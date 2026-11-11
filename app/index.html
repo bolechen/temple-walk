@@ -1,0 +1,118 @@
+<title>径山寺漫游</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&display=swap">
+<style>
+  /* Layout: two full-viewport views, the courtyard and the hall interior, joined by a fade through darkness. */
+  :root {
+    color-scheme: dark; --ink: #0b0a09; --paper: #e3e0d6; --ember: #e39a4c; --mist: #c9d3d1;
+    --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+  }
+  html, body { height: 100%; }
+  body { background: var(--ink); color: var(--paper); font-family: var(--serif); overflow: hidden; position: relative; }
+  .view { position: absolute; inset: 0; overflow: hidden; }
+  #yardGl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  .caption {
+    position: absolute; left: 0; right: 0; bottom: 0; margin: 0; text-align: center; font-size: 13px; letter-spacing: .25em;
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(26px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; transition: opacity 2s ease;
+  }
+  .caption.gone { opacity: 0; }
+
+  /* Hall interior: a stage locked to the painted plate's aspect, sized by script to cover the view. */
+  #stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; cursor: grab; }
+  #stage > img, #stage > canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #plate { object-fit: cover; }
+  #hallGl { opacity: 0; transition: opacity 2.4s ease; }
+  #hallGl.on { opacity: 1; }
+  #mirror {
+    filter: blur(0.35vh) saturate(0.8); opacity: 0; transition: opacity 2.4s ease;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 71.2%, #000 72.2%, rgba(0,0,0,.55) 82%, transparent 97%);
+            mask-image: linear-gradient(to bottom, transparent 71.2%, #000 72.2%, rgba(0,0,0,.55) 82%, transparent 97%);
+  }
+  #mirror.on { opacity: 0.34; }
+  #ui {
+    position: absolute; left: 0; right: 0; bottom: 0; display: grid; justify-items: center; gap: 10px;
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    pointer-events: none; transition: opacity 1.6s ease;
+  }
+  #ui.gone { opacity: 0; }
+  .ink-btn {
+    pointer-events: auto; font: 500 16px/1 var(--serif); letter-spacing: .5em; text-indent: .5em;
+    color: var(--paper); background: rgba(11,10,9,.5); border: 1px solid rgba(227,224,214,.4);
+    padding: 12px 22px; border-radius: 2px; cursor: pointer;
+  }
+  .ink-btn:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+  #ui.gone #offer { pointer-events: none; }
+  #note { font-size: 12px; letter-spacing: .2em; margin: 0; text-align: center; text-shadow: 0 0 6px #000, 0 0 2px #000; }
+  #leave {
+    position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+    font-size: 13px; letter-spacing: .3em; text-indent: .3em; padding: 9px 14px;
+  }
+
+  /* The join: eyes close on the way in, daylight floods on the way out. */
+  #veil { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .9s ease; }
+  #veil.on { opacity: 1; pointer-events: auto; }
+  #veil.day { background: var(--mist); }
+  #wait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; letter-spacing: .4em; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+  #wait.on { opacity: .7; }
+</style>
+
+<div class="view" id="yardView">
+  <canvas id="yardGl"></canvas>
+  <p class="caption" id="hint">拖动环顾 · 点地面行走 · 点大殿走进殿门</p>
+</div>
+<div class="view" id="hallView" hidden>
+  <div id="stage">
+    <img id="plate" src="plate.webp" alt="木构大殿内部，正中石台上供奉佛像，两侧各一盏油灯">
+    <canvas id="mirror"></canvas>
+    <canvas id="hallGl"></canvas>
+  </div>
+  <div id="ui">
+    <button id="offer" class="ink-btn" type="button">上香</button>
+    <p id="note">左右拖动可瞻仰佛像</p>
+  </div>
+  <button id="leave" class="ink-btn" type="button">出殿</button>
+</div>
+<div id="veil"></div>
+<p id="wait">入殿中</p>
+
+<script type="module">
+import "./yard.js";
+
+const yardView = document.getElementById("yardView"), hallView = document.getElementById("hallView");
+const veil = document.getElementById("veil"), waitMsg = document.getElementById("wait");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const send = (name) => window.dispatchEvent(new CustomEvent(name));
+
+// The interior and its statue load quietly once the courtyard is up, so the door is ready when you reach it.
+let hall = null;
+const loadHall = () => (hall ??= import("./hall.js").then(() => true, (err) => { console.error(err); hall = null; return false; }));
+setTimeout(loadHall, 2500);
+
+let busy = false;
+window.addEventListener("enter-hall", async () => {
+  if (busy) return; busy = true;
+  veil.className = "on";                      // step into the dark
+  const ready = loadHall();
+  await sleep(950);
+  send("yard-pause");
+  waitMsg.classList.add("on");
+  const ok = await ready;
+  waitMsg.classList.remove("on");
+  if (ok) { yardView.hidden = true; hallView.hidden = false; send("hall-show"); }
+  else send("yard-resume");                    // the hall could not be loaded: stay outside
+  await sleep(120);
+  veil.className = "";                        // eyes adjust
+  busy = false;
+});
+
+document.getElementById("leave").addEventListener("click", async () => {
+  if (busy) return; busy = true;
+  veil.className = "on day";                  // walk toward the daylight at the door
+  await sleep(950);
+  send("hall-hide"); hallView.hidden = true; yardView.hidden = false; send("yard-resume");
+  await sleep(150);
+  veil.className = "day";
+  await sleep(950); veil.className = "";
+  busy = false;
+});
+</script>
