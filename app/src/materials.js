@@ -105,6 +105,31 @@ export function createMaterials() {
       col=mix(vec3(.05,.07,.035),vec3(.11,.13,.055),a); col=mix(col,vec3(.16,.13,.07),smoothstep(.55,.75,b)*.6);
       float leaf=step(.86,n2(vWP.xz*22.))*step(.5,n2(vWP.xz*5.+2.)); col=mix(col,vec3(.3,.27,.13),leaf*.5);
       bump_=b*.02;`),
+    // Rough rubble laid dry: the lining of the well.
+    rubble: procMat("rubble", { roughness: 0.92, envMapIntensity: 0.25 }, `
+      vec3 q=vWP*2.3; vec3 id=floor(q+fbm3(vWP*1.1)*1.4); float t=h31(id);
+      vec3 f=fract(q+fbm3(vWP*1.1)*1.4)-.5; float edge=1.-smoothstep(.34,.48,max(abs(f.x),max(abs(f.y),abs(f.z))));
+      col=mix(vec3(.2,.16,.13),vec3(.42,.33,.26),t)*(.7+.5*fbm3(vWP*5.)); col=mix(vec3(.03,.035,.03),col,edge);
+      col=mix(col,vec3(.12,.17,.08),smoothstep(.5,.8,fbm3(vWP*1.4+3.))*.6); bump_=edge*.04; rough_=.9;`),
+    // White stone of the balustrades: pale, veined, greened where rain sits.
+    marble: procMat("marble", { roughness: 0.6, envMapIntensity: 0.5 }, `
+      float v=fbm3(vWP*1.7); col=mix(vec3(.5,.5,.47),vec3(.74,.74,.7),v); col=mix(col,vec3(.3,.36,.25),smoothstep(.55,.8,fbm3(vWP*2.6+7.))*.45);
+      col*=.85+.25*n3(vWP*18.); rough_=mix(.45,.8,v); bump_=fbm3(vWP*12.)*.003;`),
+    // Cryptomeria: dense dark needles in drooping masses, lighter at the tips.
+    cedar: procMat("cedar", { roughness: 0.85, envMapIntensity: 0.2 }, `
+      float a=fbm3(vWP*1.3), b=fbm3(vWP*9.);
+      col=mix(vec3(.018,.05,.03),vec3(.06,.13,.06),a); col=mix(col,vec3(.12,.2,.08),smoothstep(.55,.85,b)*smoothstep(-.2,.7,vWN.y)*.7);
+      col*=.6+.7*b; bump_=b*.08; ao_=mix(.35,1.,smoothstep(-.6,.6,vWN.y));`),
+    bark: procMat("bark", { roughness: 0.95, envMapIntensity: 0.15 }, `
+      float r=fbm3(vWP*vec3(7.,.9,7.)); col=mix(vec3(.08,.05,.035),vec3(.2,.13,.09),r); col=mix(col,vec3(.12,.15,.08),smoothstep(.5,.75,fbm3(vWP*1.5))*.5);
+      bump_=r*.03;`),
+    // Cast iron left to weather for four hundred years.
+    iron: procMat("iron", { roughness: 0.75, metalness: 0.55, envMapIntensity: 0.5 }, `
+      float r=smoothstep(.4,.75,fbm3(vWP*6.)); col=mix(vec3(.045,.045,.05),vec3(.2,.1,.05),r*.75);
+      col*=.7+.5*n3(vWP*34.); rough_=mix(.55,.95,r); bump_=fbm3(vWP*28.)*.003;`),
+    // Tea bowls: black glaze breaking to brown at the rim, as on bowls from these mountains.
+    glaze: procMat("glaze", { roughness: 0.18, envMapIntensity: 1.2 }, `
+      float s=n3(vWP*vec3(60.,8.,60.)); col=mix(vec3(.012,.01,.012),vec3(.16,.07,.03),smoothstep(.55,.9,s)*.8); rough_=.16;`),
     // Clipped tea bushes: dense dark leaf, paler new growth along the top.
     tea: procMat("tea", { roughness: 0.7, envMapIntensity: 0.3 }, `
       float a=fbm3(vWP*3.), b=fbm3(vWP*14.), far=smoothstep(.02,.2,fwidth(vWP.x)+fwidth(vWP.z));

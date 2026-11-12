@@ -23,7 +23,8 @@ const DEFAULTS = {
   dark: true, lamps: true,      // a dark interior behind the front, with two lamps far back
   steps: 4.6, stepsBack: 0,     // width of the stairs, 0 for none
   walkAll: false,               // the whole platform is open floor (covered walks)
-  plaque: "",                   // name board over the front, if any
+  plaque: "",                   // name board over the front: a string, or { text, vertical, gold }
+  rail: false,                  // a white stone balustrade round the platform
 };
 
 export function buildHall(M, opts) {
@@ -54,7 +55,20 @@ export function buildHall(M, opts) {
     const parts = [box(PX * 2, p.platH - p.platBase, zF - zB, 0, (p.platH + p.platBase) / 2, (zF + zB) / 2)];
     if (p.steps) parts.push(stairs(p.steps).translate(0, 0, zF));
     if (p.stepsBack) parts.push(stairs(p.stepsBack).rotateY(Math.PI).translate(0, 0, zB));
-    add(merge(parts), M.stone, { ao: null });
+    add(merge(parts), p.platBase > 0 ? M.woodX : M.stone, { ao: null });   // an upper floor is a timber gallery, not a stone platform
+  }
+  if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
+    const parts = [], y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
+    const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
+      const n = Math.max(1, Math.round((b - a) / 1.5)), d = (b - a) / n;
+      for (let i = 0; i <= n; i++) { const t = a + i * d, px = ax === "x" ? t : fixed, pz = ax === "x" ? fixed : t; parts.push(box(0.17, 1.0, 0.17, px, y + 0.5, pz), box(0.23, 0.1, 0.23, px, y + 1.05, pz)); }
+      const mid = (a + b) / 2, len = b - a;
+      parts.push(ax === "x" ? box(len, 0.1, 0.11, mid, y + 0.86, fixed) : box(0.11, 0.1, len, fixed, y + 0.86, mid), ax === "x" ? box(len, 0.46, 0.06, mid, y + 0.42, fixed) : box(0.06, 0.46, len, fixed, y + 0.42, mid));
+    };
+    const ex = PX - inset;
+    for (const [z, gap] of [[zF - inset, gapF], [zB + inset, gapB]]) { if (gap) { run("x", -ex, -gap, z); run("x", gap, ex, z); } else run("x", -ex, ex, z); }
+    run("z", zB + inset, zF - inset, -ex); run("z", zB + inset, zF - inset, ex);
+    add(merge(parts), p.platBase > 0 ? M.woodX : M.marble, { ao: null });
   }
 
   // ---- Columns ----
@@ -246,7 +260,7 @@ export function buildHall(M, opts) {
   }
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
-    const m = makePlaque(p.plaque), zz = Z + (p.brackets ? 1.3 : 0.45);
+    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq), zz = Z + (p.brackets ? 1.3 : 0.45);
     m.position.set(0, Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08), zz); m.rotation.x = 0.1;
     g.add(m);
   }

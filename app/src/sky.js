@@ -3,7 +3,8 @@ import * as THREE from "../v/build/three.module.js";
 import { NOISE } from "./glsl.js";
 
 export const FOG = new THREE.Color(0.70, 0.745, 0.74);
-export const SUN_DIR = new THREE.Vector3(-0.45, 0.72, 0.53).normalize();
+// The temple faces south-east down the mountain (+z); morning light comes from the east, front and right.
+export const SUN_DIR = new THREE.Vector3(0.5, 0.68, 0.53).normalize();
 
 export function createSky(renderer, scene, quality, focus) {
   const mat = new THREE.ShaderMaterial({

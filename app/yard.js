@@ -10,7 +10,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor } from "./src/quality.js";
-import { strike } from "./src/audio.js";
+import { strike, startAmbience } from "./src/audio.js";
 import { createBamboo } from "./src/bamboo.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
@@ -59,6 +59,9 @@ const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, eyeY = EYE + walker.heightAt(pos.x, pos.z), doorArmed = true;
 
 let down = null;
+// The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
+const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
+canvas.addEventListener("pointerdown", () => startAmbience(() => ({ grove: grove() })), { once: true });
 canvas.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false }; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing"; });
 canvas.addEventListener("pointermove", (e) => {
   if (!down) return;

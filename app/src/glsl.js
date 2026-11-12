@@ -18,7 +18,7 @@ vec3 woodCol(vec3 p, vec3 grain){
   float g=fbm3(p*grain), fine=n3(p*grain*7.);
   vec3 c=mix(vec3(.11,.062,.036),vec3(.27,.165,.095),g); c*=.82+.36*fine;
   float w=smoothstep(.42,.72,fbm3(p*.6+3.)); c=mix(c,vec3(.25,.225,.195),w*.42);
-  return c*vec3(.6,.57,.55);
+  return c*vec3(.66,.565,.52);   // a little toward the red-brown the real halls are stained
 }`;
 
 // Perturb a normal from a height value, using screen-space derivatives.
