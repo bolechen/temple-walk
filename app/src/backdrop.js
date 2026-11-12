@@ -35,7 +35,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
 
 // The land itself outside the walls and on the hill: leaf litter and moss under the bamboo.
 function createEarth(scene, M, terrain) {
-  const g = new THREE.PlaneGeometry(260, 300, 130, 150).rotateX(-Math.PI / 2).translate(0, 0, -35), p = g.attributes.position;
+  const g = new THREE.PlaneGeometry(280, 360, 140, 180).rotateX(-Math.PI / 2).translate(0, 0, -50), p = g.attributes.position;
   for (let i = 0; i < p.count; i++) p.setY(i, terrain(p.getX(i), p.getZ(i)));
   g.computeVertexNormals();
   g.setAttribute("ao", new THREE.BufferAttribute(new Float32Array(p.count).fill(1), 1));
@@ -55,13 +55,13 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   };
   // The grove follows the land uphill in steps, on both sides, and closes behind the approach and above the summit.
   const L1 = levels[0], L2 = levels[1];
-  const steps = [[zS + 14, bounds.fore, -6.5], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
+  const steps = [[zS + 14, bounds.fore, -9], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
   [[2.2, 1.0], [5.5, 0.82], [10, 0.62]].forEach(([o, tone], i) => {
     steps.forEach(([za, zb, base], k) => {
-      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? -8 : 0);
+      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 10 : 0);
       band(x, zb, x, za, i + k * 3 + 1, tone, base + o * 0.09); band(-x, za, -x, zb, i + k * 3 + 20, tone, base + o * 0.09);
     });
-    band(X + o + 14, zS + o + 2, -X - o - 14, zS + o + 2, i + 40, tone, -7.5);
+    band(X + o + 24, zS + o + 2, -X - o - 24, zS + o + 2, i + 40, tone, -13);
     band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3);
   });
   // Five peaks stand round the temple, each range fainter than the one before.
@@ -73,7 +73,7 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
       p.setY(i, p.getY(i) > 0 ? Math.max(8, h) : -4);
     }
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide }));
-    m.position.z = -30; scene.add(m);
+    m.position.z = -45; scene.add(m);
   });
   return { update: (t) => { for (const m of mats) m.uniforms.uT.value = t; } };
 }

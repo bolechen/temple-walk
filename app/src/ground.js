@@ -63,7 +63,7 @@ export function createGround(scene, shade, censer, paving) {
       }`,
   });
   const mat = pave(shade[0], true, new THREE.Vector2(censer.x, censer.z));
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(420, 264).rotateX(-Math.PI / 2).translate(0, 0, -68), mat);   // ends at the head of the approach stair
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(460, 300).rotateX(-Math.PI / 2).translate(0, 0, -86), mat);   // ends at the head of the approach stair
   scene.add(ground);
   // The same wet paving on the terraces above: no mirror pass up there, only the sky's sheen.
   for (const p of paving) {

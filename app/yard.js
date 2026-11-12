@@ -36,15 +36,16 @@ scene.add(site.root);
 const walker = createWalker(site);
 const sky = createSky(renderer, scene, quality, site.sunFocus);
 const ground = createGround(scene, site.shade, site.censer, site.paving);
-const backdrop = createBackdrop(scene, M, SITE, LEVELS, terrain);
-// Real bamboo where you come close to it: all round the stair you arrive by and the forecourt, and beyond the tea.
-const hill = { zS: LEVELS[0].zN, zN: LEVELS[1].zS };
+const backdrop = createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain);
+// Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea.
+const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
+const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
 createBamboo(scene, [
-  { x0: -30, x1: 30, z0: SITE.fore - 2, z1: APPROACH.end + 6, n: 620 },
+  { x0: -28, x1: 40, z0: SITE.fore - 2, z1: A.zA1 + 13, n: 900 },
   { x0: -34, x1: -13, z0: SITE.zS + 1, z1: SITE.fore, n: 130 }, { x0: 13, x1: 34, z0: SITE.zS + 1, z1: SITE.fore, n: 130 },
-  { x0: -38, x1: -26, z0: LEVELS[1].zN - 5, z1: hill.zS, n: 150 }, { x0: 26, x1: 38, z0: LEVELS[1].zN - 5, z1: hill.zS, n: 150 },
+  { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 },
 ], terrain, (x, z) => {
-  if (z > SITE.fore - 0.5) return Math.abs(x) > APPROACH.w / 2 + 0.9;                       // clear of the stair
+  if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1, A.zA0, A.zA1, 0.8) || near(x, z, 3.6, 9.6, A.zA0 - 5.8, A.zA0, 0.5));   // clear of the path and the half-way pavilion
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
 });

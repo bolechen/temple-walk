@@ -2,7 +2,7 @@
 //   A. from the foot of the approach stair: round the screen wall, through the gate, across the court, in at the door
 //   B. inside: offer incense, leave
 //   C. from the court at real walking speed: tap the hall, arrive at the door, enter
-//   D. round the hall, up both terraces and the stair between the tea rows, to the summit
+//   D. round the hall, up the library and Guanyin terraces and the stair between the tea rows, to the summit
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app"), out = path.join(__dirname, "out");
@@ -30,11 +30,11 @@ const srv = http.createServer((req, res) => {
 
   // A. the whole way in: up the stair from the grove, round the screen wall, through the gate, across the court, into the hall
   await p.goto(base + "?q=low&fast=1"); await ready();
-  await p.evaluate(() => window.__walk([[0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -5.4]]));
+  await p.evaluate(() => window.__walk([[11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -5.4]]));
   let minH = 0, maxH = 0; const seen = [];
   await until(async () => { const s = await state(); minH = Math.min(minH, s.h); maxH = Math.max(maxH, s.h); seen.push(s.z); return inHall(); }, 300000, "the walk in never reached the hall");
   console.log("A: z samples", seen.filter((_, i) => i % 3 === 0).join(" "), "height from", minH, "to", maxH);
-  if (minH > -5) fail("did not start at the foot of the approach stair");
+  if (minH > -10) fail("did not start on the lower landing of the approach");
   // B. inside
   await p.waitForTimeout(4000); await p.screenshot({ path: path.join(out, "walk-hall.png") });
   if (await p.isVisible("#offer")) { await p.click("#offer"); await p.waitForTimeout(3000); } else fail("offer button not visible");
@@ -45,9 +45,9 @@ const srv = http.createServer((req, res) => {
   await p.goto(base + "?q=low&cam=0.3,2.2,0,0.05"); await ready();
   await p.mouse.click(210, 300);
   await until(inHall, 300000, "tap on the hall never led inside");
-  // D. past the hall, up both terraces, to the porch of the summit pavilion
-  await p.goto(base + "?q=low&fast=1&cam=16.5,0,0,0"); await ready();
-  await p.evaluate(() => window.__walk([[16.5, -23], [0, -23], [0, -30], [13.6, -30], [13.6, -54], [0, -54.5], [0, -91], [0, -94.3]]));
+  // D. past the hall, up the two terraces, to the porch of the summit pavilion
+  await p.goto(base + "?q=low&fast=1&cam=19.5,0,0,0"); await ready();
+  await p.evaluate(() => window.__walk([[19.5, -28], [0, -28], [0, -36], [13.6, -36], [13.6, -60], [0, -61], [0, -69.2], [13, -69.2], [13, -89], [0, -89.5], [0, -120], [0, -123]]));
   await until(async () => (await state()).h > 20.8, 300000, "never reached the summit porch");
   console.log("D: summit", JSON.stringify(await state()));
   console.log(errs.length ? "errors: " + JSON.stringify(errs) : "PASS");
