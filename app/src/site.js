@@ -28,25 +28,46 @@ export function buildSite(M) {
   // ---- Buildings, south to north ----
   const gate = put(buildHall(M, {   // mountain gate: you walk through its middle bay
     xs: [-5.4, -1.9, 1.9, 5.4], zs: [2.4, -2.4], platH: 0.36, platOut: 1.2, colTop: 3.7, overhang: 1.9, rise: 3.3, G: 2.3,
-    front: "pass", back: "pass", dark: false, steps: 3.4, stepsBack: 3.4,
+    front: "pass", back: "pass", dark: false, steps: 3.4, stepsBack: 3.4, plaque: "云径禅寺",
   }), [0, SITE.zS]);
-  for (const sx of [-1, 1]) put(buildHall(M, {   // bell tower (east) and drum tower (west)
-    xs: [-1.7, 1.7], zs: [1.7, -1.7], platH: 0.6, platOut: 0.9, colTop: 5.4, overhang: 1.5, rise: 3.0, G: 9, lift: 0.6, liftLen: 2.6,
-    front: "lattice", dark: true, lamps: false, steps: 0,
-  }), [sx * 11.2, 27.5], sx > 0 ? 3 : 1);
-  const main = put(buildHall(M, {}), [0, -9.4]);   // the main hall, as first built
+  const strikers = [];
+  for (const sx of [-1, 1]) {   // bell pavilion (east) and drum pavilion (west), open on all sides
+    const t = put(buildHall(M, {
+      xs: [-1.7, 1.7], zs: [1.7, -1.7], platH: 0.6, platOut: 0.9, colTop: 4.4, overhang: 1.5, rise: 3.0, G: 9, lift: 0.6, liftLen: 2.6,
+      front: "open", back: "open", sides: "open", dark: false, steps: 0, plaque: sx > 0 ? "钟楼" : "鼓楼",
+    }), [sx * 11.2, 27.5], sx > 0 ? 3 : 1);
+    const thing = sx > 0 ? bell(M, t) : drum(M, t);
+    t.group.add(thing.group); strikers.push({ kind: sx > 0 ? "bell" : "drum", mesh: thing.hit, swing: thing.swing });
+  }
+  const main = put(buildHall(M, { plaque: "大雄宝殿" }), [0, -9.4]);   // the main hall, as first built
   for (const sx of [-1, 1]) put(buildHall(M, {     // covered walks down both sides of the main court
     xs: Array.from({ length: 10 }, (_, i) => -13.5 + i * 3), zs: [1.15, -1.15], platH: 0.3, platOut: 0.45, colTop: 2.9, overhang: 0.9, rise: 1.25, G: 0,
     brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true,
   }), [sx * 14.9, -2], 1);
-  const library = put(buildHall(M, {   // sutra library, the largest roof on the axis
-    xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 5.6, G: 3.4,
+  // Sutra library, two storeys: the lower roof is a skirt whose ridge hides inside the upper storey,
+  // and the upper storey starts where that skirt meets its walls.
+  const lower = put(buildHall(M, {
+    xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 3.0, G: 6.0,
     steps: 5.2,
+  }), [0, -41.5]);
+  put(buildHall(M, {
+    xs: [-6.4, -2.2, 2.2, 6.4], zs: [2.6, -2.6], platH: lower.roofAt(lower.EZ - 2.6) - 0.08, platOut: 0.05, colTop: 3.1, overhang: 2.3, rise: 4.4, G: 2.9,
+    platBase: lower.roofAt(lower.EZ - 2.6) - 0.4, dark: false, steps: 0, plaque: "藏经楼",
   }), [0, -41.5]);
   put(buildHall(M, {   // tea house on the east side of the rear court, facing west
     xs: [-4.2, -1.4, 1.4, 4.2], zs: [2.1, -2.1], platH: 0.45, platOut: 1.0, colTop: 3.3, overhang: 1.5, rise: 2.7, G: 1.9,
-    lamps: false, steps: 2.8,
+    lamps: false, steps: 2.8, plaque: "吃茶去",
   }), [11.3, -28.5], 3);
+
+  // Stone lanterns in pairs along the axis, each with a flame.
+  const lanternStone = [], lanternAt = [[3.0, 33], [3.0, 21.5], [4.5, 1.4], [3.6, -30]];
+  for (const [lx, lz] of lanternAt) for (const sx of [-1, 1]) {
+    lanternStone.push(lantern().translate(sx * lx, 0, lz));
+    const f = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), M.flame); f.position.set(sx * lx, 1.36, lz); root.add(f);
+    walk.solids.push({ x0: sx * lx - 0.5, x1: sx * lx + 0.5, z0: lz - 0.5, z1: lz + 0.5 });
+    shade.push({ x0: sx * lx - 0.3, x1: sx * lx + 0.3, z0: lz - 0.3, z1: lz + 0.3 });
+  }
+  root.add(mesh(merge(lanternStone), M.stone));
 
   // ---- Walls ----
   const body = [], ridge = [], capPos = [], capUv = [], capIdx = [], H = SITE.wallH, T = 0.42;
@@ -106,10 +127,57 @@ export function buildSite(M) {
     arrive: [0, 50.5, 0, 0.1], gate: [3.2, 46.5, -0.35, 0.22], frontcourt: [0, 36, 0, 0.06], towers: [-4, 33, 0.9, 0.28],
     court: [7.5, 12.5, -0.52, 0.07], eave: [3.5, 2.2, -0.3, 0.42], walk: [14.9, 11, 0, 0.02], corner: [-10, 6, 0.75, 0.2],
     passage: [12.2, -14, 0, 0.1], rear: [-6, -21.5, 0.3, 0.16], library: [0, -24, 0, 0.16], teahouse: [2, -24, 1.25, 0.1],
+    bell: [5.5, 30.5, 1.15, 0.2], drum: [-5.5, 30.5, -1.15, 0.2], plaque: [0, 4.6, 0, 0.36], lantern: [1.2, 24.5, -0.5, 0.02],
     back: [-5, -31, Math.PI + 0.35, 0.14],
   };
 
-  return { root, walk, shade, hall, views, start: views.arrive, censer: new THREE.Vector3(0, 0, 3.2), sunFocus: [0, -6] };
+  return { root, walk, shade, hall, views, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 3.2), sunFocus: [0, -6] };
+}
+
+// ---- Furnishings ----
+const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
+
+// A stone lantern: lotus base, shaft, an open chamber for the flame, a hexagonal cap.
+function lantern() {
+  const parts = [
+    lathe([[0, 0], [0.42, 0], [0.42, 0.12], [0.3, 0.2], [0.16, 0.3], [0.14, 0.95], [0.2, 1.02], [0.36, 1.1], [0.38, 1.18], [0, 1.18]], 12),
+    lathe([[0, 1.56], [0.46, 1.56], [0.5, 1.61], [0.3, 1.82], [0.1, 1.95], [0.07, 2.1], [0, 2.17]], 6),
+  ];
+  for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) parts.push(box(0.06, 0.4, 0.06, a * 0.2, 1.37, b * 0.2));
+  return merge(parts);
+}
+
+// A bronze bell hung from a cross beam, with the log that strikes it slung beside it.
+function bell(M, t) {
+  const g = new THREE.Group(), y0 = t.platH + 1.1, beamY = t.colTop - 0.55;
+  const body = mesh(merge([
+    lathe([[0.64, 0], [0.61, 0.07], [0.53, 0.3], [0.48, 0.8], [0.46, 1.25], [0.41, 1.5], [0.26, 1.68], [0.08, 1.75], [0, 1.75]], 28).translate(0, y0, 0),
+    new THREE.TorusGeometry(0.12, 0.035, 8, 14).translate(0, y0 + 1.83, 0),
+    new THREE.CylinderGeometry(0.025, 0.025, beamY - y0 - 1.9, 6).translate(0, (beamY + y0 + 1.9) / 2, 0),
+  ]), M.bronze);
+  const inside = new THREE.Mesh(new THREE.CircleGeometry(0.6, 20).rotateX(Math.PI / 2).translate(0, y0 + 0.03, 0), M.dark.clone());
+  inside.material.side = THREE.DoubleSide;
+  const frame = mesh(merge([box(3.6, 0.24, 0.24, 0, beamY, 0), box(0.24, 0.24, 3.6, 0, beamY - 0.02, 0)]), M.woodX);
+  const log = mesh(merge([
+    new THREE.CylinderGeometry(0.09, 0.09, 1.7, 10).rotateX(Math.PI / 2).translate(0, y0 + 0.35, 1.55),
+    new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 1.0),
+    new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 2.1),
+  ]), M.woodZ);
+  g.add(body, inside, frame, log);
+  return { group: g, hit: body, swing: log };
+}
+
+// A barrel drum on a timber stand, its face toward the court.
+function drum(M, t) {
+  const g = new THREE.Group(), cy = t.platH + 1.75;
+  const barrel = mesh(lathe([[0.8, -0.68], [0.9, -0.4], [0.95, 0], [0.9, 0.4], [0.8, 0.68]], 28).rotateX(Math.PI / 2).translate(0, cy, 0), M.lacquer);
+  const skins = mesh(merge([new THREE.CircleGeometry(0.8, 28).translate(0, cy, 0.685), new THREE.CircleGeometry(0.8, 28).rotateY(Math.PI).translate(0, cy, -0.685)]), M.hide);
+  const stand = [];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) stand.push(box(0.14, cy - t.platH - 0.3, 0.14, sx * 0.72, (cy + t.platH - 0.3) / 2, sz * 0.5));
+  for (const sz of [-1, 1]) stand.push(box(1.7, 0.14, 0.14, 0, cy - 0.78, sz * 0.5), box(1.7, 0.12, 0.12, 0, t.platH + 0.35, sz * 0.5));
+  for (const sx of [-1, 1]) stand.push(box(0.12, 0.12, 1.1, sx * 0.72, t.platH + 0.35, 0));
+  g.add(barrel, skins, mesh(merge(stand), M.woodX));
+  return { group: g, hit: skins, swing: null };
 }
 
 // ---- Walking over the plan ----

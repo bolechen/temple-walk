@@ -23,11 +23,16 @@ export function createGround(scene, shade, censer) {
       void main(){
         vec2 p=vWP.xz;
         // Running-bond slabs, each a slightly different stone.
-        vec2 sz=vec2(1.02,.64); float row=floor(p.y/sz.y);
-        vec2 q=vec2(p.x+(mod(row,2.)*.5+h21(vec2(row,7.))*.3)*sz.x,p.y)/sz; vec2 id=floor(q), f=fract(q);
-        float edge=min(min(f.x,1.-f.x)*sz.x,min(f.y,1.-f.y)*sz.y)+(n2(p*9.)-.5)*.02, joint=1.-smoothstep(.014,.04,edge);
+        // Down the axis runs a path of large square slabs between two lines of kerb stones.
+        bool onAxis=p.y>-.55&&p.y<54., path=onAxis&&abs(p.x)<1.7, kerb=onAxis&&!path&&abs(p.x)<2.02;
+        vec2 sz=path?vec2(1.1333):vec2(1.02,.64); float row=floor(p.y/sz.y);
+        vec2 q=vec2(p.x/sz.x+(path?1.5:mod(row,2.)*.5+h21(vec2(row,7.))*.3),p.y/sz.y); vec2 id=floor(q)+(path?vec2(300.,0.):vec2(0.)), f=fract(q);
+        float edge=min(min(f.x,1.-f.x)*sz.x,min(f.y,1.-f.y)*sz.y);
+        if(kerb){ float kz=fract(p.y/1.6); edge=min(min(abs(p.x)-1.7,2.02-abs(p.x)),min(kz,1.-kz)*1.6); id=vec2(floor(p.y/1.6),500.+sign(p.x)); }
+        edge+=(n2(p*9.)-.5)*.02; float joint=1.-smoothstep(.014,.04,edge);
         float tone=h21(id);
         vec3 alb=mix(vec3(.17,.175,.17),vec3(.34,.345,.33),tone)*(.6+.55*fbm2(p*2.6))*(.75+.5*fbm2(p*11.));
+        if(path) alb*=vec3(1.16,1.13,1.06); if(kerb) alb*=.78;
         float mossM=smoothstep(.42,.7,fbm2(p*.45+9.));
         alb=mix(alb,vec3(.12,.18,.07),joint*(.35+.65*mossM)); alb=mix(alb,vec3(.03),joint*.3*(1.-mossM));
         alb=mix(alb,vec3(.15,.2,.1),mossM*smoothstep(.12,.0,edge)*.35);

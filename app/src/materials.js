@@ -99,6 +99,13 @@ export function createMaterials() {
       col=mix(vec3(.1,.105,.11),vec3(.19,.195,.195),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
       rough_=.5; bump_=fbm3(vWP*14.)*.004; ao_=1.;`),
     gable: procMat("gable", { roughness: 0.9, envMapIntensity: 0.2, side: THREE.DoubleSide }, "col=vec3(.62,.615,.58)*(.75+.3*fbm3(vWP*.9)); ao_=.75;"),
+    // Old red lacquer on the drum barrel, and the hide stretched over its ends.
+    lacquer: procMat("lacquer", { roughness: 0.45, envMapIntensity: 0.6 }, `
+      float w=fbm3(vWP*3.); col=mix(vec3(.2,.035,.025),vec3(.36,.07,.04),w); col=mix(col,vec3(.09,.05,.04),smoothstep(.55,.8,fbm3(vWP*7.+2.))*.7);
+      rough_=mix(.3,.7,w); bump_=fbm3(vWP*20.)*.002;`),
+    hide: procMat("hide", { roughness: 0.75, envMapIntensity: 0.3 }, `
+      float w=fbm3(vWP*2.5); col=mix(vec3(.5,.42,.3),vec3(.72,.65,.5),w); col*=.85+.3*n3(vWP*40.);
+      col=mix(col,vec3(.3,.22,.14),smoothstep(.6,.85,fbm3(vWP*5.+9.))*.5); bump_=n3(vWP*60.)*.0015;`),
     dark: new THREE.MeshBasicMaterial({ color: 0x030302, side: THREE.BackSide, fog: false }),
     flame: new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }),
   };

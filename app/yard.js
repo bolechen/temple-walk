@@ -10,6 +10,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor } from "./src/quality.js";
+import { strike } from "./src/audio.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 const Q = new URLSearchParams(location.search);
@@ -59,6 +60,13 @@ canvas.addEventListener("pointerup", (e) => {
   if (down && !down.moved && performance.now() - down.t < 600) {
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    // The bell and the drum answer a tap from anywhere in their court.
+    const struck = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
+    if (struck && struck.distance < 32) {
+      const s = site.strikers.find((k) => k.mesh === struck.object);
+      strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = performance.now();
+      document.getElementById("hint").classList.add("gone"); down = null; return;
+    }
     const hit = ray.ray.intersectPlane(floor, new THREE.Vector3());
     const hall = site.hall, toHall = ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < 15.5, onGround = walker.onGround(pos.x, pos.z);
     // Tapping the main hall from its court means "go to its door"; the way there, and back, is over the steps.
@@ -123,6 +131,9 @@ function frame(now) {
   else if (doorArmed) { doorArmed = false; target = null; route = []; window.dispatchEvent(new CustomEvent("enter-hall")); }
 
   sky.update(t); backdrop.update(t); props.update(t, dt, still);
+  for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
+    const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
+  }
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   if (quality.planar > 0) ground.render(renderer, camera);
   post.render(t);

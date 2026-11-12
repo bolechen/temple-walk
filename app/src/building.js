@@ -3,11 +3,13 @@
 // Halls, gate houses, towers and covered walks are all this function with different parameters.
 import * as THREE from "../v/build/three.module.js";
 import { box, smooth, plain, merge, mesh, tube } from "./geo.js";
+import { makePlaque } from "./plaque.js";
 
 const DEFAULTS = {
   xs: [-6.7, -2.5, 2.5, 6.7],   // column lines across the front
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
   platH: 0.9, platOut: 1.6,     // platform height and how far it reaches beyond the columns
+  platBase: 0,                  // where the platform starts: above 0 for an upper storey standing on a roof
   colTop: 4.08,                 // column head above the platform
   overhang: 2.4,                // eave beyond the columns
   rise: 5.2,                    // eave to ridge
@@ -20,6 +22,7 @@ const DEFAULTS = {
   dark: true, lamps: true,      // a dark interior behind the front, with two lamps far back
   steps: 4.6, stepsBack: 0,     // width of the stairs, 0 for none
   walkAll: false,               // the whole platform is open floor (covered walks)
+  plaque: "",                   // name board over the front, if any
 };
 
 export function buildHall(M, opts) {
@@ -57,7 +60,7 @@ export function buildHall(M, opts) {
     return merge(parts);
   };
   {
-    const parts = [box(PX * 2, p.platH, zF - zB, 0, p.platH / 2, (zF + zB) / 2)];
+    const parts = [box(PX * 2, p.platH - p.platBase, zF - zB, 0, (p.platH + p.platBase) / 2, (zF + zB) / 2)];
     if (p.steps) parts.push(stairs(p.steps).translate(0, 0, zF));
     if (p.stepsBack) parts.push(stairs(p.stepsBack).rotateY(Math.PI).translate(0, 0, zB));
     add(merge(parts), M.stone, { ao: null });
@@ -151,6 +154,7 @@ export function buildHall(M, opts) {
       box(0.16, 0.18, 1.3, 0, 0.67, 0.3),
       box(1.0, 0.15, 0.15, 0, 0.84, 0.88), box(0.2, 0.12, 0.2, -0.4, 0.97, 0.88), box(0.2, 0.12, 0.2, 0.4, 0.97, 0.88),
       box(0.14, 0.14, 0.36, 0, 0.67, 1.05),
+      new THREE.BoxGeometry(0.13, 0.15, 1.5).rotateX(0.32).translate(0, 0.6, 0.55),   // the slanting arm whose beak shows under the eave
     ]);
     const spots = perimeter.map((c) => ({ x: c.x, z: c.z, a: Math.atan2(c.ox, c.oz) }));
     const between = (a, b) => { const n = Math.abs(b - a) > 4.6 ? 2 : 1; return Array.from({ length: n }, (_, i) => a + ((b - a) * (i + 1)) / (n + 1)); };
@@ -203,6 +207,12 @@ export function buildHall(M, opts) {
     fascia.setIndex(ei); fascia.computeVertexNormals();
     add(fascia, M.fascia, { ao: null });
 
+    // Round end tiles closing each row of cover tiles along the eave.
+    const ends = [], cap = new THREE.CylinderGeometry(0.085, 0.085, 0.07, 10);
+    for (let x = -EX + 0.125 + 0.4; x < EX - 0.4; x += 0.25) for (const s of [-1, 1]) ends.push(cap.clone().rotateX(Math.PI / 2).translate(x, roofY(x, s * EZ) + 0.035, s * (EZ + 0.02)));
+    if (G > 0.05) for (let z = -EZ + 0.125 + 0.4; z < EZ - 0.4; z += 0.25) for (const s of [-1, 1]) ends.push(cap.clone().rotateZ(Math.PI / 2).translate(s * (EX + 0.02), roofY(s * EX, z) + 0.035, z));
+    add(merge(ends), M.ridge, { ao: null, cast: false });
+
     // Ridges: the main ridge with its end ornaments, the gable ridges, the hip ridges that sweep up at the corners.
     const ridgeY = EAVE_Y + p.rise, parts = [];
     if (gx > 0.3) {
@@ -244,6 +254,12 @@ export function buildHall(M, opts) {
     }
   }
 
+  if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
+    const m = makePlaque(p.plaque), zz = Z + (p.brackets ? 1.3 : 0.45);
+    m.position.set(0, Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08), zz); m.rotation.x = 0.1;
+    g.add(m);
+  }
+
   // ---- Where you can stand (local space; the site turns these into world space) ----
   const walk = { solids: [], decks: [], ramps: [] };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
@@ -262,5 +278,5 @@ export function buildHall(M, opts) {
     else if (p.steps) walk.decks.push({ x0: -X - 0.8, x1: X + 0.8, z0: Z + 0.45, z1: zF - 0.25, h: p.platH });   // the porch
   }
 
-  return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, platH: p.platH, run, frontZ: Z, zF, zB };
+  return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
 }
