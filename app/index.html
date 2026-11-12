@@ -85,7 +85,8 @@ const send = (name) => window.dispatchEvent(new CustomEvent(name));
 
 // The interior and its statue load quietly once the courtyard is up, so the door is ready when you reach it.
 let hall = null;
-const loadHall = () => (hall ??= import("./hall.js").then(() => true, (err) => { console.error(err); hall = null; return false; }));
+let hallError = "";
+const loadHall = () => (hall ??= import("./hall.js").then(() => true, (err) => { console.error(err); hallError = String(err && err.message ? err.message : err); hall = null; return false; }));
 setTimeout(loadHall, 2500);
 
 let busy = false;
@@ -99,7 +100,11 @@ window.addEventListener("enter-hall", async () => {
   const ok = await ready;
   waitMsg.classList.remove("on");
   if (ok) { yardView.hidden = true; hallView.hidden = false; send("hall-show"); }
-  else send("yard-resume");                    // the hall could not be loaded: stay outside
+  else {                                       // the hall could not be loaded: stay outside, and say why
+    send("yard-resume");
+    const hint = document.getElementById("hint");
+    hint.textContent = "殿内没有加载出来：" + hallError; hint.classList.remove("gone");
+  }
   await sleep(120);
   veil.className = "";                        // eyes adjust
   busy = false;

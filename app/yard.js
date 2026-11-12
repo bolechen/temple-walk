@@ -653,21 +653,21 @@ function blocked(x, z) {
   return false;
 }
 const hallBox = new THREE.Box3(new THREE.Vector3(-PLAT.x, 0, PLAT.zB), new THREE.Vector3(PLAT.x, 11, PLAT.zF + STEP_RUN));
-const FOOT = new THREE.Vector3(0, 0, PLAT.zF + STEP_RUN + 0.4), DOOR = new THREE.Vector3(0, 0, COLS_Z[0] + 0.5);
+const FOOT = new THREE.Vector3(0, 0, PLAT.zF + STEP_RUN + 0.4), DOOR = new THREE.Vector3(0, 0, COLS_Z[0] + 0.55);
 let route = [], running = true, eyeY = EYE, doorArmed = true;
 let down = null;
 canvas.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false }; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing"; });
 canvas.addEventListener("pointermove", (e) => {
   if (!down) return;
   const dx = e.clientX - down.x, dy = e.clientY - down.y;
-  if (!down.moved && Math.hypot(dx, dy) < 6) return;
+  if (!down.moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 14)) return;
   down.moved = true; yaw += dx * 0.0042; pitch = THREE.MathUtils.clamp(pitch + dy * 0.0042, -0.5, 0.75);
   down.x = e.clientX; down.y = e.clientY;
 });
 const ray = new THREE.Raycaster();
 canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = "grab";
-  if (down && !down.moved && performance.now() - down.t < 400) {
+  if (down && !down.moved && performance.now() - down.t < 600) {
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     const hit = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3());
@@ -717,7 +717,7 @@ function frame(now) {
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0), s = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
   let vx = 0, vz = 0;
   if (f || s) { target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
-  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.15) { target = route.shift() || null; vx = vz = 0; } }
+  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; } }
   const len = Math.hypot(vx, vz);
   if (len > 0) {
     const step = Math.min(len, (Q.has("fast") ? 14 : 2.1) * dt); vx = (vx / len) * step; vz = (vz / len) * step;
@@ -732,7 +732,7 @@ function frame(now) {
   eyeY += (EYE + heightAt(pos.x, pos.z) - eyeY) * Math.min(1, dt * 9);
   camera.position.set(pos.x, eyeY + (len > 0 && !still ? Math.sin(t * 6.5) * 0.018 : 0), pos.z);
   // Crossing the threshold hands over to the hall interior.
-  const atDoor = region(pos.x, pos.z) === "porch" && Math.abs(pos.x) < 1.35 && pos.z < COLS_Z[0] + 0.62;
+  const atDoor = region(pos.x, pos.z) === "porch" && Math.abs(pos.x) < 1.35 && pos.z < COLS_Z[0] + 0.8;
   if (!atDoor) doorArmed = true;
   else if (doorArmed) { doorArmed = false; target = null; route = []; window.dispatchEvent(new CustomEvent("enter-hall")); }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");
@@ -762,7 +762,7 @@ setTimeout(() => document.getElementById("hint").classList.add("gone"), 9000);
 window.addEventListener("yard-pause", () => { running = false; });
 window.addEventListener("yard-resume", () => {
   // Step back out of the hall: on the porch, facing the courtyard.
-  pos.set(0, EYE, COLS_Z[0] + 0.9); yaw = Math.PI; pitch = 0.04; target = null; route = []; doorArmed = false;
+  pos.set(0, EYE, COLS_Z[0] + 1.15); yaw = Math.PI; pitch = 0.04; target = null; route = []; doorArmed = false;
   eyeY = EYE + PLAT.h; for (const k in keys) keys[k] = false;
   if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); }
 });

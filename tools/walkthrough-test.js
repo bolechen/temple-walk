@@ -19,13 +19,13 @@ const srv = http.createServer((req, res) => {
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.stack ? e.stack.slice(0, 400) : e.message));
   p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?fast=1&cam=2.5,9,-0.15,0.05`);
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?cam=0.3,2.2,0,0.05`);
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 120000 });
   await p.waitForTimeout(1500); await p.screenshot({ path: "walk-1-yard.png" });
-  await p.mouse.click(210, 230);                                    // tap the hall
+  await p.mouse.click(210, 300);                                    // tap the hall
   const t0 = Date.now();
-  for (let i = 0; i < 5; i++) { if (!(await p.evaluate(() => document.getElementById('hallView').hidden))) break; await p.waitForTimeout(12000); console.log(JSON.stringify(await p.evaluate(() => window.__yard()))); }
-  await p.waitForFunction(() => !document.getElementById("hallView").hidden, null, { timeout: 60000 }).catch((e) => errs.push("never entered: " + String(e).slice(0, 120)));
+  for (let i = 0; i < 14; i++) { if (!(await p.evaluate(() => document.getElementById('hallView').hidden))) break; await p.waitForTimeout(12000); console.log(JSON.stringify(await p.evaluate(() => window.__yard()))); }
+  await p.waitForFunction(() => !document.getElementById("hallView").hidden, null, { timeout: 200000 }).catch((e) => errs.push("never entered: " + String(e).slice(0, 120)));
   console.log("entered after", Math.round((Date.now() - t0) / 1000), "s");
   await p.waitForTimeout(5000); await p.screenshot({ path: "walk-2-hall.png" });
   if (await p.isVisible("#offer")) { await p.click("#offer"); await p.waitForTimeout(6000); } else errs.push("offer hidden");
