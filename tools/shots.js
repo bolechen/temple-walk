@@ -26,7 +26,7 @@ const srv = http.createServer((req, res) => {
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 }).catch((e) => errs.push(String(e).slice(0, 160)));
     if (!names.length) names = await p.evaluate(() => window.__views);
     await p.waitForTimeout(1200);
-    await p.screenshot({ path: path.join(out, names[i] + ".png") });
+    await p.screenshot({ path: path.join(out, names[i] + ".png"), timeout: 240000 });
     console.log(names[i], JSON.stringify(await p.evaluate(() => { const y = window.__yard(); return { tris: y.tris, calls: y.calls }; })));
   }
   console.log("errors:", [...new Set(errs)].slice(0, 6));

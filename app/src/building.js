@@ -2,7 +2,7 @@
 // infill, and a curved tiled roof. Built in local space: centred on the origin, front facing +z.
 // Halls, gate houses, towers and covered walks are all this function with different parameters.
 import * as THREE from "../v/build/three.module.js";
-import { box, smooth, plain, merge, mesh, tube } from "./geo.js";
+import { box, smooth, plain, merge, mesh, tube, stairGeo } from "./geo.js";
 import { makePlaque } from "./plaque.js";
 
 const DEFAULTS = {
@@ -10,6 +10,7 @@ const DEFAULTS = {
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
   platH: 0.9, platOut: 1.6,     // platform height and how far it reaches beyond the columns
   platBase: 0,                  // where the platform starts: above 0 for an upper storey standing on a roof
+  ground: 0,                    // height of the terrace the building stands on (for weathering that follows the ground)
   colTop: 4.08,                 // column head above the platform
   overhang: 2.4,                // eave beyond the columns
   rise: 5.2,                    // eave to ridge
@@ -48,17 +49,7 @@ export function buildHall(M, opts) {
   const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); g.add(m); return m; };
 
   // ---- Platform and stairs ----
-  const N = Math.max(1, Math.round(p.platH / 0.18)), sh = p.platH / N, sd = 0.34, run = sd * N;
-  const stairs = (w) => {   // relative to the platform edge at z = 0, descending toward +z
-    const parts = [];
-    for (let i = 0; i < N; i++) parts.push(box(w, sh * (N - i), sd, 0, (sh * (N - i)) / 2, sd * (i + 0.5)));
-    if (N > 2) for (const sx of [-1, 1]) {   // sloped stone cheeks
-      const len = Math.hypot(run, p.platH);
-      parts.push(new THREE.BoxGeometry(0.42, 0.26, len + 0.1).rotateX(Math.atan2(p.platH, run)).translate(sx * (w / 2 + 0.21), p.platH / 2 - 0.02, run / 2),
-        box(0.42, p.platH / 2, run, sx * (w / 2 + 0.21), p.platH / 4 - 0.1, run / 2));
-    }
-    return merge(parts);
-  };
+  const run = stairGeo(1, p.platH).run, stairs = (w) => stairGeo(w, p.platH).geo;
   {
     const parts = [box(PX * 2, p.platH - p.platBase, zF - zB, 0, (p.platH + p.platBase) / 2, (zF + zB) / 2)];
     if (p.steps) parts.push(stairs(p.steps).translate(0, 0, zF));
@@ -131,7 +122,7 @@ export function buildHall(M, opts) {
     walls.push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
   }
   add(merge(bx), M.woodX); add(merge(bz), M.woodZ);
-  if (walls.length) add(merge(walls), M.plaster(p.platH));
+  if (walls.length) add(merge(walls), M.plaster(p.platH + p.ground));
   if (lat.length) add(merge(lat), M.lattice, { cast: false });
   if (p.dark) {
     const d = Math.min(2.4, Z - ZB - 0.4);

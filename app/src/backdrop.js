@@ -33,29 +33,47 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
     }`,
 });
 
-export function createBackdrop(scene, bounds) {
-  const mats = [], H = 16, { x: X, zN } = bounds, zS = bounds.apron;   // the grove closes behind the approach, not at the gate
-  const band = (x0, z0, x1, z1, seed, tone) => {
+// The land itself outside the walls and on the hill: leaf litter and moss under the bamboo.
+function createEarth(scene, M, terrain) {
+  const g = new THREE.PlaneGeometry(260, 300, 130, 150).rotateX(-Math.PI / 2).translate(0, 0, -35), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) p.setY(i, terrain(p.getX(i), p.getZ(i)));
+  g.computeVertexNormals();
+  g.setAttribute("ao", new THREE.BufferAttribute(new Float32Array(p.count).fill(1), 1));
+  const m = new THREE.Mesh(g, M.earth); m.receiveShadow = true; scene.add(m);
+}
+
+export function createBackdrop(scene, M, bounds, levels, terrain) {
+  createEarth(scene, M, terrain);
+  const mats = [], H = 17, X = bounds.x, zS = bounds.apron;
+  const band = (x0, z0, x1, z1, seed, tone, base = 0) => {
     const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, H);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len, uv.getY(i) * H);
     const mat = bambooMat(seed, tone); mats.push(mat);
     const m = new THREE.Mesh(g, mat);
-    m.position.set((x0 + x1) / 2, H / 2, (z0 + z1) / 2); m.rotation.y = Math.atan2(-(z1 - z0), x1 - x0);
+    m.position.set((x0 + x1) / 2, base + H / 2 - 0.6, (z0 + z1) / 2); m.rotation.y = Math.atan2(-(z1 - z0), x1 - x0);
     scene.add(m);
   };
+  // The grove follows the land uphill in steps, on both sides, and closes behind the approach and above the summit.
+  const L1 = levels[0], L2 = levels[1];
+  const steps = [[zS + 14, bounds.fore, -6.5], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
   [[2.2, 1.0], [5.5, 0.82], [10, 0.62]].forEach(([o, tone], i) => {
-    band(-X - o - 12, zN - o, X + o + 12, zN - o, i + 1, tone); band(X + o, zN - o - 12, X + o, zS + o + 12, i + 4, tone);
-    band(-X - o, zS + o + 12, -X - o, zN - o - 12, i + 7, tone); band(X + o + 12, zS + o + 3, -X - o - 12, zS + o + 3, i + 10, tone);
+    steps.forEach(([za, zb, base], k) => {
+      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? -8 : 0);
+      band(x, zb, x, za, i + k * 3 + 1, tone, base + o * 0.09); band(-x, za, -x, zb, i + k * 3 + 20, tone, base + o * 0.09);
+    });
+    band(X + o + 14, zS + o + 2, -X - o - 14, zS + o + 2, i + 40, tone, -7.5);
+    band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3);
   });
-  [[110, 34, 0.5], [165, 58, 2.1], [240, 86, 4.4]].forEach(([R, Hm, ph]) => {
-    const g = new THREE.CylinderGeometry(R, R, 1, 96, 1, true), p = g.attributes.position;
+  // Five peaks stand round the temple, each range fainter than the one before.
+  [[150, 46, 0.5], [215, 74, 2.1], [300, 110, 4.4]].forEach(([R, Hm, ph]) => {
+    const g = new THREE.CylinderGeometry(R, R, 1, 120, 1, true), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const a = Math.atan2(p.getZ(i), p.getX(i));
-      const h = Hm * (0.45 + 0.3 * Math.sin(a * 2 + ph) + 0.16 * Math.sin(a * 5 + ph * 2) + 0.09 * Math.sin(a * 11 + ph * 3));
-      p.setY(i, p.getY(i) > 0 ? Math.max(6, h) : -2);
+      const h = Hm * (0.42 + 0.34 * Math.pow(0.5 + 0.5 * Math.sin(a * 5 + ph), 1.6) + 0.1 * Math.sin(a * 11 + ph * 3) + 0.22 * Math.max(0, -Math.sin(a)));   // higher to the north
+      p.setY(i, p.getY(i) > 0 ? Math.max(8, h) : -4);
     }
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide }));
-    m.position.z = (zN + zS) / 2; scene.add(m);
+    m.position.z = -30; scene.add(m);
   });
   return { update: (t) => { for (const m of mats) m.uniforms.uT.value = t; } };
 }

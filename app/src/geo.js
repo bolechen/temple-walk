@@ -28,4 +28,15 @@ export function mesh(geo, mat, { cast = true, receive = true, ao } = {}) {
   m.castShadow = cast; m.receiveShadow = receive;
   return m;
 }
+// A flight of stone steps with sloped cheeks. Top edge at z = 0, descending toward +z, rising `rise` from y = 0.
+export function stairGeo(w, rise) {
+  const N = Math.max(1, Math.round(rise / 0.18)), sh = rise / N, sd = 0.34, run = sd * N, parts = [];
+  for (let i = 0; i < N; i++) parts.push(box(w, sh * (N - i), sd, 0, (sh * (N - i)) / 2, sd * (i + 0.5)));
+  if (N > 2) for (const sx of [-1, 1]) {
+    const len = Math.hypot(run, rise);
+    parts.push(new THREE.BoxGeometry(0.42, 0.26, len + 0.1).rotateX(Math.atan2(rise, run)).translate(sx * (w / 2 + 0.21), rise / 2 - 0.02, run / 2),
+      box(0.42, rise / 2, run, sx * (w / 2 + 0.21), rise / 4 - 0.1, run / 2));
+  }
+  return { geo: merge(parts), run };
+}
 export const tube = (pts, r) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), pts.length * 2, r, 8, false);

@@ -5,16 +5,18 @@ import { FOG, SUN_DIR } from "./sky.js";
 
 const MAX_SHADE = 40;
 
-export function createGround(scene, shade, censer) {
+export function createGround(scene, shade, censer, paving) {
   const rt = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
   const cam = new THREE.PerspectiveCamera(), texM = new THREE.Matrix4();
-  const boxes = Array.from({ length: MAX_SHADE }, (_, i) => {
-    const r = shade[i]; return r ? new THREE.Vector4((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2, (r.z1 - r.z0) / 2) : new THREE.Vector4(0, 0, -1, -1);
+  const boxes = (list) => Array.from({ length: MAX_SHADE }, (_, i) => {
+    const r = list[i]; return r ? new THREE.Vector4((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2, (r.z1 - r.z0) / 2) : new THREE.Vector4(0, 0, -1, -1);
   });
-  const mat = new THREE.ShaderMaterial({
+  // One paving shader, used by the entrance court (with the mirror) and by the terraces (without).
+  const blank = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1); blank.needsUpdate = true;
+  const pave = (list, mirror, censerAt) => new THREE.ShaderMaterial({
     uniforms: {
-      tRefl: { value: rt.texture }, uReflOn: { value: 1 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
-      uShade: { value: boxes }, uCenser: { value: new THREE.Vector2(censer.x, censer.z) },
+      tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
+      uShade: { value: boxes(list) }, uCenser: { value: censerAt },
     },
     vertexShader: "varying vec3 vWP; void main(){ vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
     fragmentShader: NOISE + /* glsl */`
@@ -24,7 +26,7 @@ export function createGround(scene, shade, censer) {
         vec2 p=vWP.xz;
         // Running-bond slabs, each a slightly different stone.
         // Down the axis runs a path of large square slabs between two lines of kerb stones.
-        bool onAxis=p.y>-.55&&p.y<54., path=onAxis&&abs(p.x)<1.7, kerb=onAxis&&!path&&abs(p.x)<2.02;
+        bool onAxis=p.y>-.95&&p.y<53.9, path=onAxis&&abs(p.x)<1.7, kerb=onAxis&&!path&&abs(p.x)<2.02;
         vec2 sz=path?vec2(1.1333):vec2(1.02,.64); float row=floor(p.y/sz.y);
         vec2 q=vec2(p.x/sz.x+(path?1.5:mod(row,2.)*.5+h21(vec2(row,7.))*.3),p.y/sz.y); vec2 id=floor(q)+(path?vec2(300.,0.):vec2(0.)), f=fract(q);
         float edge=min(min(f.x,1.-f.x)*sz.x,min(f.y,1.-f.y)*sz.y);
@@ -60,8 +62,13 @@ export function createGround(scene, shade, censer) {
         #include <colorspace_fragment>
       }`,
   });
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 260).rotateX(-Math.PI / 2), mat);
+  const mat = pave(shade[0], true, new THREE.Vector2(censer.x, censer.z));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(420, 264).rotateX(-Math.PI / 2).translate(0, 0, -68), mat);   // ends at the head of the approach stair
   scene.add(ground);
+  // The same wet paving on the terraces above: no mirror pass up there, only the sky's sheen.
+  for (const p of paving) {
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(p.x * 2, p.zS - p.zN).rotateX(-Math.PI / 2).translate(0, p.y, (p.zS + p.zN) / 2), pave(shade[p.level], false, new THREE.Vector2(0, 999))));
+  }
 
   const rot = new THREE.Matrix4(), look = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   return {

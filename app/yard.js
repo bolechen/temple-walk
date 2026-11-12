@@ -3,7 +3,7 @@
 import * as THREE from "./v/build/three.module.js";
 import { FOG_DENSITY } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
-import { buildSite, createWalker, SITE } from "./src/site.js";
+import { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } from "./src/site.js";
 import { createSky, FOG } from "./src/sky.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
@@ -11,6 +11,7 @@ import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor } from "./src/quality.js";
 import { strike } from "./src/audio.js";
+import { createBamboo } from "./src/bamboo.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 const Q = new URLSearchParams(location.search);
@@ -27,15 +28,26 @@ renderer.shadowMap.autoUpdate = false;
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(FOG, FOG_DENSITY);
-const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 600);
+const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
 
 const M = createMaterials();
 const site = buildSite(M);
 scene.add(site.root);
 const walker = createWalker(site);
 const sky = createSky(renderer, scene, quality, site.sunFocus);
-const ground = createGround(scene, site.shade, site.censer);
-const backdrop = createBackdrop(scene, SITE);
+const ground = createGround(scene, site.shade, site.censer, site.paving);
+const backdrop = createBackdrop(scene, M, SITE, LEVELS, terrain);
+// Real bamboo where you come close to it: all round the stair you arrive by and the forecourt, and beyond the tea.
+const hill = { zS: LEVELS[0].zN, zN: LEVELS[1].zS };
+createBamboo(scene, [
+  { x0: -30, x1: 30, z0: SITE.fore - 2, z1: APPROACH.end + 6, n: 620 },
+  { x0: -34, x1: -13, z0: SITE.zS + 1, z1: SITE.fore, n: 130 }, { x0: 13, x1: 34, z0: SITE.zS + 1, z1: SITE.fore, n: 130 },
+  { x0: -38, x1: -26, z0: LEVELS[1].zN - 5, z1: hill.zS, n: 150 }, { x0: 26, x1: 38, z0: LEVELS[1].zN - 5, z1: hill.zS, n: 150 },
+], terrain, (x, z) => {
+  if (z > SITE.fore - 0.5) return Math.abs(x) > APPROACH.w / 2 + 0.9;                       // clear of the stair
+  if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
+  return true;
+});
 const props = createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2);
 const post = createPost(renderer, scene, camera, quality);
 
@@ -68,7 +80,7 @@ canvas.addEventListener("pointerup", (e) => {
       document.getElementById("hint").classList.add("gone"); down = null; return;
     }
     const hit = ray.ray.intersectPlane(floor, new THREE.Vector3());
-    const hall = site.hall, toHall = ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < 15.5, onGround = walker.onGround(pos.x, pos.z);
+    const hall = site.hall, toHall = ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < SITE.zS - 4, onGround = walker.onGround(pos.x, pos.z);
     // Tapping the main hall from its court means "go to its door"; the way there, and back, is over the steps.
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
     else if (hit && hit.distanceTo(pos) < 70) route = [hit];
@@ -153,3 +165,4 @@ window.addEventListener("yard-resume", () => {
 // For the test tools.
 window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: renderer.info.render.triangles, calls: renderer.info.render.calls });
 window.__views = Object.keys(site.views);
+window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };

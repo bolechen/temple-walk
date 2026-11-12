@@ -99,6 +99,17 @@ export function createMaterials() {
       col=mix(vec3(.1,.105,.11),vec3(.19,.195,.195),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
       rough_=.5; bump_=fbm3(vWP*14.)*.004; ao_=1.;`),
     gable: procMat("gable", { roughness: 0.9, envMapIntensity: 0.2, side: THREE.DoubleSide }, "col=vec3(.62,.615,.58)*(.75+.3*fbm3(vWP*.9)); ao_=.75;"),
+    // The floor of the grove: dark leaf litter, moss, a scatter of fallen bamboo leaves.
+    earth: procMat("earth", { roughness: 0.95, envMapIntensity: 0.15 }, `
+      float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*2.3+4.);
+      col=mix(vec3(.05,.07,.035),vec3(.11,.13,.055),a); col=mix(col,vec3(.16,.13,.07),smoothstep(.55,.75,b)*.6);
+      float leaf=step(.86,n2(vWP.xz*22.))*step(.5,n2(vWP.xz*5.+2.)); col=mix(col,vec3(.3,.27,.13),leaf*.5);
+      bump_=b*.02;`),
+    // Clipped tea bushes: dense dark leaf, paler new growth along the top.
+    tea: procMat("tea", { roughness: 0.7, envMapIntensity: 0.3 }, `
+      float a=fbm3(vWP*3.), b=fbm3(vWP*14.), far=smoothstep(.02,.2,fwidth(vWP.x)+fwidth(vWP.z));
+      col=mix(vec3(.03,.075,.028),vec3(.075,.16,.05),a); col=mix(col,vec3(.17,.29,.09),smoothstep(.5,.95,vWN.y)*smoothstep(.4,.7,b)*.8);
+      col*=mix(.7+.55*b,1.,far); rough_=.75; bump_=b*.035*(1.-far); ao_=mix(.4,1.,smoothstep(-.3,.7,vWN.y));`),
     // Old red lacquer on the drum barrel, and the hide stretched over its ends.
     lacquer: procMat("lacquer", { roughness: 0.45, envMapIntensity: 0.6 }, `
       float w=fbm3(vWP*3.); col=mix(vec3(.2,.035,.025),vec3(.36,.07,.04),w); col=mix(col,vec3(.09,.05,.04),smoothstep(.55,.8,fbm3(vWP*7.+2.))*.7);

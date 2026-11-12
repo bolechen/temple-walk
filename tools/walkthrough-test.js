@@ -1,7 +1,8 @@
 // Walks the whole visit and fails loudly if any step does not happen:
-//   A. from the approach, straight up the axis with the keyboard: gate house, front court, main court, steps, door
+//   A. from the foot of the approach stair: round the screen wall, through the gate, across the court, in at the door
 //   B. inside: offer incense, leave
 //   C. from the court at real walking speed: tap the hall, arrive at the door, enter
+//   D. round the hall, up both terraces and the stair between the tea rows, to the summit
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app"), out = path.join(__dirname, "out");
@@ -27,13 +28,13 @@ const srv = http.createServer((req, res) => {
   const inHall = () => p.evaluate(() => !document.getElementById("hallView").hidden);
   const until = async (fn, ms, what) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return true; await p.waitForTimeout(1500); } fail(what + " | " + JSON.stringify(await state())); return false; };
 
-  // A. up the axis
+  // A. the whole way in: up the stair from the grove, round the screen wall, through the gate, across the court, into the hall
   await p.goto(base + "?q=low&fast=1"); await ready();
-  await p.keyboard.down("w");
-  let maxH = 0; const seen = [];
-  await until(async () => { const s = await state(); maxH = Math.max(maxH, s.h); seen.push(s.z); return inHall(); }, 240000, "axis walk never reached the hall");
-  await p.keyboard.up("w");
-  console.log("A: z samples", seen.filter((_, i) => i % 3 === 0).join(" "), "max height", maxH);
+  await p.evaluate(() => window.__walk([[0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -5.4]]));
+  let minH = 0, maxH = 0; const seen = [];
+  await until(async () => { const s = await state(); minH = Math.min(minH, s.h); maxH = Math.max(maxH, s.h); seen.push(s.z); return inHall(); }, 300000, "the walk in never reached the hall");
+  console.log("A: z samples", seen.filter((_, i) => i % 3 === 0).join(" "), "height from", minH, "to", maxH);
+  if (minH > -5) fail("did not start at the foot of the approach stair");
   // B. inside
   await p.waitForTimeout(4000); await p.screenshot({ path: path.join(out, "walk-hall.png") });
   if (await p.isVisible("#offer")) { await p.click("#offer"); await p.waitForTimeout(3000); } else fail("offer button not visible");
@@ -43,7 +44,12 @@ const srv = http.createServer((req, res) => {
   // C. tap the hall at walking speed
   await p.goto(base + "?q=low&cam=0.3,2.2,0,0.05"); await ready();
   await p.mouse.click(210, 300);
-  await until(inHall, 240000, "tap on the hall never led inside");
+  await until(inHall, 300000, "tap on the hall never led inside");
+  // D. past the hall, up both terraces, to the porch of the summit pavilion
+  await p.goto(base + "?q=low&fast=1&cam=16.5,0,0,0"); await ready();
+  await p.evaluate(() => window.__walk([[16.5, -23], [0, -23], [0, -30], [13.6, -30], [13.6, -54], [0, -54.5], [0, -91], [0, -94.3]]));
+  await until(async () => (await state()).h > 20.8, 300000, "never reached the summit porch");
+  console.log("D: summit", JSON.stringify(await state()));
   console.log(errs.length ? "errors: " + JSON.stringify(errs) : "PASS");
   await b.close(); srv.close();
   process.exit(errs.length ? 1 : 0);

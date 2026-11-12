@@ -26,7 +26,7 @@ export function createSky(renderer, scene, quality, focus) {
         #include <colorspace_fragment>
       }`,
   });
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), mat);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), mat);
   scene.add(dome);
   const env = new THREE.Scene(); env.add(new THREE.Mesh(dome.geometry, mat));
   const pm = new THREE.PMREMGenerator(renderer);
@@ -34,10 +34,10 @@ export function createSky(renderer, scene, quality, focus) {
 
   // A weak sun through the deck, just enough for form, and the whole sky as one soft light.
   const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);
-  sun.position.copy(SUN_DIR).multiplyScalar(90).add(new THREE.Vector3(focus[0], 0, focus[1]));
+  sun.position.copy(SUN_DIR).multiplyScalar(140).add(new THREE.Vector3(focus[0], 0, focus[1]));
   sun.target.position.set(focus[0], 3, focus[1]);
   sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow, quality.shadow); sun.shadow.radius = 5; sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.05;
-  Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 52, bottom: -52, near: 10, far: 190 });
+  Object.assign(sun.shadow.camera, { left: -50, right: 50, top: 92, bottom: -92, near: 10, far: 320 });
   scene.add(sun, sun.target, new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15));
   return { update: (t) => { mat.uniforms.uT.value = t; } };
 }
