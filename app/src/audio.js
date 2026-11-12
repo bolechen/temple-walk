@@ -1,6 +1,15 @@
 // Sounds made from nothing: a temple bell and a drum, each built from decaying partials,
 // played through a generated reverb. The audio context starts on the first tap, as browsers require.
-let ctx = null, wet = null, dry = null;
+let ctx = null, wet = null, dry = null, tap = null;
+// For the tests: is anything sounding, how loud, and at which frequencies.
+export function listen() {
+  if (!tap) return { state: "off" };
+  const t = new Float32Array(tap.fftSize), f = new Float32Array(tap.frequencyBinCount); tap.getFloatTimeDomainData(t); tap.getFloatFrequencyData(f);
+  let rms = 0; for (const v of t) rms += v * v;
+  const hz = ctx.sampleRate / tap.fftSize, peaks = [];
+  for (let i = 2; i < f.length - 2; i++) if (f[i] > -62 && f[i] > f[i - 1] && f[i] > f[i + 1] && f[i] > f[i - 2] && f[i] > f[i + 2]) peaks.push([Math.round(i * hz), Math.round(f[i])]);
+  return { state: ctx.state, rms: +Math.sqrt(rms / t.length).toFixed(4), peaks: peaks.sort((a, b) => b[1] - a[1]).slice(0, 8) };
+}
 
 function start() {
   if (ctx) return ctx;
@@ -11,6 +20,7 @@ function start() {
   for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
   const conv = ctx.createConvolver(); conv.buffer = ir;
   const comp = ctx.createDynamicsCompressor(); comp.connect(ctx.destination);
+  tap = ctx.createAnalyser(); tap.fftSize = 8192; tap.smoothingTimeConstant = 0; comp.connect(tap);
   dry = ctx.createGain(); dry.gain.value = 0.8; dry.connect(comp);
   wet = ctx.createGain(); wet.gain.value = 0.45; wet.connect(conv); conv.connect(comp);
   return ctx;

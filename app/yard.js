@@ -10,7 +10,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor } from "./src/quality.js";
-import { strike, startAmbience } from "./src/audio.js";
+import { strike, startAmbience, listen } from "./src/audio.js";
 import { createBamboo } from "./src/bamboo.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
@@ -25,6 +25,7 @@ renderer.toneMapping = THREE.AgXToneMapping;      // applied by the output pass
 renderer.toneMappingExposure = 1.12;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.autoUpdate = false;
+renderer.info.autoReset = false;   // so one frame's count covers every pass
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(FOG, FOG_DENSITY);
@@ -41,11 +42,11 @@ const backdrop = createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain)
 const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
 const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
 createBamboo(scene, [
-  { x0: -28, x1: 40, z0: SITE.fore - 2, z1: A.zA1 + 13, n: 900 },
+  { x0: -28, x1: 44, z0: SITE.fore - 2, z1: A.zC1 + 12, n: 1150 },
   { x0: -34, x1: -13, z0: SITE.zS + 1, z1: SITE.fore, n: 130 }, { x0: 13, x1: 34, z0: SITE.zS + 1, z1: SITE.fore, n: 130 },
   { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 },
 ], terrain, (x, z) => {
-  if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1, A.zA0, A.zA1, 0.8) || near(x, z, 3.6, 9.6, A.zA0 - 5.8, A.zA0, 0.5));   // clear of the path and the half-way pavilion
+  if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || near(x, z, 3.6, 9.6, A.zA0 - 5.8, A.zA0, 0.5) || near(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || near(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
 });
@@ -111,6 +112,7 @@ const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0;
+const load = { tris: 0, calls: 0, ms: 0 };
 function frame(now) {
   if (!running) return;
   governor.tick((now - prev) / 1000);
@@ -150,6 +152,7 @@ function frame(now) {
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
   }
+  load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   if (quality.planar > 0) ground.render(renderer, camera);
   post.render(t);
@@ -167,6 +170,7 @@ window.addEventListener("yard-resume", () => {
   if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); }
 });
 // For the test tools.
-window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: renderer.info.render.triangles, calls: renderer.info.render.calls });
+window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
 window.__views = Object.keys(site.views);
+window.__listen = listen; window.__strike = strike;
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };

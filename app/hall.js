@@ -117,6 +117,20 @@ ped.position.set(0, PLATFORM.top, CENTER_Z);
 const buddha = fit(buddhaRaw, BUDDHA_H);
 buddha.position.set(0, PLATFORM.top + PED.h, CENTER_Z);
 scene.add(ped, buddha);
+// Two smaller figures in dark iron sit before the main one, as the old iron Buddhas of the temple sit
+// with it: three in all. They share the main statue's geometry.
+const ironMat = {};
+for (const sx of [-1, 1]) {
+  const fig = buddhaRaw.clone(true);
+  fig.traverse((o) => {
+    if (!o.isMesh) return;
+    ironMat[o.material.uuid] = ironMat[o.material.uuid] || Object.assign(o.material.clone(), { roughness: 0.72, metalness: 0.45 });
+    o.material = ironMat[o.material.uuid]; o.material.color.set(0x57524c); o.castShadow = true;
+  });
+  const g = new THREE.Group(); g.add(fig); g.scale.setScalar(0.44);
+  g.position.set(sx * 1.92, PLATFORM.top, PLATFORM.frontZ - 0.62);
+  scene.add(g); scene.add(contactBlob(1.9, 1.3, PLATFORM.top + 0.005, PLATFORM.frontZ - 0.62).translateX(sx * 1.92));
+}
 
 // ---- Censer (placeholder shape), incense, smoke, dust: hidden from the mirror pass
 const extras = new THREE.Group(); scene.add(extras);

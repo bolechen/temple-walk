@@ -2,6 +2,7 @@
 //   A. from the foot of the approach stair: round the screen wall, through the gate, across the court, in at the door
 //   B. inside: offer incense, leave
 //   C. from the court at real walking speed: tap the hall, arrive at the door, enter
+//   E. the bell and the drum produce sound with the partials they were built from
 //   D. round the hall, up the library and Guanyin terraces and the stair between the tea rows, to the summit
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
@@ -18,7 +19,7 @@ const srv = http.createServer((req, res) => {
   await new Promise((r) => srv.listen(0, r));
   fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`;
-  const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+  const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"] });
   const p = await b.newPage({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1 });
   const errs = [], fail = (m) => { errs.push(m); console.log("FAIL", m); };
   p.on("pageerror", (e) => errs.push(e.stack ? e.stack.slice(0, 400) : e.message));
@@ -30,11 +31,11 @@ const srv = http.createServer((req, res) => {
 
   // A. the whole way in: up the stair from the grove, round the screen wall, through the gate, across the court, into the hall
   await p.goto(base + "?q=low&fast=1"); await ready();
-  await p.evaluate(() => window.__walk([[11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -5.4]]));
+  await p.evaluate(() => window.__walk([[21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -5.4]]));
   let minH = 0, maxH = 0; const seen = [];
   await until(async () => { const s = await state(); minH = Math.min(minH, s.h); maxH = Math.max(maxH, s.h); seen.push(s.z); return inHall(); }, 300000, "the walk in never reached the hall");
   console.log("A: z samples", seen.filter((_, i) => i % 3 === 0).join(" "), "height from", minH, "to", maxH);
-  if (minH > -10) fail("did not start on the lower landing of the approach");
+  if (minH > -14) fail("did not start at the river-view pavilion, at the foot of the path");
   // B. inside
   await p.waitForTimeout(4000); await p.screenshot({ path: path.join(out, "walk-hall.png") });
   if (await p.isVisible("#offer")) { await p.click("#offer"); await p.waitForTimeout(3000); } else fail("offer button not visible");
@@ -47,9 +48,18 @@ const srv = http.createServer((req, res) => {
   await until(inHall, 300000, "tap on the hall never led inside");
   // D. past the hall, up the two terraces, to the porch of the summit pavilion
   await p.goto(base + "?q=low&fast=1&cam=19.5,0,0,0"); await ready();
-  await p.evaluate(() => window.__walk([[19.5, -28], [0, -28], [0, -36], [13.6, -36], [13.6, -60], [0, -61], [0, -69.2], [13, -69.2], [13, -89], [0, -89.5], [0, -120], [0, -123]]));
+  await p.evaluate(() => window.__walk([[19.5, -28], [0, -28], [0, -36], [13.6, -36], [13.6, -60], [0, -61], [0, -69.2], [-13, -69.2], [-13, -89], [0, -89.5], [0, -120], [0, -123]]));
   await until(async () => (await state()).h > 20.8, 300000, "never reached the summit porch");
   console.log("D: summit", JSON.stringify(await state()));
+  // E. the bell really sounds: its lowest partials are in what comes out
+  await p.goto(base + "?q=low&show=court"); await ready();
+  await p.evaluate(() => window.__strike("bell")); await p.waitForTimeout(700);
+  const heard = await p.evaluate(() => window.__listen());
+  console.log("E: bell", JSON.stringify(heard));
+  if (heard.state !== "running" || !(heard.rms > 0.003)) fail("the bell made no sound");
+  else if (!heard.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8)) fail("the bell's fundamental is missing from its sound");
+  await p.evaluate(() => window.__strike("drum")); await p.waitForTimeout(150);
+  console.log("E: drum", JSON.stringify(await p.evaluate(() => window.__listen())));
   console.log(errs.length ? "errors: " + JSON.stringify(errs) : "PASS");
   await b.close(); srv.close();
   process.exit(errs.length ? 1 : 0);

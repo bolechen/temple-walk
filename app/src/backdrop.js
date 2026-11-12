@@ -55,13 +55,13 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   };
   // The grove follows the land uphill in steps, on both sides, and closes behind the approach and above the summit.
   const L1 = levels[0], L2 = levels[1];
-  const steps = [[zS + 14, bounds.fore, -9], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
+  const steps = [[zS + 14, bounds.fore, -13], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
   [[2.2, 1.0], [5.5, 0.82], [10, 0.62]].forEach(([o, tone], i) => {
     steps.forEach(([za, zb, base], k) => {
-      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 10 : 0);
+      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
       band(x, zb, x, za, i + k * 3 + 1, tone, base + o * 0.09); band(-x, za, -x, zb, i + k * 3 + 20, tone, base + o * 0.09);
     });
-    band(X + o + 24, zS + o + 2, -X - o - 24, zS + o + 2, i + 40, tone, -13);
+    band(X + o + 28, zS + o + 2, -X - o - 28, zS + o + 2, i + 40, tone, -19);
     band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3);
   });
   // Five peaks stand round the temple, each range fainter than the one before.

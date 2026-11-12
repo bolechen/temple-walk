@@ -9,7 +9,7 @@ import { box, merge, mesh, smooth, stairGeo } from "./geo.js";
 import { buildHall } from "./building.js";
 import { makePlaque } from "./plaque.js";
 
-export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 96, wallH: 3.0 };
+export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0 };
 // Terraces above the entrance court, as on the mountain: each hall stands higher than the one before.
 // zS is the front edge, where the stairs arrive.
 export const LEVELS = [
@@ -19,18 +19,20 @@ export const LEVELS = [
 ];
 const [T1, T2, TOP] = LEVELS;
 const HILL = { zS: T2.zN, zN: TOP.zS };   // the slope below the summit, crossed only by the stair between the tea rows
-// The way in: a zigzag up through the grove. You start on the lower landing, climb west to the half-way
-// pavilion, turn, and climb north to the forecourt in front of the gate.
+// The way in: the last of the old path up the mountain, a zigzag through the grove. You start at the
+// river-view pavilion, climb north past the ink-stone pool, turn west and climb to the half-way pavilion,
+// turn again and climb north to the forecourt in front of the gate.
 const steps = (rise) => 0.34 * Math.round(rise / 0.18);
-export const APPROACH = { top: SITE.fore, w: 4, rise: 6, rise2: 4.5, run: steps(6), run2: steps(4.5), zA0: SITE.fore + steps(6), zA1: SITE.fore + steps(6) + 4.6, xTurn: 10, end: 90 };
+export const APPROACH = { top: SITE.fore, w: 4, rise: 6, rise2: 4.5, run: steps(6), run2: steps(4.5), zA0: SITE.fore + steps(6), zA1: SITE.fore + steps(6) + 4.6, xTurn: 10, rise3: 4, run3: steps(4) };
 APPROACH.zMid = (APPROACH.zA0 + APPROACH.zA1) / 2; APPROACH.xB0 = APPROACH.xTurn + APPROACH.run2; APPROACH.xB1 = APPROACH.xB0 + 5.6;
+APPROACH.xC = (APPROACH.xB0 + APPROACH.xB1) / 2; APPROACH.zC0 = APPROACH.zA1 + APPROACH.run3; APPROACH.zC1 = APPROACH.zC0 + 5.4; APPROACH.end = APPROACH.zC1 + 0.4;
 
 // Height of the land outside the walls, under the approach, and on the hill.
 export function terrain(x, z) {
   const ax = Math.abs(x), A = APPROACH;
   if (z > A.top - 0.5) {
     const down = A.rise * Math.min(1, Math.max(0, (z - A.top) / A.run)) + A.rise2 * Math.min(1, Math.max(0, (x - A.xTurn) / A.run2)) * smooth(A.top + 3, A.zA0, z);
-    return -down - 0.14 - Math.max(0, z - A.zA1 - 1) * 0.35 + Math.max(0, -x - 3) * 0.05;
+    return -down - 0.14 - A.rise3 * Math.min(1, Math.max(0, (z - A.zA1) / A.run3)) - Math.max(0, z - A.zC1 - 1) * 0.35 + Math.max(0, -x - 3) * 0.05;
   }
   if (ax < SITE.x + 0.2 && z > HILL.zS + 0.05 && z < SITE.zS) return -0.8;                 // inside: the courts cover it
   if (ax < TOP.x && z < HILL.zN && z > SITE.zN) return TOP.y - 0.4;                          // under the summit terrace
@@ -109,7 +111,7 @@ export function buildSite(M) {
   // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts.
   {
     const trunks = [], crowns = []; let s = 5; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    for (const [x, z, h, lvl] of [[-4.7, 46.2, 21, 0], [4.7, 46.2, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-16.5, T1.zS - 22, 20, 1], [17.5, T2.zS - 16, 18, 2]]) {
+    for (const [x, z, h, lvl] of [[-4.7, 46.2, 21, 0], [4.7, 46.2, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
       const y = lvl ? LEVELS[lvl - 1].y : 0;
       trunks.push(new THREE.CylinderGeometry(0.2, 0.42, h, 9).translate(x, y + h / 2, z));
       // Whorls of branches up the trunk, each sweeping out and down, shorter toward the top: the ragged
@@ -152,6 +154,11 @@ export function buildSite(M) {
     walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 });
   }
 
+  // Flanking halls on the terraces, small and plain, as the real temple has them beside the axis.
+  const wing = { xs: [-5.4, -1.8, 1.8, 5.4], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.5, overhang: 1.7, rise: 2.9, G: 2.1, lamps: false, steps: 3.0 };
+  put({ ...wing, plaque: "药师殿" }, [-16.4, T1.zS - 13], 1, 1);
+  put({ ...wing, plaque: "大慧院" }, [16.4, T2.zS - 12], 3, 2);
+
   put({   // on the second terrace: the Guanyin hall, single-eaved and quieter
     xs: [-9, -5.2, -1.8, 1.8, 5.2, 9], zs: [5, 1.7, -1.7, -5], platH: 0.9, platOut: 1.6, colTop: 4.2, overhang: 2.4, rise: 5.0, G: 3.2, steps: 4.6, plaque: "观音殿",
   }, [0, T2.zS - 12.2], 0, 2);
@@ -193,12 +200,23 @@ export function buildSite(M) {
     walk.ramps.push({ x0: -A.w / 2 + pad, x1: A.w / 2 - pad, z0: A.top - 0.4, z1: A.zA0, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
       { x0: A.xTurn - 0.2, x1: A.xB0, z0: A.zA0 + 0.6, z1: A.zA1 - 0.6, base: yB, h: A.rise2, low: [A.xB0, A.zMid], high: [A.xTurn, A.zMid] });
     walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn - 0.2, z0: A.zA0 - 0.5, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 - pad, h: yB });
-    walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 6 });
-    // The half-way pavilion, open on all sides: somewhere to stop and look back down through the grove.
-    put({
-      xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, rise: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
-      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true, plaque: "半山亭",
-    }, [6.6, A.zA0 - 2.75], 0, 0, yA);
+    // Below that, a third flight coming up from the south, from the landing where the walk begins.
+    const yC = yB - A.rise3;
+    stone.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1), box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
+    walk.ramps.push({ x0: A.xC - A.w / 2 + pad, x1: A.xC + A.w / 2 - pad, z0: A.zA1 - 0.4, z1: A.zC0, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
+    walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
+    walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8 });
+    // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
+    const rest = { xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, rise: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
+      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
+    put({ ...rest, plaque: "半山亭" }, [6.6, A.zA0 - 2.75], 0, 0, yA);
+    put({ ...rest, plaque: "望江亭" }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
+    // The pool where, they say, a poet once washed his ink-stone: black water in a stone rim, beside the second landing.
+    const px = A.xB1 + 2.2, pz = A.zMid;
+    stone.push(box(3.3, 3.2, 2.6, px, yB - 1.45, pz), box(0.5, 1.5, 0.3, px + 2.1, yB + 0.75, pz - 0.6), box(1.6, 3.2, 1.0, px + 2.1, yB - 1.6, pz - 0.6));   // a tank of dressed stone standing out of the slope
+    const ink = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 2.0).rotateX(-Math.PI / 2).translate(px, yB + 0.165, pz), new THREE.MeshStandardMaterial({ color: 0x050607, roughness: 0.04, metalness: 0.3, envMapIntensity: 1.5 }));
+    const tag = makePlaque("洗砚池", { vertical: true }); tag.scale.setScalar(0.62); tag.position.set(px + 2.1, yB + 1.0, pz - 0.42); tag.rotation.y = -Math.PI / 2 - 0.5;
+    root.add(ink, tag);
   }
   root.add(mesh(merge(stone), M.stone));
 
@@ -278,11 +296,11 @@ export function buildSite(M) {
   // ---- Named views: one per thing worth looking at. The screenshot tool renders each of them. ----
   const A = APPROACH;
   const views = {
-    arrive: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [1.5, A.zMid + 0.6, 0.9, 0.12], stair: [0, A.zA0 - 0.6, 0, 0.3],
+    arrive: [A.xC, A.zC1 - 1.2, 0, 0.3], pool: [A.xC - 0.5, A.zA1 - 1.2, 0.9, -0.12], second: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [1.5, A.zMid + 0.6, 0.9, 0.12], stair: [0, A.zA0 - 0.6, 0, 0.3],
     forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [15, 61, -0.6, 0.22], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
     court: [0, 33, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
     teahouse: [-5, 16, -1.35, 0.1], chan: [5, 16, 1.35, 0.1], behind: [19, -22, 0.4, 0.14], terrace: [0, T1.zS + 5.6, 0, 0.25],
-    library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], climb: [0, T2.zN + 1, 0, 0.45],
+    library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 11, -1.3, 0.12], dahui: [4, T2.zS - 10, 1.3, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
     tea: [0, HILL.zS - 12, 0.6, 0.12], summit: [0, TOP.zS + 9, 0, 0.42], lookback: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
   };
 
