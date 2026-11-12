@@ -19,7 +19,7 @@ const srv = http.createServer((req, res) => {
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.stack ? e.stack.slice(0, 400) : e.message));
   p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?cam=0.3,2.2,0,0.05`);
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=high&cam=0.3,2.2,0,0.05`);
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 120000 });
   await p.waitForTimeout(1500); await p.screenshot({ path: "walk-1-yard.png" });
   await p.mouse.click(210, 300);                                    // tap the hall

@@ -32,6 +32,26 @@ function roofY(x, z, eps = 0) {
   return EAVE_Y + profile(d) + LIFT * t * t * (1 - smooth(0, 2.6, Math.min(dz, dx)));
 }
 
+// ---- Quality ------------------------------------------------------------------
+// One tier per class of device, as Saltline does: render scale, a pixel budget, MSAA samples,
+// the size of the planar reflection relative to the frame, and the shadow map.
+const TIERS = {
+  low:    { name: "low",    scale: 0.75, budget: 1.0e6, msaa: 0, planar: 0.35, shadow: 1024, bloom: true },
+  medium: { name: "medium", scale: 0.9,  budget: 1.6e6, msaa: 2, planar: 0.5,  shadow: 2048, bloom: true },
+  high:   { name: "high",   scale: 1,    budget: 2.4e6, msaa: 4, planar: 0.5,  shadow: 2048, bloom: true },
+};
+function pickTier() {
+  if (TIERS[Q.get("q")]) return { ...TIERS[Q.get("q")], fixed: true };
+  if (/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) < 900)) return { ...TIERS.low };
+  let gpu = "";
+  try {
+    const gl = document.createElement("canvas").getContext("webgl2"), ext = gl && gl.getExtension("WEBGL_debug_renderer_info");
+    gpu = String(gl ? gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) : "");
+  } catch {}
+  return { ...(/SwiftShader|llvmpipe|Software|Mali|Adreno|PowerVR/i.test(gpu) || (/Intel/i.test(gpu) && !/Arc/i.test(gpu)) ? TIERS.medium : TIERS.high) };
+}
+const quality = pickTier();
+
 // ---- Renderer -----------------------------------------------------------------
 const canvas = document.getElementById("yardGl");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
@@ -198,7 +218,7 @@ scene.add(sky);
 const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);     // weak sun through the deck: just enough for form
 sun.position.copy(SUN_DIR).multiplyScalar(60).add(new THREE.Vector3(0, 0, CZ));
 sun.target.position.set(0, 3, CZ);
-sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 7; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.03;
+sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow, quality.shadow); sun.shadow.radius = 7; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.03;
 Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 22, bottom: -22, near: 10, far: 120 });
 scene.add(sun, sun.target);
 // The whole overcast sky as one soft light, so faces turned away from the sun still read.
@@ -554,10 +574,10 @@ const reflRT = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType
 const reflCam = new THREE.PerspectiveCamera();
 const texM = new THREE.Matrix4();
 const groundMat = new THREE.ShaderMaterial({
-  uniforms: { tRefl: { value: reflRT.texture }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR }, uT: { value: 0 } },
+  uniforms: { tRefl: { value: reflRT.texture }, uReflOn: { value: 1 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR }, uT: { value: 0 } },
   vertexShader: "varying vec3 vWP; void main(){ vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
   fragmentShader: NOISE + /* glsl */`
-    varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun; uniform float uT;
+    varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun; uniform float uT, uReflOn;
     float sdRect(vec2 p, vec2 c, vec2 h){ vec2 d=abs(p-c)-h; return length(max(d,0.))+min(max(d.x,d.y),0.); }
     void main(){
       vec2 p=vWP.xz;
@@ -589,7 +609,7 @@ const groundMat = new THREE.ShaderMaterial({
       vec3 lit=alb*(vec3(.78,.83,.84)*ao+vec3(1.,.93,.82)*max(dot(N,uSun),0.)*.42*ao);
       // Mirror in puddles; on damp stone only a stretched, blurred sheen.
       vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
-      vec3 refl=texture2D(tRefl,ruv,mix(2.6,.0,puddle)).rgb;
+      vec3 refl=uReflOn>.5?texture2D(tRefl,ruv,mix(2.6,.0,puddle)).rgb:uFog*mix(.9,1.06,ndv);   // without the mirror pass: the sky alone
       float kr=fres*mix(.25+damp*.6,1.,puddle)*(1.-joint*.7);
       vec3 c=mix(lit,refl,clamp(kr,0.,1.));
       c=mix(c,uFog,1.-exp(-pow(dist*.009,2.)));
@@ -602,7 +622,7 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(140, 140).rotateX(-Math.PI
 scene.add(ground);
 
 // ---- Post-processing ----------------------------------------------------------
-const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 4 }));
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: quality.msaa }));
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.7, 0.92);
 composer.addPass(bloom);
@@ -686,11 +706,29 @@ addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
 
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
-  const dpr = Math.min(devicePixelRatio, 1.5);
-  renderer.setPixelRatio(dpr); renderer.setSize(w, h, false); composer.setPixelRatio(dpr); composer.setSize(w, h);
-  reflRT.setSize(Math.round(w * dpr * 0.5), Math.round(h * dpr * 0.5));
-  grade.uniforms.uRes.value.set(w * dpr, h * dpr);
+  // Device pixels, scaled by the tier, then capped by its pixel budget.
+  let k = Math.min(devicePixelRatio, 2) * quality.scale;
+  const px = w * h * k * k; if (px > quality.budget) k *= Math.sqrt(quality.budget / px);
+  renderer.setPixelRatio(k); renderer.setSize(w, h, false); composer.setPixelRatio(k); composer.setSize(w, h);
+  if (quality.planar > 0) reflRT.setSize(Math.max(64, Math.round(w * k * quality.planar)), Math.max(64, Math.round(h * k * quality.planar)));
+  groundMat.uniforms.uReflOn.value = quality.planar > 0 ? 1 : 0;
+  bloom.enabled = quality.bloom;
+  grade.uniforms.uRes.value.set(w * k, h * k);
   camera.aspect = w / h; camera.fov = w < h ? 68 : 52; camera.updateProjectionMatrix();
+}
+// No two phones are alike and none can be tested from here, so the page watches its own frame time
+// and gives things up in order of how little they will be missed.
+const governor = { n: 0, sum: 0, level: 0, steps: [
+  () => { quality.scale *= 0.8; quality.budget *= 0.7; },
+  () => { quality.planar = 0; },
+  () => { quality.bloom = false; quality.scale *= 0.85; quality.budget *= 0.8; },
+] };
+function govern(dtReal) {
+  if (quality.fixed || governor.level >= governor.steps.length || frames < 30) return;
+  governor.sum += dtReal; governor.n++;
+  if (governor.n < 45) return;
+  const avg = governor.sum / governor.n; governor.n = 0; governor.sum = 0;
+  if (avg > 0.03) { governor.steps[governor.level++](); resize(); }
 }
 new ResizeObserver(resize).observe(canvas); resize();
 
@@ -712,6 +750,7 @@ function renderReflection() {
 let prev = performance.now(), frames = 0;
 function frame(now) {
   if (!running) return;
+  govern((now - prev) / 1000);
   const dt = Math.min(0.05, (now - prev) / 1000), t = now / 1000; prev = now;
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0), s = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
@@ -751,7 +790,7 @@ function frame(now) {
   for (const b of bamboo) b.material.uniforms.uT.value = tt;
 
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
-  renderReflection();
+  if (quality.planar > 0) renderReflection();
   composer.render();
   if (++frames === 3) document.body.dataset.ready = "1";
   requestAnimationFrame(frame);
@@ -766,4 +805,4 @@ window.addEventListener("yard-resume", () => {
   eyeY = EYE + PLAT.h; for (const k in keys) keys[k] = false;
   if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); }
 });
-window.__yard = () => ({ x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), region: region(pos.x, pos.z), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames });
+window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), region: region(pos.x, pos.z), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames });
