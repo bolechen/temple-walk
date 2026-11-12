@@ -105,8 +105,8 @@ export function buildSite(M) {
   const views = {
     arrive: [0, 50.5, 0, 0.1], gate: [3.2, 46.5, -0.35, 0.22], frontcourt: [0, 36, 0, 0.06], towers: [-4, 33, 0.9, 0.28],
     court: [7.5, 12.5, -0.52, 0.07], eave: [3.5, 2.2, -0.3, 0.42], walk: [14.9, 11, 0, 0.02], corner: [-10, 6, 0.75, 0.2],
-    passage: [12.2, -14, 0, 0.1], rear: [-6, -21.5, 0.3, 0.16], library: [0, -29, 0, 0.2], teahouse: [2, -24, 1.25, 0.1],
-    back: [0, -22, Math.PI, 0.12],
+    passage: [12.2, -14, 0, 0.1], rear: [-6, -21.5, 0.3, 0.16], library: [0, -24, 0, 0.16], teahouse: [2, -24, 1.25, 0.1],
+    back: [-5, -31, Math.PI + 0.35, 0.14],
   };
 
   return { root, walk, shade, hall, views, start: views.arrive, censer: new THREE.Vector3(0, 0, 3.2), sunFocus: [0, -6] };

@@ -34,7 +34,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
 });
 
 export function createBackdrop(scene, bounds) {
-  const mats = [], H = 16, { x: X, zN, zS } = bounds;
+  const mats = [], H = 16, { x: X, zN } = bounds, zS = bounds.apron;   // the grove closes behind the approach, not at the gate
   const band = (x0, z0, x1, z1, seed, tone) => {
     const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, H);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len, uv.getY(i) * H);

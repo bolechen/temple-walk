@@ -100,10 +100,15 @@ function frame(now) {
   const len = Math.hypot(vx, vz);
   if (len > 0) {
     const step = Math.min(f || s ? 1e9 : len, (Q.has("fast") ? 14 : 2.1) * dt); vx = (vx / len) * step; vz = (vz / len) * step;
-    if (!walker.blocked(pos.x + vx, pos.z + vz)) { pos.x += vx; pos.z += vz; }
-    else if (!walker.blocked(pos.x + vx, pos.z)) pos.x += vx;
-    else if (!walker.blocked(pos.x, pos.z + vz)) pos.z += vz;
-    else { target = null; route = []; }
+    // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
+    let moved = false;
+    for (let k = 1; k > 0.1 && !moved; k /= 2) {
+      const sx = vx * k, sz = vz * k;
+      if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; }
+      else if (Math.abs(sx) > 1e-4 && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
+      else if (Math.abs(sz) > 1e-4 && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
+    }
+    if (!moved) { target = null; route = []; }
     // The censer does not stop you: you are eased around it.
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
