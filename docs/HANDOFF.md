@@ -100,6 +100,15 @@ node tools/walkthrough-test.js                  # 全程：上山、进殿、上
 
 网址参数新增：`?season=` `?time=` `?view=`。带 `?shot` `?show` `?cam` 时默认是夏昼、第一视角，保证旧截图可比。
 
+## CI（2026-11-13 修过一次）
+
+`ce429fa` 的部署失败过：那次运行被重跑，第一次尝试留下的 `github-pages` artifact 没被清掉，
+第二次又传了一个，于是 `deploy-pages@v4` 看到两个同名 artifact 而拒绝部署。错误与代码无关。
+
+已删除那两个陈旧 artifact。`.github/workflows/pages.yml` 现在给每次尝试生成带
+`run_id/run_attempt` 的唯一名字、只保留一天，并把这个名字显式传给 `deploy-pages`。
+重跑部署不会再撞名。以后查 CI 先看 `gh run view <id> --log-failed`，别猜是页面代码坏了。
+
 ## 几条容易踩的坑
 
 - `procMat` 的 GLSL 片段会被包进一行 `{ ... }`，**片段末尾不能有 `//` 注释**，否则右花括号被注释掉，着色器编译失败。
