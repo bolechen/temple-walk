@@ -134,8 +134,8 @@ export function buildSite(M) {
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
-    xs: [-14.4, -10.2, -6.2, -2.3, 2.3, 6.2, 10.2, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, rise: 3.4, steps: 6.4, rail: true,
-  }, { xs: [-10.2, -6.2, -2.3, 2.3, 6.2, 10.2], zs: [5.0, 0, -5.0], colTop: 3.4, overhang: 2.8, rise: 6.2, G: 3.6, plaque: { text: "大雄宝殿", gold: true } }, [0, mz]);
+    xs: [-14.4, -10.2, -6.2, -2.3, 2.3, 6.2, 10.2, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, rise: 3.4, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true },
+  }, { xs: [-10.2, -6.2, -2.3, 2.3, 6.2, 10.2], zs: [5.0, 0, -5.0], colTop: 3.4, overhang: 2.8, rise: 6.2, G: 3.6, plaque: { text: "大雄宝殿", gold: true, vertical: true } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
     xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 3.0, steps: 5.2, lamps: false,
