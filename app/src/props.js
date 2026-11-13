@@ -33,6 +33,7 @@ export function createProps(scene, M, at, centre) {
     s.userData = { a, R }; mist.push(s); scene.add(s);
   }
   return {
+    setMood(m) { for (const sp of mist) { sp.material.color.setRGB(...m.fog).multiplyScalar(1.08); sp.material.opacity = 0.5 * m.mist; } },
     update(t, dt, still) {
       for (const sp of mist) if (!still) sp.position.x = Math.cos(sp.userData.a) * sp.userData.R + Math.sin(t * 0.03 + sp.userData.a * 3) * 6;
       for (const sp of smoke) {

@@ -16,6 +16,8 @@ Three outside projects shape this one, each documented in `docs/`:
 - **Saltline** (Felix Rieseberg's generated dock-shooter) is the rendering benchmark. `docs/SALTLINE-TEARDOWN.md` explains its pipeline and ends with the intended order of rendering work here: baked textures, an independent backdrop module, then volumetric fog and light before soft shadows. Its gap table is a snapshot from when the project had a single courtyard; the lines about the module split, blank plaques and missing audio are now stale, so read the conclusions rather than the table as current state.
 - **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/m/` (`static.rushiwowen.co/models/zen-v2/`, kept decompressed here at about 11 MB). That provenance is why the README asks that this repo stay private.
 
+**Start with `docs/HANDOFF.md`**: it states what the user has asked for, in their words and in order, what exists, and what to do next.
+
 ## Commands
 
 No build step, no `package.json`, no dependencies to install for the app itself. Serve `app/` statically:

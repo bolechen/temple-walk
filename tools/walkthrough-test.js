@@ -3,6 +3,7 @@
 //   B. inside: offer incense, leave
 //   C. from the court at real walking speed: tap the hall, arrive at the door, enter
 //   E. the bell and the drum produce sound with the partials they were built from
+//   F. photograph mode returns a mounted card of the framed view
 //   D. round the hall, up the library and Guanyin terraces and the stair between the tea rows, to the summit
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
@@ -60,6 +61,15 @@ const srv = http.createServer((req, res) => {
   else if (!heard.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8)) fail("the bell's fundamental is missing from its sound");
   await p.evaluate(() => window.__strike("drum")); await p.waitForTimeout(150);
   console.log("E: drum", JSON.stringify(await p.evaluate(() => window.__listen())));
+  // F. a photograph: third person, autumn dusk, palms together; the mounted card comes back as an image
+  await p.goto(base + "?q=medium&shot=1&view=third&season=autumn&time=dusk&cam=0,24,0,-0.06"); await ready();
+  await p.evaluate(() => window.__photo(true, { pray: true, aspect: "tall", lens: 46, dist: 5.2 })); await p.waitForTimeout(2500);
+  const card = await p.evaluate(() => window.__capture());
+  fs.writeFileSync(path.join(out, "card.jpg"), Buffer.from(card.url.split(",")[1], "base64"));
+  console.log("F: card", card.w, "x", card.h);
+  if (!(card.w > 1500 && card.h > card.w)) fail("the photograph came back the wrong size");
+  await p.evaluate(() => window.__photo(false));
+  if ((await state()).running !== true) fail("the walk did not resume after the photograph");
   console.log(errs.length ? "errors: " + JSON.stringify(errs) : "PASS");
   await b.close(); srv.close();
   process.exit(errs.length ? 1 : 0);

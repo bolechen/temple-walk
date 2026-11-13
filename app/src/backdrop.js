@@ -1,14 +1,14 @@
 // Everything beyond the walls: bamboo, then three ranges of hills lost progressively in the mist.
 import * as THREE from "../v/build/three.module.js";
-import { NOISE, fogMix } from "./glsl.js";
+import { NOISE, fogMix, U } from "./glsl.js";
 import { FOG } from "./sky.js";
 
 const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
-  uniforms: { uT: { value: 0 }, uFog: { value: FOG }, uSeed: { value: seed }, uTone: { value: tone } },
+  uniforms: { uT: { value: 0 }, uFog: { value: FOG }, uSeed: { value: seed }, uTone: { value: tone }, uFogD: U.uFogD, uLeaf: U.uLeaf, uLight: U.uLight },
   vertexShader: "varying vec2 vU; varying vec3 vWP; void main(){ vU=uv; vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
   fragmentShader: NOISE + /* glsl */`
-    varying vec2 vU; varying vec3 vWP; uniform float uT, uSeed, uTone; uniform vec3 uFog;
+    varying vec2 vU; varying vec3 vWP; uniform float uT, uSeed, uTone, uFogD; uniform vec3 uFog, uLeaf, uLight;
     void main(){
       float x=vU.x+uSeed*37., y=vU.y, sway=sin(uT*.35+x*.2)*.12*smoothstep(4.,13.,y);
       float top=10.5+4.5*fbm2(vec2(x*.16,uSeed))+1.2*n2(vec2(x*1.1,3.));
@@ -24,7 +24,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
       if(max(a,culm)<.5) discard;
       vec3 c=mix(vec3(.025,.06,.03),vec3(.17,.3,.1),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.22,.28,.12)*uTone,culm*(1.-a));
       c*=.55+.6*smoothstep(0.,12.,y);                                  // darker inside the grove near the ground
-      float d=length(vWP-cameraPosition);
+      c*=uLeaf*uLight; float d=length(vWP-cameraPosition);
       ${fogMix("c", "d")}
       c=mix(c,uFog,.3*(1.-uTone));
       gl_FragColor=vec4(c,1.);
@@ -44,7 +44,7 @@ function createEarth(scene, M, terrain) {
 
 export function createBackdrop(scene, M, bounds, levels, terrain) {
   createEarth(scene, M, terrain);
-  const mats = [], H = 17, X = bounds.x, zS = bounds.apron;
+  const mats = [], hills = [], H = 17, X = bounds.x, zS = bounds.apron;
   const band = (x0, z0, x1, z1, seed, tone, base = 0) => {
     const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, H);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len, uv.getY(i) * H);
@@ -72,8 +72,11 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
       const h = Hm * (0.42 + 0.34 * Math.pow(0.5 + 0.5 * Math.sin(a * 5 + ph), 1.6) + 0.1 * Math.sin(a * 11 + ph * 3) + 0.22 * Math.max(0, -Math.sin(a)));   // higher to the north
       p.setY(i, p.getY(i) > 0 ? Math.max(8, h) : -4);
     }
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide }));
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide })); hills.push(m.material);
     m.position.z = -45; scene.add(m);
   });
-  return { update: (t) => { for (const m of mats) m.uniforms.uT.value = t; } };
+  return {
+    update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
+    setMood(m) { for (const h of hills) h.color.setRGB(m.hills[0] * U.uLight.value.r, m.hills[1] * U.uLight.value.g, m.hills[2] * U.uLight.value.b); },
+  };
 }

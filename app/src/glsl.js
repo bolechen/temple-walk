@@ -1,4 +1,12 @@
 // Shader building blocks shared by every procedural material.
+import * as THREE from "../v/build/three.module.js";
+
+// What every shader needs to know about the hour and the season. One object each, shared by reference.
+export const U = {
+  uFogD: { value: 0.009 }, uSnow: { value: 0 }, uLamp: { value: 0 }, uWet: { value: 1 },
+  uAmb: { value: new THREE.Color(0.78, 0.83, 0.84) }, uSunC: { value: new THREE.Color(0.42, 0.39, 0.34) },
+  uLeaf: { value: new THREE.Color(1, 1, 1) }, uLight: { value: new THREE.Color(1, 1, 1) },
+};
 
 export const NOISE = /* glsl */`
 float h21(vec2 p){ p=fract(p*vec2(234.34,435.345)); p+=dot(p,p+34.23); return fract(p.x*p.y); }
@@ -31,4 +39,4 @@ vec3 bumpN(vec3 sp, vec3 N, float h){
 
 // Distance fog, matching THREE.FogExp2 so hand-written shaders sit in the same air.
 export const FOG_DENSITY = 0.009;
-export const fogMix = (c, d) => `${c}=mix(${c},uFog,1.-exp(-pow(${d}*${FOG_DENSITY},2.)));`;
+export const fogMix = (c, d) => `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)));`;   // needs `uniform float uFogD`

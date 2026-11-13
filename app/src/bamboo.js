@@ -47,9 +47,10 @@ export function createBamboo(scene, areas, heightAt, keep) {
       g.applyMatrix4(m4.compose(top, q, one)); leaves.push(g);
     }
   }
-  if (!culms.length) return;
+  if (!culms.length) return { setMood() {} };
   const cm = new THREE.Mesh(mergeGeometries(culms), new THREE.MeshStandardMaterial({ map: culmTexture(), roughness: 0.55, envMapIntensity: 0.4 }));
   cm.castShadow = true;
   const lm = new THREE.Mesh(mergeGeometries(leaves), new THREE.MeshStandardMaterial({ map: leafTexture(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.8, envMapIntensity: 0.25 }));
   scene.add(cm, lm);
+  return { setMood(m) { lm.material.color.setRGB(...m.leaf); cm.material.color.setRGB(...m.leaf); } };
 }

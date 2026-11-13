@@ -1,4 +1,4 @@
-<title>径山寺漫游</title>
+<title>云径禅寺</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Ma+Shan+Zheng&display=swap">
 <style>
   /* Layout: two full-viewport views, the courtyard and the hall interior, joined by a fade through darkness. */
@@ -6,7 +6,8 @@
     color-scheme: dark; --ink: #0b0a09; --paper: #e3e0d6; --ember: #e39a4c; --mist: #c9d3d1;
     --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
   }
-  html, body { height: 100%; }
+  html, body { height: 100%; margin: 0; }
+  [hidden] { display: none !important; }
   body { background: var(--ink); color: var(--paper); font-family: var(--serif); overflow: hidden; position: relative; }
   .view { position: absolute; inset: 0; overflow: hidden; }
   #yardGl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
@@ -16,6 +17,35 @@
     text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; transition: opacity 2s ease;
   }
   .caption.gone { opacity: 0; }
+
+  /* The controls: three small words at the edge, and what they open. The place stays the subject. */
+  .rail { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; justify-items: end; }
+  .chip {
+    font: 500 13px/1 var(--serif); letter-spacing: .3em; text-indent: .3em; color: var(--paper); cursor: pointer;
+    background: rgba(11,10,9,.42); border: 1px solid rgba(227,224,214,.34); padding: 10px 12px; border-radius: 2px; min-width: 44px; min-height: 40px;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .chip[aria-pressed="true"] { background: rgba(227,224,214,.9); color: #14120f; border-color: transparent; }
+  .chip:focus-visible, #shutter:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+  #moodTag { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); margin: 0; font-size: 13px; letter-spacing: .4em; text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; }
+  #moodPanel { position: absolute; right: max(70px, calc(env(safe-area-inset-right, 0px) + 70px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; padding: 10px; background: rgba(11,10,9,.5); border: 1px solid rgba(227,224,214,.22); border-radius: 2px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  #moodPanel > div { display: flex; gap: 6px; }
+  /* Photograph mode: everything leaves but the frame and the few things that shape the picture. */
+  #frame { position: absolute; border: 1px solid rgba(243,239,229,.75); box-shadow: 0 0 0 200vmax rgba(8,8,7,.6); pointer-events: none; display: none; }
+  #photoBar { position: absolute; left: 0; right: 0; bottom: 0; display: none; justify-items: center; gap: 10px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+  #photoBar .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  #photoBar .chip { padding: 8px 10px; min-height: 34px; font-size: 12px; }
+  #shutter { width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(243,239,229,.9); background: rgba(243,239,229,.92); box-shadow: inset 0 0 0 4px rgba(11,10,9,.85); cursor: pointer; }
+  #shutter:disabled { opacity: .4; }
+  #photoClose { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); display: none; }
+  body.photo .rail, body.photo #hint, body.photo #moodTag { display: none; }
+  body.photo #frame { display: block; } body.photo #photoBar { display: grid; } body.photo #photoClose { display: block; }
+  body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
+  /* The print, once taken. */
+  #print { position: absolute; inset: 0; background: rgba(8,8,7,.92); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
+  #print img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+  #print .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  #print a.chip { text-decoration: none; display: inline-grid; place-items: center; }
 
   /* Hall interior: a stage locked to the painted plate's aspect, sized by script to cover the view. */
   #stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; cursor: grab; }
@@ -58,7 +88,31 @@
 
 <div class="view" id="yardView">
   <canvas id="yardGl"></canvas>
+  <p id="moodTag"></p>
   <p class="caption" id="hint">拖动环顾 · 点地面行走 · 点大殿进殿 · 点钟鼓可敲</p>
+  <div class="rail">
+    <button class="chip" id="viewBtn" type="button" aria-label="切换第一视角和第三视角">身外</button>
+    <button class="chip" id="moodBtn" type="button" aria-label="选择季节和时辰">时节</button>
+    <button class="chip" id="photoBtn" type="button" aria-label="拍照">留影</button>
+  </div>
+  <div id="moodPanel" hidden>
+    <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
+    <div><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
+  </div>
+  <div id="frame"></div>
+  <button class="chip" id="photoClose" type="button">收起</button>
+  <div id="photoBar">
+    <div class="row">
+      <button class="chip" data-aspect="tall" aria-pressed="true" type="button">竖幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button>
+      <button class="chip" data-lens="66" aria-pressed="false" type="button">广</button><button class="chip" data-lens="46" aria-pressed="true" type="button">中</button><button class="chip" data-lens="26" aria-pressed="false" type="button">长</button>
+      <button class="chip" id="monkToggle" aria-pressed="true" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button">合掌</button>
+    </div>
+    <button id="shutter" type="button" aria-label="按下快门"></button>
+  </div>
+  <div id="print" hidden>
+    <img id="printImg" alt="刚拍下的照片">
+    <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
+  </div>
 </div>
 <div class="view" id="hallView" hidden>
   <div id="stage">

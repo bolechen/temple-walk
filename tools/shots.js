@@ -22,11 +22,13 @@ const srv = http.createServer((req, res) => {
   p.on("console", (m) => (m.type() === "error" || m.type() === "warning") && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 400)));
   let names = process.argv.slice(2);
   for (let i = 0; i < Math.max(1, names.length); i++) {
-    await p.goto(`${base}?shot=1&q=high&show=${names[i] || "arrive"}`);
+    // A name may carry a season and hour and a view: "court@autumn-dusk@third".
+    const [vname, when = "", vw = ""] = (names[i] || "arrive").split("@"), [season, time] = when.split("-");
+    await p.goto(`${base}?shot=1&q=high&show=${vname}` + (season ? `&season=${season}` : "") + (time ? `&time=${time}` : "") + (vw ? `&view=${vw}` : ""));
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 }).catch((e) => errs.push(String(e).slice(0, 160)));
     if (!names.length) names = await p.evaluate(() => window.__views);
     await p.waitForTimeout(1200);
-    await p.screenshot({ path: path.join(out, names[i] + ".png"), timeout: 240000 });
+    await p.screenshot({ path: path.join(out, names[i].replace(/@/g, "_") + ".png"), timeout: 240000 });
     console.log(names[i], JSON.stringify(await p.evaluate(() => { const y = window.__yard(); return { tris: y.tris, calls: y.calls }; })));
   }
   console.log("errors:", [...new Set(errs)].slice(0, 6));

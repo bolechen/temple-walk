@@ -1,28 +1,39 @@
-// Overcast sky after rain, and the light that comes from it.
+// The sky at any hour, and the light that comes from it.
 import * as THREE from "../v/build/three.module.js";
-import { NOISE } from "./glsl.js";
+import { NOISE, U } from "./glsl.js";
 
+// Shared by reference with every shader that fogs or lights by hand; `setMood` changes them in place.
 export const FOG = new THREE.Color(0.70, 0.745, 0.74);
 // The temple faces south-east down the mountain (+z); morning light comes from the east, front and right.
 export const SUN_DIR = new THREE.Vector3(0.5, 0.68, 0.53).normalize();
 
 export function createSky(renderer, scene, quality, focus) {
+  const u = {
+    uSun: { value: SUN_DIR }, uT: { value: 0 }, uFog: { value: FOG },
+    uZen: { value: new THREE.Color(0.36, 0.52, 0.74) }, uHor: { value: new THREE.Color(0.8, 0.86, 0.9) }, uSunCol: { value: new THREE.Color(1, 0.95, 0.86) },
+    uCloud: { value: 0.9 }, uStars: { value: 0 }, uGlow: { value: 0.6 }, uDisk: { value: 1 },
+  };
   const mat = new THREE.ShaderMaterial({
-    side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { uSun: { value: SUN_DIR }, uT: { value: 0 }, uFog: { value: FOG } },
+    side: THREE.BackSide, depthWrite: false, fog: false, uniforms: u,
     vertexShader: "varying vec3 vD; void main(){ vD=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
     fragmentShader: NOISE + /* glsl */`
-      varying vec3 vD; uniform vec3 uSun, uFog; uniform float uT;
+      varying vec3 vD; uniform vec3 uSun, uFog, uZen, uHor, uSunCol; uniform float uT, uCloud, uStars, uGlow, uDisk;
       void main(){
-        vec3 d=normalize(vD); float up=max(d.y,0.);
-        // A bright milky horizon, a heavier deck overhead, one thinner patch where the sun sits.
+        vec3 d=normalize(vD); float up=max(d.y,0.), s=max(dot(d,uSun),0.);
+        vec3 c=mix(uHor,uZen,pow(smoothstep(0.,.85,up),.55));
+        c+=uSunCol*(pow(s,5.)*.22+pow(s,40.)*.5)*uGlow;                      // the glow round the sun, or the moon
+        // Stars: one to a cell of the sphere, each with its own slow shimmer.
+        vec3 q=d*190.; float h=h31(floor(q));
+        c+=step(.9968,h)*smoothstep(.5,.05,length(fract(q)-.5))*uStars*(.55+.45*sin(uT*1.7+h*90.))*smoothstep(.03,.3,d.y)*vec3(.9,.95,1.)*1.6;
+        float disk=smoothstep(.99935,.99965,dot(d,uSun))*uDisk;
+        // Clouds: a deck that thins to wisps as the weather clears, lit from the side the sun is on.
         vec2 cp=d.xz/(up+.18)*1.1+vec2(uT*.004,0.);
         float deck=fbm2(cp)*.65+fbm2(cp*2.7+3.)*.35;
-        vec3 c=mix(uFog*1.08,vec3(.5,.545,.57),smoothstep(0.,.75,up));
-        c*=mix(.82,1.18,smoothstep(.3,.75,deck));
-        float s=max(dot(d,uSun),0.); c+=vec3(1.,.94,.82)*(pow(s,8.)*.22+pow(s,60.)*.35)*smoothstep(.35,.7,deck+.25);
+        float cov=smoothstep(.95-uCloud*.75,1.2-uCloud*.75,deck+.22)*smoothstep(0.,.16,d.y);
+        vec3 cloud=mix(uHor*.82+uZen*.12,uSunCol*1.05,pow(s,2.5)*.65+.12)*mix(.72,1.12,smoothstep(.3,.8,deck));
+        c=mix(c+uSunCol*disk*3.*(1.-cov),cloud,cov*.92);
         c=mix(uFog,c,smoothstep(-.02,.14,d.y));
-        gl_FragColor=vec4(c,1.);
+        gl_FragColor=vec4(min(c,vec3(6.)),1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
@@ -31,14 +42,30 @@ export function createSky(renderer, scene, quality, focus) {
   scene.add(dome);
   const env = new THREE.Scene(); env.add(new THREE.Mesh(dome.geometry, mat));
   const pm = new THREE.PMREMGenerator(renderer);
-  scene.environment = pm.fromScene(env, 0.02).texture; pm.dispose();
+  let envRT = pm.fromScene(env, 0.02); scene.environment = envRT.texture;
 
-  // A weak sun through the deck, just enough for form, and the whole sky as one soft light.
+  const at = new THREE.Vector3(focus[0], 0, focus[1]);
   const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);
-  sun.position.copy(SUN_DIR).multiplyScalar(170).add(new THREE.Vector3(focus[0], 0, focus[1]));
   sun.target.position.set(focus[0], 3, focus[1]);
   sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow, quality.shadow); sun.shadow.radius = 5; sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.05;
-  Object.assign(sun.shadow.camera, { left: -56, right: 56, top: 124, bottom: -124, near: 10, far: 380 });
-  scene.add(sun, sun.target, new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15));
-  return { update: (t) => { mat.uniforms.uT.value = t; } };
+  Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 128, bottom: -128, near: 10, far: 420 });
+  const hemi = new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15);
+  sun.position.copy(SUN_DIR).multiplyScalar(170).add(at);
+  scene.add(sun, sun.target, hemi);
+
+  return {
+    update: (t) => { u.uT.value = t; },
+    // Everything the hour and the season decide about light. The caller redraws the shadows afterwards.
+    setMood(m) {
+      SUN_DIR.set(...m.sun).normalize(); FOG.setRGB(...m.fog);
+      u.uZen.value.setRGB(...m.zen); u.uHor.value.setRGB(...m.hor); u.uSunCol.value.setRGB(...m.sunCol);
+      u.uCloud.value = m.cloud; u.uStars.value = m.stars; u.uGlow.value = m.glow; u.uDisk.value = m.disk;
+      sun.position.copy(SUN_DIR).multiplyScalar(190).add(at); sun.color.setRGB(...m.sunCol); sun.intensity = m.sunI;
+      hemi.color.setRGB(...m.hemiS); hemi.groundColor.setRGB(...m.hemiG); hemi.intensity = m.hemiI;
+      U.uAmb.value.setRGB(...m.hemiS).multiplyScalar(m.hemiI * 0.82); U.uSunC.value.setRGB(...m.sunCol).multiplyScalar(m.sunI * 0.2);
+      const l = U.uLight.value.setRGB(...m.hemiS).multiplyScalar(m.hemiI * 0.6); l.r += m.sunCol[0] * m.sunI * 0.14; l.g += m.sunCol[1] * m.sunI * 0.14; l.b += m.sunCol[2] * m.sunI * 0.14;
+      scene.fog.color.copy(FOG); scene.fog.density = U.uFogD.value = m.fogD;
+      const next = pm.fromScene(env, 0.02); scene.environment = next.texture; envRT.dispose(); envRT = next;
+    },
+  };
 }

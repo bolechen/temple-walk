@@ -1,6 +1,6 @@
 // Wet flagstones with a real mirror in the puddles.
 import * as THREE from "../v/build/three.module.js";
-import { NOISE, fogMix } from "./glsl.js";
+import { NOISE, fogMix, U } from "./glsl.js";
 import { FOG, SUN_DIR } from "./sky.js";
 
 const MAX_SHADE = 40;
@@ -16,11 +16,11 @@ export function createGround(scene, shade, censer, paving) {
   const pave = (list, mirror, censerAt) => new THREE.ShaderMaterial({
     uniforms: {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
-      uShade: { value: boxes(list) }, uCenser: { value: censerAt },
+      uShade: { value: boxes(list) }, uCenser: { value: censerAt }, uFogD: U.uFogD, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
     },
     vertexShader: "varying vec3 vWP; void main(){ vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
     fragmentShader: NOISE + /* glsl */`
-      varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun; uniform float uReflOn;
+      varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet;
       uniform vec4 uShade[${MAX_SHADE}]; uniform vec2 uCenser;
       void main(){
         vec2 p=vWP.xz;
@@ -39,18 +39,20 @@ export function createGround(scene, shade, censer, paving) {
         alb=mix(alb,vec3(.12,.18,.07),joint*(.35+.65*mossM)); alb=mix(alb,vec3(.03),joint*.3*(1.-mossM));
         alb=mix(alb,vec3(.15,.2,.1),mossM*smoothstep(.12,.0,edge)*.35);
         // Water: one continuous ramp, standing water -> soaked -> damp.
-        float low=fbm2(p*.17+3.)+(tone-.5)*.07-joint*.03;
+        float low=fbm2(p*.17+3.)+(tone-.5)*.07-joint*.03+(uWet-1.)*.34;
         float puddle=smoothstep(.47,.52,low), damp=smoothstep(.22,.47,low);
         alb*=mix(.78,.5,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         float dB=1e3;
         for(int i=0;i<${MAX_SHADE};i++){ vec4 b=uShade[i]; if(b.z<0.) break; vec2 d=abs(p-b.xy)-b.zw; dB=min(dB,length(max(d,0.))+min(max(d.x,d.y),0.)); }
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
+        // Snow lies where no one has walked: thin on the path, deep in the corners.
+        float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.3:0.))*smoothstep(-.2,.7,dB); alb=mix(alb,vec3(.8,.84,.9),sn); puddle*=1.-sn; damp*=1.-sn;
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
         vec2 g=((vec2(n2(p*16.),n2(p*16.+5.))-.5)*.09*(1.-puddle)*nf+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf));
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
         float ndv=max(dot(N,V),0.), fres=.035+.965*pow(1.-ndv,5.);
-        vec3 lit=alb*(vec3(.78,.83,.84)*ao+vec3(1.,.93,.82)*max(dot(N,uSun),0.)*.42*ao);
+        vec3 lit=alb*(uAmb*ao+uSunC*max(dot(N,uSun),0.)*ao);
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.
         vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
         vec3 refl=uReflOn>.5?texture2D(tRefl,ruv,mix(2.6,.0,puddle)).rgb:uFog*mix(.9,1.06,ndv);

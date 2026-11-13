@@ -1,23 +1,27 @@
 // Lit materials whose colour, roughness and relief are computed in the shader, not sampled from files.
 import * as THREE from "../v/build/three.module.js";
-import { NOISE, WOOD, BUMP } from "./glsl.js";
+import { NOISE, WOOD, BUMP, U } from "./glsl.js";
 
 // `body` may write: vec3 col, float rough_, float bump_ (metres), float ao_.
 // Every geometry drawn with these needs a float `ao` attribute (see geo.js): occlusion is baked per vertex
 // by whatever built the geometry, because overcast light casts no shadow to do that job.
-export function procMat(key, params, body) {
+// It may also write vec3 emit_: light of its own. Snow settles on whatever faces the sky unless `snow` is false.
+export function procMat(key, params, body, { snow = true } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   m.onBeforeCompile = (sh) => {
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp;
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nvarying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP)
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP)
       .replace("#include <color_fragment>", `#include <color_fragment>
-        float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb;
+        float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.);
         { ${body} }
+        ${snow ? "float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25); col=mix(col,vec3(.82,.86,.92),sn_); rough_=mix(rough_,.9,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8),sn_);" : ""}
         diffuseColor.rgb=col*ao_;`)
+      .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance+=emit_;")
       .replace("#include <roughnessmap_fragment>", "float roughnessFactor=clamp(rough_,.04,1.);")
       .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n normal=bumpN(-vViewPosition,normal,bump_);");
   };
@@ -84,7 +88,8 @@ export function createMaterials() {
       float hole=zone*(1.-frame)*(1.-bar)*(1.-rail);
       float panel=(1.-zone)*(1.-frame)*smoothstep(.0,.03,min(min(lx-.16,.89-lx),min(q.y-.16,1.02-q.y)));
       col=woodCol(vWP,vec3(9.,1.1,9.))*(1.-.25*panel); col=mix(col,vec3(.01,.009,.008),hole);
-      rough_=mix(.8,1.,hole); bump_=(frame+bar*zone+rail)*.012-hole*.03+panel*.008;`),
+      rough_=mix(.8,1.,hole); bump_=(frame+bar*zone+rail)*.012-hole*.03+panel*.008;
+      emit_=vec3(1.,.5,.17)*uLamp*hole*(.45+.55*n2(vec2(floor(vUv2.x)*.37,2.)));`, { snow: false }),   // emit_: lamplight behind the lattice after dusk
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
       float p=smoothstep(.4,.72,fbm3(vWP*5.)); col=mix(vec3(.16,.125,.085),vec3(.16,.27,.22),p*.75);  // verdigris
@@ -93,7 +98,7 @@ export function createMaterials() {
     // Underside of a roof: boards and rafters. vUv2.x runs along the eave.
     rafters: procMat("rafters", { roughness: 0.9, envMapIntensity: 0.15, side: THREE.BackSide }, `
       float r=abs(fract(vUv2.x/.3)-.5); float raft=1.-smoothstep(.16,.2,r);
-      col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.4,.85,raft); ao_*=.8; bump_=raft*.03;`),
+      col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.4,.85,raft); ao_*=.8; bump_=raft*.03;`, { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),
     ridge: procMat("ridge", { roughness: 0.55, envMapIntensity: 0.8 }, `
       col=mix(vec3(.1,.105,.11),vec3(.19,.195,.195),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
