@@ -54,6 +54,7 @@ cd app && python3 -m http.server 8000
 线上地址：https://bolechen.github.io/temple-walk/ （推送到 `main` 后自动部署）。
 
 参照物 Saltline 的源码对照和我们的差距见 [docs/SALTLINE-TEARDOWN.md](docs/SALTLINE-TEARDOWN.md)。
+水彩纸面、实例笔触和确定性出图的参照见 [docs/WATERCOLOUR-TEARDOWN.md](docs/WATERCOLOUR-TEARDOWN.md)。
 
 ## 几个要知道的事
 

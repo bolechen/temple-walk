@@ -129,7 +129,7 @@ wasm 内嵌、异步 `await init()`、自带 `KinematicCharacterController`（�
 **空白判断**：「一城一寺 + 手作 + 程序生成 + 网页即开 + 统一作者声音」没有人占。
 Kage 是单处滚动摄影，机构项目是记录，Sansa 是单处社交静坐。
 
-### 另外两个技术参照
+### 另外三个技术参照
 
 - **小王子：星辰之旅** <https://littleprince.dev>：审美参照，Unity WebGPU 桌面重资产，
   详见 `docs/LITTLEPRINCE-TEARDOWN.md`。值得抄的是「打不开时也有安静明白的界面」、
@@ -138,6 +138,9 @@ Kage 是单处滚动摄影，机构项目是记录，Sansa 是单处社交静坐
   SparkJS 渲染高斯泼溅、Three.js + Rapier 做交互与物理。这条方向印证了「物理用轻量 wasm、
   不为碰撞引 Unity」，但它是 WebGPU 桌面实验、生成式生产模型，不是当前计划。
   原始 X 链接被登录墙挡住，依据是同期 LinkedIn 与公开转载，引用前请再核。
+- **Watercolour** <https://patch.gg/blendi/watercolour>：three.js 的纸面渲染与实例笔触参照，
+  源码对照见 `docs/WATERCOLOUR-TEARDOWN.md`。值得研究的是拍照时的深度感知纸面、近景植被的 GPU 批次
+  和确定性截图，不是把寺院改成童话水彩，也不是加「走一步染一步」的任务。
 
 ## 四、代码层面：哪些能复用，哪些绑死在径山寺
 
