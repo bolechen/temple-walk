@@ -10,8 +10,9 @@ The guiding principle from the README: 画面精美庄严是第一原则 (a beau
 
 ## Reference projects
 
-Two outside projects are referred to in the docs:
+Three outside projects shape this one. The first two are documented in `docs/`; the third is a taste reference mentioned here only:
 
+- **A Little Prince 3D narrative game** by @Saccc_c (built with Opus 5.5, Tripo and Blender in about 16 days) is the reference for taste: a quiet, painterly place worth lingering in, with a memorable visual identity rather than technical spectacle. It has no teardown in this repo, so do not cite its implementation details as facts here; judge visual changes against the effect, not against an assumed engine or pipeline.
 - **Saltline** (Felix Rieseberg's generated dock-shooter) is the rendering benchmark. `docs/SALTLINE-TEARDOWN.md` explains its pipeline and ends with the intended order of rendering work here: baked textures, an independent backdrop module, then volumetric fog and light before soft shadows. Its gap table is a snapshot from when the project had a single courtyard; the lines about the module split, blank plaques and missing audio are now stale, so read the conclusions rather than the table as current state.
 - **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/m/` (`static.rushiwowen.co/models/zen-v2/`, kept decompressed here at about 11 MB). That provenance is why the README asks that this repo stay private.
 
