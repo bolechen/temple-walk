@@ -229,7 +229,7 @@ function frame(now) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
   if (view === "first" && !photo.on) camera.position.set(pos.x, footY + EYE + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
   else {
-    const ty = footY + 1.12, reach = photo.on ? photo.dist : 4.4; let d = 0.5;
+    const ty = footY + (photo.on ? 0.72 : 1.0), reach = photo.on ? photo.dist : 4.4; let d = 0.5;
     for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
       const cx = pos.x - lx * s2, cz = pos.z - lz * s2, cy = ty - ly * s2;
       if (walker.blocked(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
