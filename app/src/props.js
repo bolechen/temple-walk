@@ -33,15 +33,17 @@ export function createProps(scene, M, at, centre) {
   cloud.frustumCulled = false; scene.add(cloud);
   for (let i = 0; i < 14; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.5, color: 0xdfe6e4, fog: false }));
-    const a = (i / 14) * Math.PI * 2 + 0.4, R = 34 + (i % 3) * 10;
-    s.position.set(Math.cos(a) * R, 5 + (i % 4) * 2.2, centre + Math.sin(a) * R * 1.7); s.scale.set(38, 12, 1);
-    s.userData = { a, R }; mist.push(s); scene.add(s);
+    // Beyond the walls, on either side, all the way up the hill: never over the courts or across a roof, where a
+    // sheet of mist reads as a pale pane hung in front of the building.
+    const a = i * 2.4, x0 = (i % 2 ? 1 : -1) * (44 + (i % 3) * 9);
+    s.position.set(x0, 5 + (i % 4) * 2.2, 84 - i * 17); s.scale.set(38, 12, 1);
+    s.userData = { a, x0 }; mist.push(s); scene.add(s);
   }
   return {
     setMood(m) { for (const sp of mist) { sp.material.color.setRGB(...m.fog).multiplyScalar(1.08); sp.material.opacity = 0.5 * m.mist; } },
     update(t, dt, still, px = 800) {
       su.uPx.value = px;
-      for (const sp of mist) if (!still) sp.position.x = Math.cos(sp.userData.a) * sp.userData.R + Math.sin(t * 0.03 + sp.userData.a * 3) * 6;
+      for (const sp of mist) if (!still) sp.position.x = sp.userData.x0 + Math.sin(t * 0.03 + sp.userData.a * 3) * 6;
       smoke.forEach((u, i) => {
         if (!still) u.t = (u.t + dt * 0.09) % 1;
         const a = u.t, sway = a * a;

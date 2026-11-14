@@ -50,6 +50,13 @@
   `__walk`、`?tour` 这类程序行走只算 diagnostic 证据，不能单独证明真实输入的验收通过；T4 不能推定 Mac 或手机。
   我们在 `docs/t00/acceptance-report.json` 里按同样的口径自报。
 
+之后用户又追加了三句，都已做：「小沙弥需要再精细化」（背上的竹斗笠、肩和袍褶、手指、青皮；程序建模仍是占位，
+骨骼角色是下一步）、「山门两边墙没有封闭，要修吗」（院墙绕钟鼓楼合拢）、「加入空格跳跃功能」（空格跳，E/回车行事）。
+
+**这个仓库现在有两方在同时推 main**：所有者那边（另一位代理）在做楼梯动作、低台下跳、发版和站点同步。规矩在
+`AGENTS.md`、`CONTRIBUTING.md`、`docs/SITE-SYNC.md`：提交用 Conventional Commits；每轮交付更新 `docs/t00/delivery.json`；
+不要碰 `docs/t00/independent-review.json`，不要自称验收通过。推之前先 `git fetch` 再 rebase，冲突时两边的改动都保留。
+
 界面这一轮也改了：操作提示只在用得上的时候出现一行（`app/src/hints.js`），H 键开键位卡；界面文字用楷体
 （霞鹜文楷，`app/f/kai.woff2`）；匾额改繁体楷书。
 

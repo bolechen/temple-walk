@@ -12,15 +12,18 @@
 | D02 工程基线与变更 | [project-baseline.json](project-baseline.json)、[decisions.md](decisions.md)、[CHANGELOG.md](CHANGELOG.md) | 有；目标设备未锁定 |
 | D03 场景与相机 | [scene-spec.json](scene-spec.json)、[camera-manifest.json](camera-manifest.json)；`?show=cam01`…`cam06` | 有 |
 | D04 六机位运行截图 | `evidence/M2-before/`（改之前）、`evidence/M4/CAM-01.jpg`…`CAM-06.jpg` | 有，T4 上的真实页面 |
-| D05 连续行走录像 | `evidence/M4/walkthrough.webm` | 有，webm 而非 mp4，程序行走 |
+| D05 连续行走录像 | `evidence/M4/walkthrough.webm` | 有，webm 而非 mp4，程序行走（diagnostic） |
 | D06 性能证据 | [performance.json](performance.json)、`evidence/M4/frame-times.csv`、`evidence/M4/console.txt` | **只有 T4；目标设备 blocked** |
 | D07 资产与权利 | [asset-register.csv](asset-register.csv) | 有；佛像模型授权待所有者确认 |
 | D08 评审与验收 | [review-log.json](review-log.json)、[acceptance-report.json](acceptance-report.json)、[KNOWN-ISSUES.md](KNOWN-ISSUES.md) | 有；**验收没有全部通过** |
 
-诚实的结论写在 [acceptance-report.json](acceptance-report.json)：哪几项通过、哪几项没有、哪几项因为没有目标设备而无法判定。
+开发方的自报写在 [acceptance-report.json](acceptance-report.json)：哪几项通过、哪几项没有、哪几项因为没有目标设备而无法判定。
+它不是独立验收。独立验收由评审方写入 [independent-review.json](independent-review.json)；每轮交付的摘要在 [delivery.json](delivery.json)，
+由仓库的状态工作流同步到研究站点（见 `../SITE-SYNC.md`）。
 完成定义是「验收通过并有运行证据」，按这个定义 T00 **还没有完成**。
 
 证据怎么来的：截图、录像和帧耗时都由 `tools/gpu-render.sh` 在 Hugging Face 的一块 Tesla T4 上，用无头 Chromium（ANGLE/Vulkan）
 打开真实页面得到，不是离线渲染。它不是目标设备。每份证据标的提交号是出图时 `app/` 的版本。
 
-评审人是同一模型的子代理（各自独立的会话，只拿到截图），不是人。
+`review-log.json` 里的评审人是同一模型的子代理（各自独立的会话，只拿到截图或代码），不是人，也不是独立评审方。
+四个维度各评了一轮，六机位复核了一轮；复核之后的修改没有再复核。

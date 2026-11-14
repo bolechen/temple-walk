@@ -122,7 +122,7 @@ export function buildSite(M) {
   // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts. trees.js grows them;
   // the plan only says where they stand, how tall, and that they are in the way.
   const cedars = [];
-  for (const [x, z, h, lvl] of [[-12.6, 49.5, 21, 0], [12.4, 50.5, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
+  for (const [x, z, h, lvl] of [[-13.6, 53.2, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.solids.push({ x0: x - 0.8, x1: x + 0.8, z0: z - 0.8, z1: z + 0.8 }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
   }

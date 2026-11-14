@@ -536,6 +536,13 @@ window.__listen = listen; window.__strike = strike;
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+// What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
+// see-through. When something in a screenshot will not be explained, ask this before guessing.
+window.__pick = (px, py, n = 6) => {
+  const r = canvas.getBoundingClientRect(), rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(((px - r.left) / r.width) * 2 - 1, -((py - r.top) / r.height) * 2 + 1), camera);
+  return rc.intersectObjects(scene.children, true).filter((h) => h.object.visible).slice(0, n).map((h) => { const m = h.object.material || {}; let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; }
+    return { part, material: m.customProgramCacheKey && /^[a-zA-Z]+$/.test(m.customProgramCacheKey()) ? m.customProgramCacheKey() : m.type, distance: +h.distance.toFixed(2), at: h.point.toArray().map((v) => +v.toFixed(2)), transparent: !!m.transparent, kind: h.object.type }; });
+};
 createGame({
   hints,
   site, walker, scene,

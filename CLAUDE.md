@@ -156,7 +156,8 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__strike(kind)`, `__listen()`. The tests and tools depend on these; keep them when refactoring, and add
+`__capture()`, `__strike(kind)`, `__listen()`, `__hud()`, `__tour()`, and `__pick(x, y)`: what lies under a point of the
+picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
 ## Working notes
@@ -166,4 +167,7 @@ to `__probe` rather than reaching into the page from a test.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`npm run check` guards this).
 - The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.
+- When a shape in a screenshot will not be explained, do not guess at materials: ask `__pick(x, y)` what is there. A pale
+  sheet across the gate's roof was chased through tiles, boards, normals and hills for hours; it was a mist sprite
+  (`props.js`) hanging in front of the building. Mist sheets stay outside the walls.
 - The shadow map is drawn once per mood change (`shadowMap.autoUpdate = false`), so nothing that moves casts a real shadow; the novice stands on a painted one.

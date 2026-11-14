@@ -162,7 +162,7 @@ export function createMaterials() {
       col*=.7+.5*n3(vWP*30.); rough_=mix(.42,.85,p); bump_=fbm3(vWP*24.)*.002;`),
 
     // Underside of a roof: boards and rafters. vUv2.x runs along the eave.
-    rafters: procMat("rafters", { roughness: 0.9, envMapIntensity: 0.15 }, `
+    rafters: procMat("rafters", { roughness: 1, envMapIntensity: 0, metalness: 0 }, `
       float r=abs(fract(vUv2.x/.3)-.5); float raft=1.-smoothstep(.16,.2,r);
       col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.34,.42,raft); ao_=min(ao_,.42); emit_=col*uAmb*.03; rough_=1.;`, { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),
