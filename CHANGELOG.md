@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/bolechen/temple-walk/compare/v0.1.0...v0.1.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* **movement:** keep the novice above stair treads ([96b6e85](https://github.com/bolechen/temple-walk/commit/96b6e851a612318a752f0a61c098fd13ec4c0f5c))
+
 ## 0.1.0 (2026-11-14)
 
 ### 初始版本基线
