@@ -1,8 +1,50 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "建立 Claude 交付、CI 验证、部署与独立评审分离的自动同步流程。",
-  "changes": ["主线变更自动生成 Site 状态", "建筑边缘检查与整改目标见独立评审记录"],
-  "known_issues": ["最终美术与目标设备性能尚未完成独立验收；以对应提交的评审证据为准"],
-  "evidence": ["docs/STAIR-LOCOMOTION.md", "docs/t00/review-log.json" ]
+  "summary": "T00 五区（竹林、石阶、照壁、山门、首院）对齐 J01 阴天雨后参考图的一轮整改，附四个维度的评审与一轮复核、六机位截图、行走录像和 T4 帧记录（均出自提交 31660e4）。开发方自评：未达到验收——A08 未通过，A06 因没有目标设备而 blocked。",
+  "changes": [
+    "基准预设「夏·昼」改为阴天雨后：弱日光、灰天、薄雾，近山做成从雾里起来的林坡",
+    "材质：木色去红压暗并加雨蚀；白墙污痕收到墙脚与压顶下；铺地积水只在洼处、苔只在常潮的缝；瓦面降低反光，瓦的背面按深色木板渲染",
+    "山门改木板壁与带钉版门；院墙绕钟鼓楼合拢；檐下椽子为真实几何；歇山竖直山面不再铺瓦",
+    "半山亭移到平台南侧的石台上并可走入；踏步出挑；照壁加瓦顶窄脊；石灯改经幢；大殿上下檐收紧；匾额改繁体楷书",
+    "柳杉加密压暗并在墙外成林；竹下加矮竹与蕨；竹竿节环变淡",
+    "六个验收机位 cam01…cam06（camera-manifest.json 由总平面生成）；?tour=120x3 行走测量与录像",
+    "操作提示只在需要时出现一行，H 开键位卡；界面改楷体；游戏名「山门之外」",
+    "体验修正：石阶上视线平滑、拖动与鼠标同向、入山提示含换视角；空格跳跃（E/回车行事，触屏有「跃」键）",
+    "小沙弥细化：背上的竹斗笠与系带、肩与袍褶、手指、头顶青影",
+    "性能：降档器先关镜面并在约 45 帧以下动作；上层台地不画镜面；植被排在建筑之后；远处柳杉不长枝干",
+    "开发工具服务器只在 app/ 内解析路径、只监听 127.0.0.1，并有回归测试"
+  ],
+  "known_issues": [
+    "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上平均约 55.2 帧/秒，不到 60",
+    "A02 只有程序行走的录像与自动化测试，没有真人正常速度往返的录像",
+    "评审中仍未关闭的阻断/严重项 22 条，见 docs/t00/review-log.json 的 open_blockers_or_majors",
+    "NEW-01（山门屋角发白）已修但未再复核；本提交之后没有做第三方复核",
+    "斗拱在阴天檐影里读不出体积；山门明间缺门额门槛门扇；山门无平坐",
+    "天空仍偏亮偏平；竹林机位偏暗；远竹仍是平片；院地上仍看得出建筑投影的形状",
+    "佛像与须弥座模型（app/m）没有再分发授权记录；项目代码尚无 LICENSE",
+    "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG"
+  ],
+  "evidence": [
+    "docs/t00/README.md",
+    "docs/t00/acceptance-report.json",
+    "docs/t00/review-log.json",
+    "docs/t00/KNOWN-ISSUES.md",
+    "docs/t00/decisions.md",
+    "docs/t00/camera-manifest.json",
+    "docs/t00/performance.json",
+    "docs/t00/evidence/M4/manifest.json",
+    "docs/t00/evidence/M4/CAM-01.jpg",
+    "docs/t00/evidence/M4/CAM-02.jpg",
+    "docs/t00/evidence/M4/CAM-03.jpg",
+    "docs/t00/evidence/M4/CAM-04.jpg",
+    "docs/t00/evidence/M4/CAM-05.jpg",
+    "docs/t00/evidence/M4/CAM-06.jpg",
+    "docs/t00/evidence/M4/walkthrough.webm",
+    "docs/t00/evidence/M4/frame-times.csv",
+    "docs/t00/evidence/M4/console.txt",
+    "docs/t00/evidence/M2-before/",
+    "docs/t00/asset-register.csv",
+    "docs/STAIR-LOCOMOTION.md"
+  ]
 }

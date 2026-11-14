@@ -1,0 +1,105 @@
+{
+ "scene_id": "T00",
+ "kind": "developer_self_report",
+ "warning": "这是开发方自报，不是独立验收。独立验收由评审方写入 independent-review.json 并绑定完整提交；开发方不自行把它改为通过。",
+ "source_commit": "31660e48de6062f8e8bc186ed55a863e38da27d6",
+ "date": "2026-11-14",
+ "overall": "not_accepted",
+ "overall_note": "按交接包的完成定义（全部必需项通过且证据对应最终版本），T00 没有完成：A01 通过，A02–A05、A07 部分通过，A08 未通过，A06 因没有目标设备而 blocked。",
+ "criteria": [
+  {
+   "id": "A01",
+   "title": "可复现启动",
+   "result": "pass",
+   "finding": "按 RUN.md 起静态服务即可；本提交上 npm run check、单元测试通过，e2e boot 在本机软件渲染下通过；T4 上三轮行走期间页面无错误、无失败请求（evidence/M4/console.txt）。GPU 任务不带 app/m 的佛像模型，那里的 404 被忽略，殿内不在本轮路线上。",
+   "evidence": [
+    "RUN.md",
+    "evidence/M4/console.txt",
+    "evidence/M4/manifest.json"
+   ]
+  },
+  {
+   "id": "A02",
+   "title": "完整往返路线",
+   "result": "partial",
+   "finding": "页面自己沿五区往返行走的连续录像（evidence/M4/walkthrough.webm，无剪辑无瞬移）和 e2e tour 通过；子代理在 Node 里以 2 厘米步长对路线及两侧取样，未见阻挡和高度突变，并修掉了半山亭入口的死缝。但这些都是程序行走，属 diagnostic 证据：没有人用键鼠或触屏以正常速度走一遍并录像。",
+   "evidence": [
+    "evidence/M4/walkthrough.webm",
+    "review-log.json (UX-01…UX-11)",
+    "tests/e2e/run.cjs: tour, stairs, drop, jump"
+   ]
+  },
+  {
+   "id": "A03",
+   "title": "尺度与构造",
+   "result": "partial",
+   "finding": "半山亭已落在石台上，檐下有真实的椽，山门是木板壁和版门，院墙绕钟鼓楼合拢。复核人在 8d237c9 上判为 fail，主因是 NEW-01（山门屋角一片发白的面），该项已在本提交修掉但尚未再复核；仍开着的严重项：斗拱在檐影里读不出、山门明间没有门额门槛门扇、山门无平坐。历史构造（铺作、材份、柱高比例）未按《营造法式》核对。",
+   "evidence": [
+    "evidence/M4/CAM-01…06.jpg",
+    "review-log.json (STR-*, NEW-*)",
+    "KNOWN-ISSUES.md"
+   ]
+  },
+  {
+   "id": "A04",
+   "title": "材质与光照",
+   "result": "partial",
+   "finding": "基准预设已是 J01 阴天雨后；木、石、瓦、墙的明度次序对了，镜面铺地和满缝的苔没有了，雾和泛光不遮缺陷。复核人判 partial：天空仍是最亮最大的平面，竹林两个机位偏暗，墙面污痕和院地投影还不够有来处，斗拱和上段石阶在暗部读不清。",
+   "evidence": [
+    "evidence/M4/CAM-01…06.jpg",
+    "evidence/M2-before/",
+    "review-log.json (ART-*, NEW-*)"
+   ]
+  },
+  {
+   "id": "A05",
+   "title": "地域与原创",
+   "result": "partial",
+   "finding": "成对点亮的石灯换成了不点灯的经幢，匾额改为繁体楷书，没有任何「宋代原貌」的说法；生成参考图与实拍来源分开记在 asset-register.csv。仍是混合时代形制的：带亭盖的香炉、白色方格栏板（均已列入 KNOWN-ISSUES）。佛像模型的再分发授权没有记录。",
+   "evidence": [
+    "asset-register.csv",
+    "review-log.json (STR-03, STR-08, STR-11, STR-12)"
+   ]
+  },
+  {
+   "id": "A06",
+   "title": "性能可测",
+   "result": "blocked",
+   "finding": "目标设备没有锁定，也没有在任何 Mac 或手机上测过。参考数据：T4（无头 Chromium，ANGLE/Vulkan，关垂直同步），1920×1080，DPR 1，高档，预热 10 秒后同一路线 120 秒 × 3 次：平均 55.2, 55.9, 60.8 帧/秒，p95 23.8, 23.8, 21.3 毫秒，载入约 5.0 秒，降档器未动作。p95 在 33.3 毫秒以内，平均不到 60。这不能推定目标设备的表现；子代理估计基础款 M1 在高档约 35–55 帧。测量工具已就绪：?tour=120x3。",
+   "evidence": [
+    "performance.json",
+    "evidence/M4/frame-times.csv",
+    "project-baseline.json"
+   ]
+  },
+  {
+   "id": "A07",
+   "title": "证据对应最终版本",
+   "result": "partial",
+   "finding": "六机位截图、录像、帧记录、控制台记录都出自同一次任务、同一提交 31660e4，清单带 SHA-256（evidence/M4/manifest.json），都是真实页面的运行画面而非离线渲染。不足：截图是由 PNG 转存的 JPEG；录像是 webm 且为程序行走；四个维度的评审是在更早的提交（035efc0、8d237c9）上做的，本提交没有再评审；交付文档本身在随后的提交里。",
+   "evidence": [
+    "evidence/M4/manifest.json",
+    "camera-manifest.json"
+   ]
+  },
+  {
+   "id": "A08",
+   "title": "评审闭环",
+   "result": "fail",
+   "finding": "美术、结构与地域、第一人称体验、性能四个维度都有逐条记录，并对六机位做过一轮复核；但阻断和严重问题没有全部修复并复核通过。仍未关闭的阻断/严重项 22 条：ART-02, ART-04, ART-08, ART-10, ART-14, STR-02, STR-04, UX-01, UX-03, UX-04, UX-05, UX-06, PERF-01, PERF-02, PERF-03, PERF-04, PERF-08, NEW-01, NEW-02, NEW-03, NEW-04, NEW-05。评审人是同一模型的子代理，不是人，也不是独立评审方。",
+   "evidence": [
+    "review-log.json",
+    "KNOWN-ISSUES.md"
+   ]
+  }
+ ],
+ "independent_audit_items": {
+  "source": "https://temple-atlas-research.floralpage64.chatgpt.site/t00-audit.json（针对 c5f69f4 / 035efc0）",
+  "R01": "竹叶与树冠的重复片状感：部分处理（柳杉加密压暗、竹竿节环变淡、竹下加矮植），未到位，见 ART-07 ART-10 NEW-07",
+  "R02": "墙与石材变化偏均一：部分处理（墙污痕收到墙脚和压顶下、苔只在部分缝、踏面踏亮），复核仍说墙面偏均匀，见 ART-05 ART-08",
+  "R03": "中景被雾压低：已处理（雾减薄、曝光和天空重定、近山从雾里起来），复核认可大殿不再被洗白，天空仍偏亮，见 ART-02",
+  "R04": "验收相机未对应交接定义：已处理，cam01…cam06 登记在 camera-manifest.json，CAM-04 是绕壁后的山门，CAM-05 是门内回望",
+  "R05": "入口点击在软件环境超时：未能复现为产品问题；本机 e2e boot 在本提交通过，T4 上三轮行走无错误",
+  "R06": "性能与授权证据：测量工具和 T4 的 120 秒×3 原始帧记录已有，目标设备仍 blocked；资产台账已建，佛像模型授权仍待所有者确认"
+ }
+}
