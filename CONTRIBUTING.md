@@ -44,3 +44,9 @@ BREAKING CHANGE: describe the migration required by the new save format.
 ## 发版
 
 版本由Release Please管理，接入基线为0.1.0。机器人创建的版本PR也使用Conventional Commits标题和squash合并；评审确认后合并，workflow再创建标签与GitHub Release。不要绕过版本PR手改版本或直接打发布标签。详见[发版流程](docs/RELEASING.md)，尤其注意默认GITHUB_TOKEN创建的PR不会自动触发其他Actions。
+
+## 合并后自动清理分支
+
+`Clean merged branches`工作流在PR合并关闭后清理来源分支。只处理本仓库分支，跳过默认分支、目标分支、受保护分支以及合并后已有新增提交的分支；关闭但未合并的PR不会触发删除。删除使用预期SHA的Git lease，检查后出现新提交也会拒绝删除。
+
+代码从默认分支读取，不执行来源分支脚本，令牌仅提供给清理步骤；已删除的分支重复清理会跳过。历史已合并PR可在Actions中手动运行该工作流，输入PR编号，沿用相同检查；无需依赖仓库管理开关。权限或lease拒绝时保留错误记录，不盲目重试。

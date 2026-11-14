@@ -10,3 +10,4 @@
 示例：`fix(camera): correct trackpad look direction`、`feat(loading): 增加首屏加载进度`、`docs: clarify contribution rules`。
 
 - 版本由Release Please管理；版本PR同样使用Conventional Commits标题与squash合并。版本、manifest和变更日志一起维护，操作与权限边界见[docs/RELEASING.md](docs/RELEASING.md)。
+- 已合并来源分支由`Clean merged branches`工作流清理；保留默认/目标/受保护分支及合并后有新提交的分支，不清理未合并PR的分支。
