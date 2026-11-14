@@ -29,6 +29,7 @@ const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
 const hints = createHints({ off: Q.has("shot") }); let arrived = false;   // what is said about the controls, and when
 const quality = pickQuality(Q.get("q"));
+const loading = window.templeLoading;
 
 const canvas = document.getElementById("yardGl");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
@@ -39,7 +40,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.autoUpdate = false;
 renderer.info.autoReset = false;   // so one frame's count covers every pass
 
-loadTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+loading.textures(loadTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy()), loading.textures));
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(FOG, FOG_DENSITY);
 const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
@@ -52,17 +53,21 @@ if (OFF.has("reflect")) quality.planar = 0;
 if (OFF.has("bloom")) quality.bloom = false;
 if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
 
+await loading.step("山路");
 const M = createMaterials();
 const site = buildSite(M);
 part("site", () => scene.add(site.root));
 const walker = createWalker(site);
+await loading.step("山门");
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls); scene.add(h.group); return h; });
 site.places.incense = rooms.places.incense;
+await loading.step("殿堂");
 let hallIn = null;   // the room he is in, when he is in one
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
 const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain));
+await loading.step("山林");
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea.
 const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
 const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
@@ -75,8 +80,10 @@ const bamboo = part("bamboo", () => createBamboo(scene, [
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
 }, { a2c: quality.msaa > 0, fine: quality.name !== "low" }));
+await loading.step("竹林");
 const props = part("props", () => createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2));
 const post = createPost(renderer, scene, camera, quality);
+await loading.step("院落");
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, [
@@ -99,11 +106,14 @@ const glows = [];
   ground.setLamps(glows.map((g) => ({ x: g.position.x, y: g.position.y, z: g.position.z, reach: g.scale.x > 1 ? 1.9 : 0.9 })));
 }
 
+await loading.step("树影");
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
 
+await loading.step("石阶");
 const monk = createMonk(); part("monk", () => scene.add(monk.group));
 
+await loading.step("行走");
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
@@ -356,7 +366,8 @@ function frame(now) {
   if (quality.planar > 0 && !inside) ground.render(renderer, camera);   // there are no puddles indoors
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; document.body.dataset.ready = "1"; } }
+  loading.frame(frames + 1);
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -501,3 +512,5 @@ createGame({
   onTick: (fn) => ticks.push(fn),
 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
+
+await loading.step("山路");

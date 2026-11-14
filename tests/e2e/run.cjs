@@ -10,7 +10,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   boot: { tier: 1, async run(b, base) {
-    const t = await open(b, base, "q=low", { enter: false });
+    const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.
     expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "山门之外" && (await t.page.textContent("#title .sub")).includes("云径禅寺"), "the title is missing");
     expect(!(await t.page.isVisible("#viewBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
@@ -18,6 +18,12 @@ const scenarios = {
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
     await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
     expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("钟楼"), "a new visitor should be pointed at the bell");
+    const loading = await t.page.evaluate(() => ({ values: window.__loadingHistory, hidden: document.getElementById("loading").hidden, value: document.getElementById("loadProgress").value }));
+    expect(loading.values.includes(null), "loading indicator must exist before module initialization");
+    expect(loading.values.some(v => v > 0 && v < 100), "loading must show intermediate real progress");
+    expect(loading.value === 100 && loading.hidden, "loading must finish and leave the picture when ready");
+    const numbers = loading.values.filter(v => v !== null);
+    expect(numbers.every((v, i) => !i || v >= numbers[i - 1]), "loading progress moved backwards");
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
