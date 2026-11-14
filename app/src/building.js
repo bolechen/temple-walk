@@ -231,9 +231,18 @@ export function buildHall(M, opts) {
     const top = new THREE.BufferGeometry();
     top.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
     top.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
-    top.setIndex(idx); top.computeVertexNormals();
+    // Every triangle of the roof is wound to face the sky (and of the boards under it, the ground), whichever way it was laid.
+    const wind = (ix, up) => { for (let i = 0; i < ix.length; i += 3) { const a = ix[i] * 3, b = ix[i + 1] * 3, c = ix[i + 2] * 3, ny = (pos[b + 2] - pos[a + 2]) * (pos[c] - pos[a]) - (pos[b] - pos[a]) * (pos[c + 2] - pos[a + 2]); if (ny > 0 !== up) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; } } return ix; };
+    // The upright step between the end slope and the main roof is not tiled: it is left out, and the boarded gable behind it shows.
+    { const keep = []; for (let i = 0; i < idx.length; i += 3) { const a = idx[i] * 3, b = idx[i + 1] * 3, c = idx[i + 2] * 3, ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if (Math.abs(ny) > 0.08 * Math.hypot(nx, ny, nz)) keep.push(idx[i], idx[i + 1], idx[i + 2]); }
+      idx.length = 0; idx.push(...keep); }
+    top.setIndex(wind(idx, true)); top.computeVertexNormals();
     add(top, M.tile, { ao: null });
-    add(top.clone().translate(0, -0.17, 0), M.rafters, { cast: false });   // boards and rafters seen from below
+    {   // the boards seen from below: the same surface a hand lower, turned over so that it faces the ground and is lit as such
+      const under = top.clone().translate(0, -0.17, 0); wind(under.index.array, false); under.computeVertexNormals();
+      add(under, M.rafters, { cast: false });
+    }
 
     // The rafters themselves, under the boards: round the whole eave, one every third of a metre, from the purlin
     // over the brackets out to the edge, and at each corner a fan of them turning from one side to the next.

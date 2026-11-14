@@ -208,9 +208,9 @@ const scenarios = {
   } },
   // Photograph mode: framing, the three shapes, focus, the mounted card, and back to walking.
   photo: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=medium&shot=1&view=third&season=autumn&time=dusk&cam=0,24,0,-0.06");
+    const t = await open(b, base, "q=low&shot=1&view=third&season=autumn&time=dusk&cam=0,24,0,-0.06");   // the low tier: software rendering draws the mirror and the lens blur together at a frame every few seconds
     await t.page.evaluate(() => document.body.classList.remove("bare"));
-    await t.page.click("#photoBtn"); await t.page.waitForTimeout(2000);
+    await t.page.click("#photoBtn", { timeout: 120000 }); await t.frames(3);
     for (const id of ["frame", "photoBar", "shutter", "photoClose"]) expect(await t.page.isVisible("#" + id), `#${id} missing in photograph mode`);
     expect(!(await t.page.isVisible("#viewBtn")), "the walking controls should leave");
     let p = await t.probe(); expect(p.photo && p.monk, "the novice should be in the picture by default");

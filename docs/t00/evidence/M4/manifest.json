@@ -1,0 +1,64 @@
+{
+ "scene_id": "T00",
+ "commit": "8d237c9",
+ "captured": "2026-11-14T13:26:26.965Z",
+ "how": "tools/gpu-render.sh on a Hugging Face Job: the real page in headless Chromium on an NVIDIA Tesla T4 (ANGLE/Vulkan). Not offline rendering; not the target device.",
+ "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+ "note": "The job does not carry app/m (the statue models), which are indoors and off this route. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450.",
+ "files": [
+  {
+   "file": "CAM-01.jpg",
+   "bytes": 711426,
+   "sha256": "9ec099c15121ab70d3019471cf92cd16015cbeba5a870a00149d28a329f4564f",
+   "kind": "runtime screenshot"
+  },
+  {
+   "file": "CAM-02.jpg",
+   "bytes": 684612,
+   "sha256": "e21e941b30a227f3a096154285f57eb2341fe7d9b84df324ea31badf0dc0d20b",
+   "kind": "runtime screenshot"
+  },
+  {
+   "file": "CAM-03.jpg",
+   "bytes": 487817,
+   "sha256": "72c9fa7edd5b3a016a12699f85188233f0697a46e1241c5ab84e3c08c4304b25",
+   "kind": "runtime screenshot"
+  },
+  {
+   "file": "CAM-04.jpg",
+   "bytes": 351210,
+   "sha256": "de4c346f9e2c79d643823b1363815160610a5c767bdeaa126a39bc295e4da041",
+   "kind": "runtime screenshot"
+  },
+  {
+   "file": "CAM-05.jpg",
+   "bytes": 416907,
+   "sha256": "dd84303767e9f70addad430a133524b51d9bdf4705b6d16ba3fc2806473d54d6",
+   "kind": "runtime screenshot"
+  },
+  {
+   "file": "CAM-06.jpg",
+   "bytes": 464631,
+   "sha256": "db50b8c966d51381ce4ceb7e384d8c0afcf67156a9f3f7df0a77c1095519565c",
+   "kind": "runtime screenshot"
+  },
+  {
+   "file": "console.txt",
+   "bytes": 66,
+   "sha256": "f523ea5464317d374d94c3c0c41bd64f09187a95cf6c0cc1496e210274d9ab21",
+   "kind": "log"
+  },
+  {
+   "file": "frame-times.csv",
+   "bytes": 252770,
+   "sha256": "96d1677163c0c2758d34ca6a9ff47774abf971f5a59ae3a8e7492cdf781ca8df",
+   "kind": "diagnostic"
+  },
+  {
+   "file": "walkthrough.webm",
+   "bytes": 18381593,
+   "sha256": "b26468d916e410ab7b327539adbc061bfefefe6ab4c87cd7c74de195a9854946",
+   "kind": "diagnostic"
+  }
+ ]
+}

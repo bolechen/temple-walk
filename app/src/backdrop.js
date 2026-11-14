@@ -73,11 +73,23 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
       const tops = Hm * (0.022 * Math.sin(a * 83 + ph * 7) + 0.016 * Math.sin(a * 211 + ph) + 0.012 * Math.sin(a * 137 + 1.7));   // the ragged line of tree tops
       p.setY(i, p.getY(i) > 0 ? Math.max(8, h + tops) : -4);
     }
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide, fog: false })); hills.push(m.material);   // each range is mixed toward the mist by hand, so that the nearest still reads as a wooded hill
+    // A hill is not a flat cut-out: it stands in mist at its foot and darkens toward its crest, and the wood on it has a grain.
+    const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: { uTop: { value: new THREE.Color(0.1, 0.16, 0.13) }, uMist: { value: new THREE.Color(0.6, 0.65, 0.63) }, uH: { value: Hm } },
+      vertexShader: "varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
+      fragmentShader: NOISE + `varying vec3 vP; uniform vec3 uTop, uMist; uniform float uH;
+        void main(){ float a=atan(vP.z,vP.x), up=clamp(vP.y/uH,0.,1.);
+          float wood=fbm2(vec2(a*60.,vP.y*.22))*.5+fbm2(vec2(a*190.,vP.y*.7))*.5;
+          float veil=smoothstep(.55,.05,up+(fbm2(vec2(a*9.,up*3.))-.5)*.35);            // mist lying in the folds, thickest low down
+          vec3 c=mix(uTop*(.7+.6*wood),uMist,clamp(veil*.85,0.,1.));
+          gl_FragColor=vec4(c,1.);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }` });
+    const m = new THREE.Mesh(g, mat); hills.push(mat);
     m.position.z = -45; scene.add(m);
   });
   return {
     update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
-    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.color.setRGB(c[0], c[1], c[2]); }); },
+    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
   };
 }

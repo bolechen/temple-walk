@@ -255,6 +255,9 @@ export function buildSite(M) {
   }
   const X = SITE.x;
   for (const sx of [-1, 1]) { wall(sx * 10.9, SITE.zS, sx * 12.8, SITE.zS); wall(sx * 18.2, SITE.zS, sx * X, SITE.zS); }
+  // The bell and drum towers stand inside the enclosure: the wall steps out round each of them, so that from the
+  // forecourt the temple is closed from end to end and the two small roofs rise behind it.
+  for (const sx of [-1, 1]) { const zo = SITE.zS + 3.0; wall(sx * 12.8, SITE.zS, sx * 12.8, zo); wall(sx * 12.8, zo, sx * 18.2, zo); wall(sx * 18.2, zo, sx * 18.2, SITE.zS); }
   for (const sx of [-1, 1]) {
     wall(sx * X, T1.zS, sx * X, SITE.zS); wall(sx * X, T1.zN, sx * X, T1.zS, 1); wall(sx * X, T2.zN, sx * X, T2.zS, 2);
     wall(sx * X, T2.zN, sx * (TOP.stair / 2 + 0.6), T2.zN, 2);                      // the back of the terrace, open where the stair climbs
