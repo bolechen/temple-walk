@@ -1,0 +1,6 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> temple-walk@0.1.1 check
+> node tools/check.cjs
+
+32 files checked, 0 problems
