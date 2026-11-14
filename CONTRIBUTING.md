@@ -44,3 +44,7 @@ BREAKING CHANGE: describe the migration required by the new save format.
 ## 发版
 
 版本由Release Please管理，接入基线为0.1.0。机器人创建的版本PR也使用Conventional Commits标题和squash合并；评审确认后合并，workflow再创建标签与GitHub Release。不要绕过版本PR手改版本或直接打发布标签。详见[发版流程](docs/RELEASING.md)，尤其注意默认GITHUB_TOKEN创建的PR不会自动触发其他Actions。
+
+## 向研究 Site 同步
+
+每轮开发同时更新 `docs/t00/delivery.json` 并随 PR 提交。main 合并后，GitHub 自动将交付、实际 CI、部署和独立评审数据同步给 Site，无需 Site 发布权限。详见[自动同步与证据规则](docs/SITE-SYNC.md)。

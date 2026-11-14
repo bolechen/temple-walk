@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {compose,validateDelivery} from '../../tools/status/build.mjs';
+const sha='a'.repeat(40), old='b'.repeat(40);
+const delivery={schema_version:1,scene_id:'T00',summary:'Development report',changes:[],known_issues:[],evidence:[]};
+const run=(id,head,conclusion)=>({id,head_sha:head,status:'completed',conclusion,html_url:`https://github.com/run/${id}`});
+const base=()=>({sha,delivery,deliveryCommit:old,review:{status:'pass',reviewed_commit:old,reviewer:'external',issues:[],evidence:['old.png']},runs:[],jobs:[]});
+test('old review cannot approve current source',()=>{const d=compose(base());assert.equal(d.independent_review.status,'not_reviewed');assert.equal(d.independent_review.reviewed_commit,old);assert.equal(d.deployment.status,'not_current');assert.equal(d.verification.status,'pending');});
+test('failed current CI preserves last deployed commit',()=>{const b=base();b.runs=[run(2,sha,'failure'),run(1,old,'success')];const d=compose(b);assert.equal(d.verification.conclusion,'failure');assert.equal(d.deployment.sha,old);assert.equal(d.deployment.status,'not_current');});
+test('successful pipeline does not imply independent acceptance',()=>{const b=base();b.runs=[run(3,sha,'success')];const d=compose(b);assert.equal(d.deployment.status,'deployed');assert.equal(d.independent_review.status,'not_reviewed');});
+test('job evidence must belong to the selected run',()=>{const b=base();b.runs=[run(3,sha,'failure')];b.jobs=[{steps:[{name:'Every script parses',conclusion:'success'}]}];b.jobs.run_id=2;assert.equal(compose(b).verification.checks.syntax,'pending');b.jobs.run_id=3;assert.equal(compose(b).verification.checks.syntax,'success');});
+test('developer record rejects missing lists',()=>assert.throws(()=>validateDelivery({...delivery,known_issues:null})));
+test('invalid source SHA is rejected',()=>assert.throws(()=>compose({...base(),sha:'main'})));

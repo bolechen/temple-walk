@@ -208,3 +208,7 @@ Claude Code调用 `/temple-review`，Codex调用 `$temple-review`。其他项目
 ## 版本与发版
 
 使用 [Release Please](.github/workflows/release-please.yml) 根据 Conventional Commits 维护版本PR、`CHANGELOG.md`、标签与GitHub Release，以 **0.1.0** 接入。当前版本见 [package.json](package.json)，操作与权限说明见 [发版流程](docs/RELEASING.md)。版本PR仍使用 squash 合并；GitHub Pages试玩部署独立运行。
+
+### 开发交付与研究站联动
+
+Claude 等开发者随 PR 更新交付记录；合并后 GitHub Actions 自动生成状态，研究 Site 读取最新交付、测试、部署和独立评审。测试通过不等于美术验收通过。详见[联动流程](docs/SITE-SYNC.md)。

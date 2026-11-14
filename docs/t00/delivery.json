@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "scene_id": "T00",
+  "summary": "建立 Claude 交付、CI 验证、部署与独立评审分离的自动同步流程。",
+  "changes": ["主线变更自动生成 Site 状态", "建筑边缘检查与整改目标见独立评审记录"],
+  "known_issues": ["最终美术与目标设备性能尚未完成独立验收；以对应提交的评审证据为准"],
+  "evidence": ["docs/STAIR-LOCOMOTION.md", "docs/t00/review-log.json" ]
+}

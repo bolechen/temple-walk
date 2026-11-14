@@ -1,0 +1,9 @@
+{
+  "scene_id": "T00",
+  "status": "not_reviewed",
+  "reviewed_commit": null,
+  "reviewer": null,
+  "evidence": [],
+  "issues": [],
+  "note": "自动测试通过不构成完整独立验收；历史意见保留于 review-log.json。"
+}
