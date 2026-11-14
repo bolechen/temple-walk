@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Follow the shared [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md): use squash merges and Conventional Commits for new commits, PR titles and final squash titles.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this is
