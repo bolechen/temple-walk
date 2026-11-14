@@ -82,16 +82,16 @@ function sheet(kind) {
     };
     for (let k = 0; k < 7; k++) fork(N / 2, N / 2, (k / 7) * 6.283 + rnd() * 0.5, 250 + rnd() * 90, 7, 3);
   } else {
-    const leaf = kind === "maple" ? maple : kind === "ginkgo" ? ginkgo : blossom, size = kind === "blossom" ? 21 : kind === "maple" ? 34 : 27;
+    const leaf = kind === "maple" ? maple : kind === "ginkgo" ? ginkgo : blossom, size = kind === "blossom" ? 17 : kind === "maple" ? 25 : 21;
     // A spray seen from its side: twigs running out from the middle, leaves along them and thick between them.
     const twigs = [];
-    for (let k = 0; k < 8; k++) {
-      let a = (k / 8) * 6.283 + rnd() * 0.5, px = N / 2, py = N / 2; x.strokeStyle = "rgb(104,88,74)";
-      for (let i = 0; i < 9; i++) { const qx = px + Math.cos(a) * 50, qy = py + Math.sin(a) * 50; x.lineWidth = 6 - i * 0.55; x.beginPath(); x.moveTo(px, py); x.lineTo(qx, qy); x.stroke(); px = qx; py = qy; a += (rnd() - 0.5) * 0.5; twigs.push([px, py, a]); }
+    for (let k = 0; k < 9; k++) {
+      let a = (k / 9) * 6.283 + rnd() * 0.5, px = N / 2, py = N / 2; x.strokeStyle = "rgb(104,88,74)";
+      for (let i = 0; i < 9; i++) { const qx = px + Math.cos(a) * 50, qy = py + Math.sin(a) * 50; x.lineWidth = 4.5 - i * 0.42; x.beginPath(); x.moveTo(px, py); x.lineTo(qx, qy); x.stroke(); px = qx; py = qy; a += (rnd() - 0.5) * 0.5; twigs.push([px, py, a]); }
     }
     const spots = [];
-    for (const [px, py, a] of twigs) for (let j = 0; j < (kind === "blossom" ? 5 : 4); j++) spots.push([px + (rnd() - 0.5) * 74, py + (rnd() - 0.5) * 74, a + (rnd() < 0.5 ? -1 : 1) * (0.5 + rnd() * 0.9) + Math.PI / 2]);
-    for (let i = 0; i < (kind === "blossom" ? 190 : 120); i++) { const rr = Math.pow(rnd(), 0.75) * 470, aa = rnd() * 6.283; spots.push([N / 2 + Math.cos(aa) * rr, N / 2 + Math.sin(aa) * rr, rnd() * 6.283]); }
+    for (const [px, py, a] of twigs) for (let j = 0; j < (kind === "blossom" ? 8 : 7); j++) spots.push([px + (rnd() - 0.5) * 70, py + (rnd() - 0.5) * 70, a + (rnd() < 0.5 ? -1 : 1) * (0.5 + rnd() * 0.9) + Math.PI / 2]);
+    for (let i = 0; i < (kind === "blossom" ? 330 : 240); i++) { const rr = Math.pow(rnd(), 0.75) * 470, aa = rnd() * 6.283; spots.push([N / 2 + Math.cos(aa) * rr, N / 2 + Math.sin(aa) * rr, rnd() * 6.283]); }
     for (let i = spots.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
     for (const [px, py, rot] of spots) if (Math.hypot(px - N / 2, py - N / 2) < 488) at(px, py, rot, () => leaf(size * (0.72 + rnd() * 0.56)));
   }
@@ -107,7 +107,7 @@ const COLOURS = {
 
 // A crown material: cards that take their light as parts of one round mass, let the low sun through, hold snow,
 // keep their leaves at a distance (a sheet's thin places would otherwise vanish), and stir in the air.
-function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
+export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
   const m = new THREE.MeshStandardMaterial({ map, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.82, envMapIntensity: 0.25, vertexColors: true, alphaToCoverage: !!a2c });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, { uSnow: U.uSnow, uSunC: U.uSunC, uT: U.uT, uSunDir: { value: SUN_DIR } });
@@ -131,13 +131,13 @@ function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
 }
 
 // A tapering tube through `pts`, smoothed. Radius runs from r0 to r1.
-function limb(pts, r0, r1, radial = 7) {
-  const curve = new THREE.CatmullRomCurve3(pts), n = Math.max(2, (pts.length - 1) * 3), pos = [], nor = [], uv = [], idx = [];
+function limb(pts, r0, r1, radial = 7, flare = 0) {
+  const curve = new THREE.CatmullRomCurve3(pts), n = Math.max(2, (pts.length - 1) * (flare ? 6 : 3)), len = curve.getLength(), pos = [], nor = [], uv = [], idx = [];
   const T = new THREE.Vector3(), Nn = new THREE.Vector3(), B = new THREE.Vector3(), P = new THREE.Vector3(), ref = new THREE.Vector3();
   for (let i = 0; i <= n; i++) {
     const t = i / n; curve.getPoint(t, P); curve.getTangent(t, T);
     ref.set(Math.abs(T.y) > 0.9 ? 1 : 0, Math.abs(T.y) > 0.9 ? 0 : 1, 0); Nn.crossVectors(T, ref).normalize(); B.crossVectors(T, Nn);
-    const r = r0 + (r1 - r0) * t;
+    const r = (r0 + (r1 - r0) * t) * (1 + flare * Math.exp(-(t * len) / 0.4) * (1 + 0.18 * Math.sin(i * 1.7)));   // spreading into roots where it meets the ground
     for (let k = 0; k <= radial; k++) { const a = (k / radial) * 6.283, cx = Math.cos(a), sx = Math.sin(a); nor.push(Nn.x * cx + B.x * sx, Nn.y * cx + B.y * sx, Nn.z * cx + B.z * sx); pos.push(P.x + (Nn.x * cx + B.x * sx) * r, P.y + (Nn.y * cx + B.y * sx) * r, P.z + (Nn.z * cx + B.z * sx) * r); uv.push(k / radial, t); }
   }
   for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
@@ -160,25 +160,30 @@ export function createTrees(scene, M, spots, opts = {}) {
     g.setAttribute("color", new THREE.BufferAttribute(col, 3)); list.push(g);
   };
   const clump = (kind, p, centre, w, n = 5) => {
-    const d = p.distanceTo(centre), shade = 0.62 + 0.38 * Math.min(1, d / 2.6);
+    const d = p.distanceTo(centre), shade = 0.62 + 0.38 * Math.min(1, d / 2.6); n = Math.round(n * 1.7);
     for (let i = 0; i < n; i++) {
-      q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); const s = w * (0.8 + rnd() * 0.45), at = p.clone().add(V((rnd() - 0.5) * w * 0.5, (rnd() - 0.5) * w * 0.4, (rnd() - 0.5) * w * 0.5));
+      if (rnd() < 0.72) q.setFromEuler(e.set(-Math.PI / 2 + (rnd() - 0.5) * 0.9, rnd() * 6.3, (rnd() - 0.5) * 0.5, "YXZ")); else q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1, "XYZ"));
+      const s = w * (0.55 + rnd() * 0.35), at = p.clone().add(V((rnd() - 0.5) * w * 0.75, (rnd() - 0.5) * w * 0.5, (rnd() - 0.5) * w * 0.75));
       card(cards[kind], new THREE.PlaneGeometry(s, s), at, centre, shade);
       if (i < 2) { q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); card(cards.twig, new THREE.PlaneGeometry(s * 1.1, s * 1.1), at, centre, 1); }
     }
   };
-  const grow = (pts, r0, r1, radial) => { const l = limb(pts, r0, r1, radial); wood.push(l.geo); return l.curve; };
+  const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
+  // The fine wood at the end of a branch: a few twigs fanning out, which is what a bare tree is made of.
+  const twigs = (p, dir, n = 3, reach = 0.6) => { for (let i = 0; i < n; i++) { const tip = p.clone().add(V(dir.x * reach + jit(reach), reach * (0.2 + rnd() * 0.6), dir.z * reach + jit(reach))); grow([p, p.clone().lerp(tip, 0.5).add(V(jit(0.12), 0.05, jit(0.12))), tip], 0.011, 0.004, 4); } };
   const jit = (k) => (rnd() - 0.5) * k;
 
   for (const [x, y, z, kind, h] of spots) {
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
       const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t);
-      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 9);
-      for (let by = h * 0.26; by < h * 0.985; by += 0.62) {
-        const t = by / h, c = axis(t), len = (1 - t) * (2.6 + h * 0.07) + 0.75, n = 5 + ((rnd() * 2) | 0), a0 = rnd() * 6.283;
+      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, 0.85);
+      for (let by = h * 0.42; by < h * 0.985; by += 0.5) {
+        const t = by / h, c = axis(t), len = (1 - t) * (2.5 + h * 0.075) * (0.75 + 0.5 * Math.sin(by * 1.3 + x)) + 0.8, n = 4 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
-          const a = a0 + (k / n) * 6.283 + jit(0.4), droop = 1.05 + jit(0.3), l = len * (0.75 + rnd() * 0.45), w = l * (0.7 + rnd() * 0.2), far = V(Math.sin(a), 0, Math.cos(a));
+          if (rnd() < 0.14) continue;   // a gap where a bough was lost
+          const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 1.0 + jit(0.4), l = len * (0.6 + rnd() * 0.7), w = l * (0.6 + rnd() * 0.25), far = V(Math.sin(a), 0, Math.cos(a));
+          if (k % 2 === 0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
           // a bough: hinged at the trunk, reaching out and down
           q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
           card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
@@ -192,12 +197,13 @@ export function createTrees(scene, M, spots, opts = {}) {
     const tall = kind === "ginkgo", top = y + h, centre = V(x, y + h * (tall ? 0.62 : 0.7), z), r0 = 0.09 + h * 0.019;
     if (tall) {
       // Ginkgo: one leader, and boughs that climb away from it.
-      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 8);
+      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 12, 0.7);
       let a = rnd() * 6.283;
       for (let t = 0.26; t < 0.97; t += 0.058) {
         a += 2.4 + jit(0.5); const from = lead.getPoint(t), reach = h * (0.36 - t * 0.24) * (0.8 + rnd() * 0.4), rise = reach * (0.75 + rnd() * 0.5);
         const tip = from.clone().add(V(Math.cos(a) * reach, rise, Math.sin(a) * reach)), mid = from.clone().lerp(tip, 0.5).add(V(Math.cos(a) * reach * 0.12, -rise * 0.14, Math.sin(a) * reach * 0.12)).add(V(jit(0.3), 0, jit(0.3)));
         const bough = grow([from, mid, tip], 0.03 + (1 - t) * 0.07, 0.012, 5);
+        twigs(tip, V(Math.cos(a), 0, Math.sin(a)), 3, 0.5);
         for (const u of [0.45, 0.7, 0.95]) { const p = bough.getPoint(u); clump(kind, p, centre, 0.95 + rnd() * 0.5, 4);
           if (u < 0.9) { const side = p.clone().add(V(Math.cos(a + 1.3 * (rnd() < 0.5 ? -1 : 1)) * reach * 0.4, reach * 0.22, Math.sin(a + 1.3) * reach * 0.4)); grow([p, p.clone().lerp(side, 0.5).add(V(0, -0.08, 0)), side], 0.018, 0.008, 4); clump(kind, side, centre, 0.9 + rnd() * 0.4, 4); } }
       }
@@ -205,17 +211,17 @@ export function createTrees(scene, M, spots, opts = {}) {
     } else {
       // The spreading tree: a short crooked trunk that forks low, long boughs that reach out before they rise.
       const forkAt = V(x + jit(0.6), y + h * (0.3 + rnd() * 0.07), z + jit(0.6));
-      grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 9);
+      grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 12, 0.8);
       const n = 5, a0 = rnd() * 6.283;
       for (let i = 0; i < n; i++) {
         const a = a0 + (i / n) * 6.283 + jit(0.5), reach = h * (0.36 + rnd() * 0.16), rise = h * (0.34 + rnd() * 0.2);
         const tip = forkAt.clone().add(V(Math.cos(a) * reach, rise, Math.sin(a) * reach)), elbow = forkAt.clone().add(V(Math.cos(a + jit(0.5)) * reach * 0.5, rise * 0.3, Math.sin(a + jit(0.5)) * reach * 0.5));
-        const bough = grow([forkAt, elbow, tip.clone().lerp(elbow, 0.35).add(V(jit(0.4), rise * 0.12, jit(0.4))), tip], r0 * 0.5, 0.02, 6);
+        const bough = grow([forkAt, elbow, tip.clone().lerp(elbow, 0.35).add(V(jit(0.4), rise * 0.12, jit(0.4))), tip], r0 * 0.5, 0.02, 8); twigs(tip, V(Math.cos(a), 0, Math.sin(a)), 4, 0.6);
         for (const u of [0.42, 0.6, 0.78, 0.97]) {
           const p = bough.getPoint(u); clump(kind, p, centre, 1.05 + rnd() * 0.55, 5);
           if (u < 0.9) {   // a side branch, and a twig off that
             const b = a + (rnd() < 0.5 ? -1 : 1) * (0.7 + rnd() * 0.6), side = p.clone().add(V(Math.cos(b) * reach * 0.45, rise * 0.16 + jit(0.4), Math.sin(b) * reach * 0.45));
-            const sb = grow([p, p.clone().lerp(side, 0.5).add(V(jit(0.25), -0.1, jit(0.25))), side], 0.035, 0.012, 5); clump(kind, side, centre, 1.0 + rnd() * 0.5, 5);
+            const sb = grow([p, p.clone().lerp(side, 0.5).add(V(jit(0.25), -0.1, jit(0.25))), side], 0.035, 0.012, 5); clump(kind, side, centre, 1.0 + rnd() * 0.5, 5); twigs(side, V(Math.cos(b), 0, Math.sin(b)), 3, 0.55);
             const mid = sb.getPoint(0.55), tw = mid.clone().add(V(jit(1.3), 0.5 + rnd() * 0.5, jit(1.3))); grow([mid, tw], 0.014, 0.006, 4); clump(kind, tw, centre, 0.9 + rnd() * 0.4, 4);
           }
         }
