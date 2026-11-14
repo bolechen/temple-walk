@@ -141,7 +141,17 @@ let down = null;
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
 canvas.addEventListener("pointerdown", () => startAmbience(() => ({ grove: grove() })), { once: true });
 const touches = new Map(); let pinch = 0;
-const zoom = (k) => { if (photo.on) photo.dist = THREE.MathUtils.clamp(photo.dist * k, 1.6, 16); };
+let reachWant = 6.2;   // how far behind him the eye stands; the wheel changes it
+const zoom = (k) => { if (photo.on) photo.dist = THREE.MathUtils.clamp(photo.dist * k, 1.6, 16); else reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11); };
+// With a mouse the view is held the way such games hold it: a click on the picture takes the pointer, moving the
+// mouse looks round, Esc lets go. A touch still drags to look and taps to walk.
+const locked = () => document.pointerLockElement === canvas;
+const joy = { x: 0, y: 0 };
+document.addEventListener("pointerlockchange", () => document.body.classList.toggle("held", locked()));
+document.addEventListener("mousemove", (e) => {
+  if (!locked()) return; const orbit = view === "third" || photo.on;
+  yaw += e.movementX * 0.0026; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022, orbit ? -0.5 : -0.75, orbit ? 1.0 : 0.5);
+});
 canvas.addEventListener("pointerdown", (e) => {
   touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing";
   if (touches.size === 2) { const [a, b] = [...touches.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); down = null; return; }
@@ -173,6 +183,14 @@ function pickFloor() {
 }
 canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = "grab"; lift(e);
+  if (e.pointerType === "mouse" && !photo.on && down && !down.moved) {
+    if (!locked()) { canvas.requestPointerLock?.(); startAmbience(() => ({ grove: grove() })); document.getElementById("hint").classList.add("gone"); }
+    else {   // held: a click strikes what the middle of the picture rests on
+      ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
+      if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
+    }
+    down = null; return;
+  }
   if (down && !down.moved && performance.now() - down.t < 600 && photo.on) {   // in a photograph, a tap chooses what is sharp
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
@@ -201,7 +219,26 @@ canvas.addEventListener("pointerup", (e) => {
   down = null;
 });
 const keys = {};
-addEventListener("keydown", (e) => { keys[e.key.toLowerCase()] = true; });
+addEventListener("keydown", (e) => {
+  const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  const press = (id) => { const el = document.getElementById(id); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
+  // The keys such games use: E to do what is offered here, V to change the view, B for the book, P to photograph, T for the season and hour.
+  if (k === "e" || k === "enter" || k === " ") { if (press("slipTake") || press("act") || press("enterBtn") || press("offer")) e.preventDefault(); }
+  else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { if (!press("bookClose")) press("bookBtn"); e.preventDefault(); }
+  else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
+  else if (k === "escape") { press("bookClose"); press("printBack") || press("photoClose"); }
+});
+addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
+// A thumb-stick for a touch screen, lower left: push to walk, relative to where he is looking.
+{
+  const stick = document.getElementById("stick"), knob = document.getElementById("knob"); let id = null, cx = 0, cy = 0;
+  if (stick) {
+    const move = (e) => { const dx = e.clientX - cx, dy = e.clientY - cy, l = Math.hypot(dx, dy), m = Math.min(l, 46), k = l ? m / l : 0; joy.x = (dx * k) / 46; joy.y = (dy * k) / 46; knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`; };
+    const end = (e) => { if (e.pointerId !== id) return; id = null; joy.x = joy.y = 0; knob.style.transform = ""; };
+    stick.addEventListener("pointerdown", (e) => { id = e.pointerId; stick.setPointerCapture(id); const r = stick.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(e); startAmbience(() => ({ grove: grove() })); e.preventDefault(); });
+    stick.addEventListener("pointermove", (e) => { if (e.pointerId === id) move(e); }); stick.addEventListener("pointerup", end); stick.addEventListener("pointercancel", end);
+  }
+}
 addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
 
 function resize() {
@@ -237,14 +274,15 @@ function frame(now) {
   const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
-  const f = photo.on ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0), s = photo.on ? 0 : (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+  const f = photo.on ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   const x0 = pos.x, z0 = pos.z;
   let vx = 0, vz = 0;
   if (f || s) { interrupt(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) settle(true); } }
   const len = Math.hypot(vx, vz);
   if (len > 0) {
-    const step = Math.min(f || s ? 1e9 : len, (Q.has("fast") ? 14 : 2.1) * dt); vx = (vx / len) * step; vz = (vz / len) * step;
+    const pace = Q.has("fast") ? 14 : keys.shift ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);   // Shift to hurry; a stick pushed a little walks slowly
+    const step = Math.min(f || s ? 1e9 : len, pace * dt); vx = (vx / len) * step; vz = (vz / len) * step;
     // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
     let moved = false;
     for (let k = 1; k > 0.1 && !moved; k /= 2) {
@@ -275,7 +313,7 @@ function frame(now) {
   else {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = photo.on || walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = footY + (photo.on ? 0.72 : 1.18), reach = photo.on ? photo.dist : 6.2; let d = 0.5;
+    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = footY + (photo.on ? 0.72 : 1.18), reach = photo.on ? photo.dist : reachWant; let d = 0.5;
     for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
       const cx = ox - lx * s2, cz = oz - lz * s2, cy = ty - ly * s2;
       if (walker.wall(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;

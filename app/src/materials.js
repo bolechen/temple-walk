@@ -141,11 +141,11 @@ export function createMaterials() {
 
     // vUv2 = (leaf index + position across the leaf, height mapped to 0..3.02); transoms are offset by 100 and mapped to 0...7.
     lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3 }, `
-      vec2 q=vUv2; bool tr=q.y>50.; if(tr) q.y-=100.; float lx=fract(q.x)*1.05, top=tr?.7:3.02;
-      float fr=min(min(lx,1.05-lx),min(q.y,top-q.y)), frame=1.-smoothstep(.065,.07,fr);
+      vec2 q=vUv2; bool win=q.y>150., tr=q.y>50.&&!win; if(tr) q.y-=100.; if(win) q.y-=200.; float lx=fract(q.x)*1.05, top=tr?.7:3.02;
+      float fr=min(min(lx,1.05-lx),min(q.y-(win?1.25:0.),top-q.y)), frame=1.-smoothstep(.065,.07,fr);
       float rail=tr?0.:1.-smoothstep(.05,.055,abs(q.y-1.18));
       float zone=tr?1.:step(1.18,q.y);
-      vec2 gf=abs(fract(vec2(lx,q.y)/.105)-.5); float bar=step(.33,max(gf.x,gf.y));
+      vec2 gf=abs(fract(vec2(lx,q.y)/.105)-.5); float bar=win?step(.27,gf.x):step(.33,max(gf.x,gf.y));
       float hole=zone*(1.-frame)*(1.-bar)*(1.-rail);
       float px=.105/max(max(fwidth(lx),fwidth(q.y)),1e-5); hole=mix(zone*(1.-frame)*(1.-rail)*.44,hole,clamp((px-1.6)/2.4,0.,1.));   // too far to count the bars: their mean, not a shimmer
       float panel=(1.-zone)*(1.-frame)*smoothstep(.0,.03,min(min(lx-.16,.89-lx),min(q.y-.16,1.02-q.y)));
@@ -214,6 +214,11 @@ export function createMaterials() {
     hide: procMat("hide", { roughness: 0.75, envMapIntensity: 0.3 }, `
       float w=fbm3(vWP*2.5); col=mix(vec3(.5,.42,.3),vec3(.72,.65,.5),w); col*=.85+.3*n3(vWP*40.);
       col=mix(col,vec3(.3,.22,.14),smoothstep(.6,.85,fbm3(vWP*5.+9.))*.5); bump_=n3(vWP*60.)*.0015;`),
+    // Stone cut from one block: column bases, lamp pillars, the stele. No courses, no joints.
+    monolith: procMat("monolith", { roughness: 0.8, envMapIntensity: 0.4 }, `
+      vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
+      col=vec3(.3,.3,.28)*A; col=mix(col,vec3(.16,.2,.1),smoothstep(.5,.75,fbm3(vWP*1.3+4.))*.45);
+      rough_=Nr.w; nd_=Nr.xyz*1.2;`, { tex: ["stone"] }),
     // Woven rush and straw: mats and cushions.
     straw: procMat("straw", { roughness: 0.8, envMapIntensity: 0.25 }, `
       vec3 q=vWP*1.5, w=triW(vWN); vec3 A=triA(tWeaveA,q,w)/mWeave; vec4 Nr=triN(tWeaveN,q,w);

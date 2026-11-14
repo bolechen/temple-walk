@@ -100,7 +100,7 @@ function sheet(kind) {
 
 // The colour each crown wears, season by season (null: bare).
 const COLOURS = {
-  maple:  { spring: [0.93, 0.74, 0.78], summer: [0.2, 0.36, 0.13], autumn: [0.62, 0.13, 0.055], winter: null },
+  maple:  { spring: [0.94, 0.92, 0.86], summer: [0.2, 0.36, 0.13], autumn: [0.62, 0.13, 0.055], winter: null },
   ginkgo: { spring: [0.42, 0.6, 0.22], summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1], winter: null },
   cedar:  { spring: [0.13, 0.26, 0.12], summer: [0.11, 0.23, 0.11], autumn: [0.12, 0.22, 0.1], winter: [0.1, 0.19, 0.11] },
 };

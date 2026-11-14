@@ -89,6 +89,17 @@
   #breathWord { font: 400 5vmin/1 var(--brush); text-shadow: 0 0 10px #000; }
   body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #say, body:not(.entered) .rail, body:not(.entered) #goal, body:not(.entered) #hint, body:not(.entered) #moodTag { display: none; }
 
+  /* How it is played: keys shown where a keyboard is likely, a thumb-stick where a finger is. */
+  kbd { font: 500 12px/1 var(--serif); display: inline-grid; place-items: center; min-width: 1.9em; height: 1.9em; padding: 0 .4em; margin-right: .7em; border: 1px solid rgba(237,232,220,.6); border-bottom-width: 2px; border-radius: 3px; background: rgba(11,10,9,.5); letter-spacing: 0; text-indent: 0; vertical-align: middle; }
+  #keys { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 12px; letter-spacing: .12em; line-height: 2.5; text-shadow: 0 0 6px #000, 0 0 2px #000; opacity: .78; pointer-events: none; transition: opacity 1s; }
+  #keys kbd { margin: 0 .35em 0 1em; } #keys kbd:first-child { margin-left: 0; }
+  #cross { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(237,232,220,.7); box-shadow: 0 0 0 1px rgba(11,10,9,.5); display: none; pointer-events: none; }
+  body.held #cross { display: block; }
+  #stick { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px)); width: 118px; height: 118px; border-radius: 50%; border: 1px solid rgba(237,232,220,.34); background: rgba(11,10,9,.22); touch-action: none; display: none; place-items: center; z-index: 4; }
+  #knob { width: 50px; height: 50px; border-radius: 50%; background: rgba(237,232,220,.5); border: 1px solid rgba(11,10,9,.4); pointer-events: none; }
+  @media (pointer: coarse) { #stick { display: grid; } #keys, #act kbd { display: none; } .caption { padding-left: 150px; } }
+  body.photo #keys, body.photo #stick, body.photo #cross, body.bare #keys, body.bare #stick, body:not(.entered) #keys, body:not(.entered) #stick { display: none; }
+
   /* Hall interior: a stage locked to the painted plate's aspect, sized by script to cover the view. */
   #stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; cursor: grab; }
   #stage > img, #stage > canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -132,10 +143,13 @@
   <canvas id="yardGl"></canvas>
   <p id="moodTag"></p>
   <p id="goal"></p>
+  <p id="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>行走<kbd>Shift</kbd>快步<kbd>鼠标</kbd>环顾 · 点画面握住，Esc 松开<br><kbd>E</kbd>行事<kbd>V</kbd>视角<kbd>B</kbd>朱印<kbd>P</kbd>留影<kbd>T</kbd>时节<kbd>滚轮</kbd>远近</p>
+  <div id="cross"></div>
+  <div id="stick"><div id="knob"></div></div>
   <p id="say"></p>
   <button class="ink-btn" id="act" type="button" hidden></button>
   <div id="breath" hidden><span id="breathWord">吸</span></div>
-  <p class="caption" id="hint">拖动环顾 · 点地面行走 · 走进地上的圆相，做那里的事</p>
+  <p class="caption" id="hint">走进地上的圆相，做那里的事</p>
   <div class="rail">
     <button class="chip" id="viewBtn" type="button" aria-label="切换第一视角和第三视角">身外</button>
     <button class="chip" id="moodBtn" type="button" aria-label="选择季节和时辰">时节</button>
@@ -168,7 +182,7 @@
     <canvas id="hallGl"></canvas>
   </div>
   <div id="ui">
-    <button id="offer" class="ink-btn" type="button">上香</button>
+    <button id="offer" class="ink-btn" type="button"><kbd>E</kbd>上香</button>
     <p id="note">左右拖动可瞻仰佛像</p>
   </div>
   <button id="leave" class="ink-btn" type="button">出殿</button>

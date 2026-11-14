@@ -45,18 +45,18 @@ const scenarios = {
   } },
   // At a real walking pace, a tap on the hall leads to its door and through it.
   tap: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&view=first&cam=0.3,2.2,0,0.05");
-    await t.page.mouse.click(210, 300); await t.until(t.inHall, 300000, "a tap on the hall never led inside");
+    const t = await open(b, base, "q=low&view=first&cam=0.3,2.2,0,0.05", { hasTouch: true });
+    await t.page.touchscreen.tap(210, 300); await t.until(t.inHall, 300000, "a tap on the hall never led inside");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A tap on the ground sends him to the spot tapped, on every level of the mountain and on the stairs between.
   taps: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0");
+    const t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0", { hasTouch: true });
     // Each place: where he stands, which way he looks (0 is uphill, a quarter turn is east), and the least height that proves he is there.
     for (const [name, x, z, yaw, lo] of [["the court", 0, 30, 0, -0.1], ["the first terrace", 12, -40, 0, 2.3], ["the second terrace", 6, -70.5, Math.PI / 2, 5.1], ["the summit", -10, -120.4, Math.PI / 2, 19.9], ["the foot of the path, looking up its steps", 21.3, 91.5, 0, -15]]) {
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, yaw]); await t.frames(2);
       const s0 = await t.state(); expect(s0.h > lo, `${name}: posed at the wrong height ${s0.h}`);
-      await t.page.mouse.click(210, 520);   // below the horizon: a spot on the ground a few steps ahead
+      await t.page.touchscreen.tap(210, 520);   // below the horizon: a spot on the ground a few steps ahead
       await t.frames(1); const s1 = await t.state();
       expect(s1.target, `${name}: a tap on the ground set no destination`);
       const ahead = (s1.target[0] - x) * Math.sin(yaw) - (s1.target[1] - z) * Math.cos(yaw), aside = Math.abs((s1.target[0] - x) * Math.cos(yaw) + (s1.target[1] - z) * Math.sin(yaw));
@@ -74,13 +74,13 @@ const scenarios = {
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
     // The bell: stand in its ring, and strike three times.
     await at("bell"); await t.until(() => t.page.isVisible("#act"), 30000, "standing before the bell offered nothing");
-    expect((await t.page.textContent("#act")) === "撞钟", "the button should say what can be done");
+    expect((await t.page.getAttribute("#act", "data-word")) === "撞钟", "the button should say what can be done");
     for (let i = 0; i < 3; i++) { await t.page.click("#act"); await t.frames(2); if (i < 2) await t.until(() => t.page.isVisible("#act"), 20000, "the bell could not be struck again"); }
     await seal("bell", "the bell"); expect((await t.page.textContent("#toastName")).includes("闻钟") && (await t.page.getAttribute("#toastSeal", "src")).startsWith("data:image"), "no seal was shown");
     expect((await t.page.textContent("#bookBtn")).includes("一"), "the book's button should count the seals");
     // Tea, the well, the lamp: walk into the ring, press, wait.
     for (const [id, word] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
-      await at(id); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.textContent("#act")) === word, 30000, `nothing offered at ${id}`);
+      await at(id); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 30000, `nothing offered at ${id}`);
       await t.page.click("#act"); await seal(id, id);
     }
     expect((await t.journey()).lampLit, "the lamp should stay lit");
@@ -194,16 +194,41 @@ const scenarios = {
     p = await t.probe(); expect(!p.photo && (await t.page.isVisible("#viewBtn")), "did not return to walking");
     expect((await t.state()).running, "the walk did not resume"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // With a keyboard and mouse, as such games are played: W walks, Shift hurries, E does what is offered, V and B and P open things.
+  keys: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    expect(await t.page.isVisible("#keys") && !(await t.page.isVisible("#stick")), "a keyboard should be shown its keys, not a thumb-stick");
+    const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(6); await t.page.keyboard.up("w");
+    const z1 = (await t.state()).z; expect(z1 < z0 - 0.15, `W should walk him forward: ${z0} to ${z1}`);
+    await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w"); await t.frames(6); await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift");
+    const z2 = (await t.state()).z; expect(z1 - z2 > (z0 - z1) * 1.4, `Shift should hurry him: ${(z0 - z1).toFixed(2)} then ${(z1 - z2).toFixed(2)}`);
+    await t.page.keyboard.press("v"); expect((await t.probe()).view === "first", "V should change the view"); await t.page.keyboard.press("v");
+    const d0 = (await t.probe()).camDist; await t.page.mouse.move(450, 300); for (let i = 0; i < 4; i++) await t.page.mouse.wheel(0, 300); await t.frames(16);
+    const d1 = (await t.probe()).camDist; expect(d1 > d0 + 1, `the wheel should draw the eye back: ${d0} to ${d1}`);
+    await t.page.keyboard.press("b"); await t.until(() => t.page.isVisible("#book"), 60000, "B should open the book"); await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#book")), "Esc should close it");
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
+    await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=third", { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first", { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
     for (const id of ["viewBtn", "moodBtn", "photoBtn"]) {
       const r = await t.page.evaluate((i) => { const b = document.getElementById(i).getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight]; }, id);
       expect(r[0] >= 0 && r[1] >= 0 && r[2] <= r[4] && r[3] <= r[5], `#${id} hangs off the screen`); expect(r[2] - r[0] >= 40 && r[3] - r[1] >= 38, `#${id} is too small to tap`);
     }
     expect(await t.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight), "the page scrolls");
-    const z0 = (await t.state()).z; await t.page.touchscreen.tap(195, 425);   // the paving a few steps ahead of him
+    expect(await t.page.isVisible("#stick") && !(await t.page.isVisible("#keys")), "a phone should be given a thumb-stick, not a list of keys");
+    const z0 = (await t.state()).z; await t.page.touchscreen.tap(195, 560);   // the paving a few steps ahead of him
     await t.until(async () => (await t.state()).z < z0 - 2, 120000, "a tap on the ground ahead did not start a walk");
+    // The thumb-stick, pushed up, walks him the way he is looking.
+    const sb = await t.page.evaluate(() => { const r = document.getElementById("stick").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+    await t.until(async () => (await t.state()).target === null, 60000, "the walk never finished");
+    const zs = (await t.state()).z, cdp0 = await t.page.context().newCDPSession(t.page);
+    await cdp0.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: sb[0], y: sb[1], id: 7 }] });
+    await cdp0.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: sb[0], y: sb[1] - 44, id: 7 }] });
+    await t.frames(5); await cdp0.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    expect((await t.state()).z < zs - 0.5, "the thumb-stick did not walk him forward");
     // Dragging a finger turns the view and does not send him anywhere.
     const cdp = await t.page.context().newCDPSession(t.page), pt = (x, y) => [{ x, y, id: 1 }];
     await t.until(async () => (await t.state()).target === null, 60000, "the walk never finished");

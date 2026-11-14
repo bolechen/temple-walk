@@ -118,8 +118,8 @@ export function buildSite(M) {
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
-    xs: [-14.4, -10.2, -6.2, -2.3, 2.3, 6.2, 10.2, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, rise: 3.4, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true },
-  }, { xs: [-10.2, -6.2, -2.3, 2.3, 6.2, 10.2], zs: [5.0, 0, -5.0], colTop: 3.4, overhang: 2.8, rise: 6.2, G: 3.6, plaque: { text: "大雄宝殿", gold: true, vertical: true } }, [0, mz]);
+    xs: [-14.4, -10.2, -6.2, -2.3, 2.3, 6.2, 10.2, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, rise: 4.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true },
+  }, { xs: [-10.2, -6.2, -2.3, 2.3, 6.2, 10.2], zs: [5.0, 0, -5.0], colTop: 2.3, overhang: 2.8, rise: 5.4, G: 3.6, plaque: { text: "大雄宝殿", gold: true, vertical: true } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
     xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 3.0, steps: 5.2, lamps: false,
@@ -159,7 +159,7 @@ export function buildSite(M) {
     { xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, rise: 1.3, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
     { xs: [-1.2, 1.2], zs: [1.2, -1.2], colTop: 1.5, overhang: 1.5, rise: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: "御碑亭" },
   ], [-12.5, 50.5], 1);
-  sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.stone));
+  sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], paving = [];
@@ -259,16 +259,16 @@ export function buildSite(M) {
     shade[0].push({ x0: -w / 2, x1: w / 2, z0: z - 0.35, z1: z + 0.35 });
   }
 
-  // Stone lanterns in pairs along the axis, each with a flame.
+  // One pair of stone lamp pillars, at the foot of the great hall's stair: such temples never had rows of them.
   const lanternStone = [];
-  for (const [lx, lz, lvl] of [[7.4, 45.6, 0], [3.4, 27, 0], [5.0, 1.2, 0], [3.9, T1.zS - 4.5, 1], [3.6, T2.zS - 2.4, 2], [3.0, TOP.zS - 1.7, 3]]) for (const sx of [-1, 1]) {
+  for (const [lx, lz, lvl] of [[5.0, 1.2, 0]]) for (const sx of [-1, 1]) {
     const y = lvl ? LEVELS[lvl - 1].y : 0;
     lanternStone.push(lantern().translate(sx * lx, y, lz));
-    const f = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), M.flame); f.position.set(sx * lx, y + 1.36, lz); root.add(f);
+    const f = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), M.flame); f.position.set(sx * lx, y + 1.86, lz); root.add(f);
     walk.solids.push({ x0: sx * lx - 0.5, x1: sx * lx + 0.5, z0: lz - 0.5, z1: lz + 0.5 });
     shade[lvl].push({ x0: sx * lx - 0.3, x1: sx * lx + 0.3, z0: lz - 0.3, z1: lz + 0.3 });
   }
-  root.add(mesh(merge(lanternStone), M.stone));
+  root.add(mesh(merge(lanternStone), M.monolith));
 
   // ---- The main hall can be entered ----
   const doorZ = mz + main.frontZ + 0.55;
@@ -369,13 +369,14 @@ export function buildSite(M) {
 // ---- Furnishings ----
 const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
 
-// A stone lantern: lotus base, shaft, an open chamber for the flame, a hexagonal cap.
+// A lamp pillar of the old kind, eight-sided, some two and a half metres tall: a lotus pedestal, a shaft, an upturned
+// lotus plate, an open chamber for the flame, a tiled cap and a jewel.
 function lantern() {
   const parts = [
-    lathe([[0, 0], [0.42, 0], [0.42, 0.12], [0.3, 0.2], [0.16, 0.3], [0.14, 0.95], [0.2, 1.02], [0.36, 1.1], [0.38, 1.18], [0, 1.18]], 12),
-    lathe([[0, 1.56], [0.46, 1.56], [0.5, 1.61], [0.3, 1.82], [0.1, 1.95], [0.07, 2.1], [0, 2.17]], 6),
+    lathe([[0, 0], [0.56, 0], [0.56, 0.1], [0.46, 0.16], [0.4, 0.3], [0.5, 0.4], [0.52, 0.5], [0.2, 0.56], [0.17, 0.6], [0.165, 1.44], [0.2, 1.5], [0.36, 1.62], [0.38, 1.68], [0, 1.68]], 8),
+    lathe([[0, 2.06], [0.42, 2.06], [0.47, 2.1], [0.3, 2.26], [0.1, 2.36], [0.07, 2.42], [0.1, 2.5], [0.05, 2.58], [0, 2.62]], 8),
   ];
-  for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) parts.push(box(0.06, 0.4, 0.06, a * 0.2, 1.37, b * 0.2));
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * 6.283 + 0.39; parts.push(box(0.05, 0.38, 0.05, Math.cos(a) * 0.25, 1.87, Math.sin(a) * 0.25)); }
   return merge(parts);
 }
 

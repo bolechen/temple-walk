@@ -82,7 +82,7 @@ export function buildHall(M, opts) {
     const shaft = new THREE.LatheGeometry([[r, 0], [r * 1.02, h * 0.15], [r, h * 0.55], [r * 0.93, h * 0.88], [r * 0.87, h]].map(([a, b]) => new THREE.Vector2(a, b)), 18).translate(0, p.platH + 0.25, 0);
     const drum = new THREE.LatheGeometry([[0, 0], [r * 1.5, 0], [r * 1.56, 0.05], [r * 1.33, 0.13], [r * 1.22, 0.22], [r * 1.1, 0.25], [0, 0.25]].map(([a, b]) => new THREE.Vector2(a, b)), 18).translate(0, p.platH, 0);
     add(merge(perimeter.map((c) => shaft.clone().translate(c.x, 0, c.z))), M.woodV);
-    add(merge(perimeter.map((c) => drum.clone().translate(c.x, 0, c.z))), M.stone, { ao: null });
+    add(merge(perimeter.map((c) => drum.clone().translate(c.x, 0, c.z))), M.monolith, { ao: null });
   }
 
   // ---- Beams ----
@@ -100,12 +100,13 @@ export function buildHall(M, opts) {
   // ---- Infill ----
   const walls = [], lat = [];
   const sill = p.platH + 0.16, head = Math.min(sill + 2.86, topY - 0.5), hasTransom = topY - head > 0.4;
-  const leaf = (x0, x1, y0, y1, transom, z, flip) => {
+  // kind: 0 a door leaf (lattice over a panel), 1 a transom, 2 a window of upright bars
+  const leaf = (x0, x1, y0, y1, kind, z, flip) => {
     const g2 = new THREE.PlaneGeometry(x1 - x0, y1 - y0);
     if (flip) g2.rotateY(Math.PI);
     g2.translate((x0 + x1) / 2, (y0 + y1) / 2, z);
     const n = Math.max(1, Math.round((x1 - x0) / 1.05)), uv = g2.attributes.uv;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * n, (transom ? 100 : 0) + uv.getY(i) * (transom ? 0.7 : 3.02));
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * n, kind === 2 ? 201.25 + uv.getY(i) * 1.77 : (kind ? 100 : 0) + uv.getY(i) * (kind ? 0.7 : 3.02));
     lat.push(g2);
   };
   const mid = Math.floor(nx / 2);
@@ -115,9 +116,14 @@ export function buildHall(M, opts) {
     for (let i = 0; i < nx; i++) {
       const x0 = xs[i] + 0.25, x1 = xs[i + 1] - 0.25, centre = i === mid;
       if (mode === "lattice") {
-        if (centre && p.dark) { leaf(x0, x0 + 1.05, sill, head, false, zz, flip); leaf(x1 - 1.05, x1, sill, head, false, zz, flip); }
-        else leaf(x0, x1, sill, head, false, zz, flip);
-        if (hasTransom) leaf(x0, x1, head + 0.14, topY, true, zz, flip);
+        // The middle bays are doors; the bays beyond them are windows of upright bars over a white sill wall.
+        const door = Math.abs(i - mid) <= (nx >= 5 ? 1 : 0) || nx < 3;
+        if (centre && p.dark) { leaf(x0, x0 + 1.05, sill, head, 0, zz, flip); leaf(x1 - 1.05, x1, sill, head, 0, zz, flip); }
+        else if (door) leaf(x0, x1, sill, head, 0, zz, flip);
+        else { walls.push(box(x1 - x0, 1.0, 0.16, (x0 + x1) / 2, sill + 0.5, z)); bx.push(box(x1 - x0, 0.12, 0.24, (x0 + x1) / 2, sill + 1.06, z)); leaf(x0, x1, sill + 1.12, head, 2, zz, flip); }
+        if (hasTransom) leaf(x0, x1, head + 0.14, topY, 1, zz, flip);
+        // Seven red, eight white: the row of pale dashes along every tie-beam.
+        const dash = (x1 - x0 - 0.3 - 7 * 0.07) / 8; for (let k = 0; k < 8; k++) walls.push(box(dash, 0.07, 0.02, x0 + 0.15 + k * (dash + 0.07) + dash / 2, by + 0.02, z + sign * 0.105));
       } else if (!(mode === "pass" && centre)) {
         walls.push(box(x1 - x0, topY - p.platH, 0.14, (x0 + x1) / 2, (topY + p.platH) / 2, z));
         bx.push(box(x1 - x0, 0.16, 0.2, (x0 + x1) / 2, p.platH + 1.5, z));
@@ -222,8 +228,9 @@ export function buildHall(M, opts) {
     // Ridges: the main ridge with its end ornaments, the gable ridges, the hip ridges that sweep up at the corners.
     const ridgeY = EAVE_Y + p.rise, parts = [];
     if (gx > 0.3) {
-      parts.push(box(gx * 2 + 0.5, 0.62, 0.36, 0, ridgeY + 0.2, 0), box(gx * 2 + 0.7, 0.1, 0.46, 0, ridgeY + 0.54, 0));
-      const k = Math.min(1, p.rise / 5), curl = new THREE.Shape([[0, 0], [0.95, 0], [1.0, 0.55], [0.74, 1.1], [0.34, 1.36], [0.1, 1.18], [0.36, 0.98], [0.46, 0.66], [0.22, 0.5], [0, 0.56]].map(([x, y]) => new THREE.Vector2(x * k, y * k)));
+      const rh = Math.min(0.95, 0.34 + p.rise * 0.1);   // the ridge: a tall wall of tile courses on a great hall, low on a small one
+      parts.push(box(gx * 2 + 0.5, rh, 0.36, 0, ridgeY - 0.11 + rh / 2, 0), box(gx * 2 + 0.7, 0.1, 0.46, 0, ridgeY - 0.08 + rh, 0));
+      const k = Math.min(1.55, p.rise / 3.4), curl = new THREE.Shape([[0, 0], [0.95, 0], [1.0, 0.55], [0.74, 1.1], [0.34, 1.36], [0.1, 1.18], [0.36, 0.98], [0.46, 0.66], [0.22, 0.5], [0, 0.56]].map(([x, y]) => new THREE.Vector2(x * k, y * k)));
       for (const s of [-1, 1]) {
         const c = plain(new THREE.ExtrudeGeometry(curl, { depth: 0.34, bevelEnabled: false }).translate(-k, 0, -0.17));
         if (s < 0) {   // mirror, then restore the winding

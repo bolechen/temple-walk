@@ -117,6 +117,25 @@ view (tall, square, wide; three lenses), a tap chooses what is sharp, and the sh
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
 fireflies in the air; both are driven only by the mood.
 
+**The visit as a pilgrimage (`journey.js`, `game.js`, `goshuin.js`).** `journey.js` is book-keeping only (seven seals,
+the bell's three strokes, the library's line, storage under `yunjing.journey.v1`) and is unit-tested in Node.
+`site.places` says where each observance is made. `game.js` owns everything a visitor sees of it: the title, the brush
+rings on the ground, the action button, how each observance unfolds, the seal toast, the book; it reaches the walk only
+through the small object `yard.js` hands it (`walkTo`, `stage`, `strike`, `where`, `onTick`…). `goshuin.js` draws the
+page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__places`.
+
+**How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
+hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
+nearer or farther, E (or Enter or Space) does what is offered, V changes the view, B opens the book, P photographs,
+T opens the season and hour. While the pointer is held a click strikes the bell or drum under the dot. On a touch
+screen: a thumb-stick lower left, a drag to look, a tap on the ground to walk there. The key list (`#keys`) shows only
+where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
+
+**Typefaces (`app/f/`, `tools/fonts.py`).** Three faces under the SIL Open Font License, cut down to the characters the
+app uses and served with it: "Yunjing Brush" (Ma Shan Zheng), "Yunjing Serif" and "Yunjing Seal" (Noto Serif SC regular
+and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
+`npm run check` fails if a character is used that the cut does not hold.
+
 **Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov), `__views`, `__merged`,

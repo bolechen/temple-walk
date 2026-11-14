@@ -77,7 +77,7 @@ export function createGame(y) {
     } else if (id === "sutra") {
       await wait(1.6); if (!on()) return;
       const day = Math.floor(Date.now() / 864e5), verse = pickVerse(Q.has("seed") ? +Q.get("seed") : day + (journey.born % 97));
-      $("slipText").textContent = verse.text; $("slipFrom").textContent = verse.from; $("slip").hidden = false;
+      $("slipText").textContent = verse.text; $("slipFrom").textContent = verse.from; $("slip").hidden = false; document.exitPointerLock?.();
       await new Promise((r) => { $("slipTake").onclick = r; mineRite.take = r; }); $("slip").hidden = true; if (!on()) return;
       if (journey.earn("sutra", { verse })) earned("sutra"); end(); return;
     }
@@ -100,7 +100,7 @@ export function createGame(y) {
     const w = y.where(), here = entered && !rite && !y.busy() ? placeAt(places, w.x, w.z) : null;
     near = here && !journey.has(here) ? here : null;
     const b = $("act"); if (!b) return;
-    if (near) { b.textContent = near === "incense" ? "进殿" : SEAL[near].act; b.hidden = false; } else b.hidden = true;
+    if (near) { b.dataset.word = near === "incense" ? "进殿" : SEAL[near].act; b.innerHTML = `<kbd>E</kbd>${b.dataset.word}`; b.hidden = false; } else b.hidden = true;
   });
   $("act")?.addEventListener("click", () => near && begin(near));
 
@@ -114,7 +114,7 @@ export function createGame(y) {
     $("bookHint").textContent = next ? next.hint : "七印圆满。这一页是你的了。";
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
     $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: "云径禅寺 · 朱印" }); } catch {} };
-    $("bookReset").textContent = "重新朝山"; $("book").hidden = false;
+    $("bookReset").textContent = "重新朝山"; $("book").hidden = false; document.exitPointerLock?.();
   }
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => { $("book").hidden = true; });

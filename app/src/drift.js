@@ -5,7 +5,7 @@ import * as THREE from "../v/build/three.module.js";
 // col: three hues a kind comes in; part: how many of the cloud are shown; near: none closer to the eye than this.
 const KINDS = {
   none:    { col: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], size: 0, fall: 0, sway: 0, op: 0, glow: 0, part: 0, near: 1, point: 0 },
-  petal:   { col: [[1.0, 0.9, 0.93], [0.98, 0.8, 0.86], [1, 0.96, 0.95]], size: 0.06, fall: 0.5, sway: 0.7, op: 0.9, glow: 0, part: 0.45, near: 1.6, point: 0.12 },
+  petal:   { col: [[1.0, 0.98, 0.94], [0.97, 0.94, 0.9], [1, 0.97, 0.96]], size: 0.06, fall: 0.5, sway: 0.7, op: 0.9, glow: 0, part: 0.45, near: 1.6, point: 0.12 },
   leaf:    { col: [[0.62, 0.15, 0.05], [0.86, 0.42, 0.08], [0.8, 0.58, 0.12]], size: 0.085, fall: 0.75, sway: 1.0, op: 0.95, glow: 0, part: 0.38, near: 1.6, point: 0.24 },
   snow:    { col: [[1, 1, 1], [0.95, 0.97, 1], [1, 1, 1]], size: 0.06, fall: 1.0, sway: 0.35, op: 0.9, glow: 0, part: 1, near: 0.7, point: 0 },
   firefly: { col: [[0.75, 1.0, 0.35], [0.8, 1.0, 0.4], [0.7, 1.0, 0.3]], size: 0.09, fall: -0.05, sway: 0.5, op: 1, glow: 1, part: 0.5, near: 0.5, point: 0 },
