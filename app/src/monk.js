@@ -76,7 +76,7 @@ export function createMonk() {
   for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 12).scale(1, 0.7, 0.22), rose); b.position.copy(on(sx * 0.6, -0.3, 0.99)); b.rotation.y = sx * 0.6; head.add(b); }
 
   // ---- Arms: wide sleeves that hang open at the cuff; small hands ----
-  const arms = [], hands = [], legs = [];
+  const arms = [], hands = [], legs = [], soles = [], footLift = [0, 0];
   for (const sx of [-1, 1]) {
     const arm = new THREE.Group(); arm.position.set(sx * 0.152, 0.765, 0); body.add(arm); arms.push(arm);
     const sleeve = new THREE.LatheGeometry(V2([[0.0, 0.035], [0.045, 0.025], [0.06, -0.02], [0.07, -0.12], [0.084, -0.22], [0.09, -0.27], [0.086, -0.285], [0.06, -0.275], [0.03, -0.262]]), 32);
@@ -88,7 +88,11 @@ export function createMonk() {
     const leg = new THREE.Group(); leg.position.set(sx * 0.082, 0.25, 0); root.add(leg); legs.push(leg);
     add(leg, new THREE.CylinderGeometry(0.062, 0.05, 0.13, 16).translate(0, -0.065, 0), sashM);
     add(leg, new THREE.CylinderGeometry(0.038, 0.04, 0.07, 14).translate(0, -0.16, 0), linen);
-    add(leg, mergeGeometries([new THREE.SphereGeometry(0.05, 16, 10).scale(0.86, 0.6, 1.75).translate(0, -0.215, 0.032), new THREE.CylinderGeometry(0.043, 0.045, 0.012, 14).translate(0, -0.192, 0)]), dark);
+    const shoe = add(leg, mergeGeometries([new THREE.SphereGeometry(0.05, 16, 10).scale(0.86, 0.6, 1.75).translate(0, -0.215, 0.032), new THREE.CylinderGeometry(0.043, 0.045, 0.012, 14).translate(0, -0.192, 0)]), dark);
+    shoe.geometry.computeBoundingBox();
+    const bounds = shoe.geometry.boundingBox, probes = [];
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) probes.push(new THREE.Vector3(x, y, z));
+    soles.push(probes);
   }
   // He casts no real shadow (the shadow map is drawn once, for the buildings); a soft dark patch goes with him.
   const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"), gr = x.createRadialGradient(32, 32, 2, 32, 32, 32);
@@ -101,6 +105,10 @@ export function createMonk() {
   const lap = add(root, mergeGeometries([new THREE.SphereGeometry(0.3, 24, 12).scale(1.12, 0.36, 0.95).translate(0, 0.1, 0.06), new THREE.SphereGeometry(0.13, 14, 10).scale(1.2, 0.7, 1.3).translate(-0.2, 0.1, 0.2), new THREE.SphereGeometry(0.13, 14, 10).scale(1.2, 0.7, 1.3).translate(0.2, 0.1, 0.2)]), robeM);
   lap.visible = false;
   let phase = 0, gait = 0, palms = 0, seat = 0;
+  const contact = new THREE.Vector3();
+  const hem = [];
+  const clothPoints = robe.attributes.position;
+  for (let i = 0; i < clothPoints.count; i++) if (clothPoints.getY(i) < 0.24) hem.push(new THREE.Vector3().fromBufferAttribute(clothPoints, i));
   return {
     group: root,
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
@@ -108,7 +116,7 @@ export function createMonk() {
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
     // `speed` in metres a second; `pray` true to bring the palms together and bow the head a little.
     // `pose`: false to stand or walk, true or "pray" for palms together, "sit" to sit with legs folded.
-    update(dt, speed, pose, t) {
+    update(dt, speed, pose, t, surfaceAt) {
       const pray = pose === true || pose === "pray", sit = pose === "sit";
       seat += ((sit ? 1 : 0) - seat) * Math.min(1, dt * 3.5);
       gait += ((speed > 0.05 && !sit ? 1 : 0) - gait) * Math.min(1, dt * 8); palms += ((pray ? 1 : 0) - palms) * Math.min(1, dt * 4);
@@ -125,6 +133,32 @@ export function createMonk() {
       if (seat > 0.01) {   // down onto the cushion: hands in the lap, head a little bowed, breathing slowly
         body.position.y = -0.37 * seat + Math.sin(t * 0.9) * 0.006; body.rotation.x = 0.05 * seat; head.rotation.x += 0.1 * seat;
         arms.forEach((a, i) => { const sx = i ? 1 : -1; a.rotation.x += -0.62 * seat; a.rotation.z += -sx * 0.3 * seat; });
+      }
+      // Match each animated shoe to the treads it spans, not only the character's centre.
+      // Lift immediately before stone can cover it; ease the release to avoid a snapping foot.
+      if (surfaceAt && seat < 0.01) {
+        root.updateWorldMatrix(true, false);
+        legs.forEach((leg, i) => {
+          leg.position.y = 0.25; leg.updateMatrix();
+          let highest = -Infinity, lowest = Infinity;
+          for (const probe of soles[i]) {
+            contact.copy(probe).applyMatrix4(leg.matrix).applyMatrix4(root.matrixWorld);
+            highest = Math.max(highest, surfaceAt(contact.x, contact.z));
+            lowest = Math.min(lowest, contact.y);
+          }
+          const lift = Math.max(0, highest + 0.002 - lowest);
+          footLift[i] = Math.max(lift, footLift[i] + (lift - footLift[i]) * Math.min(1, dt * 14));
+          leg.position.y += footLift[i];
+        });
+        // The leaning hem can reach the next tread before the body's centre does.
+        body.updateMatrix(); let lift = 0;
+        for (const probe of hem) {
+          contact.copy(probe).applyMatrix4(body.matrix).applyMatrix4(root.matrixWorld);
+          lift = Math.max(lift, surfaceAt(contact.x, contact.z) + 0.002 - contact.y);
+        }
+        body.position.y += lift;
+      } else {
+        legs.forEach((leg, i) => { leg.position.y = 0.25; footLift[i] = 0; });
       }
       lap.visible = seat > 0.3; lap.scale.setScalar(Math.min(1, seat * 1.2)); for (const l of legs) l.visible = seat < 0.45;
       // The shadow keeps to the ground and to the sun, whichever way he turns.

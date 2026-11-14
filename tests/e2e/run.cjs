@@ -252,6 +252,24 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Real keyboard movement over visible treads, uphill and back down without smoothing the novice into stone.
+  stairs: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=21.3,86.8,0,0.04&view=third&season=summer&time=day", { viewport: { width: 640, height: 360 } });
+    await t.page.evaluate(() => {
+      window.__stairRegression = { active: true, samples: [] };
+      const read = () => { const s = window.__yard(); window.__stairRegression.samples.push({ z: s.z, floor: s.groundY, feet: s.footY }); if (window.__stairRegression.active) requestAnimationFrame(read); };
+      requestAnimationFrame(read);
+    });
+    const start = await t.state();
+    await t.page.keyboard.down("w"); await t.frames(14); await t.page.keyboard.up("w");
+    const high = await t.state(); expect(high.h > start.h + 0.2, "W did not climb the visible steps"); await t.shot("stairs-up");
+    await t.page.keyboard.down("s"); await t.frames(14); await t.page.keyboard.up("s");
+    const low = await t.state(); expect(low.h < high.h - 0.2, "S did not return down the steps"); await t.shot("stairs-down");
+    const samples = await t.page.evaluate(() => { window.__stairRegression.active = false; return window.__stairRegression.samples; });
+    expect(samples.length >= 28 && samples.every(s => Number.isFinite(s.feet) && s.feet + 0.001 >= s.floor), "the novice's root sank into a tread: " + JSON.stringify(samples));
+    fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "stairs-grounding.json"), JSON.stringify(samples, null, 2));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Click-drag (including trackpad presses) and locked movement must agree on look direction.
   camera: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 900, height: 600 } });

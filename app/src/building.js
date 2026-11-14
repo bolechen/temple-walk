@@ -2,7 +2,7 @@
 // infill, and a curved tiled roof. Built in local space: centred on the origin, front facing +z.
 // Halls, gate houses, towers and covered walks are all this function with different parameters.
 import * as THREE from "../v/build/three.module.js";
-import { box, smooth, plain, merge, mesh, tube, stairGeo, footAt } from "./geo.js";
+import { box, smooth, plain, merge, mesh, tube, stairGeo, STAIR, footAt } from "./geo.js";
 import { makePlaque } from "./plaque.js";
 
 const DEFAULTS = {
@@ -333,7 +333,7 @@ export function buildHall(M, opts) {
     walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 });
     const stair = (w, sign) => {   // sign = +1 front, -1 back
       const edge = sign > 0 ? zF : zB, a = edge - sign * 0.25, b = edge + sign * run, hw = w / 2 - 0.3;
-      walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b), z1: Math.max(a, b), h: p.platH, low: [0, b], high: [0, a] });
+      walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
       walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b) });
     };
     if (p.steps) stair(p.steps, 1);

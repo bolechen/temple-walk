@@ -5,7 +5,7 @@
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "../v/build/three.module.js";
-import { box, merge, mesh, smooth, stairGeo, footAt } from "./geo.js";
+import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt } from "./geo.js";
 import { buildHall } from "./building.js";
 import { makePlaque } from "./plaque.js";
 
@@ -439,14 +439,17 @@ export function createWalker(site) {
   const { solids, decks, ramps, posts = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
   function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
-    for (const d of decks) if (inRect(d, x, z)) return d.h;
+    let height = null;
+    const take = h => { height = height === null ? h : Math.max(height, h); };
+    for (const d of decks) if (inRect(d, x, z)) take(d.h);
     for (const r of ramps) if (inRect(r, x, z)) {
       const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1];
       // A stair is steps, not a slope: he stands on the tread he is over, so his feet never sink into the stone.
-      const f = Math.min(1, Math.max(0, ((x - r.low[0]) * dx + (z - r.low[1]) * dz) / (dx * dx + dz * dz))), n = Math.max(1, Math.round(r.h / 0.18));
-      return (r.base || 0) + r.h * (even ? f : Math.min(1, (Math.floor(f * n + 1e-6) + (f > 1e-6 ? 1 : 0)) / n));
+      const { count: n, nosing } = stairProfile(r.h), run = Math.hypot(dx, dz);
+      const f = Math.min(1, Math.max(0, ((x - r.low[0]) * dx + (z - r.low[1]) * dz) / (run * run) + nosing / run));
+      take((r.base || 0) + r.h * (even ? f : Math.ceil(f * n - 1e-6) / n));
     }
-    return null;
+    return height;
   }
   function level(x, z) { if (z > SITE.fore + 0.3) return terrainLevel(x, z); for (const L of LEVELS) if (Math.abs(x) < L.x && z < L.zS && z > L.zN) return L.y; return 0; }
   // Indoors the plan is set aside: a room is one level floor inside four walls, with its own things in the way.

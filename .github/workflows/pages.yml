@@ -38,8 +38,8 @@ jobs:
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
         run: npm install --no-save playwright@1.63.0 && npx playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: End to end, the quick tier (the page comes up clean and draws)
-        run: npm run e2e:quick
+      - name: End to end, startup and stair grounding
+        run: node tests/e2e/run.cjs boot stairs
       - name: Keep the report and screenshots
         if: always()
         uses: actions/upload-artifact@v4

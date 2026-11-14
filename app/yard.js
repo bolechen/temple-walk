@@ -316,7 +316,7 @@ function frame(now) {
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
-  footY += (walker.heightAt(pos.x, pos.z) - footY) * Math.min(1, dt * 9); eyeY += (walker.eyeAt(pos.x, pos.z) - eyeY) * Math.min(1, dt * 12);
+  footY = walker.heightAt(pos.x, pos.z); eyeY += (walker.eyeAt(pos.x, pos.z) - eyeY) * Math.min(1, dt * 12);
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!arrived && document.body.classList.contains("entered")) { arrived = true; hints.say.entered(); }
@@ -326,7 +326,7 @@ function frame(now) {
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
   monk.group.position.set(pos.x, footY + (stage ? stage.lift || 0 : 0), pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
-  monk.update(dt, still ? 0 : speedNow, stage ? stage.pose : photo.on && photo.pray, t);
+  monk.update(dt, still ? 0 : speedNow, stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt);
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
@@ -335,7 +335,7 @@ function frame(now) {
   else {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = photo.on || walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = footY + (photo.on ? 0.72 : 1.18), reach = photo.on ? photo.dist : reachWant; let d = 0.5;
+    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = (photo.on ? footY : eyeY) + (photo.on ? 0.72 : 1.18), reach = photo.on ? photo.dist : reachWant; let d = 0.5;
     for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
       const cx = ox - lx * s2, cz = oz - lz * s2, cy = ty - ly * s2;
       if (walker.wall(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
@@ -458,7 +458,7 @@ async function pass(hall) {
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
-window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
+window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // What a frame costs to draw, in milliseconds: `n` frames drawn back to back, each waited for until the graphics card
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
