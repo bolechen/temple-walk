@@ -10,7 +10,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   boot: { tier: 1, async run(b, base) {
-    const t = await open(b, base, "q=low", { enter: false });
+    const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.
     expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "山门之外" && (await t.page.textContent("#title .sub")).includes("云径禅寺"), "the title is missing");
     expect(!(await t.page.isVisible("#viewBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
@@ -18,6 +18,12 @@ const scenarios = {
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
     await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
     expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("钟楼"), "a new visitor should be pointed at the bell");
+    const loading = await t.page.evaluate(() => ({ values: window.__loadingHistory, hidden: document.getElementById("loading").hidden, value: document.getElementById("loadProgress").value }));
+    expect(loading.values.includes(null), "loading indicator must exist before module initialization");
+    expect(loading.values.some(v => v > 0 && v < 100), "loading must show intermediate real progress");
+    expect(loading.value === 100 && loading.hidden, "loading must finish and leave the picture when ready");
+    const numbers = loading.values.filter(v => v !== null);
+    expect(numbers.every((v, i) => !i || v >= numbers[i - 1]), "loading progress moved backwards");
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
@@ -246,6 +252,28 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Click-drag (including trackpad presses) and locked movement must agree on look direction.
+  camera: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 900, height: 600 } });
+    for (const mode of ["first", "third", "photo"]) {
+      if (mode === "third") await t.page.keyboard.press("v");
+      if (mode === "photo") await t.page.click("#photoBtn");
+      const before = await t.state();
+      await t.page.mouse.move(420, 320); await t.page.mouse.down();
+      await t.page.mouse.move(460, 360, { steps: 4 }); await t.page.mouse.up();
+      const after = await t.state();
+      expect(after.yaw > before.yaw + 0.05 && after.pitch < before.pitch - 0.05,
+        `${mode}: dragging right/down must look right/down: ${JSON.stringify({ before, after })}`);
+      expect(after.target === null, `${mode}: dragging must not also walk`);
+      // The reverse movement should undo the rotation without crossing a pitch limit.
+      await t.page.mouse.move(460, 360); await t.page.mouse.down();
+      await t.page.mouse.move(420, 320, { steps: 4 }); await t.page.mouse.up();
+      const back = await t.state();
+      expect(Math.abs(back.yaw - before.yaw) < 0.02 && Math.abs(back.pitch - before.pitch) < 0.02,
+        `${mode}: reverse drag did not restore the view`);
+    }
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The measured walk: from the bamboo up to the first court and back, timed, with the numbers offered at the end.
   tour: { tier: 3, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&tour=8x1&enter&view=first&season=summer&time=day", { viewport: { width: 640, height: 360 }, enter: false });
@@ -256,6 +284,7 @@ const scenarios = {
     expect(r.tier === "low" && r.size[0] === 640 && r.view === "first" && typeof r.gpu === "string" && r.load_ms > 0, "the measurement does not say what it was made on");
     expect(far < 84 && hi > -13.5, `the walk should set off up the stair from the bamboo: reached z=${far}, height ${hi}`);   // how far he gets depends on how many frames the machine draws
     expect(await t.page.isVisible("#tour") && (await t.page.textContent("#tour")).includes("p95"), "the numbers were not shown");
+
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.

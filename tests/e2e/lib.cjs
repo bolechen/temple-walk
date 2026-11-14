@@ -2,7 +2,7 @@
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "..", "app"), out = path.join(__dirname, "..", "..", "tools", "out");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".png": "image/png" };
+const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml" };
 
 async function serve() {
   const srv = http.createServer((req, res) => {
@@ -10,7 +10,7 @@ async function serve() {
     if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
     // The page is published without a document shell (the host supplies one); give it the same minimum here.
-    if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><body>' + fs.readFileSync(p, "utf8"));
+    if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' + fs.readFileSync(p, "utf8"));
     fs.createReadStream(p).pipe(res);
   });
   await new Promise((r) => srv.listen(0, "127.0.0.1", r));
@@ -20,13 +20,26 @@ const launch = () => chromium.launch({ args: ["--use-gl=swiftshader", "--enable-
 
 // A page on the temple. `errors` collects everything the page complains about; a scenario fails if it is not empty at the end.
 async function open(browser, base, query, opts = {}) {
-  const { enter, ...ctxOpts } = opts;
+  const { enter, observeLoading, ...ctxOpts } = opts;
   const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, ...ctxOpts });
   const page = await ctx.newPage(), errors = [];
   page.on("pageerror", (e) => errors.push("page error: " + String(e.stack || e).slice(0, 400)));
-  page.on("console", (m) => m.type() === "error" && !/GPU stall|favicon/.test(m.text()) && errors.push("console: " + m.text().slice(0, 300)));
+  page.on("console", (m) => {
+    if (m.type() !== "error" || /GPU stall/.test(m.text())) return;
+    const at = m.location();
+    errors.push("console: " + m.text().slice(0, 300) + (at.url ? ` (${at.url}:${at.lineNumber ?? at.line ?? 0})` : ""));
+  });
   page.on("requestfailed", (r) => !/fonts\.g/.test(r.url()) && errors.push("request failed: " + r.url()));
-  page.on("response", (r) => r.status() >= 400 && !/favicon/.test(r.url()) && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+  page.on("response", (r) => r.status() >= 400 && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+  if (observeLoading) await page.addInitScript(() => {
+    window.__loadingHistory = [];
+    new MutationObserver(() => {
+      const bar = document.getElementById("loadProgress");
+      if (!bar) return;
+      const value = bar.hasAttribute("value") ? Number(bar.getAttribute("value")) : null;
+      if (window.__loadingHistory.at(-1) !== value || !window.__loadingHistory.length) window.__loadingHistory.push(value);
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
+  });
   await page.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });   // the page builds the whole temple before it reports itself loaded
   await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   // A visitor arriving meets the title first and steps in from it; a scenario may ask to be left at the title.
