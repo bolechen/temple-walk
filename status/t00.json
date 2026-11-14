@@ -1,32 +1,20 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-14T22:48:10.980Z",
+  "generated_at": "2026-11-14T22:48:38.743Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "89d7cb4b7bb10c481369da0ac1ec7ab572973c7e",
-    "url": "https://github.com/bolechen/temple-walk/commit/89d7cb4b7bb10c481369da0ac1ec7ab572973c7e"
+    "sha": "8e4cb3f98e60ece11d9ef291a387469618fd92b2",
+    "url": "https://github.com/bolechen/temple-walk/commit/8e4cb3f98e60ece11d9ef291a387469618fd92b2"
   },
   "delivery": {
     "schema_version": 1,
     "scene_id": "T00",
-    "summary": "T00 五区（竹林、石阶、照壁、山门、首院）对齐 J01 阴天雨后参考图的整改，附四个维度的评审与四轮复核、六机位截图、行走录像和 T4 帧记录（均出自提交 0e960f0）。开发方自评：未达到验收——四轮复核后没有未关闭的阻断或严重项，但 A06 因没有目标设备而 blocked，A02 没有真人操作的录像，独立验收未做。",
+    "summary": "留影以风景为主：简洁界面、默认横幅、全景清晰，无景深。",
     "changes": [
-      "基准预设「夏·昼」改为阴天雨后：弱日光、灰天、薄雾，近山做成从雾里起来的林坡",
-      "材质：木色去红压暗并加雨蚀；白墙污痕收到墙脚与压顶下；铺地积水只在洼处、苔只在常潮的缝；瓦面降低反光，瓦的背面按深色木板渲染",
-      "山门改木板壁与带钉版门，明间有门额门簪门槛和打开的门扇，上层有平坐勾阑，铺作读得出；院墙绕钟鼓楼合拢；檐下椽子为真实几何",
-      "香炉改素鼎、栏杆改灰石、经幢加高；雾片只在墙外；「歇脚」设置菜单（画质、环顾快慢、上下反转、音量、回到起点）",
-      "半山亭移到平台南侧的石台上并可走入；踏步出挑；照壁加瓦顶窄脊；石灯改经幢；大殿上下檐收紧；匾额改繁体楷书",
-      "柳杉加密压暗并在墙外成林；竹下加矮竹与蕨；竹竿节环变淡",
-      "六个验收机位 cam01…cam06（camera-manifest.json 由总平面生成）；?tour=120x3 行走测量与录像",
-      "操作提示只在需要时出现一行，H 开键位卡；界面改楷体；游戏名「山门之外」",
-      "体验修正：石阶上视线平滑、拖动与鼠标同向、入山提示含换视角；空格跳跃（E/回车行事，触屏有「跃」键）",
-      "小沙弥细化：背上的竹斗笠与系带、肩与袍褶、手指、头顶青影",
-      "性能：降档器先关镜面并在约 45 帧以下动作；上层台地不画镜面；植被排在建筑之后；远处柳杉不长枝干",
-      "开发工具服务器只在 app/ 内解析路径、只监听 127.0.0.1，并有回归测试",
-      "游戏层：通往下一处的路标与步数、朱印帐里的行程记录、菜单里的全屏、标题页的设置入口；八座殿第一幅画框的文字",
-      "构造细部：须弥座、象眼、单勾栏、博风板与悬鱼、风铎、波口钟、华带牌；晨昏的淡光束、雪天扫净的甬道与雪檐、殿前一对小柏",
-      "地面光照图在建成时烘出；灯火光晕合成一个点云；静态几何的共用顶点合并（173 万变 61 万）"
+      "默认只保留快门、设置和收起，画幅/远近/人物收入折叠面板",
+      "默认16:9广角，人物可选；移除点选对焦、景深shader和深度贴图",
+      "补桌面/触控photo-ui与原有导出照片回归"
     ],
     "known_issues": [
       "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上三次平均 60.4, 60.1, 60.5 帧/秒，不能代表目标设备",
@@ -40,38 +28,20 @@
       "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG"
     ],
     "evidence": [
-      "docs/t00/README.md",
-      "docs/t00/acceptance-report.json",
-      "docs/t00/review-log.json",
-      "docs/t00/KNOWN-ISSUES.md",
-      "docs/t00/decisions.md",
-      "docs/t00/camera-manifest.json",
-      "docs/t00/performance.json",
-      "docs/t00/evidence/M4/manifest.json",
-      "docs/t00/evidence/M4/CAM-01.jpg",
-      "docs/t00/evidence/M4/CAM-02.jpg",
-      "docs/t00/evidence/M4/CAM-03.jpg",
-      "docs/t00/evidence/M4/CAM-04.jpg",
-      "docs/t00/evidence/M4/CAM-05.jpg",
-      "docs/t00/evidence/M4/CAM-06.jpg",
-      "docs/t00/evidence/M4/walkthrough.webm",
-      "docs/t00/evidence/M4/frame-times.csv",
-      "docs/t00/evidence/M4/console.txt",
-      "docs/t00/evidence/M2-before/",
-      "docs/t00/asset-register.csv",
-      "docs/STAIR-LOCOMOTION.md"
+      "tests/e2e/run.cjs: photo-ui / photo",
+      "docs/PHOTO-MODE.md"
     ],
-    "record_commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+    "record_commit": "8e4cb3f98e60ece11d9ef291a387469618fd92b2",
     "kind": "developer_report"
   },
   "verification": {
     "status": "in_progress",
     "conclusion": null,
-    "run_id": 43649940603,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43649940603",
+    "run_id": 43650005152,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43650005152",
     "checks": {
       "syntax": "success",
-      "unit": "success",
+      "unit": "in_progress",
       "e2e": "pending"
     },
     "scope": [
