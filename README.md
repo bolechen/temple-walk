@@ -203,3 +203,7 @@ Claude Code调用 `/temple-review`，Codex调用 `$temple-review`。其他项目
 ## 提交与合并规范
 
 后续 PR 统一 **Squash and merge**；新提交、PR 标题及最终 squash 提交标题使用 **Conventional Commits**。示例：`feat(loading): 增加首屏加载进度`。详见 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [代理协作规则](AGENTS.md)。
+
+## 版本与发版
+
+使用 [Release Please](.github/workflows/release-please.yml) 根据 Conventional Commits 维护版本PR、`CHANGELOG.md`、标签与GitHub Release，以 **0.1.0** 接入。当前版本见 [package.json](package.json)，操作与权限说明见 [发版流程](docs/RELEASING.md)。版本PR仍使用 squash 合并；GitHub Pages试玩部署独立运行。

@@ -8,3 +8,5 @@
 - 本规则自采用后生效，不为调整提交格式而改写已发布的主线历史。
 
 示例：`fix(camera): correct trackpad look direction`、`feat(loading): 增加首屏加载进度`、`docs: clarify contribution rules`。
+
+- 版本由Release Please管理；版本PR同样使用Conventional Commits标题与squash合并。版本、manifest和变更日志一起维护，操作与权限边界见[docs/RELEASING.md](docs/RELEASING.md)。

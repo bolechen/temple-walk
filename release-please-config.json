@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "c336515b19f2034b358a5267e7bee64c901e9abb",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "temple-walk",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false,
+      "pull-request-title-pattern": "chore(main): release ${version}"
+    }
+  }
+}
