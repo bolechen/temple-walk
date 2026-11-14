@@ -47,6 +47,13 @@ export function stairGeo(w, rise) {
     const len = Math.hypot(run, rise);
     parts.push(new THREE.BoxGeometry(0.42, 0.26, len + 0.1).rotateX(Math.atan2(rise, run)).translate(sx * (w / 2 + 0.21), rise / 2 - 0.02, run / 2),
       box(0.42, rise / 2, run, sx * (w / 2 + 0.21), rise / 4 - 0.1, run / 2));
+    // Under each cheek stone, on a flight tall enough to show it: the triangle of its side, cut back in three steps.
+    if (rise >= 0.85) for (let k = 0; k < 3; k++) {
+      const m = 0.1 + k * 0.13, y0 = m * 0.6, z0 = m, z1 = run - m * 2.2, y1 = (rise - 0.3) * (1 - (z0 + m) / run) - m * 0.4; if (z1 - z0 < 0.3 || y1 - y0 < 0.15) break;
+      const tri = new THREE.Shape([new THREE.Vector2(z0, y0), new THREE.Vector2(z1, y0), new THREE.Vector2(z0, y1)]), hole = new THREE.Path([new THREE.Vector2(z0 + 0.05, y0 + 0.04), new THREE.Vector2(z0 + 0.05, y1 - 0.1), new THREE.Vector2(z1 - 0.16, y0 + 0.04)]);
+      tri.holes.push(hole);
+      parts.push(new THREE.ExtrudeGeometry(tri, { depth: 0.03, bevelEnabled: false }).rotateY(-Math.PI / 2).translate(sx * (w / 2 + 0.42 + 0.03 * (3 - k)) + (sx > 0 ? 0 : 0.03), 0, 0));
+    }
   }
   return { geo: merge(parts), run };
 }

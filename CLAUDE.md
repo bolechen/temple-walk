@@ -146,6 +146,10 @@ every label and spoken line, and the name boards, which are written in tradition
 "Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `npm run check` fails if a character is used that the cut does not hold.
 
+**The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small red lozenge
+(`#way`) sits on the picture where the next place lies, or at the edge toward it, with the distance in steps; it leaves with
+the goal. The visit's metres and minutes are kept under `yunjing.visit.v1` and told on the book's page. `__visit()` reports them.
+
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
 opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, volume, the key card, and
 a way back to the start of the path. The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value

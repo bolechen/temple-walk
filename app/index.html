@@ -89,6 +89,11 @@
   #jumpBtn { position: absolute; right: max(78px, calc(env(safe-area-inset-right, 0px) + 78px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); width: 58px; height: 58px; border-radius: 50%; padding: 0; text-indent: 0; letter-spacing: 0; font-size: 17px; z-index: 4; display: none; }
   @media (pointer: coarse) { #jumpBtn { display: block; } }
   body.photo #jumpBtn, body.bare #jumpBtn, body:not(.entered) #jumpBtn { display: none; }
+  /* The way to the next place: a small red lozenge on the picture where it lies, or at the edge toward it, with how far. Shown with the goal, and gone with it. */
+  #way { position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; display: grid; justify-items: center; gap: 6px; font: 400 12px/1 var(--kai); letter-spacing: .12em; text-shadow: 0 0 6px #000, 0 0 2px #000; will-change: transform; }
+  #way i { width: 9px; height: 9px; background: var(--seal); transform: rotate(45deg); box-shadow: 0 0 0 1px rgba(237,232,220,.55), 0 0 10px rgba(0,0,0,.6); }
+  body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
+  #titleSet { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); opacity: .7; }
   #act { position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 400 22px/1 var(--kai); letter-spacing: .4em; text-indent: .4em; padding: 14px 28px; border-color: rgba(237,232,220,.55); background: rgba(11,10,9,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-radius: 3px; z-index: 5; }
   #say { position: absolute; left: 0; right: 0; bottom: calc(168px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(19px, 3.1vmin, 26px)/1.6 var(--kai); letter-spacing: .18em; text-shadow: 0 0 12px #000, 0 0 3px #000; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
   #say.on { opacity: 1; }
@@ -125,7 +130,7 @@
   #keys p { margin: 20px 0 0; text-align: center; font-size: 12px; letter-spacing: .3em; opacity: .5; }
 
   /* The pause menu: the same card as the keys, with the few things a visitor may set. */
-  #menu { position: absolute; inset: 0; z-index: 22; display: grid; place-items: center; background: rgba(8,8,7,.28); touch-action: none; }   /* covers the view: nothing behind it is touched while it is open */
+  #menu { position: absolute; inset: 0; z-index: 45; display: grid; place-items: center; background: rgba(8,8,7,.28); touch-action: none; }   /* covers the view: nothing behind it is touched while it is open */
   #menu .card { width: min(86vw, 380px); box-sizing: border-box; padding: 26px 30px 22px; background: rgba(11,10,9,.78); border: 1px solid var(--line); border-radius: 4px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 60px rgba(0,0,0,.45); font: 400 15px/1 var(--kai); letter-spacing: .16em; display: grid; gap: 16px; }
   #menu h2 { margin: 0 0 4px; font: 400 26px/1 var(--brush); letter-spacing: .4em; text-indent: .4em; text-align: center; }
   #menu .set { display: grid; grid-template-columns: 6.2em 1fr; align-items: center; gap: 12px; } #menu .opts { display: flex; gap: 6px; flex-wrap: wrap; } #menu .opts .chip, #menu .set > .chip { padding: 8px 10px; min-height: 34px; min-width: 40px; justify-self: start; }
@@ -158,6 +163,7 @@
   <canvas id="yardGl"></canvas>
   <p id="moodTag" class="fade"></p>
   <p id="goal" class="fade"></p>
+  <div id="way" class="fade" aria-hidden="true"><i></i><span></span></div>
   <div id="keys" hidden><h2>键位</h2><dl>
     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>行走</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
     <dt><kbd>鼠标</kbd></dt><dd>环顾，点画面握住</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
@@ -188,7 +194,7 @@
     <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
     <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
     <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
-    <div class="row"><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuResume" type="button">继续</button></div>
+    <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuResume" type="button">继续</button></div>
   </div></div>
   <div id="moodPanel" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
@@ -233,6 +239,7 @@
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>
   </div>
   <p class="how">七处小事 · 七枚朱印</p>
+  <button class="chip" id="titleSet" type="button">设置</button>
 </div>
 <div id="veil"></div>
 

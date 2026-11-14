@@ -64,15 +64,31 @@ export function buildHall(M, opts) {
       const t = 0.19, o = 0.07, y = p.platH - t / 2 + 0.004, half = p.steps ? p.steps / 2 : 0, cap = [box(PX * 2 + o * 2, t, 0.6, 0, y, zB + 0.3 - o), box(0.6, t, zF - zB + o * 2, -PX - o + 0.3, y, (zF + zB) / 2), box(0.6, t, zF - zB + o * 2, PX + o - 0.3, y, (zF + zB) / 2)];
       for (const sx of [-1, 1]) cap.push(box(PX + o - half, t, 0.6, sx * (PX + o + half) / 2, y, zF - 0.3 + o));
       add(merge(cap), M.monolith, { ao: null });
+      // A tall platform is a sumeru base: a foot and a head that stand proud, a waist drawn in between them, and
+      // small posts dividing the waist into panels.
+      if (p.platH >= 1.2) {
+        const su = [], h = p.platH, ring = (out, y0, y1) => { const w = PX + out, zf = zF + out, zb = zB - out, hh = y1 - y0, yy = (y0 + y1) / 2;
+          su.push(box(w * 2, hh, 0.12, 0, yy, zb + 0.06), box(0.12, hh, zf - zb, -w + 0.06, yy, (zf + zb) / 2), box(0.12, hh, zf - zb, w - 0.06, yy, (zf + zb) / 2));
+          for (const sx of [-1, 1]) su.push(box(w - half, hh, 0.12, sx * (w + half) / 2, yy, zf - 0.06)); };
+        ring(0.16, 0, 0.2); ring(0.09, 0.2, 0.32); ring(0.09, h - 0.5, h - 0.38); ring(0.14, h - 0.38, h - 0.2);
+        const post = (x, z) => su.push(box(0.16, h - 0.82, 0.16, x, (0.32 + h - 0.5) / 2, z));
+        for (let x = -PX; x <= PX + 1e-6; x += (PX * 2) / Math.round((PX * 2) / 1.7)) { post(x, zB - 0.03); if (Math.abs(x) > half + 0.3) post(x, zF + 0.03); }
+        for (let z = zB; z <= zF + 1e-6; z += (zF - zB) / Math.round((zF - zB) / 1.7)) { post(-PX - 0.03, z); post(PX + 0.03, z); }
+        add(merge(su), M.monolith, { ao: null });
+      }
     }
   }
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
     const parts = [], y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
     const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
       const n = Math.max(1, Math.round((b - a) / 1.5)), d = (b - a) / n;
-      for (let i = 0; i <= n; i++) { const t = a + i * d, px = ax === "x" ? t : fixed, pz = ax === "x" ? fixed : t; parts.push(box(0.17, 1.0, 0.17, px, y + 0.5, pz), box(0.23, 0.1, 0.23, px, y + 1.05, pz)); }
-      const mid = (a + b) / 2, len = b - a;
-      parts.push(ax === "x" ? box(len, 0.1, 0.11, mid, y + 0.86, fixed) : box(0.11, 0.1, len, fixed, y + 0.86, mid), ax === "x" ? box(len, 0.46, 0.06, mid, y + 0.42, fixed) : box(0.06, 0.46, len, fixed, y + 0.42, mid));
+      // The posts: eight-sided, each ending in a lotus bud. Between them, from the floor up: a sill, a panel, the
+      // basin rail, a short strut in the middle of each bay, and the hand rail.
+      for (let i = 0; i <= n; i++) { const t = a + i * d, px = ax === "x" ? t : fixed, pz = ax === "x" ? fixed : t;
+        parts.push(new THREE.CylinderGeometry(0.085, 0.095, 1.0, 8).translate(px, y + 0.5, pz), new THREE.LatheGeometry([[0, 0], [0.11, 0], [0.12, 0.03], [0.07, 0.06], [0.1, 0.12], [0.095, 0.19], [0.05, 0.26], [0, 0.29]].map(([r, hh]) => new THREE.Vector2(r, hh)), 8).translate(px, y + 1.0, pz));
+        if (i < n) { const m = t + d / 2; parts.push(ax === "x" ? box(0.07, 0.2, 0.07, m, y + 0.74, fixed) : box(0.07, 0.2, 0.07, fixed, y + 0.74, m)); } }
+      const mid = (a + b) / 2, len = b - a, bar = (hh, th, yy) => parts.push(ax === "x" ? box(len, hh, th, mid, y + yy, fixed) : box(th, hh, len, fixed, y + yy, mid));
+      bar(0.1, 0.14, 0.05); bar(0.44, 0.05, 0.34); bar(0.08, 0.14, 0.6); bar(0.09, 0.1, 0.88);
     };
     const ex = PX - inset;
     for (const [z, gap] of [[zF - inset, gapF], [zB + inset, gapB]]) { if (gap) { run("x", -ex, -gap, z); run("x", gap, ex, z); } else run("x", -ex, ex, z); }

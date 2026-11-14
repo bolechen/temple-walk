@@ -34,8 +34,29 @@ export function createProps(scene, M, at, centre) {
     s.position.set(x0, 5 + (i % 4) * 2.2, 84 - i * 17); s.scale.set(38, 12, 1);
     s.userData = { a, x0 }; mist.push(s); scene.add(s);
   }
+  // Shafts of light: at dawn and dusk, when the sun is low and the air is not all cloud, its light comes over the
+  // side halls' roofs and stands in the mist of the first court. Each is two crossed sheets, brightest along its middle.
+  const shafts = [], sc = document.createElement("canvas"); sc.width = 64; sc.height = 256;
+  { const g2 = sc.getContext("2d"), img = g2.createImageData(64, 256); let q = 91; const rn = () => ((q = (q * 16807) % 2147483647) / 2147483647);
+    for (let yy = 0; yy < 256; yy++) for (let xx = 0; xx < 64; xx++) { const u = xx / 63 - 0.5, v = yy / 255, a2 = Math.pow(Math.max(0, 1 - Math.abs(u) * 2), 1.6) * Math.sin(Math.PI * Math.pow(v, 0.7)) * (0.82 + 0.18 * rn()), i = (yy * 64 + xx) * 4; img.data[i] = img.data[i + 1] = img.data[i + 2] = 255; img.data[i + 3] = a2 * 255; }
+    g2.putImageData(img, 0, 0); }
+  const shaftTex = new THREE.CanvasTexture(sc), shaftMat = new THREE.MeshBasicMaterial({ map: shaftTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false, opacity: 0 });
+  for (let i = 0; i < 5; i++) for (let k = 0; k < 1; k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shaftMat); m.visible = false; m.renderOrder = 3; m.userData = { i, k }; shafts.push(m); scene.add(m); }
+  const Yax = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), from = new THREE.Vector3(), turn = new THREE.Quaternion();
+  function setShafts(m) {
+    const low = m.sun[1] < 0.3 && m.time !== "night", k = low ? 0.075 * Math.max(0, 1 - m.cloud * 1.3) : 0;   // faint: light standing in mist, not a beam
+    shaftMat.opacity = k; shaftMat.color.setRGB(m.sunCol[0], m.sunCol[1], m.sunCol[2]);
+    dir.set(-m.sun[0], -m.sun[1], -m.sun[2]).normalize();
+    for (const s of shafts) {
+      s.visible = k > 0.01; if (!s.visible) continue;
+      const { i, k: cross } = s.userData, len = 17 + (i % 3) * 3, w = 4.2 + (i % 2) * 1.8;
+      from.set(Math.sign(m.sun[0] || 1) * 10.5, 5.6 + (i % 2) * 0.5, 31 - i * 6.2 + (i % 2) * 1.3);       // just over the eaves on the sun's side
+      s.position.copy(from).addScaledVector(dir, len / 2); s.quaternion.setFromUnitVectors(Yax, dir);
+      s.quaternion.multiply(turn.setFromAxisAngle(Yax, Math.atan2(dir.x, dir.z) > 0 ? 0.5 : -0.5)); s.scale.set(w, len, 1);   // turned a little toward the axis of the court, from where it is seen
+    }
+  }
   return {
-    setMood(m) { for (const sp of mist) { sp.material.color.setRGB(...m.fog).multiplyScalar(1.08); sp.material.opacity = 0.5 * m.mist; } },
+    setMood(m) { setShafts(m); for (const sp of mist) { sp.material.color.setRGB(...m.fog).multiplyScalar(1.08); sp.material.opacity = 0.5 * m.mist; } },
     update(t, dt, still, px = 800) {
       su.uPx.value = px;
       for (const sp of mist) if (!still) sp.position.x = sp.userData.x0 + Math.sin(t * 0.03 + sp.userData.a * 3) * 6;

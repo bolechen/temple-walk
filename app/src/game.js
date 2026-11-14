@@ -27,6 +27,11 @@ export function createGame(y) {
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter");
 
+  // The visit so far: metres walked and time on the mountain, kept between sittings like the seals.
+  const VISIT = "yunjing.visit.v1", visit = { metres: 0, seconds: 0, at: null, save: 0 };
+  try { const v = JSON.parse(localStorage.getItem(VISIT) || "null"); if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
+  const keep = () => { try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
+  const told = () => `这一趟走了 ${Math.round(visit.metres)} 步，在山上 ${Math.max(1, Math.round(visit.seconds / 60))} 分钟。`;
   // ---- On the ground: a ring at every place whose seal is still to be earned ----
   const tex = ensoTexture(), rings = {};
   for (const id in places) {
@@ -95,6 +100,16 @@ export function createGame(y) {
   // ---- The button that offers what can be done here ----
   let acc = 0, look = null, wasIndoors = false; const seen = new Set();
   y.onTick((dt) => {
+    // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
+    { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
+      if (el) { const show = !!(p && g && g.classList.contains("on") && entered && (p.room || null) === y.room() && !rite);
+        el.classList.toggle("on", show);
+        if (show) { const w = y.where(), py = p.y ?? y.walker.heightAt(p.at[0], p.at[1]), sc = y.screenOf(p.at[0], py + 1.6, p.at[1]), m = 46;
+          let sx = sc.x, sy = sc.y; if (sc.behind) { sx = sc.w - sx; sy = sc.h - m; }
+          sx = Math.min(sc.w - m, Math.max(m, sx)); sy = Math.min(sc.h - m * 2.4, Math.max(m * 1.6, sy));
+          el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -50%)`; el.lastChild.textContent = `${Math.max(1, Math.round(Math.hypot(p.at[0] - w.x, p.at[1] - w.z)))} 步`; } } }
+    // How long this visit has been and how far it has gone: told on the last page of the book.
+    { const w = y.where(); if (entered) { if (visit.at) { const d = Math.hypot(w.x - visit.at[0], w.z - visit.at[1]); if (d < 3) visit.metres += d; } visit.at = [w.x, w.z]; visit.seconds += dt; if ((visit.save += dt) > 10) { visit.save = 0; keep(); } } }
     for (const id in rings) if (rings[id].visible) rings[id].material.opacity = (0.5 + 0.22 * Math.sin(performance.now() / 900 + id.length)) * (y.night() ? 0.9 : 0.75), rings[id].material.color.setScalar(1).multiply(y.night() ? new THREE.Color(1, 0.86, 0.6) : new THREE.Color(0.06, 0.05, 0.045));
     const nowT = performance.now(); if (nowT - acc < 180) return; acc = nowT;   // a few times a second is enough
     const w = y.where(), free = entered && !rite && !y.busy(), indoors = y.inside();
@@ -121,14 +136,14 @@ export function createGame(y) {
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label, url: location.host + location.pathname.replace(/\/$/, "") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = "云径禅寺-朱印.jpg";
-    $("bookHint").textContent = next ? next.hint : "七印圆满。这一页是你的了。";
+    $("bookHint").textContent = next ? `${next.hint}　${told()}` : `七印圆满。这一页是你的了。${told()}`;
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
     $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: "云径禅寺 · 朱印" }); } catch {} };
     $("bookReset").textContent = "重新朝山"; $("book").hidden = false; document.exitPointerLock?.();
   }
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => { $("book").hidden = true; });
-  $("bookReset")?.addEventListener("click", (e) => { if (e.currentTarget.textContent === "重新朝山") { e.currentTarget.textContent = "再点一次，清空朱印"; return; } journey.reset(); refresh(); $("book").hidden = true; });
+  $("bookReset")?.addEventListener("click", (e) => { if (e.currentTarget.textContent === "重新朝山") { e.currentTarget.textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); $("book").hidden = true; });
 
   // ---- The title ----
   const title = $("title");
@@ -138,6 +153,7 @@ export function createGame(y) {
 
   // For the tests.
   window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
+  window.__visit = () => ({ metres: visit.metres, seconds: visit.seconds });
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
   window.__take = () => rite && rite.take && rite.take();
   return { near: () => near, rite: () => rite && rite.id };

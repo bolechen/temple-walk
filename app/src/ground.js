@@ -72,7 +72,7 @@ export function createGround(scene, shade, censer, paving) {
         for(int i=0;i<${MAX_SHADE};i++){ vec4 b=uShade[i]; if(b.z<0.) break; vec2 d=abs(p-b.xy)-b.zw; dB=min(dB,length(max(d,0.))+min(max(d.x,d.y),0.)); }
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
         // Snow lies where no one has walked: thin on the path, deep in the corners.
-        float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.3:0.))*smoothstep(-.2,.7,dB); puddle*=1.-sn; damp*=1.-sn;
+        float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.8:0.)-(kerb?.35:0.))*smoothstep(-.2,.7,dB); puddle*=1.-sn; damp*=1.-sn;
         vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*(.88+.24*wN.z),sn);
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
         vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
