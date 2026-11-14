@@ -1,0 +1,154 @@
+[
+  {
+    "id": "tea-porch-table-south",
+    "at": [
+      -13.680000000000001,
+      18.9
+    ],
+    "blocked": false,
+    "support": 0.45,
+    "tableTop": 0.8200000000000001,
+    "avatarVerticesInsideTableTopSlab": 97,
+    "reachablePorchSamples": [
+      {
+        "at": [
+          -13.390000000000002,
+          18.9
+        ],
+        "blocked": true
+      },
+      {
+        "at": [
+          -13.420000000000002,
+          18.9
+        ],
+        "blocked": true
+      },
+      {
+        "at": [
+          -13.450000000000003,
+          18.9
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.480000000000002,
+          18.9
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.510000000000002,
+          18.9
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.540000000000003,
+          18.9
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.570000000000002,
+          18.9
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.600000000000003,
+          18.9
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.630000000000003,
+          18.9
+        ],
+        "blocked": false
+      }
+    ]
+  },
+  {
+    "id": "tea-porch-table-north",
+    "at": [
+      -13.680000000000001,
+      9.1
+    ],
+    "blocked": false,
+    "support": 0.45,
+    "tableTop": 0.8200000000000001,
+    "avatarVerticesInsideTableTopSlab": 97,
+    "reachablePorchSamples": [
+      {
+        "at": [
+          -13.390000000000002,
+          9.1
+        ],
+        "blocked": true
+      },
+      {
+        "at": [
+          -13.420000000000002,
+          9.1
+        ],
+        "blocked": true
+      },
+      {
+        "at": [
+          -13.450000000000003,
+          9.1
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.480000000000002,
+          9.1
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.510000000000002,
+          9.1
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.540000000000003,
+          9.1
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.570000000000002,
+          9.1
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.600000000000003,
+          9.1
+        ],
+        "blocked": false
+      },
+      {
+        "at": [
+          -13.630000000000003,
+          9.1
+        ],
+        "blocked": false
+      }
+    ]
+  }
+]
