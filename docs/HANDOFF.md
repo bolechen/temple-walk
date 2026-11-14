@@ -45,7 +45,10 @@
 - 评审用了两个子代理（美术、结构与地域），29 条问题在 `docs/t00/review-log.json`，改了什么、为什么在 `decisions.md`，
   没改完的在 `KNOWN-ISSUES.md`。**最大的一项没做完：檐椽、飞椽、斗拱出跳的真实几何（STR-02）。**
 - 按交接包的完成定义（验收通过并有运行证据），T00 还没有完成。`acceptance-report.json` 逐条写了通过、未通过和 blocked。
-- 资料库的评审指出：仓库是私有的，但 GitHub Pages 是公开的，`app/m/` 里的佛像模型谁都能下载。这件事要用户决定。
+- 仓库在 2026-11-14 由所有者改为公开。`app/m/` 的佛像模型没有再分发授权记录，要确认或替换；项目代码还没有 LICENSE。
+- 所有者同时加了独立评审流程（`docs/REVIEW-PROCESS.md`、`skills/temple-review/`）。那是评审方的规范：证据按提交追溯，
+  `__walk`、`?tour` 这类程序行走只算 diagnostic 证据，不能单独证明真实输入的验收通过；T4 不能推定 Mac 或手机。
+  我们在 `docs/t00/acceptance-report.json` 里按同样的口径自报。
 
 界面这一轮也改了：操作提示只在用得上的时候出现一行（`app/src/hints.js`），H 键开键位卡；界面文字用楷体
 （霞鹜文楷，`app/f/kai.woff2`）；匾额改繁体楷书。
