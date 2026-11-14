@@ -1,0 +1,146 @@
+[
+  {
+    "id": "tea",
+    "at": [
+      -13.740000000000002,
+      6
+    ],
+    "base": 0.45,
+    "shaftConservativeRadius": 0.19,
+    "maxVertexInsideShaft": 0.0510689134291189,
+    "sample": {
+      "point": [
+        -14.061167945861818,
+        1.0650000095367431,
+        5.994755235034972
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "chan",
+    "at": [
+      13.740000000000002,
+      22
+    ],
+    "base": 0.45,
+    "shaftConservativeRadius": 0.19,
+    "maxVertexInsideShaft": 0.0510689134291189,
+    "sample": {
+      "point": [
+        14.061167945861818,
+        1.0650000095367431,
+        22.005244764965028
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "main",
+    "at": [
+      14.4,
+      -5.549999999999999
+    ],
+    "base": 1.5,
+    "shaftConservativeRadius": 0.24,
+    "maxVertexInsideShaft": 0.11106123262182732,
+    "sample": {
+      "point": [
+        14.405244764965028,
+        2.115000009536743,
+        -5.871167945861815
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "library",
+    "at": [
+      9.4,
+      -44.34
+    ],
+    "base": 3.66,
+    "shaftConservativeRadius": 0.24,
+    "maxVertexInsideShaft": 0.10106891342912419,
+    "sample": {
+      "point": [
+        9.405244764965028,
+        4.275000009536743,
+        -44.66116794586182
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "yaoshi",
+    "at": [
+      -13.54,
+      -52.4
+    ],
+    "base": 2.85,
+    "shaftConservativeRadius": 0.19,
+    "maxVertexInsideShaft": 0.0510689134291189,
+    "sample": {
+      "point": [
+        -13.861167945861816,
+        3.4650000095367433,
+        -52.405244764965026
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "dahui",
+    "at": [
+      13.54,
+      -74.5
+    ],
+    "base": 5.65,
+    "shaftConservativeRadius": 0.19,
+    "maxVertexInsideShaft": 0.0510689134291189,
+    "sample": {
+      "point": [
+        13.861167945861816,
+        6.2650000095367435,
+        -74.49475523503497
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "guanyin",
+    "at": [
+      9,
+      -74.64999999999999
+    ],
+    "base": 6.1000000000000005,
+    "shaftConservativeRadius": 0.24,
+    "maxVertexInsideShaft": 0.11106123262182555,
+    "sample": {
+      "point": [
+        9.005244764965028,
+        6.715000009536744,
+        -74.97116794586181
+      ],
+      "phase": 0
+    }
+  },
+  {
+    "id": "lingxiao",
+    "at": [
+      7.5,
+      -123.34000000000002
+    ],
+    "base": 20.9,
+    "shaftConservativeRadius": 0.24,
+    "maxVertexInsideShaft": 0.10106891342912419,
+    "sample": {
+      "point": [
+        7.505244764965028,
+        21.51500000953674,
+        -123.66116794586183
+      ],
+      "phase": 0
+    }
+  }
+]

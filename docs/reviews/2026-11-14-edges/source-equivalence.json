@@ -1,0 +1,32 @@
+{
+  "reviewed_commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+  "observed_commit": "954f84d89fba3b03e39610bfa07dc0f44d7f75b6",
+  "files": {
+    "src/site.js": {
+      "reviewed_sha256": "a6168e13624119b27674fc9b87791aa5debd1f9c0c6398f954b09a63a892ec48",
+      "observed_sha256": "a6168e13624119b27674fc9b87791aa5debd1f9c0c6398f954b09a63a892ec48",
+      "identical": true
+    },
+    "src/building.js": {
+      "reviewed_sha256": "65ecc1909cff574974f6b534ae3dbc00aaaadacea9e3366d7572a011bb997414",
+      "observed_sha256": "b3cc802cee9b3207c3d86f608f9cfc94893906330d9a99d436b10a5250c9ea96",
+      "identical": false
+    },
+    "src/monk.js": {
+      "reviewed_sha256": "2d12881430e4312beb2f5362cef48b83e7f3f64e9a1e9b26df239cdb40cf8e87",
+      "observed_sha256": "2d12881430e4312beb2f5362cef48b83e7f3f64e9a1e9b26df239cdb40cf8e87",
+      "identical": true
+    },
+    "yard.js": {
+      "reviewed_sha256": "62ee4b68570346b3622839b0d0d1e8c3d5220b7cb22d9af6e0c197d98e9bb2cf",
+      "observed_sha256": "62ee4b68570346b3622839b0d0d1e8c3d5220b7cb22d9af6e0c197d98e9bb2cf",
+      "identical": true
+    }
+  },
+  "scope": "mechanical collision evidence only; changed materials have not been re-rendered at observed commit",
+  "building_walk_block_identical": true,
+  "building_walk_block_sha256": {
+    "reviewed": "3b96996fea25cb35c999e51dae770d25521dc2fb9c46c365d670ff46e20e3503",
+    "observed": "3b96996fea25cb35c999e51dae770d25521dc2fb9c46c365d670ff46e20e3503"
+  }
+}

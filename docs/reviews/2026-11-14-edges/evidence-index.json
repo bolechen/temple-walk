@@ -1,0 +1,780 @@
+{
+  "run_id": "T00-20261114-edges-3e67700",
+  "source_commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+  "artifacts": [
+    {
+      "id": "outer-bell-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:52:26.055676+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-bell-front.png",
+      "sha256": "27aae67cb3c32f584f74cd6c99fde14342e430e57c0730398c18ed2a8da39619"
+    },
+    {
+      "id": "outer-bell-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:52:39.108026+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-bell-left.png",
+      "sha256": "3eaf9ed804ef7cc24116a1c642133934deeaedc4c1c9b8a6c3da705b01d7d723"
+    },
+    {
+      "id": "outer-bell-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:52:49.960318+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-bell-right.png",
+      "sha256": "e5b10981d1c3ae770064292a4cde6491b4a6b4f93738f4e2a68e77baf543604b"
+    },
+    {
+      "id": "outer-chan-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:55:18.964312+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-chan-column-contact.png",
+      "sha256": "f338740700e98afe813082fc549001aea9c8c51f0e625cf2ca7b27b677d3f078"
+    },
+    {
+      "id": "outer-chan-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:54:32.055057+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-chan-front.png",
+      "sha256": "d906bf76c15175f112a2bfc8f7701262619987aaf3ae1c63ccd13deedefa89e3"
+    },
+    {
+      "id": "outer-chan-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:54:43.303358+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-chan-left.png",
+      "sha256": "d8dc80dbba9c7ddd0fc59cd8c67ac42b51c73f9f4f3c5d333a7a57d665f9d12a"
+    },
+    {
+      "id": "outer-chan-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:54:55.063673+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-chan-right.png",
+      "sha256": "a1788a18abac630b137cf0d0b49bac17fda9b69de9563fdeaf0df4d8b2956081"
+    },
+    {
+      "id": "outer-dahui-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:59:29.903031+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-dahui-column-contact.png",
+      "sha256": "22fbea73bc4a0f733a316571f0a5ccd5e2d199752be8347b2a1dcab6fd3f5e7e"
+    },
+    {
+      "id": "outer-dahui-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:59:00.974257+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-dahui-left.png",
+      "sha256": "27b9286900352bfa9a7f68bc942c3cb1aabaeac08b583cfcbce072efe60f60d4"
+    },
+    {
+      "id": "outer-dahui-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:59:11.506538+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-dahui-right.png",
+      "sha256": "503d3acb30f6000c402a8bc15856eface20d83be1d7dea8f4d0852c9a1ca187c"
+    },
+    {
+      "id": "outer-drum-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:53:01.004615+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-drum-front.png",
+      "sha256": "1cc90bd9d602d93f8ee428b3b64cd755502bc54630d271c4192b130202147a87"
+    },
+    {
+      "id": "outer-drum-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:53:12.576926+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-drum-left.png",
+      "sha256": "ceab3a279ab9da0ed92627bac68da9c76cc91dfa901d99db08ce6a4ab62e7596"
+    },
+    {
+      "id": "outer-drum-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:53:27.005313+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-drum-right.png",
+      "sha256": "14bc23af18bb1d3077b0083a83ed12b9cd58b96dfb116b83f990ef7fce6fb9c2"
+    },
+    {
+      "id": "outer-gate-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:51:36.454342+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-gate-front.png",
+      "sha256": "501b125b8582aaba794d5fb69af6ec4578afe509e3f38e3c96c70180a26644b5"
+    },
+    {
+      "id": "outer-gate-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:51:56.510881+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-gate-left.png",
+      "sha256": "a304949ac360d6243d4a23e43ac45d44aeb70e06ee06c5921ff5c1ae345da544"
+    },
+    {
+      "id": "outer-gate-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:52:14.195357+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-gate-right.png",
+      "sha256": "1ffa3d0a8c28754b9309742eca4631ea747496b41f2034c66752cc30bf96068e"
+    },
+    {
+      "id": "outer-guanyin-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:00:48.793149+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-guanyin-column-contact.png",
+      "sha256": "247e1d21359f8db5a580e9f388f8406c62f9dabf5d0a9524399462e9358f1c62"
+    },
+    {
+      "id": "outer-guanyin-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:59:40.803324+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-guanyin-front.png",
+      "sha256": "3b337e9e4c744dd6a42269ce883f66b961230ea9e014cb6c6ad801a6b0d0a0df"
+    },
+    {
+      "id": "outer-guanyin-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:59:55.187710+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-guanyin-left.png",
+      "sha256": "750530131a8998d6e4c420b589a0c43c3e35ef9aed5561d91241de4f9fc532bf"
+    },
+    {
+      "id": "outer-guanyin-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:00:15.160247+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-guanyin-right.png",
+      "sha256": "c0baee68ff35646d27474ec30d34e1fb4bb1ef9b70d5db676fd94ab4aaa6e88d"
+    },
+    {
+      "id": "outer-library-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:57:46.384259+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-library-column-contact.png",
+      "sha256": "d1083fcff21d8a9a64431bf40c691fda1258e13007a3c5c93bf8fdabb048fa9d"
+    },
+    {
+      "id": "outer-library-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:56:47.962694+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-library-front.png",
+      "sha256": "525043eff46b39350cdd9947b41ecb639593c27d44ada34c2ea7c19ed2035187"
+    },
+    {
+      "id": "outer-library-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:57:03.347106+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-library-left.png",
+      "sha256": "91b4aa314d532c8bd4ed00571b2600064bb13c31e56adbabad2bb716c10b9f07"
+    },
+    {
+      "id": "outer-library-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:57:17.487485+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-library-right.png",
+      "sha256": "8bd552a81154578b87b7e7bfd89aac17e2b592285b51a50088a635e9f88f481c"
+    },
+    {
+      "id": "outer-lingxiao-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:01:46.402697+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-lingxiao-column-contact.png",
+      "sha256": "a4f30eab1b33bb4f6c7433cf7bec52ff7b8dcc22cde429f61d34f35ccec4242d"
+    },
+    {
+      "id": "outer-lingxiao-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:00:58.177401+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-lingxiao-front.png",
+      "sha256": "2e7b073d2248946c4bd78125e6f2bf8fbf012b9a08343c84e7aa08941823cff7"
+    },
+    {
+      "id": "outer-lingxiao-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:01:11.281753+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-lingxiao-left.png",
+      "sha256": "537f3908a69d25188125851ae6e37c4d33f223e4dc56741bd38000b10585d855"
+    },
+    {
+      "id": "outer-lingxiao-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:01:25.370131+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-lingxiao-right.png",
+      "sha256": "2acafcd85700c83fcc0f65eb8b12f9517a520f902e30d1dd79dfe906362c902e"
+    },
+    {
+      "id": "outer-main-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:56:35.362356+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-main-column-contact.png",
+      "sha256": "9f486beb5c04a60236ea408c3c5886d8ab0d147af7387f47981431df440ae2c9"
+    },
+    {
+      "id": "outer-main-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:55:34.456727+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-main-front.png",
+      "sha256": "ad7e9b46526b227e09d4e5daa0908cc2b750511513fb1ddb30f26b3173ab9f6c"
+    },
+    {
+      "id": "outer-main-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:55:51.069171+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-main-left.png",
+      "sha256": "b5e0e41f18b8cc6d00e08eec4ab34388a06dcb35e5ead15cfb7c7b3e58f4dd41"
+    },
+    {
+      "id": "outer-main-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:56:05.993570+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-main-right.png",
+      "sha256": "c95c7f0ff0c26f3adbce50cdecc7d53e4dc351d338d90ff7b8067ff25c49c40f"
+    },
+    {
+      "id": "outer-stele-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:01:54.702919+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-stele-front.png",
+      "sha256": "527aa96087691b85dfe9f67e38ead3f2f19a265e280ef5e057becadbc78e9aae"
+    },
+    {
+      "id": "outer-stele-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:02:06.975248+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-stele-left.png",
+      "sha256": "2727907b28f07ad3dd9ae2bea0de52cc25a0b0fc198a0e17b12d220c527d2581"
+    },
+    {
+      "id": "outer-stele-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:02:17.611533+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-stele-right.png",
+      "sha256": "3d177f8c49a2724c2ff44dabe6268d330f65be190b11f21b27eb88d7e3f8ee67"
+    },
+    {
+      "id": "outer-summit-stair",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:03:34.793602+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-summit-stair.png",
+      "sha256": "c56683b7cecdfc0c2f0961341f85d85605dc2d5bb771c3d7f55905f3dd7d2b42"
+    },
+    {
+      "id": "outer-tea-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:54:21.954786+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-tea-column-contact.png",
+      "sha256": "31fca9ee12cd73eb3b594352cf813b2a77312b0f1aa2ba4f527dad2347ffbac1"
+    },
+    {
+      "id": "outer-tea-front",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:53:37.765602+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-tea-front.png",
+      "sha256": "dfc37361264c76e8630d4d2fab9e8a709bfc0c02fe4a643452cec966f91aed37"
+    },
+    {
+      "id": "outer-tea-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:53:49.101907+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-tea-left.png",
+      "sha256": "c8819531bc6bef612ccf63f5db7fbbce6bdff7bc120070ffc1d07e2c131a5af0"
+    },
+    {
+      "id": "outer-tea-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:54:01.102228+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-tea-right.png",
+      "sha256": "8cabb67825c5c6e499cc42fedee456346e9eb32a0d333b66a9185c0262b51ddb"
+    },
+    {
+      "id": "outer-terrace1",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:03:18.281159+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-terrace1.png",
+      "sha256": "f2cd14e9589fbf4a38679b812c4cb12e45e1e7859b733d572d387a698602ed63"
+    },
+    {
+      "id": "outer-terrace2",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:03:30.861496+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-terrace2.png",
+      "sha256": "7ca1dc664119669b4855fddc32325042ffe6e997fa94c705b502ad972319e910"
+    },
+    {
+      "id": "outer-well",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:03:44.101851+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-well.png",
+      "sha256": "701b05932710574f296b072b308734881132f0dd2f3fd511602eb9c12d7baa2d"
+    },
+    {
+      "id": "outer-yaoshi-column-contact",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:58:36.957614+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-yaoshi-column-contact.png",
+      "sha256": "aeb89914fb3ea64dd0afed7cb3fc19b0b09d8ea41bb8a2c241bb490fd5109def"
+    },
+    {
+      "id": "outer-yaoshi-left",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:58:07.096814+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-yaoshi-left.png",
+      "sha256": "afdb2841b247b8a417c98718c0cac9603f5977c58c2c9d604fd1653de0dd7118"
+    },
+    {
+      "id": "outer-yaoshi-right",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:58:19.249140+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/outer-yaoshi-right.png",
+      "sha256": "5dc6fb0d2af74fb53c7f76d1d2151c088084d658bc63314f1286089264342a87"
+    },
+    {
+      "id": "detail-bell-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:04:41.503390+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-bell-back.png",
+      "sha256": "75b4a11936bb25b7c77d4e86a37861ee14da1330ca74855fb9dbfc607ad1eb19"
+    },
+    {
+      "id": "detail-chan-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:05:24.500543+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-chan-back.png",
+      "sha256": "d0e83f058f3382ebb41e45580225aed576324da50f828088d1288e8c03781848"
+    },
+    {
+      "id": "detail-chan-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:10:27.248670+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-chan-interior-entry.png",
+      "sha256": "6020eef93aaaa5914a014bb1092d0c5274613b5e3a794763a5361b2bf742434e"
+    },
+    {
+      "id": "detail-dahui-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:06:16.293931+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-dahui-back.png",
+      "sha256": "b5720d038a5e843d803b418cd63b51f38636e2f3b9d129e7aa7244ca2edeaec3"
+    },
+    {
+      "id": "detail-dahui-front-correct",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:07:38.580139+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-dahui-front-correct.png",
+      "sha256": "1f7f1318deb9267d63a7e113425b4c4746e00fbec7d8a210418aeb0901641ae3"
+    },
+    {
+      "id": "detail-dahui-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:11:43.382699+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-dahui-interior-entry.png",
+      "sha256": "38507091855f2cc3d4eeff1da4c2185e49a0a38b3e1f19faf26baf92f666d6ab"
+    },
+    {
+      "id": "detail-drum-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:04:56.255785+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-drum-back.png",
+      "sha256": "dea8ff046b25dfdb483007f318cb8fc5b714f80791618713668af4bfcd9d2346"
+    },
+    {
+      "id": "detail-gate-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:04:27.199006+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-gate-back.png",
+      "sha256": "90fdf0df4dfddf44033b3c17ca09004bfd52c1efd7f31de5916614a947d8f220"
+    },
+    {
+      "id": "detail-guanyin-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:06:30.594315+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-guanyin-back.png",
+      "sha256": "66cc489b1ec7b323e64906fe2da00627d0b60e6f917556f8b0f57d0104eccb52"
+    },
+    {
+      "id": "detail-guanyin-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:12:02.099154+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-guanyin-interior-entry.png",
+      "sha256": "b791a9ad3efef27ed95885c7d321a7a9e63834a2851de01a8059dd5c84e873fa"
+    },
+    {
+      "id": "detail-halfway-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:07:10.403383+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-halfway-back.png",
+      "sha256": "ad70268ccabb0dacb16e5cebca8dc6c79395481c7f914290e6b5a038973bba9d"
+    },
+    {
+      "id": "detail-halfway-front-correct",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:07:46.476351+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-halfway-front-correct.png",
+      "sha256": "006bdd8aad0bcd785170181aad5ab3d2299d313130138b8d87e0ad07f41958d7"
+    },
+    {
+      "id": "detail-library-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:05:52.453292+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-library-back.png",
+      "sha256": "8ea2c87aa4240665e35732df0a6fa0c9ca049e218b1bb3dc86230d8f6159fe4e"
+    },
+    {
+      "id": "detail-library-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:11:04.089654+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-library-interior-entry.png",
+      "sha256": "39a709f1fd16eb7dac59eaf136099c697a1421281cb35f6e9027b0f76c01842c"
+    },
+    {
+      "id": "detail-lingxiao-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:06:41.990621+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-lingxiao-back.png",
+      "sha256": "c1b81f343aa66b0012e18169149ce34167216795942f43b84e1c1395e7499f5f"
+    },
+    {
+      "id": "detail-lingxiao-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:12:21.371669+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-lingxiao-interior-entry.png",
+      "sha256": "2f020d26da6d0ec65c03bd62dac2e17f7afb66269fb1c4a8c9a6d4917d1c78bc"
+    },
+    {
+      "id": "detail-main-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:05:38.188910+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-main-back.png",
+      "sha256": "41098535717ee9d37ba85dca3c20937aac06c40a129f8fc2142274652bbe8175"
+    },
+    {
+      "id": "detail-main-column-side",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:09:57.267864+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-main-column-side.png",
+      "sha256": "30d7a5360a0f29e2347708572f752eb9e4bf845ebb057ab4905eaaedcb0ac267"
+    },
+    {
+      "id": "detail-main-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:10:46.001173+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-main-interior-entry.png",
+      "sha256": "434213e9ba613545898da4639b84f6a26f2db727fd653585e61a2517e404fe65"
+    },
+    {
+      "id": "detail-river-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:07:20.403651+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-river-back.png",
+      "sha256": "98b4ffd63ef5ce9148c6d9db1467c24fdd6346cacd21477dc697cf70263e6a7a"
+    },
+    {
+      "id": "detail-river-front-correct",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:07:57.992661+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-river-front-correct.png",
+      "sha256": "cdda48b81b4617c4ed8cd7ad6e79205135023a6d9dbc775f838df35cf832b3e3"
+    },
+    {
+      "id": "detail-stele-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:06:55.558985+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-stele-back.png",
+      "sha256": "8c00c5938a46b9480f570ea00ed02bba825195ad88772c3cb1b13fd88637461a"
+    },
+    {
+      "id": "detail-tea-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:05:11.396191+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-tea-back.png",
+      "sha256": "b90603116c34cdca48c0c71ff616dedc98f2a9f07ac2d9d6bf5464abc334498d"
+    },
+    {
+      "id": "detail-tea-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:10:08.704171+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-tea-interior-entry.png",
+      "sha256": "f84d0f605a43864002e93765364588bf7978e3ced19ec89dc9e3c00e21f5b02f"
+    },
+    {
+      "id": "detail-tea-table-north",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:08:40.101792+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-tea-table-north.png",
+      "sha256": "a2ebe3223d865742812329bf5bda32bab09bf6e6a5a669dbc10fd3550db61889"
+    },
+    {
+      "id": "detail-tea-table-south",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:09:24.046972+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-tea-table-south.png",
+      "sha256": "02027192b07f286b34023f5fe76f242c71cbe4c18835baef32626661b19277d8"
+    },
+    {
+      "id": "detail-yaoshi-back",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:06:05.881652+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-yaoshi-back.png",
+      "sha256": "15b9409d8cfbe98bfb38fc7d608da52376a8fefa4b525b28d55f4c862d9f132f"
+    },
+    {
+      "id": "detail-yaoshi-front-correct",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:07:28.663873+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-yaoshi-front-correct.png",
+      "sha256": "c42b9b2b60aabc6ced45f45036901cd14986ab488967eb92050d77530d88a18d"
+    },
+    {
+      "id": "detail-yaoshi-interior-entry",
+      "type": "runtime_screenshot",
+      "mode": "diagnostic",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:11:26.414247+00:00",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/detail-yaoshi-interior-entry.png",
+      "sha256": "d503dfdb2eeaf6e6d93b42d0b9d6b592baa008741f3d2a20aef2fcbcd6366b7e"
+    },
+    {
+      "id": "scan-json",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:49:19.294666+00:00",
+      "file": "scan.json",
+      "sha256": "95870c7b2124a37164c1a088b95bb9ea244b5ad6332abaf90038a625c8b92f0d"
+    },
+    {
+      "id": "contacts-json",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:52:02.555043+00:00",
+      "file": "contacts.json",
+      "sha256": "a6e2b645a4a675826077c5941b31a3204053bb15b7ba159c1da61ae25535dca0"
+    },
+    {
+      "id": "contacts-idle-json",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:52:13.671343+00:00",
+      "file": "contacts-idle.json",
+      "sha256": "f55e2b1ec6728a11ea2d1f7a4009292ebf289058f7e49bf207fddac987ae1283"
+    },
+    {
+      "id": "props-json",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T15:56:52.550817+00:00",
+      "file": "props.json",
+      "sha256": "6c48f684f895182acc0982ffe72c6a6c0fa30ac5c136c8a77b2f72880ccdef00"
+    },
+    {
+      "id": "source-equivalence-json",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:05:12.684487+00:00",
+      "file": "source-equivalence.json",
+      "sha256": "bae2cc1453acfceb9396ada71e5b57fd302d957f1fff8b18a5fe51663a0274ba"
+    },
+    {
+      "id": "static-unit-log",
+      "type": "test_log",
+      "mode": "isolated_node_geometry",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:00:15.072245+00:00",
+      "file": "static-unit.log",
+      "sha256": "e7de3010238d3a382a95f1bd38df042f6db03bebb9f4f4649823c443355fb803"
+    },
+    {
+      "id": "outer-browse",
+      "type": "test_log",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:03:45.257882+00:00",
+      "file": "outer-browse.json",
+      "sha256": "18bda1cb72edb38390547adb047b737aa818f9fa2c6674ae30fd4a1ed7b41308"
+    },
+    {
+      "id": "detail-browse",
+      "type": "test_log",
+      "mode": "diagnostic_then_user_input",
+      "commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+      "created_at": "2026-11-14T16:12:32.003953+00:00",
+      "file": "detail-browse.json",
+      "sha256": "2ae5ef075c66bfbdb3592109412c99b2c57868fde0e663b1890fbbefea3e35dc"
+    },
+    {
+      "id": "current-scan",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "created_at": "2026-11-14T22:28:05.644300+00:00",
+      "file": "current-scan.json",
+      "sha256": "14b4a0b6351505267f19051b363b58364802f5617165a90dd21ab77df496ceab"
+    },
+    {
+      "id": "current-contacts",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "created_at": "2026-11-14T22:28:06.484324+00:00",
+      "file": "current-contacts.json",
+      "sha256": "a6e2b645a4a675826077c5941b31a3204053bb15b7ba159c1da61ae25535dca0"
+    },
+    {
+      "id": "current-props",
+      "type": "diagnostic_data",
+      "mode": "isolated_node_geometry",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "created_at": "2026-11-14T22:28:07.196344+00:00",
+      "file": "current-props.json",
+      "sha256": "6c48f684f895182acc0982ffe72c6a6c0fa30ac5c136c8a77b2f72880ccdef00"
+    }
+  ]
+}

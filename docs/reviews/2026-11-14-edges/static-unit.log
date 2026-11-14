@@ -1,0 +1,85 @@
+
+> temple-walk@0.1.1 check
+> node tools/check.cjs
+
+30 files checked, 0 problems
+
+> temple-walk@0.1.1 test
+> node --test tests/unit/*.test.mjs
+
+✔ geometry helpers (48.624694ms)
+✔ a hall, built from its numbers, is whole (240.727752ms)
+✔ every kind of building the plan uses can be built (468.995066ms)
+✔ merging what never moves keeps every triangle and leaves the marked meshes alone (5.86986ms)
+✔ the novice stands, walks and prays without coming apart (290.948567ms)
+✔ first: trackpad click-drag looks right/down, matching locked mouse (4.670562ms)
+✔ third: trackpad click-drag looks right/down, matching locked mouse (1.562626ms)
+✔ third photo: trackpad click-drag looks right/down, matching locked mouse (3.399315ms)
+✔ locked mouse button drag is applied only once (1.417407ms)
+✔ touch drag has the same camera direction and small taps do not rotate (0.775739ms)
+✔ reproduced 0.45m tea porch blocker has a deliberate drop route (1.759933ms)
+✔ railed main hall, wrong facing, indoors and ordinary ground do not offer a jump (0.275695ms)
+✔ obstructed or unstable landing is rejected (0.175074ms)
+✔ hop arc clears the back foot before it descends through the platform edge (2.284344ms)
+✔ large drops have no route (0.149606ms)
+✔ landing body clearance includes diagonal corners (0.136596ms)
+✔ there are seven seals, each with everything the page shows (2.106246ms)
+✔ a new visitor's book is empty and points at the bell (0.979267ms)
+✔ the bell must be struck three times (0.289546ms)
+✔ a seal is earned once, in any order, and unknown seals are refused (0.485012ms)
+✔ the library's line is kept with its seal (0.248424ms)
+✔ the book is full when all seven are earned, and remembers when (0.314855ms)
+✔ the book survives leaving and coming back (0.399502ms)
+✔ a damaged or foreign book is replaced by a fresh one rather than breaking the visit (0.368876ms)
+✔ a store that refuses to remember does not stop the visit (0.481416ms)
+✔ every line the library can give has a text and a source, and the choice is steady (0.324008ms)
+✔ standing in a place's circle finds it; standing between two finds the nearer (0.337269ms)
+✔ loading follows completed work, yields to paint and reserves 100 for readiness (3.990176ms)
+✔ late texture callbacks cannot move progress backwards (0.714206ms)
+✔ startup errors expose retry and cannot be reported as complete (0.640155ms)
+✔ errors after startup do not reopen the loading screen (0.957824ms)
+✔ every season at every hour is a complete mood (2.703096ms)
+✔ the seasons differ where they should (0.333372ms)
+✔ the hours differ where they should (0.251329ms)
+✔ an unknown season or hour falls back instead of throwing (0.223917ms)
+✔ the present moment is a real season and hour (0.387985ms)
+✔ the terraces rise one above another, going north (0.839556ms)
+✔ the land is defined everywhere and has no cliffs where the bamboo stands (1.44571ms)
+✔ the half-way pavilion can be stepped into from the landing, a hand's width at a time (1.04811ms)
+✔ the eye climbs a stair as a slope, never more than half a tread from the feet (1.930191ms)
+✔ every named view stands somewhere a visitor could stand (0.545282ms)
+✔ the plan registers what the rest of the page reads (4.882682ms)
+✔ from the first step, every part of the temple can be walked to (439.507268ms)
+✔ every observance of the journey has a place that can be walked to, and they do not crowd each other (461.02626ms)
+✔ every hall with a door can be walked up to, entered at its threshold, and left onto open floor (420.52623ms)
+✔ the columns of the open pavilions stand in the way (0.362306ms)
+✔ walls, halls and the hillside keep the visitor out (373.664685ms)
+✔ heights: the courts are level, the stairs climb evenly (7.443493ms)
+✔ the test server serves the app, and only the app, and only to this machine (96.98774ms)
+✔ up stairs at 60Hz have no whole-step body pop (212.767243ms)
+ℹ max body delta: 0.01271 m/frame
+✔ up stairs at 30Hz have no whole-step body pop (115.583267ms)
+ℹ max body delta: 0.02516 m/frame
+✔ up stairs at 20Hz have no whole-step body pop (75.480262ms)
+ℹ max body delta: 0.03789 m/frame
+✔ down stairs at 60Hz have no whole-step body pop (101.340863ms)
+ℹ max body delta: 0.01277 m/frame
+✔ down stairs at 30Hz have no whole-step body pop (34.15784ms)
+ℹ max body delta: 0.02547 m/frame
+✔ down stairs at 20Hz have no whole-step body pop (62.634144ms)
+ℹ max body delta: 0.03804 m/frame
+✔ a deliberate hop does not snap the feet or torso back onto the floor (22.435135ms)
+✔ walking height agrees with actual stair geometry including the overhanging tread noses (133.611117ms)
+✔ hall stair collision uses the same top edge and tread spacing as its visible stairs (103.730566ms)
+✔ an overlapping lower landing cannot pull feet through a visible tread (1.188792ms)
+✔ animated cloth shoes stay above each supporting tread while ascending, descending and turning (565.0084ms)
+✔ surface support does not lift the seated pose out of its cushion (33.192545ms)
+✔ sideways and reverse stair flights agree with the visible treads (5.945514ms)
+ℹ tests 62
+ℹ suites 0
+ℹ pass 62
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9385.451282
