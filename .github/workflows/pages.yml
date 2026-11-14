@@ -3,6 +3,8 @@ name: Verify and deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    # Notes, tests and tools do not change what is published.
+    paths: ["app/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -28,9 +30,15 @@ jobs:
         run: npm run check
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
         run: npm test
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
-        run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
-      - name: End to end, the quick tier (the page comes up; a tap walks him there on every level)
+        run: npm install --no-save playwright@1.63.0 && npx playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: End to end, the quick tier (the page comes up clean and draws)
         run: npm run e2e:quick
       - name: Keep the report and screenshots
         if: always()

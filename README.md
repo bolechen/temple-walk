@@ -61,8 +61,8 @@ cd app && python3 -m http.server 8000
 ```sh
 npm run check        # 所有脚本能解析
 npm test             # 单元测试，一两秒
-npm run e2e:quick    # 端到端第一档，约 2 分钟：页面能起来；各级台地上点地面都能走到
-npm run e2e:smoke    # 前两档，约 8 分钟：再加钟鼓、十六种光景、两种视角、手机
+npm run e2e:quick    # 端到端第一档，约 1 分钟：页面能起来、画得出来
+npm run e2e:smoke    # 前两档，约 9 分钟：再加各级台地点地行走、钟鼓、十六种光景、两种视角、手机
 npm run e2e          # 全部，约 20 分钟：再加上山进殿上香、登顶、拍照
 npm run verify       # check + 单元 + smoke，改了 app/ 之后推送前跑这个
 node tools/shots.js court@autumn-dusk@third   # 机位名@季节-时辰@视角 → tools/out/

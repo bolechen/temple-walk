@@ -131,7 +131,7 @@
 
 ```sh
 npm run check && npm test                       # 脚本能解析；单元测试（寺院平面、行走、建筑生成器、季节）
-npm run e2e:quick                               # 端到端第一档：页面能起来，各级台地点地面都能走到
+npm run e2e:quick                               # 端到端第一档：页面能起来、画得出来
 npm run e2e:smoke                               # 再加钟鼓频谱、十六种光景、两种视角、手机触屏
 npm run e2e                                     # 再加上山进殿上香、点大殿、登顶、拍照三种画幅
 node tools/portrait.js autumn-dusk              # 小沙弥的五个角度（正、侧、背、合掌两张）

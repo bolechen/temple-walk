@@ -34,8 +34,8 @@ and render with SwiftShader, so everything runs headless with no GPU.
 ```sh
 npm run check                       # every script in app/ parses; no shader fragment ends in a // comment
 npm test                            # unit tests, a second or two: the plan, the walker, the building generator, the seasons
-npm run e2e:quick                   # tier 1, ~2 min: the page comes up clean; a tap walks him there on every level
-npm run e2e:smoke                   # tiers 1–2, ~8 min: + bell and drum, all 16 season/hour moods, both views, a phone
+npm run e2e:quick                   # tier 1, ~1 min: the page comes up clean and draws
+npm run e2e:smoke                   # tiers 1–2, ~9 min: + a tap walks him there on every level, bell and drum, all 16 season/hour moods, both views, a phone
 npm run e2e                         # everything, ~20 min: + the walk in and the offering, the summit climb, the photograph
 node tests/e2e/run.cjs moods photo  # only the scenarios named
 npm run verify                      # check + unit + smoke: run this before pushing anything that touches app/

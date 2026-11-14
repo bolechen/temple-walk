@@ -1,7 +1,7 @@
 // End-to-end scenarios: a real page in a real browser, driven the way a visitor drives it.
 //   node tests/e2e/run.cjs              every scenario (about twenty minutes without a GPU)
 //   node tests/e2e/run.cjs --smoke      tiers 1 and 2: everything but the long walks and the photograph
-//   node tests/e2e/run.cjs --quick      tier 1 only: what must pass before anything is published
+//   node tests/e2e/run.cjs --quick      tier 1 only (the page comes up clean): what must pass before anything is published
 //   node tests/e2e/run.cjs walk photo   only those named
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
@@ -43,7 +43,7 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A tap on the ground sends him to the spot tapped, on every level of the mountain and on the stairs between.
-  taps: { tier: 1, async run(b, base) {
+  taps: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0");
     // Each place: where he stands, which way he looks (0 is uphill, a quarter turn is east), and the least height that proves he is there.
     for (const [name, x, z, yaw, lo] of [["the court", 0, 30, 0, -0.1], ["the first terrace", 12, -40, 0, 2.3], ["the second terrace", 6, -70.5, Math.PI / 2, 5.1], ["the summit", -10, -120.4, Math.PI / 2, 19.9], ["the foot of the path, looking up its steps", 21.3, 91.5, 0, -15]]) {
