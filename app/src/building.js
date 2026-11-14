@@ -156,16 +156,24 @@ export function buildHall(M, opts) {
 
   // ---- Bracket sets (dougong) ----
   if (p.brackets) {
-    // One set, outward = +z, base at y = 0: blocks, lateral arms, two projecting tiers, an outer lateral arm.
+    // One set, outward = +z, base at y = 0. From below it is an inverted, stepped trapezoid: the great block on the
+    // column head, a short arm along the wall and a longer one over it, arms stepping outward with a small block
+    // at every end, the slanting beak, and the last arm under the eave purlin. Arm ends are rounded off below.
+    const arm = (len, y, z, along = "x", h = 0.21, t = 0.15) => {
+      const L = len / 2, e = Math.min(0.2, len * 0.22), sh = new THREE.Shape([[-L, h], [L, h], [L, h * 0.5], [L - e * 0.5, h * 0.16], [L - e, 0], [-L + e, 0], [-L + e * 0.5, h * 0.16], [-L, h * 0.5]].map(([a, b]) => new THREE.Vector2(a, b)));
+      const g2 = plain(new THREE.ExtrudeGeometry(sh, { depth: t, bevelEnabled: false }).translate(0, 0, -t / 2)); if (along === "z") g2.rotateY(-Math.PI / 2);
+      return g2.translate(0, y, z);
+    };
+    const dou = (x, y, z, w = 0.21) => box(w, 0.13, w, x, y + 0.065, z);
     const set = merge([
-      box(0.46, 0.26, 0.46, 0, 0.13, 0),
-      box(1.25, 0.17, 0.16, 0, 0.36, 0), box(0.22, 0.14, 0.22, -0.52, 0.52, 0), box(0.22, 0.14, 0.22, 0.52, 0.52, 0),
-      box(1.7, 0.16, 0.15, 0, 0.68, 0),
-      box(0.16, 0.18, 1.0, 0, 0.36, 0.25), box(0.22, 0.14, 0.22, 0, 0.52, 0.62),
-      box(0.16, 0.18, 1.3, 0, 0.67, 0.3),
-      box(1.0, 0.15, 0.15, 0, 0.84, 0.88), box(0.2, 0.12, 0.2, -0.4, 0.97, 0.88), box(0.2, 0.12, 0.2, 0.4, 0.97, 0.88),
-      box(0.14, 0.14, 0.36, 0, 0.67, 1.05),
-      new THREE.BoxGeometry(0.13, 0.15, 1.5).rotateX(0.32).translate(0, 0.6, 0.55),   // the slanting arm whose beak shows under the eave
+      box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0),                         // the great block, narrower at its foot
+      arm(0.9, 0.28, 0), dou(-0.35, 0.49, 0), dou(0.35, 0.49, 0),                                      // the first arm along the wall
+      arm(1.02, 0.28, 0.16, "z"), dou(0, 0.49, 0.6),                                                   // the first arm stepping out
+      arm(1.32, 0.63, 0), dou(-0.55, 0.84, 0), dou(0.55, 0.84, 0),                                     // the long arm over it
+      arm(0.9, 0.63, 0.6), dou(-0.35, 0.84, 0.6), dou(0.35, 0.84, 0.6),                                // an arm on the first step
+      arm(1.5, 0.63, 0.3, "z"),
+      new THREE.BoxGeometry(0.13, 0.16, 1.5).rotateX(0.4).translate(0, 0.6, 0.6),                      // the slanting arm whose beak shows under the eave
+      arm(1.0, 0.8, 0.88),                                                                             // the last arm, under the purlin
     ]);
     const spots = perimeter.map((c) => ({ x: c.x, z: c.z, a: Math.atan2(c.ox, c.oz) }));
     const between = (a, b) => { const n = Math.abs(b - a) > 4.6 ? 2 : 1; return Array.from({ length: n }, (_, i) => a + ((b - a) * (i + 1)) / (n + 1)); };
