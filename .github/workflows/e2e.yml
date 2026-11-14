@@ -1,0 +1,45 @@
+name: End to end, every scenario
+
+# The whole suite takes the better part of an hour without a GPU, so it does not run on every push:
+# once a week, and whenever it is asked for (Actions → this workflow → Run workflow).
+on:
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: "Scenario names separated by spaces, or --smoke; empty runs them all"
+        required: false
+        default: ""
+  schedule:
+    - cron: "17 19 * * 6"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-full
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run check && npm test
+      - name: A browser to drive the page with
+        run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
+      - name: Walk the whole temple
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: node tests/e2e/run.cjs $SCENARIOS
+      - name: Keep the report, the screenshots and the photograph
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-full-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 14
+          if-no-files-found: ignore

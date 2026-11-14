@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Verify and deploy to GitHub Pages
 
 on:
   push:
@@ -15,7 +15,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Nothing is published that does not parse, pass its unit tests, and come up in a real browser.
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Every script parses
+        run: npm run check
+      - name: Unit tests (the plan, the walker, the building generator, the seasons)
+        run: npm test
+      - name: A browser to drive the page with
+        run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
+      - name: End to end, the quick tier (the page comes up; a tap walks him there on every level)
+        run: npm run e2e:quick
+      - name: Keep the report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-quick-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 7
+          if-no-files-found: ignore
+
   deploy:
+    needs: verify
     runs-on: ubuntu-latest
     environment:
       name: github-pages

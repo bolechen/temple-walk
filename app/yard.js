@@ -3,6 +3,7 @@
 import * as THREE from "./v/build/three.module.js";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
+import { mergeStatic } from "./src/geo.js";
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } from "./src/site.js";
 import { createSky, FOG } from "./src/sky.js";
 import { createGround } from "./src/ground.js";
@@ -78,6 +79,9 @@ const glows = [];
   });
 }
 
+// Nothing built so far will move again: draw it in as few pieces as the materials allow.
+const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
+
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
@@ -100,7 +104,8 @@ setMood(state.season, state.time);
 // ---- The novice ------------------------------------------------------------------
 const monk = createMonk(); scene.add(monk.group);
 let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
-const photo = { on: false, aspect: "tall", lens: 46, dist: 4.6, monk: true, pray: false };
+const photo = { on: false, aspect: "tall", lens: 46, dist: 4.6, monk: true, pray: false, focus: null };   // focus: metres, or null to follow the novice
+const APERTURE = { 66: 0.006, 46: 0.012, 26: 0.022 };
 const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] };
 
 // ---- Looking and walking ------------------------------------------------------
@@ -135,9 +140,26 @@ canvas.addEventListener("pointermove", (e) => {
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
 const lift = (e) => { touches.delete(e.pointerId); pinch = 0; };
 canvas.addEventListener("pointercancel", (e) => { lift(e); down = null; });
-const ray = new THREE.Raycaster(), floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const ray = new THREE.Raycaster();
+// Where a tap lands on the ground. The ground is not flat: follow the line of sight outward until it first
+// dips below whatever can be stood on there (a court, a terrace, a flight of steps), then close in on that spot.
+function pickFloor() {
+  const o = ray.ray.origin, d = ray.ray.direction, p = new THREE.Vector3(), under = (s) => { p.copy(d).multiplyScalar(s).add(o); return p.y <= walker.heightAt(p.x, p.z); };
+  let a = 0.3, b = -1;
+  for (let s = 0.5; s < 90 && b < 0; s += 0.25) { if (under(s)) b = s; else a = s; }
+  if (b < 0) return null;
+  for (let i = 0; i < 8; i++) { const m = (a + b) / 2; if (under(m)) b = m; else a = m; }
+  under(b); return p;
+}
 canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = "grab"; lift(e);
+  if (down && !down.moved && performance.now() - down.t < 600 && photo.on) {   // in a photograph, a tap chooses what is sharp
+    const r = canvas.getBoundingClientRect();
+    ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    const hits = ray.intersectObjects([site.root, monk.group], true)[0], floorHit = pickFloor();
+    const d = Math.min(hits ? hits.distance : 1e9, floorHit ? floorHit.distanceTo(camera.position) : 1e9);
+    photo.focus = d < 200 ? d : null;
+  }
   if (down && !down.moved && performance.now() - down.t < 600 && !photo.on) {
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
@@ -148,11 +170,11 @@ canvas.addEventListener("pointerup", (e) => {
       strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = performance.now();
       document.getElementById("hint").classList.add("gone"); down = null; return;
     }
-    const hit = ray.ray.intersectPlane(floor, new THREE.Vector3());
+    const hit = pickFloor();
     const hall = site.hall, toHall = ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < SITE.zS - 4, onGround = walker.onGround(pos.x, pos.z);
     // Tapping the main hall from its court means "go to its door"; the way there, and back, is over the steps.
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
-    else if (hit && hit.distanceTo(pos) < 70) route = [hit];
+    else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
     else route = [];
     if (route.length) { target = route.shift(); document.getElementById("hint").classList.add("gone"); }
   }
@@ -250,6 +272,7 @@ function frame(now) {
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
   }
+  if (photo.on) post.focus(photo.focus ?? (photo.monk ? camDist : 14), APERTURE[photo.lens] || 0.012);
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   if (quality.planar > 0) ground.render(renderer, camera);
@@ -272,8 +295,9 @@ document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("clic
 
 // ---- Taking a photograph ------------------------------------------------------------
 function setPhoto(open) {
+  if (!open) post.focus(null);
   photo.on = open; document.body.classList.toggle("photo", open); $("moodPanel")?.setAttribute("hidden", "");
-  if (open) { target = null; route = []; photo.dist = 7; pitch = Math.min(pitch, 0.02); }
+  if (open) { target = null; route = []; photo.dist = 7; photo.focus = null; pitch = Math.min(pitch, 0.02); }
   else if (view === "first") pitch = Math.max(pitch, 0);
   resize();
 }
@@ -323,8 +347,18 @@ window.addEventListener("yard-resume", () => {
   if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); }
 });
 // For the test tools.
-window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
-window.__views = Object.keys(site.views);
+window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
+window.__views = Object.keys(site.views); window.__merged = merged;
+// What the picture looks like right now, measured: draws one frame and averages it. Also reports the state the tests assert on.
+window.__probe = () => {
+  const t = still ? 0 : performance.now() / 1000;
+  if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
+  const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0, 32, 32);
+  const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
+  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
+    camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, lamp: U.uLamp.value, fov: camera.fov };
+};
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = walker.heightAt(x, z); };

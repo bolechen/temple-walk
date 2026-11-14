@@ -4,14 +4,36 @@ import * as THREE from "../v/build/three.module.js";
 import { mergeGeometries } from "../v/jsm/utils/BufferGeometryUtils.js";
 import { merge, mesh } from "./geo.js";
 
-function sprayTexture() {   // a scatter of small soft shapes: petals, or leaves, depending on the colour laid over them
-  const c = document.createElement("canvas"); c.width = c.height = 256;
-  const x = c.getContext("2d"); let s = 77; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < 230; i++) {
-    const v = 190 + rnd() * 65; x.fillStyle = `rgb(${v},${v},${v})`;
-    x.beginPath(); x.ellipse(18 + rnd() * 220, 18 + rnd() * 220, 4 + rnd() * 7, 3 + rnd() * 5, rnd() * 3.14, 0, 6.3); x.fill();
+// Sprays drawn large and fine, one sheet for each thing a tree can wear: five-petalled blossom,
+// the five-pointed leaf of a maple, the fan of a ginkgo. Drawn pale; the season lays its colour over them.
+function sprayTexture(kind) {
+  const N = 1024, c = document.createElement("canvas"); c.width = c.height = N;
+  const x = c.getContext("2d"); let s = kind.length * 131; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const tone = () => { const v = 205 + rnd() * 50; return `rgb(${v},${v},${v})`; };
+  x.strokeStyle = "rgba(120,110,100,.9)";
+  for (let k = 0; k < 9; k++) {   // twigs, so the sprays hang from something
+    let px = 80 + rnd() * (N - 160), py = 80 + rnd() * (N - 160), a = rnd() * 6.3; x.lineWidth = 3.2; x.beginPath(); x.moveTo(px, py);
+    for (let i = 0; i < 9; i++) { a += (rnd() - 0.5) * 0.7; px += Math.cos(a) * 46; py += Math.sin(a) * 46; x.lineTo(px, py); } x.stroke();
   }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const count = kind === "blossom" ? 190 : 150;
+  for (let i = 0; i < count; i++) {
+    const px = 50 + rnd() * (N - 100), py = 50 + rnd() * (N - 100), r = (kind === "blossom" ? 15 : 24) * (0.7 + rnd() * 0.6), rot = rnd() * 6.3;
+    x.save(); x.translate(px, py); x.rotate(rot); x.fillStyle = tone();
+    if (kind === "blossom") {
+      for (let p = 0; p < 5; p++) { x.rotate(6.283 / 5); x.beginPath(); x.ellipse(0, -r * 0.62, r * 0.42, r * 0.6, 0, 0, 6.3); x.fill(); }
+      x.fillStyle = "rgb(150,140,130)"; x.beginPath(); x.arc(0, 0, r * 0.16, 0, 6.3); x.fill();
+    } else if (kind === "maple") {
+      x.beginPath();
+      for (let p = 0; p < 5; p++) { const a0 = -1.57 + (p - 2) * 0.62, len = r * (p === 2 ? 1.25 : p === 1 || p === 3 ? 1.05 : 0.72); x.lineTo(Math.cos(a0 - 0.2) * len * 0.42, Math.sin(a0 - 0.2) * len * 0.42); x.lineTo(Math.cos(a0) * len, Math.sin(a0) * len); x.lineTo(Math.cos(a0 + 0.2) * len * 0.42, Math.sin(a0 + 0.2) * len * 0.42); }
+      x.lineTo(0, r * 0.5); x.closePath(); x.fill();
+      x.strokeStyle = "rgba(120,110,100,.55)"; x.lineWidth = 1.2; for (let p = 0; p < 5; p++) { const a0 = -1.57 + (p - 2) * 0.62; x.beginPath(); x.moveTo(0, r * 0.15); x.lineTo(Math.cos(a0) * r * 0.9, Math.sin(a0) * r * 0.9); x.stroke(); }
+    } else {   // ginkgo: a fan with a notch, on a thin stalk
+      x.beginPath(); x.moveTo(0, r * 0.75); x.arc(0, r * 0.75, r * 1.5, -1.57 - 0.72, -1.57 - 0.05); x.lineTo(0, -r * 0.3); x.arc(0, r * 0.75, r * 1.5, -1.57 + 0.05, -1.57 + 0.72); x.closePath(); x.fill();
+      x.strokeStyle = "rgba(120,110,100,.45)"; x.lineWidth = 1; for (let p = -5; p <= 5; p++) { x.beginPath(); x.moveTo(0, r * 0.75); x.lineTo(Math.sin(p * 0.13) * r * 1.4, r * 0.75 - Math.cos(p * 0.13) * r * 1.4); x.stroke(); }
+    }
+    x.restore();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 const COLOURS = {
   maple:  { spring: [1.0, 0.8, 0.86], summer: [0.3, 0.5, 0.2], autumn: [0.82, 0.17, 0.07], winter: null },
@@ -42,15 +64,15 @@ export function createTrees(scene, M, spots) {
     }
   }
   scene.add(mesh(merge(wood), M.bark));
-  const tex = sprayTexture(), mats = {};
+  const tex = { blossom: sprayTexture("blossom"), maple: sprayTexture("maple"), ginkgo: sprayTexture("ginkgo") }, mats = {};
   for (const kind of ["maple", "ginkgo"]) {
     if (!crowns[kind].length) continue;
-    mats[kind] = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.75, envMapIntensity: 0.3 });
+    mats[kind] = new THREE.MeshStandardMaterial({ map: tex[kind], alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.75, envMapIntensity: 0.3 });
     mats[kind].mesh = new THREE.Mesh(mergeGeometries(crowns[kind]), mats[kind]); mats[kind].mesh.castShadow = true; scene.add(mats[kind].mesh);
   }
   return {
     setMood(m) {
-      for (const kind in mats) { const c = COLOURS[kind][m.season]; mats[kind].mesh.visible = !!c; if (c) mats[kind].color.setRGB(...c); }
+      for (const kind in mats) { const c = COLOURS[kind][m.season]; mats[kind].mesh.visible = !!c; if (c) mats[kind].color.setRGB(...c); mats[kind].map = kind === "maple" && m.season === "spring" ? tex.blossom : tex[kind]; }
     },
   };
 }

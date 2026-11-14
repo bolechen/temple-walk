@@ -1,0 +1,16 @@
+{
+  "name": "temple-walk",
+  "private": true,
+  "description": "A walk through a code-built mountain temple, in the browser",
+  "scripts": {
+    "check": "node tools/check.cjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "e2e": "node tests/e2e/run.cjs",
+    "e2e:smoke": "node tests/e2e/run.cjs --smoke",
+    "e2e:quick": "node tests/e2e/run.cjs --quick",
+    "verify": "npm run check && npm test && npm run e2e:smoke",
+    "shots": "node tools/shots.js",
+    "portrait": "node tools/portrait.js",
+    "serve": "cd app && python3 -m http.server 8000"
+  }
+}

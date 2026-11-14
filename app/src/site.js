@@ -185,7 +185,8 @@ export function buildSite(M) {
     stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2), st.geo.translate(0, y0, L.zS));
     for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
     paving.push({ level: i + 1, y: L.y + 0.012, x: L.x, zS: L.zS, zN: L.zN });
-    walk.ramps.push({ x0: -L.stair / 2 + 0.3, x1: L.stair / 2 - 0.3, z0: L.zS - 0.4, z1: L.zS + st.run, base: y0, h: rise, low: [0, L.zS + st.run], high: [0, L.zS] });
+    walk.ramps.push({ x0: -L.stair / 2 + 0.3, x1: L.stair / 2 - 0.3, z0: L.zS - 0.4, z1: L.zS + st.run + 0.3, base: y0,   // a little past its foot, so no sliver of ground is left without a height
+       h: rise, low: [0, L.zS + st.run], high: [0, L.zS] });
     walk.solids.push({ x0: -60, x1: 60, z0: L.zS - 0.3, z1: L.zS + 0.5 });
     if (i < 2) for (const sx of [-1, 1]) walk.solids.push({ x0: sx > 0 ? L.stair / 2 - 0.3 : -L.stair / 2 - 0.9, x1: sx > 0 ? L.stair / 2 + 0.9 : -L.stair / 2 + 0.3, z0: L.zS, z1: L.zS + st.run });
     shade[i].push({ x0: -L.x, x1: L.x, z0: L.zN, z1: L.zS });
@@ -197,19 +198,21 @@ export function buildSite(M) {
       stairGeo(A.zA1 - A.zA0 - 0.6, A.rise2).geo.rotateY(Math.PI / 2).translate(A.xTurn, yB, A.zMid),
       box(A.xTurn + A.w / 2 + 0.4, 0.4, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.2, yA - 0.2, A.zMid),
       box(A.xB1 - A.xB0, 0.4, A.zA1 - A.zA0, (A.xB0 + A.xB1) / 2, yB - 0.2, A.zMid));
-    walk.ramps.push({ x0: -A.w / 2 + pad, x1: A.w / 2 - pad, z0: A.top - 0.4, z1: A.zA0, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
-      { x0: A.xTurn - 0.2, x1: A.xB0, z0: A.zA0 + 0.6, z1: A.zA1 - 0.6, base: yB, h: A.rise2, low: [A.xB0, A.zMid], high: [A.xTurn, A.zMid] });
-    walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn - 0.2, z0: A.zA0 - 0.5, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 - pad, h: yB });
+    walk.ramps.push({ x0: -A.w / 2 + pad, x1: A.w / 2 - pad, z0: A.top - 0.4, z1: A.zA0 + 0.2, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
+      { x0: A.xTurn - 0.2, x1: A.xB0 + 0.2, z0: A.zA0 + 0.6, z1: A.zA1 - 0.6, base: yB, h: A.rise2, low: [A.xB0, A.zMid], high: [A.xTurn, A.zMid] });
+    // Landings overlap the flights that reach them by a hand's width, so there is never a seam to fall into.
+    walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn + 0.2, z0: A.zA0 - 0.05, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 + 0.2, h: yB });
     // Below that, a third flight coming up from the south, from the landing where the walk begins.
     const yC = yB - A.rise3;
     stone.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1), box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
-    walk.ramps.push({ x0: A.xC - A.w / 2 + pad, x1: A.xC + A.w / 2 - pad, z0: A.zA1 - 0.4, z1: A.zC0, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
+    walk.ramps.push({ x0: A.xC - A.w / 2 + pad, x1: A.xC + A.w / 2 - pad, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
     walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8 });
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
     const rest = { xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, rise: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
       brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
     put({ ...rest, plaque: "半山亭" }, [6.6, A.zA0 - 2.75], 0, 0, yA);
+    walk.decks.push({ x0: 4.6, x1: 8.6, z0: A.zA0 - 0.6, z1: A.zA0 + 0.1, h: yA });   // the step between its floor and the landing
     put({ ...rest, plaque: "望江亭" }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where, they say, a poet once washed his ink-stone: black water in a stone rim, beside the second landing.
     const px = A.xB1 + 2.2, pz = A.zMid;
@@ -300,7 +303,7 @@ export function buildSite(M) {
     forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [15, 61, -0.6, 0.22], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
     court: [0, 33, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
     teahouse: [-5, 16, -1.35, 0.1], chan: [5, 16, 1.35, 0.1], behind: [19, -22, 0.4, 0.14], terrace: [0, T1.zS + 5.6, 0, 0.25],
-    library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 11, -1.3, 0.12], dahui: [4, T2.zS - 10, 1.3, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
+    library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 5.5, -1.0, 0.12], dahui: [4, T2.zS - 3.6, 1.0, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
     tea: [0, HILL.zS - 12, 0.6, 0.12], summit: [0, TOP.zS + 9, 0, 0.42], lookback: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
   };
 
@@ -336,6 +339,7 @@ function bell(M, t) {
     new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 1.0),
     new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 2.1),
   ]), M.woodZ);
+  body.userData.keep = log.userData.keep = true;   // the bell is struck and the log swings
   g.add(body, inside, frame, log);
   return { group: g, hit: body, swing: log };
 }
@@ -349,6 +353,7 @@ function drum(M, t) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) stand.push(box(0.14, cy - t.platH - 0.3, 0.14, sx * 0.72, (cy + t.platH - 0.3) / 2, sz * 0.5));
   for (const sz of [-1, 1]) stand.push(box(1.7, 0.14, 0.14, 0, cy - 0.78, sz * 0.5), box(1.7, 0.12, 0.12, 0, t.platH + 0.35, sz * 0.5));
   for (const sx of [-1, 1]) stand.push(box(0.12, 0.12, 1.1, sx * 0.72, t.platH + 0.35, 0));
+  skins.userData.keep = true;
   g.add(barrel, skins, mesh(merge(stand), M.woodX));
   return { group: g, hit: skins, swing: null };
 }
@@ -373,6 +378,7 @@ export function createWalker(site) {
     blocked(x, z) {
       if (carved(x, z) !== null) return false;
       if (Math.abs(x) > SITE.x + 8 || z < SITE.zN || z > APPROACH.end) return true;
+      if (z > SITE.zS && Math.abs(x) > 20.5) return true;                                  // the grove closes in on both sides of the forecourt
       for (const s of solids) if (inRect(s, x, z)) return true;
       return false;
     },

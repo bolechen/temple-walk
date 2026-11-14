@@ -23,7 +23,7 @@
 
 ## 现在到哪了
 
-能走通的一座山寺，约 250 米，全程自动测试通过（`node tools/walkthrough-test.js`）。
+能走通的一座山寺，约 250 米。单元测试和端到端测试齐全（见下面「怎么验证」），推送后先过测试才部署。
 第 4 条要求的四样东西**都已经有了第一版**，是 2026-11-13 这一轮加的：
 
 | 功能 | 在哪 | 状态 |
@@ -101,17 +101,35 @@
 ## 怎么验证
 
 ```sh
+npm run check && npm test                       # 脚本能解析；单元测试（寺院平面、行走、建筑生成器、季节）
+npm run e2e:quick                               # 端到端第一档：页面能起来，各级台地点地面都能走到
+npm run e2e:smoke                               # 再加钟鼓频谱、十六种光景、两种视角、手机触屏
+npm run e2e                                     # 再加上山进殿上香、点大殿、登顶、拍照三种画幅
 node tools/portrait.js autumn-dusk              # 小沙弥的五个角度（正、侧、背、合掌两张）
 node tools/shots.js court@autumn-dusk@third     # 机位名@季节-时辰@视角，输出到 tools/out/
-node tools/walkthrough-test.js                  # 全程：上山、进殿、上香、登顶、钟鼓的频谱、拍一张照片
 ```
 
-测试钩子：`window.__mood(season, time)`、`__view("first"|"third")`、`__photo(open, opts)`、`__capture()`、
+**测试是每次改动的一部分。** 用户的原话：「这是你的长期项目，要在一开始就做好完善的测试和 e2e」。
+规矩写在 `CLAUDE.md` 的 Commands 一节：加一个地方就把它加进 `tests/unit/plan.test.mjs` 的 `places`；
+加一个访客能做的事就加一个端到端场景；修 bug 先让一个测试因为它而失败。端到端里等的是帧数（`t.frames(n)`），不是秒数。
+
+第一次把这套测试跑起来就抓出了八个真问题，都已修掉：前院两侧能走出寺外；石阶脚下有一条没有高度的两厘米的缝；
+三处平台和石阶之间有接缝；两个机位落在建筑里面；半山亭几乎走不进去；未知季节会让页面崩掉；
+**在高处台地上点地面，落点是按山脚的高度算的**（山顶上点了没反应，第一级台地上会走出三倍远）。
+最后这个是原型以来一直存在的，之前的全程测试用的是写死的路点，所以从没发现。
+
+测试钩子：`window.__probe()`（画一帧并返回平均颜色，以及季节、时辰、视角、拍照状态、相机距离、雪、灯、视角大小）、
+`__mood(season, time)`、`__view("first"|"third")`、`__photo(open, opts)`、`__capture()`、
 `__pose(x, z, yaw, pitch)`，加上原有的 `__yard / __walk / __strike / __listen`。
 
 网址参数新增：`?season=` `?time=` `?view=`。带 `?shot` `?show` `?cam` 时默认是夏昼、第一视角，保证旧截图可比。
 
-## CI（2026-11-13 修过一次）
+## CI
+
+`.github/workflows/pages.yml`：推 `main` 后先跑 `verify`（check、单元测试、端到端第一档），通过了才部署。
+`.github/workflows/e2e.yml`：全部端到端场景，每周一次，也可以手动触发。失败时报告和截图在该次运行的 artifact 里。
+
+### 2026-11-13 修过的一次部署失败
 
 `ce429fa` 的部署失败过：那次运行被重跑，第一次尝试留下的 `github-pages` artifact 没被清掉，
 第二次又传了一个，于是 `deploy-pages@v4` 看到两个同名 artifact 而拒绝部署。错误与代码无关。

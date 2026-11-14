@@ -21,31 +21,55 @@ Four outside projects are documented as references:
 
 ## Commands
 
-No build step, no `package.json`, no dependencies to install for the app itself. Serve `app/` statically:
+No build step and nothing to install for the app itself. Serve `app/` statically:
 
 ```sh
-cd app && python3 -m http.server 8000
+npm run serve                       # = cd app && python3 -m http.server 8000
 ```
 
-The two tools need Playwright (`npm i -g playwright` or a local install, plus Chromium). Both start their own server and render with SwiftShader, so they run headless with no GPU:
+The root `package.json` only names the commands; it has no dependencies. The tests and tools need Node 22+ and
+Playwright with Chromium (`npm i -g playwright`, or whatever the machine already has). They start their own server
+and render with SwiftShader, so everything runs headless with no GPU.
 
 ```sh
-node tools/shots.js                 # every named view → tools/out/<name>.png, prints tris/calls and page errors
-node tools/shots.js gate library    # only those views (names: `views` in app/src/site.js, or window.__views)
-node tools/walkthrough-test.js      # end-to-end walk; exits 1 on any failure or page error
+npm run check                       # every script in app/ parses; no shader fragment ends in a // comment
+npm test                            # unit tests, a second or two: the plan, the walker, the building generator, the seasons
+npm run e2e:quick                   # tier 1, ~2 min: the page comes up clean; a tap walks him there on every level
+npm run e2e:smoke                   # tiers 1–2, ~8 min: + bell and drum, all 16 season/hour moods, both views, a phone
+npm run e2e                         # everything, ~20 min: + the walk in and the offering, the summit climb, the photograph
+node tests/e2e/run.cjs moods photo  # only the scenarios named
+npm run verify                      # check + unit + smoke: run this before pushing anything that touches app/
+node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
+node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png
 ```
 
-Run `shots.js` after any visual change and look at the PNGs. Run `walkthrough-test.js` after touching `site.js`, `yard.js`, `index.html`, `hall.js` or `audio.js`: it walks the approach → gate → court → into the hall, offers incense, leaves, taps the hall from the court at real speed, climbs to the summit, and checks the bell's spectrum contains its designed partials (~98/196 Hz). Both are slow under software rendering (minutes); timeouts are already generous.
+**Tests are part of every change.** The unit tests in `tests/unit/` build the real plan in Node (three.js with a
+stubbed DOM, `dom-stub.mjs`) and assert on it: every named place can be walked to from the first step
+(a flood fill over `heightAt/blocked`), nothing leaks through the walls, stairs have even treads, every named view
+stands on walkable ground, every mood has every field. The end-to-end scenarios in `tests/e2e/run.cjs` drive the real
+page and fail on any page error, console error, failed request or HTTP error; `tests/e2e/lib.cjs` holds what they share.
+When you add something a visitor can do, add a scenario (or extend one) that does it; when you add a place, add it to
+`places` in `plan.test.mjs`; when you fix a bug, first make a test fail for it. Wait on frames (`t.frames(n)`), never on
+seconds: software rendering may draw one frame a second or ten.
 
-URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1), `?shot=1` (freeze time), `?q=low|medium|high` (fix the quality tier, disables the governor).
+Run `shots.js` after any visual change and look at the PNGs; a test passing says nothing about beauty.
 
-Deploy: pushing to `main` publishes `app/` as-is to GitHub Pages (`.github/workflows/pages.yml`).
+URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
+`?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
+`?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`. With `?shot`, `?show` or
+`?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
+visitor's own season and hour, seen from behind the novice.
+
+Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (check, unit tests, e2e quick tier in a real
+browser) and then, only if that passes, publishes `app/` as it is to GitHub Pages. `.github/workflows/e2e.yml` runs
+every scenario once a week and on demand. A red `verify` means the site was not published: read the uploaded
+`e2e-quick-*` artifact (report + screenshots) before guessing.
 
 ## Architecture
 
 **Two views in one page.** `app/index.html` holds the courtyard canvas and the hall interior, joined by a black/mist veil. It imports `yard.js` immediately and lazy-imports `hall.js` after 2.5 s. The views talk only through window events: `enter-hall` (fired by yard when the walker crosses the main hall's door), `yard-pause`/`yard-resume`, `hall-show`/`hall-hide`. `yard-resume` always re-places the visitor on the porch facing the court.
 
-**Courtyard pipeline (`app/yard.js`).** Creates the renderer, then composes the modules in `app/src/` in a fixed order: `createMaterials` → `buildSite` → `createWalker` → sky → ground → backdrop → bamboo → props → post. It owns input (drag to look, tap the floor to walk, tap bell/drum to strike, WASD), the frame loop, and the quality governor. Everything else is a module exposing one `create*`/`build*` function.
+**Courtyard pipeline (`app/yard.js`).** Creates the renderer, then composes the modules in `app/src/` in a fixed order: `createMaterials` → `buildSite` → `createWalker` → sky → ground → backdrop → bamboo → props → post → trees → drift → `mergeStatic` (everything built so far, batched per material into a few zones along the axis; a mesh that must stay itself sets `userData.keep`) → mood → monk. It owns input (drag to look, tap the floor to walk, tap bell/drum to strike, WASD), the frame loop, and the quality governor. Everything else is a module exposing one `create*`/`build*` function.
 
 **The plan is data (`app/src/site.js`).** `buildSite(M)` places every building with `put(opts, [x, z], quarterTurns, level, baseY)`, which calls `buildHall` and also registers the building's footprint into two side structures that everything else reads:
 - `walk` = `{solids, decks, ramps}` rectangles. `createWalker` turns these into `heightAt / blocked / onGround`. Decks and ramps are "carved" floors that override solids, so stairs and platforms are walkable even inside a building's blocking box.
@@ -62,10 +86,37 @@ Conventions: 1 unit = 1 m, north/uphill is -z, the visitor arrives from +z, buil
 
 **Hall interior (`app/hall.js`).** A single painted plate (`plate.webp`) with a 3D statue and pedestal (`app/m/*.json`, GLTF) composited at a fixed camera. The camera constants at the top of the file are calibrated to the plate's pixel geometry; a new plate means re-deriving them. The statue model comes from an external scene and is the reason the README asks that the repo stay private.
 
-**Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes `window.__yard()` (position, height, tier, tris, calls), `__views`, `__walk(points)`, `__strike(kind)`, `__listen()`. The tools depend on these; keep them when refactoring.
+**The season and the hour (`app/src/mood.js`).** `moodOf(season, time)` returns one table of numbers (sun, sky, fog,
+grade, snow, wetness, lamp light, leaf colours, what drifts in the air, the verse for the photograph). `yard.js`'s
+`setMood` hands it to every module's `setMood(m)`; nothing else decides how a season looks. The uniforms in `glsl.js`
+(`U`), `FOG` and `SUN_DIR` are shared by reference and must be mutated in place.
+
+**The novice and the two views (`app/src/monk.js`, the camera block in `yard.js`).** `createMonk()` returns `group` and
+`update(dt, speed, pray, t)`; replacing the hand-built figure with a rigged model touches nothing else. In third person
+the eye follows a few steps behind and is pulled in along its line when `walker.blocked` says a wall is in the way.
+
+**A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
+`walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
+
+**The photograph (`capture()` in `yard.js`, `app/src/card.js`, the DOF pass in `post.js`).** Photograph mode frames the
+view (tall, square, wide; three lenses), a tap chooses what is sharp, and the shutter re-renders the framed region at
+1600 or 2160 px and mounts it on a card with the mood's verse, the temple's name and a seal.
+
+**Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
+fireflies in the air; both are driven only by the mood.
+
+**Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
+`window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
+returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov), `__views`, `__merged`,
+`__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
+`__capture()`, `__strike(kind)`, `__listen()`. The tests and tools depend on these; keep them when refactoring, and add
+to `__probe` rather than reaching into the page from a test.
 
 ## Working notes
 
 - Code comments and commit messages are in English and written as prose describing the place, not the code; the README and docs are in Chinese. Keep that split.
 - Only headless software rendering has ever been tested. Real-device frame rate is unknown; anything that adds geometry near the bamboo or the planar reflection is the first suspect for performance.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
+- A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`npm run check` guards this).
+- The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.
+- The shadow map is drawn once per mood change (`shadowMap.autoUpdate = false`), so nothing that moves casts a real shadow; the novice stands on a painted one.

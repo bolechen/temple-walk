@@ -39,4 +39,24 @@ export function stairGeo(w, rise) {
   }
   return { geo: merge(parts), run };
 }
+// Once the place is built, everything that never moves and shares a material becomes one mesh per stretch
+// of the axis: a few hundred draws become a few dozen, and what is behind you is still culled.
+// Meshes marked `userData.keep`, and anything not drawn with a procedural material, are left alone.
+export function mergeStatic(root, zones) {
+  root.updateMatrixWorld(true);
+  const groups = new Map(), gone = [], c = new THREE.Vector3();
+  root.traverse((o) => {
+    if (!o.isMesh || o.userData.keep || Array.isArray(o.material)) return;
+    const a = o.geometry.attributes; if (!a.ao || !a.uv || !a.normal) return;
+    const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(o.matrixWorld);
+    for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv", "ao"].includes(k)) g.deleteAttribute(k);
+    g.computeBoundingBox(); g.boundingBox.getCenter(c);
+    const zone = zones.findIndex((z) => c.z > z), key = `${o.material.uuid}|${o.castShadow}|${o.receiveShadow}|${zone}`;
+    if (!groups.has(key)) groups.set(key, { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, geos: [] });
+    groups.get(key).geos.push(g); gone.push(o);
+  });
+  for (const o of gone) { o.parent.remove(o); o.geometry.dispose(); }
+  for (const g of groups.values()) { const m = new THREE.Mesh(mergeGeometries(g.geos), g.mat); m.castShadow = g.cast; m.receiveShadow = g.recv; root.add(m); }
+  return { before: gone.length, after: groups.size };
+}
 export const tube = (pts, r) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), pts.length * 2, r, 8, false);

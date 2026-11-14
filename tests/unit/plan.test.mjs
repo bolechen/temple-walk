@@ -1,0 +1,71 @@
+import test from "node:test"; import assert from "node:assert/strict";
+import "./dom-stub.mjs";
+import * as THREE from "../../app/v/build/three.module.js";
+const { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } = await import("../../app/src/site.js");
+
+// Materials are only handed on to meshes; any object will do, but they must be distinct and cloneable.
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" ? () => (t.__p ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+const site = buildSite(M), walker = createWalker(site);
+
+test("the terraces rise one above another, going north", () => {
+  for (let i = 1; i < LEVELS.length; i++) { assert.ok(LEVELS[i].y > LEVELS[i - 1].y); assert.ok(LEVELS[i].zS <= LEVELS[i - 1].zN + 1e-6); }
+  assert.ok(SITE.zN < SITE.zS && SITE.fore > SITE.zS);
+});
+test("the land is defined everywhere and has no cliffs where the bamboo stands", () => {
+  for (let x = -60; x <= 60; x += 3) for (let z = -160; z <= 110; z += 3) assert.ok(Number.isFinite(terrain(x, z)), `terrain(${x}, ${z})`);
+  for (let z = SITE.fore + 1; z < APPROACH.zC1; z += 0.5) assert.ok(Math.abs(terrain(-20, z + 0.5) - terrain(-20, z)) < 1.2, `a cliff beside the approach at z=${z}`);
+});
+test("every named view stands somewhere a visitor could stand", () => {
+  for (const [name, [x, z, yaw, pitch]] of Object.entries(site.views)) {
+    assert.ok([x, z, yaw, pitch].every(Number.isFinite), name);
+    assert.ok(!walker.blocked(x, z), `view "${name}" is inside something at (${x}, ${z})`);
+  }
+});
+test("the plan registers what the rest of the page reads", () => {
+  assert.ok(site.walk.solids.length > 20 && site.walk.decks.length > 5 && site.walk.ramps.length >= 6);
+  for (const k of ["solids", "decks", "ramps"]) for (const r of site.walk[k]) assert.ok(r.x1 > r.x0 && r.z1 > r.z0, `${k}: an empty rectangle`);
+  for (const r of site.walk.ramps) assert.ok(r.h > 0 && r.low && r.high);
+  assert.equal(site.shade.length, LEVELS.length + 1);
+  for (const list of site.shade) assert.ok(list.length <= 40, "ground.js shades at most 40 rectangles per level, found " + list.length);
+  assert.equal(site.strikers.length, 2); assert.deepEqual(site.strikers.map((s) => s.kind).sort(), ["bell", "drum"]);
+  assert.ok(site.hall.inside(site.hall.door.x, site.hall.door.z), "the walk to the door ends inside the threshold");
+  assert.ok(!site.hall.inside(...site.hall.out), "leaving the hall must not re-enter it");
+});
+
+// Flood outward from where the visit begins, a quarter-metre at a time, stepping only where a child could.
+function reach(from) {
+  const S = 0.25, key = (i, j) => i * 100000 + j, seen = new Set(), todo = [[Math.round(from[0] / S), Math.round(from[1] / S)]];
+  seen.add(key(...todo[0]));
+  while (todo.length) {
+    const [i, j] = todo.pop(), x = i * S, z = j * S, h = walker.heightAt(x, z);
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const a = i + di, b = j + dj, k = key(a, b); if (seen.has(k)) continue;
+      const nx = a * S, nz = b * S; if (walker.blocked(nx, nz) || Math.abs(walker.heightAt(nx, nz) - h) > 0.45) continue;
+      seen.add(k); todo.push([a, b]);
+    }
+  }
+  return (x, z, r = 0.6) => { for (let dx = -r; dx <= r; dx += S) for (let dz = -r; dz <= r; dz += S) if (seen.has(key(Math.round((x + dx) / S), Math.round((z + dz) / S)))) return true; return false; };
+}
+test("from the first step, every part of the temple can be walked to", () => {
+  const can = reach([site.start[0], site.start[1]]), [T1, T2, TOP] = LEVELS;
+  const places = {
+    "the half-way pavilion": [6.6, APPROACH.zA0 - 2.75], "the forecourt": [8, 60], "the stele pavilion's side": [-6, 50.5], "inside the gate": [0, 33],
+    "the censer": [1.6, 13], "the tea house porch": [-13.4, 14], "the meditation hall porch": [13.4, 14], "the main hall's door": [site.hall.door.x, site.hall.door.z],
+    "behind the main hall": [0, -30], "the library terrace": [0, T1.zS - 3], "the dragon well": [13.2, T2.zS + 3], "the Guanyin terrace": [0, T2.zS - 3],
+    "the foot of the last stair": [0, T2.zN + 1.5], "the summit": [0, TOP.zS - 3], "the summit pavilion's porch": site.summitPorch,
+  };
+  for (const [name, [x, z]] of Object.entries(places)) assert.ok(can(x, z), `cannot walk to ${name} (${x}, ${z})`);
+});
+test("walls, halls and the hillside keep the visitor out", () => {
+  const can = reach([site.start[0], site.start[1]]), [T1, T2] = LEVELS;
+  assert.ok(!can(0, -14.6, 0.3), "inside the main hall");
+  assert.ok(!can(30, 10, 0.3), "outside the east wall");
+  assert.ok(!can(12, (T2.zN + LEVELS[2].zS) / 2, 0.3), "on the tea slope, off the stair");
+});
+test("heights: the courts are level, the stairs climb evenly", () => {
+  assert.equal(walker.heightAt(0, 20), 0); assert.equal(walker.heightAt(0, LEVELS[0].zS - 5), LEVELS[0].y);
+  for (const r of site.walk.ramps) {
+    let last = null; const run = Math.hypot(r.high[0] - r.low[0], r.high[1] - r.low[1]);
+    for (let t = 0.02; t <= 0.98; t += 0.02) { const x = r.low[0] + (r.high[0] - r.low[0]) * t, z = r.low[1] + (r.high[1] - r.low[1]) * t; if (x <= r.x0 || x >= r.x1 || z <= r.z0 || z >= r.z1) continue; const h = walker.heightAt(x, z); if (last !== null) assert.ok(h >= last - 1e-6 && h - last < 0.02 * run * 0.75, `a stair that does not climb evenly near (${x.toFixed(1)}, ${z.toFixed(1)}): ${last.toFixed(2)} to ${h.toFixed(2)}`); last = h; }
+  }
+});

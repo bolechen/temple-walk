@@ -26,7 +26,8 @@ const LINES = {
 };
 
 export function moodOf(season, time) {
-  const t = TIME[time] || TIME.day, s = SEASON[season] || SEASON.summer, dark = time === "night" || time === "dusk";
+  if (!TIME[time]) time = "day"; if (!SEASON[season]) season = "summer";
+  const t = TIME[time], s = SEASON[season], dark = time === "night" || time === "dusk";
   const cloud = Math.min(1, Math.max(0.05, s.cloud + t.cloud));
   const m = { ...t, season, time, cloud, wet: s.wet, snow: s.snow, leaf: s.leaf, hills: s.hills, fogD: t.fogD * s.fogK, disk: 1 };
   m.sunI = t.sunI * (1 - 0.36 * cloud);                 // cloud takes the edge off the sun and gives it back as skylight
