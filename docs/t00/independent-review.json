@@ -2,22 +2,22 @@
   "schema_version": "1.0",
   "scene_id": "T00",
   "status": "partial",
-  "run_id": "t00-20261115-ab064f9",
+  "run_id": "t00-20261115-6c72023",
   "source": {
     "repository": "https://github.com/bolechen/temple-walk",
     "ref": "main",
-    "reviewed_commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-    "code_commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+    "reviewed_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+    "code_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
     "evidence_commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
-    "observed_head": "ab064f9bba6896b556381eedce5a700e2baf5535",
-    "code_equivalence": "ab064f9 follows 0e960f0 with delivery-document changes only; app/ tree is identical"
+    "observed_head": "6c72023d8266c26cb3370c154e254a218c7f116f",
+    "code_equivalence": "none: the current app/ tree changes after the last runtime evidence commit"
   },
-  "reviewed_commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+  "reviewed_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
   "reviewer": "Codex 独立评审",
   "reviewer_details": {
     "method": "commit-traceable independent review",
     "skill_commit": "c4c3ba5cad3eb9337c3f21c07cbdbd4ac62f3ee3",
-    "checked_at": "2026-11-14T22:06:45Z"
+    "checked_at": "2026-11-14T22:25:00Z"
   },
   "change_kind": "ui",
   "run_status": "completed",
@@ -25,31 +25,32 @@
   "environment": {
     "os": "managed Linux",
     "browser": "cloud Chrome + desktop Chromium attempts",
-    "renderer": "WebGL unavailable locally; historical evidence NVIDIA T4 ANGLE/Vulkan",
+    "renderer": "deployed UI reached load-retry state; WebGL scene unavailable locally; historical evidence NVIDIA T4 ANGLE/Vulkan",
     "target_device": false
   },
   "selection": {
     "selected": [
-      "changed source diff 2c05944..0e960f0",
+      "changed source diff ab064f9..6c72023",
       "parser",
-      "79 unit tests",
+      "82 unit tests",
       "review validator 17 tests",
-      "E2E smoke first failure and one diagnostic retry",
-      "reference images",
-      "CAM-01..06",
-      "affected hall-platform camera",
-      "walkthrough video",
-      "T4 raw frame data",
+      "normal-input E2E first failure",
+      "deployed title/load state in desktop Chromium and cloud Chrome",
+      "affected interior ink paintings",
+      "affected batched mist",
+      "affected third-person novice skeleton",
+      "existing M4 evidence provenance",
       "asset register",
       "repository status JSON"
     ],
     "skipped": [
       "Mac/phone 120s×3 target performance",
       "successful local normal-input traversal",
+      "commit-matched interior/mist/novice runtime screenshots",
       "interior statue completeness",
       "direct Site source publication"
     ],
-    "reason": "UI/geometry/performance changes require static, unit, runtime, visual and performance review; local WebGL/E2E environment blocked normal-input completion, and T4 cannot substitute for target devices."
+    "reason": "The source commit changes interior art, exterior mist, the third-person novice, and startup texture work. Static and unit checks passed, but current runtime/visual/performance evidence is absent and the deployed UI could not enter the WebGL scene in this environment."
   },
   "checks": [
     {
@@ -57,8 +58,8 @@
       "scope": "static",
       "criterion": "锁定提交源码可解析",
       "status": "pass",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "31 files checked, 0 problems.",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "32 files checked, 0 problems.",
       "evidence_ids": [
         "A-CHECK"
       ]
@@ -68,8 +69,8 @@
       "scope": "static",
       "criterion": "锁定提交单元回归通过",
       "status": "pass",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "79/79 unit tests passed.",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "82/82 unit tests passed, including three new novice skeleton tests.",
       "evidence_ids": [
         "A-UNIT"
       ]
@@ -79,7 +80,7 @@
       "scope": "static",
       "criterion": "评审结构/证据校验器自身回归通过",
       "status": "pass",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
       "reason": "17/17 validator tests passed.",
       "evidence_ids": [
         "A-VALIDATOR"
@@ -90,43 +91,34 @@
       "scope": "runtime",
       "criterion": "真人正常速度键鼠/触控完成受影响路线",
       "status": "blocked",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "Playwright browser package missing; one system-Chromium diagnostic retry was denied by the runtime socket policy; cloud browser had WebGL disabled and desktop Chromium remained at the retry state.",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "The first Playwright attempt failed because its browser executable is absent. Desktop Chromium and cloud Chrome were opened but remained at the deployed load-retry state, so no normal-input scene traversal was possible.",
       "evidence_ids": [
         "A-E2E-FIRST",
-        "A-E2E-RETRY",
         "A-INSPECTION"
       ]
     },
     {
       "id": "C05",
       "scope": "visual",
-      "criterion": "六固定机位和受影响大殿机位符合参考图的明度、材质、植被和构造目标",
-      "status": "partial",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "All images were opened and hashes verified. Runtime images belong to code commit 0e960f0, whose app tree equals ab064f9, but are not relabeled; several stable minor findings remain.",
+      "criterion": "本次受影响的内殿墨画、外景雾效与第三人称小沙弥在匹配提交上可见且符合目标",
+      "status": "blocked",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "No commit-matched runtime screenshots exist. The opened deployment did not enter the WebGL scene; M4 images predate these source changes and cannot pass the affected scope.",
       "evidence_ids": [
         "A-INSPECTION",
-        "A-M4-MANIFEST",
-        "A-CAM01",
-        "A-CAM02",
-        "A-CAM03",
-        "A-CAM04",
-        "A-CAM05",
-        "A-CAM06",
-        "A-HALL"
+        "A-M4-MANIFEST"
       ]
     },
     {
       "id": "C06",
       "scope": "runtime",
       "criterion": "完整五区往返可由正常用户输入完成",
-      "status": "partial",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "Automated diagnostic tour and unit reachability support the route, but the 116.04s video is program-driven and does not satisfy normal-input acceptance.",
+      "status": "blocked",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "No normal-input traversal evidence matches this commit. The historical program-driven walkthrough is diagnostic only and predates the changed app tree.",
       "evidence_ids": [
         "A-WALK",
-        "A-UNIT",
         "A-INSPECTION"
       ]
     },
@@ -135,11 +127,11 @@
       "scope": "performance",
       "criterion": "锁定目标 Mac 与手机各完成 120秒×3 性能测量",
       "status": "blocked",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "Only T4 diagnostic data exists; no target device was measured.",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "The new canvas textures, mist batching, and novice rig have no current target-device measurements. Historical T4 data cannot be extrapolated to Mac or phone.",
       "evidence_ids": [
         "A-PERF",
-        "A-M4-MANIFEST"
+        "A-INSPECTION"
       ]
     },
     {
@@ -147,7 +139,7 @@
       "scope": "security",
       "criterion": "素材来源、再分发授权与仓库许可完整可核",
       "status": "fail",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
       "reason": "Buddha and pedestal model authorship/re-distribution license remain unrecorded; repository code license is absent.",
       "evidence_ids": [
         "A-ASSETS"
@@ -158,10 +150,11 @@
       "scope": "release",
       "criterion": "仓库状态与部署信息不夸大验收",
       "status": "partial",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "reason": "Status JSON correctly reported CI in progress, deployment at code commit 0e960f0, and independent review not yet applied. Final post-merge sync must be read back.",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "reason": "Repository status reports CI and deployment success for the locked source while correctly showing that the previous independent review does not apply. CI/deployment success is provenance, not acceptance.",
       "evidence_ids": [
-        "A-STATUS"
+        "A-STATUS",
+        "A-INSPECTION"
       ]
     }
   ],
@@ -170,55 +163,46 @@
       "id": "A-CHECK",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "file": "docs/t00/evidence/independent/20261115-ab064f9/check.log",
-      "sha256": "6cd565d6f0845760287c7f6d40c739538fd3b5b90666f3a19f54f9e3d4278ef9"
+      "created_at": "2026-11-14T22:25:00Z",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "file": "docs/t00/evidence/independent/20261115-6c72023/check.log",
+      "sha256": "25bb273346660bb3d27b03a37fdfc56177de4f93de517ce22d338d9b70fe7f44"
     },
     {
       "id": "A-UNIT",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "file": "docs/t00/evidence/independent/20261115-ab064f9/unit.log",
-      "sha256": "2fc5af0d556a87c59a72783290bb38e45e2d8a5e4e1a4aa34e4b8e836e7daaa6"
+      "created_at": "2026-11-14T22:25:00Z",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "file": "docs/t00/evidence/independent/20261115-6c72023/unit.log",
+      "sha256": "b925920fe26d74bfd6fedda12416972028c036bc13757cb7e3395647bfaf369e"
     },
     {
       "id": "A-VALIDATOR",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "file": "docs/t00/evidence/independent/20261115-ab064f9/validator-tests.log",
-      "sha256": "76134e43bb0c2e0da8a66488b3f10588c5a425f327702293ac9e871ad9c0bc52"
+      "created_at": "2026-11-14T22:25:00Z",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "file": "docs/t00/evidence/independent/20261115-6c72023/validator-tests.log",
+      "sha256": "fdca35adbc6bdd3a5eea58b98ea709ad61281db73f15253970c502ea2c278439"
     },
     {
       "id": "A-E2E-FIRST",
       "type": "test_log",
       "mode": "user_input",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "file": "docs/t00/evidence/independent/20261115-ab064f9/e2e-first-failure.log",
-      "sha256": "a828fdc5d23c6f1e7a593f47bfe1e1e6f5826cd8984743923e16d7a2573f0e11"
-    },
-    {
-      "id": "A-E2E-RETRY",
-      "type": "test_log",
-      "mode": "diagnostic",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "file": "docs/t00/evidence/independent/20261115-ab064f9/e2e-diagnostic-retry.log",
-      "sha256": "8ef53d55233b4f306627fae857f4e39438d8d30472aeb73e3c2a8f28b4e3a062"
+      "created_at": "2026-11-14T22:25:00Z",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "file": "docs/t00/evidence/independent/20261115-6c72023/e2e-first-failure.log",
+      "sha256": "16e8aa7f33dc21467c0c8c30420db99731aa7570f1508a482c59230cb6b3e121"
     },
     {
       "id": "A-INSPECTION",
       "type": "test_log",
       "mode": "manual_visual_review",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
-      "file": "docs/t00/evidence/independent/20261115-ab064f9/inspection.md",
-      "sha256": "17a34c5d10a684bdecc8caa3a1e6a9c6c894191b38e3ee4efd18ee9effa96b7b"
+      "created_at": "2026-11-14T22:25:00Z",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "file": "docs/t00/evidence/independent/20261115-6c72023/inspection.md",
+      "sha256": "f04953258e5683b51eb3e5f28aa764df35bf290cf902bce9e951ec6dad019bde"
     },
     {
       "id": "A-M4-MANIFEST",
@@ -323,8 +307,8 @@
       "id": "A-STATUS",
       "type": "remote_status",
       "mode": "repository_generated",
-      "created_at": "2026-11-14T22:06:45Z",
-      "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+      "created_at": "2026-11-14T22:25:00Z",
+      "commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
       "url": "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
     }
   ],
@@ -574,10 +558,24 @@
       "evidence_ids": [
         "A-WALK"
       ]
+    },
+    {
+      "id": "EVID-02",
+      "state": "open",
+      "severity": "major",
+      "finding": "锁定提交新增内殿墨画、外景雾效和第三人称小沙弥，但 delivery.json 与 M4 运行证据仍指向更早提交；没有匹配提交的受影响机位截图或正常输入证据。",
+      "recommendation": "在同一源码提交上补录内殿墨画、外景雾效、第三人称小沙弥及正常输入路线；更新交付记录但不重贴旧 SHA。",
+      "target": "内殿八幅墨画、外景雾层、第三人称小沙弥与五区正常输入路线",
+      "acceptance_condition": "新证据清单与文件哈希均绑定同一完整源码 SHA；逐一打开截图/录像确认三个受影响范围，并以正常输入完成路线。",
+      "evidence_ids": [
+        "A-INSPECTION",
+        "A-M4-MANIFEST",
+        "A-STATUS"
+      ]
     }
   ],
   "evidence": [
-    "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261115-ab064f9",
+    "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261115-6c72023",
     "https://github.com/bolechen/temple-walk/blob/0e960f09442cd56b156175f195663c0ed1ff15e0/docs/t00/evidence/M4/manifest.json",
     "https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt",
     "https://temple-atlas-research.floralpage64.chatgpt.site/assets/generated/T00.png",
@@ -593,10 +591,11 @@
     "note": "Routine status is synchronized by the repository workflow; no Site source was changed."
   },
   "limitations": [
-    "Runtime screenshots/video and T4 data are from 0e960f0, not the following delivery-document commit ab064f9; the app/ tree is identical but evidence was not relabeled.",
-    "Normal user input acceptance is blocked in this environment.",
-    "Mac/phone target-device performance is blocked.",
+    "No commit-matched runtime screenshots or normal-input traversal exist for the locked source commit.",
+    "The deployed UI was opened but remained at the load-retry title state in both available browsers.",
+    "Mac/phone target-device performance is blocked; historical T4/SwiftShader results are not extrapolated.",
+    "Historical M4 runtime evidence predates the changed app tree and is provenance only.",
     "Exterior GPU evidence excludes statue models and cannot establish interior completeness."
   ],
-  "note": "自动化、开发自评、CI 和 T4 诊断均不等于完整验收；本轮结论为 partial / not_accepted。"
+  "note": "静态检查与单测通过；但本次视觉、运行、正常输入和目标设备性能均缺少匹配提交证据，且资产授权问题仍在。本轮结论为 partial / not_accepted。"
 }
