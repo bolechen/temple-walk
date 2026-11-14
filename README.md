@@ -199,3 +199,7 @@ Claude Code调用 `/temple-review`，Codex调用 `$temple-review`。其他项目
 评审锁定提交，按改动选检查，串行运行图形验证，区分实际用户操作与诊断hook；功能、视觉、性能与发布分别形成带证据的结论。历史截图保留原提交，修复后复测才能关闭问题。结构校验通过不代表美术或游戏整体通过。
 
 图形验证确有需要时可以使用商业Hugging Face Jobs；创建前核对费率、额度与预算，限制时长和作业数量。PRO不是无限免费GPU，T4结果也不代替Mac或手机测试。纯文档更新无需启动GPU。
+
+## 提交与合并规范
+
+后续 PR 统一 **Squash and merge**；新提交、PR 标题及最终 squash 提交标题使用 **Conventional Commits**。示例：`feat(loading): 增加首屏加载进度`。详见 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [代理协作规则](AGENTS.md)。

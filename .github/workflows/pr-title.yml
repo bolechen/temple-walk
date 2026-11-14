@@ -1,0 +1,27 @@
+name: Conventional PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the future squash commit title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          node <<'NODE'
+          const title = process.env.PR_TITLE || '';
+          const conventional = /^[a-z][a-z0-9-]*(\([^()\r\n]+\))?!?: \S[^\r\n]*$/;
+          if (!conventional.test(title)) {
+            console.error('PR title must use Conventional Commits: <type>[optional scope][!]: <description>');
+            process.exitCode = 1;
+          } else {
+            console.log('Conventional PR title verified. Merge using squash.');
+          }
+          NODE
