@@ -16,7 +16,7 @@ const scenarios = {
     expect(!(await t.page.isVisible("#viewBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
     expect(await t.page.evaluate(() => document.fonts.check('40px "Yunjing Brush"', "云径禅寺") && document.fonts.check('20px "Yunjing Serif"', "朱印") && document.fonts.check('20px "Yunjing Kai"', "朱印")), "the temple's own typefaces did not load");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
-    await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
+    await t.page.keyboard.press("Space"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
     expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("钟楼"), "a new visitor should be pointed at the bell");
     const loading = await t.page.evaluate(() => ({ values: window.__loadingHistory, hidden: document.getElementById("loading").hidden, value: document.getElementById("loadProgress").value }));
     expect(loading.values.includes(null), "loading indicator must exist before module initialization");
@@ -251,6 +251,28 @@ const scenarios = {
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // A deliberate low ledge hop: normal walking stays blocked; Space or the touch button clears it.
+  drop: { tier: 2, async run(b, base) {
+    for (const touch of [false, true]) {
+      const t = await open(b, base, "q=low&cam=-13.65,11,1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
+      await t.until(() => t.page.isVisible("#dropBtn"), 30000, "the low unrailed porch offers no way down");
+      if (!touch) {
+        await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
+        const edge = await t.state(); expect(edge.h === 0.45 && edge.x < -13.2, "ordinary walking should still stop at the porch edge");
+      } else {
+        const r = await t.page.locator("#dropBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
+      }
+      await t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      if (touch) await t.page.tap("#dropBtn"); else await t.page.keyboard.press("Space");
+      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x > -12.7; }, 120000, "the low porch hop never reached its clear landing");
+      const samples = await t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
+      expect(samples.filter(s => s.dropping).length >= 3 && samples.some(s => s.y > 0.5) && samples.some(s => s.y > 0 && s.y < 0.4), "the hop must rise and descend continuously, not teleport");
+      expect(samples.every(s => s.y >= -0.001), "the hop fell through its landing");
+      await t.shot(touch ? "drop-touch" : "drop-space");
+      if (!touch) { const x = (await t.state()).x; await t.page.keyboard.press("Space"); await t.frames(3); expect(!(await t.state()).dropping && Math.abs((await t.state()).x - x) < 0.03, "Space on ordinary ground should not start an unrestricted jump"); }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
   } },
   // Real keyboard movement over visible treads, uphill and back down without smoothing the novice into stone.
   stairs: { tier: 2, async run(b, base) {

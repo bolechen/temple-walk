@@ -323,7 +323,7 @@ export function buildHall(M, opts) {
   }
 
   // ---- Where you can stand (local space; the site turns these into world space) ----
-  const walk = { solids: [], decks: [], ramps: [], posts: [] };
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [] };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
   if (p.walkAll) {   // open floor, but its columns still stand in the way
     walk.decks.push({ ...plat, h: p.platH });
@@ -344,5 +344,10 @@ export function buildHall(M, opts) {
     if (p.dark && p.front === "lattice") walk.decks.push({ x0: -1.0, x1: 1.0, z0: Z - 0.35, z1: Z + 0.5, h: p.platH });   // and the threshold of its open door
   }
 
+  // Only exposed front porch edges of a low, unrailed ground-level platform can be hopped down.
+  if (!p.rail && !p.walkAll && p.steps && p.platBase <= 0 && p.platH >= 0.2 && p.platH <= 1.5) {
+    const end = X + 0.8, gap = p.steps / 2 + 0.8;
+    for (const [a, b] of [[-end, -gap], [gap, end]]) if (b - a > 0.6) walk.drops.push({ a: [a, zF], b: [b, zF], normal: [0, 1], top: p.platH });
+  }
   return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
 }
