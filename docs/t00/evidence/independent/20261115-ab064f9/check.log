@@ -1,0 +1,11 @@
+command: npm run check
+reviewed_commit: ab064f9bba6896b556381eedce5a700e2baf5535
+exit_code: 0
+credentials_removed: GH_TOKEN,GITHUB_TOKEN,HF_TOKEN,HUGGING_FACE_HUB_TOKEN,OPENAI_API_KEY,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> temple-walk@0.1.1 check
+> node tools/check.cjs
+
+31 files checked, 0 problems
