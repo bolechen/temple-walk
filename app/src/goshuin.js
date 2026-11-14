@@ -39,15 +39,15 @@ export async function drawGoshuin({ seals, verse, when, label, temple = "云径�
   for (let i = 0; i < 520; i++) { const px = W / 2 - 150 + rnd() * 300, py = 120 + rnd() * 1060; x.globalAlpha = 0.1 + rnd() * 0.25; x.fillRect(px, py, 1 + rnd() * 2, 8 + rnd() * 46); }
   x.globalCompositeOperation = "destination-over"; x.globalAlpha = 1; x.fillStyle = "#f1ebde"; x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";
   // The temple's seal over the name.
-  x.save(); x.translate(W / 2 + 6, 770); x.rotate(-0.03); x.globalAlpha = 0.86; x.drawImage(sealStamp(temple, 360, { seed: 3 }), -180, -180); x.restore();
+  x.save(); x.translate(W / 2 + 6, 770); x.rotate(-0.03); x.globalCompositeOperation = "multiply"; x.globalAlpha = 0.9; x.drawImage(sealStamp(temple, 360, { seed: 3 }), -180, -180); x.restore();   // pressed over the ink, which shows through
   // To the right: the day. To the left: the line that was given.
   x.fillStyle = "#2a2622"; x.font = `58px ${BRUSH}`; vertical(x, "奉拜", W - 150, 190, 66);
   x.font = `36px ${SERIF}`; x.fillStyle = "#3a352f"; vertical(x, dateLine(when), W - 150, 380, 43);
   x.fillStyle = "#6b6458"; x.font = `28px ${SERIF}`; vertical(x, label.replace(/\s/g, ""), W - 92, 380, 36);
   if (verse) {
-    const cols = []; let t = [...verse.text]; while (t.length) cols.push(t.splice(0, 15).join(""));
+    const cols = [], t = [...verse.text]; while (t.length) { const col = t.splice(0, 14); while (t.length && "，。；、？！".includes(t[0])) col.push(t.shift()); cols.push(col.join("")); }   // a column never begins with a stop
     x.fillStyle = "#2a2622"; x.font = `40px ${BRUSH}`; cols.forEach((col, i) => vertical(x, col, 190 - i * 58, 200, 47));
-    x.fillStyle = "#6b6458"; x.font = `24px ${SERIF}`; vertical(x, verse.from, 190 - cols.length * 58 - 4, 200 + 15 * 47 - [...verse.from].length * 28, 28);
+    x.fillStyle = "#6b6458"; x.font = `24px ${SERIF}`; vertical(x, verse.from, Math.max(78, 190 - cols.length * 58 + 6), 200 + 16 * 47 - [...verse.from].length * 28, 28);
   }
   // Along the foot: the seven seals of the visit.
   const n = seals.length, size = 126, gap = (W - 150 - n * size) / (n - 1), y = 1318; let got = 0;
