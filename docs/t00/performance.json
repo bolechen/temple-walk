@@ -1,6 +1,6 @@
 {
  "scene_id": "T00",
- "commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+ "commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
  "status": "measured_on_reference_gpu_only; target device NOT measured (blocked)",
  "evidence_kind": "diagnostic: the page walks the route itself (?tour=120x3) in a headless browser with vsync off; not a person at the controls, not the target device",
  "environment": {
@@ -10,7 +10,7 @@
   "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
   "headless": true,
   "vsync": "off (--disable-gpu-vsync --disable-frame-rate-limit)",
-  "page_load_ms": 10363
+  "page_load_ms": 9981
  },
  "window": [
   1920,
@@ -61,28 +61,28 @@
    29
   ]
  ],
- "load_ms_to_ready": 5113,
+ "load_ms_to_ready": 9960,
  "runs": [
   {
+   "seconds": 120,
+   "frames": 7308,
+   "fps_mean": 60.9,
+   "p95_ms": 20.9,
+   "max_ms": 49.4
+  },
+  {
+   "seconds": 120.02,
+   "frames": 7265,
+   "fps_mean": 60.53,
+   "p95_ms": 21.5,
+   "max_ms": 35.6
+  },
+  {
    "seconds": 120.01,
-   "frames": 6779,
-   "fps_mean": 56.49,
-   "p95_ms": 22.7,
-   "max_ms": 44.8
-  },
-  {
-   "seconds": 120,
-   "frames": 7208,
-   "fps_mean": 60.06,
+   "frames": 7414,
+   "fps_mean": 61.78,
    "p95_ms": 22.3,
-   "max_ms": 37.9
-  },
-  {
-   "seconds": 120,
-   "frames": 7047,
-   "fps_mean": 58.72,
-   "p95_ms": 22.7,
-   "max_ms": 36.2
+   "max_ms": 35.5
   }
  ],
  "target_proposal_from_handoff": {
@@ -92,8 +92,14 @@
  },
  "on_this_gpu": {
   "p95_frame_ms_within_33.3": true,
-  "mean_fps_at_least_60": false
+  "mean_fps_at_least_60": true
  },
+ "what_it_does_not_show": [
+  "the target device",
+  "GPU time on a vsynced display",
+  "start-up hitches (inside the warm-up)",
+  "the governor at work (the tier is pinned to high here)"
+ ],
  "target_device": {
   "status": "blocked",
   "how": "open ?tour=120x3&enter&view=first&q=high&season=summer&time=day in a 1920x1080 window on the Mac; put the two downloaded files in evidence/M4/device/"

@@ -66,12 +66,12 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
     "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "大殿不再被洗白；天空（亮度 180–210）仍比所有白墙（145–157）亮，是 CAM-03/04/06 里最大的一块平面"
+    "remaining_severity": "minor",
+    "note": "天空 182–205，白墙 151–162（之前约 203 对 147）；CAM-03/04 仍有 13% 的平天。参考图里天也比墙亮，只是占不到 3% 的画面，所以剩下的是天的面积而不是曝光"
    },
    "dev_note": "对照 evidence/M4 同机位截图",
    "recheck_history": [
@@ -82,6 +82,14 @@
      "verdict": "improved_but_open",
      "remaining_severity": "major",
      "note": "大殿不再被洗白；天空仍是最大最亮的一块平面"
+    },
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "大殿不再被洗白；天空（亮度 180–210）仍比所有白墙（145–157）亮，是 CAM-03/04/06 里最大的一块平面"
     }
    ]
   },
@@ -123,15 +131,15 @@
    "issue": "山门像灰泥墙上贴木条；斗拱是墙面上的黑色剪影",
    "suggested_fix": "山门各间改木板壁或格子；拱眼壁改木；斗拱出跳有体积，檐下环境光抬起",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open_improved",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
-    "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "山门有板壁、格子和真椽；两层的拱眼壁是白灰加深色斗拱剪影（美术评审仍嫌它像贴片；结构评审认为这是对的并已读得出铺作）"
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "CAM-04 里斗拱是带出跳的分层构件，配真椽，读作结构；CAM-06 远看成深色字形，可接受。白拱眼壁在阴影里（98 对受光墙 154），可接受"
    },
    "dev_note": "山门改木板壁和版门；斗拱仍是平片",
    "recheck_history": [
@@ -142,6 +150,14 @@
      "verdict": "improved_but_open",
      "remaining_severity": "major",
      "note": "山门是木板壁和格子；檐下读不出斗拱，大殿斗拱仍像白底上的剪影"
+    },
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "山门有板壁、格子和真椽；两层的拱眼壁是白灰加深色斗拱剪影（美术评审仍嫌它像贴片；结构评审认为这是对的并已读得出铺作）"
     }
    ]
   },
@@ -246,12 +262,12 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
     "verdict": "improved_but_open",
     "remaining_severity": "major",
-    "note": "最下几级有浅色踏面；上段和挡墙仍是同一种毛石纹理和明度，没有压顶"
+    "note": "CAM-01 石阶 73–80、挡墙 52–60、山坡 43，低处踏面是浅石板；CAM-02 里踢面（57）夹在两面墙（46 和 71）之间又是同一种毛石，中段读作一面砌体；仍无压顶"
    },
    "dev_note": "踏步出挑、踏面踏亮；挡墙未改",
    "recheck_history": [
@@ -262,6 +278,14 @@
      "verdict": "improved_but_open",
      "remaining_severity": "major",
      "note": "近处踏面读得出；上段仍并成一片，挡墙未改"
+    },
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "最下几级有浅色踏面；上段和挡墙仍是同一种毛石纹理和明度，没有压顶"
     }
    ]
   },
@@ -306,12 +330,12 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
     "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "柳杉暗了但像涂抹，有零散直线；院里的树细；殿后是一条浅色带而不是深林"
+    "remaining_severity": "minor",
+    "note": "柳杉成了退进雾里的深色团块（40）；轮廓仍毛糙有直线，院里的树细，正脊后面的天是空的"
    },
    "dev_note": "柳杉加密压暗并在墙外成林；院内树未改",
    "recheck_history": [
@@ -322,6 +346,14 @@
      "verdict": "improved_but_open",
      "remaining_severity": "major",
      "note": "柳杉变暗但轮廓仍像细线涂抹；墙后是浅绿带而不是深林"
+    },
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "柳杉暗了但像涂抹，有零散直线；院里的树细；殿后是一条浅色带而不是深林"
     }
    ]
   },
@@ -423,15 +455,15 @@
    "issue": "院地上有三角形深色楔块，像阴影或镜面的瑕疵",
    "suggested_fix": "查镜面裁剪面和建筑下的暗区矩形",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
-    "verdict": "not_fixed",
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
+    "verdict": "improved_but_open",
     "remaining_severity": "major",
-    "note": "院地中央硬边的深色三角和多边形仍是地面上最显眼的东西"
+    "note": "CAM-06 的大三角变淡（82 对之前 74.5），但左、中、右仍有硬边的深色多边形，仍是铺地上最显眼的东西"
    },
    "dev_note": null,
    "recheck_history": [
@@ -442,6 +474,14 @@
      "verdict": "not_fixed",
      "remaining_severity": "major",
      "note": "院地上的深色多边形成了地面上最显眼的东西（复核时严重度上调）"
+    },
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "not_fixed",
+     "remaining_severity": "major",
+     "note": "院地中央硬边的深色三角和多边形仍是地面上最显眼的东西"
     }
    ]
   },
@@ -903,9 +943,16 @@
    "issue": "半山亭进不去：平台和亭子台阶之间有 0.2 米没有开出来，被竹林的阻挡盖住",
    "suggested_fix": "台阶的可走范围从平台里面开始",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "复核人以 2 厘米步长取样，从平台到亭内只有柱子挡路"
+   },
    "dev_note": "单元测试「半山亭可以一步一步走进去」以 3 厘米步长取样"
   },
   {
@@ -916,9 +963,16 @@
    "issue": "平台石板和亭子石台之间有 10 厘米没有石头",
    "suggested_fix": "石台加深",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "脚下 3 厘米内处处有石面"
+   },
    "dev_note": "读代码"
   },
   {
@@ -929,9 +983,16 @@
    "issue": "可走范围内地形高出铺地，人会走进土坡里",
    "suggested_fix": "西侧地形的抬升不进前院",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "前院 156,884 个可走点取样，地形都不高于 -0.12"
+   },
    "dev_note": "地形公式加了范围；待出图复核"
   },
   {
@@ -942,9 +1003,16 @@
    "issue": "上下石阶时眼睛每秒抖六次，最多比脚低或高 0.2 米",
    "suggested_fix": "第一视角的眼高跟随坡面而不是每一级踏步",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "eyeAt 沿坡面；60Hz 模拟无踏步频率的抖动"
+   },
    "dev_note": "单元测试「眼睛沿坡面上石阶」"
   },
   {
@@ -955,9 +1023,16 @@
    "issue": "拖动看上下和鼠标相反，上下限也是反的；触屏在石阶上低头只有 29°",
    "suggested_fix": "拖动和鼠标同向，共用一组上下限",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "拖动与鼠标同号同限；相机输入测试通过；未在触屏设备上试"
+   },
    "dev_note": "读代码；触屏真机未验"
   },
   {
@@ -968,9 +1043,16 @@
    "issue": "默认第三视角，路线上没有任何提示告诉玩家怎么换第一视角",
    "suggested_fix": "入山那一行提示里写上 V（触屏写右侧的「身外」）",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "入山提示里有 V /「身外」；走 4 米后消失，e2e 没有断言这句话"
+   },
    "dev_note": "e2e boot/phone"
   },
   {
@@ -981,9 +1063,16 @@
    "issue": "行走测量默认是第三视角；转头速度随帧率变",
    "suggested_fix": "测量强制第一视角；转头按时间",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "测量强制第一视角，转头按时间"
+   },
    "dev_note": "e2e tour 检查 view=first"
   },
   {
@@ -996,7 +1085,14 @@
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
    "status": "open",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "4 米宽的石阶仍只能走中间 ±1.7 米，没有路缘"
+   },
    "dev_note": null
   },
   {
@@ -1007,9 +1103,16 @@
    "issue": "Esc 之后一秒内再点，requestPointerLock 被拒绝且没有接住",
    "suggested_fix": "接住拒绝",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "拒绝已接住（读代码）"
+   },
    "dev_note": "读代码"
   },
   {
@@ -1020,9 +1123,16 @@
    "issue": "触屏没有快步；点照壁后面的地面会滑一段然后悄悄取消",
    "suggested_fix": "摇杆推满即快步；绕照壁加路点",
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
-   "status": "open",
+   "status": "fixed_pending_retest",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "复核时摇杆最高 2.1 米/秒；被挡的路线悄悄取消（摇杆推满快步已在之后的提交里加上）"
+   },
    "dev_note": null
   },
   {
@@ -1035,7 +1145,14 @@
    "evidence_before": "评审人在 Node 里对真实总平面和行走器取样，或读代码",
    "status": "open",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "亭子地面仍有 0.3 米一跳；眼睛是缓的，脚是跳的"
+   },
    "dev_note": null
   },
   {
@@ -1046,9 +1163,16 @@
    "issue": "所有植物各是一张不分区的网格，永远不被剔除，镜面里再画一遍；今天多出的 34 万三角面多半是墙外柳杉藏在枝叶里的枝干",
    "suggested_fix": "墙外柳杉不长枝干；竹和柳杉按区域分网格",
    "evidence_before": "T4 实测与读代码",
-   "status": "partly_fixed",
+   "status": "open_improved",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "improved_but_open",
+    "remaining_severity": "minor",
+    "note": "柳杉 6.2 万面（带枝干时 24.9 万）；竹仍是两张不分区的网格"
+   },
    "dev_note": "墙外柳杉不再长枝干；分区未做"
   },
   {
@@ -1059,9 +1183,16 @@
    "issue": "透明测试的叶片卡片过度绘制；在苹果和手机的分块渲染 GPU 上 discard 让隐面消除失效，T4 上看不出来",
    "suggested_fix": "树冠和竹叶排在建筑之后画；低档少画矮竹",
    "evidence_before": "T4 实测与读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "renderOrder=1；低档竹 3.8 万面；分块渲染 GPU 上的效果未测"
+   },
    "dev_note": "renderOrder=1；低档矮竹减到四分之一；真机未测"
   },
   {
@@ -1072,10 +1203,27 @@
    "issue": "镜面那一遍总是画全部东西，包括在没有镜面的上层台地",
    "suggested_fix": "上层台地不画镜面",
    "evidence_before": "T4 实测与读代码",
-   "status": "partly_fixed",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
-   "dev_note": "上层台地已跳过；镜面里仍画飘落物和矮竹"
+   "recheck": {
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "yard.js:417–418 只在 footY ±0.6 内且不在殿内时画镜面"
+   },
+   "dev_note": "上层台地已跳过；镜面里仍画飘落物和矮竹",
+   "recheck_history": [
+    {
+     "at_commit": "7142498",
+     "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+     "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "复核时只跳过了上层台地；整条上山路上镜面仍白画（已在之后的提交里改为只在前院和首院画）"
+    }
+   ]
   },
   {
    "id": "PERF-04",
@@ -1085,10 +1233,27 @@
    "issue": "高档 4x MSAA 的半浮点目标有两个；M1 会被判成高档",
    "suggested_fix": "未知和苹果基础款 GPU 用中档",
    "evidence_before": "T4 实测与读代码",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
-   "dev_note": null
+   "recheck": {
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "基础款苹果芯片、「Apple GPU」、Intel 和软件渲染从中档起；有单元测试。空的显卡名仍是高档，没有在 Mac 上测过"
+   },
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "7142498",
+     "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+     "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+     "verdict": "not_fixed",
+     "remaining_severity": "major",
+     "note": "复核时苹果和未知 GPU 仍是高档（已在 f449c38 改为基础款苹果芯片和隐藏名称的显卡从中档起）"
+    }
+   ]
   },
   {
    "id": "PERF-05",
@@ -1100,7 +1265,14 @@
    "evidence_before": "T4 实测与读代码",
    "status": "open",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "低档仍开泛光"
+   },
    "dev_note": null
   },
   {
@@ -1113,7 +1285,14 @@
    "evidence_before": "T4 实测与读代码",
    "status": "open",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "材质里 34 处 fbm，没有按距离省略"
+   },
    "dev_note": null
   },
   {
@@ -1126,7 +1305,14 @@
    "evidence_before": "T4 实测与读代码",
    "status": "open",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "阴影图高度固定 4096"
+   },
    "dev_note": null
   },
   {
@@ -1137,9 +1323,16 @@
    "issue": "降档阈值是平均 30 毫秒，35–55 帧的设备永远得不到帮助；输入没有截断；第一步降的是像素而瓶颈是面数",
    "suggested_fix": "截断到 100 毫秒，阈值约 22 毫秒，先关镜面",
    "evidence_before": "T4 实测与读代码",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "100 毫秒截断、22 毫秒阈值、先关镜面；没有单元测试"
+   },
    "dev_note": "读代码"
   },
   {
@@ -1152,7 +1345,14 @@
    "evidence_before": "T4 实测与读代码",
    "status": "open",
    "fixed_in": null,
-   "recheck": null,
+   "recheck": {
+    "at_commit": "7142498",
+    "evidence": "读代码、单元测试、复核人自己在 Node 里对真实总平面取样",
+    "by": "Claude 子代理复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "minor",
+    "note": "没有 compileAsync"
+   },
    "dev_note": null
   },
   {
@@ -1188,14 +1388,23 @@
    "fixed_in": null,
    "dev_note": "踏步出挑板和石阶同宽，暗线因此伸到垂带；待改",
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
     "verdict": "not_fixed",
     "remaining_severity": "major",
-    "note": "每级踏步边缘都有黑细线，下面几级仍伸到挡墙上"
+    "note": "CAM-01/02 每级踏步边缘仍有一像素的黑线，下面几级仍伸到两侧墙上"
    },
-   "recheck_history": []
+   "recheck_history": [
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "not_fixed",
+     "remaining_severity": "major",
+     "note": "每级踏步边缘都有黑细线，下面几级仍伸到挡墙上"
+    }
+   ]
   },
   {
    "id": "NEW-03",
@@ -1205,18 +1414,27 @@
    "issue": "这两个机位比 CAM-03/05/06 暗约一档，坡和亭子在白天下近黑",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "dev_note": "竹林里天光被遮是有意的，但暗部要再抬；待改",
    "recheck": {
-    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
-    "verdict": "not_fixed",
-    "remaining_severity": "major",
-    "note": "CAM-01/02 平均亮度 48–51，CAM-03/06 是 102–107；坡、踏步、墙都在 40–50"
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
+    "verdict": "improved_but_open",
+    "remaining_severity": "minor",
+    "note": "CAM-01/02 平均亮度 54/62（之前 47/50），CAM-03/06 是 109/95：竹林比院内暗不到一档；山坡 38–44，亭子仍是 22"
    },
-   "recheck_history": []
+   "recheck_history": [
+    {
+     "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+     "verdict": "not_fixed",
+     "remaining_severity": "major",
+     "note": "CAM-01/02 平均亮度 48–51，CAM-03/06 是 102–107；坡、踏步、墙都在 40–50"
+    }
+   ]
   },
   {
    "id": "NEW-04",
@@ -1439,39 +1657,178 @@
    "fixed_in": null,
    "dev_note": null,
    "recheck": null
+  },
+  {
+   "id": "R3-UX-01",
+   "dimension": "第一人称体验",
+   "camera_or_location": "台沿处跳起后按空格",
+   "severity": "minor",
+   "issue": "跳在空中时在台沿按空格会开始一次下台阶：落地后又弹起再落一次",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "空中不再提供下台阶",
+   "recheck": null
+  },
+  {
+   "id": "R3-UX-02",
+   "dimension": "第一人称体验",
+   "camera_or_location": "歇脚菜单",
+   "severity": "minor",
+   "issue": "菜单只是画面中间一张卡片，后面的画面仍接受点地、拖动、滚轮、握住鼠标和 E/V/B/P/T/H",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "菜单铺满画面，打开时只听 Esc；e2e menu 断言按键、点击、滚轮都无效",
+   "recheck": null
+  },
+  {
+   "id": "R3-UX-03",
+   "dimension": "第一人称体验",
+   "camera_or_location": "殿内「回到起点」",
+   "severity": "minor",
+   "issue": "从殿内回到起点，0.9 秒后被出殿的过场放回殿前",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "直接出殿，不走过场",
+   "recheck": null
+  },
+  {
+   "id": "R3-UX-04",
+   "dimension": "第一人称体验",
+   "camera_or_location": "山顶石阶脚旁（T00 范围外）",
+   "severity": "minor",
+   "issue": "1.7<|x|<2.15、z -90.55…-90.50 一条缝在 5.2 米高的台地上高度为 0 且不挡",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": "未动",
+   "recheck": null
+  },
+  {
+   "id": "R3-UX-05",
+   "dimension": "第一人称体验",
+   "camera_or_location": "山门门槛",
+   "severity": "minor",
+   "issue": "脚穿过 0.13 米高的门槛",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "门槛压低到 0.05 米",
+   "recheck": null
+  },
+  {
+   "id": "R3-UX-06",
+   "dimension": "第一人称体验",
+   "camera_or_location": "?fast 下跳着进殿",
+   "severity": "minor",
+   "issue": "进殿不清除跳跃状态，会掉 60 米",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "进出殿时清除跳跃和下跳",
+   "recheck": null
+  },
+  {
+   "id": "R3-PERF-01",
+   "dimension": "性能",
+   "camera_or_location": "上山路全程",
+   "severity": "major",
+   "issue": "上山路上眼睛在镜面以下，镜面那一遍白画：一段往返有 54% 的时间把场景画两遍",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "verified_closed",
+   "fixed_in": null,
+   "dev_note": "镜面只在前院和首院那一层画",
+   "recheck": {
+    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+    "by": "Claude 子代理第三轮复核（独立会话）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "在 Node 里对真实总平面取样：49.7 米的上山路上只有 1.1 米开着镜面"
+   },
+   "recheck_history": []
+  },
+  {
+   "id": "R3-PERF-02",
+   "dimension": "性能",
+   "camera_or_location": "山门台基上跳",
+   "severity": "minor",
+   "issue": "在 0.5 米的台基上跳起时倒影中断",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "跳跃不改变是否画镜面",
+   "recheck": null
+  },
+  {
+   "id": "R3-PERF-03",
+   "dimension": "性能",
+   "camera_or_location": "行走测量的载入时间",
+   "severity": "minor",
+   "issue": "load_ms 从 createTour 算起而不是从导航算起",
+   "suggested_fix": null,
+   "evidence_before": "第三轮复核（提交 7142498）时新发现",
+   "status": "fixed_pending_retest",
+   "fixed_in": null,
+   "dev_note": "改为从导航开始算",
+   "recheck": null
+  },
+  {
+   "id": "R4-01",
+   "dimension": "性能/画面",
+   "camera_or_location": "大殿月台（footY 1.5）、第一次上山的最后几级",
+   "severity": "major",
+   "issue": "镜面那一遍被跳过时，uReflOn 仍是 1，倒影贴图和矩阵停在上一次的值：站在大殿月台上看院里的积水会是冻住的倒影；第一次上山到顶的最后几级会采样一张从没画过的贴图（复核人读代码发现，六张图里看不到）",
+   "suggested_fix": "跳过时把 uReflOn 关掉；月台仍算在院内",
+   "evidence_before": "第三轮复核（提交 b6da920）读代码发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
   }
  ],
  "summary": {
-  "open_improved": 15,
-  "verified_closed": 16,
-  "open": 22,
-  "fixed_pending_retest": 11,
-  "partly_fixed": 2
+  "open_improved": 17,
+  "verified_closed": 30,
+  "open": 20,
+  "fixed_pending_retest": 9
  },
  "open_blockers_or_majors": [
-  "ART-02",
-  "ART-04",
   "ART-08",
-  "ART-10",
   "ART-14",
-  "UX-01",
-  "UX-03",
-  "UX-04",
-  "UX-05",
-  "UX-06",
-  "PERF-01",
-  "PERF-02",
-  "PERF-03",
-  "PERF-04",
-  "PERF-08",
   "NEW-02",
-  "NEW-03"
+  "R4-01"
  ],
  "recheck_summary": {
   "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
   "A03": "partial（结构复核人：没有漂浮和破面，出檐都有支承；STR-10 脊下透缝、NEW-04、STR-06 仍在）",
   "A04": "partial（美术复核人：材料分得开、雾和泛光不遮缺陷；竹林偏暗、院地深色块、天空偏亮未过）",
   "A05": "pass，带两条保留（经幢远看仍可能当成灯；decisions.md 里「宋式做法」要给出处或标未核）",
-  "note": "第二轮复核针对 dce43b3。之后的提交又改了竹林和石阶的明度、潮石的反光、天空、殿后的树、博风板和悬鱼、风铎、钟口；这些没有再复核。独立验收由评审方写入 independent-review.json。"
+  "note": "第二轮复核针对 dce43b3。之后的提交又改了竹林和石阶的明度、潮石的反光、天空、殿后的树、博风板和悬鱼、风铎、钟口；这些没有再复核。独立验收由评审方写入 independent-review.json。",
+  "ux_perf": {
+   "at_commit": "7142498",
+   "A02": "partial（复核人：路线在 Node 里的行走循环中往返无阻，脚的每一步不超过一级踏步；没有人在浏览器里用真实操作走过）",
+   "A06": "测量工具可用；它不显示目标设备、垂直同步下的 GPU 时间、启动卡顿、降档过程"
+  },
+  "third": {
+   "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+   "A04": "partial（材料分得清、曝光大体一致、雾和泛光不遮缺陷；院地的硬边深色块没有来处，石阶黑线和踢面与挡墙同一种石头仍伤结构）",
+   "remaining_majors": [
+    "ART-08",
+    "ART-14",
+    "NEW-02",
+    "R4-01"
+   ]
+  }
  }
 }
