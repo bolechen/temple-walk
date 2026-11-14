@@ -30,7 +30,7 @@ export function createTour(spec, y) {
     if (phase === "wait") { if (document.body.dataset.ready !== "1" || !document.body.classList.contains("entered")) return; result.ready_ms = now - t0; phase = "warm"; began = now; last = now; next(); return; }
     const dt = now - last; last = now;
     const s = y.state(); if (!s.target) next();                                    // at either end, turn round and go back
-    y.face(s.heading);                                                             // he looks where he is going
+    y.face(s.heading, Math.min(0.1, dt / 1000));                                                             // he looks where he is going
     if (phase === "warm") { if (now - began >= WARM) { phase = "run"; began = now; frames = []; } return; }
     frames.push(+dt.toFixed(2));
     if (now - began >= secs * 1000) {

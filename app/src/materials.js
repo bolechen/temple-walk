@@ -163,12 +163,12 @@ export function createMaterials() {
     // Underside of a roof: boards and rafters. vUv2.x runs along the eave.
     rafters: procMat("rafters", { roughness: 0.9, envMapIntensity: 0.15, side: THREE.BackSide }, `
       float r=abs(fract(vUv2.x/.3)-.5); float raft=1.-smoothstep(.16,.2,r);
-      col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.55,1.25,raft); ao_=mix(ao_,1.,.45); emit_=col*uAmb*.14; bump_=raft*.05;`, { snow: false }),
+      col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.75,.95,raft); ao_=mix(ao_,1.,.45); emit_=col*uAmb*.1; bump_=raft*.05;`, { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),
     ridge: procMat("ridge", { roughness: 0.55, envMapIntensity: 0.8 }, `
       col=mix(vec3(.1,.105,.11),vec3(.19,.195,.195),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
       rough_=.5; bump_=fbm3(vWP*14.)*.004; ao_=1.;`),
-    gable: procMat("gable", { roughness: 0.9, envMapIntensity: 0.2, side: THREE.DoubleSide }, "col=vec3(.62,.615,.58)*(.75+.3*fbm3(vWP*.9)); ao_=.75;"),
+    gable: procMat("gable", { roughness: 0.9, envMapIntensity: 0.2, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(9.,1.1,9.))*.8; ao_=.7;"),
     // The floor of the grove: dark leaf litter, moss, a scatter of fallen bamboo leaves.
     earth: procMat("earth", { roughness: 0.95, envMapIntensity: 0.15 }, `
       float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*.09+4.);

@@ -173,7 +173,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   const twigs = (p, dir, n = 3, reach = 0.6) => { for (let i = 0; i < n; i++) { const tip = p.clone().add(V(dir.x * reach + jit(reach), reach * (0.2 + rnd() * 0.6), dir.z * reach + jit(reach))); grow([p, p.clone().lerp(tip, 0.5).add(V(jit(0.12), 0.05, jit(0.12))), tip], 0.011, 0.004, 4); } };
   const jit = (k) => (rnd() - 0.5) * k;
 
-  for (const [x, y, z, kind, h] of spots) {
+  for (const [x, y, z, kind, h, far0] of spots) {
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
       const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t);
@@ -183,7 +183,7 @@ export function createTrees(scene, M, spots, opts = {}) {
         for (let k = 0; k < n; k++) {
           if (rnd() < 0.14) continue;   // a gap where a bough was lost
           const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 0.72 + jit(0.3), l = len * (0.65 + rnd() * 0.6), w = l * (0.95 + rnd() * 0.3), far = V(Math.sin(a), 0, Math.cos(a));
-          if (k % 2 === 0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
+          if (k % 2 === 0 && !far0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
           // a bough: hinged at the trunk, reaching out and down
           q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
           card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
@@ -235,7 +235,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   const put = (kind, map, o) => {
     if (!cards[kind].length) return;
     const mat = crownMaterial(map, { a2c: opts.a2c, ...o }), m = new THREE.Mesh(mergeGeometries(cards[kind]), mat);
-    m.castShadow = true; m.receiveShadow = false; scene.add(m); crowns[kind] = { mat, mesh: m };
+    m.castShadow = true; m.receiveShadow = false; m.renderOrder = 1; scene.add(m); crowns[kind] = { mat, mesh: m };   // after the buildings, which then hide most of it for nothing
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {

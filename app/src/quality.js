@@ -21,8 +21,8 @@ export function pickQuality(forced) {
 export function createGovernor(quality, apply) {
   // Things are given up in order of how little they will be missed.
   const steps = [
+    () => { quality.planar = 0; },                                  // the mirror first: it draws the temple a second time
     () => { quality.scale *= 0.8; quality.budget *= 0.7; },
-    () => { quality.planar = 0; },
     () => { quality.bloom = false; quality.scale *= 0.85; quality.budget *= 0.8; },
   ];
   let n = 0, sum = 0, level = 0, frames = 0;
@@ -30,10 +30,10 @@ export function createGovernor(quality, apply) {
     get level() { return level; },
     tick(dt) {
       if (quality.fixed || level >= steps.length || ++frames < 30) return;
-      sum += dt; n++;
+      sum += Math.min(dt, 0.1); n++;                                  // a tab left and come back to is not a slow machine
       if (n < 45) return;
       const avg = sum / n; n = 0; sum = 0;
-      if (avg > 0.03) { steps[level++](); apply(); }
+      if (avg > 0.022) { steps[level++](); apply(); }                 // under about 45 frames a second, give something up
     },
   };
 }

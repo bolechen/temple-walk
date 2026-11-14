@@ -235,6 +235,24 @@ export function buildHall(M, opts) {
     add(top, M.tile, { ao: null });
     add(top.clone().translate(0, -0.17, 0), M.rafters, { cast: false });   // boards and rafters seen from below
 
+    // The rafters themselves, under the boards: round the whole eave, one every third of a metre, from the purlin
+    // over the brackets out to the edge, and at each corner a fan of them turning from one side to the next.
+    {
+      const raf = [], up = new THREE.Vector3(0, 0, 1), d = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), one = new THREE.Vector3(1, 1, 1), mid = new THREE.Vector3();
+      const stick = (x0, z0, x1, z1) => {
+        const y0 = roofY(x0, z0) - 0.27, y1 = roofY(x1, z1) - 0.26; d.set(x1 - x0, y1 - y0, z1 - z0); const L = d.length(); if (L < 0.3) return;
+        q.setFromUnitVectors(up, d.normalize()); raf.push(new THREE.BoxGeometry(0.085, 0.1, L).applyMatrix4(m4.compose(mid.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), q, one)));
+      };
+      const inn = p.brackets ? 0.8 : 0.15, out = 0.06, gap = 0.34;
+      for (let x = -X; x <= X + 1e-6; x += gap) { stick(x, Z + inn, x, EZ - out); stick(x, ZB - inn, x, -EZ + out); }
+      for (let z = ZB; z <= Z + 1e-6; z += gap) { stick(X + inn, z, EX - out, z); stick(xs[0] - inn, z, -EX + out, z); }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const cx = sx > 0 ? X : xs[0], cz = sz > 0 ? Z : ZB, ex = sx * (EX - out), ez = sz * (EZ - out), n = 7;
+        for (let k = 1; k <= n; k++) { const t = k / (n + 1); stick(cx + sx * inn * 0.7, cz + sz * inn * 0.7, t < 0.5 ? cx + (ex - cx) * t * 2 : ex, t < 0.5 ? ez : ez + (cz - ez) * (t - 0.5) * 2); }
+      }
+      if (raf.length) add(merge(raf), M.woodZ, { cast: false });
+    }
+
     // Eave board closing the edge between tiles and rafters.
     const ring = [];
     for (let x = -EX; x <= EX + 1e-6; x += STEP) ring.push([Math.min(x, EX), EZ]);

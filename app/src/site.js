@@ -32,7 +32,7 @@ export function terrain(x, z) {
   const ax = Math.abs(x), A = APPROACH;
   if (z > A.top - 0.5) {
     const down = A.rise * Math.min(1, Math.max(0, (z - A.top) / A.run)) + A.rise2 * Math.min(1, Math.max(0, (x - A.xTurn) / A.run2)) * smooth(A.top + 3, A.zA0, z);
-    return -down - 0.14 - A.rise3 * Math.min(1, Math.max(0, (z - A.zA1) / A.run3)) - Math.max(0, z - A.zC1 - 1) * 0.35 + Math.max(0, -x - 3) * 0.05;
+    return -down - 0.14 - A.rise3 * Math.min(1, Math.max(0, (z - A.zA1) / A.run3)) - Math.max(0, z - A.zC1 - 1) * 0.35 + Math.max(0, -x - 3) * 0.05 * smooth(A.top + 0.6, A.top + 3, z);   // west of the path the land rises, but not into the forecourt
   }
   if (ax < SITE.x + 0.2 && z > HILL.zS + 0.05 && z < SITE.zS) return -0.8;                 // inside: the courts cover it
   if (ax < TOP.x && z < HILL.zN && z > SITE.zN) return TOP.y - 0.4;                          // under the summit terrace
@@ -124,7 +124,7 @@ export function buildSite(M) {
   }
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
   for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
-    [-27, -30, 24], [28, -34, 26], [-40, 22, 28], [41, 34, 27], [-25, 76, 20]]) cedars.push([x, terrain(x, z) - 0.3, z, "cedar", h]);
+    [-27, -30, 24], [28, -34, 26], [-40, 22, 28], [41, 34, 27], [-25, 76, 20]]) cedars.push([x, terrain(x, z) - 0.3, z, "cedar", h, true]);   // `true`: seen only from afar, so grown without the branches inside its boughs
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
@@ -208,8 +208,8 @@ export function buildSite(M) {
     // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
     // level ground under every column, and the valley to look at.
     put({ ...rest, plaque: "半山亭" }, [5.2, A.zA1 + 2.75], 2, 0, yA);
-    stone.push(box(5.0, 4.0, 5.3, 5.2, yA - 2.0, A.zA1 + 2.75));
-    walk.decks.push({ x0: 3.2, x1: 7.2, z0: A.zA1 - 0.1, z1: A.zA1 + 0.6, h: yA });   // the step between its floor and the landing
+    stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
+    walk.decks.push({ x0: 3.2, x1: 7.2, z0: A.zA1 - 0.4, z1: A.zA1 + 0.6, h: yA });   // the step between its floor and the landing
     put({ ...rest, plaque: "望江亭" }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where, they say, a poet once washed his ink-stone: black water in a stone rim, beside the second landing.
     const px = A.xB1 + 2.2, pz = A.zMid;
@@ -438,13 +438,13 @@ const terrainLevel = (x, z) => terrain(x, z);
 export function createWalker(site) {
   const { solids, decks, ramps, posts = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
-  function carved(x, z) {   // a floor or stair of a building or terrace, if you are on one
+  function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
     for (const d of decks) if (inRect(d, x, z)) return d.h;
     for (const r of ramps) if (inRect(r, x, z)) {
       const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1];
       // A stair is steps, not a slope: he stands on the tread he is over, so his feet never sink into the stone.
       const f = Math.min(1, Math.max(0, ((x - r.low[0]) * dx + (z - r.low[1]) * dz) / (dx * dx + dz * dz))), n = Math.max(1, Math.round(r.h / 0.18));
-      return (r.base || 0) + r.h * Math.min(1, (Math.floor(f * n + 1e-6) + (f > 1e-6 ? 1 : 0)) / n);
+      return (r.base || 0) + r.h * (even ? f : Math.min(1, (Math.floor(f * n + 1e-6) + (f > 1e-6 ? 1 : 0)) / n));
     }
     return null;
   }
@@ -455,6 +455,8 @@ export function createWalker(site) {
   return {
     setRoom(r) { room = r || null; }, get room() { return room; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },
+    // Where the eye rides: over a stair it follows the slope, not each tread, so the view climbs without juddering.
+    eyeAt(x, z) { if (room) return room.y; const c = carved(x, z, true); return c === null ? level(x, z) : c; },
     // The surface of whatever is there, walkable or not: floors and stairs, the courts, and the open hillside.
     landAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? Math.max(level(x, z), terrain(x, z)) : c; },
     // Is something solid standing here: a building, a wall, a tree? (Not the edges of the walk, which are only air.) The eye uses this.

@@ -74,7 +74,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
   const cm = new THREE.Mesh(mergeGeometries(culms), new THREE.MeshStandardMaterial({ map: culmTexture(), roughness: 0.55, envMapIntensity: 0.4 }));
   cm.castShadow = true;
   const lm = new THREE.Mesh(mergeGeometries(leaves), crownMaterial(leafTexture(), { a2c: opts.a2c, sway: 0.05, snow: 0.75 }));
-  scene.add(cm, lm);
+  lm.renderOrder = 1; scene.add(cm, lm);
   // The grove's grey-green, turned a little by the season.
   return { setMood(m) { lm.material.color.setRGB(0.2 * m.leaf[0], 0.28 * m.leaf[1], 0.155 * m.leaf[2]); cm.material.color.setRGB(0.72 * m.leaf[0], 0.74 * m.leaf[1], 0.7 * m.leaf[2]); } };
 }

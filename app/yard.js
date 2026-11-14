@@ -158,7 +158,7 @@ const joy = { x: 0, y: 0 };
 document.addEventListener("pointerlockchange", () => { document.body.classList.toggle("held", locked()); if (locked()) hints.say.held(); });
 document.addEventListener("mousemove", (e) => {
   if (!locked()) return; const orbit = view === "third" || photo.on;
-  yaw += e.movementX * 0.0026; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022, orbit ? -0.5 : -0.75, orbit ? 1.0 : 0.5);
+  yaw += e.movementX * 0.0026; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022, orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);
 });
 canvas.addEventListener("pointerdown", (e) => {
   touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing";
@@ -172,7 +172,7 @@ canvas.addEventListener("pointermove", (e) => {
   const dx = e.clientX - down.x, dy = e.clientY - down.y;
   if (!down.moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 14)) return;   // a finger never lands perfectly still
   const orbit = view === "third" || photo.on;                                              // round him, or from his eyes
-  down.moved = true; yaw += dx * 0.0042; pitch = THREE.MathUtils.clamp(pitch + dy * 0.0042, orbit ? -1.0 : -0.5, orbit ? 0.45 : 0.75);
+  down.moved = true; yaw += dx * 0.0042; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042, orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
@@ -192,7 +192,7 @@ function pickFloor() {
 canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = "grab"; lift(e);
   if (e.pointerType === "mouse" && !photo.on && down && !down.moved) {
-    if (!locked()) { canvas.requestPointerLock?.(); startAmbience(() => ({ grove: grove() })); }
+    if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} startAmbience(() => ({ grove: grove() })); }
     else {   // held: a click strikes what the middle of the picture rests on
       ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
       if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
@@ -275,7 +275,7 @@ function layoutFrame() {
 const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
 
-let prev = performance.now(), frames = 0, tour = null;
+let prev = performance.now(), frames = 0, tour = null, eyeY = footY;
 const load = { tris: 0, calls: 0, ms: 0 };
 function frame(now) {
   if (!running) return;
@@ -305,7 +305,7 @@ function frame(now) {
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
-  footY += (walker.heightAt(pos.x, pos.z) - footY) * Math.min(1, dt * 9);
+  footY += (walker.heightAt(pos.x, pos.z) - footY) * Math.min(1, dt * 9); eyeY += (walker.eyeAt(pos.x, pos.z) - eyeY) * Math.min(1, dt * 12);
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!arrived && document.body.classList.contains("entered")) { arrived = true; hints.say.entered(); }
@@ -320,7 +320,7 @@ function frame(now) {
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
-  if (view === "first" && !photo.on) camera.position.set(pos.x, footY + (stage && stage.pose === "sit" ? 0.78 : EYE) + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
+  if (view === "first" && !photo.on) camera.position.set(pos.x, eyeY + (stage && stage.pose === "sit" ? 0.78 : EYE) + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
   else {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = photo.on || walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
@@ -353,7 +353,7 @@ function frame(now) {
   if (photo.on) post.focus(photo.focus ?? (photo.monk ? camDist : 14), APERTURE[photo.lens] || 0.012);
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
-  if (quality.planar > 0 && !inside) ground.render(renderer, camera);   // there are no puddles indoors
+  if (quality.planar > 0 && !inside && footY < 0.6) ground.render(renderer, camera);   // there are no puddles indoors, and no mirror on the terraces above
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; document.body.dataset.ready = "1"; } }
@@ -432,7 +432,7 @@ function indoors(hall) {
   scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none"; });
   if (on) { pos.set(hallIn.room.door[0], EYE, hallIn.room.door[1]); yaw = 0; U.uLamp.value = 1; sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.45, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); }
   else { pos.set(lastHall.out[0], EYE, lastHall.out[1]); yaw = lastHall.outYaw; doorArmed = false; setMood(state.season, state.time); }
-  pitch = 0.04; footY = walker.heightAt(pos.x, pos.z); heading = on ? Math.PI : Math.atan2(Math.sin(yaw), -Math.cos(yaw)); camDist = 0.6; document.body.classList.toggle("indoors", on);
+  pitch = 0.04; footY = eyeY = walker.heightAt(pos.x, pos.z); heading = on ? Math.PI : Math.atan2(Math.sin(yaw), -Math.cos(yaw)); camDist = 0.6; document.body.classList.toggle("indoors", on);
   window.dispatchEvent(new CustomEvent(on ? "entered-hall" : "left-hall", { detail: hall && hall.id }));
 }
 // `hall`: one of site.halls to go into, or null to come out of the one he is in.
@@ -482,7 +482,7 @@ window.__probe = () => {
 };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
-window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = walker.heightAt(x, z); };
+window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); };
 window.__listen = listen; window.__strike = strike;
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
@@ -502,9 +502,10 @@ createGame({
 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
+if (Q.has("tour")) setView("first");   // it is measured from his own eyes
 if (Q.has("tour")) tour = createTour(Q.get("tour"), {
   walk: window.__walk,
   state: () => ({ target: !!target, heading: target ? Math.atan2(target.x - pos.x, -(target.z - pos.z)) : yaw }),
-  face: (want) => { yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * 0.05; pitch += (0.06 - pitch) * 0.05; },
+  face: (want, dt) => { const k = 1 - Math.exp(-3 * dt); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * k; pitch += (0.06 - pitch) * k; },
   env: () => { const gl = renderer.getContext(), dbg = gl.getExtension("WEBGL_debug_renderer_info"); return { size: [canvas.clientWidth, canvas.clientHeight], dpr: devicePixelRatio, tier: quality.name, scale: +quality.scale.toFixed(2), governed: governor.level, view, season: state.season, time: state.time, gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "unknown", ua: navigator.userAgent }; },
 });

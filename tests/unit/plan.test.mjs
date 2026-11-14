@@ -15,6 +15,15 @@ test("the land is defined everywhere and has no cliffs where the bamboo stands",
   for (let x = -60; x <= 60; x += 3) for (let z = -160; z <= 110; z += 3) assert.ok(Number.isFinite(terrain(x, z)), `terrain(${x}, ${z})`);
   for (let z = SITE.fore + 1; z < APPROACH.zC1; z += 0.5) assert.ok(Math.abs(terrain(-20, z + 0.5) - terrain(-20, z)) < 1.2, `a cliff beside the approach at z=${z}`);
 });
+test("the half-way pavilion can be stepped into from the landing, a hand's width at a time", () => {
+  for (let z = APPROACH.zMid; z <= APPROACH.zA1 + 2.75; z += 0.03) assert.ok(!walker.blocked(5.2, z), `blocked on the way into the pavilion at z=${z.toFixed(2)}`);
+});
+test("the eye climbs a stair as a slope, never more than half a tread from the feet", () => {
+  for (let z = SITE.fore + 0.2; z < APPROACH.zA0; z += 0.05) {
+    const e = walker.eyeAt(0, z), f = walker.heightAt(0, z);
+    assert.ok(Math.abs(e - f) < 0.2, `eye ${e} and feet ${f} part company at z=${z}`); assert.ok(Math.abs(walker.eyeAt(0, z + 0.05) - e) < 0.06, `the eye jumps at z=${z}`);
+  }
+});
 test("every named view stands somewhere a visitor could stand", () => {
   for (const [name, [x, z, yaw, pitch]] of Object.entries(site.views)) {
     assert.ok([x, z, yaw, pitch].every(Number.isFinite), name);
