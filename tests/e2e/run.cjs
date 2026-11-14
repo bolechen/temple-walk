@@ -279,7 +279,7 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=21.3,86.8,0,0.04&view=third&season=summer&time=day", { viewport: { width: 640, height: 360 } });
     await t.page.evaluate(() => {
       window.__stairRegression = { active: true, samples: [] };
-      const read = () => { const s = window.__yard(); window.__stairRegression.samples.push({ z: s.z, floor: s.groundY, feet: s.footY }); if (window.__stairRegression.active) requestAnimationFrame(read); };
+      const read = () => { const s = window.__yard(); window.__stairRegression.samples.push({ z: s.z, floor: s.groundY, feet: s.footY, body: s.bodyY }); if (window.__stairRegression.active) requestAnimationFrame(read); };
       requestAnimationFrame(read);
     });
     const start = await t.state();
@@ -289,6 +289,8 @@ const scenarios = {
     const low = await t.state(); expect(low.h < high.h - 0.2, "S did not return down the steps"); await t.shot("stairs-down");
     const samples = await t.page.evaluate(() => { window.__stairRegression.active = false; return window.__stairRegression.samples; });
     expect(samples.length >= 28 && samples.every(s => Number.isFinite(s.feet) && s.feet + 0.001 >= s.floor), "the novice's root sank into a tread: " + JSON.stringify(samples));
+    const bodyDelta = Math.max(...samples.slice(1).map((s, i) => Math.abs(s.body - samples[i].body)));
+    expect(Number.isFinite(bodyDelta) && bodyDelta < 0.08, `the torso still pops a whole step: ${bodyDelta} metres/frame`);
     fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "stairs-grounding.json"), JSON.stringify(samples, null, 2));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },

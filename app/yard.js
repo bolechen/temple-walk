@@ -319,7 +319,8 @@ function frame(now) {
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) settle(true); } }
   const len = Math.hypot(vx, vz);
   if (len > 0 && !airborne) {
-    const pace = Q.has("fast") ? 14 : keys.shift ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);   // Shift to hurry; a stick pushed a little walks slowly
+    const walkPace = keys.shift ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);
+    const pace = Q.has("fast") ? 14 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? keys.shift ? 1.6 : 1.25 : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
     const step = Math.min(f || s ? 1e9 : len, pace * dt); vx = (vx / len) * step; vz = (vz / len) * step;
     // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
     let moved = false;
@@ -349,7 +350,7 @@ function frame(now) {
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
   monk.group.position.set(pos.x, footY + (stage ? stage.lift || 0 : 0), pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
-  monk.update(dt, still || airborne ? 0 : speedNow, airborne ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt);
+  monk.update(dt, still || airborne ? 0 : speedNow, airborne ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z) });
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
@@ -481,7 +482,7 @@ async function pass(hall) {
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
-window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
+window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // What a frame costs to draw, in milliseconds: `n` frames drawn back to back, each waited for until the graphics card
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
