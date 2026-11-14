@@ -1,8 +1,8 @@
 // A photograph, mounted: the picture on a sheet of paper with a line of verse, the name of the place, and a seal.
-const BRUSH = '"Ma Shan Zheng", "STKaiti", "KaiTi", "Kaiti SC", serif', SERIF = '"Noto Serif SC", "Songti SC", "STSong", serif';
+const BRUSH = '"Yunjing Brush", "STKaiti", "KaiTi", "Kaiti SC", serif', SERIF = '"Yunjing Serif", "Songti SC", "STSong", serif';
 
 export async function composeCard(shot, { line, label, temple, url }) {
-  try { await Promise.all([document.fonts.load(`80px "Ma Shan Zheng"`, line + temple), document.fonts.load(`30px "Noto Serif SC"`, label)]); } catch {}
+  try { await Promise.all([document.fonts.load(`80px "Yunjing Brush"`, line + temple), document.fonts.load(`30px "Yunjing Serif"`, label)]); } catch {}
   const W = shot.width, H = shot.height, m = Math.round(Math.min(W, H) * 0.055), foot = Math.round(Math.min(W, H) * 0.2);
   const c = document.createElement("canvas"); c.width = W + m * 2; c.height = H + m + foot;
   const x = c.getContext("2d"), u = Math.min(W, H) / 100;

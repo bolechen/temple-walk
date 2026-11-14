@@ -20,7 +20,8 @@ const launch = () => chromium.launch({ args: ["--use-gl=swiftshader", "--enable-
 
 // A page on the temple. `errors` collects everything the page complains about; a scenario fails if it is not empty at the end.
 async function open(browser, base, query, opts = {}) {
-  const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, ...opts });
+  const { enter, ...ctxOpts } = opts;
+  const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, ...ctxOpts });
   const page = await ctx.newPage(), errors = [];
   page.on("pageerror", (e) => errors.push("page error: " + String(e.stack || e).slice(0, 400)));
   page.on("console", (m) => m.type() === "error" && !/GPU stall|favicon/.test(m.text()) && errors.push("console: " + m.text().slice(0, 300)));
@@ -28,10 +29,13 @@ async function open(browser, base, query, opts = {}) {
   page.on("response", (r) => r.status() >= 400 && !/favicon/.test(r.url()) && errors.push(`HTTP ${r.status()}: ${r.url()}`));
   await page.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });   // the page builds the whole temple before it reports itself loaded
   await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+  // A visitor arriving meets the title first and steps in from it; a scenario may ask to be left at the title.
+  if (opts.enter !== false && (await page.isVisible("#title"))) { await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await page.click("#enterBtn"); await page.waitForFunction(() => document.body.classList.contains("entered")); }
   const t = {
     page, errors, close: () => ctx.close(),
     state: () => page.evaluate(() => window.__yard()),
     probe: () => page.evaluate(() => window.__probe()),
+    journey: () => page.evaluate(() => window.__journey()),
     inHall: () => page.evaluate(() => !document.getElementById("hallView").hidden),
     // Poll until `fn` is true; throw with the walker's state if it never is.
     async until(fn, ms, what) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return; await page.waitForTimeout(1200); } throw new Error(what + " | " + JSON.stringify(await t.state())); },

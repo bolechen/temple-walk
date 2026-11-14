@@ -10,15 +10,22 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   boot: { tier: 1, async run(b, base) {
-    const t = await open(b, base, "q=low");
+    const t = await open(b, base, "q=low", { enter: false });
+    // First the title: the temple's name, a way in, and nothing else in the way.
+    expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "云径禅寺", "the title is missing");
+    expect(!(await t.page.isVisible("#viewBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
+    expect(await t.page.evaluate(() => document.fonts.check('40px "Yunjing Brush"', "云径禅寺") && document.fonts.check('20px "Yunjing Serif"', "朱印")), "the temple's own typefaces did not load");
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
+    await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
+    expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("钟楼"), "a new visitor should be pointed at the bell");
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     expect(p.camDist > 3.2, `the first sight of the place should not be the back of his head: the eye is ${p.camDist} m behind him`);
     expect(p.lum > 12 && p.lum < 245, "the picture is blank: mean " + p.lum.toFixed(1));
-    for (const id of ["viewBtn", "moodBtn", "photoBtn", "hint", "moodTag"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
-    for (const id of ["moodPanel", "print", "photoBar", "frame"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
+    for (const id of ["viewBtn", "moodBtn", "photoBtn", "bookBtn", "moodTag", "goal"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
+    for (const id of ["moodPanel", "print", "photoBar", "frame", "book", "slip", "toast", "act"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -57,6 +64,43 @@ const scenarios = {
       await t.until(async () => (await t.state()).target === null, 60000, `${name}: never arrived`);
       const s2 = await t.state(); expect(Math.hypot(s2.x - s1.target[0], s2.z - s1.target[1]) < 0.3, `${name}: stopped short of the tapped spot at ${s2.x}, ${s2.z}`);
     }
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.
+  pilgrimage: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&seed=4");
+    const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
+    const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
+    let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
+    // The bell: stand in its ring, and strike three times.
+    await at("bell"); await t.until(() => t.page.isVisible("#act"), 30000, "standing before the bell offered nothing");
+    expect((await t.page.textContent("#act")) === "撞钟", "the button should say what can be done");
+    for (let i = 0; i < 3; i++) { await t.page.click("#act"); await t.frames(2); if (i < 2) await t.until(() => t.page.isVisible("#act"), 20000, "the bell could not be struck again"); }
+    await seal("bell", "the bell"); expect((await t.page.textContent("#toastName")).includes("闻钟") && (await t.page.getAttribute("#toastSeal", "src")).startsWith("data:image"), "no seal was shown");
+    expect((await t.page.textContent("#bookBtn")).includes("一"), "the book's button should count the seals");
+    // Tea, the well, the lamp: walk into the ring, press, wait.
+    for (const [id, word] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
+      await at(id); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.textContent("#act")) === word, 30000, `nothing offered at ${id}`);
+      await t.page.click("#act"); await seal(id, id);
+    }
+    expect((await t.journey()).lampLit, "the lamp should stay lit");
+    // The library gives a line, which must be taken.
+    await at("sutra"); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered at the library"); await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#slip"), 60000, "no slip was given"); const line = await t.page.textContent("#slipText"); expect(line.length > 3, "the slip is blank");
+    await t.page.click("#slipTake"); await seal("sutra", "the library"); expect((await t.journey()).verse.text === line, "the line was not kept");
+    // The book survives leaving and coming back.
+    await t.page.reload(); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect((await t.page.textContent("#titleSeals")).includes("五"), "the title should say how many seals are held");
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled); await t.page.click("#enterBtn");
+    j = await t.journey(); expect(j.count === 5 && j.lampLit && j.next === "incense", "the book was not remembered: " + JSON.stringify(j));
+    // Sitting on the summit, then incense (as the hall reports it): the seventh seal opens the book.
+    await at("sit"); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered on the summit"); await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.page.evaluate(() => window.dispatchEvent(new CustomEvent("incense-offered")));
+    await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
+    j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
+    expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
+    await t.page.click("#bookClose"); expect(!(await t.page.isVisible("#act")), "nothing should be offered once every seal is held");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.

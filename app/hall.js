@@ -196,7 +196,7 @@ stage.addEventListener("pointercancel", release);
 
 document.getElementById("offer").addEventListener("click", () => {
   if (lit) return;
-  lit = true; litAt = performance.now(); yawTarget = 0;
+  lit = true; litAt = performance.now(); yawTarget = 0; window.dispatchEvent(new CustomEvent("incense-offered"));
   stick.visible = ember.visible = true;
   ui.classList.add("gone");
 });

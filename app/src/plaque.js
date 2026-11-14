@@ -2,7 +2,7 @@
 // Read right to left, as these boards are.
 import * as THREE from "../v/build/three.module.js";
 
-const FONT = '"Ma Shan Zheng", "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", serif';
+const FONT = '"Yunjing Brush", "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", serif';
 
 // `vertical`: characters stacked top to bottom, as on the board between the eaves of a gate.
 // `gold`: dark characters on a gilded ground, as on the boards of the great halls.
@@ -31,7 +31,7 @@ export function makePlaque(text, { vertical = false, gold = false } = {}) {
   }
   draw();
   // The brush face arrives over the network; redraw once it is there.
-  if (document.fonts && document.fonts.load) document.fonts.load(`200px "Ma Shan Zheng"`, text).then(draw, () => {});
+  if (document.fonts && document.fonts.load) document.fonts.load(`200px "Yunjing Brush"`, text).then(draw, () => {});
   const a = n * 0.6 + 0.45, b = (a * short) / long, w = vertical ? b : a, h = vertical ? a : b;
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.07), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5, metalness: gold ? 0.35 : 0.15, envMapIntensity: 0.5 }));
   m.castShadow = true; m.userData.height = h;

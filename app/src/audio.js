@@ -61,6 +61,20 @@ export function strike(kind, loud = 1) {
   }
 }
 
+// A hand chime, struck once: what marks a seal. And one drop falling into deep water.
+export function chime(loud = 1) {
+  if (!start()) return; if (ctx.state === "suspended") ctx.resume();
+  const t = ctx.currentTime + 0.01;
+  for (const [f, a, d] of [[1174, 0.16, 3.4], [1180.5, 0.09, 3.0], [2762, 0.05, 1.6], [4510, 0.02, 0.8]]) partial(f, a * loud, d, t);
+}
+export function drop() {
+  if (!start()) return; if (ctx.state === "suspended") ctx.resume();
+  const now = ctx.currentTime + 0.01, o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(520, now); o.frequency.exponentialRampToValueAtTime(1150, now + 0.09);
+  g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.22, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+  o.connect(g); g.connect(dry); g.connect(wet); o.start(now); o.stop(now + 0.35);
+}
+
 // ---- The sound of the place when nothing is happening ----
 // Wind moving through bamboo (filtered noise that swells and falls), water dripping from the eaves after
 // rain, and now and then a small bell under an eave. `place()` returns { grove: 0..1 }: how deep in the

@@ -19,6 +19,7 @@ import { createMonk } from "./src/monk.js";
 import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
+import { createGame } from "./src/game.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -130,6 +131,11 @@ let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, f
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), camDist = 6.2, sideNow = 1.2, speedNow = 0;
 if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 
+// What a walk is for, and what he is doing when he has arrived: `arrive` is told whether he got there;
+// `stage` holds him in place (facing a way, praying or seated) until the visitor sends him elsewhere.
+let arrive = null, stage = null; const ticks = [];
+const settle = (ok) => { if (arrive) { const fn = arrive; arrive = null; fn(ok); } };
+const interrupt = () => { settle(false); if (stage) { const st = stage; stage = null; st.leave && st.leave(); } };
 let down = null;
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
@@ -181,7 +187,7 @@ canvas.addEventListener("pointerup", (e) => {
     const struck = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
     if (struck && struck.distance < 32) {
       const s = site.strikers.find((k) => k.mesh === struck.object);
-      strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = performance.now();
+      strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind }));
       document.getElementById("hint").classList.add("gone"); down = null; return;
     }
     const hit = pickFloor();
@@ -190,7 +196,7 @@ canvas.addEventListener("pointerup", (e) => {
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
     else route = [];
-    if (route.length) { target = route.shift(); document.getElementById("hint").classList.add("gone"); }
+    if (route.length) { interrupt(); target = route.shift(); document.getElementById("hint").classList.add("gone"); }
   }
   down = null;
 });
@@ -234,8 +240,8 @@ function frame(now) {
   const f = photo.on ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0), s = photo.on ? 0 : (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
   const x0 = pos.x, z0 = pos.z;
   let vx = 0, vz = 0;
-  if (f || s) { target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
-  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; } }
+  if (f || s) { interrupt(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
+  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) settle(true); } }
   const len = Math.hypot(vx, vz);
   if (len > 0) {
     const step = Math.min(f || s ? 1e9 : len, (Q.has("fast") ? 14 : 2.1) * dt); vx = (vx / len) * step; vz = (vz / len) * step;
@@ -247,7 +253,7 @@ function frame(now) {
       else if (Math.abs(sx) > 1e-4 && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
       else if (Math.abs(sz) > 1e-4 && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
     }
-    if (!moved) { target = null; route = []; }
+    if (!moved) { target = null; route = []; settle(false); }
     // The censer does not stop you: you are eased around it.
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
@@ -256,16 +262,16 @@ function frame(now) {
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
-  const want = view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
+  const want = stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
-  monk.group.position.set(pos.x, footY, pos.z); monk.group.rotation.y = heading;
+  monk.group.position.set(pos.x, footY + (stage ? stage.lift || 0 : 0), pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
-  monk.update(dt, still ? 0 : speedNow, photo.on && photo.pray, t);
+  monk.update(dt, still ? 0 : speedNow, stage ? stage.pose : photo.on && photo.pray, t);
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
-  if (view === "first" && !photo.on) camera.position.set(pos.x, footY + EYE + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
+  if (view === "first" && !photo.on) camera.position.set(pos.x, footY + (stage && stage.pose === "sit" ? 0.78 : EYE) + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
   else {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = photo.on || walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
@@ -289,6 +295,7 @@ function frame(now) {
   if (!atDoor) doorArmed = true;
   else if (doorArmed) { doorArmed = false; target = null; route = []; window.dispatchEvent(new CustomEvent("enter-hall")); }
 
+  for (const fn of ticks) fn(dt, t);
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
@@ -407,4 +414,17 @@ window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) 
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = walker.heightAt(x, z); };
 window.__listen = listen; window.__strike = strike;
+
+// ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
+createGame({
+  site, walker, scene,
+  where: () => ({ x: pos.x, z: pos.z }),
+  // Send him along `points` ([x, z] each); `then(true)` when he arrives, `then(false)` if he is stopped or sent elsewhere.
+  walkTo(points, then) { interrupt(); route = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); arrive = then || null; },
+  stage(o) { stage = o; },
+  strike(kind) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s) s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
+  mood: () => mood, night: () => mood.lamp > 0.5, busy: () => photo.on || !running,
+  listen: () => startAmbience(() => ({ grove: grove() })),
+  onTick: (fn) => ticks.push(fn),
+});
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };

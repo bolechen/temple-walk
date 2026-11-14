@@ -1,10 +1,13 @@
 <title>云径禅寺</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Ma+Shan+Zheng&display=swap">
 <style>
   /* Layout: two full-viewport views, the courtyard and the hall interior, joined by a fade through darkness. */
+  /* Three typefaces, cut down to the characters the temple uses (tools/fonts.py) and kept with the page. */
+  @font-face { font-family: "Yunjing Brush"; src: url("f/brush.woff2") format("woff2"); font-display: swap; }
+  @font-face { font-family: "Yunjing Serif"; src: url("f/serif.woff2") format("woff2"); font-display: swap; }
+  @font-face { font-family: "Yunjing Seal"; src: url("f/seal.woff2") format("woff2"); font-display: swap; }
   :root {
-    color-scheme: dark; --ink: #0b0a09; --paper: #e3e0d6; --ember: #e39a4c; --mist: #c9d3d1;
-    --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+    color-scheme: dark; --ink: #0b0a09; --paper: #ede8dc; --ember: #e39a4c; --mist: #c9d3d1; --seal: #b0281c;
+    --serif: "Yunjing Serif", "Songti SC", "STSong", serif; --brush: "Yunjing Brush", "STKaiti", "KaiTi", serif;
   }
   html, body { height: 100%; margin: 0; }
   [hidden] { display: none !important; }
@@ -46,6 +49,45 @@
   #print img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
   #print .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   #print a.chip { text-decoration: none; display: inline-grid; place-items: center; }
+
+  /* The visit as a pilgrimage: a title to step in from, what there is to do here, the seal that answers it, the book. */
+  #title { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; text-align: center; transition: opacity 1.5s ease;
+    background: radial-gradient(ellipse at 50% 42%, rgba(11,10,9,.34), rgba(11,10,9,.78) 70%), linear-gradient(rgba(11,10,9,.2), rgba(11,10,9,.72)); }
+  #title.gone { opacity: 0; pointer-events: none; }
+  #title h1 { font: 400 clamp(64px, 17vmin, 150px)/1.05 var(--brush); margin: 0; letter-spacing: .08em; text-indent: .08em; color: var(--paper); text-shadow: 0 2px 30px rgba(0,0,0,.6); }
+  #title .sub { font-size: clamp(12px, 2.2vmin, 16px); letter-spacing: .7em; text-indent: .7em; margin: 2.2vmin 0 0; opacity: .82; }
+  #title .mark { width: clamp(46px, 9vmin, 76px); aspect-ratio: 1; margin: 5vmin auto 0; background: var(--seal); border-radius: 6%; display: grid; place-items: center; font: clamp(15px, 3.1vmin, 26px)/1.08 "Yunjing Seal", var(--serif); color: #f3ead9; transform: rotate(-3deg); box-shadow: 0 2px 14px rgba(0,0,0,.4); }
+  #enterBtn { margin-top: 7vmin; font: 400 clamp(22px, 4.6vmin, 34px)/1 var(--brush); letter-spacing: .5em; text-indent: .5em; color: var(--paper); background: rgba(11,10,9,.3); border: 1px solid rgba(237,232,220,.55); padding: 16px 30px; border-radius: 2px; cursor: pointer; transition: background .3s, opacity .6s; }
+  #enterBtn:disabled { opacity: .45; cursor: default; font-family: var(--serif); font-size: 14px; }
+  #enterBtn:not(:disabled):hover { background: rgba(237,232,220,.16); }
+  #titleSeals { font-size: 13px; letter-spacing: .4em; text-indent: .4em; margin: 3vmin 0 0; min-height: 1.3em; color: #e5b9a4; }
+  #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 12px; letter-spacing: .28em; opacity: .6; }
+  #goal { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(40px + env(safe-area-inset-top, 0px)); margin: 0; font: 400 19px/1 var(--brush); letter-spacing: .2em; text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; opacity: .92; }
+  #act { position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 400 26px/1 var(--brush); letter-spacing: .4em; text-indent: .4em; padding: 15px 30px; border-color: rgba(237,232,220,.7); background: rgba(11,10,9,.55); z-index: 5; }
+  #say { position: absolute; left: 0; right: 0; bottom: calc(170px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(20px, 3.4vmin, 28px)/1.5 var(--brush); letter-spacing: .16em; text-shadow: 0 0 10px #000, 0 0 3px #000; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
+  #say.on { opacity: 1; }
+  #toast { position: absolute; left: 50%; top: 24%; transform: translate(-50%, -50%); z-index: 40; display: grid; justify-items: center; gap: 12px; pointer-events: none; opacity: 0; transition: opacity .9s ease; text-align: center; }
+  #toast.on { opacity: 1; }
+  #toast img { width: clamp(84px, 17vmin, 132px); aspect-ratio: 1; filter: drop-shadow(0 4px 18px rgba(0,0,0,.55)); }
+  #toast.on img { animation: press .5s cubic-bezier(.2, 1.5, .4, 1) both; }
+  @keyframes press { from { transform: scale(1.6) rotate(-9deg); opacity: 0; } to { transform: scale(1) rotate(-3deg); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { #toast.on img { animation: none; } }
+  #toastName { margin: 0; font-size: 13px; letter-spacing: .5em; text-indent: .5em; text-shadow: 0 0 8px #000, 0 0 2px #000; }
+  #toastLine { margin: 0; max-width: min(86vw, 30em); font: 400 clamp(19px, 3.2vmin, 26px)/1.55 var(--brush); letter-spacing: .12em; text-shadow: 0 0 10px #000, 0 0 3px #000; }
+  #book, #slip { position: absolute; inset: 0; z-index: 35; background: rgba(8,8,7,.9); display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 12px; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+  #book img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+  #bookHint { margin: 0; font-size: 14px; letter-spacing: .14em; text-align: center; max-width: 34em; line-height: 1.7; }
+  #book .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  #book a.chip { text-decoration: none; display: inline-grid; place-items: center; }
+  #bookReset { opacity: .6; }
+  #slip { grid-template-rows: 1fr auto; place-items: center; }
+  #slip .paper { writing-mode: vertical-rl; background: linear-gradient(#f3eee2, #e8e0cf); color: #1d1a17; padding: 34px 26px; min-height: min(62vh, 520px); max-height: 70vh; box-shadow: 0 10px 40px rgba(0,0,0,.6); border-radius: 1px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+  #slipText { margin: 0; font: 400 clamp(26px, 4.6vmin, 38px)/1.5 var(--brush); letter-spacing: .14em; }
+  #slipFrom { margin: 0; font-size: 14px; letter-spacing: .2em; color: #6b6458; align-self: flex-end; }
+  #breath { position: absolute; left: 50%; top: 46%; width: 30vmin; aspect-ratio: 1; margin: -15vmin 0 0 -15vmin; border-radius: 50%; border: 1px solid rgba(237,232,220,.6); display: grid; place-items: center; pointer-events: none; transition: transform 4s ease-in-out, opacity 1s; transform: scale(.55); z-index: 6; }
+  #breath[data-phase="in"] { transform: scale(1); } #breath[data-phase="out"] { transform: scale(.55); transition-duration: 5s, 1s; }
+  #breathWord { font: 400 5vmin/1 var(--brush); text-shadow: 0 0 10px #000; }
+  body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #say, body:not(.entered) .rail, body:not(.entered) #goal, body:not(.entered) #hint, body:not(.entered) #moodTag { display: none; }
 
   /* Hall interior: a stage locked to the painted plate's aspect, sized by script to cover the view. */
   #stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; cursor: grab; }
@@ -89,11 +131,16 @@
 <div class="view" id="yardView">
   <canvas id="yardGl"></canvas>
   <p id="moodTag"></p>
-  <p class="caption" id="hint">拖动环顾 · 点地面行走 · 点大殿进殿 · 点钟鼓可敲</p>
+  <p id="goal"></p>
+  <p id="say"></p>
+  <button class="ink-btn" id="act" type="button" hidden></button>
+  <div id="breath" hidden><span id="breathWord">吸</span></div>
+  <p class="caption" id="hint">拖动环顾 · 点地面行走 · 走进地上的圆相，做那里的事</p>
   <div class="rail">
     <button class="chip" id="viewBtn" type="button" aria-label="切换第一视角和第三视角">身外</button>
     <button class="chip" id="moodBtn" type="button" aria-label="选择季节和时辰">时节</button>
     <button class="chip" id="photoBtn" type="button" aria-label="拍照">留影</button>
+    <button class="chip" id="bookBtn" type="button" aria-label="打开朱印帐">朱印</button>
   </div>
   <div id="moodPanel" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
@@ -125,6 +172,26 @@
     <p id="note">左右拖动可瞻仰佛像</p>
   </div>
   <button id="leave" class="ink-btn" type="button">出殿</button>
+</div>
+<div id="toast" hidden><img id="toastSeal" alt=""><p id="toastName"></p><p id="toastLine"></p></div>
+<div id="book" hidden>
+  <img id="bookImg" alt="朱印帐：寺名、日期和已得的印">
+  <p id="bookHint"></p>
+  <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+</div>
+<div id="slip" hidden>
+  <div class="paper"><p id="slipText"></p><p id="slipFrom"></p></div>
+  <button class="ink-btn" id="slipTake" type="button">收下</button>
+</div>
+<div id="title">
+  <div>
+    <h1>云径禅寺</h1>
+    <p class="sub">一城一寺 · 一处净心</p>
+    <div class="mark">朝<br>山</div>
+    <p id="titleSeals"></p>
+    <button id="enterBtn" type="button" disabled>山路正在铺开</button>
+  </div>
+  <p class="how">七处小事 · 七枚朱印</p>
 </div>
 <div id="veil"></div>
 <p id="wait">入殿中</p>

@@ -97,15 +97,21 @@ export function createMonk() {
   patch.position.y = 0.03; root.add(patch);
   const sun = { az: 0, len: 1, op: 1 };
 
-  let phase = 0, gait = 0, palms = 0;
+  // Seated, his legs are folded under the robe: what shows is a lap of cloth spreading round him.
+  const lap = add(root, mergeGeometries([new THREE.SphereGeometry(0.3, 24, 12).scale(1.12, 0.36, 0.95).translate(0, 0.1, 0.06), new THREE.SphereGeometry(0.13, 14, 10).scale(1.2, 0.7, 1.3).translate(-0.2, 0.1, 0.2), new THREE.SphereGeometry(0.13, 14, 10).scale(1.2, 0.7, 1.3).translate(0.2, 0.1, 0.2)]), robeM);
+  lap.visible = false;
+  let phase = 0, gait = 0, palms = 0, seat = 0;
   return {
     group: root,
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
     // `speed` in metres a second; `pray` true to bring the palms together and bow the head a little.
-    update(dt, speed, pray, t) {
-      gait += ((speed > 0.05 ? 1 : 0) - gait) * Math.min(1, dt * 8); palms += ((pray ? 1 : 0) - palms) * Math.min(1, dt * 4);
+    // `pose`: false to stand or walk, true or "pray" for palms together, "sit" to sit with legs folded.
+    update(dt, speed, pose, t) {
+      const pray = pose === true || pose === "pray", sit = pose === "sit";
+      seat += ((sit ? 1 : 0) - seat) * Math.min(1, dt * 3.5);
+      gait += ((speed > 0.05 && !sit ? 1 : 0) - gait) * Math.min(1, dt * 8); palms += ((pray ? 1 : 0) - palms) * Math.min(1, dt * 4);
       phase += dt * Math.max(speed, 0.4) * 4.6;
       const sw = Math.sin(phase) * 0.55 * gait, breathe = Math.sin(t * 1.6) * 0.004;
       legs[0].rotation.x = sw; legs[1].rotation.x = -sw;
@@ -116,6 +122,11 @@ export function createMonk() {
       });
       body.position.y = Math.abs(Math.sin(phase)) * 0.024 * gait + breathe; body.rotation.x = 0.06 * gait + 0.08 * palms; body.rotation.z = Math.sin(phase) * 0.03 * gait;
       head.rotation.x = 0.22 * palms + Math.sin(phase * 2) * 0.02 * gait; head.rotation.z = -Math.sin(phase) * 0.025 * gait;
+      if (seat > 0.01) {   // down onto the cushion: hands in the lap, head a little bowed, breathing slowly
+        body.position.y = -0.37 * seat + Math.sin(t * 0.9) * 0.006; body.rotation.x = 0.05 * seat; head.rotation.x += 0.1 * seat;
+        arms.forEach((a, i) => { const sx = i ? 1 : -1; a.rotation.x += -0.62 * seat; a.rotation.z += -sx * 0.3 * seat; });
+      }
+      lap.visible = seat > 0.3; lap.scale.setScalar(Math.min(1, seat * 1.2)); for (const l of legs) l.visible = seat < 0.45;
       // The shadow keeps to the ground and to the sun, whichever way he turns.
       const a = sun.az - root.rotation.y, off = (sun.len - 1) * 0.42;
       patch.rotation.y = a; patch.scale.set(1, 1, sun.len); patch.position.set(Math.sin(a) * off, 0.03, Math.cos(a) * off); patch.material.opacity = sun.op;
