@@ -329,7 +329,9 @@ export function buildHall(M, opts) {
     const ridgeY = EAVE_Y + p.rise, parts = [];
     if (gx > 0.3) {
       const rh = Math.min(0.95, 0.34 + p.rise * 0.1);   // the ridge: a tall wall of tile courses on a great hall, low on a small one
-      parts.push(box(gx * 2 + 0.5, rh, 0.36, 0, ridgeY - 0.11 + rh / 2, 0), box(gx * 2 + 0.7, 0.1, 0.46, 0, ridgeY - 0.08 + rh, 0));
+      // It is bedded well down into the tiles: the roof falls away steeply either side of its top, and a ridge that only
+      // touched the crest would show daylight under its edges.
+      parts.push(box(gx * 2 + 0.5, rh + 0.34, 0.36, 0, ridgeY - 0.45 + (rh + 0.34) / 2, 0), box(gx * 2 + 0.7, 0.1, 0.46, 0, ridgeY - 0.08 + rh, 0));
       const k = Math.min(1.55, p.rise / 3.4), curl = new THREE.Shape([[0, 0], [0.95, 0], [1.0, 0.55], [0.74, 1.1], [0.34, 1.36], [0.1, 1.18], [0.36, 0.98], [0.46, 0.66], [0.22, 0.5], [0, 0.56]].map(([x, y]) => new THREE.Vector2(x * k, y * k)));
       for (const s of [-1, 1]) {
         const c = plain(new THREE.ExtrudeGeometry(curl, { depth: 0.34, bevelEnabled: false }).translate(-k, 0, -0.17));
