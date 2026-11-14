@@ -17,6 +17,7 @@ const DEFAULTS = {
   G: 3.3,                       // depth of the end slopes: 0 = plain gable, >= half depth = pyramid
   lift: 0.5, liftLen: 3.6,      // corner upturn and how far along the eave it reaches
   brackets: true,
+  timber: false,                // close the bays that are not doors or windows in planks, not lime (a gate)
   front: "lattice",             // lattice | pass | wall | open
   back: "wall",                 // wall | pass | open
   sides: "wall",                // wall | open
@@ -44,7 +45,7 @@ export function buildHall(M, opts) {
     return EAVE_Y + profile(d) + lift * t * t * (1 - smooth(0, 2.6, Math.min(dz, dx)));
   }
   // Darker the higher a surface sits beneath the roof.
-  const ao = (x, y, z) => 1 - smooth(-0.4, 1.6, Math.min(EX - Math.abs(x), EZ - Math.abs(z))) * smooth(EAVE_Y - 2.7, EAVE_Y + 0.3, y) * 0.72;
+  const ao = (x, y, z) => 1 - smooth(-0.4, 1.6, Math.min(EX - Math.abs(x), EZ - Math.abs(z))) * smooth(EAVE_Y - 2.7, EAVE_Y + 0.3, y) * 0.58;
 
   const g = new THREE.Group();
   const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); g.add(m); return m; };
@@ -104,7 +105,14 @@ export function buildHall(M, opts) {
   }
 
   // ---- Infill ----
-  const walls = [], lat = [];
+  const walls = [], lat = [], boards = [], studs = [];
+  // A bay closed in timber rather than lime: upright planks between stiles, a rail at the waist, as a gate is closed.
+  const planked = (w, h, d, x, y, z, alongZ) => {
+    const span = alongZ ? d : w, n = Math.max(3, Math.round(span / 0.3)), pw = span / n;   // each plank its own board, no two quite flush
+    for (let k = 0; k < n; k++) { const o = -span / 2 + pw * (k + 0.5), t = 0.05 + 0.03 * ((k * 7) % 3) / 2; boards.push(alongZ ? box(t, h, pw - 0.012, x, y, z + o) : box(pw - 0.012, h, t, x + o, y, z)); }
+    for (const o of [-span / 2 + 0.06, span / 2 - 0.06]) boards.push(alongZ ? box(0.14, h, 0.12, x, y, z + o) : box(0.12, h, 0.14, x + o, y, z));
+    for (const yy of [y - h / 2 + 0.09, y - h * 0.08, y + h / 2 - 0.09]) boards.push(alongZ ? box(0.15, 0.14, d, x, yy, z) : box(w, 0.14, 0.15, x, yy, z));
+  };
   const sill = p.platH + 0.16, head = Math.min(sill + 2.86, topY - 0.5), hasTransom = topY - head > 0.4;
   // kind: 0 a door leaf (lattice over a panel), 1 a transom, 2 a window of upright bars
   const leaf = (x0, x1, y0, y1, kind, z, flip) => {
@@ -131,23 +139,30 @@ export function buildHall(M, opts) {
         // Seven red, eight white: the row of pale dashes along every tie-beam.
         const dash = (x1 - x0 - 0.3 - 7 * 0.07) / 8; for (let k = 0; k < 8; k++) walls.push(box(dash, 0.07, 0.02, x0 + 0.15 + k * (dash + 0.07) + dash / 2, by + 0.02, z + sign * 0.105));
       } else if (!(mode === "pass" && centre)) {
-        walls.push(box(x1 - x0, topY - p.platH, 0.14, (x0 + x1) / 2, (topY + p.platH) / 2, z));
-        bx.push(box(x1 - x0, 0.16, 0.2, (x0 + x1) / 2, p.platH + 1.5, z));
+        if (p.timber) { planked(x1 - x0, head - p.platH, 0, (x0 + x1) / 2, (head + p.platH) / 2, z);
+          if (Math.abs(i - mid) === 1 && sign > 0) {   // the bays either side of the way through are doors too, kept shut: two leaves, a seam, rows of iron studs
+            const cx = (x0 + x1) / 2, w = x1 - x0; boards.push(box(0.05, head - p.platH - 0.3, 0.16, cx, (head + p.platH) / 2, z));
+            for (let r = 0; r < 5; r++) for (let c = 0; c < 8; c++) { const sx = cx + (c - 3.5) * (w - 0.5) / 8 + (c < 4 ? -0.06 : 0.06); studs.push(box(0.07, 0.07, 0.05, sx, p.platH + 0.55 + r * (head - p.platH - 1.0) / 4, z + 0.075)); }
+          } if (hasTransom) leaf(x0, x1, head + 0.14, topY, 1, zz, flip); else boards.push(box(x1 - x0, topY - head, 0.07, (x0 + x1) / 2, (topY + head) / 2, z)); bx.push(box(x1 - x0, 0.14, 0.18, (x0 + x1) / 2, head + 0.07, z)); }
+        else { walls.push(box(x1 - x0, topY - p.platH, 0.14, (x0 + x1) / 2, (topY + p.platH) / 2, z)); bx.push(box(x1 - x0, 0.16, 0.2, (x0 + x1) / 2, p.platH + 1.5, z)); }
       }
     }
     if (mode === "lattice") bx.push(box(X * 2, 0.16, 0.2, 0, p.platH + 0.08, z), box(X * 2, 0.14, 0.18, 0, head + 0.07, z));
   };
   face(p.front, Z, 1); face(p.back, ZB, -1);
   if (p.sides === "wall") for (const x of [xs[0], X]) for (let i = 0; i < zs.length - 1; i++) {
+    if (p.timber) { planked(0, topY - p.platH, zs[i] - zs[i + 1] - 0.5, x, (topY + p.platH) / 2, (zs[i] + zs[i + 1]) / 2, true); continue; }
     walls.push(box(0.14, topY - p.platH, zs[i] - zs[i + 1] - 0.5, x, (topY + p.platH) / 2, (zs[i] + zs[i + 1]) / 2));
     bz.push(box(0.2, 0.16, zs[i] - zs[i + 1] - 0.5, x, p.platH + 1.5, (zs[i] + zs[i + 1]) / 2));
   }
   const underside = (d) => EAVE_Y + profile(d) - 0.17;
   if (p.brackets) {   // the white band between the bracket sets, all the way round
     const bandH = underside(p.overhang) - PLATE_TOP + 0.12, y = PLATE_TOP + bandH / 2;
-    walls.push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
+    (p.timber ? boards : walls).push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
   }
   add(merge(bx), M.woodX); add(merge(bz), M.woodZ);
+  if (boards.length) add(merge(boards), M.woodV);
+  if (studs.length) add(merge(studs), M.iron, { cast: false });
   if (walls.length) add(footAt(merge(walls), p.platH + p.ground), M.plaster());
   if (lat.length) add(merge(lat), M.lattice, { cast: false });
   if (p.dark) {

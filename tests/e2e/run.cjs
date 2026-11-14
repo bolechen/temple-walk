@@ -245,6 +245,18 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The measured walk: from the bamboo up to the first court and back, timed, with the numbers offered at the end.
+  tour: { tier: 3, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&tour=8x1&enter&view=first&season=summer&time=day", { viewport: { width: 640, height: 360 }, enter: false });
+    let far = 99, hi = -99;
+    await t.until(async () => { const s = await t.state(); far = Math.min(far, s.z); hi = Math.max(hi, s.h); return (await t.page.evaluate(() => window.__tour().done)); }, 400000, "the measured walk never finished");
+    const r = await t.page.evaluate(() => window.__tour().result);
+    expect(r.runs.length === 1 && r.runs[0].frames > 3 && r.runs[0].p95_ms > 0 && r.runs[0].fps_mean > 0, "the walk was not measured: " + JSON.stringify(r.runs.map((x) => [x.frames, x.p95_ms])));
+    expect(r.tier === "low" && r.size[0] === 640 && r.view === "first" && typeof r.gpu === "string" && r.load_ms > 0, "the measurement does not say what it was made on");
+    expect(far < 45 && hi > -1, `the walk should climb from the bamboo to the gate: reached z=${far}, height ${hi}`);
+    expect(await t.page.isVisible("#tour") && (await t.page.textContent("#tour")).includes("p95"), "the numbers were not shown");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first", { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });

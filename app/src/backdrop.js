@@ -22,7 +22,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
       float a=smoothstep(.5,.56,leaf*.75+crown*.42)*step(y,top+fbm2(vec2(x*2.3,1.))*1.6-.8);
       a=max(a,step(y,4.6+n2(vec2(x*.8,7.))*1.2));
       if(max(a,culm)<.5) discard;
-      vec3 c=mix(vec3(.025,.06,.03),vec3(.17,.3,.1),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.22,.28,.12)*uTone,culm*(1.-a));
+      vec3 c=mix(vec3(.02,.045,.026),vec3(.095,.165,.075),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.13,.17,.09)*uTone,culm*(1.-a));
       c*=.55+.6*smoothstep(0.,12.,y);                                  // darker inside the grove near the ground
       c*=uLeaf*uLight; float d=length(vWP-cameraPosition);
       ${fogMix("c", "d")}
@@ -65,18 +65,19 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
     band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3);
   });
   // Five peaks stand round the temple, each range fainter than the one before.
-  [[150, 46, 0.5], [215, 74, 2.1], [300, 110, 4.4]].forEach(([R, Hm, ph]) => {
-    const g = new THREE.CylinderGeometry(R, R, 1, 120, 1, true), p = g.attributes.position;
+  [[150, 54, 0.5], [215, 78, 2.1], [300, 112, 4.4]].forEach(([R, Hm, ph]) => {   // the nearest is the wooded hill the temple sits in
+    const g = new THREE.CylinderGeometry(R, R, 1, 360, 1, true), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const a = Math.atan2(p.getZ(i), p.getX(i));
       const h = Hm * (0.42 + 0.34 * Math.pow(0.5 + 0.5 * Math.sin(a * 5 + ph), 1.6) + 0.1 * Math.sin(a * 11 + ph * 3) + 0.22 * Math.max(0, -Math.sin(a)));   // higher to the north
-      p.setY(i, p.getY(i) > 0 ? Math.max(8, h) : -4);
+      const tops = Hm * (0.022 * Math.sin(a * 83 + ph * 7) + 0.016 * Math.sin(a * 211 + ph) + 0.012 * Math.sin(a * 137 + 1.7));   // the ragged line of tree tops
+      p.setY(i, p.getY(i) > 0 ? Math.max(8, h + tops) : -4);
     }
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide })); hills.push(m.material);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.16, 0.13), side: THREE.BackSide, fog: false })); hills.push(m.material);   // each range is mixed toward the mist by hand, so that the nearest still reads as a wooded hill
     m.position.z = -45; scene.add(m);
   });
   return {
     update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
-    setMood(m) { for (const h of hills) h.color.setRGB(m.hills[0] * U.uLight.value.r, m.hills[1] * U.uLight.value.g, m.hills[2] * U.uLight.value.b); },
+    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, c = [0, 1, 2].map((j) => m.hills[j] * U.uLight.value.getComponent(j) * (1 - k) + m.fog[j] * k); h.color.setRGB(c[0], c[1], c[2]); }); },
   };
 }

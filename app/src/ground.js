@@ -61,11 +61,11 @@ export function createGround(scene, shade, censer, paving) {
         vec3 alb=mix(vec3(.17,.175,.17),vec3(.34,.345,.33),tone)*mix(vec3(1.),sA,.9)*(.78+.4*fbm2(p*.7));
         if(path) alb*=vec3(1.16,1.13,1.06); if(kerb) alb*=.78;
         float mossM=smoothstep(.42,.7,fbm2(p*.45+9.));
-        alb=mix(alb,vec3(.12,.18,.07),joint*(.35+.65*mossM)); alb=mix(alb,vec3(.03),joint*.3*(1.-mossM));
-        alb=mix(alb,vec3(.15,.2,.1),mossM*smoothstep(.12,.0,edge)*.35);
+        alb=mix(alb,vec3(.085,.115,.06),joint*mossM*.85); alb=mix(alb,vec3(.03),joint*.55*(1.-mossM));   // moss only in the joints that stay damp; the rest are dark with dirt
+        alb=mix(alb,vec3(.11,.14,.085),mossM*smoothstep(.12,.0,edge)*.25);
         // Water: one continuous ramp, standing water -> soaked -> damp.
         float low=fbm2(p*.17+3.)+(tone-.5)*.07-joint*.03+(uWet-1.)*.34;
-        float puddle=smoothstep(.47,.52,low), damp=smoothstep(.22,.47,low);
+        float puddle=smoothstep(.57,.61,low), damp=smoothstep(.3,.58,low);   // water stands only in the hollows
         alb*=mix(.78,.5,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         float dB=1e3;
@@ -86,7 +86,7 @@ export function createGround(scene, shade, censer, paving) {
         vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
         vec3 refl=uReflOn>.5?texture2D(tRefl,ruv,mix(2.6,.0,puddle)).rgb:uFog*mix(.9,1.06,ndv);
         if(!(refl.r>=0.)) refl=vec3(0.); refl=min(refl,vec3(32.));
-        float kr=fres*mix(.25+damp*.6,1.,puddle)*(1.-joint*.7);
+        float kr=fres*mix(.1+damp*.42,1.,puddle)*(1.-joint*.7);
         vec3 c=mix(lit,refl,clamp(kr,0.,1.));
         ${fogMix("c", "dist")}
         gl_FragColor=vec4(c,1.);

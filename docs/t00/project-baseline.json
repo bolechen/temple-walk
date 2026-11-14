@@ -1,0 +1,43 @@
+{
+ "scene_id": "T00",
+ "game": "山门之外",
+ "chapter": "序章 · 云径禅寺",
+ "repository": "bolechen/temple-walk",
+ "filled_by": "Claude Code session, from the source and from running the page",
+ "filled_on": "2026-11-14",
+ "tech": {
+  "runtime": "browser, WebGL2",
+  "engine": "three.js r186, vendored in app/v/ (no bundler, no package dependencies)",
+  "language": "ES modules, plain JavaScript",
+  "entry": "app/index.html → app/yard.js",
+  "start": "npm run serve (python3 -m http.server in app/); see RUN.md"
+ },
+ "units": { "length": "1 unit = 1 metre", "up": "+y", "north_uphill": "-z", "arrival_from": "+z", "angles": "yaw 0 looks north (-z), positive turns east; pitch positive looks up" },
+ "visitor": { "eye_height_m": 1.3, "why": "the visitor is a novice, a child; kept on purpose", "walk_speed_mps": 2.1, "run_speed_mps": 4.2, "first_person_fov_vertical_deg": 52, "third_person_fov_vertical_deg": 44 },
+ "route": {
+  "start": { "name": "竹林起点 (望江亭 landing)", "position_xz": [21.3, 91.5], "floor_y": -14.5 },
+  "end": { "name": "第一院落", "position_xz": [0, 29], "floor_y": 0 },
+  "waypoints_xz": [[21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 29]],
+  "source": "app/src/tour.js ROUTE; the end-to-end scenario `tour` walks it"
+ },
+ "zones": [
+  { "id": "Z1", "name": "竹林入口", "extent": "z 86…96, the lowest landing and the grove round it" },
+  { "id": "Z2", "name": "上山石阶", "extent": "three flights: north (rise 4 m), west (rise 4.5 m), north (rise 6 m), with the half-way pavilion at the second landing" },
+  { "id": "Z3", "name": "照壁", "extent": "forecourt z 40…64, screen wall at z 55, 11 m wide" },
+  { "id": "Z4", "name": "重阁山门", "extent": "gate on z 40, five bays below, three above, bell and drum towers at either end" },
+  { "id": "Z5", "name": "第一个院落", "extent": "x ±22, z -24…40: censer, sutra pillars, meditation hall, tea house, the main hall at its head" }
+ ],
+ "whitebox": "the plan is data in app/src/site.js (buildSite); walkability is derived from it (createWalker: solids, decks, ramps, posts)",
+ "allowed_changes": "appearance, materials, props and structure detail anywhere; the plan of the five zones is kept, changes are listed in decisions.md",
+ "baseline_preset": { "id": "J01", "name": "阴天雨后", "in_project": "season=summer, time=day (moodOf in app/src/mood.js)" },
+ "performance_target": {
+  "status": "NOT LOCKED - needs the owner's target device",
+  "proposal_from_handoff": { "resolution": [1920, 1080], "dpr": 1, "mean_fps": 60, "p95_frame_ms_max": 33.3 },
+  "how_to_measure": "open ?tour=120x3&enter&view=first&q=high&season=summer&time=day on the target device; the page writes performance.json and frame-times.csv"
+ },
+ "environments_available_to_this_session": [
+  "headless Chromium with SwiftShader (software) - tests and screenshots only, frame rates meaningless",
+  "Hugging Face Job, NVIDIA Tesla T4, Chromium on ANGLE/Vulkan, headless - real GPU screenshots and frame cost; not the target device"
+ ],
+ "not_verified": ["any Mac", "any phone", "Safari", "Firefox"]
+}

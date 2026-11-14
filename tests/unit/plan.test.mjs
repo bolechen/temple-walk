@@ -49,7 +49,7 @@ function reach(from) {
 test("from the first step, every part of the temple can be walked to", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2, TOP] = LEVELS;
   const places = {
-    "the half-way pavilion": [6.6, APPROACH.zA0 - 2.75], "the forecourt": [8, 60], "the stele pavilion's side": [-6, 50.5], "inside the gate": [0, 33],
+    "the half-way pavilion": [5.2, APPROACH.zA1 + 2.75], "the forecourt": [8, 60], "the stele pavilion's side": [-6, 50.5], "inside the gate": [0, 33],
     "the censer": [1.6, 13], "the tea house porch": [-13.4, 14], "the meditation hall porch": [13.4, 14], "the main hall's door": [site.hall.door.x, site.hall.door.z],
     "behind the main hall": [0, -30], "the library terrace": [0, T1.zS - 3], "the dragon well": [13.2, T2.zS + 3], "the Guanyin terrace": [0, T2.zS - 3],
     "the foot of the last stair": [0, T2.zN + 1.5], "the summit": [0, TOP.zS - 3], "the summit pavilion's porch": site.summitPorch,
@@ -83,7 +83,7 @@ test("every hall with a door can be walked up to, entered at its threshold, and 
 test("the columns of the open pavilions stand in the way", () => {
   assert.ok(site.walk.posts.length >= 8, "the pavilions on the approach have columns");
   for (const r of site.walk.posts) { const x = (r.x0 + r.x1) / 2, z = (r.z0 + r.z1) / 2; assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through a column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
-  assert.ok(!walker.blocked(6.6, APPROACH.zA0 - 2.75), "the middle of the half-way pavilion is open floor");
+  assert.ok(!walker.blocked(5.2, APPROACH.zA1 + 2.75), "the middle of the half-way pavilion is open floor");
 });
 test("walls, halls and the hillside keep the visitor out", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2] = LEVELS;

@@ -22,6 +22,7 @@ import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
+import { createTour } from "./src/tour.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -67,11 +68,11 @@ const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0
 const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
 const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
 const bamboo = part("bamboo", () => createBamboo(scene, [
-  { x0: -28, x1: 44, z0: SITE.fore - 2, z1: A.zC1 + 12, n: 1150 },
-  { x0: -34, x1: -13, z0: SITE.zS + 1, z1: SITE.fore, n: 130 }, { x0: 13, x1: 34, z0: SITE.zS + 1, z1: SITE.fore, n: 130 },
+  { x0: -28, x1: 44, z0: SITE.fore + 0.8, z1: A.zC1 + 12, n: 1150 },
+  { x0: -36, x1: -23.2, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 }, { x0: 23.2, x1: 36, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 },
   { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 },
 ], terrain, (x, z) => {
-  if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || near(x, z, 3.6, 9.6, A.zA0 - 5.8, A.zA0, 0.5) || near(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || near(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
+  if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || near(x, z, 2.4, 8.0, A.zA1, A.zA1 + 5.8, 0.6) || near(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || near(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
 }, { a2c: quality.msaa > 0, fine: quality.name !== "low" }));
@@ -274,11 +275,11 @@ function layoutFrame() {
 const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
 
-let prev = performance.now(), frames = 0;
+let prev = performance.now(), frames = 0, tour = null;
 const load = { tris: 0, calls: 0, ms: 0 };
 function frame(now) {
   if (!running) return;
-  governor.tick((now - prev) / 1000);
+  governor.tick((now - prev) / 1000); tour?.frame(now);
   const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
@@ -500,3 +501,10 @@ createGame({
   onTick: (fn) => ticks.push(fn),
 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
+// ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
+if (Q.has("tour")) tour = createTour(Q.get("tour"), {
+  walk: window.__walk,
+  state: () => ({ target: !!target, heading: target ? Math.atan2(target.x - pos.x, -(target.z - pos.z)) : yaw }),
+  face: (want) => { yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * 0.05; pitch += (0.06 - pitch) * 0.05; },
+  env: () => { const gl = renderer.getContext(), dbg = gl.getExtension("WEBGL_debug_renderer_info"); return { size: [canvas.clientWidth, canvas.clientHeight], dpr: devicePixelRatio, tier: quality.name, scale: +quality.scale.toFixed(2), governed: governor.level, view, season: state.season, time: state.time, gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "unknown", ua: navigator.userAgent }; },
+});
