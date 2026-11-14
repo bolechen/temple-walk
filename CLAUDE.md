@@ -135,7 +135,7 @@ page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__p
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
 hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
-nearer or farther, E (or Enter or Space) does what is offered, V changes the view, B opens the book, P photographs,
+nearer or farther, E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
 T opens the season and hour. While the pointer is held a click strikes the bell or drum under the dot. On a touch
 screen: a thumb-stick lower left, a drag to look, a tap on the ground to walk there. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.

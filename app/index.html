@@ -86,6 +86,9 @@
   #goal::before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 .9em .15em .1em; background: var(--seal); transform: rotate(45deg); box-shadow: 0 0 6px rgba(0,0,0,.6); }
   #dropBtn { position: absolute; right: 18px; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 5; min-height: 44px; }
   #dropBtn kbd { margin-right: 8px; }
+  #jumpBtn { position: absolute; right: max(78px, calc(env(safe-area-inset-right, 0px) + 78px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); width: 58px; height: 58px; border-radius: 50%; padding: 0; text-indent: 0; letter-spacing: 0; font-size: 17px; z-index: 4; display: none; }
+  @media (pointer: coarse) { #jumpBtn { display: block; } }
+  body.photo #jumpBtn, body.bare #jumpBtn, body:not(.entered) #jumpBtn { display: none; }
   #act { position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 400 22px/1 var(--kai); letter-spacing: .4em; text-indent: .4em; padding: 14px 28px; border-color: rgba(237,232,220,.55); background: rgba(11,10,9,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-radius: 3px; z-index: 5; }
   #say { position: absolute; left: 0; right: 0; bottom: calc(168px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(19px, 3.1vmin, 26px)/1.6 var(--kai); letter-spacing: .18em; text-shadow: 0 0 12px #000, 0 0 3px #000; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
   #say.on { opacity: 1; }
@@ -152,7 +155,7 @@
     <dt><kbd>鼠标</kbd></dt><dd>环顾，点画面握住</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
     <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
-    <dt><kbd>Space</kbd></dt><dd>下台阶</dd>
+    <dt><kbd>Space</kbd></dt><dd>跳，台沿处下台阶</dd>
     <dt><kbd>T</kbd></dt><dd>时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上</dd>
   </dl><p>按 H 收起</p></div>
   <div id="cross"></div>
@@ -160,6 +163,7 @@
   <p id="say"></p>
   <button class="ink-btn" id="act" type="button" hidden></button>
   <button class="chip" id="dropBtn" type="button" hidden>下台阶</button>
+  <button class="chip" id="jumpBtn" type="button" aria-label="跳">跃</button>
   <div id="breath" hidden><span id="breathWord">吸</span></div>
   <p class="caption" id="hint"></p>
   <div class="rail">

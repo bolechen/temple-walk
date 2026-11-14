@@ -45,7 +45,7 @@ export function createHints({ off = false } = {}) {
     if (off) return;
     walked += moved; if (running && moved > 0) ran = true;
     if (now === "walk" && walked > 4) drop("walk");
-    if (!coarse && !ran && walked > 40) tip("run", `${K("Shift")}快步`, 6);
+    if (!coarse && !ran && walked > 40) tip("run", `${K("Shift")}快步　·　${K("Space")}跳`, 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
   return { tip, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: !!$("keys") && !$("keys").hidden, calm: document.body.classList.contains("calm") }) };
