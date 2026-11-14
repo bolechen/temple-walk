@@ -1,0 +1,27 @@
+{
+ "scene_id": "T00",
+ "name": "云径禅寺",
+ "game": "山门之外",
+ "revision": "implementation, 2026-11-14",
+ "status": "implemented_in_project; see acceptance-report.json for what is and is not verified",
+ "source_of_truth": "app/src/site.js (buildSite). Numbers here are read from it; if they disagree, the code is right.",
+ "units": "metres; +y up; north/uphill is -z; the visitor arrives from +z",
+ "zones": [
+  { "id": "Z1", "name": "竹林入口", "connects_to": ["Z2"], "objects": ["望江亭（起点平台上的亭子）", "竹林（真竹约一千四百竿，墙外另有画出来的远竹）", "矮竹与蕨", "柳杉"],
+    "floor": "landing at y=-14.5, x 18.8…26.7, z 87.3…92.4", "collision": "deck (landing); the grove is an `open` solid: not walkable, but nothing solid" },
+  { "id": "Z2", "name": "上山石阶", "connects_to": ["Z1", "Z3"], "objects": ["第三段石阶（向北，升 4 米）", "第二段石阶（向西，升 4.5 米）", "半山亭与石台", "第一段石阶（向北，升 6 米）", "垂带", "挡墙"],
+    "floor": "treads 0.34 m deep, about 0.18 m high, walked as treads not slopes", "collision": "ramps (stairs) carved over solids; pavilion columns are posts" },
+  { "id": "Z3", "name": "照壁", "connects_to": ["Z2", "Z4"], "objects": ["照壁「雙徑歸堂」11 米宽 4.2 米高，瓦顶", "御碑亭", "前院铺地", "院墙"],
+    "floor": "forecourt at y=0, x ±22, z 40…64", "collision": "screen wall is a solid; you go round either end" },
+  { "id": "Z4", "name": "重阁山门", "connects_to": ["Z3", "Z5"], "objects": ["山门下层五间（明间通行，次间版门）", "上层三间", "匾「萬年正續」「雲徑禪寺」", "钟楼（东）", "鼓楼（西）", "门前柳杉一对"],
+    "floor": "platform 0.5 m, four steps front and back", "collision": "solid except the middle bay (deck); bell and drum can be struck" },
+  { "id": "Z5", "name": "第一个院落", "connects_to": ["Z4"], "objects": ["香炉", "经幢一对", "禅堂（东）", "茶寮（西）", "枫", "银杏", "大雄宝殿（重檐七间，月台，勾阑）"],
+    "floor": "court at y=0, x ±22, z -24…40", "collision": "halls are solids with doors; the censer eases you round it" }
+ ],
+ "route": { "waypoints_xz": [[21.3, 91.5], [21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 29]], "length_one_way_m": 87, "returns_the_same_way": true },
+ "lighting": { "preset": "J01 阴天雨后 = season summer, time day", "main_light": "overcast sky (hemisphere light); a weak, cool directional light from the south-east only to shape forms", "local_light": "none by day; hall windows and lamps at dusk and night",
+  "fog": "exponential, density 0.0056, cool grey-green; the nearest wooded ridge is mixed toward it by hand so it still reads", "wetness": "paving: standing water only in hollows; stone tops damp; column feet and wall feet dark with damp" },
+ "cameras": "camera-manifest.json",
+ "deferred": ["上两层台地与山顶", "殿内", "茶事等七处小仪式", "四季四时的其余十五种", "拍照"],
+ "unknowns": ["bracket sets, rafters and column proportions are not checked against the Yingzao Fashi", "target device"]
+}

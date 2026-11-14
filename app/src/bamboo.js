@@ -58,7 +58,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
     }
   }
   // Under the culms, what grows where nobody walks: knee-high clumps of dwarf bamboo and fern, thickest near the path.
-  for (const a of areas) for (let i = 0, n = Math.round(a.n * (opts.fine === false ? 0.7 : 1.5)); i < n; i++) {
+  for (const a of areas) for (let i = 0, n = Math.round(a.n * (opts.fine === false ? 0.35 : 1.5)); i < n; i++) {
     const x = a.x0 + rnd() * (a.x1 - a.x0), z = a.z0 + rnd() * (a.z1 - a.z0);
     if (!keep(x, z)) continue;
     const y = heightAt(x, z), hh = 0.5 + rnd() * 0.7, w = 0.9 + rnd() * 0.9, turn = rnd() * 3.14, tint = 0.55 + rnd() * 0.35;

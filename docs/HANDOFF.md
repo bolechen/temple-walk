@@ -21,6 +21,35 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 先读这一段：T00 交付（2026-11-14 晚）
+
+用户最新的三句话，覆盖前面所有关于「下一步做什么」的安排：
+
+- 「我们现在做的原型是 T00，当前项目游戏名最终定为“山门之外”，参考 codex 的 T00 交付评审，独立思考，并跟进完成 goal」
+  （评审入口：<https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt>）
+- 「视觉交付对齐 <https://temple-atlas-research.floralpage64.chatgpt.site/assets/generated/T00.png>」
+- 「游戏操作提示不需要一直展示，影响画面干净度。只在合适的时机提醒玩家即可，更精致的字体和 ui」
+
+也就是说：游戏叫《山门之外》，云径禅寺是它的序章 T00；资料库那边写了一份完整的交接包（Goal、八项交付 D01–D08、
+六个固定机位、八条验收 A01–A08），我们按它交付。**交付物全在 `docs/t00/`，从那里的 README 读起。**
+
+要点：
+
+- 验收范围只有五区：竹林入口、上山石阶、照壁、山门、第一个院落。其余保留，不在这一轮里。
+- 基准画面是 J01「阴天雨后」，在工程里就是「夏 · 昼」。两张参考图是生成图，只用来定明度、材料关系和气氛，
+  不照搬布局（我们的石阶顶正对照壁，绕过去才见山门；参考图是石阶直对山门）。
+- 六个机位是 `site.js` 里的 `cam01`…`cam06`，`node tools/cameras.mjs` 把它们写进 `docs/t00/camera-manifest.json`。
+- `?tour=120x3&enter&view=first&q=high&season=summer&time=day` 是行走测量：页面自己沿路线往返走，记下每一帧，
+  结束时给出平均帧率、p95 和两个可下载的文件。**用户在 Mac 上测，这一项要等他跑**，在那之前 A06 是 blocked。
+- `tools/gpu-render.sh t4-small '{"tour":{"runs":"120x3","film":95},"shots":[...]}'` 在 T4 上跑同一个测量并录像。
+- 评审用了两个子代理（美术、结构与地域），29 条问题在 `docs/t00/review-log.json`，改了什么、为什么在 `decisions.md`，
+  没改完的在 `KNOWN-ISSUES.md`。**最大的一项没做完：檐椽、飞椽、斗拱出跳的真实几何（STR-02）。**
+- 按交接包的完成定义（验收通过并有运行证据），T00 还没有完成。`acceptance-report.json` 逐条写了通过、未通过和 blocked。
+- 资料库的评审指出：仓库是私有的，但 GitHub Pages 是公开的，`app/m/` 里的佛像模型谁都能下载。这件事要用户决定。
+
+界面这一轮也改了：操作提示只在用得上的时候出现一行（`app/src/hints.js`），H 键开键位卡；界面文字用楷体
+（霞鹜文楷，`app/f/kai.woff2`）；匾额改繁体楷书。
+
 ## 现在到哪了（2026-11-14 更新）
 
 能走通的一座山寺，约 250 米。小沙弥、两种视角、四季 × 四时、拍照装裱都有。

@@ -78,6 +78,6 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   });
   return {
     update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
-    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, c = [0, 1, 2].map((j) => m.hills[j] * U.uLight.value.getComponent(j) * (1 - k) + m.fog[j] * k); h.color.setRGB(c[0], c[1], c[2]); }); },
+    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.color.setRGB(c[0], c[1], c[2]); }); },
   };
 }

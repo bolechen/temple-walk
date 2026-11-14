@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { shots: ["court@autumn-dusk@third", ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off }], seconds: 6 }
+// spec: { tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -48,8 +48,8 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
   save();
   if (!browser) { console.log("no browser could be started"); process.exit(1); }
 
-  const open = async (query, [w, h], scale = 1) => {
-    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale }), page = await ctx.newPage();
+  const open = async (query, [w, h], scale = 1, extra = {}) => {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, ...extra }), page = await ctx.newPage();
     // The hall's statue is deliberately not sent to the job, so its absence is not an error here.
     const ours = (t) => !/hall\.js|plate\.webp|\/m\/|404|Failed to load resource|Failed to fetch dynamically/.test(t);
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
@@ -72,6 +72,28 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
       const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier };
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }
+    save();
+  }
+  // The measured walk (app/src/tour.js) and a film of it: spec.tour = { runs: "120x3", size: [1920, 1080], q: "high", film: 95, filmSize: [960, 540] }.
+  // The numbers and the film come from separate passes, so that recording does not slow what is being measured.
+  if (spec.tour) {
+    const T = spec.tour, size = T.size || [1920, 1080], query = (runs) => `tour=${runs}&enter&view=first&q=${T.q || "high"}&season=summer&time=day`;
+    try {
+      const { ctx, page, loadMs } = await open(query(T.runs || "120x3"), size, 1);
+      await page.waitForFunction(() => window.__tour().done, null, { timeout: 900000, polling: 2000 });
+      const r = await page.evaluate(() => window.__tour().result);
+      r.environment = { host_gpu: report.host.gpu, browser: browser.version(), how: report.using, renderer: report.renderer, headless: true, vsync: "off (--disable-gpu-vsync --disable-frame-rate-limit)", page_load_ms: loadMs };
+      fs.writeFileSync(path.join(out, "performance.json"), JSON.stringify(r, null, 1));
+      fs.writeFileSync(path.join(out, "frame-times.csv"), "run,frame,ms\n" + r.runs.map((x, i) => x.frame_ms.map((ms, k) => `${i + 1},${k},${ms}`).join("\n")).join("\n") + "\n");
+      report.tour = r.runs.map(({ frame_ms, ...x }) => x); console.log("tour", JSON.stringify(report.tour)); await ctx.close();
+    } catch (e) { report.tour = { error: String(e.message).slice(0, 300) }; console.log("tour failed", report.tour.error); }
+    save();
+    if (T.film) try {
+      const fs2 = T.filmSize || [960, 540], { ctx, page } = await open(query(`${T.film}x1`), fs2, 1, { recordVideo: { dir: out, size: { width: fs2[0], height: fs2[1] } } });
+      await page.waitForFunction(() => window.__tour().done, null, { timeout: 600000, polling: 2000 });
+      const v = page.video(); await ctx.close(); const from = await v.path(); fs.renameSync(from, path.join(out, "walkthrough.webm")); report.film = { file: "walkthrough.webm", seconds: T.film + 10, size: fs2 }; console.log("film", fs.statSync(path.join(out, "walkthrough.webm")).size);
+    } catch (e) { report.film = { error: String(e.message).slice(0, 300) }; console.log("film failed", report.film.error); }
+    fs.writeFileSync(path.join(out, "console.txt"), (report.errors.length ? report.errors.join("\n") : "no page errors, console errors or failed requests during the walk") + "\n");
     save();
   }
   // The pictures: a named view, optionally a season and hour and a point of view, drawn large.
