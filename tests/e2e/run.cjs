@@ -208,14 +208,35 @@ const scenarios = {
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // Photograph mode: framing, the three shapes, focus, the mounted card, and back to walking.
+  // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
+  "photo-ui": { tier: 2, async run(b, base) {
+    for (const touch of [false, true]) {
+      const t = await open(b, base, "q=low&cam=0,24,0,-0.06", { viewport: touch ? { width: 390, height: 844 } : { width: 960, height: 600 }, hasTouch: touch, isMobile: touch });
+      await t.page.click("#photoBtn", { timeout: 120000 }); await t.frames(2);
+      let p = await t.probe(); expect(p.photo && !p.monk && p.aspect === "wide" && Math.abs(p.fov - 66) < .1, "photo mode should begin with a clear wide landscape");
+      expect(!(await t.page.isVisible("#photoSettings")) && (await t.page.getAttribute("#photoSettingsToggle", "aria-expanded")) === "false", "settings should start folded");
+      expect((await t.page.locator('#photoBar button:visible').count()) === 2, "only settings and the shutter belong on the lower bar");
+      for (const id of ["shutter", "photoSettingsToggle", "photoClose"]) { const r = await t.page.locator("#" + id).boundingBox(); expect(r && r.width >= 44 && r.height >= 44 && r.x >= 0 && r.y >= 0, id + " is not a reachable touch target"); }
+      await t.page.click("#photoSettingsToggle");
+      expect(await t.page.isVisible("#photoSettings"), "settings did not open");
+      const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
+      await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "the optional figure did not appear");
+      await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
+      await t.page.keyboard.press("Escape"); expect(!(await t.probe()).photo && (await t.page.isVisible("#viewBtn")), "second Escape should return to walking");
+      await t.page.click("#photoBtn"); expect(!(await t.page.isVisible("#photoSettings")), "settings should stay folded on re-entry");
+      await t.shot(touch ? "photo-clean-touch" : "photo-clean-desktop");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
+  // Photograph mode: clear scenery, optional figure, three shapes, the mounted card, and back to walking.
   photo: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&shot=1&view=third&season=autumn&time=dusk&cam=0,24,0,-0.06");   // the low tier: software rendering draws the mirror and the lens blur together at a frame every few seconds
+    const t = await open(b, base, "q=low&shot=1&view=third&season=autumn&time=dusk&cam=0,24,0,-0.06");   // the low tier, for software rendering
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#photoBtn", { timeout: 120000 }); await t.frames(3);
     for (const id of ["frame", "photoBar", "shutter", "photoClose"]) expect(await t.page.isVisible("#" + id), `#${id} missing in photograph mode`);
     expect(!(await t.page.isVisible("#viewBtn")), "the walking controls should leave");
-    let p = await t.probe(); expect(p.photo && p.monk, "the novice should be in the picture by default");
+    let p = await t.probe(); expect(p.photo && !p.monk, "landscape mode should start with the novice out of the picture");
+    await t.page.click("#photoSettingsToggle"); await t.page.click("#monkToggle");
     await t.page.click("#monkToggle"); p = await t.probe(); expect(!p.monk, "he should be able to step out of the picture"); await t.page.click("#monkToggle");
     await t.page.click('[data-lens="26"]'); p = await t.probe(); expect(Math.abs(p.fov - 26) < 0.1, "the long lens did not narrow the view");
     await t.page.click('[data-lens="46"]'); await t.page.click("#prayToggle"); await t.page.waitForTimeout(2500);

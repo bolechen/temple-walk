@@ -35,7 +35,7 @@ export function createHints({ off = false } = {}) {
     held() { tip("held", `${K("Esc")}松开鼠标　·　${K("滚轮")}远近　·　单击敲钟击鼓`, 7); },
     indoors() { if (!coarse) tip("view", `${K("V")}换成自己的眼睛看　·　画框前${K("E")}细看`, 7); else tip("view", "走到画框前，可以细看", 6); },
     seal() { tip("book", coarse ? "朱印收在右侧的「朱印」里" : `${K("B")}翻看朱印帐`, 7); },
-    photo() { tip("photo", coarse ? "点画面选清晰处　·　双指远近" : `点画面选清晰处　·　${K("滚轮")}远近　·　${K("P")}收起`, 8); },
+    photo() { drop(); },
     mood() { flash("moodTag", 6); },
     goal() { flash("goal", 8); },
   };

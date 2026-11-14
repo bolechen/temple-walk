@@ -3,6 +3,8 @@ name: Verify and deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    paths: ["app/**", "tests/**", "tools/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -11,12 +13,14 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
   cancel-in-progress: true
 
 jobs:
   # Nothing is published that does not parse, pass its unit tests, and come up in a real browser.
   verify:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -37,7 +41,7 @@ jobs:
       - name: A browser to drive the page with
         run: npm install --no-save playwright@1.63.0 && npx playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
       - name: End to end, startup and movement
-        run: node tests/e2e/run.cjs boot stairs drop
+        run: node tests/e2e/run.cjs boot stairs drop photo-ui
       - name: Keep the report and screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -48,6 +52,7 @@ jobs:
           if-no-files-found: ignore
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: verify
     runs-on: ubuntu-latest
     environment:

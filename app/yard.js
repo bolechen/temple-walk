@@ -145,8 +145,7 @@ setMood(state.season, state.time);
 
 // ---- The novice ------------------------------------------------------------------
 let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
-const photo = { on: false, aspect: "tall", lens: 46, dist: 4.6, monk: true, pray: false, focus: null };   // focus: metres, or null to follow the novice
-const APERTURE = { 66: 0.006, 46: 0.012, 26: 0.022 };
+const photo = { on: false, aspect: "wide", lens: 66, dist: 4.6, monk: false, pray: false };   // Landscape first: a clear wide view; a figure is optional.
 const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] };
 
 // ---- Looking and walking ------------------------------------------------------
@@ -221,13 +220,6 @@ canvas.addEventListener("pointerup", (e) => {
     }
     down = null; return;
   }
-  if (down && !down.moved && performance.now() - down.t < 600 && photo.on) {   // in a photograph, a tap chooses what is sharp
-    const r = canvas.getBoundingClientRect();
-    ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
-    const hits = ray.intersectObjects([site.root, monk.group], true)[0], floorHit = pickFloor();
-    const d = Math.min(hits ? hits.distance : 1e9, floorHit ? floorHit.distanceTo(camera.position) : 1e9);
-    photo.focus = d < 200 ? d : null;
-  }
   if (down && !down.moved && performance.now() - down.t < 600 && !photo.on) {
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
@@ -274,6 +266,7 @@ if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Spac
 addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const press = (id) => { const el = document.getElementById(id); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
+  if (photo.on && k === "tab") return;   // Photo controls use normal keyboard focus navigation.
   if (!menuEl.hidden && k !== "escape") return;   // while the pause menu is open only Esc is heard
   // The keys such games use: E to do what is offered here, V to change the view, B for the book, P to photograph, T for the season and hour.
   if (k === " " && e.target?.tagName === "BUTTON") return;
@@ -285,6 +278,7 @@ addEventListener("keydown", (e) => {
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
   else if (k === "h" || k === "?") hints.card();
   else if (k === "escape") {   // Esc shuts whatever is open; with nothing open it is the pause menu
+    if (photo.on && !$("photoSettings").hidden) { setPhotoSettings(false); $("photoSettingsToggle").focus(); e.preventDefault(); return; }
     const keysOpen = !document.getElementById("keys")?.hidden, moodOpen = !document.getElementById("moodPanel")?.hidden; hints.card(false); if (moodOpen) document.getElementById("moodPanel").hidden = true;
     const shut = [keysOpen, moodOpen, press("menuResume"), press("bookClose"), press("printBack") || press("photoClose")].some(Boolean);
     if (!shut && document.body.classList.contains("entered") && !stage) openMenu(true);
@@ -415,7 +409,6 @@ function frame(now) {
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
   }
-  if (photo.on) post.focus(photo.focus ?? (photo.monk ? camDist : 14), APERTURE[photo.lens] || 0.012);
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
@@ -442,17 +435,21 @@ document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("cl
 document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => setMood(state.season, b.dataset.time)));
 
 // ---- Taking a photograph ------------------------------------------------------------
+function setPhotoSettings(open) {
+  $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open));
+}
 function setPhoto(open) {
-  if (!open) post.focus(null);
+  setPhotoSettings(false);
   photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo"); $("moodPanel")?.setAttribute("hidden", "");
-  if (open) { target = null; route = []; photo.dist = 7; photo.focus = null; pitch = Math.min(pitch, 0.02); }
+  if (open) { target = null; route = []; photo.dist = 7; pitch = Math.min(pitch, 0.02); }
   else if (view === "first") pitch = Math.max(pitch, 0);
   resize();
 }
+on("photoSettingsToggle", () => setPhotoSettings($("photoSettings").hidden));
 on("photoBtn", () => setPhoto(true)); on("photoClose", () => setPhoto(false));
 document.querySelectorAll("[data-aspect]").forEach((b) => b.addEventListener("click", () => { photo.aspect = b.dataset.aspect; document.querySelectorAll("[data-aspect]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); layoutFrame(); }));
 document.querySelectorAll("[data-lens]").forEach((b) => b.addEventListener("click", () => { photo.lens = +b.dataset.lens; document.querySelectorAll("[data-lens]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); resize(); }));
-on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute("aria-pressed", String(photo.monk)); });
+on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; });
 on("prayToggle", (e) => { photo.pray = !photo.pray; e.currentTarget.setAttribute("aria-pressed", String(photo.pray)); });
 
 // Draw the framed part of the view again, large, and mount it on its card.
@@ -548,7 +545,7 @@ window.__probe = () => {
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, lamp: U.uLamp.value, fov: camera.fov };
+    photoSettings: !document.getElementById("photoSettings").hidden, aspect: photo.aspect, camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, lamp: U.uLamp.value, fov: camera.fov };
 };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };

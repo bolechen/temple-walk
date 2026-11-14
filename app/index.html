@@ -45,14 +45,22 @@
   #moodPanel { position: absolute; right: max(70px, calc(env(safe-area-inset-right, 0px) + 70px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; padding: 10px; background: rgba(11,10,9,.5); border: 1px solid rgba(227,224,214,.22); border-radius: 2px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   #moodPanel > div { display: flex; gap: 6px; }
   /* Photograph mode: everything leaves but the frame and the few things that shape the picture. */
-  #frame { position: absolute; border: 1px solid rgba(243,239,229,.75); box-shadow: 0 0 0 200vmax rgba(8,8,7,.6); pointer-events: none; display: none; }
-  #photoBar { position: absolute; left: 0; right: 0; bottom: 0; display: none; justify-items: center; gap: 10px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
-  #photoBar .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-  #photoBar .chip { padding: 8px 10px; min-height: 34px; font-size: 12px; }
-  #shutter { width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(243,239,229,.9); background: rgba(243,239,229,.92); box-shadow: inset 0 0 0 4px rgba(11,10,9,.85); cursor: pointer; }
+  #frame { position: absolute; border: 1px solid rgba(243,239,229,.75); box-shadow: 0 0 0 200vmax rgba(8,8,7,.3); pointer-events: none; display: none; }
+  #photoBar { position: absolute; inset: auto 0 0; display: none; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
+  #photoBar button { pointer-events: auto; }
+  #photoSettingsToggle { justify-self: start; min-height: 44px; }
+  #shutter { grid-column: 2; width: 58px; height: 58px; border-radius: 50%; border: 2px solid rgba(243,239,229,.9); background: rgba(243,239,229,.92); box-shadow: inset 0 0 0 4px rgba(11,10,9,.85); cursor: pointer; }
   #shutter:disabled { opacity: .4; }
-  #photoClose { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); display: none; }
-  body.photo .rail, body.photo #moodTag { display: none; } body.photo #hint { bottom: auto; top: calc(58px + env(safe-area-inset-top, 0px)); }
+  #photoClose { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); min-height: 44px; display: none; }
+  #photoSettings { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(94px + env(safe-area-inset-bottom, 0px)); width: min(308px, calc(100vw - 32px)); max-height: calc(100dvh - 174px); overflow-y: auto; padding: 18px; box-sizing: border-box; background: rgba(16,18,16,.91); border: 1px solid rgba(243,239,229,.22); border-radius: 6px; }
+  #photoSettings fieldset { margin: 0 0 14px; padding: 0; border: 0; }
+  #photoSettings fieldset:last-of-type { margin-bottom: 0; }
+  #photoSettings legend { margin-bottom: 8px; font: 13px/1.5 var(--serif); color: rgba(243,239,229,.65); }
+  #photoSettings .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  #photoSettings .chip { min-height: 44px; padding: 10px 13px; font-size: 13px; }
+  #photoSettings p { margin: 16px 0 0; font: 12px/1.7 var(--serif); color: rgba(243,239,229,.65); }
+  body:not(.photo) #photoSettings { display: none; }
+  body.photo .rail, body.photo #moodTag, body.photo #hint, body.photo #say, body.photo #dropBtn { display: none; }
   body.photo #frame { display: block; } body.photo #photoBar { display: grid; } body.photo #photoClose { display: block; }
   body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
   /* The print, once taken. */
@@ -203,13 +211,21 @@
   <div id="frame"></div>
   <button class="chip" id="photoClose" type="button">收起</button>
   <div id="photoBar">
-    <div class="row">
-      <button class="chip" data-aspect="tall" aria-pressed="true" type="button">竖幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button>
-      <button class="chip" data-lens="66" aria-pressed="false" type="button">广</button><button class="chip" data-lens="46" aria-pressed="true" type="button">中</button><button class="chip" data-lens="26" aria-pressed="false" type="button">长</button>
-      <button class="chip" id="monkToggle" aria-pressed="true" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button">合掌</button>
-    </div>
+    <button class="chip" id="photoSettingsToggle" type="button" aria-expanded="false" aria-controls="photoSettings">设置</button>
     <button id="shutter" type="button" aria-label="按下快门"></button>
   </div>
+  <section id="photoSettings" aria-label="拍照设置" hidden>
+    <fieldset><legend>画幅</legend><div class="row">
+      <button class="chip" data-aspect="wide" aria-pressed="true" type="button">横幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="tall" aria-pressed="false" type="button">竖幅</button>
+    </div></fieldset>
+    <fieldset><legend>远近</legend><div class="row">
+      <button class="chip" data-lens="66" aria-pressed="true" type="button">广</button><button class="chip" data-lens="46" aria-pressed="false" type="button">中</button><button class="chip" data-lens="26" aria-pressed="false" type="button">长</button>
+    </div></fieldset>
+    <fieldset><legend>人物</legend><div class="row">
+      <button class="chip" id="monkToggle" aria-pressed="false" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button" disabled>合掌</button>
+    </div></fieldset>
+    <p>拖动环顾 · 滚轮远近</p>
+  </section>
   <div id="print" hidden>
     <img id="printImg" alt="刚拍下的照片">
     <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
