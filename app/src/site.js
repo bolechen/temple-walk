@@ -472,6 +472,7 @@ export function createWalker(site) {
     // Is something solid standing here: a building, a wall, a tree? (Not the edges of the walk, which are only air.) The eye uses this.
     wall(x, z) { if (room) return shut(x, z); for (const s of posts) if (inRect(s, x, z)) return true; if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; },
     onGround: (x, z) => !room && carved(x, z) === null,
+    onStairs: (x, z) => !room && ramps.some(r => inRect(r, x, z) && carved(x, z) <= (r.base || 0) + r.h + 0.01),
     blocked(x, z) {
       if (room) return shut(x, z);
       for (const s of posts) if (inRect(s, x, z)) return true;   // a column on an open floor

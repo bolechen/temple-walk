@@ -43,10 +43,10 @@ test('animated cloth shoes stay above each supporting tread while ascending, des
   for (const heading of [0,Math.PI/2,Math.PI]) for(let k=0;k<80;k++) {
     const z=.08+k*.041;
     monk.group.position.set(0,f.walker.heightAt(0,z),z);monk.group.rotation.y=heading;
-    monk.update(1/30,2.1,false,k/30,f.walker.heightAt);
+    monk.update(1/30,2.1,false,k/30,f.walker.heightAt,{heightAt:f.walker.eyeAt,stairs:true});
     monk.group.updateMatrixWorld(true);
     const cloth=monk.group.children[0].children[0],cp=cloth.geometry.attributes.position;
-    for(let i=0;i<cp.count;i++) if(cp.getY(i)<.24) {
+    for(let i=0;i<cp.count;i++) {
       const v=new THREE.Vector3().fromBufferAttribute(cp,i).applyMatrix4(cloth.matrixWorld);
       assert.ok(v.y+1e-4>=f.walker.heightAt(v.x,v.z), 'the leaning robe hem intersects a higher tread');
     }
