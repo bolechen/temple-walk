@@ -32,7 +32,7 @@ export function createGame(y) {
   for (const id in places) {
     const p = places[id], w = id === "sutra" || id === "sit" ? 0.9 : 1.5;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
-    m.position.set(p.at[0], y.walker.heightAt(p.at[0], p.at[1]) + (p.sit ? 0.14 : 0.03), p.at[1]); m.rotation.y = id.length; m.renderOrder = 2; y.scene.add(m); rings[id] = m;
+    m.position.set(p.at[0], y.walker.heightAt(p.at[0], p.at[1]) + (p.sit && !p.lift ? 0.14 : 0.03), p.at[1]); m.rotation.y = id.length; m.renderOrder = 2; y.scene.add(m); rings[id] = m;
   }
   // The lamp the visitor lights stays lit.
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
@@ -66,7 +66,7 @@ export function createGame(y) {
     if (id === "incense") { y.walkTo([[y.site.hall.foot.x, y.site.hall.foot.z], [y.site.hall.door.x, y.site.hall.door.z]]); return; }
     const mineRite = (rite = { id }), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
-    y.stage({ face: p.face, pose: p.sit ? "sit" : id === "well" ? false : "pray", lift: p.sit ? 0.1 : 0, leave: () => { if (on()) end(); } });
+    y.stage({ face: p.face, pose: p.sit ? "sit" : id === "well" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, leave: () => { if (on()) end(); } });
     if (id === "tea") { await wait(2); if (!on()) return; say(d.line, 6); await wait(5); }
     else if (id === "well") { say(d.line, 6); for (let i = 0; i < 3; i++) { await wait(1.5); if (!on()) return; drop(); } await wait(1.2); }
     else if (id === "lamp") { await wait(1.8); if (!on()) return; mine.visible = true; say(d.line, 5); await wait(2); }

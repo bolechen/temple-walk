@@ -2,7 +2,7 @@
 // infill, and a curved tiled roof. Built in local space: centred on the origin, front facing +z.
 // Halls, gate houses, towers and covered walks are all this function with different parameters.
 import * as THREE from "../v/build/three.module.js";
-import { box, smooth, plain, merge, mesh, tube, stairGeo } from "./geo.js";
+import { box, smooth, plain, merge, mesh, tube, stairGeo, footAt } from "./geo.js";
 import { makePlaque } from "./plaque.js";
 
 const DEFAULTS = {
@@ -142,7 +142,7 @@ export function buildHall(M, opts) {
     walls.push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
   }
   add(merge(bx), M.woodX); add(merge(bz), M.woodZ);
-  if (walls.length) add(merge(walls), M.plaster(p.platH + p.ground));
+  if (walls.length) add(footAt(merge(walls), p.platH + p.ground), M.plaster());
   if (lat.length) add(merge(lat), M.lattice, { cast: false });
   if (p.dark) {
     const d = Math.min(2.4, Z - ZB - 0.4);
@@ -181,12 +181,14 @@ export function buildHall(M, opts) {
   {
     const STEP = 0.26;
     const cols = [];   // {x, eps}: the gable line appears twice, once evaluated on each side of the step
-    for (let x = -EX; x < EX - 1e-6; x += STEP) cols.push({ x, eps: 0 });
-    cols.push({ x: EX, eps: 0 });
+    // The roof is drawn finely only where it curls up at the corners; the long middle of it is nearly straight
+    // across and needs a third of the triangles.
+    const ticks = (E) => { const out = [], fine = Math.min(E, p.liftLen + 0.6); let v = -E; while (v < E - 1e-6) { out.push(v); v += Math.abs(v) > E - fine - 1e-6 || Math.abs(v + 0.78) > E - fine ? STEP : 0.78; } out.push(E); return out; };
+    for (const x of ticks(EX)) cols.push({ x, eps: 0 });
     const split = gx > 0.3 && G > 0.05;
     if (split) for (const s of [-1, 1]) cols.push({ x: s * gx, eps: 0, cut: s }, { x: s * gx, eps: -1e-3, cut: s, inner: true });
     cols.sort((a, b) => a.x - b.x || ((a.inner ? 1 : 0) - (b.inner ? 1 : 0)) * Math.sign(a.x));
-    const rows = []; for (let z = -EZ; z < EZ - 1e-6; z += STEP) rows.push(z); rows.push(EZ);
+    const rows = ticks(EZ);
 
     const pos = [], uv = [], idx = [], nz = rows.length;
     for (const c of cols) for (const z of rows) {

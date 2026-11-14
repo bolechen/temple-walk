@@ -5,7 +5,7 @@
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "../v/build/three.module.js";
-import { box, merge, mesh, smooth, stairGeo } from "./geo.js";
+import { box, merge, mesh, smooth, stairGeo, footAt } from "./geo.js";
 import { buildHall } from "./building.js";
 import { makePlaque } from "./plaque.js";
 
@@ -244,13 +244,13 @@ export function buildSite(M) {
     wall(sx * TOP.x, TOP.zN, sx * TOP.x, TOP.zS, 3, 1.15); wall(sx * TOP.x, TOP.zS, sx * (TOP.stair / 2 + 0.6), TOP.zS, 3, 1.15);   // a low wall round the summit
   }
   wall(-TOP.x, TOP.zN, TOP.x, TOP.zN, 3, 1.15);
-  body.forEach((b, i) => { if (b.length) root.add(mesh(merge(b), M.plaster(i ? LEVELS[i - 1].y : 0))); });
+  body.forEach((b, i) => { if (b.length) root.add(mesh(footAt(merge(b), i ? LEVELS[i - 1].y : 0), M.plaster())); });
   root.add(mesh(tiles(capPos, capUv, capIdx), M.tile), mesh(merge(ridge), M.stone));
 
   // The screen wall facing the gate, where the two old paths up the mountain meet.
   {
     const z = 55, w = 11, h = 4.2;
-    root.add(mesh(merge([box(w, h, 0.7, 0, h / 2, z)]), M.plaster(0)), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 0.7, 0.16, 1.2, 0, h + 0.5, z)]), M.stone));
+    root.add(mesh(footAt(merge([box(w, h, 0.7, 0, h / 2, z)]), 0), M.plaster()), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 0.7, 0.16, 1.2, 0, h + 0.5, z)]), M.stone));
     const cp = [], cu = [], ci = [];
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.5, 0], [w + 0.8, h + 0.5, 0], [w + 0.8, h + 0.05, s * 0.85], [0, h + 0.05, s * 0.85]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
@@ -283,31 +283,33 @@ export function buildSite(M) {
   // ---- The small observances of a visit (journey.js): the things they are made with, and where to stand ----
   const flame = (x, y, z, glow) => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.016, 10, 8).scale(1, 2.1, 1), M.flame); f.position.set(x, y, z); f.userData.glow = glow; root.add(f); return f; };
   const cushion = () => lathe([[0, 0], [0.25, 0], [0.288, 0.028], [0.292, 0.06], [0.262, 0.092], [0.1, 0.104], [0, 0.104]], 28);
-  // A tea mat on the court before the tea house, laid so that whoever sits at it looks across the wet stone to the great hall.
+  // A tea table on the court before the tea house, as tea was taken in these monasteries: a table and stools, a ewer
+  // of hot water, black bowls on stands. Whoever sits at it looks across the wet stone to the great hall.
   const teaSeat = [-10.3, 22.6], teaDir = [0 - teaSeat[0], mz + main.zF - teaSeat[1]], teaTurn = Math.atan2(-teaDir[0], -teaDir[1]);
   const teaFrom = (lx, lz) => [teaSeat[0] + lx * Math.cos(teaTurn) + (lz - 0.62) * Math.sin(teaTurn), teaSeat[1] - lx * Math.sin(teaTurn) + (lz - 0.62) * Math.cos(teaTurn)];   // the mat's own frame: he sits at (0, 0.62) and looks toward -z
   {
-    const P = { straw: [], wood: [], glaze: [], iron: [], bronze: [] }, y = 0.024;
+    const P = { straw: [], wood: [], glaze: [], iron: [], lacquer: [] }, y = 0;
     const bowl = () => lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 24);
-    P.straw.push(box(2.4, y, 1.8, 0, y / 2, 0.1));                                                                   // the rush mat
-    for (const sz of [-1, 1]) P.wood.push(box(2.4, y + 0.004, 0.08, 0, y / 2 + 0.002, 0.1 + sz * 0.86));             // and its bound edges
-    P.wood.push(box(1.16, 0.04, 0.48, 0, 0.3, -0.12), box(1.2, 0.012, 0.52, 0, 0.326, -0.12), box(0.045, 0.28, 0.4, -0.5, 0.14, -0.12), box(0.045, 0.28, 0.4, 0.5, 0.14, -0.12), box(0.96, 0.03, 0.03, 0, 0.1, -0.12));   // a low table
-    P.glaze.push(bowl().translate(0, 0.332, 0.02), bowl().translate(0.36, 0.332, -0.2));                             // his bowl, and one for whoever comes
-    P.glaze.push(lathe([[0, 0], [0.03, 0], [0.041, 0.02], [0.043, 0.07], [0.03, 0.086], [0.022, 0.09], [0, 0.09]], 18).translate(-0.34, 0.332, -0.22));   // the caddy
-    P.straw.push(new THREE.CylinderGeometry(0.012, 0.03, 0.1, 12).translate(-0.17, 0.382, -0.24), box(0.012, 0.004, 0.19, -0.03, 0.335, -0.27));        // the whisk and the scoop
-    // The brazier at his left hand, and the iron kettle singing on it.
-    P.bronze.push(lathe([[0, 0], [0.11, 0], [0.165, 0.045], [0.19, 0.13], [0.172, 0.2], [0.14, 0.2], [0.14, 0.168], [0, 0.168]], 24).translate(-0.84, y, 0.02));
-    P.iron.push(lathe([[0, 0], [0.085, 0], [0.125, 0.045], [0.132, 0.1], [0.088, 0.15], [0.05, 0.158], [0.05, 0.168], [0.034, 0.172], [0.012, 0.19], [0, 0.192]], 24).translate(-0.84, y + 0.178, 0.02),
-      new THREE.TorusGeometry(0.1, 0.008, 6, 18, Math.PI).translate(-0.84, y + 0.33, 0.02), new THREE.CylinderGeometry(0.011, 0.02, 0.1, 8).rotateZ(-0.95).translate(-0.7, y + 0.29, 0.02));
-    P.straw.push(cushion().translate(0, y, 0.62), cushion().translate(0.92, y, -0.06));
-    // One branch in a bottle, at the corner of the mat.
-    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(0.98, y, 0.78));
-    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + 0.98, v[1] + y, v[2] + 0.78))), 18, 0.006, 6),
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + 0.98, v[1] + y, v[2] + 0.78))), 10, 0.004, 5));
-    const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, bronze: M.bronze };
+    const T = 0.78, stool = () => lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 20);
+    // The table: a thick top on four legs joined by stretchers.
+    P.wood.push(box(1.3, 0.05, 0.7, 0, T - 0.025, -0.12), box(1.2, 0.06, 0.04, 0, T - 0.09, 0.19), box(1.2, 0.06, 0.04, 0, T - 0.09, -0.43));
+    for (const [a, c] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.wood.push(box(0.06, T - 0.05, 0.06, a * 0.58, (T - 0.05) / 2, -0.12 + c * 0.29));
+    for (const a of [-1, 1]) P.wood.push(box(0.04, 0.04, 0.58, a * 0.58, 0.2, -0.12));
+    // His bowl and one for whoever comes, each on its lacquer stand; the whisk; the ewer of hot water.
+    for (const [bx2, bz2] of [[0, 0.06], [0.38, -0.26]]) { P.glaze.push(bowl().translate(bx2, T + 0.03, bz2)); P.lacquer.push(lathe([[0, 0], [0.05, 0], [0.04, 0.012], [0.1, 0.02], [0.105, 0.03], [0.04, 0.03], [0, 0.03]], 20).translate(bx2, T, bz2)); }
+    P.straw.push(new THREE.CylinderGeometry(0.012, 0.03, 0.1, 12).translate(-0.2, T + 0.05, -0.3));
+    P.iron.push(lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.12], [0.07, 0.19], [0.035, 0.22], [0.03, 0.27], [0.045, 0.29], [0, 0.29]], 22).translate(-0.42, T, -0.2),
+      new THREE.TorusGeometry(0.075, 0.009, 6, 16, Math.PI).rotateZ(-Math.PI / 2).translate(-0.53, T + 0.15, -0.2), new THREE.CylinderGeometry(0.008, 0.016, 0.2, 8).rotateZ(-0.7).translate(-0.28, T + 0.17, -0.2));
+    // Stools: his own, and two for company.
+    P.wood.push(stool().translate(0, 0, 0.62), stool().translate(0.95, 0, -0.12), stool().translate(0, 0, -0.86));
+    // One branch in a bottle, on the table.
+    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(0.46, 0.78, -0.38));
+    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 18, 0.006, 6),
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 10, 0.004, 5));
+    const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, lacquer: M.lacquer };
     for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
-    const t = teaFrom(0, -0.12), b = teaFrom(-0.84, 0.02);
-    walk.solids.push({ x0: t[0] - 0.62, x1: t[0] + 0.62, z0: t[1] - 0.4, z1: t[1] + 0.4 }, { x0: b[0] - 0.24, x1: b[0] + 0.24, z0: b[1] - 0.24, z1: b[1] + 0.24 });
+    const t = teaFrom(0, -0.12);
+    walk.solids.push({ x0: t[0] - 0.66, x1: t[0] + 0.66, z0: t[1] - 0.44, z1: t[1] + 0.44 });
   }
   // A stand of small lamps before the Guanyin hall. A few are always burning; one in the middle waits for the visitor.
   const lampAt = [-6.2, T2.zS - 4.0], lampMine = [lampAt[0], T2.y + 0.5 + 0.26 + 0.088, lampAt[1] + 0.02];
@@ -344,7 +346,7 @@ export function buildSite(M) {
   const places = {
     bell:    { at: [15.5, 35.7], r: 1.9, face: 0 },
     incense: { at: [hall.foot.x, hall.foot.z + 0.9], r: 1.9, face: Math.PI },
-    tea:     { at: teaSeat, r: 1.5, face: Math.atan2(teaDir[0], teaDir[1]), sit: true, steam: [...teaFrom(-0.84, 0.02), 0.42] },
+    tea:     { at: teaSeat, r: 1.5, face: Math.atan2(teaDir[0], teaDir[1]), sit: true, lift: 0.44, steam: [...teaFrom(-0.42, -0.2), 1.1] },
     sutra:   { at: [deskAt[0], deskAt[1] + 0.56], r: 1.3, face: Math.PI },
     well:    { at: [13.2, T2.zS + 3.0], r: 1.8, face: Math.PI, pool: [13.2, T1.y + 0.2, T2.zS + 0.62] },
     lamp:    { at: [lampAt[0], lampAt[1] + 1.4], r: 1.5, face: Math.PI, flame: lampMine },

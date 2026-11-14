@@ -15,6 +15,10 @@ export function plain(g) {
 }
 export const merge = (list) => mergeGeometries(list.map(plain));
 
+// Tell a wall how high its foot stands: plaster is damp and green at its foot wherever that is, and one material
+// serves every wall by reading the height from here (kept in the first texture coordinate, which walls do not use).
+export function footAt(geo, base) { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, base); return geo; }
+
 // Bake an occlusion value into every vertex. `fn(x, y, z)` returns 0..1; omit it for "fully lit".
 export function bakeAO(geo, fn) {
   const p = geo.attributes.position, a = new Float32Array(p.count);

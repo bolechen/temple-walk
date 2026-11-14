@@ -334,7 +334,7 @@ function frame(now) {
   else if (doorArmed) { doorArmed = false; target = null; route = []; window.dispatchEvent(new CustomEvent("enter-hall")); }
 
   for (const fn of ticks) fn(dt, t);
-  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still); drift.update(t, camera.position, pxH);
+  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
   }

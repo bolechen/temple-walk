@@ -22,10 +22,15 @@ export function createProps(scene, M, at, centre) {
   r.addColorStop(0, "rgba(240,240,236,.55)"); r.addColorStop(0.5, "rgba(240,240,236,.16)"); r.addColorStop(1, "rgba(240,240,236,0)");
   x.fillStyle = r; x.fillRect(0, 0, 128, 128);
   const tex = new THREE.CanvasTexture(c), smoke = [], mist = [];
-  for (let i = 0; i < 40; i++) {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 }));
-    s.userData = { t: i / 40, seed: Math.random() * 100 }; smoke.push(s); scene.add(s);
-  }
+  // The censer's smoke: forty soft puffs, drawn together as one cloud of points.
+  const N = 40, sg = new THREE.BufferGeometry(), sp = new Float32Array(N * 3), sa = new Float32Array(N * 2);
+  sg.setAttribute("position", new THREE.BufferAttribute(sp, 3)); sg.setAttribute("puff", new THREE.BufferAttribute(sa, 2));
+  for (let i = 0; i < N; i++) smoke.push({ t: i / N, seed: Math.random() * 100 });
+  const su = { tMap: { value: tex }, uPx: { value: 800 }, uCol: { value: new THREE.Color(0.94, 0.94, 0.92) } };
+  const cloud = new THREE.Points(sg, new THREE.ShaderMaterial({ uniforms: su, transparent: true, depthWrite: false,
+    vertexShader: "attribute vec2 puff; uniform float uPx; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); gl_Position=projectionMatrix*mv; gl_PointSize=puff.x*uPx*projectionMatrix[1][1]*.5/max(-mv.z,.2); vA=puff.y; }",
+    fragmentShader: "uniform sampler2D tMap; uniform vec3 uCol; varying float vA; void main(){ gl_FragColor=vec4(uCol,texture2D(tMap,gl_PointCoord).a*vA); }" }));
+  cloud.frustumCulled = false; scene.add(cloud);
   for (let i = 0; i < 14; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.5, color: 0xdfe6e4, fog: false }));
     const a = (i / 14) * Math.PI * 2 + 0.4, R = 34 + (i % 3) * 10;
@@ -34,14 +39,16 @@ export function createProps(scene, M, at, centre) {
   }
   return {
     setMood(m) { for (const sp of mist) { sp.material.color.setRGB(...m.fog).multiplyScalar(1.08); sp.material.opacity = 0.5 * m.mist; } },
-    update(t, dt, still) {
+    update(t, dt, still, px = 800) {
+      su.uPx.value = px;
       for (const sp of mist) if (!still) sp.position.x = Math.cos(sp.userData.a) * sp.userData.R + Math.sin(t * 0.03 + sp.userData.a * 3) * 6;
-      for (const sp of smoke) {
-        const u = sp.userData; if (!still) u.t = (u.t + dt * 0.09) % 1;
+      smoke.forEach((u, i) => {
+        if (!still) u.t = (u.t + dt * 0.09) % 1;
         const a = u.t, sway = a * a;
-        sp.position.set(at.x + Math.sin(t * 0.5 + u.seed + a * 5) * 0.4 * sway + a * 0.5, 1.02 + a * 4.2, at.z + Math.cos(t * 0.4 + u.seed * 1.7 + a * 4) * 0.3 * sway);
-        sp.scale.setScalar(0.05 + a * 0.9); sp.material.opacity = Math.sin(Math.min(1, a * 6) * Math.PI / 2) * (1 - a) * 0.22;
-      }
+        sp[i * 3] = at.x + Math.sin(t * 0.5 + u.seed + a * 5) * 0.4 * sway + a * 0.5; sp[i * 3 + 1] = 1.02 + a * 4.2; sp[i * 3 + 2] = at.z + Math.cos(t * 0.4 + u.seed * 1.7 + a * 4) * 0.3 * sway;
+        sa[i * 2] = 0.05 + a * 0.9; sa[i * 2 + 1] = Math.sin(Math.min(1, a * 6) * Math.PI / 2) * (1 - a) * 0.4;
+      });
+      sg.attributes.position.needsUpdate = true; sg.attributes.puff.needsUpdate = true;
     },
   };
 }

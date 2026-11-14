@@ -146,7 +146,7 @@ to `__probe` rather than reaching into the page from a test.
 ## Working notes
 
 - Code comments and commit messages are in English and written as prose describing the place, not the code; the README and docs are in Chinese. Keep that split.
-- Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. On 2026-11-14 the main court cost 10.4 ms at 1080p on the high tier and 7.4 ms on the low tier at a phone's size: it is bound by triangles (1.5 M a frame, the whole temple drawn twice for the mirror) and draw calls (about 500), not by pixels. Roofs are two thirds of the temple's triangles.
+- Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`npm run check` guards this).
 - The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.

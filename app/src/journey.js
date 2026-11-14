@@ -7,7 +7,7 @@
 export const SEALS = [
   { id: "bell",    seal: "闻钟", place: "钟楼",     act: "撞钟",   need: 3, line: "钟声三下，山门内外都听见了。",       hint: "山门东侧的钟楼里悬着大钟。走到钟前，撞三下。" },
   { id: "incense", seal: "上香", place: "大雄宝殿", act: "上香",   need: 1, line: "一炷香的工夫，什么也不求。",         hint: "穿过大院，登上台阶，进大雄宝殿上一炷香。" },
-  { id: "tea",     seal: "吃茶", place: "茶寮",     act: "吃茶",   need: 1, line: "赵州和尚说：吃茶去。",               hint: "大院西侧的茶寮前铺着一方茶席，坐下吃一盏茶。" },
+  { id: "tea",     seal: "吃茶", place: "茶寮",     act: "吃茶",   need: 1, line: "赵州和尚说：吃茶去。",               hint: "大院西侧的茶寮前摆着茶桌，坐下吃一盏茶。" },
   { id: "sutra",   seal: "得句", place: "藏经楼",   act: "请一句", need: 1, line: "一句就够了，带着它下山。",           hint: "大殿后面的第一级台地上是藏经楼，在檐下请一句话。" },
   { id: "well",    seal: "观水", place: "龙井",     act: "观水",   need: 1, line: "龙神让出了整座山，只留下这口井。",   hint: "藏经楼东边的石壁下有一口井，去看看井里的水。" },
   { id: "lamp",    seal: "燃灯", place: "观音殿",   act: "燃灯",   need: 1, line: "一灯能除千年暗。",                   hint: "第二级台地的观音殿前有一座灯台，点一盏灯。" },

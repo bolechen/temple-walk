@@ -56,20 +56,18 @@ export function createMaterials() {
     col*=mix(1.,.62,damp); rough_=mix(Nr.w*.92,.5,damp);
     nd_=Nr.xyz.${turn}*1.5;`, { tex: ["wood"] });
 
-  const plasterCache = new Map();
-  const plaster = (base) => {
-    const k = base.toFixed(2);
-    if (!plasterCache.has(k)) plasterCache.set(k, procMat("plaster" + k, { roughness: 0.9, envMapIntensity: 0.25 }, `
-      float t=vWP.x+vWP.z; vec3 q=vWP/2.7, w=triW(vWN);
+  // Lime-washed walls. One material for all of them: each wall's geometry says how high its foot stands (geo.footAt).
+  const plasterOne = procMat("plaster", { roughness: 0.9, envMapIntensity: 0.25 }, `
+      float t=vWP.x+vWP.z, base=vUv2.x; vec3 q=vWP/2.7, w=triW(vWN);
       vec3 A=triA(tPlasterA,q,w)/mPlaster; vec4 Nr=triN(tPlasterN,q,w);
       col=vec3(.88,.865,.82)*mix(vec3(1.),A,.55)*(.92+.12*fbm3(vWP*.5));   // lime wash: the paper of this picture, with the stains of many rains
-      float drip=smoothstep(.45,.8,n2(vec2(t*5.,vWP.y*.35)))*smoothstep(${k}+2.2,${k}+3.4,vWP.y+fbm2(vec2(t,2.))*1.5);
+      float drip=smoothstep(.45,.8,n2(vec2(t*5.,vWP.y*.35)))*smoothstep(base+2.2,base+3.4,vWP.y+fbm2(vec2(t,2.))*1.5);
       col=mix(col,vec3(.36,.37,.34)*A,drip*.5);                     // rain streaks run down from the cap
-      float damp=smoothstep(${k}+1.1,${k},vWP.y-fbm2(vec2(t*.9,5.))*.9);
+      float damp=smoothstep(base+1.1,base,vWP.y-fbm2(vec2(t*.9,5.))*.9);
       col=mix(col,vec3(.2,.235,.17)*A,damp*.75);                    // rising damp and moss at the foot
-      rough_=mix(Nr.w,.6,damp); nd_=Nr.xyz*.8;`, { tex: ["plaster"] }));
-    return plasterCache.get(k);
-  };
+      rough_=mix(Nr.w,.6,damp); nd_=Nr.xyz*.8;`, { tex: ["plaster"] });
+  const plaster = () => plasterOne;
+
 
   // What is seen through an open door: not a black hole but a dim room, warmest low down round its one lamp,
   // and behind the same mist as everything else. `base` is the height of the building's floor.
