@@ -175,18 +175,6 @@
     <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
   </div>
 </div>
-<div class="view" id="hallView" hidden>
-  <div id="stage">
-    <img id="plate" src="plate.webp" alt="木构大殿内部，正中石台上供奉佛像，两侧各一盏油灯">
-    <canvas id="mirror"></canvas>
-    <canvas id="hallGl"></canvas>
-  </div>
-  <div id="ui">
-    <button id="offer" class="ink-btn" type="button"><kbd>E</kbd>上香</button>
-    <p id="note">左右拖动可瞻仰佛像</p>
-  </div>
-  <button id="leave" class="ink-btn" type="button">出殿</button>
-</div>
 <div id="toast" hidden><img id="toastSeal" alt=""><p id="toastName"></p><p id="toastLine"></p></div>
 <div id="book" hidden>
   <img id="bookImg" alt="朱印帐：寺名、日期和已得的印">
@@ -208,51 +196,8 @@
   <p class="how">七处小事 · 七枚朱印</p>
 </div>
 <div id="veil"></div>
-<p id="wait">入殿中</p>
 
 <script type="module">
 import "./yard.js";
 
-const yardView = document.getElementById("yardView"), hallView = document.getElementById("hallView");
-const veil = document.getElementById("veil"), waitMsg = document.getElementById("wait");
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const send = (name) => window.dispatchEvent(new CustomEvent(name));
-
-// The interior and its statue load quietly once the courtyard is up, so the door is ready when you reach it.
-let hall = null;
-let hallError = "";
-const loadHall = () => (hall ??= import("./hall.js").then(() => true, (err) => { console.error(err); hallError = String(err && err.message ? err.message : err); hall = null; return false; }));
-setTimeout(loadHall, 2500);
-
-let busy = false;
-window.addEventListener("enter-hall", async () => {
-  if (busy) return; busy = true;
-  veil.className = "on";                      // step into the dark
-  const ready = loadHall();
-  await sleep(950);
-  send("yard-pause");
-  waitMsg.classList.add("on");
-  const ok = await ready;
-  waitMsg.classList.remove("on");
-  if (ok) { yardView.hidden = true; hallView.hidden = false; send("hall-show"); }
-  else {                                       // the hall could not be loaded: stay outside, and say why
-    send("yard-resume");
-    const hint = document.getElementById("hint");
-    hint.textContent = "殿内没有加载出来：" + hallError; hint.classList.remove("gone");
-  }
-  await sleep(120);
-  veil.className = "";                        // eyes adjust
-  busy = false;
-});
-
-document.getElementById("leave").addEventListener("click", async () => {
-  if (busy) return; busy = true;
-  veil.className = "on day";                  // walk toward the daylight at the door
-  await sleep(950);
-  send("hall-hide"); hallView.hidden = true; yardView.hidden = false; send("yard-resume");
-  await sleep(150);
-  veil.className = "day";
-  await sleep(950); veil.className = "";
-  busy = false;
-});
 </script>

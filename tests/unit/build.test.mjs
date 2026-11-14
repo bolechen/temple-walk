@@ -20,7 +20,7 @@ test("a hall, built from its numbers, is whole", () => {
   const b = buildHall(M, {});
   finite(b.group); assert.ok(tris(b.group) > 5000);
   b.group.traverse((m) => { if (m.isMesh && m.material !== M.dark && m.material !== M.flame && m.material !== M.interior(0)) assert.ok(m.geometry.attributes.ao, "a mesh without baked occlusion"); });
-  assert.ok(b.walk.solids.length >= 1 && b.walk.ramps.length === 1 && b.walk.decks.length === 1);
+  assert.ok(b.walk.solids.length >= 1 && b.walk.ramps.length === 1 && b.walk.decks.length === 2);
   assert.ok(b.roofAt(0) < b.roofAt(3) && b.ridgeY > b.eaveY && b.eaveY > b.colTop);
 });
 test("every kind of building the plan uses can be built", () => {

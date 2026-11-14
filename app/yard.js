@@ -20,6 +20,7 @@ import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
+import { buildInteriors } from "./src/interior.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -53,6 +54,10 @@ const M = createMaterials();
 const site = buildSite(M);
 part("site", () => scene.add(site.root));
 const walker = createWalker(site);
+// The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
+const rooms = part("interior", () => { const h = buildInteriors(M, site.halls); scene.add(h.group); return h; });
+site.places.incense = rooms.places.incense;
+let hallIn = null;   // the room he is in, when he is in one
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
 const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain));
@@ -209,7 +214,7 @@ canvas.addEventListener("pointerup", (e) => {
       document.getElementById("hint").classList.add("gone"); down = null; return;
     }
     const hit = pickFloor();
-    const hall = site.hall, toHall = ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < SITE.zS - 4, onGround = walker.onGround(pos.x, pos.z);
+    const hall = site.hall, toHall = !inside && ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < SITE.zS - 4, onGround = walker.onGround(pos.x, pos.z);
     // Tapping the main hall from its court means "go to its door"; the way there, and back, is over the steps.
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
@@ -329,9 +334,10 @@ function frame(now) {
   camera.rotation.set(pitch, -yaw, 0, "YXZ");
   camera.updateMatrixWorld();
   // Crossing the threshold hands over to the hall interior.
-  const atDoor = site.hall.inside(pos.x, pos.z);
+  const atDoor = inside ? null : site.halls.find((h) => h.inside(pos.x, pos.z)) || null;
   if (!atDoor) doorArmed = true;
-  else if (doorArmed) { doorArmed = false; target = null; route = []; window.dispatchEvent(new CustomEvent("enter-hall")); }
+  else if (doorArmed && !inside && !passing) { doorArmed = false; pass(atDoor); }
+  if (inside && !passing && pos.z > hallIn.room.exitZ && Math.abs(pos.x - hallIn.room.cx) < 1.3) pass(null);
 
   for (const fn of ticks) fn(dt, t);
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); drift.update(t, camera.position, pxH);
@@ -341,7 +347,7 @@ function frame(now) {
   if (photo.on) post.focus(photo.focus ?? (photo.monk ? camDist : 14), APERTURE[photo.lens] || 0.012);
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
-  if (quality.planar > 0) ground.render(renderer, camera);
+  if (quality.planar > 0 && !inside) ground.render(renderer, camera);   // there are no puddles indoors
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; document.body.dataset.ready = "1"; } }
@@ -406,15 +412,35 @@ on("shareBtn", async () => {
   try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: "云径禅寺", text: mood.line }); } catch {}
 });
 
-window.addEventListener("yard-pause", () => { running = false; });
-window.addEventListener("yard-resume", () => {
-  // Step back out of the hall: on the porch, facing the courtyard.
-  pos.set(site.hall.out[0], EYE, site.hall.out[1]); yaw = Math.PI; pitch = 0.04; target = null; route = []; doorArmed = false;
-  footY = walker.heightAt(pos.x, pos.z); heading = 0; for (const k in keys) keys[k] = false;
-  if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); }
-});
+// ---- Through the door ----------------------------------------------------------------
+// Eyes close on the way in and daylight floods on the way out; behind the veil he is moved between the porch and the
+// room, the room's lamps are lit or put out, and the picture is exposed for indoors or for the sky.
+let inside = false, passing = false;
+const veil = $("veil"), pause = (ms) => new Promise((r) => setTimeout(r, Q.has("fast") ? ms / 6 : ms));
+let lastHall = null;
+function indoors(hall) {
+  const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; }
+  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); target = null; route = [];
+  for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
+  for (const o of scene.children) if (["site", "backdrop", "bamboo", "trees", "ground", "props"].includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
+  scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none"; });
+  if (on) { pos.set(hallIn.room.door[0], EYE, hallIn.room.door[1]); yaw = 0; U.uLamp.value = 1; sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.45, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); }
+  else { pos.set(lastHall.out[0], EYE, lastHall.out[1]); yaw = lastHall.outYaw; doorArmed = false; setMood(state.season, state.time); }
+  pitch = 0.04; footY = walker.heightAt(pos.x, pos.z); heading = on ? Math.PI : Math.atan2(Math.sin(yaw), -Math.cos(yaw)); camDist = 0.6; document.body.classList.toggle("indoors", on);
+  window.dispatchEvent(new CustomEvent(on ? "entered-hall" : "left-hall", { detail: hall && hall.id }));
+}
+// `hall`: one of site.halls to go into, or null to come out of the one he is in.
+async function pass(hall) {
+  const on = !!hall; if (passing) return; passing = true;
+  if (veil) veil.className = on ? "on" : "on day"; await pause(900);
+  indoors(hall); await pause(200);
+  if (veil) { veil.className = on ? "" : "day"; if (!on) { await pause(700); veil.className = ""; } }
+  passing = false;
+}
+if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; } }   // ?in=1 begins inside the hall
 // For the test tools.
-window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
+window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
+window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // What a frame costs to draw, in milliseconds: `n` frames drawn back to back, each waited for until the graphics card
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
@@ -461,7 +487,8 @@ createGame({
   walkTo(points, then) { interrupt(); route = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); arrive = then || null; },
   stage(o) { stage = o; },
   strike(kind) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s) s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
-  mood: () => mood, night: () => mood.lamp > 0.5, busy: () => photo.on || !running,
+  mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing, inside: () => inside,
+  gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => startAmbience(() => ({ grove: grove() })),
   onTick: (fn) => ticks.push(fn),
 });

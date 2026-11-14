@@ -21,8 +21,8 @@ function leafTexture() {
 function culmTexture() {
   const c = document.createElement("canvas"); c.width = 16; c.height = 256;
   const x = c.getContext("2d"), g = x.createLinearGradient(0, 0, 16, 0);
-  g.addColorStop(0, "#3f5a26"); g.addColorStop(0.5, "#6f8a3c"); g.addColorStop(1, "#40592a"); x.fillStyle = g; x.fillRect(0, 0, 16, 256);
-  for (let y = 0; y < 256; y += 32) { x.fillStyle = "rgba(210,215,180,.55)"; x.fillRect(0, y, 16, 2); x.fillStyle = "rgba(20,30,12,.6)"; x.fillRect(0, y + 2, 16, 2); }   // nodes
+  g.addColorStop(0, "#4c5c3a"); g.addColorStop(0.5, "#6f7f5a"); g.addColorStop(1, "#4f5e3e"); x.fillStyle = g; x.fillRect(0, 0, 16, 256);   // grey-green culms, with white bloom under each node
+  for (let y = 0; y < 256; y += 32) { x.fillStyle = "rgba(225,230,215,.5)"; x.fillRect(0, y + 4, 16, 9); x.fillStyle = "rgba(210,215,180,.6)"; x.fillRect(0, y, 16, 2); x.fillStyle = "rgba(20,30,12,.6)"; x.fillRect(0, y + 2, 16, 2); }   // nodes
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapT = THREE.RepeatWrapping; return t;
 }
 

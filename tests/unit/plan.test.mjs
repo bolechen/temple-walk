@@ -70,6 +70,21 @@ test("every observance of the journey has a place that can be walked to, and the
   assert.ok(site.places.lamp.flame.every(Number.isFinite) && site.places.tea.steam.every(Number.isFinite) && site.places.well.pool.every(Number.isFinite));
   assert.ok(walker.heightAt(...site.places.sit.at) > 20.5, "the last seal is earned on the summit pavilion's porch");
 });
+test("every hall with a door can be walked up to, entered at its threshold, and left onto open floor", () => {
+  const can = reach([site.start[0], site.start[1]]);
+  assert.deepEqual(site.halls.map((h) => h.id).sort(), ["chan", "dahui", "guanyin", "library", "lingxiao", "main", "tea", "yaoshi"]);
+  for (const h of site.halls) {
+    assert.ok(h.inside(h.door[0], h.door[1]), `${h.name}: its door is not its threshold`);
+    assert.ok(!h.inside(h.out[0], h.out[1]), `${h.name}: coming out would go straight back in`);
+    assert.ok(!walker.blocked(h.out[0], h.out[1]) && can(h.out[0], h.out[1], 0.3), `${h.name}: nowhere to stand on coming out at (${h.out})`);
+    assert.ok(Number.isFinite(h.outYaw) && h.name && h.kind);
+  }
+});
+test("the columns of the open pavilions stand in the way", () => {
+  assert.ok(site.walk.posts.length >= 8, "the pavilions on the approach have columns");
+  for (const r of site.walk.posts) { const x = (r.x0 + r.x1) / 2, z = (r.z0 + r.z1) / 2; assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through a column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
+  assert.ok(!walker.blocked(6.6, APPROACH.zA0 - 2.75), "the middle of the half-way pavilion is open floor");
+});
 test("walls, halls and the hillside keep the visitor out", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2] = LEVELS;
   assert.ok(!can(0, -14.6, 0.3), "inside the main hall");
@@ -80,6 +95,8 @@ test("heights: the courts are level, the stairs climb evenly", () => {
   assert.equal(walker.heightAt(0, 20), 0); assert.equal(walker.heightAt(0, LEVELS[0].zS - 5), LEVELS[0].y);
   for (const r of site.walk.ramps) {
     let last = null; const run = Math.hypot(r.high[0] - r.low[0], r.high[1] - r.low[1]);
-    for (let t = 0.02; t <= 0.98; t += 0.02) { const x = r.low[0] + (r.high[0] - r.low[0]) * t, z = r.low[1] + (r.high[1] - r.low[1]) * t; if (x <= r.x0 || x >= r.x1 || z <= r.z0 || z >= r.z1) continue; const h = walker.heightAt(x, z); if (last !== null) assert.ok(h >= last - 1e-6 && h - last < 0.02 * run * 0.75, `a stair that does not climb evenly near (${x.toFixed(1)}, ${z.toFixed(1)}): ${last.toFixed(2)} to ${h.toFixed(2)}`); last = h; }
+    // A stair is treads: the height holds across a tread and rises by one step, never more, and it ends at the top.
+    assert.ok(Math.abs(walker.heightAt(r.high[0] + (r.low[0] - r.high[0]) * 0.01, r.high[1] + (r.low[1] - r.high[1]) * 0.01) - ((r.base || 0) + r.h)) < 1e-6, "the top tread is the landing's height");
+    for (let t = 0.005; t <= 0.995; t += 0.005) { const x = r.low[0] + (r.high[0] - r.low[0]) * t, z = r.low[1] + (r.high[1] - r.low[1]) * t; if (x <= r.x0 || x >= r.x1 || z <= r.z0 || z >= r.z1) continue; const h = walker.heightAt(x, z); if (last !== null) assert.ok(h >= last - 1e-6 && h - last < 0.2, `a stair that does not climb a step at a time near (${x.toFixed(1)}, ${z.toFixed(1)}): ${last.toFixed(2)} to ${h.toFixed(2)}`); last = h; }
   }
 });

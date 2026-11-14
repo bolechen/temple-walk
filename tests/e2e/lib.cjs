@@ -36,7 +36,7 @@ async function open(browser, base, query, opts = {}) {
     state: () => page.evaluate(() => window.__yard()),
     probe: () => page.evaluate(() => window.__probe()),
     journey: () => page.evaluate(() => window.__journey()),
-    inHall: () => page.evaluate(() => !document.getElementById("hallView").hidden),
+    inHall: () => page.evaluate(() => window.__yard().inside),
     // Poll until `fn` is true; throw with the walker's state if it never is.
     async until(fn, ms, what) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return; await page.waitForTimeout(1200); } throw new Error(what + " | " + JSON.stringify(await t.state())); },
     // Let the page draw `n` more frames: under software rendering a second may hold one frame or ten.

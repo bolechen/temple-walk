@@ -17,6 +17,8 @@ Four outside projects are documented as references:
 - **Watercolour** (<https://patch.gg/blendi/watercolour>, by @blendi) is the reference for painterly materials, instanced brush marks and deterministic capture. `docs/WATERCOLOUR-TEARDOWN.md` records its paint-arrival map, depth-aware paper pass and what should not be carried into a solemn temple. It is a technical reference, not an approved visual direction.
 - **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/m/` (`static.rushiwowen.co/models/zen-v2/`, kept decompressed here at about 11 MB). That provenance is why the README asks that this repo stay private.
 
+**Art direction.** `docs/ART-SPEC.md` records the art specification the owner pointed to (the project's research atlas, where this temple is entry T00: "quiet realism, light that comes from somewhere", a working palette, material rules, an acceptance list) and where the scene stands against each rule. Check a visual change against it.
+
 **Start with `docs/HANDOFF.md`**: it states what the user has asked for, in their words and in order, what exists, and what to do next.
 
 ## Commands
@@ -79,7 +81,9 @@ every scenario once a week and on demand. A red `verify` means the site was not 
 
 ## Architecture
 
-**Two views in one page.** `app/index.html` holds the courtyard canvas and the hall interior, joined by a black/mist veil. It imports `yard.js` immediately and lazy-imports `hall.js` after 2.5 s. The views talk only through window events: `enter-hall` (fired by yard when the walker crosses the main hall's door), `yard-pause`/`yard-resume`, `hall-show`/`hall-hide`. `yard-resume` always re-places the visitor on the porch facing the court.
+**One page, one scene.** `app/index.html` holds the canvas and the interface; `app/yard.js` is the whole walk, outdoors and in. Stepping through a hall's door closes a veil (`#veil`), moves the walker into that hall's room, and opens it again.
+
+**Indoors (`app/src/interior.js`).** Every hall the plan marks with `hall: { id, kind, name }` can be entered: `put()` records its door, where to stand on coming out and which way to face (`site.halls`), and `buildInteriors` builds one room for each, side by side sixty metres under the courts, furnished by `kind` (`buddha`, `figure`, `chan`, `tea`, `library`, `patriarch`, `pavilion`). While he is inside, `walker.setRoom(room)` replaces the plan with the room's floor, walls and furniture; the courts are not drawn, the sun is put out and the room's lamps are lit (`indoors()` in `yard.js`). The Buddha and pedestal models (`app/m/*.json`, GLTF as base64) are fetched once and stood in every hall with an altar. Along each room's side walls hang frames: what hangs in one is data, `GALLERY["<hall>-w1"] = { title, text, image }` in `interior.js`, shown when a visitor stands before it and presses E. This is where the story's artworks go. `?in=<hall id>` starts inside a hall.
 
 **Courtyard pipeline (`app/yard.js`).** Creates the renderer, then composes the modules in `app/src/` in a fixed order: `createMaterials` → `buildSite` → `createWalker` → sky → ground → backdrop → bamboo → props → post → trees → drift → `mergeStatic` (everything built so far, batched per material into a few zones along the axis; a mesh that must stay itself sets `userData.keep`) → mood → monk. It owns input (drag to look, tap the floor to walk, tap bell/drum to strike, WASD), the frame loop, and the quality governor. Everything else is a module exposing one `create*`/`build*` function.
 
@@ -95,8 +99,6 @@ Conventions: 1 unit = 1 m, north/uphill is -z, the visitor arrives from +z, buil
 **Materials: a pattern from the world, fine grain from a scan (`app/src/materials.js`, `glsl.js`, `textures.js`).** `procMat(key, params, body, { tex })` patches `MeshStandardMaterial` so `body` (GLSL) writes `col`, `rough_`, `bump_`, `ao_`, `emit_` and `nd_` (a world-space nudge to the normal) from world position. The large pattern is still worked out in the shader (courses of stone, rows of tile, damp at the foot of a wall); the fine grain comes from scanned surfaces in `app/t/` (Poly Haven, CC0, packed by `tools/textures.py`: `<name>_a.webp` colour, `<name>_n.jpg` normal x/y + roughness), laid on from three sides (`triA`/`triN`) and divided by the scan's own mean colour so the material's colour stays in charge. Until a scan arrives its mean colour stands in, so the first frame is whole. Every mesh drawn with these needs a per-vertex `ao` attribute; `geo.mesh()` bakes it (`bakeAO`), and `geo.merge()` normalises geometries so they can be batched into one draw per material. The paving (`ground.js`) is lit by hand because of its mirror, but takes the sun's shadows from the same shadow map.
 
 **Quality (`app/src/quality.js`).** Three tiers (render scale, pixel budget, MSAA, planar reflection scale, shadow map). Mobile UAs always start on `low`; a governor drops scale → reflection → bloom when frames average over 30 ms. `?q=` pins a tier.
-
-**Hall interior (`app/hall.js`).** A single painted plate (`plate.webp`) with a 3D statue and pedestal (`app/m/*.json`, GLTF) composited at a fixed camera. The camera constants at the top of the file are calibrated to the plate's pixel geometry; a new plate means re-deriving them. The statue model comes from an external scene and is the reason the README asks that the repo stay private.
 
 **The season and the hour (`app/src/mood.js`).** `moodOf(season, time)` returns one table of numbers (sun, sky, fog,
 grade, snow, wetness, lamp light, leaf colours, what drifts in the air, the verse for the photograph). `yard.js`'s
@@ -122,7 +124,7 @@ the bell's three strokes, the library's line, storage under `yunjing.journey.v1`
 `site.places` says where each observance is made. `game.js` owns everything a visitor sees of it: the title, the brush
 rings on the ground, the action button, how each observance unfolds, the seal toast, the book; it reaches the walk only
 through the small object `yard.js` hands it (`walkTo`, `stage`, `strike`, `where`, `onTick`…). `goshuin.js` draws the
-page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__places`.
+page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__places`, `__inside(id|null)`, `__halls`, `__gallery`, `__figures()`.
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
 hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
@@ -146,7 +148,7 @@ to `__probe` rather than reaching into the page from a test.
 ## Working notes
 
 - Code comments and commit messages are in English and written as prose describing the place, not the code; the README and docs are in Chinese. Keep that split.
-- Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles.
+- Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`npm run check` guards this).
 - The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.

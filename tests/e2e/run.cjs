@@ -32,16 +32,26 @@ const scenarios = {
   // Up the old path, round the screen wall, through the gate, across the court, in at the door; incense; out again.
   walk: { tier: 3, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1");
-    await t.page.evaluate(() => window.__walk([[21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -5.4]]));
+    await t.page.evaluate(() => window.__walk([[21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -6.0]]));
     let lo = 0, hi = -99;
     await t.until(async () => { const s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return t.inHall(); }, 300000, "the walk in never reached the hall");
     expect(lo < -14 && hi >= 1.4, `the climb should go from the foot of the path to the hall's platform; went ${lo} to ${hi}`);
-    await t.page.waitForTimeout(4000); await t.shot("e2e-hall");
-    expect(await t.page.isVisible("#offer"), "no way to offer incense"); await t.page.click("#offer"); await t.page.waitForTimeout(2500);
-    await t.page.click("#leave"); await t.until(async () => !(await t.inHall()), 30000, "never left the hall");
-    await t.page.waitForTimeout(2500);
-    const s = await t.state(); expect(s.running && Math.abs(s.h - 1.5) < 0.05 && s.z > -7, "should step out onto the porch: " + JSON.stringify(s));
-    expect(!(await t.inHall()), "walked straight back in"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // Indoors: a real room. He stands on its floor, far below the court, with the figures before him.
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
+    let s = await t.state(); expect(s.inside && s.h < -50 && s.z > 5, "should stand just inside the door: " + JSON.stringify(s));
+    await t.until(() => t.page.evaluate(() => window.__figures() === "here"), 120000, "the figures never arrived"); await t.frames(3); await t.shot("e2e-hall");
+    // He can walk about in it, the columns stop him, and a frame on the wall can be looked at.
+    await t.page.evaluate(() => window.__walk([[-6, 5], [-11.7, 5.05]])); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
+    expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing"); await t.page.click("#slipTake");
+    await t.page.evaluate(() => window.__walk([[-9, 3]])); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x + 9, s.z - 3) > 0.45, "he walked through a column");
+    // Incense before the altar, then out by the door into the daylight.
+    await t.page.evaluate(() => window.__walk([[0, 4], [0, -1.2]])); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 60000, "no way to offer incense");
+    await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
+    await t.page.evaluate(() => window.__walk([[0, 4], [0, 7.9]])); await t.until(async () => !(await t.inHall()), 60000, "never left the hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared");
+    s = await t.state(); expect(s.running && Math.abs(s.h - 1.5) < 0.05 && s.z > -7, "should step out onto the porch: " + JSON.stringify(s));
+    await t.frames(4); expect(!(await t.inHall()), "walked straight back in"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // At a real walking pace, a tap on the hall leads to its door and through it.
   tap: { tier: 3, async run(b, base) {
@@ -65,6 +75,23 @@ const scenarios = {
       const s2 = await t.state(); expect(Math.hypot(s2.x - s1.target[0], s2.z - s1.target[1]) < 0.3, `${name}: stopped short of the tapped spot at ${s2.x}, ${s2.z}`);
     }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Every hall with a door can be gone into, has a room of its own with frames on its walls, and lets him out again where he came in.
+  halls: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
+    const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));
+    for (const h of halls) {
+      await t.page.evaluate((id) => window.__inside(id), h.id); await t.until(async () => (await t.state()).room === h.id, 30000, `could not go into ${h.name}`);
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
+      let s = await t.state(); expect(s.h < -50, `${h.name}: not standing on the room's floor`);
+      const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
+      const spot = await t.page.evaluate((id) => Object.entries(window.__gallery).find(([k]) => k.startsWith(id + "-"))[1].at, h.id);
+      await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0), spot); await t.until(async () => ((await t.journey()).look || "").startsWith(h.id + "-"), 30000, `${h.name}: no frame to look at`);
+      await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, `could not leave ${h.name}`);
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(3);
+      s = await t.state(); expect(Math.hypot(s.x - h.out[0], s.z - h.out[1]) < 0.3 && !s.inside, `${h.name}: came out in the wrong place or went straight back in: ${JSON.stringify(s)}`);
+    }
+    await t.shot("e2e-halls"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.
   pilgrimage: { tier: 2, async run(b, base) {
@@ -96,7 +123,8 @@ const scenarios = {
     // Sitting on the summit, then incense (as the hall reports it): the seventh seal opens the book.
     await at("sit"); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered on the summit"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
-    await t.page.evaluate(() => window.dispatchEvent(new CustomEvent("incense-offered")));
+    await t.page.evaluate(() => window.__inside(true)); await t.until(() => t.inHall(), 30000, "could not go in");
+    await at("incense"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 30000, "nothing offered before the altar"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
     expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");

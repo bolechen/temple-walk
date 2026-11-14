@@ -32,13 +32,13 @@ export function createGame(y) {
   for (const id in places) {
     const p = places[id], w = id === "sutra" || id === "sit" ? 0.9 : 1.5;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
-    m.position.set(p.at[0], y.walker.heightAt(p.at[0], p.at[1]) + (p.sit && !p.lift ? 0.14 : 0.03), p.at[1]); m.rotation.y = id.length; m.renderOrder = 2; y.scene.add(m); rings[id] = m;
+    m.position.set(p.at[0], p.y ?? y.walker.heightAt(p.at[0], p.at[1]) + (p.sit && !p.lift ? 0.14 : 0.03), p.at[1]); m.rotation.y = id.length; m.renderOrder = 2; y.scene.add(m); rings[id] = m;
   }
   // The lamp the visitor lights stays lit.
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
   mine.position.set(...places.lamp.flame); y.scene.add(mine);
   const refresh = () => {
-    for (const id in rings) rings[id].visible = !journey.has(id);
+    for (const id in rings) rings[id].visible = !journey.has(id) && (places[id].room || null) === y.room();
     mine.visible = journey.has("lamp");
     const n = journey.count(), next = journey.next();
     if ($("bookBtn")) $("bookBtn").textContent = n ? `朱印 ${"〇一二三四五六七"[n]}` : "朱印";
@@ -63,11 +63,11 @@ export function createGame(y) {
     if (rite || !places[id]) return;
     const p = places[id], d = SEAL[id]; $("act")?.setAttribute("hidden", "");
     if (id === "bell") { y.strike("bell"); return; }                                  // the stroke itself is heard below
-    if (id === "incense") { y.walkTo([[y.site.hall.foot.x, y.site.hall.foot.z], [y.site.hall.door.x, y.site.hall.door.z]]); return; }
     const mineRite = (rite = { id }), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     y.stage({ face: p.face, pose: p.sit ? "sit" : id === "well" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, leave: () => { if (on()) end(); } });
     if (id === "tea") { await wait(2); if (!on()) return; say(d.line, 6); await wait(5); }
+    else if (id === "incense") { await wait(2.2); if (!on()) return; say(d.line, 6); await wait(3); }
     else if (id === "well") { say(d.line, 6); for (let i = 0; i < 3; i++) { await wait(1.5); if (!on()) return; drop(); } await wait(1.2); }
     else if (id === "lamp") { await wait(1.8); if (!on()) return; mine.visible = true; say(d.line, 5); await wait(2); }
     else if (id === "sit") {
@@ -93,16 +93,26 @@ export function createGame(y) {
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
 
   // ---- The button that offers what can be done here ----
-  let acc = 0;
+  let acc = 0, look = null, wasIndoors = false; const seen = new Set();
   y.onTick((dt) => {
     for (const id in rings) if (rings[id].visible) rings[id].material.opacity = (0.5 + 0.22 * Math.sin(performance.now() / 900 + id.length)) * (y.night() ? 0.9 : 0.75), rings[id].material.color.setScalar(1).multiply(y.night() ? new THREE.Color(1, 0.86, 0.6) : new THREE.Color(0.06, 0.05, 0.045));
-    if ((acc += dt) < 0.2) return; acc = 0;
-    const w = y.where(), here = entered && !rite && !y.busy() ? placeAt(places, w.x, w.z) : null;
+    const nowT = performance.now(); if (nowT - acc < 180) return; acc = nowT;   // a few times a second is enough
+    const w = y.where(), free = entered && !rite && !y.busy(), indoors = y.inside();
+    const room = y.room(), here = free ? placeAt(Object.fromEntries(Object.entries(places).filter(([, p]) => (p.room || null) === room)), w.x, w.z) : null;
     near = here && !journey.has(here) ? here : null;
+    // Indoors, standing before a frame on the wall offers a look at what hangs there.
+    look = free && indoors && !near ? placeAt(Object.fromEntries(Object.entries(y.gallery).filter(([, p]) => p.room === room)), w.x, w.z) : null;
     const b = $("act"); if (!b) return;
-    if (near) { b.dataset.word = near === "incense" ? "进殿" : SEAL[near].act; b.innerHTML = `<kbd>E</kbd>${b.dataset.word}`; b.hidden = false; } else b.hidden = true;
+    if (near || look) { b.dataset.word = near ? SEAL[near].act : "观看"; b.innerHTML = `<kbd>E</kbd>${b.dataset.word}`; b.hidden = false; } else b.hidden = true;
+    if (indoors !== wasIndoors) { wasIndoors = indoors; refresh(); if (indoors) say(room === "main" && !journey.has("incense") ? "走到佛前的圆相里，上一炷香。" : y.hallName(), 5); }
   });
-  $("act")?.addEventListener("click", () => near && begin(near));
+  $("act")?.addEventListener("click", () => {
+    if (near) return begin(near);
+    if (!look) return;
+    const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
+    $("slipText").textContent = it.title; $("slipFrom").textContent = it.text; $("slipTake").textContent = "看过了"; $("slip").hidden = false; document.exitPointerLock?.();
+    $("slipTake").onclick = () => { $("slip").hidden = true; $("slipTake").textContent = "收下"; y.stage(null); seen.add(look); };
+  });
 
   // ---- The book ----
   let page = null;
@@ -127,7 +137,7 @@ export function createGame(y) {
   refresh();
 
   // For the tests.
-  window.__journey = () => ({ ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
+  window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
   window.__take = () => rite && rite.take && rite.take();
   return { near: () => near, rite: () => rite && rite.id };

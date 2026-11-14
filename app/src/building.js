@@ -56,6 +56,12 @@ export function buildHall(M, opts) {
     if (p.steps) parts.push(stairs(p.steps).translate(0, 0, zF));
     if (p.stepsBack) parts.push(stairs(p.stepsBack).rotateY(Math.PI).translate(0, 0, zB));
     add(merge(parts), p.platBase > 0 ? M.woodX : M.stone, { ao: null });   // an upper floor is a timber gallery, not a stone platform
+    // The platform's edge: a course of long slabs, cut from single stones, standing a hand proud of the wall below.
+    if (p.platBase <= 0 && p.platH >= 0.4) {
+      const t = 0.19, o = 0.07, y = p.platH - t / 2 + 0.004, half = p.steps ? p.steps / 2 : 0, cap = [box(PX * 2 + o * 2, t, 0.6, 0, y, zB + 0.3 - o), box(0.6, t, zF - zB + o * 2, -PX - o + 0.3, y, (zF + zB) / 2), box(0.6, t, zF - zB + o * 2, PX + o - 0.3, y, (zF + zB) / 2)];
+      for (const sx of [-1, 1]) cap.push(box(PX + o - half, t, 0.6, sx * (PX + o + half) / 2, y, zF - 0.3 + o));
+      add(merge(cap), M.monolith, { ao: null });
+    }
   }
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
     const parts = [], y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
@@ -284,9 +290,12 @@ export function buildHall(M, opts) {
   }
 
   // ---- Where you can stand (local space; the site turns these into world space) ----
-  const walk = { solids: [], decks: [], ramps: [] };
+  const walk = { solids: [], decks: [], ramps: [], posts: [] };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
-  if (p.walkAll) walk.decks.push({ ...plat, h: p.platH });
+  if (p.walkAll) {   // open floor, but its columns still stand in the way
+    walk.decks.push({ ...plat, h: p.platH });
+    for (const x of xs) for (const z of zs) if (x === xs[0] || x === X || z === Z || z === ZB) walk.posts.push({ x0: x - 0.34, x1: x + 0.34, z0: z - 0.34, z1: z + 0.34 });
+  }
   else {
     walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 });
     const stair = (w, sign) => {   // sign = +1 front, -1 back
@@ -299,6 +308,7 @@ export function buildHall(M, opts) {
     const passing = p.front === "pass" && p.back === "pass";
     if (passing) { const hw = (xs[mid + 1] - xs[mid]) / 2 - 0.45; walk.decks.push({ x0: -hw, x1: hw, z0: zB + 0.25, z1: zF - 0.25, h: p.platH }); }
     else if (p.steps) walk.decks.push({ x0: -X - 0.8, x1: X + 0.8, z0: Z + 0.45, z1: zF - 0.25, h: p.platH });   // the porch
+    if (p.dark && p.front === "lattice") walk.decks.push({ x0: -1.0, x1: 1.0, z0: Z - 0.35, z1: Z + 0.5, h: p.platH });   // and the threshold of its open door
   }
 
   return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };

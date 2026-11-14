@@ -57,6 +57,8 @@ export function createSky(renderer, scene, quality, focus) {
 
   return {
     update: (t) => { u.uT.value = t; },
+    // Indoors neither the sun nor much of the sky reaches: the lamps do the work. The next setMood restores them.
+    indoors() { sun.intensity = 0; hemi.intensity *= 0.3; },
     // Everything the hour and the season decide about light. The caller redraws the shadows afterwards.
     setMood(m) {
       SUN_DIR.set(...m.sun).normalize(); FOG.setRGB(...m.fog);
