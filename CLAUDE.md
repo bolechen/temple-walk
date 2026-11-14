@@ -41,7 +41,19 @@ node tests/e2e/run.cjs moods photo  # only the scenarios named
 npm run verify                      # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png
+tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
+python3 tools/textures.py <dir of Poly Haven jpgs>   # repack the scanned surfaces into app/t/
 ```
+
+**A real graphics card (`tools/gpu-render.sh`, `tools/gpu/job.cjs`).** Software rendering cannot say how fast the
+page is. The script syncs `app/` (without the hall's statue models) to a private Hugging Face bucket, starts a
+Hugging Face Job with a GPU (default one T4, about $0.40 an hour; a run takes a few minutes), opens the page there in
+Chromium on Vulkan, and brings back `tools/out/gpu/<run>/report.json` and PNGs. It needs the `hf` command logged in
+to an account that may run Jobs. Each measurement reports frames per second and, more usefully, `cost`: milliseconds
+to draw one frame with the card made to finish it (`window.__cost()`), which leaves out the headless browser's own
+presenting (about 10 ms a frame there). `?off=site,bamboo,reflect,bloom,…` switches parts of the scene off so their
+cost can be measured one at a time; `window.__census()` says what each part weighs in triangles. Measure before and
+after anything that adds geometry or a pass, and write the numbers into `docs/HANDOFF.md`.
 
 **Tests are part of every change.** The unit tests in `tests/unit/` build the real plan in Node (three.js with a
 stubbed DOM, `dom-stub.mjs`) and assert on it: every named place can be walked to from the first step
@@ -80,7 +92,7 @@ Conventions: 1 unit = 1 m, north/uphill is -z, the visitor arrives from +z, buil
 
 **One parametric building (`app/src/building.js`).** `buildHall(M, opts)` makes platform, stairs, columns, beams, bracket sets, infill, name board and a curved tiled roof from the `DEFAULTS` table (column lines `xs`/`zs`, `platH`, `colTop`, `overhang`, `rise`, gable depth `G`, `front/back/sides` = lattice|pass|wall|open, etc.). Halls, the gate, bell/drum towers, pavilions, the library and the summit tower are all this one function. It returns the group plus `walk`, `plat`, `frontZ`, `roofAt` that `site.js` relies on.
 
-**Materials are shaders, not textures (`app/src/materials.js`, `glsl.js`).** `procMat(key, params, body)` patches `MeshStandardMaterial` so `body` (GLSL) writes `col`, `rough_`, `bump_`, `ao_` from world position. Every mesh drawn with these needs a per-vertex `ao` attribute; `geo.mesh()` bakes it (`bakeAO`), and `geo.merge()` normalises geometries so they can be batched into one draw per material. Prefer merging static geometry per material over many meshes.
+**Materials: a pattern from the world, fine grain from a scan (`app/src/materials.js`, `glsl.js`, `textures.js`).** `procMat(key, params, body, { tex })` patches `MeshStandardMaterial` so `body` (GLSL) writes `col`, `rough_`, `bump_`, `ao_`, `emit_` and `nd_` (a world-space nudge to the normal) from world position. The large pattern is still worked out in the shader (courses of stone, rows of tile, damp at the foot of a wall); the fine grain comes from scanned surfaces in `app/t/` (Poly Haven, CC0, packed by `tools/textures.py`: `<name>_a.webp` colour, `<name>_n.jpg` normal x/y + roughness), laid on from three sides (`triA`/`triN`) and divided by the scan's own mean colour so the material's colour stays in charge. Until a scan arrives its mean colour stands in, so the first frame is whole. Every mesh drawn with these needs a per-vertex `ao` attribute; `geo.mesh()` bakes it (`bakeAO`), and `geo.merge()` normalises geometries so they can be batched into one draw per material. The paving (`ground.js`) is lit by hand because of its mirror, but takes the sun's shadows from the same shadow map.
 
 **Quality (`app/src/quality.js`).** Three tiers (render scale, pixel budget, MSAA, planar reflection scale, shadow map). Mobile UAs always start on `low`; a governor drops scale → reflection → bloom when frames average over 30 ms. `?q=` pins a tier.
 
@@ -115,7 +127,7 @@ to `__probe` rather than reaching into the page from a test.
 ## Working notes
 
 - Code comments and commit messages are in English and written as prose describing the place, not the code; the README and docs are in Chinese. Keep that split.
-- Only headless software rendering has ever been tested. Real-device frame rate is unknown; anything that adds geometry near the bamboo or the planar reflection is the first suspect for performance.
+- Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. On 2026-11-14 the main court cost 10.4 ms at 1080p on the high tier and 7.4 ms on the low tier at a phone's size: it is bound by triangles (1.5 M a frame, the whole temple drawn twice for the mirror) and draw calls (about 500), not by pixels. Roofs are two thirds of the temple's triangles.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`npm run check` guards this).
 - The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.

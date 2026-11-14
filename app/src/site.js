@@ -191,7 +191,7 @@ export function buildSite(M) {
     if (i < 2) for (const sx of [-1, 1]) walk.solids.push({ x0: sx > 0 ? L.stair / 2 - 0.3 : -L.stair / 2 - 0.9, x1: sx > 0 ? L.stair / 2 + 0.9 : -L.stair / 2 + 0.3, z0: L.zS, z1: L.zS + st.run });
     shade[i].push({ x0: -L.x, x1: L.x, z0: L.zN, z1: L.zS });
   });
-  walk.solids.push({ x0: -60, x1: 60, z0: HILL.zN, z1: HILL.zS - 0.05 });   // the hillside itself
+  walk.solids.push({ x0: -60, x1: 60, z0: HILL.zN, z1: HILL.zS - 0.05, open: true });   // the hillside itself: not to be walked on, but open air above it
   {   // the approach: lower landing, a flight west to the half-way pavilion, a turn, a flight north to the forecourt
     const A = APPROACH, yA = -A.rise, yB = -A.rise - A.rise2, pad = 0.3;
     stone.push(stairGeo(A.w, A.rise).geo.translate(0, yA, A.top),
@@ -207,7 +207,7 @@ export function buildSite(M) {
     stone.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1), box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
     walk.ramps.push({ x0: A.xC - A.w / 2 + pad, x1: A.xC + A.w / 2 - pad, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
     walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
-    walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8 });
+    walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
     const rest = { xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, rise: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
       brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
@@ -296,18 +296,90 @@ export function buildSite(M) {
     out: [0, doorZ + 0.6],
   };
 
+  // ---- The small observances of a visit (journey.js): the things they are made with, and where to stand ----
+  const flame = (x, y, z, glow) => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.016, 10, 8).scale(1, 2.1, 1), M.flame); f.position.set(x, y, z); f.userData.glow = glow; root.add(f); return f; };
+  const cushion = () => lathe([[0, 0], [0.25, 0], [0.288, 0.028], [0.292, 0.06], [0.262, 0.092], [0.1, 0.104], [0, 0.104]], 28);
+  // A tea mat on the court before the tea house, laid so that whoever sits at it looks across the wet stone to the great hall.
+  const teaSeat = [-10.3, 22.6], teaDir = [0 - teaSeat[0], mz + main.zF - teaSeat[1]], teaTurn = Math.atan2(-teaDir[0], -teaDir[1]);
+  const teaFrom = (lx, lz) => [teaSeat[0] + lx * Math.cos(teaTurn) + (lz - 0.62) * Math.sin(teaTurn), teaSeat[1] - lx * Math.sin(teaTurn) + (lz - 0.62) * Math.cos(teaTurn)];   // the mat's own frame: he sits at (0, 0.62) and looks toward -z
+  {
+    const P = { straw: [], wood: [], glaze: [], iron: [], bronze: [] }, y = 0.024;
+    const bowl = () => lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 24);
+    P.straw.push(box(2.4, y, 1.8, 0, y / 2, 0.1));                                                                   // the rush mat
+    for (const sz of [-1, 1]) P.wood.push(box(2.4, y + 0.004, 0.08, 0, y / 2 + 0.002, 0.1 + sz * 0.86));             // and its bound edges
+    P.wood.push(box(1.16, 0.04, 0.48, 0, 0.3, -0.12), box(1.2, 0.012, 0.52, 0, 0.326, -0.12), box(0.045, 0.28, 0.4, -0.5, 0.14, -0.12), box(0.045, 0.28, 0.4, 0.5, 0.14, -0.12), box(0.96, 0.03, 0.03, 0, 0.1, -0.12));   // a low table
+    P.glaze.push(bowl().translate(0, 0.332, 0.02), bowl().translate(0.36, 0.332, -0.2));                             // his bowl, and one for whoever comes
+    P.glaze.push(lathe([[0, 0], [0.03, 0], [0.041, 0.02], [0.043, 0.07], [0.03, 0.086], [0.022, 0.09], [0, 0.09]], 18).translate(-0.34, 0.332, -0.22));   // the caddy
+    P.straw.push(new THREE.CylinderGeometry(0.012, 0.03, 0.1, 12).translate(-0.17, 0.382, -0.24), box(0.012, 0.004, 0.19, -0.03, 0.335, -0.27));        // the whisk and the scoop
+    // The brazier at his left hand, and the iron kettle singing on it.
+    P.bronze.push(lathe([[0, 0], [0.11, 0], [0.165, 0.045], [0.19, 0.13], [0.172, 0.2], [0.14, 0.2], [0.14, 0.168], [0, 0.168]], 24).translate(-0.84, y, 0.02));
+    P.iron.push(lathe([[0, 0], [0.085, 0], [0.125, 0.045], [0.132, 0.1], [0.088, 0.15], [0.05, 0.158], [0.05, 0.168], [0.034, 0.172], [0.012, 0.19], [0, 0.192]], 24).translate(-0.84, y + 0.178, 0.02),
+      new THREE.TorusGeometry(0.1, 0.008, 6, 18, Math.PI).translate(-0.84, y + 0.33, 0.02), new THREE.CylinderGeometry(0.011, 0.02, 0.1, 8).rotateZ(-0.95).translate(-0.7, y + 0.29, 0.02));
+    P.straw.push(cushion().translate(0, y, 0.62), cushion().translate(0.92, y, -0.06));
+    // One branch in a bottle, at the corner of the mat.
+    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(0.98, y, 0.78));
+    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + 0.98, v[1] + y, v[2] + 0.78))), 18, 0.006, 6),
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + 0.98, v[1] + y, v[2] + 0.78))), 10, 0.004, 5));
+    const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, bronze: M.bronze };
+    for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
+    const t = teaFrom(0, -0.12), b = teaFrom(-0.84, 0.02);
+    walk.solids.push({ x0: t[0] - 0.62, x1: t[0] + 0.62, z0: t[1] - 0.4, z1: t[1] + 0.4 }, { x0: b[0] - 0.24, x1: b[0] + 0.24, z0: b[1] - 0.24, z1: b[1] + 0.24 });
+  }
+  // A stand of small lamps before the Guanyin hall. A few are always burning; one in the middle waits for the visitor.
+  const lampAt = [-6.2, T2.zS - 4.0], lampMine = [lampAt[0], T2.y + 0.5 + 0.26 + 0.088, lampAt[1] + 0.02];
+  {
+    const P = { stone: [], wood: [], bronze: [] }, y = T2.y;
+    P.stone.push(box(1.7, 0.42, 0.66, lampAt[0], y + 0.21, lampAt[1]), box(1.86, 0.08, 0.8, lampAt[0], y + 0.46, lampAt[1]));
+    const cup = () => lathe([[0, 0], [0.03, 0], [0.022, 0.012], [0.018, 0.03], [0.044, 0.055], [0.05, 0.062], [0.043, 0.062], [0.012, 0.036], [0, 0.036]], 16);
+    for (let r = 0; r < 3; r++) {   // three wooden steps, the highest at the back
+      const top = y + 0.5 + 0.13 * (r + 1), z = lampAt[1] + 0.22 - r * 0.2;
+      P.wood.push(box(1.6, 0.13 * (r + 1), 0.2, lampAt[0], y + 0.5 + 0.065 * (r + 1), z));
+      for (let i = 0; i < 5; i++) {
+        const x = lampAt[0] + (i - 2) * 0.3; P.bronze.push(cup().translate(x, top, z));
+        if ([[0, 1], [0, 4], [1, 0], [2, 3]].some(([a, c]) => a === r && c === i)) flame(x, top + 0.088, z, 0.8);
+      }
+    }
+    root.add(mesh(merge(P.stone), M.stone), mesh(merge(P.wood), M.woodX), mesh(merge(P.bronze), M.bronze));
+    walk.solids.push({ x0: lampAt[0] - 1.05, x1: lampAt[0] + 1.05, z0: lampAt[1] - 0.5, z1: lampAt[1] + 0.5 });
+    shade[2].push({ x0: lampAt[0] - 0.85, x1: lampAt[0] + 0.85, z0: lampAt[1] - 0.33, z1: lampAt[1] + 0.33 });
+  }
+  // On the library's porch, a narrow desk with a holder of bamboo slips and an open book.
+  const deskAt = [2.9, T1.zS - 15 + 4.86];
+  {
+    const y = T1.y + 1.26, [x, z] = deskAt, slips = [];
+    for (let i = 0; i < 11; i++) { const a = (i / 11) * 6.283, t = 0.12 + ((i * 7) % 5) * 0.03; slips.push(box(0.012, 0.25, 0.004, 0, 0.125, 0).rotateZ(Math.sin(a) * t).rotateX(Math.cos(a) * t).translate(x + 0.24 + Math.sin(a) * 0.022, y + 0.72, z + Math.cos(a) * 0.022)); }
+    root.add(mesh(merge([box(0.9, 0.04, 0.36, x, y + 0.66, z), box(0.94, 0.012, 0.4, x, y + 0.686, z), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.04, 0.64, 0.04, x + a * 0.4, y + 0.32, z + c * 0.14)), box(0.8, 0.03, 0.03, x, y + 0.2, z)]), M.woodX),
+      mesh(merge([new THREE.CylinderGeometry(0.062, 0.058, 0.17, 18, 1, true).translate(x + 0.24, y + 0.777, z), new THREE.CircleGeometry(0.058, 18).rotateX(Math.PI / 2).translate(x + 0.24, y + 0.693, z), ...slips]), M.hide),
+      mesh(merge([box(0.17, 0.012, 0.25, -0.088, 0, 0).rotateZ(-0.1).translate(x - 0.14, y + 0.708, z + 0.02), box(0.17, 0.012, 0.25, 0.088, 0, 0).rotateZ(0.1).translate(x - 0.14, y + 0.708, z + 0.02)]), M.marble));
+  }
+  // A straw cushion at the top of the summit pavilion's steps, facing back down the mountain.
+  const porchY = TOP.y + 0.9, porchZ = topZ + 7.5 + 0.8;
+  root.add(mesh(cushion().translate(0, porchY, porchZ), M.straw));
+  // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
+  // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
+  const places = {
+    bell:    { at: [15.5, 35.7], r: 1.9, face: 0 },
+    incense: { at: [hall.foot.x, hall.foot.z + 0.9], r: 1.9, face: Math.PI },
+    tea:     { at: teaSeat, r: 1.5, face: Math.atan2(teaDir[0], teaDir[1]), sit: true, steam: [...teaFrom(-0.84, 0.02), 0.42] },
+    sutra:   { at: [deskAt[0], deskAt[1] + 0.56], r: 1.3, face: Math.PI },
+    well:    { at: [13.2, T2.zS + 3.0], r: 1.8, face: Math.PI, pool: [13.2, T1.y + 0.2, T2.zS + 0.62] },
+    lamp:    { at: [lampAt[0], lampAt[1] + 1.4], r: 1.5, face: Math.PI, flame: lampMine },
+    sit:     { at: [0, porchZ], r: 1.2, face: 0, sit: true },
+  };
+
   // ---- Named views: one per thing worth looking at. The screenshot tool renders each of them. ----
   const A = APPROACH;
   const views = {
     arrive: [A.xC, A.zC1 - 1.2, 0, 0.3], pool: [A.xC - 0.5, A.zA1 - 1.2, 0.9, -0.12], second: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [1.5, A.zMid + 0.6, 0.9, 0.12], stair: [0, A.zA0 - 0.6, 0, 0.3],
-    forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [15, 61, -0.6, 0.22], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
+    forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [9.5, 61.5, -0.4, 0.2], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
     court: [0, 33, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
     teahouse: [-5, 16, -1.35, 0.1], chan: [5, 16, 1.35, 0.1], behind: [19, -22, 0.4, 0.14], terrace: [0, T1.zS + 5.6, 0, 0.25],
     library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 5.5, -1.0, 0.12], dahui: [4, T2.zS - 3.6, 1.0, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
     tea: [0, HILL.zS - 12, 0.6, 0.12], summit: [0, TOP.zS + 9, 0, 0.42], lookback: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
+    teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.6, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
   };
 
-  return { root, walk, shade, paving, hall, views, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, views, places, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
@@ -374,6 +446,10 @@ export function createWalker(site) {
   function level(x, z) { if (z > SITE.fore + 0.3) return terrainLevel(x, z); for (const L of LEVELS) if (Math.abs(x) < L.x && z < L.zS && z > L.zN) return L.y; return 0; }
   return {
     heightAt(x, z) { const c = carved(x, z); return c === null ? level(x, z) : c; },
+    // The surface of whatever is there, walkable or not: floors and stairs, the courts, and the open hillside.
+    landAt(x, z) { const c = carved(x, z); return c === null ? Math.max(level(x, z), terrain(x, z)) : c; },
+    // Is something solid standing here: a building, a wall, a tree? (Not the edges of the walk, which are only air.) The eye uses this.
+    wall(x, z) { if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; },
     onGround: (x, z) => carved(x, z) === null,
     blocked(x, z) {
       if (carved(x, z) !== null) return false;

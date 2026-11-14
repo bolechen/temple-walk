@@ -56,6 +56,20 @@ test("from the first step, every part of the temple can be walked to", () => {
   };
   for (const [name, [x, z]] of Object.entries(places)) assert.ok(can(x, z), `cannot walk to ${name} (${x}, ${z})`);
 });
+test("every observance of the journey has a place that can be walked to, and they do not crowd each other", async () => {
+  const { SEALS } = await import("../../app/src/journey.js"), { placeAt } = await import("../../app/src/journey.js");
+  const can = reach([site.start[0], site.start[1]]);
+  assert.deepEqual(Object.keys(site.places).sort(), SEALS.map((s) => s.id).sort());
+  for (const [id, p] of Object.entries(site.places)) {
+    assert.ok(p.at.every(Number.isFinite) && Number.isFinite(p.face) && p.r > 0.8, id);
+    assert.ok(!walker.blocked(p.at[0], p.at[1]), `the place for "${id}" is inside something at (${p.at})`);
+    assert.ok(can(p.at[0], p.at[1], 0.3), `cannot walk to the place for "${id}" at (${p.at})`);
+    assert.equal(placeAt(site.places, p.at[0], p.at[1]), id);
+    for (const [other, q] of Object.entries(site.places)) if (other !== id) assert.ok(Math.hypot(p.at[0] - q.at[0], p.at[1] - q.at[1]) > p.r + q.r, `${id} and ${other} overlap`);
+  }
+  assert.ok(site.places.lamp.flame.every(Number.isFinite) && site.places.tea.steam.every(Number.isFinite) && site.places.well.pool.every(Number.isFinite));
+  assert.ok(walker.heightAt(...site.places.sit.at) > 20.5, "the last seal is earned on the summit pavilion's porch");
+});
 test("walls, halls and the hillside keep the visitor out", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2] = LEVELS;
   assert.ok(!can(0, -14.6, 0.3), "inside the main hall");

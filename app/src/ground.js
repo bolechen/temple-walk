@@ -2,6 +2,7 @@
 import * as THREE from "../v/build/three.module.js";
 import { NOISE, fogMix, U } from "./glsl.js";
 import { FOG, SUN_DIR } from "./sky.js";
+import { declare, bind } from "./textures.js";
 
 const MAX_SHADE = 40;
 
@@ -13,13 +14,34 @@ export function createGround(scene, shade, censer, paving) {
   });
   // One paving shader, used by the entrance court (with the mirror) and by the terraces (without).
   const blank = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1); blank.needsUpdate = true;
+  // The paving is lit by hand (it has a mirror to mix in), but it takes the sun's shadows from the same map as everything
+  // else: at dawn and dusk the long shadows of the halls lie across the court.
   const pave = (list, mirror, censerAt) => new THREE.ShaderMaterial({
-    uniforms: {
+    lights: true,
+    uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       uShade: { value: boxes(list) }, uCenser: { value: censerAt }, uFogD: U.uFogD, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-    },
-    vertexShader: "varying vec3 vWP; void main(){ vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
-    fragmentShader: NOISE + /* glsl */`
+    }), ["stone", "snow"]),
+    vertexShader: /* glsl */`
+      #include <common>
+      #include <shadowmap_pars_vertex>
+      varying vec3 vWP;
+      void main(){
+        #include <beginnormal_vertex>
+        #include <defaultnormal_vertex>
+        #include <begin_vertex>
+        #include <project_vertex>
+        #include <worldpos_vertex>
+        #include <shadowmap_vertex>
+        vWP=(modelMatrix*vec4(position,1.)).xyz;
+      }`,
+    fragmentShader: /* glsl */`
+      #include <common>
+      #include <packing>
+      #include <lights_pars_begin>
+      #include <shadowmap_pars_fragment>
+      #include <shadowmask_pars_fragment>
+      ` + NOISE + declare(["stone", "snow"]) + /* glsl */`
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet;
       uniform vec4 uShade[${MAX_SHADE}]; uniform vec2 uCenser;
       void main(){
@@ -33,7 +55,9 @@ export function createGround(scene, shade, censer, paving) {
         if(kerb){ float kz=fract(p.y/1.6); edge=min(min(abs(p.x)-1.7,2.02-abs(p.x)),min(kz,1.-kz)*1.6); id=vec2(floor(p.y/1.6),500.+sign(p.x)); }
         edge+=(n2(p*9.)-.5)*.02; float joint=1.-smoothstep(.014,.04,edge);
         float tone=h21(id);
-        vec3 alb=mix(vec3(.17,.175,.17),vec3(.34,.345,.33),tone)*(.6+.55*fbm2(p*2.6))*(.75+.5*fbm2(p*11.));
+        // Each slab is cut from a different part of the scanned stone.
+        vec2 suv=p*.75+vec2(h21(id+3.),h21(id+7.))*5.; vec3 sA=texture2D(tStoneA,suv).rgb/mStone, sN=texture2D(tStoneN,suv).xyz;
+        vec3 alb=mix(vec3(.17,.175,.17),vec3(.34,.345,.33),tone)*mix(vec3(1.),sA,.9)*(.78+.4*fbm2(p*.7));
         if(path) alb*=vec3(1.16,1.13,1.06); if(kerb) alb*=.78;
         float mossM=smoothstep(.42,.7,fbm2(p*.45+9.));
         alb=mix(alb,vec3(.12,.18,.07),joint*(.35+.65*mossM)); alb=mix(alb,vec3(.03),joint*.3*(1.-mossM));
@@ -47,12 +71,14 @@ export function createGround(scene, shade, censer, paving) {
         for(int i=0;i<${MAX_SHADE};i++){ vec4 b=uShade[i]; if(b.z<0.) break; vec2 d=abs(p-b.xy)-b.zw; dB=min(dB,length(max(d,0.))+min(max(d.x,d.y),0.)); }
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
         // Snow lies where no one has walked: thin on the path, deep in the corners.
-        float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.3:0.))*smoothstep(-.2,.7,dB); alb=mix(alb,vec3(.8,.84,.9),sn); puddle*=1.-sn; damp*=1.-sn;
+        float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.3:0.))*smoothstep(-.2,.7,dB); puddle*=1.-sn; damp*=1.-sn;
+        vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*(.88+.24*wN.z),sn);
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
-        vec2 g=((vec2(n2(p*16.),n2(p*16.+5.))-.5)*.09*(1.-puddle)*nf+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf));
+        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
         float ndv=max(dot(N,V),0.), fres=.035+.965*pow(1.-ndv,5.);
-        vec3 lit=alb*(uAmb*ao+uSunC*max(dot(N,uSun),0.)*ao);
+        float sun=getShadowMask();
+        vec3 lit=alb*(uAmb*ao*mix(.86,1.,sun)+uSunC*1.5*max(dot(N,uSun),0.)*ao*sun);
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.
         vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
         vec3 refl=uReflOn>.5?texture2D(tRefl,ruv,mix(2.6,.0,puddle)).rgb:uFog*mix(.9,1.06,ndv);
@@ -66,10 +92,11 @@ export function createGround(scene, shade, censer, paving) {
   });
   const mat = pave(shade[0], true, new THREE.Vector2(censer.x, censer.z));
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(460, 300).rotateX(-Math.PI / 2).translate(0, 0, -86), mat);   // ends at the head of the approach stair
-  scene.add(ground);
+  ground.receiveShadow = true; scene.add(ground);
   // The same wet paving on the terraces above: no mirror pass up there, only the sky's sheen.
   for (const p of paving) {
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(p.x * 2, p.zS - p.zN).rotateX(-Math.PI / 2).translate(0, p.y, (p.zS + p.zN) / 2), pave(shade[p.level], false, new THREE.Vector2(0, 999))));
+    const terrace = new THREE.Mesh(new THREE.PlaneGeometry(p.x * 2, p.zS - p.zN).rotateX(-Math.PI / 2).translate(0, p.y, (p.zS + p.zN) / 2), pave(shade[p.level], false, new THREE.Vector2(0, 999)));
+    terrace.receiveShadow = true; scene.add(terrace);
   }
 
   const rot = new THREE.Matrix4(), look = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);

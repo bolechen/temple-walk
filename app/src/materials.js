@@ -1,57 +1,69 @@
-// Lit materials whose colour, roughness and relief are computed in the shader, not sampled from files.
+// Lit materials. Each has a colour and a pattern of its own, worked out in the shader from where the surface is in
+// the world (courses of stone, rows of tile, damp at the foot of a wall), and most take their fine grain from a
+// scanned surface (textures.js): the scan is divided by its own mean colour, so it supplies detail and not hue.
 import * as THREE from "../v/build/three.module.js";
 import { NOISE, WOOD, BUMP, U } from "./glsl.js";
+import { TRI, declare, bind } from "./textures.js";
 
 // `body` may write: vec3 col, float rough_, float bump_ (metres), float ao_.
 // Every geometry drawn with these needs a float `ao` attribute (see geo.js): occlusion is baked per vertex
 // by whatever built the geometry, because overcast light casts no shadow to do that job.
-// It may also write vec3 emit_: light of its own. Snow settles on whatever faces the sky unless `snow` is false.
-export function procMat(key, params, body, { snow = true } = {}) {
+// It may also write vec3 emit_: light of its own; and vec3 nd_: a nudge to the surface normal in world space,
+// which is how a scanned surface (textures.js) gives its relief. `tex` names the scans the body samples.
+// Snow settles on whatever faces the sky unless `snow` is false.
+export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
+  if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp;
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; bind(sh.uniforms, tex);
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP)
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : ""))
       .replace("#include <color_fragment>", `#include <color_fragment>
-        float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.);
+        float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
-        ${snow ? "float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25); col=mix(col,vec3(.82,.86,.92),sn_); rough_=mix(rough_,.9,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8),sn_);" : ""}
+        ${snow ? `float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25);
+          if(sn_>.001){ vec3 sr=texture2D(tSnowN,vWP.xz*.7).xyz; col=mix(col,vec3(.82,.86,.92)*(.9+.2*sr.z),sn_); rough_=mix(rough_,.82,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8),sn_); nd_=mix(nd_,vec3(sr.x*2.-1.,0.,sr.y*2.-1.)*.55,sn_); }` : ""}
         diffuseColor.rgb=col*ao_;`)
       .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance+=emit_;")
       .replace("#include <roughnessmap_fragment>", "float roughnessFactor=clamp(rough_,.04,1.);")
-      .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n normal=bumpN(-vViewPosition,normal,bump_);");
+      .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n normal=normalize(normal+(viewMatrix*vec4(nd_,0.)).xyz); normal=bumpN(-vViewPosition,normal,bump_);");
   };
   m.customProgramCacheKey = () => key;
   return m;
 }
 
 export function createMaterials() {
-  const wood = (key, grain) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
-    col=woodCol(vWP,vec3(${grain}));
+  // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
+  const wood = (key, grain, turn) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
+    vec3 q=vWP.${turn}*vec3(.95,.5,.95), w=triW(vWN.${turn});
+    vec3 A=triA(tWoodA,q,w)/mWood; vec4 Nr=triN(tWoodN,q,w);
+    col=vec3(.125,.064,.034)*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // each timber its own tone
+    float weather=smoothstep(.42,.72,fbm3(vWP*.6+3.)); col=mix(col,vec3(.15,.132,.11)*A,weather*.4);   // bleached silver where the weather reaches
     float damp=smoothstep(2.2,.9,vWP.y+fbm3(vWP*.8)*.8);          // feet of columns stay damp and dark
-    col*=mix(1.,.62,damp); rough_=mix(.86,.5,damp);
-    bump_=fbm3(vWP*vec3(${grain})*5.)*.004;`);
+    col*=mix(1.,.62,damp); rough_=mix(Nr.w*.92,.5,damp);
+    nd_=Nr.xyz.${turn}*1.5;`, { tex: ["wood"] });
 
   const plasterCache = new Map();
   const plaster = (base) => {
     const k = base.toFixed(2);
     if (!plasterCache.has(k)) plasterCache.set(k, procMat("plaster" + k, { roughness: 0.9, envMapIntensity: 0.25 }, `
-      float t=vWP.x+vWP.z;
-      col=vec3(.74,.735,.7)*(.8+.28*fbm3(vWP*.9));
+      float t=vWP.x+vWP.z; vec3 q=vWP/2.7, w=triW(vWN);
+      vec3 A=triA(tPlasterA,q,w)/mPlaster; vec4 Nr=triN(tPlasterN,q,w);
+      col=vec3(.73,.725,.69)*mix(vec3(1.),A,.8)*(.9+.14*fbm3(vWP*.5));    // lime wash, with the stains of many rains
       float drip=smoothstep(.45,.8,n2(vec2(t*5.,vWP.y*.35)))*smoothstep(${k}+2.2,${k}+3.4,vWP.y+fbm2(vec2(t,2.))*1.5);
-      col=mix(col,vec3(.36,.37,.34),drip*.55);                      // rain streaks run down from the cap
+      col=mix(col,vec3(.36,.37,.34)*A,drip*.5);                     // rain streaks run down from the cap
       float damp=smoothstep(${k}+1.1,${k},vWP.y-fbm2(vec2(t*.9,5.))*.9);
-      col=mix(col,vec3(.2,.235,.17),damp*.75);                      // rising damp and moss at the foot
-      rough_=mix(.92,.6,damp); bump_=fbm3(vWP*6.)*.003;`));
+      col=mix(col,vec3(.2,.235,.17)*A,damp*.75);                    // rising damp and moss at the foot
+      rough_=mix(Nr.w,.6,damp); nd_=Nr.xyz*.8;`, { tex: ["plaster"] }));
     return plasterCache.get(k);
   };
 
   return {
-    woodV: wood("woodV", "9.,1.1,9."), woodX: wood("woodX", "1.1,9.,9."), woodZ: wood("woodZ", "9.,9.,1.1"),
+    woodV: wood("woodV", "9.,1.1,9.", "xyz"), woodX: wood("woodX", "1.1,9.,9.", "yxz"), woodZ: wood("woodZ", "9.,9.,1.1", "xzy"),
     plaster,
 
     // vUv2 = (metres along the eave, metres up the slope). Rows of half-round cover tiles over pan tiles.
@@ -68,15 +80,25 @@ export function createMaterials() {
       col*=mix(1.,mix(.5,1.,cover*.6+.4),detail);                   // gutters sit in shade
       rough_=mix(.3,.55,tone)-.1*cover*detail;`),
 
+    // Dressed stone. Faces that look up are slabs, each cut from a different part of the scan; faces that look out
+    // are coursed masonry.
     stone: procMat("stone", { roughness: 0.8, envMapIntensity: 0.5 }, `
-      bool topF=vWN.y>.5; vec2 q=topF?vWP.xz/vec2(1.1,.7):vec2(vWP.x+vWP.z,vWP.y*4.45)/vec2(.95,1.);
-      q.x+=floor(q.y)*.37; vec2 f=fract(q), id=floor(q);
-      float edge=min(min(f.x,1.-f.x)*1.2,min(f.y,1.-f.y)*.5), joint=1.-smoothstep(.01,.03,edge);
-      col=mix(vec3(.17,.175,.165),vec3(.3,.3,.285),h21(id))*(.6+.6*fbm3(vWP*2.5));
-      float moss=smoothstep(.45,.7,fbm3(vWP*.9+2.))*(topF?.25:smoothstep(1.,.1,vWP.y));
-      col=mix(col,vec3(.13,.18,.08),max(moss*.8,joint*.5)); col=mix(col,vec3(.04),joint*.3);
-      float wet=topF?.75:smoothstep(.5,0.,vWP.y); col*=mix(1.,.6,wet); rough_=mix(.85,.28,wet*(1.-joint));
-      bump_=fbm3(vWP*9.)*.004-joint*.006;`),
+      float moss=smoothstep(.45,.7,fbm3(vWP*.9+2.)), wet;
+      if(vWN.y>.5){
+        vec2 q=vWP.xz/vec2(1.1,.7); q.x+=floor(q.y)*.37; vec2 f=fract(q), id=floor(q);
+        float edge=min(min(f.x,1.-f.x)*1.1,min(f.y,1.-f.y)*.7)+(n2(vWP.xz*9.)-.5)*.012, joint=1.-smoothstep(.006,.022,edge);
+        vec2 uv=vWP.xz*.75+vec2(h21(id),h21(id+7.))*5.; vec3 A=texture2D(tStoneA,uv).rgb/mStone, nr=texture2D(tStoneN,uv).xyz;
+        col=mix(vec3(.2,.202,.19),vec3(.33,.33,.31),h21(id+3.))*mix(vec3(1.),A,.9);
+        col=mix(col,vec3(.13,.18,.08),max(moss*.2,joint*.5)); col=mix(col,vec3(.035),joint*.35);
+        wet=.75; rough_=mix(nr.z,.28,wet*(1.-joint)); nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*(1.-joint)*1.1; bump_=-joint*.006;
+      } else {
+        vec3 w=triW(vWN); w.y=0.; w/=w.x+w.z+1e-4; vec3 q=vWP/1.6;
+        vec3 A=triA(tBlocksA,q,w)/mBlocks; vec4 Nr=triN(tBlocksN,q,w);
+        col=vec3(.25,.25,.235)*mix(vec3(1.),A,.95);
+        col=mix(col,vec3(.13,.18,.08),moss*smoothstep(1.,.1,vWP.y-floor(vWP.y/2.6)*2.6)*.7);       // green toward the foot of each rise
+        wet=smoothstep(.5,0.,vWP.y); rough_=mix(Nr.w,.35,wet); nd_=Nr.xyz*1.3;
+      }
+      col*=mix(1.,.6,wet);`, { tex: ["stone", "blocks"] }),
 
     // vUv2 = (leaf index + position across the leaf, height mapped to 0..3.02); transoms are offset by 100 and mapped to 0...7.
     lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3 }, `
@@ -106,10 +128,10 @@ export function createMaterials() {
     gable: procMat("gable", { roughness: 0.9, envMapIntensity: 0.2, side: THREE.DoubleSide }, "col=vec3(.62,.615,.58)*(.75+.3*fbm3(vWP*.9)); ao_=.75;"),
     // The floor of the grove: dark leaf litter, moss, a scatter of fallen bamboo leaves.
     earth: procMat("earth", { roughness: 0.95, envMapIntensity: 0.15 }, `
-      float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*2.3+4.);
-      col=mix(vec3(.05,.07,.035),vec3(.11,.13,.055),a); col=mix(col,vec3(.16,.13,.07),smoothstep(.55,.75,b)*.6);
-      float leaf=step(.86,n2(vWP.xz*22.))*step(.5,n2(vWP.xz*5.+2.)); col=mix(col,vec3(.3,.27,.13),leaf*.5);
-      bump_=b*.02;`),
+      float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*.09+4.);
+      vec2 uv=vWP.xz/1.9; vec3 A=mix(texture2D(tLeavesA,uv).rgb,texture2D(tLeavesA,uv.yx*.37+.3).rgb,.35)/mLeaves, nr=texture2D(tLeavesN,uv).xyz;   // two scales, so the litter does not repeat
+      col=mix(vec3(.05,.066,.03),vec3(.12,.125,.055),a)*A*1.15; col=mix(col,col*vec3(1.25,1.05,.7),smoothstep(.45,.7,b));
+      rough_=nr.z; nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*1.6;`, { tex: ["leaves"] }),
     // Rough rubble laid dry: the lining of the well.
     rubble: procMat("rubble", { roughness: 0.92, envMapIntensity: 0.25 }, `
       vec3 q=vWP*2.3; vec3 id=floor(q+fbm3(vWP*1.1)*1.4); float t=h31(id);
@@ -126,8 +148,9 @@ export function createMaterials() {
       col=mix(vec3(.018,.05,.03),vec3(.06,.13,.06),a); col=mix(col,vec3(.12,.2,.08),smoothstep(.55,.85,b)*smoothstep(-.2,.7,vWN.y)*.7);
       col*=.6+.7*b; bump_=b*.08; ao_=mix(.35,1.,smoothstep(-.6,.6,vWN.y));`),
     bark: procMat("bark", { roughness: 0.95, envMapIntensity: 0.15 }, `
-      float r=fbm3(vWP*vec3(7.,.9,7.)); col=mix(vec3(.08,.05,.035),vec3(.2,.13,.09),r); col=mix(col,vec3(.12,.15,.08),smoothstep(.5,.75,fbm3(vWP*1.5))*.5);
-      bump_=r*.03;`),
+      vec3 q=vWP*vec3(1.4,.85,1.4), w=triW(vWN); vec3 A=triA(tBarkA,q,w)/mBark; vec4 Nr=triN(tBarkN,q,w);
+      col=vec3(.13,.082,.055)*A; col=mix(col,vec3(.12,.15,.08)*A,smoothstep(.5,.75,fbm3(vWP*1.5))*.5);   // moss on the weather side
+      rough_=Nr.w; nd_=Nr.xyz*1.8;`, { tex: ["bark"] }),
     // Cast iron left to weather for four hundred years.
     iron: procMat("iron", { roughness: 0.75, metalness: 0.55, envMapIntensity: 0.5 }, `
       float r=smoothstep(.4,.75,fbm3(vWP*6.)); col=mix(vec3(.045,.045,.05),vec3(.2,.1,.05),r*.75);
@@ -147,6 +170,10 @@ export function createMaterials() {
     hide: procMat("hide", { roughness: 0.75, envMapIntensity: 0.3 }, `
       float w=fbm3(vWP*2.5); col=mix(vec3(.5,.42,.3),vec3(.72,.65,.5),w); col*=.85+.3*n3(vWP*40.);
       col=mix(col,vec3(.3,.22,.14),smoothstep(.6,.85,fbm3(vWP*5.+9.))*.5); bump_=n3(vWP*60.)*.0015;`),
+    // Woven rush and straw: mats and cushions.
+    straw: procMat("straw", { roughness: 0.8, envMapIntensity: 0.25 }, `
+      vec3 q=vWP*1.5, w=triW(vWN); vec3 A=triA(tWeaveA,q,w)/mWeave; vec4 Nr=triN(tWeaveN,q,w);
+      col=vec3(.3,.25,.15)*A*A*(.8+.4*fbm3(vWP*1.7)); rough_=mix(.75,.98,Nr.w); nd_=Nr.xyz*2.2;`, { tex: ["weave"] }),
     dark: new THREE.MeshBasicMaterial({ color: 0x030302, side: THREE.BackSide, fog: false }),
     flame: new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }),
   };

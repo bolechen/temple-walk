@@ -18,6 +18,7 @@ import { createDrift } from "./src/drift.js";
 import { createMonk } from "./src/monk.js";
 import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
+import { loadTextures, textureState } from "./src/textures.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -34,21 +35,30 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.autoUpdate = false;
 renderer.info.autoReset = false;   // so one frame's count covers every pass
 
+loadTextures(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(FOG, FOG_DENSITY);
 const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
 
+// Each part of the scene is named as it is made, so that it can be counted, and switched off to see what it costs
+// (?off=bamboo,trees,... ; also reflect, bloom and shadow for the passes). See window.__census().
+const OFF = new Set((Q.get("off") || "").split(",").filter(Boolean));
+const part = (name, make) => { const n = scene.children.length, made = make(); for (const o of scene.children.slice(n)) { o.userData.part = name; if (OFF.has(name)) o.visible = false; } return made; };
+if (OFF.has("reflect")) quality.planar = 0;
+if (OFF.has("bloom")) quality.bloom = false;
+if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
+
 const M = createMaterials();
 const site = buildSite(M);
-scene.add(site.root);
+part("site", () => scene.add(site.root));
 const walker = createWalker(site);
-const sky = createSky(renderer, scene, quality, site.sunFocus);
-const ground = createGround(scene, site.shade, site.censer, site.paving);
-const backdrop = createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain);
+const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
+const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
+const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea.
 const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
 const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
-const bamboo = createBamboo(scene, [
+const bamboo = part("bamboo", () => createBamboo(scene, [
   { x0: -28, x1: 44, z0: SITE.fore - 2, z1: A.zC1 + 12, n: 1150 },
   { x0: -34, x1: -13, z0: SITE.zS + 1, z1: SITE.fore, n: 130 }, { x0: 13, x1: 34, z0: SITE.zS + 1, z1: SITE.fore, n: 130 },
   { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 },
@@ -56,16 +66,16 @@ const bamboo = createBamboo(scene, [
   if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || near(x, z, 3.6, 9.6, A.zA0 - 5.8, A.zA0, 0.5) || near(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || near(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
-});
-const props = createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2);
+}));
+const props = part("props", () => createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2));
 const post = createPost(renderer, scene, camera, quality);
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
-const trees = createTrees(scene, M, [
+const trees = part("trees", () => createTrees(scene, M, [
   [11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
   [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-9, TOP.y, TOP.zS - 4.5, "maple", 6.5], [9.5, TOP.y, TOP.zS - 4.5, "ginkgo", 8],
-]);
-const drift = createDrift(scene, quality.name === "low" ? 420 : 800);
+]));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800));
 const glows = [];
 {
   const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -75,7 +85,7 @@ const glows = [];
   site.root.traverse((o) => {
     if (!o.isMesh || o.material !== M.flame) return;
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, fog: false }));
-    sp.position.copy(o.getWorldPosition(p)); sp.scale.setScalar(2.6); glows.push(sp); scene.add(sp);
+    sp.position.copy(o.getWorldPosition(p)); sp.scale.setScalar(o.userData.glow || 2.6); glows.push(sp); scene.add(sp);
   });
 }
 
@@ -102,7 +112,7 @@ function setMood(season, time) {
 setMood(state.season, state.time);
 
 // ---- The novice ------------------------------------------------------------------
-const monk = createMonk(); scene.add(monk.group);
+const monk = createMonk(); part("monk", () => scene.add(monk.group));
 let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
 const photo = { on: false, aspect: "tall", lens: 46, dist: 4.6, monk: true, pray: false, focus: null };   // focus: metres, or null to follow the novice
 const APERTURE = { 66: 0.006, 46: 0.012, 26: 0.022 };
@@ -247,19 +257,22 @@ function frame(now) {
   monk.group.position.set(pos.x, footY, pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
   monk.update(dt, still ? 0 : speedNow, photo.on && photo.pray, t);
-  // The eye: his own, or one that follows a few steps behind and keeps out of walls.
+  // The eye: his own, or one that follows a few steps behind. It aims just over his head, so that he stands in the
+  // lower part of the picture and the place fills the rest; it comes in close rather than pass through anything solid,
+  // and it never sinks into the ground or the hillside.
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
   if (view === "first" && !photo.on) camera.position.set(pos.x, footY + EYE + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
   else {
-    const ty = footY + (photo.on ? 0.72 : 1.0), reach = photo.on ? photo.dist : 4.4; let d = 0.5;
+    const ty = footY + (photo.on ? 0.72 : 1.28), reach = photo.on ? photo.dist : 4.4; let d = 0.5;
     for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
       const cx = pos.x - lx * s2, cz = pos.z - lz * s2, cy = ty - ly * s2;
-      if (walker.blocked(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
+      if (walker.wall(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
       d = s2;
     }
     camDist = d < camDist ? d : camDist + (d - camDist) * Math.min(1, dt * 4);
     const cx = pos.x - lx * camDist, cz = pos.z - lz * camDist;
-    camera.position.set(cx, Math.max(ty - ly * camDist, Math.min(walker.heightAt(cx, cz), footY + 1.5) + 0.3), cz);
+    camera.position.set(cx, Math.max(ty - ly * camDist, walker.landAt(cx, cz) + 0.35), cz);
+    if (camDist < 0.95 && !photo.on) monk.group.visible = false;   // backed against a wall, the eye is as good as his own
   }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");
   camera.updateMatrixWorld();
@@ -277,7 +290,8 @@ function frame(now) {
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   if (quality.planar > 0) ground.render(renderer, camera);
   post.render(t);
-  if (++frames === 3) document.body.dataset.ready = "1";
+  // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; document.body.dataset.ready = "1"; } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -348,7 +362,29 @@ window.addEventListener("yard-resume", () => {
 });
 // For the test tools.
 window.__yard = () => ({ tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
-window.__views = Object.keys(site.views); window.__merged = merged;
+window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
+// What a frame costs to draw, in milliseconds: `n` frames drawn back to back, each waited for until the graphics card
+// has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
+window.__cost = (n = 40) => {
+  const gl = renderer.getContext(), px = new Uint8Array(4);
+  const one = () => { renderer.info.reset(); if (quality.planar > 0) ground.render(renderer, camera); post.render(0); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+  for (let i = 0; i < 6; i++) one();
+  const t0 = performance.now(); for (let i = 0; i < n; i++) one();
+  return +((performance.now() - t0) / n).toFixed(2);
+};
+// What each part of the scene weighs: meshes, and triangles as drawn (instances counted).
+window.__census = () => {
+  const out = {};
+  for (const top of scene.children) {
+    const k = top.userData.part || top.type, row = (out[k] ||= { meshes: 0, tris: 0, hidden: !top.visible });
+    top.traverse((o) => {
+      if (!(o.isMesh || o.isPoints || o.isSprite) || !o.geometry) return; row.meshes++;
+      const g = o.geometry, n = g.index ? g.index.count : g.attributes.position ? g.attributes.position.count : 0;
+      row.tris += Math.round((o.isPoints ? 0 : n / 3) * (o.isInstancedMesh ? o.count : 1));
+    });
+  }
+  return out;
+};
 // What the picture looks like right now, measured: draws one frame and averages it. Also reports the state the tests assert on.
 window.__probe = () => {
   const t = still ? 0 : performance.now() / 1000;

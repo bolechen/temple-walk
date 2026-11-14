@@ -13,7 +13,9 @@ const scenarios = {
     const t = await open(b, base, "q=low");
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
+    await t.frames(10);
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
+    expect(p.camDist > 3.2, `the first sight of the place should not be the back of his head: the eye is ${p.camDist} m behind him`);
     expect(p.lum > 12 && p.lum < 245, "the picture is blank: mean " + p.lum.toFixed(1));
     for (const id of ["viewBtn", "moodBtn", "photoBtn", "hint", "moodTag"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
     for (const id of ["moodPanel", "print", "photoBar", "frame"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
