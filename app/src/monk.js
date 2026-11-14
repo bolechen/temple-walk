@@ -29,12 +29,13 @@ export function createMonk() {
   const add = (parent, geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; parent.add(o); return o; };
 
   // ---- Robe: narrow at the shoulders, falling in soft folds to an uneven hem ----
-  const robe = new THREE.LatheGeometry(V2([[0, 0.2], [0.235, 0.2], [0.246, 0.215], [0.225, 0.32], [0.2, 0.44], [0.182, 0.54], [0.178, 0.62], [0.172, 0.7], [0.15, 0.76], [0.1, 0.795], [0.062, 0.81], [0, 0.81]]), 64);
+  const robe = new THREE.LatheGeometry(V2([[0, 0.2], [0.235, 0.2], [0.246, 0.215], [0.225, 0.32], [0.2, 0.44], [0.182, 0.54], [0.18, 0.62], [0.18, 0.7], [0.166, 0.75], [0.128, 0.786], [0.094, 0.8], [0.062, 0.81], [0, 0.81]]), 96);
   {
     const p = robe.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(x, z), low = 1 - smooth(0.3, 0.62, y);
-      const k = 1 + low * (0.05 * Math.sin(a * 7 + 0.6) + 0.022 * Math.sin(a * 13 + 2)) + 0.012 * Math.sin(a * 5 + y * 9) * smooth(0.5, 0.7, y);
+      const seam = Math.exp(-Math.pow((Math.abs(a) - Math.PI) * 9, 2)) * 0.012 * smooth(0.78, 0.5, y);   // the seam down the middle of his back
+      const k = 1 + low * (0.06 * Math.sin(a * 7 + 0.6) + 0.028 * Math.sin(a * 13 + 2)) + 0.014 * Math.sin(a * 5 + y * 9) * smooth(0.5, 0.7, y) - seam + 0.01 * Math.sin(y * 46 + a * 2) * smooth(0.5, 0.6, y) * smooth(0.72, 0.6, y);
       p.setXYZ(i, x * k, y + (y < 0.23 ? 0.014 * Math.sin(a * 7 + 1.3) : 0), z * k * (1 - 0.07 * smooth(0.45, 0.75, y)));   // a child's chest is not round
     }
     robe.computeVertexNormals();
@@ -53,6 +54,19 @@ export function createMonk() {
   // Beads: each one turned, strung in a loop that hangs to the chest.
   const beads = []; for (let i = 0; i < 30; i++) { const a = (i / 30) * 6.283, hang = (1 - Math.cos(a)) / 2; beads.push(new THREE.SphereGeometry(i === 15 ? 0.017 : 0.0115, 10, 8).translate(Math.sin(a) * 0.092, 0.815 - hang * 0.2, 0.02 + Math.cos(a) * -0.07 + hang * 0.215)); }
   add(body, mergeGeometries(beads), beadM);
+  // On his back, the bamboo hat every walking monk carries, hung by a cord that crosses his chest.
+  const hat = new THREE.Group(); hat.position.set(0, 0.6, -0.178); hat.rotation.x = -Math.PI / 2 + 0.3; body.add(hat);
+  {
+    const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); x.fillStyle = "#b39a63"; x.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 256; i += 3) { x.fillStyle = `rgba(${i % 2 ? "70,52,24" : "235,215,160"},${0.18 + Math.random() * 0.2})`; x.fillRect(i, 0, 1.5, 256); }                     // the ribs, from crown to rim
+    for (let j = 0; j < 256; j += 9) { x.fillStyle = `rgba(60,44,20,${0.12 + Math.random() * 0.16})`; x.fillRect(0, j, 256, 1.5); }                                                   // and the rings that bind them
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.repeat.set(3, 1);
+    const straw = new THREE.MeshStandardMaterial({ map: t, bumpMap: t, bumpScale: 0.5, roughness: 0.85, envMapIntensity: 0.3, side: THREE.DoubleSide });
+    add(hat, new THREE.LatheGeometry(V2([[0.0, 0.082], [0.03, 0.076], [0.1, 0.045], [0.168, 0.012], [0.178, 0.004], [0.174, 0], [0.16, 0.006], [0.09, 0.036], [0.0, 0.064]]), 56), straw);
+    add(hat, new THREE.TorusGeometry(0.176, 0.006, 6, 56).rotateX(Math.PI / 2).translate(0, 0.004, 0), sashM);                                                                         // the bound rim
+    for (const sx of [-1, 1]) add(body, new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(sx * 0.085, 0.67, -0.165), new THREE.Vector3(sx * 0.1, 0.775, -0.06), new THREE.Vector3(sx * 0.098, 0.792, 0.04),
+      new THREE.Vector3(sx * 0.075, 0.72, 0.15), new THREE.Vector3(sx * 0.05, 0.6, 0.182), new THREE.Vector3(sx * 0.03, 0.555, 0.186)]), 32, 0.0042, 6), sashM);   // a cord over each shoulder, tucked into the sash
+  }
 
   // ---- Head: large, soft in the cheek ----
   const head = new THREE.Group(); head.position.set(0, 0.84, 0); body.add(head);
@@ -63,6 +77,13 @@ export function createMonk() {
   const flesh = [skull, new THREE.CylinderGeometry(0.058, 0.066, 0.07, 20).translate(0, -0.02, 0), new THREE.SphereGeometry(0.013, 14, 10).scale(1, 0.85, 0.8).translate(...on(0, -0.2, 1.015).toArray())];
   for (const sx of [-1, 1]) flesh.push(new THREE.SphereGeometry(0.05, 18, 14).scale(0.42, 1, 0.72).rotateY(sx * 0.35).translate(sx * 0.208, HY - 0.035, -0.005), new THREE.TorusGeometry(0.026, 0.008, 6, 14).rotateY(Math.PI / 2 + sx * 0.3).scale(1, 1.3, 1).translate(sx * 0.222, HY - 0.03, 0.002));
   add(head, mergeGeometries(flesh.map((g) => g.index ? g.toNonIndexed() : g)), skin);
+  {   // a shaved head is not the colour of a cheek: the grey-blue shadow of the hair lies over the crown and fades at the hairline
+    const c = document.createElement("canvas"); c.width = 8; c.height = 128; const x = c.getContext("2d"), g2 = x.createLinearGradient(0, 0, 0, 128);
+    g2.addColorStop(0, "#fff"); g2.addColorStop(0.62, "#fff"); g2.addColorStop(1, "#000"); x.fillStyle = g2; x.fillRect(0, 0, 8, 128);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(R * 1.014, 56, 24, 0, Math.PI * 2, 0, 1.32).scale(...S).rotateX(-0.36).translate(0, HY, 0),
+      new THREE.MeshStandardMaterial({ color: 0x6b6a70, roughness: 0.75, transparent: true, opacity: 0.34, alphaMap: new THREE.CanvasTexture(c), depthWrite: false, envMapIntensity: 0.3, polygonOffset: true, polygonOffsetFactor: -2 }));
+    head.add(cap);
+  }
   // The face is drawn in a few fine lines: closed eyes, brows, a small smile.
   const stroke = (pts, r) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, r, 6);
   const lines = [];
@@ -84,7 +105,8 @@ export function createMonk() {
     { const p = sleeve.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i), d = smooth(-0.08, -0.3, y), a = Math.atan2(p.getX(i), p.getZ(i)); p.setY(i, y - d * 0.03 * (1 + Math.cos(a - Math.PI)) * 0.5 - d * 0.006 * Math.sin(a * 5)); p.setX(i, p.getX(i) * (1 - d * 0.12)); } sleeve.computeVertexNormals(); }
     const sl = add(arm, sleeve, robeM); sl.material = robeM;
     const hand = new THREE.Group(); hand.position.set(0, -0.265, 0.008); arm.add(hand); hands.push(hand);
-    add(hand, mergeGeometries([new THREE.SphereGeometry(0.034, 16, 12).scale(0.62, 1.25, 0.95).translate(0, -0.04, 0), new THREE.SphereGeometry(0.014, 10, 8).scale(1, 1.7, 1).rotateX(-0.5).translate(0, -0.03, 0.03), new THREE.CylinderGeometry(0.02, 0.024, 0.05, 12).translate(0, 0.005, 0)]), skin);
+    add(hand, mergeGeometries([new THREE.SphereGeometry(0.034, 16, 12).scale(0.62, 1.25, 0.95).translate(0, -0.04, 0), new THREE.SphereGeometry(0.014, 10, 8).scale(1, 1.7, 1).rotateX(-0.5).translate(0, -0.03, 0.03), new THREE.CylinderGeometry(0.02, 0.024, 0.05, 12).translate(0, 0.005, 0),
+      ...[-0.0135, -0.0045, 0.0045, 0.0135].map((fx, k) => new THREE.CapsuleGeometry(0.0052, 0.022 + (k === 1 || k === 2 ? 0.006 : 0), 3, 8).translate(0, -0.088, fx))]), skin);   // four fingers, held together
     // Legs: loose trousers gathered at the ankle, white socks, black cloth shoes.
     const leg = new THREE.Group(); leg.position.set(sx * 0.082, 0.25, 0); root.add(leg); legs.push(leg);
     trousers.push(add(leg, new THREE.CylinderGeometry(0.062, 0.05, 0.13, 16).translate(0, -0.065, 0), sashM));
@@ -132,6 +154,7 @@ export function createMonk() {
         hands[i].rotation.set(-2.1 * palms, 0, 0); hands[i].position.y = -0.265 - 0.05 * palms;   // the hands come out of the sleeves, fingers up, to meet
       });
       body.position.y = Math.abs(Math.sin(phase)) * (grounding.stairs ? 0.008 : 0.024) * gait + breathe; body.rotation.x = 0.06 * gait + 0.08 * palms; body.rotation.z = Math.sin(phase) * 0.03 * gait;
+      hat.rotation.z = Math.sin(phase) * 0.05 * gait; hat.position.y = 0.6 + Math.abs(Math.cos(phase)) * 0.008 * gait;
       head.rotation.x = 0.22 * palms + Math.sin(phase * 2) * 0.02 * gait; head.rotation.z = -Math.sin(phase) * 0.025 * gait;
       if (hop) {
         legs.forEach(leg => leg.rotation.x = -0.16);
