@@ -240,7 +240,8 @@ export function buildHall(M, opts) {
     top.setIndex(wind(idx, true)); top.computeVertexNormals();
     add(top, M.tile, { ao: null });
     {   // the boards seen from below: the same surface a hand lower, turned over so that it faces the ground and is lit as such
-      const under = top.clone().translate(0, -0.17, 0); wind(under.index.array, false); under.computeVertexNormals();
+      const under = top.clone().translate(0, -0.17, 0), un = under.attributes.normal; wind(under.index.array, false);
+      for (let i = 0; i < un.count; i++) un.setXYZ(i, 0, -1, 0);   // lit as a ceiling is, whatever the curl of the corner does to its faces
       add(under, M.rafters, { cast: false });
     }
 

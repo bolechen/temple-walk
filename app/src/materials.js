@@ -104,7 +104,7 @@ export function createMaterials() {
     plaster,
 
     // vUv2 = (metres along the eave, metres up the slope). Rows of half-round cover tiles over pan tiles.
-    tile: procMat("tile", { roughness: 0.6, envMapIntensity: 0.9, side: THREE.DoubleSide }, `
+    tile: procMat("tile", { roughness: 0.6, envMapIntensity: 0.3, side: THREE.DoubleSide }, `
       float u=vUv2.x/.25, r=fract(u)-.5, row=floor(u), seg=floor(vUv2.y/.33), fw=fwidth(u);
       float cover=sqrt(max(0.,1.-pow(r/.3,2.)))*step(abs(r),.3);
       float pan=(1.-cos(clamp((abs(r)-.3)/.2,0.,1.)*3.14159))*.5;
@@ -115,7 +115,7 @@ export function createMaterials() {
       float gutter=1.-smoothstep(.0,.16,abs(abs(r)-.5)+.02);
       float moss=smoothstep(.5,.75,fbm2(vWP.xz*.9+4.))*gutter; col=mix(col,vec3(.1,.14,.06),moss*.7);
       col*=mix(1.,mix(.5,1.,cover*.6+.4),detail);                   // gutters sit in shade
-      rough_=mix(.3,.55,tone)-.1*cover*detail;`),
+      rough_=mix(.5,.72,tone)-.1*cover*detail;`),
 
     // Dressed stone. Faces that look up are slabs, each cut from a different part of the scan; faces that look out
     // are coursed masonry.
@@ -163,7 +163,7 @@ export function createMaterials() {
     // Underside of a roof: boards and rafters. vUv2.x runs along the eave.
     rafters: procMat("rafters", { roughness: 0.9, envMapIntensity: 0.15 }, `
       float r=abs(fract(vUv2.x/.3)-.5); float raft=1.-smoothstep(.16,.2,r);
-      col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.5,.62,raft); ao_=min(ao_,.8); emit_=col*uAmb*.06;`, { snow: false }),
+      col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.34,.42,raft); ao_=min(ao_,.42); emit_=col*uAmb*.03; rough_=1.;`, { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),
     ridge: procMat("ridge", { roughness: 0.55, envMapIntensity: 0.8 }, `
       col=mix(vec3(.1,.105,.11),vec3(.19,.195,.195),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
