@@ -2,6 +2,9 @@
 // played through a generated reverb. The audio context starts on the first tap, as browsers require.
 let ctx = null, wet = null, dry = null, tap = null;
 // For the tests: is anything sounding, how loud, and at which frequencies.
+// How loud the visitor wants it, 0..1 (the pause menu); remembered if nothing has sounded yet.
+let master = null, loudness = 0.8;
+export function setVolume(v) { loudness = Math.min(1, Math.max(0, v)); if (master) master.gain.value = loudness; }
 export function listen() {
   if (!tap) return { state: "off" };
   const t = new Float32Array(tap.fftSize), f = new Float32Array(tap.frequencyBinCount); tap.getFloatTimeDomainData(t); tap.getFloatFrequencyData(f);
@@ -19,7 +22,7 @@ function start() {
   const len = Math.floor(ctx.sampleRate * 3.2), ir = ctx.createBuffer(2, len, ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
   const conv = ctx.createConvolver(); conv.buffer = ir;
-  const comp = ctx.createDynamicsCompressor(); comp.connect(ctx.destination);
+  const comp = ctx.createDynamicsCompressor(); master = ctx.createGain(); master.gain.value = loudness; comp.connect(master); master.connect(ctx.destination);   // the visitor's own volume, last in the chain
   tap = ctx.createAnalyser(); tap.fftSize = 8192; tap.smoothingTimeConstant = 0; comp.connect(tap);
   dry = ctx.createGain(); dry.gain.value = 0.8; dry.connect(comp);
   wet = ctx.createGain(); wet.gain.value = 0.45; wet.connect(conv); conv.connect(comp);

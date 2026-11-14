@@ -252,6 +252,27 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Esc with nothing open is the pause menu: what the visitor sets there is kept, and there is a way back to the start.
+  menu: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 800, height: 500 } });
+    expect(!(await t.page.isVisible("#menu")), "the menu should wait to be asked for");
+    await t.page.keyboard.press("Escape"); expect(await t.page.isVisible("#menu") && (await t.page.textContent("#menu")).includes("环顾快慢"), "Esc with nothing open should bring the pause menu");
+    const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(4); await t.page.keyboard.up("w"); expect(Math.abs((await t.state()).z - z0) < 0.01, "he should stand still while the menu is open");
+    await t.page.click("#setInvert"); await t.page.evaluate(() => { for (const [id, v] of [["setSens", "1.8"], ["setVolume", "0.3"]]) { const el = document.getElementById(id); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); } });
+    await t.page.click('#menu [data-q="medium"]'); expect(await t.page.isVisible("#qualityNote"), "a change of tier should say when it takes effect");
+    let st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3 && st.quality === "medium", "the menu did not set what it shows: " + JSON.stringify(st));
+    await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#menu")), "Esc should close the menu again");
+    // Kept for next time: a new page finds them, and the look really is the other way up.
+    await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3, "the settings were not kept: " + JSON.stringify(st));
+    const p0 = (await t.state()).pitch; await t.page.mouse.move(400, 250); await t.page.mouse.down(); await t.page.mouse.move(400, 330, { steps: 4 }); await t.page.mouse.up(); await t.frames(2);
+    expect((await t.state()).pitch > p0 + 0.05, "with the look inverted, a drag down should look up");
+    // A way back to where the path begins.
+    await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu chip did not open the menu"); await t.page.click("#menuHome"); await t.frames(3);
+    const s = await t.state(); expect(s.z > 85 && s.h < -10 && !(await t.page.isVisible("#menu")), "回到起点 should put him back at the foot of the path: " + JSON.stringify([s.x, s.z, s.h]));
+    await t.page.evaluate(() => localStorage.removeItem("yunjing.settings.v1"));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Space jumps: he leaves the ground, comes down where he stood (or a little on, if he was walking), and nothing else happens.
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 640, height: 400 } });

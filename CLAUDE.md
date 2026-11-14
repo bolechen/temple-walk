@@ -146,6 +146,11 @@ every label and spoken line, and the name boards, which are written in tradition
 "Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `npm run check` fails if a character is used that the cut does not hold.
 
+**The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
+opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, volume, the key card, and
+a way back to the start of the path. The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
+validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
+
 **What is said about the controls (`app/src/hints.js`).** Nothing about the controls stays on the picture. One line at
 the foot of the view says each thing once, when it becomes useful (how to walk on arriving, Esc and the wheel when the
 mouse is first held, Shift after a long stroll, the book after the first seal), and leaves. H opens the list of keys.

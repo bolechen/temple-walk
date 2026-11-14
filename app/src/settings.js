@@ -1,0 +1,37 @@
+// What a visitor may set for themselves and find again next time: how finely the place is drawn, how fast the mouse
+// turns the head and which way up, how loud it is. Kept in the browser under one key; anything unreadable or out of
+// range falls back to the default, so an old or damaged save can never stop the walk. (After the settings store of
+// wok-ing-dead, the reference for what a finished game's shell carries.)
+export const SETTINGS_KEY = "yunjing.settings.v1";
+export const QUALITIES = ["auto", "low", "medium", "high"];
+export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, volume: 0.8 });
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+export function sanitize(saved) {
+  const s = { ...DEFAULTS };
+  if (saved && typeof saved === "object") {
+    if (QUALITIES.includes(saved.quality)) s.quality = saved.quality;
+    if (Number.isFinite(saved.sens)) s.sens = clamp(saved.sens, 0.3, 2.5);
+    if (typeof saved.invertY === "boolean") s.invertY = saved.invertY;
+    if (Number.isFinite(saved.volume)) s.volume = clamp(saved.volume, 0, 1);
+  }
+  return s;
+}
+// `store`: { get(), set(text) }. In the page that is localStorage; in a test, anything.
+export function createSettings(store) {
+  let now; try { now = sanitize(JSON.parse(store.get() || "null")); } catch { now = { ...DEFAULTS }; }
+  const heard = new Set();
+  return {
+    get: () => ({ ...now }),
+    set(key, value) {
+      if (!(key in DEFAULTS)) return now[key];
+      now = sanitize({ ...now, [key]: value });
+      try { store.set(JSON.stringify(now)); } catch {}   // storage may be full or forbidden; the walk goes on without it
+      for (const fn of heard) fn({ ...now }, key);
+      return now[key];
+    },
+    reset() { for (const k in DEFAULTS) this.set(k, DEFAULTS[k]); return this.get(); },
+    onChange(fn) { heard.add(fn); },
+  };
+}
+export const browserSettingsStore = () => ({ get: () => { try { return localStorage.getItem(SETTINGS_KEY); } catch { return null; } }, set: (t) => localStorage.setItem(SETTINGS_KEY, t) });

@@ -124,6 +124,13 @@
   #keys dt { justify-self: end; white-space: nowrap; } #keys dt kbd:last-child { margin-right: 0; } #keys dd { margin: 0 22px 0 0; white-space: nowrap; opacity: .88; } #keys dd:nth-of-type(even) { margin-right: 0; }
   #keys p { margin: 20px 0 0; text-align: center; font-size: 12px; letter-spacing: .3em; opacity: .5; }
 
+  /* The pause menu: the same card as the keys, with the few things a visitor may set. */
+  #menu { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 22; width: min(86vw, 380px); padding: 26px 30px 22px; background: rgba(11,10,9,.78); border: 1px solid var(--line); border-radius: 4px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 60px rgba(0,0,0,.45); font: 400 15px/1 var(--kai); letter-spacing: .16em; display: grid; gap: 16px; }
+  #menu h2 { margin: 0 0 4px; font: 400 26px/1 var(--brush); letter-spacing: .4em; text-indent: .4em; text-align: center; }
+  #menu .set { display: grid; grid-template-columns: 6.2em 1fr; align-items: center; gap: 12px; } #menu .opts { display: flex; gap: 6px; flex-wrap: wrap; } #menu .opts .chip, #menu .set > .chip { padding: 8px 10px; min-height: 34px; min-width: 40px; justify-self: start; }
+  #menu input[type=range] { width: 100%; accent-color: var(--ember); } #menu .note { margin: -6px 0 0; font-size: 12px; letter-spacing: .1em; opacity: .8; } #menu .note .chip { padding: 5px 8px; min-height: 0; font-size: 12px; margin-left: .6em; }
+  #menu .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; flex-wrap: wrap; } #menu[hidden] { display: none; }
+  @media (pointer: coarse) { #menuKeys { display: none; } }
   #cross { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(237,232,220,.7); box-shadow: 0 0 0 1px rgba(11,10,9,.5); display: none; pointer-events: none; }
   body.held #cross { display: block; }
   #stick { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px)); width: 118px; height: 118px; border-radius: 50%; border: 1px solid rgba(237,232,220,.34); background: rgba(11,10,9,.22); touch-action: none; display: none; place-items: center; z-index: 4; }
@@ -156,7 +163,7 @@
     <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
     <dt><kbd>Space</kbd></dt><dd>跳，台沿处下台阶</dd>
-    <dt><kbd>T</kbd></dt><dd>时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上</dd>
+    <dt><kbd>T</kbd></dt><dd>时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上，歇脚</dd>
   </dl><p>按 H 收起</p></div>
   <div id="cross"></div>
   <div id="stick"><div id="knob"></div></div>
@@ -171,6 +178,16 @@
     <button class="chip" id="moodBtn" type="button" aria-label="选择季节和时辰">时节</button>
     <button class="chip" id="photoBtn" type="button" aria-label="拍照">留影</button>
     <button class="chip" id="bookBtn" type="button" aria-label="打开朱印帐">朱印</button>
+    <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置">歇脚</button>
+  </div>
+  <div id="menu" role="dialog" aria-label="歇脚" hidden>
+    <h2>歇脚</h2>
+    <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
+    <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
+    <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
+    <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
+    <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
+    <div class="row"><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuResume" type="button">继续</button></div>
   </div>
   <div id="moodPanel" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>

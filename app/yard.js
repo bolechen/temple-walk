@@ -11,7 +11,8 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor } from "./src/quality.js";
-import { strike, startAmbience, listen } from "./src/audio.js";
+import { strike, startAmbience, listen, setVolume } from "./src/audio.js";
+import { createSettings, browserSettingsStore } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
 import { createTrees } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
@@ -30,7 +31,8 @@ import { findDrop, dropPose } from "./src/drop.js";
 const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
 const hints = createHints({ off: Q.has("shot") }); let arrived = false;   // what is said about the controls, and when
-const quality = pickQuality(Q.get("q"));
+const settings = createSettings(browserSettingsStore()); setVolume(settings.get().volume);   // what the visitor has set for themselves (the pause menu)
+const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
 
 const canvas = document.getElementById("yardGl");
@@ -155,6 +157,7 @@ if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 let arrive = null, stage = null; const ticks = [];
 const settle = (ok) => { if (arrive) { const fn = arrive; arrive = null; fn(ok); } };
 const interrupt = () => { settle(false); if (stage) { const st = stage; stage = null; st.leave && st.leave(); } };
+const menuEl = document.getElementById("menu");
 let down = null, hop = null, leap = null;   // `hop`: a planned drop from a porch; `leap`: a small jump where he stands, steered as he goes
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
@@ -169,7 +172,8 @@ const joy = { x: 0, y: 0 };
 document.addEventListener("pointerlockchange", () => { document.body.classList.toggle("held", locked()); if (locked()) hints.say.held(); });
 document.addEventListener("mousemove", (e) => {
   if (!locked()) return; const orbit = view === "third" || photo.on;
-  yaw += e.movementX * 0.0026; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022, orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);
+  const S = settings.get();
+  yaw += e.movementX * 0.0026 * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);
 });
 canvas.addEventListener("pointerdown", (e) => {
   touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing";
@@ -184,7 +188,8 @@ canvas.addEventListener("pointermove", (e) => {
   const dx = e.clientX - down.x, dy = e.clientY - down.y;
   if (!down.moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 14)) return;   // a finger never lands perfectly still
   const orbit = view === "third" || photo.on;                                              // round him, or from his eyes
-  down.moved = true; yaw += dx * 0.0042; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042, orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);   // a finger and a mouse look the same way
+  const S = settings.get();
+  down.moved = true; yaw += dx * 0.0042 * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
@@ -242,7 +247,7 @@ const keys = {};
 const dropButton = document.getElementById("dropBtn");
 function availableDrop() {
   if (hop || inside || stage || passing || photo.on || !document.body.classList.contains("entered")) return null;
-  for (const id of ["book", "print", "slip", "keys", "moodPanel"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return null; }
+  for (const id of ["book", "print", "slip", "keys", "moodPanel", "menu"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return null; }
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y;
   const s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   return findDrop(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
@@ -255,7 +260,7 @@ function startDrop() {
 const JUMP = { speed: 3.0, gravity: 9.8 };
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
-  for (const id of ["book", "print", "slip", "keys", "moodPanel"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return false; }
+  for (const id of ["book", "print", "slip", "keys", "moodPanel", "menu"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return false; }
   leap = { y: footY, v: JUMP.speed }; return true;
 }
 const jumpButton = document.getElementById("jumpBtn"); if (jumpButton) jumpButton.addEventListener("click", () => { startDrop() || startJump(); });
@@ -273,7 +278,11 @@ addEventListener("keydown", (e) => {
   else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { if (!press("bookClose")) press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
   else if (k === "h" || k === "?") hints.card();
-  else if (k === "escape") { hints.card(false); press("bookClose"); press("printBack") || press("photoClose"); }
+  else if (k === "escape") {   // Esc shuts whatever is open; with nothing open it is the pause menu
+    const keysOpen = !document.getElementById("keys")?.hidden, moodOpen = !document.getElementById("moodPanel")?.hidden; hints.card(false); if (moodOpen) document.getElementById("moodPanel").hidden = true;
+    const shut = [keysOpen, moodOpen, press("menuResume"), press("bookClose"), press("printBack") || press("photoClose")].some(Boolean);
+    if (!shut && document.body.classList.contains("entered") && !stage) openMenu(true);
+  }
 });
 addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
 // A thumb-stick for a touch screen, lower left: push to walk, relative to where he is looking.
@@ -321,7 +330,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
-  const f = photo.on ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
+  const menuUp = !menuEl.hidden;
+  const f = photo.on || menuUp ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on || menuUp ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
   if (f || s) { interrupt(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
@@ -536,6 +546,26 @@ window.__listen = listen; window.__strike = strike;
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+// ---- The pause menu: what the visitor may set, a way back to the start, the keys ----
+function openMenu(open) {
+  menuEl.hidden = !open; if (!open) return; document.exitPointerLock?.(); interrupt(); target = null; route = [];
+  const S = settings.get();
+  menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
+  $("setSens").value = S.sens; $("setVolume").value = S.volume; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
+  $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
+}
+{
+  const set = (k, v) => { settings.set(k, v); openMenu(true); };
+  menuEl.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => set("quality", b.dataset.q)));
+  $("setSens").addEventListener("input", (e) => settings.set("sens", +e.target.value));
+  $("setVolume").addEventListener("input", (e) => { settings.set("volume", +e.target.value); setVolume(settings.get().volume); });
+  on("setInvert", () => set("invertY", !settings.get().invertY));
+  on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(menuEl.hidden)); on("menuKeys", () => { openMenu(false); hints.card(true); });
+  on("reloadBtn", () => location.reload());
+  // Lost, or wedged somewhere he should not be: back to where the path begins.
+  on("menuHome", () => { if (inside) pass(null); openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; });
+}
+window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
 window.__pick = (px, py, n = 6) => {
