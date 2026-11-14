@@ -1,78 +1,246 @@
-// The trees that keep the calendar: one kind flowers pale pink in spring and burns red in autumn, the
-// other is a ginkgo that turns gold. Both stand bare under snow.
+// The trees. Cryptomerias, tall and dark, as old as the walls; and the two that keep the calendar: one flowers
+// pale pink in spring and burns red in autumn, the other is a ginkgo that turns gold. Both stand bare under snow.
+//
+// A tree is a crooked trunk and three orders of branches, built as tapering tubes, and a crown of small flat
+// sprays ("cards"), each drawn large and fine with the leaves of its kind. The cards do not light as the flat
+// things they are: every one borrows its normal from the round crown it belongs to, so a tree shades as a mass,
+// light on top and toward the sun, dark within. With the sun behind them the leaves glow.
 import * as THREE from "../v/build/three.module.js";
 import { mergeGeometries } from "../v/jsm/utils/BufferGeometryUtils.js";
 import { merge, mesh } from "./geo.js";
+import { U } from "./glsl.js";
+import { SUN_DIR } from "./sky.js";
 
-// Sprays drawn large and fine, one sheet for each thing a tree can wear: five-petalled blossom,
-// the five-pointed leaf of a maple, the fan of a ginkgo. Drawn pale; the season lays its colour over them.
-function sprayTexture(kind) {
+const seeded = (seed) => { let s = seed; return () => ((s = (s * 16807) % 2147483647) / 2147483647); };
+
+// ---- The sheets: one for each thing a tree can wear. Drawn pale; the season lays its colour over them. ----
+function sheet(kind) {
   const N = 1024, c = document.createElement("canvas"); c.width = c.height = N;
-  const x = c.getContext("2d"); let s = kind.length * 131; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  const tone = () => { const v = 205 + rnd() * 50; return `rgb(${v},${v},${v})`; };
-  x.strokeStyle = "rgba(120,110,100,.9)";
-  for (let k = 0; k < 9; k++) {   // twigs, so the sprays hang from something
-    let px = 80 + rnd() * (N - 160), py = 80 + rnd() * (N - 160), a = rnd() * 6.3; x.lineWidth = 3.2; x.beginPath(); x.moveTo(px, py);
-    for (let i = 0; i < 9; i++) { a += (rnd() - 0.5) * 0.7; px += Math.cos(a) * 46; py += Math.sin(a) * 46; x.lineTo(px, py); } x.stroke();
-  }
-  const count = kind === "blossom" ? 190 : 150;
-  for (let i = 0; i < count; i++) {
-    const px = 50 + rnd() * (N - 100), py = 50 + rnd() * (N - 100), r = (kind === "blossom" ? 15 : 24) * (0.7 + rnd() * 0.6), rot = rnd() * 6.3;
-    x.save(); x.translate(px, py); x.rotate(rot); x.fillStyle = tone();
-    if (kind === "blossom") {
-      for (let p = 0; p < 5; p++) { x.rotate(6.283 / 5); x.beginPath(); x.ellipse(0, -r * 0.62, r * 0.42, r * 0.6, 0, 0, 6.3); x.fill(); }
-      x.fillStyle = "rgb(150,140,130)"; x.beginPath(); x.arc(0, 0, r * 0.16, 0, 6.3); x.fill();
-    } else if (kind === "maple") {
-      x.beginPath();
-      for (let p = 0; p < 5; p++) { const a0 = -1.57 + (p - 2) * 0.62, len = r * (p === 2 ? 1.25 : p === 1 || p === 3 ? 1.05 : 0.72); x.lineTo(Math.cos(a0 - 0.2) * len * 0.42, Math.sin(a0 - 0.2) * len * 0.42); x.lineTo(Math.cos(a0) * len, Math.sin(a0) * len); x.lineTo(Math.cos(a0 + 0.2) * len * 0.42, Math.sin(a0 + 0.2) * len * 0.42); }
-      x.lineTo(0, r * 0.5); x.closePath(); x.fill();
-      x.strokeStyle = "rgba(120,110,100,.55)"; x.lineWidth = 1.2; for (let p = 0; p < 5; p++) { const a0 = -1.57 + (p - 2) * 0.62; x.beginPath(); x.moveTo(0, r * 0.15); x.lineTo(Math.cos(a0) * r * 0.9, Math.sin(a0) * r * 0.9); x.stroke(); }
-    } else {   // ginkgo: a fan with a notch, on a thin stalk
-      x.beginPath(); x.moveTo(0, r * 0.75); x.arc(0, r * 0.75, r * 1.5, -1.57 - 0.72, -1.57 - 0.05); x.lineTo(0, -r * 0.3); x.arc(0, r * 0.75, r * 1.5, -1.57 + 0.05, -1.57 + 0.72); x.closePath(); x.fill();
-      x.strokeStyle = "rgba(120,110,100,.45)"; x.lineWidth = 1; for (let p = -5; p <= 5; p++) { x.beginPath(); x.moveTo(0, r * 0.75); x.lineTo(Math.sin(p * 0.13) * r * 1.4, r * 0.75 - Math.cos(p * 0.13) * r * 1.4); x.stroke(); }
+  const x = c.getContext("2d"), rnd = seeded(kind.length * 977 + kind.charCodeAt(0) * 31);
+  x.lineCap = "round"; x.lineJoin = "round";
+  // A leaf's own tone: mostly its lightness, and a little of its hue, so that an autumn crown is not one red.
+  const tone = (lo = 150) => { const v = lo + rnd() * (255 - lo), g = 0.78 + rnd() * 0.22, b = 0.8 + rnd() * 0.2; return `rgb(${v | 0},${(v * g) | 0},${(v * b) | 0})`; };
+  const at = (px, py, rot, draw) => { x.save(); x.translate(px, py); x.rotate(rot); draw(); x.restore(); };
+
+  const maple = (r) => {   // seven narrow lobes from the stalk
+    const A = [-112, -72, -36, 0, 36, 72, 112].map((d) => (d * Math.PI) / 180), L = [0.5, 0.8, 0.95, 1, 0.95, 0.8, 0.5];
+    x.fillStyle = tone(); x.beginPath(); x.moveTo(0, r * 0.12);
+    A.forEach((a, i) => {
+      const l = L[i] * r;
+      x.lineTo(Math.sin(a - 0.31) * r * 0.3, -Math.cos(a - 0.31) * r * 0.3); x.lineTo(Math.sin(a - 0.11) * l * 0.62, -Math.cos(a - 0.11) * l * 0.62);
+      x.lineTo(Math.sin(a) * l, -Math.cos(a) * l); x.lineTo(Math.sin(a + 0.11) * l * 0.62, -Math.cos(a + 0.11) * l * 0.62);
+    });
+    x.lineTo(Math.sin(A[6] + 0.31) * r * 0.3, -Math.cos(A[6] + 0.31) * r * 0.3); x.closePath(); x.fill();
+    x.strokeStyle = "rgba(70,60,52,.5)"; x.lineWidth = Math.max(1, r * 0.035);
+    A.forEach((a, i) => { x.beginPath(); x.moveTo(0, r * 0.06); x.lineTo(Math.sin(a) * L[i] * r * 0.85, -Math.cos(a) * L[i] * r * 0.85); x.stroke(); });
+    x.beginPath(); x.moveTo(0, r * 0.1); x.lineTo(0, r * 0.5); x.stroke();
+  };
+  const ginkgo = (r) => {   // a fan with a notch, on a thin stalk
+    x.fillStyle = tone(); x.beginPath(); x.moveTo(0, r * 0.3);
+    for (let i = 0; i <= 18; i++) { const t = i / 18, a = ((-62 + 124 * t) * Math.PI) / 180, k = 1.25 * (1 - 0.32 * Math.exp(-Math.pow((t - 0.5) / 0.045, 2)) + 0.025 * Math.sin(t * 43)); x.lineTo(Math.sin(a) * r * k, r * 0.3 - Math.cos(a) * r * k); }
+    x.closePath(); x.fill();
+    x.strokeStyle = "rgba(70,62,50,.32)"; x.lineWidth = 1;
+    for (let p = -6; p <= 6; p++) { const a = p * 0.165; x.beginPath(); x.moveTo(0, r * 0.3); x.lineTo(Math.sin(a) * r * 1.15, r * 0.3 - Math.cos(a) * r * 1.15); x.stroke(); }
+    x.strokeStyle = "rgba(80,70,56,.8)"; x.lineWidth = Math.max(1.2, r * 0.05); x.beginPath(); x.moveTo(0, r * 0.3); x.lineTo(r * 0.06, r * 0.95); x.stroke();
+  };
+  const blossom = (r) => {   // five petals, each notched, round a darker heart
+    for (let p = 0; p < 5; p++) {
+      x.rotate(6.283 / 5); const g = x.createRadialGradient(0, -r * 0.2, 0, 0, -r * 0.6, r * 0.75), v = 225 + rnd() * 30;
+      g.addColorStop(0, `rgb(${v - 40},${(v - 75) | 0},${(v - 60) | 0})`); g.addColorStop(1, `rgb(${v | 0},${(v * 0.94) | 0},${(v * 0.95) | 0})`); x.fillStyle = g;
+      x.beginPath(); x.moveTo(0, 0); x.bezierCurveTo(-r * 0.62, -r * 0.3, -r * 0.5, -r * 1.05, -r * 0.06, -r * 0.92); x.lineTo(0, -r * 0.8); x.lineTo(r * 0.06, -r * 0.92); x.bezierCurveTo(r * 0.5, -r * 1.05, r * 0.62, -r * 0.3, 0, 0); x.fill();
     }
-    x.restore();
+    x.fillStyle = "rgb(150,96,104)"; x.beginPath(); x.arc(0, 0, r * 0.14, 0, 6.3); x.fill();
+    x.strokeStyle = "rgba(170,120,110,.8)"; x.lineWidth = 1; for (let p = 0; p < 9; p++) { const a = rnd() * 6.283; x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a) * r * 0.4, Math.sin(a) * r * 0.4); x.stroke(); }
+  };
+
+  if (kind === "cedar") {
+    // Ropes of short curved needles hanging from boughs that sweep out and down from the top of the sheet.
+    const rope = (px, py, a, len, w) => {
+      for (let d = 0; d < len; d += 4.5) {
+        a += (rnd() - 0.5) * 0.05 + 0.0014 * Math.sign(Math.sin(a)) * -1; px += Math.sin(a) * 4.5; py += Math.cos(a) * 4.5;
+        const t = d / len, nl = w * (1 - t * 0.55) * (0.75 + rnd() * 0.5), v = 110 + rnd() * 90 + t * 55;
+        x.strokeStyle = `rgb(${(v * 0.92) | 0},${v | 0},${(v * 0.86) | 0})`; x.lineWidth = 2.2;
+        for (const s of [-1, 1]) { x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + Math.sin(a + s * 0.5) * nl * 0.6, py + Math.cos(a + s * 0.5) * nl * 0.6, px + Math.sin(a + s * 0.85) * nl, py + Math.cos(a + s * 0.85) * nl + nl * 0.25); x.stroke(); }
+      }
+      return [px, py, a];
+    };
+    for (let k = 0; k < 11; k++) {
+      const a0 = (k / 10 - 0.5) * 2.2 + (rnd() - 0.5) * 0.12; let px = N / 2 + (rnd() - 0.5) * 60, py = 14, a = a0;
+      x.strokeStyle = "rgb(96,80,66)"; x.lineWidth = 5;
+      for (let seg = 0; seg < 7; seg++) {
+        const from = [px, py]; [px, py, a] = rope(px, py, a, 120 + rnd() * 30, 19); a = a * 0.86;   // the bough turns to hang
+        for (const s of [-1, 1]) if (rnd() < 0.85) rope(from[0], from[1], a + s * (0.5 + rnd() * 0.5), 150 + rnd() * 160, 15);
+      }
+    }
+  } else if (kind === "twig") {
+    // Bare twigs, forking three times: what is left in winter.
+    const fork = (px, py, a, len, w, depth) => {
+      const n = 5; x.strokeStyle = `rgb(${200 + rnd() * 40},${196 + rnd() * 40},${190 + rnd() * 40})`;
+      for (let i = 0; i < n; i++) { const qx = px + Math.cos(a) * len / n, qy = py + Math.sin(a) * len / n; x.lineWidth = Math.max(1.1, w * (1 - (i / n) * 0.4)); x.beginPath(); x.moveTo(px, py); x.lineTo(qx, qy); x.stroke(); px = qx; py = qy; a += (rnd() - 0.5) * 0.34;
+        if (depth && i > 0 && rnd() < 0.75) fork(px, py, a + (rnd() < 0.5 ? -1 : 1) * (0.45 + rnd() * 0.5), len * (0.5 + rnd() * 0.25), w * 0.6, depth - 1); }
+      if (depth) for (const s of [-1, 1]) fork(px, py, a + s * (0.3 + rnd() * 0.3), len * 0.55, w * 0.6, depth - 1);
+    };
+    for (let k = 0; k < 7; k++) fork(N / 2, N / 2, (k / 7) * 6.283 + rnd() * 0.5, 250 + rnd() * 90, 7, 3);
+  } else {
+    const leaf = kind === "maple" ? maple : kind === "ginkgo" ? ginkgo : blossom, size = kind === "blossom" ? 21 : kind === "maple" ? 34 : 27;
+    // A spray seen from its side: twigs running out from the middle, leaves along them and thick between them.
+    const twigs = [];
+    for (let k = 0; k < 8; k++) {
+      let a = (k / 8) * 6.283 + rnd() * 0.5, px = N / 2, py = N / 2; x.strokeStyle = "rgb(104,88,74)";
+      for (let i = 0; i < 9; i++) { const qx = px + Math.cos(a) * 50, qy = py + Math.sin(a) * 50; x.lineWidth = 6 - i * 0.55; x.beginPath(); x.moveTo(px, py); x.lineTo(qx, qy); x.stroke(); px = qx; py = qy; a += (rnd() - 0.5) * 0.5; twigs.push([px, py, a]); }
+    }
+    const spots = [];
+    for (const [px, py, a] of twigs) for (let j = 0; j < (kind === "blossom" ? 5 : 4); j++) spots.push([px + (rnd() - 0.5) * 74, py + (rnd() - 0.5) * 74, a + (rnd() < 0.5 ? -1 : 1) * (0.5 + rnd() * 0.9) + Math.PI / 2]);
+    for (let i = 0; i < (kind === "blossom" ? 190 : 120); i++) { const rr = Math.pow(rnd(), 0.75) * 470, aa = rnd() * 6.283; spots.push([N / 2 + Math.cos(aa) * rr, N / 2 + Math.sin(aa) * rr, rnd() * 6.283]); }
+    for (let i = spots.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
+    for (const [px, py, rot] of spots) if (Math.hypot(px - N / 2, py - N / 2) < 488) at(px, py, rot, () => leaf(size * (0.72 + rnd() * 0.56)));
   }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.premultiplyAlpha = false; return t;
 }
+
+// The colour each crown wears, season by season (null: bare).
 const COLOURS = {
-  maple:  { spring: [1.0, 0.8, 0.86], summer: [0.3, 0.5, 0.2], autumn: [0.82, 0.17, 0.07], winter: null },
-  ginkgo: { spring: [0.6, 0.8, 0.34], summer: [0.34, 0.56, 0.2], autumn: [0.98, 0.74, 0.12], winter: null },
+  maple:  { spring: [0.93, 0.74, 0.78], summer: [0.2, 0.36, 0.13], autumn: [0.62, 0.13, 0.055], winter: null },
+  ginkgo: { spring: [0.42, 0.6, 0.22], summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1], winter: null },
+  cedar:  { spring: [0.13, 0.26, 0.12], summer: [0.11, 0.23, 0.11], autumn: [0.12, 0.22, 0.1], winter: [0.1, 0.19, 0.11] },
 };
 
-// `spots`: [x, y, z, kind, height]
-export function createTrees(scene, M, spots) {
-  let s = 311; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  const wood = [], crowns = { maple: [], ginkgo: [] };
-  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), one = new THREE.Vector3(1, 1, 1);
-  const limb = (a, b, r0, r1) => {   // a tapering cylinder from a to b
-    const d = b.clone().sub(a), len = d.length(), g = new THREE.CylinderGeometry(r1, r0, len, 6).translate(0, len / 2, 0);
-    q.setFromUnitVectors(up, d.normalize()); wood.push(g.applyMatrix4(m4.compose(a, q, one)));
+// A crown material: cards that take their light as parts of one round mass, let the low sun through, hold snow,
+// keep their leaves at a distance (a sheet's thin places would otherwise vanish), and stir in the air.
+function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
+  const m = new THREE.MeshStandardMaterial({ map, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.82, envMapIntensity: 0.25, vertexColors: true, alphaToCoverage: !!a2c });
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { uSnow: U.uSnow, uSunC: U.uSunC, uT: U.uT, uSunDir: { value: SUN_DIR } });
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", "#include <common>\nuniform float uT; varying float vUp;")
+      .replace("#include <begin_vertex>", `#include <begin_vertex>
+        vUp=normalize(mat3(modelMatrix)*objectNormal).y;
+        transformed.x+=sin(uT*1.1+position.x*.7+position.y*.5)*${sway.toFixed(3)}; transformed.z+=cos(uT*.83+position.z*.6+position.y*.4)*${sway.toFixed(3)};`);
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform float uSnow; uniform vec3 uSunC, uSunDir; varying float vUp;")
+      .replace("#include <map_fragment>", `#include <map_fragment>
+        { vec2 tx=vMapUv*1024.; float lod=max(0.,.5*log2(max(dot(dFdx(tx),dFdx(tx)),dot(dFdy(tx),dFdy(tx))))); diffuseColor.a*=1.+lod*.32; }
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.84,.88,.94),uSnow*smoothstep(.15,.7,vUp)*${snow.toFixed(2)});`)
+      .replace("#include <normal_fragment_begin>", "#include <normal_fragment_begin>\n normal=normalize(vNormal);")   // both faces of a card take the crown's light the same way
+      .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+        { vec3 Lv=normalize((viewMatrix*vec4(uSunDir,0.)).xyz); float thru=pow(max(dot(normalize(vViewPosition),-Lv),0.),2.5);
+          totalEmissiveRadiance+=diffuseColor.rgb*uSunC*vec3(1.,1.,.45)*thru*1.6*(1.-uSnow*.7); }`);
   };
-  for (const [x, y, z, kind, h] of spots) {
-    const base = new THREE.Vector3(x, y - 0.1, z), fork = new THREE.Vector3(x + (rnd() - 0.5) * 0.5, y + h * 0.42, z + (rnd() - 0.5) * 0.5);
-    limb(base, fork, 0.2, 0.13);
-    const n = 5 + Math.floor(rnd() * 2), wide = kind === "maple" ? 1 : 0.6;
+  m.customProgramCacheKey = () => "crown" + sway + snow + (a2c ? "c" : "");
+  return m;
+}
+
+// A tapering tube through `pts`, smoothed. Radius runs from r0 to r1.
+function limb(pts, r0, r1, radial = 7) {
+  const curve = new THREE.CatmullRomCurve3(pts), n = Math.max(2, (pts.length - 1) * 3), pos = [], nor = [], uv = [], idx = [];
+  const T = new THREE.Vector3(), Nn = new THREE.Vector3(), B = new THREE.Vector3(), P = new THREE.Vector3(), ref = new THREE.Vector3();
+  for (let i = 0; i <= n; i++) {
+    const t = i / n; curve.getPoint(t, P); curve.getTangent(t, T);
+    ref.set(Math.abs(T.y) > 0.9 ? 1 : 0, Math.abs(T.y) > 0.9 ? 0 : 1, 0); Nn.crossVectors(T, ref).normalize(); B.crossVectors(T, Nn);
+    const r = r0 + (r1 - r0) * t;
+    for (let k = 0; k <= radial; k++) { const a = (k / radial) * 6.283, cx = Math.cos(a), sx = Math.sin(a); nor.push(Nn.x * cx + B.x * sx, Nn.y * cx + B.y * sx, Nn.z * cx + B.z * sx); pos.push(P.x + (Nn.x * cx + B.x * sx) * r, P.y + (Nn.y * cx + B.y * sx) * r, P.z + (Nn.z * cx + B.z * sx) * r); uv.push(k / radial, t); }
+  }
+  for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  return { geo: g, curve };
+}
+
+// `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
+export function createTrees(scene, M, spots, opts = {}) {
+  const rnd = seeded(311), wood = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), V = (x, y, z) => new THREE.Vector3(x, y, z);
+  // One flat spray at `p`, lit as part of the crown round `centre`; `shade` darkens those deep inside.
+  const card = (list, g, p, centre, shade, squash = 0.75, lift = 0.35) => {
+    g.applyMatrix4(m4.compose(p, q, one));
+    const P = g.attributes.position, Nn = g.attributes.normal, col = new Float32Array(P.count * 3), tint = 0.86 + rnd() * 0.28;
+    for (let i = 0; i < P.count; i++) {
+      const nx = P.getX(i) - centre.x, ny = (P.getY(i) - centre.y) * squash + lift, nz = P.getZ(i) - centre.z, l = Math.hypot(nx, ny, nz) || 1;
+      Nn.setXYZ(i, nx / l, ny / l, nz / l); col[i * 3] = shade * tint; col[i * 3 + 1] = shade * (tint * 0.5 + 0.5); col[i * 3 + 2] = shade * tint;
+    }
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3)); list.push(g);
+  };
+  const clump = (kind, p, centre, w, n = 5) => {
+    const d = p.distanceTo(centre), shade = 0.62 + 0.38 * Math.min(1, d / 2.6);
     for (let i = 0; i < n; i++) {
-      const a = (i / n) * 6.283 + rnd() * 0.6, reach = h * (0.26 + rnd() * 0.14) * wide, tip = new THREE.Vector3(fork.x + Math.cos(a) * reach, y + h * (0.72 + rnd() * 0.22), fork.z + Math.sin(a) * reach);
-      const mid = fork.clone().lerp(tip, 0.5); mid.y -= h * 0.04; limb(fork, mid, 0.1, 0.06); limb(mid, tip, 0.06, 0.02);
-      for (let k = 0; k < 13; k++) {   // sprays of leaf or blossom round each bough
-        const w = 1.3 + rnd() * 1.3, g = new THREE.PlaneGeometry(w, w), t = 0.25 + rnd() * 0.9;
-        v.copy(fork).lerp(tip, t).add(new THREE.Vector3((rnd() - 0.5) * 1.5, (rnd() - 0.35) * 1.3, (rnd() - 0.5) * 1.5));
-        q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); crowns[kind].push(g.applyMatrix4(m4.compose(v, q, one)));
+      q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); const s = w * (0.8 + rnd() * 0.45), at = p.clone().add(V((rnd() - 0.5) * w * 0.5, (rnd() - 0.5) * w * 0.4, (rnd() - 0.5) * w * 0.5));
+      card(cards[kind], new THREE.PlaneGeometry(s, s), at, centre, shade);
+      if (i < 2) { q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); card(cards.twig, new THREE.PlaneGeometry(s * 1.1, s * 1.1), at, centre, 1); }
+    }
+  };
+  const grow = (pts, r0, r1, radial) => { const l = limb(pts, r0, r1, radial); wood.push(l.geo); return l.curve; };
+  const jit = (k) => (rnd() - 0.5) * k;
+
+  for (const [x, y, z, kind, h] of spots) {
+    if (kind === "cedar") {
+      // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
+      const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t);
+      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 9);
+      for (let by = h * 0.26; by < h * 0.985; by += 0.62) {
+        const t = by / h, c = axis(t), len = (1 - t) * (2.6 + h * 0.07) + 0.75, n = 5 + ((rnd() * 2) | 0), a0 = rnd() * 6.283;
+        for (let k = 0; k < n; k++) {
+          const a = a0 + (k / n) * 6.283 + jit(0.4), droop = 1.05 + jit(0.3), l = len * (0.75 + rnd() * 0.45), w = l * (0.7 + rnd() * 0.2), far = V(Math.sin(a), 0, Math.cos(a));
+          // a bough: hinged at the trunk, reaching out and down
+          q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
+          card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
+          // and a curtain hanging from it, so the tree has depth from every side
+          if (k % 2 === 0) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const cw = l * 0.75; card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), c.clone().addScaledVector(far, l * 0.36), c.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
+        }
       }
+      q.setFromEuler(e.set(0, rnd() * 3, 0)); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5, 2.3).translate(0, -0.6, 0), axis(1).add(V(0, 0.9, 0)), axis(0.9), 0.95, 0.4, 0.5); }
+      continue;
+    }
+    const tall = kind === "ginkgo", top = y + h, centre = V(x, y + h * (tall ? 0.62 : 0.7), z), r0 = 0.09 + h * 0.019;
+    if (tall) {
+      // Ginkgo: one leader, and boughs that climb away from it.
+      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 8);
+      let a = rnd() * 6.283;
+      for (let t = 0.26; t < 0.97; t += 0.058) {
+        a += 2.4 + jit(0.5); const from = lead.getPoint(t), reach = h * (0.36 - t * 0.24) * (0.8 + rnd() * 0.4), rise = reach * (0.75 + rnd() * 0.5);
+        const tip = from.clone().add(V(Math.cos(a) * reach, rise, Math.sin(a) * reach)), mid = from.clone().lerp(tip, 0.5).add(V(Math.cos(a) * reach * 0.12, -rise * 0.14, Math.sin(a) * reach * 0.12)).add(V(jit(0.3), 0, jit(0.3)));
+        const bough = grow([from, mid, tip], 0.03 + (1 - t) * 0.07, 0.012, 5);
+        for (const u of [0.45, 0.7, 0.95]) { const p = bough.getPoint(u); clump(kind, p, centre, 0.95 + rnd() * 0.5, 4);
+          if (u < 0.9) { const side = p.clone().add(V(Math.cos(a + 1.3 * (rnd() < 0.5 ? -1 : 1)) * reach * 0.4, reach * 0.22, Math.sin(a + 1.3) * reach * 0.4)); grow([p, p.clone().lerp(side, 0.5).add(V(0, -0.08, 0)), side], 0.018, 0.008, 4); clump(kind, side, centre, 0.9 + rnd() * 0.4, 4); } }
+      }
+      clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
+    } else {
+      // The spreading tree: a short crooked trunk that forks low, long boughs that reach out before they rise.
+      const forkAt = V(x + jit(0.6), y + h * (0.3 + rnd() * 0.07), z + jit(0.6));
+      grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 9);
+      const n = 5, a0 = rnd() * 6.283;
+      for (let i = 0; i < n; i++) {
+        const a = a0 + (i / n) * 6.283 + jit(0.5), reach = h * (0.36 + rnd() * 0.16), rise = h * (0.34 + rnd() * 0.2);
+        const tip = forkAt.clone().add(V(Math.cos(a) * reach, rise, Math.sin(a) * reach)), elbow = forkAt.clone().add(V(Math.cos(a + jit(0.5)) * reach * 0.5, rise * 0.3, Math.sin(a + jit(0.5)) * reach * 0.5));
+        const bough = grow([forkAt, elbow, tip.clone().lerp(elbow, 0.35).add(V(jit(0.4), rise * 0.12, jit(0.4))), tip], r0 * 0.5, 0.02, 6);
+        for (const u of [0.42, 0.6, 0.78, 0.97]) {
+          const p = bough.getPoint(u); clump(kind, p, centre, 1.05 + rnd() * 0.55, 5);
+          if (u < 0.9) {   // a side branch, and a twig off that
+            const b = a + (rnd() < 0.5 ? -1 : 1) * (0.7 + rnd() * 0.6), side = p.clone().add(V(Math.cos(b) * reach * 0.45, rise * 0.16 + jit(0.4), Math.sin(b) * reach * 0.45));
+            const sb = grow([p, p.clone().lerp(side, 0.5).add(V(jit(0.25), -0.1, jit(0.25))), side], 0.035, 0.012, 5); clump(kind, side, centre, 1.0 + rnd() * 0.5, 5);
+            const mid = sb.getPoint(0.55), tw = mid.clone().add(V(jit(1.3), 0.5 + rnd() * 0.5, jit(1.3))); grow([mid, tw], 0.014, 0.006, 4); clump(kind, tw, centre, 0.9 + rnd() * 0.4, 4);
+          }
+        }
+      }
+      clump(kind, centre.clone().add(V(jit(0.8), h * 0.2, jit(0.8))), centre, 1.5, 5);
     }
   }
   scene.add(mesh(merge(wood), M.bark));
-  const tex = { blossom: sprayTexture("blossom"), maple: sprayTexture("maple"), ginkgo: sprayTexture("ginkgo") }, mats = {};
-  for (const kind of ["maple", "ginkgo"]) {
-    if (!crowns[kind].length) continue;
-    mats[kind] = new THREE.MeshStandardMaterial({ map: tex[kind], alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.75, envMapIntensity: 0.3 });
-    mats[kind].mesh = new THREE.Mesh(mergeGeometries(crowns[kind]), mats[kind]); mats[kind].mesh.castShadow = true; scene.add(mats[kind].mesh);
-  }
+
+  const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
+  const put = (kind, map, o) => {
+    if (!cards[kind].length) return;
+    const mat = crownMaterial(map, { a2c: opts.a2c, ...o }), m = new THREE.Mesh(mergeGeometries(cards[kind]), mat);
+    m.castShadow = true; m.receiveShadow = false; scene.add(m); crowns[kind] = { mat, mesh: m };
+  };
+  put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
     setMood(m) {
-      for (const kind in mats) { const c = COLOURS[kind][m.season]; mats[kind].mesh.visible = !!c; if (c) mats[kind].color.setRGB(...c); mats[kind].map = kind === "maple" && m.season === "spring" ? tex.blossom : tex[kind]; }
+      for (const kind of ["maple", "ginkgo", "cedar"]) {
+        const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
+        k.mesh.visible = !!c; if (!c) continue;
+        k.mat.color.setRGB(...c); if (kind === "maple") k.mat.map = m.season === "spring" ? tex.blossom : tex.maple;
+      }
+      // Bare twigs show only when the leaves are down.
+      if (crowns.twig) { crowns.twig.mesh.visible = m.season === "winter"; crowns.twig.mat.color.setRGB(0.2, 0.16, 0.13); }
     },
   };
 }

@@ -140,7 +140,7 @@ export function buildHall(M, opts) {
   if (lat.length) add(merge(lat), M.lattice, { cast: false });
   if (p.dark) {
     const d = Math.min(2.4, Z - ZB - 0.4);
-    const m = new THREE.Mesh(box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), M.dark);
+    const m = new THREE.Mesh(box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), M.interior(p.platH));
     g.add(m);
     if (p.lamps) for (const sx of [-1, 1]) {
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), M.flame);
@@ -213,10 +213,11 @@ export function buildHall(M, opts) {
     add(fascia, M.fascia, { ao: null });
 
     // Round end tiles closing each row of cover tiles along the eave.
-    const ends = [], cap = new THREE.CylinderGeometry(0.085, 0.085, 0.07, 10);
-    for (let x = -EX + 0.125 + 0.4; x < EX - 0.4; x += 0.25) for (const s of [-1, 1]) ends.push(cap.clone().rotateX(Math.PI / 2).translate(x, roofY(x, s * EZ) + 0.035, s * (EZ + 0.02)));
-    if (G > 0.05) for (let z = -EZ + 0.125 + 0.4; z < EZ - 0.4; z += 0.25) for (const s of [-1, 1]) ends.push(cap.clone().rotateZ(Math.PI / 2).translate(s * (EX + 0.02), roofY(s * EX, z) + 0.035, z));
-    add(merge(ends), M.ridge, { ao: null, cast: false });
+    // Each is a disc of eight triangles, seen only face-on from below; thousands of them line the eaves.
+    const ends = [], cap = new THREE.CircleGeometry(0.085, 8);
+    for (let x = -EX + 0.125 + 0.4; x < EX - 0.4; x += 0.25) for (const s of [-1, 1]) ends.push(cap.clone().rotateY(s > 0 ? 0 : Math.PI).translate(x, roofY(x, s * EZ) + 0.035, s * (EZ + 0.045)));
+    if (G > 0.05) for (let z = -EZ + 0.125 + 0.4; z < EZ - 0.4; z += 0.25) for (const s of [-1, 1]) ends.push(cap.clone().rotateY(s * Math.PI / 2).translate(s * (EX + 0.045), roofY(s * EX, z) + 0.035, z));
+    add(merge(ends), M.ridge, { ao: () => 0.7, cast: false });
 
     // Ridges: the main ridge with its end ornaments, the gable ridges, the hip ridges that sweep up at the corners.
     const ridgeY = EAVE_Y + p.rise, parts = [];

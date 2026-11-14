@@ -4,7 +4,7 @@ import * as THREE from "../../app/v/build/three.module.js";
 const { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } = await import("../../app/src/site.js");
 
 // Materials are only handed on to meshes; any object will do, but they must be distinct and cloneable.
-const M = new Proxy({}, { get: (t, k) => (k === "plaster" ? () => (t.__p ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site);
 
 test("the terraces rise one above another, going north", () => {

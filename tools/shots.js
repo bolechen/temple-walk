@@ -24,7 +24,7 @@ const srv = http.createServer((req, res) => {
   for (let i = 0; i < Math.max(1, names.length); i++) {
     // A name may carry a season and hour and a view: "court@autumn-dusk@third".
     const [vname, when = "", vw = ""] = (names[i] || "arrive").split("@"), [season, time] = when.split("-");
-    await p.goto(`${base}?shot=1&q=high&show=${vname}` + (season ? `&season=${season}` : "") + (time ? `&time=${time}` : "") + (vw ? `&view=${vw}` : ""));
+    await p.goto(`${base}?shot=1&q=high&show=${vname}` + (season ? `&season=${season}` : "") + (time ? `&time=${time}` : "") + (vw ? `&view=${vw}` : ""), { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 }).catch((e) => errs.push(String(e).slice(0, 160)));
     if (!names.length) names = await p.evaluate(() => window.__views);
     await p.waitForTimeout(1200);

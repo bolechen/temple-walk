@@ -1,10 +1,9 @@
-// The picture after the render: a little bloom, tone mapping, then a grade.
+// The picture after the render: depth of field for photographs, a little bloom, then the finish.
 import * as THREE from "../v/build/three.module.js";
 import { EffectComposer } from "../v/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "../v/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "../v/jsm/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "../v/jsm/postprocessing/ShaderPass.js";
-import { OutputPass } from "../v/jsm/postprocessing/OutputPass.js";
 import { NOISE } from "./glsl.js";
 
 export function createPost(renderer, scene, camera, quality) {
@@ -34,21 +33,27 @@ export function createPost(renderer, scene, camera, quality) {
   dof.enabled = false; composer.addPass(dof);
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.7, 0.92);
   composer.addPass(bloom);
-  composer.addPass(new OutputPass());
+  // The finish, in one pass and in the light's own terms: exposure, the colour of the shadows and of the lights,
+  // contrast about middle grey, saturation, a film's shoulder, and only then the screen's encoding and a little grain.
+  // The values are planned like an ink painting: paper-white walls, one heavy dark for roofs and timber, mist between.
   const grade = new ShaderPass({
-    uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uSh: { value: new THREE.Vector3(0.93, 1, 1.035) }, uHi: { value: new THREE.Vector3(1.03, 1, 0.965) }, uSat: { value: 1.06 }, uLift: { value: 0.012 } },
+    uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uExp: { value: 1 }, uCon: { value: 1.1 },
+      uSh: { value: new THREE.Vector3(0.93, 1, 1.035) }, uHi: { value: new THREE.Vector3(1.03, 1, 0.965) }, uSat: { value: 1.06 }, uLift: { value: 0.012 } },
     vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }",
     fragmentShader: NOISE + /* glsl */`
-      varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uT, uSat, uLift; uniform vec2 uRes; uniform vec3 uSh, uHi;
+      varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uT, uSat, uLift, uExp, uCon; uniform vec2 uRes; uniform vec3 uSh, uHi;
+      vec3 film(vec3 x){ return x*(2.36*x+.035)/(x*(2.18*x+.66)+.16); }
       void main(){
-        vec3 c=texture2D(tDiffuse,vUv).rgb; float l=dot(c,vec3(.2126,.7152,.0722));
-        c=mix(c,c*uSh,(1.-l)*.55);                         // the colour of the shadows
-        c=mix(c,c*uHi,l*.45);                              // and of the lights
-        c=mix(vec3(l),c,uSat);
-        c=mix(c,c*c*(3.-2.*c),.6);                         // S-curve
-        c=c*.97+uLift;                                     // lifted blacks: the air is wet
-        vec2 d=vUv-.5; c*=1.-dot(d,d)*.6;                  // vignette
-        c+=(h21(vUv*uRes+fract(uT)*91.)-.5)*.02;           // grain, and dither against banding in the sky
+        vec3 c=max(texture2D(tDiffuse,vUv).rgb,0.)*uExp; float l=dot(c,vec3(.2126,.7152,.0722));
+        c*=mix(uSh,vec3(1.),smoothstep(0.,.3,l));                 // the colour of the shadows
+        c*=mix(vec3(1.),uHi,smoothstep(.22,1.3,l));               // and of the lights
+        c=pow(c/.18,vec3(uCon))*.18;                              // contrast, turning about middle grey
+        l=dot(c,vec3(.2126,.7152,.0722)); c=max(mix(vec3(l),c,uSat*mix(1.,.8,smoothstep(.8,3.,l))),0.);   // saturation, easing off in the lights
+        vec2 d=vUv-.5; c*=1.-dot(d,d)*.5;                         // vignette
+        float m=max(c.r,max(c.g,c.b)); c=mix(film(c),c*(film(vec3(m)).r/max(m,1e-4)),.3);   // the shoulder, partly keeping hue
+        c=c*(1.-uLift)+uLift;                                     // lifted blacks: the air is wet
+        c=mix(c*12.92,1.055*pow(c,vec3(1./2.4))-.055,step(.0031308,c));
+        c+=(h21(vUv*uRes+fract(uT)*91.)-.5)*.018;                 // grain, and dither against banding in the sky
         gl_FragColor=vec4(c,1.);
       }`,
   });
@@ -58,6 +63,6 @@ export function createPost(renderer, scene, camera, quality) {
     render(t) { grade.uniforms.uT.value = t; dof.uniforms.tDepth.value = composer.readBuffer.depthTexture; dof.uniforms.uNear.value = camera.near; dof.uniforms.uFar.value = camera.far; composer.render(); },
     // `focus` in metres from the eye; `aperture` is the largest blur as a fraction of the picture's height. Pass null to turn it off.
     focus(focus, aperture) { dof.enabled = focus !== null; if (focus !== null) { dof.uniforms.uFocus.value = focus; dof.uniforms.uAperture.value = aperture; } },
-    setMood(m) { grade.uniforms.uSh.value.set(...m.sh); grade.uniforms.uHi.value.set(...m.hi); grade.uniforms.uSat.value = m.sat; grade.uniforms.uLift.value = m.lift; bloom.strength = m.bloom; },
+    setMood(m) { const u = grade.uniforms; u.uSh.value.set(...m.sh); u.uHi.value.set(...m.hi); u.uSat.value = m.sat; u.uLift.value = m.lift; u.uExp.value = m.exp; u.uCon.value = m.con ?? 1.1; bloom.strength = m.bloom; },
   };
 }

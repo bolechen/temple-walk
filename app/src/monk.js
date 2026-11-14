@@ -20,7 +20,7 @@ export function createMonk() {
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   const bump = weave();
   const cloth = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.92, bumpMap: bump, bumpScale: 0.6, envMapIntensity: 0.35 });
-  const robeM = cloth(0xc8843a), sashM = cloth(0x7a4a22), linen = cloth(0xe8e0cf), dark = cloth(0x2b2622);
+  const robeM = cloth(0x9a6846), sashM = cloth(0x5a3b28), linen = cloth(0xd9d2c2), dark = cloth(0x2b2622);   // persimmon-dyed cloth after many washings
   const skin = new THREE.MeshStandardMaterial({ color: 0xf2cdae, roughness: 0.58, envMapIntensity: 0.45, emissive: 0x2a1206, emissiveIntensity: 0.55 });
   const ink = new THREE.MeshStandardMaterial({ color: 0x4a2f22, roughness: 0.6 });
   const beadM = new THREE.MeshStandardMaterial({ color: 0x4a2a16, roughness: 0.32, envMapIntensity: 0.9 });
@@ -95,10 +95,14 @@ export function createMonk() {
   gr.addColorStop(0, "rgba(0,0,0,.5)"); gr.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
   const patch = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.95).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
   patch.position.y = 0.03; root.add(patch);
+  const sun = { az: 0, len: 1, op: 1 };
 
   let phase = 0, gait = 0, palms = 0;
   return {
     group: root,
+    // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
+    // long when it is low.
+    setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
     // `speed` in metres a second; `pray` true to bring the palms together and bow the head a little.
     update(dt, speed, pray, t) {
       gait += ((speed > 0.05 ? 1 : 0) - gait) * Math.min(1, dt * 8); palms += ((pray ? 1 : 0) - palms) * Math.min(1, dt * 4);
@@ -112,6 +116,9 @@ export function createMonk() {
       });
       body.position.y = Math.abs(Math.sin(phase)) * 0.024 * gait + breathe; body.rotation.x = 0.06 * gait + 0.08 * palms; body.rotation.z = Math.sin(phase) * 0.03 * gait;
       head.rotation.x = 0.22 * palms + Math.sin(phase * 2) * 0.02 * gait; head.rotation.z = -Math.sin(phase) * 0.025 * gait;
+      // The shadow keeps to the ground and to the sun, whichever way he turns.
+      const a = sun.az - root.rotation.y, off = (sun.len - 1) * 0.42;
+      patch.rotation.y = a; patch.scale.set(1, 1, sun.len); patch.position.set(Math.sin(a) * off, 0.03, Math.cos(a) * off); patch.material.opacity = sun.op;
     },
   };
 }

@@ -47,8 +47,10 @@ export function createSky(renderer, scene, quality, focus) {
   const at = new THREE.Vector3(focus[0], 0, focus[1]);
   const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);
   sun.target.position.set(focus[0], 3, focus[1]);
-  sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow, quality.shadow); sun.shadow.radius = 5; sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.05;
-  Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 128, bottom: -128, near: 10, far: 420 });
+  // The shadow map is long, like the temple: its long side runs up the mountain (the camera's "up" is north), so
+  // the foot of the approach and the summit are both inside it at every hour.
+  sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow / 2, 4096); sun.shadow.radius = 2.5; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.05;
+  Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 128, bottom: -128, near: 10, far: 420 }); sun.shadow.camera.up.set(0, 0, -1);
   const hemi = new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15);
   sun.position.copy(SUN_DIR).multiplyScalar(170).add(at);
   scene.add(sun, sun.target, hemi);

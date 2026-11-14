@@ -2,7 +2,7 @@
 // reflection relative to the frame, and the shadow map. A governor steps down when frames run long,
 // because no two phones are alike and none can be tested ahead of time.
 const TIERS = {
-  low:    { name: "low",    scale: 0.75, budget: 1.0e6, msaa: 0, planar: 0.35, shadow: 2048, bloom: true },
+  low:    { name: "low",    scale: 0.75, budget: 1.0e6, msaa: 0, planar: 0,    shadow: 2048, bloom: true },   // no mirror: drawing the temple twice is what a phone cannot afford
   medium: { name: "medium", scale: 0.9,  budget: 1.6e6, msaa: 2, planar: 0.5,  shadow: 2048, bloom: true },
   high:   { name: "high",   scale: 1,    budget: 2.4e6, msaa: 4, planar: 0.5,  shadow: 4096, bloom: true },
 };

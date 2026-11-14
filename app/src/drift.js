@@ -2,12 +2,13 @@
 // fireflies that rise instead. A cloud of points that follows the visitor, wrapping round as they walk.
 import * as THREE from "../v/build/three.module.js";
 
+// col: three hues a kind comes in; part: how many of the cloud are shown; near: none closer to the eye than this.
 const KINDS = {
-  none:    { col: [1, 1, 1], size: 0, fall: 0, sway: 0, op: 0, glow: 0 },
-  petal:   { col: [1.0, 0.84, 0.9], size: 0.085, fall: 0.55, sway: 0.7, op: 0.92, glow: 0 },
-  leaf:    { col: [0.92, 0.5, 0.1], size: 0.11, fall: 0.8, sway: 1.0, op: 0.95, glow: 0 },
-  snow:    { col: [1, 1, 1], size: 0.07, fall: 1.0, sway: 0.35, op: 0.9, glow: 0 },
-  firefly: { col: [0.75, 1.0, 0.35], size: 0.09, fall: -0.05, sway: 0.5, op: 1, glow: 1 },
+  none:    { col: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], size: 0, fall: 0, sway: 0, op: 0, glow: 0, part: 0, near: 1, point: 0 },
+  petal:   { col: [[1.0, 0.9, 0.93], [0.98, 0.8, 0.86], [1, 0.96, 0.95]], size: 0.06, fall: 0.5, sway: 0.7, op: 0.9, glow: 0, part: 0.45, near: 1.6, point: 0.12 },
+  leaf:    { col: [[0.62, 0.15, 0.05], [0.86, 0.42, 0.08], [0.8, 0.58, 0.12]], size: 0.085, fall: 0.75, sway: 1.0, op: 0.95, glow: 0, part: 0.38, near: 1.6, point: 0.24 },
+  snow:    { col: [[1, 1, 1], [0.95, 0.97, 1], [1, 1, 1]], size: 0.06, fall: 1.0, sway: 0.35, op: 0.9, glow: 0, part: 1, near: 0.7, point: 0 },
+  firefly: { col: [[0.75, 1.0, 0.35], [0.8, 1.0, 0.4], [0.7, 1.0, 0.3]], size: 0.09, fall: -0.05, sway: 0.5, op: 1, glow: 1, part: 0.5, near: 0.5, point: 0 },
 };
 
 export function createDrift(scene, count) {
@@ -15,26 +16,32 @@ export function createDrift(scene, count) {
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
   g.setAttribute("seed", new THREE.BufferAttribute(seed, 4));
-  const u = { uT: { value: 0 }, uCam: { value: new THREE.Vector3() }, uCol: { value: new THREE.Color() }, uSize: { value: 0 }, uFall: { value: 0 }, uSway: { value: 0 }, uOp: { value: 0 }, uGlow: { value: 0 }, uPx: { value: 800 }, uLight: { value: new THREE.Color(1, 1, 1) } };
+  const u = { uT: { value: 0 }, uCam: { value: new THREE.Vector3() }, uCol: { value: new THREE.Color() }, uSize: { value: 0 }, uFall: { value: 0 }, uSway: { value: 0 }, uOp: { value: 0 }, uGlow: { value: 0 }, uPx: { value: 800 }, uLight: { value: new THREE.Color(1, 1, 1) },
+    uCol2: { value: new THREE.Color() }, uCol3: { value: new THREE.Color() }, uPart: { value: 1 }, uNear: { value: 1 }, uPoint: { value: 0 } };
   const mat = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false,
     vertexShader: /* glsl */`
-      attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow; uniform vec3 uCam; varying float vA; varying float vS;
+      attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; varying float vA; varying float vS; varying float vH;
       void main(){
         vec3 B=vec3(34.,13.,34.), p=seed.xyz*B;
         p.y-=uT*uFall*(.6+.8*seed.w); p.x+=sin(uT*.7+seed.w*40.)*uSway; p.z+=cos(uT*.53+seed.w*31.)*uSway*.7;
         p=mod(p-uCam+B*.5,B)-B*.5+uCam; p.y+=3.5;
         vec4 mv=viewMatrix*vec4(p,1.); gl_Position=projectionMatrix*mv;
-        gl_PointSize=uSize*(.55+.9*seed.w)*uPx/max(-mv.z,.3);
+        gl_PointSize=min(uSize*(.55+.9*seed.w)*uPx/max(-mv.z,.3),uPx*.022)*step(fract(seed.x*7.31+seed.z*3.7),uPart);
         float blink=mix(1.,smoothstep(.2,.9,sin(uT*(1.+seed.w*2.)+seed.x*30.)),uGlow);
-        vA=blink*smoothstep(17.,11.,length(p.xz-uCam.xz))*smoothstep(.2,1.2,-mv.z); vS=seed.w;
+        vA=blink*smoothstep(17.,11.,length(p.xz-uCam.xz))*smoothstep(uNear,uNear+1.4,-mv.z); vS=seed.w; vH=seed.z;
       }`,
     fragmentShader: /* glsl */`
-      uniform vec3 uCol, uLight; uniform float uOp, uGlow; varying float vA; varying float vS;
+      uniform vec3 uCol, uCol2, uCol3, uLight; uniform float uOp, uGlow, uPoint, uT; varying float vA; varying float vS; varying float vH;
       void main(){
-        vec2 q=gl_PointCoord-.5; float a=vS*6.3, c=cos(a), s=sin(a); q=mat2(c,-s,s,c)*q; q.y*=mix(1.9,1.,uGlow);   // petals and leaves are longer than wide, each turned its own way
-        float d=length(q); float m=mix(smoothstep(.5,.36,d),smoothstep(.5,0.,d),uGlow);
-        vec3 col=mix(uCol*uLight*(.8+.4*vS),uCol*3.,uGlow);
+        // Each is turned its own way, and turns over as it falls: now broad, now edge-on.
+        vec2 q=gl_PointCoord-.5; float a=vS*6.3+uT*(.4+vS), c=cos(a), s=sin(a); q=mat2(c,-s,s,c)*q;
+        q.x/=mix(.3+.7*abs(sin(uT*1.7+vS*40.)),1.,uGlow);
+        // A leaf is where two circles overlap: pointed at both ends. Snow and fireflies are round.
+        float d=mix(length(q*vec2(1.,1.)),max(length(q-vec2(uPoint,0.)),length(q+vec2(uPoint,0.))),step(.001,uPoint));
+        float m=mix(smoothstep(.5,.44,d),smoothstep(.5,0.,d),uGlow);
+        vec3 hue=vH<.34?uCol:vH<.67?uCol2:uCol3;
+        vec3 col=mix(hue*uLight*(.8+.4*vS)*(1.-.3*smoothstep(.05,0.,abs(q.x))*step(.001,uPoint)),hue*3.,uGlow);
         gl_FragColor=vec4(col,m*uOp*vA);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -44,7 +51,7 @@ export function createDrift(scene, count) {
   return {
     setMood(m, light) {
       const k = KINDS[m.drift] || KINDS.none;
-      u.uCol.value.setRGB(...k.col); u.uSize.value = k.size; u.uFall.value = k.fall; u.uSway.value = k.sway; u.uOp.value = k.op; u.uGlow.value = k.glow;
+      u.uCol.value.setRGB(...k.col[0]); u.uCol2.value.setRGB(...k.col[1]); u.uCol3.value.setRGB(...k.col[2]); u.uPart.value = k.part; u.uNear.value = k.near; u.uPoint.value = k.point; u.uSize.value = k.size; u.uFall.value = k.fall; u.uSway.value = k.sway; u.uOp.value = k.op; u.uGlow.value = k.glow;
       u.uLight.value.copy(light); pts.visible = k.op > 0; mat.blending = k.glow ? THREE.AdditiveBlending : THREE.NormalBlending;
     },
     update(t, cam, px) { u.uT.value = t; u.uCam.value.copy(cam); u.uPx.value = px; },

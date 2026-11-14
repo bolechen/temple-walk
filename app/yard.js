@@ -5,7 +5,7 @@ import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } from "./src/site.js";
-import { createSky, FOG } from "./src/sky.js";
+import { createSky, FOG, SUN_DIR } from "./src/sky.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
@@ -74,7 +74,8 @@ const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, [
   [11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
   [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-9, TOP.y, TOP.zS - 4.5, "maple", 6.5], [9.5, TOP.y, TOP.zS - 4.5, "ginkgo", 8],
-]));
+  ...site.cedars,
+], { a2c: quality.msaa > 0 }));
 const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800));
 const glows = [];
 {
@@ -85,12 +86,15 @@ const glows = [];
   site.root.traverse((o) => {
     if (!o.isMesh || o.material !== M.flame) return;
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, fog: false }));
-    sp.position.copy(o.getWorldPosition(p)); sp.scale.setScalar(o.userData.glow || 2.6); glows.push(sp); scene.add(sp);
+    sp.position.copy(o.getWorldPosition(p)); sp.scale.setScalar((o.userData.glow || 2.6) * 0.55); glows.push(sp); scene.add(sp);
   });
+  ground.setLamps(glows.map((g) => ({ x: g.position.x, y: g.position.y, z: g.position.z, reach: g.scale.x > 1 ? 1.9 : 0.9 })));
 }
 
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
+
+const monk = createMonk(); part("monk", () => scene.add(monk.group));
 
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
@@ -102,7 +106,8 @@ function setMood(season, time) {
   sky.setMood(mood);
   U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.setRGB(...mood.leaf);
   backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value);
-  for (const g of glows) g.material.opacity = Math.min(1, mood.lamp * 0.6);
+  for (const g of glows) { g.material.opacity = Math.min(0.7, mood.lamp * 0.45); g.visible = mood.lamp > 0.01; }
+  monk.setSun(SUN_DIR, mood.sunI / 3);
   renderer.toneMappingExposure = mood.exp;
   renderer.shadowMap.needsUpdate = true;
   document.querySelectorAll("[data-season]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.season === season)));
@@ -112,7 +117,6 @@ function setMood(season, time) {
 setMood(state.season, state.time);
 
 // ---- The novice ------------------------------------------------------------------
-const monk = createMonk(); part("monk", () => scene.add(monk.group));
 let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
 const photo = { on: false, aspect: "tall", lens: 46, dist: 4.6, monk: true, pray: false, focus: null };   // focus: metres, or null to follow the novice
 const APERTURE = { 66: 0.006, 46: 0.012, 26: 0.022 };
@@ -123,8 +127,8 @@ const EYE = 1.3;   // the eye height of a child
 const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.get("show")] || site.start;
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
-let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), camDist = 4.4, speedNow = 0;
-if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = -0.1;
+let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), camDist = 6.2, sideNow = 1.2, speedNow = 0;
+if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 
 let down = null;
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
@@ -202,7 +206,7 @@ function resize() {
   renderer.setPixelRatio(k); renderer.setSize(w, h, false);
   post.resize(w, h, k);
   ground.resize(Math.round(w * k * quality.planar), Math.round(h * k * quality.planar), quality.planar > 0);
-  camera.aspect = w / h; camera.fov = photo.on ? photo.lens : w < h ? 68 : 52; camera.updateProjectionMatrix();
+  camera.aspect = w / h; camera.fov = photo.on ? photo.lens : view === "third" ? (w < h ? 58 : 44) : w < h ? 68 : 52; camera.updateProjectionMatrix();   // from behind him, a longer lens: the halls stand taller
   pxH = h * k; layoutFrame();
 }
 let pxH = 800;
@@ -257,21 +261,25 @@ function frame(now) {
   monk.group.position.set(pos.x, footY, pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
   monk.update(dt, still ? 0 : speedNow, photo.on && photo.pray, t);
-  // The eye: his own, or one that follows a few steps behind. It aims just over his head, so that he stands in the
-  // lower part of the picture and the place fills the rest; it comes in close rather than pass through anything solid,
-  // and it never sinks into the ground or the hillside.
+  // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
+  // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
+  // anything solid, and it never sinks into the ground or the hillside.
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
   if (view === "first" && !photo.on) camera.position.set(pos.x, footY + EYE + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
   else {
-    const ty = footY + (photo.on ? 0.72 : 1.28), reach = photo.on ? photo.dist : 4.4; let d = 0.5;
+    const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = photo.on || walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
+    sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
+    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = footY + (photo.on ? 0.72 : 1.18), reach = photo.on ? photo.dist : 6.2; let d = 0.5;
     for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
-      const cx = pos.x - lx * s2, cz = pos.z - lz * s2, cy = ty - ly * s2;
+      const cx = ox - lx * s2, cz = oz - lz * s2, cy = ty - ly * s2;
       if (walker.wall(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
       d = s2;
     }
     camDist = d < camDist ? d : camDist + (d - camDist) * Math.min(1, dt * 4);
-    const cx = pos.x - lx * camDist, cz = pos.z - lz * camDist;
-    camera.position.set(cx, Math.max(ty - ly * camDist, walker.landAt(cx, cz) + 0.35), cz);
+    const cx = ox - lx * camDist, cz = oz - lz * camDist;
+    // Standing on something higher than he is (a platform, a stair above him), the eye rises enough to see his feet over its edge.
+    const under = walker.landAt(cx, cz), over = Math.max(0, under - footY);
+    camera.position.set(cx, Math.max(ty - ly * camDist, under + 0.35 + over * 1.6), cz);
     if (camDist < 0.95 && !photo.on) monk.group.visible = false;   // backed against a wall, the eye is as good as his own
   }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");
@@ -281,7 +289,7 @@ function frame(now) {
   if (!atDoor) doorArmed = true;
   else if (doorArmed) { doorArmed = false; target = null; route = []; window.dispatchEvent(new CustomEvent("enter-hall")); }
 
-  sky.update(t); backdrop.update(t); props.update(t, dt, still); drift.update(t, camera.position, pxH);
+  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
   }
@@ -300,7 +308,7 @@ setTimeout(() => document.getElementById("hint").classList.add("gone"), 9000);
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = (id) => document.getElementById(id), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
 if (Q.has("shot")) document.body.classList.add("bare");
-const setView = (v) => { view = v; pitch = v === "third" ? Math.min(pitch, -0.08) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; };
+const setView = (v) => { view = v; pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; resize(); };
 setView(view);
 on("viewBtn", () => setView(view === "third" ? "first" : "third"));
 on("moodBtn", () => $("moodPanel").toggleAttribute("hidden"));
@@ -356,7 +364,7 @@ on("shareBtn", async () => {
 window.addEventListener("yard-pause", () => { running = false; });
 window.addEventListener("yard-resume", () => {
   // Step back out of the hall: on the porch, facing the courtyard.
-  pos.set(site.hall.out[0], EYE, site.hall.out[1]); yaw = Math.PI; pitch = view === "third" ? -0.1 : 0.04; target = null; route = []; doorArmed = false;
+  pos.set(site.hall.out[0], EYE, site.hall.out[1]); yaw = Math.PI; pitch = 0.04; target = null; route = []; doorArmed = false;
   footY = walker.heightAt(pos.x, pos.z); heading = 0; for (const k in keys) keys[k] = false;
   if (!running) { running = true; prev = performance.now(); requestAnimationFrame(frame); }
 });

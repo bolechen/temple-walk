@@ -25,12 +25,21 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
-        ${snow ? `float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25);
-          if(sn_>.001){ vec3 sr=texture2D(tSnowN,vWP.xz*.7).xyz; col=mix(col,vec3(.82,.86,.92)*(.9+.2*sr.z),sn_); rough_=mix(rough_,.82,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8),sn_); nd_=mix(nd_,vec3(sr.x*2.-1.,0.,sr.y*2.-1.)*.55,sn_); }` : ""}
-        diffuseColor.rgb=col*ao_;`)
+        ${snow ? `if(uSnow>.001){ float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25); vec3 sr=texture2D(tSnowN,vWP.xz*.7).xyz;
+          col=mix(col,vec3(.82,.86,.92)*(.9+.2*sr.z),sn_); rough_=mix(rough_,.82,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8),sn_); nd_=mix(nd_,vec3(sr.x*2.-1.,0.,sr.y*2.-1.)*.55,sn_); }` : ""}
+        diffuseColor.rgb=col;`)
+      // What is tucked away is dark to the sky, and only a little to the sun.
+      .replace("#include <aomap_fragment>", `reflectedLight.indirectDiffuse*=ao_; reflectedLight.directDiffuse*=mix(1.,ao_,.3);
+        #if defined( USE_ENVMAP ) && defined( STANDARD )
+          reflectedLight.indirectSpecular*=computeSpecularOcclusion(saturate(dot(geometryNormal,geometryViewDir)),ao_,material.roughness);
+        #endif`)
       .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance+=emit_;")
       .replace("#include <roughnessmap_fragment>", "float roughnessFactor=clamp(rough_,.04,1.);")
-      .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n normal=normalize(normal+(viewMatrix*vec4(nd_,0.)).xyz); normal=bumpN(-vViewPosition,normal,bump_);");
+      // A face seen exactly edge-on gives the relief nothing to work from; such a normal is left as it was (one bad
+      // pixel there used to spread through the mirror into a black stain on the paving).
+      .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
+        normal=normalize(normal+(viewMatrix*vec4(nd_,0.)).xyz);
+        if(bump_!=0.){ vec3 nb=bumpN(-vViewPosition,normal,bump_); float qn=dot(nb,nb); if(qn>.5&&qn<2.) normal=nb; }`);
   };
   m.customProgramCacheKey = () => key;
   return m;
@@ -41,7 +50,7 @@ export function createMaterials() {
   const wood = (key, grain, turn) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
     vec3 q=vWP.${turn}*vec3(.95,.5,.95), w=triW(vWN.${turn});
     vec3 A=triA(tWoodA,q,w)/mWood; vec4 Nr=triN(tWoodN,q,w);
-    col=vec3(.125,.064,.034)*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // each timber its own tone
+    col=vec3(.118,.046,.026)*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // dark red-brown, each timber its own tone
     float weather=smoothstep(.42,.72,fbm3(vWP*.6+3.)); col=mix(col,vec3(.15,.132,.11)*A,weather*.4);   // bleached silver where the weather reaches
     float damp=smoothstep(2.2,.9,vWP.y+fbm3(vWP*.8)*.8);          // feet of columns stay damp and dark
     col*=mix(1.,.62,damp); rough_=mix(Nr.w*.92,.5,damp);
@@ -53,7 +62,7 @@ export function createMaterials() {
     if (!plasterCache.has(k)) plasterCache.set(k, procMat("plaster" + k, { roughness: 0.9, envMapIntensity: 0.25 }, `
       float t=vWP.x+vWP.z; vec3 q=vWP/2.7, w=triW(vWN);
       vec3 A=triA(tPlasterA,q,w)/mPlaster; vec4 Nr=triN(tPlasterN,q,w);
-      col=vec3(.73,.725,.69)*mix(vec3(1.),A,.8)*(.9+.14*fbm3(vWP*.5));    // lime wash, with the stains of many rains
+      col=vec3(.88,.865,.82)*mix(vec3(1.),A,.55)*(.92+.12*fbm3(vWP*.5));   // lime wash: the paper of this picture, with the stains of many rains
       float drip=smoothstep(.45,.8,n2(vec2(t*5.,vWP.y*.35)))*smoothstep(${k}+2.2,${k}+3.4,vWP.y+fbm2(vec2(t,2.))*1.5);
       col=mix(col,vec3(.36,.37,.34)*A,drip*.5);                     // rain streaks run down from the cap
       float damp=smoothstep(${k}+1.1,${k},vWP.y-fbm2(vec2(t*.9,5.))*.9);
@@ -62,7 +71,37 @@ export function createMaterials() {
     return plasterCache.get(k);
   };
 
+  // What is seen through an open door: not a black hole but a dim room, warmest low down round its one lamp,
+  // and behind the same mist as everything else. `base` is the height of the building's floor.
+  const interiorCache = new Map();
+  const interior = (base) => {
+    const k = base.toFixed(2);
+    if (!interiorCache.has(k)) interiorCache.set(k, new THREE.ShaderMaterial({
+      side: THREE.BackSide, fog: true, uniforms: Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.fog), { uLamp: U.uLamp }),
+      vertexShader: `
+        #include <common>
+        #include <fog_pars_vertex>
+        varying vec3 vOP;
+        void main(){
+          vOP=position; vec4 mvPosition=modelViewMatrix*vec4(position,1.); gl_Position=projectionMatrix*mvPosition;
+          #include <fog_vertex>
+        }`,
+      fragmentShader: `
+        #include <common>
+        #include <fog_pars_fragment>
+        uniform float uLamp; varying vec3 vOP;
+        void main(){
+          float d=length(vec2(vOP.x,(vOP.y-${k}-1.05)*1.3));
+          vec3 c=mix(vec3(.052,.022,.0095),vec3(.0065,.0045,.003),smoothstep(.15,3.6,d))*(.75+1.7*uLamp);
+          gl_FragColor=vec4(c,1.);
+          #include <fog_fragment>
+        }`,
+    }));
+    return interiorCache.get(k);
+  };
+
   return {
+    interior,
     woodV: wood("woodV", "9.,1.1,9.", "xyz"), woodX: wood("woodX", "1.1,9.,9.", "yxz"), woodZ: wood("woodZ", "9.,9.,1.1", "xzy"),
     plaster,
 
@@ -87,7 +126,7 @@ export function createMaterials() {
       if(vWN.y>.5){
         vec2 q=vWP.xz/vec2(1.1,.7); q.x+=floor(q.y)*.37; vec2 f=fract(q), id=floor(q);
         float edge=min(min(f.x,1.-f.x)*1.1,min(f.y,1.-f.y)*.7)+(n2(vWP.xz*9.)-.5)*.012, joint=1.-smoothstep(.006,.022,edge);
-        vec2 uv=vWP.xz*.75+vec2(h21(id),h21(id+7.))*5.; vec3 A=texture2D(tStoneA,uv).rgb/mStone, nr=texture2D(tStoneN,uv).xyz;
+        vec2 uv0=vWP.xz*.75, uv=uv0+vec2(h21(id),h21(id+7.))*5., gx=dFdx(uv0), gy=dFdy(uv0); vec3 A=textureGrad(tStoneA,uv,gx,gy).rgb/mStone, nr=textureGrad(tStoneN,uv,gx,gy).xyz;
         col=mix(vec3(.2,.202,.19),vec3(.33,.33,.31),h21(id+3.))*mix(vec3(1.),A,.9);
         col=mix(col,vec3(.13,.18,.08),max(moss*.2,joint*.5)); col=mix(col,vec3(.035),joint*.35);
         wet=.75; rough_=mix(nr.z,.28,wet*(1.-joint)); nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*(1.-joint)*1.1; bump_=-joint*.006;
@@ -108,10 +147,15 @@ export function createMaterials() {
       float zone=tr?1.:step(1.18,q.y);
       vec2 gf=abs(fract(vec2(lx,q.y)/.105)-.5); float bar=step(.33,max(gf.x,gf.y));
       float hole=zone*(1.-frame)*(1.-bar)*(1.-rail);
+      float px=.105/max(max(fwidth(lx),fwidth(q.y)),1e-5); hole=mix(zone*(1.-frame)*(1.-rail)*.44,hole,clamp((px-1.6)/2.4,0.,1.));   // too far to count the bars: their mean, not a shimmer
       float panel=(1.-zone)*(1.-frame)*smoothstep(.0,.03,min(min(lx-.16,.89-lx),min(q.y-.16,1.02-q.y)));
       col=woodCol(vWP,vec3(9.,1.1,9.))*(1.-.25*panel); col=mix(col,vec3(.01,.009,.008),hole);
       rough_=mix(.8,1.,hole); bump_=(frame+bar*zone+rail)*.012-hole*.03+panel*.008;
-      emit_=vec3(1.,.5,.17)*uLamp*hole*(.45+.55*n2(vec2(floor(vUv2.x)*.37,2.)));`, { snow: false }),   // emit_: lamplight behind the lattice after dusk
+      // Lamplight behind the lattice after dusk: brightest low down where the lamp stands, fading up the paper;
+      // each room its own strength, and one leaf in eight dark.
+      float leaf=floor(vUv2.x), room=n2(vec2(leaf*.31,2.)), on=step(.125,h21(vec2(leaf,7.)));
+      float up=tr?.25:exp(-pow((q.y-.85)/1.25,2.));
+      emit_=mix(vec3(.19,.068,.02),vec3(.8,.47,.18),up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
       float p=smoothstep(.4,.72,fbm3(vWP*5.)); col=mix(vec3(.16,.125,.085),vec3(.16,.27,.22),p*.75);  // verdigris
@@ -174,7 +218,7 @@ export function createMaterials() {
     straw: procMat("straw", { roughness: 0.8, envMapIntensity: 0.25 }, `
       vec3 q=vWP*1.5, w=triW(vWN); vec3 A=triA(tWeaveA,q,w)/mWeave; vec4 Nr=triN(tWeaveN,q,w);
       col=vec3(.3,.25,.15)*A*A*(.8+.4*fbm3(vWP*1.7)); rough_=mix(.75,.98,Nr.w); nd_=Nr.xyz*2.2;`, { tex: ["weave"] }),
-    dark: new THREE.MeshBasicMaterial({ color: 0x030302, side: THREE.BackSide, fog: false }),
+    dark: new THREE.MeshBasicMaterial({ color: 0x030302, side: THREE.BackSide }),   // the dark indoors; the mist outside still lies in front of it
     flame: new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }),
   };
 }

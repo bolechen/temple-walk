@@ -10,7 +10,7 @@ export function plain(g) {
   const n = g.index ? g.toNonIndexed() : g;
   for (const k of Object.keys(n.attributes)) if (!["position", "normal", "uv"].includes(k)) n.deleteAttribute(k);
   if (!n.attributes.uv) n.setAttribute("uv", new THREE.Float32BufferAttribute(new Array(n.attributes.position.count * 2).fill(0), 2));
-  n.computeVertexNormals();
+  if (!n.attributes.normal) n.computeVertexNormals();   // a turned shape keeps its round normals; only what has none is given flat ones
   return n;
 }
 export const merge = (list) => mergeGeometries(list.map(plain));

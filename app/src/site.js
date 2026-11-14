@@ -108,28 +108,12 @@ export function buildSite(M) {
     }
     tea.group.add(mesh(merge(parts.wood), M.woodX), mesh(merge(parts.glaze), M.glaze), mesh(merge(parts.iron), M.iron), mesh(merge(parts.straw), M.hide));
   }
-  // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts.
-  {
-    const trunks = [], crowns = []; let s = 5; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    for (const [x, z, h, lvl] of [[-4.7, 46.2, 21, 0], [4.7, 46.2, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
-      const y = lvl ? LEVELS[lvl - 1].y : 0;
-      trunks.push(new THREE.CylinderGeometry(0.2, 0.42, h, 9).translate(x, y + h / 2, z));
-      // Whorls of branches up the trunk, each sweeping out and down, shorter toward the top: the ragged
-      // narrow cone of a cryptomeria.
-      const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), at = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), one = new THREE.Vector3(1, 1, 1);
-      for (let by = h * 0.3; by < h; by += 0.55) {
-        const t = by / h, len = (1 - t) * 4.2 + 0.7, n = 5 + Math.floor(rnd() * 3), a0 = rnd() * 6.283;
-        for (let k = 0; k < n; k++) {
-          const a = a0 + (k / n) * 6.283 + (rnd() - 0.5) * 0.5, l = len * (0.7 + rnd() * 0.5), droop = 0.35 + rnd() * 0.3;
-          const g = new THREE.ConeGeometry(0.4 + (1 - t) * 0.75, l, 7, 1).translate(0, l / 2, 0).scale(1, 1, 0.55);   // a flattened bough, thick at the trunk
-          q.setFromUnitVectors(up, v.set(Math.cos(a) * Math.cos(droop), -Math.sin(droop), Math.sin(a) * Math.cos(droop)));
-          crowns.push(g.applyMatrix4(m4.compose(at.set(x, y + by, z), q, one)));
-        }
-      }
-      crowns.push(new THREE.ConeGeometry(0.8, 2.4, 6).translate(x, y + h + 0.7, z));
-      walk.solids.push({ x0: x - 0.8, x1: x + 0.8, z0: z - 0.8, z1: z + 0.8 }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
-    }
-    root.add(mesh(merge(trunks), M.bark), mesh(merge(crowns), M.cedar));
+  // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts. trees.js grows them;
+  // the plan only says where they stand, how tall, and that they are in the way.
+  const cedars = [];
+  for (const [x, z, h, lvl] of [[-4.7, 46.2, 21, 0], [4.7, 46.2, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
+    cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
+    walk.solids.push({ x0: x - 0.8, x1: x + 0.8, z0: z - 0.8, z1: z + 0.8 }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
   }
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
@@ -372,14 +356,14 @@ export function buildSite(M) {
   const views = {
     arrive: [A.xC, A.zC1 - 1.2, 0, 0.3], pool: [A.xC - 0.5, A.zA1 - 1.2, 0.9, -0.12], second: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [1.5, A.zMid + 0.6, 0.9, 0.12], stair: [0, A.zA0 - 0.6, 0, 0.3],
     forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [9.5, 61.5, -0.4, 0.2], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
-    court: [0, 33, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
+    court: [0, 29, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
     teahouse: [-5, 16, -1.35, 0.1], chan: [5, 16, 1.35, 0.1], behind: [19, -22, 0.4, 0.14], terrace: [0, T1.zS + 5.6, 0, 0.25],
     library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 5.5, -1.0, 0.12], dahui: [4, T2.zS - 3.6, 1.0, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
     tea: [0, HILL.zS - 12, 0.6, 0.12], summit: [0, TOP.zS + 9, 0, 0.42], lookback: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.6, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
   };
 
-  return { root, walk, shade, paving, hall, views, places, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, views, places, cedars, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----

@@ -17,7 +17,7 @@ const srv = http.createServer((req, res) => {
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 1500, height: 760 }, deviceScaleFactor: 1 });
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05`);
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
   const shots = [];
   for (const [yaw, pray] of [[Math.PI, false], [Math.PI + 0.9, false], [0, false], [Math.PI, true], [Math.PI - 0.7, true]]) {
