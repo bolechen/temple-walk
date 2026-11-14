@@ -30,7 +30,7 @@ export function createSky(renderer, scene, quality, focus) {
         vec2 cp=d.xz/(up+.18)*1.1+vec2(uT*.004,0.);
         float deck=fbm2(cp)*.65+fbm2(cp*2.7+3.)*.35;
         float cov=smoothstep(.95-uCloud*.75,1.2-uCloud*.75,deck+.22)*smoothstep(0.,.16,d.y);
-        vec3 cloud=mix(uHor*.82+uZen*.12,uSunCol*1.05,pow(s,2.5)*.65+.12)*mix(.84,1.08,smoothstep(.3,.8,deck));
+        vec3 cloud=mix(uHor*.82+uZen*.12,uSunCol*1.05,pow(s,2.5)*.65+.12)*mix(.74,1.06,smoothstep(.25,.85,deck));
         c=mix(c+uSunCol*disk*3.*(1.-cov),cloud,cov*.92);
         c=mix(uFog,c,smoothstep(-.02,.14,d.y));
         gl_FragColor=vec4(min(c,vec3(6.)),1.);

@@ -93,7 +93,7 @@ export function buildSite(M) {
   putTwo({   // the gate: you pass through its middle bay, under an upper storey
     xs: [-9.6, -6.0, -2.2, 2.2, 6.0, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0, rise: 2.2,
     front: "pass", back: "pass", dark: false, timber: true, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
-  }, { timber: true, xs: [-7.0, -2.2, 2.2, 7.0], zs: [1.8, -1.8], colTop: 3.0, overhang: 2.1, rise: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
+  }, { timber: true, platOut: 0.85, rail: true, xs: [-7.0, -2.2, 2.2, 7.0], zs: [1.8, -1.8], colTop: 3.0, overhang: 2.1, rise: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
 
   const strikers = [];
   for (const sx of [-1, 1]) {   // at either end of the gate, completing its five roofs: the bell (east) and the drum (west)
@@ -402,7 +402,7 @@ function lantern() {
     lathe([[0, 0], [0.6, 0], [0.6, 0.12], [0.48, 0.18], [0.4, 0.34], [0.52, 0.44], [0.54, 0.54], [0.24, 0.6], [0.21, 0.64], [0.2, 1.9], [0.24, 1.96], [0.44, 2.04], [0.48, 2.1], [0.46, 2.16], [0.2, 2.24],
       [0.16, 2.28], [0.155, 2.74], [0.19, 2.8], [0.34, 2.87], [0.36, 2.93], [0.2, 3.04], [0.08, 3.1], [0.06, 3.16], [0.11, 3.24], [0.06, 3.34], [0, 3.38]], 8),
   ];
-  return merge(parts);
+  return merge(parts).scale(1.08, 1.34, 1.08);   // taller than a man, as they stand before the old halls
 }
 
 // A bronze bell hung from a cross beam, with the log that strikes it slung beside it.

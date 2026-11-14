@@ -140,7 +140,7 @@ export function createMaterials() {
       col*=mix(1.,.6,wet); if(vWN.y<-.5) col*=.3;`, { tex: ["stone", "blocks"] }),
 
     // vUv2 = (leaf index + position across the leaf, height mapped to 0..3.02); transoms are offset by 100 and mapped to 0...7.
-    lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3 }, `
+    lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3, side: THREE.DoubleSide }, `
       vec2 q=vUv2; bool win=q.y>150., tr=q.y>50.&&!win; if(tr) q.y-=100.; if(win) q.y-=200.; float lx=fract(q.x)*1.05, top=tr?.7:3.02;
       float fr=min(min(lx,1.05-lx),min(q.y-(win?1.25:0.),top-q.y)), frame=1.-smoothstep(.065,.07,fr);
       float rail=tr?0.:1.-smoothstep(.05,.055,abs(q.y-1.18));
@@ -174,7 +174,7 @@ export function createMaterials() {
     earth: procMat("earth", { roughness: 0.95, envMapIntensity: 0.15 }, `
       float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*.09+4.);
       vec2 uv=vWP.xz/1.9; vec3 A=mix(texture2D(tLeavesA,uv).rgb,texture2D(tLeavesA,uv.yx*.37+.3).rgb,.35)/mLeaves, nr=texture2D(tLeavesN,uv).xyz;   // two scales, so the litter does not repeat
-      col=mix(vec3(.028,.036,.02),vec3(.066,.074,.04),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=.75+.5*fbm2(vWP.xz*.05+7.);   // dark and damp, never the same for long
+      col=mix(vec3(.036,.046,.027),vec3(.084,.094,.052),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=.75+.5*fbm2(vWP.xz*.05+7.);   // dark and damp, never the same for long
       rough_=nr.z; nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*1.6;`, { tex: ["leaves"] }),
     // Rough rubble laid dry: the lining of the well.
     rubble: procMat("rubble", { roughness: 0.92, envMapIntensity: 0.25 }, `

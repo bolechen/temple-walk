@@ -75,7 +75,7 @@ export function buildHall(M, opts) {
     const ex = PX - inset;
     for (const [z, gap] of [[zF - inset, gapF], [zB + inset, gapB]]) { if (gap) { run("x", -ex, -gap, z); run("x", gap, ex, z); } else run("x", -ex, ex, z); }
     run("z", zB + inset, zF - inset, -ex); run("z", zB + inset, zF - inset, ex);
-    add(merge(parts), p.platBase > 0 ? M.woodX : M.marble, { ao: null });
+    add(merge(parts), p.platBase > 0 ? M.woodX : M.monolith, { ao: null });   // a stone railing is the stone of its platform, not white marble
   }
 
   // ---- Columns ----
@@ -110,6 +110,7 @@ export function buildHall(M, opts) {
   const planked = (w, h, d, x, y, z, alongZ) => {
     const span = alongZ ? d : w, n = Math.max(3, Math.round(span / 0.3)), pw = span / n;   // each plank its own board, no two quite flush
     for (let k = 0; k < n; k++) { const o = -span / 2 + pw * (k + 0.5), t = 0.05 + 0.03 * ((k * 7) % 3) / 2; boards.push(alongZ ? box(t, h, pw - 0.012, x, y, z + o) : box(pw - 0.012, h, t, x + o, y, z)); }
+    boards.push(alongZ ? box(0.03, h, d - 0.02, x, y, z) : box(w - 0.02, h, 0.03, x, y, z));   // a lining behind the planks, so no daylight shows between them
     for (const o of [-span / 2 + 0.06, span / 2 - 0.06]) boards.push(alongZ ? box(0.14, h, 0.12, x, y, z + o) : box(0.12, h, 0.14, x + o, y, z));
     for (const yy of [y - h / 2 + 0.09, y - h * 0.08, y + h / 2 - 0.09]) boards.push(alongZ ? box(0.15, 0.14, d, x, yy, z) : box(w, 0.14, 0.15, x, yy, z));
   };
@@ -138,6 +139,18 @@ export function buildHall(M, opts) {
         if (hasTransom) leaf(x0, x1, head + 0.14, topY, 1, zz, flip);
         // Seven red, eight white: the row of pale dashes along every tie-beam.
         const dash = (x1 - x0 - 0.3 - 7 * 0.07) / 8; for (let k = 0; k < 8; k++) walls.push(box(dash, 0.07, 0.02, x0 + 0.15 + k * (dash + 0.07) + dash / 2, by + 0.02, z + sign * 0.105));
+      } else if (mode === "pass" && centre) {
+        if (p.timber && sign > 0) {   // the way through: a lintel with its four pegs, a sill to step over, two leaves standing open, lattice above
+          const cx = (x0 + x1) / 2, w = x1 - x0, lw = w / 2 - 0.12, lh = head - p.platH - 0.26;
+          bx.push(box(w, 0.22, 0.24, cx, head + 0.02, z), box(w, 0.13, 0.22, cx, p.platH + 0.065, z));
+          for (let k = 0; k < 4; k++) boards.push(box(0.16, 0.16, 0.14, cx + (k - 1.5) * w * 0.2, head + 0.02, z + 0.16));
+          for (const sx of [-1, 1]) {
+            const hx = cx + sx * (w / 2 - 0.05); boards.push(box(0.07, lh, lw, hx, p.platH + 0.13 + lh / 2, z - 0.1 - lw / 2));
+            for (const yy of [0.22, 0.5, 0.78]) boards.push(box(0.1, 0.1, lw, hx, p.platH + 0.13 + lh * yy, z - 0.1 - lw / 2));
+            for (let r = 0; r < 5; r++) for (let c = 0; c < 4; c++) studs.push(box(0.05, 0.07, 0.07, hx - sx * 0.05, p.platH + 0.55 + r * (lh - 0.9) / 4, z - 0.25 - c * (lw - 0.3) / 3));
+          }
+          if (hasTransom) leaf(x0, x1, head + 0.14, topY, 1, zz, flip);
+        }
       } else if (!(mode === "pass" && centre)) {
         if (p.timber) { planked(x1 - x0, head - p.platH, 0, (x0 + x1) / 2, (head + p.platH) / 2, z);
           if (Math.abs(i - mid) === 1 && sign > 0) {   // the bays either side of the way through are doors too, kept shut: two leaves, a seam, rows of iron studs
@@ -158,7 +171,7 @@ export function buildHall(M, opts) {
   const underside = (d) => EAVE_Y + profile(d) - 0.17;
   if (p.brackets) {   // the white band between the bracket sets, all the way round
     const bandH = underside(p.overhang) - PLATE_TOP + 0.12, y = PLATE_TOP + bandH / 2;
-    (p.timber ? boards : walls).push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
+    walls.push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
   }
   add(merge(bx), M.woodX); add(merge(bz), M.woodZ);
   if (boards.length) add(merge(boards), M.woodV);

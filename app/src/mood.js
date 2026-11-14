@@ -35,7 +35,7 @@ export function moodOf(season, time) {
   // Summer by day is the picture the place is judged by (J01 in docs/ART-SPEC.md): overcast, just after rain. No sun
   // to speak of, a grey sky darker than the white walls, thin cool mist that leaves what is near perfectly clear.
   if (season === "summer" && time === "day") Object.assign(m, { cloud: 1, sunI: 0.5, sunCol: [0.62, 0.65, 0.66], hills: [0.05, 0.085, 0.07], hemiI: 1.15, hemiS: [0.8, 0.86, 0.87], hemiG: [0.38, 0.4, 0.36],
-    fog: [0.6, 0.65, 0.63], fogD: 0.0056, zen: [0.44, 0.48, 0.5], hor: [0.56, 0.6, 0.59], exp: 1.1, sat: 0.98, lift: 0.006, bloom: 0.14, mist: 0.8, glow: 0.3 });
+    fog: [0.6, 0.65, 0.63], fogD: 0.0056, zen: [0.36, 0.4, 0.42], hor: [0.5, 0.54, 0.53], exp: 1.16, sat: 0.98, lift: 0.006, bloom: 0.14, mist: 0.8, glow: 0.3 });
   if (s.snow && time !== "night") m.fog = t.fog.map((v, i) => v * 0.6 + [0.86, 0.88, 0.92][i] * 0.4);
   m.drift = s.drift === "none" && time === "night" ? "firefly" : s.drift;
   m.line = LINES[season][dark ? 1 : 0];
