@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-14T19:38:38.837Z",
+  "generated_at": "2026-11-14T19:53:31.295Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
-    "url": "https://github.com/bolechen/temple-walk/commit/dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c"
+    "sha": "8abc84adbd8554e9103caac01239105119b357ce",
+    "url": "https://github.com/bolechen/temple-walk/commit/8abc84adbd8554e9103caac01239105119b357ce"
   },
   "delivery": {
     "schema_version": 1,
     "scene_id": "T00",
-    "summary": "T00 五区（竹林、石阶、照壁、山门、首院）对齐 J01 阴天雨后参考图的整改，附四个维度的评审与三轮复核、六机位截图、行走录像和 T4 帧记录（均出自提交 b6da920）。开发方自评：未达到验收——A08 未通过，A06 因没有目标设备而 blocked。",
+    "summary": "T00 五区（竹林、石阶、照壁、山门、首院）对齐 J01 阴天雨后参考图的整改，附四个维度的评审与四轮复核、六机位截图、行走录像和 T4 帧记录（均出自提交 dfc9909）。开发方自评：未达到验收——四轮复核后没有未关闭的阻断或严重项，但 A06 因没有目标设备而 blocked，A02 没有真人操作的录像，独立验收未做。",
     "changes": [
       "基准预设「夏·昼」改为阴天雨后：弱日光、灰天、薄雾，近山做成从雾里起来的林坡",
       "材质：木色去红压暗并加雨蚀；白墙污痕收到墙脚与压顶下；铺地积水只在洼处、苔只在常潮的缝；瓦面降低反光，瓦的背面按深色木板渲染",
@@ -26,10 +26,10 @@
       "开发工具服务器只在 app/ 内解析路径、只监听 127.0.0.1，并有回归测试"
     ],
     "known_issues": [
-      "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上三次平均 60.9, 60.5, 61.8 帧/秒，不能代表目标设备",
+      "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上三次平均 61.5, 60.9, 61.3 帧/秒，不能代表目标设备",
       "A02 只有程序行走的录像与自动化测试，没有真人正常速度往返的录像",
-      "三轮复核后仍未关闭的严重项 4 条：ART-08、ART-14、NEW-02、R4-01，见 docs/t00/review-log.json",
-      "院地上硬边的深色块、石阶边缘的黑线、踢面与挡墙同一种石头、跳过镜面时倒影冻住（R4-01）",
+      "四轮复核后没有未关闭的阻断或严重项；剩 36 条轻微项（18 条有改善未到位、18 条未动）和 9 条已修未复核，见 docs/t00/review-log.json",
+      "石阶踢面和两侧墙同一种石头且无压顶；石阶砌缝的暗带延到墙上；院地积水里屋顶倒影的直边仍显眼",
       "大殿正脊下有一道透天的缝；山门通道斜看像窄缝；上段石阶和挡墙仍是同一种毛石",
       "远竹仍是平片；柳杉轮廓仍显涂抹；墙面污痕仍偏均匀；瓦面偏平",
       "佛像与须弥座模型（app/m）没有再分发授权记录；项目代码尚无 LICENSE",
@@ -57,18 +57,18 @@
       "docs/t00/asset-register.csv",
       "docs/STAIR-LOCOMOTION.md"
     ],
-    "record_commit": "8b78fa039f19ca3b657294ef7b3d4a5689c7db6d",
+    "record_commit": "8abc84adbd8554e9103caac01239105119b357ce",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43632829716,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43632829716",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43634519342,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43634519342",
     "checks": {
       "syntax": "success",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "in_progress",
+      "e2e": "pending"
     },
     "scope": [
       "boot",
@@ -77,7 +77,7 @@
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43632829716"
