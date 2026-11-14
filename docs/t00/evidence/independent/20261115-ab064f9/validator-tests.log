@@ -1,0 +1,9 @@
+command: python3 skills/temple-review/scripts/test_validate_review.py
+reviewed_commit: ab064f9bba6896b556381eedce5a700e2baf5535
+exit_code: 0
+
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.268s
+
+OK
