@@ -2,7 +2,7 @@
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "..", "app"), out = path.join(__dirname, "..", "..", "tools", "out");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".png": "image/png" };
+const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml" };
 
 async function serve() {
   const srv = http.createServer((req, res) => {
@@ -24,9 +24,13 @@ async function open(browser, base, query, opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, ...ctxOpts });
   const page = await ctx.newPage(), errors = [];
   page.on("pageerror", (e) => errors.push("page error: " + String(e.stack || e).slice(0, 400)));
-  page.on("console", (m) => m.type() === "error" && !/GPU stall|favicon/.test(m.text()) && errors.push("console: " + m.text().slice(0, 300)));
+  page.on("console", (m) => {
+    if (m.type() !== "error" || /GPU stall/.test(m.text())) return;
+    const at = m.location();
+    errors.push("console: " + m.text().slice(0, 300) + (at.url ? ` (${at.url}:${at.lineNumber ?? at.line ?? 0})` : ""));
+  });
   page.on("requestfailed", (r) => !/fonts\.g/.test(r.url()) && errors.push("request failed: " + r.url()));
-  page.on("response", (r) => r.status() >= 400 && !/favicon/.test(r.url()) && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+  page.on("response", (r) => r.status() >= 400 && errors.push(`HTTP ${r.status()}: ${r.url()}`));
   await page.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });   // the page builds the whole temple before it reports itself loaded
   await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   // A visitor arriving meets the title first and steps in from it; a scenario may ask to be left at the title.
