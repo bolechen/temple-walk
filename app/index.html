@@ -125,7 +125,8 @@
   #keys p { margin: 20px 0 0; text-align: center; font-size: 12px; letter-spacing: .3em; opacity: .5; }
 
   /* The pause menu: the same card as the keys, with the few things a visitor may set. */
-  #menu { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 22; width: min(86vw, 380px); padding: 26px 30px 22px; background: rgba(11,10,9,.78); border: 1px solid var(--line); border-radius: 4px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 60px rgba(0,0,0,.45); font: 400 15px/1 var(--kai); letter-spacing: .16em; display: grid; gap: 16px; }
+  #menu { position: absolute; inset: 0; z-index: 22; display: grid; place-items: center; background: rgba(8,8,7,.28); touch-action: none; }   /* covers the view: nothing behind it is touched while it is open */
+  #menu .card { width: min(86vw, 380px); box-sizing: border-box; padding: 26px 30px 22px; background: rgba(11,10,9,.78); border: 1px solid var(--line); border-radius: 4px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 60px rgba(0,0,0,.45); font: 400 15px/1 var(--kai); letter-spacing: .16em; display: grid; gap: 16px; }
   #menu h2 { margin: 0 0 4px; font: 400 26px/1 var(--brush); letter-spacing: .4em; text-indent: .4em; text-align: center; }
   #menu .set { display: grid; grid-template-columns: 6.2em 1fr; align-items: center; gap: 12px; } #menu .opts { display: flex; gap: 6px; flex-wrap: wrap; } #menu .opts .chip, #menu .set > .chip { padding: 8px 10px; min-height: 34px; min-width: 40px; justify-self: start; }
   #menu input[type=range] { width: 100%; accent-color: var(--ember); } #menu .note { margin: -6px 0 0; font-size: 12px; letter-spacing: .1em; opacity: .8; } #menu .note .chip { padding: 5px 8px; min-height: 0; font-size: 12px; margin-left: .6em; }
@@ -180,7 +181,7 @@
     <button class="chip" id="bookBtn" type="button" aria-label="打开朱印帐">朱印</button>
     <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置">歇脚</button>
   </div>
-  <div id="menu" role="dialog" aria-label="歇脚" hidden>
+  <div id="menu" role="dialog" aria-label="歇脚" hidden><div class="card">
     <h2>歇脚</h2>
     <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
     <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
@@ -188,7 +189,7 @@
     <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
     <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
     <div class="row"><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuResume" type="button">继续</button></div>
-  </div>
+  </div></div>
   <div id="moodPanel" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
     <div><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>

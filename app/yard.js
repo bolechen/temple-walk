@@ -246,7 +246,7 @@ canvas.addEventListener("pointerup", (e) => {
 const keys = {};
 const dropButton = document.getElementById("dropBtn");
 function availableDrop() {
-  if (hop || inside || stage || passing || photo.on || !document.body.classList.contains("entered")) return null;
+  if (hop || leap || inside || stage || passing || photo.on || !document.body.classList.contains("entered")) return null;   // not in mid-air either
   for (const id of ["book", "print", "slip", "keys", "moodPanel", "menu"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return null; }
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y;
   const s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
@@ -269,6 +269,7 @@ if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Spac
 addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const press = (id) => { const el = document.getElementById(id); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
+  if (!menuEl.hidden && k !== "escape") return;   // while the pause menu is open only Esc is heard
   // The keys such games use: E to do what is offered here, V to change the view, B for the book, P to photograph, T for the season and hour.
   if (k === " " && e.target?.tagName === "BUTTON") return;
   if (hop && (k === "e" || k === "enter" || k === " ")) { e.preventDefault(); return; }
@@ -322,7 +323,7 @@ function layoutFrame() {
 const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
 
-let prev = performance.now(), frames = 0, tour = null, eyeY = footY;
+let prev = performance.now(), frames = 0, tour = null, eyeY = footY, mirrorOn = true;
 const load = { tris: 0, calls: 0, ms: 0 };
 function frame(now) {
   if (!running) return;
@@ -338,7 +339,7 @@ function frame(now) {
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) settle(true); } }
   const len = Math.hypot(vx, vz);
   if (len > 0 && !airborne) {
-    const walkPace = keys.shift ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);
+    const walkPace = keys.shift || Math.hypot(joy.x, joy.y) > 0.94 ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);
     const pace = Q.has("fast") ? 14 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? keys.shift ? 1.6 : 1.25 : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
     const step = Math.min(f || s ? 1e9 : len, pace * dt); vx = (vx / len) * step; vz = (vz / len) * step;
     // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
@@ -411,7 +412,10 @@ function frame(now) {
   if (photo.on) post.focus(photo.focus ?? (photo.monk ? camDist : 14), APERTURE[photo.lens] || 0.012);
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
-  if (quality.planar > 0 && !inside && footY < 0.6) ground.render(renderer, camera);   // there are no puddles indoors, and no mirror on the terraces above
+  // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
+  // approach where the eye is under it. A jump does not change which of these he is in.
+  if (!aloft) mirrorOn = footY > -0.6 && footY < 0.6;
+  if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
@@ -485,7 +489,7 @@ let lastHall = null;
 function indoors(hall) {
   if (hall) hints.say.indoors();
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; }
-  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); target = null; route = [];
+  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); target = null; route = []; hop = leap = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (["site", "backdrop", "bamboo", "trees", "ground", "props"].includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none"; });
@@ -563,7 +567,7 @@ function openMenu(open) {
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(menuEl.hidden)); on("menuKeys", () => { openMenu(false); hints.card(true); });
   on("reloadBtn", () => location.reload());
   // Lost, or wedged somewhere he should not be: back to where the path begins.
-  on("menuHome", () => { if (inside) pass(null); openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; });
+  on("menuHome", () => { if (inside) indoors(null); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; });
 }
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is

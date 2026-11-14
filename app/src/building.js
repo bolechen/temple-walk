@@ -142,10 +142,11 @@ export function buildHall(M, opts) {
       } else if (mode === "pass" && centre) {
         if (p.timber && sign > 0) {   // the way through: a lintel with its four pegs, a sill to step over, two leaves standing open, lattice above
           const cx = (x0 + x1) / 2, w = x1 - x0, lw = w / 2 - 0.12, lh = head - p.platH - 0.26;
-          bx.push(box(w, 0.22, 0.24, cx, head + 0.02, z), box(w, 0.13, 0.22, cx, p.platH + 0.065, z));
+          bx.push(box(w, 0.22, 0.24, cx, head + 0.02, z), box(w, 0.05, 0.22, cx, p.platH + 0.025, z));   // the sill is worn low: feet do not pass through it
           for (let k = 0; k < 4; k++) boards.push(box(0.16, 0.16, 0.14, cx + (k - 1.5) * w * 0.2, head + 0.02, z + 0.16));
           for (const sx of [-1, 1]) {
             const hx = cx + sx * (w / 2 - 0.05); boards.push(box(0.07, lh, lw, hx, p.platH + 0.13 + lh / 2, z - 0.1 - lw / 2));
+            for (let c = 1; c < 6; c++) boards.push(box(0.085, lh, 0.012, hx, p.platH + 0.13 + lh / 2, z - 0.1 - (lw * c) / 6));   // the seams between its boards
             for (const yy of [0.22, 0.5, 0.78]) boards.push(box(0.1, 0.1, lw, hx, p.platH + 0.13 + lh * yy, z - 0.1 - lw / 2));
             for (let r = 0; r < 5; r++) for (let c = 0; c < 4; c++) studs.push(box(0.05, 0.07, 0.07, hx - sx * 0.05, p.platH + 0.55 + r * (lh - 0.9) / 4, z - 0.25 - c * (lw - 0.3) / 3));
           }

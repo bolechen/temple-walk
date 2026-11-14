@@ -27,7 +27,7 @@ export function createTour(spec, y) {
   // Called once a frame with the clock. Nothing is measured until the place has drawn itself and he has been let in.
   function frame(now) {
     if (phase === "done") return;
-    if (phase === "wait") { if (document.body.dataset.ready !== "1" || !document.body.classList.contains("entered")) return; result.ready_ms = now - t0; phase = "warm"; began = now; last = now; next(); return; }
+    if (phase === "wait") { if (document.body.dataset.ready !== "1" || !document.body.classList.contains("entered")) return; result.ready_ms = now; /* a frame's clock counts from the start of the navigation: the whole load */ phase = "warm"; began = now; last = now; next(); return; }
     const dt = now - last; last = now;
     const s = y.state(); if (!s.target) next();                                    // at either end, turn round and go back
     y.face(s.heading, Math.min(0.1, dt / 1000));                                                             // he looks where he is going
