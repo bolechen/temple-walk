@@ -115,7 +115,8 @@ export function createMaterials() {
       float gutter=1.-smoothstep(.0,.16,abs(abs(r)-.5)+.02);
       float moss=smoothstep(.5,.75,fbm2(vWP.xz*.9+4.))*gutter; col=mix(col,vec3(.1,.14,.06),moss*.7);
       col*=mix(1.,mix(.5,1.,cover*.6+.4),detail);                   // gutters sit in shade
-      rough_=mix(.5,.72,tone)-.1*cover*detail;`),
+      rough_=mix(.5,.72,tone)-.1*cover*detail;
+      if(!gl_FrontFacing){ col=vec3(.03,.023,.018); nd_=vec3(0.); bump_=0.; rough_=1.; ao_=min(ao_,.5); }`),
 
     // Dressed stone. Faces that look up are slabs, each cut from a different part of the scan; faces that look out
     // are coursed masonry.
