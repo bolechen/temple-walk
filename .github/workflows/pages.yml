@@ -3,8 +3,6 @@ name: Verify and deploy to GitHub Pages
 on:
   push:
     branches: [main]
-    # Notes, tests and tools do not change what is published.
-    paths: ["app/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
