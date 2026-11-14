@@ -1,45 +1,45 @@
 {
  "scene_id": "T00",
- "commit": "31660e48de6062f8e8bc186ed55a863e38da27d6",
- "captured": "2026-11-14T16:50:13.296Z",
+ "commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+ "captured": "2026-11-14T17:31:57.047Z",
  "how": "tools/gpu-render.sh on a Hugging Face Job: the real page in headless Chromium on an NVIDIA Tesla T4 (ANGLE/Vulkan). Not offline rendering; not the target device.",
  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
  "note": "The job does not carry app/m (the statue models), which are indoors and off this route; their 404s are ignored there. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450, one walk up and back made by the page itself (diagnostic, not a person at the controls).",
  "files": [
   {
    "file": "CAM-01.jpg",
-   "bytes": 678961,
-   "sha256": "0f8b7380d1aaea0c193dfbef8efdc17da02dda405b019f8c7416e7b276351620",
+   "bytes": 708814,
+   "sha256": "80f34ba5d8be9c64f09bf935aa6299db8d246e42c56dc0f62ad9186e50a819d8",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-02.jpg",
-   "bytes": 653567,
-   "sha256": "919dfa0d1f24415a216ef320c4801ab6d11cdab12f4e4e88ce6c32499e842aac",
+   "bytes": 674086,
+   "sha256": "10256bcf69cc9617f7c7b6311109adc0521cc9fe25052f331283ca952b05a1f6",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-03.jpg",
-   "bytes": 468946,
-   "sha256": "befb030befdccb38eb06d8dcda93ae43504a635ffd8527073e4fa84f2f766f9b",
+   "bytes": 476382,
+   "sha256": "f3e5c5973a2f6878f2045a499a4cfe010b0bf11c8bcd1cd80380e25797be6d25",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-04.jpg",
-   "bytes": 350378,
-   "sha256": "7d67d96302c4c036dd932c7541fc2c2579ef8076e30da27fb1d77b502bcbf444",
+   "bytes": 388444,
+   "sha256": "c0d5caed9136c21800c4850f3ccc3e23cd470edbf94040d5f4423575459e34fd",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-05.jpg",
-   "bytes": 414516,
-   "sha256": "13275b5a2664b2df25dee925562686a01cb2a9872b4eef4d585e728aaecc8dea",
+   "bytes": 380698,
+   "sha256": "64e5d6a5ad2fd46e073a229eef8759a78eeab11a33fa27085320905a441c45cc",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-06.jpg",
-   "bytes": 464838,
-   "sha256": "79bb5de70c10bf0064a8b38c8c05468f6dd967226901cc6db86cce5de0924efc",
+   "bytes": 468606,
+   "sha256": "31be9a8d51fdf6994f0f137353f25e0676136b043e2fba49791a1448409c7e72",
    "kind": "runtime screenshot"
   },
   {
@@ -50,14 +50,14 @@
   },
   {
    "file": "frame-times.csv",
-   "bytes": 239494,
-   "sha256": "58832d082144584ea8169945af0cd1e72e8affb22257987745c481909e2d8b3f",
+   "bytes": 244130,
+   "sha256": "87949b6b1c8bf3cb416ae98bcb99b1460f47813c416db668ab25807fc8c9ba76",
    "kind": "diagnostic"
   },
   {
    "file": "walkthrough.webm",
-   "bytes": 22044536,
-   "sha256": "f278876c63c87e5332b1a73302d758eea88f1a2657fdf25982f0466db019b25d",
+   "bytes": 22220235,
+   "sha256": "0b93e64c74e06bc60bb0edcf9fb3c98a45f75bf27e80fe27ba6fe37918d46beb",
    "kind": "diagnostic"
   }
  ]

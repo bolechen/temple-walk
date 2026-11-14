@@ -36,14 +36,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "镜面没有了，积水约一两成；石板仍偏浅"
+    "note": "镜面没有了，积水约一两成；铺地仍偏亮，CAM-05 里前院铺地和白墙一个明度"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "镜面没有了，积水约一两成；石板仍偏浅"
+    }
+   ]
   },
   {
    "id": "ART-02",
@@ -56,14 +66,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "major",
-    "note": "大殿不再被洗白；天空仍是最大最亮的一块平面"
+    "note": "大殿不再被洗白；天空（亮度 180–210）仍比所有白墙（145–157）亮，是 CAM-03/04/06 里最大的一块平面"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "大殿不再被洗白；天空仍是最大最亮的一块平面"
+    }
+   ]
   },
   {
    "id": "ART-03",
@@ -73,17 +93,27 @@
    "issue": "木构像新刷的红漆，无木纹；目标是风化深木，檐下近黑",
    "suggested_fix": "基色改深褐，降饱和，加竖向雨蚀发灰和柱脚返潮",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open_improved",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "improved_but_open",
-    "remaining_severity": "minor",
-    "note": "木色已是低饱和深褐；近看是斑点而非板缝和雨痕"
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "低饱和深褐，有竖向条痕，檐下近黑"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "木色已是低饱和深褐；近看是斑点而非板缝和雨痕"
+    }
+   ]
   },
   {
    "id": "ART-04",
@@ -96,14 +126,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "major",
-    "note": "山门是木板壁和格子；檐下读不出斗拱，大殿斗拱仍像白底上的剪影"
+    "note": "山门有板壁、格子和真椽；两层的拱眼壁是白灰加深色斗拱剪影（美术评审仍嫌它像贴片；结构评审认为这是对的并已读得出铺作）"
    },
-   "dev_note": "山门改木板壁和版门；斗拱仍是平片"
+   "dev_note": "山门改木板壁和版门；斗拱仍是平片",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "山门是木板壁和格子；檐下读不出斗拱，大殿斗拱仍像白底上的剪影"
+    }
+   ]
   },
   {
    "id": "ART-05",
@@ -116,14 +156,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "污痕变淡，但仍均匀布满整面墙"
+    "note": "污痕变淡，但仍是整面均匀的斑驳"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "污痕变淡，但仍均匀布满整面墙"
+    }
+   ]
   },
   {
    "id": "ART-06",
@@ -136,14 +186,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "坡面变暗并有矮植；仍是一张均匀的落叶毯，没有石块"
+    "note": "变暗并有矮植；仍是一张均匀的落叶毯，没有石块"
    },
-   "dev_note": "压暗并加矮竹和蕨；没有石块"
+   "dev_note": "压暗并加矮竹和蕨；没有石块",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "坡面变暗并有矮植；仍是一张均匀的落叶毯，没有石块"
+    }
+   ]
   },
   {
    "id": "ART-07",
@@ -156,14 +216,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "竹竿变暗、节环变淡；照壁后的竹仍稀，天从后面透出"
+    "note": "竹竿暗、节环淡、冠更密；照壁后的竹仍是光杆加几簇叶"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "竹竿变暗、节环变淡；照壁后的竹仍稀，天从后面透出"
+    }
+   ]
   },
   {
    "id": "ART-08",
@@ -176,14 +246,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "major",
-    "note": "近处踏面读得出；上段仍并成一片，挡墙未改"
+    "note": "最下几级有浅色踏面；上段和挡墙仍是同一种毛石纹理和明度，没有压顶"
    },
-   "dev_note": "踏步出挑、踏面踏亮；挡墙未改"
+   "dev_note": "踏步出挑、踏面踏亮；挡墙未改",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "近处踏面读得出；上段仍并成一片，挡墙未改"
+    }
+   ]
   },
   {
    "id": "ART-09",
@@ -196,14 +276,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "山门下檐读得出椽头；亭子檐下仍近黑"
+    "note": "山门下檐椽和瓦当读得出；亭子檐下仍近黑"
    },
-   "dev_note": "椽子条纹提亮；仍不是几何"
+   "dev_note": "椽子条纹提亮；仍不是几何",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "山门下檐读得出椽头；亭子檐下仍近黑"
+    }
+   ]
   },
   {
    "id": "ART-10",
@@ -216,14 +306,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "major",
-    "note": "柳杉变暗但轮廓仍像细线涂抹；墙后是浅绿带而不是深林"
+    "note": "柳杉暗了但像涂抹，有零散直线；院里的树细；殿后是一条浅色带而不是深林"
    },
-   "dev_note": "柳杉加密压暗并在墙外成林；院内树未改"
+   "dev_note": "柳杉加密压暗并在墙外成林；院内树未改",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "柳杉变暗但轮廓仍像细线涂抹；墙后是浅绿带而不是深林"
+    }
+   ]
   },
   {
    "id": "ART-11",
@@ -233,17 +333,27 @@
    "issue": "匾额太新：高饱和金配纯黑；照壁上的匾占满墙面",
    "suggested_fix": "暗金、深褐底、略做旧；照壁匾缩到墙宽四成",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open_improved",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "improved_but_open",
-    "remaining_severity": "minor",
-    "note": "照壁匾已暗金且缩小；「萬年正續」仍是平的亮黄底"
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "照壁匾暗金、约占墙宽 38%；「萬年正續」是哑的赭色"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "照壁匾已暗金且缩小；「萬年正續」仍是平的亮黄底"
+    }
+   ]
   },
   {
    "id": "ART-12",
@@ -253,17 +363,27 @@
    "issue": "屋面瓦是平的中灰",
    "suggested_fix": "压暗，瓦垄顶有湿光，近檐瓦沟有苔，正脊加重",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "not_fixed",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "瓦面仍平；CAM-03 里瓦的纹理有块状锯齿"
+    "note": "屋面变暗但平，没有苔和湿脊；CAM-03 大殿屋面有块状摩尔纹"
    },
-   "dev_note": "瓦改得更粗糙、反光更少（为修 NEW-01），与「瓦垄顶有湿光」的建议相反；近檐的苔未做"
+   "dev_note": "瓦改得更粗糙、反光更少（为修 NEW-01），与「瓦垄顶有湿光」的建议相反；近檐的苔未做",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "not_fixed",
+     "remaining_severity": "minor",
+     "note": "瓦面仍平；CAM-03 里瓦的纹理有块状锯齿"
+    }
+   ]
   },
   {
    "id": "ART-13",
@@ -276,14 +396,24 @@
    "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "verified_closed",
     "remaining_severity": "none",
-    "note": "缝是暗的，只有零星的绿"
+    "note": "缝是暗的，绿很少"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "verified_closed",
+     "remaining_severity": "none",
+     "note": "缝是暗的，只有零星的绿"
+    }
+   ]
   },
   {
    "id": "ART-14",
@@ -296,14 +426,24 @@
    "status": "open",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "not_fixed",
     "remaining_severity": "major",
-    "note": "院地上的深色多边形成了地面上最显眼的东西（复核时严重度上调）"
+    "note": "院地中央硬边的深色三角和多边形仍是地面上最显眼的东西"
    },
-   "dev_note": null
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "not_fixed",
+     "remaining_severity": "major",
+     "note": "院地上的深色多边形成了地面上最显眼的东西（复核时严重度上调）"
+    }
+   ]
   },
   {
    "id": "STR-01",
@@ -316,14 +456,24 @@
    "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "verified_closed",
     "remaining_severity": "none",
-    "note": "柱础落在水平石台上（部分在画外，辅以代码）"
+    "note": "柱和柱础立在水平石台上"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "verified_closed",
+     "remaining_severity": "none",
+     "note": "柱础落在水平石台上（部分在画外，辅以代码）"
+    }
+   ]
   },
   {
    "id": "STR-02",
@@ -333,17 +483,27 @@
    "issue": "所有出檐看不到支承：檐下是光滑黑壳，没有椽；亭子柱头间没有阑额，没有斗拱；殿门的斗拱是墙面里的平片",
    "suggested_fix": "斗拱至少出一跳；檐下加檐椽、飞椽；柱头间一律加阑额",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open_improved",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "两层檐下都看得到椽；山门下檐读不出铺作；大殿斗拱仍像平片（代码里是有出跳的）"
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "椽、翼角扇形椽、出跳的铺作和白色拱眼壁都读得出；亭子有阑额；大殿斗拱正面看仍像剪影"
    },
-   "dev_note": "严重，未修：见 KNOWN-ISSUES"
+   "dev_note": "严重，未修：见 KNOWN-ISSUES",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "两层檐下都看得到椽；山门下檐读不出铺作；大殿斗拱仍像平片（代码里是有出跳的）"
+    }
+   ]
   },
   {
    "id": "STR-03",
@@ -356,14 +516,24 @@
    "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "verified_closed",
     "remaining_severity": "minor",
-    "note": "不点灯、更高、两层盖；远看仍可能被当成灯"
+    "note": "不点灯的两层盖石柱"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "verified_closed",
+     "remaining_severity": "minor",
+     "note": "不点灯、更高、两层盖；远看仍可能被当成灯"
+    }
+   ]
   },
   {
    "id": "STR-04",
@@ -373,17 +543,27 @@
    "issue": "山门只有一个门洞，没有门扇、门槛、门额；山门应为三门",
    "suggested_fix": "两侧次间改为门或直棂窗；明间加打开的版门、地栿、门簪",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open_improved",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "次间是带钉的版门；明间没有门槛、门簪、门扇"
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "门额、门槛、门砧、两扇打开的带钉门扇；次间带钉；门簪只在代码里，看不清"
    },
-   "dev_note": "次间是关着的版门；没有门槛门额和明间门扇"
+   "dev_note": "次间是关着的版门；没有门槛门额和明间门扇",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "次间是带钉的版门；明间没有门槛、门簪、门扇"
+    }
+   ]
   },
   {
    "id": "STR-05",
@@ -393,17 +573,27 @@
    "issue": "大殿重檐读作两层楼阁：两檐之间是一整层格子窗和粉墙；山门是真上层却没有平坐",
    "suggested_fix": "大殿两檐间距缩到斗拱高加 0.6 米并去掉格子；山门加平坐",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open_improved",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "improved_but_open",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
     "remaining_severity": "minor",
-    "note": "大殿两檐间的格子层没有了；山门仍无平坐"
+    "note": "大殿两檐间是矮带，没有格子层；山门上层有带望柱的勾阑（平坐下没有铺作层）"
    },
-   "dev_note": "大殿上下檐已收紧；山门平坐未做"
+   "dev_note": "大殿上下檐已收紧；山门平坐未做",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "大殿两檐间的格子层没有了；山门仍无平坐"
+    }
+   ]
   },
   {
    "id": "STR-06",
@@ -416,14 +606,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "垂带清楚，下段踏面有浅色顶；上段仍像斜墙"
+    "note": "垂带清楚；上段是压在大块毛石上的细线，一块石头跨三四级"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "垂带清楚，下段踏面有浅色顶；上段仍像斜墙"
+    }
+   ]
   },
   {
    "id": "STR-07",
@@ -436,14 +636,24 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "improved_but_open",
     "remaining_severity": "minor",
-    "note": "背面看是瓦坡；正面看脊仍像一块宽石板；仍挂木匾"
+    "note": "背面是瓦坡；正面檐底是一片薄黑板，没有瓦当，脊是一条花岗石；木匾仍在"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "minor",
+     "note": "背面看是瓦坡；正面看脊仍像一块宽石板；仍挂木匾"
+    }
+   ]
   },
   {
    "id": "STR-08",
@@ -456,14 +666,24 @@
    "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "verified_closed",
     "remaining_severity": "none",
-    "note": "各匾均为繁体，自右向左"
+    "note": "匾额均为繁体、自右向左"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "verified_closed",
+     "remaining_severity": "none",
+     "note": "各匾均为繁体，自右向左"
+    }
+   ]
   },
   {
    "id": "STR-09",
@@ -473,17 +693,27 @@
    "issue": "翼角伸出一根细直杆",
    "suggested_fix": "缩短加粗成收分的角梁，瓦盖住它",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "cannot_judge",
-    "remaining_severity": "minor",
-    "note": "这些机位里看不清"
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "翼角是上翘的戗脊，没有细杆"
    },
-   "dev_note": null
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "cannot_judge",
+     "remaining_severity": "minor",
+     "note": "这些机位里看不清"
+    }
+   ]
   },
   {
    "id": "STR-10",
@@ -496,14 +726,24 @@
    "status": "open",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "not_fixed",
     "remaining_severity": "minor",
-    "note": ""
+    "note": "正脊是一条直板，底下沿全长有一道透天的缝；配殿脊端是方钩"
    },
-   "dev_note": null
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "not_fixed",
+     "remaining_severity": "minor",
+     "note": ""
+    }
+   ]
   },
   {
    "id": "STR-11",
@@ -513,17 +753,27 @@
    "issue": "白色方格栏板读作明清汉白玉",
    "suggested_fix": "改成与台基同色的灰石单勾阑",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "not_fixed",
-    "remaining_severity": "minor",
-    "note": ""
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "素灰色的望柱栏杆"
    },
-   "dev_note": null
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "not_fixed",
+     "remaining_severity": "minor",
+     "note": ""
+    }
+   ]
   },
   {
    "id": "STR-12",
@@ -533,17 +783,27 @@
    "issue": "带两层亭盖的香炉是清式",
    "suggested_fix": "改成素面三足鼎或石香炉",
    "evidence_before": "evidence/M2-before/ (commit 035efc0, T4, summer-day)",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
-    "verdict": "not_fixed",
-    "remaining_severity": "minor",
-    "note": ""
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "两耳素鼎"
    },
-   "dev_note": null
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "not_fixed",
+     "remaining_severity": "minor",
+     "note": ""
+    }
+   ]
   },
   {
    "id": "STR-13",
@@ -556,14 +816,24 @@
    "status": "open",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "cannot_judge",
     "remaining_severity": "minor",
     "note": "匾在侧面"
    },
-   "dev_note": null
+   "dev_note": null,
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "cannot_judge",
+     "remaining_severity": "minor",
+     "note": "匾在侧面"
+    }
+   ]
   },
   {
    "id": "STR-14",
@@ -576,14 +846,24 @@
    "status": "fixed_pending_retest",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "cannot_judge",
     "remaining_severity": "minor",
-    "note": "竹脚被照壁挡住"
+    "note": "竹脚被挡住"
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "cannot_judge",
+     "remaining_severity": "minor",
+     "note": "竹脚被照壁挡住"
+    }
+   ]
   },
   {
    "id": "STR-16",
@@ -596,14 +876,24 @@
    "status": "verified_closed",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "8d237c9",
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "evidence": "evidence/M4/CAM-01…06.jpg",
-    "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
     "verdict": "verified_closed",
     "remaining_severity": "none",
-    "note": "山门台阶前没有树"
+    "note": ""
    },
-   "dev_note": "对照 evidence/M4 同机位截图"
+   "dev_note": "对照 evidence/M4 同机位截图",
+   "recheck_history": [
+    {
+     "at_commit": "8d237c9",
+     "evidence": "evidence/M4/CAM-01…06.jpg",
+     "by": "Claude 子代理复核（独立会话，不采信开发方自报状态）",
+     "verdict": "verified_closed",
+     "remaining_severity": "none",
+     "note": "山门台阶前没有树"
+    }
+   ]
   },
   {
    "id": "UX-01",
@@ -873,10 +1163,18 @@
    "issue": "山门上层屋顶东端檐下一片近白的面，旁边一道斜的暗楔，读作破碎相交的屋面（两位复核人各自独立指出）",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": "见 evidence/M4/manifest.json 的 commit",
    "dev_note": "查明（用 __pick 对那几个像素做射线拾取）：山门上层屋顶前面挂着一张半透明的雾片（props.js 里的 mist sprite，原本应在墙外），屋面、望板和椽子都在它后面，是好的。它同时把山门上层整体洗灰。之前两次误判（以为是望板法线、以为是瓦的反光）顺带做的修改保留：望板朝下受光、屋顶三角面统一绕向、歇山竖直山面不铺瓦、瓦背按深色木板渲染。雾片现在只在墙外两侧。修后见最终的 evidence/M4/CAM-04.jpg，尚未再经第三方复核",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "CAM-04 右上没有发白的面，上檐下看得到椽和望板，上层不再发灰（两位复核人一致）"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-02",
@@ -889,7 +1187,15 @@
    "status": "open",
    "fixed_in": null,
    "dev_note": "踏步出挑板和石阶同宽，暗线因此伸到垂带；待改",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "major",
+    "note": "每级踏步边缘都有黑细线，下面几级仍伸到挡墙上"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-03",
@@ -902,7 +1208,15 @@
    "status": "open",
    "fixed_in": null,
    "dev_note": "竹林里天光被遮是有意的，但暗部要再抬；待改",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "not_fixed",
+    "remaining_severity": "major",
+    "note": "CAM-01/02 平均亮度 48–51，CAM-03/06 是 102–107；坡、踏步、墙都在 40–50"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-04",
@@ -912,10 +1226,18 @@
    "issue": "通道读作一条窄缝，旁边的板壁没到门额，上面透天；开口不对称于轴线",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "dev_note": "明间需要门额和对称的门框",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "improved_but_open",
+    "remaining_severity": "minor",
+    "note": "从门内看是整间对称的门洞，上方不透天；CAM-04 斜看仍像一条偏轴的窄缝"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-05",
@@ -925,10 +1247,18 @@
    "issue": "山门下檐直接从板壁上出来，看不到柱头铺作和阑额",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
    "dev_note": "代码里有斗拱和阑额，但在阴天的檐影里读不出来",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "阑额、铺作、椽都读得出"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-06",
@@ -938,10 +1268,18 @@
    "issue": "板缝透出白色的天；从里面看次间上方是空的，格子只有一面",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
    "dev_note": "板缝后加衬板；格子做双面",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "板缝不透光；每间上方都有格子"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-07",
@@ -951,10 +1289,18 @@
    "issue": "远竹是一张浅绿的平片，顶上锯齿；照壁后的竹是光杆加几簇叶",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "dev_note": "继续做远竹",
-   "recheck": null
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "improved_but_open",
+    "remaining_severity": "minor",
+    "note": "远竹变暗但仍是一张顶部锯齿的浅绿平片"
+   },
+   "recheck_history": []
   },
   {
    "id": "NEW-08",
@@ -964,17 +1310,142 @@
    "issue": "经幢只有栏杆高，远看仍可能当成灯；瓦当像浮在檐口上的圆点",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "dev_note": "经幢加高并做出八角面和刻字",
+   "recheck": {
+    "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+    "evidence": "evidence/M4/CAM-01…06.jpg",
+    "by": "Claude 子代理第二轮复核（独立会话，不采信开发方备注）",
+    "verdict": "improved_but_open",
+    "remaining_severity": "minor",
+    "note": "经幢约两倍栏杆高，但看不出八角面和刻字；瓦当仍是凸出檐口的圆片"
+   },
+   "recheck_history": []
+  },
+  {
+   "id": "R2-ART-01",
+   "dimension": "美术",
+   "camera_or_location": "CAM-04/05 门扇和板壁",
+   "severity": "minor",
+   "issue": "看不出板缝和穿带，像整块板；门钉是黑方块，读作洞而不是凸钉",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-ART-02",
+   "dimension": "美术",
+   "camera_or_location": "CAM-04 平坐",
+   "severity": "minor",
+   "issue": "栏杆和楼面之间露出纯白的灰泥条，是立面上最亮的东西",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-ART-03",
+   "dimension": "美术/结构",
+   "camera_or_location": "CAM-03 照壁压顶正面",
+   "severity": "minor",
+   "issue": "檐底是一片带尖角的平黑板，没有瓦的细节",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-ART-04",
+   "dimension": "美术",
+   "camera_or_location": "CAM-06 殿侧天空",
+   "severity": "minor",
+   "issue": "远山是直边的浅色块面，读作多边形",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-ART-05",
+   "dimension": "美术",
+   "camera_or_location": "CAM-04 檐口",
+   "severity": "minor",
+   "issue": "瓦当是平的浅蓝圆片，比瓦和木都亮",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-STR-02",
+   "dimension": "结构",
+   "camera_or_location": "CAM-01 右上、CAM-02",
+   "severity": "minor",
+   "issue": "亭子戗脊端是一根不收分的粗管",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-STR-03",
+   "dimension": "结构",
+   "camera_or_location": "CAM-02",
+   "severity": "minor",
+   "issue": "贴着石台长的竹竿越过亭檐，可能穿过出檐",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-STR-04",
+   "dimension": "结构",
+   "camera_or_location": "CAM-04/06",
+   "severity": "minor",
+   "issue": "柱础是浅色方台而不是覆盆；山门的柱不突出，柱础像贴在板壁上",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
+   "recheck": null
+  },
+  {
+   "id": "R2-STR-05",
+   "dimension": "文档",
+   "camera_or_location": "KNOWN-ISSUES.md、decisions.md",
+   "severity": "minor",
+   "issue": "已知问题里 STR-04、STR-05、NEW-08 的描述还是旧状态；decisions.md 把白拱眼壁、腰串、直棂窗称作「宋式做法」而没有出处",
+   "suggested_fix": null,
+   "evidence_before": "evidence/M4（提交 dce43b3）第二轮复核时新发现",
+   "status": "open",
+   "fixed_in": null,
+   "dev_note": null,
    "recheck": null
   }
  ],
  "summary": {
-  "open_improved": 16,
+  "open_improved": 15,
+  "verified_closed": 16,
   "open": 22,
-  "verified_closed": 5,
-  "fixed_pending_retest": 12,
+  "fixed_pending_retest": 11,
   "partly_fixed": 2
  },
  "open_blockers_or_majors": [
@@ -983,8 +1454,6 @@
   "ART-08",
   "ART-10",
   "ART-14",
-  "STR-02",
-  "STR-04",
   "UX-01",
   "UX-03",
   "UX-04",
@@ -995,17 +1464,14 @@
   "PERF-03",
   "PERF-04",
   "PERF-08",
-  "NEW-01",
   "NEW-02",
-  "NEW-03",
-  "NEW-04",
-  "NEW-05"
+  "NEW-03"
  ],
  "recheck_summary": {
-  "at_commit": "8d237c9",
-  "A03": "fail（复核人意见，主因 NEW-01）",
-  "A04": "partial",
-  "A05": "partial",
-  "note": "复核之后又改了：NEW-01（瓦的反光）、远山、阴天日光、山门两侧院墙围合、小沙弥、空格跳跃。这些修改之后没有再做第三方复核；独立评审由评审方写入 independent-review.json，开发方不自行改结论"
+  "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
+  "A03": "partial（结构复核人：没有漂浮和破面，出檐都有支承；STR-10 脊下透缝、NEW-04、STR-06 仍在）",
+  "A04": "partial（美术复核人：材料分得开、雾和泛光不遮缺陷；竹林偏暗、院地深色块、天空偏亮未过）",
+  "A05": "pass，带两条保留（经幢远看仍可能当成灯；decisions.md 里「宋式做法」要给出处或标未核）",
+  "note": "第二轮复核针对 dce43b3。之后的提交又改了竹林和石阶的明度、潮石的反光、天空、殿后的树、博风板和悬鱼、风铎、钟口；这些没有再复核。独立验收由评审方写入 independent-review.json。"
  }
 }
