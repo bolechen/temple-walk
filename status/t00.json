@@ -1,20 +1,21 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-14T17:25:14.377Z",
+  "generated_at": "2026-11-14T17:58:09.952Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "dce43b31f73c37b2df6d0186b5b8068338e13095",
-    "url": "https://github.com/bolechen/temple-walk/commit/dce43b31f73c37b2df6d0186b5b8068338e13095"
+    "sha": "71424981b2ee8ae81187625e9bb59b6baeda9ad7",
+    "url": "https://github.com/bolechen/temple-walk/commit/71424981b2ee8ae81187625e9bb59b6baeda9ad7"
   },
   "delivery": {
     "schema_version": 1,
     "scene_id": "T00",
-    "summary": "T00 五区（竹林、石阶、照壁、山门、首院）对齐 J01 阴天雨后参考图的一轮整改，附四个维度的评审与一轮复核、六机位截图、行走录像和 T4 帧记录（均出自提交 31660e4）。开发方自评：未达到验收——A08 未通过，A06 因没有目标设备而 blocked。",
+    "summary": "T00 五区（竹林、石阶、照壁、山门、首院）对齐 J01 阴天雨后参考图的整改，附四个维度的评审与两轮复核、六机位截图、行走录像和 T4 帧记录（均出自提交 dce43b3）。开发方自评：未达到验收——A08 未通过，A06 因没有目标设备而 blocked。",
     "changes": [
       "基准预设「夏·昼」改为阴天雨后：弱日光、灰天、薄雾，近山做成从雾里起来的林坡",
       "材质：木色去红压暗并加雨蚀；白墙污痕收到墙脚与压顶下；铺地积水只在洼处、苔只在常潮的缝；瓦面降低反光，瓦的背面按深色木板渲染",
-      "山门改木板壁与带钉版门；院墙绕钟鼓楼合拢；檐下椽子为真实几何；歇山竖直山面不再铺瓦",
+      "山门改木板壁与带钉版门，明间有门额门簪门槛和打开的门扇，上层有平坐勾阑，铺作读得出；院墙绕钟鼓楼合拢；檐下椽子为真实几何",
+      "香炉改素鼎、栏杆改灰石、经幢加高；雾片只在墙外；「歇脚」设置菜单（画质、环顾快慢、上下反转、音量、回到起点）",
       "半山亭移到平台南侧的石台上并可走入；踏步出挑；照壁加瓦顶窄脊；石灯改经幢；大殿上下檐收紧；匾额改繁体楷书",
       "柳杉加密压暗并在墙外成林；竹下加矮竹与蕨；竹竿节环变淡",
       "六个验收机位 cam01…cam06（camera-manifest.json 由总平面生成）；?tour=120x3 行走测量与录像",
@@ -25,12 +26,12 @@
       "开发工具服务器只在 app/ 内解析路径、只监听 127.0.0.1，并有回归测试"
     ],
     "known_issues": [
-      "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上平均约 55.2 帧/秒，不到 60",
+      "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上平均约 56.5 帧/秒，不到 60",
       "A02 只有程序行走的录像与自动化测试，没有真人正常速度往返的录像",
-      "评审中仍未关闭的阻断/严重项 22 条，见 docs/t00/review-log.json 的 open_blockers_or_majors",
-      "NEW-01（山门屋角发白）已修但未再复核；本提交之后没有做第三方复核",
-      "斗拱在阴天檐影里读不出体积；山门明间缺门额门槛门扇；山门无平坐",
-      "天空仍偏亮偏平；竹林机位偏暗；远竹仍是平片；院地上仍看得出建筑投影的形状",
+      "评审中未关闭或未复核的严重项 17 条（美术 5 条、竹林和石阶 2 条，其余是已修但未经复核的体验和性能项），见 docs/t00/review-log.json",
+      "两轮复核之后的修改（竹林与石阶明度、潮石反光、天空、殿后树林、博风板悬鱼、风铎、钟口）没有再复核",
+      "大殿正脊下有一道透天的缝；山门通道斜看像窄缝；上段石阶和挡墙仍是同一种毛石",
+      "远竹仍是平片；柳杉轮廓仍显涂抹；墙面污痕仍偏均匀；瓦面偏平",
       "佛像与须弥座模型（app/m）没有再分发授权记录；项目代码尚无 LICENSE",
       "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG"
     ],
@@ -56,18 +57,18 @@
       "docs/t00/asset-register.csv",
       "docs/STAIR-LOCOMOTION.md"
     ],
-    "record_commit": "1c7d8d87735b89e3825b500ad4eb4c7b669fc315",
+    "record_commit": "d08d4013bd10312693981a5a221c2d58a51a5380",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43620560998,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43620560998",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43623938864,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43623938864",
     "checks": {
       "syntax": "success",
       "unit": "success",
-      "e2e": "success"
+      "e2e": "pending"
     },
     "scope": [
       "boot",
@@ -76,7 +77,7 @@
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "dce43b31f73c37b2df6d0186b5b8068338e13095",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43620560998"
