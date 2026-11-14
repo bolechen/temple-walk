@@ -140,9 +140,11 @@ T opens the season and hour. While the pointer is held a click strikes the bell 
 screen: a thumb-stick lower left, a drag to look, a tap on the ground to walk there. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
-**Typefaces (`app/f/`, `tools/fonts.py`).** Four faces under the SIL Open Font License, cut down to the characters the
+**Typefaces (`app/f/`, `tools/fonts.py`).** Five faces under the SIL Open Font License, cut down to the characters the
 app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page of seals), "Yunjing Kai" (LXGW WenKai:
-every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Serif" and
+every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Xing" (Zhi Mang Xing, a running hand: what is written by hand on paper, which is
+the verse under a photograph, the slip drawn in the library and the title on a leaf in a hall; it has no traditional
+forms, so it is not for name boards), "Yunjing Serif" and
 "Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `npm run check` fails if a character is used that the cut does not hold.
 

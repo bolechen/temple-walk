@@ -8,10 +8,11 @@
   @font-face { font-family: "Yunjing Serif"; src: url("f/serif.woff2") format("woff2"); font-display: swap; }
   @font-face { font-family: "Yunjing Kai"; src: url("f/kai.woff2") format("woff2"); font-display: swap; }
   @font-face { font-family: "Yunjing Seal"; src: url("f/seal.woff2") format("woff2"); font-display: swap; }
+  @font-face { font-family: "Yunjing Xing"; src: url("f/xing.woff2") format("woff2"); font-display: swap; }
   :root {
     color-scheme: dark; --ink: #0b0a09; --paper: #ede8dc; --ember: #e39a4c; --mist: #c9d3d1; --seal: #b0281c;
     --serif: "Yunjing Serif", "Songti SC", "STSong", serif; --brush: "Yunjing Brush", "STKaiti", "KaiTi", serif;
-    --kai: "Yunjing Kai", "STKaiti", "KaiTi", "Yunjing Serif", serif; --line: rgba(237,232,220,.26); --glass: rgba(11,10,9,.38);
+    --kai: "Yunjing Kai", "STKaiti", "KaiTi", "Yunjing Serif", serif; --xing: "Yunjing Xing", "Yunjing Kai", "STXingkai", "STKaiti", serif; --line: rgba(237,232,220,.26); --glass: rgba(11,10,9,.38);
   }
   html, body { height: 100%; margin: 0; }
   [hidden] { display: none !important; }
@@ -121,7 +122,7 @@
   #bookReset { opacity: .6; }
   #slip { grid-template-rows: 1fr auto; place-items: center; }
   #slip .paper { writing-mode: vertical-rl; background: linear-gradient(#f3eee2, #e8e0cf); color: #1d1a17; padding: 34px 26px; min-height: min(62vh, 520px); max-height: 70vh; box-shadow: 0 10px 40px rgba(0,0,0,.6); border-radius: 1px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
-  #slipText { margin: 0; font: 400 clamp(24px, 4.2vmin, 34px)/1.6 var(--kai); letter-spacing: .16em; }
+  #slipText { margin: 0; font: 400 clamp(30px, 5.2vmin, 44px)/1.45 var(--xing); letter-spacing: .1em; }
   #slipFrom { margin: 0; font: 400 14px/1.6 var(--kai); letter-spacing: .2em; color: #6b6458; align-self: flex-end; }
   #breath { position: absolute; left: 50%; top: 46%; width: 30vmin; aspect-ratio: 1; margin: -15vmin 0 0 -15vmin; border-radius: 50%; border: 1px solid rgba(237,232,220,.6); display: grid; place-items: center; pointer-events: none; transition: transform 4s ease-in-out, opacity 1s; transform: scale(.55); z-index: 6; }
   #breath[data-phase="in"] { transform: scale(1); } #breath[data-phase="out"] { transform: scale(.55); transition-duration: 5s, 1s; }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cut the four typefaces the temple writes with down to the characters it actually uses.
+"""Cut the five typefaces the temple writes with down to the characters it actually uses.
 
     python3 tools/fonts.py <dir holding the original TTFs>     (needs fonttools and brotli)
 
@@ -8,9 +8,12 @@ Reads every character in app/ (the page and its scripts) and writes app/f/:
     serif.woff2   Noto Serif SC, regular: everything that is read
     seal.woff2    Noto Serif SC, black: what is cut into a seal
     kai.woff2     LXGW WenKai: what the page says to the visitor, the labels on its controls
+    xing.woff2    Zhi Mang Xing, a running hand: what is written by hand on paper (the verse under a photograph,
+                  the slip drawn in the library, the title on a leaf in a hall)
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
-All four are under the SIL Open Font License 1.1 (app/f/OFL.txt): the first three from github.com/google/fonts,
-the kai from github.com/lxgw/LxgwWenKai (cut down for the web only, as its licence asks).
+All five are under the SIL Open Font License 1.1 (app/f/OFL.txt): the brush, serif, seal and running hand from
+github.com/google/fonts, the kai from github.com/lxgw/LxgwWenKai (cut down for the web only, as its licence asks).
+The running hand has no traditional forms; the name boards, which need them, are written in the kai.
 Run it again whenever words are added.
 """
 import os, sys, glob, shutil
@@ -36,12 +39,14 @@ def main():
     src, out = sys.argv[1], f"{ROOT}/app/f"; os.makedirs(out, exist_ok=True); text = used()
     cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), text, f"{out}/brush.woff2")
     cut(TTFont(f"{src}/lxgwwenkai_LXGWWenKai-Regular.ttf"), text, f"{out}/kai.woff2")
+    cut(TTFont(f"{src}/zhimangxing_ZhiMangXing-Regular.ttf"), text, f"{out}/xing.woff2")
     for name, w in (("serif", 400), ("seal", 900)):
         cut(instancer.instantiateVariableFont(TTFont(f"{src}/notoserifsc_NotoSerifSC[wght].ttf"), {"wght": w}), text, f"{out}/{name}.woff2")
     open(f"{out}/chars.txt", "w", encoding="utf-8").write(text)
     shutil.copy(f"{src}/notoserifsc_OFL.txt", f"{out}/OFL.txt")
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Ma Shan Zheng ----\n\n" + open(f"{src}/mashanzheng_OFL.txt").read())
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- LXGW WenKai ----\n\n" + open(f"{src}/lxgwwenkai_OFL.txt").read())
+    with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Zhi Mang Xing ----\n\n" + open(f"{src}/zhimangxing_OFL.txt").read())
     print(len(text), "characters")
 
 if __name__ == "__main__":

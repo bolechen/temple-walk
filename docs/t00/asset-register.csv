@@ -9,6 +9,7 @@ TEX-snow,app/t/snow_a.webp + snow_n.jpg,scanned PBR texture,polyhaven.com/a/snow
 TEX-weave,app/t/weave_a.webp + weave_n.jpg,scanned PBR texture,polyhaven.com/a/hessian_230,Poly Haven,CC0,same,mats and cushions,shipped
 FONT-brush,app/f/brush.woff2,typeface,github.com/google/fonts (Ma Shan Zheng),Ma Shanzheng,SIL OFL 1.1,subset to the characters used (tools/fonts.py),title and the page of seals,shipped
 FONT-kai,app/f/kai.woff2,typeface,github.com/lxgw/LxgwWenKai v1.530,LXGW,SIL OFL 1.1 (web subsetting expressly permitted),subset,interface labels and name boards,shipped
+FONT-xing,app/f/xing.woff2,typeface,github.com/google/fonts (Zhi Mang Xing),The Zhi Mang Xing Project Authors,SIL OFL 1.1,subset to the characters used (tools/fonts.py),"handwriting on paper: the verse under a photograph, the library slip, leaf titles",shipped
 FONT-serif,app/f/serif.woff2,typeface,github.com/google/fonts (Noto Serif SC),Google / Adobe,SIL OFL 1.1,"instanced at weight 400, subset",body text and key caps,shipped
 FONT-seal,app/f/seal.woff2,typeface,github.com/google/fonts (Noto Serif SC),Google / Adobe,SIL OFL 1.1,"instanced at weight 900, subset",seal characters,shipped
 LIB-three,app/v/,library,three.js r186,three.js authors,MIT,unmodified (vendored build and addons),renderer,shipped

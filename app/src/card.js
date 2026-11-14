@@ -1,8 +1,10 @@
 // A photograph, mounted: the picture on a sheet of paper with a line of verse, the name of the place, and a seal.
 const BRUSH = '"Yunjing Brush", "STKaiti", "KaiTi", "Kaiti SC", serif', SERIF = '"Yunjing Serif", "Songti SC", "STSong", serif';
+// The verse is written in a running hand, as a line is added to a picture; the name and the seal keep the brush.
+const XING = '"Yunjing Xing", "Yunjing Kai", "STXingkai", "STKaiti", serif';
 
 export async function composeCard(shot, { line, label, temple, url }) {
-  try { await Promise.all([document.fonts.load(`80px "Yunjing Brush"`, line + temple), document.fonts.load(`30px "Yunjing Serif"`, label)]); } catch {}
+  try { await Promise.all([document.fonts.load(`80px "Yunjing Xing"`, line), document.fonts.load(`80px "Yunjing Brush"`, temple), document.fonts.load(`30px "Yunjing Serif"`, label)]); } catch {}
   const W = shot.width, H = shot.height, m = Math.round(Math.min(W, H) * 0.055), foot = Math.round(Math.min(W, H) * 0.2);
   const c = document.createElement("canvas"); c.width = W + m * 2; c.height = H + m + foot;
   const x = c.getContext("2d"), u = Math.min(W, H) / 100;
@@ -16,7 +18,7 @@ export async function composeCard(shot, { line, label, temple, url }) {
 
   const y0 = H + m, cy = y0 + foot / 2;
   x.fillStyle = "#26221e"; x.textBaseline = "middle"; x.textAlign = "left";
-  x.font = `${Math.round(u * 5.4)}px ${BRUSH}`; x.fillText(line, m + u, cy - u * 2.4);
+  x.font = `${Math.round(u * 6.6)}px ${XING}`; x.fillText(line, m + u, cy - u * 2.4);
   x.fillStyle = "#6f695e"; x.font = `${Math.round(u * 2.1)}px ${SERIF}`;
   try { x.letterSpacing = `${u * 0.7}px`; } catch {}
   x.fillText(`${temple} · ${label}`, m + u, cy + u * 3.4);
