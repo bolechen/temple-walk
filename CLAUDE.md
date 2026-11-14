@@ -15,9 +15,11 @@ Four outside projects are documented as references:
 - **《小王子：星辰之旅》** (<https://littleprince.dev>) is the reference for taste: a quiet, painterly place worth lingering in, with a memorable visual identity rather than technical spectacle. It is a Unity WebGPU desktop game, not a three.js page; `docs/LITTLEPRINCE-TEARDOWN.md` records what its shipped files show and which of its engineering habits are worth copying here.
 - **Saltline** (Felix Rieseberg's generated dock-shooter) is the rendering benchmark. `docs/SALTLINE-TEARDOWN.md` explains its pipeline and ends with the intended order of rendering work here: baked textures, an independent backdrop module, then volumetric fog and light before soft shadows. Its gap table is a snapshot from when the project had a single courtyard; the lines about the module split, blank plaques and missing audio are now stale, so read the conclusions rather than the table as current state.
 - **Watercolour** (<https://patch.gg/blendi/watercolour>, by @blendi) is the reference for painterly materials, instanced brush marks and deterministic capture. `docs/WATERCOLOUR-TEARDOWN.md` records its paint-arrival map, depth-aware paper pass and what should not be carried into a solemn temple. It is a technical reference, not an approved visual direction.
-- **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/m/` (`static.rushiwowen.co/models/zen-v2/`, kept decompressed here at about 11 MB). That provenance is why the README asks that this repo stay private.
+- **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/m/` (`static.rushiwowen.co/models/zen-v2/`, kept decompressed here at about 11 MB). The repository is now public; no redistribution licence for these models is recorded, so they must be confirmed or replaced (README, `docs/t00/asset-register.csv`).
 
 **Art direction.** `docs/ART-SPEC.md` records the art specification the owner pointed to (the project's research atlas, where this temple is entry T00: "quiet realism, light that comes from somewhere", a working palette, material rules, an acceptance list) and where the scene stands against each rule. Check a visual change against it.
+
+**The game is 《山门之外》; this temple is its prologue, T00.** The research atlas wrote a handoff for it (goal, eight deliverables, six fixed cameras, eight acceptance criteria). What we deliver against it lives in `docs/t00/` — run guide, baseline, decisions, camera manifest, reviews, known issues, acceptance report, evidence. The acceptance scope is five zones only: the bamboo start, the stair, the screen wall, the gate, the first court. The baseline look is J01, overcast after rain, which is summer by day. Do not mark an acceptance item passed without run evidence for the commit in question.
 
 **Start with `docs/HANDOFF.md`**: it states what the user has asked for, in their words and in order, what exists, and what to do next.
 
@@ -43,6 +45,7 @@ node tests/e2e/run.cjs moods photo  # only the scenarios named
 npm run verify                      # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png
+node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
 python3 tools/textures.py <dir of Poly Haven jpgs>   # repack the scanned surfaces into app/t/
 ```
@@ -70,7 +73,9 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
-`?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`. With `?shot`, `?show` or
+`?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
+`?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
+page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.
 
@@ -133,10 +138,17 @@ T opens the season and hour. While the pointer is held a click strikes the bell 
 screen: a thumb-stick lower left, a drag to look, a tap on the ground to walk there. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
-**Typefaces (`app/f/`, `tools/fonts.py`).** Three faces under the SIL Open Font License, cut down to the characters the
-app uses and served with it: "Yunjing Brush" (Ma Shan Zheng), "Yunjing Serif" and "Yunjing Seal" (Noto Serif SC regular
-and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
+**Typefaces (`app/f/`, `tools/fonts.py`).** Four faces under the SIL Open Font License, cut down to the characters the
+app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page of seals), "Yunjing Kai" (LXGW WenKai:
+every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Serif" and
+"Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `npm run check` fails if a character is used that the cut does not hold.
+
+**What is said about the controls (`app/src/hints.js`).** Nothing about the controls stays on the picture. One line at
+the foot of the view says each thing once, when it becomes useful (how to walk on arriving, Esc and the wheel when the
+mouse is first held, Shift after a long stroll, the book after the first seal), and leaves. H opens the list of keys.
+The season's name and the next place show when they change and when the visitor has stood still a while; the controls
+at the edge fade while the mouse rests. Add a hint there, not as permanent text in `index.html`. `__hud()` reports it.
 
 **Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and

@@ -15,6 +15,15 @@ test("the land is defined everywhere and has no cliffs where the bamboo stands",
   for (let x = -60; x <= 60; x += 3) for (let z = -160; z <= 110; z += 3) assert.ok(Number.isFinite(terrain(x, z)), `terrain(${x}, ${z})`);
   for (let z = SITE.fore + 1; z < APPROACH.zC1; z += 0.5) assert.ok(Math.abs(terrain(-20, z + 0.5) - terrain(-20, z)) < 1.2, `a cliff beside the approach at z=${z}`);
 });
+test("the half-way pavilion can be stepped into from the landing, a hand's width at a time", () => {
+  for (let z = APPROACH.zMid; z <= APPROACH.zA1 + 2.75; z += 0.03) assert.ok(!walker.blocked(5.2, z), `blocked on the way into the pavilion at z=${z.toFixed(2)}`);
+});
+test("the eye climbs a stair as a slope, never more than half a tread from the feet", () => {
+  for (let z = SITE.fore + 0.2; z < APPROACH.zA0; z += 0.05) {
+    const e = walker.eyeAt(0, z), f = walker.heightAt(0, z);
+    assert.ok(Math.abs(e - f) < 0.2, `eye ${e} and feet ${f} part company at z=${z}`); assert.ok(Math.abs(walker.eyeAt(0, z + 0.05) - e) < 0.06, `the eye jumps at z=${z}`);
+  }
+});
 test("every named view stands somewhere a visitor could stand", () => {
   for (const [name, [x, z, yaw, pitch]] of Object.entries(site.views)) {
     assert.ok([x, z, yaw, pitch].every(Number.isFinite), name);
@@ -49,7 +58,7 @@ function reach(from) {
 test("from the first step, every part of the temple can be walked to", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2, TOP] = LEVELS;
   const places = {
-    "the half-way pavilion": [6.6, APPROACH.zA0 - 2.75], "the forecourt": [8, 60], "the stele pavilion's side": [-6, 50.5], "inside the gate": [0, 33],
+    "the half-way pavilion": [5.2, APPROACH.zA1 + 2.75], "the forecourt": [8, 60], "the stele pavilion's side": [-6, 50.5], "inside the gate": [0, 33],
     "the censer": [1.6, 13], "the tea house porch": [-13.4, 14], "the meditation hall porch": [13.4, 14], "the main hall's door": [site.hall.door.x, site.hall.door.z],
     "behind the main hall": [0, -30], "the library terrace": [0, T1.zS - 3], "the dragon well": [13.2, T2.zS + 3], "the Guanyin terrace": [0, T2.zS - 3],
     "the foot of the last stair": [0, T2.zN + 1.5], "the summit": [0, TOP.zS - 3], "the summit pavilion's porch": site.summitPorch,
@@ -83,7 +92,7 @@ test("every hall with a door can be walked up to, entered at its threshold, and 
 test("the columns of the open pavilions stand in the way", () => {
   assert.ok(site.walk.posts.length >= 8, "the pavilions on the approach have columns");
   for (const r of site.walk.posts) { const x = (r.x0 + r.x1) / 2, z = (r.z0 + r.z1) / 2; assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through a column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
-  assert.ok(!walker.blocked(6.6, APPROACH.zA0 - 2.75), "the middle of the half-way pavilion is open floor");
+  assert.ok(!walker.blocked(5.2, APPROACH.zA1 + 2.75), "the middle of the half-way pavilion is open floor");
 });
 test("walls, halls and the hillside keep the visitor out", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2] = LEVELS;

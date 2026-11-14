@@ -5,14 +5,14 @@ const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app"), out = path.join(__dirname, "out");
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary" };
 const srv = http.createServer((req, res) => {
-  const p = path.join(root, decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"));
-  if (!p.startsWith(root) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
+  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
+  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
   if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}</style><body>' + fs.readFileSync(p, "utf8"));
   fs.createReadStream(p).pipe(res);
 });
 (async () => {
-  await new Promise((r) => srv.listen(0, r)); fs.mkdirSync(out, { recursive: true });
+  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
   const [season = "summer", time = "day"] = (process.argv[2] || "").split("-");
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 1500, height: 760 }, deviceScaleFactor: 1 });

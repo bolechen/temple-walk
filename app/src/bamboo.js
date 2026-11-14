@@ -24,7 +24,7 @@ function culmTexture() {
   const c = document.createElement("canvas"); c.width = 16; c.height = 256;
   const x = c.getContext("2d"), g = x.createLinearGradient(0, 0, 16, 0);
   g.addColorStop(0, "#4c5c3a"); g.addColorStop(0.5, "#6f7f5a"); g.addColorStop(1, "#4f5e3e"); x.fillStyle = g; x.fillRect(0, 0, 16, 256);   // grey-green culms, with white bloom under each node
-  for (let y = 0; y < 256; y += 32) { x.fillStyle = "rgba(225,230,215,.5)"; x.fillRect(0, y + 4, 16, 9); x.fillStyle = "rgba(210,215,180,.6)"; x.fillRect(0, y, 16, 2); x.fillStyle = "rgba(20,30,12,.6)"; x.fillRect(0, y + 2, 16, 2); }   // nodes
+  for (let y = 0; y < 256; y += 32) { x.fillStyle = "rgba(225,230,215,.14)"; x.fillRect(0, y + 4, 16, 7); x.fillStyle = "rgba(210,215,180,.3)"; x.fillRect(0, y, 16, 2); x.fillStyle = "rgba(20,30,12,.6)"; x.fillRect(0, y + 2, 16, 2); }   // nodes
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapT = THREE.RepeatWrapping; return t;
 }
 
@@ -57,11 +57,24 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
       g.setAttribute("color", new THREE.BufferAttribute(col, 3)); leaves.push(g);
     }
   }
+  // Under the culms, what grows where nobody walks: knee-high clumps of dwarf bamboo and fern, thickest near the path.
+  for (const a of areas) for (let i = 0, n = Math.round(a.n * (opts.fine === false ? 0.35 : 1.5)); i < n; i++) {
+    const x = a.x0 + rnd() * (a.x1 - a.x0), z = a.z0 + rnd() * (a.z1 - a.z0);
+    if (!keep(x, z)) continue;
+    const y = heightAt(x, z), hh = 0.5 + rnd() * 0.7, w = 0.9 + rnd() * 0.9, turn = rnd() * 3.14, tint = 0.55 + rnd() * 0.35;
+    for (let k = 0; k < 2; k++) {
+      const g = new THREE.PlaneGeometry(w, hh); g.translate(0, hh * 0.46, 0);
+      q.setFromEuler(e.set((rnd() - 0.5) * 0.5, turn + k * 1.57, 0)); g.applyMatrix4(m4.compose(v.set(x, y - 0.03, z), q, one));
+      const P = g.attributes.position, Nn = g.attributes.normal, col = new Float32Array(P.count * 3);
+      for (let i2 = 0; i2 < P.count; i2++) { const up2 = (P.getY(i2) - y) / hh, c = tint * (0.45 + 0.55 * up2); Nn.setXYZ(i2, (P.getX(i2) - x) * 0.4, 0.9, (P.getZ(i2) - z) * 0.4); col[i2 * 3] = c * 0.9; col[i2 * 3 + 1] = c; col[i2 * 3 + 2] = c * 0.8; }
+      g.setAttribute("color", new THREE.BufferAttribute(col, 3)); leaves.push(g);
+    }
+  }
   if (!culms.length) return { setMood() {} };
   const cm = new THREE.Mesh(mergeGeometries(culms), new THREE.MeshStandardMaterial({ map: culmTexture(), roughness: 0.55, envMapIntensity: 0.4 }));
   cm.castShadow = true;
   const lm = new THREE.Mesh(mergeGeometries(leaves), crownMaterial(leafTexture(), { a2c: opts.a2c, sway: 0.05, snow: 0.75 }));
-  scene.add(cm, lm);
+  lm.renderOrder = 1; scene.add(cm, lm);
   // The grove's grey-green, turned a little by the season.
-  return { setMood(m) { lm.material.color.setRGB(0.3 * m.leaf[0], 0.4 * m.leaf[1], 0.22 * m.leaf[2]); cm.material.color.setRGB(...m.leaf); } };
+  return { setMood(m) { lm.material.color.setRGB(0.2 * m.leaf[0], 0.28 * m.leaf[1], 0.155 * m.leaf[2]); cm.material.color.setRGB(0.72 * m.leaf[0], 0.74 * m.leaf[1], 0.7 * m.leaf[2]); } };
 }

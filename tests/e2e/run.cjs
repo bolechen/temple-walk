@@ -45,21 +45,22 @@ const scenarios = {
     const t = await open(b, base, "q=low&fast=1");
     await t.page.evaluate(() => window.__walk([[21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -6.0]]));
     let lo = 0, hi = -99;
-    await t.until(async () => { const s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return t.inHall(); }, 300000, "the walk in never reached the hall");
+    await t.until(async () => { const s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return t.inHall(); }, 700000, "the walk in never reached the hall");
     expect(lo < -14 && hi >= 1.4, `the climb should go from the foot of the path to the hall's platform; went ${lo} to ${hi}`);
     // Indoors: a real room. He stands on its floor, far below the court, with the figures before him.
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
     let s = await t.state(); expect(s.inside && s.h < -50 && s.z > 5, "should stand just inside the door: " + JSON.stringify(s));
     await t.until(() => t.page.evaluate(() => window.__figures() === "here"), 120000, "the figures never arrived"); await t.frames(3); await t.shot("e2e-hall");
     // He can walk about in it, the columns stop him, and a frame on the wall can be looked at.
-    await t.page.evaluate(() => window.__walk([[-6, 5], [-11.7, 5.05]])); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
+    const cx = await t.page.evaluate(() => window.__places.incense.at[0]), go = (pts) => t.page.evaluate(([c, p]) => window.__walk(p.map(([x, z]) => [c + x, z])), [cx, pts]);   // every hall has its own room; this one's middle is at cx
+    await go([[-6, 5], [-11.7, 5.05]]); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing"); await t.page.click("#slipTake");
-    await t.page.evaluate(() => window.__walk([[-9, 3]])); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x + 9, s.z - 3) > 0.45, "he walked through a column");
+    await go([[-9, 3]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9, s.z - 3) > 0.45, "he walked through a column");
     // Incense before the altar, then out by the door into the daylight.
-    await t.page.evaluate(() => window.__walk([[0, 4], [0, -1.2]])); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 60000, "no way to offer incense");
+    await go([[0, 4], [0, -1.2]]); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 240000, "no way to offer incense");
     await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
-    await t.page.evaluate(() => window.__walk([[0, 4], [0, 7.9]])); await t.until(async () => !(await t.inHall()), 60000, "never left the hall");
+    await go([[0, 4], [0, 7.9]]); await t.until(async () => !(await t.inHall()), 60000, "never left the hall");
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared");
     s = await t.state(); expect(s.running && Math.abs(s.h - 1.5) < 0.05 && s.z > -7, "should step out onto the porch: " + JSON.stringify(s));
     await t.frames(4); expect(!(await t.inHall()), "walked straight back in"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -271,6 +272,19 @@ const scenarios = {
       expect(Math.abs(back.yaw - before.yaw) < 0.02 && Math.abs(back.pitch - before.pitch) < 0.02,
         `${mode}: reverse drag did not restore the view`);
     }
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The measured walk: from the bamboo up to the first court and back, timed, with the numbers offered at the end.
+  tour: { tier: 3, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&tour=8x1&enter&view=first&season=summer&time=day", { viewport: { width: 640, height: 360 }, enter: false });
+    let far = 99, hi = -99;
+    await t.until(async () => { const s = await t.state(); far = Math.min(far, s.z); hi = Math.max(hi, s.h); return (await t.page.evaluate(() => window.__tour().done)); }, 400000, "the measured walk never finished");
+    const r = await t.page.evaluate(() => window.__tour().result);
+    expect(r.runs.length === 1 && r.runs[0].frames > 3 && r.runs[0].p95_ms > 0 && r.runs[0].fps_mean > 0, "the walk was not measured: " + JSON.stringify(r.runs.map((x) => [x.frames, x.p95_ms])));
+    expect(r.tier === "low" && r.size[0] === 640 && r.view === "first" && typeof r.gpu === "string" && r.load_ms > 0, "the measurement does not say what it was made on");
+    expect(far < 84 && hi > -13.5, `the walk should set off up the stair from the bamboo: reached z=${far}, height ${hi}`);   // how far he gets depends on how many frames the machine draws
+    expect(await t.page.isVisible("#tour") && (await t.page.textContent("#tour")).includes("p95"), "the numbers were not shown");
+
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.

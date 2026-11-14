@@ -59,7 +59,7 @@ function sheet(kind) {
       for (let d = 0; d < len; d += 4.5) {
         a += (rnd() - 0.5) * 0.05 + 0.0014 * Math.sign(Math.sin(a)) * -1; px += Math.sin(a) * 4.5; py += Math.cos(a) * 4.5;
         const t = d / len, nl = w * (1 - t * 0.55) * (0.75 + rnd() * 0.5), v = 110 + rnd() * 90 + t * 55;
-        x.strokeStyle = `rgb(${(v * 0.92) | 0},${v | 0},${(v * 0.86) | 0})`; x.lineWidth = 2.2;
+        x.strokeStyle = `rgb(${(v * 0.92) | 0},${v | 0},${(v * 0.86) | 0})`; x.lineWidth = 3.4;
         for (const s of [-1, 1]) { x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + Math.sin(a + s * 0.5) * nl * 0.6, py + Math.cos(a + s * 0.5) * nl * 0.6, px + Math.sin(a + s * 0.85) * nl, py + Math.cos(a + s * 0.85) * nl + nl * 0.25); x.stroke(); }
       }
       return [px, py, a];
@@ -102,7 +102,7 @@ function sheet(kind) {
 const COLOURS = {
   maple:  { spring: [0.94, 0.92, 0.86], summer: [0.2, 0.36, 0.13], autumn: [0.62, 0.13, 0.055], winter: null },
   ginkgo: { spring: [0.42, 0.6, 0.22], summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1], winter: null },
-  cedar:  { spring: [0.13, 0.26, 0.12], summer: [0.11, 0.23, 0.11], autumn: [0.12, 0.22, 0.1], winter: [0.1, 0.19, 0.11] },
+  cedar:  { spring: [0.075, 0.15, 0.08], summer: [0.06, 0.125, 0.075], autumn: [0.07, 0.125, 0.065], winter: [0.065, 0.12, 0.08] },
 };
 
 // A crown material: cards that take their light as parts of one round mass, let the low sun through, hold snow,
@@ -173,17 +173,17 @@ export function createTrees(scene, M, spots, opts = {}) {
   const twigs = (p, dir, n = 3, reach = 0.6) => { for (let i = 0; i < n; i++) { const tip = p.clone().add(V(dir.x * reach + jit(reach), reach * (0.2 + rnd() * 0.6), dir.z * reach + jit(reach))); grow([p, p.clone().lerp(tip, 0.5).add(V(jit(0.12), 0.05, jit(0.12))), tip], 0.011, 0.004, 4); } };
   const jit = (k) => (rnd() - 0.5) * k;
 
-  for (const [x, y, z, kind, h] of spots) {
+  for (const [x, y, z, kind, h, far0] of spots) {
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
       const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t);
-      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, 0.85);
-      for (let by = h * 0.42; by < h * 0.985; by += 0.5) {
-        const t = by / h, c = axis(t), len = (1 - t) * (2.5 + h * 0.075) * (0.75 + 0.5 * Math.sin(by * 1.3 + x)) + 0.8, n = 4 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
+      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, 0.4);
+      for (let by = h * 0.36; by < h * 0.985; by += 0.4) {
+        const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
           if (rnd() < 0.14) continue;   // a gap where a bough was lost
-          const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 1.0 + jit(0.4), l = len * (0.6 + rnd() * 0.7), w = l * (0.6 + rnd() * 0.25), far = V(Math.sin(a), 0, Math.cos(a));
-          if (k % 2 === 0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
+          const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 0.72 + jit(0.3), l = len * (0.65 + rnd() * 0.6), w = l * (0.95 + rnd() * 0.3), far = V(Math.sin(a), 0, Math.cos(a));
+          if (k % 2 === 0 && !far0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
           // a bough: hinged at the trunk, reaching out and down
           q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
           card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
@@ -235,7 +235,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   const put = (kind, map, o) => {
     if (!cards[kind].length) return;
     const mat = crownMaterial(map, { a2c: opts.a2c, ...o }), m = new THREE.Mesh(mergeGeometries(cards[kind]), mat);
-    m.castShadow = true; m.receiveShadow = false; scene.add(m); crowns[kind] = { mat, mesh: m };
+    m.castShadow = true; m.receiveShadow = false; m.renderOrder = 1; scene.add(m); crowns[kind] = { mat, mesh: m };   // after the buildings, which then hide most of it for nothing
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {

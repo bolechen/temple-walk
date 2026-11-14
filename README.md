@@ -20,6 +20,7 @@
 - [T00 研究、进度与独立验收](https://temple-atlas-research.floralpage64.chatgpt.site/#temple/T00)
 - [Claude / Fable 读取入口 llms.txt](https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt)
 - [开发交接与验收包](https://temple-atlas-research.floralpage64.chatgpt.site/handoff/T00-handoff-v001.zip)
+- [开发方按交接包提交的 T00 交付物](docs/t00/README.md)：启动说明、基线、机位、评审记录、已知问题、验收自报与证据
 
 ## 当前实现
 
@@ -144,7 +145,7 @@ node tools/shots.js court@autumn-dusk@third
 
 2026-11-14 对基线 `035efc0` 的完整可达历史 33 个提交及当前目录运行 Gitleaks v8.30.1，未检出规则命中的常见密钥。这是限定范围的扫描结果，不代表所有外部服务与依赖都已完成安全审计。不要提交 `.env`、账号令牌、私钥、云服务凭据或包含这些内容的日志。
 
-已知待修复问题：测试／截图／GPU 作业工具的临时静态服务器存在目录边界检查不足、无效 URL 编码异常及未限定监听地址的问题。路径越界已用临时假数据复现；隔离测试中的修复方案已验证，但**尚未合入仓库**。影响已确认于开发工具服务器，不能据此声称 GitHub Pages 静态托管存在同一漏洞。修复前仅在可信本机环境运行这些工具。
+测试／截图／GPU 作业工具的临时静态服务器曾有目录边界检查不足、无效 URL 编码异常及未限定监听地址的问题，已修复：路径在 `app/` 内解析并校验、无效编码返回 404、只监听 `127.0.0.1`；`tests/unit/serve.test.mjs` 对越界路径和坏编码有回归测试，`npm run serve` 也只绑定本机。影响只在开发工具服务器，与 GitHub Pages 静态托管无关。
 
 许可须按资产分别处理：
 
@@ -177,7 +178,7 @@ node tools/shots.js court@autumn-dusk@third
 
 ## 下一步
 
-1. 修复开发工具服务器的边界与监听问题，补齐资产许可。
+1. 补齐资产许可（开发工具服务器的边界与监听问题已修）。
 2. 配置 PR 检查与分支保护，明确贡献和项目许可。
 3. 改善植被重复感、近景材质及雾的前中后景层次，提交固定机位对照图。
 4. 完成当前版本正常速度往返走查及目标设备性能测量。

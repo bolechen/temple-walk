@@ -32,7 +32,7 @@ export function terrain(x, z) {
   const ax = Math.abs(x), A = APPROACH;
   if (z > A.top - 0.5) {
     const down = A.rise * Math.min(1, Math.max(0, (z - A.top) / A.run)) + A.rise2 * Math.min(1, Math.max(0, (x - A.xTurn) / A.run2)) * smooth(A.top + 3, A.zA0, z);
-    return -down - 0.14 - A.rise3 * Math.min(1, Math.max(0, (z - A.zA1) / A.run3)) - Math.max(0, z - A.zC1 - 1) * 0.35 + Math.max(0, -x - 3) * 0.05;
+    return -down - 0.14 - A.rise3 * Math.min(1, Math.max(0, (z - A.zA1) / A.run3)) - Math.max(0, z - A.zC1 - 1) * 0.35 + Math.max(0, -x - 3) * 0.05 * smooth(A.top + 0.6, A.top + 3, z);   // west of the path the land rises, but not into the forecourt
   }
   if (ax < SITE.x + 0.2 && z > HILL.zS + 0.05 && z < SITE.zS) return -0.8;                 // inside: the courts cover it
   if (ax < TOP.x && z < HILL.zN && z > SITE.zN) return TOP.y - 0.4;                          // under the summit terrace
@@ -88,8 +88,8 @@ export function buildSite(M) {
   // ---- Buildings, from the gate uphill ----
   putTwo({   // the gate: you pass through its middle bay, under an upper storey
     xs: [-9.6, -6.0, -2.2, 2.2, 6.0, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0, rise: 2.2,
-    front: "pass", back: "pass", dark: false, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
-  }, { xs: [-7.0, -2.2, 2.2, 7.0], zs: [1.8, -1.8], colTop: 3.0, overhang: 2.1, rise: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
+    front: "pass", back: "pass", dark: false, timber: true, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
+  }, { timber: true, xs: [-7.0, -2.2, 2.2, 7.0], zs: [1.8, -1.8], colTop: 3.0, overhang: 2.1, rise: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
 
   const strikers = [];
   for (const sx of [-1, 1]) {   // at either end of the gate, completing its five roofs: the bell (east) and the drum (west)
@@ -118,15 +118,18 @@ export function buildSite(M) {
   // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts. trees.js grows them;
   // the plan only says where they stand, how tall, and that they are in the way.
   const cedars = [];
-  for (const [x, z, h, lvl] of [[-4.7, 46.2, 21, 0], [4.7, 46.2, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
+  for (const [x, z, h, lvl] of [[-12.6, 49.5, 21, 0], [12.4, 50.5, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.solids.push({ x0: x - 0.8, x1: x + 0.8, z0: z - 0.8, z1: z + 0.8 }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
   }
+  // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
+  for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
+    [-27, -30, 24], [28, -34, 26], [-40, 22, 28], [41, 34, 27], [-25, 76, 20]]) cedars.push([x, terrain(x, z) - 0.3, z, "cedar", h, true]);   // `true`: seen only from afar, so grown without the branches inside its boughs
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
     xs: [-14.4, -10.2, -6.2, -2.3, 2.3, 6.2, 10.2, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, rise: 4.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
-  }, { xs: [-10.2, -6.2, -2.3, 2.3, 6.2, 10.2], zs: [5.0, 0, -5.0], colTop: 2.3, overhang: 2.8, rise: 5.4, G: 3.6, plaque: { text: "大雄宝殿", gold: true, vertical: true } }, [0, mz]);
+  }, { xs: [-10.2, -6.2, -2.3, 2.3, 6.2, 10.2], zs: [5.0, 0, -5.0], colTop: 1.45, front: "wall", overhang: 2.8, rise: 5.4, G: 3.6, plaque: { text: "大雄宝殿", gold: true, vertical: true } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
     xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 3.0, steps: 5.2, lamps: false, hall: { id: "library", kind: "library", name: "藏经楼" },
@@ -202,8 +205,11 @@ export function buildSite(M) {
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
     const rest = { xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, rise: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
       brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
-    put({ ...rest, plaque: "半山亭" }, [6.6, A.zA0 - 2.75], 0, 0, yA);
-    walk.decks.push({ x0: 4.6, x1: 8.6, z0: A.zA0 - 0.6, z1: A.zA0 + 0.1, h: yA });   // the step between its floor and the landing
+    // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
+    // level ground under every column, and the valley to look at.
+    put({ ...rest, plaque: "半山亭" }, [5.2, A.zA1 + 2.75], 2, 0, yA);
+    stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
+    walk.decks.push({ x0: 3.2, x1: 7.2, z0: A.zA1 - 0.4, z1: A.zA1 + 0.6, h: yA });   // the step between its floor and the landing
     put({ ...rest, plaque: "望江亭" }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where, they say, a poet once washed his ink-stone: black water in a stone rim, beside the second landing.
     const px = A.xB1 + 2.2, pz = A.zMid;
@@ -257,21 +263,21 @@ export function buildSite(M) {
   // The screen wall facing the gate, where the two old paths up the mountain meet.
   {
     const z = 55, w = 11, h = 4.2;
-    root.add(mesh(footAt(merge([box(w, h, 0.7, 0, h / 2, z)]), 0), M.plaster()), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 0.7, 0.16, 1.2, 0, h + 0.5, z)]), M.stone));
+    root.add(mesh(footAt(merge([box(w, h, 0.7, 0, h / 2, z)]), 0), M.plaster()), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 1.0, 0.2, 0.24, 0, h + 0.62, z)]), M.stone));   // a plinth, and the ridge of its little roof
     const cp = [], cu = [], ci = [];
-    for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.5, 0], [w + 0.8, h + 0.5, 0], [w + 0.8, h + 0.05, s * 0.85], [0, h + 0.05, s * 0.85]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
+    for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
-    for (const s of [-1, 1]) { const p = makePlaque("双径归堂"); p.scale.setScalar(2.3); p.position.set(0, 2.3, z + s * 0.39); if (s > 0) p.rotation.y = Math.PI; root.add(p); }
+    for (const s of [-1, 1]) { const p = makePlaque("双径归堂"); p.scale.setScalar(1.5); p.position.set(0, 2.45, z + s * 0.39); if (s > 0) p.rotation.y = Math.PI; root.add(p); }
     walk.solids.push({ x0: -w / 2 - 0.7, x1: w / 2 + 0.7, z0: z - 0.9, z1: z + 0.9 });
     shade[0].push({ x0: -w / 2, x1: w / 2, z0: z - 0.35, z1: z + 0.35 });
   }
 
-  // One pair of stone lamp pillars, at the foot of the great hall's stair: such temples never had rows of them.
+  // A pair of sutra pillars at the foot of the great hall's stair, as before the halls of Lingyin: eight-sided
+  // shafts cut with a dharani, under layered caps. They carry no light.
   const lanternStone = [];
   for (const [lx, lz, lvl] of [[5.0, 1.2, 0]]) for (const sx of [-1, 1]) {
     const y = lvl ? LEVELS[lvl - 1].y : 0;
     lanternStone.push(lantern().translate(sx * lx, y, lz));
-    const f = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), M.flame); f.position.set(sx * lx, y + 1.86, lz); root.add(f);
     walk.solids.push({ x0: sx * lx - 0.5, x1: sx * lx + 0.5, z0: lz - 0.5, z1: lz + 0.5 });
     shade[lvl].push({ x0: sx * lx - 0.3, x1: sx * lx + 0.3, z0: lz - 0.3, z1: lz + 0.3 });
   }
@@ -363,12 +369,15 @@ export function buildSite(M) {
   // ---- Named views: one per thing worth looking at. The screenshot tool renders each of them. ----
   const A = APPROACH;
   const views = {
-    arrive: [A.xC, A.zC1 - 1.2, 0, 0.3], pool: [A.xC - 0.5, A.zA1 - 1.2, 0.9, -0.12], second: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [1.5, A.zMid + 0.6, 0.9, 0.12], stair: [0, A.zA0 - 0.6, 0, 0.3],
+    arrive: [A.xC, A.zC1 - 1.2, 0, 0.3], pool: [A.xC - 0.5, A.zA1 - 1.2, 0.9, -0.12], second: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [9.4, A.zMid - 1.2, -2.2, 0.1], stair: [0, A.zA0 - 0.6, 0, 0.3],
     forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [9.5, 61.5, -0.4, 0.2], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
     court: [0, 29, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
     teahouse: [-5, 16, -1.35, 0.1], chan: [5, 16, 1.35, 0.1], behind: [19, -22, 0.4, 0.14], terrace: [0, T1.zS + 5.6, 0, 0.25],
     library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 5.5, -1.0, 0.12], dahui: [4, T2.zS - 3.6, 1.0, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
     tea: [0, HILL.zS - 12, 0.6, 0.12], summit: [0, TOP.zS + 9, 0, 0.42], lookback: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
+    // The six fixed views the T00 handoff is judged by (docs/t00/camera-manifest.json): bamboo start, stair turn,
+    // before the screen wall, the gate once round it, back through the gate, the first court.
+    cam01: [A.xC, A.zC1 - 1.2, 0, 0.3], cam02: [A.xB0 + 1.6, A.zMid + 0.9, -1.35, 0.16], cam03: [0, 63.8, 0, 0.14], cam04: [6.6, 53.4, -0.42, 0.3], cam05: [0.6, 37.6, Math.PI, 0.08], cam06: [0, 29, 0, 0.1],
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.6, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
   };
 
@@ -382,10 +391,10 @@ const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THRE
 // lotus plate, an open chamber for the flame, a tiled cap and a jewel.
 function lantern() {
   const parts = [
-    lathe([[0, 0], [0.56, 0], [0.56, 0.1], [0.46, 0.16], [0.4, 0.3], [0.5, 0.4], [0.52, 0.5], [0.2, 0.56], [0.17, 0.6], [0.165, 1.44], [0.2, 1.5], [0.36, 1.62], [0.38, 1.68], [0, 1.68]], 8),
-    lathe([[0, 2.06], [0.42, 2.06], [0.47, 2.1], [0.3, 2.26], [0.1, 2.36], [0.07, 2.42], [0.1, 2.5], [0.05, 2.58], [0, 2.62]], 8),
+    // a sumeru base, the long inscribed shaft, a canopy, a short second shaft, a smaller canopy, a jewel
+    lathe([[0, 0], [0.6, 0], [0.6, 0.12], [0.48, 0.18], [0.4, 0.34], [0.52, 0.44], [0.54, 0.54], [0.24, 0.6], [0.21, 0.64], [0.2, 1.9], [0.24, 1.96], [0.44, 2.04], [0.48, 2.1], [0.46, 2.16], [0.2, 2.24],
+      [0.16, 2.28], [0.155, 2.74], [0.19, 2.8], [0.34, 2.87], [0.36, 2.93], [0.2, 3.04], [0.08, 3.1], [0.06, 3.16], [0.11, 3.24], [0.06, 3.34], [0, 3.38]], 8),
   ];
-  for (let i = 0; i < 8; i++) { const a = (i / 8) * 6.283 + 0.39; parts.push(box(0.05, 0.38, 0.05, Math.cos(a) * 0.25, 1.87, Math.sin(a) * 0.25)); }
   return merge(parts);
 }
 
@@ -429,13 +438,13 @@ const terrainLevel = (x, z) => terrain(x, z);
 export function createWalker(site) {
   const { solids, decks, ramps, posts = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
-  function carved(x, z) {   // a floor or stair of a building or terrace, if you are on one
+  function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
     for (const d of decks) if (inRect(d, x, z)) return d.h;
     for (const r of ramps) if (inRect(r, x, z)) {
       const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1];
       // A stair is steps, not a slope: he stands on the tread he is over, so his feet never sink into the stone.
       const f = Math.min(1, Math.max(0, ((x - r.low[0]) * dx + (z - r.low[1]) * dz) / (dx * dx + dz * dz))), n = Math.max(1, Math.round(r.h / 0.18));
-      return (r.base || 0) + r.h * Math.min(1, (Math.floor(f * n + 1e-6) + (f > 1e-6 ? 1 : 0)) / n);
+      return (r.base || 0) + r.h * (even ? f : Math.min(1, (Math.floor(f * n + 1e-6) + (f > 1e-6 ? 1 : 0)) / n));
     }
     return null;
   }
@@ -446,6 +455,8 @@ export function createWalker(site) {
   return {
     setRoom(r) { room = r || null; }, get room() { return room; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },
+    // Where the eye rides: over a stair it follows the slope, not each tread, so the view climbs without juddering.
+    eyeAt(x, z) { if (room) return room.y; const c = carved(x, z, true); return c === null ? level(x, z) : c; },
     // The surface of whatever is there, walkable or not: floors and stairs, the courts, and the open hillside.
     landAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? Math.max(level(x, z), terrain(x, z)) : c; },
     // Is something solid standing here: a building, a wall, a tree? (Not the edges of the walk, which are only air.) The eye uses this.

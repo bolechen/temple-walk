@@ -11,6 +11,6 @@
     "verify": "npm run check && npm test && npm run e2e:smoke",
     "shots": "node tools/shots.js",
     "portrait": "node tools/portrait.js",
-    "serve": "cd app && python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000 --bind 127.0.0.1 --directory app"
   }
 }
