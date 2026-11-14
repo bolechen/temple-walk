@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-14T22:33:30.071Z",
+  "generated_at": "2026-11-14T22:35:21.793Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "a2c7f3162958dd19b87e90abb7801f661db28ed4",
-    "url": "https://github.com/bolechen/temple-walk/commit/a2c7f3162958dd19b87e90abb7801f661db28ed4"
+    "sha": "2823b9cead6927f848e1ef46421c60fb9577c712",
+    "url": "https://github.com/bolechen/temple-walk/commit/2823b9cead6927f848e1ef46421c60fb9577c712"
   },
   "delivery": {
     "schema_version": 1,
@@ -65,13 +65,13 @@
     "kind": "developer_report"
   },
   "verification": {
-    "status": "in_progress",
+    "status": "pending",
     "conclusion": null,
-    "run_id": 43648702123,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43648702123",
+    "run_id": 43648868256,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43648868256",
     "checks": {
-      "syntax": "success",
-      "unit": "in_progress",
+      "syntax": "pending",
+      "unit": "pending",
       "e2e": "pending"
     },
     "scope": [
@@ -660,6 +660,57 @@
           "A-M4-MANIFEST",
           "A-STATUS"
         ]
+      },
+      {
+        "id": "EDGE-001",
+        "state": "open",
+        "severity": "major",
+        "title": "前檐柱与角色体积相交，影响八座殿堂",
+        "finding": "角色中心止于柱前约0.45–0.46m，但衣袍进入柱身。实际模型静止采样穿入保守柱芯约5.1–11.1cm；行走姿态约8.7–14.7cm。浏览器普通W从前廊诊断点可达到该边界。",
+        "recommendation": "按角色体积与可见动画包络处理共享碰撞；覆盖全部前檐柱并保留门口与前廊通行。方案由Claude选择，不能仅缩小/隐藏人物或封死通路。",
+        "goal": "玩家走近、转身、奔跑和落地时，衣袍、身体与随身物均不进入柱身/柱础。",
+        "acceptance": [
+          "茶寮、禅堂、大雄宝殿、藏经楼、药师殿、大慧院、观音殿、凌霄阁全部前檐柱逐一检查，补山门/亭子柱基。",
+          "正向、斜向、贴边转身、倒退、Shift和跳跃/落地均无持续可见穿插；几何误差≤1cm。",
+          "柱间、楼梯、入口与前廊保持可达，提供同机位前后图和正常速度连续录像。"
+        ],
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "contacts-json",
+          "contacts-idle-json",
+          "outer-browse",
+          "detail-main-column-side",
+          "current-contacts"
+        ],
+        "current_reproduced_commit": "6c72023d8266c26cb3370c154e254a218c7f116f"
+      },
+      {
+        "id": "EDGE-002",
+        "state": "open",
+        "severity": "major",
+        "title": "茶寮两张檐下茶案没有阻挡角色",
+        "finding": "(-13.68,9.1)与(-13.68,18.9)桌面中心被walker允许通行，支撑仍为y=0.45；实际静止人物有97个采样顶点落入桌板体积。",
+        "recommendation": "茶案与桌腿具有匹配可见体积的阻挡；合法绕行和原下台阶点继续可用。",
+        "goal": "角色可以绕过茶案，到达入口与下台阶点，不能走进桌板或桌腿。",
+        "acceptance": [
+          "两张茶案均测试正向、两侧、斜角、倒退和Shift；身体、鞋、衣摆无持续穿插。",
+          "空格起跳和落地不穿桌、不落入桌板内部；若允许站桌面须显式设计并测试。",
+          "保留前廊通行与器物落点，提交正常速度前后对照录像。"
+        ],
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "props-json",
+          "detail-tea-table-north",
+          "detail-tea-table-south",
+          "current-props"
+        ],
+        "current_reproduced_commit": "6c72023d8266c26cb3370c154e254a218c7f116f"
       }
     ],
     "evidence": [
@@ -668,7 +719,9 @@
       "https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt",
       "https://temple-atlas-research.floralpage64.chatgpt.site/assets/generated/T00.png",
       "https://temple-atlas-research.floralpage64.chatgpt.site/assets/generated/T00-sheet.png",
-      "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
+      "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json",
+      "https://github.com/bolechen/temple-walk/blob/main/docs/reviews/2026-11-14-edges/GOAL.md",
+      "https://temple-atlas-research.floralpage64.chatgpt.site/assets/reviews/2026-11-14-edges/index.html"
     ],
     "publish": {
       "requested": false,
@@ -686,6 +739,15 @@
       "Exterior GPU evidence excludes statue models and cannot establish interior completeness."
     ],
     "note": "静态检查与单测通过；但本次视觉、运行、正常输入和目标设备性能均缺少匹配提交证据，且资产授权问题仍在。本轮结论为 partial / not_accepted。",
+    "supplemental_reviews": [
+      {
+        "run_id": "T00-20261114-edges-3e67700",
+        "reviewed_commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+        "mechanical_recheck_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+        "report": "docs/reviews/2026-11-14-edges/report.json",
+        "verdict": "not_accepted"
+      }
+    ],
     "applies_to_current": false
   }
 }
