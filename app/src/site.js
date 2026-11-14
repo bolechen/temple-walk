@@ -254,7 +254,7 @@ export function buildSite(M) {
     walk.solids.push({ x0: r.x0 - 0.45, x1: r.x1 + 0.45, z0: r.z0 - 0.45, z1: r.z1 + 0.45 });
   }
   const X = SITE.x;
-  for (const sx of [-1, 1]) { wall(sx * 10.9, SITE.zS, sx * 12.8, SITE.zS); wall(sx * 18.2, SITE.zS, sx * X, SITE.zS); }
+  for (const sx of [-1, 1]) { wall(sx * 9.72, SITE.zS, sx * 12.8, SITE.zS); wall(sx * 18.2, SITE.zS, sx * X, SITE.zS); }   // the wall runs right up to the gate's end wall: no slit to see through beside it
   // The bell and drum towers stand inside the enclosure: the wall steps out round each of them, so that from the
   // forecourt the temple is closed from end to end and the two small roofs rise behind it.
   for (const sx of [-1, 1]) { const zo = SITE.zS + 3.0; wall(sx * 12.8, SITE.zS, sx * 12.8, zo); wall(sx * 12.8, zo, sx * 18.2, zo); wall(sx * 18.2, zo, sx * 18.2, SITE.zS); }

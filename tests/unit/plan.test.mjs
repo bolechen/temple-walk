@@ -24,6 +24,17 @@ test("the eye climbs a stair as a slope, never more than half a tread from the f
     assert.ok(Math.abs(e - f) < 0.2, `eye ${e} and feet ${f} part company at z=${z}`); assert.ok(Math.abs(walker.eyeAt(0, z + 0.05) - e) < 0.06, `the eye jumps at z=${z}`);
   }
 });
+test("the enclosure is closed either side of the gate: wall meets the gate's end, and wraps the towers", () => {
+  // At a child's eye height, a line of sight from the forecourt toward the court meets something built (wall, gate
+  // or tower base) at every point from the gate's end to the corner of the enclosure.
+  site.root.updateMatrixWorld(true); const ray = new THREE.Raycaster(); ray.far = 9.5;
+  for (const sx of [-1, 1]) for (let x = 9.3; x <= 21.9; x += 0.15) {
+    ray.set(new THREE.Vector3(sx * x, 1.3, SITE.zS + 6), new THREE.Vector3(0, 0, -1));
+    assert.ok(ray.intersectObject(site.root, true).length > 0, `a gap in the enclosure beside the gate at x=${(sx * x).toFixed(2)}: one can see straight into the court`);
+  }
+  // and nobody can walk from the forecourt into the court except through the gate
+  for (const sx of [-1, 1]) for (let x = 2.8; x <= 21.9; x += 0.1) { let through = true; for (let z = SITE.zS + 4; z >= SITE.zS - 4 && through; z -= 0.1) if (walker.blocked(sx * x, z)) through = false; assert.ok(!through, `one can walk straight through beside the gate at x=${(sx * x).toFixed(1)}`); }
+});
 test("every named view stands somewhere a visitor could stand", () => {
   for (const [name, [x, z, yaw, pitch]] of Object.entries(site.views)) {
     assert.ok([x, z, yaw, pitch].every(Number.isFinite), name);
