@@ -86,7 +86,7 @@ export function createGround(scene, shade, censer, paving) {
         vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
         // Standing water mirrors; stone that is only damp gives back a soft, pale light with no shapes in it.
         vec3 sky=uFog*mix(.9,1.06,ndv), refl=sky;
-        if(uReflOn>.5){ vec3 sharp=texture2D(tRefl,ruv,0.).rgb, soft=mix(texture2D(tRefl,ruv,5.5).rgb,sky,.6); if(!(sharp.r>=0.)) sharp=sky; if(!(soft.r>=0.)) soft=sky; refl=mix(soft,sharp,puddle); }
+        if(uReflOn>.5){ vec3 sharp=texture2D(tRefl,ruv,0.).rgb, soft=mix(texture2D(tRefl,ruv,6.).rgb,sky,.88); if(!(sharp.r>=0.)) sharp=sky; if(!(soft.r>=0.)) soft=sky; refl=mix(soft,sharp,puddle); }
         if(!(refl.r>=0.)) refl=vec3(0.); refl=min(refl,vec3(32.));
         float kr=fres*mix(.05+damp*.24,1.,puddle)*(1.-joint*.7);
         vec3 c=mix(lit,refl,clamp(kr,0.,1.));
@@ -106,7 +106,7 @@ export function createGround(scene, shade, censer, paving) {
     terrace.receiveShadow = true; scene.add(terrace); levels.push({ mat: terrace.material, y: p.y });
   }
 
-  const rot = new THREE.Matrix4(), look = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  const rot = new THREE.Matrix4(), look = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0); let has = false;
   return {
     // `lamps`: [{ x, y, z, reach }] — every flame in the place. Each lights the paving just below it.
     setLamps(lamps) {
@@ -115,7 +115,10 @@ export function createGround(scene, shade, censer, paving) {
         L.mat.uniforms.uLamps.value.forEach((v, i) => { const l = mine[i]; if (l) v.set(l.x, l.z, l.reach, Math.min(1.4, 0.5 + 0.5 / Math.max(0.6, l.y - L.y))); else v.set(0, 0, 1, 0); });
       }
     },
-    resize(w, h, on) { if (on) rt.setSize(Math.max(64, w), Math.max(64, h)); mat.uniforms.uReflOn.value = on ? 1 : 0; },
+    resize(w, h, on) { if (on) rt.setSize(Math.max(64, w), Math.max(64, h)); has = !!on; mat.uniforms.uReflOn.value = on ? 1 : 0; },
+    // Whether the mirror is being drawn this frame. When it is not, the paving falls back to the sky's sheen
+    // instead of showing whatever the mirror last held.
+    mirror(on) { mat.uniforms.uReflOn.value = has && on ? 1 : 0; },
     // The camera's mirror image below the ground looks back up at the real scene.
     render(renderer, camera) {
       rot.extractRotation(camera.matrixWorld);

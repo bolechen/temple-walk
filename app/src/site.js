@@ -176,11 +176,11 @@ export function buildSite(M) {
   sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
-  const stone = [], paving = [];
+  const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
   LEVELS.forEach((L, i) => {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
     const bottom = i === 2 ? 4 : y0 - 0.2 < 0 ? 0 : y0 - 0.2;
-    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2), st.geo.translate(0, y0, L.zS));
+    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(st.geo.translate(0, y0, L.zS));
     for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
     paving.push({ level: i + 1, y: L.y + 0.012, x: L.x, zS: L.zS, zN: L.zN });
     walk.ramps.push({ x0: -L.stair / 2 + 0.3, x1: L.stair / 2 - 0.3, z0: L.zS - 0.4, z1: L.zS + st.run + 0.3, base: y0,   // a little past its foot, so no sliver of ground is left without a height
@@ -192,9 +192,8 @@ export function buildSite(M) {
   walk.solids.push({ x0: -60, x1: 60, z0: HILL.zN, z1: HILL.zS - 0.05, open: true });   // the hillside itself: not to be walked on, but open air above it
   {   // the approach: lower landing, a flight west to the half-way pavilion, a turn, a flight north to the forecourt
     const A = APPROACH, yA = -A.rise, yB = -A.rise - A.rise2, pad = 0.3;
-    stone.push(stairGeo(A.w, A.rise).geo.translate(0, yA, A.top),
-      stairGeo(A.zA1 - A.zA0 - 0.6, A.rise2).geo.rotateY(Math.PI / 2).translate(A.xTurn, yB, A.zMid),
-      box(A.xTurn + A.w / 2 + 0.4, 0.4, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.2, yA - 0.2, A.zMid),
+    flights.push(stairGeo(A.w, A.rise).geo.translate(0, yA, A.top), stairGeo(A.zA1 - A.zA0 - 0.6, A.rise2).geo.rotateY(Math.PI / 2).translate(A.xTurn, yB, A.zMid));
+    stone.push(box(A.xTurn + A.w / 2 + 0.4, 0.4, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.2, yA - 0.2, A.zMid),
       box(A.xB1 - A.xB0, 0.4, A.zA1 - A.zA0, (A.xB0 + A.xB1) / 2, yB - 0.2, A.zMid));
     walk.ramps.push({ x0: -A.w / 2 + pad, x1: A.w / 2 - pad, z0: A.top - 0.4, z1: A.zA0 + 0.2, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
       { x0: A.xTurn - 0.2, x1: A.xB0 + 0.2, z0: A.zA0 + 0.6, z1: A.zA1 - 0.6, base: yB, h: A.rise2, low: [A.xB0, A.zMid], high: [A.xTurn, A.zMid] });
@@ -202,7 +201,7 @@ export function buildSite(M) {
     walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn + 0.2, z0: A.zA0 - 0.05, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 + 0.2, h: yB });
     // Below that, a third flight coming up from the south, from the landing where the walk begins.
     const yC = yB - A.rise3;
-    stone.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1), box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
+    flights.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1)); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
     walk.ramps.push({ x0: A.xC - A.w / 2 + pad, x1: A.xC + A.w / 2 - pad, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
     walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
@@ -222,7 +221,7 @@ export function buildSite(M) {
     const tag = makePlaque("洗砚池", { vertical: true }); tag.scale.setScalar(0.62); tag.position.set(px + 2.1, yB + 1.0, pz - 0.42); tag.rotation.y = -Math.PI / 2 - 0.5;
     root.add(ink, tag);
   }
-  root.add(mesh(merge(stone), M.stone));
+  root.add(mesh(merge(stone), M.stone), mesh(merge(flights), M.steps));
 
   // Rows of tea across the last slope, following the hill, as they do beside the highest hall.
   {

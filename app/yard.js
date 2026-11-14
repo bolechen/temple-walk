@@ -414,7 +414,8 @@ function frame(now) {
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
   // approach where the eye is under it. A jump does not change which of these he is in.
-  if (!aloft) mirrorOn = footY > -0.6 && footY < 0.6;
+  if (!aloft) mirrorOn = footY > -0.6 && footY < 2.0;   // the court, the forecourt, and the platforms that stand in them
+  ground.mirror?.(mirrorOn && !inside);
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).

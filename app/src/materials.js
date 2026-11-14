@@ -137,7 +137,17 @@ export function createMaterials() {
         col=mix(col,vec3(.13,.18,.08),moss*smoothstep(1.,.1,vWP.y-floor(vWP.y/2.6)*2.6)*.7);       // green toward the foot of each rise
         wet=smoothstep(.35,.75,fbm3(vWP*.35+7.))*.7; rough_=mix(Nr.w,.35,wet); nd_=Nr.xyz*1.3;   // damp in patches, wherever the wall stands (it used to be wet below the height of the court, which was the whole approach)
       }
-      col*=mix(1.,.6,wet); if(vWN.y<-.5) col*=.55;`, { tex: ["stone", "blocks"] }),
+      col*=mix(1.,.6,wet);`, { tex: ["stone", "blocks"] }),
+    // A stair is dressed stone on every face, not the rubble of the wall beside it: pale where feet fall, a tone
+    // darker in the riser, moss only low in the corners.
+    steps: procMat("steps", { roughness: 0.8, envMapIntensity: 0.4 }, `
+      vec3 w=triW(vWN), q=vWP*.75; vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
+      float up=smoothstep(.4,.6,vWN.y), trod=smoothstep(.3,.7,fbm2(vWP.xz*.6+2.));
+      col=mix(vec3(.21,.212,.2),vec3(.31,.31,.29),up)*mix(vec3(1.),A,.9)*(.92+.2*trod*up);
+      float moss=smoothstep(.56,.76,fbm3(vWP*.9+2.))*(1.-up); col=mix(col,vec3(.1,.13,.07),moss*.45);
+      float cy=fract(vWP.y/.46), cx=fract((vWP.x+vWP.z)/1.3+floor(vWP.y/.46)*.5), joint=(1.-smoothstep(0.,.022,min(min(cy,1.-cy)*.46,min(cx,1.-cx)*1.3)))*(1.-up);
+      col*=1.-.6*joint; bump_=-joint*.006;
+      rough_=mix(Nr.w,.45,.3*up); nd_=Nr.xyz*.8;`, { tex: ["stone"] }),
 
     // vUv2 = (leaf index + position across the leaf, height mapped to 0..3.02); transoms are offset by 100 and mapped to 0...7.
     lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3, side: THREE.DoubleSide }, `

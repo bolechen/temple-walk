@@ -54,8 +54,10 @@ export function buildHall(M, opts) {
   const run = stairGeo(1, p.platH).run, stairs = (w) => stairGeo(w, p.platH).geo;
   {
     const parts = [box(PX * 2, p.platH - p.platBase, zF - zB, 0, (p.platH + p.platBase) / 2, (zF + zB) / 2)];
-    if (p.steps) parts.push(stairs(p.steps).translate(0, 0, zF));
-    if (p.stepsBack) parts.push(stairs(p.stepsBack).rotateY(Math.PI).translate(0, 0, zB));
+    const flights = [];
+    if (p.steps) flights.push(stairs(p.steps).translate(0, 0, zF));
+    if (p.stepsBack) flights.push(stairs(p.stepsBack).rotateY(Math.PI).translate(0, 0, zB));
+    if (flights.length) add(merge(flights), p.platBase > 0 ? M.woodX : M.steps, { ao: null });   // steps are dressed stone, not the platform's rubble
     add(merge(parts), p.platBase > 0 ? M.woodX : M.stone, { ao: null });   // an upper floor is a timber gallery, not a stone platform
     // The platform's edge: a course of long slabs, cut from single stones, standing a hand proud of the wall below.
     if (p.platBase <= 0 && p.platH >= 0.4) {
