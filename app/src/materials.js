@@ -60,7 +60,7 @@ export function createMaterials() {
   const plasterOne = procMat("plaster", { roughness: 0.9, envMapIntensity: 0.25 }, `
       float t=vWP.x+vWP.z, base=vUv2.x; vec3 q=vWP/2.7, w=triW(vWN);
       vec3 A=triA(tPlasterA,q,w)/mPlaster; vec4 Nr=triN(tPlasterN,q,w);
-      col=vec3(.86,.85,.81)*mix(vec3(1.),A,.3)*(.94+.1*fbm3(vWP*.5));   // lime wash: the paper of this picture, with the stains of many rains
+      col=vec3(.9,.89,.85)*mix(vec3(1.),A,.3)*(.94+.1*fbm3(vWP*.5));   // lime wash: the paper of this picture, with the stains of many rains
       float drip=smoothstep(.45,.8,n2(vec2(t*5.,vWP.y*.35)))*smoothstep(base+2.2,base+3.4,vWP.y+fbm2(vec2(t,2.))*1.5);
       col=mix(col,vec3(.42,.43,.41)*A,drip*.38);                     // rain streaks run down from the cap
       float damp=smoothstep(base+.75,base,vWP.y-fbm2(vec2(t*.9,5.))*.6);
@@ -126,7 +126,7 @@ export function createMaterials() {
         vec2 q=vWP.xz/vec2(1.1,.7); q.x+=floor(q.y)*.37; vec2 f=fract(q), id=floor(q);
         float edge=min(min(f.x,1.-f.x)*1.1,min(f.y,1.-f.y)*.7)+(n2(vWP.xz*9.)-.5)*.012, joint=1.-smoothstep(.006,.022,edge);
         vec2 uv0=vWP.xz*.75, uv=uv0+vec2(h21(id),h21(id+7.))*5., gx=dFdx(uv0), gy=dFdy(uv0); vec3 A=textureGrad(tStoneA,uv,gx,gy).rgb/mStone, nr=textureGrad(tStoneN,uv,gx,gy).xyz;
-        col=mix(vec3(.2,.202,.19),vec3(.33,.33,.31),h21(id+3.))*mix(vec3(1.),A,.9);
+        col=mix(vec3(.23,.232,.218),vec3(.37,.37,.345),h21(id+3.))*mix(vec3(1.),A,.9);
         col=mix(col,vec3(.11,.14,.075),moss*max(.2,joint*.8)); col=mix(col,vec3(.035),joint*.5);
         float worn=smoothstep(.5,.15,abs(fract(vWP.x*.25)-.5))*.0+smoothstep(.3,.7,fbm2(vWP.xz*.6+2.)); col*=mix(.9,1.22,worn);   // trodden pale where feet go
         wet=.45; rough_=mix(nr.z,.28,wet*(1.-joint)); nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*(1.-joint)*1.1; bump_=-joint*.006;
@@ -135,9 +135,9 @@ export function createMaterials() {
         vec3 A=triA(tBlocksA,q,w)/mBlocks; vec4 Nr=triN(tBlocksN,q,w);
         col=vec3(.25,.25,.235)*mix(vec3(1.),A,.95);
         col=mix(col,vec3(.13,.18,.08),moss*smoothstep(1.,.1,vWP.y-floor(vWP.y/2.6)*2.6)*.7);       // green toward the foot of each rise
-        wet=smoothstep(.5,0.,vWP.y); rough_=mix(Nr.w,.35,wet); nd_=Nr.xyz*1.3;
+        wet=smoothstep(.35,.75,fbm3(vWP*.35+7.))*.7; rough_=mix(Nr.w,.35,wet); nd_=Nr.xyz*1.3;   // damp in patches, wherever the wall stands (it used to be wet below the height of the court, which was the whole approach)
       }
-      col*=mix(1.,.6,wet); if(vWN.y<-.5) col*=.3;`, { tex: ["stone", "blocks"] }),
+      col*=mix(1.,.6,wet); if(vWN.y<-.5) col*=.55;`, { tex: ["stone", "blocks"] }),
 
     // vUv2 = (leaf index + position across the leaf, height mapped to 0..3.02); transoms are offset by 100 and mapped to 0...7.
     lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3, side: THREE.DoubleSide }, `
@@ -167,14 +167,14 @@ export function createMaterials() {
       col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.34,.42,raft); ao_=min(ao_,.42); emit_=col*uAmb*.03; rough_=1.;`, { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),
     ridge: procMat("ridge", { roughness: 0.55, envMapIntensity: 0.8 }, `
-      col=mix(vec3(.1,.105,.11),vec3(.19,.195,.195),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
+      col=mix(vec3(.06,.064,.068),vec3(.12,.124,.124),fbm3(vWP*2.)); float m=smoothstep(.5,.72,fbm3(vWP*1.3+5.)); col=mix(col,vec3(.11,.15,.07),m*.6);
       rough_=.5; bump_=fbm3(vWP*14.)*.004; ao_=1.;`),
     gable: procMat("gable", { roughness: 0.9, envMapIntensity: 0.2, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(9.,1.1,9.))*.8; ao_=.7;"),
     // The floor of the grove: dark leaf litter, moss, a scatter of fallen bamboo leaves.
     earth: procMat("earth", { roughness: 0.95, envMapIntensity: 0.15 }, `
       float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*.09+4.);
       vec2 uv=vWP.xz/1.9; vec3 A=mix(texture2D(tLeavesA,uv).rgb,texture2D(tLeavesA,uv.yx*.37+.3).rgb,.35)/mLeaves, nr=texture2D(tLeavesN,uv).xyz;   // two scales, so the litter does not repeat
-      col=mix(vec3(.036,.046,.027),vec3(.084,.094,.052),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=.75+.5*fbm2(vWP.xz*.05+7.);   // dark and damp, never the same for long
+      col=mix(vec3(.045,.056,.034),vec3(.1,.11,.062),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=.75+.5*fbm2(vWP.xz*.05+7.);   // dark and damp, never the same for long
       rough_=nr.z; nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*1.6;`, { tex: ["leaves"] }),
     // Rough rubble laid dry: the lining of the well.
     rubble: procMat("rubble", { roughness: 0.92, envMapIntensity: 0.25 }, `

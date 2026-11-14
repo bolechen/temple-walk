@@ -66,7 +66,7 @@ export function createGround(scene, shade, censer, paving) {
         // Water: one continuous ramp, standing water -> soaked -> damp.
         float low=fbm2(p*.17+3.)+(tone-.5)*.07-joint*.03+(uWet-1.)*.34;
         float puddle=smoothstep(.57,.61,low), damp=smoothstep(.3,.58,low);   // water stands only in the hollows
-        alb*=mix(.78,.5,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
+        alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         float dB=1e3;
         for(int i=0;i<${MAX_SHADE};i++){ vec4 b=uShade[i]; if(b.z<0.) break; vec2 d=abs(p-b.xy)-b.zw; dB=min(dB,length(max(d,0.))+min(max(d.x,d.y),0.)); }
@@ -84,9 +84,11 @@ export function createGround(scene, shade, censer, paving) {
         if(uLamp>.01){ float pool=0.; for(int i=0;i<${MAX_LAMPS};i++){ vec4 L=uLamps[i]; if(L.w<=0.) break; vec2 dl=p-L.xy; pool+=L.w*exp(-dot(dl,dl)/(L.z*L.z)); } lit+=(alb*.55+.03)*vec3(1.,.56,.25)*min(pool,1.2)*uLamp*.85; }
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.
         vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
-        vec3 refl=uReflOn>.5?texture2D(tRefl,ruv,mix(2.6,.0,puddle)).rgb:uFog*mix(.9,1.06,ndv);
+        // Standing water mirrors; stone that is only damp gives back a soft, pale light with no shapes in it.
+        vec3 sky=uFog*mix(.9,1.06,ndv), refl=sky;
+        if(uReflOn>.5){ vec3 sharp=texture2D(tRefl,ruv,0.).rgb, soft=mix(texture2D(tRefl,ruv,5.5).rgb,sky,.6); if(!(sharp.r>=0.)) sharp=sky; if(!(soft.r>=0.)) soft=sky; refl=mix(soft,sharp,puddle); }
         if(!(refl.r>=0.)) refl=vec3(0.); refl=min(refl,vec3(32.));
-        float kr=fres*mix(.1+damp*.42,1.,puddle)*(1.-joint*.7);
+        float kr=fres*mix(.05+damp*.24,1.,puddle)*(1.-joint*.7);
         vec3 c=mix(lit,refl,clamp(kr,0.,1.));
         ${fogMix("c", "dist")}
         gl_FragColor=vec4(c,1.);

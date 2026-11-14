@@ -327,6 +327,16 @@ export function buildHall(M, opts) {
       }
     }
     add(merge(parts), M.ridge, { ao: null });
+    // Under each corner of the eaves hangs a small bronze wind bell.
+    {
+      const bells = [];
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const x = sx * (EX - 0.22), z = sz * (EZ - 0.22), y = roofY(x, z) - 0.36;
+        bells.push(new THREE.LatheGeometry([[0, 0.14], [0.03, 0.135], [0.045, 0.09], [0.058, 0.02], [0.066, 0], [0.05, 0.005], [0, 0.02]].map(([r, h]) => new THREE.Vector2(r, h)), 10).translate(x, y - 0.14, z),
+          new THREE.CylinderGeometry(0.006, 0.006, 0.2, 4).translate(x, y + 0.1, z), new THREE.BoxGeometry(0.05, 0.09, 0.006).translate(x, y - 0.2, z));
+      }
+      add(merge(bells), M.bronze, { ao: null, cast: false });
+    }
 
     // Gable walls under the upper roof.
     const half = EZ - G;
@@ -336,12 +346,22 @@ export function buildHall(M, opts) {
       for (let z = -half; z <= half + 1e-6; z += 0.3) gs.lineTo(z, EAVE_Y + profile(EZ - Math.abs(z)) - 0.22);
       gs.lineTo(half, baseY);
       for (const s of [-1, 1]) add(plain(new THREE.ShapeGeometry(gs).rotateY((s * Math.PI) / 2).translate(s * (gx - 0.3), 0, 0)), M.gable, { ao: null });
+      // Bargeboards down either slope of each gable, and where they meet under the ridge, a hanging fish.
+      const barge = [], k = Math.min(1.4, Math.max(0.6, half / 3)), fish = new THREE.Shape([[0, 0.1], [0.2, -0.22], [0.11, -0.55], [0, -0.9], [-0.11, -0.55], [-0.2, -0.22]].map(([a2, b2]) => new THREE.Vector2(a2 * k, b2 * k)));
+      for (const s of [-1, 1]) {
+        for (const sz of [-1, 1]) for (let z = 0; z < half - 1e-6; z += 0.3) {
+          const z1 = Math.min(half, z + 0.3), y0 = EAVE_Y + profile(EZ - z), y1 = EAVE_Y + profile(EZ - z1), L = Math.hypot(z1 - z, y1 - y0);
+          barge.push(new THREE.BoxGeometry(0.06, 0.36, L + 0.03).rotateX(sz * Math.atan2(y0 - y1, z1 - z)).translate(s * (gx + 0.05), (y0 + y1) / 2 - 0.2, sz * (z + z1) / 2));
+        }
+        barge.push(plain(new THREE.ShapeGeometry(fish).rotateY((s * Math.PI) / 2).translate(s * (gx + 0.09), EAVE_Y + profile(EZ) - 0.3, 0)));
+      }
+      add(merge(barge), M.fascia, { ao: null });
     }
   }
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
     const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq), zz = Z + (p.brackets ? 1.3 : 0.45);
-    m.position.set(0, Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08), zz); m.rotation.x = 0.1;
+    m.position.set(0, Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08), zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
     g.add(m);
   }
 

@@ -128,7 +128,7 @@ export function buildSite(M) {
   }
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
   for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
-    [-27, -30, 24], [28, -34, 26], [-40, 22, 28], [41, 34, 27], [-25, 76, 20]]) cedars.push([x, terrain(x, z) - 0.3, z, "cedar", h, true]);   // `true`: seen only from afar, so grown without the branches inside its boughs
+    [-27, -30, 24], [28, -34, 26], [-40, 22, 28], [41, 34, 27], [-25, 76, 20], [-25.5, -17, 31], [25.5, -20, 32], [-26, 3, 29], [26, -3, 30], [-30, -44, 30], [31, -48, 31], [-24.5, -60, 28], [25, -64, 29]]) cedars.push([x, terrain(x, z) - 0.3, z, "cedar", h, true]);   // `true`: seen only from afar, so grown without the branches inside its boughs
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
@@ -406,10 +406,16 @@ function lantern() {
 }
 
 // A bronze bell hung from a cross beam, with the log that strikes it slung beside it.
+// The mouth of a great temple bell is not a plain circle: its lip rises and falls in eight waves.
+function waved(geo) {
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y < 0.32) p.setY(i, y + 0.055 * (1 - y / 0.32) * (0.5 + 0.5 * Math.cos(Math.atan2(p.getX(i), p.getZ(i)) * 8))); }
+  geo.computeVertexNormals(); return geo;
+}
 function bell(M, t) {
   const g = new THREE.Group(), y0 = t.platH + 1.1, beamY = t.colTop - 0.55;
   const body = mesh(merge([
-    lathe([[0.64, 0], [0.61, 0.07], [0.53, 0.3], [0.48, 0.8], [0.46, 1.25], [0.41, 1.5], [0.26, 1.68], [0.08, 1.75], [0, 1.75]], 28).translate(0, y0, 0),
+    waved(lathe([[0.64, 0], [0.61, 0.07], [0.53, 0.3], [0.48, 0.8], [0.46, 1.25], [0.41, 1.5], [0.26, 1.68], [0.08, 1.75], [0, 1.75]], 48)).translate(0, y0, 0),
     new THREE.TorusGeometry(0.12, 0.035, 8, 14).translate(0, y0 + 1.83, 0),
     new THREE.CylinderGeometry(0.025, 0.025, beamY - y0 - 1.9, 6).translate(0, (beamY + y0 + 1.9) / 2, 0),
   ]), M.bronze);
