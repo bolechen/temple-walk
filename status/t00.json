@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-14T22:03:24.858Z",
+  "generated_at": "2026-11-14T22:10:59.621Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "ab064f9bba6896b556381eedce5a700e2baf5535",
-    "url": "https://github.com/bolechen/temple-walk/commit/ab064f9bba6896b556381eedce5a700e2baf5535"
+    "sha": "5fd49a104bdb59d5c119ba523ce39e88cc7a9912",
+    "url": "https://github.com/bolechen/temple-walk/commit/5fd49a104bdb59d5c119ba523ce39e88cc7a9912"
   },
   "delivery": {
     "schema_version": 1,
@@ -65,14 +65,14 @@
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43645693408,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43645693408",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43646711253,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43646711253",
     "checks": {
-      "syntax": "success",
-      "unit": "success",
-      "e2e": "success"
+      "syntax": "pending",
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot",
@@ -81,19 +81,612 @@
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "ab064f9bba6896b556381eedce5a700e2baf5535",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43645693408"
   },
   "independent_review": {
+    "schema_version": "1.0",
     "scene_id": "T00",
     "status": "not_reviewed",
-    "reviewed_commit": null,
-    "reviewer": null,
-    "evidence": [],
-    "issues": [],
-    "note": "自动测试通过不构成完整独立验收；历史意见保留于 review-log.json。",
+    "run_id": "t00-20261115-ab064f9",
+    "source": {
+      "repository": "https://github.com/bolechen/temple-walk",
+      "ref": "main",
+      "reviewed_commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+      "code_commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+      "evidence_commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+      "observed_head": "ab064f9bba6896b556381eedce5a700e2baf5535",
+      "code_equivalence": "ab064f9 follows 0e960f0 with delivery-document changes only; app/ tree is identical"
+    },
+    "reviewed_commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+    "reviewer": "Codex 独立评审",
+    "reviewer_details": {
+      "method": "commit-traceable independent review",
+      "skill_commit": "c4c3ba5cad3eb9337c3f21c07cbdbd4ac62f3ee3",
+      "checked_at": "2026-11-14T22:06:45Z"
+    },
+    "change_kind": "ui",
+    "run_status": "completed",
+    "verdict": "not_accepted",
+    "environment": {
+      "os": "managed Linux",
+      "browser": "cloud Chrome + desktop Chromium attempts",
+      "renderer": "WebGL unavailable locally; historical evidence NVIDIA T4 ANGLE/Vulkan",
+      "target_device": false
+    },
+    "selection": {
+      "selected": [
+        "changed source diff 2c05944..0e960f0",
+        "parser",
+        "79 unit tests",
+        "review validator 17 tests",
+        "E2E smoke first failure and one diagnostic retry",
+        "reference images",
+        "CAM-01..06",
+        "affected hall-platform camera",
+        "walkthrough video",
+        "T4 raw frame data",
+        "asset register",
+        "repository status JSON"
+      ],
+      "skipped": [
+        "Mac/phone 120s×3 target performance",
+        "successful local normal-input traversal",
+        "interior statue completeness",
+        "direct Site source publication"
+      ],
+      "reason": "UI/geometry/performance changes require static, unit, runtime, visual and performance review; local WebGL/E2E environment blocked normal-input completion, and T4 cannot substitute for target devices."
+    },
+    "checks": [
+      {
+        "id": "C01",
+        "scope": "static",
+        "criterion": "锁定提交源码可解析",
+        "status": "pass",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "31 files checked, 0 problems.",
+        "evidence_ids": [
+          "A-CHECK"
+        ]
+      },
+      {
+        "id": "C02",
+        "scope": "static",
+        "criterion": "锁定提交单元回归通过",
+        "status": "pass",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "79/79 unit tests passed.",
+        "evidence_ids": [
+          "A-UNIT"
+        ]
+      },
+      {
+        "id": "C03",
+        "scope": "static",
+        "criterion": "评审结构/证据校验器自身回归通过",
+        "status": "pass",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "17/17 validator tests passed.",
+        "evidence_ids": [
+          "A-VALIDATOR"
+        ]
+      },
+      {
+        "id": "C04",
+        "scope": "runtime",
+        "criterion": "真人正常速度键鼠/触控完成受影响路线",
+        "status": "blocked",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "Playwright browser package missing; one system-Chromium diagnostic retry was denied by the runtime socket policy; cloud browser had WebGL disabled and desktop Chromium remained at the retry state.",
+        "evidence_ids": [
+          "A-E2E-FIRST",
+          "A-E2E-RETRY",
+          "A-INSPECTION"
+        ]
+      },
+      {
+        "id": "C05",
+        "scope": "visual",
+        "criterion": "六固定机位和受影响大殿机位符合参考图的明度、材质、植被和构造目标",
+        "status": "partial",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "All images were opened and hashes verified. Runtime images belong to code commit 0e960f0, whose app tree equals ab064f9, but are not relabeled; several stable minor findings remain.",
+        "evidence_ids": [
+          "A-INSPECTION",
+          "A-M4-MANIFEST",
+          "A-CAM01",
+          "A-CAM02",
+          "A-CAM03",
+          "A-CAM04",
+          "A-CAM05",
+          "A-CAM06",
+          "A-HALL"
+        ]
+      },
+      {
+        "id": "C06",
+        "scope": "runtime",
+        "criterion": "完整五区往返可由正常用户输入完成",
+        "status": "partial",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "Automated diagnostic tour and unit reachability support the route, but the 116.04s video is program-driven and does not satisfy normal-input acceptance.",
+        "evidence_ids": [
+          "A-WALK",
+          "A-UNIT",
+          "A-INSPECTION"
+        ]
+      },
+      {
+        "id": "C07",
+        "scope": "performance",
+        "criterion": "锁定目标 Mac 与手机各完成 120秒×3 性能测量",
+        "status": "blocked",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "Only T4 diagnostic data exists; no target device was measured.",
+        "evidence_ids": [
+          "A-PERF",
+          "A-M4-MANIFEST"
+        ]
+      },
+      {
+        "id": "C08",
+        "scope": "security",
+        "criterion": "素材来源、再分发授权与仓库许可完整可核",
+        "status": "fail",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "Buddha and pedestal model authorship/re-distribution license remain unrecorded; repository code license is absent.",
+        "evidence_ids": [
+          "A-ASSETS"
+        ]
+      },
+      {
+        "id": "C09",
+        "scope": "release",
+        "criterion": "仓库状态与部署信息不夸大验收",
+        "status": "partial",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "reason": "Status JSON correctly reported CI in progress, deployment at code commit 0e960f0, and independent review not yet applied. Final post-merge sync must be read back.",
+        "evidence_ids": [
+          "A-STATUS"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "A-CHECK",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/evidence/independent/20261115-ab064f9/check.log",
+        "sha256": "6cd565d6f0845760287c7f6d40c739538fd3b5b90666f3a19f54f9e3d4278ef9"
+      },
+      {
+        "id": "A-UNIT",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/evidence/independent/20261115-ab064f9/unit.log",
+        "sha256": "2fc5af0d556a87c59a72783290bb38e45e2d8a5e4e1a4aa34e4b8e836e7daaa6"
+      },
+      {
+        "id": "A-VALIDATOR",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/evidence/independent/20261115-ab064f9/validator-tests.log",
+        "sha256": "76134e43bb0c2e0da8a66488b3f10588c5a425f327702293ac9e871ad9c0bc52"
+      },
+      {
+        "id": "A-E2E-FIRST",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/evidence/independent/20261115-ab064f9/e2e-first-failure.log",
+        "sha256": "a828fdc5d23c6f1e7a593f47bfe1e1e6f5826cd8984743923e16d7a2573f0e11"
+      },
+      {
+        "id": "A-E2E-RETRY",
+        "type": "test_log",
+        "mode": "diagnostic",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/evidence/independent/20261115-ab064f9/e2e-diagnostic-retry.log",
+        "sha256": "8ef53d55233b4f306627fae857f4e39438d8d30472aeb73e3c2a8f28b4e3a062"
+      },
+      {
+        "id": "A-INSPECTION",
+        "type": "test_log",
+        "mode": "manual_visual_review",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/evidence/independent/20261115-ab064f9/inspection.md",
+        "sha256": "17a34c5d10a684bdecc8caa3a1e6a9c6c894191b38e3ee4efd18ee9effa96b7b"
+      },
+      {
+        "id": "A-M4-MANIFEST",
+        "type": "test_log",
+        "mode": "gpu_job_manifest",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/manifest.json",
+        "sha256": "a7c4d96f259d61381f4e3fa3fb6b9bff7fdf43a4431fe9ebed5075974176b22a"
+      },
+      {
+        "id": "A-CAM01",
+        "type": "runtime_screenshot",
+        "mode": "fixed_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/CAM-01.jpg",
+        "sha256": "91bbb31022b2418c0efda1fb496ace6afdce04a8e94f10f2a1e782c870aabe46"
+      },
+      {
+        "id": "A-CAM02",
+        "type": "runtime_screenshot",
+        "mode": "fixed_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/CAM-02.jpg",
+        "sha256": "7a6623cc8d5caeff9faecc07c834072b6ed2c0508b06d4ccc3d8637c91e0a72a"
+      },
+      {
+        "id": "A-CAM03",
+        "type": "runtime_screenshot",
+        "mode": "fixed_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/CAM-03.jpg",
+        "sha256": "4fdc94ace23a1e7d976e9e0a53ad7f13cc3b90e95a4f8a140f21ab122868e73a"
+      },
+      {
+        "id": "A-CAM04",
+        "type": "runtime_screenshot",
+        "mode": "fixed_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/CAM-04.jpg",
+        "sha256": "7056228c002ade58f7376ae79c04ad9e6cd03bbc90a5520165f88112ee0b9484"
+      },
+      {
+        "id": "A-CAM05",
+        "type": "runtime_screenshot",
+        "mode": "fixed_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/CAM-05.jpg",
+        "sha256": "37b631f47a70ffd7219062c025576657681ee30dccfe80d9d26d6fe1ca627434"
+      },
+      {
+        "id": "A-CAM06",
+        "type": "runtime_screenshot",
+        "mode": "fixed_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/CAM-06.jpg",
+        "sha256": "8971b92d995ff2d7b538cdeeb1053a34cc0a5cc8b713f3ed2047b2d0cc1504a1"
+      },
+      {
+        "id": "A-HALL",
+        "type": "runtime_screenshot",
+        "mode": "affected_camera_diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/extra-hall-platform.jpg",
+        "sha256": "49ba6cd872e06a0d347d8d1b80a27a7206fed84acd15cf2262fbbd11c18c2292"
+      },
+      {
+        "id": "A-WALK",
+        "type": "runtime_video",
+        "mode": "diagnostic",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/walkthrough.webm",
+        "sha256": "6cd40dc93002dd2268ca4b1d4750b467abc9dfcccba97d2d80ac2f1d2458cfba"
+      },
+      {
+        "id": "A-PERF",
+        "type": "performance_data",
+        "mode": "diagnostic_t4",
+        "created_at": "2026-11-14T21:58:40Z",
+        "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+        "file": "docs/t00/evidence/M4/frame-times.csv",
+        "sha256": "459d98b07eefcce3df844856ddd6ecbbb72f621137e76be468e512ce165012b1"
+      },
+      {
+        "id": "A-ASSETS",
+        "type": "test_log",
+        "mode": "source_audit",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "file": "docs/t00/asset-register.csv",
+        "sha256": "afe2eeb448afee3047a06a08430d1ca1a90cd2ecc8599c996083e0495f20378c"
+      },
+      {
+        "id": "A-STATUS",
+        "type": "remote_status",
+        "mode": "repository_generated",
+        "created_at": "2026-11-14T22:06:45Z",
+        "commit": "ab064f9bba6896b556381eedce5a700e2baf5535",
+        "url": "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
+      }
+    ],
+    "issues": [
+      {
+        "id": "ART-01",
+        "state": "open",
+        "severity": "minor",
+        "finding": "CAM-06 与补充大殿机位的湿铺地仍偏亮，积水倒影边界清楚。",
+        "recommendation": "降低非积水区域亮度与镜面权重，软化积水边界。",
+        "target": "CAM-04/05/06 与大殿月台",
+        "acceptance_condition": "同一锁定提交、同一机位截图中，哑光湿石占主导且少量积水不形成硬直边。",
+        "evidence_ids": [
+          "A-CAM06",
+          "A-HALL"
+        ]
+      },
+      {
+        "id": "ART-02",
+        "state": "open",
+        "severity": "minor",
+        "finding": "CAM-03/04/06 中亮灰天空面积仍大，抢过白墙与木构层级。",
+        "recommendation": "缩小平天空面积并加强林冠、雾山的明度层次。",
+        "target": "全部固定机位",
+        "acceptance_condition": "六机位复测中天空不成为最大最亮平面，远殿仍可读。",
+        "evidence_ids": [
+          "A-CAM03",
+          "A-CAM04",
+          "A-CAM06"
+        ]
+      },
+      {
+        "id": "ART-05",
+        "state": "open",
+        "severity": "minor",
+        "finding": "白墙风化仍较均匀，墙脚和压顶下的因果分布不够明显。",
+        "recommendation": "把主要污痕集中到墙脚、滴水线与局部渗水路径。",
+        "target": "CAM-03/04/05",
+        "acceptance_condition": "当前提交固定机位中不再出现整面均匀重复斑驳。",
+        "evidence_ids": [
+          "A-CAM03",
+          "A-CAM04",
+          "A-CAM05"
+        ]
+      },
+      {
+        "id": "ART-07",
+        "state": "open",
+        "severity": "minor",
+        "finding": "竹林冠层仍有重复片状与透亮天空，层次弱于参考图。",
+        "recommendation": "增加近中远竹层级并压低远层透天。",
+        "target": "CAM-01/02/05",
+        "acceptance_condition": "固定机位中竹林形成连续深背景且不出现明显平片轮廓。",
+        "evidence_ids": [
+          "A-CAM01",
+          "A-CAM02",
+          "A-CAM05"
+        ]
+      },
+      {
+        "id": "ART-08",
+        "state": "open",
+        "severity": "minor",
+        "finding": "石阶踢面与侧墙仍接近同材同明度，直缝使开场局部像现浇混凝土。",
+        "recommendation": "区分踏面、踢面、挡墙石材尺度与收边，补挡墙压顶。",
+        "target": "CAM-01/02",
+        "acceptance_condition": "正常视角下每级踏面连续可读，挡墙不再与踢面并成同一砌体。",
+        "evidence_ids": [
+          "A-CAM01",
+          "A-CAM02"
+        ]
+      },
+      {
+        "id": "ART-10",
+        "state": "open",
+        "severity": "minor",
+        "finding": "远处柳杉轮廓仍呈细长刷状剪影，建筑背后的树林层次单薄。",
+        "recommendation": "重做远树轮廓与密度分布，减少规则尖锥/毛刷感。",
+        "target": "CAM-03/05/06",
+        "acceptance_condition": "受影响机位中远树有自然团簇和深浅层级，无明显重复刷状轮廓。",
+        "evidence_ids": [
+          "A-CAM03",
+          "A-CAM05",
+          "A-CAM06"
+        ]
+      },
+      {
+        "id": "ART-14",
+        "state": "open",
+        "severity": "minor",
+        "finding": "CAM-06 与补充机位积水里仍有显眼的硬边屋顶倒影。",
+        "recommendation": "限制倒影到洼地并增加粗糙模糊与边缘过渡。",
+        "target": "CAM-06 与大殿月台",
+        "acceptance_condition": "固定机位中倒影边界不再读作几何瑕疵。",
+        "evidence_ids": [
+          "A-CAM06",
+          "A-HALL"
+        ]
+      },
+      {
+        "id": "STR-10",
+        "state": "open",
+        "severity": "minor",
+        "finding": "大殿正脊下仍可见浅色直线，屋脊与屋面连接偏悬浮。",
+        "recommendation": "封闭脊下缝隙并校正正脊、脊端的支承关系。",
+        "target": "CAM-06 与大殿月台",
+        "acceptance_condition": "同机位截图无透天缝或悬浮浅线。",
+        "evidence_ids": [
+          "A-CAM06",
+          "A-HALL"
+        ]
+      },
+      {
+        "id": "STR-14",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "修复提交声称解决竹竿从湿铺地直接长出，但没有匹配版本的独立复测。",
+        "recommendation": "保留待复验；在 CAM-05 与近地补充机位检查根部落点。",
+        "target": "CAM-05",
+        "acceptance_condition": "新运行截图确认竹竿均落在土坡/种植带且无穿铺地。",
+        "evidence_ids": [
+          "A-CAM05"
+        ]
+      },
+      {
+        "id": "UX-08",
+        "state": "open",
+        "severity": "minor",
+        "finding": "前院边缘与部分石阶侧边仍依赖不可见碰撞边界。",
+        "recommendation": "用可见路缘、栏杆或地形边界解释可走范围。",
+        "target": "前院东西边缘、石阶两侧",
+        "acceptance_condition": "真人正常速度往返时不撞不可见墙，视觉边界与碰撞边界一致。",
+        "evidence_ids": []
+      },
+      {
+        "id": "UX-10",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "触屏快步与点地取消的修复只有代码/开发自报，没有独立触控复测。",
+        "recommendation": "在真实触控或等效设备上完成点地、摇杆快步与取消路径。",
+        "target": "触屏",
+        "acceptance_condition": "当前提交触控录像显示快步可用、点地失败有明确反馈且无静默取消。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-01",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "台沿空中再次按空格的二次弹跳修复尚未独立复测。",
+        "recommendation": "用正常输入在台沿复现原步骤。",
+        "target": "台沿跳跃",
+        "acceptance_condition": "当前提交录像中一次按键只产生一次跳跃/落地。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-02",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "歇脚菜单拦截后景输入的修复尚未独立复测。",
+        "recommendation": "逐项测试点地、拖动、滚轮、E/V/B/P/T/H。",
+        "target": "歇脚菜单",
+        "acceptance_condition": "菜单打开时背景状态、相机和角色完全不响应上述输入。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-03",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "殿内回到起点被出殿过场覆盖的修复尚未独立复测。",
+        "recommendation": "从殿内触发回到起点并观察过场结束后位置。",
+        "target": "殿内回到起点",
+        "acceptance_condition": "当前提交中角色保持在起点且不会被传回殿前。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-05",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "山门门槛穿透修复尚未独立复测。",
+        "recommendation": "第一/第三人称正常速度通过门槛并录像。",
+        "target": "山门门槛",
+        "acceptance_condition": "脚部/碰撞与可见门槛关系自然，无穿透或阻滞。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-06",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "跳着进殿后坠落的修复尚未独立复测。",
+        "recommendation": "以正常输入和 fast 诊断各复现一次，正常输入为验收证据。",
+        "target": "殿门过场",
+        "acceptance_condition": "进入殿内后跳跃状态清除且高度保持有效。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-PERF-02",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "山门台基跳跃时倒影中断的修复尚未匹配版本复测。",
+        "recommendation": "在山门台基跳跃并录制倒影连续性。",
+        "target": "山门台基",
+        "acceptance_condition": "当前提交录像中倒影不会因跳跃异常冻结或消失。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-PERF-03",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "行走测量载入计时起点修复尚未独立复测。",
+        "recommendation": "比对导航开始、ready 与报告 load_ms。",
+        "target": "?tour",
+        "acceptance_condition": "原始日志证明 load_ms 从导航开始计时且可重复。",
+        "evidence_ids": []
+      },
+      {
+        "id": "PERF-01",
+        "state": "open",
+        "severity": "minor",
+        "finding": "顶点焊接与 T4 数据显示改善，但植物分区、剔除和目标设备成本仍未独立验证。",
+        "recommendation": "在锁定 Mac 与手机上按同一路线测 120 秒×3，并记录原始帧数据与降档行为。",
+        "target": "五区路线与植被密集机位",
+        "acceptance_condition": "两类目标设备均有平均 FPS、p95、分辨率、画质、预热与原始帧数据；不以 T4 外推。",
+        "evidence_ids": [
+          "A-PERF"
+        ]
+      },
+      {
+        "id": "ASSET-01",
+        "state": "open",
+        "severity": "major",
+        "finding": "佛像与须弥座模型原作者和再分发授权仍未记录，仓库代码也没有 LICENSE。",
+        "recommendation": "补齐模型作者、来源、许可或移除不可确认资产；明确项目代码许可。",
+        "target": "app/m/buddha.json、app/m/pedestal.json 与仓库许可",
+        "acceptance_condition": "资产台账包含可核验授权链接/文件且仓库许可明确；内殿实际载入不再依赖被忽略的 404。",
+        "evidence_ids": [
+          "A-ASSETS"
+        ]
+      },
+      {
+        "id": "EVID-01",
+        "state": "open",
+        "severity": "major",
+        "finding": "A02 没有真人以正常速度使用键鼠或触屏完成五区往返的证据；自动 tour、__walk 或加速均只属诊断。",
+        "recommendation": "在匹配提交上录制一次无瞬移、无内部 hook、正常速度的完整往返。",
+        "target": "竹林—石阶—照壁—山门—首院",
+        "acceptance_condition": "录像和输入日志证明实际键鼠/触控完成往返，含加载、进入、转向、上下阶和返回。",
+        "evidence_ids": [
+          "A-WALK"
+        ]
+      }
+    ],
+    "evidence": [
+      "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261115-ab064f9",
+      "https://github.com/bolechen/temple-walk/blob/0e960f09442cd56b156175f195663c0ed1ff15e0/docs/t00/evidence/M4/manifest.json",
+      "https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt",
+      "https://temple-atlas-research.floralpage64.chatgpt.site/assets/generated/T00.png",
+      "https://temple-atlas-research.floralpage64.chatgpt.site/assets/generated/T00-sheet.png",
+      "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
+    ],
+    "publish": {
+      "requested": false,
+      "status": "not_requested",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/",
+      "site_version": null,
+      "hosting_commit": null,
+      "note": "Routine status is synchronized by the repository workflow; no Site source was changed."
+    },
+    "limitations": [
+      "Runtime screenshots/video and T4 data are from 0e960f0, not the following delivery-document commit ab064f9; the app/ tree is identical but evidence was not relabeled.",
+      "Normal user input acceptance is blocked in this environment.",
+      "Mac/phone target-device performance is blocked.",
+      "Exterior GPU evidence excludes statue models and cannot establish interior completeness."
+    ],
+    "note": "自动化、开发自评、CI 和 T4 诊断均不等于完整验收；本轮结论为 partial / not_accepted。",
     "applies_to_current": false
   }
 }
