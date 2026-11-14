@@ -30,7 +30,7 @@ Four outside projects are documented as references:
 No build step and nothing to install for the app itself. Serve `app/` statically:
 
 ```sh
-npm run serve                       # = cd app && python3 -m http.server 8000
+npm run serve                       # = python3 -m http.server 8000 --bind 127.0.0.1 --directory app (this machine only)
 ```
 
 The root `package.json` only names the commands; it has no dependencies. The tests and tools need Node 22+ and
@@ -161,7 +161,7 @@ to `__probe` rather than reaching into the page from a test.
 
 ## Working notes
 
-- Code comments and commit messages are in English and written as prose describing the place, not the code; the README and docs are in Chinese. Keep that split.
+- Code comments are in English and written as prose describing the place, not the code; commit messages and PR titles follow Conventional Commits as AGENTS.md sets out; the README and docs are in Chinese. Keep that split.
 - Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`npm run check` guards this).
