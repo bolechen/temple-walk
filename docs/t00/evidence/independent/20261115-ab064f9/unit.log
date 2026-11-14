@@ -1,0 +1,103 @@
+command: npm test
+reviewed_commit: ab064f9bba6896b556381eedce5a700e2baf5535
+exit_code: 0
+credentials_removed: GH_TOKEN,GITHUB_TOKEN,HF_TOKEN,HUGGING_FACE_HUB_TOKEN,OPENAI_API_KEY,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> temple-walk@0.1.1 test
+> node --test tests/unit/*.test.mjs
+
+✔ geometry helpers (27.643887ms)
+✔ a hall, built from its numbers, is whole (196.107318ms)
+✔ every kind of building the plan uses can be built (370.190722ms)
+✔ merging what never moves keeps every triangle and leaves the marked meshes alone (5.389995ms)
+✔ the novice stands, walks and prays without coming apart (98.634134ms)
+✔ first: trackpad click-drag looks right/down, matching locked mouse (6.755004ms)
+✔ third: trackpad click-drag looks right/down, matching locked mouse (3.252384ms)
+✔ third photo: trackpad click-drag looks right/down, matching locked mouse (6.594261ms)
+✔ locked mouse button drag is applied only once (2.435702ms)
+✔ touch drag has the same camera direction and small taps do not rotate (1.345069ms)
+✔ the visitor's own settings turn the head faster and, if asked, the other way up (10.25865ms)
+✔ reproduced 0.45m tea porch blocker has a deliberate drop route (2.013365ms)
+✔ railed main hall, wrong facing, indoors and ordinary ground do not offer a jump (0.313505ms)
+✔ obstructed or unstable landing is rejected (0.267064ms)
+✔ hop arc clears the back foot before it descends through the platform edge (2.881811ms)
+✔ large drops have no route (0.198887ms)
+✔ landing body clearance includes diagonal corners (0.151829ms)
+✔ there are seven seals, each with everything the page shows (1.838278ms)
+✔ a new visitor's book is empty and points at the bell (1.878881ms)
+✔ the bell must be struck three times (0.74258ms)
+✔ a seal is earned once, in any order, and unknown seals are refused (0.324579ms)
+✔ the library's line is kept with its seal (0.627088ms)
+✔ the book is full when all seven are earned, and remembers when (0.459019ms)
+✔ the book survives leaving and coming back (0.914934ms)
+✔ a damaged or foreign book is replaced by a fresh one rather than breaking the visit (0.637505ms)
+✔ a store that refuses to remember does not stop the visit (0.285771ms)
+✔ every line the library can give has a text and a source, and the choice is steady (0.476645ms)
+✔ standing in a place's circle finds it; standing between two finds the nearer (0.371134ms)
+✔ loading follows completed work, yields to paint and reserves 100 for readiness (5.248563ms)
+✔ late texture callbacks cannot move progress backwards (1.327021ms)
+✔ startup errors expose retry and cannot be reported as complete (1.769549ms)
+✔ errors after startup do not reopen the loading screen (1.137499ms)
+✔ every season at every hour is a complete mood (1.731816ms)
+✔ the seasons differ where they should (0.226788ms)
+✔ the hours differ where they should (0.426188ms)
+✔ an unknown season or hour falls back instead of throwing (0.121507ms)
+✔ the present moment is a real season and hour (0.690793ms)
+✔ the terraces rise one above another, going north (1.359487ms)
+✔ the land is defined everywhere and has no cliffs where the bamboo stands (5.870171ms)
+✔ the half-way pavilion can be stepped into from the landing, a hand's width at a time (3.239477ms)
+✔ the eye climbs a stair as a slope, never more than half a tread from the feet (5.896446ms)
+✔ every named view stands somewhere a visitor could stand (1.167579ms)
+✔ the plan registers what the rest of the page reads (1.615715ms)
+✔ from the first step, every part of the temple can be walked to (295.263496ms)
+✔ every observance of the journey has a place that can be walked to, and they do not crowd each other (253.56473ms)
+✔ every hall with a door can be walked up to, entered at its threshold, and left onto open floor (244.326974ms)
+✔ the columns of the open pavilions stand in the way (0.742724ms)
+✔ walls, halls and the hillside keep the visitor out (263.720078ms)
+✔ heights: the courts are level, the stairs climb evenly (5.944848ms)
+✔ a discrete card starts on the high tier (1.825868ms)
+✔ integrated, base Apple, software and hidden cards start on medium (0.319134ms)
+✔ no name at all is taken for a capable card, as before (0.200672ms)
+✔ the mirror is drawn in the forecourt and first court and on their platforms, and nowhere else (1426.199172ms)
+✔ the test server serves the app, and only the app, and only to this machine (72.408362ms)
+✔ a new visitor gets the defaults (3.442874ms)
+✔ what is set is kept for next time (0.611917ms)
+✔ values out of range are brought back into it (0.538144ms)
+✔ a damaged save is ignored, not thrown on (0.495769ms)
+✔ storage that refuses to write does not stop a change (0.514994ms)
+✔ a change is announced (0.50223ms)
+✔ old review cannot approve current source (2.327111ms)
+✔ failed current CI preserves last deployed commit (0.329523ms)
+✔ successful pipeline does not imply independent acceptance (0.196891ms)
+✔ job evidence must belong to the selected run (0.540984ms)
+✔ developer record rejects missing lists (0.559211ms)
+✔ invalid source SHA is rejected (0.245233ms)
+✔ up stairs at 60Hz have no whole-step body pop (365.746181ms)
+ℹ max body delta: 0.01271 m/frame
+✔ up stairs at 30Hz have no whole-step body pop (116.731346ms)
+ℹ max body delta: 0.02516 m/frame
+✔ up stairs at 20Hz have no whole-step body pop (97.457902ms)
+ℹ max body delta: 0.03789 m/frame
+✔ down stairs at 60Hz have no whole-step body pop (113.231934ms)
+ℹ max body delta: 0.01277 m/frame
+✔ down stairs at 30Hz have no whole-step body pop (53.249519ms)
+ℹ max body delta: 0.02547 m/frame
+✔ down stairs at 20Hz have no whole-step body pop (47.906311ms)
+ℹ max body delta: 0.03804 m/frame
+✔ a deliberate hop does not snap the feet or torso back onto the floor (22.448239ms)
+✔ walking height agrees with actual stair geometry including the overhanging tread noses (138.01006ms)
+✔ hall stair collision uses the same top edge and tread spacing as its visible stairs (96.821147ms)
+✔ an overlapping lower landing cannot pull feet through a visible tread (8.192792ms)
+✔ animated cloth shoes stay above each supporting tread while ascending, descending and turning (443.511791ms)
+✔ surface support does not lift the seated pose out of its cushion (22.424806ms)
+✔ sideways and reverse stair flights agree with the visible treads (8.854275ms)
+ℹ tests 79
+ℹ suites 0
+ℹ pass 79
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2720.051664
