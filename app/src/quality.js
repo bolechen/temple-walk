@@ -15,7 +15,17 @@ export function pickQuality(forced) {
     const gl = document.createElement("canvas").getContext("webgl2"), ext = gl && gl.getExtension("WEBGL_debug_renderer_info");
     gpu = String(gl ? gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) : "");
   } catch {}
-  return { ...(/SwiftShader|llvmpipe|Software|Mali|Adreno|PowerVR/i.test(gpu) || (/Intel/i.test(gpu) && !/Arc/i.test(gpu)) ? TIERS.medium : TIERS.high) };
+  return { ...TIERS[tierFor(gpu)] };
+}
+// Which tier a graphics card starts on, from the name the browser gives for it. Software renderers, phone chips,
+// integrated Intel and the base Apple chips start on medium: the high tier draws the temple twice (the mirror) under
+// 4x MSAA, which they do not hold at sixty frames a second. A browser that hides the name ("Apple GPU") is treated
+// as the base chip. The governor still steps down from wherever this starts.
+export function tierFor(gpu) {
+  gpu = String(gpu || "");
+  if (/SwiftShader|llvmpipe|Software|Mali|Adreno|PowerVR/i.test(gpu) || (/Intel/i.test(gpu) && !/Arc/i.test(gpu))) return "medium";
+  if (/Apple/i.test(gpu) && !/\b(Pro|Max|Ultra)\b/i.test(gpu)) return "medium";
+  return "high";
 }
 
 export function createGovernor(quality, apply) {
