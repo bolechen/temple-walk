@@ -40,3 +40,7 @@ BREAKING CHANGE: describe the migration required by the new save format.
 [PR 标题检查](.github/workflows/pr-title.yml)在 PR 新建、编辑或更新时检查格式；合并者仍须确认 squash 方式及最终提交标题。仓库设置建议仅保留 squash，并使用 PR 标题生成提交标题、PR 正文生成提交正文；实际开关以 GitHub Settings 为准。
 
 规范来源：[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)。规则自采用后生效，不改写已发布历史。
+
+## 发版
+
+版本由Release Please管理，接入基线为0.1.0。机器人创建的版本PR也使用Conventional Commits标题和squash合并；评审确认后合并，workflow再创建标签与GitHub Release。不要绕过版本PR手改版本或直接打发布标签。详见[发版流程](docs/RELEASING.md)，尤其注意默认GITHUB_TOKEN创建的PR不会自动触发其他Actions。
