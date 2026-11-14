@@ -1,7 +1,7 @@
 {
  "scene_id": "T00",
- "commit": "2c05944aba60466af72446279c04fac2aa5779e9",
- "captured": "2026-11-14T21:19:13.931Z",
+ "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
+ "captured": "2026-11-14T21:58:40.583Z",
  "how": "tools/gpu-render.sh on a Hugging Face Job: the real page in headless Chromium on an NVIDIA Tesla T4 (ANGLE/Vulkan). Not offline rendering; not the target device.",
  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
  "note": "The job does not carry app/m (the statue models), which are indoors and off this route; their 404s are ignored there. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450, one walk up and back made by the page itself (diagnostic, not a person at the controls). extra-hall-platform.jpg is the named view hall, looking at the great hall's base and railing.",
@@ -20,26 +20,26 @@
   },
   {
    "file": "CAM-03.jpg",
-   "bytes": 474714,
-   "sha256": "62ba799fa12d557d288e037fa8ceaaf23be94c9d45d9d19b56760ebaaa335310",
+   "bytes": 474633,
+   "sha256": "4fdc94ace23a1e7d976e9e0a53ad7f13cc3b90e95a4f8a140f21ab122868e73a",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-04.jpg",
-   "bytes": 390344,
-   "sha256": "57140c31b213859a6941934d028ef2a03a2b1bf0c86f0ff75eceefcee7a92d2b",
+   "bytes": 389063,
+   "sha256": "7056228c002ade58f7376ae79c04ad9e6cd03bbc90a5520165f88112ee0b9484",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-05.jpg",
-   "bytes": 384824,
-   "sha256": "b1007800df559c417703b7e59e4e7098a6bb87f10c6f59203c7788b4a3175ea9",
+   "bytes": 384858,
+   "sha256": "37b631f47a70ffd7219062c025576657681ee30dccfe80d9d26d6fe1ca627434",
    "kind": "runtime screenshot"
   },
   {
    "file": "CAM-06.jpg",
-   "bytes": 495662,
-   "sha256": "328e602ee8b1c782c751df98ae5b306454f97f51e9f6ffd386a18777ba719c2b",
+   "bytes": 495590,
+   "sha256": "8971b92d995ff2d7b538cdeeb1053a34cc0a5cc8b713f3ed2047b2d0cc1504a1",
    "kind": "runtime screenshot"
   },
   {
@@ -50,20 +50,20 @@
   },
   {
    "file": "extra-hall-platform.jpg",
-   "bytes": 467934,
-   "sha256": "a6f2f5a1fc38793efb1c5dfc190240c87ffb5f39679a16e0006a87ff2ce74554",
+   "bytes": 467555,
+   "sha256": "49ba6cd872e06a0d347d8d1b80a27a7206fed84acd15cf2262fbbd11c18c2292",
    "kind": "runtime screenshot"
   },
   {
    "file": "frame-times.csv",
-   "bytes": 227697,
-   "sha256": "c1f25c5ce8f1c0338547f695d0cfda1ad00350478c6850997a548e3f05827516",
+   "bytes": 252114,
+   "sha256": "459d98b07eefcce3df844856ddd6ecbbb72f621137e76be468e512ce165012b1",
    "kind": "diagnostic"
   },
   {
    "file": "walkthrough.webm",
-   "bytes": 20742220,
-   "sha256": "f0727925d132d6c133da3392b721d523fcec1c415d25301adb1428de86fd0ddd",
+   "bytes": 20818046,
+   "sha256": "6cd40dc93002dd2268ca4b1d4750b467abc9dfcccba97d2d80ac2f1d2458cfba",
    "kind": "diagnostic"
   }
  ]

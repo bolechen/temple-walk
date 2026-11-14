@@ -1,6 +1,6 @@
 {
  "scene_id": "T00",
- "commit": "2c05944aba60466af72446279c04fac2aa5779e9",
+ "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
  "status": "measured_on_reference_gpu_only; target device NOT measured (blocked)",
  "evidence_kind": "diagnostic: the page walks the route itself (?tour=120x3) in a headless browser with vsync off; not a person at the controls, not the target device",
  "environment": {
@@ -10,7 +10,7 @@
   "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
   "headless": true,
   "vsync": "off (--disable-gpu-vsync --disable-frame-rate-limit)",
-  "page_load_ms": 10901
+  "page_load_ms": 13275
  },
  "window": [
   1920,
@@ -61,28 +61,28 @@
    29
   ]
  ],
- "load_ms_to_ready": 10889,
+ "load_ms_to_ready": 13259,
  "runs": [
   {
    "seconds": 120.01,
-   "frames": 6591,
-   "fps_mean": 54.92,
-   "p95_ms": 23.7,
-   "max_ms": 51
+   "frames": 7251,
+   "fps_mean": 60.42,
+   "p95_ms": 21,
+   "max_ms": 49.5
   },
   {
-   "seconds": 120.01,
-   "frames": 6502,
-   "fps_mean": 54.18,
-   "p95_ms": 23.8,
-   "max_ms": 42.6
+   "seconds": 120,
+   "frames": 7214,
+   "fps_mean": 60.12,
+   "p95_ms": 21.4,
+   "max_ms": 36.4
   },
   {
-   "seconds": 120.01,
-   "frames": 6543,
-   "fps_mean": 54.52,
-   "p95_ms": 23.5,
-   "max_ms": 35.7
+   "seconds": 120.02,
+   "frames": 7257,
+   "fps_mean": 60.47,
+   "p95_ms": 21.1,
+   "max_ms": 36.3
   }
  ],
  "target_proposal_from_handoff": {
@@ -92,7 +92,7 @@
  },
  "on_this_gpu": {
   "p95_frame_ms_within_33.3": true,
-  "mean_fps_at_least_60": false
+  "mean_fps_at_least_60": true
  },
  "what_it_does_not_show": [
   "the target device",
