@@ -165,13 +165,14 @@ canvas.addEventListener("pointerdown", (e) => {
   down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false };
 });
 canvas.addEventListener("pointermove", (e) => {
+  if (locked()) return;   // relative mousemove owns the camera while the pointer is held
   if (touches.has(e.pointerId)) touches.set(e.pointerId, [e.clientX, e.clientY]);
   if (touches.size === 2) { const [a, b] = [...touches.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch > 0) zoom(pinch / d); pinch = d; return; }
   if (!down) return;
   const dx = e.clientX - down.x, dy = e.clientY - down.y;
   if (!down.moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 14)) return;   // a finger never lands perfectly still
   const orbit = view === "third" || photo.on;                                              // round him, or from his eyes
-  down.moved = true; yaw += dx * 0.0042; pitch = THREE.MathUtils.clamp(pitch + dy * 0.0042, orbit ? -1.0 : -0.5, orbit ? 0.45 : 0.75);
+  down.moved = true; yaw += dx * 0.0042; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042, orbit ? -0.5 : -0.75, orbit ? 1.0 : 0.5);
   down.x = e.clientX; down.y = e.clientY;
 });
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
