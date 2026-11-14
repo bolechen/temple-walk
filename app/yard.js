@@ -10,7 +10,7 @@ import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
-import { pickQuality, createGovernor } from "./src/quality.js";
+import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
 import { strike, startAmbience, listen, setVolume } from "./src/audio.js";
 import { createSettings, browserSettingsStore } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
@@ -414,7 +414,7 @@ function frame(now) {
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
   // approach where the eye is under it. A jump does not change which of these he is in.
-  if (!aloft) mirrorOn = footY > -0.6 && footY < 2.0;   // the court, the forecourt, and the platforms that stand in them
+  if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.render(t);

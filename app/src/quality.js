@@ -28,6 +28,11 @@ export function tierFor(gpu) {
   return "high";
 }
 
+// Whether the planar mirror is worth drawing for a visitor standing at this height: it lies in the forecourt and the
+// first court (y = 0) and is seen from the platforms that stand in them; not from the approach below, where the eye is
+// under it, nor from the terraces above, whose paving has no mirror.
+export const mirrorAt = (footY) => footY > -0.6 && footY < 2.0;
+
 export function createGovernor(quality, apply) {
   // Things are given up in order of how little they will be missed.
   const steps = [
