@@ -1,0 +1,14 @@
+# 山门之外 · Agent handoff
+
+先读取实时状态并核对 source.sha、deployment.sha 与 independent_review.reviewed_commit。静态文档和旧截图不能证明当前版本通过。
+
+- 实时状态：https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json
+- 最新目标：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/handoff/LATEST-GOALS.md
+- 项目规则：https://raw.githubusercontent.com/bolechen/temple-walk/main/AGENTS.md
+- 协作契约：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/SITE-SYNC.md
+- 开发交付：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/delivery.json
+- 独立评审：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/independent-review.json
+- 建筑边缘整改：https://github.com/bolechen/temple-walk/issues/16
+- 研究 Site：https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt
+
+若 Site 被当前读取环境拒绝，继续使用上述 GitHub 入口，相关图片未实际打开时标未核，不伪造看图结果。WebGL 禁用是测试环境阻塞，不代表线上加载失败。配乐目标目前为提案，不自动实施；需要 HF Job 时先向用户说明用途、预计费用与时间。
