@@ -21,11 +21,13 @@ import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
 import { buildInteriors } from "./src/interior.js";
+import { createHints } from "./src/hints.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
 const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
+const hints = createHints({ off: Q.has("shot") }); let arrived = false;   // what is said about the controls, and when
 const quality = pickQuality(Q.get("q"));
 
 const canvas = document.getElementById("yardGl");
@@ -118,7 +120,7 @@ function setMood(season, time) {
   renderer.shadowMap.needsUpdate = true;
   document.querySelectorAll("[data-season]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.season === season)));
   document.querySelectorAll("[data-time]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.time === time)));
-  const tag = document.getElementById("moodTag"); if (tag) tag.textContent = mood.label;
+  const tag = document.getElementById("moodTag"); if (tag) { if (tag.textContent && tag.textContent !== mood.label) hints.say.mood(); tag.textContent = mood.label; }
 }
 setMood(state.season, state.time);
 
@@ -152,7 +154,7 @@ const zoom = (k) => { if (photo.on) photo.dist = THREE.MathUtils.clamp(photo.dis
 // mouse looks round, Esc lets go. A touch still drags to look and taps to walk.
 const locked = () => document.pointerLockElement === canvas;
 const joy = { x: 0, y: 0 };
-document.addEventListener("pointerlockchange", () => document.body.classList.toggle("held", locked()));
+document.addEventListener("pointerlockchange", () => { document.body.classList.toggle("held", locked()); if (locked()) hints.say.held(); });
 document.addEventListener("mousemove", (e) => {
   if (!locked()) return; const orbit = view === "third" || photo.on;
   yaw += e.movementX * 0.0026; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022, orbit ? -0.5 : -0.75, orbit ? 1.0 : 0.5);
@@ -189,7 +191,7 @@ function pickFloor() {
 canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = "grab"; lift(e);
   if (e.pointerType === "mouse" && !photo.on && down && !down.moved) {
-    if (!locked()) { canvas.requestPointerLock?.(); startAmbience(() => ({ grove: grove() })); document.getElementById("hint").classList.add("gone"); }
+    if (!locked()) { canvas.requestPointerLock?.(); startAmbience(() => ({ grove: grove() })); }
     else {   // held: a click strikes what the middle of the picture rests on
       ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
       if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
@@ -211,7 +213,7 @@ canvas.addEventListener("pointerup", (e) => {
     if (struck && struck.distance < 32) {
       const s = site.strikers.find((k) => k.mesh === struck.object);
       strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind }));
-      document.getElementById("hint").classList.add("gone"); down = null; return;
+      down = null; return;
     }
     const hit = pickFloor();
     const hall = site.hall, toHall = !inside && ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < SITE.zS - 4, onGround = walker.onGround(pos.x, pos.z);
@@ -219,7 +221,7 @@ canvas.addEventListener("pointerup", (e) => {
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
     else route = [];
-    if (route.length) { interrupt(); target = route.shift(); document.getElementById("hint").classList.add("gone"); }
+    if (route.length) { interrupt(); target = route.shift(); }
   }
   down = null;
 });
@@ -231,7 +233,8 @@ addEventListener("keydown", (e) => {
   if (k === "e" || k === "enter" || k === " ") { if (press("slipTake") || press("act") || press("enterBtn") || press("offer")) e.preventDefault(); }
   else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { if (!press("bookClose")) press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
-  else if (k === "escape") { press("bookClose"); press("printBack") || press("photoClose"); }
+  else if (k === "h" || k === "?") hints.card();
+  else if (k === "escape") { hints.card(false); press("bookClose"); press("printBack") || press("photoClose"); }
 });
 addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
 // A thumb-stick for a touch screen, lower left: push to walk, relative to where he is looking.
@@ -304,6 +307,8 @@ function frame(now) {
   footY += (walker.heightAt(pos.x, pos.z) - footY) * Math.min(1, dt * 9);
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
+  if (!arrived && document.body.classList.contains("entered")) { arrived = true; hints.say.entered(); }
+  if (arrived) hints.step(dt, moved, !!keys.shift, !stage && !photo.on);
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
   const want = stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
@@ -354,7 +359,6 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-setTimeout(() => document.getElementById("hint").classList.add("gone"), 9000);
 
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = (id) => document.getElementById(id), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
@@ -369,7 +373,7 @@ document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("clic
 // ---- Taking a photograph ------------------------------------------------------------
 function setPhoto(open) {
   if (!open) post.focus(null);
-  photo.on = open; document.body.classList.toggle("photo", open); $("moodPanel")?.setAttribute("hidden", "");
+  photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo"); $("moodPanel")?.setAttribute("hidden", "");
   if (open) { target = null; route = []; photo.dist = 7; photo.focus = null; pitch = Math.min(pitch, 0.02); }
   else if (view === "first") pitch = Math.max(pitch, 0);
   resize();
@@ -419,6 +423,7 @@ let inside = false, passing = false;
 const veil = $("veil"), pause = (ms) => new Promise((r) => setTimeout(r, Q.has("fast") ? ms / 6 : ms));
 let lastHall = null;
 function indoors(hall) {
+  if (hall) hints.say.indoors();
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; }
   inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); target = null; route = [];
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
@@ -480,7 +485,9 @@ window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; foot
 window.__listen = listen; window.__strike = strike;
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
+window.__hud = () => hints.state();
 createGame({
+  hints,
   site, walker, scene,
   where: () => ({ x: pos.x, z: pos.z }),
   // Send him along `points` ([x, z] each); `then(true)` when he arrives, `then(false)` if he is stopped or sent elsewhere.

@@ -1,36 +1,46 @@
-<title>云径禅寺</title>
+<meta charset="utf-8">
+<title>山门之外 · 云径禅寺</title>
 <style>
   /* Layout: two full-viewport views, the courtyard and the hall interior, joined by a fade through darkness. */
-  /* Three typefaces, cut down to the characters the temple uses (tools/fonts.py) and kept with the page. */
+  /* Four typefaces, cut down to the characters the temple uses (tools/fonts.py) and kept with the page. */
   @font-face { font-family: "Yunjing Brush"; src: url("f/brush.woff2") format("woff2"); font-display: swap; }
   @font-face { font-family: "Yunjing Serif"; src: url("f/serif.woff2") format("woff2"); font-display: swap; }
+  @font-face { font-family: "Yunjing Kai"; src: url("f/kai.woff2") format("woff2"); font-display: swap; }
   @font-face { font-family: "Yunjing Seal"; src: url("f/seal.woff2") format("woff2"); font-display: swap; }
   :root {
     color-scheme: dark; --ink: #0b0a09; --paper: #ede8dc; --ember: #e39a4c; --mist: #c9d3d1; --seal: #b0281c;
     --serif: "Yunjing Serif", "Songti SC", "STSong", serif; --brush: "Yunjing Brush", "STKaiti", "KaiTi", serif;
+    --kai: "Yunjing Kai", "STKaiti", "KaiTi", "Yunjing Serif", serif; --line: rgba(237,232,220,.26); --glass: rgba(11,10,9,.38);
   }
   html, body { height: 100%; margin: 0; }
   [hidden] { display: none !important; }
   body { background: var(--ink); color: var(--paper); font-family: var(--serif); overflow: hidden; position: relative; }
   .view { position: absolute; inset: 0; overflow: hidden; }
   #yardGl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  /* What is said about the controls: one line at the foot of the view, there only while it is of use (src/hints.js). */
   .caption {
-    position: absolute; left: 0; right: 0; bottom: 0; margin: 0; text-align: center; font-size: 13px; letter-spacing: .25em;
-    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(26px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-    text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; transition: opacity 2s ease;
+    position: absolute; left: 0; right: 0; bottom: 0; margin: 0; text-align: center; font: 400 15px/1.9 var(--kai); letter-spacing: .16em;
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(30px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    text-shadow: 0 0 10px rgba(0,0,0,.9), 0 0 2px #000; pointer-events: none; opacity: 0; visibility: hidden; transform: translateY(6px);
+    transition: opacity 1.2s ease, transform 1.2s ease, visibility 0s 1.2s;
   }
-  .caption.gone { opacity: 0; }
+  .caption::before { content: ""; display: block; width: 34px; height: 1px; margin: 0 auto 10px; background: linear-gradient(90deg, transparent, rgba(237,232,220,.7), transparent); }
+  .caption.on { opacity: .94; visibility: visible; transform: none; transition: opacity .9s ease, transform .9s ease; }
+  .fade { opacity: 0; visibility: hidden; transition: opacity 1.6s ease, visibility 0s 1.6s; }
+  .fade.on { opacity: 1; visibility: visible; transition: opacity .9s ease; }
 
   /* The controls: three small words at the edge, and what they open. The place stays the subject. */
-  .rail { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; justify-items: end; }
+  .rail { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; justify-items: end; transition: opacity 1.2s ease; }
+  @media (pointer: fine) { body.calm .rail { opacity: 0; } body.held .rail { opacity: 0; pointer-events: none; } .rail:hover, .rail:focus-within { opacity: 1 !important; } }
   .chip {
-    font: 500 13px/1 var(--serif); letter-spacing: .3em; text-indent: .3em; color: var(--paper); cursor: pointer;
-    background: rgba(11,10,9,.42); border: 1px solid rgba(227,224,214,.34); padding: 10px 12px; border-radius: 2px; min-width: 44px; min-height: 40px;
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    font: 400 14px/1 var(--kai); letter-spacing: .32em; text-indent: .32em; color: var(--paper); cursor: pointer;
+    background: var(--glass); border: 1px solid var(--line); padding: 11px 13px; border-radius: 3px; min-width: 44px; min-height: 40px;
+    -webkit-backdrop-filter: blur(8px) saturate(.8); backdrop-filter: blur(8px) saturate(.8); transition: background .3s ease, border-color .3s ease, color .3s ease;
   }
+  .chip:hover { border-color: rgba(237,232,220,.6); background: rgba(11,10,9,.55); }
   .chip[aria-pressed="true"] { background: rgba(227,224,214,.9); color: #14120f; border-color: transparent; }
   .chip:focus-visible, #shutter:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
-  #moodTag { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); margin: 0; font-size: 13px; letter-spacing: .4em; text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; }
+  #moodTag { position: absolute; left: max(18px, env(safe-area-inset-left, 0px)); top: calc(16px + env(safe-area-inset-top, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .5em; text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; }
   #moodPanel { position: absolute; right: max(70px, calc(env(safe-area-inset-right, 0px) + 70px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; padding: 10px; background: rgba(11,10,9,.5); border: 1px solid rgba(227,224,214,.22); border-radius: 2px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   #moodPanel > div { display: flex; gap: 6px; }
   /* Photograph mode: everything leaves but the frame and the few things that shape the picture. */
@@ -41,7 +51,7 @@
   #shutter { width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(243,239,229,.9); background: rgba(243,239,229,.92); box-shadow: inset 0 0 0 4px rgba(11,10,9,.85); cursor: pointer; }
   #shutter:disabled { opacity: .4; }
   #photoClose { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); display: none; }
-  body.photo .rail, body.photo #hint, body.photo #moodTag { display: none; }
+  body.photo .rail, body.photo #moodTag { display: none; } body.photo #hint { bottom: auto; top: calc(58px + env(safe-area-inset-top, 0px)); }
   body.photo #frame { display: block; } body.photo #photoBar { display: grid; } body.photo #photoClose { display: block; }
   body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
   /* The print, once taken. */
@@ -55,16 +65,17 @@
     background: radial-gradient(ellipse at 50% 42%, rgba(11,10,9,.12), rgba(11,10,9,.6) 75%), linear-gradient(rgba(11,10,9,.05), rgba(11,10,9,.55)); }
   #title.gone { opacity: 0; pointer-events: none; }
   #title h1 { font: 400 clamp(64px, 17vmin, 150px)/1.05 var(--brush); margin: 0; letter-spacing: .08em; text-indent: .08em; color: var(--paper); text-shadow: 0 2px 30px rgba(0,0,0,.6); }
-  #title .sub { font-size: clamp(12px, 2.2vmin, 16px); letter-spacing: .7em; text-indent: .7em; margin: 2.2vmin 0 0; opacity: .82; }
+  #title .sub { font: 400 clamp(13px, 2.3vmin, 17px)/1 var(--kai); letter-spacing: .7em; text-indent: .7em; margin: 2.2vmin 0 0; opacity: .82; }
   #title .mark { width: clamp(46px, 9vmin, 76px); aspect-ratio: 1; margin: 5vmin auto 0; background: var(--seal); border-radius: 6%; display: grid; place-items: center; font: clamp(15px, 3.1vmin, 26px)/1.08 "Yunjing Seal", var(--serif); color: #f3ead9; transform: rotate(-3deg); box-shadow: 0 2px 14px rgba(0,0,0,.4); }
-  #enterBtn { margin-top: 7vmin; font: 400 clamp(22px, 4.6vmin, 34px)/1 var(--brush); letter-spacing: .5em; text-indent: .5em; color: var(--paper); background: rgba(11,10,9,.3); border: 1px solid rgba(237,232,220,.55); padding: 16px 30px; border-radius: 2px; cursor: pointer; transition: background .3s, opacity .6s; }
-  #enterBtn:disabled { opacity: .45; cursor: default; font-family: var(--serif); font-size: 14px; }
+  #enterBtn { margin-top: 7vmin; font: 400 clamp(20px, 4vmin, 30px)/1 var(--kai); letter-spacing: .6em; text-indent: .6em; color: var(--paper); background: rgba(11,10,9,.28); border: 1px solid rgba(237,232,220,.5); padding: 16px 34px; border-radius: 3px; cursor: pointer; transition: background .3s, opacity .6s, border-color .3s; }
+  #enterBtn:disabled { opacity: .45; cursor: default; font-size: 14px; letter-spacing: .4em; text-indent: .4em; }
   #enterBtn:not(:disabled):hover { background: rgba(237,232,220,.16); }
-  #titleSeals { font-size: 13px; letter-spacing: .4em; text-indent: .4em; margin: 3vmin 0 0; min-height: 1.3em; color: #e5b9a4; }
-  #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 12px; letter-spacing: .28em; opacity: .6; }
-  #goal { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(40px + env(safe-area-inset-top, 0px)); margin: 0; font: 400 19px/1 var(--brush); letter-spacing: .2em; text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; opacity: .92; }
-  #act { position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 400 26px/1 var(--brush); letter-spacing: .4em; text-indent: .4em; padding: 15px 30px; border-color: rgba(237,232,220,.7); background: rgba(11,10,9,.55); z-index: 5; }
-  #say { position: absolute; left: 0; right: 0; bottom: calc(170px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(20px, 3.4vmin, 28px)/1.5 var(--brush); letter-spacing: .16em; text-shadow: 0 0 10px #000, 0 0 3px #000; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
+  #titleSeals { font: 400 14px/1 var(--kai); letter-spacing: .4em; text-indent: .4em; margin: 3vmin 0 0; min-height: 1.3em; color: #e5b9a4; }
+  #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .3em; opacity: .6; }
+  #goal { position: absolute; left: max(18px, env(safe-area-inset-left, 0px)); top: calc(42px + env(safe-area-inset-top, 0px)); margin: 0; font: 400 18px/1 var(--kai); letter-spacing: .22em; text-shadow: 0 0 8px #000, 0 0 2px #000; pointer-events: none; }
+  #goal::before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 .9em .15em .1em; background: var(--seal); transform: rotate(45deg); box-shadow: 0 0 6px rgba(0,0,0,.6); }
+  #act { position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 400 22px/1 var(--kai); letter-spacing: .4em; text-indent: .4em; padding: 14px 28px; border-color: rgba(237,232,220,.55); background: rgba(11,10,9,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-radius: 3px; z-index: 5; }
+  #say { position: absolute; left: 0; right: 0; bottom: calc(168px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(19px, 3.1vmin, 26px)/1.6 var(--kai); letter-spacing: .18em; text-shadow: 0 0 12px #000, 0 0 3px #000; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
   #say.on { opacity: 1; }
   #toast { position: absolute; left: 50%; top: 24%; transform: translate(-50%, -50%); z-index: 40; display: grid; justify-items: center; gap: 12px; pointer-events: none; opacity: 0; transition: opacity .9s ease; text-align: center; }
   #toast.on { opacity: 1; }
@@ -72,64 +83,45 @@
   #toast.on img { animation: press .5s cubic-bezier(.2, 1.5, .4, 1) both; }
   @keyframes press { from { transform: scale(1.6) rotate(-9deg); opacity: 0; } to { transform: scale(1) rotate(-3deg); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { #toast.on img { animation: none; } }
-  #toastName { margin: 0; font-size: 13px; letter-spacing: .5em; text-indent: .5em; text-shadow: 0 0 8px #000, 0 0 2px #000; }
-  #toastLine { margin: 0; max-width: min(86vw, 30em); font: 400 clamp(19px, 3.2vmin, 26px)/1.55 var(--brush); letter-spacing: .12em; text-shadow: 0 0 10px #000, 0 0 3px #000; }
+  #toastName { margin: 0; font: 400 14px/1 var(--kai); letter-spacing: .5em; text-indent: .5em; text-shadow: 0 0 8px #000, 0 0 2px #000; }
+  #toastLine { margin: 0; max-width: min(86vw, 30em); font: 400 clamp(18px, 3vmin, 24px)/1.65 var(--kai); letter-spacing: .14em; text-shadow: 0 0 10px #000, 0 0 3px #000; }
   #book, #slip { position: absolute; inset: 0; z-index: 35; background: rgba(8,8,7,.9); display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 12px; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
   #book img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
-  #bookHint { margin: 0; font-size: 14px; letter-spacing: .14em; text-align: center; max-width: 34em; line-height: 1.7; }
+  #bookHint { margin: 0; font: 400 15px/1.8 var(--kai); letter-spacing: .14em; text-align: center; max-width: 34em; }
   #book .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   #book a.chip { text-decoration: none; display: inline-grid; place-items: center; }
   #bookReset { opacity: .6; }
   #slip { grid-template-rows: 1fr auto; place-items: center; }
   #slip .paper { writing-mode: vertical-rl; background: linear-gradient(#f3eee2, #e8e0cf); color: #1d1a17; padding: 34px 26px; min-height: min(62vh, 520px); max-height: 70vh; box-shadow: 0 10px 40px rgba(0,0,0,.6); border-radius: 1px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
-  #slipText { margin: 0; font: 400 clamp(26px, 4.6vmin, 38px)/1.5 var(--brush); letter-spacing: .14em; }
-  #slipFrom { margin: 0; font-size: 14px; letter-spacing: .2em; color: #6b6458; align-self: flex-end; }
+  #slipText { margin: 0; font: 400 clamp(24px, 4.2vmin, 34px)/1.6 var(--kai); letter-spacing: .16em; }
+  #slipFrom { margin: 0; font: 400 14px/1.6 var(--kai); letter-spacing: .2em; color: #6b6458; align-self: flex-end; }
   #breath { position: absolute; left: 50%; top: 46%; width: 30vmin; aspect-ratio: 1; margin: -15vmin 0 0 -15vmin; border-radius: 50%; border: 1px solid rgba(237,232,220,.6); display: grid; place-items: center; pointer-events: none; transition: transform 4s ease-in-out, opacity 1s; transform: scale(.55); z-index: 6; }
   #breath[data-phase="in"] { transform: scale(1); } #breath[data-phase="out"] { transform: scale(.55); transition-duration: 5s, 1s; }
-  #breathWord { font: 400 5vmin/1 var(--brush); text-shadow: 0 0 10px #000; }
+  #breathWord { font: 400 5vmin/1 var(--kai); text-shadow: 0 0 10px #000; }
   body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #say, body:not(.entered) .rail, body:not(.entered) #goal, body:not(.entered) #hint, body:not(.entered) #moodTag { display: none; }
 
   /* How it is played: keys shown where a keyboard is likely, a thumb-stick where a finger is. */
-  kbd { font: 500 12px/1 var(--serif); display: inline-grid; place-items: center; min-width: 1.9em; height: 1.9em; padding: 0 .4em; margin-right: .7em; border: 1px solid rgba(237,232,220,.6); border-bottom-width: 2px; border-radius: 3px; background: rgba(11,10,9,.5); letter-spacing: 0; text-indent: 0; vertical-align: middle; }
-  #keys { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 12px; letter-spacing: .12em; line-height: 2.5; text-shadow: 0 0 6px #000, 0 0 2px #000; opacity: .78; pointer-events: none; transition: opacity 1s; }
-  #keys kbd { margin: 0 .35em 0 1em; } #keys kbd:first-child { margin-left: 0; }
+  kbd { font: 400 12px/1 var(--serif); display: inline-grid; place-items: center; min-width: 1.75em; height: 1.75em; padding: 0 .45em; margin: 0 .5em 0 0; border: 1px solid rgba(237,232,220,.5); border-radius: 4px; background: rgba(237,232,220,.09); box-shadow: 0 1px 0 rgba(237,232,220,.28); letter-spacing: 0; text-indent: 0; vertical-align: .08em; box-sizing: border-box; }
+  kbd + kbd { margin-left: -.25em; }
+  #keys { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 20; margin: 0; padding: 26px 34px 20px; background: rgba(11,10,9,.72); border: 1px solid var(--line); border-radius: 4px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 60px rgba(0,0,0,.45); font: 400 15px/1 var(--kai); letter-spacing: .16em; }
+  #keys h2 { margin: 0 0 18px; font: 400 26px/1 var(--brush); letter-spacing: .4em; text-indent: .4em; text-align: center; }
+  #keys dl { display: grid; grid-template-columns: auto auto auto auto; gap: 14px 14px; margin: 0; align-items: center; }
+  #keys dt { justify-self: end; white-space: nowrap; } #keys dt kbd:last-child { margin-right: 0; } #keys dd { margin: 0 22px 0 0; white-space: nowrap; opacity: .88; } #keys dd:nth-of-type(even) { margin-right: 0; }
+  #keys p { margin: 20px 0 0; text-align: center; font-size: 12px; letter-spacing: .3em; opacity: .5; }
+
   #cross { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(237,232,220,.7); box-shadow: 0 0 0 1px rgba(11,10,9,.5); display: none; pointer-events: none; }
   body.held #cross { display: block; }
   #stick { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px)); width: 118px; height: 118px; border-radius: 50%; border: 1px solid rgba(237,232,220,.34); background: rgba(11,10,9,.22); touch-action: none; display: none; place-items: center; z-index: 4; }
   #knob { width: 50px; height: 50px; border-radius: 50%; background: rgba(237,232,220,.5); border: 1px solid rgba(11,10,9,.4); pointer-events: none; }
-  @media (pointer: coarse) { #stick { display: grid; } #keys, #act kbd { display: none; } .caption { padding-left: 150px; } }
+  @media (pointer: coarse) { #stick { display: grid; } #keys, #act kbd { display: none; } .caption { bottom: auto; top: calc(78px + env(safe-area-inset-top, 0px)); padding-bottom: 0; font-size: 14px; } }
   body.photo #keys, body.photo #stick, body.photo #cross, body.bare #keys, body.bare #stick, body:not(.entered) #keys, body:not(.entered) #stick { display: none; }
 
-  /* Hall interior: a stage locked to the painted plate's aspect, sized by script to cover the view. */
-  #stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; cursor: grab; }
-  #stage > img, #stage > canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  #plate { object-fit: cover; }
-  #hallGl { opacity: 0; transition: opacity 2.4s ease; }
-  #hallGl.on { opacity: 1; }
-  #mirror {
-    filter: blur(0.35vh) saturate(0.8); opacity: 0; transition: opacity 2.4s ease;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 71.2%, #000 72.2%, rgba(0,0,0,.55) 82%, transparent 97%);
-            mask-image: linear-gradient(to bottom, transparent 71.2%, #000 72.2%, rgba(0,0,0,.55) 82%, transparent 97%);
-  }
-  #mirror.on { opacity: 0.34; }
-  #ui {
-    position: absolute; left: 0; right: 0; bottom: 0; display: grid; justify-items: center; gap: 10px;
-    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-    pointer-events: none; transition: opacity 1.6s ease;
-  }
-  #ui.gone { opacity: 0; }
   .ink-btn {
-    pointer-events: auto; font: 500 16px/1 var(--serif); letter-spacing: .5em; text-indent: .5em;
+    pointer-events: auto; font: 400 17px/1 var(--kai); letter-spacing: .5em; text-indent: .5em;
     color: var(--paper); background: rgba(11,10,9,.5); border: 1px solid rgba(227,224,214,.4);
     padding: 12px 22px; border-radius: 2px; cursor: pointer;
   }
   .ink-btn:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
-  #ui.gone #offer { pointer-events: none; }
-  #note { font-size: 12px; letter-spacing: .2em; margin: 0; text-align: center; text-shadow: 0 0 6px #000, 0 0 2px #000; }
-  #leave {
-    position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
-    font-size: 13px; letter-spacing: .3em; text-indent: .3em; padding: 9px 14px;
-  }
 
   /* The join: eyes close on the way in, daylight floods on the way out. */
   #veil { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .9s ease; }
@@ -141,15 +133,21 @@
 
 <div class="view" id="yardView">
   <canvas id="yardGl"></canvas>
-  <p id="moodTag"></p>
-  <p id="goal"></p>
-  <p id="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>行走<kbd>Shift</kbd>快步<kbd>鼠标</kbd>环顾 · 点画面握住，Esc 松开<br><kbd>E</kbd>行事<kbd>V</kbd>视角<kbd>B</kbd>朱印<kbd>P</kbd>留影<kbd>T</kbd>时节<kbd>滚轮</kbd>远近</p>
+  <p id="moodTag" class="fade"></p>
+  <p id="goal" class="fade"></p>
+  <div id="keys" hidden><h2>键位</h2><dl>
+    <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>行走</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
+    <dt><kbd>鼠标</kbd></dt><dd>环顾，点画面握住</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
+    <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd>
+    <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
+    <dt><kbd>T</kbd></dt><dd>时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上</dd>
+  </dl><p>按 H 收起</p></div>
   <div id="cross"></div>
   <div id="stick"><div id="knob"></div></div>
   <p id="say"></p>
   <button class="ink-btn" id="act" type="button" hidden></button>
   <div id="breath" hidden><span id="breathWord">吸</span></div>
-  <p class="caption" id="hint">走进地上的圆相，做那里的事</p>
+  <p class="caption" id="hint"></p>
   <div class="rail">
     <button class="chip" id="viewBtn" type="button" aria-label="切换第一视角和第三视角">身外</button>
     <button class="chip" id="moodBtn" type="button" aria-label="选择季节和时辰">时节</button>
@@ -187,8 +185,8 @@
 </div>
 <div id="title">
   <div>
-    <h1>云径禅寺</h1>
-    <p class="sub">一城一寺 · 一处净心</p>
+    <h1>山门之外</h1>
+    <p class="sub">序章 · 云径禅寺</p>
     <div class="mark">朝<br>山</div>
     <p id="titleSeals"></p>
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>

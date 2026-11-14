@@ -12,9 +12,9 @@ const scenarios = {
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false });
     // First the title: the temple's name, a way in, and nothing else in the way.
-    expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "云径禅寺", "the title is missing");
+    expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "山门之外" && (await t.page.textContent("#title .sub")).includes("云径禅寺"), "the title is missing");
     expect(!(await t.page.isVisible("#viewBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
-    expect(await t.page.evaluate(() => document.fonts.check('40px "Yunjing Brush"', "云径禅寺") && document.fonts.check('20px "Yunjing Serif"', "朱印")), "the temple's own typefaces did not load");
+    expect(await t.page.evaluate(() => document.fonts.check('40px "Yunjing Brush"', "云径禅寺") && document.fonts.check('20px "Yunjing Serif"', "朱印") && document.fonts.check('20px "Yunjing Kai"', "朱印")), "the temple's own typefaces did not load");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
     await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
     expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("钟楼"), "a new visitor should be pointed at the bell");
@@ -24,7 +24,12 @@ const scenarios = {
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     expect(p.camDist > 3.2, `the first sight of the place should not be the back of his head: the eye is ${p.camDist} m behind him`);
     expect(p.lum > 12 && p.lum < 245, "the picture is blank: mean " + p.lum.toFixed(1));
-    for (const id of ["viewBtn", "moodBtn", "photoBtn", "bookBtn", "moodTag", "goal"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
+    for (const id of ["viewBtn", "moodBtn", "photoBtn", "bookBtn"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
+    // What is said about the controls is said once, on arriving, and then the picture is left alone.
+    const hud = () => t.page.evaluate(() => window.__hud());
+    expect((await hud()).said.includes("walk") && (await t.page.textContent("#hint")).includes("行走"), "an arriving visitor was not told how to walk");
+    expect(!(await t.page.isVisible("#keys")), "the list of keys should wait until it is asked for");
+    await t.until(async () => { const h = await hud(); return !h.tip && !h.goal && !h.moodTag && !(await t.page.isVisible("#hint")) && !(await t.page.isVisible("#goal")); }, 60000, "the words on the picture never left it");
     for (const id of ["moodPanel", "print", "photoBar", "frame", "book", "slip", "toast", "act"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -225,7 +230,9 @@ const scenarios = {
   // With a keyboard and mouse, as such games are played: W walks, Shift hurries, E does what is offered, V and B and P open things.
   keys: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
-    expect(await t.page.isVisible("#keys") && !(await t.page.isVisible("#stick")), "a keyboard should be shown its keys, not a thumb-stick");
+    expect(!(await t.page.isVisible("#keys")) && !(await t.page.isVisible("#stick")), "nothing about the controls should sit on the picture uninvited");
+    await t.page.keyboard.press("h"); expect(await t.page.isVisible("#keys") && (await t.page.textContent("#keys")).includes("行走"), "H should open the list of keys");
+    await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#keys")), "Esc should close the list of keys");
     const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(6); await t.page.keyboard.up("w");
     const z1 = (await t.state()).z; expect(z1 < z0 - 0.15, `W should walk him forward: ${z0} to ${z1}`);
     await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w"); await t.frames(6); await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift");
@@ -247,6 +254,7 @@ const scenarios = {
     }
     expect(await t.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight), "the page scrolls");
     expect(await t.page.isVisible("#stick") && !(await t.page.isVisible("#keys")), "a phone should be given a thumb-stick, not a list of keys");
+    expect((await t.page.textContent("#hint")).includes("圆盘"), "a phone should be told about the thumb-stick, not about keys");
     const z0 = (await t.state()).z; await t.page.touchscreen.tap(195, 560);   // the paving a few steps ahead of him
     await t.until(async () => (await t.state()).z < z0 - 2, 120000, "a tap on the ground ahead did not start a walk");
     // The thumb-stick, pushed up, walks him the way he is looking.

@@ -42,7 +42,7 @@ export function createGame(y) {
     mine.visible = journey.has("lamp");
     const n = journey.count(), next = journey.next();
     if ($("bookBtn")) $("bookBtn").textContent = n ? `朱印 ${"〇一二三四五六七"[n]}` : "朱印";
-    if ($("goal")) $("goal").textContent = next ? `下一处 · ${next.place}` : "七印圆满";
+    const g = $("goal"), word = next ? `下一处 · ${next.place}` : "七印圆满"; if (g && g.textContent !== word) { if (g.textContent) y.hints?.say.goal(); g.textContent = word; }
     if ($("titleSeals")) $("titleSeals").textContent = n ? (n === 7 ? "七印圆满 · 山门常开" : `已得${"〇一二三四五六七"[n]}印`) : "";
   };
 
@@ -54,7 +54,7 @@ export function createGame(y) {
     const el = $("toast"), d = SEAL[id]; if (!el) return;
     $("toastSeal").src = sealStamp(d.seal, 220, { seed: SEALS.indexOf(d) + 11 }).toDataURL(); $("toastLine").textContent = id === "sutra" && journey.verse ? journey.verse.text : d.line; $("toastName").textContent = `${d.place} · ${d.seal}`;
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
-    setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 900); if (journey.done()) openBook(); }, 4200 * Math.max(fast, 0.3));
+    setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 900); if (journey.done()) openBook(); else y.hints?.say.seal(); }, 4200 * Math.max(fast, 0.3));
   }
 
   // ---- Each observance ----
