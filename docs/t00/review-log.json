@@ -262,12 +262,12 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
-    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
-    "by": "Claude 子代理第三轮复核（独立会话）",
+    "at_commit": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
+    "evidence": "evidence/M4/CAM-01…06.jpg、extra-hall-platform.jpg；读代码",
+    "by": "Claude 子代理第四轮复核（独立会话）",
     "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "CAM-01 石阶 73–80、挡墙 52–60、山坡 43，低处踏面是浅石板；CAM-02 里踢面（57）夹在两面墙（46 和 71）之间又是同一种毛石，中段读作一面砌体；仍无压顶"
+    "remaining_severity": "minor",
+    "note": "毛石没有了，近处踏面读得出（CAM-02 踏面 86 对踢面 55）；踢面和两侧墙仍是同一种石头同一个明度，仍无压顶；光滑带孔的石面配笔直的缝，开场那张有点像现浇混凝土"
    },
    "dev_note": "踏步出挑、踏面踏亮；挡墙未改",
    "recheck_history": [
@@ -286,6 +286,14 @@
      "verdict": "improved_but_open",
      "remaining_severity": "major",
      "note": "最下几级有浅色踏面；上段和挡墙仍是同一种毛石纹理和明度，没有压顶"
+    },
+    {
+     "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+     "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+     "by": "Claude 子代理第三轮复核（独立会话）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "CAM-01 石阶 73–80、挡墙 52–60、山坡 43，低处踏面是浅石板；CAM-02 里踢面（57）夹在两面墙（46 和 71）之间又是同一种毛石，中段读作一面砌体；仍无压顶"
     }
    ]
   },
@@ -458,12 +466,12 @@
    "status": "open_improved",
    "fixed_in": null,
    "recheck": {
-    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
-    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
-    "by": "Claude 子代理第三轮复核（独立会话）",
+    "at_commit": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
+    "evidence": "evidence/M4/CAM-01…06.jpg、extra-hall-platform.jpg；读代码",
+    "by": "Claude 子代理第四轮复核（独立会话）",
     "verdict": "improved_but_open",
-    "remaining_severity": "major",
-    "note": "CAM-06 的大三角变淡（82 对之前 74.5），但左、中、右仍有硬边的深色多边形，仍是铺地上最显眼的东西"
+    "remaining_severity": "minor",
+    "note": "大的淡三角没有了；从月台看过去深色块读作积水（边缘自然，里面映着斗拱和灯）；CAM-06 里积水仍是铺地上最显眼的东西，有三处保留直边——那是倒影里屋顶的轮廓而不是水的边缘"
    },
    "dev_note": null,
    "recheck_history": [
@@ -482,6 +490,14 @@
      "verdict": "not_fixed",
      "remaining_severity": "major",
      "note": "院地中央硬边的深色三角和多边形仍是地面上最显眼的东西"
+    },
+    {
+     "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+     "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+     "by": "Claude 子代理第三轮复核（独立会话）",
+     "verdict": "improved_but_open",
+     "remaining_severity": "major",
+     "note": "CAM-06 的大三角变淡（82 对之前 74.5），但左、中、右仍有硬边的深色多边形，仍是铺地上最显眼的东西"
     }
    ]
   },
@@ -1384,16 +1400,16 @@
    "issue": "踏步边缘的细黑线，有的伸出石阶两侧到了垂带和挡墙上",
    "suggested_fix": null,
    "evidence_before": "evidence/M4（提交 8d237c9）复核时新发现",
-   "status": "open",
+   "status": "open_improved",
    "fixed_in": null,
    "dev_note": "踏步出挑板和石阶同宽，暗线因此伸到垂带；待改",
    "recheck": {
-    "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
-    "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
-    "by": "Claude 子代理第三轮复核（独立会话）",
-    "verdict": "not_fixed",
-    "remaining_severity": "major",
-    "note": "CAM-01/02 每级踏步边缘仍有一像素的黑线，下面几级仍伸到两侧墙上"
+    "at_commit": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
+    "evidence": "evidence/M4/CAM-01…06.jpg、extra-hall-platform.jpg；读代码",
+    "by": "Claude 子代理第四轮复核（独立会话）",
+    "verdict": "improved_but_open",
+    "remaining_severity": "minor",
+    "note": "每级的黑细线变成柔和的灰线并止于石阶边缘；剩下的是 steps 材质里 0.46 米一道的砌缝：三像素的暗带横过踢面并延到两侧墙上"
    },
    "recheck_history": [
     {
@@ -1403,6 +1419,14 @@
      "verdict": "not_fixed",
      "remaining_severity": "major",
      "note": "每级踏步边缘都有黑细线，下面几级仍伸到挡墙上"
+    },
+    {
+     "at_commit": "b6da9207bba2b4f197c33b8c9682284849c8733d",
+     "evidence": "evidence/M4/CAM-01…06.jpg（美术）；读代码与取样（性能）",
+     "by": "Claude 子代理第三轮复核（独立会话）",
+     "verdict": "not_fixed",
+     "remaining_severity": "major",
+     "note": "CAM-01/02 每级踏步边缘仍有一像素的黑线，下面几级仍伸到两侧墙上"
     }
    ]
   },
@@ -1791,24 +1815,27 @@
    "issue": "镜面那一遍被跳过时，uReflOn 仍是 1，倒影贴图和矩阵停在上一次的值：站在大殿月台上看院里的积水会是冻住的倒影；第一次上山到顶的最后几级会采样一张从没画过的贴图（复核人读代码发现，六张图里看不到）",
    "suggested_fix": "跳过时把 uReflOn 关掉；月台仍算在院内",
    "evidence_before": "第三轮复核（提交 b6da920）读代码发现",
-   "status": "open",
+   "status": "verified_closed",
    "fixed_in": null,
    "dev_note": null,
-   "recheck": null
+   "recheck": {
+    "at_commit": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
+    "evidence": "evidence/M4/CAM-01…06.jpg、extra-hall-platform.jpg；读代码",
+    "by": "Claude 子代理第四轮复核（独立会话）",
+    "verdict": "verified_closed",
+    "remaining_severity": "none",
+    "note": "ground.js:121 uReflOn = has && on；yard.js:418 每帧先设再决定是否画；着色器退回天光。2.0 的阈值盖住大殿月台（1.5）而低于第一层台地（2.4）"
+   },
+   "recheck_history": []
   }
  ],
  "summary": {
-  "open_improved": 17,
-  "verified_closed": 30,
-  "open": 20,
+  "open_improved": 18,
+  "verified_closed": 31,
+  "open": 18,
   "fixed_pending_retest": 9
  },
- "open_blockers_or_majors": [
-  "ART-08",
-  "ART-14",
-  "NEW-02",
-  "R4-01"
- ],
+ "open_blockers_or_majors": [],
  "recheck_summary": {
   "at_commit": "dce43b31f73c37b2df6d0186b5b8068338e13095",
   "A03": "partial（结构复核人：没有漂浮和破面，出檐都有支承；STR-10 脊下透缝、NEW-04、STR-06 仍在）",
@@ -1829,6 +1856,13 @@
     "NEW-02",
     "R4-01"
    ]
+  },
+  "fourth": {
+   "at_commit": "dfc99097b4ddabca9ebcdfdbb2cf124b2f94329c",
+   "A03": "partial（没有漂浮和破面，石阶读作砌成的；CAM-06 里大殿正脊下的缝仍在）",
+   "A04": "partial（材料分得清、曝光一致；只剩三条轻微项）",
+   "new_majors": "无",
+   "remaining_majors": []
   }
  }
 }
