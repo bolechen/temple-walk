@@ -1,6 +1,6 @@
 // Small geometry helpers.
 import * as THREE from "../v/build/three.module.js";
-import { mergeGeometries } from "../v/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "../v/jsm/utils/BufferGeometryUtils.js";
 
 export const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 export const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -60,7 +60,7 @@ export function stairGeo(w, rise) {
 // Once the place is built, everything that never moves and shares a material becomes one mesh per stretch
 // of the axis: a few hundred draws become a few dozen, and what is behind you is still culled.
 // Meshes marked `userData.keep`, and anything not drawn with a procedural material, are left alone.
-export function mergeStatic(root, zones) {
+export function mergeStatic(root, zones, weld = true) {
   root.updateMatrixWorld(true);
   const groups = new Map(), gone = [], c = new THREE.Vector3();
   root.traverse((o) => {
@@ -74,7 +74,11 @@ export function mergeStatic(root, zones) {
     groups.get(key).geos.push(g); gone.push(o);
   });
   for (const o of gone) { o.parent.remove(o); o.geometry.dispose(); }
-  for (const g of groups.values()) { const m = new THREE.Mesh(mergeGeometries(g.geos), g.mat); m.castShadow = g.cast; m.receiveShadow = g.recv; root.add(m); }
-  return { before: gone.length, after: groups.size };
+  // Corners that several faces share exactly (same place, same normal, same everything) are kept once and pointed
+  // to: a flat-shaded box keeps its twenty-four, a curved roof or a column loses most of its repeats.
+  let v0 = 0, v1 = 0; const t0 = typeof performance !== "undefined" ? performance.now() : 0;
+  for (const g of groups.values()) { let geo = mergeGeometries(g.geos); v0 += geo.attributes.position.count; if (weld) geo = mergeVertices(geo, 1e-4); v1 += geo.attributes.position.count;
+    const m = new THREE.Mesh(geo, g.mat); m.castShadow = g.cast; m.receiveShadow = g.recv; root.add(m); }
+  return { before: gone.length, after: groups.size, vertices: [v0, v1], weldMs: Math.round((typeof performance !== "undefined" ? performance.now() : 0) - t0) };
 }
 export const tube = (pts, r) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), pts.length * 2, r, 8, false);

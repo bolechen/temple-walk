@@ -96,7 +96,7 @@ const trees = part("trees", () => createTrees(scene, M, [
   ...site.cedars,
 ], { a2c: quality.msaa > 0 }));
 const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800));
-const glows = [];
+const glows = []; let glowCloud = null;
 {
   const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
   g.addColorStop(0, "rgba(255,190,110,1)"); g.addColorStop(0.3, "rgba(255,150,70,.35)"); g.addColorStop(1, "rgba(255,120,40,0)"); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
@@ -104,9 +104,14 @@ const glows = [];
   scene.updateMatrixWorld(true);
   site.root.traverse((o) => {
     if (!o.isMesh || o.material !== M.flame) return;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, fog: false }));
-    sp.position.copy(o.getWorldPosition(p)); sp.scale.setScalar((o.userData.glow || 2.6) * 0.55); glows.push(sp); scene.add(sp);
+    glows.push({ position: o.getWorldPosition(p).clone(), scale: { x: (o.userData.glow || 2.6) * 0.55 } });
   });
+  // Every flame's halo is one point of a single cloud: thirty lamps, one draw.
+  const gg = new THREE.BufferGeometry(); gg.setAttribute("position", new THREE.Float32BufferAttribute(glows.flatMap((g) => g.position.toArray()), 3)); gg.setAttribute("size", new THREE.Float32BufferAttribute(glows.map((g) => g.scale.x), 1));
+  glowCloud = new THREE.Points(gg, new THREE.ShaderMaterial({ uniforms: { tMap: { value: tex }, uPx: { value: 800 }, uOp: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: "attribute float size; uniform float uPx; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); gl_Position=projectionMatrix*mv; gl_PointSize=size*uPx*projectionMatrix[1][1]*.5/max(-mv.z,.2); }",
+    fragmentShader: "uniform sampler2D tMap; uniform float uOp; void main(){ vec4 c=texture2D(tMap,gl_PointCoord); gl_FragColor=vec4(c.rgb*c.a*uOp,c.a*uOp); }" }));
+  glowCloud.frustumCulled = false; glowCloud.visible = false; if (glows.length) scene.add(glowCloud);
   ground.setLamps(glows.map((g) => ({ x: g.position.x, y: g.position.y, z: g.position.z, reach: g.scale.x > 1 ? 1.9 : 0.9 })));
 }
 
@@ -128,7 +133,7 @@ function setMood(season, time) {
   sky.setMood(mood);
   U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.setRGB(...mood.leaf);
   backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value);
-  for (const g of glows) { g.material.opacity = Math.min(0.7, mood.lamp * 0.45); g.visible = mood.lamp > 0.01; }
+  if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
   renderer.toneMappingExposure = mood.exp;
   renderer.shadowMap.needsUpdate = true;
@@ -405,6 +410,7 @@ function frame(now) {
   if (inside && !passing && pos.z > hallIn.room.exitZ && Math.abs(pos.x - hallIn.room.cx) < 1.3) pass(null);
 
   for (const fn of ticks) fn(dt, t);
+  if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);

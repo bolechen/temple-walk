@@ -301,6 +301,15 @@ export function buildHall(M, opts) {
     for (let z = EZ; z >= -EZ - 1e-6; z -= STEP) ring.push([EX, Math.max(z, -EZ)]);
     for (let x = EX; x >= -EX - 1e-6; x -= STEP) ring.push([Math.max(x, -EX), -EZ]);
     for (let z = -EZ; z <= EZ + 1e-6; z += STEP) ring.push([-EX, Math.min(z, EZ)]);
+    // In winter a lip of snow a hand deep lies along the edge of every eave: a rounded strip standing on the last
+    // course of tiles, which is there all year and drawn only when it has snowed.
+    { const sp = [], si = [], inn = 0.34;
+      ring.forEach(([x, z], i) => { if (i % 2 && i !== ring.length - 1) return; const y = roofY(x, z) + 0.05, nx = Math.abs(x) >= EX - 1e-6 ? -Math.sign(x) : 0, nz = Math.abs(z) >= EZ - 1e-6 ? -Math.sign(z) : 0, b = sp.length / 3;
+        const yi = roofY(x + nx * inn, z + nz * inn) + 0.03;
+        sp.push(x - nx * 0.05, y - 0.06, z - nz * 0.05, x - nx * 0.03, y + 0.07, z - nz * 0.03, x + nx * inn * 0.5, yi + 0.1 - (yi - y) * 0.5, z + nz * inn * 0.5, x + nx * inn, yi, z + nz * inn);
+        if (b) si.push(b - 4, b, b - 3, b - 3, b, b + 1, b - 3, b + 1, b - 2, b - 2, b + 1, b + 2, b - 2, b + 2, b - 1, b - 1, b + 2, b + 3); });
+      const lip = new THREE.BufferGeometry(); lip.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3)); lip.setAttribute("uv", new THREE.Float32BufferAttribute(new Array((sp.length / 3) * 2).fill(0), 2)); lip.setIndex(si); lip.computeVertexNormals();
+      add(lip, M.snowlip, { ao: null, cast: false }); }
     const ep = [], ei = [];
     ring.forEach(([x, z], i) => { const y = roofY(x, z); ep.push(x, y + 0.02, z, x, y - 0.2, z); if (i) { const a = (i - 1) * 2; ei.push(a, a + 1, a + 2, a + 2, a + 1, a + 3); } });
     const fascia = new THREE.BufferGeometry();

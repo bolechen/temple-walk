@@ -4,23 +4,37 @@ import { NOISE, fogMix, U } from "./glsl.js";
 import { FOG, SUN_DIR } from "./sky.js";
 import { declare, bind } from "./textures.js";
 
-const MAX_SHADE = 40, MAX_LAMPS = 14;
+const MAX_LAMPS = 14;
 
 export function createGround(scene, shade, censer, paving) {
   const rt = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
   const cam = new THREE.PerspectiveCamera(), texM = new THREE.Matrix4();
-  const boxes = (list) => Array.from({ length: MAX_SHADE }, (_, i) => {
-    const r = list[i]; return r ? new THREE.Vector4((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2, (r.z1 - r.z0) / 2) : new THREE.Vector4(0, 0, -1, -1);
-  });
+  // The light map: how far each spot of paving lies from the nearest wall, platform or trunk, worked out once when the
+  // place is built and kept as a picture, eight points to the metre. The shader reads it for the soft darkening
+  // under eaves and along walls, and for where snow drifts. (It used to walk a list of forty boxes for every pixel,
+  // and anything past the fortieth cast nothing.)
+  const SPAN = 3, bake = (list) => {
+    if (!list.length) list = [{ x0: 0, x1: 0, z0: 999, z1: 999 }];
+    const x0 = Math.min(...list.map((r) => r.x0)) - 3.5, x1 = Math.max(...list.map((r) => r.x1)) + 3.5, z0 = Math.min(...list.map((r) => r.z0)) - 3.5, z1 = Math.max(...list.map((r) => r.z1)) + 3.5;
+    const k = Math.min(8, 1024 / Math.max(x1 - x0, z1 - z0)), W = Math.max(2, Math.ceil((x1 - x0) * k)), H = Math.max(2, Math.ceil((z1 - z0) * k)), data = new Uint8Array(W * H);
+    const bx = list.map((r) => [(r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2, (r.z1 - r.z0) / 2]);
+    for (let j2 = 0; j2 < H; j2++) for (let i2 = 0; i2 < W; i2++) {
+      const px = x0 + ((i2 + 0.5) / W) * (x1 - x0), pz = z0 + ((j2 + 0.5) / H) * (z1 - z0); let d = 1e3;
+      for (const b of bx) { const dx = Math.abs(px - b[0]) - b[2], dz = Math.abs(pz - b[1]) - b[3]; const v = Math.hypot(Math.max(dx, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dz), 0); if (v < d) d = v; }
+      data[j2 * W + i2] = Math.max(0, Math.min(255, Math.round(((d + 0.5) / SPAN) * 255)));
+    }
+    const tex = new THREE.DataTexture(data, W, H, THREE.RedFormat); tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.unpackAlignment = 1; tex.needsUpdate = true;   // one byte a point: rows are not padded to four
+    return { tex, box: new THREE.Vector4(x0, z0, 1 / (x1 - x0), 1 / (z1 - z0)) };
+  };
   // One paving shader, used by the entrance court (with the mirror) and by the terraces (without).
   const blank = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1); blank.needsUpdate = true;
   // The paving is lit by hand (it has a mirror to mix in), but it takes the sun's shadows from the same map as everything
   // else: at dawn and dusk the long shadows of the halls lie across the court.
-  const pave = (list, mirror, censerAt) => new THREE.ShaderMaterial({
+  const pave = (list, mirror, censerAt, lm = bake(list)) => new THREE.ShaderMaterial({
     lights: true,
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
-      uShade: { value: boxes(list) }, uCenser: { value: censerAt }, uFogD: U.uFogD, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
+      tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
       uLamp: U.uLamp, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
@@ -44,7 +58,7 @@ export function createGround(scene, shade, censer, paving) {
       #include <shadowmask_pars_fragment>
       ` + NOISE + declare(["stone", "snow"]) + /* glsl */`
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet;
-      uniform vec4 uShade[${MAX_SHADE}]; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
+      uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       void main(){
         vec2 p=vWP.xz;
         // Running-bond slabs, each a slightly different stone.
@@ -68,8 +82,7 @@ export function createGround(scene, shade, censer, paving) {
         float puddle=smoothstep(.57,.61,low), damp=smoothstep(.3,.58,low);   // water stands only in the hollows
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
-        float dB=1e3;
-        for(int i=0;i<${MAX_SHADE};i++){ vec4 b=uShade[i]; if(b.z<0.) break; vec2 d=abs(p-b.xy)-b.zw; dB=min(dB,length(max(d,0.))+min(max(d.x,d.y),0.)); }
+        vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; float dB=(lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.)?texture2D(tShade,lmUv).r*${SPAN}.-.5:2.5;
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
         // Snow lies where no one has walked: thin on the path, deep in the corners.
         float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.8:0.)-(kerb?.35:0.))*smoothstep(-.2,.7,dB); puddle*=1.-sn; damp*=1.-sn;
