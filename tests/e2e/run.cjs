@@ -55,7 +55,8 @@ const scenarios = {
     const cx = await t.page.evaluate(() => window.__places.incense.at[0]), go = (pts) => t.page.evaluate(([c, p]) => window.__walk(p.map(([x, z]) => [c + x, z])), [cx, pts]);   // every hall has its own room; this one's middle is at cx
     await go([[-6, 5], [-11.7, 5.05]]); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing"); await t.page.click("#slipTake");
+    await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
+    expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("山门之外"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
     await go([[-9, 3]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9, s.z - 3) > 0.45, "he walked through a column");
     // Incense before the altar, then out by the door into the daylight.
     await go([[0, 4], [0, -1.2]]); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 240000, "no way to offer incense");

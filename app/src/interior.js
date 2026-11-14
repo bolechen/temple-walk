@@ -22,7 +22,19 @@ const KINDS = {
 };
 // What hangs in a frame, by its id ("main-w1" is the first frame on the great hall's west wall). `title` and `text`
 // are shown when a visitor stands before it; `image` (a URL) replaces the blank paper. The story will be written here.
-export const GALLERY = {};
+// The first leaf in each hall: eight short notes a visitor reads on the way up, written for this imagined temple out
+// of what is told of such mountain monasteries (docs/JINGSHAN.md). They stand in for the artworks the story will
+// hang here later; give a frame an `image` and it shows that instead of blank paper.
+export const GALLERY = {
+  "main-w1": { title: "入山帖", text: "山门之外是路，山门之内也是路。上来的人各有来处，到了殿前，都只是站一站。" },
+  "chan-w1": { title: "坐帖", text: "禅堂里没有要学的东西。一炷香的工夫，听得见自己呼吸，就算坐过了。" },
+  "tea-w1": { title: "茶帖", text: "相传山里的茶宴有十几道规矩，后来渡海东去。小沙弥只记得一条：茶来了，就喝茶。" },
+  "library-w1": { title: "经帖", text: "楼上的经卷多数没人翻过。老师父说，请一句带下山，够用很久。" },
+  "yaoshi-w1": { title: "药帖", text: "山下的人上来求药，师父先让他们在廊下坐一会儿。坐过之后，要的常常不是药了。" },
+  "guanyin-w1": { title: "灯帖", text: "灯是别人点的，也是给别人点的。添一盏的人，往往不知道它照见了谁。" },
+  "dahui-w1": { title: "井帖", text: "相传开山那年，龙让出了整座山，只留下这口井。水在暗处，俯身才看得见。" },
+  "lingxiao-w1": { title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
+};
 const BLANK = { title: "空着的画框", text: "这里以后会挂上一件东西，讲这座寺的一段事。" };
 
 const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
