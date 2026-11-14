@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "scene_id": "T00",
+  "generated_at": "2026-11-14T15:48:16.366Z",
+  "repository": "https://github.com/bolechen/temple-walk",
+  "source": {
+    "sha": "61b775188a0e577e3d384129a90cbfabe492b6f9",
+    "url": "https://github.com/bolechen/temple-walk/commit/61b775188a0e577e3d384129a90cbfabe492b6f9"
+  },
+  "delivery": {
+    "schema_version": 1,
+    "scene_id": "T00",
+    "summary": "建立 Claude 交付、CI 验证、部署与独立评审分离的自动同步流程。",
+    "changes": [
+      "主线变更自动生成 Site 状态",
+      "建筑边缘检查与整改目标见独立评审记录"
+    ],
+    "known_issues": [
+      "最终美术与目标设备性能尚未完成独立验收；以对应提交的评审证据为准"
+    ],
+    "evidence": [
+      "docs/STAIR-LOCOMOTION.md",
+      "docs/t00/review-log.json"
+    ],
+    "record_commit": "61b775188a0e577e3d384129a90cbfabe492b6f9",
+    "kind": "developer_report"
+  },
+  "verification": {
+    "status": "pending",
+    "conclusion": null,
+    "run_id": 43612105417,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43612105417",
+    "checks": {
+      "syntax": "pending",
+      "unit": "pending",
+      "e2e": "pending"
+    },
+    "scope": [
+      "boot",
+      "stairs",
+      "drop"
+    ]
+  },
+  "deployment": {
+    "status": "not_current",
+    "sha": "28809876a35d44c9e73cf76d7f1ea7c19475aca2",
+    "url": "https://bolechen.github.io/temple-walk/",
+    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43610778634"
+  },
+  "independent_review": {
+    "scene_id": "T00",
+    "status": "not_reviewed",
+    "reviewed_commit": null,
+    "reviewer": null,
+    "evidence": [],
+    "issues": [],
+    "note": "自动测试通过不构成完整独立验收；历史意见保留于 review-log.json。",
+    "applies_to_current": false
+  }
+}
