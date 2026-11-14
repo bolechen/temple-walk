@@ -1,3 +1,9 @@
 tools/out/
 tools/*.png
 tools/served-files.json
+
+# Generated client installations; canonical package is skills/temple-review
+.claude/skills/temple-review/
+.agents/skills/temple-review/
+__pycache__/
+*.pyc

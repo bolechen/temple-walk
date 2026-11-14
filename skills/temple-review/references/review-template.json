@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "run_id": "fill-before-validation",
+  "source": {"repository": "", "ref": "main", "reviewed_commit": null, "observed_head": null},
+  "change_kind": "code",
+  "run_status": "blocked",
+  "reviewer": {"name": "", "method": "independent_review"},
+  "environment": {"os": null, "browser": null, "renderer": null, "target_device": false},
+  "selection": {"selected": [], "skipped": [], "reason": "填写影响分析，不能把跳过写成通过"},
+  "checks": [],
+  "artifacts": [],
+  "issues": [],
+  "verdict": "blocked",
+  "publish": {"requested": false, "status": "not_requested", "url": null, "site_version": null, "hosting_commit": null},
+  "limitations": ["模板未填写，不能当作通过报告；本地artifact使用相对路径、SHA-256与证据提交。"]
+}

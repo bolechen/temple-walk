@@ -1,0 +1,69 @@
+{
+  "project_name": "山门之外",
+  "repository": "https://github.com/bolechen/temple-walk",
+  "ref": "main",
+  "scene_id": "T00",
+  "site_url": "https://temple-atlas-research.floralpage64.chatgpt.site/",
+  "inputs": [
+    "llms.txt",
+    "t00-progress.json",
+    "t00-audit.json",
+    "handoff/T00/acceptance.json"
+  ],
+  "permissions": {
+    "source_repository": "read_only",
+    "publish_site": "only_if_user_authorized",
+    "paid_gpu": "when_necessary_with_verified_access_and_budget"
+  },
+  "commands": {
+    "syntax": [
+      "npm",
+      "run",
+      "check"
+    ],
+    "unit": [
+      "npm",
+      "test"
+    ],
+    "quick": [
+      "npm",
+      "run",
+      "e2e:quick"
+    ]
+  },
+  "serial_browser_jobs": true,
+  "performance_target": {
+    "status": "unconfirmed",
+    "device": null,
+    "viewport": [
+      1920,
+      1080
+    ],
+    "dpr": 1,
+    "quality": null,
+    "average_fps_min": 60,
+    "p95_frame_ms_max": 33.3,
+    "warmup_seconds": 10,
+    "sample_seconds": 120,
+    "runs": 3
+  },
+  "hosting": {
+    "max_file_bytes": 26214400,
+    "text_encoding": "UTF-8; TXT浏览器兼容需明确字符集或BOM"
+  },
+  "note": "示例不是已确认配置。设备与性能阈值先按工程目标锁定，其他项目替换URL、命令和验收规范。",
+  "gpu_jobs": {
+    "provider": "huggingface_jobs",
+    "membership_reported_by_user": "PRO",
+    "account_access_verified": false,
+    "trigger": "graphics_validation_or_software_renderer_interference",
+    "preferred_flavor": "t4-small",
+    "max_jobs_per_review": 1,
+    "timeout_minutes": 20,
+    "estimated_compute_budget_usd": 0.5,
+    "budget_status": "proposed_default_verify_before_spending",
+    "price_source": "https://huggingface.co/api/jobs/hardware",
+    "storage": "private_allowlisted_files_only",
+    "target_device_equivalence": false
+  }
+}
