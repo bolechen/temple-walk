@@ -117,7 +117,7 @@ export function createMonk() {
     // `speed` in metres a second; `pray` true to bring the palms together and bow the head a little.
     // `pose`: false to stand or walk, true or "pray" for palms together, "sit" to sit with legs folded.
     update(dt, speed, pose, t, surfaceAt) {
-      const pray = pose === true || pose === "pray", sit = pose === "sit";
+      const pray = pose === true || pose === "pray", sit = pose === "sit", hop = pose === "hop";
       seat += ((sit ? 1 : 0) - seat) * Math.min(1, dt * 3.5);
       gait += ((speed > 0.05 && !sit ? 1 : 0) - gait) * Math.min(1, dt * 8); palms += ((pray ? 1 : 0) - palms) * Math.min(1, dt * 4);
       phase += dt * Math.max(speed, 0.4) * 4.6;
@@ -130,6 +130,11 @@ export function createMonk() {
       });
       body.position.y = Math.abs(Math.sin(phase)) * 0.024 * gait + breathe; body.rotation.x = 0.06 * gait + 0.08 * palms; body.rotation.z = Math.sin(phase) * 0.03 * gait;
       head.rotation.x = 0.22 * palms + Math.sin(phase * 2) * 0.02 * gait; head.rotation.z = -Math.sin(phase) * 0.025 * gait;
+      if (hop) {
+        legs.forEach(leg => leg.rotation.x = -0.16);
+        arms.forEach((arm, i) => { arm.rotation.x = -0.35; arm.rotation.z = i ? 0.24 : -0.24; });
+        body.rotation.x = 0.08;
+      }
       if (seat > 0.01) {   // down onto the cushion: hands in the lap, head a little bowed, breathing slowly
         body.position.y = -0.37 * seat + Math.sin(t * 0.9) * 0.006; body.rotation.x = 0.05 * seat; head.rotation.x += 0.1 * seat;
         arms.forEach((a, i) => { const sx = i ? 1 : -1; a.rotation.x += -0.62 * seat; a.rotation.z += -sx * 0.3 * seat; });

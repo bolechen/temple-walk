@@ -23,6 +23,7 @@ import { createGame } from "./src/game.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
 import { createTour } from "./src/tour.js";
+import { findDrop, dropPose } from "./src/drop.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -154,7 +155,7 @@ if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 let arrive = null, stage = null; const ticks = [];
 const settle = (ok) => { if (arrive) { const fn = arrive; arrive = null; fn(ok); } };
 const interrupt = () => { settle(false); if (stage) { const st = stage; stage = null; st.leave && st.leave(); } };
-let down = null;
+let down = null, hop = null;
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
 canvas.addEventListener("pointerdown", () => startAmbience(() => ({ grove: grove() })), { once: true });
@@ -238,10 +239,27 @@ canvas.addEventListener("pointerup", (e) => {
   down = null;
 });
 const keys = {};
+const dropButton = document.getElementById("dropBtn");
+function availableDrop() {
+  if (hop || inside || stage || passing || photo.on || !document.body.classList.contains("entered")) return null;
+  for (const id of ["book", "print", "slip", "keys", "moodPanel"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return null; }
+  const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y;
+  const s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
+  return findDrop(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+}
+function startDrop() {
+  const plan = availableDrop(); if (!plan) return false;
+  interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true;
+}
+if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Space</kbd>下台阶"; dropButton.addEventListener("click", startDrop); }
+
 addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const press = (id) => { const el = document.getElementById(id); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
   // The keys such games use: E to do what is offered here, V to change the view, B for the book, P to photograph, T for the season and hour.
+  if (k === " " && e.target?.tagName === "BUTTON") return;
+  if (hop && (k === "e" || k === "enter" || k === " ")) { e.preventDefault(); return; }
+  if (k === " " && e.target?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === "e" || k === "enter" || k === " ") { if (press("slipTake") || press("act") || press("enterBtn") || press("offer")) e.preventDefault(); }
   else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { if (!press("bookClose")) press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
@@ -295,12 +313,12 @@ function frame(now) {
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const f = photo.on ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
-  const x0 = pos.x, z0 = pos.z;
+  const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
   if (f || s) { interrupt(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) settle(true); } }
   const len = Math.hypot(vx, vz);
-  if (len > 0) {
+  if (len > 0 && !airborne) {
     const pace = Q.has("fast") ? 14 : keys.shift ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);   // Shift to hurry; a stick pushed a little walks slowly
     const step = Math.min(f || s ? 1e9 : len, pace * dt); vx = (vx / len) * step; vz = (vz / len) * step;
     // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
@@ -316,17 +334,22 @@ function frame(now) {
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
-  footY = walker.heightAt(pos.x, pos.z); eyeY += (walker.eyeAt(pos.x, pos.z) - eyeY) * Math.min(1, dt * 12);
+  if (flight) {
+    flight.elapsed += dt; const p = dropPose(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
+    if (p.done) hop = null;
+  } else footY = walker.heightAt(pos.x, pos.z);
+  eyeY += ((airborne ? footY : walker.eyeAt(pos.x, pos.z)) - eyeY) * Math.min(1, dt * 12);
+  if (dropButton) dropButton.hidden = !availableDrop();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!arrived && document.body.classList.contains("entered")) { arrived = true; hints.say.entered(); }
-  if (arrived) hints.step(dt, moved, !!keys.shift, !stage && !photo.on);
+  if (arrived) hints.step(dt, moved, !!keys.shift, !stage && !photo.on && !airborne);
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
-  const want = stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
+  const want = flight ? Math.atan2(flight.plan.to[0] - flight.plan.from[0], flight.plan.to[2] - flight.plan.from[2]) : stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
   monk.group.position.set(pos.x, footY + (stage ? stage.lift || 0 : 0), pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
-  monk.update(dt, still ? 0 : speedNow, stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt);
+  monk.update(dt, still || airborne ? 0 : speedNow, airborne ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt);
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
@@ -458,7 +481,7 @@ async function pass(hall) {
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
-window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
+window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // What a frame costs to draw, in milliseconds: `n` frames drawn back to back, each waited for until the graphics card
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
@@ -507,7 +530,7 @@ createGame({
   walkTo(points, then) { interrupt(); route = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); arrive = then || null; },
   stage(o) { stage = o; },
   strike(kind) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s) s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
-  mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing, inside: () => inside,
+  mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => startAmbience(() => ({ grove: grove() })),
   onTick: (fn) => ticks.push(fn),

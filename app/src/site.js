@@ -54,7 +54,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [] }, shade = [[], [], [], []], halls = [];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [] }, shade = [[], [], [], []], halls = [];
   const put = (opts, at, q = 0, lvl = 0, base) => {
     const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, ground: y });
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
@@ -62,6 +62,10 @@ export function buildSite(M) {
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
+    for (const edge of b.walk.drops) {
+      const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
+      walk.drops.push({ a: world(edge.a), b: world(edge.b), normal: turn(...edge.normal, q), top: edge.top + y });
+    }
     if (base === undefined) shade[lvl].push(place(b.plat, at, q));
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
