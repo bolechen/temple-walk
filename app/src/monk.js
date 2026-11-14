@@ -18,7 +18,11 @@ function weave() {   // the grain of coarse cloth, as a bump
 }
 
 export function createMonk() {
-  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  // He is built on a skeleton: a hip bone under the root, and from it the spine, head, two arms with their hands, two
+  // legs, and the hat on his back. Each part of him is bound to one bone and moves with it; `update` poses the bones.
+  // A sculpted, skinned figure can take this one's place by bringing bones of the same names (see `skeleton` below).
+  const bone = (name) => { const b = new THREE.Bone(); b.name = name; return b; };
+  const root = new THREE.Group(), body = bone("spine"); root.add(body);
   const bump = weave();
   const cloth = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.92, bumpMap: bump, bumpScale: 0.6, envMapIntensity: 0.35 });
   const robeM = cloth(0x9a6846), sashM = cloth(0x5a3b28), linen = cloth(0xd9d2c2), dark = cloth(0x2b2622);   // persimmon-dyed cloth after many washings
@@ -55,7 +59,7 @@ export function createMonk() {
   const beads = []; for (let i = 0; i < 30; i++) { const a = (i / 30) * 6.283, hang = (1 - Math.cos(a)) / 2; beads.push(new THREE.SphereGeometry(i === 15 ? 0.017 : 0.0115, 10, 8).translate(Math.sin(a) * 0.092, 0.815 - hang * 0.2, 0.02 + Math.cos(a) * -0.07 + hang * 0.215)); }
   add(body, mergeGeometries(beads), beadM);
   // On his back, the bamboo hat every walking monk carries, hung by a cord that crosses his chest.
-  const hat = new THREE.Group(); hat.position.set(0, 0.6, -0.178); hat.rotation.x = -Math.PI / 2 + 0.3; body.add(hat);
+  const hat = bone("hat"); hat.position.set(0, 0.6, -0.178); hat.rotation.x = -Math.PI / 2 + 0.3; body.add(hat);
   {
     const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); x.fillStyle = "#b39a63"; x.fillRect(0, 0, 256, 256);
     for (let i = 0; i < 256; i += 3) { x.fillStyle = `rgba(${i % 2 ? "70,52,24" : "235,215,160"},${0.18 + Math.random() * 0.2})`; x.fillRect(i, 0, 1.5, 256); }                     // the ribs, from crown to rim
@@ -69,7 +73,7 @@ export function createMonk() {
   }
 
   // ---- Head: large, soft in the cheek ----
-  const head = new THREE.Group(); head.position.set(0, 0.84, 0); body.add(head);
+  const head = bone("head"); head.position.set(0, 0.84, 0); body.add(head);
   const R = 0.205, S = [1, 0.95, 0.97], HY = 0.165;
   const on = (az, el, k = 1) => new THREE.Vector3(R * Math.sin(az) * Math.cos(el) * S[0] * k, HY + R * Math.sin(el) * S[1] * k, R * Math.cos(az) * Math.cos(el) * S[2] * k);   // a point on the face
   const skull = new THREE.SphereGeometry(R, 56, 40).scale(...S);
@@ -100,15 +104,15 @@ export function createMonk() {
   // ---- Arms: wide sleeves that hang open at the cuff; small hands ----
   const arms = [], hands = [], legs = [], trousers = [], soles = [], footLift = [0, 0];
   for (const sx of [-1, 1]) {
-    const arm = new THREE.Group(); arm.position.set(sx * 0.152, 0.765, 0); body.add(arm); arms.push(arm);
+    const arm = bone(sx < 0 ? "armL" : "armR"); arm.position.set(sx * 0.152, 0.765, 0); body.add(arm); arms.push(arm);
     const sleeve = new THREE.LatheGeometry(V2([[0.0, 0.035], [0.045, 0.025], [0.06, -0.02], [0.07, -0.12], [0.084, -0.22], [0.09, -0.27], [0.086, -0.285], [0.06, -0.275], [0.03, -0.262]]), 32);
     { const p = sleeve.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i), d = smooth(-0.08, -0.3, y), a = Math.atan2(p.getX(i), p.getZ(i)); p.setY(i, y - d * 0.03 * (1 + Math.cos(a - Math.PI)) * 0.5 - d * 0.006 * Math.sin(a * 5)); p.setX(i, p.getX(i) * (1 - d * 0.12)); } sleeve.computeVertexNormals(); }
     const sl = add(arm, sleeve, robeM); sl.material = robeM;
-    const hand = new THREE.Group(); hand.position.set(0, -0.265, 0.008); arm.add(hand); hands.push(hand);
+    const hand = bone(sx < 0 ? "handL" : "handR"); hand.position.set(0, -0.265, 0.008); arm.add(hand); hands.push(hand);
     add(hand, mergeGeometries([new THREE.SphereGeometry(0.034, 16, 12).scale(0.62, 1.25, 0.95).translate(0, -0.04, 0), new THREE.SphereGeometry(0.014, 10, 8).scale(1, 1.7, 1).rotateX(-0.5).translate(0, -0.03, 0.03), new THREE.CylinderGeometry(0.02, 0.024, 0.05, 12).translate(0, 0.005, 0),
       ...[-0.0135, -0.0045, 0.0045, 0.0135].map((fx, k) => new THREE.CapsuleGeometry(0.0052, 0.022 + (k === 1 || k === 2 ? 0.006 : 0), 3, 8).translate(0, -0.088, fx))]), skin);   // four fingers, held together
     // Legs: loose trousers gathered at the ankle, white socks, black cloth shoes.
-    const leg = new THREE.Group(); leg.position.set(sx * 0.082, 0.25, 0); root.add(leg); legs.push(leg);
+    const leg = bone(sx < 0 ? "legL" : "legR"); leg.position.set(sx * 0.082, 0.25, 0); root.add(leg); legs.push(leg);
     trousers.push(add(leg, new THREE.CylinderGeometry(0.062, 0.05, 0.13, 16).translate(0, -0.065, 0), sashM));
     add(leg, new THREE.CylinderGeometry(0.038, 0.04, 0.07, 14).translate(0, -0.16, 0), linen);
     const shoe = add(leg, mergeGeometries([new THREE.SphereGeometry(0.05, 16, 10).scale(0.86, 0.6, 1.75).translate(0, -0.215, 0.032), new THREE.CylinderGeometry(0.043, 0.045, 0.012, 14).translate(0, -0.192, 0)]), dark);
@@ -134,8 +138,11 @@ export function createMonk() {
   clothPoints.setUsage(THREE.DynamicDrawUsage);
   robeMesh.geometry.attributes.normal.setUsage(THREE.DynamicDrawUsage);
   let bodyHeight = null, lastRootY = null;
+  // The skeleton, in its resting pose: what an animation clip or a replacement figure is written against.
+  root.updateMatrixWorld(true);
+  const skeleton = new THREE.Skeleton([body, head, hat, ...arms, ...hands, ...legs]);
   return {
-    group: root,
+    group: root, skeleton, bones: Object.fromEntries(skeleton.bones.map((b) => [b.name, b])),
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },

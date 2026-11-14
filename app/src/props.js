@@ -16,7 +16,7 @@ export function createProps(scene, M, at, centre) {
   const x = c.getContext("2d"), r = x.createRadialGradient(64, 64, 2, 64, 64, 64);
   r.addColorStop(0, "rgba(240,240,236,.55)"); r.addColorStop(0.5, "rgba(240,240,236,.16)"); r.addColorStop(1, "rgba(240,240,236,0)");
   x.fillStyle = r; x.fillRect(0, 0, 128, 128);
-  const tex = new THREE.CanvasTexture(c), smoke = [], mist = [];
+  const tex = new THREE.CanvasTexture(c), smoke = [];
   // The censer's smoke: forty soft puffs, drawn together as one cloud of points.
   const N = 40, sg = new THREE.BufferGeometry(), sp = new Float32Array(N * 3), sa = new Float32Array(N * 2);
   sg.setAttribute("position", new THREE.BufferAttribute(sp, 3)); sg.setAttribute("puff", new THREE.BufferAttribute(sa, 2));
@@ -26,13 +26,20 @@ export function createProps(scene, M, at, centre) {
     vertexShader: "attribute vec2 puff; uniform float uPx; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); gl_Position=projectionMatrix*mv; gl_PointSize=puff.x*uPx*projectionMatrix[1][1]*.5/max(-mv.z,.2); vA=puff.y; }",
     fragmentShader: "uniform sampler2D tMap; uniform vec3 uCol; varying float vA; void main(){ gl_FragColor=vec4(uCol,texture2D(tMap,gl_PointCoord).a*vA); }" }));
   cloud.frustumCulled = false; scene.add(cloud);
-  for (let i = 0; i < 14; i++) {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.5, color: 0xdfe6e4, fog: false }));
-    // Beyond the walls, on either side, all the way up the hill: never over the courts or across a roof, where a
-    // sheet of mist reads as a pale pane hung in front of the building.
-    const a = i * 2.4, x0 = (i % 2 ? 1 : -1) * (44 + (i % 3) * 9);
-    s.position.set(x0, 5 + (i % 4) * 2.2, 84 - i * 17); s.scale.set(38, 12, 1);
-    s.userData = { a, x0 }; mist.push(s); scene.add(s);
+  // Sheets of mist beyond the walls, on either side, all the way up the hill: never over the courts or across a roof,
+  // where a sheet of mist reads as a pale pane hung in front of the building. All fourteen are one mesh; each sheet
+  // turns to face the eye and drifts a little, in the vertex shader.
+  const mu = { tMap: { value: tex }, uT: { value: 0 }, uCol: { value: new THREE.Color(0xdfe6e4) }, uOp: { value: 0.5 } };
+  {
+    const pos = [], cor = [], idx = [];
+    for (let i = 0; i < 14; i++) { const a = i * 2.4, x0 = (i % 2 ? 1 : -1) * (44 + (i % 3) * 9), b = pos.length / 3;
+      for (const [cx, cy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { pos.push(x0, 5 + (i % 4) * 2.2, 84 - i * 17); cor.push(cx, cy, a); }
+      idx.push(b, b + 1, b + 2, b, b + 2, b + 3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("corner", new THREE.Float32BufferAttribute(cor, 3)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: mu, transparent: true, depthWrite: false,
+      vertexShader: "attribute vec3 corner; uniform float uT; varying vec2 vU; void main(){ vU=corner.xy*.5+.5; vec3 p=position; p.x+=sin(uT*.03+corner.z*3.)*6.; vec4 mv=modelViewMatrix*vec4(p,1.); mv.xy+=corner.xy*vec2(19.,6.); gl_Position=projectionMatrix*mv; }",
+      fragmentShader: "uniform sampler2D tMap; uniform vec3 uCol; uniform float uOp; varying vec2 vU; void main(){ gl_FragColor=vec4(uCol,texture2D(tMap,vU).a*uOp); }" }));
+    m.frustumCulled = false; scene.add(m);
   }
   // Shafts of light: at dawn and dusk, when the sun is low and the air is not all cloud, its light comes over the
   // side halls' roofs and stands in the mist of the first court. Each is two crossed sheets, brightest along its middle.
@@ -56,10 +63,10 @@ export function createProps(scene, M, at, centre) {
     }
   }
   return {
-    setMood(m) { setShafts(m); for (const sp of mist) { sp.material.color.setRGB(...m.fog).multiplyScalar(1.08); sp.material.opacity = 0.5 * m.mist; } },
+    setMood(m) { setShafts(m); mu.uCol.value.setRGB(...m.fog).multiplyScalar(1.08); mu.uOp.value = 0.5 * m.mist; },
     update(t, dt, still, px = 800) {
       su.uPx.value = px;
-      for (const sp of mist) if (!still) sp.position.x = sp.userData.x0 + Math.sin(t * 0.03 + sp.userData.a * 3) * 6;
+      if (!still) mu.uT.value = t;
       smoke.forEach((u, i) => {
         if (!still) u.t = (u.t + dt * 0.09) % 1;
         const a = u.t, sway = a * a;

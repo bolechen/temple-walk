@@ -6,6 +6,7 @@
 // The rooms are built far below the courts, side by side (the paving above hides them), and the walker is moved
 // into one at its hall's door.
 import * as THREE from "../v/build/three.module.js";
+import { paintLeaf } from "./leaves.js";
 import { GLTFLoader } from "../v/jsm/loaders/GLTFLoader.js";
 import { box, merge, mesh, footAt } from "./geo.js";
 
@@ -24,16 +25,16 @@ const KINDS = {
 // are shown when a visitor stands before it; `image` (a URL) replaces the blank paper. The story will be written here.
 // The first leaf in each hall: eight short notes a visitor reads on the way up, written for this imagined temple out
 // of what is told of such mountain monasteries (docs/JINGSHAN.md). They stand in for the artworks the story will
-// hang here later; give a frame an `image` and it shows that instead of blank paper.
+// hang here later; each has a small ink painting drawn for it (`paint`, see leaves.js); give a frame an `image` and it shows that instead.
 export const GALLERY = {
-  "main-w1": { title: "入山帖", text: "山门之外是路，山门之内也是路。上来的人各有来处，到了殿前，都只是站一站。" },
-  "chan-w1": { title: "坐帖", text: "禅堂里没有要学的东西。一炷香的工夫，听得见自己呼吸，就算坐过了。" },
-  "tea-w1": { title: "茶帖", text: "相传山里的茶宴有十几道规矩，后来渡海东去。小沙弥只记得一条：茶来了，就喝茶。" },
-  "library-w1": { title: "经帖", text: "楼上的经卷多数没人翻过。老师父说，请一句带下山，够用很久。" },
-  "yaoshi-w1": { title: "药帖", text: "山下的人上来求药，师父先让他们在廊下坐一会儿。坐过之后，要的常常不是药了。" },
-  "guanyin-w1": { title: "灯帖", text: "灯是别人点的，也是给别人点的。添一盏的人，往往不知道它照见了谁。" },
-  "dahui-w1": { title: "井帖", text: "相传开山那年，龙让出了整座山，只留下这口井。水在暗处，俯身才看得见。" },
-  "lingxiao-w1": { title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
+  "main-w1": { paint: "gate", title: "入山帖", text: "山门之外是路，山门之内也是路。上来的人各有来处，到了殿前，都只是站一站。" },
+  "chan-w1": { paint: "sit", title: "坐帖", text: "禅堂里没有要学的东西。一炷香的工夫，听得见自己呼吸，就算坐过了。" },
+  "tea-w1": { paint: "tea", title: "茶帖", text: "相传山里的茶宴有十几道规矩，后来渡海东去。小沙弥只记得一条：茶来了，就喝茶。" },
+  "library-w1": { paint: "scroll", title: "经帖", text: "楼上的经卷多数没人翻过。老师父说，请一句带下山，够用很久。" },
+  "yaoshi-w1": { paint: "gourd", title: "药帖", text: "山下的人上来求药，师父先让他们在廊下坐一会儿。坐过之后，要的常常不是药了。" },
+  "guanyin-w1": { paint: "lamp", title: "灯帖", text: "灯是别人点的，也是给别人点的。添一盏的人，往往不知道它照见了谁。" },
+  "dahui-w1": { paint: "well", title: "井帖", text: "相传开山那年，龙让出了整座山，只留下这口井。水在暗处，俯身才看得见。" },
+  "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
 };
 const BLANK = { title: "空着的画框", text: "这里以后会挂上一件东西，讲这座寺的一段事。" };
 
@@ -130,7 +131,7 @@ function buildRoom(M, hall, ox, figures) {
   for (const west of [true, false]) for (let k = 0; k < n; k++) {
     const id = `${hall.id}-${west ? "w" : "e"}${k + 1}`, z = (n - 1) * 1.55 - k * 3.1 + 0.4, x = (west ? -1 : 1) * (wx - 0.08), it = GALLERY[id] || BLANK;
     frames.push(box(0.08, fh + 0.24, 0.1, x, fy, z - fw / 2 - 0.07), box(0.08, fh + 0.24, 0.1, x, fy, z + fw / 2 + 0.07), box(0.08, 0.1, fw + 0.24, x, fy + fh / 2 + 0.07, z), box(0.08, 0.1, fw + 0.24, x, fy - fh / 2 - 0.07, z));
-    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh).rotateY(west ? Math.PI / 2 : -Math.PI / 2).translate(ox + x + (west ? 0.03 : -0.03), fy, z), new THREE.MeshStandardMaterial({ map: paper(), roughness: 0.95, envMapIntensity: 0.1 }));
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh).rotateY(west ? Math.PI / 2 : -Math.PI / 2).translate(ox + x + (west ? 0.03 : -0.03), fy, z), new THREE.MeshStandardMaterial({ map: it.paint ? paintLeaf(it) : paper(), roughness: 0.95, envMapIntensity: 0.1 }));
     if (it.image) new THREE.TextureLoader().load(it.image, (t) => { t.colorSpace = THREE.SRGBColorSpace; sheet.material.map = t; sheet.material.needsUpdate = true; });
     g.add(sheet); spots[id] = { at: [ox + x + (west ? 1.7 : -1.7), z], face: west ? -Math.PI / 2 : Math.PI / 2, r: 1.3, item: { id, ...it }, room: hall.id };
   }
