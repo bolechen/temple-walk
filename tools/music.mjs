@@ -84,7 +84,7 @@ window.balance = async () => {
 window.chunk = (i, n) => { const a = window.__pcm.subarray(i, i + n); let s = ""; for (let k = 0; k < a.length; k += 0x8000) s += String.fromCharCode.apply(null, a.subarray(k, k + 0x8000)); return btoa(s); };
 </script>`;
 
-const types = { ".css": "text/css", ".js": "text/javascript", ".html": "text/html" };
+const types = { ".js": "text/javascript", ".html": "text/html", ".css": "text/css", ".woff2": "font/woff2" };
 const srv = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split("?")[0]);
   if (u === "/" || u === "/music.html") { res.writeHead(200, { "content-type": "text/html" }); return res.end(page); }

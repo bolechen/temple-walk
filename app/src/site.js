@@ -65,7 +65,7 @@ export function buildSite(M) {
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
-    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
+    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
     for (const edge of b.walk.drops) {
       const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
       walk.drops.push({ a: world(edge.a), b: world(edge.b), normal: turn(...edge.normal, q), top: edge.top + y });
@@ -110,6 +110,8 @@ export function buildSite(M) {
     }, [sx * 15.5, SITE.zS], 2);
     const thing = sx > 0 ? bell(M, t) : drum(M, t);
     t.group.add(thing.group); strikers.push({ kind: sx > 0 ? "bell" : "drum", mesh: thing.hit, swing: thing.swing });
+    // The log that strikes the bell is slung out past the columns toward the gate: the eye keeps out of it too.
+    if (sx > 0) { const r = walk.roofs[walk.roofs.length - 1]; r.core = { ...r.core, z0: Math.min(r.core.z0, SITE.zS - 2.6) }; }
   }
   // Facing each other across the court: the meditation hall, and the tea house.
   const side = { xs: [-8, -4.8, -1.6, 1.6, 4.8, 8], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.6, overhang: 1.7, rise: 3.0, G: 2.2, lamps: false, steps: 3.0 };
@@ -134,7 +136,7 @@ export function buildSite(M) {
   // evergreens that stand clear of everything in the corners before the great hall. trees.js grows them; the plan
   // only says where they stand, how tall, and that they are in the way: a trunk is a round thing as wide as it
   // is grown at the knee, where its roots still spread it.
-  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.58 : (0.2 + h * 0.012) * 1.24) : (0.09 + h * 0.019) * 1.4 + (kind === "maple" ? 0.14 : 0.04));   // a young evergreen's boughs sweep the ground all round it; a maple forks low and crooked
+  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.58 : (0.2 + h * 0.012) * 1.75) : (0.09 + h * 0.019) * 1.8 + (kind === "maple" ? 0.1 : 0));   // a young evergreen's boughs sweep the ground all round it; a maple forks low and crooked
   for (const [x, z, h, lvl] of [[-13.6, 54.4, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-15.5, 1.8, 5.2, 0], [15.5, 1.8, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
@@ -528,8 +530,10 @@ export function createWalker(site) {
     eyeShut(x, y, z, foot) {
       if (room) return shut(x, z);
       for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;
-      // A square post is a low thing drawn wide by his body (a table, the cheek of a stair) and stands below the eye.
-      const p = post(x, z, 0.15); if (p && p.r !== undefined) return p.r < 0.45 ? "post" : true;
+      // A square post is a low thing drawn wide by his body (a table, the cheek of a stair): in the way only of an eye
+      // that has come down near the floor it stands on, as it does looking up.
+      const p = post(x, z, 0.15);
+      if (p) { if (p.r !== undefined) return p.r < 0.45 ? "post" : true; const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; }
       if (carved(x, z) !== null) return false;
       let top = -Infinity, own = false;
       for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);

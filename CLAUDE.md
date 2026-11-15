@@ -153,7 +153,8 @@ felt sick when it jumped), lets a thin column (`eyeShut` answers `"post"`) cross
 coming in, and `tests/unit/follow.test.mjs` bounds how far it may move on its own per frame along four routes. "Inside" is: a column, a
 building within its walls up to its ridge, its platform only up to the floor (so from a porch the eye backs out over
 the edge), any other wall some way above his head, and every roof from the foot of its beams to over its ridge
-(`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes.
+(`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes,
+and `tests/unit/sweeps.test.mjs` does the same round every building on the plan.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
@@ -254,6 +255,12 @@ to `__probe` rather than reaching into the page from a test.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`pnpm run check` guards this).
 - The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `src/ui.css` (linked first thing in `index.html`) says `[hidden]{display:none !important}`.
+- When a visitor says the novice goes through something (穿模) or cannot get down (走不下来): first `pnpm run edges`,
+  which says whether his body goes into anything; if it is clean, it is the eye, so ask `__pick(x, y)` what lies under
+  that point of the picture. For "cannot get down", look for a prop where a hop off a porch would land. Make a unit test
+  fail first: `tests/unit/sweeps.test.mjs` already raycasts from his head to the eye against every building and hops off
+  every porch edge, and `eaves.test.mjs` shows how to pin one place down. Anything new stood near a porch leaves about
+  1.4 m clear in front of its edge.
 - When a shape in a screenshot will not be explained, do not guess at materials: ask `__pick(x, y)` what is there. A pale
   sheet across the gate's roof was chased through tiles, boards, normals and hills for hours; it was a mist sprite
   (`props.js`) hanging in front of the building. Mist sheets stay outside the walls.
