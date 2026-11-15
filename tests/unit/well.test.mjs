@@ -46,3 +46,12 @@ test("the pool is in the niche, inside what keeps him from walking into it", () 
   const [x, , z] = pool;
   assert.ok(site.walk.solids.some((s) => x > s.x0 && x < s.x1 && z > s.z0 && z < s.z1), "nothing keeps him out of the pool at " + JSON.stringify(pool));
 });
+
+test("the well's name board hangs in front of the stone of its arch, where it can be read, not inside it", () => {
+  site.root.updateMatrixWorld(true);
+  const niche = site.root.getObjectByName("well-niche"), board = site.root.getObjectByName("well-board");
+  assert.ok(niche && board, "the niche or its board is missing");
+  const n = new THREE.Box3().setFromObject(niche), b = new THREE.Box3().setFromObject(board);
+  assert.ok(b.min.z > n.max.z, `the board's face is at z ${b.max.z.toFixed(2)}, behind the arch's front at ${n.max.z.toFixed(2)}`);
+  assert.ok(b.min.y > n.min.y + 2.0 && b.max.y <= n.max.y + 0.05, "the board does not hang on the crown of the arch");
+});
