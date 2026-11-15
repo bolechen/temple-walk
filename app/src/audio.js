@@ -110,12 +110,32 @@ export function chime(loud = 1, n = 1) {
   duck(0.55, 2.5);
   for (const [r, a, d] of [[1, 0.16, 3.4], [1.0055, 0.09, 3.0], [2.353, 0.05, 1.6], [3.842, 0.02, 0.8]]) partial(f * r, a * loud, d, t);
 }
+// Whatever must happen when a drop falls in the well during the rite (the rings on the water), told by yard.js.
+let dropped = () => {};
+export function onDrop(fn) { dropped = fn; }
 export function drop() {
+  dropped();
   if (!start()) return; wake();
   const now = ctx.currentTime + 0.01, o = ctx.createOscillator(), g = ctx.createGain();
   o.frequency.setValueAtTime(520, now); o.frequency.exponentialRampToValueAtTime(1150, now + 0.09);
   g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.22, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
   o.connect(g); g.connect(bus.effects.in); o.start(now); o.stop(now + 0.35);
+}
+
+// One drop falling into the dragon well, heard from near by (`level` 0..1, well.js): a short rising plink, darker
+// than the eaves' drips, and the stone niche giving it back twice, fainter and duller each time.
+let niche = null;
+export function wellDrip(level = 1) {
+  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  if (!niche) {
+    const d = ctx.createDelay(1), fb = ctx.createGain(), lp = ctx.createBiquadFilter(), out = ctx.createGain();
+    d.delayTime.value = 0.13; fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1400; out.gain.value = 0.6;
+    d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(out); out.connect(bus.ambience.in); niche = d;
+  }
+  const now = ctx.currentTime + 0.01, f = 430 + Math.random() * 120, o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f * 2.1, now + 0.08);
+  g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.11 * level, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+  o.connect(g); g.connect(bus.ambience.in); g.connect(niche); o.start(now); o.stop(now + 0.25);
 }
 
 // ---- The sound of the place when nothing is happening ----

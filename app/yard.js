@@ -11,7 +11,8 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, startAmbience, listen, setLevels, musicState } from "./src/audio.js";
+import { strike, startAmbience, listen, setLevels, musicState, wellDrip, onDrop } from "./src/audio.js";
+import { createWell } from "./src/well.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
 import { createSettings, browserSettingsStore } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
@@ -123,6 +124,8 @@ const glows = []; let glowCloud = null;
 await loading.step("树影");
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
+// The dragon well's drops and the rings they send across the water (well.js); the rite's drops ring it too.
+const well = createWell(scene, site.places.well.pool, wellDrip); onDrop(() => well.ripple());
 
 await loading.step("石阶");
 const monk = createMonk(); part("monk", () => scene.add(monk.group));
@@ -448,7 +451,7 @@ function frame(now) {
 
   for (const fn of ticks) fn(dt, t);
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
-  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); drift.update(t, camera.position, pxH);
+  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
     const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
   }
@@ -640,6 +643,7 @@ window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) 
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike;
+window.__well = (drip) => { if (drip) { well.ripple(); wellDrip(well.state().level); } return well.state(); };   // a drop now, if asked, and how the well stands
 // The music: what it is doing; `__music(true)` lets the place be heard, as a first tap does.
 window.__music = (begin) => { if (begin) hear(); return musicState(); };
 

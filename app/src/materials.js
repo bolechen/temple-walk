@@ -228,6 +228,14 @@ export function createMaterials() {
       col=mix(vec3(.045,.056,.034),vec3(.1,.11,.062),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=.75+.5*fbm2(vWP.xz*.05+7.);   // dark and damp, never the same for long
       rough_=nr.z; nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*1.6;`, { tex: ["leaves"] }),
     // Rough rubble laid dry: the lining of the well.
+    // Water seeping down the stone of the dragon well's niche: irregular dark wet runs, more of them low down where
+    // the water gathers, and moss at their feet. Laid on as thin sheets over the stone; vUv2 runs across and up.
+    seep: procMat("seep", { roughness: 0.3, envMapIntensity: 0.6 }, `
+      vec2 q=vUv2; float n=fbm2(vec2(q.x*6.+vWP.x+vWP.z,q.y*1.4));
+      float runs=n2(vec2(q.x*8.+vWP.x*3.+vWP.z*3.,0.))+.4*(1.-q.y)+.25*n, edge=smoothstep(0.,.18,q.x)*smoothstep(1.,.82,q.x);
+      if(runs*edge<.62) discard;
+      float moss=smoothstep(.32,0.,q.y+.18*(n-.5));
+      col=mix(vec3(.045,.046,.042),vec3(.06,.085,.04),moss)*(.85+.3*n); rough_=mix(.2,.85,moss);`, { snow: false }),
     rubble: procMat("rubble", { roughness: 0.92, envMapIntensity: 0.25 }, `
       vec3 q=vWP*2.3; vec3 id=floor(q+fbm3(vWP*1.1)*1.4); float t=h31(id);
       vec3 f=fract(q+fbm3(vWP*1.1)*1.4)-.5; float edge=1.-smoothstep(.34,.48,max(abs(f.x),max(abs(f.y),abs(f.z))));
