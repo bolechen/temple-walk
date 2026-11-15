@@ -536,6 +536,9 @@ export function createMonk() {
           tv.set(s * FOOT_X, 0, FOOT_Z + step[i].off * gait);
           let ground = -Infinity;
           for (const pr of PROBES) { tv2.copy(pr).applyAxisAngle(UPV, s * TOE_OUT).add(tv); tv2.y = 0; group.localToWorld(tv2); ground = Math.max(ground, surfaceAt ? surfaceAt(tv2.x, tv2.z) : rootY); }
+          // At the side of a stair the ground under one shoe can be metres below the treads under the other. That shoe
+          // hangs, a tread below the body at most: reaching for it would bring the pelvis down through the stair.
+          if (surfaceAt && grounding.heightAt && bodyHeight !== null) ground = Math.max(ground, bodyHeight - 0.3);
           if (footY[i] !== null && Math.abs(footY[i] - ground) < 0.6 && dt > 0) ground = Math.max(ground, damp(footY[i], ground, 16, dt));   // down a step gently, never through it
           footY[i] = ground;
           group.localToWorld(targets[i].copy(tv)); targets[i].y = ground + ANKLE + step[i].lift * gait * (stairs ? 0.075 : 0.05);

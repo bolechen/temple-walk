@@ -10,11 +10,12 @@
 // platform's edge (`liftAt(dist)`), and `at(dist)`, where the eye stands when it is `dist` behind with that whole rise.
 export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = eyeY + 1.18;
-  // A retaining wall: bare ground (not a stair or a floor he can walk on) standing higher than a step. The eye does not
-  // climb it to look at his feet over the top (that is a rise of several metres, and he drops out of the picture
-  // below it); it stays on his side of it, as it would against any wall.
-  const tall = (px, pz) => walker.onGround?.(px, pz) && walker.landAt(px, pz) - foot > 1.2;
-  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (tall(px, pz) ? true : null);
+  // How far the eye would have to rise to see his feet over the ground at a point (see `need` below), and the most
+  // it may: past that it is not a platform's edge but a terrace wall or a flight of stairs far above him, and an eye
+  // sent up it stands metres over his head and loses him below the frame. Such a point is closed to the eye, as a wall is.
+  const MAXRISE = 1.5;
+  const rise = (px, y, pz) => { const under = walker.landAt(px, pz); return under + 0.35 + Math.max(0, under - foot) * 1.6 - y; };
+  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null);
   // First to his side, only as far as is open: on a porch that side may be a column, the lattice or a roof's edge.
   let s0 = 0;
   for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
@@ -32,13 +33,14 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach })
   // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open just now).
   const base = (dist, sd = s0) => [x + rx * sd - lx * dist, ty - ly * dist, z + rz * sd - lz * dist];
   // Over a platform or a stair higher than his feet it rises to see them over the edge. The rise needed at one spot.
-  const need = (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = tall(cx, cz) ? foot : walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
+  const need = (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
   const liftAt = (dist, sd = s0) => {
     // Looking a little to either side of where the eye stands, so that it is already rising when it comes to the edge
-    // of a platform, not climbing out of the stone after it has crossed into it.
+    // of a platform, not climbing out of the stone after it has crossed into it. Only as far as it can ever stand: ground
+    // beyond a wall that stops it is none of its business.
     const y = base(dist, sd)[1]; let L = 0;
-    for (let s = Math.max(0, dist - 0.5); s <= dist + 1.0 + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
-    return L;
+    for (let s = Math.max(0, dist - 0.5); s <= Math.min(dist + 1.0, Math.max(d, dist)) + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
+    return Math.min(L, MAXRISE);
   };
   const open = (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.

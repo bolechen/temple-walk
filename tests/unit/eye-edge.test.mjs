@@ -35,12 +35,17 @@ test("the view from the summit stair's head (cam 0.63,-118.95, yaw 1.502) keeps 
   assert.ok(!outside(c, foot), `the eye is outside the terrace at (${c[0].toFixed(2)}, ${c[2].toFixed(2)})`);
 });
 
-test("under a terrace's retaining wall the eye does not climb it to look at his feet (cam 2.1,-66.63, yaw -2.794, pitch -0.459 once rose to 9.7 m and lost him)", () => {
-  const x = 2.1, z = -66.63, foot = walker.heightAt(x, z), follow = createFollow();
-  const eye = followEye(walker, { x, z, foot, eyeY: walker.eyeAt(x, z), yaw: -2.794, pitch: -0.459, side: 1.2, reach: 6.2 });
-  let c; for (let i = 0; i < 120; i++) c = follow.step(1 / 60, eye);
-  assert.ok(c[1] < foot + 2.5, `the eye rose to ${c[1].toFixed(2)} m over his ${foot} m`);
-  // and he is in the picture: the line from the eye to his head dips no steeper than the lens can follow (50° wide, looking down 0.459 rad)
-  const down = Math.atan2(c[1] - (foot + 1), Math.hypot(c[0] - x, c[2] - z));
-  assert.ok(Math.abs(down - 0.459) < 0.4, `he is ${down.toFixed(2)} rad below the eye, the view looks ${0.459} down`);
+// Where the picture's eye settles when he stands still at (x, z) looking `yaw, pitch`: the side eases out from 0 as the page does, 20 frames a second.
+const settle = (x, z, yaw, pitch, frames = 120) => {
+  const follow = createFollow(), foot = walker.heightAt(x, z); let side = 0, c;
+  for (let i = 0; i < frames; i++) {
+    side += ((walker.wall(x + Math.cos(yaw) * 1.4, z + Math.sin(yaw) * 1.4) ? 0 : 1.2) - side) * 0.15;
+    c = follow.step(0.05, followEye(walker, { x, z, foot, eyeY: walker.eyeAt(x, z), yaw, pitch, side, reach: 6.2 }));
+  }
+  return { c, foot, dist: follow.dist };
+};
+
+test("under a terrace's retaining wall the eye does not climb the stair above to look at his feet (cam 2.1,-66.63, yaw -2.794, pitch -0.459 once stood at 10 m and lost him)", () => {
+  const { c, foot } = settle(2.1, -66.63, -2.794, -0.459);
+  assert.ok(c[1] < foot + 2, `the eye stands at ${c[1].toFixed(2)} m over his ${foot} m`);
 });

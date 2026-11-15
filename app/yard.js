@@ -164,6 +164,12 @@ const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] }, ZOOM = { min: 0.
 const EYE = 1.3;   // the eye height of a child
 const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.get("show")] || site.start;
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
+// A pose written to two decimals (the dev address does) can fall a hair inside what stops him, such as the cheek beside a
+// stair: he would stand there at the wrong height with the eye in the stone. Put him on the nearest ground he could walk to.
+if (Q.has("cam") && !Q.has("in") && walker.blocked(pos.x, pos.z)) {
+  const x = pos.x, z = pos.z;
+  search: for (let r = 0.005; r <= 0.6; r += 0.005) for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!walker.blocked(nx, nz)) { pos.x = nx; pos.z = nz; break search; } }
+}
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
 const follow = createFollow();
@@ -447,8 +453,9 @@ function frame(now) {
     const eye = followEye(walker, { x: pos.x, z: pos.z, foot: footY, eyeY, yaw, pitch, side: sideNow, reach: reachWant });
     camera.position.fromArray(follow.step(dt, eye));
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
-    // beyond a farther one, so that he does not flicker in and out at the edge of it.
-    monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
+    // beyond a farther one, so that he does not flicker in and out at the edge of it. The eye rides at his head's height,
+    // so closer than a body's width and a half his back fills the lens (at night, a black picture).
+    monkHidden = follow.dist < (monkHidden ? 1.35 : 1.1);
     if (monkHidden && !photo.on) monk.group.visible = false;
   }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");

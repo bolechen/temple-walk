@@ -123,3 +123,16 @@ test("the robe covers the trousers above its hem, standing and through a walking
   assert.ok(through() < 0.002, "standing, the trousers show through the robe");
   for (let i = 0; i < 60; i++) { m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); if (i >= 44 && i % 2 === 0) { const w = through(); assert.ok(w < 0.002, `walking (frame ${i}), the trousers show ${(w * 1000).toFixed(1)} mm through the robe`); } }
 });
+
+test("at the side edge of a stair, where the ground under one shoe is metres lower, his body stays on the treads (it once sank 2 m into them and he vanished: cam 2.1,-66.63)", () => {
+  const m = createMonk(), top = 4.68, low = 2.4;
+  m.group.position.set(0, top, 0);
+  // the flight under x < 0, the paving beside its cheek, 2.3 m lower, under x >= 0: his feet straddle the edge
+  const surface = (x) => (x < 0 ? top : low);
+  for (let i = 0; i < 60; i++) m.update(1 / 20, 0, false, i / 20, surface, { heightAt: () => top, stairs: true });
+  m.group.updateMatrixWorld(true);
+  let lo = Infinity, hi = -Infinity;
+  m.group.traverse((o) => { if (!o.isSkinnedMesh) return; for (let i = 0; i < o.geometry.attributes.position.count; i += 5) { const y = skinnedWorld(o, i).y; lo = Math.min(lo, y); hi = Math.max(hi, y); } });
+  assert.ok(lo > top - 0.45, `his lowest point is ${(top - lo).toFixed(2)} m under the treads`);
+  assert.ok(hi > top + 0.8, `his head is only ${(hi - top).toFixed(2)} m over the treads`);
+});
