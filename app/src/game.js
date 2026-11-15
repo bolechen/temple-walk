@@ -3,6 +3,7 @@
 // on the ground where an observance is made, the button that offers it, how each one unfolds, the seal that
 // answers it, and the page of seals at the end. yard.js lends it the walker, the novice and the clock (`y`).
 import * as THREE from "../v/build/three.module.js";
+import { WORKS } from "./works.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
 import { drawGoshuin, sealStamp } from "./goshuin.js";
 import { chime, drop } from "./audio.js";
@@ -125,9 +126,24 @@ export function createGame(y) {
     if (near) return begin(near);
     if (!look) return;
     const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
+    if (it.work) return showWork(it.work, look);
     $("slipText").textContent = it.title; $("slipFrom").textContent = it.text; $("slipTake").textContent = "看过了"; $("slip").hidden = false; document.exitPointerLock?.();
     $("slipTake").onclick = () => { $("slip").hidden = true; $("slipTake").textContent = "收下"; y.stage(null); seen.add(look); };
   });
+
+  // ---- A work on the wall, read closely: the picture, and beside it what an encyclopedia would say ----
+  function showWork(slug, spot) {
+    const w = WORKS[slug], el = $("piece"); if (!w || !el) return;
+    $("pieceImg").src = new URL(`../g/${slug}.webp`, import.meta.url).href; $("pieceImg").alt = w.title;
+    $("pieceTitle").textContent = w.title; $("pieceBy").textContent = [w.by, w.dates].filter(Boolean).join("　");
+    $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && w.size + " 厘米"], ["收藏", w.holder + (w.rank ? "　" + w.rank : "")]].filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    $("pieceNote").textContent = w.note; $("pieceLink").textContent = w.link; $("pieceCredit").textContent = w.credit;
+    el.hidden = false; document.exitPointerLock?.();
+    const close = () => { el.hidden = true; y.stage(null); seen.add(spot); removeEventListener("keydown", key, true); };
+    const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key.toLowerCase() === "e") { e.preventDefault(); e.stopPropagation(); close(); } };
+    $("pieceClose").onclick = close; setTimeout(() => addEventListener("keydown", key, true), 250);
+  }
+  window.__work = (slug) => (slug ? showWork(slug, null) : { open: !$("piece")?.hidden, title: $("pieceTitle")?.textContent, loaded: !!$("pieceImg")?.naturalWidth });
 
   // ---- The book ----
   let page = null;

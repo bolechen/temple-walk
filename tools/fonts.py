@@ -26,9 +26,10 @@ from fontTools.varLib import instancer
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 ALWAYS = "".join(chr(c) for c in range(0x20, 0x7F)) + "〇一二三四五六七八九十百千年月日时分春夏秋冬晨昼暮夜·，。、；：？！「」《》—…○●"
 
-def used():
+def used(skip=()):
     chars = set(ALWAYS)
     for path in glob.glob(f"{ROOT}/app/*.html") + glob.glob(f"{ROOT}/app/*.js") + glob.glob(f"{ROOT}/app/src/*.js"):
+        if os.path.basename(path) in skip: continue
         chars.update(c for c in open(path, encoding="utf-8").read() if ord(c) > 0x2000 and not 0xE000 <= ord(c) <= 0xF8FF)
     return "".join(sorted(chars))
 
@@ -48,12 +49,13 @@ def cut(font, text, out):
 
 def main():
     src, out = sys.argv[1], f"{ROOT}/app/f"; os.makedirs(out, exist_ok=True); text = used()
-    cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), text, f"{out}/brush.woff2")
+    few = used(skip=("works.js",))   # the encyclopedia notes are set in the kai and the serif only
+    cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), few, f"{out}/brush.woff2")
     cut(TTFont(f"{src}/lxgwwenkai_LXGWWenKai-Regular.ttf"), text, f"{out}/kai.woff2")
-    cut(TTFont(f"{src}/zhimangxing_ZhiMangXing-Regular.ttf"), text, f"{out}/xing.woff2")
+    cut(TTFont(f"{src}/zhimangxing_ZhiMangXing-Regular.ttf"), few, f"{out}/xing.woff2")
     cut(TTFont(f"{src}/yujiboku_YujiBoku-Regular.ttf"), boards(), f"{out}/bang.woff2"); print("boards:", boards())
     for name, w in (("serif", 400), ("seal", 900)):
-        cut(instancer.instantiateVariableFont(TTFont(f"{src}/notoserifsc_NotoSerifSC[wght].ttf"), {"wght": w}), text, f"{out}/{name}.woff2")
+        cut(instancer.instantiateVariableFont(TTFont(f"{src}/notoserifsc_NotoSerifSC[wght].ttf"), {"wght": w}), text if name == "serif" else few, f"{out}/{name}.woff2")
     open(f"{out}/chars.txt", "w", encoding="utf-8").write(text)
     shutil.copy(f"{src}/notoserifsc_OFL.txt", f"{out}/OFL.txt")
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Ma Shan Zheng ----\n\n" + open(f"{src}/mashanzheng_OFL.txt").read())

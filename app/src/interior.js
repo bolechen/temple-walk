@@ -7,12 +7,13 @@
 // into one at its hall's door.
 import * as THREE from "../v/build/three.module.js";
 import { paintLeaf } from "./leaves.js";
+import { WORKS, HANG } from "./works.js";
 import { GLTFLoader } from "../v/jsm/loaders/GLTFLoader.js";
 import { box, merge, mesh, footAt } from "./geo.js";
 
 const FLOOR = -60;
 // What each kind of hall is like inside: width, depth, height, and how it is furnished.
-const KINDS = {
+export const KINDS = {
   buddha:    { w: 26.4, d: 16.8, h: 7.6, cols: [-9, -4.5, 4.5, 9] },
   figure:    { w: 15, d: 11, h: 5.6, cols: [-4.5, 4.5] },
   chan:      { w: 17, d: 9, h: 4.8, cols: [] },
@@ -23,6 +24,8 @@ const KINDS = {
 };
 // What hangs in a frame, by its id ("main-w1" is the first frame on the great hall's west wall). `title` and `text`
 // are shown when a visitor stands before it; `image` (a URL) replaces the blank paper. The story will be written here.
+// Beside the leaves hang real works (works.js, written by tools/gallery.py): things that survive from the temple this
+// place is drawn from, each shown with its encyclopedia note and the museum's source line.
 // The first leaf in each hall: eight short notes a visitor reads on the way up, written for this imagined temple out
 // of what is told of such mountain monasteries (docs/JINGSHAN.md). They stand in for the artworks the story will
 // hang here later; each has a small ink painting drawn for it (`paint`, see leaves.js); give a frame an `image` and it shows that instead.
@@ -37,6 +40,35 @@ export const GALLERY = {
   "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
 };
 const BLANK = { title: "空着的画框", text: "这里以后会挂上一件东西，讲这座寺的一段事。" };
+
+// A real work, mounted as a scroll is: the picture on a sheet of pale paper, a hair-line round it, and under it the
+// name and the maker in the kai hand. The picture is fetched only when the hall it hangs in is first entered.
+const KAI = '"Yunjing Kai", "STKaiti", "KaiTi", serif';
+function mount(slug) {
+  const w = WORKS[slug], c = document.createElement("canvas"); c.width = 768; c.height = 1126; const x = c.getContext("2d");
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const sheet = () => {
+    const g = x.createLinearGradient(0, 0, 768, 1126); g.addColorStop(0, "#e6dfce"); g.addColorStop(1, "#d6cdb8"); x.fillStyle = g; x.fillRect(0, 0, 768, 1126);
+    let s = 11; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 1500; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? "110,95,70" : "255,255,250"},${0.03 + rnd() * 0.05})`; x.fillRect(rnd() * 768, rnd() * 1126, 1 + rnd() * 6, 1); }
+    return rnd;
+  };
+  sheet();   // bare paper until the picture has come
+  const im = new Image();
+  im.onload = () => {
+    sheet();
+    const bw = 668, bh = 876, k = Math.min(bw / im.width, bh / im.height), iw = im.width * k, ih = im.height * k, ix = (768 - iw) / 2, iy = 56 + (bh - ih) / 2;
+    x.shadowColor = "rgba(40,30,20,.3)"; x.shadowBlur = 14; x.shadowOffsetY = 5; x.drawImage(im, ix, iy, iw, ih); x.shadowColor = "transparent";
+    x.strokeStyle = "rgba(40,32,24,.55)"; x.lineWidth = 2; x.strokeRect(ix - 1, iy - 1, iw + 2, ih + 2);
+    x.fillStyle = "rgba(28,24,20,.92)"; x.textAlign = "center"; x.textBaseline = "middle";
+    let fs = 40; x.font = `${fs}px ${KAI}`; while (fs > 24 && x.measureText(w.title).width > 690) x.font = `${--fs}px ${KAI}`;
+    x.fillText(w.title, 384, 996); x.fillStyle = "rgba(70,62,52,.9)"; x.font = `26px ${KAI}`; x.fillText(`${w.by}　${w.period}`.slice(0, 26), 384, 1050);
+    x.strokeStyle = "rgba(60,50,40,.3)"; x.lineWidth = 3; x.strokeRect(22, 22, 724, 1082);
+    tex.needsUpdate = true;
+  };
+  im.src = new URL(`../g/${slug}.webp`, import.meta.url).href;
+  return tex;
+}
 
 const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
 let sheetTex = null;
@@ -144,17 +176,21 @@ function buildRoom(M, hall, ox, figures) {
   add(box(3.0, 0.12, 0.5, 0, Y + 0.06, zs + 0.15), M.stone, () => 0.7);
   lightAt.push([0, 3.0, K.d / 2 - 1.6, 0xcfdcec, 14, 20]);
   // The frames along the side walls: a timber border round a sheet of paper, hung a little above a child's eye.
-  const frames = [], spots = {}, fw = 1.5, fh = 2.2, n = Math.max(1, Math.floor((K.d - 2.4) / 3.1)), fy = Y + Math.min(2.35, K.h / 2);
+  const frames = [], spots = {}, hangs = [], fw = 1.5, fh = 2.2, n = Math.max(1, Math.floor((K.d - 2.4) / 3.1)), fy = Y + Math.min(2.35, K.h / 2);
   for (const west of [true, false]) for (let k = 0; k < n; k++) {
-    const id = `${hall.id}-${west ? "w" : "e"}${k + 1}`, z = (n - 1) * 1.55 - k * 3.1 + 0.4, x = (west ? -1 : 1) * (wx - 0.08), it = GALLERY[id] || BLANK;
+    // The first frame on the west wall keeps its leaf; the works go round from the first on the east: e1, w2, e2, w3 ...
+    const order = west ? 2 * k - 1 : 2 * k, slug = order >= 0 ? (HANG[hall.id] || [])[order] : null, work = slug && WORKS[slug];
+    const id = `${hall.id}-${west ? "w" : "e"}${k + 1}`, z = (n - 1) * 1.55 - k * 3.1 + 0.4, x = (west ? -1 : 1) * (wx - 0.08), it = work ? { work: slug, title: work.title, text: work.note } : GALLERY[id] || BLANK;
     frames.push(box(0.08, fh + 0.24, 0.1, x, fy, z - fw / 2 - 0.07), box(0.08, fh + 0.24, 0.1, x, fy, z + fw / 2 + 0.07), box(0.08, 0.1, fw + 0.24, x, fy + fh / 2 + 0.07, z), box(0.08, 0.1, fw + 0.24, x, fy - fh / 2 - 0.07, z));
     const sheet = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh).rotateY(west ? Math.PI / 2 : -Math.PI / 2).translate(ox + x + (west ? 0.03 : -0.03), fy, z), new THREE.MeshStandardMaterial({ map: it.paint ? paintLeaf(it) : paper(), roughness: 0.95, envMapIntensity: 0.1 }));
     if (it.image) new THREE.TextureLoader().load(it.image, (t) => { t.colorSpace = THREE.SRGBColorSpace; sheet.material.map = t; sheet.material.needsUpdate = true; });
+    if (work) hangs.push(() => { sheet.material = sheet.material.clone(); sheet.material.map = mount(slug); });
     g.add(sheet); spots[id] = { at: [ox + x + (west ? 1.7 : -1.7), z], face: west ? -Math.PI / 2 : Math.PI / 2, r: 1.3, item: { id, ...it }, room: hall.id };
   }
   add(merge(frames), M.woodZ);
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
-  return { group: g, room: { ...R, solids }, lights, flames, spots, places, outlook: out };
+  // `hang()`: fetch and mount this hall's works, the first time someone comes in.
+  return { group: g, room: { ...R, solids }, lights, flames, spots, places, outlook: out, hang() { hangs.splice(0).forEach((f) => f()); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.

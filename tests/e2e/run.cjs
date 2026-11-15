@@ -104,6 +104,14 @@ const scenarios = {
       if (h === halls[0]) {
         await t.page.evaluate((x) => window.__pose(x, 0, Math.PI, 0.05), s.x); await t.frames(3);
         const p = await t.page.evaluate(() => window.__probe()); expect(p.lum > 25 && p.lum < 170, `${h.name}: looking out through the door the picture is washed out or black: mean ${p.lum.toFixed(1)}`);
+        // A real work hangs beside the leaf; read closely it shows its picture, its entry and where it comes from.
+        const hung = await t.page.evaluate((id) => Object.entries(window.__gallery).filter(([k, v]) => v.room === id && v.item.work).map(([, v]) => v.item.work), h.id);
+        expect(hung.length >= 1, `${h.name}: no real work on the walls`);
+        await t.page.evaluate((slug) => window.__work(slug), hung[0]); await t.until(async () => { const w = await t.page.evaluate(() => window.__work()); return w.open && w.loaded && w.title; }, 60000, "the work's card never showed its picture");
+        const card = await t.page.evaluate(() => ({ note: document.getElementById("pieceNote").textContent.length, credit: document.getElementById("pieceCredit").textContent }));
+        expect(card.note > 100 && /ColBase|Metropolitan/.test(card.credit), "the card lacks its note or its source line: " + JSON.stringify(card));
+        await t.page.waitForTimeout(400); await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.evaluate(() => window.__work())).open, 20000, "Esc did not put the work's card away");
+        expect((await t.page.evaluate(() => window.__menu ? document.getElementById("menu").hidden : true)), "Esc on the card also opened the pause menu");
       }
       const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
       const spot = await t.page.evaluate((id) => Object.entries(window.__gallery).find(([k]) => k.startsWith(id + "-"))[1].at, h.id);

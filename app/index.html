@@ -122,6 +122,20 @@
   #book a.chip { text-decoration: none; display: inline-grid; place-items: center; }
   #bookReset { opacity: .6; }
   #slip { grid-template-rows: 1fr auto; place-items: center; }
+  /* A work read closely: the picture large on the left, its encyclopedia entry on a sheet of paper to the right. */
+  #piece { position: absolute; inset: 0; z-index: 36; background: rgba(8,8,7,.94); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); gap: clamp(14px, 3vw, 44px); align-items: center; padding: calc(20px + env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 56px) calc(20px + env(safe-area-inset-bottom, 0px)); }
+  #piece figure { margin: 0; height: 100%; min-height: 0; display: grid; place-items: center; }
+  #piece img { max-width: 100%; max-height: calc(100vh - 56px); object-fit: contain; box-shadow: 0 12px 50px rgba(0,0,0,.7); background: #d9d0bc; }
+  #piece article { max-height: 100%; overflow: auto; background: linear-gradient(#f3eee2, #e8e0cf); color: #1d1a17; padding: clamp(18px, 2.6vw, 34px); border-radius: 1px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+  #pieceTitle { margin: 0; font: 400 clamp(22px, 2.6vw, 32px)/1.35 var(--kai); letter-spacing: .06em; }
+  #pieceBy { margin: 6px 0 0; font: 400 15px/1.6 var(--kai); letter-spacing: .12em; color: #5d564b; }
+  #pieceFacts { margin: 16px 0 0; padding: 12px 0; border-top: 1px solid rgba(60,50,40,.25); border-bottom: 1px solid rgba(60,50,40,.25); display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font: 400 14px/1.7 var(--serif); }
+  #pieceFacts dt { color: #8a2a1e; letter-spacing: .2em; font-family: var(--kai); } #pieceFacts dd { margin: 0; }
+  #pieceNote { margin: 16px 0 0; font: 400 clamp(15px, 1.25vw, 17px)/1.95 var(--serif); text-align: justify; }
+  #pieceLink { margin: 12px 0 0; padding-left: 12px; border-left: 2px solid #8a2a1e; font: 400 14px/1.8 var(--kai); color: #4a443b; }
+  #pieceCredit { margin: 14px 0 0; font: 400 11px/1.6 var(--serif); color: #7a7266; word-break: break-all; }
+  #piece .ink-btn { margin-top: 18px; color: #1d1a17; border-color: rgba(29,26,23,.5); background: transparent; }
+  @media (max-width: 760px), (orientation: portrait) { #piece { grid-template-columns: 1fr; grid-template-rows: minmax(0, 42vh) minmax(0, 1fr); align-items: stretch; } #piece img { max-height: 42vh; } }
   #slip .paper { writing-mode: vertical-rl; background: linear-gradient(#f3eee2, #e8e0cf); color: #1d1a17; padding: 34px 26px; min-height: min(62vh, 520px); max-height: 70vh; box-shadow: 0 10px 40px rgba(0,0,0,.6); border-radius: 1px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
   #slipText { margin: 0; font: 400 clamp(30px, 5.2vmin, 44px)/1.45 var(--xing); letter-spacing: .1em; }
   #slipFrom { margin: 0; font: 400 14px/1.6 var(--kai); letter-spacing: .2em; color: #6b6458; align-self: flex-end; }
@@ -238,6 +252,15 @@
   <img id="bookImg" alt="朱印帐：寺名、日期和已得的印">
   <p id="bookHint"></p>
   <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+</div>
+<div id="piece" hidden>
+  <figure><img id="pieceImg" alt=""></figure>
+  <article>
+    <h2 id="pieceTitle"></h2><p id="pieceBy"></p>
+    <dl id="pieceFacts"></dl>
+    <p id="pieceNote"></p><p id="pieceLink"></p><p id="pieceCredit"></p>
+    <button class="ink-btn" id="pieceClose" type="button">看过了</button>
+  </article>
 </div>
 <div id="slip" hidden>
   <div class="paper"><p id="slipText"></p><p id="slipFrom"></p></div>
