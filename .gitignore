@@ -11,4 +11,3 @@ __pycache__/
 # What pnpm install fetches or copies (tools/setup.mjs): not kept in git
 node_modules/
 app/vendor/
-app/levels/*/models/

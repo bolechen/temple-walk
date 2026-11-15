@@ -48,10 +48,10 @@
 
 ## 运行
 
-应用没有构建步骤，页面是原生 ES 模块。**Three.js r186 和殿内佛像模型不放在 Git 里**，由 pnpm 取回：需要 Node.js 22+ 和 pnpm 10，先在仓库根目录执行一次
+应用没有构建步骤，页面是原生 ES 模块。**Three.js r186 不放在 Git 里**，由 pnpm 取回：需要 Node.js 22+ 和 pnpm 10，先在仓库根目录执行一次
 
 ```sh
-pnpm install   # 装依赖，并运行 tools/setup.mjs：把 three.js 用到的文件拷进 app/vendor/three/，把佛像与莲座取到 app/levels/t00/models/
+pnpm install   # 装依赖，并运行 tools/setup.mjs：把 three.js 用到的文件拷进 app/vendor/three/，并校验 app/levels/t00/models/ 里的佛像文件
 ```
 
 之后只需要支持 WebGL2 的现代浏览器及一个静态服务器。
@@ -156,7 +156,7 @@ node tools/shots.js court@autumn-dusk@third
 许可须按资产分别处理：
 
 - **项目代码**：根目录尚无项目 LICENSE，许可待维护者明确；不要因仓库 public 就推定已有统一开源许可。
-- **佛像模型**：不在本仓库里。`pnpm install` 时由 `tools/setup.mjs` 从如是我闻 `/zen` 场景的 CDN 取回原始文件（约 3.9 MB，带校验和）到 `app/levels/t00/models/`；该目录被 Git 忽略。模型仍随 GitHub Pages 发布，授权依据仍需所有者确认或替换，不能将原站可下载视作授权。旧提交的 Git 历史里仍有转换过的副本。
+- **佛像模型**：`app/levels/t00/models/`，约 3.9 MB，是如是我闻 `/zen` 场景 CDN 上发布的原始文件（`tools/setup.mjs` 里记着地址和校验和）。它们仍留在 Git 里，因为那个 CDN 拒绝 GitHub 的构建机（403），发布不能依赖现取。授权依据仍需所有者确认或替换，不能将原站可下载视作授权。
 - **扫描贴图**：来源与生成方式见 [tools/textures.py](tools/textures.py)，当前记录为 Poly Haven CC0。
 - **字体**：本地子集、来源及相关许可见 [tools/fonts.py](tools/fonts.py) 和 [app/shared/fonts/OFL.txt](app/shared/fonts/OFL.txt)。
 - **Three.js 与扩展**：由 pnpm 管理（`three@0.186.0`，MIT），安装时拷到 `app/vendor/three/`（Git 忽略），其 LICENSE 一并拷入。
@@ -176,7 +176,7 @@ node tools/shots.js court@autumn-dusk@third
 | `app/src/sky.js`、`mood.js`、`props.js`、`post.js`、`drift.js` | 天光、季节时辰、器物、后期和飘落物 |
 | `app/src/monk.js`、`journey.js`、`game.js`、`hints.js` | 沙弥、朱印、交互与情境提示 |
 | `app/src/card.js`、`goshuin.js`、`plaque.js`、`audio.js` | 分享卡片、印章、匾额与合成声音 |
-| `app/levels/t00/` | 序章这一关自己的资源：`textures/` 扫描贴图、`gallery/` 殿内真迹图片、`boards/` 匾额取字、`models/` 佛像（不入库，安装时取回） |
+| `app/levels/t00/` | 序章这一关自己的资源：`textures/` 扫描贴图、`gallery/` 殿内真迹图片、`boards/` 匾额取字、`models/` 佛像 |
 | `app/shared/fonts/` | 各关共用的字体子集 |
 | `app/vendor/three/` | three.js（不入库，由 pnpm 安装后拷入） |
 | `package.json`、`pnpm-lock.yaml`、`tools/setup.mjs` | 依赖与安装后的准备步骤 |

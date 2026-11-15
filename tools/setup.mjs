@@ -6,9 +6,10 @@
 //
 // 1. three.js. The page is plain ES modules with no bundler, so the files it imports are copied out of the installed
 //    package into app/vendor/three/, with `from "three"` turned into the relative path a browser can follow.
-// 2. The statue and its pedestal for the halls of level T00, fetched from the product they belong to
-//    (如是我闻 /zen) into app/levels/t00/models/ and checked against the hashes below. They are the owner's own
-//    assets on the owner's own CDN; they are not redistributed through this repository.
+// 2. The statue and its pedestal for the halls of level T00 (app/levels/t00/models/). These ARE kept in git, as
+//    published (meshopt and Basis packed, 3.9 MB): the CDN they come from (如是我闻 /zen) turns GitHub's runners
+//    away with a 403, so a publication cannot depend on fetching them. Here they are only checked against the
+//    hashes below, and fetched if someone has removed them.
 import fs from "node:fs"; import { execFileSync } from "node:child_process"; import path from "node:path"; import crypto from "node:crypto"; import { createRequire } from "node:module"; import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), ".."), FORCE = process.argv.includes("--force");

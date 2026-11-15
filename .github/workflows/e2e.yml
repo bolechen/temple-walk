@@ -34,11 +34,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Remember the statues between runs
-        uses: actions/cache@v4
-        with:
-          path: app/levels/t00/models
-          key: models-${{ hashFiles('tools/setup.mjs') }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check && pnpm test
       - name: Remember the browser between runs

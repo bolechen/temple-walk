@@ -17,7 +17,7 @@ Four outside projects are documented as references:
 - **《小王子：星辰之旅》** (<https://littleprince.dev>) is the reference for taste: a quiet, painterly place worth lingering in, with a memorable visual identity rather than technical spectacle. It is a Unity WebGPU desktop game, not a three.js page; `docs/LITTLEPRINCE-TEARDOWN.md` records what its shipped files show and which of its engineering habits are worth copying here.
 - **Saltline** (Felix Rieseberg's generated dock-shooter) is the rendering benchmark. `docs/SALTLINE-TEARDOWN.md` explains its pipeline and ends with the intended order of rendering work here: baked textures, an independent backdrop module, then volumetric fog and light before soft shadows. Its gap table is a snapshot from when the project had a single courtyard; the lines about the module split, blank plaques and missing audio are now stale, so read the conclusions rather than the table as current state.
 - **Watercolour** (<https://patch.gg/blendi/watercolour>, by @blendi) is the reference for painterly materials, instanced brush marks and deterministic capture. `docs/WATERCOLOUR-TEARDOWN.md` records its paint-arrival map, depth-aware paper pass and what should not be carried into a solemn temple. It is a technical reference, not an approved visual direction.
-- **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/levels/t00/models/` (`static.rushiwowen.co/models/zen-v2/`). They are not kept in git: `pnpm install` fetches the two published files, about 3.9 MB, with a checksum (`tools/setup.mjs`), and the page opens them with three's meshopt and Basis decoders. No redistribution licence for these models is recorded, so they must still be confirmed or replaced (README, `docs/t00/asset-register.csv`).
+- **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/levels/t00/models/` (`static.rushiwowen.co/models/zen-v2/`). They are kept in git as published (about 3.9 MB, meshopt and Basis packed; `tools/setup.mjs` records where they come from and checks their hashes) because that CDN refuses GitHub's runners, so a publication cannot fetch them; the page opens them with three's meshopt and Basis decoders. No redistribution licence for these models is recorded, so they must still be confirmed or replaced (README, `docs/t00/asset-register.csv`).
 
 **Art direction.** `docs/ART-SPEC.md` records the art specification the owner pointed to (the project's research atlas, where this temple is entry T00: "quiet realism, light that comes from somewhere", a working palette, material rules, an acceptance list) and where the scene stands against each rule. Check a visual change against it.
 
@@ -27,19 +27,19 @@ Four outside projects are documented as references:
 
 ## Commands
 
-No build step: the page is plain ES modules. But two things it needs are not kept in git and come with the install:
+No build step: the page is plain ES modules. But three.js is not kept in git and comes with the install:
 
 ```sh
-pnpm install                        # dependencies, then tools/setup.mjs: three.js copied to app/vendor/three/, the statues fetched to app/levels/t00/models/
+pnpm install                        # dependencies, then tools/setup.mjs: three.js copied to app/vendor/three/, the statues' hashes checked
 pnpm run serve                      # = python3 -m http.server 8000 --bind 127.0.0.1 --directory app (this machine only)
 ```
 
 **Where things live.** `app/src/` is the code. What belongs to a level sits under `app/levels/<level>/`: for the
 prologue, `app/levels/t00/textures/` (scanned surfaces), `gallery/` (the real works in the halls), `boards/` (hands cut
-for name boards), `models/` (the statues; ignored by git, fetched by the setup). What every level shares is in
+for name boards), `models/` (the statues). What every level shares is in
 `app/shared/` (the typefaces). `app/vendor/` is what the install copies out of `node_modules` and is ignored by git.
-A resource that can be had again from where it came from (a library, a model on a CDN) is fetched by
-`tools/setup.mjs`, with a checksum, rather than committed; one that was worked on here (a packed texture, a cut
+A resource that can be had again from where it came from, by the machines that publish the site as well as by a
+person (a library from the registry), is fetched by `tools/setup.mjs` rather than committed; one that was worked on here (a packed texture, a cut
 typeface, a cropped picture) is committed with the tool that made it. The page's documents live in `docs/<level>/`.
 
 `package.json` names the commands and two dependencies: `three` and, for the tests, `playwright` (pinned to the

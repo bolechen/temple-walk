@@ -1,12 +1,12 @@
 # T00 云径禅寺 · 启动说明
 
-《山门之外》序章。浏览器里的 three.js r186 场景，没有构建步骤。three.js 和佛像模型不在 Git 里，由 `pnpm install` 取回。
+《山门之外》序章。浏览器里的 three.js r186 场景，没有构建步骤。three.js 不在 Git 里，由 `pnpm install` 取回。
 
 ## 启动
 
 ```sh
 git clone <本仓库> && cd temple-walk
-pnpm install             # 依赖；并把 three.js 拷进 app/vendor/three/、把佛像取到 app/levels/t00/models/
+pnpm install             # 依赖；并把 three.js 拷进 app/vendor/three/
 pnpm run serve           # 等于 python3 -m http.server 8000 --bind 127.0.0.1 --directory app
 ```
 

@@ -48,12 +48,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Remember the statues between runs
-        uses: actions/cache@v4
-        with:
-          path: app/levels/t00/models
-          key: models-${{ hashFiles('tools/setup.mjs') }}
-      - name: Install, copy three.js into the page, fetch the statues
+      - name: Install and copy three.js into the page
         run: pnpm install --frozen-lockfile
       - name: Every script parses
         run: pnpm run check
