@@ -12,6 +12,7 @@
     "verify": "pnpm run check && pnpm test && pnpm run e2e:smoke",
     "shots": "node tools/shots.js",
     "portrait": "node tools/portrait.js",
+    "music": "node tools/music.mjs",
     "serve": "python3 -m http.server 8000 --bind 127.0.0.1 --directory app",
     "setup": "node tools/setup.mjs",
     "postinstall": "node tools/setup.mjs",
