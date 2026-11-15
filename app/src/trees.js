@@ -171,7 +171,10 @@ function bed(x, y, z, r, seed) {
 
 // `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
 export function createTrees(scene, M, spots, opts = {}) {
-  const rnd = seeded(311), wood = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
+  // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
+  // lent to another stream for a moment without disturbing it.
+  let draw = seeded(311); const rnd = () => draw();
+  const wood = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), V = (x, y, z) => new THREE.Vector3(x, y, z);
   // One flat spray at `p`, lit as part of the crown round `centre`; `shade` darkens those deep inside.
   const card = (list, g, p, centre, shade, squash = 0.75, lift = 0.35) => {
@@ -202,10 +205,11 @@ export function createTrees(scene, M, spots, opts = {}) {
   for (const [x, y, z, kind, h, far0] of spots) {
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
-      // A young one is the same tree drawn smaller: its boughs are as long as its height allows, not an old tree's.
+      // A young one is the same tree drawn smaller, its boughs only as long as its height allows, and it is not yet
+      // bare below: see the end of this block.
       const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t), size = Math.min(1, h / 18);
       grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, far0 ? 0.4 : 0); root(x, y, z, r0, far0);
-      for (let by = h * 0.36; by < h * 0.985; by += far0 ? 0.85 : 0.4) {   // a tree seen only from afar is grown with half the boughs, each a little larger
+      const whorl = (by) => {   // one tier of boughs round the shaft at `by` above the ground
         const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
           if (rnd() < 0.14) continue;   // a gap where a bough was lost
@@ -218,8 +222,16 @@ export function createTrees(scene, M, spots, opts = {}) {
           // and a curtain hanging from it, so the tree has depth from every side
           if (k % 2 === 0 && !far0) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const cw = Math.min(l * 0.75, (by - 0.4) / 0.9); card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), c.clone().addScaledVector(far, l * 0.36), c.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
         }
-      }
+      };
+      for (let by = h * 0.36; by < h * 0.985; by += far0 ? 0.85 : 0.4) whorl(by);   // a tree seen only from afar is grown with half the boughs, each a little larger
       q.setFromEuler(e.set(0, rnd() * 3, 0)); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5, 2.3).translate(0, -0.6, 0), axis(1).add(V(0, 0.9, 0)), axis(0.9), 0.95, 0.4, 0.5); }
+      // A young tree is clothed nearly to the ground, the lowest boughs short where the paving stops them. They are
+      // grown from a chance of their own, so that every tree after this one keeps the shape it had.
+      if (size < 1) {
+        const wood0 = draw; draw = seeded(Math.abs(Math.round(x * 131 + z * 17)) + 7);
+        for (let by = h * 0.36 - 0.4; by >= Math.max(0.9, h * 0.36 * size); by -= 0.4) whorl(by);
+        draw = wood0;
+      }
       continue;
     }
     const tall = kind === "ginkgo", top = y + h, centre = V(x, y + h * (tall ? 0.62 : 0.7), z), r0 = 0.09 + h * 0.019;

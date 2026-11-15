@@ -36,3 +36,9 @@ test("a young cedar is narrower than it is tall", () => {
     assert.ok(reach * 2 < c[4], `the ${c[4]} m cedar at ${c[0]}, ${c[2]} spreads ${(reach * 2).toFixed(1)} m across`);
   }
 });
+test("a young cedar is clothed nearly to the ground, not bare below like an old one", () => {
+  for (const { tree: c, corners } of grown.filter((g) => g.tree[4] < 10)) {
+    const low = Math.min(...corners.map((k) => k.y));
+    assert.ok(low < 1.0, `the ${c[4]} m cedar at ${c[0]}, ${c[2]} is bare to ${low.toFixed(2)} m`);
+  }
+});
