@@ -204,7 +204,7 @@ export function buildInteriors(M, halls, renderer) {
     try {
       // The statue and its pedestal are not kept in git: `pnpm install` fetches them as they are published (tools/setup.mjs),
       // packed with meshopt and with Basis textures, which are opened here by the decoders that come with three.js.
-      const base = new URL("../levels/t00/models/", import.meta.url).href, loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+      const base = new URL("../shared/models/", import.meta.url).href, loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
       if (renderer) loader.setKTX2Loader(new KTX2Loader().setTranscoderPath(new URL("../vendor/three/jsm/libs/basis/", import.meta.url).href).detectSupport(renderer));
       const get = async (name) => (await loader.loadAsync(base + name)).scene;
       const [buddha, ped] = await Promise.all([get("buddha.glb"), get("pedestal.glb")]);

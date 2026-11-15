@@ -2,12 +2,12 @@
 """Pack the scanned surfaces the temple is dressed in.
 
 Source: Poly Haven (https://polyhaven.com), all CC0. For each surface this reads the 1k Diffuse, nor_gl and Rough
-JPEGs (fetch them first: see FETCH below) and writes two files into app/levels/t00/textures/:
+JPEGs (fetch them first: see FETCH below) and writes two files into app/shared/textures/:
 
     <name>_a.webp   colour (sRGB)
     <name>_n.jpg    red, green = the normal's x and y (OpenGL convention); blue = roughness. No chroma subsampling.
 
-and app/levels/t00/textures/index.js with each surface's mean colour in linear light, which the shaders divide by so that a material's
+and app/shared/textures/index.js with each surface's mean colour in linear light, which the shaders divide by so that a material's
 own colour stays in charge and the scan only supplies the detail.
 
     python3 tools/textures.py <dir with the downloaded jpgs> [size]
@@ -32,7 +32,7 @@ SURFACES = {
 
 def main():
     src = sys.argv[1]; size = int(sys.argv[2]) if len(sys.argv) > 2 else 1024
-    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app", "levels", "t00", "textures"); os.makedirs(out, exist_ok=True)
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app", "shared", "textures"); os.makedirs(out, exist_ok=True)
     index = {}
     for name, slug in SURFACES.items():
         a = Image.open(f"{src}/{slug}.Diffuse.jpg").convert("RGB").resize((size, size), Image.LANCZOS)
@@ -51,7 +51,7 @@ def main():
         f.write("// mean: the scan's average colour in linear light; rough: its average roughness.\n")
         f.write("export const SURFACES = " + json.dumps(index, indent=1) + ";\n")
     total = sum(os.path.getsize(os.path.join(out, f)) for f in os.listdir(out))
-    print(f"{len(index)} surfaces, {total // 1024} KB in app/levels/t00/textures/")
+    print(f"{len(index)} surfaces, {total // 1024} KB in app/shared/textures/")
 
 if __name__ == "__main__":
     main()

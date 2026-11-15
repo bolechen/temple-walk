@@ -1,20 +1,20 @@
 asset_id,file,type,source,author_or_origin,license,modified,used_for,status
-TEX-wood,app/levels/t00/textures/wood_a.webp + wood_n.jpg,scanned PBR texture,polyhaven.com/a/fine_grained_wood,Poly Haven,CC0,"resized to 1k, colour as webp, normal xy + roughness packed in one jpg (tools/textures.py)",timber: columns beams doors,shipped
-TEX-stone,app/levels/t00/textures/stone_a.webp + stone_n.jpg,scanned PBR texture,polyhaven.com/a/brushed_concrete_2,Poly Haven,CC0,same,paving and platform tops,shipped
-TEX-blocks,app/levels/t00/textures/blocks_a.webp + blocks_n.jpg,scanned PBR texture,polyhaven.com/a/medieval_blocks_03,Poly Haven,CC0,same,retaining walls and platform sides,shipped
-TEX-plaster,app/levels/t00/textures/plaster_a.webp + plaster_n.jpg,scanned PBR texture,polyhaven.com/a/worn_mossy_plasterwall,Poly Haven,CC0,same,lime-washed walls,shipped
-TEX-bark,app/levels/t00/textures/bark_a.webp + bark_n.jpg,scanned PBR texture,polyhaven.com/a/japanese_cedar_bark,Poly Haven,CC0,same,tree trunks,shipped
-TEX-leaves,app/levels/t00/textures/leaves_a.webp + leaves_n.jpg,scanned PBR texture,polyhaven.com/a/forest_leaves_03,Poly Haven,CC0,same,grove floor,shipped
-TEX-snow,app/levels/t00/textures/snow_a.webp + snow_n.jpg,scanned PBR texture,polyhaven.com/a/snow_02,Poly Haven,CC0,same,winter snow cover,shipped
-TEX-weave,app/levels/t00/textures/weave_a.webp + weave_n.jpg,scanned PBR texture,polyhaven.com/a/hessian_230,Poly Haven,CC0,same,mats and cushions,shipped
+TEX-wood,app/shared/textures/wood_a.webp + wood_n.jpg,scanned PBR texture,polyhaven.com/a/fine_grained_wood,Poly Haven,CC0,"resized to 1k, colour as webp, normal xy + roughness packed in one jpg (tools/textures.py)",timber: columns beams doors,shipped
+TEX-stone,app/shared/textures/stone_a.webp + stone_n.jpg,scanned PBR texture,polyhaven.com/a/brushed_concrete_2,Poly Haven,CC0,same,paving and platform tops,shipped
+TEX-blocks,app/shared/textures/blocks_a.webp + blocks_n.jpg,scanned PBR texture,polyhaven.com/a/medieval_blocks_03,Poly Haven,CC0,same,retaining walls and platform sides,shipped
+TEX-plaster,app/shared/textures/plaster_a.webp + plaster_n.jpg,scanned PBR texture,polyhaven.com/a/worn_mossy_plasterwall,Poly Haven,CC0,same,lime-washed walls,shipped
+TEX-bark,app/shared/textures/bark_a.webp + bark_n.jpg,scanned PBR texture,polyhaven.com/a/japanese_cedar_bark,Poly Haven,CC0,same,tree trunks,shipped
+TEX-leaves,app/shared/textures/leaves_a.webp + leaves_n.jpg,scanned PBR texture,polyhaven.com/a/forest_leaves_03,Poly Haven,CC0,same,grove floor,shipped
+TEX-snow,app/shared/textures/snow_a.webp + snow_n.jpg,scanned PBR texture,polyhaven.com/a/snow_02,Poly Haven,CC0,same,winter snow cover,shipped
+TEX-weave,app/shared/textures/weave_a.webp + weave_n.jpg,scanned PBR texture,polyhaven.com/a/hessian_230,Poly Haven,CC0,same,mats and cushions,shipped
 FONT-brush,app/shared/fonts/brush.woff2,typeface,github.com/google/fonts (Ma Shan Zheng),Ma Shanzheng,SIL OFL 1.1,subset to the characters used (tools/fonts.py),title and the page of seals,shipped
 FONT-kai,app/shared/fonts/kai.woff2,typeface,github.com/lxgw/LxgwWenKai v1.530,LXGW,SIL OFL 1.1 (web subsetting expressly permitted),subset,interface labels and name boards,shipped
 FONT-xing,app/shared/fonts/xing.woff2,typeface,github.com/google/fonts (Zhi Mang Xing),The Zhi Mang Xing Project Authors,SIL OFL 1.1,subset to the characters used (tools/fonts.py),"handwriting on paper: the verse under a photograph, the library slip, leaf titles",shipped
 FONT-serif,app/shared/fonts/serif.woff2,typeface,github.com/google/fonts (Noto Serif SC),Google / Adobe,SIL OFL 1.1,"instanced at weight 400, subset",body text and key caps,shipped
 FONT-seal,app/shared/fonts/seal.woff2,typeface,github.com/google/fonts (Noto Serif SC),Google / Adobe,SIL OFL 1.1,"instanced at weight 900, subset",seal characters,shipped
 LIB-three,app/vendor/three/,library,three.js r186,three.js authors,MIT,unmodified; a pnpm dependency (three@0.186.0) copied into the page at install, not in git,renderer,shipped
-MODEL-buddha,app/levels/t00/models/buddha.glb,3D model (GLB),static.rushiwowen.co/models/zen-v2/ (如是我闻 /zen scene),project owner's other product; original authorship not recorded here,NOT RECORDED - owner to confirm,as published (meshopt + Basis),figure on every altar (indoors only; outside the T00 route),shipped - licence to be confirmed
-MODEL-pedestal,app/levels/t00/models/pedestal.glb,3D model (GLB),static.rushiwowen.co/models/zen-v2/,same as above,NOT RECORDED - owner to confirm,as published (meshopt),pedestal under the figure,shipped - licence to be confirmed
+MODEL-buddha,app/shared/models/buddha.glb,3D model (GLB),static.rushiwowen.co/models/zen-v2/ (如是我闻 /zen scene),project owner's other product; original authorship not recorded here,NOT RECORDED - owner to confirm,as published (meshopt + Basis),figure on every altar (indoors only; outside the T00 route),shipped - licence to be confirmed
+MODEL-pedestal,app/shared/models/pedestal.glb,3D model (GLB),static.rushiwowen.co/models/zen-v2/,same as above,NOT RECORDED - owner to confirm,as published (meshopt),pedestal under the figure,shipped - licence to be confirmed
 GEN-buildings,app/src/building.js site.js,procedural geometry,written for this project,this project,project's own,n/a,"every hall, gate, wall, stair, terrace",shipped
 GEN-plants,app/src/trees.js bamboo.js,procedural geometry and canvas-drawn leaf sheets,written for this project,this project,project's own,n/a,"bamboo, cryptomeria, maple, ginkgo, undergrowth",shipped
 GEN-novice,app/src/monk.js,procedural figure,written for this project,this project,project's own,n/a,the novice (third-person view),placeholder - a rigged model is planned

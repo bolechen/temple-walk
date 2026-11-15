@@ -13,7 +13,7 @@ pnpm run serve           # 等于 python3 -m http.server 8000 --bind 127.0.0.1 -
 打开 <http://localhost:8000/>，点「入山」。任何静态文件服务器都可以，直接把 `app/` 当站点根目录。
 
 需要的东西：一个支持 WebGL2 的浏览器；本地需要 Node.js 22+、pnpm 10（只为安装那一步）和 Python 3（或任何静态服务器）。
-没有锁文件，因为没有依赖：three.js 在 `app/vendor/three/`，字体在 `app/shared/fonts/`，贴图在 `app/levels/t00/textures/`，佛像模型在 `app/levels/t00/models/`。
+没有锁文件，因为没有依赖：three.js 在 `app/vendor/three/`，字体在 `app/shared/fonts/`，贴图在 `app/shared/textures/`，佛像模型在 `app/shared/models/`。
 测试和出图工具另外需要 Node 22+ 和 Playwright（Chromium）。
 
 ## 操作

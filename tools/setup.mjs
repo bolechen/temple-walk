@@ -6,7 +6,7 @@
 //
 // 1. three.js. The page is plain ES modules with no bundler, so the files it imports are copied out of the installed
 //    package into app/vendor/three/, with `from "three"` turned into the relative path a browser can follow.
-// 2. The statue and its pedestal for the halls of level T00 (app/levels/t00/models/). These ARE kept in git, as
+// 2. The statue and its pedestal for the halls of level T00 (app/shared/models/). These ARE kept in git, as
 //    published (meshopt and Basis packed, 3.9 MB): the CDN they come from (如是我闻 /zen) turns GitHub's runners
 //    away with a 403, so a publication cannot depend on fetching them. Here they are only checked against the
 //    hashes below, and fetched if someone has removed them.
@@ -46,7 +46,7 @@ const MODELS = [
   { file: "pedestal.glb", url: "https://static.rushiwowen.co/models/zen-v2/pedestal-49ccf1d43981.glb", sha256: "49ccf1d439810d3ba6c57cd2ad991fb95337bf859de3e9961a862e94cba80619" },
 ];
 async function models() {
-  const out = path.join(ROOT, "app/levels/t00/models"); fs.mkdirSync(out, { recursive: true });
+  const out = path.join(ROOT, "app/shared/models"); fs.mkdirSync(out, { recursive: true });
   for (const m of MODELS) {
     const to = path.join(out, m.file), sum = (b) => crypto.createHash("sha256").update(b).digest("hex");
     if (!FORCE && fs.existsSync(to) && sum(fs.readFileSync(to)) === m.sha256) { say(`${m.file} already there`); continue; }
