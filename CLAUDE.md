@@ -56,7 +56,7 @@ pnpm run e2e                        # everything, ~20 min: + the walk in and the
 node tests/e2e/run.cjs moods photo  # only the scenarios named
 pnpm run verify                     # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
-node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png
+node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png (add `bind` for his A-pose)
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
@@ -129,8 +129,19 @@ grade, snow, wetness, lamp light, leaf colours, what drifts in the air, the vers
 `setMood` hands it to every module's `setMood(m)`; nothing else decides how a season looks. The uniforms in `glsl.js`
 (`U`), `FOG` and `SUN_DIR` are shared by reference and must be mutated in place.
 
-**The novice and the two views (`app/src/monk.js`, the camera block in `yard.js`).** He stands on nine named bones (`spine`, `head`, `hat`, `armL/R`, `handL/R`, `legL/R`; `createMonk().skeleton`), each part of him bound rigidly to one. `createMonk()` returns `group` and
-`update(dt, speed, pray, t)`; replacing the hand-built figure with a rigged model touches nothing else. In third person
+**The novice and the two views (`app/src/monk.js`, the camera block in `yard.js`).** He is modelled after the owner's
+A-pose turnaround (front, side, back) and bound to a humanoid skeleton in that same pose: a `root` bone that carries his
+height above the step (`group.children[0]`), then `hips`, `spine`, `chest`, `neck`, `head` and, for each side,
+`leftShoulder`/`UpperArm`/`LowerArm`/`Hand`/`UpperLeg`/`LowerLeg`/`Foot` (VRM-style names; he faces +z, so his left
+is on +x), plus `robeFront/Back/Left/Right`, `sashTail` and `hat` for what hangs off him. Skin, robe, trousers and shoes are
+four skinned meshes weighted by hand (`createMonk().parts`); the beads and the hat are rigid on their bones. The legs
+reach the ground under each shoe with a two-bone solver (`reach`), the pelvis coming down when a foot could not otherwise
+reach it; the arms reach the same way to pray or to rest in the lap; the skirt, the sash's ends and the hat swing on
+springs driven by speed and turning, and the skirt's bones are shortened wherever its hem would pass into a step.
+`update(dt, speed, pose, t, surfaceAt, grounding)`; pose `"bind"` shows the A-pose, and
+`node tools/portrait.js summer-day bind` renders it front, side and back to set beside the drawing. A sculpted or
+generated mesh can take this one's place with the same bone names, bound in the same A-pose and proportions
+(`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
 the eye follows a few steps behind and is pulled in along its line when `walker.blocked` says a wall is in the way.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
