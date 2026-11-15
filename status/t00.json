@@ -1,17 +1,23 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-15T04:29:39.863Z",
+  "generated_at": "2026-11-15T04:31:12.834Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "5c2106b197350795b5baef9ade6a6ad66ea90590",
-    "url": "https://github.com/bolechen/temple-walk/commit/5c2106b197350795b5baef9ade6a6ad66ea90590"
+    "sha": "fe1c0381e222cb2fe006cd73d643dae5cf1468b7",
+    "url": "https://github.com/bolechen/temple-walk/commit/fe1c0381e222cb2fe006cd73d643dae5cf1468b7"
   },
   "delivery": {
     "schema_version": 1,
     "scene_id": "T00",
-    "summary": "小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
+    "summary": "配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
     "changes": [
+      "app/src/score.js：G 羽调式与七音主题（每枚印的磬声是下一个音，七印前不完整奏出），七个地点各自造句，停留 2 秒才换场，换场时丢弃未奏的音、旧句淡出 3.5 秒",
+      "app/src/instruments.js：合成的琴（Karplus–Strong，吟与上）、泛音、低空弦、箫、和声；每个声音以 60 毫秒闸门收尾；createPlayer 供页面与离线渲染共用",
+      "app/src/audio.js：配乐、山声、音效三条总线各自音量与分析器；殿内外两套混响；撞钟、击鼓、得印时音乐让位；后台暂停、任意点按恢复；檐铃改入同一调式",
+      "歇脚菜单新增 乐声 / 山声 / 音效 三个滑杆，设置可保存",
+      "tools/music.mjs：离线渲染整段、分段与分轨 MP3，报告峰值、削波、静默、乐句、音准与各总线实时响度",
+      "测试：tests/unit/score.test.mjs（地点、换场稳定、调式与音域、主题保密、十分钟走访、变化度）；e2e 新增 music 场景，sound 场景改读音效总线",
       "外形按 A-pose 三视图：身高 1.18 米、头约四分之一；赭红短袖宽袍到膝、交领右衽、米色中衣；同色腰带左前打结、两条带尾；灰褐灯笼裤收进米色绑腿；深灰布鞋浅色鞋底；三十二颗木念珠；竹斗笠背在背上，两条背带压进腰带",
       "骨骼：root（上台阶的平滑高度）→ hips、spine、chest、neck、head，两侧 Shoulder/UpperArm/LowerArm/Hand/UpperLeg/LowerLeg/Foot；另有 robeFront/Back/Left/Right、sashTail、hat。皮肤、袍、裤、鞋四个蒙皮网格，权重手写；念珠和斗笠刚性挂骨。绘制从 25 次减到 6 次，三角形从约 2.7 万增到约 3.9 万",
       "动作：腿用两骨 IK 踩到每只鞋下的地面（台阶上一步一级），够不到时骨盆下沉；走路时一只鞋底始终贴地；合掌掌心相对、指尖朝上，打坐双手掌心向上落在腿上",
@@ -20,6 +26,10 @@
       "pose \"bind\" 回到 A-pose；node tools/portrait.js <季节-时辰> bind 出正、侧、背三视图，可与设定图并排对照"
     ],
     "known_issues": [
+      "配乐还没有人听过：自动测试与渲染报告只证明音准、无削波、无叠播、换场按规则发生，不证明好听",
+      "配乐目标第 2 条的两版样片比较未做（用户选择直接接入）；第 6 条的实机含声音录像需用户录制",
+      "Safari / iOS 的后台恢复未在真机验证；只在无头 Chromium 中测过",
+      "调式 G 羽由开发者选定（与钟的小三度分音一致），用户未确认",
       "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上三次平均 60.4, 60.1, 60.5 帧/秒，不能代表目标设备",
       "最后一轮复核针对 dfc9909；之后加的构造细部、光照图和游戏层没有再复核。顶点合并让载入多花约两三秒（T4 主机上载入约 13 秒）",
       "小沙弥：T4 上首院 high 1080p 绘制 11.23→9.07 ms、low 手机尺寸 6.20→4.64 ms（各一次 Job，含实例差异，见 HANDOFF）；Mac 和手机仍未测；仍是代码建模，不是雕刻或生成的模型；手指和袖口没有单独的骨骼；打坐时腿上的那团布仍是旧的光滑形体",
@@ -38,27 +48,31 @@
       "docs/t00/evidence/monk/walking.jpg",
       "tests/unit/monk.test.mjs",
       "tests/unit/stairs.test.mjs",
-      "docs/HANDOFF.md"
+      "docs/HANDOFF.md",
+      "tests/unit/score.test.mjs",
+      "tests/e2e/run.cjs: music / sound",
+      "tools/music.mjs → tools/out/music/report.json（本地生成，不入库）",
+      "docs/t00/MUSIC.md"
     ],
-    "record_commit": "af5afede33e07766f884bdec3f2eb994be71b45e",
+    "record_commit": "fe1c0381e222cb2fe006cd73d643dae5cf1468b7",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43676961565,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43676961565",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43677105329,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43677105329",
     "checks": {
-      "syntax": "success",
-      "unit": "success",
-      "e2e": "skipped"
+      "syntax": "pending",
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "5c2106b197350795b5baef9ade6a6ad66ea90590",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43676961565"
