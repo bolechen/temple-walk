@@ -16,9 +16,9 @@ test("the width the plan allows him is the width of the model, in every pose it 
   for (const [speed, pose] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {
     const monk = createMonk();
     for (let k = 0; k < 90; k++) {
-      monk.update(1 / 30, speed, pose, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true);
+      monk.update(1 / 30, speed, pose, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true); monk.skeleton?.update?.();   // he is a skinned figure: his surface is where his bones put it, not where it was modelled
       monk.group.traverse((o) => { if (!o.isMesh || !o.visible || o.material?.transparent) return; const a = o.geometry.attributes.position;
-        for (let i = 0; i < a.count; i++) { v.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld); if (v.y > 0.02) reach = Math.max(reach, Math.hypot(v.x, v.z)); } });
+        for (let i = 0; i < a.count; i++) { (o.isSkinnedMesh ? o.getVertexPosition(i, v) : v.fromBufferAttribute(a, i)).applyMatrix4(o.matrixWorld); if (v.y > 0.02) reach = Math.max(reach, Math.hypot(v.x, v.z)); } });
     }
   }
   assert.ok(reach <= BODY, `some part of him reaches ${reach.toFixed(3)} m from his centre, and the plan allows ${BODY}`);

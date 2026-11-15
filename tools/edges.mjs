@@ -29,11 +29,11 @@ export function outline() {
   for (const [speed, pray] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {   // standing, walking, hurrying, hands together, in the air
     const monk = createMonk();
     for (let k = 0; k < 150; k++) {
-      monk.update(1 / 30, speed, pray, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true);
+      monk.update(1 / 30, speed, pray, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true); monk.skeleton?.update?.();   // he is a skinned figure: his surface is where his bones put it, not where it was modelled
       monk.group.traverse((o) => {
         if (!o.isMesh || !o.visible || o.userData.shadow || o.material?.transparent) return;
         const a = o.geometry.attributes.position;
-        for (let i = 0; i < a.count; i++) { v.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld); const b = Math.floor(v.y / BIN); if (b >= 0 && b < 40 && v.y > 0.02) bins[b] = Math.max(bins[b], Math.hypot(v.x, v.z)); }
+        for (let i = 0; i < a.count; i++) { (o.isSkinnedMesh ? o.getVertexPosition(i, v) : v.fromBufferAttribute(a, i)).applyMatrix4(o.matrixWorld); const b = Math.floor(v.y / BIN); if (b >= 0 && b < 40 && v.y > 0.02) bins[b] = Math.max(bins[b], Math.hypot(v.x, v.z)); }
       });
     }
   }
