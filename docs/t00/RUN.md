@@ -43,7 +43,7 @@ pnpm dev                 # Vite 开发服务器，只监听 127.0.0.1:8000
 - 行走测量：`?tour=120x3&enter&view=first&q=high&season=summer&time=day`。
   预热 10 秒后，沿「竹林起点 → 石阶 → 照壁 → 山门 → 第一院」往返走 120 秒，重复 3 次，结束时页面上给出每次的平均帧率、
   p95 帧耗时，并可下载 `performance.json` 和 `frame-times.csv`。请在目标设备的浏览器里以 1920×1080 窗口运行。
-- 殿内机位不占 `cam01…cam06` 的名字：`app/src/hall-views.js` 给八座殿各登记两个（陈设、屋顶），
+- 殿内机位不占 `cam01…cam06` 的名字：`app/levels/t00/hall-views.js` 给八座殿各登记两个（陈设、屋顶），
   `node tools/inside.cjs tools/out/hall-views --views` 一次出图；单独的机位用 `?in=<殿名>&cam=<房间坐标>`。
 - 其他参数见仓库根目录 `CLAUDE.md`。
 

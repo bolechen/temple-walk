@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { HALL_VIEWS, hallViewURL } from "../../app/src/hall-views.js";
+import { HALL_VIEWS, hallViewURL } from "../../app/levels/t00/hall-views.js";
 import { buildSite, createWalker } from "../../app/src/site.js";
 import { buildInteriors } from "../../app/src/interior.js";
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });

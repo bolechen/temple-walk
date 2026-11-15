@@ -1,4 +1,4 @@
-// The indoor views, for working on a hall's room (`tools/inside.cjs renders them). These are not the six fixed
+// T00 only: the indoor views, for working on a hall's room (`tools/inside.cjs renders them). These are not the six fixed
 // cameras of the T00 handoff: those live in site.views, are locked, and look at the five zones outdoors. A room lies
 // below the courts and sixty metres from the next, so `?show=<name>` cannot stand in one: every view here names a
 // hall and a point in that room's own place. `node tools/inside.cjs tools/out --views` draws them all.

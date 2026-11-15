@@ -555,12 +555,14 @@ function lookOut(hall) {
   const r = rooms.rooms[hall.id]; if (!r || !r.outlook) return;
   const was = walker.room; walker.setRoom(null);
   const [x, z] = hall.out, f = [Math.sin(hall.outYaw), -Math.cos(hall.outYaw)];
-  outCam.position.set(x + f[0] * 0.3, walker.heightAt(x, z) + 1.5, z + f[1] * 0.3); walker.setRoom(was);
+  const eye = [x + f[0] * 0.3, walker.heightAt(x, z) + 1.5, z + f[1] * 0.3];
+  outCam.position.set(eye[0], eye[1], eye[2]); sky.at(eye[0], eye[1], eye[2]); walker.setRoom(was);
   const seen = scene.children.map((o) => o.visible);
   for (const o of scene.children) { const part = o.userData.part; if (COURTS.includes(part)) o.visible = !OFF.has(part); else if (part === "monk" || part === "interior" || part === "drift") o.visible = false; }
   ground.mirror?.(false);
   const target = renderer.getRenderTarget(), xr = renderer.xr.enabled; renderer.xr.enabled = false;
-  outCam.update(renderer, scene); renderer.xr.enabled = xr; renderer.setRenderTarget(target);
+  try { outCam.update(renderer, scene); } finally { sky.at(0, 0, 0); }
+  renderer.xr.enabled = xr; renderer.setRenderTarget(target);
   scene.children.forEach((o, i) => { o.visible = seen[i]; });
   const u = r.outlook.material.uniforms; u.tOut.value = outCube.texture; u.uHas.value = 1; u.uTurn.value.set(f[0], f[1]);
 }

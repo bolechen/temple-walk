@@ -130,6 +130,22 @@ const scenarios = {
       await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(3);
       s = await t.state(); expect(Math.hypot(s.x - h.out[0], s.z - h.out[1]) < 0.3 && !s.inside, `${h.name}: came out in the wrong place or went straight back in: ${JSON.stringify(s)}`);
     }
+    // From the summit pavilion, the door-view cube camera is so far from the middle of the mountain that a
+    // sky dome left at the origin falls beyond its far plane. Every pixel above the hills must be night sky,
+    // not a black hole: sample the doorway's upper band on the page's own drawing buffer.
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 30000, "could not go into the summit pavilion");
+    await t.page.evaluate(() => window.__pose(420, 5.9, -3.14, -0.226)); await t.frames(3);
+    const skyBand = await t.page.evaluate(() => {
+      const c = document.getElementById("yardGl"), a = document.createElement("canvas");
+      a.width = c.width; a.height = c.height;
+      window.__probe();   // the doorway has been drawn with its own post pass before pixels are read
+      a.getContext("2d").drawImage(c, 0, 0);
+      const x = Math.round(a.width * 0.4), y = Math.round(a.height * 0.14), d = a.getContext("2d").getImageData(x, y, Math.round(a.width * 0.2), Math.round(a.height * 0.12)).data;
+      let dark = 0, n = 0; for (let i = 0; i < d.length; i += 4) { n++; if ((d[i] + d[i + 1] + d[i + 2]) / 3 < 25) dark++; }
+      return dark / n;
+    });
+    expect(skyBand < 0.02, `the sky seen through the summit door is a black hole: ${(skyBand * 100).toFixed(1)}% dark`);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the summit pavilion");
     await t.shot("e2e-halls"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // In winter he leaves his prints in the snow of the court; indoors no snow lies on the floor and none falls,
