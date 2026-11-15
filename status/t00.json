@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-15T12:35:08.266Z",
+  "generated_at": "2026-11-15T13:05:50.032Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "236b0f6f47e3c56a0fce75ca54f9e5f86552686f",
-    "url": "https://github.com/bolechen/temple-walk/commit/236b0f6f47e3c56a0fce75ca54f9e5f86552686f"
+    "sha": "ee195ad4fb2b8b8a0ad1e327cb5a19849f2eb906",
+    "url": "https://github.com/bolechen/temple-walk/commit/ee195ad4fb2b8b8a0ad1e327cb5a19849f2eb906"
   },
   "delivery": {
     "schema_version": 1,
@@ -83,7 +83,8 @@
       "docs/LITTLEPRINCE-TEARDOWN.md 新增「角色移动、碰撞与相机」一节：从小王子线上包的脚本类名和 IL2CPP 字段名对照两边的做法（只有名字，没有代码）",
       "工程化（所有者 2026-11-15 决定）：接入 Vite 8 与 TypeScript 7。源码直接 import three，不再拷贝到 app/vendor/three；pnpm dev 为开发服务器，pnpm build 出 dist/，发布、端到端测试、出图与 GPU 作业都改为打开 dist/（tools/site.cjs 按需重建）；按名字取的资源经 app/src/assets.js 从页面地址定位；pnpm typecheck 纳入 check 流程与两条工作流",
       "所有者 2026-11-15 的另三个决定已记入文档：代码暂不开源、保留所有权利；佛像与莲座模型归所有者所有、可随项目分发；山门竖匾保持虚构的「雲徑禪寺」（不改为真寺名）",
-      "类型检查扩大到 app/ 全部模块（所有者要求）：加入 @types/three，补 JSDoc 标注；颜色与位置由展开数组的 setRGB/set 改为等价的 fromArray"
+      "类型检查扩大到 app/ 全部模块（所有者要求）：加入 @types/three，补 JSDoc 标注；颜色与位置由展开数组的 setRGB/set 改为等价的 fromArray",
+      "2026-11-15 分享卡片：复用现有实机宣传封面为 app/shared/og/temple-walk.jpg（1920×1080 JPEG），页面增加 Open Graph、Twitter 大图卡片、简介与新域名 canonical；共享资源沿用现有 Vite 复制流程。"
     ],
     "known_issues": [
       "冬天小柏几乎全白，看不出底下的深绿：积雪系数 snow: 0.8 是按大柳杉调的，小树的枝叶小而密，整株被雪盖住。未改",
@@ -130,7 +131,8 @@
       "垂带重做只在软件渲染的截图里看过（藏经楼、主殿、一级平台、进山石阶、山门），没有在 Mac 或手机上走过",
       "佛像与莲座仍在库里（来源 CDN 对 GitHub 构建机返回 403）；所有者 2026-11-15 确认其归本人所有、可随项目分发，原始作者信息仍未记录",
       "类型检查（checkJs）已覆盖 app/ 全部模块并使用 @types/three，但没有开 strict；页面元素查找和场景遍历回调标为 any；没有文件改成 .ts；「引擎／关卡」代码拆分未做",
-      "接入 Vite 后发布的是打包后的 dist/（单个约 1 MB 的脚本，gzip 约 314 KB）；本机只跑了 boot、halls、stairs、drop 四个端到端场景和开发服务器的一次载入，其余场景与 T4 测量未在打包后的站点上重跑，本轮没有新的性能数字"
+      "接入 Vite 后发布的是打包后的 dist/（单个约 1 MB 的脚本，gzip 约 314 KB）；本机只跑了 boot、halls、stairs、drop 四个端到端场景和开发服务器的一次载入，其余场景与 T4 测量未在打包后的站点上重跑，本轮没有新的性能数字",
+      "分享平台可能缓存旧卡片；本轮分享元信息不代表游戏独立验收或手机性能通过。"
     ],
     "evidence": [
       "docs/t00/evidence/trees/young-cedars-before-after.jpg",
@@ -177,30 +179,57 @@
       "tools/music.mjs → tools/out/music/report.json（本地生成，不入库）",
       "docs/t00/MUSIC.md",
       "接入 Vite 的提交：pnpm run check（0 问题）、pnpm typecheck（0 错误）、pnpm test（全部通过）、pnpm run edges（0 处超限）、node tests/e2e/run.cjs boot halls stairs drop（在 dist/ 上通过）、Vite 开发服务器载入一次无报错",
-      "类型检查全覆盖的提交：pnpm typecheck 0 错误、pnpm test 138 项通过、node tests/e2e/run.cjs boot moods halls 在 dist/ 上通过；此前 5864213 的发布流程（run 140）成功"
+      "类型检查全覆盖的提交：pnpm typecheck 0 错误、pnpm test 138 项通过、node tests/e2e/run.cjs boot moods halls 在 dist/ 上通过；此前 5864213 的发布流程（run 140）成功",
+      "app/shared/og/temple-walk.jpg",
+      "app/index.html（Open Graph 与 Twitter 元信息）",
+      "OG 分享卡片提交：隔离的 origin/main 工作区 pnpm run verify 通过（check、typecheck、138 项单测、18 个 smoke 场景）；dist/index.html 元信息及 dist/shared/og/temple-walk.jpg 与源文件一致。"
     ],
-    "record_commit": "7f4eb1f9d337c41eedf0f27fad96ebb30e61c014",
+    "domain_binding": {
+      "date": "2026-11-15",
+      "domain": "temple.rushiwowen.co",
+      "hosting": "GitHub Pages (existing workflow)",
+      "dns": {
+        "type": "CNAME",
+        "target": "bolechen.github.io",
+        "verified": "Cloudflare authoritative nameserver and public DNS-over-HTTPS return CNAME"
+      },
+      "verification": {
+        "http": "301 redirect to HTTPS",
+        "https": "200 OK with valid certificate; GitHub https_certificate.state=approved; https_enforced=true",
+        "legacy_url": "https://bolechen.github.io/temple-walk/ returns 301 to https://temple.rushiwowen.co/",
+        "browser": "Ego Chromium: title 山门之外 · 云径禅寺, loading completes, 入山 opens game scene; Resource Timing reports no HTTP error responses",
+        "deployment": "Existing pages.yml workflow dispatch run 43714364111 completed success; restored game dist after prior Jekyll README deployment"
+      },
+      "evidence": [
+        "https://github.com/bolechen/temple-walk/settings/pages",
+        "https://api.github.com/repos/bolechen/temple-walk/pages",
+        "https://github.com/bolechen/temple-walk/actions/runs/43714364111",
+        "https://temple.rushiwowen.co/"
+      ],
+      "note": "Domain verification only; no change to CI/deployment or independent game acceptance status."
+    },
+    "record_commit": "ee195ad4fb2b8b8a0ad1e327cb5a19849f2eb906",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43714364111,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43714364111",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43717185066,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43717185066",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "236b0f6f47e3c56a0fce75ca54f9e5f86552686f",
     "url": "https://bolechen.github.io/temple-walk/",
-    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43714364111"
+    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43713702299"
   },
   "independent_review": {
     "schema_version": "1.0",
