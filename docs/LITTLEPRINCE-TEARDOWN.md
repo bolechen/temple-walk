@@ -7,6 +7,11 @@ Unity loader、`Build/` 里的 `.data.br` / `.wasm.br`，以及 `StreamingAssets
 `tools/`、`scenes/shared/design/` 路径来自产物自身的注释，只能证明存在这些构建工具和设计文档，不能证明其内容。
 文中「章节」是按包命名推断的说法，不是官方称呼。
 
+2026-11-15 补了一节「角色移动、碰撞与相机」，多核对了两样东西：把 `StreamingAssets/aa/` 里的 `*_monoscripts_*.bundle`
+（UnityFS，LZ4 块）解开，读出全部脚本类名和程序集；再从 `Build/*.data.br` 里的
+`Il2CppData/Metadata/global-metadata.dat` 读字符串表，那里有每个类的字段名和方法名，并大致按声明顺序排列。
+**只有名字，没有代码**：一个参数做什么、默认值多少，都只能从名字推测。
+
 ## 它是什么
 
 一个 **Unity 6000.3.25f1** 的 **WebGPU / WebGL 构建**，不是 three.js 网页。wasm 里带版本串和 `WebGPU` 字样；
@@ -82,6 +87,77 @@ Unity loader、`Build/` 里的 `.data.br` / `.wasm.br`，以及 `StreamingAssets
 | 叙事 | 标题、旅程存档 `journey.json`、九个章节场景 | 一条可以来回走的路，无进度 | 可加极轻量的「到过哪儿」，但 README 明确要的是安静、无事件也耐看，别做成任务系统 |
 | 多语言 | 八语言页面与游戏内设置、各自 logo 和字体子集 | 界面中文，字体从 Google Fonts 取 | 若给外国游客看，先把 `index.html` 的提示语抽成小字典，别引入整套 i18n 构建链 |
 | 测试 | 从注释看有 `loading.test.cjs` 和 A/B 帧时间实测 | `tools/shots.js` 每个命名机位截图、`walkthrough-test.js` 走全程验声 | 我们的确定性截图测试其实更贴合这个项目的迭代方式，继续保持；补一个加载失败态测试即可 |
+
+## 角色移动、碰撞与相机（2026-11-15）
+
+先分清两类名字。`CapsuleCast`、`ComputePenetration`、`Rigidbody`、`HingeJoint`、`Cloth`、`slopeLimit`、`skinWidth`、
+`fixedTimeStep` 这些出现在元数据里，只因为构建链接了 Unity 的物理模块，**不能证明游戏代码调用了它们**。能说明游戏
+自己怎么做的，只有它自己的类和成员。
+
+**主角是 Unity 的角色胶囊加一层自写手感。** `PlayerController` 有 `get_Controller` 和 `OnControllerColliderHit`
+（后者是 CharacterController 才发的消息），`PlayerCarryController` 有 `get_CC`，所以基本可以断定移动交给
+CharacterController（PhysX 胶囊扫掠）。它自己的字段按声明顺序是：`jogSpeed runSpeed turnSmoothTime maxTurnSpeed
+fullSpeedAngle groundedStickVelocity groundSnapDistance slopeSlowStartAngle slopeSlowAtLimit slideAngle stepSmoothTime
+slideAcceleration maxSlideSpeed jumpEnabled jumpHeight jumpCooldown jumpClipAirTime`，私有状态有 `_verticalVel _airTime
+_slideVel _steepNormal _stepOffset _stepVel _stepApplied`，方法有 `ProbeGround IsStepAhead ApplyStepOffset EaseStep
+SetScripted SetExternal ReturnToPlayer`。按名字读：自己积分重力和跳跃；下坡时贴地不腾空；上坡到一定角度减速，太陡就
+下滑；身体上台阶后，画面上的高度再用 `stepSmoothTime` 缓过去（这里的 `_stepOffset` 是它自己的台阶平滑，不是胶囊的
+`stepOffset` 参数）；过场时脚本接管、结束后交还。
+
+**相机是它花力气最多的地方之一。** `ThirdPersonCamera` 的字段有 `collisionRadius collisionRecoverTime followSmoothTimeXZ
+followSmoothTimeY maxFollowLag groundClearance hideCharacterBelow showCharacterAbove liftBelow maxLiftPitch liftStep
+liftSmoothTime maxSwing swingSpeed coverMargin`，方法有 `CastClear KeepAboveGround FindLift FindSwing SolveSteady`。
+旁边还有 `CameraOccluderFade`（淡化挡在中间的东西）、`InteriorCameraZone`（进屋时距离、俯仰、视角在 `blendTime` 内过渡）、
+`CourtCameraSafety`（`_preferredShoulder`、`shoulderDuringSwing`）。推测的读法（未见代码）：`CastClear` 是带半径的扫掠；
+被挡时先抬高（lift）或侧绕（swing），不得已才拉近；人物的藏和显用两个阈值，避免在临界处闪；王庭里被挡时换肩。
+
+**唯一像样的「物理模拟」是围巾。** `ScarfRig`：`Simulate LinkAB PushOut CollideScene UpdateShelter MeasureBody
+ClosestOnSegment`，参数 `damping bendStiffness aero flutter windSpeed shelteredWind clothRadius sceneColliders Iterations
+MaxSteps SettleSteps`，结构上有 `Chain rung diagAB diagBA capsule`。推测是一条自写的 Verlet 链：链节之间和对角之间
+各有约束，用胶囊把布推出身体，也碰场景，挡风处风变小，瞬移时 `ResetSimulation`。`BottleLiquid`（液面晃动的弹簧）、
+`FloatingRock`（`bobAmplitude`）都是几行的小动画，不是物理。
+
+**脚。** `FootGrounder`：`rayStartHeight footIK adjustPelvis slopePelvisShare slopePlaneMaxAngle plantBlendTime
+pinHoldFraction`，状态 `_lPlant _rPlant _pinLPos _pinRPos`。射线找地、脚 IK、骨盆下沉、按坡面倾斜，落地脚钉住。
+它的 QA 输出里有一项 `planted-foot slide (XZ drift through each planted run: the bone moving < 5 mm per frame within
+3 cm of its standing height; whole run)`：每帧移动不到 5 mm、离站立高度不到 3 cm 的那几帧算「落地」，量的是这几帧里
+脚在水平面上漂了多远。也就是说，它把滑步当成一个要测的数。
+
+**NPC 走路。** `DesertPilotGuide`：路网 `netPoints netEdges`，`SegmentBlocked Detour Avoid`，`personalSpace
+avoidPlayer sideStepBlockers strideMatch arriveYawTolerance`。是自写的路点导航加避让，不是 NavMeshAgent
+（元数据里没有这个名字）。
+
+### 和我们对照
+
+我们没有物理引擎。`site.js` 的 `createWalker` 把平面图（`solids/decks/ramps/posts`）变成 `heightAt` 和 `blocked`；
+小和尚是一个点，所有障碍按 `BODY` 0.38 m 画大；`yard.js` 每帧先试整步，挡住就分轴滑，再减半，最后转开最多约 77°
+绕柱。重力只出现在两处：空格的小跳（`leap`），和从门廊跳下（`drop.js` 事先算好的抛物线）。
+
+| | 小王子 | 我们 |
+|---|---|---|
+| 碰撞体 | 胶囊扫掠编辑器里摆的碰撞体 | 点加 `BODY` 余量；碰撞和建筑出自同一次 `put()`，不会错位 |
+| 上台阶 | 胶囊限高，画面高度再平滑 | 楼梯就是踏面；视线走 `eyeAt` 的斜坡并平滑：同一个思路 |
+| 斜坡 | 减速、陡坡下滑、贴地 | 不需要：可走处都是平台和台阶 |
+| 跳跃 | 积分重力，有冷却和空中动画 | `leap` 积分；跳下台阶是事先规划的 |
+| 相机 | 扫掠、抬高、侧绕、淡化遮挡、双阈值藏人、进屋过渡、换肩 | 每 0.25 m 取点问 `walker.wall`，碰墙立刻拉近再慢慢退回，靠墙时侧偏收为 0，不钻地，近于 0.95 m 时直接藏人；进殿时 `camDist` 直接设为 0.6 |
+| 衣物 | Verlet 围巾，碰身体，受风 | 腰带尾和斗笠是一维阻尼弹簧，只受速度和转身驱动；裙摆碰到台阶时缩短骨头 |
+| 脚 | 射线、IK、钉脚，测滑步 | 两段式 `reach` 加骨盆下沉；单测只测「脚底贴地」 |
+
+我们的走法**本身不限台阶高度**：哪里不被挡，他就站在哪里的高度上，能不能一步走上一米高的台子全靠平面图画对。
+`plan.test.mjs` 原来只证明「存在一条好走的路」，现在加了一条「nowhere he can walk is there a step taller than a
+child's」：从起点按 0.2 m 网格（不粗于他加速时一帧走的距离）不限高差泛洪，检查任意两个相邻可走点的高差都不超过
+`STEP_UP`（0.45 m，与原有的可达性测试共用）。目前最大的一级是 0.3 m，在竹林起点旁的平台。把一块平台临时抬高
+0.6 m，这条测试就会失败。
+
+### 值得拿走的，按性价比
+
+1. ~~平面图不留越级的台阶~~：已有单测。
+2. 相机被挡时先抬高再拉近；藏人改用两个阈值（只动 `yard.js` 相机那一段，不加几何）。
+3. 进殿和出殿时，相机距离、俯仰、视角做过渡。
+4. 腰带尾改成三四个点的 Verlet 链，加身体胶囊推开，接上 mood 的风。
+5. 单测里量滑步：落地脚在水平面上漂了多少。
+
+不搬：通用刚体、PhysX 式碰撞体、陡坡下滑。我们是台阶和平台，手机优先，这些只会多花时间、多出错。
 
 ## 结论
 
