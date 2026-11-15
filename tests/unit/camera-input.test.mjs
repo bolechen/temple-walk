@@ -19,7 +19,7 @@ function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: f
   };
 }
 
-for (const [view, photo] of [['first', false], ['third', false], ['third', true]]) {
+for (const [view, photo] of [['first', false], ['third', false]]) {
   test(`${view}${photo ? ' photo' : ''}: trackpad click-drag looks right/down, matching locked mouse`, () => {
     const drag = controls(view, photo), locked = controls(view, photo);
     drag.send('canvas', 'pointerdown');
@@ -34,6 +34,15 @@ for (const [view, photo] of [['first', false], ['third', false], ['third', true]
     }
   });
 }
+// With the camera raised for a photograph the view is held still: neither a drag nor the held mouse turns it.
+test('photo: neither a click-drag nor the locked mouse turns the camera', () => {
+  for (const view of ['first', 'third']) {
+    const drag = controls(view, true), locked = controls(view, true);
+    drag.send('canvas', 'pointerdown'); drag.send('canvas', 'pointermove', { clientX: 160, clientY: 140 });
+    locked.lock(); locked.send('document', 'mousemove', { movementX: 40, movementY: 30 });
+    for (const input of [drag, locked]) assert.deepEqual(input.state(), { yaw: 0, pitch: 0 }, `${view}: the raised camera turned`);
+  }
+});
 test('locked mouse button drag is applied only once', () => {
   const c = controls(); c.lock(); c.send('canvas', 'pointerdown');
   c.send('document', 'mousemove', { movementX: 20, movementY: 20 });
