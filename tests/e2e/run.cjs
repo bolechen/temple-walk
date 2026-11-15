@@ -304,9 +304,9 @@ const scenarios = {
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.evaluate(() => document.body.classList.add("seasons"));   // as once the book has been filled (the seasons scenario does it for real)
     await t.page.keyboard.press("t"); expect(await t.page.isVisible("#moodPanel"), "the season panel did not open");
-    await t.page.click('[data-season="autumn"]'); await t.page.click('[data-time="dusk"]');
+    await t.page.click('#moodPanel [data-season="autumn"]'); await t.page.click('#moodPanel [data-time="dusk"]');
     const p = await t.probe(); expect(p.season === "autumn" && p.time === "dusk", "the panel's buttons did not change the season");
-    expect((await t.page.getAttribute('[data-season="autumn"]', "aria-pressed")) === "true", "the chosen season is not marked");
+    expect((await t.page.getAttribute('#moodPanel [data-season="autumn"]', "aria-pressed")) === "true", "the chosen season is not marked");
     await t.shot("e2e-autumn-dusk");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -327,6 +327,7 @@ const scenarios = {
     expect((await t.probe()).view === "first", "pushing on past the nearest should give him his own eyes");
     for (let i = 0; i < 6; i++) { await t.page.mouse.wheel(0, 300); await t.frames(1); }
     p = await t.probe(); expect(p.view === "third" && p.monk, "drawing out of his eyes should stand the eye behind him again");
+    for (let i = 0; i < 7; i++) { await t.page.mouse.wheel(0, 300); await t.frames(1); }   // and back out to about where the eye usually stands (6.2 m)
     // With his back to the court's east wall, the eye comes in close rather than passing through it.
     await t.page.evaluate(() => window.__pose(20.5, 30, -Math.PI / 2, -0.05)); await t.frames(3);
     p = await t.probe(); expect(p.camDist < 1.6, "the eye went through the court wall: " + p.camDist);
