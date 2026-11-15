@@ -539,6 +539,10 @@ export function createWalker(site) {
       const p = post(x, z, 0.15);
       if (p) { if (p.r !== undefined) return p.r < 0.45 ? "post" : true; const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; }
       if (carved(x, z) !== null) return false;
+      // He stands on a terrace: the eye stays over it too, and does not step out past its edge to look back at him along
+      // the wall's outer face. Past the front edge it may be only where the wall is open to the stair (the view back down
+      // the flight); over the stair itself it has been let through above, as carved floor.
+      for (const L of LEVELS) if (Math.abs(foot - L.y) < 0.6 && (Math.abs(x) > L.x || z < L.zN || (z > L.zS && Math.abs(x) > L.stair / 2 + 0.5))) return true;
       let top = -Infinity, own = false;
       for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);
       for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.own) own = true; else top = Math.max(top, foot + 5.5); }
