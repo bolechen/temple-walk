@@ -7,7 +7,7 @@
 import * as THREE from "../vendor/three/build/three.module.js";
 import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt } from "./geo.js";
 import { buildHall } from "./building.js";
-import { makePlaque } from "./plaque.js";
+import { makePlaque, makeWallPanel } from "./plaque.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0 };
 // Terraces above the entrance court, as on the mountain: each hall stands higher than the one before.
@@ -276,7 +276,8 @@ export function buildSite(M) {
     const cp = [], cu = [], ci = [];
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
-    for (const s of [-1, 1]) { const p = makePlaque("双径归堂", { bare: true }); p.scale.setScalar(1.5); p.position.set(0, 2.45, z + s * 0.445); if (s < 0) p.rotation.y = Math.PI; root.add(p); }   // gilt characters set straight into the wall, as on the real one
+    // Both faces: a panel of diamond-laid grey brick in a frame of pale stone, the four characters gilt upon it, as on the real wall.
+    for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
     walk.solids.push({ x0: -w / 2 - 0.7, x1: w / 2 + 0.7, z0: z - 0.9, z1: z + 0.9 });
     shade[0].push({ x0: -w / 2, x1: w / 2, z0: z - 0.35, z1: z + 0.35 });
   }

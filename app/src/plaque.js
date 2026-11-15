@@ -119,3 +119,40 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
   if (band) { const back = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, h * 0.84, 0.07), new THREE.MeshStandardMaterial({ color: 0x1c0f0b, roughness: 0.8 })); back.castShadow = true; g.add(back); }
   g.userData.height = h; return g;
 }
+
+// The face of the screen wall, as it is at the real temple: no hanging board, but a panel of grey bricks laid on the
+// diamond inside a frame of pale dressed stone, and the four characters set into it large and gilt, read from the right.
+export function makeWallPanel(text, w, h) {
+  const chars = [...text].map((ch) => OLD[ch] || ch), n = chars.length, W = 2048, H = Math.round((W * h) / w);
+  const c = doc.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  function draw() {
+    let s = 4241; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    const f = Math.round(H * 0.085), b = Math.round(H * 0.045);   // the stone frame, and the plain grey band inside it
+    x.fillStyle = "#c9c7bf"; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(${rnd() < 0.5 ? "90,90,84" : "240,240,232"},${0.03 + rnd() * 0.06})`; x.fillRect(rnd() * W, rnd() * H, 2 + rnd() * 9, 1 + rnd() * 2); }
+    x.strokeStyle = "rgba(70,70,64,.5)"; x.lineWidth = 3; x.strokeRect(f * 0.42, f * 0.42, W - f * 0.84, H - f * 0.84);   // a moulding cut round the frame
+    x.fillStyle = "#74777a"; x.fillRect(f, f, W - 2 * f, H - 2 * f);
+    const px = f + b, py = f + b, pw = W - 2 * (f + b), ph = H - 2 * (f + b);
+    x.save(); x.beginPath(); x.rect(px, py, pw, ph); x.clip();
+    x.fillStyle = "#63676a"; x.fillRect(px, py, pw, ph);
+    const d = ph / 3.5;   // the half-diagonal of one brick
+    for (let j = -1; j * d < ph + d; j++) for (let i = -1; i * d < pw + d; i++) {
+      if ((i + j) & 1) continue; const cx = px + i * d, cy = py + j * d, v = 92 + Math.floor(rnd() * 26);
+      x.fillStyle = `rgb(${v},${v + 4},${v + 7})`; x.beginPath(); x.moveTo(cx, cy - d); x.lineTo(cx + d, cy); x.lineTo(cx, cy + d); x.lineTo(cx - d, cy); x.closePath(); x.fill();
+      x.strokeStyle = "rgba(38,40,42,.75)"; x.lineWidth = 5; x.stroke(); x.strokeStyle = "rgba(190,194,196,.16)"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - d + 6, cy); x.lineTo(cx, cy - d + 6); x.stroke();
+    }
+    for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${rnd() < 0.6 ? "30,34,36" : "170,176,170"},${0.04 + rnd() * 0.1})`; x.beginPath(); x.ellipse(px + rnd() * pw, py + rnd() * ph, 2 + rnd() * 22, 1 + rnd() * 7, rnd() * 3, 0, 7); x.fill(); }   // weather on the brick
+    x.restore();
+    x.strokeStyle = "rgba(40,42,44,.8)"; x.lineWidth = 4; x.strokeRect(px, py, pw, ph);
+    // The characters: gilt, standing a finger proud of the brick.
+    const size = ph * 0.6, gap = pw / (n + 0.6); x.font = `${Math.round(size)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "middle";
+    chars.forEach((ch, i) => { const cx = px + pw - gap * (i + 0.8), cy = py + ph / 2 + size * 0.02;
+      x.fillStyle = "rgba(0,0,0,.55)"; x.fillText(ch, cx + size * 0.018, cy + size * 0.024); x.fillStyle = "#ecd89a"; x.fillText(ch, cx - size * 0.006, cy - size * 0.008); x.fillStyle = "#c2a14e"; x.fillText(ch, cx, cy); });
+    tex.needsUpdate = true;
+  }
+  draw();
+  if (doc.fonts && doc.fonts.load) doc.fonts.load(`200px "Yunjing Bang"`, chars.join("")).then(draw, () => {});
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
+  m.castShadow = false; m.userData.height = h; return m;
+}
