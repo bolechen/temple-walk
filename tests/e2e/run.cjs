@@ -286,7 +286,9 @@ const scenarios = {
         await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(640, 240, { steps: 6 }); await t.page.mouse.up(); await t.frames(2);
         now = await t.state(); expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3, "a drag turned the camera"); expect(!(await t.page.isVisible("#print")), "a drag took a photograph");
         await t.page.mouse.wheel(0, -400); await t.frames(2); p = await t.probe(); expect(p.zoom > 1 && p.fov < before.fov - 1, "the wheel did not draw the view nearer");
-        for (let i = 0; i < 40; i++) await t.page.mouse.wheel(0, 400); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
+        // Forty turns of the wheel at once, dispatched inside the page: one at a time through the driver each waits on a
+        // software-rendered frame, which cost two minutes of the scenario.
+        await t.page.evaluate(() => { const c = document.getElementById("yardGl"); for (let i = 0; i < 40; i++) c.dispatchEvent(new WheelEvent("wheel", { deltaY: 400, bubbles: true, cancelable: true })); }); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
       }
       expect(!(await t.page.isVisible("#photoSettings")) && (await t.page.getAttribute("#photoSettingsToggle", "aria-expanded")) === "false", "settings should start folded");
       expect((await t.page.locator('#photoBar button:visible').count()) === 2, "only settings and the shutter belong on the lower bar");
