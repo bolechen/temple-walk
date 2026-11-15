@@ -195,6 +195,16 @@ forms, so it is not for name boards), "Yunjing Bang" (Yuji Boku, a heavy brush r
 (`#way`) sits on the picture where the next place lies, or at the edge toward it, with the distance in steps; it leaves with
 the goal. The visit's metres and minutes are kept under `yunjing.visit.v1` and told on the book's page. `__visit()` reports them.
 
+**What lies over the picture (`app/src/ui.js`).** Everything that opens over the walk is a layer on one stack:
+`modal` sheets (`menu`, `book`, `print`, `piece`, `slip`) are `<dialog class="layer">` opened with `showModal()`, so the
+page behind is inert, the pointer is let go, the walk stands still (`ui.modal()`) and only the sheet's own keys are heard
+(`confirm`: what E/Enter presses; `keys`: e.g. B closes the book); `panel`s (`keys`, `moodPanel`, `photoSettings`) sit at
+the edge and the walk goes on under them; the raised camera is a `mode`. Esc always closes the top layer and opens the
+pause menu only when the stack is empty; closing gives the focus back to what opened the layer. Open and close through
+`ui.open(id, { onClose })` / `ui.close(id)`, never by setting `hidden` (it is kept in step for the tests). A new sheet is a
+`<dialog class="layer">` plus one `ui.layer(id, …)` call. No UI library: comparable web games hand-write their DOM too
+(`docs/t00/decisions.md`, "界面").
+
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
 opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, volume, the key card, and
 a way back to the start of the path. The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
@@ -210,7 +220,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 

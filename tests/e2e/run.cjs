@@ -386,6 +386,31 @@ const scenarios = {
     await t.page.evaluate(() => localStorage.removeItem("yunjing.settings.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
+  // the focus goes into the sheet and comes back to what opened it.
+  layers: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    const ui = () => t.page.evaluate(() => window.__ui());
+    await t.page.keyboard.press("h"); await t.page.keyboard.press("t");
+    let u = await ui(); expect(u.stack.join() === "keys,moodPanel" && !u.modal, "H then T should lay two panels: " + JSON.stringify(u));
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "keys" && (await t.page.isVisible("#keys")) && !(await t.page.isVisible("#moodPanel")), "Esc should put away only the top panel: " + JSON.stringify(u));
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.page.isVisible("#menu")), "the second Esc should close the keys, not bring the menu: " + JSON.stringify(u));
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "menu" && u.modal && u.focus === "menu", "with nothing open Esc brings the menu, and the focus goes into it: " + JSON.stringify(u));
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && u.focus !== "menu", "Esc closes the menu and the focus leaves it: " + JSON.stringify(u));
+    // The book: opened by its chip, the walk and a jump held while it is open, Tab kept among its buttons, the focus given back.
+    await t.page.click("#bookBtn"); await t.until(async () => (await ui()).stack.join() === "book", 60000, "the chip did not open the book");
+    const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(4); await t.page.keyboard.up("w"); await t.page.keyboard.press(" "); await t.frames(2);
+    let s = await t.state(); expect(Math.abs(s.z - z0) < 0.01 && !s.jumping, "behind the open book he should neither walk nor jump: " + JSON.stringify([z0, s.z, s.jumping]));
+    await t.page.keyboard.press("Tab"); expect(await t.page.evaluate(() => document.getElementById("book").contains(document.activeElement)), "Tab should move among the book's own buttons");
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.page.isVisible("#book")) && u.focus === "bookBtn", "Esc should close the book and give the focus back to its chip: " + JSON.stringify(u));
+    await t.page.evaluate(() => document.activeElement?.blur());
+    await t.page.keyboard.press("b"); await t.until(() => t.page.isVisible("#book"), 60000, "B did not open the book"); await t.page.keyboard.press("b"); expect(!(await t.page.isVisible("#book")), "B should close the book it opened");
+    // The raised camera, its settings over it.
+    await t.page.click("#photoBtn"); await t.page.click("#photoSettingsToggle"); u = await ui(); expect(u.stack.join() === "photo,photoSettings" && !u.modal, "the settings should lie over the raised camera: " + JSON.stringify(u));
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "photo" && u.focus === "photoSettingsToggle", "Esc folds the settings and leaves the focus on their button: " + JSON.stringify(u));
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.probe()).photo, "the next Esc lowers the camera: " + JSON.stringify(u));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Space jumps: he leaves the ground, comes down where he stood (or a little on, if he was walking), and nothing else happens.
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 640, height: 400 } });

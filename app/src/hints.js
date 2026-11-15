@@ -5,7 +5,7 @@
 const $ = (id) => document.getElementById(id);
 const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
 
-export function createHints({ off = false } = {}) {
+export function createHints({ off = false, ui = null } = {}) {
   const coarse = matchMedia("(pointer: coarse)").matches, line = $("hint"), said = new Set(), timers = {};
   let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0;
 
@@ -21,7 +21,13 @@ export function createHints({ off = false } = {}) {
     const el = $(id); if (off || !el) return;
     el.classList.add("on"); clearTimeout(timers[id]); timers[id] = setTimeout(() => el.classList.remove("on"), secs * 1000);
   }
-  const card = (open = $("keys")?.hidden) => { const el = $("keys"); if (!el || coarse) return false; el.hidden = !open; if (open) drop(); return open; };
+  // The card of keys is a panel on the stack of what lies over the picture (src/ui.js), so Esc puts it away like anything else.
+  const shown = () => (ui ? ui.isOpen("keys") : !!$("keys") && !$("keys").hidden);
+  const card = (open = !shown()) => {
+    const el = $("keys"); if (!el || coarse) return false;
+    if (ui) { if (open) ui.open("keys"); else ui.close("keys"); } else el.hidden = !open;
+    if (open) drop(); return open;
+  };
 
   // The controls at the edge keep out of the way of someone who is walking with the keys: they come back when the mouse moves.
   const stir = () => { document.body.classList.remove("calm"); clearTimeout(calmT); calmT = setTimeout(() => document.body.classList.add("calm"), 4500); };
@@ -48,5 +54,5 @@ export function createHints({ off = false } = {}) {
     if (!coarse && !ran && walked > 40) tip("run", `${K("Shift")}快步　·　${K("Space")}跳`, 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
-  return { tip, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: !!$("keys") && !$("keys").hidden, calm: document.body.classList.contains("calm") }) };
+  return { tip, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: shown(), calm: document.body.classList.contains("calm") }) };
 }

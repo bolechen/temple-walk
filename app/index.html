@@ -17,6 +17,11 @@
   }
   html, body { height: 100%; margin: 0; }
   [hidden] { display: none !important; }
+  /* The sheets that open over the walk are <dialog>s on one stack (src/ui.js). The browser's own dialog look is put
+     aside: each sheet below draws its own ground, and nothing about it says "window". */
+  dialog.layer { margin: 0; padding: 0; border: 0; width: auto; height: auto; max-width: none; max-height: none; background: transparent; color: inherit; overflow: visible; box-sizing: border-box; }
+  dialog.layer:focus { outline: none; }
+  dialog.layer::backdrop { background: transparent; }
   body { background: var(--ink); color: var(--paper); font-family: var(--serif); overflow: hidden; position: relative; }
   .view { position: absolute; inset: 0; overflow: hidden; }
   #yardGl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
@@ -211,7 +216,7 @@
     <button class="chip" id="bookBtn" type="button" aria-label="打开朱印帐">朱印</button>
     <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置">歇脚</button>
   </div>
-  <div id="menu" role="dialog" aria-label="歇脚" hidden><div class="card">
+  <dialog class="layer" id="menu" aria-label="歇脚" hidden><div class="card">
     <h2>歇脚</h2>
     <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
     <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
@@ -222,7 +227,7 @@
     <div class="set"><label for="setAmbience">山声</label><input id="setAmbience" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setEffects">音效</label><input id="setEffects" type="range" min="0" max="1" step="0.05"></div>
     <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuResume" type="button">继续</button></div>
-  </div></div>
+  </div></dialog>
   <div id="moodPanel" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
     <div><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
@@ -245,18 +250,18 @@
     </div></fieldset>
     <p>画面就是你眼前所见 · 单击即拍 · 滚轮远近</p>
   </section>
-  <div id="print" hidden>
+  <dialog class="layer" id="print" aria-label="照片" hidden>
     <img id="printImg" alt="刚拍下的照片">
     <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
-  </div>
+  </dialog>
 </div>
 <div id="toast" hidden><img id="toastSeal" alt=""><p id="toastName"></p><p id="toastLine"></p></div>
-<div id="book" hidden>
+<dialog class="layer" id="book" aria-label="朱印帐" hidden>
   <img id="bookImg" alt="朱印帐：寺名、日期和已得的印">
   <p id="bookHint"></p>
   <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
-</div>
-<div id="piece" hidden>
+</dialog>
+<dialog class="layer" id="piece" aria-labelledby="pieceTitle" hidden>
   <figure><img id="pieceImg" alt=""></figure>
   <article>
     <h2 id="pieceTitle"></h2><p id="pieceBy"></p>
@@ -264,11 +269,11 @@
     <p id="pieceNote"></p><p id="pieceLink"></p><p id="pieceCredit"></p>
     <button class="ink-btn" id="pieceClose" type="button">看过了</button>
   </article>
-</div>
-<div id="slip" hidden>
+</dialog>
+<dialog class="layer" id="slip" aria-labelledby="slipText" hidden>
   <div class="paper"><p id="slipText"></p><p id="slipFrom"></p></div>
   <button class="ink-btn" id="slipTake" type="button">收下</button>
-</div>
+</dialog>
 <div id="title">
   <div>
     <h1>山门之外</h1>

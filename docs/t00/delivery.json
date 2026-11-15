@@ -1,8 +1,16 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
+  "summary": "界面这一轮：所有盖在画面上的界面收到 app/src/ui.js 的一个栈上，不接任何第三方 UI 库。菜单、朱印帐、照片、画作卡、签改成原生 <dialog>：背后的页面不能操作，焦点留在弹层里，人物站住，只认弹层自己的按键。Esc 只关最上面一层，栈空了才打开歇脚菜单；关掉时焦点回到打开它的按钮。配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
   "changes": [
+    "新增 app/src/ui.js（约 120 行，无依赖）：层分 modal、panel、mode 三种。用 ui.open(id, { onClose }) 和 ui.close(id) 开关，不再直接改 hidden（hidden 仍同步，测试照读）",
+    "index.html：#menu、#book、#print、#piece、#slip 改成 <dialog class=\"layer\">，浏览器自带的对话框外观全部去掉，画面不变",
+    "yard.js：Esc 那串手写优先级换成 ui.key(e)。跳跃、下台阶、行走的拦截原来各列一遍弹层 id，现在改问 ui.covered() 和 ui.modal()。拍照改成「相机 mode → 设置 panel → 照片 modal」三层",
+    "game.js：签和画框各开各的实例，不再靠改按钮文字共用一个 DOM。画作卡去掉了自己的捕获监听和 250 毫秒延时。藏经楼的签按 Esc 关掉也算收下（以前 Esc 对它不起作用）",
+    "hints.js：键位卡改成栈上的一个 panel",
+    "去掉 E 键里对不存在的 #offer 的引用。照片打开时按 P 不再把相机放下、留下照片悬在画面上",
+    "新增测试钩子 __ui()（栈、是否 modal、焦点在哪）和 e2e 场景 layers",
+    "调研同类项目和现成 UI 库的结论写在 docs/t00/decisions.md 的「界面」一节",
     "app/src/score.js：G 羽调式与七音主题（每枚印的磬声是下一个音，七印前不完整奏出），七个地点各自造句，停留 2 秒才换场，换场时丢弃未奏的音、旧句淡出 3.5 秒",
     "app/src/instruments.js：合成的琴（Karplus–Strong，吟与上）、泛音、低空弦、箫、和声；每个声音以 60 毫秒闸门收尾；createPlayer 供页面与离线渲染共用",
     "app/src/audio.js：配乐、山声、音效三条总线各自音量与分析器；殿内外两套混响；撞钟、击鼓、得印时音乐让位；后台暂停、任意点按恢复；檐铃改入同一调式",
@@ -17,6 +25,10 @@
     "pose \"bind\" 回到 A-pose；node tools/portrait.js <季节-时辰> bind 出正、侧、背三视图，可与设定图并排对照"
   ],
   "known_issues": [
+    "弹层打开时，焦点会移到弹层本身，不落在第一个按钮上，这样画面上不会出现焦点框；键盘用户要先按一下 Tab 才进入按钮",
+    "鼠标点开的弹层，关掉后焦点回到原来的按钮。之后按空格，会按那个按钮，而不是跳跃。这是原来就有的行为，没有改",
+    "没有手柄支持；动作和按键的对应表还在 yard.js 的 keydown 里，没有抽出来",
+    "toast、say、breath 不在栈上（它们不接收输入）",
     "配乐还没有人听过：自动测试与渲染报告只证明音准、无削波、无叠播、换场按规则发生，不证明好听",
     "配乐目标第 2 条的两版样片比较未做（用户选择直接接入）；第 6 条的实机含声音录像需用户录制",
     "Safari / iOS 的后台恢复未在真机验证；只在无头 Chromium 中测过",
@@ -34,6 +46,11 @@
     "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG"
   ],
   "evidence": [
+    "app/src/ui.js",
+    "tests/e2e/run.cjs（layers、keys、menu、photo-ui、halls、pilgrimage、jump、drop 场景）",
+    "docs/t00/evidence/ui/menu-quirks.jpg",
+    "docs/t00/evidence/ui/book-quirks.jpg",
+    "docs/t00/decisions.md",
     "docs/t00/evidence/monk/apose.jpg",
     "docs/t00/evidence/monk/poses.jpg",
     "docs/t00/evidence/monk/walking.jpg",
