@@ -123,8 +123,25 @@ function buildRoom(M, hall, ox, figures) {
     add(merge([-0.9, 0.9].map((x) => cushion().translate(x, Y, -K.d / 2 + 3.2))), M.straw, () => 0.7);
     lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14]);
   }
-  // Daylight standing in the doorway.
-  const day = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 3.3).rotateY(Math.PI).translate(ox, Y + 1.65, zs + 0.2), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 2.3, 2.4), fog: false })); g.add(day);
+  // Through the doorway: the court outside, as it stood when he came in. The room is not where the hall is (it lies
+  // under the hill), so the view cannot simply be left open. Instead a picture of all that surrounds the hall's own
+  // door is taken as he steps over the threshold (`lookOut` in yard.js), and here it is laid on the inside of a great
+  // box standing beyond the opening: its floor level with this one, its far wall ten metres off. Each point of the box
+  // shows what lay in that direction from the real doorway, so the porch runs on from the sill and the picture shifts
+  // as it should when he walks across the room. Until a picture arrives it is the pale grey of an overcast noon.
+  const C = new THREE.Vector3(ox, Y + 1.5, zs + 0.9);
+  const out = new THREE.Mesh(new THREE.BoxGeometry(44, 14, 10.5).translate(ox, Y + 7 - 0.02, zs + 0.28 + 5.25), new THREE.ShaderMaterial({
+    side: THREE.BackSide, fog: false,
+    uniforms: { tOut: { value: null }, uHas: { value: 0 }, uC: { value: C }, uTurn: { value: new THREE.Vector2(0, 1) }, uGain: { value: 1.12 } },
+    vertexShader: "varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+    fragmentShader: "uniform samplerCube tOut; uniform float uHas, uGain; uniform vec3 uC; uniform vec2 uTurn; varying vec3 vW; void main(){ vec3 v = vW - uC; vec3 d = vec3(uTurn.y * v.x + uTurn.x * v.z, v.y, -uTurn.x * v.x + uTurn.y * v.z); vec3 c = mix(vec3(.62, .66, .68), textureCube(tOut, d).rgb * uGain, uHas); gl_FragColor = vec4(c, 1.); }",
+  }));
+  g.add(out);
+  // The opening itself: jambs and a lintel of dark timber the thickness of the wall, a stone sill, and the two
+  // leaves of the door folded back against the wall inside, so that the daylight has an edge to come round.
+  add(merge([box(0.22, 3.3, 0.42, -1.5, Y + 1.65, zs + 0.15), box(0.22, 3.3, 0.42, 1.5, Y + 1.65, zs + 0.15), box(3.3, 0.24, 0.42, 0, Y + 3.3, zs + 0.15),
+    box(1.3, 3.0, 0.07, -2.3, Y + 1.56, zs - 0.06), box(1.3, 3.0, 0.07, 2.3, Y + 1.56, zs - 0.06)]), M.woodX);
+  add(box(3.0, 0.12, 0.5, 0, Y + 0.06, zs + 0.15), M.stone, () => 0.7);
   lightAt.push([0, 3.0, K.d / 2 - 1.6, 0xcfdcec, 14, 20]);
   // The frames along the side walls: a timber border round a sheet of paper, hung a little above a child's eye.
   const frames = [], spots = {}, fw = 1.5, fh = 2.2, n = Math.max(1, Math.floor((K.d - 2.4) / 3.1)), fy = Y + Math.min(2.35, K.h / 2);
@@ -137,7 +154,7 @@ function buildRoom(M, hall, ox, figures) {
   }
   add(merge(frames), M.woodZ);
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
-  return { group: g, room: { ...R, solids }, lights, flames, spots, places };
+  return { group: g, room: { ...R, solids }, lights, flames, spots, places, outlook: out };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.

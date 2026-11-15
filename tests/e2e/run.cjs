@@ -98,6 +98,13 @@ const scenarios = {
       await t.page.evaluate((id) => window.__inside(id), h.id); await t.until(async () => (await t.state()).room === h.id, 30000, `could not go into ${h.name}`);
       await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
       let s = await t.state(); expect(s.h < -50, `${h.name}: not standing on the room's floor`);
+      // Turning to look back at the door, he sees the court he came from: a picture taken at the hall's own door,
+      // not a sheet of white light that floods the room.
+      expect(s.doorway === 1, `${h.name}: nothing was hung beyond the doorway`);
+      if (h === halls[0]) {
+        await t.page.evaluate((x) => window.__pose(x, 0, Math.PI, 0.05), s.x); await t.frames(3);
+        const p = await t.page.evaluate(() => window.__probe()); expect(p.lum > 25 && p.lum < 170, `${h.name}: looking out through the door the picture is washed out or black: mean ${p.lum.toFixed(1)}`);
+      }
       const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
       const spot = await t.page.evaluate((id) => Object.entries(window.__gallery).find(([k]) => k.startsWith(id + "-"))[1].at, h.id);
       await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0), spot); await t.until(async () => ((await t.journey()).look || "").startsWith(h.id + "-"), 30000, `${h.name}: no frame to look at`);
