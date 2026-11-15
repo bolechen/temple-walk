@@ -1,0 +1,64 @@
+// What the observances ask of him and of the place: a hand sent somewhere arrives, a bow and a breath show, the bell's
+// log touches the bronze and goes no further, every cushion and stool is a seat he can come to, and the incense stand
+// is within his reach.
+import test from "node:test"; import assert from "node:assert/strict";
+import "./dom-stub.mjs";
+import * as THREE from "three";
+const { buildSite, createWalker, BODY } = await import("../../app/src/site.js");
+const { buildInteriors } = await import("../../app/src/interior.js");
+const { createMonk } = await import("../../app/src/monk.js");
+const { logSwing } = await import("../../app/src/rites.js");
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+const site = buildSite(M), walker = createWalker(site), rooms = buildInteriors(M, site.halls);
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+test("a hand sent to a place within his reach arrives there, and one sent too far goes as far as the arm does", () => {
+  const monk = createMonk(), act = { hands: { left: { at: V(0.05, 0.8, 0.27), w: 1 }, right: { at: V(-0.05, 0.8, 0.27), w: 1 } } };
+  for (let i = 0; i < 20; i++) monk.update(0.05, 0, false, i * 0.05, () => 0, { act });
+  for (const n of ["left", "right"]) { const d = monk.bones[n + "Hand"].getWorldPosition(V(0, 0, 0)).distanceTo(act.hands[n].at); assert.ok(d < 0.02, `${n} hand is ${(d * 100).toFixed(1)} cm from where it was sent`); }
+  act.hands.left.at.set(0.1, 0.8, 1.5); monk.update(0.05, 0, false, 2, () => 0, { act });
+  const sh = monk.bones.leftUpperArm.getWorldPosition(V(0, 0, 0)), far = monk.bones.leftHand.getWorldPosition(V(0, 0, 0));
+  assert.ok(far.distanceTo(sh) < 0.36 && far.z > 0.3, "an arm does not stretch");
+  act.hands.left.w = act.hands.right.w = 0; monk.update(0.05, 0, false, 3, () => 0, { act });
+  assert.ok(monk.bones.leftHand.getWorldPosition(V(0, 0, 0)).y < 0.55, "a hand let go hangs at his side again");
+});
+test("a bow carries his head forward and down, and a breath taken on purpose fills his chest", () => {
+  const monk = createMonk(), head = () => monk.bones.head.getWorldPosition(V(0, 0, 0));
+  monk.update(0.05, 0, false, 0, () => 0, {}); const up = head();
+  monk.update(0.05, 0, false, 0, () => 0, { act: { bow: 0.5 } }); const down = head();
+  assert.ok(down.z > up.z + 0.08 && down.y < up.y - 0.015, `bowed: the head moved ${(down.z - up.z).toFixed(3)} forward, ${(up.y - down.y).toFixed(3)} down`);
+  monk.update(0.05, 0, "sit", 0, () => 0, { act: { breath: -1 } }); const out = monk.bones.chest.scale.z;
+  monk.update(0.05, 0, "sit", 0, () => 0, { act: { breath: 1 } }); const full = monk.bones.chest.scale.z;
+  assert.ok(Math.abs(out - 1) < 1e-6 && full > 1.04, "the chest does not fill"); assert.ok(Math.abs(monk.bones.neck.scale.z * full - 1) < 1e-6, "the head should keep its size");
+});
+test("the bell's log is drawn back, touches the bronze and goes no further, and comes to rest", () => {
+  const s = { t0: 10000, lead: 1300, gap: 0.18 }; let lo = 0, hi = 0;
+  for (let t = 8000; t < 22000; t += 5) { const z = logSwing(s, t); lo = Math.min(lo, z); hi = Math.max(hi, z); }
+  assert.ok(Math.abs(lo + 0.18) < 1e-9, `the log reached ${lo}`); assert.ok(hi > 0.2 && hi < 0.3, `it was drawn back ${hi}`);
+  assert.equal(logSwing(s, 8600), 0); assert.ok(Math.abs(logSwing(s, 10000) + 0.18) < 1e-9, "it should meet the bell at the moment it sounds"); assert.equal(logSwing(s, 19500), 0);
+  const tap = { t0: 10000, lead: 0, gap: 0.18 }; assert.equal(logSwing(tap, 9990), 0); assert.ok(Math.abs(logSwing(tap, 10080) + 0.18) < 1e-9 && logSwing(tap, 10040) < -0.05, "a tap should send the log to the bell");
+  const bellS = site.strikers.find((k) => k.kind === "bell"); assert.ok(bellS.rope && bellS.gap > 0.1, "the bell's log has no rope to pull");
+  const p = site.places.bell; assert.ok(!walker.blocked(p.at[0], p.at[1]) && walker.blocked(p.at[0], p.at[1] + 0.06), "he should stand at the edge of what he can reach, before the rope");
+});
+test("every cushion and every stool is a seat, and he can come within a step or two of each", () => {
+  const all = [...site.seats, ...rooms.seats]; assert.ok(all.length >= 30, `only ${all.length} seats`);
+  for (const id of ["main", "chan", "tea", "library", "yaoshi", "guanyin", "dahui", "lingxiao"]) assert.ok(rooms.seats.some((s) => s.room === id), `nothing to sit on in ${id}`);
+  assert.equal(site.seats.filter((s) => s.room === null).length, 4, "out of doors: three stools and the summit mat");
+  for (const s of all) {
+    walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
+    let near = false; for (let a = 0; a < 24 && !near; a++) for (const r of [0.5, 0.9, 1.3]) { const x = s.at[0] + Math.sin((a / 24) * 6.283) * r, z = s.at[1] + Math.cos((a / 24) * 6.283) * r; if (!walker.blocked(x, z)) { near = true; break; } }
+    assert.ok(near, `the seat at ${s.at.map((v) => v.toFixed(1))} in ${s.room || "the open"} cannot be come to`);
+    const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0], s.at[1]);
+    assert.ok(Number.isFinite(s.face) && s.top - floor > 0.05 && s.top - floor < 1.0, `a seat ${(s.top - floor).toFixed(2)} m above the floor in ${s.room || "the open"}`);
+  }
+  walker.setRoom(null);
+});
+test("the incense stand is before the cushion, within his reach from where he steps up to it", () => {
+  const p = rooms.places.incense; assert.ok(p && p.front && p.bowl, "the great hall has no stand for a visitor's incense");
+  walker.setRoom(rooms.rooms.main.room);
+  assert.ok(!walker.blocked(p.at[0], p.at[1]) && !walker.blocked(p.front[0], p.front[1]), "he cannot stand at the cushion or before the stand");
+  assert.ok(walker.blocked(p.bowl[0], p.bowl[2]), "the stand should be in the way, not walked through");
+  const d = Math.hypot(p.bowl[0] - p.front[0], p.bowl[2] - p.front[1]); assert.ok(d > BODY && d < 0.62, `the bowl is ${d.toFixed(2)} m from where he stands`);
+  assert.ok(p.bowl[1] - p.y > 0.5 && p.bowl[1] - p.y < 0.75, "the bowl should stand below his shoulders");
+  walker.setRoom(null);
+});

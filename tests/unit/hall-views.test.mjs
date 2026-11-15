@@ -44,3 +44,20 @@ test("the locked T00 acceptance cameras are untouched", () => {
   for (const v of HALL_VIEWS) assert.ok(!/^cam0[1-6]$/.test(v.name), "a hall view must not take a locked name");
   for (const v of HALL_VIEWS) assert.ok(!(v.name in site.views), `${v.name} would displace an outdoor view`);
 });
+
+// tools/inside.cjs --views [level]: each level reads its own table, and nothing else.
+import { createRequire } from "node:module";
+const tool = createRequire(import.meta.url)("../../tools/hall-views.cjs");
+
+test("the tool finds the level's own table, T00 by default, with each room's offset added", () => {
+  assert.ok(tool.levels().includes("t00"));
+  const jobs = tool.views();
+  assert.equal(jobs.length, HALL_VIEWS.length);
+  assert.deepEqual(tool.views("t00"), jobs);
+  for (const j of jobs) { const v = HALL_VIEWS.find((h) => h.name === j.name); assert.equal(j.abs[0], v.abs[0] + rooms.rooms[j.hall].room.cx, j.name); }
+});
+
+test("a level without a table, or a name that is not a plain folder, is refused with the levels that have one", () => {
+  for (const bad of ["t01", "../t00", "t00/..", "T00", ""]) assert.throws(() => tool.tableOf(bad), /no indoor views for level .*levels with .*t00/, JSON.stringify(bad));
+  assert.equal(tool.tableOf("t00"), "./app/levels/t00/hall-views.js");
+});

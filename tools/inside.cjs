@@ -1,13 +1,20 @@
 // Renders views inside the halls, which the named views of tools/shots.js cannot reach: each job names a hall, a pose
 // and optionally a view and extra address parameters, and the picture's mean colour and the frame's load are printed.
 // usage: node tools/inside.cjs <out dir> '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}, ...]'
-//   or   node tools/inside.cjs <out dir> --views   (each hall's registered views, app/levels/t00/hall-views.js)
+//   or   node tools/inside.cjs <out dir> --views [level]   (every registered view of a level, app/levels/<level>/hall-views.js;
+//        the level defaults to t00, and a level without a table is refused with the list of those that have one)
 //   abs = [x, z, yaw, pitch] in the room's absolute place (rooms stand sixty metres apart in the order of site.halls).
 //   A registered view gives [dx, z, yaw, pitch] from the room's centre line; --views adds the room's own offset.
 //   view = "first" | "third"; qs = more address parameters, e.g. "time=night".
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
-const root = require("./site.cjs").site(), out = process.argv[2];
+const out = process.argv[2];
+// The jobs are read before the site is built, so a wrong level or a bad list fails at once.
+const jobs = (() => {
+  if (process.argv[3] !== "--views") return JSON.parse(process.argv[3]);   // [{hall, name, abs:[x,z,yaw,pitch], view, qs}]
+  try { return require("./hall-views.cjs").views(process.argv[4]); } catch (e) { console.error(String(e.message || e).split("\n")[0]); process.exit(2); }
+})();
+const root = require("./site.cjs").site();
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
 const srv = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), p = path.join(root, rel);
@@ -16,7 +23,6 @@ const srv = http.createServer((req, res) => {
   if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><style>body{margin:0}</style><body>' + fs.readFileSync(p, "utf8"));
   fs.createReadStream(p).pipe(res);
 });
-const jobs = process.argv[3] === "--views" ? require("./hall-views.cjs") : JSON.parse(process.argv[3]);   // [{hall, name, abs:[x,z,yaw,pitch], view, qs}]
 (async () => {
   await new Promise((r) => srv.listen(0, "127.0.0.1", r));
   const base = `http://127.0.0.1:${srv.address().port}/`;

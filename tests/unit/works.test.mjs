@@ -15,8 +15,8 @@ test("every work that hangs is described, credited to the museum that publishes 
     const w = WORKS[slug]; assert.ok(w, `${slug} is hung but not described`);
     for (const k of ["title", "by", "period", "medium", "holder", "note", "link", "credit", "url"]) assert.ok(typeof w[k] === "string" && w[k].length > 1, `${slug}: no ${k}`);
     assert.ok(w.note.length >= 100 && w.note.length <= 200, `${slug}: the note is ${w.note.length} characters`);
-    assert.ok(/ColBase \(https:\/\/colbase\.nich\.go\.jp\/collection_items\//.test(w.credit) || /Metropolitan Museum of Art.*Open Access/.test(w.credit), `${slug}: the source line does not name an open collection: ${w.credit}`);
-    assert.ok(/^https:\/\/(colbase\.nich\.go\.jp|www\.metmuseum\.org)\//.test(w.url), `${slug}: ${w.url}`);
+    assert.ok(/ColBase \(https:\/\/colbase\.nich\.go\.jp\/collection_items\//.test(w.credit) || /Metropolitan Museum of Art.*Open Access/.test(w.credit) || /Cleveland Museum of Art.*Open Access, public domain \(CC0\)/.test(w.credit), `${slug}: the source line does not name an open collection: ${w.credit}`);
+    assert.ok(/^https:\/\/(colbase\.nich\.go\.jp|www\.metmuseum\.org|clevelandart\.org)\//.test(w.url), `${slug}: ${w.url}`);
     const file = new URL(`levels/t00/gallery/${slug}.webp`, app); assert.ok(fs.existsSync(file) && fs.statSync(file).size > 8000, `${slug}: no picture in app/levels/t00/gallery`);
     assert.ok(fs.statSync(file).size < 300e3, `${slug}: the picture is heavier than 300 KB`); assert.ok(w.w > 300 && w.h > 300 && Math.max(w.w, w.h) <= 1280);
   }
@@ -28,6 +28,8 @@ test("each hall has wall enough for its works beside its own leaf", () => {
     const frames = 2 * Math.max(1, Math.floor((KINDS[hall.kind].d - 2.4) / 3.1)); assert.ok(slugs.length <= frames - 1, `${hall.name} has ${frames} frames and ${slugs.length} works besides its leaf`);
   }
   for (const h of site.halls) assert.ok((HANG[h.id] || []).length >= 1, `${h.name} has nothing real on its walls`);
+  // No frame is left blank: beside its leaf, every hall has a work for each frame on its walls.
+  for (const h of site.halls) { const frames = 2 * Math.max(1, Math.floor((KINDS[h.kind].d - 2.4) / 3.1)); assert.equal((HANG[h.id] || []).length, frames - 1, `${h.name}: ${frames} frames, ${(HANG[h.id] || []).length} works and a leaf`); }
 });
 
 test("every figure a hall stands is a packed scan that is there, small, and stands in a hall that exists", () => {

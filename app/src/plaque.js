@@ -20,10 +20,11 @@ const GROUND = {
   ink:  { top: "#191613", foot: "#221d19", ink: "#b3964f", rim: "#7c6836", fillet: "#6f5a2a" },
   navy: { top: "#131a27", foot: "#18202e", ink: "#b3964f", rim: "#7c6836", fillet: "#6f5a2a" },
   wood: { top: "#3d2016", foot: "#472619", ink: "#b89a52", rim: "#2a150d", fillet: "#6a4a26" },
+  stone: { top: "#8a8880", foot: "#7a7871", ink: "#1d1a17", rim: "#5f5d57", fillet: "#6c6a63" },   // a stele of grey stone, the characters cut and inked
 };
 const doc = typeof document !== "undefined" ? document : null;
 
-// `vertical`: characters stacked top to bottom. `style`: gold | ink | navy | wood (what the ground is). `gold` is the
+// `vertical`: characters stacked top to bottom. `style`: gold | ink | navy | wood | stone (what the ground is). `gold` is the
 // old way of asking for a gilt ground. `band`: an upright board inside the flaring carved band (the default for an
 // upright board of four characters). `cols`: columns on a banded board, read from the right. `hand`: characters
 // taken from a picture of the original instead of a typeface. `notes`: two small columns either side of the name

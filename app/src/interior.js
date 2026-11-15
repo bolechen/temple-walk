@@ -106,7 +106,9 @@ function paper() {   // a hanging scroll's blank sheet
 function buildRoom(M, hall, ox, figures) {
   const K = KINDS[hall.kind] || KINDS.patriarch, Y = FLOOR, g = new THREE.Group(), solids = [], dim = () => 0.42;
   // Where a column must not stand: on what is in the way already, on a cushion, where a visitor stops (`keep`).
-  const keep = [], seat = (x, z, r = 0.32) => (keep.push({ x, z, r }), cushion().translate(x, Y, z));
+  // Every cushion and stool is a seat he may take (`seats`: where it is, the height of its top, the way one sits on it).
+  const keep = [], seats = [], sitAt = (x, z, up, face = Math.PI) => seats.push({ at: [ox + x, z], top: Y + up, face, room: hall.id });
+  const seat = (x, z, r = 0.32, up = 0, face = Math.PI) => (keep.push({ x, z, r }), sitAt(x, z, up + 0.104, face), cushion().translate(x, Y, z));
   const R = { id: hall.id, y: Y, x0: ox - K.w / 2, x1: ox + K.w / 2, z0: -K.d / 2, z1: K.d / 2, h: K.h, door: [ox, K.d / 2 - 1.6], exitZ: K.d / 2 - 0.7, cx: ox };
   const add = (geo, mat, ao = dim) => { const m = mesh(geo.translate(ox, 0, 0), mat, { ao }); g.add(m); return m; };
   const block = (x0, x1, z0, z1) => solids.push({ x0: ox + x0, x1: ox + x1, z0, z1 });
@@ -138,13 +140,22 @@ function buildRoom(M, hall, ox, figures) {
     if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
     else later.push((get) => get(stand.centre[0], stand.centre[1]).then((o) => altar.add(o)));
     for (const [file, x, z, h] of stand.beside || []) later.push((get) => get(file, h).then((o) => { o.position.set(x, 0, z); o.rotation.y = -Math.sign(x) * 0.12; altar.add(o); }));   // turned a little toward the middle
-    if (big) places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id };
+    // Before the middle cushion of the great hall, a low stand with a bowl of ash: the censer on the table is out of a
+    // child's reach, and this is where a visitor's own incense goes. He bows at the cushion, steps up to `front`, and
+    // sets the sticks in the ash at `bowl` (rites.js).
+    if (big) {
+      const sz = tz + 0.95, sh = 0.52;
+      add(merge([box(0.34, 0.035, 0.3, 0, Y + sh - 0.018, sz), box(0.3, 0.04, 0.26, 0, Y + sh - 0.06, sz), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.035, sh - 0.03, 0.035, a * 0.14, Y + (sh - 0.03) / 2, sz + c * 0.12)), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz - 0.12), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz + 0.12)]), M.woodX);
+      add(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.12, 0.05], [0.13, 0.085], [0.118, 0.085], [0.11, 0.07], [0, 0.07]], 24).translate(0, Y + sh, sz), M.bronze, () => 0.8);
+      block(-0.17 - BODY, 0.17 + BODY, sz - 0.15 - BODY, sz + 0.15 + BODY);
+      places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz] };
+    }
     lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, big ? K.h - 2.4 : K.h - 2.0, big ? tz + 0.8 : tz + 1.8, 0xffe6c4, big ? 11 : 7, 16, true]);
   } else if (hall.kind === "chan") {
     // The meditation hall: long sitting platforms down both sides, a cushion at every place, the aisle between.
-    const plat = [], seats = [];
-    for (const sx of [-1, 1]) { plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) seats.push(seat(x, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0)).translate(0, 0.42, 0)); }
-    add(merge(plat), M.woodX); add(merge(seats), M.straw, () => 0.7);
+    const plat = [], mats = [];
+    for (const sx of [-1, 1]) { plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) mats.push(seat(x, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0), 0.32, 0.42, sx > 0 ? Math.PI : 0).translate(0, 0.42, 0)); }   // each faces the aisle
+    add(merge(plat), M.woodX); add(merge(mats), M.straw, () => 0.7);
     block(-K.w / 2 + 1.5, K.w / 2 - 1.5, -K.d / 2, -K.d / 2 + 2.2); block(-K.w / 2 + 1.5, -1.6, K.d / 2 - 4.4, K.d / 2 - 2.4); block(1.6, K.w / 2 - 1.5, K.d / 2 - 4.4, K.d / 2 - 2.4);
     lampStand(0, -K.d / 2 + 3.2); lightAt.push([0, 2.0, -K.d / 2 + 3.2, 0xffa050, 9, 14], [0, K.h - 1.4, 0.5, 0xffe6c4, 6, 14, true]);
   } else if (hall.kind === "tea") {
@@ -152,7 +163,7 @@ function buildRoom(M, hall, ox, figures) {
     const wood = [], glaze = [], iron = [];
     for (const [x, z] of [[-5, -1.4], [0, -2.2], [5, -1.4]]) {
       wood.push(table(1.3, 0.8, 0.78, x, z)); block(x - 0.75, x + 0.75, z - 0.5, z + 0.5);
-      for (const [a, c] of [[0, 0.95], [0, -0.95], [1.05, 0]]) keep.push({ x: x + a, z: z + c, r: 0.22 }), wood.push(lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 18).translate(x + a, Y, z + c));
+      for (const [a, c] of [[0, 0.95], [0, -0.95], [1.05, 0]]) keep.push({ x: x + a, z: z + c, r: 0.22 }), sitAt(x + a, z + c, 0.44, Math.atan2(-a, -c)), wood.push(lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 18).translate(x + a, Y, z + c));
       for (const a of [-0.2, 0.25]) glaze.push(lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 20).translate(x + a, Y + 0.815, z + 0.1));
       iron.push(lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.12], [0.07, 0.19], [0.035, 0.22], [0.03, 0.27], [0.045, 0.29], [0, 0.29]], 20).translate(x - 0.42, Y + 0.815, z - 0.15));
     }
@@ -260,12 +271,12 @@ function buildRoom(M, hall, ox, figures) {
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
   // `hang()`: fetch and mount this hall's works, the first time someone comes in.
   const m = timber.members, frame = { ...m, cols: m.cols.map((c) => ({ ...c, x: c.x + ox })), beams: m.beams.map((q) => ({ ...q, x: q.x + ox })), ties: m.ties.map((q) => ({ ...q, x0: q.x0 + ox, x1: q.x1 + ox })), wx: m.wx, ox };
-  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
+  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.
 export function buildInteriors(M, halls, renderer) {
-  const group = new THREE.Group(), rooms = {}, spots = {}, places = {}, state = { figures: "loading" };
+  const group = new THREE.Group(), rooms = {}, spots = {}, places = {}, seats = [], state = { figures: "loading" };
   // The figures are fetched once and stood in every hall that has an altar.
   const figures = (async () => {
     if (typeof fetch === "undefined" || typeof document === "undefined") return null;
@@ -292,8 +303,8 @@ export function buildInteriors(M, halls, renderer) {
     const o = src.clone(true); o.traverse((m) => { if (m.isMesh) { m.material.envMapIntensity = 0.12; m.castShadow = false; } }); o.scale.setScalar(h); state.stood[file] = (state.stood[file] || 0) + 1; return o;
   });
   halls.forEach((hall, i) => {
-    const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places);
+    const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places); seats.push(...r.seats);
     const hang = r.hang; r.hang = () => hang(get);
   });
-  return { group, rooms, spots, places, state };
+  return { group, rooms, spots, places, seats, state };
 }
