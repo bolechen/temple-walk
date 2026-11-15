@@ -5,12 +5,13 @@ import { findDrop,dropPose } from '../../app/src/drop.js';
 const M=new Proxy({}, {get(t,k){return k==='plaster'||k==='interior'?()=>t[k]||=new THREE.MeshBasicMaterial():t[k]||=new THREE.MeshBasicMaterial();}});
 const site=buildSite(M),w=createWalker(site);
 test('reproduced 0.45m tea porch blocker has a deliberate drop route',()=>{
- assert.equal(w.heightAt(-13.5,11),.45);assert.equal(w.blocked(-13.3,11),true);
- const plan=findDrop(w,site.walk.drops,-13.5,11,1,0);assert.ok(plan);assert.equal(plan.from[1],.45);assert.equal(plan.to[1],0);assert.equal(w.blocked(plan.to[0],plan.to[2]),false);
+ // (The tea house's porch was deepened on 2026-11-15 so its tables can be walked round: its edge is at x = -12.6 now.)
+ assert.equal(w.heightAt(-12.9,11),.45);assert.equal(w.blocked(-12.7,11),true);
+ const plan=findDrop(w,site.walk.drops,-12.9,11,1,0);assert.ok(plan);assert.equal(plan.from[1],.45);assert.equal(plan.to[1],0);assert.equal(w.blocked(plan.to[0],plan.to[2]),false);
 });
 test('railed main hall, wrong facing, indoors and ordinary ground do not offer a jump',()=>{
  assert.equal(findDrop(w,site.walk.drops,5,-4.1,0,1),null);
- assert.equal(findDrop(w,site.walk.drops,-13.5,11,-1,0),null);
+ assert.equal(findDrop(w,site.walk.drops,-12.9,11,-1,0),null);
  assert.equal(findDrop(w,site.walk.drops,0,20,0,-1),null);
  w.setRoom({y:-100,x0:-10,x1:10,z0:-10,z1:10,solids:[]});assert.equal(findDrop(w,site.walk.drops,0,0,0,1),null);w.setRoom(null);
 });

@@ -351,6 +351,12 @@ function frame(now) {
       else if (Math.abs(sx) > 1e-4 && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
       else if (Math.abs(sz) > 1e-4 && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
     }
+    // Something round or cornered is square in his way (a column, a table): he goes round it, turning aside by as
+    // little as will let him pass, to whichever hand is nearer the way he was going.
+    for (const a of moved ? [] : [0.5, -0.5, 0.95, -0.95, 1.35, -1.35]) {
+      const c = Math.cos(a), s = Math.sin(a), sx = (vx * c - vz * s) * 0.8, sz = (vx * s + vz * c) * 0.8;
+      if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; break; }
+    }
     if (!moved) { target = null; route = []; settle(false); }
     // The censer does not stop you: you are eased around it.
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
@@ -373,7 +379,9 @@ function frame(now) {
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
   const want = flight ? Math.atan2(flight.plan.to[0] - flight.plan.from[0], flight.plan.to[2] - flight.plan.from[2]) : stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
-  monk.group.position.set(pos.x, footY + (stage ? stage.lift || 0 : 0), pos.z); monk.group.rotation.y = heading;
+  // Seated on something that stands in the way (a stool): he came to stand behind it, and is drawn on it while he sits.
+  const sat = stage && stage.seat ? stage.seat : null;
+  monk.group.position.set(sat ? sat[0] : pos.x, footY + (stage ? stage.lift || 0 : 0), sat ? sat[1] : pos.z); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
   monk.update(dt, still || aloft ? 0 : speedNow, aloft ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z) });
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands

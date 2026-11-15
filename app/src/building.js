@@ -2,9 +2,11 @@
 // infill, and a curved tiled roof. Built in local space: centred on the origin, front facing +z.
 // Halls, gate houses, towers and covered walks are all this function with different parameters.
 import * as THREE from "../vendor/three/build/three.module.js";
-import { box, smooth, plain, merge, mesh, tube, stairGeo, STAIR, footAt } from "./geo.js";
+import { box, smooth, plain, merge, mesh, tube, stairGeo, stairProfile, STAIR, BODY, CHEEK, footAt } from "./geo.js";
 import { makePlaque } from "./plaque.js";
 
+// At a hall's open door he comes this near the line of its leaves before he is inside: his own width and a finger more.
+export const DOOR = Object.freeze({ reach: BODY + 0.02, half: 1.0 - BODY - 0.01 });
 const DEFAULTS = {
   xs: [-6.7, -2.5, 2.5, 6.7],   // column lines across the front
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
@@ -97,13 +99,13 @@ export function buildHall(M, opts) {
   }
 
   // ---- Columns ----
-  const perimeter = [];
+  const perimeter = [], COL_R = p.colTop > 3.6 ? 0.27 : 0.2;
   for (const x of xs) for (const z of zs) {
     const ox = x === xs[0] ? -1 : x === X ? 1 : 0, oz = z === Z ? 1 : z === ZB ? -1 : 0;
     if (ox || oz) perimeter.push({ x, z, ox, oz });
   }
   {
-    const h = p.colTop - 0.25, r = p.colTop > 3.6 ? 0.27 : 0.2;
+    const h = p.colTop - 0.25, r = COL_R;
     const shaft = new THREE.LatheGeometry([[r, 0], [r * 1.02, h * 0.15], [r, h * 0.55], [r * 0.93, h * 0.88], [r * 0.87, h]].map(([a, b]) => new THREE.Vector2(a, b)), 18).translate(0, p.platH + 0.25, 0);
     const drum = new THREE.LatheGeometry([[0, 0], [r * 1.5, 0], [r * 1.56, 0.05], [r * 1.33, 0.13], [r * 1.22, 0.22], [r * 1.1, 0.25], [0, 0.25]].map(([a, b]) => new THREE.Vector2(a, b)), 18).translate(0, p.platH, 0);
     add(merge(perimeter.map((c) => shaft.clone().translate(c.x, 0, c.z))), M.woodV);
@@ -396,25 +398,39 @@ export function buildHall(M, opts) {
   }
 
   // ---- Where you can stand (local space; the site turns these into world space) ----
+  // `posts` stand in the way even on a floor: a round one is { x, z, r } (its real radius; the walker adds his own
+  // width), a square one is a rectangle already drawn that much larger than the thing.
   const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [] };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
-  if (p.walkAll) {   // open floor, but its columns still stand in the way
-    walk.decks.push({ ...plat, h: p.platH });
-    for (const x of xs) for (const z of zs) if (x === xs[0] || x === X || z === Z || z === ZB) walk.posts.push({ x0: x - 0.34, x1: x + 0.34, z0: z - 0.34, z1: z + 0.34 });
-  }
+  // Every column on the outside is round and in the way wherever a floor comes up to it: the walker keeps his
+  // whole width off its shaft (a little fatter than the shaft at its swell).
+  for (const c of perimeter) walk.posts.push({ x: c.x, z: c.z, r: COL_R * 1.03 });
+  // An edge with a railing along it is kept back by the rail and by his own width; an open edge only so that his feet stay on the stone.
+  const edgeIn = p.rail ? 0.16 + 0.1 + BODY : 0.25;
+  if (p.walkAll) walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way
   else {
     walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 });
     const stair = (w, sign) => {   // sign = +1 front, -1 back
-      const edge = sign > 0 ? zF : zB, a = edge - sign * 0.25, b = edge + sign * run, hw = w / 2 - 0.3;
+      // The treads are walked clear of the cheek stones by his own width; the cheeks themselves, and the ground
+      // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
+      const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
+      if (stairProfile(p.platH).count > 2) for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02 });
       walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
       walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b) });
     };
     if (p.steps) stair(p.steps, 1);
     if (p.stepsBack) stair(p.stepsBack, -1);
     const passing = p.front === "pass" && p.back === "pass";
-    if (passing) { const hw = (xs[mid + 1] - xs[mid]) / 2 - 0.45; walk.decks.push({ x0: -hw, x1: hw, z0: zB + 0.25, z1: zF - 0.25, h: p.platH }); }
-    else if (p.steps) walk.decks.push({ x0: -X - 0.8, x1: X + 0.8, z0: Z + 0.45, z1: zF - 0.25, h: p.platH });   // the porch
-    if (p.dark && p.front === "lattice") walk.decks.push({ x0: -1.0, x1: 1.0, z0: Z - 0.35, z1: Z + 0.5, h: p.platH });   // and the threshold of its open door
+    // The way through a gate runs between its open leaves, which stand against the sides with their ledges and studs.
+    if (passing) { const hw = (xs[mid + 1] - xs[mid]) / 2 - (p.timber ? 0.25 + 0.2 + BODY + 0.01 : 0.45); walk.decks.push({ x0: -hw, x1: hw, z0: zB + 0.25, z1: zF - 0.25, h: p.platH }); }
+    else if (p.steps) {   // the porch, and where it meets the head of its stair
+      const ex = Math.min(X + 0.8, PX - edgeIn);
+      walk.decks.push({ x0: -ex, x1: ex, z0: Z + 0.45, z1: zF - edgeIn, h: p.platH });
+      if (p.rail) walk.decks.push({ x0: -(p.steps / 2 - BODY - 0.02), x1: p.steps / 2 - BODY - 0.02, z0: zF - edgeIn - 0.1, z1: zF - 0.2, h: p.platH });
+    }
+    // And the threshold of its open door: he steps between the leaves as far as the sill, no farther, and never
+    // wider than leaves his sleeves clear of them (the opening is two metres).
+    if (p.dark && p.front === "lattice") walk.decks.push({ x0: -(1.0 - BODY - 0.01), x1: 1.0 - BODY - 0.01, z0: Z + DOOR.reach, z1: Z + 0.5, h: p.platH });
   }
 
   // Only exposed front porch edges of a low, unrailed ground-level platform can be hopped down.

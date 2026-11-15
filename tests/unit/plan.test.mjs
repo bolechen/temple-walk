@@ -1,7 +1,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "../../app/vendor/three/build/three.module.js";
-const { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } = await import("../../app/src/site.js");
+const { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain, BODY } = await import("../../app/src/site.js");
 
 // Materials are only handed on to meshes; any object will do, but they must be distinct and cloneable.
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -102,7 +102,11 @@ test("every hall with a door can be walked up to, entered at its threshold, and 
 });
 test("the columns of the open pavilions stand in the way", () => {
   assert.ok(site.walk.posts.length >= 8, "the pavilions on the approach have columns");
-  for (const r of site.walk.posts) { const x = (r.x0 + r.x1) / 2, z = (r.z0 + r.z1) / 2; assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through a column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
+  for (const r of site.walk.posts) {   // a round post is its centre and radius; a square one is its rectangle
+    const x = r.r !== undefined ? r.x : (r.x0 + r.x1) / 2, z = r.r !== undefined ? r.z : (r.z0 + r.z1) / 2; assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through what stands at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+    if (r.r !== undefined) { assert.ok(walker.blocked(x + r.r + BODY - 0.02, z), `his sleeve can enter the column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
+  }
+  assert.ok(site.walk.posts.filter((r) => r.r !== undefined).length >= 100, "every outer column of every building is a post");
   assert.ok(!walker.blocked(5.2, APPROACH.zA1 + 2.75), "the middle of the half-way pavilion is open floor");
 });
 test("walls, halls and the hillside keep the visitor out", () => {

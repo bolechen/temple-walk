@@ -335,17 +335,18 @@ const scenarios = {
   // A deliberate low ledge hop: normal walking stays blocked; Space or the touch button clears it.
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
-      const t = await open(b, base, "q=low&cam=-13.65,11,1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
+      // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)
+      const t = await open(b, base, "q=low&cam=13.65,11,-1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
       await t.until(() => t.page.isVisible("#dropBtn"), 30000, "the low unrailed porch offers no way down");
       if (!touch) {
         await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
-        const edge = await t.state(); expect(edge.h === 0.45 && edge.x < -13.2, "ordinary walking should still stop at the porch edge");
+        const edge = await t.state(); expect(edge.h === 0.45 && edge.x > 13.2, "ordinary walking should still stop at the porch edge");
       } else {
         const r = await t.page.locator("#dropBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
       }
       await t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
       if (touch) await t.page.tap("#dropBtn"); else await t.page.keyboard.press("Space");
-      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x > -12.7; }, 120000, "the low porch hop never reached its clear landing");
+      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < 12.7; }, 120000, "the low porch hop never reached its clear landing");
       const samples = await t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
       expect(samples.filter(s => s.dropping).length >= 3 && samples.some(s => s.y > 0.5) && samples.some(s => s.y > 0 && s.y < 0.4), "the hop must rise and descend continuously, not teleport");
       expect(samples.every(s => s.y >= -0.001), "the hop fell through its landing");

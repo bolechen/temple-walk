@@ -71,7 +71,7 @@ export function createGame(y) {
     if (id === "bell") { y.strike("bell"); return; }                                  // the stroke itself is heard below
     const mineRite = (rite = { id }), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
-    y.stage({ face: p.face, pose: p.sit ? "sit" : id === "well" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, leave: () => { if (on()) end(); } });
+    y.stage({ face: p.face, pose: p.sit ? "sit" : id === "well" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, leave: () => { if (on()) end(); } });
     if (id === "tea") { await wait(2); if (!on()) return; say(d.line, 6); await wait(5); }
     else if (id === "incense") { await wait(2.2); if (!on()) return; say(d.line, 6); await wait(3); }
     else if (id === "well") { say(d.line, 6); for (let i = 0; i < 3; i++) { await wait(1.5); if (!on()) return; drop(); } await wait(1.2); }

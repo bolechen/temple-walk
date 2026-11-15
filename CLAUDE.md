@@ -57,6 +57,7 @@ node tests/e2e/run.cjs moods photo  # only the scenarios named
 pnpm run verify                     # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png
+pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
 python3 tools/textures.py <dir of Poly Haven jpgs>   # repack the scanned surfaces into app/levels/t00/textures/
@@ -108,6 +109,8 @@ way; the same workflow runs every scenario once a week and on demand. A red `ver
 
 **The plan is data (`app/src/site.js`).** `buildSite(M)` places every building with `put(opts, [x, z], quarterTurns, level, baseY)`, which calls `buildHall` and also registers the building's footprint into two side structures that everything else reads:
 - `walk` = `{solids, decks, ramps}` rectangles. `createWalker` turns these into `heightAt / blocked / onGround`. Decks and ramps are "carved" floors that override solids, so stairs and platforms are walkable even inside a building's blocking box.
+  `walk.posts` stand in the way even on a carved floor: a round one is `{x, z, r}` with its real radius (every outer column of every building), a square one a rectangle drawn already larger than the thing (a table on a porch, the cheek of a stair).
+- **He has a width.** The walker moves a point, but the novice reaches `BODY` (0.38 m, `geo.js`) from it. Whatever stands in his way must keep that point its own shape plus `BODY` off: a round post gets it added by the walker; a solid, a deck's edge or a square post must be drawn with it. A unit test holds `BODY` to the model's measured reach, and `pnpm run edges` (`tools/edges.mjs`, half a minute) stands him on every reachable spot of the plan and fails if any part of him is more than a centimetre inside anything built; `--table docs/t00/edge-coverage.md` writes the building-by-building table. Run it after moving or adding anything he can walk up to.
 - `shade[level]` rectangles darken the paving under buildings and walls (consumed by `ground.js`).
 Adding a building is one `put(...)` call; walkability and ground shading follow automatically. `putStack` builds multi-storey towers by standing each storey on the roof of the one below (`roofAt`). Exported constants `SITE`, `LEVELS` (the three terraces), `APPROACH` (the zigzag stair) and `terrain(x, z)` are shared with `yard.js`, `backdrop.js` and `bamboo.js`, so moving a terrace moves the hillside, the far bamboo and the near bamboo exclusion zones together.
 

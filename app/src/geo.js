@@ -34,6 +34,12 @@ export function mesh(geo, mat, { cast = true, receive = true, ao } = {}) {
 }
 // A flight of stone steps with sloped cheeks. Top edge at z = 0, descending toward +z, rising `rise` from y = 0.
 export const STAIR = Object.freeze({ rise: 0.18, tread: 0.34, nosing: 0.05 });
+// How far the novice reaches from the point he stands on: his sleeves, his hands when he walks, the hat on his back.
+// The walker moves a point; everything that stands in his way keeps that point this far off, so that no part of
+// him enters it. (tools/edges.mjs measures the model, a unit test holds this to it, and the sweep checks the whole plan.)
+export const BODY = 0.38;
+// A stair's cheek stones stand outside its treads, from the edge of the treads to this far beyond.
+export const CHEEK = 0.55;
 export function stairProfile(rise) {
   const count = Math.max(1, Math.round(rise / STAIR.rise));
   return { count, height: rise / count, tread: STAIR.tread, run: STAIR.tread * count, nosing: STAIR.nosing };
