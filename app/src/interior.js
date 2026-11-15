@@ -138,7 +138,7 @@ function buildRoom(M, hall, ox, figures) {
     else later.push((get) => get(stand.centre[0], stand.centre[1]).then((o) => altar.add(o)));
     for (const [file, x, z, h] of stand.beside || []) later.push((get) => get(file, h).then((o) => { o.position.set(x, 0, z); o.rotation.y = -Math.sign(x) * 0.12; altar.add(o); }));   // turned a little toward the middle
     if (big) places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id };
-    lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, K.h - 2.4, tz + 0.8, 0xffe6c4, big ? 11 : 7, 16, true]);
+    lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, big ? K.h - 2.4 : K.h - 2.0, big ? tz + 0.8 : tz + 1.8, 0xffe6c4, big ? 11 : 7, 16, true]);
   } else if (hall.kind === "chan") {
     // The meditation hall: long sitting platforms down both sides, a cushion at every place, the aisle between.
     const plat = [], seats = [];
