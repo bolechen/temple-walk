@@ -65,7 +65,7 @@ node tests/e2e/run.cjs moods photo  # only the scenarios named
 pnpm run verify                     # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
-node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png (add `bind` for his A-pose)
+node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose)
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -268,7 +268,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 
 **Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
-returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov), `__views`, `__merged`,
+returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
 `__capture()`, `__trail()`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add

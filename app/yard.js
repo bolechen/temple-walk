@@ -615,6 +615,17 @@ window.__census = () => {
   return out;
 };
 // What the picture looks like right now, measured: draws one frame and averages it. Also reports the state the tests assert on.
+// Where the novice stands in the picture, in page pixels (left, top, width, height), or null when he is not drawn:
+// the corners of a box round him, as tall as he is, carried through the camera.
+const monkBox = () => {
+  if (!monk.group.visible) return null;
+  const r = canvas.getBoundingClientRect(), o = monk.group.position, v = new THREE.Vector3(); let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const dy of [0, 1.22]) {
+    v.set(o.x + dx, o.y + dy, o.z + dz).project(camera); const x = r.left + (v.x + 1) / 2 * r.width, y = r.top + (1 - v.y) / 2 * r.height;
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+  }
+  return [x0, y0, x1 - x0, y1 - y0].map((n) => +n.toFixed(1));
+};
 window.__probe = () => {
   const t = still ? 0 : performance.now() / 1000;
   if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
@@ -622,7 +633,7 @@ window.__probe = () => {
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    photoSettings: !document.getElementById("photoSettings").hidden, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov };
+    photoSettings: !document.getElementById("photoSettings").hidden, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox() };
 };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
