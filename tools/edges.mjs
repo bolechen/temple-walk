@@ -18,6 +18,7 @@ import fs from "node:fs";
 const { buildSite, createWalker, SITE, APPROACH, LEVELS } = await import("../app/src/site.js");
 const { CHEEK, stairProfile } = await import("../app/src/geo.js");
 const { createMonk } = await import("../app/src/monk.js");
+const { dressed } = await import("../tests/unit/novice-glb.mjs");   // the sculpted body he wears in the page, read from the file
 const { createTrees } = await import("../app/src/trees.js");
 
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
@@ -27,8 +28,8 @@ const G = 0.05, KNEE = 0.32, BIN = 0.05;   // below the knee is the business of 
 // ---- How far he reaches from his centre, at each height, over every pose ----
 export function outline() {
   const bins = new Float32Array(40), v = new THREE.Vector3();
-  for (const [speed, pray] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {   // standing, walking, hurrying, hands together, in the air
-    const monk = createMonk();
+  for (const make of [createMonk, () => dressed(createMonk)]) for (const [speed, pray] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {   // both bodies; standing, walking, hurrying, hands together, in the air
+    const monk = make();
     for (let k = 0; k < 150; k++) {
       monk.update(1 / 30, speed, pray, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true); monk.skeleton?.update?.();   // he is a skinned figure: his surface is where his bones put it, not where it was modelled
       monk.group.traverse((o) => {

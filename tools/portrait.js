@@ -20,6 +20,7 @@ const srv = http.createServer((req, res) => {
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
   await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
+  await p.waitForFunction(() => window.__yard().dressed === true, null, { timeout: 60000 }).catch(() => console.log("the sculpted body did not arrive; he is shown as built in code"));   // his body is fetched after the first frames
   // `bind` as a second argument shows him front, side and back in the A-pose he is bound in, to set beside the drawing.
   const bind = process.argv[3] === "bind", W = bind ? 225 : 150, H = 320;   // each view, in page pixels (drawn at twice that)
   const poses = bind ? [[Math.PI, "bind"], [Math.PI * 1.5, "bind"], [0, "bind"]] : [[Math.PI, false], [Math.PI + 0.9, false], [0, false], [Math.PI, true], [Math.PI - 0.7, true]];

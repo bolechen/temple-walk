@@ -6,15 +6,16 @@ import "./dom-stub.mjs";
 import * as THREE from "three";
 const { buildSite, createWalker, BODY, LEVELS, APPROACH } = await import("../../app/src/site.js");
 const { createMonk } = await import("../../app/src/monk.js");
+const { dressed } = await import("./novice-glb.mjs");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site);
 
-test("the width the plan allows him is the width of the model, in every pose it takes", () => {
+for (const [which, make] of [["built in code", createMonk], ["sculpted", () => dressed(createMonk)]]) test(`the width the plan allows him is the width of the model, in every pose it takes (${which})`, () => {
   let reach = 0; const v = new THREE.Vector3();
   // Standing, walking, hurrying, hands together, and in the air. (Seated, his knees spread wider than this; but he
   // sits only where a seat has been set for him, and is put on it, not walked into it.)
   for (const [speed, pose] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {
-    const monk = createMonk();
+    const monk = make();
     for (let k = 0; k < 90; k++) {
       monk.update(1 / 30, speed, pose, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true); monk.skeleton?.update?.();   // he is a skinned figure: his surface is where his bones put it, not where it was modelled
       monk.group.traverse((o) => { if (!o.isMesh || !o.visible || o.material?.transparent) return; const a = o.geometry.attributes.position;
