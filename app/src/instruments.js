@@ -35,7 +35,7 @@ function stringBuffer(ctx, m, kind) {
   for (let i = N; i < len; i++) d[i] = rho * ((1 - S) * d[i - N] + S * d[i - N - 1 < 0 ? 0 : i - N - 1]);
   let peak = 0; for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(d[i])); for (let i = 0; i < len; i++) d[i] /= peak || 1;
   const fade = Math.floor(sr * 0.25); for (let i = 0; i < fade; i++) d[len - 1 - i] *= i / fade;   // never ends on a click
-  const out = { buffer: b, rate: (N * f) / sr }; cache.set(key, out); return out;
+  const out = { buffer: b, rate: ((N + S) * f) / sr }; cache.set(key, out); return out;   // the loop filter adds S of a sample to each pass
 }
 let noiseBuf = new WeakMap();
 function noise(ctx) {
