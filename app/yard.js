@@ -64,6 +64,7 @@ const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
 // (?off=bamboo,trees,... ; also reflect, bloom and shadow for the passes). See window.__census().
 const OFF = new Set((Q.get("off") || "").split(",").filter(Boolean));
 const part = (name, make) => { const n = scene.children.length, made = make(); for (const o of scene.children.slice(n)) { o.userData.part = name; if (OFF.has(name)) o.visible = false; } return made; };
+const PLANAR = quality.planar, PASSES = ["reflect", "bloom", "shadow"];   // the mirror as the tier draws it, for switching it back on
 if (OFF.has("reflect")) quality.planar = 0;
 if (OFF.has("bloom")) quality.bloom = false;
 if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
@@ -626,8 +627,26 @@ async function pass(hall) {
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
-window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls });
+window.__yard = () => ({ inside, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
+// A named view, without loading the place again: out of any room, then stood where the view stands.
+window.__show = (name) => { const v = site.views[name]; if (!v) return false; if (inside) indoors(null); window.__pose(v[0], v[1], v[2], v[3]); return true; };
+// Switch a part of the scene, or one of the passes, while the walk goes on (the debug panel; `?off=` does the same at
+// load). `__part()` lists them, each true when drawn. What a room or the hour hides stays hidden: a court switched
+// back on while he is indoors is not drawn until he comes out. The novice and the rooms are shown or hidden by the
+// walk itself every frame, so they are not offered.
+const shownNow = (name) => !OFF.has(name) && !(inside && (COURTS.includes(name) || name === "drift")) && !(name === "drift" && mood.drift === "none");
+window.__part = (name, on) => {
+  const names = [...new Set(scene.children.map((o) => o.userData.part).filter((n) => n && n !== "monk" && n !== "interior"))];
+  if (name === undefined) return Object.fromEntries([...names, ...PASSES].map((n) => [n, !OFF.has(n)]));
+  if (!names.includes(name) && !PASSES.includes(name)) return null;
+  if (on) OFF.delete(name); else OFF.add(name);
+  if (name === "reflect") { quality.planar = on ? PLANAR : 0; resize(); }
+  else if (name === "bloom") { quality.bloom = !!on; resize(); }
+  else if (name === "shadow") { renderer.shadowMap.enabled = !!on; renderer.shadowMap.needsUpdate = true; scene.traverse((/** @type {any} */ o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); }
+  else for (const o of scene.children) if (o.userData.part === name) o.visible = shownNow(name);
+  return !OFF.has(name);
+};
 // What a frame costs to draw, in milliseconds: `n` frames drawn back to back, each waited for until the graphics card
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
 window.__cost = (n = 40) => {
@@ -762,6 +781,12 @@ if (DEVPOSE) {
     const link = devpose.link(); console.info("[devpose]", link); navigator.clipboard?.writeText(link).catch(() => {});
   });
   window.__devpose = () => devpose.link();
+}
+// ?debug on the dev server: a panel of where he stands, what the frame costs, the hour, and switches for each part
+// (src/debug.js). It acts only through the hooks above. The published build leaves this branch, and the module, out.
+if (import.meta.env.DEV && Q.has("debug")) {
+  const { mountDebug } = await import("./src/debug.js");
+  await mountDebug({ link: () => (devpose ? devpose.link() : null) });
 }
 
 await loading.step("山路");
