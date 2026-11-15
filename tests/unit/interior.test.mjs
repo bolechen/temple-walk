@@ -66,3 +66,10 @@ test("under an open roof the gable walls rise with the boards, from the eaves to
     const ridge = Math.max(...f.boards.map(([, y]) => y)), eave = f.boards[0][1]; assert.ok(ridge > eave + 1, `${h.name}: the roof does not rise to a ridge`);
   }
 });
+
+test("no vertex in any room is NaN or infinite (one bad vertex blacks out the whole picture through the bloom)", () => {
+  for (const h of site.halls) built.rooms[h.id].group.traverse((m) => {
+    if (!m.isMesh) return;
+    for (const [n, a] of Object.entries(m.geometry.attributes)) assert.ok(a.array.every(Number.isFinite), `${h.name}: a mesh has a ${n} that is not a number`);
+  });
+});

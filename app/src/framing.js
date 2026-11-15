@@ -42,7 +42,7 @@ function strut(a, b, w, h) {
 function moonBeam(x, z0, z1, top, h, w) {
   const len = Math.abs(z1 - z0), g = new THREE.BoxGeometry(w, h, len, 1, 2, 16), p = g.attributes.position, camber = Math.min(0.2 * h, 0.14);
   for (let i = 0; i < p.count; i++) {
-    const t = p.getZ(i) / len + 0.5, y = p.getY(i), lift = camber * Math.pow(Math.sin(Math.PI * t), 0.6);
+    const t = p.getZ(i) / len + 0.5, y = p.getY(i), lift = camber * Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.6);   // never below nought at the ends, where a power would give no number
     if (y < -h / 4) p.setY(i, y + lift); else if (y < h / 4) p.setY(i, y + lift * 0.5);
   }
   g.computeVertexNormals(); return g.translate(x, top - h / 2, (z0 + z1) / 2);
@@ -121,7 +121,7 @@ export function frameRoom(M, add, { K, hall, Y, focus, clear }) {
   if (kind === "open") { const o = openRoof(M, add, B, H, top, lowAO); roofAt = o.roofAt; members.gable = o.gable; members.boards = o.boards; }
   else flatCeiling(M, add, B, H, kind, CELL[hall.kind] || 0.4, kind === "coffer" ? focus : null, inX, bw, lowAO);
   members.colTop = colTop; members.ceiling = H; members.spans = spans;
-  return { cols, members, roofAt, hw: kind === "open" ? K.h + 0.45 : K.h };
+  return { cols, members, roofAt };
 }
 
 // Ribs on a square grid, with painted (or, for the plain kind, bare) panels between, and over the figure a caisson.

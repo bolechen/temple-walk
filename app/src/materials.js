@@ -207,7 +207,7 @@ export function createMaterials() {
       col=vec3(.42,.36,.26)*(.82+.3*fbm3(vWP*vec3(4.,1.5,4.))); col=mix(col,vec3(.11,.12,.15),min(edge+band,1.)*.85); rough_=.95;`, { snow: false }),
     // The horn panes of a hanging lamp, lit from within.
     lampglass: procMat("lampglass", { roughness: 0.8, envMapIntensity: 0.1 }, `
-      col=vec3(.45,.33,.2); emit_=vec3(1.,.62,.3)*(.25+1.1*uLamp)*(.75+.25*sin(vUv2.y*3.14));`, { snow: false }),
+      col=vec3(.45,.33,.2); emit_=vec3(1.,.62,.3)*(.15+.5*uLamp)*(.75+.25*sin(vUv2.y*3.14));`, { snow: false }),
     // The lip of snow along an eave: drawn only when it has snowed.
     snowlip: procMat("snowlip", { roughness: 0.9, envMapIntensity: 0.3, side: THREE.DoubleSide }, "if(uSnow<.5) discard; col=vec3(.8,.84,.9)*(.92+.1*fbm3(vWP*3.)); rough_=.85; ao_=1.;", { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),
