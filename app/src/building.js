@@ -400,7 +400,7 @@ export function buildHall(M, opts) {
   // ---- Where you can stand (local space; the site turns these into world space) ----
   // `posts` stand in the way even on a floor: a round one is { x, z, r } (its real radius; the walker adds his own
   // width), a square one is a rectangle already drawn that much larger than the thing.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [] };
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
   // Every column on the outside is round and in the way wherever a floor comes up to it: the walker keeps his
   // whole width off its shaft (a little fatter than the shaft at its swell).
@@ -409,14 +409,14 @@ export function buildHall(M, opts) {
   const edgeIn = p.rail ? 0.16 + 0.1 + BODY : 0.25;
   if (p.walkAll) walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way
   else {
-    walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 });
+    walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5, own: true });   // `own`: the building's own platform, whose height the eye knows
     const stair = (w, sign) => {   // sign = +1 front, -1 back
       // The treads are walked clear of the cheek stones by his own width; the cheeks themselves, and the ground
       // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
       const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
       if (stairProfile(p.platH).count > 2) for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02 });
       walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
-      walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b) });
+      walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true });
     };
     if (p.steps) stair(p.steps, 1);
     if (p.stepsBack) stair(p.stepsBack, -1);
@@ -438,5 +438,12 @@ export function buildHall(M, opts) {
     const end = X + 0.8, gap = p.steps / 2 + 0.8;
     for (const [a, b] of [[-end, -gap], [gap, end]]) if (b - a > 0.6) walk.drops.push({ a: [a, zF], b: [b, zF], normal: [0, 1], top: p.platH });
   }
+  // What the following eye must keep out of, though he never could reach it: the roof, from the foot of the beams
+  // under the eaves to a little over the ridge, over everything the eaves cover and a hand beyond (the corners turn up
+  // and out), and within the column lines from the head of the doors (a gate's passage, an open pavilion); and, unless
+  // the floor is open, the building: within its walls up to the ridge, and over the rest of its platform only up to
+  // the floor (or the top of its railing), so that from a porch the eye can back out over the edge.
+  walk.roofs.push({ x0: -EX - 0.3, x1: EX + 0.3, z0: -EZ - 0.3, z1: EZ + 0.3, bottom: topY - 0.15, inner: head - 0.15, top: EAVE_Y + p.rise + 0.3,
+    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
 }

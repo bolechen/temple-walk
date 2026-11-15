@@ -110,6 +110,8 @@ way; the same workflow runs every scenario once a week and on demand. A red `ver
 
 **The plan is data (`app/src/site.js`).** `buildSite(M)` places every building with `put(opts, [x, z], quarterTurns, level, baseY)`, which calls `buildHall` and also registers the building's footprint into two side structures that everything else reads:
 - `walk` = `{solids, decks, ramps}` rectangles. `createWalker` turns these into `heightAt / blocked / onGround`. Decks and ramps are "carved" floors that override solids, so stairs and platforms are walkable even inside a building's blocking box.
+  `walk.roofs` is what only the eye must keep out of: each building's eave footprint with the heights its beams,
+  tiles and ridge take up, its walls (`core`) and its platform (`body`, `edge`); `walk.drops` are the porch edges he may hop down from.
   `walk.posts` stand in the way even on a carved floor: a round one is `{x, z, r}` with its real radius (every outer column of every building), a square one a rectangle drawn already larger than the thing (a table on a porch, the cheek of a stair).
 - **He has a width.** The walker moves a point, but the novice reaches `BODY` (0.38 m, `geo.js`) from it. Whatever stands in his way must keep that point its own shape plus `BODY` off: a round post gets it added by the walker; a solid, a deck's edge or a square post must be drawn with it. A unit test holds `BODY` to the model's measured reach, and `pnpm run edges` (`tools/edges.mjs`, half a minute) stands him on every reachable spot of the plan and fails if any part of him is more than a centimetre inside anything built; `--table docs/t00/edge-coverage.md` writes the building-by-building table. Run it after moving or adding anything he can walk up to.
 - `shade[level]` rectangles darken the paving under buildings and walls (consumed by `ground.js`).
@@ -143,7 +145,11 @@ springs driven by speed and turning, and the skirt's bones are shortened whereve
 `node tools/portrait.js summer-day bind` renders it front, side and back to set beside the drawing. A sculpted or
 generated mesh can take this one's place with the same bone names, bound in the same A-pose and proportions
 (`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
-the eye follows a few steps behind and is pulled in along its line when `walker.blocked` says a wall is in the way.
+the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
+its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something: a column, a
+building within its walls up to its ridge, its platform only up to the floor (so from a porch the eye backs out over
+the edge), any other wall some way above his head, and every roof from the foot of its beams to over its ridge
+(`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.

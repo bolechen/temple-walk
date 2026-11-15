@@ -63,7 +63,7 @@ test("a hall is entered at its sill: his robe at the door, not through it", () =
 
 test("what stands on the ground is closed to him: the sutra pillars, the court's tea table and stools, the lamp stand, the well", () => {
   const [, T2] = LEVELS;
-  for (const [what, x, z] of [["a sutra pillar", 5, 1.2], ["a sutra pillar", -5, 1.2], ["the base of a sutra pillar", 5.62, 1.2], ["the lamp stand", -6.2, T2.zS - 4.0], ["the crown of the dragon well's arch", 13.2, T2.zS - 0.3]])
+  for (const [what, x, z] of [["a sutra pillar", 5, 1.2], ["a sutra pillar", -5, 1.2], ["the base of a sutra pillar", 5.62, 1.2], ["the lamp stand", -6.2, T2.zS - 3.4], ["the crown of the dragon well's arch", 13.2, T2.zS - 0.3]])
     assert.ok(walker.blocked(x, z), `he can stand in ${what} at (${x}, ${z})`);
   const tea = site.places.tea; assert.ok(tea.seat && !walker.blocked(tea.at[0], tea.at[1]) && walker.blocked(tea.seat[0], tea.seat[1]), "he comes to stand behind his stool, which is itself in the way, and is seated on it");
   assert.ok(Math.hypot(tea.at[0] - tea.seat[0], tea.at[1] - tea.seat[1]) < 0.75, "the stool is within a step of where he stands");
