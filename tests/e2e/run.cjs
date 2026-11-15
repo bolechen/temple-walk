@@ -226,20 +226,39 @@ const scenarios = {
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
   "photo-ui": { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
-      const t = await open(b, base, "q=low&cam=0,24,0,-0.06", { viewport: touch ? { width: 390, height: 844 } : { width: 960, height: 600 }, hasTouch: touch, isMobile: touch });
+      const t = await open(b, base, "q=low&cam=0,24,0.35,-0.06&view=third", { viewport: touch ? { width: 390, height: 844 } : { width: 960, height: 600 }, hasTouch: touch, isMobile: touch });
+      await t.page.waitForSelector("#photoBtn", { timeout: 120000 }); await t.frames(12);   // let the eye behind him come to rest
+      const before = await t.probe(), was = await t.state();
       await t.page.click("#photoBtn", { timeout: 120000 }); await t.frames(2);
-      let p = await t.probe(); expect(p.photo && !p.monk && p.aspect === "wide" && Math.abs(p.fov - 66) < .1, "photo mode should begin with a clear wide landscape");
+      // The camera is raised on exactly what he was looking at: the same eye, angle and distance, the whole view, the novice where he stood.
+      let p = await t.probe(), now = await t.state(); expect(p.photo && p.aspect === "screen" && p.zoom === 1 && Math.abs(p.fov - before.fov) < 0.01 && p.monk === before.monk, "the camera should open on the view as it was: " + JSON.stringify([before.fov, p.fov, p.aspect, p.zoom, before.monk, p.monk]));
+      expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3 && Math.abs(p.camDist - before.camDist) < 0.05, "raising the camera moved the view: " + JSON.stringify([was.yaw, now.yaw, was.pitch, now.pitch, before.camDist, p.camDist]));
+      expect(!(await t.page.isVisible("#frame")), "the whole view needs no frame drawn over it");
+      if (!touch) {   // a drag does not turn the camera; the wheel draws nearer and farther, within bounds
+        await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(640, 240, { steps: 6 }); await t.page.mouse.up(); await t.frames(2);
+        now = await t.state(); expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3, "a drag turned the camera"); expect(!(await t.page.isVisible("#print")), "a drag took a photograph");
+        await t.page.mouse.wheel(0, -400); await t.frames(2); p = await t.probe(); expect(p.zoom > 1 && p.fov < before.fov - 1, "the wheel did not draw the view nearer");
+        for (let i = 0; i < 40; i++) await t.page.mouse.wheel(0, 400); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
+      }
       expect(!(await t.page.isVisible("#photoSettings")) && (await t.page.getAttribute("#photoSettingsToggle", "aria-expanded")) === "false", "settings should start folded");
       expect((await t.page.locator('#photoBar button:visible').count()) === 2, "only settings and the shutter belong on the lower bar");
       for (const id of ["shutter", "photoSettingsToggle", "photoClose"]) { const r = await t.page.locator("#" + id).boundingBox(); expect(r && r.width >= 44 && r.height >= 44 && r.x >= 0 && r.y >= 0, id + " is not a reachable touch target"); }
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
-      await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "the optional figure did not appear");
+      await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
+      await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
       await t.page.keyboard.press("Escape"); expect(!(await t.probe()).photo && (await t.page.isVisible("#viewBtn")), "second Escape should return to walking");
       await t.page.click("#photoBtn"); expect(!(await t.page.isVisible("#photoSettings")), "settings should stay folded on re-entry");
+      p = await t.probe(); expect(p.zoom === 1 && Math.abs(p.fov - before.fov) < 0.01, "the camera should open afresh on the view, not where the last one was left");
       await t.shot(touch ? "photo-clean-touch" : "photo-clean-desktop");
+      if (!touch) {   // the left button on the picture is the shutter
+        await t.page.mouse.click(480, 260); await t.until(() => t.page.isVisible("#print"), 300000, "a click on the picture did not take the photograph");
+        const shot = await t.page.evaluate(() => new Promise((r) => { const im = new Image(); im.onload = () => r([im.naturalWidth, im.naturalHeight]); im.src = document.getElementById("printImg").src; }));
+        expect(shot[0] >= 1600 && shot[0] > shot[1], "the photograph is not a large picture of the whole view: " + shot);
+        await t.page.click("#printBack");
+      }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
@@ -248,13 +267,18 @@ const scenarios = {
     const t = await open(b, base, "q=low&shot=1&view=third&season=autumn&time=dusk&cam=0,24,0,-0.06");   // the low tier, for software rendering
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#photoBtn", { timeout: 120000 }); await t.frames(3);
-    for (const id of ["frame", "photoBar", "shutter", "photoClose"]) expect(await t.page.isVisible("#" + id), `#${id} missing in photograph mode`);
+    for (const id of ["photoBar", "shutter", "photoClose"]) expect(await t.page.isVisible("#" + id), `#${id} missing in photograph mode`);
     expect(!(await t.page.isVisible("#viewBtn")), "the walking controls should leave");
-    let p = await t.probe(); expect(p.photo && !p.monk, "landscape mode should start with the novice out of the picture");
-    await t.page.click("#photoSettingsToggle"); await t.page.click("#monkToggle");
+    let p = await t.probe(); expect(p.photo && p.monk && p.aspect === "screen", "seen from behind him, the photograph should start as the view was, the novice in it");
+    const wide = p.fov;
+    await t.page.click("#photoSettingsToggle");
     await t.page.click("#monkToggle"); p = await t.probe(); expect(!p.monk, "he should be able to step out of the picture"); await t.page.click("#monkToggle");
-    await t.page.click('[data-lens="26"]'); p = await t.probe(); expect(Math.abs(p.fov - 26) < 0.1, "the long lens did not narrow the view");
-    await t.page.click('[data-lens="46"]'); await t.page.click("#prayToggle"); await t.page.waitForTimeout(2500);
+    await t.page.click('[data-lens="3.2"]'); p = await t.probe(); expect(p.fov < wide / 2.5, "drawing in close did not narrow the view");
+    await t.page.click('[data-lens="1.8"]'); await t.page.click("#prayToggle"); await t.page.waitForTimeout(2500);
+    {   // the whole view, mounted: the card is the picture with a margin round it and a foot under it for the verse
+      const c = await t.page.evaluate(() => window.__capture()), v = t.page.viewportSize(), m = 0.055 * Math.min(c.w, c.h), shape = (c.w - 2 * m) / (c.h - m - 0.2 * (c.w - 2 * m) / Math.max(1, v.width / v.height > 1 ? v.width / v.height : 1));
+      expect((c.w > c.h) === (v.width > v.height * 1.3) && Math.abs(shape / (v.width / v.height) - 1) < 0.12, "the whole-view photograph is not the shape of the view: " + [c.w, c.h, v.width, v.height, shape.toFixed(3)]);
+    }
     const sizes = {};
     for (const a of ["tall", "square", "wide"]) {
       await t.page.click(`[data-aspect="${a}"]`);

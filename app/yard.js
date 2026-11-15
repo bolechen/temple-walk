@@ -147,8 +147,10 @@ setMood(state.season, state.time);
 
 // ---- The novice ------------------------------------------------------------------
 let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
-const photo = { on: false, aspect: "wide", lens: 66, dist: 4.6, monk: false, pray: false };   // Landscape first: a clear wide view; a figure is optional.
-const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] };
+// The camera is raised on what he is looking at: the same eye, the same direction, the whole view. From there it
+// only draws nearer or farther (`zoom`: 1 is the view as it was); it does not turn.
+const photo = { on: false, aspect: "screen", zoom: 1, monk: false, pray: false };
+const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] }, ZOOM = { min: 0.7, max: 6 };
 
 // ---- Looking and walking ------------------------------------------------------
 const EYE = 1.3;   // the eye height of a child
@@ -170,14 +172,14 @@ const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6)
 canvas.addEventListener("pointerdown", () => startAmbience(() => ({ grove: grove() })), { once: true });
 const touches = new Map(); let pinch = 0;
 let reachWant = 6.2;   // how far behind him the eye stands; the wheel changes it
-const zoom = (k) => { if (photo.on) photo.dist = THREE.MathUtils.clamp(photo.dist * k, 1.6, 16); else reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11); };
+const zoom = (k) => { if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); } else reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11); };
 // With a mouse the view is held the way such games hold it: a click on the picture takes the pointer, moving the
 // mouse looks round, Esc lets go. A touch still drags to look and taps to walk.
 const locked = () => document.pointerLockElement === canvas;
 const joy = { x: 0, y: 0 };
 document.addEventListener("pointerlockchange", () => { document.body.classList.toggle("held", locked()); if (locked()) hints.say.held(); });
 document.addEventListener("mousemove", (e) => {
-  if (!locked()) return; const orbit = view === "third" || photo.on;
+  if (!locked() || photo.on) return; const orbit = view === "third";   // with the camera raised, the view is held still
   const S = settings.get();
   yaw += e.movementX * 0.0026 * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);
 });
@@ -193,7 +195,8 @@ canvas.addEventListener("pointermove", (e) => {
   if (!down) return;
   const dx = e.clientX - down.x, dy = e.clientY - down.y;
   if (!down.moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 14)) return;   // a finger never lands perfectly still
-  const orbit = view === "third" || photo.on;                                              // round him, or from his eyes
+  if (photo.on) { down.moved = true; return; }                                             // the camera does not turn: a drag is only not a click
+  const orbit = view === "third";                                                          // round him, or from his eyes
   const S = settings.get();
   down.moved = true; yaw += dx * 0.0042 * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
@@ -213,8 +216,10 @@ function pickFloor() {
   under(b); return p;
 }
 canvas.addEventListener("pointerup", (e) => {
-  canvas.style.cursor = "grab"; lift(e);
-  if (e.pointerType === "mouse" && !photo.on && down && !down.moved) {
+  canvas.style.cursor = photo.on ? "crosshair" : "grab"; lift(e);
+  // With the camera raised, the left button on the picture is the shutter.
+  if (photo.on) { if (e.pointerType === "mouse" && e.button === 0 && down && !down.moved && $("print").hidden && $("photoSettings").hidden && !$("shutter").disabled) $("shutter").click(); down = null; return; }
+  if (e.pointerType === "mouse" && down && !down.moved) {
     if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} startAmbience(() => ({ grove: grove() })); }
     else {   // held: a click strikes what the middle of the picture rests on
       ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
@@ -307,19 +312,26 @@ function resize() {
   renderer.setPixelRatio(k); renderer.setSize(w, h, false);
   post.resize(w, h, k);
   ground.resize(Math.round(w * k * quality.planar), Math.round(h * k * quality.planar), quality.planar > 0);
-  camera.aspect = w / h; camera.fov = photo.on ? photo.lens : view === "third" ? (w < h ? 58 : 44) : w < h ? 68 : 52; camera.updateProjectionMatrix();   // from behind him, a longer lens: the halls stand taller
+  camera.aspect = w / h; lens();
   pxH = h * k; layoutFrame();
+}
+// The angle of view: from behind him a longer lens than from his own eyes (the halls stand taller); and with the
+// camera raised, that same angle drawn in or let out by the zoom.
+function lens() {
+  const w = canvas.clientWidth, h = canvas.clientHeight, base = view === "third" ? (w < h ? 58 : 44) : w < h ? 68 : 52;
+  camera.fov = photo.on ? THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(base) / 2) / photo.zoom)) : base; camera.updateProjectionMatrix();
 }
 let pxH = 800;
 // The frame of the photograph, drawn over the view: what is inside it is what will be kept.
 function frameRect() {
-  const cw = canvas.clientWidth, ch = canvas.clientHeight, [aw, ah] = ASPECT[photo.aspect], r = aw / ah;
+  const cw = canvas.clientWidth, ch = canvas.clientHeight; if (photo.aspect === "screen") return { w: cw, h: ch, x: 0, y: 0 };   // the whole view, as he sees it
+  const [aw, ah] = ASPECT[photo.aspect], r = aw / ah;
   let h = ch * 0.74, w = h * r; if (w > cw * 0.92) { w = cw * 0.92; h = w / r; }
   return { w, h, x: (cw - w) / 2, y: (ch - h) / 2 };
 }
 function layoutFrame() {
   const el = document.getElementById("frame"); if (!el) return;
-  const f = frameRect(); Object.assign(el.style, { left: f.x + "px", top: f.y + "px", width: f.w + "px", height: f.h + "px" });
+  const f = frameRect(); Object.assign(el.style, { left: f.x + "px", top: f.y + "px", width: f.w + "px", height: f.h + "px", display: photo.aspect === "screen" ? "none" : "" });   // the whole view needs no frame drawn on it
 }
 const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
@@ -388,11 +400,11 @@ function frame(now) {
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
-  if (view === "first" && !photo.on) camera.position.set(pos.x, eyeY + (stage && stage.pose === "sit" ? 0.78 : EYE) + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
+  if (view === "first") camera.position.set(pos.x, eyeY + (stage && stage.pose === "sit" ? 0.78 : EYE) + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
   else {
-    const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = photo.on || walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
+    const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = (photo.on ? footY : eyeY) + (photo.on ? 0.72 : 1.18), reach = photo.on ? photo.dist : reachWant; let d = 0.5;
+    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = eyeY + 1.18, reach = reachWant; let d = 0.5;
     for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
       const cx = ox - lx * s2, cz = oz - lz * s2, cy = ty - ly * s2;
       if (walker.wall(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
@@ -451,20 +463,24 @@ function setPhotoSettings(open) {
 function setPhoto(open) {
   setPhotoSettings(false);
   photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo"); $("moodPanel")?.setAttribute("hidden", "");
-  if (open) { target = null; route = []; photo.dist = 7; pitch = Math.min(pitch, 0.02); }
-  else if (view === "first") pitch = Math.max(pitch, 0);
+  if (open) {   // the view stays exactly as it was: only walking stops, and the pointer is let go so the buttons can be reached
+    target = null; route = []; photo.zoom = 1; photo.monk = view === "third" && monk.group.visible; photo.pray = false; document.exitPointerLock?.();
+    $("monkToggle").disabled = view !== "third"; $("monkToggle").setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; $("prayToggle").setAttribute("aria-pressed", "false");
+    document.querySelectorAll("[data-lens]").forEach((o) => o.setAttribute("aria-pressed", String(o.dataset.lens === "1")));
+  }
+  canvas.style.cursor = open ? "crosshair" : "grab";
   resize();
 }
 on("photoSettingsToggle", () => setPhotoSettings($("photoSettings").hidden));
 on("photoBtn", () => setPhoto(true)); on("photoClose", () => setPhoto(false));
 document.querySelectorAll("[data-aspect]").forEach((b) => b.addEventListener("click", () => { photo.aspect = b.dataset.aspect; document.querySelectorAll("[data-aspect]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); layoutFrame(); }));
-document.querySelectorAll("[data-lens]").forEach((b) => b.addEventListener("click", () => { photo.lens = +b.dataset.lens; document.querySelectorAll("[data-lens]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); resize(); }));
+document.querySelectorAll("[data-lens]").forEach((b) => b.addEventListener("click", () => { photo.zoom = +b.dataset.lens; document.querySelectorAll("[data-lens]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); lens(); }));
 on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; });
 on("prayToggle", (e) => { photo.pray = !photo.pray; e.currentTarget.setAttribute("aria-pressed", String(photo.pray)); });
 
 // Draw the framed part of the view again, large, and mount it on its card.
 async function capture() {
-  const [aw, ah] = ASPECT[photo.aspect], long = quality.name === "low" ? 1600 : 2160;
+  const [aw, ah] = photo.aspect === "screen" ? [canvas.clientWidth, canvas.clientHeight] : ASPECT[photo.aspect], long = quality.name === "low" ? 1600 : quality.name === "medium" ? 2160 : 2880;   // drawn again far finer than the screen
   const W = aw >= ah ? long : Math.round((long * aw) / ah), H = aw >= ah ? Math.round((long * ah) / aw) : long;
   const f = frameRect(), keepFov = camera.fov;
   camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(keepFov) / 2) * (f.h / canvas.clientHeight)));
@@ -577,7 +593,7 @@ window.__probe = () => {
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    photoSettings: !document.getElementById("photoSettings").hidden, aspect: photo.aspect, camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, lamp: U.uLamp.value, fov: camera.fov };
+    photoSettings: !document.getElementById("photoSettings").hidden, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, lamp: U.uLamp.value, fov: camera.fov };
 };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };

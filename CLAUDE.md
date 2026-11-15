@@ -136,9 +136,12 @@ the eye follows a few steps behind and is pulled in along its line when `walker.
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
 
-**The photograph (`capture()` in `yard.js`, `app/src/card.js`, the DOF pass in `post.js`).** Photograph mode frames the
-view (tall, square, wide; three lenses), a tap chooses what is sharp, and the shutter re-renders the framed region at
-1600 or 2160 px and mounts it on a card with the mood's verse, the temple's name and a seal.
+**The photograph (`capture()` in `yard.js`, `app/src/card.js`, `docs/PHOTO-MODE.md`).** Raising the camera (P, or 留影)
+changes nothing in the picture: it is the view he had, whole, with the novice in it if he was. From there the camera
+only draws nearer or farther (the wheel, a pinch, three steps in the settings; `photo.zoom`, 0.7 to 6); it does not turn.
+The left mouse button on the picture is the shutter (a drag is not); on a touch screen the shutter button is. The
+shutter draws the view again at 1600, 2160 or 2880 px on its long side by quality tier and mounts it on a card with
+the mood's verse, the temple's name and a seal. Tall, square and wide frames are still offered in the settings.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
 fireflies in the air; both are driven only by the mood.
