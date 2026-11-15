@@ -18,6 +18,7 @@ import fs from "node:fs";
 const { buildSite, createWalker, SITE, APPROACH, LEVELS } = await import("../app/src/site.js");
 const { CHEEK, stairProfile } = await import("../app/src/geo.js");
 const { createMonk } = await import("../app/src/monk.js");
+const { createTrees } = await import("../app/src/trees.js");
 
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
 const TOL = +arg("tol", 0.01), TOP = +arg("top", 12), OUT = arg("json", "tools/out/edge-audit/sweep.json");
@@ -115,7 +116,11 @@ export function sweep({ tol = TOL } = {}) {
     }
   };
   const m4 = new THREE.Matrix4(), w4 = new THREE.Matrix4();
-  site.root.traverse((o) => {
+  // The trees are grown by their own module, not by the plan: their trunks and boughs are gone over too (their
+  // leaves are not: he may brush through a spray of maple).
+  const grove = new THREE.Scene(); createTrees(grove, M, site.trees.filter((t) => !t[5]), {}); grove.updateMatrixWorld(true);
+  const built = new THREE.Group(); built.add(site.root); grove.traverse((o) => { if (o.isMesh && o.material?.name !== "bark") o.visible = false; }); built.add(grove);
+  built.traverse((o) => {
     if (!o.isMesh || !o.visible || o.userData.soft) return;
     const mat = Array.isArray(o.material) ? o.material[0] : o.material, name = mat?.name || o.name || "?";
     label = names.indexOf(name); if (label < 0) label = names.push(name) - 1;

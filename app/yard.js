@@ -94,11 +94,7 @@ const post = createPost(renderer, scene, camera, quality);
 await loading.step("院落");
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
-const trees = part("trees", () => createTrees(scene, M, [
-  [11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
-  [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-9, TOP.y, TOP.zS - 4.5, "maple", 6.5], [9.5, TOP.y, TOP.zS - 4.5, "ginkgo", 8],
-  ...site.cedars,
-], { a2c: quality.msaa > 0 }));
+const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
 const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800));
 const glows = []; let glowCloud = null;
 {

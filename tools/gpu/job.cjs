@@ -36,7 +36,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
     const key = name + (channel ? "+new-headless" : "+headless-shell"); let b = null;
     try {
       b = await chromium.launch({ channel, args: [...COMMON, ...flags] });
-      const p = await b.newPage(); await p.goto(base + "v/build/three.module.js");   // any same-origin page will do
+      const p = await b.newPage(); await p.goto(base + "favicon.svg");   // any same-origin page will do; it must exist, or this flavour is passed over and the frame rates are no longer comparable
       const gl = await p.evaluate(() => { const c = document.createElement("canvas"), g = c.getContext("webgl2"); if (!g) return "no webgl2"; const e = g.getExtension("WEBGL_debug_renderer_info"); return String(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); });
       report.tried[key] = gl; await p.close();
       if ((/NVIDIA|Tesla|GeForce|RTX|Quadro|AMD|Radeon/i.test(gl) && !/SwiftShader|llvmpipe/i.test(gl)) || name === "swiftshader") { browser = b; how = key; break pick; }

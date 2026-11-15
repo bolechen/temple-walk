@@ -130,14 +130,19 @@ export function buildSite(M) {
     }
     tea.group.add(mesh(merge(parts.wood), M.woodX), mesh(merge(parts.glaze), M.glaze), mesh(merge(parts.iron), M.iron), mesh(merge(parts.straw), M.hide));
   }
-  // (The last two in the list are the pair of young evergreens before the great hall.)
-  // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts. trees.js grows them;
-  // the plan only says where they stand, how tall, and that they are in the way.
-  const cedars = [];
-  for (const [x, z, h, lvl] of [[-13.6, 53.2, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-13.2, 6.4, 5.2, 0], [13.2, 6.4, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
+  // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts; and the pair of young
+  // evergreens that stand clear of everything in the corners before the great hall. trees.js grows them; the plan
+  // only says where they stand, how tall, and that they are in the way: a trunk is a round thing as wide as it
+  // is grown at the knee, where its roots still spread it.
+  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.58 : (0.2 + h * 0.012) * 1.24) : (0.09 + h * 0.019) * 1.4 + (kind === "maple" ? 0.14 : 0.04));   // a young evergreen's boughs sweep the ground all round it; a maple forks low and crooked
+  for (const [x, z, h, lvl] of [[-13.6, 54.4, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-15.5, 1.8, 5.2, 0], [15.5, 1.8, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
-    walk.solids.push({ x0: x - 0.8, x1: x + 0.8, z0: z - 0.8, z1: z + 0.8 }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
+    walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
   }
+  // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
+  const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
+    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.5, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];
+  for (const [x, , z, kind, h] of seasonal) walk.posts.push({ x, z, r: girth(kind, h) });
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
   for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
     [-27, -30, 24], [28, -34, 26], [-40, 22, 28], [41, 34, 27], [-25, 76, 20], [-25.5, -17, 31], [25.5, -20, 32], [-26, 3, 29], [26, -3, 30], [-30, -44, 30], [31, -48, 31], [-24.5, -60, 28], [25, -64, 29]]) cedars.push([x, terrain(x, z) - 0.3, z, "cedar", h, true]);   // `true`: seen only from afar, so grown without the branches inside its boughs
@@ -413,7 +418,7 @@ export function buildSite(M) {
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
   };
 
-  return { root, walk, shade, paving, hall, halls, buildings, views, places, cedars, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, halls, buildings, views, places, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----

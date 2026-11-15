@@ -75,3 +75,13 @@ test("stairs are walked between their cheek stones, and the stones are closed to
     assert.ok(walker.blocked(x, z), `he can stand in ${what} at (${x.toFixed(2)}, ${z.toFixed(2)})`);
   for (const L of LEVELS) for (let z = L.zS - 0.5; z < L.zS + 3; z += 0.1) assert.ok(!walker.blocked(0, z), `the middle of the stair to a terrace is closed at z=${z.toFixed(1)}`);
 });
+
+test("every tree in the courts is in the way, by its trunk and his width, and none grows through a platform", () => {
+  const near = site.trees.filter((t) => !t[5]); assert.ok(near.length >= 18, "the plan lists the seasonal trees as well as the cryptomerias");
+  for (const [x, , z, kind, h] of near) {
+    const post = site.walk.posts.find((p) => p.r !== undefined && Math.hypot(p.x - x, p.z - z) < 1e-6); assert.ok(post, `the ${kind} at (${x}, ${z}) has nothing to stop him`);
+    const trunk = kind === "cedar" ? 0.2 + h * 0.012 : 0.09 + h * 0.019; assert.ok(post.r >= trunk * 1.2, `the ${kind} at (${x}, ${z}) is closed to ${post.r.toFixed(2)} m but its trunk is ${trunk.toFixed(2)} m before its roots spread`);
+    for (let a = 0; a < 6.283; a += 0.5) assert.ok(walker.blocked(x + Math.cos(a) * (post.r + BODY - 0.02), z + Math.sin(a) * (post.r + BODY - 0.02)), `he can lean into the ${kind} at (${x}, ${z})`);
+    for (const b of site.buildings) assert.ok(!(x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3), `the ${kind} at (${x}, ${z}) grows through the platform of ${b.name || "a building"}`);
+  }
+});
