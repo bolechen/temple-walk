@@ -237,6 +237,7 @@ const scenarios = {
     await t.frames(3); expect((await t.page.evaluate(() => window.__well())).rings > 0, "the drop sent no ring across the water");
     // Two culms knocking in the bamboo: the sound is made and counted on the place's bus.
     const k = await t.page.evaluate(() => window.__knock(true)); expect(k.knocks >= 1, "the culms made no knock: " + JSON.stringify(k));
+    const bd = await t.page.evaluate(() => window.__bird(true)); expect(bd.birds >= 1, "no bird sang: " + JSON.stringify(bd));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The music: it begins with the first sound, follows him from place to place once he has settled, ignores pacing

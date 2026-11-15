@@ -153,11 +153,40 @@ export function knock(level = 1) {
   }
   knocks++;
 }
-export const ambienceState = () => ({ knocks, running: !!ambient });
+// Birds, after Chang Jian's poem on the Chan cloister behind Poshan Temple (Quan Tang Shi; the text and its variant
+// readings are in docs/t00/SOURCES.md): the light on the mountain pleases the birds; within the walls every other sound is still and only bell and chime are heard. So
+// they sing in the bamboo and on the path up (`grove`, `stair`), most at first light, now and then by day, a last few
+// at dusk, none at night, few in winter; never in the courts, the halls or the summit's court. `birdGap` is the mean
+// time between two calls, in seconds, or 0 for silence.
+export function birdGap(zone, time, season) {
+  if (zone !== "grove" && zone !== "stair") return 0;
+  const t = { dawn: 7, day: 16, dusk: 26, night: 0 }[time] ?? 16;
+  if (!t) return 0;
+  return (zone === "stair" ? t * 1.6 : t) * (season === "winter" ? 3 : 1);
+}
+let birds = 0;
+// One small bird some way off: two to five quick whistled notes, each a sweep up or down in the high register, softened
+// by distance.
+export function bird(level = 1) {
+  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  const now = ctx.currentTime + 0.02, n = 2 + Math.floor(Math.random() * 4), base = 2600 + Math.random() * 1400, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  const far = ctx.createBiquadFilter(); far.type = "lowpass"; far.frequency.value = 5200; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; far.connect(pan); pan.connect(bus.ambience.in); } else far.connect(bus.ambience.in);
+  let t = now;
+  for (let i = 0; i < n; i++) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), len = 0.05 + Math.random() * 0.09, f = base * (0.85 + Math.random() * 0.4), up = Math.random() < 0.6;
+    o.frequency.setValueAtTime(up ? f * 0.8 : f * 1.2, t); o.frequency.exponentialRampToValueAtTime(up ? f * 1.25 : f * 0.75, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.022 * level, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(g); g.connect(far); o.start(t); o.stop(t + len + 0.02);
+    t += len + 0.03 + Math.random() * 0.08;
+  }
+  birds++;
+}
+export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 
 // ---- The sound of the place when nothing is happening ----
 // Wind moving through bamboo (filtered noise that swells and falls), now and then two culms knocking together in a
-// gust, water dripping from the eaves after rain, and now and then a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
+// gust, birds out on the mountain (never within the walls), water dripping from the eaves after rain, and now and then
+// a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
 // in the bamboo the listener stands, which part of the mountain (score.js), and the mood. The music starts with it.
 let ambient = null;
 export function startAmbience(place) {
@@ -174,7 +203,7 @@ export function startAmbience(place) {
     return g;
   };
   const low = layer("bandpass", 420, 0.5), leaves = layer("highpass", 2600, 0.3);
-  ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14, nextKnock: 4 };
+  ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14, nextKnock: 4, nextBird: 3 };
   startMusic(place);
   const tick = () => {
     if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
@@ -191,6 +220,8 @@ export function startAmbience(place) {
       gg.gain.setValueAtTime(0.0001, now); gg.gain.exponentialRampToValueAtTime(0.05 * (1 - 0.6 * g), now + 0.005); gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
       o.connect(gg); gg.connect(bus.ambience.in); o.start(now); o.stop(now + 0.15);
     }
+    const gap = birdGap(p.zone, p.time, p.season);
+    if ((a.nextBird -= 0.25) <= 0) { a.nextBird = gap ? gap * (0.5 + Math.random()) : 4; if (gap) bird(0.6 + 0.4 * g); }
     if ((a.nextKnock -= 0.25) <= 0 && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
     if ((a.nextChime -= 0.25) <= 0 && gust > 0.62) {   // an eave bell, only when the wind is up
       a.nextChime = 18 + Math.random() * 30;

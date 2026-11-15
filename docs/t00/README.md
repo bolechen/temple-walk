@@ -20,6 +20,7 @@
 开发方的自报写在 [acceptance-report.json](acceptance-report.json)：哪几项通过、哪几项没有、哪几项因为没有目标设备而无法判定。
 它不是独立验收。独立验收由评审方写入 [independent-review.json](independent-review.json)；每轮交付的摘要在 [delivery.json](delivery.json)，
 由仓库的状态工作流同步到研究站点（见 `../SITE-SYNC.md`）。
+游戏里每一个效果（画面、声音、玩法、镜头、界面）的来源登记在 [SOURCES.md](SOURCES.md)，新效果同一个提交里补一行。
 完成定义是「验收通过并有运行证据」，按这个定义 T00 **还没有完成**：差的是目标设备上的性能测量（A06）、真人操作的往返录像（A02）、
 独立评审方的验收，以及佛像模型的授权确认。这四件事开发方在这里做不了。
 
