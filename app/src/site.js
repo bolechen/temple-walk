@@ -509,16 +509,17 @@ export function createWalker(site) {
   const post = (x, z, pad) => { const list = bins.get(key(Math.floor(x / CELL), Math.floor(z / CELL))); if (!list) return false;
     for (const s of list) { if (s.r !== undefined) { const dx = x - s.x, dz = z - s.z, r = s.r + pad; if (dx * dx + dz * dz < r * r) return s; } else if (inRect(s, x, z)) return s; }
     return null; };
+  let floor = null;   // what the highest floor found by the last carved() is made of (building floors say; the rest is the path's stone)
   function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
-    let height = null;
-    const take = h => { height = height === null ? h : Math.max(height, h); };
-    for (const d of decks) if (inRect(d, x, z)) take(d.h);
+    let height = null; floor = null;
+    const take = (h, f) => { if (height === null || h > height) { height = h; floor = f || "path"; } };
+    for (const d of decks) if (inRect(d, x, z)) take(d.h, d.floor);
     for (const r of ramps) if (inRect(r, x, z)) {
       const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1];
       // A stair is steps, not a slope: he stands on the tread he is over, so his feet never sink into the stone.
       const { count: n, nosing } = stairProfile(r.h), run = Math.hypot(dx, dz);
       const f = Math.min(1, Math.max(0, ((x - r.low[0]) * dx + (z - r.low[1]) * dz) / (run * run) + nosing / run));
-      take((r.base || 0) + r.h * (even ? f : Math.ceil(f * n - 1e-6) / n));
+      take((r.base || 0) + r.h * (even ? f : Math.ceil(f * n - 1e-6) / n), r.floor);
     }
     return height;
   }
@@ -530,6 +531,10 @@ export function createWalker(site) {
   return {
     setRoom(r) { room = r || null; }, get room() { return room; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },
+    // What a shoe comes down on: "room" (a hall's floor), "stone" or "wood" (a building's platform or gallery), "path"
+    // (the stone landings and stairs of the approach and the terraces), "paving" (the courts, where water stands after
+    // rain) or "earth" (the hillside below the screen wall).
+    floorAt(x, z) { if (room) return "room"; if (carved(x, z) !== null) return floor; return z > SITE.fore + 0.3 ? "earth" : "paving"; },
     // Where the eye rides: over a stair it follows the slope, not each tread, so the view climbs without juddering.
     eyeAt(x, z) { if (room) return room.y; const c = carved(x, z, true); return c === null ? level(x, z) : c; },
     // The surface of whatever is there, walkable or not: floors and stairs, the courts, and the open hillside.
