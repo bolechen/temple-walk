@@ -147,7 +147,10 @@ springs driven by speed and turning, and the skirt's bones are shortened whereve
 generated mesh can take this one's place with the same bone names, bound in the same A-pose and proportions
 (`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
 the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
-its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something: a column, a
+its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something. It never gets
+there in one frame: `createFollow` moves it on critically damped springs (times taken from 《小王子》's camera; a friend
+felt sick when it jumped), lets a thin column (`eyeShut` answers `"post"`) cross the line of sight a moment before
+coming in, and `tests/unit/follow.test.mjs` bounds how far it may move on its own per frame along four routes. "Inside" is: a column, a
 building within its walls up to its ridge, its platform only up to the floor (so from a porch the eye backs out over
 the edge), any other wall some way above his head, and every roof from the foot of its beams to over its ridge
 (`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes,
@@ -226,7 +229,8 @@ drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and pape
 (`unicode-range`) so that a slip written down the page has its commas in place.
 
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
-opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, volume, the key card, and
+opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, how wide the view is (`fov`, degrees
+added to the walk's 50° behind him or 65° from his eyes; the fixed views keep 44°/52°), volume, the key card, and
 a way back to the start of the path. The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
 validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
 

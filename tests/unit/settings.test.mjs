@@ -6,11 +6,12 @@ const mem = (text = null) => { const m = { text, get: () => m.text, set: (t) => 
 test("a new visitor gets the defaults", () => { assert.deepEqual(createSettings(mem()).get(), { ...DEFAULTS }); });
 test("what is set is kept for next time", () => {
   const m = mem(), a = createSettings(m); a.set("sens", 1.6); a.set("invertY", true); a.set("quality", "low"); a.set("volume", 0.25);
-  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
+  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, fov: 0, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
 });
 test("values out of range are brought back into it", () => {
   const s = createSettings(mem()); assert.equal(s.set("sens", 99), 2.5); assert.equal(s.set("sens", -3), 0.3); assert.equal(s.set("volume", 7), 1); assert.equal(s.set("volume", -1), 0);
   for (const k of ["music", "ambience", "effects"]) { assert.equal(s.set(k, 3), 1, k); assert.equal(s.set(k, -2), 0, k); assert.equal(s.set(k, "loud"), DEFAULTS[k], k + ": a word is not a level; the default stands"); }
+  assert.equal(s.set("fov", 40), 16); assert.equal(s.set("fov", -40), -6); assert.equal(s.set("fov", 4.4), 4, "the angle moves by whole degrees");
   assert.equal(s.set("quality", "ultra"), "auto", "an unknown tier falls back to the default"); assert.equal(s.set("nonsense", 1), undefined);
 });
 test("a damaged save is ignored, not thrown on", () => {

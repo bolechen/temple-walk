@@ -93,3 +93,50 @@ Unity loader、`Build/` 里的 `.data.br` / `.wasm.br`，以及 `StreamingAssets
 
 下一步若要动手，优先做三件不违背手机约束的小事：给 `index.html` 加 WebGL/上下文创建失败的明确提示，
 给殿内模型和背景图的加载加可见进度与可重试，以及在 `shots.js` 里加一条「资源缺失时不白屏」的用例。
+
+## 镜头与行走（2026-11-15 补读）
+
+朋友试玩说容易头晕，于是回头读它的镜头。读法：下载线上的 `…_monoscripts_….bundle`（脚本清单）和
+`shared_assets_assets_shared_core_prefabs_….bundle`（角色与镜头预制件），用 UnityPy 读出各 MonoBehaviour 的
+序列化字段。字段名和数值都是原样；**没有玩过，也看不到 C# 代码**，下面的「做法」是从字段名推断的。
+
+它是**第三人称**，镜头是 `B612.ThirdPersonCamera`，角色是 `B612.PlayerController`：
+
+| 字段 | 值 | 我们（改之前 → 改之后） |
+|---|---|---|
+| `fieldOfView`（Unity 是垂直视角） | 50° | 横屏 44° → **50°**（竖屏 58° → 62°），可在「歇脚」里加减 |
+| `defaultDistance` / `minDistance` / `maxDistance` | 3.2 / 1.8 / 5 米 | 6.2 / 2.6 / 11 米，没改（构图要他小小地站在左下） |
+| `pivotHeight` / `defaultPitch` | 1.0 米 / 俯 12° | 眼高 +1.18 米 / 2°，没改 |
+| `followSmoothTimeXZ` / `followSmoothTimeY` / `maxFollowLag` | 0.06 / **0.14** 秒 / 0.5 米 | 原来上下与水平都约 0.08 秒 → 第三人称上下 **0.14 秒** |
+| `zoomSmoothTime` | 0.15 秒 | 原来拉近**一帧到位** → 拉近 0.15 秒、退回 0.4 秒，都用 SmoothDamp |
+| `collisionRadius` / `collisionMask` / `collisionRecoverTime` | 0.2 米的球 / 只有两个图层 / 0.35 秒 | 一个点、凡是建的都算 → 柱子和树干挡一下先不躲（0.25 秒），大的才躲 |
+| `liftSmoothTime` / `liftHold` / `liftReleaseTime` | 0.22 / 0.35 / 0.5 秒 | 越过台基边缘的抬升原来**一帧到位** → 照搬这三个数 |
+| `hideCharacterBelow` / `showCharacterAbove` | 0.58 / 0.79 米 | 原来只有 0.95 米一道 → 0.6 / 0.85 米两道，不在边界上闪 |
+| `acceleration` / `deceleration` | 7 / 8 m/s² | 原来一下到速、松手立停 → 照搬 |
+| `walkSpeed` / `jogSpeed` / `runSpeed` | 1.5 / 2.4 / 3.5 m/s | 2.1 / 4.2 m/s，没改 |
+| `turnSmoothTime` / `stepSmoothTime` | 0.085 / 0.09 秒 | 台阶上的眼高本来就有约 0.08 秒的平滑 |
+| 键鼠 `yawSensitivity` / `pitchSensitivity` | 每像素 0.11° / 0.09° | 每像素 0.15° / 0.13°（0.0026 / 0.0022 弧度），没改，「歇脚」里可调 |
+
+脚本清单里还有一串**按场景写的镜头组件**，说明它在舒适度上下了很多功夫：`CameraOccluder`、`CameraOccluderFade`
+（挡住镜头的东西淡出，镜头不躲）、`VanityCameraComfort`、`BarCameraSafety`、`CourtCameraSafety`、
+`DesertCameraWallGuard`、`DesertCameraZone`、`GeoCameraSoftLimit`、`GeoCameraPitchAssist`、`InteriorCameraZone`、
+`CameraStartFraming`。这些组件的参数在各章自己的包里（几十到上百 MB），没有下载，只知道名字。
+
+**拿来的**（`app/src/eye.js` 的 `createFollow`）：
+- 所有镜头运动用 SmoothDamp（临界阻尼的弹簧：慢慢起速、慢慢收住），不再按每帧固定比例逼近（那种逼近第一帧最快，就是那一下抖）。
+- 拉近、退回、侧移、抬升各有自己的时间；抬升起来后至少保持 0.35 秒，沿台基边走时不会一上一下。
+- 眼睛自己的移动（侧移、后退）只往空处走；只有在它会落进东西里时才直接挪出来，挪最短的路。
+- 选择往右偏多少时，不只看肩头那一点是否空，还看从那里往后能退多远：在钟鼓楼旁边，偏右的视线会穿过楼身，正后方却是通的，就让眼睛回到正后方，不去拉近。
+
+**没有拿的**：把挡住的柱子做淡出。我们的静态几何按材质合并成了少数几个大网格（`mergeStatic`），单根柱子没法单独淡出；
+现在的做法是让一根柱子横穿视线时先挡一下（0.25 秒内不躲），比镜头猛地扑到身后好受。
+
+量化（`tests/unit/follow.test.mjs`，每秒 60 帧沿四条路线走，镜头跟着行进方向转，量眼睛「在跟随之外自己动了多少」）：
+
+| 路线 | 改前：最大单帧水平 / 竖直，跳动帧数 | 改后 |
+|---|---|---|
+| 测量路线（竹林到第一进院子） | 2.0 / 0.43 米，8 帧 | 0.05 / 0.03 米，0 帧 |
+| 第一进院子绕一圈，贴着钟鼓楼 | 5.5 / 0.58 米，27 帧 | 0.07 / 0.03 米；8 帧必须从东墙里挪出来（在墙边急转），最多 0.55 米 |
+| 中轴到大殿台阶、上二层台到观音殿台阶 | 没有跳动 | 没有跳动 |
+
+「改前」是用旧的跟随逻辑在同一份场景上跑的，但场景里方柱（桌子、台阶挡墙）现在只在眼睛低到离地 1.1 米以内时才挡，所以与线上旧版不完全相同。
