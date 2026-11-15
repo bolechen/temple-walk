@@ -66,6 +66,7 @@ pnpm run verify                     # check + unit + smoke: run this before push
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
 node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png (add `bind` for his A-pose)
+node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -163,7 +164,10 @@ springs driven by speed and turning, and the skirt's bones are shortened whereve
 `update(dt, speed, pose, t, surfaceAt, grounding)`; pose `"bind"` shows the A-pose, and
 `node tools/portrait.js summer-day bind` renders it front, side and back to set beside the drawing. A sculpted or
 generated mesh can take this one's place with the same bone names, bound in the same A-pose and proportions
-(`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
+(`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. One does: the body the owner
+made with Meshy from the drawing (`tools/novice.mjs` → `app/shared/models/novice.glb`) is fetched after the first frames by
+`app/src/novice.js` and worn through `monk.dress()`, which swaps the geometry of the four skinned parts and nothing else;
+`?body=code` keeps the one built here, and so does a failed or ill-fitting fetch. The hat and the beads are still built here. In third person
 the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
 its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something. It never gets
 there in one frame: `createFollow` moves it on critically damped springs (times taken from 《小王子》's camera; a friend

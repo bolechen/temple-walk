@@ -66,7 +66,7 @@ function classify(r, g, b, y, ax) {
   if (y < 0.032) return "shoes";                                         // the pale sole
   if (dark) return y < 0.12 ? "shoes" : "robe";
   if (cream) return y > 0.45 ? "robe" : "legs";                          // the collar's lining, or the leg wraps
-  if (grey) return "legs";                                               // the trousers
+  if (grey) return y < 0.36 ? "legs" : "robe";                            // the trousers (above the hem a grey fleck is a shadow in the cloth)
   if (red) return "robe";
   return ax > 0.2 && y > 0.4 ? "skin" : y > 0.84 ? "skin" : "robe";      // peach: the hands and forearms, the neck
 }
@@ -83,6 +83,17 @@ for (let t = 0; t < nt; t++) { const c = [0, 0, 0, 0]; for (let k = 0; k < 3; k+
 const edge = new Map(), nbr = Array.from({ length: nt }, () => []);
 for (let t = 0; t < nt; t++) for (let k = 0; k < 3; k++) { const a = I0[t * 3 + k], b = I0[t * 3 + (k + 1) % 3], key = a < b ? a * nv + b : b * nv + a; if (edge.has(key)) { const u = edge.get(key); nbr[t].push(u); nbr[u].push(t); } else edge.set(key, t); }
 for (let pass = 0; pass < 3; pass++) for (let t = 0; t < nt; t++) { const n = nbr[t]; if (n.length >= 2 && n.every((u) => tlabel[u] === tlabel[n[0]]) && tlabel[n[0]] !== tlabel[t]) tlabel[t] = tlabel[n[0]]; }
+// A fleck of one part inside another (a grey crease in the robe) is not a part: islands of fewer than 60 triangles join
+// the part that most surrounds them.
+{
+  const seen = new Uint8Array(nt);
+  for (let t0 = 0; t0 < nt; t0++) {
+    if (seen[t0]) continue;
+    const comp = [t0], around = [0, 0, 0, 0]; seen[t0] = 1;
+    for (let q = 0; q < comp.length; q++) for (const u of nbr[comp[q]]) { if (tlabel[u] === tlabel[t0]) { if (!seen[u]) { seen[u] = 1; comp.push(u); } } else around[tlabel[u]]++; }
+    if (comp.length < 60 && Math.max(...around) > 0) { const to = around.indexOf(Math.max(...around)); for (const t of comp) tlabel[t] = to; }
+  }
+}
 // A vertex's own part is the majority of its triangles; vertices on a border also remember the other part(s).
 const vparts = Array.from({ length: nv }, () => new Set());
 for (let t = 0; t < nt; t++) for (let k = 0; k < 3; k++) vparts[I0[t * 3 + k]].add(tlabel[t]);

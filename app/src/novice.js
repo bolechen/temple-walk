@@ -17,7 +17,7 @@ export function bodyOf(scene, extras, monk) {
   const names = monk.skeleton.bones.map((b) => b.name);
   if (!extras?.bones || extras.bones.length !== names.length || extras.bones.some((n, i) => n !== names[i])) throw new Error("the sculpted body's joints are not this skeleton's");
   const geometries = {}; let material = null;
-  scene.traverse((o) => { if (o.isMesh && PARTS.includes(o.name)) { geometries[o.name] = o.geometry; material ||= o.material; } });
+  scene.traverse((o) => { const m = /** @type {import("three").Mesh} */ (o); if (m.isMesh && PARTS.includes(m.name)) { geometries[m.name] = m.geometry; material ||= /** @type {import("three").Material} */ (m.material); } });
   for (const n of PARTS) if (!geometries[n]) throw new Error(`the sculpted body has no ${n}`);
   return { geometries, material, robeColor: extras.robeColor };
 }
