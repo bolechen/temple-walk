@@ -1,17 +1,21 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-15T04:49:26.656Z",
+  "generated_at": "2026-11-15T05:19:14.874Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "9e78569b77794b6174d698799f42f4e580882039",
-    "url": "https://github.com/bolechen/temple-walk/commit/9e78569b77794b6174d698799f42f4e580882039"
+    "sha": "e117a8a0e8eedbfc11e607dcc421f7fc50b1155e",
+    "url": "https://github.com/bolechen/temple-walk/commit/e117a8a0e8eedbfc11e607dcc421f7fc50b1155e"
   },
   "delivery": {
     "schema_version": 1,
     "scene_id": "T00",
-    "summary": "界面这一轮：所有盖在画面上的界面收到 app/src/ui.js 的一个栈上，不接任何第三方 UI 库。菜单、朱印帐、照片、画作卡、签改成原生 <dialog>：背后的页面不能操作，焦点留在弹层里，人物站住，只认弹层自己的按键。Esc 只关最上面一层，栈空了才打开歇脚菜单；关掉时焦点回到打开它的按钮。配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
+    "summary": "观音殿檐下：第三人称跟拍的眼睛不再进到檐廊的格扇、柱子和檐椽斗拱里；燃灯灯台挪开，西半边檐廊处处可以跳下。界面这一轮：所有盖在画面上的界面收到 app/src/ui.js 的一个栈上，不接任何第三方 UI 库。菜单、朱印帐、照片、画作卡、签改成原生 <dialog>：背后的页面不能操作，焦点留在弹层里，人物站住，只认弹层自己的按键。Esc 只关最上面一层，栈空了才打开歇脚菜单；关掉时焦点回到打开它的按钮。配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
     "changes": [
+      "跟拍的眼睛移到 app/src/eye.js（followEye），由 walker.eyeShut 判断能否放在某点：屋顶从梁底到屋脊以上不可进（每座 buildHall 登记 walk.roofs，柱网之内从门头起算），柱子留一掌，殿身墙内到屋脊，台基只到地面，其他墙仍按脚下 5.5 米",
+      "往右偏 1.2 米和往后退都逐步检查，最近可贴到他的肩头；原来从 0.5 米起算、不查侧偏，眼睛会落在墙里",
+      "全寺随机站位 × 8 朝向 × 4 俯仰，眼睛与沙弥之间被建筑挡住或眼睛在建筑里：旧 735/14656，新 22/14656（剩下的是上山石阶仰视时视线擦过台阶，与屋檐无关）",
+      "燃灯灯台从 T2.zS−4.0 挪到 T2.zS−3.4：西半边檐廊处处可以跳下，檐口下有一条走得开的路；燃灯站位与 lamps 机位随之移动",
       "新增 app/src/ui.js（约 120 行，无依赖）：层分 modal、panel、mode 三种。用 ui.open(id, { onClose }) 和 ui.close(id) 开关，不再直接改 hidden（hidden 仍同步，测试照读）",
       "index.html：#menu、#book、#print、#piece、#slip 改成 <dialog class=\"layer\">，浏览器自带的对话框外观全部去掉，画面不变",
       "yard.js：Esc 那串手写优先级换成 ui.key(e)。跳跃、下台阶、行走的拦截原来各列一遍弹层 id，现在改问 ui.covered() 和 ui.modal()。拍照改成「相机 mode → 设置 panel → 照片 modal」三层",
@@ -34,6 +38,7 @@
       "pose \"bind\" 回到 A-pose；node tools/portrait.js <季节-时辰> bind 出正、侧、背三视图，可与设定图并排对照"
     ],
     "known_issues": [
+      "上山石阶上仰视时，跟拍眼睛到沙弥的视线仍可能擦过台阶边（22/14656 处），未改",
       "弹层打开时，焦点会移到弹层本身，不落在第一个按钮上，这样画面上不会出现焦点框；键盘用户要先按一下 Tab 才进入按钮",
       "鼠标点开的弹层，关掉后焦点回到原来的按钮。之后按空格，会按那个按钮，而不是跳跃。这是原来就有的行为，没有改",
       "没有手柄支持；动作和按键的对应表还在 yard.js 的 keydown 里，没有抽出来",
@@ -55,6 +60,8 @@
       "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG"
     ],
     "evidence": [
+      "tests/unit/eaves.test.mjs",
+      "tests/unit/edges.test.mjs",
       "app/src/ui.js",
       "tests/e2e/run.cjs（layers、keys、menu、photo-ui、halls、pilgrimage、jump、drop 场景）",
       "docs/t00/evidence/ui/menu-quirks.jpg",
@@ -71,25 +78,25 @@
       "tools/music.mjs → tools/out/music/report.json（本地生成，不入库）",
       "docs/t00/MUSIC.md"
     ],
-    "record_commit": "9e78569b77794b6174d698799f42f4e580882039",
+    "record_commit": "e117a8a0e8eedbfc11e607dcc421f7fc50b1155e",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43678280621,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43678280621",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43680540875,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43680540875",
     "checks": {
       "syntax": "success",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "in_progress",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "9e78569b77794b6174d698799f42f4e580882039",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43678280621"
