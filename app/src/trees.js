@@ -145,6 +145,30 @@ function limb(pts, r0, r1, radial = 7, flare = 0) {
   return { geo: g, curve };
 }
 
+// Where a trunk meets the ground. A tube ending at the paving looks sawn off, so each tree stands on a foot of its
+// own: the bole swelling as it comes down and dividing into five or six root-spurs that run out and under, drawn in
+// level rings (so nothing is lifted clear of the ground) and carried well below it. `r` is the trunk's radius where
+// the foot takes over, `top` how high the swelling begins. The bark's grain runs on down it.
+function foot(x, y, z, r, top, seed) {
+  const R = 28, rings = 12, pos = [], nor = [], uv = [], idx = [], spurs = 5 + (seed % 2), turn = seed * 1.3;
+  const at = (i, k) => { const t = i / rings, h = top * (1 - t) - 0.35 * t * t * 3, a = (k / R) * 6.283, swell = Math.max(0, Math.exp(-Math.max(0, h) / (top * 0.3)) - Math.exp(-1 / 0.3)) * (1 - t < 0.08 ? (1 - t) / 0.08 : 1);   // nothing at its top: it leaves the trunk without a collar
+    const spur = Math.pow(0.5 + 0.5 * Math.cos(a * spurs + turn + Math.sin(a * 2 + seed) * 0.5), 2.2), rr = r * (1 + 0.55 * swell + 1.25 * swell * swell * spur) + (h < 0 ? -h * 0.5 : 0);
+    return [x + Math.cos(a) * rr, y + h, z + Math.sin(a) * rr]; };
+  for (let i = 0; i <= rings; i++) for (let k = 0; k <= R; k++) { const p = at(i, k), q = at(i, k + 0.25), e = i < rings ? 0.25 : -0.25, d0 = at(i + e, k), d = i < rings ? d0 : [2 * p[0] - d0[0], 2 * p[1] - d0[1], 2 * p[2] - d0[2]];   // the lowest ring looks back up the foot for its slope: a normal of no length would shade as not-a-number
+    const ax = q[0] - p[0], ay = q[1] - p[1], az = q[2] - p[2], bx = d[0] - p[0], by = d[1] - p[1], bz = d[2] - p[2], nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, l = Math.hypot(nx, ny, nz) || 1;
+    pos.push(...p); nor.push(-nx / l, -ny / l, -nz / l); uv.push(k / R, -i / rings * 0.5); }
+  for (let i = 0; i < rings; i++) for (let k = 0; k < R; k++) { const a = i * (R + 1) + k, b = a + R + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  return g;
+}
+// The bed it grows in: a round of dark earth standing a finger above the paving, uneven at its edge, heaped a little against the roots.
+function bed(x, y, z, r, seed) {
+  const R = 30, pos = [x, y + 0.07, z], idx = [];
+  for (const [f, lift] of [[0.62, 0.05], [1, 0.012]]) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r * f * (1 + 0.07 * Math.sin(a * 3 + seed) + 0.05 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y + lift, z + Math.sin(a) * rr); }
+  for (let k = 0; k < R; k++) { const n = (k + 1) % R; idx.push(0, 1 + n, 1 + k, 1 + k, 1 + n, 1 + R + k, 1 + n, 1 + R + n, 1 + R + k); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+
 // `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
 export function createTrees(scene, M, spots, opts = {}) {
   const rnd = seeded(311), wood = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
@@ -169,6 +193,8 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
   };
   const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
+  const beds = []; let nth = 0;
+  const root = (x, y, z, r, far) => { if (far) return; nth++; wood.push(foot(x, y, z, r * 1.005, Math.min(1.1, 0.5 + r * 1.6), nth)); beds.push(bed(x, y, z, r * 3.4 + 0.25, nth)); };
   // The fine wood at the end of a branch: a few twigs fanning out, which is what a bare tree is made of.
   const twigs = (p, dir, n = 3, reach = 0.6) => { for (let i = 0; i < n; i++) { const tip = p.clone().add(V(dir.x * reach + jit(reach), reach * (0.2 + rnd() * 0.6), dir.z * reach + jit(reach))); grow([p, p.clone().lerp(tip, 0.5).add(V(jit(0.12), 0.05, jit(0.12))), tip], 0.011, 0.004, 4); } };
   const jit = (k) => (rnd() - 0.5) * k;
@@ -177,7 +203,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
       const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t);
-      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, 0.4);
+      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, far0 ? 0.4 : 0); root(x, y, z, r0, far0);
       for (let by = h * 0.36; by < h * 0.985; by += far0 ? 0.85 : 0.4) {   // a tree seen only from afar is grown with half the boughs, each a little larger
         const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
@@ -197,7 +223,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     const tall = kind === "ginkgo", top = y + h, centre = V(x, y + h * (tall ? 0.62 : 0.7), z), r0 = 0.09 + h * 0.019;
     if (tall) {
       // Ginkgo: one leader, and boughs that climb away from it.
-      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 12, 0.7);
+      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 12, 0); root(x, y, z, r0);
       let a = rnd() * 6.283;
       for (let t = 0.26; t < 0.97; t += 0.058) {
         a += 2.4 + jit(0.5); const from = lead.getPoint(t), reach = h * (0.36 - t * 0.24) * (0.8 + rnd() * 0.4), rise = reach * (0.75 + rnd() * 0.5);
@@ -211,7 +237,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     } else {
       // The spreading tree: a short crooked trunk that forks low, long boughs that reach out before they rise.
       const forkAt = V(x + jit(0.6), y + h * (0.3 + rnd() * 0.07), z + jit(0.6));
-      grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 12, 0.8);
+      grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 12, 0); root(x, y, z, r0);
       const n = 5, a0 = rnd() * 6.283;
       for (let i = 0; i < n; i++) {
         const a = a0 + (i / n) * 6.283 + jit(0.5), reach = h * (0.36 + rnd() * 0.16), rise = h * (0.34 + rnd() * 0.2);
@@ -230,6 +256,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
   }
   scene.add(mesh(merge(wood), M.bark));
+  if (beds.length) { const soil = mesh(merge(beds), M.earth); soil.receiveShadow = true; scene.add(soil); }
 
   const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
   const put = (kind, map, o) => {
