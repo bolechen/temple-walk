@@ -194,7 +194,7 @@ upper, summit), a zone that counts only after two seconds, one phrase maker per 
 on the audio clock; on a change of place it drops the notes not yet begun and fades what sounds over 3.5 s (never the whole
 theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xiao, a held fifth) through `createPlayer` on
 any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
-The music steps back inside `strike()` for the bell and drum. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
+The music steps back inside `strike()` for the bell and drum. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
 fireflies in the air; both are driven only by the mood. Nothing drifts indoors, and no snow lies on a room's floor:

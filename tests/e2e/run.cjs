@@ -235,6 +235,8 @@ const scenarios = {
     await t.page.evaluate(([x, , z]) => window.__pose(x, z + 2.6, 0, -0.35), pool);   // the pool is [x, y, z] await t.frames(3);
     const w = await t.page.evaluate(() => window.__well(true)); expect(w.level > 0.5, "standing at the well it is not heard: " + JSON.stringify(w));
     await t.frames(3); expect((await t.page.evaluate(() => window.__well())).rings > 0, "the drop sent no ring across the water");
+    // Two culms knocking in the bamboo: the sound is made and counted on the place's bus.
+    const k = await t.page.evaluate(() => window.__knock(true)); expect(k.knocks >= 1, "the culms made no knock: " + JSON.stringify(k));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The music: it begins with the first sound, follows him from place to place once he has settled, ignores pacing

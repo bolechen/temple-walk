@@ -11,7 +11,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, startAmbience, listen, setLevels, musicState, wellDrip, onDrop } from "./src/audio.js";
+import { strike, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, ambienceState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
 import { createSettings, browserSettingsStore } from "./src/settings.js";
@@ -653,6 +653,7 @@ window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) 
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike;
+window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
 window.__well = (drip) => { if (drip) { well.ripple(); wellDrip(well.state().level); } return well.state(); };   // a drop now, if asked, and how the well stands
 // The music: what it is doing; `__music(true)` lets the place be heard, as a first tap does.
 window.__music = (begin) => { if (begin) hear(); return musicState(); };

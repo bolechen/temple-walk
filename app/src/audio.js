@@ -138,9 +138,26 @@ export function wellDrip(level = 1) {
   o.connect(g); g.connect(bus.ambience.in); g.connect(niche); o.start(now); o.stop(now + 0.25);
 }
 
+// Two culms knocked together by the wind: a hollow, wooden note that dies at once, and often a second, softer, as they
+// swing back. Only deep in the grove and only in a strong gust (`knockReady`). The Chan books tell of Xiangyan Zhixian,
+// who woke when a shard he had thrown aside struck a bamboo (Jingde Chuandeng Lu, ch. 11): so it is rare, and never loud.
+export const knockReady = (gust, grove) => gust > 0.66 && grove > 0.6;   // the bamboo at the start (grove 1), not the thinner stands higher up (0.55)
+let knocks = 0;
+export function knock(level = 1) {
+  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  const now = ctx.currentTime + 0.01, f = 300 + Math.random() * 140, twice = Math.random() < 0.6;
+  for (const [dt, loud] of twice ? [[0, 1], [0.13 + Math.random() * 0.12, 0.45]] : [[0, 1]]) {
+    const t = now + dt;
+    partial(f * (dt ? 1.07 : 1), 0.07 * level * loud, 0.09, t, "sine", bus.ambience.in);       // the hollow of the culm
+    partial(f * 2.71, 0.025 * level * loud, 0.04, t, "triangle", bus.ambience.in);              // the dry wood of its wall
+  }
+  knocks++;
+}
+export const ambienceState = () => ({ knocks, running: !!ambient });
+
 // ---- The sound of the place when nothing is happening ----
-// Wind moving through bamboo (filtered noise that swells and falls), water dripping from the eaves after
-// rain, and now and then a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
+// Wind moving through bamboo (filtered noise that swells and falls), now and then two culms knocking together in a
+// gust, water dripping from the eaves after rain, and now and then a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
 // in the bamboo the listener stands, which part of the mountain (score.js), and the mood. The music starts with it.
 let ambient = null;
 export function startAmbience(place) {
@@ -157,7 +174,7 @@ export function startAmbience(place) {
     return g;
   };
   const low = layer("bandpass", 420, 0.5), leaves = layer("highpass", 2600, 0.3);
-  ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14 };
+  ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14, nextKnock: 4 };
   startMusic(place);
   const tick = () => {
     if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
@@ -174,6 +191,7 @@ export function startAmbience(place) {
       gg.gain.setValueAtTime(0.0001, now); gg.gain.exponentialRampToValueAtTime(0.05 * (1 - 0.6 * g), now + 0.005); gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
       o.connect(gg); gg.connect(bus.ambience.in); o.start(now); o.stop(now + 0.15);
     }
+    if ((a.nextKnock -= 0.25) <= 0 && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
     if ((a.nextChime -= 0.25) <= 0 && gust > 0.62) {   // an eave bell, only when the wind is up
       a.nextChime = 18 + Math.random() * 30;
       const f0 = [hz(86), hz(89), hz(91), hz(94)][Math.floor(Math.random() * 4)];   // D F G Bb: tuned to the music's mode
