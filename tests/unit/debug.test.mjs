@@ -3,7 +3,7 @@ import test from "node:test"; import assert from "node:assert/strict";
 import fs from "node:fs";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { rate, readout, tierSearch, roomPose, levelOf, LABELS, KEY, TIERS } from "../../app/src/debug.js";
+import { rate, readout, tierSearch, roomPose, levelOf, levelState, LABELS, KEY, TIERS } from "../../app/src/debug.js";
 import { HALL_VIEWS } from "../../app/levels/t00/hall-views.js";
 import { buildSite } from "../../app/src/site.js";
 import { buildInteriors } from "../../app/src/interior.js";
@@ -74,4 +74,12 @@ test("its key is one the walk does not use", () => {
 test("the panel's key listens in the capture phase, so focus on a control cannot swallow it", () => {
   const dbg = fs.readFileSync(new URL("../../app/src/debug.js", import.meta.url), "utf8");
   assert.match(dbg, /addEventListener\("keydown", \(e\) => \{[^}]*KEY[^}]*\}, true\);/);
+});
+
+test("the level's completion is its seals, the next observance and the visit so far", () => {
+  const early = levelState({ count: 2, total: 7, done: false, next: "tea", nextPlace: "茶寮", nextSeal: "吃茶", seals: { bell: 1, incense: 2 }, earned: ["闻钟", "上香"] }, { metres: 1234, seconds: 3599 });
+  assert.deepEqual(early, { state: "未完成", progress: "2 / 7 枚朱印", next: "茶寮 · 吃茶", seals: "闻钟 · 上香", visit: "1234 步 · 60 分钟" });
+  const full = levelState({ count: 7, total: 7, done: true, next: null, seals: { bell: 1, incense: 1, tea: 1, sutra: 1, well: 1, lamp: 1, sit: 1 }, earned: ["闻钟", "上香", "吃茶", "得句", "观水", "燃灯", "静坐"] }, {});
+  assert.deepEqual(full, { state: "已完成", progress: "7 / 7 枚朱印", next: "—", seals: "闻钟 · 上香 · 吃茶 · 得句 · 观水 · 燃灯 · 静坐", visit: "0 步 · 1 分钟" });
+  assert.equal(levelState({ count: 0, done: false, next: "bell" }).progress, "0 / 0 枚朱印", "a hook without a total still gives a number");
 });

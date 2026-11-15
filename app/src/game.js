@@ -321,7 +321,7 @@ export function createGame(y) {
   refresh(); rites.restore({ incense: journey.has("incense") });
 
   // For the tests.
-  window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
+  window.__journey = () => { const n = journey.next(); return { look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
   window.__hush = (on) => { hush(on); };   // the music held back as when he sits on after tea, or let back
   window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, went, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();

@@ -46,6 +46,19 @@ export function levelOf(search, have) {
   return want && have.includes(want) ? want : have.includes("t00") ? "t00" : have[0] || null;
 }
 
+// How far the level has been carried: the seals of the pilgrimage, the next observance, and the visit so far.
+export function levelState(j, visit = {}) {
+  const total = Number(j.total) > 0 ? Number(j.total) : Object.keys(j.seals || {}).length;
+  const got = j.earned || Object.keys(j.seals || {});   // the seals by their names, in the order they are met
+  return {
+    state: j.done ? "已完成" : "未完成",
+    progress: `${Number(j.count) || 0} / ${total} 枚朱印`,
+    next: j.done ? "—" : j.nextPlace ? `${j.nextPlace} · ${j.nextSeal}` : j.next || "—",
+    seals: got.length ? got.join(" · ") : "—",
+    visit: `${Math.round(Number(visit.metres) || 0)} 步 · ${Math.max(1, Math.round((Number(visit.seconds) || 0) / 60))} 分钟`,
+  };
+}
+
 // Builds the panel. `link()` gives devpose's address of this view when ?devpose is on, or null.
 export async function mountDebug({ link }) {
   const W = /** @type {any} */ (window);
@@ -90,6 +103,16 @@ export async function mountDebug({ link }) {
     s.heaviest = Object.entries(c).sort((a, b) => b[1].tris - a[1].tris).slice(0, 3).map(([k, v]) => `${k} ${Math.round(v.tris / 1000)}k`).join(" · ");
   } }, "census").name("各部分面数 __census()"); perf.add(s, "heaviest").name("最重").listen().disable();
 
+  const lv = levelState(W.__journey(), W.__visit());
+  const levelFolder = gui.addFolder("关卡");
+  const ls = { level: level || "—", state: lv.state, progress: lv.progress, next: lv.next, seals: lv.seals, visit: lv.visit };
+  levelFolder.add(ls, "level").name("关卡").disable();
+  levelFolder.add(ls, "state").name("完成状态").listen().disable();
+  levelFolder.add(ls, "progress").name("朱印").listen().disable();
+  levelFolder.add(ls, "next").name("下一处").listen().disable();
+  levelFolder.add(ls, "seals").name("已得").listen().disable();
+  levelFolder.add(ls, "visit").name("这一趟").listen().disable();
+
   const parts = gui.addFolder("开关");
   const on = W.__part();
   for (const name of Object.keys(on)) parts.add(on, name).name(LABELS[name] || name).onChange((v) => { on[name] = W.__part(name, v); });
@@ -101,6 +124,7 @@ export async function mountDebug({ link }) {
     Object.assign(s, readout(y, rate(f0, y.frames, t - t0))); f0 = y.frames; t0 = t;
     if (document.activeElement?.closest?.("#debug")) return;   // not while a control is being used
     s.season = y.season; s.time = y.time; s.eye = y.view;
+    Object.assign(ls, levelState(W.__journey(), W.__visit()));
   }, EVERY);
 
   const show = (v) => { gui.show(v); stats.dom.style.display = v ? "" : "none"; try { sessionStorage.setItem(STORE, JSON.stringify({ hidden: !v })); } catch {} };
