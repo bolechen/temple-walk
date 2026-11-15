@@ -297,7 +297,7 @@
 用户原话：「对照小王子游戏，看我们的物理引擎实现」，看过对照后回「补」。
 
 从线上包里读出了小王子的脚本类名和 IL2CPP 字段名：主角是 Unity CharacterController 加自写手感（贴地、坡度减速、
-陡坡下滑、台阶平滑），真正的模拟只有围巾的 Verlet 链；相机和脚部 IK 是它下功夫的地方。写进了
+陡坡下滑、台阶平滑），真正的模拟只有围巾的 Verlet 链；相机另有一组类（ThirdPersonCamera、CameraOccluderFade、InteriorCameraZone、CourtCameraSafety），脚有 FootGrounder。写进了
 `docs/LITTLEPRINCE-TEARDOWN.md` 的「角色移动、碰撞与相机」一节。我们这边补了一条单测：可走处相邻两点的高差不超过
 0.45 m（行走器本身不限台阶高度）。还没做的四条（相机先抬高、进殿相机过渡、腰带 Verlet、测滑步）列在那一节末尾。
 
