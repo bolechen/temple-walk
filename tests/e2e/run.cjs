@@ -472,7 +472,7 @@ const scenarios = {
     fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "stairs-grounding.json"), JSON.stringify(samples, null, 2));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // Click-drag (including trackpad presses) and locked movement must agree on look direction.
+  // Click-drag (including trackpad presses) and locked movement must agree on look direction; the raised photo camera does not turn.
   camera: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 900, height: 600 } });
     for (const mode of ["first", "third", "photo"]) {
@@ -482,7 +482,10 @@ const scenarios = {
       await t.page.mouse.move(420, 320); await t.page.mouse.down();
       await t.page.mouse.move(460, 360, { steps: 4 }); await t.page.mouse.up();
       const after = await t.state();
-      expect(after.yaw > before.yaw + 0.05 && after.pitch < before.pitch - 0.05,
+      // With the camera raised for a photograph the view is held as it was: a drag does not turn it (docs/PHOTO-MODE.md).
+      if (mode === "photo") expect(Math.abs(after.yaw - before.yaw) < 1e-6 && Math.abs(after.pitch - before.pitch) < 1e-6,
+        `photo: dragging must not turn the raised camera: ${JSON.stringify({ before, after })}`);
+      else expect(after.yaw > before.yaw + 0.05 && after.pitch < before.pitch - 0.05,
         `${mode}: dragging right/down must look right/down: ${JSON.stringify({ before, after })}`);
       expect(after.target === null, `${mode}: dragging must not also walk`);
       // The reverse movement should undo the rotation without crossing a pitch limit.
