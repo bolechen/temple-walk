@@ -618,3 +618,17 @@ node tools/shots.js court@autumn-dusk@third     # 机位名@季节-时辰@视角
 测试：`tests/unit/devpose.test.mjs`（地址的写法与读回、保留其他参数、殿内外、朝向归一、节流与只在变化时写、过门不写、复制链接、
 只在开发分支动态加载）；端到端 `views` 场景带上 `devpose` 打开发布包，断言地址不变、没有 `__devpose`。另在本机开 Vite 开发服务器用
 Playwright 走过一遍：冬暮院中写回地址、刷新后位置朝向视角季节一致、进禅堂后带 `in=chan`、刷新后仍在禅堂原处，无页面错误。
+
+## 每座殿的调试机位（2026-11-15）
+
+用户问「要不要给每个殿加一个 cam」。做了，但没有动 `site.views` 里的 `cam01…cam06`：那六个是 T00 交接包锁定的验收机位，
+坐标和视场角写进 `camera-manifest.json`，改名或加项会污染验收。殿内的房间在山下六十米处、彼此隔开六十米，
+`site.views` 是院子里的绝对坐标，`?show=` 进不了房间。
+
+因此另立 `app/src/hall-views.js`：八座殿各两张机位，一张看本殿陈设（佛坛、禅床、茶桌、经橱），一张抬头看梁架或天花；
+相对各房间中轴写位置，由 `tools/hall-views.cjs` 从建出来的真实房间补上绝对 x。`hallViewURL()` 给出可直接打开的
+`?in=<殿名>&cam=<x,z,yaw,pitch>`。`node tools/inside.cjs tools/out/hall-views --views` 一次出十六张图，仍是原来那个
+工具，旧的 JSON 用法不变。截图看过：大殿平棊与藻井、禅堂彻上明造、藏经楼经橱、凌霄阁柱网都能看清，无页面错误。
+
+测试：`tests/unit/hall-views.test.mjs` 规定每殿恰好两机位、都站在房间空地上且第二张朝上、地址能读回、不碰六个验收机位；
+端到端 `halls` 场景在真实页面里摆到每殿第一机位，断言有画面且仍在房间地面。

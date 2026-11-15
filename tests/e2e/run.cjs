@@ -119,6 +119,11 @@ const scenarios = {
         expect((await t.page.evaluate(() => window.__menu ? document.getElementById("menu").hidden : true)), "Esc on the card also opened the pause menu");
       }
       const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
+      // The hall's registered camera pose must stand on open floor here too: check the real page, not just the plan.
+      const view = require("../../tools/hall-views.cjs").find((v) => v.hall === h.id);
+      await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), view.abs);
+      await t.frames(2); const cam = await t.probe();
+      expect(cam.lum > 8 && cam.lum < 235 && (await t.state()).h < -50, `${h.name}: the registered camera sees nothing (${cam.lum.toFixed(0)})`);
       const spot = await t.page.evaluate((id) => Object.entries(window.__gallery).find(([k]) => k.startsWith(id + "-"))[1].at, h.id);
       await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0), spot); await t.until(async () => ((await t.journey()).look || "").startsWith(h.id + "-"), 30000, `${h.name}: no frame to look at`);
       await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, `could not leave ${h.name}`);
