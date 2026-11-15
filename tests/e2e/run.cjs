@@ -29,6 +29,8 @@ const scenarios = {
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
+    { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
+      expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
     expect(p.camDist > 3.2, `the first sight of the place should not be the back of his head: the eye is ${p.camDist} m behind him`);
     expect(p.lum > 12 && p.lum < 245, "the picture is blank: mean " + p.lum.toFixed(1));
     for (const id of ["viewBtn", "moodBtn", "photoBtn", "bookBtn"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
@@ -283,7 +285,7 @@ const scenarios = {
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#viewBtn"); await t.page.waitForTimeout(600);
-    p = await t.probe(); expect(p.view === "first" && !p.monk && p.camDist < 0.8, "first person: the eye should be his own: " + JSON.stringify(p));
+    p = await t.probe(); expect(p.view === "first" && !p.monk && p.monkBox === null && p.camDist < 0.8, "first person: the eye should be his own: " + JSON.stringify(p));
     expect((await t.page.textContent("#viewBtn")) === "眼中", "the button should name the view");
     await t.page.click("#viewBtn"); await t.page.waitForTimeout(1500);
     p = await t.probe(); expect(p.view === "third" && p.monk, "back to third person");
