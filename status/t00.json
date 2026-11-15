@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-15T09:46:59.879Z",
+  "generated_at": "2026-11-15T09:58:39.514Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "5864213dca69d629a6b6a7e6a51f5b5a98d6a411",
-    "url": "https://github.com/bolechen/temple-walk/commit/5864213dca69d629a6b6a7e6a51f5b5a98d6a411"
+    "sha": "a7c77725bd097e284f0bac25ec433f37d66a0db8",
+    "url": "https://github.com/bolechen/temple-walk/commit/a7c77725bd097e284f0bac25ec433f37d66a0db8"
   },
   "delivery": {
     "schema_version": 1,
@@ -82,7 +82,8 @@
       "tests/unit/plan.test.mjs：从起点不限高差泛洪，可走处任意相邻两点高差不超过 STEP_UP（0.45 米）；行走器本身不限台阶高度，这条守住平面图",
       "docs/LITTLEPRINCE-TEARDOWN.md 新增「角色移动、碰撞与相机」一节：从小王子线上包的脚本类名和 IL2CPP 字段名对照两边的做法（只有名字，没有代码）",
       "工程化（所有者 2026-11-15 决定）：接入 Vite 8 与 TypeScript 7。源码直接 import three，不再拷贝到 app/vendor/three；pnpm dev 为开发服务器，pnpm build 出 dist/，发布、端到端测试、出图与 GPU 作业都改为打开 dist/（tools/site.cjs 按需重建）；按名字取的资源经 app/src/assets.js 从页面地址定位；pnpm typecheck 纳入 check 流程与两条工作流",
-      "所有者 2026-11-15 的另三个决定已记入文档：代码暂不开源、保留所有权利；佛像与莲座模型归所有者所有、可随项目分发；山门竖匾保持虚构的「雲徑禪寺」（不改为真寺名）"
+      "所有者 2026-11-15 的另三个决定已记入文档：代码暂不开源、保留所有权利；佛像与莲座模型归所有者所有、可随项目分发；山门竖匾保持虚构的「雲徑禪寺」（不改为真寺名）",
+      "类型检查扩大到 app/ 全部模块（所有者要求）：加入 @types/three，补 JSDoc 标注；颜色与位置由展开数组的 setRGB/set 改为等价的 fromArray"
     ],
     "known_issues": [
       "冬天小柏几乎全白，看不出底下的深绿：积雪系数 snow: 0.8 是按大柳杉调的，小树的枝叶小而密，整株被雪盖住。未改",
@@ -128,7 +129,7 @@
       "进山三段石阶下半段两侧原来的「墙」是垂带的平顶方块，重做后没有了，两侧是沿坡的垂带石；ART-08（两侧墙没有压顶）、NEW-02（砌缝延到墙上）说的就是它，要对着新图重新判断；docs/t00/evidence/ 的 CAM-01、CAM-02 没有重拍，验收项没有改动",
       "垂带重做只在软件渲染的截图里看过（藏经楼、主殿、一级平台、进山石阶、山门），没有在 Mac 或手机上走过",
       "佛像与莲座仍在库里（来源 CDN 对 GitHub 构建机返回 403）；所有者 2026-11-15 确认其归本人所有、可随项目分发，原始作者信息仍未记录",
-      "类型检查只覆盖 tsconfig.json 列出的 12 个不依赖 three.js 的模块（checkJs）；yard.js、site.js、building.js 等主体模块尚未纳入；没有任何文件改成 .ts；「引擎／关卡」代码拆分未做",
+      "类型检查（checkJs）已覆盖 app/ 全部模块并使用 @types/three，但没有开 strict；页面元素查找和场景遍历回调标为 any；没有文件改成 .ts；「引擎／关卡」代码拆分未做",
       "接入 Vite 后发布的是打包后的 dist/（单个约 1 MB 的脚本，gzip 约 314 KB）；本机只跑了 boot、halls、stairs、drop 四个端到端场景和开发服务器的一次载入，其余场景与 T4 测量未在打包后的站点上重跑，本轮没有新的性能数字"
     ],
     "evidence": [
@@ -175,27 +176,28 @@
       "tests/e2e/run.cjs: music / sound",
       "tools/music.mjs → tools/out/music/report.json（本地生成，不入库）",
       "docs/t00/MUSIC.md",
-      "接入 Vite 的提交：pnpm run check（0 问题）、pnpm typecheck（0 错误）、pnpm test（全部通过）、pnpm run edges（0 处超限）、node tests/e2e/run.cjs boot halls stairs drop（在 dist/ 上通过）、Vite 开发服务器载入一次无报错"
+      "接入 Vite 的提交：pnpm run check（0 问题）、pnpm typecheck（0 错误）、pnpm test（全部通过）、pnpm run edges（0 处超限）、node tests/e2e/run.cjs boot halls stairs drop（在 dist/ 上通过）、Vite 开发服务器载入一次无报错",
+      "类型检查全覆盖的提交：pnpm typecheck 0 错误、pnpm test 138 项通过、node tests/e2e/run.cjs boot moods halls 在 dist/ 上通过；此前 5864213 的发布流程（run 140）成功"
     ],
-    "record_commit": "6fbc771d28dd8ff4f0d295897e23188ce9a260ff",
+    "record_commit": "a7c77725bd097e284f0bac25ec433f37d66a0db8",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43700732494,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43700732494",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43701788617,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43701788617",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "in_progress",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "5864213dca69d629a6b6a7e6a51f5b5a98d6a411",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43700732494"
