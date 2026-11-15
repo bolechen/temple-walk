@@ -159,14 +159,14 @@ export function buildSite(M) {
   }, { xs: [-6.4, -2.2, 2.2, 6.4], zs: [2.6, -2.6], colTop: 3.1, overhang: 2.3, rise: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
   {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark
     const g = new THREE.Group(), w = 0.95;
-    g.add(mesh(merge([
+    const niche = mesh(merge([
       box(0.6, 2.0, 1.1, -w - 0.3, 1.0, 0.55), box(0.6, 2.0, 1.1, w + 0.3, 1.0, 0.55),
       new THREE.TorusGeometry(w + 0.3, 0.32, 8, 18, Math.PI).scale(1, 1, 3.2).translate(0, 2.0, 0.55),
       box(2.6, 0.24, 0.3, 0, 0.12, 1.25),
-    ]), M.rubble));
+    ]), M.rubble); niche.name = "well-niche"; g.add(niche);
     const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 3.0).translate(0, 1.5, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.15).rotateX(-Math.PI / 2).translate(0, 0.2, 0.62), new THREE.MeshStandardMaterial({ color: 0x0a1210, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.4 }));
-    const board = makePlaque("龙井", { style: "wood" }); board.position.set(0, 3.45, 0.2);
+    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.75); board.position.set(0, 3.26, 0.55 + 0.32 * 3.2 + 0.06);   // hung on the face of the arch's crown, which stands two metres deep out of the wall
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
     g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, 2.0).translate(sx * (w + 0.3), 1.0, 1.103), new THREE.PlaneGeometry(0.9, 1.9).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), 0.95, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
