@@ -229,6 +229,12 @@ const scenarios = {
     expect(bell.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8), "the bell's fundamental is missing: " + JSON.stringify(bell.peaks));
     await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
     const drum = await t.page.evaluate(() => window.__listen("effects")); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
+    // The dragon well: silent from the court; standing at it, a drop is heard and rings go out across the water.
+    expect((await t.page.evaluate(() => window.__well())).level === 0, "the well is heard from the court");
+    const pool = await t.page.evaluate(() => window.__places.well.pool);
+    await t.page.evaluate(([x, , z]) => window.__pose(x, z + 2.6, 0, -0.35), pool);   // the pool is [x, y, z] await t.frames(3);
+    const w = await t.page.evaluate(() => window.__well(true)); expect(w.level > 0.5, "standing at the well it is not heard: " + JSON.stringify(w));
+    await t.frames(3); expect((await t.page.evaluate(() => window.__well())).rings > 0, "the drop sent no ring across the water");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The music: it begins with the first sound, follows him from place to place once he has settled, ignores pacing

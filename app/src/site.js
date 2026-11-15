@@ -167,6 +167,8 @@ export function buildSite(M) {
     const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 3.0).translate(0, 1.5, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.15).rotateX(-Math.PI / 2).translate(0, 0.2, 0.62), new THREE.MeshStandardMaterial({ color: 0x0a1210, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.4 }));
     const board = makePlaque("龙井", { style: "wood" }); board.position.set(0, 3.45, 0.2);
+    // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
+    g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, 2.0).translate(sx * (w + 0.3), 1.0, 1.103), new THREE.PlaneGeometry(0.9, 1.9).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), 0.95, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
     walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY }, { x0: 13.2 - 1.6 - BODY, x1: 13.2 + 1.6 + BODY, z0: T2.zS - 0.5 - BODY, z1: T2.zS });   // and the crown of its arch, which stands above the terrace behind
   }
