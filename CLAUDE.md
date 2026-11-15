@@ -247,7 +247,7 @@ all of it. The hand offsets (lips, brow, rope) were set against the novice's pre
 
 **Seats.** Every cushion and stool is a seat: `site.seats` out of doors (the three stools at the tea table, the summit
 mat), and `seat()` / `sitAt()` in `interior.js` for the rooms (`{ at, top, face, room }`). Where nothing else is offered
-within a step or two of one, the button says 坐下 and he is drawn going over and down onto it (`sitDown` in `game.js`);
+within a step or two of one, the button says 坐下; he walks up to the nearest ground beside it and is drawn going over and down onto it (`sitDown` in `game.js`);
 he stays until he is sent elsewhere. A new cushion or stool must be registered the same way; `rites.test.mjs` holds it.
 
 **The close of the chapter.** This temple is the prologue, where a visitor learns how the walk goes. Sitting on the

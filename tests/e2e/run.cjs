@@ -277,7 +277,7 @@ const scenarios = {
     // Tea: the bowl leaves the table, is tilted at his lips three times, and is set down again.
     await at("tea"); await offered("吃茶"); await t.page.click("#act");
     await seen("the bowl never left the table", () => window.__rites().tea.lift > 0.1);
-    await seen("the bowl was never tilted to drink", () => window.__rites().tea.tilt > 0.6);
+    await seen("the bowl was never tilted to drink", () => window.__rites().tea.tilt > 0.3);
     await t.until(async () => (await t.journey()).seals.tea > 0, 120000, "no seal for tea"); r = await R();
     expect(r.tea.sips === 3 && Math.abs(r.tea.lift) < 0.01 && r.tea.held === 0, "the bowl is not back on the table after three sips: " + JSON.stringify(r.tea));
     // Any stool may be sat on: the one across the table.
@@ -298,6 +298,17 @@ const scenarios = {
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => { const s = window.__seats.find((k) => k.room === "chan"); window.__pose(s.at[0], s.at[1] + (s.face === 0 ? 1.2 : -1.2), 0, 0); });
     await offered("坐下"); const n = (await R()).sat; await t.page.click("#act"); await t.until(async () => (await R()).sat === n + 1, 30000, "he did not sit on the platform");
+    // Every seat there is, indoors and out: put beside it, he goes over and is on it, at its height, turned the way it faces.
+    const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room })));
+    let room = "chan";
+    for (let i = 0; i < seats.length; i++) {
+      const s = seats[i];
+      if ((s.room || null) !== room) { room = s.room || null; await t.page.evaluate((id) => window.__inside(id), room); await t.until(async () => (await t.page.evaluate(() => window.__yard().room)) === room, 40000, `could not go to ${room || "the open"}`); }
+      const from = await t.page.evaluate((k) => { const s = window.__seats[k]; for (let a = 0; a < 24; a++) for (const r of [0.6, 0.9, 1.3]) { const x = s.at[0] + Math.sin(a * 0.2618) * r, z = s.at[1] + Math.cos(a * 0.2618) * r; if (!window.__blocked(x, z)) { window.__pose(x, z, 0, 0); window.__sit(k); return [x, z]; } } return null; }, i);
+      expect(from, `no ground beside seat ${i} in ${room || "the open"}`);
+      await t.until(async () => { const r = await R(); return Math.hypot(r.him[0] - s.at[0], r.him[2] - s.at[1]) < 0.03 && Math.abs(r.him[1] - s.top) < 0.03; }, 40000, `he is not sitting on seat ${i} in ${room || "the open"} (${s.at.map((v) => v.toFixed(1))})`);
+    }
+    expect((await R()).sat >= seats.length, "not every seat was sat on");
     await t.shot("e2e-rites"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.

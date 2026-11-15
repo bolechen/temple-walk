@@ -96,7 +96,8 @@
     "2026-11-15 分享卡片：复用现有实机宣传封面为 app/shared/og/temple-walk.jpg（1920×1080 JPEG），页面增加 Open Graph、Twitter 大图卡片、简介与新域名 canonical；共享资源沿用现有 Vite 复制流程。",
     "仪式动画（所有者要求）：撞钟（握绳、后拉、放手，连撞三下，钟槌不再穿入钟身）、吃茶（双手取碗、三次举到嘴边）、点香（举香齐眉、三拜、上前插进矮香几上的香炉，香留在炉里）、山顶静坐（胸口随吸呼起伏，呼气时地上一圈墨痕）；新模块 app/src/rites.js，小沙弥的姿态新增 grounding.act 输入",
     "所有坐垫和凳子都可以坐下（室外 4 处与各殿全部蒲团、禅堂坐榻、茶寮凳子）；山顶静坐改为章节的最后一件，第七印之后播放独立的结尾动画和四句结束语，落题后翻开朱印帐；结束语为序章收尾并给下一章留悬念",
-    "殿内 15 个空画框全部挂上开放授权的馆藏作品（克利夫兰艺术博物馆 13 件、大都会 2 件，CC0），殿内真迹共 32 件，每个画框都不再是空纸"
+    "殿内 15 个空画框全部挂上开放授权的馆藏作品（克利夫兰艺术博物馆 13 件、大都会 2 件，CC0），殿内真迹共 32 件，每个画框都不再是空纸",
+    "坐下前先走到坐具旁最近的可站处，再坐上去；仪式场景新增一段，把室内外每一个坐具逐个实际坐一遍并核对位置和高度"
   ],
   "known_issues": [
     "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
@@ -211,7 +212,8 @@
     "app/shared/og/temple-walk.jpg",
     "app/index.html（Open Graph 与 Twitter 元信息）",
     "OG 分享卡片提交：隔离的 origin/main 工作区 pnpm run verify 通过（check、typecheck、138 项单测、18 个 smoke 场景）；dist/index.html 元信息及 dist/shared/og/temple-walk.jpg 与源文件一致。",
-    "仪式与结尾的提交：pnpm run check、pnpm typecheck、pnpm test、pnpm run edges 通过；端到端 rites 与 pilgrimage 场景的结果以对应提交的工作流为准；逐帧截图未入库"
+    "仪式与结尾的提交：pnpm run check、pnpm typecheck、pnpm test、pnpm run edges 通过；端到端 rites 与 pilgrimage 场景的结果以对应提交的工作流为准；逐帧截图未入库",
+    "坐具验证的提交：node tests/e2e/run.cjs boot rites pilgrimage 在 main 的树上全部通过（rites 含逐个坐遍全部坐具；pilgrimage 含第七印后的结尾动画与结束语）；pnpm test 204 项通过"
   ],
   "domain_binding": {
     "date": "2026-11-15",

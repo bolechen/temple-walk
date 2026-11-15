@@ -118,10 +118,15 @@ export function createGame(y) {
     await wait(1.2); if (on()) end();
   }
   // ---- A seat: any cushion or stool may be sat on. He goes over to it and stays until he is sent elsewhere. ----
-  function sitDown(s) {
+  async function sitDown(s) {
     if (rite) return; $("act")?.setAttribute("hidden", "");
-    const w = y.where();
-    y.stage({ face: s.face, pose: "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(w.x, w.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
+    const mine = (rite = /** @type {any} */ ({ id: "seat" })), on = () => rite === mine;
+    // He walks up to it first: to the nearest ground he can stand on, on his own side of it.
+    const w = y.where(), dx = w.x - s.at[0], dz = w.z - s.at[1], d = Math.hypot(dx, dz) || 1; let to = null;
+    for (let r = 0.25; r <= d && !to; r += 0.05) { const x = s.at[0] + (dx / d) * r, z = s.at[1] + (dz / d) * r; if (!y.walker.blocked(x, z)) to = [x, z]; }
+    if (to && Math.hypot(to[0] - w.x, to[1] - w.z) > 0.08) { await Promise.race([new Promise((r) => y.walkTo([to], r)), wait(4)]); if (!on()) return; }
+    rite = null; const here = y.where();
+    y.stage({ face: s.face, pose: "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(here.x, here.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
   }
   // ---- The close of the chapter: shown once, when the last seal is earned on the summit ----
   // The eye leaves him and the closing words are said one at a time (rites.close moves the eye); then the title of what
@@ -224,7 +229,7 @@ export function createGame(y) {
 
   // For the tests.
   window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
-  window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, closing, line: $("endingLine")?.textContent || "" });
+  window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, closing, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();
   window.__visit = () => ({ metres: visit.metres, seconds: visit.seconds });
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;

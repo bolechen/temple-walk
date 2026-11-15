@@ -187,7 +187,7 @@ if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 
 // What a walk is for, and what he is doing when he has arrived: `arrive` is told whether he got there;
 // `stage` holds him in place (facing a way, praying or seated) until the visitor sends him elsewhere.
-let arrive = null, stage = null, cine = null, drawn = null; const ticks = [];
+let arrive = null, stage = null, cine = null, drawn = null, posed = null; const ticks = [];
 const settle = (ok) => { if (arrive) { const fn = arrive; arrive = null; fn(ok); } };
 const interrupt = () => { settle(false); if (stage) { const st = stage; stage = null; st.leave && st.leave(); } };
 const menuEl = document.getElementById("menu");
@@ -447,7 +447,9 @@ function frame(now) {
   else { const k = Math.min(1, dt * 7); drawn[0] += ((sat ? sat[0] : pos.x) - drawn[0]) * k; drawn[2] += ((sat ? sat[1] : pos.z) - drawn[2]) * k; drawn[1] += (footY + (stage.lift || 0) - drawn[1]) * k; }
   monk.group.position.set(drawn[0], stage ? drawn[1] : footY, drawn[2]); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
-  monk.update(dt, stage && stage.speed != null ? stage.speed : still || aloft ? 0 : speedNow, aloft ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
+  // (`posed`: a tool may have him walk, hurry, climb, hop or sit on the spot, to be looked at closely: `__act`.)
+  if (posed) monk.update(dt || 1 / 30, posed.speed || 0, posed.pose || false, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: !!posed.stairs, act: posed.act || null });
+  else monk.update(dt, stage && stage.speed != null ? stage.speed : still || aloft ? 0 : speedNow, aloft ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
   // Where he steps outdoors in the snow he leaves his prints (a room's floor keeps none, and the square stays outside),
   // and every step is heard, as what it comes down on sounds: snow, dry stone, stone wet after rain, a puddle in the
   // paving, a hall's floor. A little to the side of the foot that made it (his left is the listener's left, from
@@ -695,6 +697,8 @@ window.__probe = () => {
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
+window.__blocked = (x, z) => walker.blocked(x, z);
+window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
 window.__pose = (x, z, y, p) => { interrupt(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
 window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
