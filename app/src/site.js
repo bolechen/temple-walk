@@ -492,8 +492,8 @@ export function createWalker(site) {
     for (let i = Math.floor(x0 / CELL); i <= Math.floor(x1 / CELL); i++) for (let j = Math.floor(z0 / CELL); j <= Math.floor(z1 / CELL); j++) { const k = key(i, j); (bins.get(k) || bins.set(k, []).get(k)).push(s); }
   }
   const post = (x, z, pad) => { const list = bins.get(key(Math.floor(x / CELL), Math.floor(z / CELL))); if (!list) return false;
-    for (const s of list) { if (s.r !== undefined) { const dx = x - s.x, dz = z - s.z, r = s.r + pad; if (dx * dx + dz * dz < r * r) return true; } else if (inRect(s, x, z)) return true; }
-    return false; };
+    for (const s of list) { if (s.r !== undefined) { const dx = x - s.x, dz = z - s.z, r = s.r + pad; if (dx * dx + dz * dz < r * r) return s; } else if (inRect(s, x, z)) return s; }
+    return null; };
   function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
     let height = null;
     const take = h => { height = height === null ? h : Math.max(height, h); };
@@ -525,11 +525,15 @@ export function createWalker(site) {
     // May the eye that follows him be at this point, he standing at `foot`? Not among the bracket sets and rafters of
     // a roof, nor in its tiles, though the floor below is open to him; not against a column; over a floor he can walk
     // on, anywhere else. A building is closed within its walls up to its ridge and over its platform up to the floor;
-    // any other wall or tree some way above his head (a court wall is passed over well above it).
+    // any other wall or tree some way above his head (a court wall is passed over well above it). A column (or a
+    // trunk: anything round and thinner than a stride) answers "post" rather than true: the eye may let one pass across the view a moment before giving way.
     eyeShut(x, y, z, foot) {
       if (room) return shut(x, z);
       for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;
-      if (post(x, z, 0.15)) return true;
+      // A square post is a low thing drawn wide by his body (a table, the cheek of a stair): in the way only of an eye
+      // that has come down near the floor it stands on, as it does looking up.
+      const p = post(x, z, 0.15);
+      if (p) { if (p.r !== undefined) return p.r < 0.45 ? "post" : true; const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; }
       if (carved(x, z) !== null) return false;
       let top = -Infinity, own = false;
       for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);

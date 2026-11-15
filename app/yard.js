@@ -18,7 +18,7 @@ import { createBamboo } from "./src/bamboo.js";
 import { createTrees } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
 import { createMonk } from "./src/monk.js";
-import { followEye } from "./src/eye.js";
+import { followEye, createFollow } from "./src/eye.js";
 import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
@@ -159,7 +159,9 @@ const EYE = 1.3;   // the eye height of a child
 const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.get("show")] || site.start;
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
-let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), camDist = 6.2, sideNow = 1.2, speedNow = 0;
+let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
+const follow = createFollow();
+const WALK = { up: 7, down: 8 }, pace = { v: 0, dir: [0, -1] }, bob = { phase: 0, amp: 0 };   // how fast he gathers and loses speed (m/s²); his speed and the way he goes
 if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 
 // What a walk is for, and what he is doing when he has arrived: `arrive` is told whether he got there;
@@ -317,9 +319,14 @@ function resize() {
   pxH = h * k; layoutFrame();
 }
 // The angle of view: from behind him a longer lens than from his own eyes (the halls stand taller); and with the
-// camera raised, that same angle drawn in or let out by the zoom.
+// camera raised, that same angle drawn in or let out by the zoom. A narrow angle makes every turn of the head sweep
+// the picture faster and was part of what made a visitor sick, so the walk is seen wider than the fixed views (which
+// keep the angle the T00 camera manifest locks, 52° from his eyes, so that old pictures stay comparable): 50° from
+// behind him as 《小王子》 has it, 65° from his eyes (Saltline uses 74°), and the visitor may widen or narrow it.
+const FIXED_VIEW = Q.has("shot") || Q.has("show") || Q.has("cam");
 function lens() {
-  const w = canvas.clientWidth, h = canvas.clientHeight, base = view === "third" ? (w < h ? 58 : 44) : w < h ? 68 : 52;
+  const w = canvas.clientWidth, h = canvas.clientHeight, tall = w < h;
+  const base = FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
   camera.fov = photo.on ? THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(base) / 2) / photo.zoom)) : base; camera.updateProjectionMatrix();
 }
 let pxH = 800;
@@ -337,7 +344,7 @@ function layoutFrame() {
 const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
 
-let prev = performance.now(), frames = 0, tour = null, eyeY = footY, mirrorOn = true;
+let prev = performance.now(), frames = 0, tour = null, eyeY = footY, mirrorOn = true, monkHidden = false;
 const load = { tris: 0, calls: 0, ms: 0 };
 function frame(now) {
   if (!running) return;
@@ -350,12 +357,20 @@ function frame(now) {
   const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
   if (f || s) { interrupt(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
-  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) settle(true); } }
+  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) { settle(true); pace.v = 0; } } }
   const len = Math.hypot(vx, vz);
-  if (len > 0 && !airborne) {
+  if (menuUp || photo.on || airborne) pace.v = 0;   // a sheet over the walk, the camera raised, a hop: he stands, or the hop carries him
+  // He gathers speed and loses it again over a few steps, as a child walks, rather than starting and stopping dead:
+  // the picture lurching into motion is felt (《小王子》's PlayerController: 7 m/s² up, 8 m/s² down). Let go of the
+  // keys and he slows along the way he was going; coming to a tapped spot he slows so as to stop on it.
+  if (len > 0) { const ux = vx / len, uz = vz / len; pace.v *= Math.max(0, ux * pace.dir[0] + uz * pace.dir[1]); pace.dir = [ux, uz]; }   // turned right round, he starts again
+  if ((len > 0 || pace.v > 0) && !airborne) {
     const walkPace = keys.shift || Math.hypot(joy.x, joy.y) > 0.94 ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);
-    const pace = Q.has("fast") ? 14 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? keys.shift ? 1.6 : 1.25 : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
-    const step = Math.min(f || s ? 1e9 : len, pace * dt); vx = (vx / len) * step; vz = (vz / len) * step;
+    let want = len === 0 ? 0 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? keys.shift ? 1.6 : 1.25 : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
+    if (target) { let left = len, at = target; for (const p of route) { left += Math.hypot(p.x - at.x, p.z - at.z); at = p; } want = Math.min(want, Math.sqrt(2 * WALK.down * left) + 0.15); }
+    if (Q.has("fast")) pace.v = len === 0 ? 0 : 14;
+    else pace.v += Math.max(-WALK.down * dt, Math.min(WALK.up * dt, want - pace.v));
+    const step = Math.min(f || s || len === 0 ? 1e9 : len, pace.v * dt); vx = pace.dir[0] * step; vz = pace.dir[1] * step;
     // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
     let moved = false;
     for (let k = 1; k > 0.1 && !moved; k /= 2) {
@@ -370,7 +385,7 @@ function frame(now) {
       const c = Math.cos(a), s = Math.sin(a), sx = (vx * c - vz * s) * 0.8, sz = (vx * s + vz * c) * 0.8;
       if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; break; }
     }
-    if (!moved) { target = null; route = []; settle(false); }
+    if (!moved) { target = null; route = []; settle(false); pace.v = 0; }
     // The censer does not stop you: you are eased around it.
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
@@ -383,7 +398,9 @@ function frame(now) {
     if (leap.y <= ground) { footY = ground; leap = null; } else footY = leap.y;                 // down again, on whatever he has come over
   } else footY = walker.heightAt(pos.x, pos.z);
   const aloft = airborne || !!leap;
-  eyeY += ((aloft ? footY : walker.eyeAt(pos.x, pos.z)) - eyeY) * Math.min(1, dt * 12);
+  // The height the view rides at follows the floor softly; from behind him more softly still, as the up and down of a
+  // following camera is what is felt most (《小王子》 smooths it over 0.14 s, its sideways following over 0.06 s).
+  eyeY += ((aloft ? footY : walker.eyeAt(pos.x, pos.z)) - eyeY) * (1 - Math.exp(-dt / (view === "third" ? 0.14 : 0.08)));
   if (dropButton) dropButton.hidden = !availableDrop();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
@@ -401,14 +418,19 @@ function frame(now) {
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
-  if (view === "first") camera.position.set(pos.x, eyeY + (stage && stage.pose === "sit" ? 0.78 : EYE) + (len > 0 && !still ? Math.sin(t * 6.5) * 0.015 : 0), pos.z);
+  // From his own eyes the view dips a little with each step he takes, and only as much as he is walking (after
+  // Saltline: the bob counted in strides and its depth eased in and out with the pace, never switched on and off).
+  bob.phase += moved / 0.55; bob.amp += ((still || aloft ? 0 : Math.min(1, speedNow / 2.1)) - bob.amp) * (1 - Math.exp(-dt / 0.15));
+  if (view === "first") camera.position.set(pos.x, eyeY + (stage && stage.pose === "sit" ? 0.78 : EYE) - (1 - Math.cos(bob.phase * Math.PI * 2)) * 0.006 * bob.amp, pos.z);
   else {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
     const eye = followEye(walker, { x: pos.x, z: pos.z, foot: footY, eyeY, yaw, pitch, side: sideNow, reach: reachWant });
-    camDist = eye.d < camDist ? eye.d : camDist + (eye.d - camDist) * Math.min(1, dt * 4);
-    camera.position.set(...eye.at(camDist));
-    if (camDist < 0.95 && !photo.on) monk.group.visible = false;   // backed against a wall, the eye is as good as his own
+    camera.position.set(...follow.step(dt, eye));
+    // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
+    // beyond a farther one, so that he does not flicker in and out at the edge of it.
+    monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
+    if (monkHidden && !photo.on) monk.group.visible = false;
   }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");
   camera.updateMatrixWorld();
@@ -442,7 +464,7 @@ requestAnimationFrame(frame);
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = (id) => document.getElementById(id), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
 if (Q.has("shot")) document.body.classList.add("bare");
-const setView = (v) => { view = v; pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; resize(); };
+const setView = (v) => { view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; resize(); };
 setView(view);
 on("viewBtn", () => setView(view === "third" ? "first" : "third"));
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
@@ -546,7 +568,7 @@ function indoors(hall) {
   scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none"; });
   if (on) { pos.set(hallIn.room.door[0], EYE, hallIn.room.door[1]); yaw = 0; dress(); }
   else { pos.set(lastHall.out[0], EYE, lastHall.out[1]); yaw = lastHall.outYaw; doorArmed = false; setMood(state.season, state.time); }
-  pitch = 0.04; footY = eyeY = walker.heightAt(pos.x, pos.z); heading = on ? Math.PI : Math.atan2(Math.sin(yaw), -Math.cos(yaw)); camDist = 0.6; document.body.classList.toggle("indoors", on);
+  pitch = 0.04; footY = eyeY = walker.heightAt(pos.x, pos.z); heading = on ? Math.PI : Math.atan2(Math.sin(yaw), -Math.cos(yaw)); follow.reset(0.6); document.body.classList.toggle("indoors", on);
   window.dispatchEvent(new CustomEvent(on ? "entered-hall" : "left-hall", { detail: hall && hall.id }));
 }
 // `hall`: one of site.halls to go into, or null to come out of the one he is in.
@@ -596,7 +618,7 @@ window.__probe = () => {
 };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
-window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); };
+window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike;
 // The music: what it is doing; `__music(true)` lets the place be heard, as a first tap does.
 window.__music = (begin) => { if (begin) hear(); return musicState(); };
@@ -615,7 +637,7 @@ function openMenu(open) {
   if (ui.open("menu")) { interrupt(); target = null; route = []; }
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
-  $("setSens").value = S.sens; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
+  $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
   menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
@@ -623,6 +645,7 @@ function openMenu(open) {
   const set = (k, v) => { settings.set(k, v); openMenu(true); };
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => set("quality", b.dataset.q)));
   $("setSens").addEventListener("input", (e) => settings.set("sens", +e.target.value));
+  $("setFov").addEventListener("input", (e) => { settings.set("fov", +e.target.value); lens(); });
   for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +e.target.value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
@@ -630,7 +653,7 @@ function openMenu(open) {
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
   // Lost, or wedged somewhere he should not be: back to where the path begins.
-  on("menuHome", () => { if (inside) indoors(null); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; });
+  on("menuHome", () => { if (inside) indoors(null); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
