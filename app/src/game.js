@@ -25,6 +25,12 @@ function ensoTexture() {
 export function createGame(y) {
   const Q = new URLSearchParams(location.search), places = y.site.places, fast = Q.has("fast") ? 0.12 : 1;
   const journey = createJourney(browserStore());
+  // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
+  // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
+  const ui = y.ui;
+  ui.layer("slip", { confirm: "slipTake" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
+  $("slipTake")?.addEventListener("click", () => ui.close("slip"));
+  const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); };
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter");
 
@@ -83,8 +89,7 @@ export function createGame(y) {
     } else if (id === "sutra") {
       await wait(1.6); if (!on()) return;
       const day = Math.floor(Date.now() / 864e5), verse = pickVerse(Q.has("seed") ? +Q.get("seed") : day + (journey.born % 97));
-      $("slipText").textContent = verse.text; $("slipFrom").textContent = verse.from; $("slip").hidden = false; document.exitPointerLock?.();
-      await new Promise((r) => { $("slipTake").onclick = r; mineRite.take = r; }); $("slip").hidden = true; if (!on()) return;
+      await new Promise((r) => { mineRite.take = () => ui.close("slip"); holdOut(verse.text, verse.from, "收下", r); }); if (!on()) return;
       if (journey.earn("sutra", { verse })) earned("sutra"); end(); return;
     }
     if (!on()) return;
@@ -127,8 +132,7 @@ export function createGame(y) {
     if (!look) return;
     const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
     if (it.work) return showWork(it.work, look);
-    $("slipText").textContent = it.title; $("slipFrom").textContent = it.text; $("slipTake").textContent = "看过了"; $("slip").hidden = false; document.exitPointerLock?.();
-    $("slipTake").onclick = () => { $("slip").hidden = true; $("slipTake").textContent = "收下"; y.stage(null); seen.add(look); };
+    const spot = look; holdOut(it.title, it.text, "看过了", () => { y.stage(null); seen.add(spot); });
   });
 
   // ---- A work on the wall, read closely: the picture, and beside it what an encyclopedia would say ----
@@ -138,12 +142,10 @@ export function createGame(y) {
     $("pieceTitle").textContent = w.title; $("pieceBy").textContent = [w.by, w.dates].filter(Boolean).join("　");
     $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && w.size + " 厘米"], ["收藏", w.holder + (w.rank ? "　" + w.rank : "")]].filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     $("pieceNote").textContent = w.note; $("pieceLink").textContent = w.link; $("pieceCredit").textContent = w.credit;
-    el.hidden = false; document.exitPointerLock?.();
-    const close = () => { el.hidden = true; y.stage(null); seen.add(spot); removeEventListener("keydown", key, true); };
-    const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key.toLowerCase() === "e") { e.preventDefault(); e.stopPropagation(); close(); } };
-    $("pieceClose").onclick = close; setTimeout(() => addEventListener("keydown", key, true), 250);
+    ui.open("piece", { onClose: () => { y.stage(null); seen.add(spot); } });
   }
-  window.__work = (slug) => (slug ? showWork(slug, null) : { open: !$("piece")?.hidden, title: $("pieceTitle")?.textContent, loaded: !!$("pieceImg")?.naturalWidth });
+  $("pieceClose")?.addEventListener("click", () => ui.close("piece"));
+  window.__work = (slug) => (slug ? showWork(slug, null) : { open: ui.isOpen("piece"), title: $("pieceTitle")?.textContent, loaded: !!$("pieceImg")?.naturalWidth });
 
   // ---- The book ----
   let page = null;
@@ -155,11 +157,11 @@ export function createGame(y) {
     $("bookHint").textContent = next ? `${next.hint}　${told()}` : `七印圆满。这一页是你的了。${told()}`;
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
     $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: "云径禅寺 · 朱印" }); } catch {} };
-    $("bookReset").textContent = "重新朝山"; $("book").hidden = false; document.exitPointerLock?.();
+    $("bookReset").textContent = "重新朝山"; ui.open("book");
   }
   $("bookBtn")?.addEventListener("click", openBook);
-  $("bookClose")?.addEventListener("click", () => { $("book").hidden = true; });
-  $("bookReset")?.addEventListener("click", (e) => { if (e.currentTarget.textContent === "重新朝山") { e.currentTarget.textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); $("book").hidden = true; });
+  $("bookClose")?.addEventListener("click", () => ui.close("book"));
+  $("bookReset")?.addEventListener("click", (e) => { if (e.currentTarget.textContent === "重新朝山") { e.currentTarget.textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 
   // ---- The title ----
   const title = $("title");

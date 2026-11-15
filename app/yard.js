@@ -24,6 +24,7 @@ import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
+import { createUI } from "./src/ui.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose } from "./src/drop.js";
 
@@ -31,7 +32,8 @@ import { findDrop, dropPose } from "./src/drop.js";
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
 const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
-const hints = createHints({ off: Q.has("shot") }); let arrived = false;   // what is said about the controls, and when
+const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
+const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false;   // what is said about the controls, and when
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
@@ -223,7 +225,7 @@ function pickFloor() {
 canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = photo.on ? "crosshair" : "grab"; lift(e);
   // With the camera raised, the left button on the picture is the shutter.
-  if (photo.on) { if (e.pointerType === "mouse" && e.button === 0 && down && !down.moved && $("print").hidden && $("photoSettings").hidden && !$("shutter").disabled) $("shutter").click(); down = null; return; }
+  if (photo.on) { if (e.pointerType === "mouse" && e.button === 0 && down && !down.moved && ui.top() === "photo" && !$("shutter").disabled) $("shutter").click(); down = null; return; }
   if (e.pointerType === "mouse" && down && !down.moved) {
     if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} hear(); }
     else {   // held: a click strikes what the middle of the picture rests on
@@ -256,7 +258,7 @@ const keys = {};
 const dropButton = document.getElementById("dropBtn");
 function availableDrop() {
   if (hop || leap || inside || stage || passing || photo.on || !document.body.classList.contains("entered")) return null;   // not in mid-air either
-  for (const id of ["book", "print", "slip", "keys", "moodPanel", "menu"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return null; }
+  if (ui.covered()) return null;
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y;
   const s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   return findDrop(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
@@ -269,7 +271,7 @@ function startDrop() {
 const JUMP = { speed: 3.0, gravity: 9.8 };
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
-  for (const id of ["book", "print", "slip", "keys", "moodPanel", "menu"]) { const el = document.getElementById(id); if (el && !el.hidden && el.offsetParent !== null) return false; }
+  if (ui.covered()) return false;
   leap = { y: footY, v: JUMP.speed }; return true;
 }
 const jumpButton = document.getElementById("jumpBtn"); if (jumpButton) jumpButton.addEventListener("click", () => { startDrop() || startJump(); });
@@ -278,23 +280,18 @@ if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Spac
 addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const press = (id) => { const el = document.getElementById(id); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
+  if (ui.key(e)) return;   // Esc puts away whatever is on top; an open sheet hears only its own keys
   if (photo.on && k === "tab") return;   // Photo controls use normal keyboard focus navigation.
-  if (!menuEl.hidden && k !== "escape") return;   // while the pause menu is open only Esc is heard
   // The keys such games use: E to do what is offered here, V to change the view, B for the book, P to photograph, T for the season and hour.
   if (k === " " && e.target?.tagName === "BUTTON") return;
   if (hop && (k === "e" || k === "enter" || k === " ")) { e.preventDefault(); return; }
   if (k === " " && e.target?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
-  if (k === " ") { if (press("slipTake") || press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, takes what is held out, and otherwise jumps
-  else if (k === "e" || k === "enter") { if (press("slipTake") || press("act") || press("enterBtn") || press("offer")) e.preventDefault(); }
-  else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { if (!press("bookClose")) press("bookBtn"); e.preventDefault(); }
+  if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
+  else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
+  else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
   else if (k === "h" || k === "?") hints.card();
-  else if (k === "escape") {   // Esc shuts whatever is open; with nothing open it is the pause menu
-    if (photo.on && !$("photoSettings").hidden) { setPhotoSettings(false); $("photoSettingsToggle").focus(); e.preventDefault(); return; }
-    const keysOpen = !document.getElementById("keys")?.hidden, moodOpen = !document.getElementById("moodPanel")?.hidden; hints.card(false); if (moodOpen) document.getElementById("moodPanel").hidden = true;
-    const shut = [keysOpen, moodOpen, press("menuResume"), press("bookClose"), press("printBack") || press("photoClose")].some(Boolean);
-    if (!shut && document.body.classList.contains("entered") && !stage) openMenu(true);
-  }
+  else if (k === "escape") { if (document.body.classList.contains("entered") && !stage) openMenu(true); }   // with nothing open, Esc is the pause menu
 });
 addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
 // A thumb-stick for a touch screen, lower left: push to walk, relative to where he is looking.
@@ -349,7 +346,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
-  const menuUp = !menuEl.hidden;
+  const menuUp = ui.modal();   // a sheet over the walk: he stands still
   const f = photo.on || menuUp ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on || menuUp ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
@@ -457,17 +454,23 @@ if (Q.has("shot")) document.body.classList.add("bare");
 const setView = (v) => { view = v; pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; resize(); };
 setView(view);
 on("viewBtn", () => setView(view === "third" ? "first" : "third"));
-on("moodBtn", () => $("moodPanel").toggleAttribute("hidden"));
+ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
+on("moodBtn", () => ui.toggle("moodPanel"));
 document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => setMood(b.dataset.season, state.time)));
 document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => setMood(state.season, b.dataset.time)));
 
 // ---- Taking a photograph ------------------------------------------------------------
-function setPhotoSettings(open) {
-  $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open));
-}
-function setPhoto(open) {
-  setPhotoSettings(false);
-  photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo"); $("moodPanel")?.setAttribute("hidden", "");
+// The raised camera is a mode on the stack of layers, its settings a panel over it, the print a sheet over both:
+// Esc folds the settings, then puts the print away, then lowers the camera.
+const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
+ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
+ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () => raise(false) });
+ui.layer("print", { kind: "modal" });
+function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
+function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }
+function raise(open) {
+  ui.close("photoSettings");   // the settings start folded every time the camera is raised
+  photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo");
   if (open) {   // the view stays exactly as it was: only walking stops, and the pointer is let go so the buttons can be reached
     target = null; route = []; photo.zoom = 1; photo.monk = view === "third" && monk.group.visible; photo.pray = false; document.exitPointerLock?.();
     $("monkToggle").disabled = view !== "third"; $("monkToggle").setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; $("prayToggle").setAttribute("aria-pressed", "false");
@@ -507,10 +510,10 @@ on("shutter", async () => {
     $("saveLink").download = `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg`;
     const file = new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" });
     $("shareBtn").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
-    $("print").hidden = false;
+    ui.open("print");
   } finally { b.disabled = false; }
 });
-on("printBack", () => { $("print").hidden = true; });
+on("printBack", () => ui.close("print"));
 on("shareBtn", async () => {
   try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: "云径禅寺", text: mood.line }); } catch {}
 });
@@ -609,10 +612,13 @@ window.__music = (begin) => { if (begin) hear(); return musicState(); };
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+window.__ui = () => ({ stack: ui.state(), modal: ui.modal(), focus: document.activeElement?.id || document.activeElement?.tagName || null });
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----
 const SOUND = [["setVolume", "volume"], ["setMusic", "music"], ["setAmbience", "ambience"], ["setEffects", "effects"]];
+ui.layer("menu", { kind: "modal" });
 function openMenu(open) {
-  menuEl.hidden = !open; if (!open) return; document.exitPointerLock?.(); interrupt(); target = null; route = [];
+  if (!open) { ui.close("menu"); return; }
+  if (ui.open("menu")) { interrupt(); target = null; route = []; }
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
   $("setSens").value = S.sens; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
@@ -624,7 +630,7 @@ function openMenu(open) {
   $("setSens").addEventListener("input", (e) => settings.set("sens", +e.target.value));
   for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +e.target.value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
-  on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(menuEl.hidden)); on("menuKeys", () => { openMenu(false); hints.card(true); });
+  on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
@@ -640,7 +646,7 @@ window.__pick = (px, py, n = 6) => {
     return { part, material: m.customProgramCacheKey && /^[a-zA-Z]+$/.test(m.customProgramCacheKey()) ? m.customProgramCacheKey() : m.type, distance: +h.distance.toFixed(2), at: h.point.toArray().map((v) => +v.toFixed(2)), transparent: !!m.transparent, kind: h.object.type }; });
 };
 createGame({
-  hints,
+  hints, ui,
   site, walker, scene,
   where: () => ({ x: pos.x, z: pos.z }),
   // Send him along `points` ([x, z] each); `then(true)` when he arrives, `then(false)` if he is stopped or sent elsewhere.

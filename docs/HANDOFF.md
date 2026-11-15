@@ -59,6 +59,10 @@
 `AGENTS.md`、`CONTRIBUTING.md`、`docs/SITE-SYNC.md`：提交用 Conventional Commits；每轮交付更新 `docs/t00/delivery.json`；
 不要碰 `docs/t00/independent-review.json`，不要自称验收通过。推之前先 `git fetch` 再 rebase，冲突时两边的改动都保留。
 
+**弹层栈（2026-11-15）**：盖在画面上的界面都放到 `app/src/ui.js` 的一个栈上，五个弹层是原生 `<dialog>`。
+加新弹层的做法：写一个 `<dialog class="layer">`，调一次 `ui.layer(id, …)`，用 `ui.open/close` 开关，不要直接改 `hidden`。
+不接第三方 UI 库，理由见 `docs/t00/decisions.md` 的「界面」一节。
+
 界面这一轮也改了：操作提示只在用得上的时候出现一行（`app/src/hints.js`），H 键开键位卡；界面文字用楷体
 （霞鹜文楷，`app/shared/fonts/kai.woff2`）；匾额改繁体楷书。
 
