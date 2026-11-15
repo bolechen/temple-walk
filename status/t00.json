@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-15T15:39:37.557Z",
+  "generated_at": "2026-11-15T15:40:46.713Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "a7cec2474627d11c7f549a4fece30d957f66353b",
-    "url": "https://github.com/bolechen/temple-walk/commit/a7cec2474627d11c7f549a4fece30d957f66353b"
+    "sha": "2a95580c17c432cad75a74530c4946a80ee1f7d3",
+    "url": "https://github.com/bolechen/temple-walk/commit/2a95580c17c432cad75a74530c4946a80ee1f7d3"
   },
   "delivery": {
     "schema_version": 1,
@@ -109,6 +109,7 @@
     ],
     "known_issues": [
       "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
+      "小沙弥雕刻的身体（novice.glb）在走路、上台阶、打坐时布料会撕开（贴图接缝处骨骼权重不对）；2026-11-15 起默认关闭，页面穿代码建的身体，地址加 ?body=sculpt 才换上；权重未修",
       "鸟叫没有人听过；SOURCES.md 表末列出还没核到原文的出处",
       "竹竿相碰没有人听过；鸟叫没做",
       "龙井的滴水声没有人听过；涟漪只在软件渲染下看过；渗水是贴面薄片",
@@ -245,17 +246,17 @@
       ],
       "note": "Domain verification only; no change to CI/deployment or independent game acceptance status."
     },
-    "record_commit": "440c17cec111203ffb485bb8ac8791348fb6fed3",
+    "record_commit": "2a95580c17c432cad75a74530c4946a80ee1f7d3",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "in_progress",
+    "status": "pending",
     "conclusion": null,
-    "run_id": 43731090507,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43731090507",
+    "run_id": 43731200127,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43731200127",
     "checks": {
       "syntax": "pending",
-      "unit": "in_progress",
+      "unit": "pending",
       "e2e": "pending"
     },
     "scope": [
