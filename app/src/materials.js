@@ -16,14 +16,14 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uAmb = U.uAmb; bind(sh.uniforms, tex);
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp; uniform vec3 uAmb; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL : ""))
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL : ""))
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -206,6 +206,18 @@ export function createMaterials() {
     // Old gilding, rubbed through to the lacquer where hands and smoke have been.
     gilt: procMat("gilt", { roughness: 0.42, metalness: 0.7, envMapIntensity: 0.6 }, `
       float w=smoothstep(.45,.75,fbm3(vWP*7.)); col=mix(vec3(.5,.36,.14),vec3(.12,.06,.04),w*.6); rough_=mix(.38,.8,w);`, { snow: false }),
+    // The ink-stone pool by the second landing. The county gazetteer says its water is clear, and when the moon is
+    // bright and the wind light the ripples glint as though traces of ink were in it (docs/t00/SOURCES.md). So: deep,
+    // clear water that gives back the sky where it is seen aslant and goes dark looking straight down, small slow
+    // ripples, and faint dark wisps drifting through it like ink loosening from a stone.
+    inkpool: procMat("inkpool", { roughness: 0.12, metalness: 0, envMapIntensity: 0.18 }, `
+      vec2 p=vWP.xz; float t=uT*.35;
+      float w1=n2(p*2.3+vec2(t,t*.7)), w2=n2(p*4.1-vec2(t*.8,-t*.5)), w=w1*.6+w2*.4;
+      nd_=vec3(n2(p*3.+vec2(.5+t,0.))-.5,0.,n2(p*3.+vec2(0.,.5-t))-.5)*.16;
+      vec3 V=normalize(cameraPosition-vWP); float fres=pow(1.-clamp(V.y+nd_.x*.6,0.,1.),5.)*.6+.03;
+      float wisp=smoothstep(.55,.85,fbm2(p*.9+vec2(t*.15,-t*.1)+w*.6));
+      col=vec3(.018,.026,.025)*(1.-.45*wisp); rough_=.1+.1*w;
+      emit_=uAmb*.32*(fres*(.6+.4*w))*(1.-.5*wisp);`, { snow: false }),
     // A temple banner (fan): old silk faded to the colour of straw, a narrow indigo edge, two painted bands; vUv2 runs
     // across and up the cloth.
     banner: procMat("banner", { roughness: 0.95, envMapIntensity: 0.1, side: THREE.DoubleSide }, `
