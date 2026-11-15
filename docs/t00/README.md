@@ -11,7 +11,7 @@
 | D01 可运行场景 | [RUN.md](RUN.md)，仓库本身 | 有 |
 | D02 工程基线与变更 | [project-baseline.json](project-baseline.json)、[decisions.md](decisions.md)、[CHANGELOG.md](CHANGELOG.md) | 有；目标设备未锁定 |
 | D03 场景与相机 | [scene-spec.json](scene-spec.json)、[camera-manifest.json](camera-manifest.json)；`?show=cam01`…`cam06` | 有 |
-| D04 六机位运行截图 | `evidence/M2-before/`（改之前）、`evidence/M4/CAM-01.jpg`…`CAM-06.jpg` | 有，T4 上的真实页面 |
+| D04 六机位运行截图 | `evidence/M2-before/`（改之前）、`evidence/M4/CAM-01.jpg`…`CAM-06.jpg` | 有，T4 上的真实页面（CAM-01、02 于 a7c7772 重拍） |
 | D05 连续行走录像 | `evidence/M4/walkthrough.webm` | 有，webm 而非 mp4，程序行走（diagnostic） |
 | D06 性能证据 | [performance.json](performance.json)、`evidence/M4/frame-times.csv`、`evidence/M4/console.txt` | **只有 T4；目标设备 blocked** |
 | D07 资产与权利 | [asset-register.csv](asset-register.csv) | 有；佛像模型授权待所有者确认 |
