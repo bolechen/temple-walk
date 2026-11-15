@@ -11,6 +11,7 @@ export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0 };
+export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
 // Terraces above the entrance court, as on the mountain: each hall stands higher than the one before.
 // zS is the front edge, where the stairs arrive.
 export const LEVELS = [
@@ -286,7 +287,7 @@ export function buildSite(M) {
 
   // The screen wall facing the gate, where the two old paths up the mountain meet.
   {
-    const z = 55, w = 11, h = 4.2;
+    const { z, w, h } = SCREEN;
     root.add(mesh(footAt(merge([box(w, h, 0.7, 0, h / 2, z)]), 0), M.plaster()), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 1.0, 0.2, 0.24, 0, h + 0.62, z)]), M.stone));   // a plinth, and the ridge of its little roof
     const cp = [], cu = [], ci = [];
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }

@@ -59,6 +59,7 @@ node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*
 node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png (add `bind` for his A-pose)
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
+node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
 python3 tools/textures.py <dir of Poly Haven jpgs>   # repack the scanned surfaces into app/shared/textures/
 ```
@@ -154,6 +155,17 @@ The left mouse button on the picture is the shutter (a drag is not); on a touch 
 shutter draws the view again at 1600, 2160 or 2880 px on its long side by quality tier and mounts it on a card with
 the mood's verse, the temple's name and a seal. Tall, square and wide frames are still offered in the settings.
 
+**Sound and music (`audio.js`, `score.js`, `instruments.js`).** Everything is synthesised; no recording is used. `audio.js`
+has three buses (music, the place, effects), each with its own level in the pause menu (`乐声`, `山声`, `音效`, under the
+master `音量`) set before its reverb send, and two reverbs (the court, a timber hall) that follow `inside`. `score.js` is
+the music as data and is unit-tested in Node: the mode (G yu, on the bell's 98 Hz), a seven-note theme of which each seal's
+chime rings the next note and which is heard whole only after the seventh seal, `zoneOf` (grove, stair, gate, court, hall,
+upper, summit), a zone that counts only after two seconds, one phrase maker per place, and a conductor that starts phrases
+on the audio clock; on a change of place it drops the notes not yet begun and fades what sounds over 3.5 s (never the whole
+theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xiao, a held fifth) through `createPlayer` on
+any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
+The music steps back inside `strike()` for the bell and drum. A season or hour changes only `moodMusic`'s few numbers.
+
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
 fireflies in the air; both are driven only by the mood.
 
@@ -198,7 +210,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__strike(kind)`, `__listen()`, `__hud()`, `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 

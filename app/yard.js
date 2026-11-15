@@ -4,14 +4,15 @@ import * as THREE from "./vendor/three/build/three.module.js";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
-import { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } from "./src/site.js";
+import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, terrain } from "./src/site.js";
 import { createSky, FOG, SUN_DIR } from "./src/sky.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, startAmbience, listen, setVolume } from "./src/audio.js";
+import { strike, startAmbience, listen, setLevels, musicState } from "./src/audio.js";
+import { zoneOf, zoneBounds } from "./src/score.js";
 import { createSettings, browserSettingsStore } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
 import { createTrees } from "./src/trees.js";
@@ -31,7 +32,7 @@ import { findDrop, dropPose } from "./src/drop.js";
 const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
 const hints = createHints({ off: Q.has("shot") }); let arrived = false;   // what is said about the controls, and when
-const settings = createSettings(browserSettingsStore()); setVolume(settings.get().volume);   // what the visitor has set for themselves (the pause menu)
+const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
 
@@ -169,7 +170,11 @@ const menuEl = document.getElementById("menu");
 let down = null, hop = null, leap = null;   // `hop`: a planned drop from a porch; `leap`: a small jump where he stands, steered as he goes
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
-canvas.addEventListener("pointerdown", () => startAmbience(() => ({ grove: grove() })), { once: true });
+// What the sound needs to know of the place: the bamboo, which part of the mountain (the music follows it), the mood.
+const ZB = zoneBounds(SITE, LEVELS, APPROACH, SCREEN);
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time });
+const hear = () => startAmbience(hearing);
+canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
 let reachWant = 6.2;   // how far behind him the eye stands; the wheel changes it
 const zoom = (k) => { if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); } else reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11); };
@@ -220,7 +225,7 @@ canvas.addEventListener("pointerup", (e) => {
   // With the camera raised, the left button on the picture is the shutter.
   if (photo.on) { if (e.pointerType === "mouse" && e.button === 0 && down && !down.moved && $("print").hidden && $("photoSettings").hidden && !$("shutter").disabled) $("shutter").click(); down = null; return; }
   if (e.pointerType === "mouse" && down && !down.moved) {
-    if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} startAmbience(() => ({ grove: grove() })); }
+    if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} hear(); }
     else {   // held: a click strikes what the middle of the picture rests on
       ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
       if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
@@ -298,7 +303,7 @@ addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
   if (stick) {
     const move = (e) => { const dx = e.clientX - cx, dy = e.clientY - cy, l = Math.hypot(dx, dy), m = Math.min(l, 46), k = l ? m / l : 0; joy.x = (dx * k) / 46; joy.y = (dy * k) / 46; knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`; };
     const end = (e) => { if (e.pointerId !== id) return; id = null; joy.x = joy.y = 0; knob.style.transform = ""; };
-    stick.addEventListener("pointerdown", (e) => { id = e.pointerId; stick.setPointerCapture(id); const r = stick.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(e); startAmbience(() => ({ grove: grove() })); e.preventDefault(); });
+    stick.addEventListener("pointerdown", (e) => { id = e.pointerId; stick.setPointerCapture(id); const r = stick.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(e); hear(); e.preventDefault(); });
     stick.addEventListener("pointermove", (e) => { if (e.pointerId === id) move(e); }); stick.addEventListener("pointerup", end); stick.addEventListener("pointercancel", end);
   }
 }
@@ -599,22 +604,25 @@ window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) 
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); };
 window.__listen = listen; window.__strike = strike;
+// The music: what it is doing; `__music(true)` lets the place be heard, as a first tap does.
+window.__music = (begin) => { if (begin) hear(); return musicState(); };
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----
+const SOUND = [["setVolume", "volume"], ["setMusic", "music"], ["setAmbience", "ambience"], ["setEffects", "effects"]];
 function openMenu(open) {
   menuEl.hidden = !open; if (!open) return; document.exitPointerLock?.(); interrupt(); target = null; route = [];
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
-  $("setSens").value = S.sens; $("setVolume").value = S.volume; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
+  $("setSens").value = S.sens; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
 {
   const set = (k, v) => { settings.set(k, v); openMenu(true); };
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => set("quality", b.dataset.q)));
   $("setSens").addEventListener("input", (e) => settings.set("sens", +e.target.value));
-  $("setVolume").addEventListener("input", (e) => { settings.set("volume", +e.target.value); setVolume(settings.get().volume); });
+  for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +e.target.value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(menuEl.hidden)); on("menuKeys", () => { openMenu(false); hints.card(true); });
   on("reloadBtn", () => location.reload());
@@ -641,7 +649,7 @@ createGame({
   strike(kind) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s) s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
   mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
-  listen: () => startAmbience(() => ({ grove: grove() })),
+  listen: () => hear(),
   onTick: (fn) => ticks.push(fn),
   // Where a point of the place falls on the picture: x and y in pixels, and whether it is behind the eye.
   screenOf(x, yy, z) { const v = new THREE.Vector3(x, yy, z).project(camera), r = canvas.getBoundingClientRect(); return { x: r.left + (v.x * 0.5 + 0.5) * r.width, y: r.top + (-v.y * 0.5 + 0.5) * r.height, behind: v.z > 1, w: r.width, h: r.height }; },
