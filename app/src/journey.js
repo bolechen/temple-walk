@@ -36,7 +36,9 @@ export const VERSES = [
 export function pickVerse(seed) { const n = VERSES.length, i = ((Math.floor(seed) % n) + n) % n; return { text: VERSES[i][0], from: VERSES[i][1] }; }
 
 export const KEY = "yunjing.journey.v1";
-const fresh = (now) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null });
+// `opened`: when the four seasons were first opened to the visitor, which is the first time the book was filled. It
+// outlives 重新朝山: a second walk up the mountain may be made in any season. `told`: whether that has been said once.
+const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told });
 
 // `store` is anything with get() → string|null and set(string); the page passes one backed by localStorage.
 export function createJourney(store, now = () => Date.now()) {
@@ -50,6 +52,8 @@ export function createJourney(store, now = () => Date.now()) {
         out.strikes = Math.min(SEAL.bell.need, Math.max(0, Number(raw.strikes) | 0));
         if (raw.verse && typeof raw.verse.text === "string") out.verse = { text: raw.verse.text, from: String(raw.verse.from || "") };
         out.done = Number(raw.done) > 0 ? Number(raw.done) : null;
+        out.opened = Number(raw.opened) > 0 ? Number(raw.opened) : out.done;   // a book filled before this was kept counts
+        out.told = raw.told === true;
         return out;
       }
     } catch {}
@@ -77,6 +81,7 @@ export function createJourney(store, now = () => Date.now()) {
       s.seals[id] = now();
       if (id === "sutra" && extra && extra.verse) s.verse = { text: String(extra.verse.text), from: String(extra.verse.from || "") };
       if (api.done() && !s.done) s.done = now();
+      if (s.done && !s.opened) s.opened = s.done;
       save(); return true;
     },
     // One stroke of the bell. The third earns its seal. Returns how many have sounded and whether this one earned it.
@@ -87,7 +92,12 @@ export function createJourney(store, now = () => Date.now()) {
       if (!earned) save();
       return { strikes: s.strikes, earned };
     },
-    reset() { s = fresh(now()); save(); },
+    // The seasons and hours are the visitor's to choose once the book has been filled.
+    opened: () => !!s.opened,
+    told: () => s.told,
+    tell() { if (!s.told) { s.told = true; save(); } },
+    // Start the book again. The seasons stay open.
+    reset() { s = fresh(now(), { opened: s.opened, told: s.told }); save(); },
     snapshot: () => JSON.parse(JSON.stringify(s)),
   };
   return api;

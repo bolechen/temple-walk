@@ -183,7 +183,16 @@ const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
 let reachWant = 6.2;   // how far behind him the eye stands; the wheel changes it
-const zoom = (k) => { if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); } else reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11); };
+// Drawing the eye all the way in to him and on (the wheel, or two fingers closing) puts it behind his own eyes; drawing
+// it out of them stands it behind him again. `nudge` gathers how far past the nearest the visitor keeps pushing, so one
+// stray notch at the end of a pinch does not change the view.
+let nudge = 0;
+const zoom = (k) => {
+  if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); return; }
+  if (view === "first") { if (k > 1 && (nudge += Math.log(k)) > 0.3) { nudge = 0; reachWant = 2.6; setView("third"); } else if (k < 1) nudge = 0; return; }
+  const near = reachWant <= 2.6 + 1e-6; reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11);
+  if (k < 1 && near) { if ((nudge -= Math.log(k)) > 0.3) { nudge = 0; setView("first"); } } else nudge = 0;
+};
 // With a mouse the view is held the way such games hold it: a click on the picture takes the pointer, moving the
 // mouse looks round, Esc lets go. A touch still drags to look and taps to walk.
 const locked = () => document.pointerLockElement === canvas;
@@ -278,7 +287,6 @@ function startJump() {
   if (ui.covered()) return false;
   leap = { y: footY, v: JUMP.speed }; return true;
 }
-const jumpButton = document.getElementById("jumpBtn"); if (jumpButton) jumpButton.addEventListener("click", () => { startDrop() || startJump(); });
 if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Space</kbd>下台阶"; dropButton.addEventListener("click", startDrop); }
 
 addEventListener("keydown", (e) => {
@@ -292,8 +300,8 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
-  else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
-  else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") press("moodBtn");
+  else if (k === "v") setView(view === "third" ? "first" : "third"); else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
+  else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
   else if (k === "h" || k === "?") hints.card();
   else if (k === "escape") { if (document.body.classList.contains("entered") && !stage) openMenu(true); }   // with nothing open, Esc is the pause menu
 });
@@ -303,8 +311,8 @@ addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
   const stick = document.getElementById("stick"), knob = document.getElementById("knob"); let id = null, cx = 0, cy = 0;
   if (stick) {
     const move = (e) => { const dx = e.clientX - cx, dy = e.clientY - cy, l = Math.hypot(dx, dy), m = Math.min(l, 46), k = l ? m / l : 0; joy.x = (dx * k) / 46; joy.y = (dy * k) / 46; knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`; };
-    const end = (e) => { if (e.pointerId !== id) return; id = null; joy.x = joy.y = 0; knob.style.transform = ""; };
-    stick.addEventListener("pointerdown", (e) => { id = e.pointerId; stick.setPointerCapture(id); const r = stick.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(e); hear(); e.preventDefault(); });
+    const end = (e) => { if (e.pointerId !== id) return; id = null; joy.x = joy.y = 0; knob.style.transform = ""; stick.classList.remove("held"); };
+    stick.addEventListener("pointerdown", (e) => { id = e.pointerId; stick.classList.add("held"); stick.setPointerCapture(id); const r = stick.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(e); hear(); e.preventDefault(); });
     stick.addEventListener("pointermove", (e) => { if (e.pointerId === id) move(e); }); stick.addEventListener("pointerup", end); stick.addEventListener("pointercancel", end);
   }
 }
@@ -470,11 +478,9 @@ requestAnimationFrame(frame);
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id)), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
 if (Q.has("shot")) document.body.classList.add("bare");
-const setView = (v) => { view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; resize(); };
+const setView = (v) => { view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize(); };
 setView(view);
-on("viewBtn", () => setView(view === "third" ? "first" : "third"));
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
-on("moodBtn", () => ui.toggle("moodPanel"));
 document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => setMood(b.dataset.season, state.time)));
 document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => setMood(state.season, b.dataset.time)));
 

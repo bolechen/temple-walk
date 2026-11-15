@@ -54,10 +54,15 @@ export function createGame(y) {
     for (const id in rings) rings[id].visible = !journey.has(id) && (places[id].room || null) === y.room();
     mine.visible = journey.has("lamp");
     const n = journey.count(), next = journey.next(); setSeals(n);   // the music knows how much of its theme has been earned
-    if ($("bookBtn")) $("bookBtn").innerHTML = n ? `朱印<span class="count">${"〇一二三四五六七"[n]}</span>` : "朱印";   // the count is a small seal on the slip
-    // The next place: a small seal with its first character, the words 下一处 above its name.
-    const g = $("goal"), word = next ? `下一处 · ${next.place}` : "七印圆满";
-    if (g && g.dataset.word !== word) { if (g.dataset.word) y.hints?.say.goal(); g.dataset.word = word; g.innerHTML = next ? `<i class="seal-mark">${next.place[0]}</i><span><small>下一处</small>${next.place}</span>` : `<i class="seal-mark">圆</i><span>七印圆满</span>`; }
+    // The book is the small seal at the top left: the first character of the next place, or 圆 once the book is full;
+    // how many seals are held is said to a screen reader, and to the tests.
+    const word = next ? `下一处 · ${next.place}` : "七印圆满", mark = next ? next.place[0] : "圆", b = $("bookBtn");
+    if (b && b.dataset.word !== `${mark}${n}`) { b.dataset.word = `${mark}${n}`; b.innerHTML = `<i class="seal-mark">${mark}</i><span class="sr">朱印 ${"〇一二三四五六七"[n]}</span>`; }
+    // The next place: 下一处 above its name, beside that seal.
+    const g = $("goal");
+    if (g && g.dataset.word !== word) { if (g.dataset.word) y.hints?.say.goal(); g.dataset.word = word; g.innerHTML = next ? `<span><small>下一处</small>${next.place}</span>` : `<span>七印圆满</span>`; }
+    // The seasons and the hours are the visitor's once the book has been filled once (src/ui.css shows what needs them).
+    document.body.classList.toggle("seasons", journey.opened());
     if ($("titleSeals")) $("titleSeals").textContent = n ? (n === 7 ? "七印圆满 · 山门常开" : `已得${"〇一二三四五六七"[n]}印`) : "";
   };
 
@@ -151,16 +156,18 @@ export function createGame(y) {
   window.__work = (slug) => (slug ? showWork(slug, null) : { open: ui.isOpen("piece"), title: $("pieceTitle")?.textContent, loaded: !!$("pieceImg")?.naturalWidth });
 
   // ---- The book ----
+  // Once the book has been filled, the line at the foot of the view says once, ever, that the seasons are open.
+  const announce = () => { if (entered && journey.opened() && !journey.told() && y.hints?.say.seasons?.()) journey.tell(); };
   let page = null;
   async function openBook() {
     const m = y.mood(), next = journey.next();
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label, url: location.host + location.pathname.replace(/\/$/, "") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = "云径禅寺-朱印.jpg";
-    $("bookHint").textContent = next ? `${next.hint}　${told()}` : `七印圆满。这一页是你的了。${told()}`;
+    $("bookHint").textContent = next ? `${next.hint}　${told()}` : `七印圆满。这一页是你的了。山中四时，自此由你。${told()}`;
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
     $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: "云径禅寺 · 朱印" }); } catch {} };
-    $("bookReset").textContent = "重新朝山"; ui.open("book");
+    $("bookReset").textContent = "重新朝山"; ui.open("book", { onClose: announce });
   }
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
@@ -168,7 +175,7 @@ export function createGame(y) {
 
   // ---- The title ----
   const title = $("title");
-  const enter = () => { if (entered) return; entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); };
+  const enter = () => { if (entered) return; entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; $("enterBtn").textContent = "入山"; } }, 200); } }
   refresh();
 

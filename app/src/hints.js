@@ -36,11 +36,13 @@ export function createHints({ off = false, ui = null } = {}) {
   const say = {
     entered() {
       stir(); flash("moodTag", 7); flash("goal", 9);
-      tip("walk", coarse ? "推左下的圆盘行走　·　拖动画面环顾　·　右侧「身外」换视角" : `${K("W", "A", "S", "D")}行走　·　点一下画面，以鼠标环顾　·　${K("V")}换视角　·　${K("H")}键位`, 12);
+      tip("walk", coarse ? "推左下的圆盘行走　·　拖动画面环顾　·　双指开合远近，拉近到底，换成自己的眼睛" : `${K("W", "A", "S", "D")}行走　·　点一下画面，以鼠标环顾　·　${K("V")}换视角　·　${K("H")}键位`, 12);
     },
     held() { tip("held", `${K("Esc")}松开鼠标　·　${K("滚轮")}远近　·　单击敲钟击鼓`, 7); },
     indoors() { if (!coarse) tip("view", `${K("V")}换成自己的眼睛看，可以举头看殿顶　·　画框前${K("E")}细看`, 8); else tip("view", "走到画框前，可以细看；也可以举头看看殿顶", 7); },
-    seal() { tip("book", coarse ? "朱印收在右侧的「朱印」里" : `${K("B")}翻看朱印帐`, 7); },
+    seal() { tip("book", coarse ? "点左上角的小印，翻看朱印帐" : `${K("B")}或左上角的小印，翻看朱印帐`, 7); },
+    // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
+    seasons() { return tip("seasons", coarse ? "时节已开：留影与歇脚里可选" : `时节已开：留影与歇脚里可选　·　${K("T")}时节`, 9); },
     photo() { drop(); },
     mood() { flash("moodTag", 6); },
     goal() { flash("goal", 8); },

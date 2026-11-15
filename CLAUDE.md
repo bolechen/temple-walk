@@ -215,9 +215,16 @@ page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__p
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
 hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
-nearer or farther, E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
-T opens the season and hour. While the pointer is held a click strikes the bell or drum under the dot. On a touch
-screen: a thumb-stick lower left, a drag to look, a tap on the ground to walk there. The key list (`#keys`) shows only
+nearer or farther (and on past the nearest into his own eyes, and back out), E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
+T opens the season and hour once they are the visitor's (below). While the pointer is held a click strikes the bell or drum under the dot. On a touch
+screen: a thumb-stick lower left (faint until a thumb is on it), a drag to look, two fingers for nearer and farther (and the view, as the wheel), a tap on the ground to walk there.
+On the picture while he walks there are only two slips at the edge (留影, 歇脚) and the book, which is the small seal at the top left;
+there is no view button and no jump button.
+
+**The seasons are earned (`journey.opened()`, `body.seasons`).** A first visit is the visitor's own season and hour and offers no
+choice. Filling the book the first time opens them (`opened` in `yunjing.journey.v1`, kept through 重新朝山): `game.js`
+sets `body.seasons`, and everything marked `need-seasons` shows (a row in the photograph's settings, two rows in the pause
+menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
 **Typefaces (`app/shared/fonts/`, `tools/fonts.py`).** Six faces under the SIL Open Font License, cut down to the characters the
@@ -243,7 +250,7 @@ pause menu only when the stack is empty; closing gives the focus back to what op
 (`docs/t00/decisions.md`, "界面").
 
 **Ink on paper (`app/src/ui.css`, `app/src/paper.js`).** The interface's look, chosen by the owner from two drawn
-directions: over the picture nothing has a box (words with a little shade under them; the five things at the edge are
+directions: over the picture nothing has a box (words with a little shade under them; the things at the edge are
 slips of paper written down the page); what opens over the walk is a sheet of paper with a torn edge (class `paper`);
 what is chosen is circled in vermilion (`aria-pressed`); the one button that matters on a sheet is a seal (`stamp`); keys
 are written as letters with a stroke under them. `paper.js` draws the paper grain, a dry brush stroke, the ring and the
