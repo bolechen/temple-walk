@@ -181,10 +181,10 @@ const scenarios = {
     const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
-    // The bell: stand in its ring, and strike three times.
+    // The bell: stand in its ring and take the rope; he rings it three times.
     await at("bell"); await t.until(() => t.page.isVisible("#act"), 30000, "standing before the bell offered nothing");
     expect((await t.page.getAttribute("#act", "data-word")) === "撞钟", "the button should say what can be done");
-    for (let i = 0; i < 3; i++) { await t.page.click("#act"); await t.frames(2); if (i < 2) await t.until(() => t.page.isVisible("#act"), 20000, "the bell could not be struck again"); }
+    await t.page.click("#act");
     await seal("bell", "the bell"); expect((await t.page.textContent("#toastName")).includes("闻钟") && (await t.page.getAttribute("#toastSeal", "src")).startsWith("data:image"), "no seal was shown");
     expect((await t.page.textContent("#bookBtn")).includes("一"), "the book's button should count the seals");
     // Tea, the well, the lamp: walk into the ring, press, wait.
@@ -202,16 +202,66 @@ const scenarios = {
     expect((await t.page.textContent("#titleSeals")).includes("五"), "the title should say how many seals are held");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled); await t.page.click("#enterBtn");
     j = await t.journey(); expect(j.count === 5 && j.lampLit && j.next === "incense", "the book was not remembered: " + JSON.stringify(j));
-    // Sitting on the summit, then incense (as the hall reports it): the seventh seal opens the book.
+    // The summit is the last thing: before the other six are done its mat is only a seat, and gives no seal.
     await at("sit"); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered on the summit"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) === 1, 30000, "he did not sit down on the summit mat"); expect(!(await t.journey()).seals.sit, "the summit gave its seal before the rest was done");
+    // Incense, in the great hall: the sticks are set in the ash and stay there.
     await t.page.evaluate(() => window.__inside(true)); await t.until(() => t.inHall(), 30000, "could not go in");
     await at("incense"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 30000, "nothing offered before the altar"); await t.page.click("#act");
+    await seal("incense", "the incense"); expect((await t.page.evaluate(() => window.__rites().incense)).planted, "the sticks are not standing in the ash");
+    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    // Then the summit: three breaths, the seventh seal, the close of the chapter with its words, and the book.
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 30000, "could not come out");
+    await at("sit"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 30000, "nothing offered on the summit"); await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed");
+    expect((await t.page.evaluate(() => window.__rites().line)).length > 6, "no closing words were said");
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
     expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
     await t.page.click("#bookClose"); expect(!(await t.page.isVisible("#act")), "nothing should be offered once every seal is held");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // What his hands do, at the pace a visitor sees it: the rope drawn and the bell rung three times, the bowl lifted
+  // and drunk from, a stool and a cushion sat on, the incense bowed with and set in the ash.
+  rites: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&enter&view=third&season=summer&time=day");
+    const at = (id, dx = 0.3, dz = 0.3) => t.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__pose(p.at[0] + d, p.at[1] + e, 0, 0); }, [id, dx, dz]);
+    const offered = (word) => t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 40000, `"${word}" was not offered`);
+    const seen = (what, fn, ms = 120000) => t.page.waitForFunction(fn, null, { timeout: ms, polling: 100 }).catch(() => { throw new Error(what); });
+    const R = () => t.page.evaluate(() => window.__rites());
+    // The bell.
+    await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
+    await seen("he never took the rope", () => window.__rites().bell.grip > 0.9);
+    await seen("the log was never drawn back", () => window.__rites().bell.log > 0.15);
+    await t.until(async () => (await t.journey()).seals.bell > 0, 120000, "three strokes were not rung");
+    let r = await R(); expect(r.bell.log >= -0.181, "the log went into the bell: " + r.bell.log);
+    await t.until(async () => (await R()).bell.grip === 0 && (await t.journey()).rite === null, 60000, "he never let the rope go");
+    // Tea: the bowl leaves the table, is tilted at his lips three times, and is set down again.
+    await at("tea"); await offered("吃茶"); await t.page.click("#act");
+    await seen("the bowl never left the table", () => window.__rites().tea.lift > 0.1);
+    await seen("the bowl was never tilted to drink", () => window.__rites().tea.tilt > 0.6);
+    await t.until(async () => (await t.journey()).seals.tea > 0, 120000, "no seal for tea"); r = await R();
+    expect(r.tea.sips === 3 && Math.abs(r.tea.lift) < 0.01 && r.tea.held === 0, "the bowl is not back on the table after three sips: " + JSON.stringify(r.tea));
+    // Any stool may be sat on: the one across the table.
+    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    await t.page.evaluate(() => { const s = window.__seats[2]; window.__pose(s.at[0] + 0.5, s.at[1] - 0.9, 0, 0); });
+    await offered("坐下"); const before = (await R()).sat; await t.page.click("#act");
+    await t.until(async () => (await R()).sat === before + 1 && (await t.page.evaluate(() => window.__probe().monkBox)) !== undefined, 30000, "he did not sit on the stool");
+    // Incense in the great hall, and a cushion in the meditation hall.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 30000, "could not go in");
+    await at("incense", 0.2); await offered("上香"); await t.page.click("#act");
+    await seen("the sticks never appeared", () => window.__rites().incense.shown);
+    await seen("he never bowed with them", () => window.__rites().bow > 0.3);
+    await t.until(async () => (await R()).incense.planted, 120000, "the sticks were never set in the ash"); r = await R();
+    const bowl = await t.page.evaluate(() => window.__places.incense.bowl);
+    expect(Math.hypot(r.incense.at[0] - bowl[0], r.incense.at[2] - bowl[2]) < 0.02 && r.incense.smoke, "the sticks are not in the bowl, smoking: " + JSON.stringify(r.incense));
+    await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for incense");
+    await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.page.evaluate(() => window.__journey().entered && window.__yard().doorway !== undefined)), 30000, "could not go into the meditation hall");
+    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    await t.page.evaluate(() => { const s = window.__seats.find((k) => k.room === "chan"); window.__pose(s.at[0], s.at[1] + (s.face === 0 ? 1.2 : -1.2), 0, 0); });
+    await offered("坐下"); const n = (await R()).sat; await t.page.click("#act"); await t.until(async () => (await R()).sat === n + 1, 30000, "he did not sit on the platform");
+    await t.shot("e2e-rites"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.
   summit: { tier: 3, async run(b, base) {

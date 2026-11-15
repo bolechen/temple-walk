@@ -85,7 +85,10 @@
     "工程化（所有者 2026-11-15 决定）：接入 Vite 8 与 TypeScript 7。源码直接 import three，不再拷贝到 app/vendor/three；pnpm dev 为开发服务器，pnpm build 出 dist/，发布、端到端测试、出图与 GPU 作业都改为打开 dist/（tools/site.cjs 按需重建）；按名字取的资源经 app/src/assets.js 从页面地址定位；pnpm typecheck 纳入 check 流程与两条工作流",
     "所有者 2026-11-15 的另三个决定已记入文档：代码暂不开源、保留所有权利；佛像与莲座模型归所有者所有、可随项目分发；山门竖匾保持虚构的「雲徑禪寺」（不改为真寺名）",
     "类型检查扩大到 app/ 全部模块（所有者要求）：加入 @types/three，补 JSDoc 标注；颜色与位置由展开数组的 setRGB/set 改为等价的 fromArray",
-    "2026-11-15 分享卡片：复用现有实机宣传封面为 app/shared/og/temple-walk.jpg（1920×1080 JPEG），页面增加 Open Graph、Twitter 大图卡片、简介与新域名 canonical；共享资源沿用现有 Vite 复制流程。"
+    "2026-11-15 分享卡片：复用现有实机宣传封面为 app/shared/og/temple-walk.jpg（1920×1080 JPEG），页面增加 Open Graph、Twitter 大图卡片、简介与新域名 canonical；共享资源沿用现有 Vite 复制流程。",
+    "仪式动画（所有者要求）：撞钟（握绳、后拉、放手，连撞三下，钟槌不再穿入钟身）、吃茶（双手取碗、三次举到嘴边）、点香（举香齐眉、三拜、上前插进矮香几上的香炉，香留在炉里）、山顶静坐（胸口随吸呼起伏，呼气时地上一圈墨痕）；新模块 app/src/rites.js，小沙弥的姿态新增 grounding.act 输入",
+    "所有坐垫和凳子都可以坐下（室外 4 处与各殿全部蒲团、禅堂坐榻、茶寮凳子）；山顶静坐改为章节的最后一件，第七印之后播放独立的结尾动画和四句结束语，落题后翻开朱印帐；结束语为序章收尾并给下一章留悬念",
+    "殿内 15 个空画框全部挂上开放授权的馆藏作品（克利夫兰艺术博物馆 13 件、大都会 2 件，CC0），殿内真迹共 32 件，每个画框都不再是空纸"
   ],
   "known_issues": [
     "龙井的滴水声没有人听过；涟漪只在软件渲染下看过；渗水是贴面薄片",
@@ -136,7 +139,10 @@
     "佛像与莲座仍在库里（来源 CDN 对 GitHub 构建机返回 403）；所有者 2026-11-15 确认其归本人所有、可随项目分发，原始作者信息仍未记录",
     "类型检查（checkJs）已覆盖 app/ 全部模块并使用 @types/three，但没有开 strict；页面元素查找和场景遍历回调标为 any；没有文件改成 .ts；「引擎／关卡」代码拆分未做",
     "接入 Vite 后发布的是打包后的 dist/（单个约 1 MB 的脚本，gzip 约 314 KB）；本机只跑了 boot、halls、stairs、drop 四个端到端场景和开发服务器的一次载入，其余场景与 T4 测量未在打包后的站点上重跑，本轮没有新的性能数字",
-    "分享平台可能缓存旧卡片；本轮分享元信息不代表游戏独立验收或手机性能通过。"
+    "分享平台可能缓存旧卡片；本轮分享元信息不代表游戏独立验收或手机性能通过。",
+    "仪式动画只在软件渲染下逐帧截图看过，没有在真机上按正常速度看过；手的位置（嘴、眉心、钟绳）按现有小沙弥比例设定，换比例要重调；坐下是把他移到坐具上，不是逐步走上去；只有大殿可以上香",
+    "结尾动画的镜头路径只在夏昼看过；结束语第四句的悬念（远山有钟声回应）由开发者拟定，下一章设定未定；旧存档若已先得静坐印，结尾不会自动播放",
+    "新增 15 件作品的条目由子代理依馆方记录撰写、开发者逐条读过：药师殿两件为日本镰仓时代；楚石梵琦、虚舟普度、偃溪广闻与径山的关系依据日文维基百科；直翁一件未能读到馆方网页说明；裁切为估计值"
   ],
   "evidence": [
     "tests/unit/well.test.mjs",
@@ -188,7 +194,8 @@
     "类型检查全覆盖的提交：pnpm typecheck 0 错误、pnpm test 138 项通过、node tests/e2e/run.cjs boot moods halls 在 dist/ 上通过；此前 5864213 的发布流程（run 140）成功",
     "app/shared/og/temple-walk.jpg",
     "app/index.html（Open Graph 与 Twitter 元信息）",
-    "OG 分享卡片提交：隔离的 origin/main 工作区 pnpm run verify 通过（check、typecheck、138 项单测、18 个 smoke 场景）；dist/index.html 元信息及 dist/shared/og/temple-walk.jpg 与源文件一致。"
+    "OG 分享卡片提交：隔离的 origin/main 工作区 pnpm run verify 通过（check、typecheck、138 项单测、18 个 smoke 场景）；dist/index.html 元信息及 dist/shared/og/temple-walk.jpg 与源文件一致。",
+    "仪式与结尾的提交：pnpm run check、pnpm typecheck、pnpm test、pnpm run edges 通过；端到端 rites 与 pilgrimage 场景的结果以对应提交的工作流为准；逐帧截图未入库"
   ],
   "domain_binding": {
     "date": "2026-11-15",
