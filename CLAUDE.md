@@ -97,7 +97,7 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
 `?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
-`?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
+`?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
 page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.

@@ -37,7 +37,7 @@ pnpm dev                 # Vite 开发服务器，只监听 127.0.0.1:8000
 
 ## 验收用的地址
 
-- 六个固定机位：`?show=cam01` … `?show=cam06`，加 `&season=summer&time=day&q=high`。`?show` 会冻结时间并隐藏界面。
+- 六个固定机位：`?show=cam01` … `?show=cam06`，加 `&season=summer&time=day&q=high`。`?show` 只定机位、视场角并跳过标题；要冻结时间、隐藏界面再加 `&shot=1`。
   机位的坐标、朝向和视场角在 `camera-manifest.json`，由 `node tools/cameras.mjs` 从 `app/src/site.js` 写出。
 - 基准预设 J01（阴天雨后）就是「夏 · 昼」：`?season=summer&time=day`。
 - 行走测量：`?tour=120x3&enter&view=first&q=high&season=summer&time=day`。

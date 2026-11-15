@@ -110,6 +110,7 @@ node tools/shots.js court@autumn-dusk@third
 - `?q=low|medium|high`：锁定画质；不指定时自动选择并可降级。
 - `?shot=1`：冻结时间、隐藏界面，用于截图。
 - `?fast=1`：加速自动行走测试；不能据此宣称正常速度手动验收通过。
+- `?devpose`：只在 `pnpm dev` 下生效。走动时把当前位置、朝向、视角、季节时辰和所在殿写回地址栏（替换，不增加历史），改代码整页刷新后回到原处；按 C 复制当前机位链接。发布包不含这段代码。
 
 真实 GPU 渲染工具见 `tools/gpu-render.sh`。运行 Hugging Face Jobs 需要自己的账号、权限与预算，可能产生费用；不是启动游戏的必要条件。
 

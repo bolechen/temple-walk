@@ -281,7 +281,8 @@ const scenarios = {
   } },
   // From behind him and through his eyes.
   views: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third");
+    // `devpose` is a dev-server aid (src/devpose.js): the published build must neither carry it nor touch the address.
+    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose");
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#viewBtn"); await t.page.waitForTimeout(600);
@@ -292,6 +293,7 @@ const scenarios = {
     // With his back to the court's east wall, the eye comes in close rather than passing through it.
     await t.page.evaluate(() => window.__pose(20.5, 30, -Math.PI / 2, -0.05)); await t.frames(3);
     p = await t.probe(); expect(p.camDist < 1.6, "the eye went through the court wall: " + p.camDist);
+    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose" && window.__devpose === undefined), "the published page should leave ?devpose alone");
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
