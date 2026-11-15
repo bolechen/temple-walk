@@ -5,7 +5,7 @@
  "how": "tools/gpu-render.sh on a Hugging Face Job: the real page in headless Chromium on an NVIDIA Tesla T4 (ANGLE/Vulkan). Not offline rendering; not the target device.",
  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
  "browser_flavour": "angle-vulkan+new-headless",
- "note": "The job does not carry the statue models (app/shared/models), which are indoors and off this route; their 404s are ignored there. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450, one walk up and back made by the page itself (diagnostic, not a person at the controls). extra-hall-platform.jpg is the named view hall; extra-tea-court.jpg is the named view teatable. CAM-01.jpg and CAM-02.jpg were taken again on 2026-11-15 at a7c7772 (the same tool, one T4 job, renderer as above), after the stair cheeks were rebuilt (#33) and the blocks that had read as walls beside the approach were gone; each carries its own commit and time. The other files are still those of the commit named at the top; taken again in the same job, CAM-03, CAM-04 and CAM-05 differed from them by no more than their JPEG noise and were left as they are; CAM-06 was left too, though the two young cedars beside the main hall are slimmer on the newer commit than in it.",
+ "note": "The job does not carry the statue models (app/shared/models), which are indoors and off this route; their 404s are ignored there. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450, one walk up and back made by the page itself (diagnostic, not a person at the controls). extra-hall-platform.jpg is the named view hall; extra-tea-court.jpg is the named view teatable. CAM-01.jpg, CAM-02.jpg and CAM-06.jpg were taken again on 2026-11-15 at a7c7772 (the same tool, one T4 job, renderer as above): the first two after the stair cheeks were rebuilt (#33) and the blocks that had read as walls beside the approach were gone, the last because the pair of young cedars before the main hall had since been restood (034015a). Each carries its own commit and time. The other files are still those of the commit named at the top; taken again in the same job, CAM-03, CAM-04 and CAM-05 differed from them by no more than their JPEG noise and were left as they are.",
  "files": [
   {
    "file": "CAM-01.jpg",
@@ -38,8 +38,10 @@
   },
   {
    "file": "CAM-06.jpg",
-   "bytes": 492117,
-   "sha256": "fd37ad2996211710d79b774eaf800967b14987725556c7118869ef2b141fe612"
+   "bytes": 494670,
+   "sha256": "f114e4cb187c30a245711dde43ba40c7fec46f3c37c3fa2bba27c292265395e9",
+   "commit": "a7c77725bd097e284f0bac25ec433f37d66a0db8",
+   "captured": "2026-11-15T10:18:10.974Z"
   },
   {
    "file": "console.txt",
