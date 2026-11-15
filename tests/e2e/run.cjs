@@ -154,12 +154,20 @@ const scenarios = {
   } },
   // In winter he leaves his prints in the snow of the court; indoors no snow lies on the floor and none falls,
   // even when the hour is changed while he is inside, and the prints by the door are still there when he comes out.
+  // Each step in the snow is heard as a crunch; on the swept path up the middle of the court, none.
   snow: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&season=winter&time=day&cam=6.5,19.5,0,0&view=third");
     expect((await t.page.evaluate(() => window.__trail())).on, "in winter the snow should be ready to take his prints");
+    // The place is heard (as after the visitor's first touch), so his steps in the snow are too.
+    await t.page.evaluate(() => window.__music(true)); await t.until(async () => (await t.page.evaluate(() => window.__steps())).state === "running", 30000, "the sound never started");
     // Off the swept axis, through the snow of the court, toward the door of the meditation hall.
     await t.page.evaluate(() => window.__walk([[6.5, 17], [6.5, 14.5]])); await t.until(async () => (await t.state()).target === null && (await t.state()).route === 0, 240000, "he never walked across the snow");
     const walked = await t.page.evaluate(() => window.__trail()); expect(walked.stamps >= 6 && walked.last, "five metres of snow should hold more prints than " + walked.stamps);
+    const heard = (await t.page.evaluate(() => window.__steps())).crunches; expect(heard >= 4, `five metres of snow crunched only ${heard} times`);
+    // A step is heard on the effects bus, listened to while it sounds (a frame drawn in software takes longer than a
+    // step, so it is played and heard within one call). That it crunches rather than thuds is steps.test.mjs's to say.
+    const step = await t.page.evaluate(() => { window.__steps(true); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
+    expect(step.rms > 0.002, "a step in the snow made no sound: " + JSON.stringify(step));
     // Standing where he stopped and looking down the way he came, the prints darken the snow.
     await t.page.evaluate(() => window.__view("first"));
     const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
@@ -174,6 +182,34 @@ const scenarios = {
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(2);
     p = await t.probe(); expect(p.snow === 1 && p.drift, `outdoors again the snow should lie and fall: snow ${p.snow}, falling ${p.drift}`);
     const still = await look(); expect(still > 0.6, `his prints were forgotten while he was in the hall: they darken the picture by ${still.toFixed(2)}`);
+    // Along the swept path up the middle of the court his steps make no crunch.
+    const before = (await t.page.evaluate(() => window.__steps())).crunches, stepped = (await t.page.evaluate(() => window.__trail())).stamps;
+    await t.page.evaluate(() => { window.__pose(0, 24, 0, 0); window.__walk([[0, 20]]); }); await t.until(async () => (await t.state()).target === null && (await t.state()).route === 0, 240000, "he never walked the swept path");
+    const after = (await t.page.evaluate(() => window.__steps())).crunches; expect(after === before, `the swept path crunched ${after - before} times`);
+    expect((await t.page.evaluate(() => window.__steps())).heard.stone >= 2, "on the swept path his steps should sound on stone");
+    expect((await t.page.evaluate(() => window.__trail())).stamps >= stepped + 4, "he took no steps along the swept path, so its silence says nothing");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // His steps sound as what they come down on: wet stone after summer rain and a splash in a puddle of the court (where
+  // the paving draws one), dry stone in autumn, the floor of a hall.
+  steps: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&season=summer&time=day&cam=4,15.5,3.14,0&view=third");
+    const heard = () => t.page.evaluate(() => window.__steps().heard);
+    const walk = async (pts, what) => { await t.page.evaluate((p) => window.__walk(p), pts); await t.until(async () => (await t.state()).target === null && (await t.state()).route === 0, 240000, what); };
+    await t.page.evaluate(() => window.__music(true)); await t.until(async () => (await t.page.evaluate(() => window.__steps())).state === "running", 30000, "the sound never started");
+    // Up the court at x = 4: wet stone to z 21, then water standing from z 21.5 (steps.js's puddleAt, the paving's own pattern).
+    await walk([[4, 23]], "he never crossed the wet court");
+    let h = await heard(); expect(h.wet >= 3 && h.puddle >= 1 && h.snow === 0 && h.stone === 0, "after summer rain the court should sound wet, with a splash in its puddle: " + JSON.stringify(h));
+    await t.page.evaluate(() => window.__mood("autumn", "day")); await t.frames(2);
+    await walk([[4, 17]], "he never crossed the dry court");
+    const h2 = await heard(); expect(h2.stone >= 3 && h2.wet === h.wet && h2.puddle === h.puddle, "in autumn the court should sound dry: " + JSON.stringify(h2));
+    // A step is heard on the effects bus as it sounds (played and listened to within one call).
+    const one = await t.page.evaluate(() => { window.__steps("stone"); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
+    expect(one.rms > 0.0008, "a step on stone made no sound: " + JSON.stringify(one));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the main hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
+    const s = await t.state(); await walk([[s.x, s.z - 3]], "he never walked in the hall");
+    const h3 = await heard(); expect(h3.stone >= h2.stone + 3 && h3.wet === h2.wet, "a hall's floor should sound as dry stone: " + JSON.stringify(h3));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.

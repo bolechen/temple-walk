@@ -11,8 +11,9 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState } from "./src/audio.js";
+import { strike, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
+import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
 import { createSettings, browserSettingsStore } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
@@ -437,8 +438,16 @@ function frame(now) {
   monk.group.position.set(drawn[0], stage ? drawn[1] : footY, drawn[2]); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
   monk.update(dt, stage && stage.speed != null ? stage.speed : still || aloft ? 0 : speedNow, aloft ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
-  // Where he steps outdoors in the snow, he leaves his prints (a room's floor keeps none, and the square stays outside).
-  for (const f of monk.steps.splice(0)) if (!inside && !passing) trail.stamp(f);
+  // Where he steps outdoors in the snow he leaves his prints (a room's floor keeps none, and the square stays outside),
+  // and every step is heard, as what it comes down on sounds: snow, dry stone, stone wet after rain, a puddle in the
+  // paving, a hall's floor. A little to the side of the foot that made it (his left is the listener's left, from
+  // behind him or from his own eyes), a little clearer on a stair.
+  for (const f of monk.steps.splice(0)) {
+    if (passing) continue;
+    if (!inside) trail.stamp(f);
+    const kind = underfoot({ x: f.x, z: f.z, y: f.y, floor: walker.floorAt(f.x, f.z), snow: inside ? 0 : mood.snow, wet: mood.wet });
+    footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet });
+  }
   if (!inside) trail.follow(pos.x, pos.z); trail.update(dt);
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
@@ -659,7 +668,7 @@ window.__trail = (show) => { if (show === false) trail.hide(); return trail.stat
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__pose = (x, z, y, p) => { interrupt(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
-window.__listen = listen; window.__strike = strike;
+window.__listen = listen; window.__strike = strike; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
 window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
 window.__bird = (go) => { if (go) bird(1); return ambienceState(); };   // a bird now, if asked, and how many have sung
 window.__well = (drip) => { if (drip) { well.ripple(); wellDrip(well.state().level); } return well.state(); };   // a drop now, if asked, and how the well stands

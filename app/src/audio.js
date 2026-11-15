@@ -4,6 +4,7 @@
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
 import { createPlayer, reverb } from "./instruments.js";
 import { createZoneKeeper, moodMusic, sealNote, hz } from "./score.js";
+import { stepSound, LEVEL } from "./steps.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null;
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
 // How loud the visitor wants it, 0..1 (the pause menu); remembered if nothing has sounded yet.
@@ -137,6 +138,24 @@ export function wellDrip(level = 1) {
   g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.11 * level, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
   o.connect(g); g.connect(bus.ambience.in); g.connect(niche); o.start(now); o.stop(now + 0.25);
 }
+// A shoe coming down (steps.js makes the sound of each kind: "stone", "wet", "puddle", "snow"). It never wakes the
+// audio by itself: until the visitor's first touch has let the place be heard, his steps are silent like everything
+// else. Each step a little to the side of the foot that made it, a little louder on a stair, and never twice the same.
+// In a hall the effects bus goes to the timber hall's reverb, so his steps there sound in the room.
+const heard = { stone: 0, wet: 0, puddle: 0, snow: 0 };
+let stepSeed = 1;
+export function footstep(kind = "snow", { speed = 2.1, side = 0, loud = 1, wet = 1 } = {}) {
+  if (!ctx || ctx.state !== "running" || !(kind in LEVEL)) return false;
+  const x = stepSound(kind, ctx.sampleRate, { seed: (stepSeed = (stepSeed * 1103515245 + 12345) >>> 0), speed, wet });
+  const b = ctx.createBuffer(1, x.length, ctx.sampleRate); b.getChannelData(0).set(x);
+  const s = ctx.createBufferSource(), g = ctx.createGain(), pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  s.buffer = b; s.playbackRate.value = 0.94 + 0.12 * ((stepSeed >>> 8) % 1000) / 1000;
+  g.gain.value = LEVEL[kind] * loud * (0.8 + 0.2 * Math.min(1, speed / 2.4));
+  s.connect(g); if (pan) { pan.pan.value = side * 0.12; g.connect(pan); pan.connect(bus.effects.in); } else g.connect(bus.effects.in);
+  s.start(ctx.currentTime + 0.005); heard[kind]++;
+  return true;
+}
+export const stepState = () => ({ crunches: heard.snow, heard: { ...heard }, state: ctx ? ctx.state : "off" });
 
 // Two culms knocked together by the wind: a hollow, wooden note that dies at once, and often a second, softer, as they
 // swing back. Only deep in the grove and only in a strong gust (`knockReady`). The Chan books tell of Xiangyan Zhixian,

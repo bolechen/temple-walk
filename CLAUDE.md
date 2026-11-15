@@ -72,6 +72,7 @@ pnpm run edges                      # ~30 s: does his whole body fit everywhere 
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~6 min)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
+node tools/steps.mjs                # his steps (steps.js): dry stone, after rain with puddles, snow, a hall's floor → tools/out/steps/*.mp3
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
 python3 tools/textures.py <dir of Poly Haven jpgs>   # repack the scanned surfaces into app/shared/textures/
 ```
@@ -200,6 +201,16 @@ on the audio clock; on a change of place it drops the notes not yet begun and fa
 theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xiao, a held fifth) through `createPlayer` on
 any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
 The music steps back inside `strike()` for the bell and drum. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
+His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
+shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
+paving (`puddleAt`, the paving shader's own puddle pattern ported to JS), and snow (a shower of tiny breaks following the
+push of the foot). All are worked out sample by sample, so `tools/steps.mjs` renders the same steps, and `LEVEL` sets
+them against each other: dry stone the quietest, snow the loudest. For every shoe `monk.steps` reports, `yard.js` asks
+`walker.floorAt` what floor it is (`room`, a building's `stone` or `wood`, the approach's `path`, the courts' `paving`)
+and `underfoot()` what that sounds like in this mood: a hall's floor and a roofed platform are dry, the swept axis path
+of the court is never snow, autumn has dried. `footstep()` in `audio.js` plays it on the effects bus (so in a hall it
+has the hall's reverb), never before the visitor's first touch has let the place be heard. `__steps(kind?)` reports
+how many of each have been heard, or plays one.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
 fireflies in the air; both are driven only by the mood. Nothing drifts indoors, and no snow lies on a room's floor:
@@ -307,7 +318,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__trail()`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
