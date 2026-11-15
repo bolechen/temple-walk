@@ -168,6 +168,13 @@ const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] }, ZOOM = { min: 0.
 // ---- Looking and walking ------------------------------------------------------
 const EYE = 1.3;   // the eye height of a child
 const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.get("show")] || site.start;
+// A place copied into an address by an older ?devpose was cut to centimetres, which beside a stair can fall just inside
+// the stop along its cheek, where the ground reads as the level below and he would stand sunk into the steps: such a
+// place steps out to the nearest free point a few centimetres off.
+if (Q.has("cam") && !Q.has("in") && walker.blocked(pose[0], pose[1])) out: for (let r = 0.005; r <= 0.06; r += 0.005) for (let k = 0; k < 16; k++) {
+  const x = pose[0] + r * Math.cos((k * Math.PI) / 8), z = pose[1] + r * Math.sin((k * Math.PI) / 8);
+  if (!walker.blocked(x, z)) { pose[0] = x; pose[1] = z; break out; }
+}
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
@@ -748,7 +755,8 @@ if (Q.has("tour")) tour = createTour(Q.get("tour"), {
 if (DEVPOSE) {
   const { createDevPose } = await import("./src/devpose.js");
   devpose = createDevPose({ where: location, history,
-    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null }) });
+    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null,
+      ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) });   // the written point stands where he stands
   addEventListener("keydown", (e) => {   // C: the address of this view, to the clipboard and the console
     if (e.key.toLowerCase() !== "c" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || ui.modal() || /** @type {Element} */ (e.target)?.tagName === "INPUT") return;
     const link = devpose.link(); console.info("[devpose]", link); navigator.clipboard?.writeText(link).catch(() => {});

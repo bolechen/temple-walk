@@ -68,3 +68,14 @@ test("the page loads it only on the dev server, so the published build carries n
   assert.match(yard, /if \(DEVPOSE\) \{\s*const \{ createDevPose \} = await import\("\.\/src\/devpose\.js"\)/, "the module must be imported only inside the dev branch");
   assert.ok(!/^import .*devpose/m.test(yard), "a static import would put it in the published build");
 });
+
+// Beside the stair of the Guanyin terrace he may stand at x 2.096 on the treads; the cheek's stop begins at 2.099. Cut to
+// two places that became 2.1, inside the stop, where the ground reads as the terrace below and he came back sunk into
+// the steps. The address keeps as many places as it takes for the point to stand where he stood.
+test("the place written down is one he can stand on, at the height he stood, however near an edge he was", () => {
+  const stair = { x: 2.0962, z: -63.3712, yaw: -0.582, pitch: -0.204 }, ok = (x, z) => x <= 2.099;   // the stop's edge, as the walker draws it
+  const cam = read(poseQuery("?devpose", { ...stair, ok })).cam.split(",").map(Number);
+  assert.ok(ok(cam[0], cam[1]), `written as ${cam[0]}, inside the stop`);
+  assert.ok(Math.abs(cam[0] - stair.x) < 0.001);
+  assert.equal(read(poseQuery("?devpose", court)).cam, "1.23,29,0.123,-0.05", "away from any edge two places are enough");
+});

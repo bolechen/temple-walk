@@ -244,11 +244,16 @@ export function buildSite(M) {
     stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
     walk.decks.push({ x0: 3.2, x1: 7.2, z0: A.zA1 - 0.4, z1: A.zA1 + 0.6, h: yA });   // the step between its floor and the landing
     put({ ...rest, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
-    // The pool where, they say, a poet once washed his ink-stone: black water in a stone rim, beside the second landing.
-    const px = A.xB1 + 2.2, pz = A.zMid;
-    stone.push(box(3.3, 3.2, 2.6, px, yB - 1.45, pz), box(0.5, 1.5, 0.3, px + 2.1, yB + 0.75, pz - 0.6), box(1.6, 3.2, 1.0, px + 2.1, yB - 1.6, pz - 0.6));   // a tank of dressed stone standing out of the slope
-    const ink = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 2.0).rotateX(-Math.PI / 2).translate(px, yB + 0.165, pz), new THREE.MeshStandardMaterial({ color: 0x050607, roughness: 0.04, metalness: 0.3, envMapIntensity: 1.5 }));
-    const tag = makePlaque("洗砚池", { vertical: true, style: "wood" }); tag.scale.setScalar(0.62); tag.position.set(px + 2.1, yB + 1.0, pz - 0.42); tag.rotation.y = -Math.PI / 2 - 0.5;
+    // The pool where Su Shi, climbing to the temple, washed his ink-stone (the county gazetteer: outside the gate, its
+    // water clear, the ripples glinting on a still moonlit night as though there were ink in them), beside the second
+    // landing: clear water in a tank of dressed stone, and behind it, facing the stair, a small stele with its name cut
+    // and inked in the stone.
+    const px = A.xB1 + 2.2, pz = A.zMid, sx = px + 1.95;
+    stone.push(box(3.3, 3.0, 2.6, px, yB - 1.55, pz), box(1.1, 3.2, 0.9, sx, yB - 1.6, pz));   // the tank standing out of the slope, and the stele's footing behind it
+    stone.push(box(3.3, 0.2, 0.3, px, yB + 0.05, pz + 1.15), box(3.3, 0.2, 0.3, px, yB + 0.05, pz - 1.15), box(0.3, 0.2, 2.0, px + 1.5, yB + 0.05, pz), box(0.3, 0.2, 2.0, px - 1.5, yB + 0.05, pz));   // its rim, the water standing a hand below it
+    stone.push(box(0.5, 0.3, 0.9, sx, yB + 0.15, pz), box(0.24, 1.42, 0.62, sx, yB + 1.01, pz), box(0.32, 0.1, 0.74, sx, yB + 1.77, pz));   // plinth, slab and a thin cap
+    const ink = mesh(new THREE.PlaneGeometry(2.7, 2.0, 8, 6).rotateX(-Math.PI / 2).translate(px, yB + 0.02, pz), M.inkpool, { ao: () => 0.7 }); ink.name = "inkpool"; ink.userData.keep = true;
+    const tag = makePlaque("洗砚池", { vertical: true, style: "stone" }); tag.name = "inkpool-stele"; tag.scale.setScalar(0.55); tag.position.set(sx - 0.14, yB + 1.0, pz); tag.rotation.y = -Math.PI / 2;
     root.add(ink, tag);
   }
   root.add(mesh(merge(stone), M.stone), mesh(merge(flights), M.steps));

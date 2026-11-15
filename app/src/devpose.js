@@ -4,12 +4,16 @@
 // hour and the hall he is in), so a reload puts him back where he stood. The address is replaced, not pushed: the
 // browser's history does not fill with steps. C copies the address, to keep a view or hand it to someone.
 
-// The address for `pose` = { x, z, yaw, pitch, view?, season?, time?, room? }, keeping every other parameter of `search`.
+// The address for `pose` = { x, z, yaw, pitch, view?, season?, time?, room?, ok? }, keeping every other parameter of `search`.
 // A named view (`show`) gives way to the exact place; `in` is the hall he is inside, or nothing when he is out.
+// `ok(x, z)` says whether a point stands where he stands (free, at his height): his place is written to two decimals,
+// or to as many more as it takes for that to stay true, since a centimetre's rounding at the edge of a stair can put
+// him inside the stop beside it, where the ground reads as the level below and he comes back sunk into the steps.
 export function poseQuery(search, pose) {
   const q = new URLSearchParams(search), yaw = Math.atan2(Math.sin(pose.yaw), Math.cos(pose.yaw));   // a turn of the head is kept within one round
   q.delete("show");
-  q.set("cam", [pose.x, pose.z, yaw, pose.pitch].map((v, i) => +v.toFixed(i < 2 ? 2 : 3)).join(","));
+  let n = 2; while (n < 6 && pose.ok && !pose.ok(+pose.x.toFixed(n), +pose.z.toFixed(n))) n++;
+  q.set("cam", [pose.x, pose.z, yaw, pose.pitch].map((v, i) => +v.toFixed(i < 2 ? n : 3)).join(","));
   for (const k of ["view", "season", "time"]) if (pose[k]) q.set(k, pose[k]);
   if (pose.room) q.set("in", pose.room); else q.delete("in");
   return "?" + q.toString().replace(/%2C/g, ",").replace(/=(&|$)/g, "$1");   // commas as written; a bare flag stays bare

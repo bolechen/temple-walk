@@ -667,6 +667,11 @@ const scenarios = {
     expect(Number.isFinite(bodyDelta) && bodyDelta < 0.08, `the torso still pops a whole step: ${bodyDelta} metres/frame`);
     fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "stairs-grounding.json"), JSON.stringify(samples, null, 2));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // An address from an older ?devpose, cut to centimetres at the edge of the Guanyin terrace's stair: it falls just inside
+    // the stop by the cheek. He must come back standing on the treads, not sunk to the terrace below them.
+    const edge = await open(b, base, "q=low&cam=2.1,-63.37,-0.582,-0.204&view=third&season=autumn&time=night", { viewport: { width: 640, height: 360 } });
+    const at = await edge.state(); expect(at.h > 2.8 && at.footY > 2.8, "he came back sunk into the stair: " + JSON.stringify({ x: at.x, z: at.z, h: at.h, footY: at.footY }));
+    expect(edge.errors.length === 0, edge.errors.join("\n")); await edge.close();
   } },
   // Click-drag (including trackpad presses) and locked movement must agree on look direction; the raised photo camera does not turn.
   camera: { tier: 2, async run(b, base) {
