@@ -1,7 +1,7 @@
 // The novice stands on a skeleton: named bones in a hierarchy, each part of him bound to one, posed by `update`.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/v/build/three.module.js";
+import * as THREE from "../../app/vendor/three/build/three.module.js";
 const { createMonk } = await import("../../app/src/monk.js");
 
 test("he has the bones a figure needs, in a hierarchy under the root", () => {

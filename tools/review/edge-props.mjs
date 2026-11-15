@@ -1,5 +1,5 @@
 import '../../tests/unit/dom-stub.mjs';
-import * as THREE from '../../app/v/build/three.module.js';
+import * as THREE from '../../app/vendor/three/build/three.module.js';
 import {buildSite,createWalker} from '../../app/src/site.js';
 import {createMonk} from '../../app/src/monk.js';
 import fs from 'node:fs';

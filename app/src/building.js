@@ -1,7 +1,7 @@
 // A Song-style timber building from a handful of numbers: platform, columns, beams, bracket sets,
 // infill, and a curved tiled roof. Built in local space: centred on the origin, front facing +z.
 // Halls, gate houses, towers and covered walks are all this function with different parameters.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 import { box, smooth, plain, merge, mesh, tube, stairGeo, STAIR, footAt } from "./geo.js";
 import { makePlaque } from "./plaque.js";
 

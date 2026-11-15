@@ -2,7 +2,7 @@
 // than its walls can hold.
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/v/build/three.module.js";
+import * as THREE from "../../app/vendor/three/build/three.module.js";
 const { WORKS, HANG } = await import("../../app/src/works.js");
 const { buildSite } = await import("../../app/src/site.js");
 const { KINDS } = await import("../../app/src/interior.js");
@@ -17,7 +17,7 @@ test("every work that hangs is described, credited to the museum that publishes 
     assert.ok(w.note.length >= 100 && w.note.length <= 200, `${slug}: the note is ${w.note.length} characters`);
     assert.ok(/ColBase \(https:\/\/colbase\.nich\.go\.jp\/collection_items\//.test(w.credit) || /Metropolitan Museum of Art.*Open Access/.test(w.credit), `${slug}: the source line does not name an open collection: ${w.credit}`);
     assert.ok(/^https:\/\/(colbase\.nich\.go\.jp|www\.metmuseum\.org)\//.test(w.url), `${slug}: ${w.url}`);
-    const file = new URL(`g/${slug}.webp`, app); assert.ok(fs.existsSync(file) && fs.statSync(file).size > 8000, `${slug}: no picture in app/g`);
+    const file = new URL(`levels/t00/gallery/${slug}.webp`, app); assert.ok(fs.existsSync(file) && fs.statSync(file).size > 8000, `${slug}: no picture in app/levels/t00/gallery`);
     assert.ok(fs.statSync(file).size < 300e3, `${slug}: the picture is heavier than 300 KB`); assert.ok(w.w > 300 && w.h > 300 && Math.max(w.w, w.h) <= 1280);
   }
   for (const slug of Object.keys(WORKS)) assert.ok(hung.includes(slug), `${slug} is described but hangs nowhere`);

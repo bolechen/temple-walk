@@ -3,7 +3,7 @@
 
     python3 tools/fonts.py <dir holding the original TTFs>     (needs fonttools and brotli)
 
-Reads every character in app/ (the page and its scripts) and writes app/f/:
+Reads every character in app/ (the page and its scripts) and writes app/shared/fonts/:
     brush.woff2   Ma Shan Zheng: name boards, titles, the line under a photograph
     serif.woff2   Noto Serif SC, regular: everything that is read
     seal.woff2    Noto Serif SC, black: what is cut into a seal
@@ -13,7 +13,7 @@ Reads every character in app/ (the page and its scripts) and writes app/f/:
     xing.woff2    Zhi Mang Xing, a running hand: what is written by hand on paper (the verse under a photograph,
                   the slip drawn in the library, the title on a leaf in a hall)
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
-All six are under the SIL Open Font License 1.1 (app/f/OFL.txt): the brush, serif, seal, running hand and board hand from
+All six are under the SIL Open Font License 1.1 (app/shared/fonts/OFL.txt): the brush, serif, seal, running hand and board hand from
 github.com/google/fonts, the kai from github.com/lxgw/LxgwWenKai (cut down for the web only, as its licence asks).
 The running hand has no traditional forms; the name boards, which need them, are written in the kai.
 Run it again whenever words are added.
@@ -48,7 +48,7 @@ def cut(font, text, out):
     print(f"{os.path.basename(out):12s} {os.path.getsize(out) // 1024:4d} KB")
 
 def main():
-    src, out = sys.argv[1], f"{ROOT}/app/f"; os.makedirs(out, exist_ok=True); text = used()
+    src, out = sys.argv[1], f"{ROOT}/app/shared/fonts"; os.makedirs(out, exist_ok=True); text = used()
     few = used(skip=("works.js",))   # the encyclopedia notes are set in the kai and the serif only
     cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), few, f"{out}/brush.woff2")
     cut(TTFont(f"{src}/lxgwwenkai_LXGWWenKai-Regular.ttf"), text, f"{out}/kai.woff2")

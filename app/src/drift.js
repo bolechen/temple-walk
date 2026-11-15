@@ -1,6 +1,6 @@
 // What falls through the air: petals in spring, leaves in autumn, snow in winter, and on summer nights
 // fireflies that rise instead. A cloud of points that follows the visitor, wrapping round as they walk.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 
 // col: three hues a kind comes in; part: how many of the cloud are shown; near: none closer to the eye than this.
 const KINDS = {

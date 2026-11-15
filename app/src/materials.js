@@ -1,7 +1,7 @@
 // Lit materials. Each has a colour and a pattern of its own, worked out in the shader from where the surface is in
 // the world (courses of stone, rows of tile, damp at the foot of a wall), and most take their fine grain from a
 // scanned surface (textures.js): the scan is divided by its own mean colour, so it supplies detail and not hue.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 import { NOISE, WOOD, BUMP, U } from "./glsl.js";
 import { TRI, declare, bind } from "./textures.js";
 

@@ -1,9 +1,9 @@
 // The picture after the render: a little bloom and a clear landscape finish.
-import * as THREE from "../v/build/three.module.js";
-import { EffectComposer } from "../v/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "../v/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "../v/jsm/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "../v/jsm/postprocessing/ShaderPass.js";
+import * as THREE from "../vendor/three/build/three.module.js";
+import { EffectComposer } from "../vendor/three/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "../vendor/three/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "../vendor/three/jsm/postprocessing/UnrealBloomPass.js";
+import { ShaderPass } from "../vendor/three/jsm/postprocessing/ShaderPass.js";
 import { NOISE } from "./glsl.js";
 
 export function createPost(renderer, scene, camera, quality) {

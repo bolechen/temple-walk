@@ -11,7 +11,7 @@ Tokyo National Museum (TB-1446, Important Cultural Property), and the museum pub
     file TB-1446_E0106954.jpg from the page's 作品画像一式 download
 
 This reads that picture, keeps the ink and throws away the paper, cuts it into its four characters and writes
-app/c/shijia.webp: the characters one under another, each centred in a square, white where the brush went. The board
+app/levels/t00/boards/shijia.webp: the characters one under another, each centred in a square, white where the brush went. The board
 painter (app/src/plaque.js) lays gold through it. The source picture itself is not kept in the repository.
 """
 import os, sys
@@ -40,7 +40,7 @@ def rows(m, n):
     return list(zip(cuts[:-1], cuts[1:]))
 
 def main():
-    src = sys.argv[1]; out = f"{ROOT}/app/c"; os.makedirs(out, exist_ok=True)
+    src = sys.argv[1]; out = f"{ROOT}/app/levels/t00/boards"; os.makedirs(out, exist_ok=True)
     m = ink(f"{src}/TB-1446_E0106954.jpg")
     h, w = m.shape; m[: int(h * 0.012)] = 0; m[-int(h * 0.012):] = 0; m[:, : int(w * 0.03)] = 0; m[:, -int(w * 0.03):] = 0   # the edges of the sheet are not writing
     cuts = []

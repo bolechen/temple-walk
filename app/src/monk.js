@@ -2,9 +2,9 @@
 // of persimmon that is a little too big for him, with a string of beads round his neck.
 // He walks where you send him, and can put his palms together.
 // Modelled by hand after the feeling of small carved novices; see docs/HANDOFF.md for the reference.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 import { STAIR } from "./geo.js";
-import { mergeGeometries } from "../v/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries } from "../vendor/three/jsm/utils/BufferGeometryUtils.js";
 
 const V2 = (pts) => pts.map(([r, y]) => new THREE.Vector2(r, y));
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };

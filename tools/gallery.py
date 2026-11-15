@@ -10,7 +10,7 @@ the source line it asks for is kept with each work) or the Metropolitan Museum's
 The directory holds one folder per work with `source.jpg` and `meta.json` (title, maker, period, holder, the
 encyclopedia note, the credit line, the page it came from) and an `index.json` of them all.
 
-Writes app/g/<slug>.webp (the longest side 1280) and app/src/works.js (what the halls and the reading card use).
+Writes app/levels/t00/gallery/<slug>.webp (the longest side 1280) and app/src/works.js (what the halls and the reading card use).
 Which work hangs in which hall, and in what order along the walls, is the HANG table below.
 """
 import json, os, sys
@@ -31,7 +31,7 @@ HANG = {
 CROP = {"met-yaoshi-fohui": (0.015, 0.05, 0.985, 0.672)}
 
 def main():
-    src = sys.argv[1]; out = f"{ROOT}/app/g"; os.makedirs(out, exist_ok=True)
+    src = sys.argv[1]; out = f"{ROOT}/app/levels/t00/gallery"; os.makedirs(out, exist_ok=True)
     works = {m["slug"]: m for m in json.load(open(f"{src}/index.json", encoding="utf-8"))}
     data = {}
     for hall, slugs in HANG.items():
@@ -51,7 +51,7 @@ def main():
           "export const HANG = " + json.dumps(HANG, ensure_ascii=False) + ";\n"
           "export const WORKS = " + json.dumps(data, ensure_ascii=False, indent=1) + ";\n")
     open(f"{ROOT}/app/src/works.js", "w", encoding="utf-8").write(js)
-    print(sum(os.path.getsize(f"{out}/{f}") for f in os.listdir(out)) // 1024, "KB in app/g")
+    print(sum(os.path.getsize(f"{out}/{f}") for f in os.listdir(out)) // 1024, "KB in app/levels/t00/gallery")
 
 if __name__ == "__main__":
     main()

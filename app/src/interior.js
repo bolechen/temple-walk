@@ -5,10 +5,12 @@
 //
 // The rooms are built far below the courts, side by side (the paving above hides them), and the walker is moved
 // into one at its hall's door.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 import { paintLeaf } from "./leaves.js";
 import { WORKS, HANG } from "./works.js";
-import { GLTFLoader } from "../v/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "../vendor/three/jsm/loaders/GLTFLoader.js";
+import { KTX2Loader } from "../vendor/three/jsm/loaders/KTX2Loader.js";
+import { MeshoptDecoder } from "../vendor/three/jsm/libs/meshopt_decoder.module.js";
 import { box, merge, mesh, footAt } from "./geo.js";
 
 const FLOOR = -60;
@@ -66,7 +68,7 @@ function mount(slug) {
     x.strokeStyle = "rgba(60,50,40,.3)"; x.lineWidth = 3; x.strokeRect(22, 22, 724, 1082);
     tex.needsUpdate = true;
   };
-  im.src = new URL(`../g/${slug}.webp`, import.meta.url).href;
+  im.src = new URL(`../levels/t00/gallery/${slug}.webp`, import.meta.url).href;
   return tex;
 }
 
@@ -194,15 +196,18 @@ function buildRoom(M, hall, ox, figures) {
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.
-export function buildInteriors(M, halls) {
+export function buildInteriors(M, halls, renderer) {
   const group = new THREE.Group(), rooms = {}, spots = {}, places = {}, state = { figures: "loading" };
   // The figures are fetched once and stood in every hall that has an altar.
   const figures = (async () => {
     if (typeof fetch === "undefined" || typeof document === "undefined") return null;
     try {
-      const loader = new GLTFLoader(), base = new URL("../m/", import.meta.url).href;
-      const get = async (name) => { const { glb } = await (await fetch(base + name)).json(); const bytes = Uint8Array.fromBase64 ? Uint8Array.fromBase64(glb) : Uint8Array.from(atob(glb), (c) => c.charCodeAt(0)); return (await loader.parseAsync(bytes.buffer, "")).scene; };
-      const [buddha, ped] = await Promise.all([get("buddha.json"), get("pedestal.json")]);
+      // The statue and its pedestal are not kept in git: `pnpm install` fetches them as they are published (tools/setup.mjs),
+      // packed with meshopt and with Basis textures, which are opened here by the decoders that come with three.js.
+      const base = new URL("../levels/t00/models/", import.meta.url).href, loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+      if (renderer) loader.setKTX2Loader(new KTX2Loader().setTranscoderPath(new URL("../vendor/three/jsm/libs/basis/", import.meta.url).href).detectSupport(renderer));
+      const get = async (name) => (await loader.loadAsync(base + name)).scene;
+      const [buddha, ped] = await Promise.all([get("buddha.glb"), get("pedestal.glb")]);
       buddha.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.5; o.material.envMapIntensity = 0; } });
       ped.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.95; } });
       const fit = (o, h) => { const b = new THREE.Box3().setFromObject(o), w = new THREE.Group(); o.position.set(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2); w.add(o); w.scale.setScalar(h / (b.max.y - b.min.y)); return w; };

@@ -48,7 +48,13 @@
 
 ## 运行
 
-应用使用本地随仓库提供的 **Three.js r186**，无构建步骤；运行应用本身不需要安装 npm 依赖。需要支持 WebGL2 的现代浏览器及一个静态服务器。
+应用没有构建步骤，页面是原生 ES 模块。**Three.js r186 和殿内佛像模型不放在 Git 里**，由 pnpm 取回：需要 Node.js 22+ 和 pnpm 10，先在仓库根目录执行一次
+
+```sh
+pnpm install   # 装依赖，并运行 tools/setup.mjs：把 three.js 用到的文件拷进 app/vendor/three/，把佛像与莲座取到 app/levels/t00/models/
+```
+
+之后只需要支持 WebGL2 的现代浏览器及一个静态服务器。
 
 从仓库根目录运行：
 
@@ -76,21 +82,20 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory app
 
 ## 测试与截图
 
-测试与截图工具需要 **Node.js 22+、Playwright 和 Chromium**。从仓库根目录安装测试工具：
+测试与截图工具需要 **Node.js 22+、pnpm、Playwright 和 Chromium**。Playwright 已是开发依赖，`pnpm install` 之后只需再取一次浏览器：
 
 ```sh
-npm install --no-save playwright@1.63.0
-npx playwright install chromium
-# Linux CI 如缺系统库，可使用：npx playwright install --with-deps chromium
+pnpm exec playwright install chromium
+# Linux CI 如缺系统库，可使用：pnpm exec playwright install --with-deps chromium
 ```
 
 ```sh
-npm run check        # 脚本解析及着色器片段检查
-npm test             # 单元测试：平面、建筑、路线、季节和朱印逻辑
-npm run e2e:quick    # 启动档：页面、渲染、字体及基本控件
-npm run e2e:smoke    # 更广的场景与控件检查
-npm run e2e          # 完整端到端场景
-npm run verify       # check + 单元测试 + smoke
+pnpm run check       # 脚本解析及着色器片段检查
+pnpm test            # 单元测试：平面、建筑、路线、季节和朱印逻辑
+pnpm run e2e:quick    # 启动档：页面、渲染、字体及基本控件
+pnpm run e2e:smoke    # 更广的场景与控件检查
+pnpm run e2e         # 完整端到端场景
+pnpm run verify      # check + 单元测试 + smoke
 node tools/shots.js court@autumn-dusk@third
 ```
 
@@ -151,10 +156,10 @@ node tools/shots.js court@autumn-dusk@third
 许可须按资产分别处理：
 
 - **项目代码**：根目录尚无项目 LICENSE，许可待维护者明确；不要因仓库 public 就推定已有统一开源许可。
-- **佛像模型**：`app/m/` 约 11 MB，源自如是我闻 `/zen` 场景；当前未见完整再分发授权依据。需确认许可或替换，不能将原站可下载视作授权。
+- **佛像模型**：不在本仓库里。`pnpm install` 时由 `tools/setup.mjs` 从如是我闻 `/zen` 场景的 CDN 取回原始文件（约 3.9 MB，带校验和）到 `app/levels/t00/models/`；该目录被 Git 忽略。模型仍随 GitHub Pages 发布，授权依据仍需所有者确认或替换，不能将原站可下载视作授权。旧提交的 Git 历史里仍有转换过的副本。
 - **扫描贴图**：来源与生成方式见 [tools/textures.py](tools/textures.py)，当前记录为 Poly Haven CC0。
-- **字体**：本地子集、来源及相关许可见 [tools/fonts.py](tools/fonts.py) 和 [app/f/OFL.txt](app/f/OFL.txt)。
-- **Three.js 与扩展**：位于 `app/v/`，需保留并核对各自许可与版权声明。
+- **字体**：本地子集、来源及相关许可见 [tools/fonts.py](tools/fonts.py) 和 [app/shared/fonts/OFL.txt](app/shared/fonts/OFL.txt)。
+- **Three.js 与扩展**：由 pnpm 管理（`three@0.186.0`，MIT），安装时拷到 `app/vendor/three/`（Git 忽略），其 LICENSE 一并拷入。
 - **参考图片与其他素材**：保留来源、作者、版本和用途记录；不能笼统由项目代码许可覆盖。
 
 删除当前文件不等于移除 Git 历史中的内容。若发现真实凭据，先撤销或轮换，再按影响范围处理历史；如发现安全漏洞，请避免在公开 Issue 中贴出凭据、个人数据或真实敏感文件内容。
@@ -171,7 +176,10 @@ node tools/shots.js court@autumn-dusk@third
 | `app/src/sky.js`、`mood.js`、`props.js`、`post.js`、`drift.js` | 天光、季节时辰、器物、后期和飘落物 |
 | `app/src/monk.js`、`journey.js`、`game.js`、`hints.js` | 沙弥、朱印、交互与情境提示 |
 | `app/src/card.js`、`goshuin.js`、`plaque.js`、`audio.js` | 分享卡片、印章、匾额与合成声音 |
-| `app/v/`、`app/t/`、`app/f/`、`app/m/` | 图形库、贴图、字体与模型 |
+| `app/levels/t00/` | 序章这一关自己的资源：`textures/` 扫描贴图、`gallery/` 殿内真迹图片、`boards/` 匾额取字、`models/` 佛像（不入库，安装时取回） |
+| `app/shared/fonts/` | 各关共用的字体子集 |
+| `app/vendor/three/` | three.js（不入库，由 pnpm 安装后拷入） |
+| `package.json`、`pnpm-lock.yaml`、`tools/setup.mjs` | 依赖与安装后的准备步骤 |
 | `tools/`、`tests/` | 截图、GPU 渲染及测试工具 |
 | `refs/`、`docs/` | 视觉参考、研究与开发记录；参考图不是测绘或验收证明 |
 

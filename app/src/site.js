@@ -4,7 +4,7 @@
 // and drum; a double-eaved hall across a wet court, a meditation hall and a tea house facing each other;
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt } from "./geo.js";
 import { buildHall } from "./building.js";
 import { makePlaque } from "./plaque.js";

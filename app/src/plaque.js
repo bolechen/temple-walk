@@ -4,7 +4,7 @@
 // carved band that flares at the head and ends in a scalloped skirt. Under the lower eaves hang long boards read from
 // the right: the great ones gilt all over with black characters, a lead-in seal at the upper right and the writer's
 // seals at the left; the lesser ones gold on black, on dark blue, or on plain red-brown wood.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 
 // A heavy brush regular hand for what is written large (Yuji Boku), with the kai behind it.
 const FONT = '"Yunjing Bang", "Yunjing Kai", "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", serif', SEAL = '"Yunjing Seal", "Yunjing Serif", "Songti SC", serif';
@@ -13,7 +13,7 @@ const OLD = { 双: "雙", 径: "徑", 归: "歸", 万: "萬", 续: "續", 云: "
 // Hands cut from the originals (tools/boards.py): one picture each, the characters one under another, white where the
 // brush went. `shijia` is 釋迦寶殿 as Wuzhun Shifan, abbot of Jingshan, wrote it in the 1240s (Tokyo National Museum
 // TB-1446, published for free reuse through ColBase); the real hall's board is carved from the same sheet.
-const HANDS = { shijia: "../c/shijia.webp" };
+const HANDS = { shijia: "../levels/t00/boards/shijia.webp" };
 const GROUND = {
   gold: { top: "#a3853f", foot: "#86692f", ink: "#15100b", rim: "#33200f", fillet: "#5a3a1e" },
   ink:  { top: "#191613", foot: "#221d19", ink: "#b3964f", rim: "#7c6836", fillet: "#6f5a2a" },

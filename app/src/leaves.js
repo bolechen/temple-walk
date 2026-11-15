@@ -1,7 +1,7 @@
 // The leaves that hang in the halls' frames: small ink paintings, each made of a few brush strokes on paper, with
 // its title down the right side and a seal at the foot. They are drawn here, not fetched, so they are as sharp as
 // the frame is large and nothing has to be licensed. `paintLeaf(item)` returns the texture for one frame.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 
 const XING = '"Yunjing Xing", "Yunjing Kai", "STKaiti", "KaiTi", serif', SEAL = '"Yunjing Seal", "Yunjing Serif", "Songti SC", serif';
 const W = 768, H = 1152, CX = 330, CY = 520;   // the picture sits a little left of centre: the title has the right margin

@@ -1,5 +1,5 @@
 // Wet flagstones with a real mirror in the puddles.
-import * as THREE from "../v/build/three.module.js";
+import * as THREE from "../vendor/three/build/three.module.js";
 import { NOISE, fogMix, U } from "./glsl.js";
 import { FOG, SUN_DIR } from "./sky.js";
 import { declare, bind } from "./textures.js";

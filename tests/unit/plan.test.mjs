@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/v/build/three.module.js";
+import * as THREE from "../../app/vendor/three/build/three.module.js";
 const { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } = await import("../../app/src/site.js");
 
 // Materials are only handed on to meshes; any object will do, but they must be distinct and cloneable.

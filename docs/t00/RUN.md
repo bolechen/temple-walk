@@ -1,18 +1,19 @@
 # T00 云径禅寺 · 启动说明
 
-《山门之外》序章。浏览器里的 three.js r186 场景，没有构建步骤，没有运行时依赖。
+《山门之外》序章。浏览器里的 three.js r186 场景，没有构建步骤。three.js 和佛像模型不在 Git 里，由 `pnpm install` 取回。
 
 ## 启动
 
 ```sh
 git clone <本仓库> && cd temple-walk
-npm run serve            # 等于 cd app && python3 -m http.server 8000
+pnpm install             # 依赖；并把 three.js 拷进 app/vendor/three/、把佛像取到 app/levels/t00/models/
+pnpm run serve           # 等于 python3 -m http.server 8000 --bind 127.0.0.1 --directory app
 ```
 
 打开 <http://localhost:8000/>，点「入山」。任何静态文件服务器都可以，直接把 `app/` 当站点根目录。
 
-需要的东西：一个支持 WebGL2 的浏览器；本地只需要 Python 3（或任何静态服务器）。
-没有锁文件，因为没有依赖：three.js 在 `app/v/`，字体在 `app/f/`，贴图在 `app/t/`，佛像模型在 `app/m/`。
+需要的东西：一个支持 WebGL2 的浏览器；本地需要 Node.js 22+、pnpm 10（只为安装那一步）和 Python 3（或任何静态服务器）。
+没有锁文件，因为没有依赖：three.js 在 `app/vendor/three/`，字体在 `app/shared/fonts/`，贴图在 `app/levels/t00/textures/`，佛像模型在 `app/levels/t00/models/`。
 测试和出图工具另外需要 Node 22+ 和 Playwright（Chromium）。
 
 ## 操作
@@ -47,10 +48,10 @@ npm run serve            # 等于 cd app && python3 -m http.server 8000
 ## 检查
 
 ```sh
-npm run check     # 每个脚本能解析，着色器片段不以注释结尾，字体覆盖所有用到的字
-npm test          # 单元测试：总平面、行走、建筑生成、季节
-npm run e2e:quick # 真实页面启动并出图
-npm run e2e       # 全部场景，约 20 分钟
+pnpm run check    # 每个脚本能解析，着色器片段不以注释结尾，字体覆盖所有用到的字
+pnpm test         # 单元测试：总平面、行走、建筑生成、季节
+pnpm run e2e:quick # 真实页面启动并出图
+pnpm run e2e      # 全部场景，约 20 分钟
 ```
 
 ## 已知限制

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import * as THREE from '../../app/v/build/three.module.js';
+import * as THREE from '../../app/vendor/three/build/three.module.js';
 
 // Exercise the actual event registrations without constructing/rendering the temple.
 function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: false }) {

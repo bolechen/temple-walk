@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: ["app/**", "tests/**", "tools/**", ".github/workflows/pages.yml"]
+    paths: ["app/**", "tests/**", "tools/**", "package.json", "pnpm-lock.yaml", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -17,56 +17,87 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Nothing is published that does not parse, pass its unit tests, and come up in a real browser.
+  # Nothing is published that does not parse, pass its unit tests, and come up in a real browser. That is all that
+  # stands between a push and the site: the slower scenarios (stairs, the low drop, the photograph) run beside this
+  # in e2e.yml and do not hold the publication up. A push that touches nothing the site is made of (documents,
+  # delivery papers) is checked in half a minute and publishes nothing, because there is nothing new to publish.
   verify:
     permissions:
       contents: read
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    outputs:
+      site: ${{ steps.changes.outputs.site }}
     steps:
       - uses: actions/checkout@v4
+      - name: Did this push touch the site
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          site=true
+          if [ "${{ github.event_name }}" = "push" ] && [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then
+            if files=$(gh api "repos/${{ github.repository }}/compare/$BEFORE...${{ github.sha }}" --jq '.files[].filename' 2>/dev/null) && [ -n "$files" ] && [ "$(echo "$files" | wc -l)" -lt 300 ]; then
+              echo "$files" | grep -qE '^(app/|tests/e2e/|package\.json$|pnpm-lock\.yaml$|tools/setup\.mjs$|\.github/workflows/pages\.yml$)' || site=false
+            fi
+          fi
+          echo "site=$site" >> "$GITHUB_OUTPUT"; echo "site changed: $site"
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
+      - name: Remember the statues between runs
+        uses: actions/cache@v4
+        with:
+          path: app/levels/t00/models
+          key: models-${{ hashFiles('tools/setup.mjs') }}
+      - name: Install, copy three.js into the page, fetch the statues
+        run: pnpm install --frozen-lockfile
       - name: Every script parses
-        run: npm run check
+        run: pnpm run check
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
-        run: npm test
+        run: pnpm test
       - name: Remember the browser between runs
+        if: steps.changes.outputs.site == 'true'
         id: pw
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
-        run: npm install --no-save playwright@1.63.0 && npx playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+        if: steps.changes.outputs.site == 'true'
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
       - name: End to end, startup and movement
-        run: node tests/e2e/run.cjs boot stairs drop photo-ui
+        if: steps.changes.outputs.site == 'true'
+        run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
-        if: always()
+        if: always() && steps.changes.outputs.site == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: e2e-quick-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
-
-  deploy:
-    if: github.event_name != 'pull_request'
-    needs: verify
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      # The site is the app folder as it is: no build step.
-      - uses: actions/upload-pages-artifact@v3
+      # The site is the app folder as it stands after the install: no build step.
+      - name: Hand the site over for publication
+        if: github.event_name != 'pull_request' && steps.changes.outputs.site == 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: app
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
+
+  deploy:
+    if: github.event_name != 'pull_request' && needs.verify.outputs.site == 'true'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
         with:

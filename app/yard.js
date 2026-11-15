@@ -1,6 +1,6 @@
 // The temple grounds: assembles the modules in src/, walks the visitor through them,
 // and hands over to the hall interior at the main hall's door.
-import * as THREE from "./v/build/three.module.js";
+import * as THREE from "./vendor/three/build/three.module.js";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
@@ -64,7 +64,7 @@ part("site", () => scene.add(site.root));
 const walker = createWalker(site);
 await loading.step("山门");
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
-const rooms = part("interior", () => { const h = buildInteriors(M, site.halls); scene.add(h.group); return h; });
+const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 site.places.incense = rooms.places.incense;
 await loading.step("殿堂");
 let hallIn = null;   // the room he is in, when he is in one

@@ -31,7 +31,7 @@ BUCKET="$NS/temple-walk-render"
 RUN="$(date -u +%Y%m%d-%H%M%S)"
 hf buckets create "$BUCKET" --private --exist-ok >/dev/null
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
-cp -R app "$STAGE/app"; rm -rf "$STAGE/app/m" "$STAGE/app/plate.webp"; cp tools/gpu/job.cjs "$STAGE/job.cjs"
+cp -R app "$STAGE/app"; rm -rf "$STAGE/app/levels/t00/models" "$STAGE/app/plate.webp"; cp tools/gpu/job.cjs "$STAGE/job.cjs"
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/in" --delete >/dev/null
 echo "run $RUN on $FLAVOR"
 hf jobs run --flavor "$FLAVOR" --timeout 25m --name "temple-walk-render-$RUN" \
