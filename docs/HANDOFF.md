@@ -88,6 +88,9 @@ three.js，换了等于重写，测试和性能调校都得重来。值得接的
 `AGENTS.md`、`CONTRIBUTING.md`、`docs/SITE-SYNC.md`：提交用 Conventional Commits；每轮交付更新 `docs/t00/delivery.json`；
 不要碰 `docs/t00/independent-review.json`，不要自称验收通过。推之前先 `git fetch` 再 rebase，冲突时两边的改动都保留。
 
+**界面改成纸本（2026-11-15）**：所有者从两个方向（纸本、漆木）的对比画布里选了纸本。规则写在 `docs/t00/decisions.md` 的「界面的样子」一节。
+样式在 `app/src/ui.css`，纹理由 `app/src/paper.js` 现画。新的弹层套用现成的几个类就行：纸用 `paper`，最要紧的按钮用 `stamp`，分隔线用 `rule`，小印用 `seal-mark`。不要再加灰框按钮或毛玻璃卡片。
+
 **弹层栈（2026-11-15）**：盖在画面上的界面都放到 `app/src/ui.js` 的一个栈上，五个弹层是原生 `<dialog>`。
 加新弹层的做法：写一个 `<dialog class="layer">`，调一次 `ui.layer(id, …)`，用 `ui.open/close` 开关，不要直接改 `hidden`。
 不接第三方 UI 库，理由见 `docs/t00/decisions.md` 的「界面」一节。

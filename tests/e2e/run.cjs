@@ -398,6 +398,9 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "keys" && (await t.page.isVisible("#keys")) && !(await t.page.isVisible("#moodPanel")), "Esc should put away only the top panel: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.page.isVisible("#menu")), "the second Esc should close the keys, not bring the menu: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "menu" && u.modal && u.focus === "menu", "with nothing open Esc brings the menu, and the focus goes into it: " + JSON.stringify(u));
+    // The menu is a sheet of paper torn to its own size, and its one button that matters is a seal (src/paper.js, src/ui.css).
+    await t.until(() => t.page.evaluate(() => getComputedStyle(document.querySelector("#menu .card"), "::before").webkitMaskImage.startsWith("url(")), 20000, "the menu's paper was never given its torn edge");
+    expect(await t.page.evaluate(() => ["--paper-tile", "--brush-ink", "--enso-red", "--stamp"].every((k) => document.documentElement.style.getPropertyValue(k).startsWith("url("))), "the paper, the strokes and the seals were not drawn");
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && u.focus !== "menu", "Esc closes the menu and the focus leaves it: " + JSON.stringify(u));
     // The book: opened by its chip, the walk and a jump held while it is open, Tab kept among its buttons, the focus given back.
     await t.page.click("#bookBtn"); await t.until(async () => (await ui()).stack.join() === "book", 60000, "the chip did not open the book");

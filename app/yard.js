@@ -26,6 +26,7 @@ import { createGame } from "./src/game.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
+import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose } from "./src/drop.js";
 
@@ -33,6 +34,7 @@ import { findDrop, dropPose } from "./src/drop.js";
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
 const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
+createPaper();   // the paper, strokes and seals the interface is drawn with (src/paper.js, src/ui.css)
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
 const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false;   // what is said about the controls, and when
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
@@ -605,12 +607,16 @@ window.__ui = () => ({ stack: ui.state(), modal: ui.modal(), focus: document.act
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----
 const SOUND = [["setVolume", "volume"], ["setMusic", "music"], ["setAmbience", "ambience"], ["setEffects", "effects"]];
 ui.layer("menu", { kind: "modal" });
+// A slider on paper is a line of ink, darker as far as it is set (src/ui.css reads --v).
+const inked = (r) => r.style.setProperty("--v", `${(100 * (r.value - r.min)) / (r.max - r.min || 1)}%`);
+menuEl.querySelectorAll("input[type=range]").forEach((r) => r.addEventListener("input", () => inked(r)));
 function openMenu(open) {
   if (!open) { ui.close("menu"); return; }
   if (ui.open("menu")) { interrupt(); target = null; route = []; }
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
   $("setSens").value = S.sens; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
+  menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
 {

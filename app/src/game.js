@@ -53,8 +53,10 @@ export function createGame(y) {
     for (const id in rings) rings[id].visible = !journey.has(id) && (places[id].room || null) === y.room();
     mine.visible = journey.has("lamp");
     const n = journey.count(), next = journey.next(); setSeals(n);   // the music knows how much of its theme has been earned
-    if ($("bookBtn")) $("bookBtn").textContent = n ? `朱印 ${"〇一二三四五六七"[n]}` : "朱印";
-    const g = $("goal"), word = next ? `下一处 · ${next.place}` : "七印圆满"; if (g && g.textContent !== word) { if (g.textContent) y.hints?.say.goal(); g.textContent = word; }
+    if ($("bookBtn")) $("bookBtn").innerHTML = n ? `朱印<span class="count">${"〇一二三四五六七"[n]}</span>` : "朱印";   // the count is a small seal on the slip
+    // The next place: a small seal with its first character, the words 下一处 above its name.
+    const g = $("goal"), word = next ? `下一处 · ${next.place}` : "七印圆满";
+    if (g && g.dataset.word !== word) { if (g.dataset.word) y.hints?.say.goal(); g.dataset.word = word; g.innerHTML = next ? `<i class="seal-mark">${next.place[0]}</i><span><small>下一处</small>${next.place}</span>` : `<i class="seal-mark">圆</i><span>七印圆满</span>`; }
     if ($("titleSeals")) $("titleSeals").textContent = n ? (n === 7 ? "七印圆满 · 山门常开" : `已得${"〇一二三四五六七"[n]}印`) : "";
   };
 
@@ -124,7 +126,7 @@ export function createGame(y) {
     // Indoors, standing before a frame on the wall offers a look at what hangs there.
     look = free && indoors && !near ? placeAt(Object.fromEntries(Object.entries(y.gallery).filter(([, p]) => p.room === room)), w.x, w.z) : null;
     const b = $("act"); if (!b) return;
-    if (near || look) { b.dataset.word = near ? SEAL[near].act : "观看"; b.innerHTML = `<kbd>E</kbd>${b.dataset.word}`; b.hidden = false; } else b.hidden = true;
+    if (near || look) { const w = near ? SEAL[near].act : "观看"; if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${w}</span>`; } b.hidden = false; } else b.hidden = true;
     if (indoors !== wasIndoors) { wasIndoors = indoors; refresh(); if (indoors) say(room === "main" && !journey.has("incense") ? "走到佛前的圆相里，上一炷香。" : y.hallName(), 5); }
   });
   $("act")?.addEventListener("click", () => {
