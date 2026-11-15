@@ -10,10 +10,11 @@ import http from "node:http"; import fs from "node:fs"; import path from "node:p
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url), { chromium } = require("playwright");
-const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "..", "app"), out = path.join(here, "out", "music");
+const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "..", "app"), out = process.env.MUSIC_OUT || path.join(here, "out", "music");
 const moods = process.argv.slice(2).length ? process.argv.slice(2) : ["summer-day", "winter-night"];
 // The walk, as the unit test walks it: seconds in each place, and seals held along the way.
-const WALK = [["grove", 70], ["stair", 60], ["gate", 12], ["court", 110], ["hall", 60], ["court", 25], ["upper", 120], ["summit", 110], ["upper", 30], ["court", 40], ["gate", 40]];
+// MUSIC_WALK='[["stair",20],["gate",50]]' walks another way; MUSIC_QUICK=1 leaves out the stems and the live balance.
+const WALK = process.env.MUSIC_WALK ? JSON.parse(process.env.MUSIC_WALK) : [["grove", 70], ["stair", 60], ["gate", 12], ["court", 110], ["hall", 60], ["court", 25], ["upper", 120], ["summit", 110], ["upper", 30], ["court", 40], ["gate", 40]];
 
 const page = `<!doctype html><meta charset="utf-8"><script type="module">
 import { createZoneKeeper, moodMusic } from "/src/score.js";
@@ -112,7 +113,7 @@ for (const mood of moods) {
   fs.unlinkSync(wavPath);
   report[mood] = { ...r, render_seconds: (Date.now() - t0) / 1000, walk: WALK };
   // Stems for the first mood: the string (with its harmonics and low strings), the flute, the held fifth.
-  if (mood === moods[0]) for (const [name, only] of [["qin", ["qin", "harm", "low"]], ["xiao", ["xiao"]], ["pad", ["pad"]]]) {
+  if (mood === moods[0] && !process.env.MUSIC_QUICK) for (const [name, only] of [["qin", ["qin", "harm", "low"]], ["xiao", ["xiao"]], ["pad", ["pad"]]]) {
     const st = await tab.evaluate(([s, t, w, o]) => window.render(s, t, w, 7, o), [season, time, WALK, only]);
     const bits = []; for (let i = 0; i < st.bytes; i += 4 << 20) bits.push(Buffer.from(await tab.evaluate(([a, b]) => window.chunk(a, b), [i, 4 << 20]), "base64"));
     const body = Buffer.concat(bits), head = Buffer.from(wav); head.writeUInt32LE(36 + body.length, 4); head.writeUInt32LE(body.length, 40);
@@ -123,7 +124,7 @@ for (const mood of moods) {
   console.log(`${mood}: ${r.seconds}s, peak ${r.peak_dbfs} dBFS, ${r.clipped} clipped, ${r.phrases.length} phrases, rendered in ${report[mood].render_seconds}s`);
   await tab.close();
 }
-{ const tab = await browser.newPage(); await tab.goto(base + "music.html"); await tab.waitForFunction(() => window.balance);
+if (!process.env.MUSIC_QUICK) { const tab = await browser.newPage(); await tab.goto(base + "music.html"); await tab.waitForFunction(() => window.balance);
   report.balance = await tab.evaluate(() => window.balance()); await tab.close();
   console.log("balance:", JSON.stringify({ walking: report.balance.walking, bell: report.balance.bell, drum: report.balance.drum })); }
 fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1));
