@@ -68,6 +68,7 @@ node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,
 node tools/inside.cjs tools/out/hall-views --views [level]   # every indoor view a level registers in app/levels/<level>/hall-views.js (default t00)
 node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose)
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
+node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~6 min)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
@@ -213,6 +214,30 @@ the bell's three strokes, the library's line, storage under `yunjing.journey.v1`
 rings on the ground, the action button, how each observance unfolds, the seal toast, the book; it reaches the walk only
 through the small object `yard.js` hands it (`walkTo`, `stage`, `strike`, `where`, `onTick`…). `goshuin.js` draws the
 page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__places`, `__inside(id|null)`, `__halls`, `__gallery`, `__figures()`.
+
+**What his hands do (`rites.js`).** game.js says when an observance happens; `rites.js` says how it is done. Each is a
+run of timed passages (`play(secs, fn, on)`, on the clock, not on frames) that write into `act`, which `yard.js` hands to
+`monk.update` with his pose (`grounding.act`: `bow`, `twist`, `nod`, `breath`, and for either hand a place in the world
+to reach, the way its fingers and palm turn, and a weight), and move the thing he holds. The bell: a rope hangs from the
+end of the log, out past the platform (`LOG` in `site.js`); he draws it back and lets go, three strokes to one press,
+and `logSwing` keeps the log from passing into the bronze. Tea: his bowl (made in `rites.js`, not merged into the table)
+is lifted in both hands and tilted at his lips three times. Incense: three sticks between his palms, raised to the brow,
+three bows, a step up to the low stand before the cushion (`places.incense.front`, `.bowl`), set in the ash, where they
+stay and smoke (also after a reload). Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
+out. `__riteClock(ms)` holds the observances' clock and steps it, so a moment can be photographed; `__rites()` reports
+all of it. The hand offsets (lips, brow, rope) were set against the novice's present proportions.
+
+**Seats.** Every cushion and stool is a seat: `site.seats` out of doors (the three stools at the tea table, the summit
+mat), and `seat()` / `sitAt()` in `interior.js` for the rooms (`{ at, top, face, room }`). Where nothing else is offered
+within a step or two of one, the button says 坐下 and he is drawn going over and down onto it (`sitDown` in `game.js`);
+he stays until he is sent elsewhere. A new cushion or stool must be registered the same way; `rites.test.mjs` holds it.
+
+**The close of the chapter.** This temple is the prologue, where a visitor learns how the walk goes. Sitting on the
+summit is the last thing: before the other six seals its mat is only a seat. When the seventh is earned there, `finale`
+(`game.js`) hands the eye to `rites.close` (`y.cine(fn)`: round before him, back down the steps, up until the pavilion
+stands whole), says the closing words one at a time (`CLOSING`: they end on something unanswered, for a chapter not
+yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
+`__ending()` plays it again.
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
 hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye

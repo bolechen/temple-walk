@@ -5,7 +5,7 @@ import fs from "node:fs"; import path from "node:path"; import { fileURLToPath }
 
 const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "app"), dist = path.join(here, "dist");
 // What the page fetches by name rather than imports (app/src/assets.js) goes into the site as it lies in app/.
-const KEPT = ["shared", "levels", "vendor", "favicon.svg", "loading.js"];
+const KEPT = ["shared", "levels", "vendor", "favicon.svg"];
 const keep = () => ({
   name: "temple-walk:keep-fetched-files", apply: "build",
   closeBundle() { for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(dist, f), { recursive: true, filter: (p) => !/\.(py|md)$/.test(p) }); },

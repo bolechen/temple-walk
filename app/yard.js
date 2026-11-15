@@ -25,6 +25,7 @@ import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
+import { logSwing, riteNow } from "./src/rites.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
@@ -73,7 +74,7 @@ const walker = createWalker(site);
 await loading.step("山门");
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
-site.places.incense = rooms.places.incense;
+site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
 await loading.step("殿堂");
 let hallIn = null;   // the room he is in, when he is in one
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
@@ -172,7 +173,7 @@ if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 
 // What a walk is for, and what he is doing when he has arrived: `arrive` is told whether he got there;
 // `stage` holds him in place (facing a way, praying or seated) until the visitor sends him elsewhere.
-let arrive = null, stage = null; const ticks = [];
+let arrive = null, stage = null, cine = null, drawn = null; const ticks = [];
 const settle = (ok) => { if (arrive) { const fn = arrive; arrive = null; fn(ok); } };
 const interrupt = () => { settle(false); if (stage) { const st = stage; stage = null; st.leave && st.leave(); } };
 const menuEl = document.getElementById("menu");
@@ -246,7 +247,7 @@ canvas.addEventListener("pointerup", (e) => {
     if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} hear(); }
     else {   // held: a click strikes what the middle of the picture rests on
       ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
-      if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
+      if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = riteNow(); s.lead = 0; window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
     }
     down = null; return;
   }
@@ -257,7 +258,7 @@ canvas.addEventListener("pointerup", (e) => {
     const struck = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
     if (struck && struck.distance < 32) {
       const s = site.strikers.find((k) => k.mesh === struck.object);
-      strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: s.kind }));
+      strike(s.kind, Math.min(1, 9 / Math.max(6, struck.distance) + 0.25)); s.t0 = riteNow(); s.lead = 0; window.dispatchEvent(new CustomEvent("struck", { detail: s.kind }));
       down = null; return;
     }
     const hit = pickFloor();
@@ -427,9 +428,12 @@ function frame(now) {
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
   // Seated on something that stands in the way (a stool): he came to stand behind it, and is drawn on it while he sits.
   const sat = stage && stage.seat ? stage.seat : null;
-  monk.group.position.set(sat ? sat[0] : pos.x, footY + (stage ? stage.lift || 0 : 0), sat ? sat[1] : pos.z); monk.group.rotation.y = heading;
+  // He does not jump onto a seat: he is drawn going over to it, and down onto it.
+  if (!stage || !drawn) drawn = [sat ? sat[0] : pos.x, footY, sat ? sat[1] : pos.z];
+  else { const k = Math.min(1, dt * 7); drawn[0] += ((sat ? sat[0] : pos.x) - drawn[0]) * k; drawn[2] += ((sat ? sat[1] : pos.z) - drawn[2]) * k; drawn[1] += (footY + (stage.lift || 0) - drawn[1]) * k; }
+  monk.group.position.set(drawn[0], stage ? drawn[1] : footY, drawn[2]); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
-  monk.update(dt, still || aloft ? 0 : speedNow, aloft ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z) });
+  monk.update(dt, stage && stage.speed != null ? stage.speed : still || aloft ? 0 : speedNow, aloft ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
   // Where he steps outdoors in the snow, he leaves his prints (a room's floor keeps none, and the square stays outside).
   for (const f of monk.steps.splice(0)) if (!inside && !passing) trail.stamp(f);
   if (!inside) trail.follow(pos.x, pos.z); trail.update(dt);
@@ -452,6 +456,8 @@ function frame(now) {
     if (monkHidden && !photo.on) monk.group.visible = false;
   }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");
+  // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
+  if (cine) { cine(camera, dt); monk.group.visible = true; }
   camera.updateMatrixWorld();
   // Crossing the threshold hands over to the hall interior.
   const atDoor = inside ? null : site.halls.find((h) => h.inside(pos.x, pos.z)) || null;
@@ -462,9 +468,7 @@ function frame(now) {
   for (const fn of ticks) fn(dt, t);
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); drift.update(t, camera.position, pxH);
-  for (const s of site.strikers) if (s.swing && s.t0) {   // the striking log swings in, then settles
-    const u = (now - s.t0) / 1000; s.swing.position.z = u > 4 ? 0 : -0.75 * Math.exp(-u * 1.3) * Math.cos(u * 4.2) * (u < 0.18 ? u / 0.18 : 1);
-  }
+  for (const s of site.strikers) if (s.swing && s.t0) s.swing.position.z = logSwing(s, riteNow());   // drawn back and let go, or only tapped: it touches the bell and swings itself out
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
@@ -651,7 +655,7 @@ window.__probe = () => {
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
-window.__pose = (x, z, y, p) => { pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
+window.__pose = (x, z, y, p) => { interrupt(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike;
 window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
 window.__bird = (go) => { if (go) bird(1); return ambienceState(); };   // a bird now, if asked, and how many have sung
@@ -706,7 +710,11 @@ createGame({
   // Send him along `points` ([x, z] each); `then(true)` when he arrives, `then(false)` if he is stopped or sent elsewhere.
   walkTo(points, then) { interrupt(); route = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); arrive = then || null; },
   stage(o) { stage = o; },
-  strike(kind) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s) s.t0 = performance.now(); window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
+  // `drawn`: he has drawn the log back himself (rites.js) and it is meeting the bell now; otherwise it is tapped.
+  strike(kind, drawn) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s && !drawn) { s.t0 = riteNow(); s.lead = 0; } window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
+  monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage,
+  // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
+  cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
   mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),

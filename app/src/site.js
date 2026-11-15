@@ -109,9 +109,9 @@ export function buildSite(M) {
       front: "open", back: "open", sides: "open", dark: false, steps: 0, plaque: { text: sx > 0 ? "钟楼" : "鼓楼", style: "wood" },
     }, [sx * 15.5, SITE.zS], 2);
     const thing = sx > 0 ? bell(M, t) : drum(M, t);
-    t.group.add(thing.group); strikers.push({ kind: sx > 0 ? "bell" : "drum", mesh: thing.hit, swing: thing.swing });
+    t.group.add(thing.group); strikers.push({ kind: sx > 0 ? "bell" : "drum", mesh: thing.hit, swing: thing.swing, rope: thing.rope || null, gap: LOG.gap });
     // The log that strikes the bell is slung out past the columns toward the gate: the eye keeps out of it too.
-    if (sx > 0) { const r = walk.roofs[walk.roofs.length - 1]; r.core = { ...r.core, z0: Math.min(r.core.z0, SITE.zS - 2.6) }; }
+    if (sx > 0) { const r = walk.roofs[walk.roofs.length - 1]; r.core = { ...r.core, z0: Math.min(r.core.z0, SITE.zS - LOG.near - LOG.len - 0.1) }; }
   }
   // Facing each other across the court: the meditation hall, and the tea house.
   const side = { xs: [-8, -4.8, -1.6, 1.6, 4.8, 8], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.6, overhang: 1.7, rise: 3.0, G: 2.2, lamps: false, steps: 3.0 };
@@ -338,18 +338,20 @@ export function buildSite(M) {
   const cushion = () => lathe([[0, 0], [0.25, 0], [0.288, 0.028], [0.292, 0.06], [0.262, 0.092], [0.1, 0.104], [0, 0.104]], 28);
   // A tea table on the court before the tea house, as tea was taken in these monasteries: a table and stools, a ewer
   // of hot water, black bowls on stands. Whoever sits at it looks across the wet stone to the great hall.
+  const TEA_T = 0.78, TEA_BOWL = 0.11;   // the table's height; how far from its middle, toward him, his bowl stands
   const teaSeat = [-10.3, 22.6], teaDir = [0 - teaSeat[0], mz + main.zF - teaSeat[1]], teaTurn = Math.atan2(-teaDir[0], -teaDir[1]);
   const teaFrom = (lx, lz) => [teaSeat[0] + lx * Math.cos(teaTurn) + (lz - 0.62) * Math.sin(teaTurn), teaSeat[1] - lx * Math.sin(teaTurn) + (lz - 0.62) * Math.cos(teaTurn)];   // the mat's own frame: he sits at (0, 0.62) and looks toward -z
   {
     const P = { straw: [], wood: [], glaze: [], iron: [], lacquer: [] }, y = 0;
     const bowl = () => lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 24);
-    const T = 0.78, stool = () => lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 20);
+    const T = TEA_T, stool = () => lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 20);
     // The table: a thick top on four legs joined by stretchers.
     P.wood.push(box(1.3, 0.05, 0.7, 0, T - 0.025, -0.12), box(1.2, 0.06, 0.04, 0, T - 0.09, 0.19), box(1.2, 0.06, 0.04, 0, T - 0.09, -0.43));
     for (const [a, c] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.wood.push(box(0.06, T - 0.05, 0.06, a * 0.58, (T - 0.05) / 2, -0.12 + c * 0.29));
     for (const a of [-1, 1]) P.wood.push(box(0.04, 0.04, 0.58, a * 0.58, 0.2, -0.12));
     // His bowl and one for whoever comes, each on its lacquer stand; the whisk; the ewer of hot water.
-    for (const [bx2, bz2] of [[0, 0.06], [0.38, -0.26]]) { P.glaze.push(bowl().translate(bx2, T + 0.03, bz2)); P.lacquer.push(lathe([[0, 0], [0.05, 0], [0.04, 0.012], [0.1, 0.02], [0.105, 0.03], [0.04, 0.03], [0, 0.03]], 20).translate(bx2, T, bz2)); }
+    // (His own bowl is lifted and drunk from, so it is made apart, in rites.js; only its stand is here.)
+    for (const [bx2, bz2] of [[0, TEA_BOWL], [0.38, -0.26]]) { if (bx2) P.glaze.push(bowl().translate(bx2, T + 0.03, bz2)); P.lacquer.push(lathe([[0, 0], [0.05, 0], [0.04, 0.012], [0.1, 0.02], [0.105, 0.03], [0.04, 0.03], [0, 0.03]], 20).translate(bx2, T, bz2)); }
     P.straw.push(new THREE.CylinderGeometry(0.012, 0.03, 0.1, 12).translate(-0.2, T + 0.05, -0.3));
     P.iron.push(lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.12], [0.07, 0.19], [0.035, 0.22], [0.03, 0.27], [0.045, 0.29], [0, 0.29]], 22).translate(-0.42, T, -0.2),
       new THREE.TorusGeometry(0.075, 0.009, 6, 16, Math.PI).rotateZ(-Math.PI / 2).translate(-0.53, T + 0.15, -0.2), new THREE.CylinderGeometry(0.008, 0.016, 0.2, 8).rotateZ(-0.7).translate(-0.28, T + 0.17, -0.2));
@@ -399,12 +401,16 @@ export function buildSite(M) {
   // A straw cushion at the top of the summit pavilion's steps, facing back down the mountain.
   const porchY = TOP.y + 0.9, porchZ = topZ + 7.5 + 0.8;
   root.add(mesh(cushion().translate(0, porchY, porchZ), M.straw));
+  // Whatever can be sat on out of doors: the three stools at the tea table (each turned to the table) and the mat on
+  // the summit porch. `top` is the height of the seat. The rooms add their own (interior.js); game.js offers them.
+  const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null }; });
+  seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null });
   // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
   // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
   const places = {
-    bell:    { at: [15.5, 35.7], r: 1.9, face: 0 },
+    bell:    { at: [15.5, SITE.zS - LOG.near - LOG.len - 0.34], r: 1.9, face: 0 },   // before the rope, an arm's length from it
     incense: { at: [hall.foot.x, hall.foot.z + 0.9], r: 1.9, face: Math.PI },
-    tea:     { at: teaFrom(0, 0.62 + 0.2 + BODY + 0.04), seat: teaSeat, r: 1.5, face: Math.atan2(teaDir[0], teaDir[1]), sit: true, lift: 0.44, steam: [...teaFrom(-0.42, -0.2), 1.1] },
+    tea:     { at: teaFrom(0, 0.62 + 0.2 + BODY + 0.04), seat: teaSeat, r: 1.5, face: Math.atan2(teaDir[0], teaDir[1]), sit: true, lift: 0.44, steam: [...teaFrom(-0.42, -0.2), TEA_T + 0.3], bowl: [teaFrom(0, TEA_BOWL)[0], TEA_T + 0.03, teaFrom(0, TEA_BOWL)[1]] },
     sutra:   { at: [deskAt[0], deskAt[1] + 0.2 + BODY + 0.04], r: 1.3, face: Math.PI },   // before the desk, his robe clear of it
     well:    { at: [13.2, T2.zS + 3.0], r: 1.8, face: Math.PI, pool: [13.2, T1.y + 0.2, T2.zS + 0.62] },
     lamp:    { at: [lampAt[0], lampAt[1] + 1.4], r: 1.5, face: Math.PI, flame: lampMine },
@@ -426,7 +432,7 @@ export function buildSite(M) {
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
   };
 
-  return { root, walk, shade, paving, hall, halls, buildings, views, places, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, halls, buildings, views, places, seats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
@@ -450,6 +456,8 @@ function waved(geo) {
   for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y < 0.32) p.setY(i, y + 0.055 * (1 - y / 0.32) * (0.5 + 0.5 * Math.cos(Math.atan2(p.getX(i), p.getZ(i)) * 8))); }
   geo.computeVertexNormals(); return geo;
 }
+// The striking log: how near its head hangs to the bell's side, how long it is, and how far it must swing to touch.
+const LOG = { near: 0.7, len: 2.08, gap: 0.18 };
 function bell(M, t) {
   const g = new THREE.Group(), y0 = t.platH + 1.1, beamY = t.colTop - 0.55;
   const body = mesh(merge([
@@ -461,13 +469,14 @@ function bell(M, t) {
   inside.material.side = THREE.DoubleSide;
   const frame = mesh(merge([box(3.6, 0.24, 0.24, 0, beamY, 0), box(0.24, 0.24, 3.6, 0, beamY - 0.02, 0)]), M.woodX);
   const log = mesh(merge([
-    new THREE.CylinderGeometry(0.09, 0.09, 1.7, 10).rotateX(Math.PI / 2).translate(0, y0 + 0.35, 1.55),
-    new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 1.0),
-    new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 2.1),
+    // It reaches out over the edge of the platform, where a rope hangs from its end for whoever rings (rites.js).
+    new THREE.CylinderGeometry(0.09, 0.09, LOG.len, 10).rotateX(Math.PI / 2).translate(0, y0 + 0.35, LOG.near + LOG.len / 2),
+    new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 1.05),
+    new THREE.CylinderGeometry(0.012, 0.012, beamY - y0 - 0.4, 5).translate(0, (beamY + y0 + 0.4) / 2, 2.3),
   ]), M.woodZ);
   body.userData.keep = log.userData.keep = true;   // the bell is struck and the log swings
   g.add(body, inside, frame, log);
-  return { group: g, hit: body, swing: log };
+  return { group: g, hit: body, swing: log, rope: [0, y0 + 0.26, LOG.near + LOG.len] };
 }
 
 // A barrel drum on a timber stand, its face toward the court.
