@@ -165,9 +165,11 @@ function caisson(M, add, hole, H, frame, gilt, rib) {
   for (const [w, d, x, z] of [[S, 0.06, 0, a], [S, 0.06, 0, -a], [0.06, S, a, 0], [0.06, S, -a, 0]]) frame.push(at(box(w + 0.06, y1 - H, d, x, (H + y1) / 2, z)), at(box(w + 0.18, 0.1, d + 0.12, x, H - 0.03, z)));
   // The corners cut across: four triangles looking down, leaving an octagon whose flats lie on the square's sides.
   const k = a * Math.tan(Math.PI / 8), tri = [];
-  for (const [sx, sz] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) tri.push(sx * a, y1, sz * a, sx * k, y1, sz * a, sx * a, y1, sz * k);
-  const corners = new THREE.BufferGeometry(); corners.setAttribute("position", new THREE.Float32BufferAttribute(tri, 3)); corners.setAttribute("uv", new THREE.Float32BufferAttribute(new Array(tri.length / 3 * 2).fill(2000), 2)); corners.computeVertexNormals();
+  // Wound so that each looks down: the three points go clockwise seen from below whichever corner it is.
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) { const p = [[sx * a, sz * a], [sx * k, sz * a], [sx * a, sz * k]]; if (sx * sz < 0) p.reverse(); for (const [x, z] of p) tri.push(x, y1, z); }
+  const corners = new THREE.BufferGeometry(); corners.setAttribute("position", new THREE.Float32BufferAttribute(tri, 3)); corners.setAttribute("uv", new THREE.Float32BufferAttribute(Array.from({ length: tri.length / 3 }, () => [0.0625, 2000]).flat(), 2)); corners.computeVertexNormals();
   if (corners.attributes.normal.getY(0) > 0) { const p = corners.attributes.position.array; for (let i = 0; i < p.length; i += 9) for (let j = 0; j < 3; j++) { const t = p[i + j]; p[i + j] = p[i + 6 + j]; p[i + 6 + j] = t; } corners.computeVertexNormals(); }
+  for (let i = 0; i < corners.attributes.normal.count; i++) if (corners.attributes.normal.getY(i) > -0.99) throw new Error("a corner of the caisson looks up");
   painted.push(at(corners));
   // The octagonal band, with a ring of small bracket blocks round its foot, and above it the dome.
   const plain = (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, 2000); return g; };

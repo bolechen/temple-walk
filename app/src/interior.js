@@ -2,6 +2,8 @@
 // courts, furnished for what the hall is (an altar and its figures, meditation platforms, tea tables, shelves of
 // sutras), and along its side walls a row of hanging frames that are empty for now. Each frame is a place where
 // something will be shown and told later; what hangs in it is data (GALLERY below, by the frame's id).
+// Overhead is the hall's own timber (framing.js): columns on the bays the building shows outside, beams resting on
+// them, and the ceiling its rank calls for, from a caisson over the Buddha to a roof open to the rafters.
 //
 // The rooms are built far below the courts, side by side (the paving above hides them), and the walker is moved
 // into one at its hall's door.
@@ -115,8 +117,6 @@ function buildRoom(M, hall, ox, figures) {
   add(box(W, 0.4, D, 0, Y - 0.2, 0), M.stone, () => 0.6);
   add(footAt(merge([box(W, hw, 0.3, 0, Y + hw / 2, zn - 0.15), box(0.3, K.h, D, -wx - 0.15, Y + K.h / 2, 0), box(0.3, K.h, D, wx + 0.15, Y + K.h / 2, 0),
     box(W / 2 - 1.5, hw, 0.3, -(W / 4 + 0.75), Y + hw / 2, zs + 0.15), box(W / 2 - 1.5, hw, 0.3, W / 4 + 0.75, Y + hw / 2, zs + 0.15), box(3, hw - 3.3, 0.3, 0, Y + 3.3 + (hw - 3.3) / 2, zs + 0.15)]), Y - 30), M.plaster());
-  const trim = []; for (const sx of [-1, 1]) trim.push(box(0.1, 1.0, D, sx * (wx - 0.05), Y + 0.5, 0), box(0.12, 0.2, D, sx * (wx - 0.06), Y + Math.min(5.2, K.h - 0.9), 0));
-  trim.push(box(W, 1.0, 0.1, 0, Y + 0.5, zn + 0.05), box(W, 0.2, 0.12, 0, Y + Math.min(5.2, K.h - 0.9), zn + 0.06)); add(merge(trim), M.woodX);
   const cushion = () => lathe([[0, 0], [0.26, 0], [0.3, 0.03], [0.3, 0.07], [0.26, 0.1], [0, 0.11]], 24);
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
@@ -216,6 +216,12 @@ function buildRoom(M, hall, ox, figures) {
     || [...keep, ...stops].some((c) => Math.hypot(x - c.x, z - c.z) < r + c.r + 0.1);
   const timber = frameRoom(M, add, { K, hall, Y, focus: { ox, z: focusZ ?? 0 }, clear });
   for (const c of timber.cols) block(c.x - 0.29 - BODY, c.x + 0.29 + BODY, c.z - 0.29 - BODY, c.z + 0.29 + BODY);
+  // The dado at the foot of the walls and a rail higher up; on the back wall the rail is left out where it would run
+  // through the brackets under the beams' ends.
+  const rail = Y + Math.min(5.2, K.h - 0.9), trim = [];
+  for (const sx of [-1, 1]) trim.push(box(0.1, 1.0, D, sx * (wx - 0.05), Y + 0.5, 0), box(0.12, 0.2, D, sx * (wx - 0.06), rail, 0));
+  trim.push(box(W, 1.0, 0.1, 0, Y + 0.5, zn + 0.05)); if (rail + 0.15 < timber.members.colTop - 0.32) trim.push(box(W, 0.2, 0.12, 0, rail, zn + 0.06));
+  add(merge(trim), M.woodX);
   // The windows of the front wall seen from inside: in each bay clear of the door's leaves, upright bars (zhiling) over
   // paper with the day behind it. From outside these bays are lattice; inside they are where the daylight comes from.
   {
@@ -243,8 +249,9 @@ function buildRoom(M, hall, ox, figures) {
   if (hall.kind === "buddha") {
     const cloth = [];
     for (const sx of [-1, 1]) {
-      const L = K.h - 2.3, gb = new THREE.PlaneGeometry(0.56, L, 1, 14), p = gb.attributes.position;
-      for (let i = 0; i < p.count; i++) p.setZ(i, 0.05 * Math.sin(p.getY(i) * 1.7 + sx));
+      const L = K.h - 2.3, gb = new THREE.PlaneGeometry(0.56, L, 2, 14), p = gb.attributes.position;
+      // Hung from its peak, the head a shallow triangle, the foot drawn to a point; a slow fold down its length.
+      for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); if (y > L / 2 - 1e-6 && Math.abs(x) > 0.01) p.setY(i, y - 0.28); if (y < -L / 2 + 1e-6 && Math.abs(x) < 0.01) p.setY(i, y - 0.3); p.setZ(i, 0.05 * Math.sin(y * 1.7 + sx)); }
       gb.computeVertexNormals(); cloth.push(gb.translate(sx * 6.9, Y + K.h - 0.12 - L / 2, altar.position.z + 2.0));
     }
     add(merge(cloth), M.banner, () => 0.85);
