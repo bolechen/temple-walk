@@ -174,11 +174,47 @@ const scenarios = {
   sound: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&show=court");
     await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(700);
-    const bell = await t.page.evaluate(() => window.__listen());
+    const bell = await t.page.evaluate(() => window.__listen("effects"));   // the effects bus alone: the music shares the bell's G
     expect(bell.state === "running" && bell.rms > 0.003, "the bell made no sound: " + JSON.stringify(bell));
     expect(bell.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8), "the bell's fundamental is missing: " + JSON.stringify(bell.peaks));
     await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
-    const drum = await t.page.evaluate(() => window.__listen()); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
+    const drum = await t.page.evaluate(() => window.__listen("effects")); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The music: it begins with the first sound, follows him from place to place once he has settled, ignores pacing
+  // along a boundary, steps back for the bell, answers its own slider, goes indoors with him, and is only ever one.
+  music: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,29,0,0&view=first");
+    const m = () => t.page.evaluate(() => window.__music());
+    expect(!(await m()).started, "the music should wait for the visitor's first touch");
+    await t.page.evaluate(() => window.__music(true));
+    await t.until(async () => { const s = await m(); return s.state === "running" && s.phrases >= 1 && s.sounding > 0; }, 30000, "the music never began");
+    let s = await m(); expect(s.zone === "court" && s.section === "court" && s.players === 1, "the first court should be heard as the court: " + JSON.stringify(s));
+    // A step over the line into the gate and straight back, timed on the audio clock (a slow page may hold a pose
+    // longer than meant; only a step back within the two seconds is judged): the music stays where it was.
+    const away = await t.page.evaluate(() => new Promise((done) => { const c0 = window.__music().clock; window.__pose(0, 41, 0, 0); setTimeout(() => { window.__pose(0, 39, 0, 0); done(window.__music().clock - c0); }, 300); }));
+    await t.page.waitForTimeout(2500); s = await m();
+    if (away < 1.5) expect(s.zone === "court", `a step over a boundary and back (${away.toFixed(2)} s) should not change the music: ` + JSON.stringify(s));
+    // Down to the bamboo: once settled there, the bamboo's music follows.
+    await t.page.evaluate(() => window.__pose(21.3, 91.5, 0, 0.3));   // the arrival view, at the foot of the path
+    await t.until(async () => (await m()).zone === "grove", 15000, "standing in the bamboo was never heard as the bamboo");
+    await t.until(async () => (await m()).section === "grove", 60000, "the bamboo's music never began");
+    // The bell: the music steps back, then returns of itself.
+    await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(800);
+    s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
+    await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
+    // Its own level, apart from everything else.
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
+    await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+    await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05 && s.levels.effects === 1, "the music slider should silence the music alone: " + JSON.stringify(s));
+    expect((await t.page.evaluate(() => window.__settings())).music === 0, "the music level was not kept");
+    await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0.7"; el.dispatchEvent(new Event("input", { bubbles: true })); }); await t.page.keyboard.press("Escape");
+    // Into a hall and out: the hall's reverb and music, and still one player however often sound is asked for.
+    await t.page.evaluate(() => window.__inside("main"));
+    await t.until(async () => { const x = await m(); return x.zone === "hall" && x.room === "hall"; }, 30000, "inside the hall was never heard as the hall");
+    await t.page.evaluate(() => window.__inside(null)); await t.page.evaluate(() => window.__music(true)); await t.page.evaluate(() => window.__music(true));
+    await t.until(async () => (await m()).room === "court", 30000, "coming out did not bring the court's reverb back");
+    s = await m(); expect(s.players === 1 && s.starts >= 3, "asking for sound again must not start a second player: " + JSON.stringify(s));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every season at every hour draws, and they look as different as they should.

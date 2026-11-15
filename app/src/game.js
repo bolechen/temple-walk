@@ -6,7 +6,7 @@ import * as THREE from "../vendor/three/build/three.module.js";
 import { WORKS } from "./works.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
 import { drawGoshuin, sealStamp } from "./goshuin.js";
-import { chime, drop } from "./audio.js";
+import { chime, drop, setSeals } from "./audio.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -46,7 +46,7 @@ export function createGame(y) {
   const refresh = () => {
     for (const id in rings) rings[id].visible = !journey.has(id) && (places[id].room || null) === y.room();
     mine.visible = journey.has("lamp");
-    const n = journey.count(), next = journey.next();
+    const n = journey.count(), next = journey.next(); setSeals(n);   // the music knows how much of its theme has been earned
     if ($("bookBtn")) $("bookBtn").textContent = n ? `朱印 ${"〇一二三四五六七"[n]}` : "朱印";
     const g = $("goal"), word = next ? `下一处 · ${next.place}` : "七印圆满"; if (g && g.textContent !== word) { if (g.textContent) y.hints?.say.goal(); g.textContent = word; }
     if ($("titleSeals")) $("titleSeals").textContent = n ? (n === 7 ? "七印圆满 · 山门常开" : `已得${"〇一二三四五六七"[n]}印`) : "";
@@ -56,7 +56,7 @@ export function createGame(y) {
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
   function earned(id) {
-    chime(); refresh();
+    chime(1, journey.count()); refresh();
     const el = $("toast"), d = SEAL[id]; if (!el) return;
     $("toastSeal").src = sealStamp(d.seal, 220, { seed: SEALS.indexOf(d) + 11 }).toDataURL(); $("toastLine").textContent = id === "sutra" && journey.verse ? journey.verse.text : d.line; $("toastName").textContent = `${d.place} · ${d.seal}`;
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
