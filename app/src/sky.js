@@ -1,5 +1,5 @@
 // The sky at any hour, and the light that comes from it.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { NOISE, U } from "./glsl.js";
 
 // Shared by reference with every shader that fogs or lights by hand; `setMood` changes them in place.

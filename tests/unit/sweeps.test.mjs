@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { buildSite, createWalker } from "../../app/src/site.js";
 import { findDrop } from "../../app/src/drop.js";
 import { followEye } from "../../app/src/eye.js";

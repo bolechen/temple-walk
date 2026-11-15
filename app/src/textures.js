@@ -2,7 +2,8 @@
 // They come from Poly Haven's CC0 library, packed by tools/textures.py into app/shared/textures/ as a colour image and an image
 // holding the surface normal (red, green) and the roughness (blue). Until one has arrived, its place is held by its
 // own mean colour, so the temple is whole from the first frame and only grows finer.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
+import { asset } from "./assets.js";
 import { SURFACES } from "../shared/textures/index.js";
 
 export { SURFACES };
@@ -18,7 +19,7 @@ for (const [name, s] of Object.entries(SURFACES)) {
 // Begin fetching them. `anisotropy` is what the renderer allows; `onChange` is called as each arrives.
 export function loadTextures(anisotropy = 8, onChange = () => {}) {
   if (typeof document === "undefined" || state.total) return state;
-  const loader = new THREE.TextureLoader(), base = new URL("../shared/textures/", import.meta.url).href;
+  const loader = new THREE.TextureLoader(), base = asset("shared/textures/");
   for (const name of Object.keys(SURFACES)) for (const [slot, file, srgb] of [["a", `${name}_a.webp`, true], ["n", `${name}_n.jpg`, false]]) {
     state.total++;
     loader.load(base + file, (t) => {

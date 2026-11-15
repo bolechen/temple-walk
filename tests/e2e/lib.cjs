@@ -1,7 +1,7 @@
 // What the end-to-end scenarios share: a server for app/, a browser that can draw without a GPU, and a page that records its own errors.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
-const root = path.join(__dirname, "..", "..", "app"), out = path.join(__dirname, "..", "..", "tools", "out");
+const root = require("../../tools/site.cjs").site(), out = path.join(__dirname, "..", "..", "tools", "out");
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".css": "text/css", ".woff2": "font/woff2" };
 
 async function serve() {

@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { box, merge, mesh, plain, bakeAO, stairGeo, mergeStatic } from "../../app/src/geo.js";
 import { buildHall } from "../../app/src/building.js";
 const { createMonk } = await import("../../app/src/monk.js");

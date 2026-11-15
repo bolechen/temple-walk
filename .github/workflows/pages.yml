@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: ["app/**", "tests/**", "tools/**", "package.json", "pnpm-lock.yaml", ".github/workflows/pages.yml"]
+    paths: ["app/**", "tests/**", "tools/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tsconfig.json", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Nothing is published that does not parse, pass its unit tests, and come up in a real browser. That is all that
+  # Nothing is published that does not parse, pass its unit tests, build, and come up in a real browser. That is all that
   # stands between a push and the site: the slower scenarios (the stairs, the low drop) run beside this
   # in e2e.yml and do not hold the publication up. A push that touches nothing the site is made of (documents,
   # delivery papers) is checked in half a minute and publishes nothing, because there is nothing new to publish.
@@ -39,7 +39,7 @@ jobs:
           site=true
           if [ "${{ github.event_name }}" = "push" ] && [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then
             if files=$(gh api "repos/${{ github.repository }}/compare/$BEFORE...${{ github.sha }}" --jq '.files[].filename' 2>/dev/null) && [ -n "$files" ] && [ "$(echo "$files" | wc -l)" -lt 300 ]; then
-              echo "$files" | grep -qE '^(app/|tests/e2e/|package\.json$|pnpm-lock\.yaml$|tools/setup\.mjs$|\.github/workflows/pages\.yml$)' || site=false
+              echo "$files" | grep -qE '^(app/|tests/e2e/|package\.json$|pnpm-lock\.yaml$|vite\.config\.mjs$|tools/(setup\.mjs|site\.cjs)$|\.github/workflows/pages\.yml$)' || site=false
             fi
           fi
           echo "site=$site" >> "$GITHUB_OUTPUT"; echo "site changed: $site"
@@ -48,12 +48,15 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Install and copy three.js into the page
+      - name: Install
         run: pnpm install --frozen-lockfile
-      - name: Every script parses
-        run: pnpm run check
+      - name: Every script parses, and the typed modules agree with themselves
+        run: pnpm run check && pnpm run typecheck
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
         run: pnpm test
+      - name: Build the site
+        if: steps.changes.outputs.site == 'true'
+        run: pnpm run build
       - name: Remember the browser between runs
         if: steps.changes.outputs.site == 'true'
         id: pw
@@ -75,12 +78,12 @@ jobs:
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
-      # The site is the app folder as it stands after the install: no build step.
+      # The site is what Vite built into dist/, the same files the browser above was just driven through.
       - name: Hand the site over for publication
         if: github.event_name != 'pull_request' && steps.changes.outputs.site == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: app
+          path: dist
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
 

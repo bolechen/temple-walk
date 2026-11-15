@@ -2,7 +2,7 @@
 // than its walls can hold.
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const { WORKS, HANG } = await import("../../app/src/works.js");
 const { buildSite } = await import("../../app/src/site.js");
 const { KINDS, STAND } = await import("../../app/src/interior.js");

@@ -2,7 +2,7 @@ import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL } from "../../app/src/score.js";
 const { buildSite, SITE, LEVELS, APPROACH, SCREEN } = await import("../../app/src/site.js");
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), B = zoneBounds(SITE, LEVELS, APPROACH, SCREEN);
 const SEASONS = ["spring", "summer", "autumn", "winter"], TIMES = ["dawn", "day", "dusk", "night"];

@@ -3,7 +3,7 @@
 // `pnpm run edges`, which takes half a minute; these are the quick ones.)
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const { buildSite, createWalker, BODY, LEVELS, APPROACH } = await import("../../app/src/site.js");
 const { createMonk } = await import("../../app/src/monk.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });

@@ -7,12 +7,13 @@
 //
 // The rooms are built far below the courts, side by side (the paving above hides them), and the walker is moved
 // into one at its hall's door.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
+import { asset } from "./assets.js";
 import { paintLeaf } from "./leaves.js";
 import { WORKS, HANG } from "./works.js";
-import { GLTFLoader } from "../vendor/three/jsm/loaders/GLTFLoader.js";
-import { KTX2Loader } from "../vendor/three/jsm/loaders/KTX2Loader.js";
-import { MeshoptDecoder } from "../vendor/three/jsm/libs/meshopt_decoder.module.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { box, merge, mesh, footAt, BODY } from "./geo.js";
 import { frameRoom, CEILING, bays } from "./framing.js";
 
@@ -85,7 +86,7 @@ function mount(slug) {
     x.strokeStyle = "rgba(60,50,40,.3)"; x.lineWidth = 3; x.strokeRect(22, 22, 724, 1082);
     tex.needsUpdate = true;
   };
-  im.src = new URL(`../levels/t00/gallery/${slug}.webp`, import.meta.url).href;
+  im.src = asset(`levels/t00/gallery/${slug}.webp`);
   return tex;
 }
 
@@ -271,8 +272,8 @@ export function buildInteriors(M, halls, renderer) {
     try {
       // The statue and its pedestal are not kept in git: `pnpm install` fetches them as they are published (tools/setup.mjs),
       // packed with meshopt and with Basis textures, which are opened here by the decoders that come with three.js.
-      const base = new URL("../shared/models/", import.meta.url).href, loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-      if (renderer) loader.setKTX2Loader(new KTX2Loader().setTranscoderPath(new URL("../vendor/three/jsm/libs/basis/", import.meta.url).href).detectSupport(renderer));
+      const base = asset("shared/models/"), loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+      if (renderer) loader.setKTX2Loader(new KTX2Loader().setTranscoderPath(asset("vendor/basis/")).detectSupport(renderer));
       const get = async (name) => (await loader.loadAsync(base + name)).scene;
       const [buddha, ped] = await Promise.all([get("buddha.glb"), get("pedestal.glb")]);
       buddha.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.5; o.material.envMapIntensity = 0; } });
@@ -287,7 +288,7 @@ export function buildInteriors(M, halls, renderer) {
   // The other figures (STAND) are fetched the first time a hall that has them is entered; each file once, however
   // many halls stand a copy. They come one unit tall, standing on the origin, painted on their vertices.
   const scans = {}, plain = typeof document === "undefined" ? null : new GLTFLoader(); state.stood = {};
-  const get = (file, h) => (scans[file] ||= plain.loadAsync(new URL(`../shared/models/${file}.glb`, import.meta.url).href).then((s) => s.scene)).then((src) => {
+  const get = (file, h) => (scans[file] ||= plain.loadAsync(asset(`shared/models/${file}.glb`)).then((s) => s.scene)).then((src) => {
     const o = src.clone(true); o.traverse((m) => { if (m.isMesh) { m.material.envMapIntensity = 0.12; m.castShadow = false; } }); o.scale.setScalar(h); state.stood[file] = (state.stood[file] || 0) + 1; return o;
   });
   halls.forEach((hall, i) => {

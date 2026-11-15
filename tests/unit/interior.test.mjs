@@ -2,7 +2,7 @@
 // its building shows outside, and nothing that stands in it cuts a visitor off from a frame or the altar.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const { buildSite } = await import("../../app/src/site.js");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { BODY } = await import("../../app/src/geo.js");

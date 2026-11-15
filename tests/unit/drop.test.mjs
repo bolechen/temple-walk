@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import './dom-stub.mjs';import * as THREE from '../../app/vendor/three/build/three.module.js';
+import './dom-stub.mjs';import * as THREE from 'three';
 import { buildSite,createWalker } from '../../app/src/site.js';
 import { findDrop,dropPose } from '../../app/src/drop.js';
 const M=new Proxy({}, {get(t,k){return k==='plaster'||k==='interior'?()=>t[k]||=new THREE.MeshBasicMaterial():t[k]||=new THREE.MeshBasicMaterial();}});

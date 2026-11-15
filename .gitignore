@@ -11,3 +11,6 @@ __pycache__/
 # What pnpm install fetches or copies (tools/setup.mjs): not kept in git
 node_modules/
 app/vendor/
+
+# What `pnpm build` writes: the site as it is published
+dist/

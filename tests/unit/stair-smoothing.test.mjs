@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import './dom-stub.mjs';import * as THREE from '../../app/vendor/three/build/three.module.js';import {createWalker} from '../../app/src/site.js';import {createMonk} from '../../app/src/monk.js';import {stairGeo} from '../../app/src/geo.js';
+import './dom-stub.mjs';import * as THREE from 'three';import {createWalker} from '../../app/src/site.js';import {createMonk} from '../../app/src/monk.js';import {stairGeo} from '../../app/src/geo.js';
 function sample(dt,descending){
  const rise=4,run=stairGeo(4,rise).run,w=createWalker({walk:{solids:[],decks:[],ramps:[{x0:-1.7,x1:1.7,z0:-.3,z1:run+.3,h:rise,low:[0,run],high:[0,0]}]}}),monk=createMonk();let last=null,max=0;
  for(let i=0;i<Math.round(2.5/dt);i++){

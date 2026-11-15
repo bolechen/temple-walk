@@ -48,18 +48,19 @@
 
 ## 运行
 
-应用没有构建步骤，页面是原生 ES 模块。**Three.js r186 不放在 Git 里**，由 pnpm 取回：需要 Node.js 22+ 和 pnpm 10，先在仓库根目录执行一次
+页面是 ES 模块，由 Vite 开发和构建（2026-11-15 起）；Three.js r186 是 pnpm 依赖，不放在 Git 里。需要 Node.js 22+ 和 pnpm 10，先在仓库根目录执行一次
 
 ```sh
-pnpm install   # 装依赖，并运行 tools/setup.mjs：把 three.js 用到的文件拷进 app/vendor/three/，并校验 app/shared/models/ 里的佛像文件
+pnpm install   # 装依赖，并运行 tools/setup.mjs：把 Basis 转码器拷进 app/vendor/basis/，并校验 app/shared/models/ 里的佛像文件
 ```
 
-之后只需要支持 WebGL2 的现代浏览器及一个静态服务器。
-
-从仓库根目录运行：
+之后从仓库根目录运行：
 
 ```sh
-python3 -m http.server 8000 --bind 127.0.0.1 --directory app
+pnpm dev         # Vite 开发服务器，改代码即时生效
+pnpm build       # 构建到 dist/，即发布到 GitHub Pages 的站点；测试和出图工具打开的也是它
+pnpm preview     # 在本机看构建结果
+pnpm typecheck   # TypeScript 检查已纳入的模块（tsconfig.json 的 include，逐步扩大）
 ```
 
 打开 `http://127.0.0.1:8000/`。默认只绑定本机；不要把开发工具服务器暴露到公网或不可信网络。
@@ -155,11 +156,11 @@ node tools/shots.js court@autumn-dusk@third
 
 许可须按资产分别处理：
 
-- **项目代码**：根目录尚无项目 LICENSE，许可待维护者明确；不要因仓库 public 就推定已有统一开源许可。
-- **佛像模型**：`app/shared/models/`，约 3.9 MB，是如是我闻 `/zen` 场景 CDN 上发布的原始文件（`tools/setup.mjs` 里记着地址和校验和）。它们仍留在 Git 里，因为那个 CDN 拒绝 GitHub 的构建机（403），发布不能依赖现取。授权依据仍需所有者确认或替换，不能将原站可下载视作授权。
+- **项目代码**：暂不开源，保留所有权利（所有者 2026-11-15 决定）。仓库公开只为协作与查看，不构成使用、修改或再分发的许可。
+- **佛像模型**：`app/shared/models/`，约 3.9 MB，是如是我闻 `/zen` 场景 CDN 上发布的原始文件（`tools/setup.mjs` 里记着地址和校验和）。它们仍留在 Git 里，因为那个 CDN 拒绝 GitHub 的构建机（403），发布不能依赖现取。所有者 2026-11-15 确认：模型归其所有，可随本项目分发；这不等于向第三方授予再使用的许可。
 - **扫描贴图**：来源与生成方式见 [tools/textures.py](tools/textures.py)，当前记录为 Poly Haven CC0。
 - **字体**：本地子集、来源及相关许可见 [tools/fonts.py](tools/fonts.py) 和 [app/shared/fonts/OFL.txt](app/shared/fonts/OFL.txt)。
-- **Three.js 与扩展**：由 pnpm 管理（`three@0.186.0`，MIT），安装时拷到 `app/vendor/three/`（Git 忽略），其 LICENSE 一并拷入。
+- **Three.js 与扩展**：由 pnpm 管理（`three@0.186.0`，MIT），由 Vite 打进站点；只有 Basis 转码器在安装时拷到 `app/vendor/basis/`（Git 忽略），其 LICENSE 一并拷入。
 - **参考图片与其他素材**：保留来源、作者、版本和用途记录；不能笼统由项目代码许可覆盖。
 
 删除当前文件不等于移除 Git 历史中的内容。若发现真实凭据，先撤销或轮换，再按影响范围处理历史；如发现安全漏洞，请避免在公开 Issue 中贴出凭据、个人数据或真实敏感文件内容。
@@ -179,7 +180,8 @@ node tools/shots.js court@autumn-dusk@third
 | `app/src/card.js`、`goshuin.js`、`plaque.js`、`audio.js` | 分享卡片、印章、匾额与合成声音 |
 | `app/levels/t00/` | 序章这一关自己的资源：`gallery/` 殿内真迹图片、`boards/` 匾额取字 |
 | `app/shared/` | 各关共用的资源：`fonts/` 字体子集、`textures/` 扫描贴图、`models/` 佛像与莲座 |
-| `app/vendor/three/` | three.js（不入库，由 pnpm 安装后拷入） |
+| `app/vendor/basis/` | Basis 转码器（不入库，由 pnpm 安装后拷入） |
+| `vite.config.mjs`、`tsconfig.json`、`dist/` | 构建与类型检查的设置；`dist/` 是构建结果，不入库 |
 | `package.json`、`pnpm-lock.yaml`、`tools/setup.mjs` | 依赖与安装后的准备步骤 |
 | `tools/`、`tests/` | 截图、GPU 渲染及测试工具 |
 | `refs/`、`docs/` | 视觉参考、研究与开发记录；参考图不是测绘或验收证明 |
@@ -188,8 +190,8 @@ node tools/shots.js court@autumn-dusk@third
 
 ## 下一步
 
-1. 补齐资产许可（开发工具服务器的边界与监听问题已修）。
-2. 配置 PR 检查与分支保护，明确贡献和项目许可。
+1. 配置 PR 检查与分支保护。
+2. 把类型检查逐步扩大到带 three.js 的模块；第二关开工前把「引擎」和「这一关」的代码分开。
 3. 改善植被重复感、近景材质及雾的前中后景层次，提交固定机位对照图。
 4. 完成当前版本正常速度往返走查及目标设备性能测量。
 5. 继续核对斗拱、梁架、檐口、器物与构图；优先完善已实现区域，再扩展剧情与天气。

@@ -16,7 +16,7 @@
 // - the meditation hall, the tea house and the patriarchs' hall no ceiling at all (cheshang mingzao): the roof is open to
 //   the rafters, its purlins carried on the beam by a camel's-hump block, posts, a short upper beam and two raking
 //   struts under the ridge (chashou), and the gable walls rise to meet it.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { box, merge, footAt } from "./geo.js";
 
 export const CEILING = { buddha: "coffer", figure: "coffer", pavilion: "coffer", library: "plain", chan: "open", tea: "open", patriarch: "open" };

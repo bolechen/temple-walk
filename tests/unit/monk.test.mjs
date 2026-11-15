@@ -2,7 +2,7 @@
 // legs reach for the floor, the arms reach to pray, and what hangs off him swings.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const { createMonk } = await import("../../app/src/monk.js");
 const HUMANOID = ["hips", "spine", "chest", "neck", "head", ...["left", "right"].flatMap((s) => ["Shoulder", "UpperArm", "LowerArm", "Hand", "UpperLeg", "LowerLeg", "Foot"].map((b) => s + b))];
 const world = (o) => o.getWorldPosition(new THREE.Vector3());

@@ -1,19 +1,19 @@
 # T00 云径禅寺 · 启动说明
 
-《山门之外》序章。浏览器里的 three.js r186 场景，没有构建步骤。three.js 不在 Git 里，由 `pnpm install` 取回。
+《山门之外》序章。浏览器里的 three.js r186 场景，由 Vite 开发和构建。three.js 不在 Git 里，由 `pnpm install` 取回。
 
 ## 启动
 
 ```sh
 git clone <本仓库> && cd temple-walk
-pnpm install             # 依赖；并把 three.js 拷进 app/vendor/three/
-pnpm run serve           # 等于 python3 -m http.server 8000 --bind 127.0.0.1 --directory app
+pnpm install             # 依赖；并把 Basis 转码器拷进 app/vendor/basis/
+pnpm dev                 # Vite 开发服务器，只监听 127.0.0.1:8000
 ```
 
-打开 <http://localhost:8000/>，点「入山」。任何静态文件服务器都可以，直接把 `app/` 当站点根目录。
+打开 <http://localhost:8000/>，点「入山」。要看发布出去的样子：`pnpm build` 之后把 `dist/` 交给任何静态文件服务器（或 `pnpm preview`）。
 
-需要的东西：一个支持 WebGL2 的浏览器；本地需要 Node.js 22+、pnpm 10（只为安装那一步）和 Python 3（或任何静态服务器）。
-没有锁文件，因为没有依赖：three.js 在 `app/vendor/three/`，字体在 `app/shared/fonts/`，贴图在 `app/shared/textures/`，佛像模型在 `app/shared/models/`。
+需要的东西：一个支持 WebGL2 的浏览器；本地需要 Node.js 22+ 和 pnpm 10。
+依赖由 `pnpm-lock.yaml` 锁定（three、vite、typescript、playwright）；字体在 `app/shared/fonts/`，贴图在 `app/shared/textures/`，佛像模型在 `app/shared/models/`。
 测试和出图工具另外需要 Node 22+ 和 Playwright（Chromium）。
 
 ## 操作

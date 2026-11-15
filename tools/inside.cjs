@@ -5,7 +5,7 @@
 //   view = "first" | "third"; qs = more address parameters, e.g. "time=night".
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
-const root = path.join(__dirname, "..", "app"), out = process.argv[2];
+const root = require("./site.cjs").site(), out = process.argv[2];
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
 const srv = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), p = path.join(root, rel);

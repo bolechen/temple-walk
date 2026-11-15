@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import './dom-stub.mjs';
-import * as THREE from '../../app/vendor/three/build/three.module.js';
+import * as THREE from 'three';
 import { stairGeo } from '../../app/src/geo.js';
 import { createWalker } from '../../app/src/site.js';
 import { buildHall } from '../../app/src/building.js';

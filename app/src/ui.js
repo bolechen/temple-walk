@@ -59,7 +59,7 @@ export function createUI() {
       try { e.onClose?.(e); } catch (err) { console.error(err); }
       const back = (L.returnFocus && $(L.returnFocus)) || e.opener;
       if (L.kind !== "mode" && back && back !== document.body && back.isConnected && back.offsetParent !== null) back.focus?.({ preventScroll: true });
-      else if (document.activeElement && L.el?.contains(document.activeElement)) document.activeElement.blur();
+      else if (document.activeElement && L.el?.contains(document.activeElement)) /** @type {HTMLElement} */ (document.activeElement).blur();
     }
     return true;
   }
@@ -75,7 +75,7 @@ export function createUI() {
     if (k === "tab") return true;   // the browser moves the focus among the sheet's own buttons
     const t = ev.target, own = t && t !== L.el && L.el?.contains(t) && /^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(t.tagName);
     if ((k === "enter" || k === " ") && own) return true;   // a focused button presses itself
-    const press = (bid) => { const b = bid && $(bid); if (b && !b.disabled && b.offsetParent !== null) { b.click(); return true; } return false; };
+    const press = (bid) => { const b = /** @type {HTMLButtonElement | null} */ (bid && $(bid)); if (b && !b.disabled && b.offsetParent !== null) { b.click(); return true; } return false; };
     if ((k === "e" || k === "enter" || k === " ") && press(L.confirm)) { ev.preventDefault(); return true; }
     if (L.keys && L.keys[k]) { press(L.keys[k]); ev.preventDefault(); }
     return true;   // nothing behind an open sheet answers a key

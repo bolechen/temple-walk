@@ -1,7 +1,7 @@
 // Every script in the app must at least parse. Vendored libraries are skipped.
 const { execFileSync } = require("child_process"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app"), files = [];
-(function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) { if (f !== "vendor") walk(p); } else if (f.endsWith(".js")) files.push(p); } })(root);
+(function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) { if (f !== "vendor" && f !== "node_modules") walk(p); } else if (f.endsWith(".js")) files.push(p); } })(root);
 let bad = 0;
 for (const f of files) { try { execFileSync(process.execPath, ["--check", f], { stdio: "pipe" }); } catch (e) { bad++; console.error(String(e.stderr).split("\n").slice(0, 6).join("\n")); } }
 // Shader fragments handed to procMat are wrapped in one line of braces: a trailing // comment would swallow the closing brace.

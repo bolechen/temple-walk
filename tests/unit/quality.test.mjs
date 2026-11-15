@@ -1,7 +1,7 @@
 // Which tier a machine starts on, from the name of its graphics card.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { tierFor, mirrorAt } from "../../app/src/quality.js";
 const { buildSite, createWalker, LEVELS, APPROACH } = await import("../../app/src/site.js");
 

@@ -1,5 +1,5 @@
 import '../../tests/unit/dom-stub.mjs';
-import * as THREE from '../../app/vendor/three/build/three.module.js';
+import * as THREE from 'three';
 import {buildSite,createWalker,APPROACH} from '../../app/src/site.js';
 import fs from 'node:fs';
 const out=process.argv[2]||'tools/out/edge-audit';fs.mkdirSync(out,{recursive:true});

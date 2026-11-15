@@ -8,7 +8,7 @@ on:
   # photograph is changed; it waits for the weekly run or a run asked for by hand.
   push:
     branches: [main]
-    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml"]
+    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs"]
   workflow_dispatch:
     inputs:
       scenarios:
@@ -37,7 +37,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run check && pnpm test
+      - run: pnpm run check && pnpm run typecheck && pnpm test
       - name: His whole body fits everywhere his feet may go
         run: pnpm run edges
       - name: Remember the browser between runs

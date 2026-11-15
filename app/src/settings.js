@@ -5,11 +5,14 @@
 export const SETTINGS_KEY = "yunjing.settings.v1";
 export const QUALITIES = ["auto", "low", "medium", "high"];
 export const LEVELS = ["volume", "music", "ambience", "effects"];
+/** @typedef {{ quality: string, sens: number, invertY: boolean, fov: number, volume: number, music: number, ambience: number, effects: number }} Settings */
+/** @type {Readonly<Settings>} */
 export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, fov: 0, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
 export const FOV_RANGE = [-6, 16];   // degrees taken from or added to the angle of view, which differs by view and screen
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 export function sanitize(saved) {
+  /** @type {Settings} */
   const s = { ...DEFAULTS };
   if (saved && typeof saved === "object") {
     if (QUALITIES.includes(saved.quality)) s.quality = saved.quality;

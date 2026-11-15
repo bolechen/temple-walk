@@ -11,9 +11,9 @@
 // two-bone solver, so each shoe stands on the tread under it; the spine is posed directly, and the arms reach with the
 // same solver to bring the palms together. As with the girl in Watercolour (docs/WATERCOLOUR-TEARDOWN.md), what hangs
 // off him swings on small springs driven by his speed and his turning.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { STAIR } from "./geo.js";
-import { mergeGeometries } from "../vendor/three/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const sq = (v) => v * v, clamp = THREE.MathUtils.clamp, damp = THREE.MathUtils.damp, TAU = Math.PI * 2;

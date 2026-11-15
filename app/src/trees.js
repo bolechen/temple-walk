@@ -5,8 +5,8 @@
 // sprays ("cards"), each drawn large and fine with the leaves of its kind. The cards do not light as the flat
 // things they are: every one borrows its normal from the round crown it belongs to, so a tree shades as a mass,
 // light on top and toward the sun, dark within. With the sun behind them the leaves glow.
-import * as THREE from "../vendor/three/build/three.module.js";
-import { mergeGeometries } from "../vendor/three/jsm/utils/BufferGeometryUtils.js";
+import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { merge, mesh } from "./geo.js";
 import { U } from "./glsl.js";
 import { SUN_DIR } from "./sky.js";

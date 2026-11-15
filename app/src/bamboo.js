@@ -1,7 +1,7 @@
 // A grove you can stand in: real culms with drooping sprays of leaves, merged into two meshes.
 // The far grove beyond is painted (backdrop.js); this is what stands close enough to be looked at.
-import * as THREE from "../vendor/three/build/three.module.js";
-import { mergeGeometries } from "../vendor/three/jsm/utils/BufferGeometryUtils.js";
+import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { crownMaterial } from "./trees.js";
 
 function leafTexture() {

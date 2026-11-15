@@ -2,7 +2,8 @@
 // and a book that fills. journey.js keeps the book; this file puts it on the page and in the place: the rings drawn
 // on the ground where an observance is made, the button that offers it, how each one unfolds, the seal that
 // answers it, and the page of seals at the end. yard.js lends it the walker, the novice and the clock (`y`).
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
+import { asset } from "./assets.js";
 import { WORKS } from "./works.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
 import { drawGoshuin, sealStamp } from "./goshuin.js";
@@ -140,7 +141,7 @@ export function createGame(y) {
   // ---- A work on the wall, read closely: the picture, and beside it what an encyclopedia would say ----
   function showWork(slug, spot) {
     const w = WORKS[slug], el = $("piece"); if (!w || !el) return;
-    $("pieceImg").src = new URL(`../levels/t00/gallery/${slug}.webp`, import.meta.url).href; $("pieceImg").alt = w.title;
+    $("pieceImg").src = asset(`levels/t00/gallery/${slug}.webp`); $("pieceImg").alt = w.title;
     $("pieceTitle").textContent = w.title; $("pieceBy").textContent = [w.by, w.dates].filter(Boolean).join("　");
     $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && w.size + " 厘米"], ["收藏", w.holder + (w.rank ? "　" + w.rank : "")]].filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     $("pieceNote").textContent = w.note; $("pieceLink").textContent = w.link; $("pieceCredit").textContent = w.credit;

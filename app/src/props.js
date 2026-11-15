@@ -1,5 +1,5 @@
 // The bronze censer with its thread of smoke, and sheets of mist hanging beyond the walls.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { merge, mesh } from "./geo.js";
 
 export function createProps(scene, M, at, centre) {

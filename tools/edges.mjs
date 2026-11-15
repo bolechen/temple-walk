@@ -13,7 +13,7 @@
 // What it prints: for each building and each kind of thing (by material), the deepest any part of him can get into
 // it and where he stands when it happens. It exits with an error if anything is deeper than the tolerance.
 import "../tests/unit/dom-stub.mjs";
-import * as THREE from "../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 import fs from "node:fs";
 const { buildSite, createWalker, SITE, APPROACH, LEVELS } = await import("../app/src/site.js");
 const { CHEEK, stairProfile } = await import("../app/src/geo.js");

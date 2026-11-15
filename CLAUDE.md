@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A mobile-browser walk through a code-generated Zen mountain temple (three.js r186, a pnpm dependency copied into `app/vendor/three/` at install). The design brief, scene walkthrough and known gaps are in `README.md` (Chinese). `docs/JINGSHAN.md` records the research on the real Jingshan temple and which "soul elements" each part of the scene stands for; `docs/SALTLINE-TEARDOWN.md` is the rendering reference we measure against. Read `JINGSHAN.md` before changing the plan: every building, name board and prop exists for a reason listed there, and the "有意没有做的" section lists things deliberately left out.
+A mobile-browser walk through a code-generated Zen mountain temple (three.js r186, a pnpm dependency bundled by Vite). The design brief, scene walkthrough and known gaps are in `README.md` (Chinese). `docs/JINGSHAN.md` records the research on the real Jingshan temple and which "soul elements" each part of the scene stands for; `docs/SALTLINE-TEARDOWN.md` is the rendering reference we measure against. Read `JINGSHAN.md` before changing the plan: every building, name board and prop exists for a reason listed there, and the "有意没有做的" section lists things deliberately left out.
 
 The guiding principle from the README: 画面精美庄严是第一原则 (a beautiful, solemn image comes first). The scene is an original interpretation, not a reconstruction, and the temple name 云径禅寺 is fictional.
 
@@ -17,7 +17,7 @@ Four outside projects are documented as references:
 - **《小王子：星辰之旅》** (<https://littleprince.dev>) is the reference for taste: a quiet, painterly place worth lingering in, with a memorable visual identity rather than technical spectacle. It is a Unity WebGPU desktop game, not a three.js page; `docs/LITTLEPRINCE-TEARDOWN.md` records what its shipped files show and which of its engineering habits are worth copying here.
 - **Saltline** (Felix Rieseberg's generated dock-shooter) is the rendering benchmark. `docs/SALTLINE-TEARDOWN.md` explains its pipeline and ends with the intended order of rendering work here: baked textures, an independent backdrop module, then volumetric fog and light before soft shadows. Its gap table is a snapshot from when the project had a single courtyard; the lines about the module split, blank plaques and missing audio are now stale, so read the conclusions rather than the table as current state.
 - **Watercolour** (<https://patch.gg/blendi/watercolour>, by @blendi) is the reference for painterly materials, instanced brush marks and deterministic capture. `docs/WATERCOLOUR-TEARDOWN.md` records its paint-arrival map, depth-aware paper pass and what should not be carried into a solemn temple. It is a technical reference, not an approved visual direction.
-- **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/shared/models/` (`static.rushiwowen.co/models/zen-v2/`). They are kept in git as published (about 3.9 MB, meshopt and Basis packed; `tools/setup.mjs` records where they come from and checks their hashes) because that CDN refuses GitHub's runners, so a publication cannot fetch them; the page opens them with three's meshopt and Basis decoders. No redistribution licence for these models is recorded, so they must still be confirmed or replaced (README, `docs/t00/asset-register.csv`).
+- **如是我闻 `/zen`** is the source of the Buddha and pedestal models in `app/shared/models/` (`static.rushiwowen.co/models/zen-v2/`). They are kept in git as published (about 3.9 MB, meshopt and Basis packed; `tools/setup.mjs` records where they come from and checks their hashes) because that CDN refuses GitHub's runners, so a publication cannot fetch them; the page opens them with three's meshopt and Basis decoders. On 2026-11-15 the owner confirmed they own these models and that they may ship with this project (README, `docs/t00/asset-register.csv`).
 
 **Art direction.** `docs/ART-SPEC.md` records the art specification the owner pointed to (the project's research atlas, where this temple is entry T00: "quiet realism, light that comes from somewhere", a working palette, material rules, an acceptance list) and where the scene stands against each rule. Check a visual change against it.
 
@@ -27,11 +27,13 @@ Four outside projects are documented as references:
 
 ## Commands
 
-No build step: the page is plain ES modules. But three.js is not kept in git and comes with the install:
+The page is ES modules developed and built with Vite; three.js is imported as `"three"` / `"three/addons/…"` and comes with the install:
 
 ```sh
-pnpm install                        # dependencies, then tools/setup.mjs: three.js copied to app/vendor/three/, the statues' hashes checked
-pnpm run serve                      # = python3 -m http.server 8000 --bind 127.0.0.1 --directory app (this machine only)
+pnpm install                        # dependencies, then tools/setup.mjs: the Basis transcoder copied to app/vendor/basis/, the statues' hashes checked
+pnpm dev                            # Vite's dev server on 127.0.0.1:8000 (this machine only)
+pnpm build                          # the site as published → dist/ (git-ignored); `pnpm preview` serves it
+pnpm typecheck                      # tsc with checkJs over the modules listed in tsconfig.json; add a module there once it passes
 ```
 
 **Where things live.** `app/src/` is the code. What belongs to a level sits under `app/levels/<level>/`: for the
@@ -41,6 +43,12 @@ materials are grained with) and `models/` (the statue and its pedestal). `app/ve
 A resource that can be had again from where it came from, by the machines that publish the site as well as by a
 person (a library from the registry), is fetched by `tools/setup.mjs` rather than committed; one that was worked on here (a packed texture, a cut
 typeface, a cropped picture) is committed with the tool that made it. The page's documents live in `docs/<level>/`.
+
+**The built site is what is tested and published.** The end-to-end tests, `shots.js`, `portrait.js`, `inside.cjs` and the GPU job open `dist/`, not
+`app/`: `tools/site.cjs` rebuilds it first whenever anything in `app/` is newer than the last build. What the page fetches by name
+(textures, models, gallery pictures, board hands, the Basis transcoder) is found from the page's own address through `asset()` in
+`app/src/assets.js` and copied into `dist/` as it lies (`KEPT` in `vite.config.mjs`); never write `new URL("../…", import.meta.url)` for such a
+file, because a bundled script no longer sits where its source did. The unit tests and Node tools import `app/src/*.js` directly.
 
 `package.json` names the commands and two dependencies: `three` and, for the tests, `playwright` (pinned to the
 version whose Chromium the machines already hold; get the browser once with `pnpm exec playwright install chromium`).
@@ -94,8 +102,8 @@ page then shows mean frame rate and 95th-percentile frame and offers `performanc
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.
 
-Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, unit tests, and the `boot`
-scenario in a real browser) and then, only if that passes, publishes `app/` as it stands after the install to GitHub
+Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, type check, unit tests, build, and the `boot`
+scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
 The slower scenarios (`stairs drop`) run beside each publication in `.github/workflows/e2e.yml`, not in its
 way; the same workflow runs every scenario once a week and on demand. A red `verify` means the site was not published: read the uploaded

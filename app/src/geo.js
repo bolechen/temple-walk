@@ -1,6 +1,6 @@
 // Small geometry helpers.
-import * as THREE from "../vendor/three/build/three.module.js";
-import { mergeGeometries, mergeVertices } from "../vendor/three/jsm/utils/BufferGeometryUtils.js";
+import * as THREE from "three";
+import { mergeGeometries, mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 export const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 export const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };

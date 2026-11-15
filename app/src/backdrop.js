@@ -1,5 +1,5 @@
 // Everything beyond the walls: bamboo, then three ranges of hills lost progressively in the mist.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
 import { NOISE, fogMix, U } from "./glsl.js";
 import { FOG } from "./sky.js";
 

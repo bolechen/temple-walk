@@ -2,7 +2,7 @@
 // manifest can never disagree with what the page draws.   node tools/cameras.mjs
 import "../tests/unit/dom-stub.mjs";
 import fs from "node:fs";
-import * as THREE from "../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const { buildSite, createWalker } = await import("../app/src/site.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site), EYE = 1.3, r = (v) => +v.toFixed(2);

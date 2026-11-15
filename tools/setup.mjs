@@ -4,8 +4,8 @@
 //     node tools/setup.mjs            (run by pnpm after an install; safe to run again)
 //     node tools/setup.mjs --force    (fetch and copy everything afresh)
 //
-// 1. three.js. The page is plain ES modules with no bundler, so the files it imports are copied out of the installed
-//    package into app/vendor/three/, with `from "three"` turned into the relative path a browser can follow.
+// 1. The Basis transcoder. three.js itself is imported from node_modules and bundled by Vite; only the transcoder,
+//    which a worker fetches by name, is copied out of the installed package into app/vendor/basis/.
 // 2. The statue and its pedestal for the halls of level T00 (app/shared/models/). These ARE kept in git, as
 //    published (meshopt and Basis packed, 3.9 MB): the CDN they come from (如是我闻 /zen) turns GitHub's runners
 //    away with a 403, so a publication cannot depend on fetching them. Here they are only checked against the
@@ -15,29 +15,17 @@ import fs from "node:fs"; import { execFileSync } from "node:child_process"; imp
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), ".."), FORCE = process.argv.includes("--force");
 const say = (...a) => console.log("setup:", ...a);
 
-// ---- three.js ----
-const JSM = [
-  "postprocessing/Pass.js", "postprocessing/EffectComposer.js", "postprocessing/RenderPass.js", "postprocessing/ShaderPass.js", "postprocessing/MaskPass.js",
-  "postprocessing/UnrealBloomPass.js", "postprocessing/OutputPass.js", "shaders/CopyShader.js", "shaders/LuminosityHighPassShader.js", "shaders/OutputShader.js",
-  "loaders/GLTFLoader.js", "loaders/KTX2Loader.js", "utils/BufferGeometryUtils.js", "utils/SkeletonUtils.js", "utils/WorkerPool.js",
-  "math/ColorSpaces.js", "libs/meshopt_decoder.module.js", "libs/ktx-parse.module.js", "libs/zstddec.module.js", "libs/basis/basis_transcoder.js", "libs/basis/basis_transcoder.wasm",
-];
+// ---- the Basis transcoder ----
+// The one part of three.js the page fetches by name instead of importing: KTX2Loader starts it in a worker.
 function vendor() {
   const require = createRequire(import.meta.url); let pkg;
   try { pkg = path.join(path.dirname(require.resolve("three")), ".."); } catch { throw new Error("three is not installed: run `pnpm install`"); }   // its package.json is not exported; its entry point is build/three.cjs
-  const version = JSON.parse(fs.readFileSync(path.join(pkg, "package.json"), "utf8")).version, out = path.join(ROOT, "app/vendor/three"), stamp = path.join(out, "VERSION");
-  if (!FORCE && fs.existsSync(stamp) && fs.readFileSync(stamp, "utf8").trim() === version && JSM.every((f) => fs.existsSync(path.join(out, "jsm", f)))) return say(`three ${version} already in app/vendor/three`);
-  fs.rmSync(out, { recursive: true, force: true });
-  const put = (from, to, text) => {
-    fs.mkdirSync(path.dirname(to), { recursive: true });
-    if (!text) return fs.copyFileSync(from, to);
-    const up = path.relative(path.dirname(to), path.join(out, "build/three.module.js")).split(path.sep).join("/");
-    fs.writeFileSync(to, fs.readFileSync(from, "utf8").replace(/(from\s*)(['"])three\2/g, `$1$2${up}$2`).replace(/(from\s*)(['"])three\/addons\//g, `$1$2${path.relative(path.dirname(to), path.join(out, "jsm")).split(path.sep).join("/") || "."}/`));
-  };
-  for (const f of ["three.module.js", "three.core.js"]) put(path.join(pkg, "build", f), path.join(out, "build", f), false);
-  for (const f of JSM) put(path.join(pkg, "examples/jsm", f), path.join(out, "jsm", f), /\.js$/.test(f) && !/basis_transcoder/.test(f));
+  const version = JSON.parse(fs.readFileSync(path.join(pkg, "package.json"), "utf8")).version, out = path.join(ROOT, "app/vendor/basis"), stamp = path.join(out, "VERSION"), files = ["basis_transcoder.js", "basis_transcoder.wasm"];
+  if (!FORCE && fs.existsSync(stamp) && fs.readFileSync(stamp, "utf8").trim() === version && files.every((f) => fs.existsSync(path.join(out, f)))) return say(`the Basis transcoder of three ${version} is already in app/vendor/basis`);
+  fs.rmSync(path.join(ROOT, "app/vendor"), { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
+  for (const f of files) fs.copyFileSync(path.join(pkg, "examples/jsm/libs/basis", f), path.join(out, f));
   fs.copyFileSync(path.join(pkg, "LICENSE"), path.join(out, "LICENSE")); fs.writeFileSync(stamp, version + "\n");
-  say(`three ${version} copied to app/vendor/three (${JSM.length + 2} files)`);
+  say(`the Basis transcoder of three ${version} copied to app/vendor/basis`);
 }
 
 // ---- the statues of level T00 ----

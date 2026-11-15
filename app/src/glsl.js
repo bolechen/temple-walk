@@ -1,5 +1,5 @@
 // Shader building blocks shared by every procedural material.
-import * as THREE from "../vendor/three/build/three.module.js";
+import * as THREE from "three";
 
 // What every shader needs to know about the hour and the season. One object each, shared by reference.
 export const U = {
