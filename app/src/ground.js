@@ -87,9 +87,11 @@ export function createGround(scene, shade, censer, paving) {
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
         // Snow lies where no one has walked: thin on the path, deep in the corners.
         float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.8:0.)-(kerb?.35:0.))*smoothstep(-.2,.7,dB); puddle*=1.-sn; damp*=1.-sn;
+        // Snow on the paving is as bright as the same snow on a platform or a roof: the paving is lit by hand for stone
+        // a third as pale, and at full brightness the snow was a glowing white with nothing in it.
         // Where he has walked the snow is pressed down: darker, a little blue, and in thin snow the stone shows through.
         vec3 tr=sn>.001?trail(vWP):vec3(0.); sn*=1.-tr.x*smoothstep(.8,.2,sn)*.6;
-        vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*(.88+.24*wN.z)*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
+        vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*.6*(.88+.24*wN.z)*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
         vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
