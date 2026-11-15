@@ -104,7 +104,7 @@ SetScripted SetExternal ReturnToPlayer`。按名字读：自己积分重力和�
 下滑；身体上台阶后，画面上的高度再用 `stepSmoothTime` 缓过去（这里的 `_stepOffset` 是它自己的台阶平滑，不是胶囊的
 `stepOffset` 参数）；过场时脚本接管、结束后交还。
 
-**相机是它花力气最多的地方之一。** `ThirdPersonCamera` 的字段有 `collisionRadius collisionRecoverTime followSmoothTimeXZ
+**相机自成一组类。** `ThirdPersonCamera` 的字段有 `collisionRadius collisionRecoverTime followSmoothTimeXZ
 followSmoothTimeY maxFollowLag groundClearance hideCharacterBelow showCharacterAbove liftBelow maxLiftPitch liftStep
 liftSmoothTime maxSwing swingSpeed coverMargin`，方法有 `CastClear KeepAboveGround FindLift FindSwing SolveSteady`。
 旁边还有 `CameraOccluderFade`（淡化挡在中间的东西）、`InteriorCameraZone`（进屋时距离、俯仰、视角在 `blendTime` 内过渡）、
