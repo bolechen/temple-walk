@@ -56,3 +56,13 @@ test("no column stands in furniture, and every frame and the altar can be walked
     for (const p of Object.values(built.places).filter((p) => p.room === h.id)) assert.ok(reach(p.at[0], p.at[1], p.r), `${h.name}: the altar cannot be walked to`);
   }
 });
+
+test("under an open roof the gable walls rise with the boards, from the eaves to the ridge, and close the join", () => {
+  for (const h of site.halls) {
+    const f = built.rooms[h.id].room.frame; if (f.kind !== "open") continue;
+    const at = (line, z) => { for (let i = 1; i < line.length; i++) { const [z0, y0] = line[i - 1], [z1, y1] = line[i]; if (z >= Math.min(z0, z1) - 1e-6 && z <= Math.max(z0, z1) + 1e-6) return z1 === z0 ? Math.max(y0, y1) : y0 + ((y1 - y0) * (z - z0)) / (z1 - z0); } return null; };
+    const top = f.gable.slice(1, -1);
+    for (const [z, y] of f.boards) { const g = at(top, z); assert.ok(g !== null && g >= y && g <= y + 0.4, `${h.name}: at z ${z.toFixed(2)} the gable stands at ${g?.toFixed(2)} and the boards at ${y.toFixed(2)}`); }
+    const ridge = Math.max(...f.boards.map(([, y]) => y)), eave = f.boards[0][1]; assert.ok(ridge > eave + 1, `${h.name}: the roof does not rise to a ridge`);
+  }
+});

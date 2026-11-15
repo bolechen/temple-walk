@@ -118,7 +118,7 @@ export function frameRoom(M, add, { K, hall, Y, focus, clear }) {
   some(shafts, M.woodV); some(bases, M.monolith); some(caps, M.woodX, lowAO(0.55)); some(wood, M.woodX, lowAO(0.5));
 
   let roofAt = () => H;
-  if (kind === "open") roofAt = openRoof(M, add, B, H, top, lowAO);
+  if (kind === "open") { const o = openRoof(M, add, B, H, top, lowAO); roofAt = o.roofAt; members.gable = o.gable; members.boards = o.boards; }
   else flatCeiling(M, add, B, H, kind, CELL[hall.kind] || 0.4, kind === "coffer" ? focus : null, inX, bw, lowAO);
   members.colTop = colTop; members.ceiling = H; members.spans = spans;
   return { cols, members, roofAt, hw: kind === "open" ? K.h + 0.45 : K.h };
@@ -184,7 +184,8 @@ function caisson(M, add, hole, H, frame, gilt, rib) {
   }
   frame.push(...blocks, at(octa(a + 0.02, a + 0.02, y2 - 0.02, y2 + 0.04)));
   // The mirror at the crown: a gilt disc with a raised rim.
-  gilt.push(at(new THREE.CircleGeometry(top * 0.98, 32).rotateX(Math.PI / 2).translate(0, y3 - 0.01, 0)), at(new THREE.TorusGeometry(top * 0.92, 0.035, 6, 32).rotateX(Math.PI / 2).translate(0, y3 - 0.04, 0)));
+  gilt.push(at(new THREE.CircleGeometry((top / Math.cos(Math.PI / 8)) * 1.05, 32).rotateX(Math.PI / 2).translate(0, y3 - 0.004, 0)),   // wide enough to close the octagon's corners
+     at(new THREE.TorusGeometry(top * 0.92, 0.035, 6, 32).rotateX(Math.PI / 2).translate(0, y3 - 0.04, 0)));
   add(merge(painted), M.coffer, (x, y) => 0.55 - 0.25 * THREE.MathUtils.clamp((y - H) / (y3 - H), 0, 1));
 }
 
@@ -221,13 +222,15 @@ function openRoof(M, add, { wx, wz, inX }, H, top, lowAO) {
     boards.push(quad(new THREE.Vector3(-wx, ba, z0), new THREE.Vector3(wx, ba, z0), new THREE.Vector3(wx, bb, z1), new THREE.Vector3(-wx, bb, z1), Math.max(2, Math.round(2 * wx))));
   }
   // The gables: the side walls rise to the boards, a little above them so that no light shows at the join.
-  const pts = [[-wz - 0.3, H]]; for (let k = 0; k <= 2 * n; k++) { const kk = Math.abs(n - k), z = (k < n ? -1 : 1) * zk(kk); pts.push([k === 0 ? -wz - 0.3 : k === 2 * n ? wz + 0.3 : z, lift(kk) + rr + 0.16]); } pts.push([wz + 0.3, H]);
+  const pts = [[-wz - 0.3, H]]; for (let k = 0; k <= 2 * n; k++) { const kk = n - Math.abs(n - k), z = (k < n ? -1 : 1) * zk(kk); pts.push([k === 0 ? -wz - 0.3 : k === 2 * n ? wz + 0.3 : z, lift(kk) + rr + 0.16]); } pts.push([wz + 0.3, H]);
   const shape = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z, y)));
   for (const s of [1, -1]) gable.push(footAt(new THREE.ExtrudeGeometry(shape, { depth: 0.3, bevelEnabled: false }).rotateY(-Math.PI / 2).translate(s > 0 ? wx + 0.3 : -wx, 0, 0), H - 30));
   const high = (x, y) => THREE.MathUtils.clamp(1 - (y - H) / (R + 0.5), 0, 1);
   add(merge(purl), M.woodX, (x, y, z) => lowAO(0.5)(x, y, z) * (0.7 + 0.3 * high(x, y)));
   add(merge(wood), M.woodX, lowAO(0.5)); add(merge(raft), M.woodX, (x, y, z) => 0.42 + 0.18 * high(x, y));
   add(merge(boards), M.woodZ, (x, y, z) => lowAO(0.36)(x, y, z) * (0.65 + 0.35 * high(x, y))); add(merge(gable), M.plaster(), (x, y) => 0.5 + 0.3 * high(x, y));
-  // How high the boards are over a point: what a lamp's chain hangs from.
-  return (x, z) => { const d = wz - Math.abs(z), t = THREE.MathUtils.clamp(d / wz, 0, 1); return H + rp + R * Math.pow(t, 1.6) + 2 * rr + rp; };
+  // How high the boards are over a point: what a lamp's chain hangs from. And, as data, the gables' outline and the
+  // boards' line from wall to ridge to wall (front to back, in z), for the tests.
+  const boardsLine = []; for (let k = 0; k <= 2 * n; k++) { const kk = n - Math.abs(n - k); boardsLine.push([(k < n ? -1 : 1) * zk(kk), lift(kk) + rr + 0.01]); }
+  return { roofAt: (x, z) => { const t = THREE.MathUtils.clamp((wz - Math.abs(z)) / wz, 0, 1); return H + rp + R * Math.pow(t, 1.6) + 2 * rr + rp; }, gable: pts, boards: boardsLine };
 }
