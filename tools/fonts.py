@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cut the five typefaces the temple writes with down to the characters it actually uses.
+"""Cut the six typefaces the temple writes with down to the characters it actually uses.
 
     python3 tools/fonts.py <dir holding the original TTFs>     (needs fonttools and brotli)
 
@@ -8,10 +8,12 @@ Reads every character in app/ (the page and its scripts) and writes app/f/:
     serif.woff2   Noto Serif SC, regular: everything that is read
     seal.woff2    Noto Serif SC, black: what is cut into a seal
     kai.woff2     LXGW WenKai: what the page says to the visitor, the labels on its controls
+    bang.woff2    Yuji Boku, a heavy brush regular hand: what is written large on the name boards; cut to the
+                  characters of the boards only (the strings handed to the board painter, in their old forms)
     xing.woff2    Zhi Mang Xing, a running hand: what is written by hand on paper (the verse under a photograph,
                   the slip drawn in the library, the title on a leaf in a hall)
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
-All five are under the SIL Open Font License 1.1 (app/f/OFL.txt): the brush, serif, seal and running hand from
+All six are under the SIL Open Font License 1.1 (app/f/OFL.txt): the brush, serif, seal, running hand and board hand from
 github.com/google/fonts, the kai from github.com/lxgw/LxgwWenKai (cut down for the web only, as its licence asks).
 The running hand has no traditional forms; the name boards, which need them, are written in the kai.
 Run it again whenever words are added.
@@ -30,6 +32,15 @@ def used():
         chars.update(c for c in open(path, encoding="utf-8").read() if ord(c) > 0x2000 and not 0xE000 <= ord(c) <= 0xF8FF)
     return "".join(sorted(chars))
 
+def boards():
+    """The characters that are written on name boards: every string given to the board painter, old forms included."""
+    import re
+    src = "".join(open(p, encoding="utf-8").read() for p in glob.glob(f"{ROOT}/app/src/*.js"))
+    text = "".join(re.findall(r'makePlaque\([^)]*\)', src) + re.findall(r'plaque: "[^"]+"', src) + re.findall(r'plaque: \{[^}]*\}', src))
+    old = dict(re.findall(r'(\S): "(\S)"', re.search(r'const OLD = \{([^}]*)\}', src).group(1)))
+    text += "".join(old.values()) + "佛鑑正法雲徑禪寺"
+    return "".join(sorted({c for c in text if ord(c) > 0x2E80}))
+
 def cut(font, text, out):
     o = Options(); o.flavor = "woff2"; o.layout_features = ["*"]; o.name_IDs = ["*"]; o.notdef_outline = True
     s = Subsetter(o); s.populate(text=text); s.subset(font); font.flavor = "woff2"; font.save(out)
@@ -40,6 +51,7 @@ def main():
     cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), text, f"{out}/brush.woff2")
     cut(TTFont(f"{src}/lxgwwenkai_LXGWWenKai-Regular.ttf"), text, f"{out}/kai.woff2")
     cut(TTFont(f"{src}/zhimangxing_ZhiMangXing-Regular.ttf"), text, f"{out}/xing.woff2")
+    cut(TTFont(f"{src}/yujiboku_YujiBoku-Regular.ttf"), boards(), f"{out}/bang.woff2"); print("boards:", boards())
     for name, w in (("serif", 400), ("seal", 900)):
         cut(instancer.instantiateVariableFont(TTFont(f"{src}/notoserifsc_NotoSerifSC[wght].ttf"), {"wght": w}), text, f"{out}/{name}.woff2")
     open(f"{out}/chars.txt", "w", encoding="utf-8").write(text)
@@ -47,6 +59,7 @@ def main():
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Ma Shan Zheng ----\n\n" + open(f"{src}/mashanzheng_OFL.txt").read())
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- LXGW WenKai ----\n\n" + open(f"{src}/lxgwwenkai_OFL.txt").read())
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Zhi Mang Xing ----\n\n" + open(f"{src}/zhimangxing_OFL.txt").read())
+    with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Yuji Boku ----\n\n" + open(f"{src}/yujiboku_OFL.txt").read())
     print(len(text), "characters")
 
 if __name__ == "__main__":
