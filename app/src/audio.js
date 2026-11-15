@@ -2,8 +2,8 @@
 // the music (score.js says what, instruments.js plays it). The audio context starts on the first tap, as browsers
 // require. Three buses, each with its own level in the pause menu: music, the place (wind, water, eave bells) and
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
-import { createVoices, reverb } from "./instruments.js";
-import { createConductor, createZoneKeeper, moodMusic, sealNote, SECTION_LEVEL, hz } from "./score.js";
+import { createPlayer, reverb } from "./instruments.js";
+import { createZoneKeeper, moodMusic, sealNote, hz } from "./score.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null;
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
 // How loud the visitor wants it, 0..1 (the pause menu); remembered if nothing has sounded yet.
@@ -17,7 +17,7 @@ export function setLevels(o) {
 }
 // For the tests: is anything sounding, how loud, and at which frequencies; on one bus, or everything together.
 export function listen(which) {
-  const tap = which && bus[which] ? bus[which].tap : bus.all;
+  const tap = (which && bus[which] && bus[which].tap) || bus.all;
   if (!tap) return { state: "off" };
   const t = new Float32Array(tap.fftSize), f = new Float32Array(tap.frequencyBinCount); tap.getFloatTimeDomainData(t); tap.getFloatFrequencyData(f);
   let rms = 0; for (const v of t) rms += v * v;
@@ -30,7 +30,7 @@ function start() {
   if (ctx) return ctx;
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
   ctx = new AC();
-  comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
+  comp = ctx.createDynamicsCompressor();   // the defaults, as the bell and drum have always been heard through
   master = ctx.createGain(); master.gain.value = levels.volume; comp.connect(master); master.connect(ctx.destination);   // the visitor's own volume, last in the chain
   bus.all = ctx.createAnalyser(); bus.all.fftSize = 8192; bus.all.smoothingTimeConstant = 0; comp.connect(bus.all);
   outVerb = reverb(ctx, 3.2, 2.6); inVerb = reverb(ctx, 2.0, 3.2, 0.9); outVerb.connect(comp); inVerb.connect(comp);
@@ -45,11 +45,16 @@ function start() {
   }
   // A page in the background is silent, and picks up where it was on return (the audio clock stops with it, so the
   // music does not hurry to catch up).
-  document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
+  document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume().catch(() => {}); });
+  // A browser may refuse to resume without a touch (iOS after the background, or an interruption): every touch tries again.
+  for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, wake, { capture: true, passive: true });
   return ctx;
 }
+export function wake() { if (ctx && ctx.state !== "running" && !document.hidden) ctx.resume().catch(() => {}); }
 // Indoors or out: the reverb follows, over a couple of seconds.
+let roomNow = null;
 function room(inside) {
+  if (inside === roomNow) return; roomNow = inside;
   const t = ctx.currentTime;
   for (const k of ["music", "ambience", "effects"]) { const b = bus[k]; b.sendOut.gain.setTargetAtTime(inside ? 0 : b.wet, t, 0.7); b.sendIn.gain.setTargetAtTime(inside ? b.wet * 1.1 : 0, t, 0.7); }
 }
@@ -76,7 +81,7 @@ function thud(t0, dur, cutoff, gain) {   // a short burst of filtered noise: the
 
 export function strike(kind, loud = 1) {
   if (!start()) return;
-  if (ctx.state === "suspended") ctx.resume();
+  wake();
   const t = ctx.currentTime + 0.01;
   duck(kind === "bell" ? 0.18 : 0.5, kind === "bell" ? 9 : 2.5);
   if (kind === "bell") {
@@ -100,13 +105,13 @@ export function strike(kind, loud = 1) {
 // A hand chime, struck once: what marks a seal. The n-th seal rings the n-th note of the theme (score.js), so the
 // seven seals spell it out over the visit. And one drop falling into deep water.
 export function chime(loud = 1, n = 1) {
-  if (!start()) return; if (ctx.state === "suspended") ctx.resume();
+  if (!start()) return; wake();
   const t = ctx.currentTime + 0.01, f = hz(sealNote(n) ?? sealNote(1));
   duck(0.55, 2.5);
   for (const [r, a, d] of [[1, 0.16, 3.4], [1.0055, 0.09, 3.0], [2.353, 0.05, 1.6], [3.842, 0.02, 0.8]]) partial(f * r, a * loud, d, t);
 }
 export function drop() {
-  if (!start()) return; if (ctx.state === "suspended") ctx.resume();
+  if (!start()) return; wake();
   const now = ctx.currentTime + 0.01, o = ctx.createOscillator(), g = ctx.createGain();
   o.frequency.setValueAtTime(520, now); o.frequency.exponentialRampToValueAtTime(1150, now + 0.09);
   g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.22, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
@@ -119,8 +124,9 @@ export function drop() {
 // in the bamboo the listener stands, which part of the mountain (score.js), and the mood. The music starts with it.
 let ambient = null;
 export function startAmbience(place) {
-  starts++; if (ambient || !start()) return;
-  if (ctx.state === "suspended") ctx.resume();
+  starts++; if (!start()) return;
+  wake();
+  if (ambient) return;
   const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
   let last = 0; for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }   // brown noise
   for (let i = 0; i < 2000; i++) { const k = i / 2000; d[i] = d[i] * k + d[len - 2000 + i] * (1 - k); }                   // no click at the loop
@@ -134,7 +140,9 @@ export function startAmbience(place) {
   ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14 };
   startMusic(place);
   const tick = () => {
-    const now = ctx.currentTime, g = place().grove, a = ambient; a.t += 0.25;
+    if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
+    const p = place(), now = ctx.currentTime, g = p.grove, a = ambient; a.t += 0.25;
+    room(p.zone === "hall");
     // Gusts: two slow waves that sometimes meet.
     const gust = 0.5 + 0.3 * Math.sin(a.t * 0.11) + 0.2 * Math.sin(a.t * 0.043 + 1.7);
     low.gain.setTargetAtTime(0.5 * gust * (0.35 + 0.65 * g), now, 0.8);
@@ -158,35 +166,27 @@ export function startAmbience(place) {
 // ---- The music ----
 // One player for the whole visit, however many times the first tap or the title asks for sound. Every quarter second
 // it asks score.js where he is settled and whether a phrase should begin, on the audio clock (not the frame loop:
-// software rendering may draw one frame a second), and schedules that phrase's notes a moment ahead.
-let music = null, seals = 0, starts = 0;
+// software rendering may draw one frame a second); instruments.js's player hands the notes to the voices.
+let music = null, seals = 0, starts = 0, players = 0;
 export function setSeals(n) { seals = Math.max(0, Math.min(7, n | 0)); }
 function startMusic(place) {
   if (music) return;
-  const keeper = createZoneKeeper(2), conductor = createConductor((Date.now() / 1000) | 0);
-  const section = ctx.createGain(); section.gain.value = 0; section.connect(bus.music.in);
-  const v2 = createVoices(ctx, section);   // the voices play through a per-place level that fades over a few seconds
-  music = { keeper, conductor, voices: v2, section, last: null, phrases: 0, mood: null, inside: null };
+  players++;
+  const keeper = createZoneKeeper(2), player = createPlayer(ctx, bus.music.in, (Date.now() / 1000) | 0);
+  music = { keeper, player };
   const tick = () => {
     if (ctx.state !== "running") return;
-    const p = place(), now = ctx.currentTime, zone = keeper.update(p.zone || "court", now), mood = moodMusic(p.season, p.time);
-    const inside = zone === "hall"; if (inside !== music.inside) { music.inside = inside; room(inside); }
-    music.mood = mood;
-    const phrase = conductor.tick(now, zone, seals, mood);
-    if (phrase) {
-      music.last = phrase; music.phrases++;
-      section.gain.setTargetAtTime(SECTION_LEVEL[phrase.section] ?? 0.8, now, 2);   // about six seconds to settle
-      for (const e of phrase.events) v2.play(e, phrase.start + e.at);
-    }
+    const p = place(), now = ctx.currentTime, zone = keeper.update(p.zone || "court", now);
+    player.tick(now, zone, seals, moodMusic(p.season, p.time));
   };
   tick(); setInterval(tick, 250);
 }
 // For the tests and tools: what the music is doing.
 export function musicState() {
-  if (!music) return { state: ctx ? ctx.state : "off", started: false, starts };
-  const now = ctx.currentTime;
-  return { state: ctx.state, clock: now, started: true, starts, players: 1, zone: music.keeper.stable, candidate: music.keeper.candidate, section: music.conductor.section,
-    place: music.conductor.place, phrases: music.phrases, playing: now < music.conductor.notesEnd, resting: now >= music.conductor.notesEnd && now < music.conductor.restEnd,
-    sounding: music.voices.sounding, seals, duck: +bus.music.duck.gain.value.toFixed(3), ducked: now < ducked.until, level: +bus.music.level.gain.value.toFixed(3),
-    sectionLevel: +music.section.gain.value.toFixed(3), room: music.inside ? "hall" : "court", levels: { ...levels }, sig: music.last && music.last.sig };
+  if (!music) return { state: ctx ? ctx.state : "off", started: false, starts, players };
+  const now = ctx.currentTime, c = music.player.conductor;
+  return { state: ctx.state, clock: now, started: true, starts, players, zone: music.keeper.stable, candidate: music.keeper.candidate, section: c.section,
+    place: c.place, phrases: music.player.phrases, cuts: c.cuts, playing: now < c.notesEnd, resting: now >= c.notesEnd && now < c.restEnd, pending: music.player.pending,
+    sounding: music.player.voices.sounding, seals, duck: +bus.music.duck.gain.value.toFixed(3), ducked: now < ducked.until, level: +bus.music.level.gain.value.toFixed(3),
+    placeLevel: +music.player.level.gain.value.toFixed(3), room: roomNow ? "hall" : "court", levels: { ...levels }, sig: music.player.last && music.player.last.sig };
 }

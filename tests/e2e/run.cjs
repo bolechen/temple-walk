@@ -195,6 +195,7 @@ const scenarios = {
     const away = await t.page.evaluate(() => new Promise((done) => { const c0 = window.__music().clock; window.__pose(0, 41, 0, 0); setTimeout(() => { window.__pose(0, 39, 0, 0); done(window.__music().clock - c0); }, 300); }));
     await t.page.waitForTimeout(2500); s = await m();
     if (away < 1.5) expect(s.zone === "court", `a step over a boundary and back (${away.toFixed(2)} s) should not change the music: ` + JSON.stringify(s));
+    else console.log(`     (music: the step back took ${away.toFixed(2)} s of audio time on this machine; the boundary check was skipped)`);
     // Down to the bamboo: once settled there, the bamboo's music follows.
     await t.page.evaluate(() => window.__pose(21.3, 91.5, 0, 0.3));   // the arrival view, at the foot of the path
     await t.until(async () => (await m()).zone === "grove", 15000, "standing in the bamboo was never heard as the bamboo");
@@ -206,7 +207,9 @@ const scenarios = {
     // Its own level, apart from everything else.
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
-    await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05 && s.levels.effects === 1, "the music slider should silence the music alone: " + JSON.stringify(s));
+    await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
+    await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
+    expect((await t.page.evaluate(() => window.__listen("effects"))).rms > 0.003, "with the music silenced the drum should still be heard");
     expect((await t.page.evaluate(() => window.__settings())).music === 0, "the music level was not kept");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0.7"; el.dispatchEvent(new Event("input", { bubbles: true })); }); await t.page.keyboard.press("Escape");
     // Into a hall and out: the hall's reverb and music, and still one player however often sound is asked for.
@@ -215,6 +218,12 @@ const scenarios = {
     await t.page.evaluate(() => window.__inside(null)); await t.page.evaluate(() => window.__music(true)); await t.page.evaluate(() => window.__music(true));
     await t.until(async () => (await m()).room === "court", 30000, "coming out did not bring the court's reverb back");
     s = await m(); expect(s.players === 1 && s.starts >= 3, "asking for sound again must not start a second player: " + JSON.stringify(s));
+    // In the background the sound stops, and nothing piles up: on return it picks up where it was.
+    const hide = (h) => t.page.evaluate((x) => { Object.defineProperty(document, "hidden", { configurable: true, get: () => x }); Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (x ? "hidden" : "visible") }); document.dispatchEvent(new Event("visibilitychange")); }, h);
+    await hide(true); await t.until(async () => (await m()).state === "suspended", 10000, "the sound went on in the background");
+    const c0 = (await m()).clock; await t.page.waitForTimeout(1500); expect(Math.abs((await m()).clock - c0) < 0.05, "the audio clock should stand still in the background");
+    await hide(false); await t.until(async () => (await m()).state === "running", 10000, "the sound did not come back with the page");
+    expect((await m()).players === 1, "coming back must not start a second player");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every season at every hour draws, and they look as different as they should.

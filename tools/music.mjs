@@ -13,20 +13,22 @@ const require = createRequire(import.meta.url), { chromium } = require("playwrig
 const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "..", "app"), out = path.join(here, "out", "music");
 const moods = process.argv.slice(2).length ? process.argv.slice(2) : ["summer-day", "winter-night"];
 // The walk, as the unit test walks it: seconds in each place, and seals held along the way.
-const WALK = [["grove", 70], ["stair", 60], ["gate", 45], ["court", 110], ["hall", 60], ["court", 25], ["upper", 120], ["summit", 110]];
+const WALK = [["grove", 70], ["stair", 60], ["gate", 12], ["court", 110], ["hall", 60], ["court", 25], ["upper", 120], ["summit", 110], ["upper", 30], ["court", 40], ["gate", 40]];
 
 const page = `<!doctype html><meta charset="utf-8"><script type="module">
-import { createConductor, createZoneKeeper, moodMusic, SECTION_LEVEL } from "/src/score.js";
-import { createVoices, reverb } from "/src/instruments.js";
-window.render = async (season, time, walk, seed) => {
+import { createZoneKeeper, moodMusic } from "/src/score.js";
+import { createVoices, createPlayer, reverb } from "/src/instruments.js";
+window.render = async (season, time, walk, seed, only) => {
   const sr = 44100, total = walk.reduce((a, [, s]) => a + s, 0) + 20, ctx = new OfflineAudioContext(2, sr * total, sr);
   // The page's chain for the music bus: a per-place level, dry and the court's reverb (or the hall's), a compressor.
-  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(ctx.destination);
+  const comp = ctx.createDynamicsCompressor(); comp.connect(ctx.destination);
   const section = ctx.createGain(), dry = ctx.createGain(), sOut = ctx.createGain(), sIn = ctx.createGain(), lvl = ctx.createGain();
   const outV = reverb(ctx, 3.2, 2.6), inV = reverb(ctx, 2.0, 3.2, 0.9);
-  section.gain.value = 0; lvl.gain.value = 0.7 * 0.8; dry.gain.value = 0.7; sOut.gain.value = 0.55; sIn.gain.value = 0;
+  section.gain.value = 1; lvl.gain.value = 0.7 * 0.8; dry.gain.value = 0.7; sOut.gain.value = 0.55; sIn.gain.value = 0;
   section.connect(lvl); lvl.connect(dry); lvl.connect(sOut); lvl.connect(sIn); dry.connect(comp); sOut.connect(outV); sIn.connect(inV); outV.connect(comp); inV.connect(comp);
-  const voices = createVoices(ctx, section), keeper = createZoneKeeper(2), c = createConductor(seed), mood = moodMusic(season, time), log = [];
+  // A stem: only some voices sound, the timing the same.
+  const player = createPlayer(ctx, section, seed), keeper = createZoneKeeper(2), mood = moodMusic(season, time), log = [];
+  if (only) { const real = player.voices.play; player.voices.play = (e, w) => { if (only.includes(e.voice)) real(e, w); }; }
   let t = 0, seals = 0, inside = false;
   for (const [zone, secs] of walk) {
     const t0 = t;
@@ -35,8 +37,9 @@ window.render = async (season, time, walk, seed) => {
       if (zone === "summit" && t - t0 > 30) seals = 7;
       const z = keeper.update(zone, t);
       if ((z === "hall") !== inside) { inside = z === "hall"; sOut.gain.setTargetAtTime(inside ? 0 : 0.55, t, 0.7); sIn.gain.setTargetAtTime(inside ? 0.6 : 0, t, 0.7); }
-      const p = c.tick(t, z, seals, mood);
-      if (p) { section.gain.setTargetAtTime(SECTION_LEVEL[p.section] ?? 0.8, t, 2); for (const e of p.events) voices.play(e, p.start + e.at); log.push({ at: +p.start.toFixed(2), place: z, section: p.section, length: +p.length.toFixed(1), rest: +(p.restEnd - p.notesEnd).toFixed(1), sig: p.sig }); }
+      const p = player.tick(t, z, seals, mood);
+      if (p && p.cut) log.push({ at: +t.toFixed(2), place: z, cut: true });
+      else if (p) { log.push({ at: +p.start.toFixed(2), place: z, section: p.section, length: +p.length.toFixed(1), rest: +(p.restEnd - p.notesEnd).toFixed(1), sig: p.sig }); }
     }
   }
   const buf = await ctx.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1);
@@ -64,6 +67,18 @@ window.tune = async (notes) => {
     res.push({ voice, m, want: +want.toFixed(2), got: +(sr / frac).toFixed(2), cents: +(1200 * Math.log2(sr / frac / want)).toFixed(1), peak: +peak.toFixed(3) });
   }
   return res;
+};
+// The buses against each other, live, through the page's own audio.js: the music at the gate for half a minute with the
+// place under it, then the bell and the drum on the effects bus. RMS of 8192-sample windows, sampled ten times a second.
+window.balance = async () => {
+  const A = await import("/src/audio.js");
+  A.startAmbience(() => ({ grove: 0.4, zone: "gate", season: "summer", time: "day" }));
+  const sample = async (buses, ms) => { const r = {}; for (const b of buses) r[b] = []; const t0 = performance.now(); while (performance.now() - t0 < ms) { for (const b of buses) { const x = A.listen(b); if (x.rms > 0) r[b].push(x.rms); } await new Promise((k) => setTimeout(k, 100)); }
+    const db = (v) => +(20 * Math.log10(v || 1e-9)).toFixed(1), out = {}; for (const b of buses) { const v = r[b]; out[b] = { max_rms_dbfs: db(Math.max(0, ...v)), mean_rms_dbfs: db(v.reduce((a, x) => a + x, 0) / (v.length || 1)) }; } return out; };
+  const quiet = await sample(["music", "ambience", "all"], 30000);
+  A.strike("bell", 1); const bell = await sample(["effects", "music", "all"], 3000);
+  await new Promise((k) => setTimeout(k, 9000)); A.strike("drum", 1); const drum = await sample(["effects"], 1500);
+  return { walking: quiet, bell, drum: drum.effects, music: A.musicState() };
 };
 window.chunk = (i, n) => { const a = window.__pcm.subarray(i, i + n); let s = ""; for (let k = 0; k < a.length; k += 0x8000) s += String.fromCharCode.apply(null, a.subarray(k, k + 0x8000)); return btoa(s); };
 </script>`;
@@ -96,9 +111,21 @@ for (const mood of moods) {
   let at = 0; for (const [zone, secs] of WALK) { execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", String(at), "-t", String(secs + 4), "-i", wavPath, "-af", `afade=t=out:st=${secs + 1}:d=3`, "-codec:a", "libmp3lame", "-q:a", "2", path.join(out, `${mood}-${String(at).padStart(3, "0")}-${zone}.mp3`)]); at += secs; }
   fs.unlinkSync(wavPath);
   report[mood] = { ...r, render_seconds: (Date.now() - t0) / 1000, walk: WALK };
+  // Stems for the first mood: the string (with its harmonics and low strings), the flute, the held fifth.
+  if (mood === moods[0]) for (const [name, only] of [["qin", ["qin", "harm", "low"]], ["xiao", ["xiao"]], ["pad", ["pad"]]]) {
+    const st = await tab.evaluate(([s, t, w, o]) => window.render(s, t, w, 7, o), [season, time, WALK, only]);
+    const bits = []; for (let i = 0; i < st.bytes; i += 4 << 20) bits.push(Buffer.from(await tab.evaluate(([a, b]) => window.chunk(a, b), [i, 4 << 20]), "base64"));
+    const body = Buffer.concat(bits), head = Buffer.from(wav); head.writeUInt32LE(36 + body.length, 4); head.writeUInt32LE(body.length, 40);
+    const sp = path.join(out, `${mood}-stem-${name}.wav`); fs.writeFileSync(sp, Buffer.concat([head, body]));
+    execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", sp, "-codec:a", "libmp3lame", "-q:a", "2", sp.replace(/\.wav$/, ".mp3")]); fs.unlinkSync(sp);
+    report[mood]["stem_" + name] = { peak_dbfs: st.peak_dbfs, clipped: st.clipped };
+  }
   console.log(`${mood}: ${r.seconds}s, peak ${r.peak_dbfs} dBFS, ${r.clipped} clipped, ${r.phrases.length} phrases, rendered in ${report[mood].render_seconds}s`);
   await tab.close();
 }
+{ const tab = await browser.newPage(); await tab.goto(base + "music.html"); await tab.waitForFunction(() => window.balance);
+  report.balance = await tab.evaluate(() => window.balance()); await tab.close();
+  console.log("balance:", JSON.stringify({ walking: report.balance.walking, bell: report.balance.bell, drum: report.balance.drum })); }
 fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1));
 await browser.close(); srv.close();
 console.log("→ " + out);

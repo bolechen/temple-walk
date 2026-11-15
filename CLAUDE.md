@@ -161,8 +161,9 @@ master `音量`) set before its reverb send, and two reverbs (the court, a timbe
 the music as data and is unit-tested in Node: the mode (G yu, on the bell's 98 Hz), a seven-note theme of which each seal's
 chime rings the next note and which is heard whole only after the seventh seal, `zoneOf` (grove, stair, gate, court, hall,
 upper, summit), a zone that counts only after two seconds, one phrase maker per place, and a conductor that starts phrases
-on the audio clock, never cuts a note, and cuts a rest short when the place has changed. `instruments.js` plays it (qin as
-a Karplus-Strong string, harmonics, xiao, a held fifth) on any audio context, so `tools/music.mjs` can render it offline.
+on the audio clock; on a change of place it drops the notes not yet begun and fades what sounds over 3.5 s (never the whole
+theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xiao, a held fifth) through `createPlayer` on
+any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
 The music steps back inside `strike()` for the bell and drum. A season or hour changes only `moodMusic`'s few numbers.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and

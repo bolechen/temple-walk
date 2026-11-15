@@ -4,7 +4,7 @@ import * as THREE from "./vendor/three/build/three.module.js";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
-import { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain } from "./src/site.js";
+import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, terrain } from "./src/site.js";
 import { createSky, FOG, SUN_DIR } from "./src/sky.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
@@ -171,7 +171,7 @@ let down = null, hop = null, leap = null;   // `hop`: a planned drop from a porc
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
 // What the sound needs to know of the place: the bamboo, which part of the mountain (the music follows it), the mood.
-const ZB = zoneBounds(SITE, LEVELS, APPROACH);
+const ZB = zoneBounds(SITE, LEVELS, APPROACH, SCREEN);
 const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });

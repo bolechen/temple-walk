@@ -27,8 +27,8 @@ export const sealNote = (n) => (n >= 1 && n <= 7 ? THEME[n - 1].m + 24 : null);
 // Seven places, in the order a visit meets them. The bounds come from site.js (passed in, so that this file needs
 // nothing of three.js and can be rendered offline).
 export const ZONES = ["grove", "stair", "gate", "court", "hall", "upper", "summit"];
-export function zoneBounds(SITE, LEVELS, APPROACH) {
-  return { grove: APPROACH.zA1, stair: 56.5, gate: 40, court: LEVELS[0].zS, summit: LEVELS[2].zS };
+export function zoneBounds(SITE, LEVELS, APPROACH, SCREEN) {
+  return { grove: APPROACH.zA1, stair: SCREEN.z + 1.5, gate: SITE.zS, court: LEVELS[0].zS, summit: LEVELS[2].zS };
 }
 export function zoneOf(x, z, inside, B) {
   if (inside) return "hall";
@@ -77,101 +77,138 @@ export const SECTION_LEVEL = { grove: 0.8, stair: 0.9, gate: 1, court: 0.75, hal
 export function rng(seed) { let a = seed >>> 0 || 1; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const pick = (r, list) => list[Math.floor(r() * list.length)];
 const between = (r, a, b) => a + r() * (b - a);
+// k steps of the mode up (or down, if k is negative) from m: a phrase moved within the mode keeps its shape and its key.
+export function step(m, k) { let x = m; const d = Math.sign(k); for (let i = 0; i < Math.abs(k); i++) { do x += d; while (!inMode(x)); } return x; }
+// The range each instrument is written for, in MIDI notes.
+export const RANGE = { qin: [36, 81], low: [31, 50], harm: [55, 93], xiao: [62, 86], pad: [31, 55] };
 // Voices: qin (a plucked silk string), harm (a qin harmonic), low (an open string, low), xiao (vertical flute),
 // pad (a thin held fifth, almost not there). Each event: at and dur in beats, m a MIDI note, vel 0..1,
 // slide "up" (the finger slides into the note after the pluck) or "yin" (a slow waver), both qin ornaments.
-const ev = (at, voice, m, dur, vel, slide) => ({ at, voice, m, dur, vel, ...(slide ? { slide } : {}) });
-// The first k notes of the theme, laid end to end from beat `from`, in `voice`, `shift` semitones up.
-function head(k, voice, from = 0, shift = 0, vel = 0.7, stretch = 1) {
-  const out = []; let t = from;
-  for (let i = 0; i < k; i++) { const n = THEME[i]; out.push(ev(t, voice, n.m + shift, n.b * stretch + (voice === "xiao" ? 0 : 1.5), vel * (i === 2 ? 1.1 : 1), voice === "qin" && i === 2 ? "yin" : voice === "qin" && i === 1 ? "up" : null)); t += n.b * stretch; }
+// `ring`: the written length is only until the next note; a plucked string is let ring past it.
+const ev = (at, voice, m, dur, vel, slide, ring) => ({ at, voice, m, dur, vel, ...(slide ? { slide } : {}), ...(ring ? { ring: true } : {}) });
+// Notes i0..i0+k-1 of the theme from beat `from`: moved `deg` steps in the mode and `shift` semitones, its rhythm
+// stretched. Only the theme itself (deg 0, from its first note) is ever heard in full, and only after seven seals.
+function head(k, voice, from = 0, o = {}) {
+  const { i0 = 0, deg = 0, shift = 0, vel = 0.7, stretch = 1 } = o, out = []; let t = from;
+  for (let i = i0; i < Math.min(7, i0 + k); i++) {
+    const n = THEME[i], slide = voice === "qin" ? (i === 2 ? "yin" : i === 1 ? "up" : null) : null;
+    out.push(ev(t, voice, step(n.m, deg) + shift, n.b * stretch, vel * (i === 2 ? 1.1 : 1), slide, true)); t += n.b * stretch;
+  }
   return { notes: out, end: t };
 }
-const lead = (voice, mm) => (voice === "low" || voice === "pad" ? voice : voice === "qin" ? (mm.lead === "qin" ? "qin" : mm.lead) : voice === "xiao" && mm.lead === "harm" ? "harm" : voice);
 
 // Each place's way of making a phrase. Returns { events, beats, rest: [min, max] seconds of silence after it }.
-// `seals` is how many seals are held; `first` is true the first time a place is heard on this visit.
+// `seals` is how many seals are held; `first` is true the first time a place is heard (whole) on this visit.
 const PHRASES = {
-  grove(r, s) {   // two or three harmonics of the theme's opening, high and far apart, as if the wind found them
-    const k = s.seals >= 3 ? pick(r, [2, 3, 3]) : pick(r, [2, 2, 3]), ev0 = []; let t = 0;
-    for (let i = 0; i < k; i++) { ev0.push(ev(t, "harm", THEME[i].m + 12, 4, 0.55 + r() * 0.15)); t += between(r, 1.6, 3.2); }
-    if (r() < 0.35) ev0.push(ev(t + 1, "harm", MODE.tonic + 24, 5, 0.4));
-    return { events: ev0, beats: t + 2, rest: [9, 16] };
+  grove(r, s) {   // two or three harmonics from the theme's opening, high and far apart, as if the wind found them
+    const k = s.seals >= 3 ? pick(r, [2, 3, 3]) : pick(r, [2, 2, 3]), i0 = pick(r, [0, 0, 1, 2]), deg = pick(r, [0, 0, 1, -1, 2]), out = []; let t = 0;
+    for (let i = i0; i < Math.min(7, i0 + k); i++) { out.push(ev(t, "harm", step(THEME[i].m, deg) + 12, 4, 0.55 + r() * 0.15)); t += between(r, 1.6, 3.4); }
+    if (r() < 0.35) out.push(ev(t + 1, "harm", pick(r, [MODE.tonic + 24, MODE.tonic + 31]), 5, 0.4));
+    return { events: out, beats: t + 2, rest: [9, 16] };
   },
-  stair(r, s) {   // a low open string, then a longer piece of the theme
-    const k = pick(r, s.seals >= 2 ? [3, 4, 4] : [3, 3, 4]), h = head(k, "qin", 1.5, 0, 0.62);
-    return { events: [ev(0, "low", MODE.tonic, 6, 0.5), ...h.notes, ...(r() < 0.4 ? [ev(h.end + 0.5, "harm", MODE.tonic + 24, 4, 0.4)] : [])], beats: h.end + 1.5, rest: [7, 12] };
+  stair(r, s) {   // a low open string, then a longer piece of the theme, not always from the same note
+    const k = pick(r, s.seals >= 2 ? [3, 4, 4] : [3, 3, 4]), h = head(k, "qin", 1.5, { i0: pick(r, [0, 0, 1]), deg: pick(r, [0, 0, -1, 1]), vel: 0.62, stretch: between(r, 0.9, 1.2) });
+    return { events: [ev(0, "low", pick(r, [MODE.tonic, MODE.tonic, MODE.tonic - 5]), 6, 0.5), ...h.notes, ...(r() < 0.4 ? [ev(h.end + 0.5, "harm", MODE.tonic + 24, 4, 0.4)] : [])], beats: h.end + 1.5, rest: [7, 12] };
   },
-  gate(r, s) {    // the gate seen whole: a full phrase the first time, over the held fifth; quieter answers after
+  gate(r, s) {    // the gate seen whole: the theme's phrase as it is the first time, over the held fifth; quieter answers after
     if (s.first) {
-      const h = head(5, "qin", 2, 0, 0.75, 1.15);
+      const h = head(5, "qin", 2, { vel: 0.75, stretch: 1.15 });
       return { events: [ev(0, "pad", MODE.tonic, h.end + 6, 0.8), ev(0.5, "low", MODE.tonic, 6, 0.55), ...h.notes, ev(h.end + 1, "low", MODE.tonic, 7, 0.6, "yin")], beats: h.end + 3, rest: [9, 13] };
     }
-    const h = head(4, "qin", 1, 0, 0.6);
+    const h = head(pick(r, [3, 4]), "qin", 1, { i0: pick(r, [0, 1]), deg: pick(r, [1, 2, -1]), vel: 0.6, stretch: between(r, 0.95, 1.25) });
     return { events: [ev(0, "low", MODE.tonic + 7, 5, 0.45), ...h.notes], beats: h.end + 1.5, rest: [9, 14] };
   },
   court(r) {      // single notes, and silence for the water and the wind
     const n = pick(r, [1, 1, 2]), out = []; let t = 0;
-    for (let i = 0; i < n; i++) { const m = pick(r, [55, 62, 62, 67, 60]); out.push(r() < 0.4 ? ev(t, "harm", m + 12, 5, 0.5) : ev(t, "qin", m, 5, 0.55, r() < 0.5 ? "yin" : null)); t += between(r, 2.5, 4); }
+    for (let i = 0; i < n; i++) { const m = pick(r, [55, 58, 60, 62, 62, 65, 67]); out.push(r() < 0.4 ? ev(t, "harm", m + 12, 5, 0.5) : ev(t, "qin", m, 5, 0.55, r() < 0.5 ? "yin" : null)); t += between(r, 2.5, 4); }
     return { events: out, beats: t + 1, rest: [10, 18] };
   },
-  hall(r) {       // no melody: a low open string under a held fifth, the room's own hum
-    const m = pick(r, [MODE.tonic, MODE.tonic, MODE.tonic - 5]);
-    return { events: [ev(0, "pad", MODE.tonic, 10, 0.7), ev(1, "low", m, 7, 0.45, r() < 0.5 ? "yin" : null)], beats: 6, rest: [12, 20] };
+  hall(r) {       // no melody: the room's own hum, a held fifth that never quite stops, and now and then a low open string
+    const out = [ev(0, "pad", MODE.tonic, 26, 0.7), ev(1, "low", pick(r, [MODE.tonic, MODE.tonic, MODE.tonic - 5]), 7, 0.45, r() < 0.5 ? "yin" : null)];
+    if (r() < 0.5) out.push(ev(between(r, 8, 11), "low", pick(r, [MODE.tonic, MODE.tonic + 7]), 7, 0.35));
+    return { events: out, beats: 18, rest: [4, 8] };
   },
-  upper(r, s) {   // the theme turned round, or lifted a fourth; the flute begins to answer
-    const kind = pick(r, ["back", "lift", "lift", "back"]), out = []; let t = 0;
-    if (kind === "back") { for (const i of [2, 1, 0]) { out.push(ev(t, "qin", THEME[i].m, THEME[i].b + 1.5, 0.6, i === 2 ? "up" : null)); t += THEME[i].b + 0.5; } }
-    else { for (const m of [67, 70, 72]) { out.push(ev(t, "qin", m, 3, 0.58)); t += 1.5; } }
-    if (r() < s.xiao + 0.15 * s.seals / 7) { out.push(ev(t + 1, "xiao", pick(r, [62, 67]), 4, 0.5)); t += 5; }
+  upper(r, s) {   // the theme turned round, or a rising figure somewhere in the mode; the flute begins to answer
+    const kind = pick(r, ["back", "lift", "lift", "back"]), deg = pick(r, [0, 1, -1]), out = []; let t = 0;
+    if (kind === "back") { for (const i of [2, 1, 0]) { out.push(ev(t, "qin", step(THEME[i].m, deg), THEME[i].b + 0.5, 0.6, i === 2 ? "up" : null, true)); t += THEME[i].b + 0.5; } }
+    else { let m = pick(r, [60, 62, 65, 67]); for (let i = 0; i < 3; i++) { out.push(ev(t, "qin", m, 1.5, 0.58, null, true)); t += pick(r, [1, 1.5, 1.5, 2]); m = step(m, pick(r, [1, 1, 2])); } }
+    if (r() < s.xiao + 0.15 * s.seals / 7) { out.push(ev(t + 1, "xiao", pick(r, [62, 65, 67, 70]), 4, 0.5)); t += 5; }
     return { events: [ev(0, "low", MODE.tonic, 5, 0.4), ...out], beats: t + 1.5, rest: [8, 14] };
   },
   summit(r) {     // the flute calls with the opening, the string answers with the close
-    const call = head(3, "xiao", 0, 12, 0.55, 1.25), out = [...call.notes]; let t = call.end + 1.5;
-    for (const i of [4, 5, 6]) { out.push(ev(t, "qin", THEME[i].m, THEME[i].b + 2, 0.6, i === 6 ? "yin" : null)); t += THEME[i].b; }
+    const call = head(pick(r, [2, 3, 3]), "xiao", 0, { i0: pick(r, [0, 0, 1]), deg: pick(r, [0, 0, 1, -1]), shift: 12, vel: 0.55, stretch: between(r, 1.1, 1.4) }), out = [...call.notes]; let t = call.end + between(r, 1, 2);
+    const deg = pick(r, [0, 0, 1, -1]);
+    for (const i of pick(r, [[4, 5, 6], [4, 5, 6], [5, 6], [3, 5, 6]])) { out.push(ev(t, "qin", step(THEME[i].m, deg), THEME[i].b, 0.6, i === 6 ? "yin" : null, true)); t += THEME[i].b; }
     return { events: [ev(0, "pad", MODE.tonic, t + 4, 0.6), ...out], beats: t + 2, rest: [10, 15] };
   },
   // Once, when the seventh seal is earned, and now and then at the gate or the summit after: the whole theme,
   // the string first and the flute after it, an octave up.
   complete() {
-    const a = head(7, "qin", 1, 0, 0.72, 1.1), b = head(7, "xiao", a.end + 2, 12, 0.5, 1.1);
+    const a = head(7, "qin", 1, { vel: 0.72, stretch: 1.1 }), b = head(7, "xiao", a.end + 2, { shift: 12, vel: 0.5, stretch: 1.1 });
     return { events: [ev(0, "pad", MODE.tonic, b.end + 6, 0.8), ev(0, "low", MODE.tonic, 7, 0.55), ...a.notes, ...b.notes, ev(b.end, "low", MODE.tonic, 8, 0.55, "yin")], beats: b.end + 3, rest: [12, 18] };
   },
 };
 
-// A phrase, made ready to play: events in seconds from its start, the voices as the mood has them, register shifted.
+// Who plays each note in this mood. A dialogue (flute and string together) keeps two voices: in winter the string's
+// part goes to harmonics and the flute stays; at night it is left as it is. Otherwise the string's part goes to
+// whoever leads, and in winter the flute's part too.
+function voicing(events, mood) {
+  const dialogue = events.some((e) => e.voice === "xiao") && events.some((e) => e.voice === "qin");
+  return events.map((e) => {
+    let v = e.voice;
+    if (v === "qin" && (dialogue ? mood.lead === "harm" : mood.lead !== "qin")) v = mood.lead;
+    else if (v === "xiao" && !dialogue && mood.lead === "harm") v = "harm";
+    return { ...e, voice: v };
+  });
+}
+const fit = (m, [lo, hi]) => { while (m < lo) m += 12; while (m > hi) m -= 12; return m; };
+
+// A phrase, made ready to play: events in seconds from its start, voiced for the mood, each in its instrument's range,
+// plucked notes let ring, the flute one note at a time.
 export function makePhrase(section, opts) {
   const { r, seals = 0, first = false, mood = moodMusic() } = opts, s = { seals, first, xiao: mood.xiao };
   const p = PHRASES[section](r, s), beat = 60 / mood.tempo;
-  const events = p.events.map((e) => {
-    const voice = lead(e.voice, mood), lift = voice === "low" || voice === "pad" ? 0 : mood.octave && voice === "harm" ? 0 : mood.octave;
-    return { ...e, voice, m: e.m + lift, at: e.at * beat, dur: e.dur * beat };
-  });
+  const events = voicing(p.events, mood).map((e) => {
+    const lift = e.voice === "qin" || e.voice === "xiao" ? mood.octave : 0;
+    const dur = e.dur + (e.ring && e.voice !== "xiao" ? 1.5 : 0);
+    const { ring, ...rest } = e;
+    return { ...rest, m: fit(e.m + lift, RANGE[e.voice]), at: e.at * beat, dur: dur * beat, vel: e.voice === "pad" ? Math.min(1, e.vel * mood.pad) : e.vel, ...(e.voice === "xiao" ? { slide: undefined } : {}) };
+  }).sort((a, b) => a.at - b.at);
+  const flute = events.filter((e) => e.voice === "xiao");
+  for (let i = 0; i + 1 < flute.length; i++) flute[i].dur = Math.min(flute[i].dur, flute[i + 1].at - flute[i].at - 0.06);
+  for (const e of events) if (e.slide === undefined) delete e.slide;
   const length = Math.max(p.beats * beat, ...events.map((e) => e.at + Math.min(e.dur, 3)));
-  return { section, events, length, rest: p.rest.map((v) => v * mood.rest), sig: section + ":" + events.map((e) => e.voice[0] + e.m).join(",") };
+  return { section, first, events, length, rest: p.rest.map((v) => v * mood.rest), sig: section + ":" + events.map((e) => e.voice[0] + e.m).join(",") };
 }
 
 // ---- The conductor: which phrase, and when ----
 // Called a few times a second with the audio clock, the place he is settled in, the seals and the mood. Returns the
-// phrase to start (with its start time) or null. A phrase is never cut. The silence after one is cut short when the
-// place has changed, so the music follows him within a few seconds; it waits out the last notes first.
+// phrase to start (with its start time), or { cut } when the place has changed under a sounding phrase, or null.
+// On a change of place the old phrase's notes not yet begun are dropped and what sounds fades over FADE seconds; the
+// new place begins 1.5 s after. A rest is simply cut short. Only the whole theme, after the seventh seal, is never cut.
+export const FADE = 3.5;
 export function createConductor(seed = 1) {
   const r = rng(seed), heard = new Set();
-  let section = null, startedIn = null, notesEnd = -1, restEnd = -1, lastSig = "", completeDue = false, sealsSeen = null, count = 0;
+  let section = null, startedIn = null, first = false, notesEnd = -1, restEnd = -1, lastSig = "", completeDue = false, sealsSeen = null, count = 0, cuts = 0, cutting = false;
   return {
     tick(now, zone, seals, mood = moodMusic()) {
       if (sealsSeen !== null && seals >= 7 && sealsSeen < 7) completeDue = true;   // the seventh seal, earned just now
       sealsSeen = seals;
       const want = completeDue && zone !== "hall" ? "complete" : zone;
       const changed = (want === "complete" && section !== "complete") || zone !== startedIn;
-      if (now < notesEnd) return null;                         // a phrase is sounding: never cut it
+      if (now < notesEnd) {
+        if (!changed || cutting || section === "complete") return null;   // a phrase is sounding, and he is where it began
+        cutting = true; cuts++; if (first) heard.delete(section);         // a first hearing cut short will be heard again
+        notesEnd = now + FADE; restEnd = notesEnd + 1.5;
+        return { cut: true, at: now, fade: FADE };
+      }
       if (now < restEnd && !(changed && now >= notesEnd + 1.5)) return null;   // resting: unless the place has changed
       // Choose the phrase. Never the same one twice running; after seven seals the gate and summit sometimes play it whole.
       let sec = want; if (sec !== "complete" && section !== "complete" && seals >= 7 && (zone === "gate" || zone === "summit") && r() < 0.3) sec = "complete";
       let p, tries = 0;
       do { p = makePhrase(sec, { r, seals: Math.min(seals, 7), first: !heard.has(sec), mood }); } while (p.sig === lastSig && ++tries < 8);
       if (sec === "complete") completeDue = false;
-      heard.add(sec); lastSig = p.sig; section = sec; startedIn = zone; count++;
+      heard.add(sec); lastSig = p.sig; section = sec; startedIn = zone; first = p.first; cutting = false; count++;
       const start = now + 0.15; notesEnd = start + p.length; restEnd = notesEnd + between(r, p.rest[0], p.rest[1]);
       return { ...p, start, notesEnd, restEnd, n: count };
     },
@@ -180,5 +217,6 @@ export function createConductor(seed = 1) {
     get notesEnd() { return notesEnd; },
     get restEnd() { return restEnd; },
     get count() { return count; },
+    get cuts() { return cuts; },
   };
 }
