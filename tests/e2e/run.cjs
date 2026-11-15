@@ -119,12 +119,33 @@ const scenarios = {
         expect((await t.page.evaluate(() => window.__menu ? document.getElementById("menu").hidden : true)), "Esc on the card also opened the pause menu");
       }
       const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
+      // The hall's registered camera pose must stand on open floor here too: check the real page, not just the plan.
+      const view = require("../../tools/hall-views.cjs").find((v) => v.hall === h.id);
+      await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), view.abs);
+      await t.frames(2); const cam = await t.probe();
+      expect(cam.lum > 8 && cam.lum < 235 && (await t.state()).h < -50, `${h.name}: the registered camera sees nothing (${cam.lum.toFixed(0)})`);
       const spot = await t.page.evaluate((id) => Object.entries(window.__gallery).find(([k]) => k.startsWith(id + "-"))[1].at, h.id);
       await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0), spot); await t.until(async () => ((await t.journey()).look || "").startsWith(h.id + "-"), 30000, `${h.name}: no frame to look at`);
       await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, `could not leave ${h.name}`);
       await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(3);
       s = await t.state(); expect(Math.hypot(s.x - h.out[0], s.z - h.out[1]) < 0.3 && !s.inside, `${h.name}: came out in the wrong place or went straight back in: ${JSON.stringify(s)}`);
     }
+    // From the summit pavilion, the door-view cube camera is so far from the middle of the mountain that a
+    // sky dome left at the origin falls beyond its far plane. Every pixel above the hills must be night sky,
+    // not a black hole: sample the doorway's upper band on the page's own drawing buffer.
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 30000, "could not go into the summit pavilion");
+    await t.page.evaluate(() => window.__pose(420, 5.9, -3.14, -0.226)); await t.frames(3);
+    const skyBand = await t.page.evaluate(() => {
+      const c = document.getElementById("yardGl"), a = document.createElement("canvas");
+      a.width = c.width; a.height = c.height;
+      window.__probe();   // the doorway has been drawn with its own post pass before pixels are read
+      a.getContext("2d").drawImage(c, 0, 0);
+      const x = Math.round(a.width * 0.4), y = Math.round(a.height * 0.14), d = a.getContext("2d").getImageData(x, y, Math.round(a.width * 0.2), Math.round(a.height * 0.12)).data;
+      let dark = 0, n = 0; for (let i = 0; i < d.length; i += 4) { n++; if ((d[i] + d[i + 1] + d[i + 2]) / 3 < 25) dark++; }
+      return dark / n;
+    });
+    expect(skyBand < 0.02, `the sky seen through the summit door is a black hole: ${(skyBand * 100).toFixed(1)}% dark`);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the summit pavilion");
     await t.shot("e2e-halls"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // In winter he leaves his prints in the snow of the court; indoors no snow lies on the floor and none falls,
@@ -281,7 +302,8 @@ const scenarios = {
   } },
   // From behind him and through his eyes.
   views: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third");
+    // `devpose` is a dev-server aid (src/devpose.js): the published build must neither carry it nor touch the address.
+    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose");
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#viewBtn"); await t.page.waitForTimeout(600);
@@ -292,6 +314,7 @@ const scenarios = {
     // With his back to the court's east wall, the eye comes in close rather than passing through it.
     await t.page.evaluate(() => window.__pose(20.5, 30, -Math.PI / 2, -0.05)); await t.frames(3);
     p = await t.probe(); expect(p.camDist < 1.6, "the eye went through the court wall: " + p.camDist);
+    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose" && window.__devpose === undefined), "the published page should leave ?devpose alone");
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
