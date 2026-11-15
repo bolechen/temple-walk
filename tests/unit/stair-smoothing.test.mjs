@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import './dom-stub.mjs';import {createWalker} from '../../app/src/site.js';import {createMonk} from '../../app/src/monk.js';import {stairGeo} from '../../app/src/geo.js';
+import './dom-stub.mjs';import * as THREE from '../../app/vendor/three/build/three.module.js';import {createWalker} from '../../app/src/site.js';import {createMonk} from '../../app/src/monk.js';import {stairGeo} from '../../app/src/geo.js';
 function sample(dt,descending){
  const rise=4,run=stairGeo(4,rise).run,w=createWalker({walk:{solids:[],decks:[],ramps:[{x0:-1.7,x1:1.7,z0:-.3,z1:run+.3,h:rise,low:[0,run],high:[0,0]}]}}),monk=createMonk();let last=null,max=0;
  for(let i=0;i<Math.round(2.5/dt);i++){
@@ -17,8 +17,6 @@ test('a deliberate hop does not snap the feet or torso back onto the floor',()=>
  const monk=createMonk();monk.group.position.y=.8;const point=monk.group.position.clone();
  monk.update(1/30,0,'hop',0,()=>0,{heightAt:()=>0,stairs:false});monk.group.updateMatrixWorld(true);
  assert.ok(Math.abs(monk.group.children[0].position.y)<.02,'hop torso was damped toward the floor');
- for(const leg of monk.group.children.filter(o=>o.isGroup&&o!==monk.group.children[0])){
-  const shoe=leg.children[2],p=shoe.geometry.attributes.position;
-  for(let i=0;i<p.count;i++){const y=shoe.localToWorld(point.set(p.getX(i),p.getY(i),p.getZ(i))).y;assert.ok(y>.7,'foot was glued to the floor during a hop');}
- }
+ const shoes=monk.parts.shoes,v=new THREE.Vector3();
+ for(let i=0;i<shoes.geometry.attributes.position.count;i++){shoes.getVertexPosition(i,v).applyMatrix4(shoes.matrixWorld);assert.ok(v.y>.7,'foot was glued to the floor during a hop');}
 });

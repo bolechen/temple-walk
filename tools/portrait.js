@@ -1,5 +1,5 @@
 // Close views of the novice from the front, the side and behind, standing and with palms together.
-// usage: node tools/portrait.js [season-time]   → tools/out/portrait.png
+// usage: node tools/portrait.js [season-time] [bind]   → tools/out/portrait.png
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app"), out = path.join(__dirname, "out");
@@ -20,13 +20,16 @@ const srv = http.createServer((req, res) => {
   await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
   const shots = [];
-  for (const [yaw, pray] of [[Math.PI, false], [Math.PI + 0.9, false], [0, false], [Math.PI, true], [Math.PI - 0.7, true]]) {
-    await p.evaluate(([y, pr]) => { window.__photo(true, { dist: 4.2, lens: 30, pray: pr, aspect: "tall" }); window.__pose(0, 24, y, -0.1); document.body.classList.add("bare"); document.getElementById("frame").style.display = "none"; document.getElementById("photoBar").style.display = "none"; document.getElementById("photoClose").style.display = "none"; }, [yaw, pray]);
-    await p.waitForTimeout(pray ? 4500 : 2500);
-    shots.push(await p.screenshot({ clip: { x: 600, y: 60, width: 300, height: 640 }, timeout: 240000 }));
+  // `bind` as a second argument shows him front, side and back in the A-pose he is bound in, to set beside the drawing.
+  const poses = process.argv[3] === "bind" ? [[Math.PI, "bind"], [Math.PI * 1.5, "bind"], [0, "bind"]] : [[Math.PI, false], [Math.PI + 0.9, false], [0, false], [Math.PI, true], [Math.PI - 0.7, true]];
+  await p.evaluate(() => window.__photo(true, { dist: 4.2, lens: 30, aspect: "tall", monk: true })); await p.waitForTimeout(3000);   // let the photograph's eye settle before the first view
+  for (const [yaw, pray] of poses) {
+    await p.evaluate(([y, pr]) => { window.__photo(true, { dist: 4.2, lens: 30, pray: pr, aspect: "tall", monk: true }); window.__pose(0, 24, y, -0.1); document.body.classList.add("bare"); document.getElementById("frame").style.display = "none"; document.getElementById("photoBar").style.display = "none"; document.getElementById("photoClose").style.display = "none"; }, [yaw, pray]);
+    await p.waitForTimeout(pray === true ? 4500 : 2500);
+    shots.push(await p.screenshot({ clip: { x: pray === "bind" ? 525 : 600, y: 60, width: pray === "bind" ? 450 : 300, height: 640 }, timeout: 240000 }));
   }
   // Lay the five views side by side.
   await p.setContent(`<body style="margin:0;display:flex;background:#111">${shots.map((s) => `<img src="data:image/png;base64,${s.toString("base64")}">`).join("")}</body>`);
-  await p.setViewportSize({ width: 1500, height: 640 }); await p.screenshot({ path: path.join(out, "portrait.png") });
+  await p.setViewportSize({ width: (process.argv[3] === "bind" ? 450 : 300) * shots.length, height: 640 }); await p.screenshot({ path: path.join(out, "portrait.png") });
   console.log("errors:", errs.slice(0, 5)); await b.close(); srv.close();
 })();
