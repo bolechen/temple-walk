@@ -10,7 +10,11 @@
 // platform's edge (`liftAt(dist)`), and `at(dist)`, where the eye stands when it is `dist` behind with that whole rise.
 export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = eyeY + 1.18;
-  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot);
+  // A retaining wall: bare ground (not a stair or a floor he can walk on) standing higher than a step. The eye does not
+  // climb it to look at his feet over the top (that is a rise of several metres, and he drops out of the picture
+  // below it); it stays on his side of it, as it would against any wall.
+  const tall = (px, pz) => walker.onGround?.(px, pz) && walker.landAt(px, pz) - foot > 1.2;
+  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (tall(px, pz) ? true : null);
   // First to his side, only as far as is open: on a porch that side may be a column, the lattice or a roof's edge.
   let s0 = 0;
   for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
@@ -28,7 +32,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach })
   // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open just now).
   const base = (dist, sd = s0) => [x + rx * sd - lx * dist, ty - ly * dist, z + rz * sd - lz * dist];
   // Over a platform or a stair higher than his feet it rises to see them over the edge. The rise needed at one spot.
-  const need = (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
+  const need = (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = tall(cx, cz) ? foot : walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
   const liftAt = (dist, sd = s0) => {
     // Looking a little to either side of where the eye stands, so that it is already rising when it comes to the edge
     // of a platform, not climbing out of the stone after it has crossed into it.

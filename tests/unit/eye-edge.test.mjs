@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
-import { followEye } from "../../app/src/eye.js";
+import { followEye, createFollow } from "../../app/src/eye.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -33,4 +33,14 @@ test("the view from the summit stair's head (cam 0.63,-118.95, yaw 1.502) keeps 
   assert.ok(foot > top.y - 0.5, "he stands on the summit");
   const c = eye.at(eye.d);
   assert.ok(!outside(c, foot), `the eye is outside the terrace at (${c[0].toFixed(2)}, ${c[2].toFixed(2)})`);
+});
+
+test("under a terrace's retaining wall the eye does not climb it to look at his feet (cam 2.1,-66.63, yaw -2.794, pitch -0.459 once rose to 9.7 m and lost him)", () => {
+  const x = 2.1, z = -66.63, foot = walker.heightAt(x, z), follow = createFollow();
+  const eye = followEye(walker, { x, z, foot, eyeY: walker.eyeAt(x, z), yaw: -2.794, pitch: -0.459, side: 1.2, reach: 6.2 });
+  let c; for (let i = 0; i < 120; i++) c = follow.step(1 / 60, eye);
+  assert.ok(c[1] < foot + 2.5, `the eye rose to ${c[1].toFixed(2)} m over his ${foot} m`);
+  // and he is in the picture: the line from the eye to his head dips no steeper than the lens can follow (50° wide, looking down 0.459 rad)
+  const down = Math.atan2(c[1] - (foot + 1), Math.hypot(c[0] - x, c[2] - z));
+  assert.ok(Math.abs(down - 0.459) < 0.4, `he is ${down.toFixed(2)} rad below the eye, the view looks ${0.459} down`);
 });
