@@ -1,0 +1,21 @@
+ok   boot       74s
+ok   layers    127s
+ok   menu      132s
+ok   photo-ui  506s
+ok   keys      122s
+ok   jump       56s
+ok   drop       70s
+ok   stairs     59s
+FAIL camera    133s
+     photo: dragging right/down must look right/down: {"before":{"inside":false,"room":null,"doorway":null,"tier":"low","scale":0.75,"planar":0,"governed":0,"x":0,"z":30,"yaw":0,"pitch":0,"h":0,"footY":0,"groundY":0,"dropping":false,"jumping":false,"bodyY":0,"target":null,"route":0,"running":true,"frames":86,"tris":831612,"calls":183},"after":{"inside":false,"room":null,"doorway":null,"tier":"low","scale":0.75,"planar":0,"governed":0,"x":0,"z":30,"yaw":0,"pitch":0,"h":0,"footY":0,"groundY":0,"dropping":false,"jumping":false,"bodyY":0,"target":null,"route":0,"running":true,"frames":102,"tris":831612,"calls":183}}
+FAIL phone     220s
+     cdpSession.send: Target page, context or browser has been closed
+FAIL halls       0s
+     browser.newContext: Protocol error (Target.createBrowserContext): Failed to create browser context.
+FAIL music       0s
+     browser.newContext: Target page, context or browser has been closed
+     Browser logs:
+     
+     <launching> /opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars 
+4 of 12 scenarios failed
+e2e exit 124
