@@ -184,8 +184,8 @@ const joy = { x: 0, y: 0 };
 document.addEventListener("pointerlockchange", () => { document.body.classList.toggle("held", locked()); if (locked()) hints.say.held(); });
 document.addEventListener("mousemove", (e) => {
   if (!locked() || photo.on) return; const orbit = view === "third";   // with the camera raised, the view is held still
-  const S = settings.get();
-  yaw += e.movementX * 0.0026 * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);
+  const S = settings.get();   // in his own eyes and under a roof he may look up as far as the ceiling
+  yaw += e.movementX * 0.0026 * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);
 });
 canvas.addEventListener("pointerdown", (e) => {
   touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing";
@@ -202,7 +202,7 @@ canvas.addEventListener("pointermove", (e) => {
   if (photo.on) { down.moved = true; return; }                                             // the camera does not turn: a drag is only not a click
   const orbit = view === "third";                                                          // round him, or from his eyes
   const S = settings.get();
-  down.moved = true; yaw += dx * 0.0042 * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : 0.5);   // a finger and a mouse look the same way
+  down.moved = true; yaw += dx * 0.0042 * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
