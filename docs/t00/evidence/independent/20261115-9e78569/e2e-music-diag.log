@@ -1,0 +1,6 @@
+FAIL music      64s
+     with the music silenced the drum should still be heard
+FAIL sound     160s
+     the drum has no low end: []
+2 of 2 scenarios failed
+exit 1

@@ -1,0 +1,133 @@
+{
+ "roundPosts": 208,
+ "res": [
+  {
+   "id": "tea",
+   "oldAt": [
+    -13.740000000000002,
+    6
+   ],
+   "nearestPost": {
+    "x": -14.2,
+    "z": 6,
+    "r": 0.20600000000000002,
+    "dFromOld": 0.46
+   },
+   "nearestFreeCentre": 0.59,
+   "postRadiusPlusReach": 0.583,
+   "margin_cm": 0.7
+  },
+  {
+   "id": "chan",
+   "oldAt": [
+    13.740000000000002,
+    22
+   ],
+   "nearestPost": {
+    "x": 14.2,
+    "z": 22,
+    "r": 0.20600000000000002,
+    "dFromOld": 0.46
+   },
+   "nearestFreeCentre": 0.59,
+   "postRadiusPlusReach": 0.583,
+   "margin_cm": 0.7
+  },
+  {
+   "id": "main",
+   "oldAt": [
+    14.4,
+    -5.549999999999999
+   ],
+   "nearestPost": {
+    "x": 14.4,
+    "z": -6,
+    "r": 0.2781,
+    "dFromOld": 0.45
+   },
+   "nearestFreeCentre": 0.66,
+   "postRadiusPlusReach": 0.655,
+   "margin_cm": 0.5
+  },
+  {
+   "id": "library",
+   "oldAt": [
+    9.4,
+    -44.34
+   ],
+   "nearestPost": {
+    "x": 9.4,
+    "z": -44.8,
+    "r": 0.2781,
+    "dFromOld": 0.46
+   },
+   "nearestFreeCentre": 0.66,
+   "postRadiusPlusReach": 0.655,
+   "margin_cm": 0.5
+  },
+  {
+   "id": "yaoshi",
+   "oldAt": [
+    -13.54,
+    -52.4
+   ],
+   "nearestPost": {
+    "x": -14.6,
+    "z": -52.4,
+    "r": 0.20600000000000002,
+    "dFromOld": 1.06
+   },
+   "nearestFreeCentre": 0.59,
+   "postRadiusPlusReach": 0.583,
+   "margin_cm": 0.7
+  },
+  {
+   "id": "dahui",
+   "oldAt": [
+    13.54,
+    -74.5
+   ],
+   "nearestPost": {
+    "x": 14,
+    "z": -74.5,
+    "r": 0.20600000000000002,
+    "dFromOld": 0.46
+   },
+   "nearestFreeCentre": 0.59,
+   "postRadiusPlusReach": 0.583,
+   "margin_cm": 0.7
+  },
+  {
+   "id": "guanyin",
+   "oldAt": [
+    9,
+    -74.64999999999999
+   ],
+   "nearestPost": {
+    "x": 9,
+    "z": -75.1,
+    "r": 0.2781,
+    "dFromOld": 0.45
+   },
+   "nearestFreeCentre": 0.66,
+   "postRadiusPlusReach": 0.655,
+   "margin_cm": 0.5
+  },
+  {
+   "id": "lingxiao",
+   "oldAt": [
+    7.5,
+    -123.34000000000002
+   ],
+   "nearestPost": {
+    "x": 7.5,
+    "z": -123.8,
+    "r": 0.2781,
+    "dFromOld": 0.46
+   },
+   "nearestFreeCentre": 0.66,
+   "postRadiusPlusReach": 0.655,
+   "margin_cm": 0.5
+  }
+ ]
+}

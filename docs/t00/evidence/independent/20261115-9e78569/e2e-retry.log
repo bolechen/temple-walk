@@ -1,0 +1,6 @@
+ok   phone     153s
+ok   halls     219s
+FAIL music      65s
+     with the music silenced the drum should still be heard
+1 of 3 scenarios failed
+e2e exit 1

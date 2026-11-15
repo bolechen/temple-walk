@@ -1,0 +1,242 @@
+{
+ "columns": [
+  {
+   "id": "tea",
+   "at": [
+    -13.740000000000002,
+    6
+   ],
+   "conservativeRadius": 0.19,
+   "nearestFreeCentre": 0.2,
+   "requiredForReach0377": 0.567,
+   "gap_cm": -36.7
+  },
+  {
+   "id": "chan",
+   "at": [
+    13.740000000000002,
+    22
+   ],
+   "conservativeRadius": 0.19,
+   "nearestFreeCentre": 0.2,
+   "requiredForReach0377": 0.567,
+   "gap_cm": -36.7
+  },
+  {
+   "id": "main",
+   "at": [
+    14.4,
+    -5.549999999999999
+   ],
+   "conservativeRadius": 0.24,
+   "nearestFreeCentre": 0.21,
+   "requiredForReach0377": 0.617,
+   "gap_cm": -40.7
+  },
+  {
+   "id": "library",
+   "at": [
+    9.4,
+    -44.34
+   ],
+   "conservativeRadius": 0.24,
+   "nearestFreeCentre": 0.2,
+   "requiredForReach0377": 0.617,
+   "gap_cm": -41.7
+  },
+  {
+   "id": "yaoshi",
+   "at": [
+    -13.54,
+    -52.4
+   ],
+   "conservativeRadius": 0.19,
+   "nearestFreeCentre": 0.315,
+   "requiredForReach0377": 0.567,
+   "gap_cm": -25.2
+  },
+  {
+   "id": "dahui",
+   "at": [
+    13.54,
+    -74.5
+   ],
+   "conservativeRadius": 0.19,
+   "nearestFreeCentre": 0.2,
+   "requiredForReach0377": 0.567,
+   "gap_cm": -36.7
+  },
+  {
+   "id": "guanyin",
+   "at": [
+    9,
+    -74.64999999999999
+   ],
+   "conservativeRadius": 0.24,
+   "nearestFreeCentre": 0.21,
+   "requiredForReach0377": 0.617,
+   "gap_cm": -40.7
+  },
+  {
+   "id": "lingxiao",
+   "at": [
+    7.5,
+    -123.34000000000002
+   ],
+   "conservativeRadius": 0.24,
+   "nearestFreeCentre": 0.2,
+   "requiredForReach0377": 0.617,
+   "gap_cm": -41.7
+  }
+ ],
+ "tables": [
+  {
+   "id": "tea-porch-table-south",
+   "at": [
+    -13.680000000000001,
+    18.9
+   ],
+   "centreBlocked": true,
+   "freeOf24ByRadius": [
+    [
+     0,
+     0
+    ],
+    [
+     0.05,
+     0
+    ],
+    [
+     0.1,
+     0
+    ],
+    [
+     0.15,
+     0
+    ],
+    [
+     0.2,
+     0
+    ],
+    [
+     0.25,
+     0
+    ],
+    [
+     0.3,
+     0
+    ],
+    [
+     0.35,
+     0
+    ],
+    [
+     0.4,
+     0
+    ],
+    [
+     0.45,
+     0
+    ],
+    [
+     0.5,
+     1
+    ],
+    [
+     0.55,
+     3
+    ],
+    [
+     0.6,
+     5
+    ],
+    [
+     0.65,
+     5
+    ],
+    [
+     0.7,
+     7
+    ],
+    [
+     0.75,
+     7
+    ]
+   ]
+  },
+  {
+   "id": "tea-porch-table-north",
+   "at": [
+    -13.680000000000001,
+    9.1
+   ],
+   "centreBlocked": true,
+   "freeOf24ByRadius": [
+    [
+     0,
+     0
+    ],
+    [
+     0.05,
+     0
+    ],
+    [
+     0.1,
+     0
+    ],
+    [
+     0.15,
+     0
+    ],
+    [
+     0.2,
+     0
+    ],
+    [
+     0.25,
+     0
+    ],
+    [
+     0.3,
+     0
+    ],
+    [
+     0.35,
+     0
+    ],
+    [
+     0.4,
+     0
+    ],
+    [
+     0.45,
+     0
+    ],
+    [
+     0.5,
+     1
+    ],
+    [
+     0.55,
+     3
+    ],
+    [
+     0.6,
+     5
+    ],
+    [
+     0.65,
+     5
+    ],
+    [
+     0.7,
+     7
+    ],
+    [
+     0.75,
+     7
+    ]
+   ]
+  }
+ ]
+}
