@@ -202,19 +202,21 @@ export function createTrees(scene, M, spots, opts = {}) {
   for (const [x, y, z, kind, h, far0] of spots) {
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
-      const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t);
+      // A young one is the same tree drawn smaller: its boughs are as long as its height allows, not an old tree's.
+      const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t), size = Math.min(1, h / 18);
       grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, far0 ? 0.4 : 0); root(x, y, z, r0, far0);
       for (let by = h * 0.36; by < h * 0.985; by += far0 ? 0.85 : 0.4) {   // a tree seen only from afar is grown with half the boughs, each a little larger
         const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
           if (rnd() < 0.14) continue;   // a gap where a bough was lost
-          const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 0.72 + jit(0.3), l = len * (0.65 + rnd() * 0.6) * (far0 ? 1.25 : 1), w = l * (0.95 + rnd() * 0.3), far = V(Math.sin(a), 0, Math.cos(a));
+          // and however it hangs, it stops short of the ground under it
+          const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 0.72 + jit(0.3), l = Math.min(len * size * (0.65 + rnd() * 0.6) * (far0 ? 1.25 : 1), (by - 0.2) / Math.cos(droop)), w = l * (0.95 + rnd() * 0.3), far = V(Math.sin(a), 0, Math.cos(a));
           if (k % 2 === 0 && !far0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
           // a bough: hinged at the trunk, reaching out and down
           q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
           card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
           // and a curtain hanging from it, so the tree has depth from every side
-          if (k % 2 === 0 && !far0) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const cw = l * 0.75; card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), c.clone().addScaledVector(far, l * 0.36), c.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
+          if (k % 2 === 0 && !far0) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const cw = Math.min(l * 0.75, (by - 0.4) / 0.9); card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), c.clone().addScaledVector(far, l * 0.36), c.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
         }
       }
       q.setFromEuler(e.set(0, rnd() * 3, 0)); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5, 2.3).translate(0, -0.6, 0), axis(1).add(V(0, 0.9, 0)), axis(0.9), 0.95, 0.4, 0.5); }
