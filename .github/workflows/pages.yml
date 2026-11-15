@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   # Nothing is published that does not parse, pass its unit tests, and come up in a real browser. That is all that
-  # stands between a push and the site: the slower scenarios (stairs, the low drop, the photograph) run beside this
+  # stands between a push and the site: the slower scenarios (the stairs, the low drop) run beside this
   # in e2e.yml and do not hold the publication up. A push that touches nothing the site is made of (documents,
   # delivery papers) is checked in half a minute and publishes nothing, because there is nothing new to publish.
   verify:

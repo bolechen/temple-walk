@@ -286,7 +286,9 @@ const scenarios = {
         await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(640, 240, { steps: 6 }); await t.page.mouse.up(); await t.frames(2);
         now = await t.state(); expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3, "a drag turned the camera"); expect(!(await t.page.isVisible("#print")), "a drag took a photograph");
         await t.page.mouse.wheel(0, -400); await t.frames(2); p = await t.probe(); expect(p.zoom > 1 && p.fov < before.fov - 1, "the wheel did not draw the view nearer");
-        for (let i = 0; i < 40; i++) await t.page.mouse.wheel(0, 400); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
+        // Forty turns of the wheel at once, dispatched inside the page: one at a time through the driver each waits on a
+        // software-rendered frame, which cost two minutes of the scenario.
+        await t.page.evaluate(() => { const c = document.getElementById("yardGl"); for (let i = 0; i < 40; i++) c.dispatchEvent(new WheelEvent("wheel", { deltaY: 400, bubbles: true, cancelable: true })); }); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
       }
       expect(!(await t.page.isVisible("#photoSettings")) && (await t.page.getAttribute("#photoSettingsToggle", "aria-expanded")) === "false", "settings should start folded");
       expect((await t.page.locator('#photoBar button:visible').count()) === 2, "only settings and the shutter belong on the lower bar");
@@ -396,6 +398,9 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "keys" && (await t.page.isVisible("#keys")) && !(await t.page.isVisible("#moodPanel")), "Esc should put away only the top panel: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.page.isVisible("#menu")), "the second Esc should close the keys, not bring the menu: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "menu" && u.modal && u.focus === "menu", "with nothing open Esc brings the menu, and the focus goes into it: " + JSON.stringify(u));
+    // The menu is a sheet of paper torn to its own size, and its one button that matters is a seal (src/paper.js, src/ui.css).
+    await t.until(() => t.page.evaluate(() => getComputedStyle(document.querySelector("#menu .card"), "::before").webkitMaskImage.startsWith("url(")), 20000, "the menu's paper was never given its torn edge");
+    expect(await t.page.evaluate(() => ["--paper-tile", "--brush-ink", "--enso-red", "--stamp"].every((k) => document.documentElement.style.getPropertyValue(k).startsWith("url("))), "the paper, the strokes and the seals were not drawn");
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && u.focus !== "menu", "Esc closes the menu and the focus leaves it: " + JSON.stringify(u));
     // The book: opened by its chip, the walk and a jump held while it is open, Tab kept among its buttons, the focus given back.
     await t.page.click("#bookBtn"); await t.until(async () => (await ui()).stack.join() === "book", 60000, "the chip did not open the book");
@@ -472,7 +477,7 @@ const scenarios = {
     fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "stairs-grounding.json"), JSON.stringify(samples, null, 2));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // Click-drag (including trackpad presses) and locked movement must agree on look direction.
+  // Click-drag (including trackpad presses) and locked movement must agree on look direction; the raised photo camera does not turn.
   camera: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 900, height: 600 } });
     for (const mode of ["first", "third", "photo"]) {
@@ -482,7 +487,10 @@ const scenarios = {
       await t.page.mouse.move(420, 320); await t.page.mouse.down();
       await t.page.mouse.move(460, 360, { steps: 4 }); await t.page.mouse.up();
       const after = await t.state();
-      expect(after.yaw > before.yaw + 0.05 && after.pitch < before.pitch - 0.05,
+      // With the camera raised for a photograph the view is held as it was: a drag does not turn it (docs/PHOTO-MODE.md).
+      if (mode === "photo") expect(Math.abs(after.yaw - before.yaw) < 1e-6 && Math.abs(after.pitch - before.pitch) < 1e-6,
+        `photo: dragging must not turn the raised camera: ${JSON.stringify({ before, after })}`);
+      else expect(after.yaw > before.yaw + 0.05 && after.pitch < before.pitch - 0.05,
         `${mode}: dragging right/down must look right/down: ${JSON.stringify({ before, after })}`);
       expect(after.target === null, `${mode}: dragging must not also walk`);
       // The reverse movement should undo the rotation without crossing a pitch limit.

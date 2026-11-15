@@ -56,6 +56,7 @@ pnpm run e2e                        # everything, ~20 min: + the walk in and the
 node tests/e2e/run.cjs moods photo  # only the scenarios named
 pnpm run verify                     # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
+node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
 node tools/portrait.js autumn-dusk  # five close views of the novice → tools/out/portrait.png (add `bind` for his A-pose)
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
@@ -96,7 +97,7 @@ visitor's own season and hour, seen from behind the novice.
 Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, unit tests, and the `boot`
 scenario in a real browser) and then, only if that passes, publishes `app/` as it stands after the install to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
-The slower scenarios (`stairs drop photo-ui`) run beside each publication in `.github/workflows/e2e.yml`, not in its
+The slower scenarios (`stairs drop`) run beside each publication in `.github/workflows/e2e.yml`, not in its
 way; the same workflow runs every scenario once a week and on demand. A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
@@ -104,7 +105,7 @@ way; the same workflow runs every scenario once a week and on demand. A red `ver
 
 **One page, one scene.** `app/index.html` holds the canvas and the interface; `app/yard.js` is the whole walk, outdoors and in. Stepping through a hall's door closes a veil (`#veil`), moves the walker into that hall's room, and opens it again.
 
-**Indoors (`app/src/interior.js`).** Every hall the plan marks with `hall: { id, kind, name }` can be entered: `put()` records its door, where to stand on coming out and which way to face (`site.halls`), and `buildInteriors` builds one room for each, side by side sixty metres under the courts, furnished by `kind` (`buddha`, `figure`, `chan`, `tea`, `library`, `patriarch`, `pavilion`). While he is inside, `walker.setRoom(room)` replaces the plan with the room's floor, walls and furniture; the courts are not drawn, the sun is put out and the room's lamps are lit (`indoors()` in `yard.js`). The Buddha and pedestal models (`app/shared/models/*.glb`, as published: meshopt and Basis packed) are fetched once and stood in every hall with an altar. Along each room's side walls hang frames (the first in each hall holds a small ink painting drawn by `app/src/leaves.js`): what hangs in one is data, `GALLERY["<hall>-w1"] = { title, text, image }` in `interior.js`, shown when a visitor stands before it and presses E. Beside the great Buddha and in three other halls stand scans of real sculpture that two museums publish as public domain (`STAND` in `interior.js` says which stands where; `app/shared/models/`, thinned and vertex-painted by `tools/statues.py`; fetched when a hall is first entered; `__statues()` reports them). They are placeholders until the project carves its own, and `docs/JINGSHAN.md` says which only stand in for another figure. This is where the story's artworks go. Beside the leaves hang real works (`app/src/works.js` and `app/levels/t00/gallery/`, both written by `tools/gallery.py` from openly licensed museum records; `HANG` there says which hall): standing before one and pressing E opens a card (`#piece`) with the picture, an encyclopedia note and the museum's source line, which must stay with it. `__work(slug)` opens one; `__work()` reports it. `?in=<hall id>` starts inside a hall.
+**Indoors (`app/src/interior.js`).** Every hall the plan marks with `hall: { id, kind, name }` can be entered: `put()` records its door, where to stand on coming out and which way to face (`site.halls`), and `buildInteriors` builds one room for each, side by side sixty metres under the courts, furnished by `kind` (`buddha`, `figure`, `chan`, `tea`, `library`, `patriarch`, `pavilion`). What stands and hangs overhead is `app/src/framing.js`: the room's columns stand on the building's own column lines (`hall.xs/zs`, scaled into the room), leaving out any that would stand on the dais, in the way to the altar or before a frame; crescent beams run front to back on their cap blocks and into brackets in the walls; and the ceiling follows the kind (`CEILING`): coffered with a caisson over the figure, plain small squares in the library, or the roof open to the rafters. `room.frame` holds it as data and `tests/unit/interior.test.mjs` checks that every column carries a beam, every beam rests on something, and every frame and the altar can still be walked to. While he is inside, `walker.setRoom(room)` replaces the plan with the room's floor, walls and furniture; the courts are not drawn, the sun is put out and the room's lamps are lit (`indoors()` in `yard.js`). The Buddha and pedestal models (`app/shared/models/*.glb`, as published: meshopt and Basis packed) are fetched once and stood in every hall with an altar. Along each room's side walls hang frames (the first in each hall holds a small ink painting drawn by `app/src/leaves.js`): what hangs in one is data, `GALLERY["<hall>-w1"] = { title, text, image }` in `interior.js`, shown when a visitor stands before it and presses E. Beside the great Buddha and in three other halls stand scans of real sculpture that two museums publish as public domain (`STAND` in `interior.js` says which stands where; `app/shared/models/`, thinned and vertex-painted by `tools/statues.py`; fetched when a hall is first entered; `__statues()` reports them). They are placeholders until the project carves its own, and `docs/JINGSHAN.md` says which only stand in for another figure. This is where the story's artworks go. Beside the leaves hang real works (`app/src/works.js` and `app/levels/t00/gallery/`, both written by `tools/gallery.py` from openly licensed museum records; `HANG` there says which hall): standing before one and pressing E opens a card (`#piece`) with the picture, an encyclopedia note and the museum's source line, which must stay with it. `__work(slug)` opens one; `__work()` reports it. `?in=<hall id>` starts inside a hall.
 
 **Courtyard pipeline (`app/yard.js`).** Creates the renderer, then composes the modules in `app/src/` in a fixed order: `createMaterials` → `buildSite` → `createWalker` → sky → ground → backdrop → bamboo → props → post → trees → drift → `mergeStatic` (everything built so far, batched per material into a few zones along the axis; a mesh that must stay itself sets `userData.keep`) → mood → monk. It owns input (drag to look, tap the floor to walk, tap bell/drum to strike, WASD), the frame loop, and the quality governor. Everything else is a module exposing one `create*`/`build*` function.
 
@@ -159,7 +160,8 @@ the eye follows a few steps behind and a little to his right (`followEye` in `ap
 its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something: a column, a
 building within its walls up to its ridge, its platform only up to the floor (so from a porch the eye backs out over
 the edge), any other wall some way above his head, and every roof from the foot of its beams to over its ridge
-(`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes.
+(`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes,
+and `tests/unit/sweeps.test.mjs` does the same round every building on the plan.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
@@ -207,7 +209,7 @@ forms, so it is not for name boards), "Yunjing Bang" (Yuji Boku, a heavy brush r
 "Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `pnpm run check` fails if a character is used that the cut does not hold.
 
-**The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small red lozenge
+**The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small vermilion seal
 (`#way`) sits on the picture where the next place lies, or at the edge toward it, with the distance in steps; it leaves with
 the goal. The visit's metres and minutes are kept under `yunjing.visit.v1` and told on the book's page. `__visit()` reports them.
 
@@ -220,6 +222,18 @@ pause menu only when the stack is empty; closing gives the focus back to what op
 `ui.open(id, { onClose })` / `ui.close(id)`, never by setting `hidden` (it is kept in step for the tests). A new sheet is a
 `<dialog class="layer">` plus one `ui.layer(id, …)` call. No UI library: comparable web games hand-write their DOM too
 (`docs/t00/decisions.md`, "界面").
+
+**Ink on paper (`app/src/ui.css`, `app/src/paper.js`).** The interface's look, chosen by the owner from two drawn
+directions: over the picture nothing has a box (words with a little shade under them; the five things at the edge are
+slips of paper written down the page); what opens over the walk is a sheet of paper with a torn edge (class `paper`);
+what is chosen is circled in vermilion (`aria-pressed`); the one button that matters on a sheet is a seal (`stamp`); keys
+are written as letters with a stroke under them. `paper.js` draws the paper grain, a dry brush stroke, the ring and the
+seal once in canvases when the page opens and hands them to the stylesheet as `--paper-tile`, `--brush-ink`,
+`--brush-light`, `--enso-light`, `--enso-red`, `--stamp`; a `ResizeObserver` gives every `.paper` its own torn edge
+(`--deckle`, a mask) and every slip at the edge its whole torn paper (`--sheet`, a picture: a mask on a button is not
+drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and paper colours, type sizes) are at the top of
+`ui.css`; every rule there reads without the drawn textures. The running hand borrows the kai's upright punctuation
+(`unicode-range`) so that a slip written down the page has its commas in place.
 
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
 opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, volume, the key card, and
@@ -246,7 +260,13 @@ to `__probe` rather than reaching into the page from a test.
 - Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles. Later the same day, with rafters, the wood outside the walls and the gate's detail added, the first court cost 9.3 ms on the high tier and 4.7 ms on the low; the measured walk (`?tour=120x3`, high tier, 1080p) averaged 61 frames a second with a 95th-percentile frame of 21 ms. Switching trees or bamboo off changes nothing on that card; the mirror pass is about 1.8 ms and is drawn only on the level of the forecourt and first court. None of this says what a Mac or a phone does.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`pnpm run check` guards this).
-- The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.
+- The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `src/ui.css` (linked first thing in `index.html`) says `[hidden]{display:none !important}`.
+- When a visitor says the novice goes through something (穿模) or cannot get down (走不下来): first `pnpm run edges`,
+  which says whether his body goes into anything; if it is clean, it is the eye, so ask `__pick(x, y)` what lies under
+  that point of the picture. For "cannot get down", look for a prop where a hop off a porch would land. Make a unit test
+  fail first: `tests/unit/sweeps.test.mjs` already raycasts from his head to the eye against every building and hops off
+  every porch edge, and `eaves.test.mjs` shows how to pin one place down. Anything new stood near a porch leaves about
+  1.4 m clear in front of its edge.
 - When a shape in a screenshot will not be explained, do not guess at materials: ask `__pick(x, y)` what is there. A pale
   sheet across the gate's roof was chased through tiles, boards, normals and hills for hours; it was a mist sprite
   (`props.js`) hanging in front of the building. Mist sheets stay outside the walls.

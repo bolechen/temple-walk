@@ -444,6 +444,6 @@ export function buildHall(M, opts) {
   // the floor is open, the building: within its walls up to the ridge, and over the rest of its platform only up to
   // the floor (or the top of its railing), so that from a porch the eye can back out over the edge.
   walk.roofs.push({ x0: -EX - 0.3, x1: EX + 0.3, z0: -EZ - 0.3, z1: EZ + 0.3, bottom: topY - 0.15, inner: head - 0.15, top: EAVE_Y + p.rise + 0.3,
-    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, edge: p.platH + (p.rail ? 1.2 : 0.3) });
+    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
 }
