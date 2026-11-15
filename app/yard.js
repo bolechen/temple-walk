@@ -18,6 +18,7 @@ import { createBamboo } from "./src/bamboo.js";
 import { createTrees } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
 import { createMonk } from "./src/monk.js";
+import { followEye } from "./src/eye.js";
 import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
@@ -406,17 +407,9 @@ function frame(now) {
   else {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const ox = pos.x + rx * sideNow, oz = pos.z + rz * sideNow, ty = eyeY + 1.18, reach = reachWant; let d = 0.5;
-    for (let s2 = 0.5; s2 <= reach + 1e-3; s2 += 0.25) {
-      const cx = ox - lx * s2, cz = oz - lz * s2, cy = ty - ly * s2;
-      if (walker.wall(cx, cz) && cy < walker.heightAt(pos.x, pos.z) + 5.5) break;
-      d = s2;
-    }
-    camDist = d < camDist ? d : camDist + (d - camDist) * Math.min(1, dt * 4);
-    const cx = ox - lx * camDist, cz = oz - lz * camDist;
-    // Standing on something higher than he is (a platform, a stair above him), the eye rises enough to see his feet over its edge.
-    const under = walker.landAt(cx, cz), over = Math.max(0, under - footY);
-    camera.position.set(cx, Math.max(ty - ly * camDist, under + 0.35 + over * 1.6), cz);
+    const eye = followEye(walker, { x: pos.x, z: pos.z, foot: footY, eyeY, yaw, pitch, side: sideNow, reach: reachWant });
+    camDist = eye.d < camDist ? eye.d : camDist + (eye.d - camDist) * Math.min(1, dt * 4);
+    camera.position.set(...eye.at(camDist));
     if (camDist < 0.95 && !photo.on) monk.group.visible = false;   // backed against a wall, the eye is as good as his own
   }
   camera.rotation.set(pitch, -yaw, 0, "YXZ");

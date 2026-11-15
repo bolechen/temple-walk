@@ -57,7 +57,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [] }, shade = [[], [], [], []], halls = [], buildings = [];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] }, shade = [[], [], [], []], halls = [], buildings = [];
   const put = (opts, at, q = 0, lvl = 0, base) => {
     const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, ground: y });
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
@@ -65,6 +65,7 @@ export function buildSite(M) {
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
+    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
     for (const edge of b.walk.drops) {
       const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
       walk.drops.push({ a: world(edge.a), b: world(edge.b), normal: turn(...edge.normal, q), top: edge.top + y });
@@ -353,7 +354,9 @@ export function buildSite(M) {
     for (const [lx, lz] of [[0, 0.62], [0.95, -0.12], [0, -0.86]]) { const t = teaFrom(lx, lz); walk.posts.push({ x: t[0], z: t[1], r: 0.2 }); }
   }
   // A stand of small lamps before the Guanyin hall. A few are always burning; one in the middle waits for the visitor.
-  const lampAt = [-6.2, T2.zS - 4.0], lampMine = [lampAt[0], T2.y + 0.5 + 0.26 + 0.088, lampAt[1] + 0.02];
+  // It stands far enough out from the porch that the eave's lip is a walk between them, and that one who hops down
+  // from the porch lands clear of it.
+  const lampAt = [-6.2, T2.zS - 3.4], lampMine = [lampAt[0], T2.y + 0.5 + 0.26 + 0.088, lampAt[1] + 0.02];
   {
     const P = { stone: [], wood: [], bronze: [] }, y = T2.y;
     P.stone.push(box(1.7, 0.42, 0.66, lampAt[0], y + 0.21, lampAt[1]), box(1.86, 0.08, 0.8, lampAt[0], y + 0.46, lampAt[1]));
@@ -407,7 +410,7 @@ export function buildSite(M) {
     // The six fixed views the T00 handoff is judged by (docs/t00/camera-manifest.json): bamboo start, stair turn,
     // before the screen wall, the gate once round it, back through the gate, the first court.
     cam01: [A.xC, A.zC1 - 1.2, 0, 0.3], cam02: [A.xB0 + 1.6, A.zMid + 0.9, -1.35, 0.16], cam03: [0, 63.8, 0, 0.14], cam04: [6.6, 53.4, -0.42, 0.3], cam05: [0.6, 37.6, Math.PI, 0.08], cam06: [0, 29, 0, 0.1],
-    teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.6, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
+    teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
   };
 
   return { root, walk, shade, paving, hall, halls, buildings, views, places, cedars, strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
@@ -471,7 +474,7 @@ function drum(M, t) {
 // ---- Walking over the plan ----
 const terrainLevel = (x, z) => terrain(x, z);
 export function createWalker(site) {
-  const { solids, decks, ramps, posts = [] } = site.walk;
+  const { solids, decks, ramps, posts = [], roofs = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
   // What stands in the way even on a floor: a round thing keeps his centre its own radius and his width away (`pad`);
   // a square one was drawn that much larger where it was put down. They are sorted into two-metre squares, so that
@@ -501,6 +504,7 @@ export function createWalker(site) {
   // Indoors the plan is set aside: a room is one level floor inside four walls, with its own things in the way.
   let room = null;
   const shut = (x, z) => x < room.x0 || x > room.x1 || z < room.z0 || z > room.z1 || room.solids.some((s) => inRect(s, x, z));
+  const wall = (x, z) => { if (room) return shut(x, z); if (post(x, z, 0.15)) return true; if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; };
   return {
     setRoom(r) { room = r || null; }, get room() { return room; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },
@@ -508,8 +512,24 @@ export function createWalker(site) {
     eyeAt(x, z) { if (room) return room.y; const c = carved(x, z, true); return c === null ? level(x, z) : c; },
     // The surface of whatever is there, walkable or not: floors and stairs, the courts, and the open hillside.
     landAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? Math.max(level(x, z), terrain(x, z)) : c; },
-    // Is something solid standing here: a building, a wall, a tree? (Not the edges of the walk, which are only air.) The eye uses this.
-    wall(x, z) { if (room) return shut(x, z); if (post(x, z, 0)) return true; if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; },
+    // Is something solid standing here: a building, a wall, a tree? (Not the edges of the walk, which are only air.) The eye uses this,
+    // and keeps a hand off a column, so that the near edge of its lens does not cut into the wood.
+    wall,
+    // May the eye that follows him be at this point, he standing at `foot`? Not among the bracket sets and rafters of
+    // a roof, nor in its tiles, though the floor below is open to him; not against a column; over a floor he can walk
+    // on, anywhere else. A building is closed within its walls up to its ridge and over its platform up to the floor;
+    // any other wall or tree some way above his head (a court wall is passed over well above it).
+    eyeShut(x, y, z, foot) {
+      if (room) return shut(x, z);
+      for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;
+      if (post(x, z, 0.15)) return true;
+      if (carved(x, z) !== null) return false;
+      let top = -Infinity, own = false;
+      for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);
+      for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.own) own = true; else top = Math.max(top, foot + 5.5); }
+      if (own && top === -Infinity) top = foot + 5.5;   // the cheeks of a building's stair, beyond its platform
+      return y < top;
+    },
     onGround: (x, z) => !room && carved(x, z) === null,
     onStairs: (x, z) => !room && ramps.some(r => inRect(r, x, z) && carved(x, z) <= (r.base || 0) + r.h + 0.01),
     blocked(x, z) {
