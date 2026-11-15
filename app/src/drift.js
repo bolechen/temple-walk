@@ -51,7 +51,7 @@ export function createDrift(scene, count) {
   return {
     setMood(m, light) {
       const k = KINDS[m.drift] || KINDS.none;
-      u.uCol.value.setRGB(...k.col[0]); u.uCol2.value.setRGB(...k.col[1]); u.uCol3.value.setRGB(...k.col[2]); u.uPart.value = k.part; u.uNear.value = k.near; u.uPoint.value = k.point; u.uSize.value = k.size; u.uFall.value = k.fall; u.uSway.value = k.sway; u.uOp.value = k.op; u.uGlow.value = k.glow;
+      u.uCol.value.fromArray(k.col[0]); u.uCol2.value.fromArray(k.col[1]); u.uCol3.value.fromArray(k.col[2]); u.uPart.value = k.part; u.uNear.value = k.near; u.uPoint.value = k.point; u.uSize.value = k.size; u.uFall.value = k.fall; u.uSway.value = k.sway; u.uOp.value = k.op; u.uGlow.value = k.glow;
       u.uLight.value.copy(light); pts.visible = k.op > 0; mat.blending = k.glow ? THREE.AdditiveBlending : THREE.NormalBlending;
     },
     update(t, cam, px) { u.uT.value = t; u.uCam.value.copy(cam); u.uPx.value = px; },

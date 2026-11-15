@@ -16,6 +16,7 @@ function rng(seed) {   // mulberry32
   let s = seed >>> 0;
   return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
+/** @returns {[HTMLCanvasElement, CanvasRenderingContext2D]} */
 const canvas = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return [c, c.getContext("2d")]; };
 const url = (c) => `url("${c.toDataURL("image/png")}")`;
 
@@ -130,7 +131,7 @@ export function createPaper(root = document.documentElement) {
       const b = e.borderBoxSize?.[0], w = b ? b.inlineSize : e.contentRect.width, h = b ? b.blockSize : e.contentRect.height;
       const vertical = getComputedStyle(e.target).writingMode.startsWith("vertical");   // the box's inline size runs down the page
       const [ww, hh] = b && vertical ? [h, w] : [w, h];
-      if (ww > 4 && hh > 4) { if (e.target.matches(".rail .chip")) e.target.style.setProperty("--sheet", sheet(ww, hh)); else e.target.style.setProperty("--deckle", deckle(ww, hh)); }
+      if (ww > 4 && hh > 4) { const el = /** @type {HTMLElement} */ (e.target); if (el.matches(".rail .chip")) el.style.setProperty("--sheet", sheet(ww, hh)); else el.style.setProperty("--deckle", deckle(ww, hh)); }
     }
   }) : null;
   const observe = (el) => { if (ro && el && !el.dataset.paper) { el.dataset.paper = "1"; ro.observe(el); } };

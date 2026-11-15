@@ -60,7 +60,7 @@ pnpm install   # 装依赖，并运行 tools/setup.mjs：把 Basis 转码器拷�
 pnpm dev         # Vite 开发服务器，改代码即时生效
 pnpm build       # 构建到 dist/，即发布到 GitHub Pages 的站点；测试和出图工具打开的也是它
 pnpm preview     # 在本机看构建结果
-pnpm typecheck   # TypeScript 检查已纳入的模块（tsconfig.json 的 include，逐步扩大）
+pnpm typecheck   # TypeScript（checkJs）检查 app/ 下全部模块，three.js 用 @types/three 的类型
 ```
 
 打开 `http://127.0.0.1:8000/`。默认只绑定本机；不要把开发工具服务器暴露到公网或不可信网络。
@@ -191,7 +191,7 @@ node tools/shots.js court@autumn-dusk@third
 ## 下一步
 
 1. 配置 PR 检查与分支保护。
-2. 把类型检查逐步扩大到带 three.js 的模块；第二关开工前把「引擎」和「这一关」的代码分开。
+2. 类型检查已覆盖全部模块但未开 `strict`，下一步逐步收紧；第二关开工前把「引擎」和「这一关」的代码分开。
 3. 改善植被重复感、近景材质及雾的前中后景层次，提交固定机位对照图。
 4. 完成当前版本正常速度往返走查及目标设备性能测量。
 5. 继续核对斗拱、梁架、檐口、器物与构图；优先完善已实现区域，再扩展剧情与天气。

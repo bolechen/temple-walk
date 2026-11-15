@@ -33,7 +33,7 @@ The page is ES modules developed and built with Vite; three.js is imported as `"
 pnpm install                        # dependencies, then tools/setup.mjs: the Basis transcoder copied to app/vendor/basis/, the statues' hashes checked
 pnpm dev                            # Vite's dev server on 127.0.0.1:8000 (this machine only)
 pnpm build                          # the site as published → dist/ (git-ignored); `pnpm preview` serves it
-pnpm typecheck                      # tsc with checkJs over the modules listed in tsconfig.json; add a module there once it passes
+pnpm typecheck                      # tsc with checkJs over all of app/ (yard.js and every module in src/), against three's own types (@types/three)
 ```
 
 **Where things live.** `app/src/` is the code. What belongs to a level sits under `app/levels/<level>/`: for the

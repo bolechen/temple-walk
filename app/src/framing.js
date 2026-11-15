@@ -117,6 +117,7 @@ export function frameRoom(M, add, { K, hall, Y, focus, clear }) {
   const some = (list, mat, ao) => list.length && add(merge(list), mat, ao);   // a hall of one bay's depth has no free columns
   some(shafts, M.pillar); some(bases, M.monolith); some(caps, M.beamX, lowAO(0.55)); some(wood, M.beamX, lowAO(0.5));
 
+  /** @type {(x?: number, z?: number) => number} */
   let roofAt = () => H;
   if (kind === "open") { const o = openRoof(M, add, B, H, top, lowAO); roofAt = o.roofAt; members.gable = o.gable; members.boards = o.boards; }
   else flatCeiling(M, add, B, H, kind, CELL[hall.kind] || 0.4, kind === "coffer" ? focus : null, inX, bw, lowAO);

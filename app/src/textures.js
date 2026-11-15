@@ -17,10 +17,11 @@ for (const [name, s] of Object.entries(SURFACES)) {
 }
 
 // Begin fetching them. `anisotropy` is what the renderer allows; `onChange` is called as each arrives.
+/** @param {number} [anisotropy] @param {(state: any) => void} [onChange] */
 export function loadTextures(anisotropy = 8, onChange = () => {}) {
   if (typeof document === "undefined" || state.total) return state;
   const loader = new THREE.TextureLoader(), base = asset("shared/textures/");
-  for (const name of Object.keys(SURFACES)) for (const [slot, file, srgb] of [["a", `${name}_a.webp`, true], ["n", `${name}_n.jpg`, false]]) {
+  for (const name of Object.keys(SURFACES)) for (const [slot, file, srgb] of /** @type {[string, string, boolean][]} */ ([["a", `${name}_a.webp`, true], ["n", `${name}_n.jpg`, false]])) {
     state.total++;
     loader.load(base + file, (t) => {
       t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = anisotropy; if (srgb) t.colorSpace = THREE.SRGBColorSpace;

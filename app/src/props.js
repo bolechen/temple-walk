@@ -6,6 +6,7 @@ export function createProps(scene, M, at, centre) {
   // A plain iron censer of the older kind: a deep three-legged bowl with two upright ears and nothing over it.
   // (It used to wear two small pavilion roofs, which is a later fashion.)
   const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
+  /** @type {THREE.BufferGeometry[]} */
   const parts = [lathe([[0, 0.42], [0.3, 0.42], [0.5, 0.52], [0.6, 0.72], [0.6, 0.9], [0.67, 0.96], [0.67, 1.03], [0.57, 1.03], [0.54, 0.9], [0, 0.86]], 36)];
   for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2 + Math.PI / 2; parts.push(new THREE.CylinderGeometry(0.09, 0.06, 0.5, 10).translate(Math.cos(a) * 0.37, 0.25, Math.sin(a) * 0.37)); }
   for (const sx of [-1, 1]) parts.push(new THREE.TorusGeometry(0.12, 0.035, 8, 16, Math.PI).rotateY(Math.PI / 2).translate(sx * 0.62, 1.03, 0));
@@ -63,7 +64,7 @@ export function createProps(scene, M, at, centre) {
     }
   }
   return {
-    setMood(m) { setShafts(m); mu.uCol.value.setRGB(...m.fog).multiplyScalar(1.08); mu.uOp.value = 0.5 * m.mist; },
+    setMood(m) { setShafts(m); mu.uCol.value.fromArray(m.fog).multiplyScalar(1.08); mu.uOp.value = 0.5 * m.mist; },
     update(t, dt, still, px = 800) {
       su.uPx.value = px;
       if (!still) mu.uT.value = t;

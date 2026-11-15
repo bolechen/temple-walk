@@ -9,7 +9,7 @@ import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./
 import { drawGoshuin, sealStamp } from "./goshuin.js";
 import { chime, drop, setSeals } from "./audio.js";
 
-const $ = (id) => document.getElementById(id);
+const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
 // A ring drawn in one breath of the brush, not quite closed: the mark on the ground where something may be done.
 function ensoTexture() {
@@ -49,7 +49,7 @@ export function createGame(y) {
   }
   // The lamp the visitor lights stays lit.
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
-  mine.position.set(...places.lamp.flame); y.scene.add(mine);
+  mine.position.fromArray(places.lamp.flame); y.scene.add(mine);
   const refresh = () => {
     for (const id in rings) rings[id].visible = !journey.has(id) && (places[id].room || null) === y.room();
     mine.visible = journey.has("lamp");
@@ -78,7 +78,7 @@ export function createGame(y) {
     if (rite || !places[id]) return;
     const p = places[id], d = SEAL[id]; $("act")?.setAttribute("hidden", "");
     if (id === "bell") { y.strike("bell"); return; }                                  // the stroke itself is heard below
-    const mineRite = (rite = { id }), on = () => rite === mineRite;
+    const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     y.stage({ face: p.face, pose: p.sit ? "sit" : id === "well" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, leave: () => { if (on()) end(); } });
     if (id === "tea") { await wait(2); if (!on()) return; say(d.line, 6); await wait(5); }
@@ -101,7 +101,7 @@ export function createGame(y) {
     await wait(1.2); if (on()) end();
   }
   window.addEventListener("struck", (e) => {
-    if (e.detail !== "bell" || journey.has("bell")) return;
+    if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
     const r = journey.strike(); say(["", "一下", "两下", "三下"][r.strikes] || "", 2.5); if (r.earned) earned("bell"); else refresh();
   });
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
@@ -164,7 +164,7 @@ export function createGame(y) {
   }
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
-  $("bookReset")?.addEventListener("click", (e) => { if (e.currentTarget.textContent === "重新朝山") { e.currentTarget.textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
+  $("bookReset")?.addEventListener("click", (e) => { if (/** @type {HTMLElement} */ (e.currentTarget).textContent === "重新朝山") { /** @type {HTMLElement} */ (e.currentTarget).textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 
   // ---- The title ----
   const title = $("title");

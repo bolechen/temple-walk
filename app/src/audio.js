@@ -37,7 +37,7 @@ function start() {
   // Each bus: what goes in, the visitor's level for it, a duck (the music steps back for the bell), then dry and
   // reverb. The level comes before the reverb send, so a muted bus leaves no echo behind.
   for (const [k, dry, wet] of [["music", 0.7, 0.55], ["ambience", 0.8, 0.45], ["effects", 0.8, 0.45]]) {
-    const b = (bus[k] = {}); b.in = ctx.createGain(); b.level = ctx.createGain(); b.level.gain.value = levels[k]; b.duck = ctx.createGain();
+    const b = (bus[k] = /** @type {any} */ ({})); b.in = ctx.createGain(); b.level = ctx.createGain(); b.level.gain.value = levels[k]; b.duck = ctx.createGain();
     b.dry = ctx.createGain(); b.dry.gain.value = dry; b.sendOut = ctx.createGain(); b.sendOut.gain.value = wet; b.sendIn = ctx.createGain(); b.sendIn.gain.value = 0;
     b.in.connect(b.level); b.level.connect(b.duck); b.duck.connect(b.dry); b.duck.connect(b.sendOut); b.duck.connect(b.sendIn);
     b.dry.connect(comp); b.sendOut.connect(outVerb); b.sendIn.connect(inVerb);

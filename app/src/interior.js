@@ -276,8 +276,8 @@ export function buildInteriors(M, halls, renderer) {
       if (renderer) loader.setKTX2Loader(new KTX2Loader().setTranscoderPath(asset("vendor/basis/")).detectSupport(renderer));
       const get = async (name) => (await loader.loadAsync(base + name)).scene;
       const [buddha, ped] = await Promise.all([get("buddha.glb"), get("pedestal.glb")]);
-      buddha.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.5; o.material.envMapIntensity = 0; } });
-      ped.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.95; } });
+      buddha.traverse((/** @type {any} */ o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.5; o.material.envMapIntensity = 0; } });
+      ped.traverse((/** @type {any} */ o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.95; } });
       const fit = (o, h) => { const b = new THREE.Box3().setFromObject(o), w = new THREE.Group(); o.position.set(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2); w.add(o); w.scale.setScalar(h / (b.max.y - b.min.y)); return w; };
       state.figures = "here";
       return {

@@ -25,6 +25,7 @@ const XV = V3(1, 0, 0), UPV = V3(0, 1, 0);
 const APOSE = 0.66, UPPER = 0.2, FORE = 0.15, THIGH = 0.22, SHIN = 0.22, ANKLE = 0.06;
 const SKULL = V3(0, 1.04, -0.004), R = 0.14;
 const FOOT_X = 0.088, FOOT_Z = 0.012, TOE_OUT = 0.12;
+/** @type {[string, number][]} */
 const SIDES = [["left", 1], ["right", -1]];   // he faces +z, so his left hand is on +x
 const SKIRT = ["robeFront", "robeLeft", "robeBack", "robeRight"];
 // Under each sole, the points that must clear the ground (in the foot's own frame, on the floor).
@@ -37,6 +38,7 @@ const PAL = {
 };
 
 // ---- Cloth and straw, painted once ----
+/** @returns {[HTMLCanvasElement, CanvasRenderingContext2D]} */
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; }
 function linen() {   // coarse, hand-woven: a thread to two pixels, and here and there a thicker slub
   const [c, x] = canvas(256, 256);
@@ -258,6 +260,7 @@ export function createMonk() {
       skinParts.push(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.18, 0.215, t), h = 0.5 * smooth(0.335, 0.352, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
       // The hand, made in its own frame (wrist at the origin, fingers down -y, palm to +z, thumb outward), then set where
       // the bone is.
+      /** @type {THREE.BufferGeometry[]} */
       const parts = [new THREE.SphereGeometry(1, 16, 12).scale(0.0215, 0.026, 0.0118).translate(0, -0.026, 0.002), new THREE.CylinderGeometry(0.0185, 0.0195, 0.024, 14)];
       [[0.0132, 0.021], [0.0045, 0.025], [-0.0045, 0.024], [-0.0132, 0.019]].forEach(([fx, len], k) => parts.push(new THREE.CapsuleGeometry(0.0061 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(-0.28 - k * 0.04).rotateZ(fx * 3).translate(fx, -0.046, 0.002)));
       parts.push(new THREE.CapsuleGeometry(0.0068, 0.018, 4, 8).translate(0, -0.009, 0).rotateZ(0.75).rotateX(-0.5).translate(0.017, -0.016, 0.007));
@@ -270,6 +273,7 @@ export function createMonk() {
 
   // ---- The robe: body and skirt, sleeves, collar, sash, the hat's straps; one mesh ----
   const robeParts = [];
+  /** @type {{ y: number, k: number, inner?: number }[]} */
   const rows = [{ y: 0.3, k: 0.955, inner: 1 }, { y: 0.266, k: 0.972, inner: 1 }, { y: 0.2568, k: 0.99, inner: 1 }, ...PROF.map((p) => ({ y: p.y, k: 1 })), { y: 0.868, k: 0.78, inner: 1 }];
   const NT = 72;
   const torso = grid(rows.length, NT + 1, (i, j) => {
@@ -290,6 +294,7 @@ export function createMonk() {
   const torsoCount = torso.attributes.position.count;
   for (const arm of ARM) {   // wide sleeves to the elbow, the underside hanging longer, lined a shade darker
     const { J, d, o, e2, n } = arm, NC = 36, NA = 15;
+    /** @type {{ v: number, k: number, back: number, lining?: number }[]} */
     const srows = [...Array.from({ length: NA }, (_, i) => ({ v: i / (NA - 1), k: 1, back: 0 })), { v: 1, k: 0.93, back: 0.012, lining: 1 }, { v: 1, k: 0.88, back: 0.06, lining: 1 }];
     const sl = grid(srows.length, NC + 1, (i, j) => {
       const th = Math.PI + (TAU * j) / NC, c = Math.cos(th), sn = Math.sin(th), row = srows[i];

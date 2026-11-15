@@ -1,7 +1,30 @@
 {
   "compilerOptions": {
-    "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler", "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "allowJs": true, "checkJs": true, "noEmit": true, "strict": false, "skipLibCheck": true, "types": ["vite/client"]
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "types": [
+      "vite/client"
+    ]
   },
-  "include": ["app/src/globals.d.ts", "app/src/assets.js", "app/src/journey.js", "app/src/score.js", "app/src/settings.js", "app/src/mood.js", "app/src/quality.js", "app/src/eye.js", "app/src/drop.js", "app/src/hints.js", "app/src/tour.js", "app/src/works.js", "app/src/ui.js"]
+  "include": [
+    "app/src/**/*.js",
+    "app/src/globals.d.ts",
+    "app/yard.js",
+    "app/shared/textures/index.js"
+  ],
+  "exclude": [
+    "app/vendor",
+    "dist"
+  ]
 }

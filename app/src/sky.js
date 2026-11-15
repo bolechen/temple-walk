@@ -61,13 +61,13 @@ export function createSky(renderer, scene, quality, focus) {
     indoors() { sun.intensity = 0; hemi.intensity *= 0.3; },
     // Everything the hour and the season decide about light. The caller redraws the shadows afterwards.
     setMood(m) {
-      SUN_DIR.set(...m.sun).normalize(); FOG.setRGB(...m.fog);
-      u.uZen.value.setRGB(...m.zen); u.uHor.value.setRGB(...m.hor); u.uSunCol.value.setRGB(...m.sunCol);
+      SUN_DIR.fromArray(m.sun).normalize(); FOG.fromArray(m.fog);
+      u.uZen.value.fromArray(m.zen); u.uHor.value.fromArray(m.hor); u.uSunCol.value.fromArray(m.sunCol);
       u.uCloud.value = m.cloud; u.uStars.value = m.stars; u.uGlow.value = m.glow; u.uDisk.value = m.disk;
-      sun.position.copy(SUN_DIR).multiplyScalar(190).add(at); sun.color.setRGB(...m.sunCol); sun.intensity = m.sunI;
-      hemi.color.setRGB(...m.hemiS); hemi.groundColor.setRGB(...m.hemiG); hemi.intensity = m.hemiI;
-      U.uAmb.value.setRGB(...m.hemiS).multiplyScalar(m.hemiI * 0.82); U.uSunC.value.setRGB(...m.sunCol).multiplyScalar(m.sunI * 0.2);
-      const l = U.uLight.value.setRGB(...m.hemiS).multiplyScalar(m.hemiI * 0.6); l.r += m.sunCol[0] * m.sunI * 0.14; l.g += m.sunCol[1] * m.sunI * 0.14; l.b += m.sunCol[2] * m.sunI * 0.14;
+      sun.position.copy(SUN_DIR).multiplyScalar(190).add(at); sun.color.fromArray(m.sunCol); sun.intensity = m.sunI;
+      hemi.color.fromArray(m.hemiS); hemi.groundColor.fromArray(m.hemiG); hemi.intensity = m.hemiI;
+      U.uAmb.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.82); U.uSunC.value.fromArray(m.sunCol).multiplyScalar(m.sunI * 0.2);
+      const l = U.uLight.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.6); l.r += m.sunCol[0] * m.sunI * 0.14; l.g += m.sunCol[1] * m.sunI * 0.14; l.b += m.sunCol[2] * m.sunI * 0.14;
       scene.fog.color.copy(FOG); scene.fog.density = U.uFogD.value = m.fogD;
       const next = pm.fromScene(env, 0.02); scene.environment = next.texture; envRT.dispose(); envRT = next;
     },

@@ -26,7 +26,7 @@ export function bakeAO(geo, fn) {
   geo.setAttribute("ao", new THREE.BufferAttribute(a, 1));
   return geo;
 }
-export function mesh(geo, mat, { cast = true, receive = true, ao } = {}) {
+export function mesh(geo, mat, { cast = true, receive = true, ao } = /** @type {{ cast?: boolean, receive?: boolean, ao?: any }} */ ({})) {
   if (!geo.attributes.ao || ao) bakeAO(geo, ao);
   const m = new THREE.Mesh(geo, mat);
   m.castShadow = cast; m.receiveShadow = receive;

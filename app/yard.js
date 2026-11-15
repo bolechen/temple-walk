@@ -41,7 +41,7 @@ const settings = createSettings(browserSettingsStore()); { const S = settings.ge
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
 
-const canvas = document.getElementById("yardGl");
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("yardGl"));
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.AgXToneMapping;      // applied by the output pass
@@ -104,7 +104,7 @@ const glows = []; let glowCloud = null;
   g.addColorStop(0, "rgba(255,190,110,1)"); g.addColorStop(0.3, "rgba(255,150,70,.35)"); g.addColorStop(1, "rgba(255,120,40,0)"); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
   const tex = new THREE.CanvasTexture(c), p = new THREE.Vector3();
   scene.updateMatrixWorld(true);
-  site.root.traverse((o) => {
+  site.root.traverse((/** @type {any} */ o) => {
     if (!o.isMesh || o.material !== M.flame) return;
     glows.push({ position: o.getWorldPosition(p).clone(), scale: { x: (o.userData.glow || 2.6) * 0.55 } });
   });
@@ -134,7 +134,7 @@ let afterMood = null;   // set further down, once there are rooms: what a change
 function setMood(season, time) {
   state.season = season; state.time = time; mood = moodOf(season, time);
   sky.setMood(mood);
-  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.setRGB(...mood.leaf);
+  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf);
   backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
@@ -280,13 +280,13 @@ if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Spac
 
 addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-  const press = (id) => { const el = document.getElementById(id); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
+  const press = (id) => { const el = /** @type {HTMLButtonElement | null} */ (document.getElementById(id)); if (el && el.offsetParent !== null && !el.disabled) { el.click(); return true; } return false; };
   if (ui.key(e)) return;   // Esc puts away whatever is on top; an open sheet hears only its own keys
   if (photo.on && k === "tab") return;   // Photo controls use normal keyboard focus navigation.
   // The keys such games use: E to do what is offered here, V to change the view, B for the book, P to photograph, T for the season and hour.
-  if (k === " " && e.target?.tagName === "BUTTON") return;
+  if (k === " " && /** @type {Element} */ (e.target)?.tagName === "BUTTON") return;
   if (hop && (k === "e" || k === "enter" || k === " ")) { e.preventDefault(); return; }
-  if (k === " " && e.target?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
+  if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
   else if (k === "v") press("viewBtn"); else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
@@ -426,7 +426,7 @@ function frame(now) {
     const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
     const eye = followEye(walker, { x: pos.x, z: pos.z, foot: footY, eyeY, yaw, pitch, side: sideNow, reach: reachWant });
-    camera.position.set(...follow.step(dt, eye));
+    camera.position.fromArray(follow.step(dt, eye));
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
     monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
@@ -462,7 +462,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // ---- The controls at the edge of the view ------------------------------------------
-const $ = (id) => document.getElementById(id), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
+const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id)), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
 if (Q.has("shot")) document.body.classList.add("bare");
 const setView = (v) => { view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); const b = $("viewBtn"); if (b) b.textContent = v === "third" ? "身外" : "眼中"; resize(); };
 setView(view);
@@ -598,7 +598,7 @@ window.__census = () => {
   const out = {};
   for (const top of scene.children) {
     const k = top.userData.part || top.type, row = (out[k] ||= { meshes: 0, tris: 0, hidden: !top.visible });
-    top.traverse((o) => {
+    top.traverse((/** @type {any} */ o) => {
       if (!(o.isMesh || o.isPoints || o.isSprite) || !o.geometry) return; row.meshes++;
       const g = o.geometry, n = g.index ? g.index.count : g.attributes.position ? g.attributes.position.count : 0;
       row.tris += Math.round((o.isPoints ? 0 : n / 3) * (o.isInstancedMesh ? o.count : 1));
@@ -644,9 +644,9 @@ function openMenu(open) {
 {
   const set = (k, v) => { settings.set(k, v); openMenu(true); };
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => set("quality", b.dataset.q)));
-  $("setSens").addEventListener("input", (e) => settings.set("sens", +e.target.value));
-  $("setFov").addEventListener("input", (e) => { settings.set("fov", +e.target.value); lens(); });
-  for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +e.target.value); setLevels({ [k]: settings.get()[k] }); });
+  $("setSens").addEventListener("input", (e) => settings.set("sens", +/** @type {HTMLInputElement} */ (e.target).value));
+  $("setFov").addEventListener("input", (e) => { settings.set("fov", +/** @type {HTMLInputElement} */ (e.target).value); lens(); });
+  for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +/** @type {HTMLInputElement} */ (e.target).value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
   on("reloadBtn", () => location.reload());
@@ -660,7 +660,7 @@ window.__settings = () => settings.get(); window.__menu = (open) => openMenu(ope
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
 window.__pick = (px, py, n = 6) => {
   const r = canvas.getBoundingClientRect(), rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(((px - r.left) / r.width) * 2 - 1, -((py - r.top) / r.height) * 2 + 1), camera);
-  return rc.intersectObjects(scene.children, true).filter((h) => h.object.visible).slice(0, n).map((h) => { const m = h.object.material || {}; let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; }
+  return rc.intersectObjects(scene.children, true).filter((h) => h.object.visible).slice(0, n).map((h) => { const m = /** @type {any} */ (h.object).material || {}; let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; }
     return { part, material: m.customProgramCacheKey && /^[a-zA-Z]+$/.test(m.customProgramCacheKey()) ? m.customProgramCacheKey() : m.type, distance: +h.distance.toFixed(2), at: h.point.toArray().map((v) => +v.toFixed(2)), transparent: !!m.transparent, kind: h.object.type }; });
 };
 createGame({
