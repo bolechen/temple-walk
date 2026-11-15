@@ -69,6 +69,13 @@ Unity loader、`Build/` 里的 `.data.br` / `.wasm.br`，以及 `StreamingAssets
 - **存档**：`autoSyncPersistentDataPath: true`，把 `journey.json` 存进 IndexedDB；`productVersion` 固定为一个
   旧提交号，注释说明这是为了不让老玩家因版本号变化而重新下载所有章节包。
 
+## 踩痕与脚步声（2026-11-15 补查）
+
+`catalog.bin` 里有 `Sand_Trail_Normal.png`、`UserDesert_Sand_CompactedNormal.png`、`Desert_Dunes_GroundMask.png`（三张）
+和按地面分的脚步声：`Footstep_Sand` 14 条、`Footstep_Gravel` 12、`Grass` 14、`Carpet` 11、`Stone` 9、`FineGravel` 9、
+`Wood` 8、`Dirt` 7。只看得到名字：沙漠的踩痕应是一张遮罩把沙面换成「压实」的法线，脚步声按脚下的地面换。我们的雪地脚印
+（`app/src/trail.js`）是同一思路的自己实现。
+
 ## 和我们项目的对照
 
 `app/` 整个目录 6.1 MB，自写 JS 约 124 KB，无构建、无 package、无引擎二进制；除了殿内佛像模型和

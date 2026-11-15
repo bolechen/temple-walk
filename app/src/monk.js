@@ -425,6 +425,9 @@ export function createMonk() {
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
   let phase = 0, gait = 0, palms = 0, seat = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null;
   const footY = [null, null], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
+  // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
+  // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
+  const steps = [], lastN = [null, null];
   const gq = new THREE.Quaternion(), tq = new THREE.Quaternion(), tq2 = new THREE.Quaternion(), q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion(), q2 = new THREE.Quaternion(), qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qc = new THREE.Quaternion();
   const tv = V3(), tv2 = V3(), _inv = new THREE.Matrix4(), _m = new THREE.Matrix4(), _t = V3(), _p = V3(), _d = V3(), _k = V3(), _u = V3(), _x = V3(), _y = V3(), _z = V3();
   // Two bones reaching for a point: `target` in the world, `pole` a world direction the middle joint should point
@@ -477,7 +480,7 @@ export function createMonk() {
   }
 
   return {
-    group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat },
+    group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat }, steps,
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
@@ -551,7 +554,14 @@ export function createMonk() {
           ft.quaternion.copy(tq.invert().multiply(tq2));
           tv.set(0, -1, 0).applyQuaternion(up.quaternion); thigh[i] = Math.atan2(tv.z, -tv.y);
         });
-      }
+        // A shoe has come down when its stride turns over from the swing into the stance.
+        SIDES.forEach(([, s], i) => {
+          const n = Math.floor((phase + i * Math.PI) / TAU), was = lastN[i]; lastN[i] = n;
+          if (was === null || n === was || gait < 0.5) return;
+          tv.set(0, 0, 0.03).applyAxisAngle(UPV, s * TOE_OUT); tv.x += s * FOOT_X; tv.z += FOOT_Z + step[i].off * gait; group.localToWorld(tv);
+          steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s });
+        });
+      } else lastN[0] = lastN[1] = null;
 
       // The arms hang a little out from his sides and swing against the legs; to pray, or seated, they reach.
       SIDES.forEach(([n, s], i) => {

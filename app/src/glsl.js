@@ -6,6 +6,8 @@ export const U = {
   uFogD: { value: 0.009 }, uSnow: { value: 0 }, uLamp: { value: 0 }, uWet: { value: 1 },
   uAmb: { value: new THREE.Color(0.78, 0.83, 0.84) }, uSunC: { value: new THREE.Color(0.42, 0.39, 0.34) },
   uLeaf: { value: new THREE.Color(1, 1, 1) }, uLight: { value: new THREE.Color(1, 1, 1) }, uT: { value: 0 },
+  // Where he has walked in the snow (trail.js): the picture of his prints, and where it lies.
+  tTrail: { value: null }, uTrail: { value: new THREE.Vector4(0, 0, 1 / 32, 0) },
 };
 
 export const NOISE = /* glsl */`

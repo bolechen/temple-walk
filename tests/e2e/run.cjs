@@ -29,6 +29,8 @@ const scenarios = {
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
+    { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
+      expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
     expect(p.camDist > 3.2, `the first sight of the place should not be the back of his head: the eye is ${p.camDist} m behind him`);
     expect(p.lum > 12 && p.lum < 245, "the picture is blank: mean " + p.lum.toFixed(1));
     for (const id of ["viewBtn", "moodBtn", "photoBtn", "bookBtn"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
@@ -124,6 +126,30 @@ const scenarios = {
       s = await t.state(); expect(Math.hypot(s.x - h.out[0], s.z - h.out[1]) < 0.3 && !s.inside, `${h.name}: came out in the wrong place or went straight back in: ${JSON.stringify(s)}`);
     }
     await t.shot("e2e-halls"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // In winter he leaves his prints in the snow of the court; indoors no snow lies on the floor and none falls,
+  // even when the hour is changed while he is inside, and the prints by the door are still there when he comes out.
+  snow: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&season=winter&time=day&cam=6.5,19.5,0,0&view=third");
+    expect((await t.page.evaluate(() => window.__trail())).on, "in winter the snow should be ready to take his prints");
+    // Off the swept axis, through the snow of the court, toward the door of the meditation hall.
+    await t.page.evaluate(() => window.__walk([[6.5, 17], [6.5, 14.5]])); await t.until(async () => (await t.state()).target === null && (await t.state()).route === 0, 240000, "he never walked across the snow");
+    const walked = await t.page.evaluate(() => window.__trail()); expect(walked.stamps >= 6 && walked.last, "five metres of snow should hold more prints than " + walked.stamps);
+    // Standing where he stopped and looking down the way he came, the prints darken the snow.
+    await t.page.evaluate(() => window.__view("first"));
+    const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
+      return t.page.evaluate(() => { const seen = window.__probe().lum; window.__trail(false); return window.__probe().lum - seen; }); };   // in one go: the next frame shows them again
+    const dark = await look(); await t.shot("e2e-snow-prints"); expect(dark > 0.6, `his prints should show in the snow: they darken the picture by ${dark.toFixed(2)} ` + JSON.stringify(walked));
+    await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.state()).room === "chan", 60000, "could not go into the meditation hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(2);
+    let p = await t.probe(); expect(p.snow === 0 && !p.drift, `indoors no snow should lie or fall: snow ${p.snow}, falling ${p.drift}`);
+    await t.page.evaluate(() => window.__mood("winter", "night")); await t.frames(2);
+    p = await t.probe(); expect(p.snow === 0 && !p.drift, `a change of hour indoors let the snow in: snow ${p.snow}, falling ${p.drift}`);
+    await t.page.evaluate(() => window.__mood("winter", "day")); await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 60000, "could not come out");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(2);
+    p = await t.probe(); expect(p.snow === 1 && p.drift, `outdoors again the snow should lie and fall: snow ${p.snow}, falling ${p.drift}`);
+    const still = await look(); expect(still > 0.6, `his prints were forgotten while he was in the hall: they darken the picture by ${still.toFixed(2)}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.
   pilgrimage: { tier: 2, async run(b, base) {
@@ -259,7 +285,7 @@ const scenarios = {
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#viewBtn"); await t.page.waitForTimeout(600);
-    p = await t.probe(); expect(p.view === "first" && !p.monk && p.camDist < 0.8, "first person: the eye should be his own: " + JSON.stringify(p));
+    p = await t.probe(); expect(p.view === "first" && !p.monk && p.monkBox === null && p.camDist < 0.8, "first person: the eye should be his own: " + JSON.stringify(p));
     expect((await t.page.textContent("#viewBtn")) === "眼中", "the button should name the view");
     await t.page.click("#viewBtn"); await t.page.waitForTimeout(1500);
     p = await t.probe(); expect(p.view === "third" && p.monk, "back to third person");
