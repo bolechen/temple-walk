@@ -141,7 +141,7 @@ springs driven by speed and turning, and the skirt's bones are shortened whereve
 `update(dt, speed, pose, t, surfaceAt, grounding)`; pose `"bind"` shows the A-pose, and
 `node tools/portrait.js summer-day bind` renders it front, side and back to set beside the drawing. A sculpted or
 generated mesh can take this one's place with the same bone names, bound in the same A-pose and proportions
-( starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
+(`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
 the eye follows a few steps behind and is pulled in along its line when `walker.blocked` says a wall is in the way.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
