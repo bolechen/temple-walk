@@ -96,7 +96,7 @@ visitor's own season and hour, seen from behind the novice.
 Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, unit tests, and the `boot`
 scenario in a real browser) and then, only if that passes, publishes `app/` as it stands after the install to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
-The slower scenarios (`stairs drop photo-ui`) run beside each publication in `.github/workflows/e2e.yml`, not in its
+The slower scenarios (`stairs drop`) run beside each publication in `.github/workflows/e2e.yml`, not in its
 way; the same workflow runs every scenario once a week and on demand. A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
