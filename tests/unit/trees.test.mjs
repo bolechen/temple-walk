@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import * as THREE from "../../app/vendor/three/build/three.module.js";
+import * as THREE from "three";
 const { buildSite } = await import("../../app/src/site.js");
 const { createTrees } = await import("../../app/src/trees.js");
 
