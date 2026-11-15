@@ -41,6 +41,19 @@ export const GALLERY = {
   "dahui-w1": { paint: "well", title: "井帖", text: "相传开山那年，龙让出了整座山，只留下这口井。水在暗处，俯身才看得见。" },
   "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
 };
+// The figures that stand in the halls beside the great Buddha, until the project carves its own: scans of real
+// sculpture which two museums publish as public domain (CC0), thinned and packed by tools/statues.py into
+// app/shared/models/. What a hall of this kind holds is set out in docs/JINGSHAN.md; these are the nearest open
+// figures to it, and where one only stands in for another the note there says so.
+//   beside: [file, x, z, height] on the altar's dais, either side of the main figure
+//   centre: [file, height] in place of the Buddha and his pedestal
+//   table:  [file, height] on the offering table of a plain hall
+export const STAND = {
+  main: { beside: [["arhat", -2.95, 0.95, 2.2], ["gilt-monk", 2.95, 0.95, 2.3], ["guanyin-seated", -4.6, 0.15, 2.0], ["guanyin-rock", 4.6, 0.15, 1.9]] },   // the two disciples nearest him, a bodhisattva beyond each
+  yaoshi: { centre: ["buddha-lacquer", 2.5] },      // a Buddha of another make for the hall of the Medicine Buddha
+  guanyin: { centre: ["guanyin-eleven", 3.4] },     // the eleven-headed Guanyin, standing
+  dahui: { table: ["monk-seated", 0.82] },          // a seated monk teaching, for the patriarchs' hall
+};
 const BLANK = { title: "空着的画框", text: "这里以后会挂上一件东西，讲这座寺的一段事。" };
 
 // A real work, mounted as a scroll is: the picture on a sheet of pale paper, a hair-line round it, and under it the
@@ -108,7 +121,7 @@ function buildRoom(M, hall, ox, figures) {
   const cushion = () => lathe([[0, 0], [0.26, 0], [0.3, 0.03], [0.3, 0.07], [0.26, 0.1], [0, 0.11]], 24);
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
-  const places = {}, altar = new THREE.Group(); altar.position.set(ox, Y, 0); g.add(altar);
+  const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
   const tz = -K.d / 2 + 5.4, lightAt = [];
 
   if (hall.kind === "buddha" || hall.kind === "figure") {
@@ -122,7 +135,9 @@ function buildRoom(M, hall, ox, figures) {
     add(merge([-1.1, 0, 1.1].map((x) => cushion().translate(x, Y, tz + 1.75))), M.straw, () => 0.7);
     for (const sx of [-1, 1]) lampStand(sx * (big ? 3.3 : 2.2), tz + 0.2);
     altar.position.set(ox, Y + ah, (az0 + az1) / 2);
-    figures.then((f) => { if (!f) return; if (big) for (const sx of [-1, 1]) { const s = f.iron(1.5); s.position.set(sx * 3.4, 0, 1.0); altar.add(s); } const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
+    if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
+    else later.push((get) => get(stand.centre[0], stand.centre[1]).then((o) => altar.add(o)));
+    for (const [file, x, z, h] of stand.beside || []) later.push((get) => get(file, h).then((o) => { o.position.set(x, 0, z); o.rotation.y = -Math.sign(x) * 0.12; altar.add(o); }));   // turned a little toward the middle
     if (big) places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id };
     lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, K.h - 2.4, tz + 0.8, 0xffe6c4, big ? 11 : 7, 16]);
   } else if (hall.kind === "chan") {
@@ -154,6 +169,7 @@ function buildRoom(M, hall, ox, figures) {
   } else {
     // A plain hall: a table, cushions, a lamp. (The patriarchs' hall and the summit pavilion: their walls are the point.)
     add(table(1.8, 0.7, 0.8, 0, -K.d / 2 + 1.6), M.woodX); block(-1.1, 1.1, -K.d / 2 + 1, -K.d / 2 + 2.2);
+    if (stand.table) later.push((get) => get(stand.table[0], stand.table[1]).then((o) => { o.position.set(ox, Y + 0.82, -K.d / 2 + 1.5); g.add(o); }));   // the patriarch's likeness, on the table
     add(merge([-0.9, 0.9].map((x) => cushion().translate(x, Y, -K.d / 2 + 3.2))), M.straw, () => 0.7);
     lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14]);
   }
@@ -192,7 +208,7 @@ function buildRoom(M, hall, ox, figures) {
   add(merge(frames), M.woodZ);
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
   // `hang()`: fetch and mount this hall's works, the first time someone comes in.
-  return { group: g, room: { ...R, solids }, lights, flames, spots, places, outlook: out, hang() { hangs.splice(0).forEach((f) => f()); } };
+  return { group: g, room: { ...R, solids }, lights, flames, spots, places, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.
@@ -211,16 +227,21 @@ export function buildInteriors(M, halls, renderer) {
       buddha.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.5; o.material.envMapIntensity = 0; } });
       ped.traverse((o) => { if (o.isMesh) { o.material.metalness = 0; o.material.roughness = 0.95; } });
       const fit = (o, h) => { const b = new THREE.Box3().setFromObject(o), w = new THREE.Group(); o.position.set(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2); w.add(o); w.scale.setScalar(h / (b.max.y - b.min.y)); return w; };
-      const ironMat = {};
       state.figures = "here";
       return {
         gold: (h) => fit(buddha.clone(true), h), pedestal: (h) => fit(ped.clone(true), h),
-        iron: (h) => { const f = buddha.clone(true); f.traverse((o) => { if (o.isMesh) { ironMat[o.material.uuid] ||= Object.assign(o.material.clone(), { roughness: 0.72, metalness: 0.45, color: new THREE.Color(0x57524c) }); o.material = ironMat[o.material.uuid]; } }); return fit(f, h); },
       };
     } catch (e) { state.figures = "missing: " + (e && e.message ? e.message : e); return null; }
   })();
+  // The other figures (STAND) are fetched the first time a hall that has them is entered; each file once, however
+  // many halls stand a copy. They come one unit tall, standing on the origin, painted on their vertices.
+  const scans = {}, plain = typeof document === "undefined" ? null : new GLTFLoader(); state.stood = {};
+  const get = (file, h) => (scans[file] ||= plain.loadAsync(new URL(`../shared/models/${file}.glb`, import.meta.url).href).then((s) => s.scene)).then((src) => {
+    const o = src.clone(true); o.traverse((m) => { if (m.isMesh) { m.material.envMapIntensity = 0.12; m.castShadow = false; } }); o.scale.setScalar(h); state.stood[file] = (state.stood[file] || 0) + 1; return o;
+  });
   halls.forEach((hall, i) => {
     const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places);
+    const hang = r.hang; r.hang = () => hang(get);
   });
   return { group, rooms, spots, places, state };
 }

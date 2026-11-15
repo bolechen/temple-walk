@@ -5,7 +5,7 @@ import "./dom-stub.mjs";
 import * as THREE from "../../app/vendor/three/build/three.module.js";
 const { WORKS, HANG } = await import("../../app/src/works.js");
 const { buildSite } = await import("../../app/src/site.js");
-const { KINDS } = await import("../../app/src/interior.js");
+const { KINDS, STAND } = await import("../../app/src/interior.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), app = new URL("../../app/", import.meta.url);
 
@@ -28,4 +28,17 @@ test("each hall has wall enough for its works beside its own leaf", () => {
     const frames = 2 * Math.max(1, Math.floor((KINDS[hall.kind].d - 2.4) / 3.1)); assert.ok(slugs.length <= frames - 1, `${hall.name} has ${frames} frames and ${slugs.length} works besides its leaf`);
   }
   for (const h of site.halls) assert.ok((HANG[h.id] || []).length >= 1, `${h.name} has nothing real on its walls`);
+});
+
+test("every figure a hall stands is a packed scan that is there, small, and stands in a hall that exists", () => {
+  const files = new Set();
+  for (const [id, set] of Object.entries(STAND)) {
+    assert.ok(site.halls.some((h) => h.id === id), `no hall called ${id}`);
+    for (const [file, ...rest] of [...(set.beside || []), ...(set.centre ? [set.centre] : []), ...(set.table ? [set.table] : [])]) {
+      files.add(file); const h = rest[rest.length - 1]; assert.ok(h > 0.3 && h < 4, `${id}: ${file} would stand ${h} m tall`);
+      if (rest.length === 3) assert.ok(Math.abs(rest[0]) < 5.6 - 0.7 && Math.abs(rest[1]) < 1.6, `${id}: ${file} stands off the dais`);
+    }
+  }
+  for (const file of files) { const f = new URL(`shared/models/${file}.glb`, app); assert.ok(fs.existsSync(f), `${file}.glb is not in app/shared/models`); const n = fs.statSync(f).size; assert.ok(n > 100e3 && n < 900e3, `${file}.glb is ${Math.round(n / 1024)} KB`); }
+  assert.ok(STAND.main.beside.length === 4 && new Set(STAND.main.beside.map((b) => b[0])).size === 4, "four different figures stand beside the great Buddha");
 });

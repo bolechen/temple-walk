@@ -101,6 +101,9 @@ const scenarios = {
       // Turning to look back at the door, he sees the court he came from: a picture taken at the hall's own door,
       // not a sheet of white light that floods the room.
       expect(s.doorway === 1, `${h.name}: nothing was hung beyond the doorway`);
+      // The figures beside the great Buddha are not copies of him: four different scans come when the main hall is first entered.
+      if (h.id === "main") { await t.until(async () => { const st = await t.page.evaluate(() => window.__statues()); return ["arhat", "gilt-monk", "guanyin-seated", "guanyin-rock"].every((k) => st[k] === 1); }, 120000, "the figures beside the Buddha never arrived");
+        await t.frames(3); const lit = await t.page.evaluate(() => window.__probe()); expect(lit.lum > 20, "with the figures in it the main hall goes dark: mean " + lit.lum.toFixed(1)); }
       if (h === halls[0]) {
         await t.page.evaluate((x) => window.__pose(x, 0, Math.PI, 0.05), s.x); await t.frames(3);
         const p = await t.page.evaluate(() => window.__probe()); expect(p.lum > 25 && p.lum < 170, `${h.name}: looking out through the door the picture is washed out or black: mean ${p.lum.toFixed(1)}`);
