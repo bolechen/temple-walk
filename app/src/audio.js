@@ -4,6 +4,7 @@
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
 import { createPlayer, reverb } from "./instruments.js";
 import { createZoneKeeper, moodMusic, sealNote, hz } from "./score.js";
+import { stepSound, LEVEL } from "./steps.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null;
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
 // How loud the visitor wants it, 0..1 (the pause menu); remembered if nothing has sounded yet.
@@ -137,10 +138,74 @@ export function wellDrip(level = 1) {
   g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.11 * level, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
   o.connect(g); g.connect(bus.ambience.in); g.connect(niche); o.start(now); o.stop(now + 0.25);
 }
+// A shoe coming down (steps.js makes the sound of each kind: "stone", "wet", "puddle", "snow"). It never wakes the
+// audio by itself: until the visitor's first touch has let the place be heard, his steps are silent like everything
+// else. Each step a little to the side of the foot that made it, a little louder on a stair, and never twice the same.
+// In a hall the effects bus goes to the timber hall's reverb, so his steps there sound in the room.
+const heard = { stone: 0, wet: 0, puddle: 0, snow: 0 };
+let stepSeed = 1;
+export function footstep(kind = "snow", { speed = 2.1, side = 0, loud = 1, wet = 1 } = {}) {
+  if (!ctx || ctx.state !== "running" || !(kind in LEVEL)) return false;
+  const x = stepSound(kind, ctx.sampleRate, { seed: (stepSeed = (stepSeed * 1103515245 + 12345) >>> 0), speed, wet });
+  const b = ctx.createBuffer(1, x.length, ctx.sampleRate); b.getChannelData(0).set(x);
+  const s = ctx.createBufferSource(), g = ctx.createGain(), pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  s.buffer = b; s.playbackRate.value = 0.94 + 0.12 * ((stepSeed >>> 8) % 1000) / 1000;
+  g.gain.value = LEVEL[kind] * loud * (0.8 + 0.2 * Math.min(1, speed / 2.4));
+  s.connect(g); if (pan) { pan.pan.value = side * 0.12; g.connect(pan); pan.connect(bus.effects.in); } else g.connect(bus.effects.in);
+  s.start(ctx.currentTime + 0.005); heard[kind]++;
+  return true;
+}
+export const stepState = () => ({ crunches: heard.snow, heard: { ...heard }, state: ctx ? ctx.state : "off" });
+
+// Two culms knocked together by the wind: a hollow, wooden note that dies at once, and often a second, softer, as they
+// swing back. Only deep in the grove and only in a strong gust (`knockReady`). The Chan books tell of Xiangyan Zhixian,
+// who woke when a shard he had thrown aside struck a bamboo (Jingde Chuandeng Lu, ch. 11): so it is rare, and never loud.
+export const knockReady = (gust, grove) => gust > 0.66 && grove > 0.6;   // the bamboo at the start (grove 1), not the thinner stands higher up (0.55)
+let knocks = 0;
+export function knock(level = 1) {
+  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  const now = ctx.currentTime + 0.01, f = 300 + Math.random() * 140, twice = Math.random() < 0.6;
+  for (const [dt, loud] of twice ? [[0, 1], [0.13 + Math.random() * 0.12, 0.45]] : [[0, 1]]) {
+    const t = now + dt;
+    partial(f * (dt ? 1.07 : 1), 0.07 * level * loud, 0.09, t, "sine", bus.ambience.in);       // the hollow of the culm
+    partial(f * 2.71, 0.025 * level * loud, 0.04, t, "triangle", bus.ambience.in);              // the dry wood of its wall
+  }
+  knocks++;
+}
+// Birds, after Chang Jian's poem on the Chan cloister behind Poshan Temple (Quan Tang Shi; the text and its variant
+// readings are in docs/t00/SOURCES.md): the light on the mountain pleases the birds; within the walls every other sound is still and only bell and chime are heard. So
+// they sing in the bamboo and on the path up (`grove`, `stair`), most at first light, now and then by day, a last few
+// at dusk, none at night, few in winter; never in the courts, the halls or the summit's court. `birdGap` is the mean
+// time between two calls, in seconds, or 0 for silence.
+export function birdGap(zone, time, season) {
+  if (zone !== "grove" && zone !== "stair") return 0;
+  const t = { dawn: 7, day: 16, dusk: 26, night: 0 }[time] ?? 16;
+  if (!t) return 0;
+  return (zone === "stair" ? t * 1.6 : t) * (season === "winter" ? 3 : 1);
+}
+let birds = 0;
+// One small bird some way off: two to five quick whistled notes, each a sweep up or down in the high register, softened
+// by distance.
+export function bird(level = 1) {
+  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  const now = ctx.currentTime + 0.02, n = 2 + Math.floor(Math.random() * 4), base = 2600 + Math.random() * 1400, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  const far = ctx.createBiquadFilter(); far.type = "lowpass"; far.frequency.value = 5200; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; far.connect(pan); pan.connect(bus.ambience.in); } else far.connect(bus.ambience.in);
+  let t = now;
+  for (let i = 0; i < n; i++) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), len = 0.05 + Math.random() * 0.09, f = base * (0.85 + Math.random() * 0.4), up = Math.random() < 0.6;
+    o.frequency.setValueAtTime(up ? f * 0.8 : f * 1.2, t); o.frequency.exponentialRampToValueAtTime(up ? f * 1.25 : f * 0.75, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.022 * level, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(g); g.connect(far); o.start(t); o.stop(t + len + 0.02);
+    t += len + 0.03 + Math.random() * 0.08;
+  }
+  birds++;
+}
+export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 
 // ---- The sound of the place when nothing is happening ----
-// Wind moving through bamboo (filtered noise that swells and falls), water dripping from the eaves after
-// rain, and now and then a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
+// Wind moving through bamboo (filtered noise that swells and falls), now and then two culms knocking together in a
+// gust, birds out on the mountain (never within the walls), water dripping from the eaves after rain, and now and then
+// a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
 // in the bamboo the listener stands, which part of the mountain (score.js), and the mood. The music starts with it.
 let ambient = null;
 export function startAmbience(place) {
@@ -157,7 +222,7 @@ export function startAmbience(place) {
     return g;
   };
   const low = layer("bandpass", 420, 0.5), leaves = layer("highpass", 2600, 0.3);
-  ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14 };
+  ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14, nextKnock: 4, nextBird: 3 };
   startMusic(place);
   const tick = () => {
     if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
@@ -174,6 +239,9 @@ export function startAmbience(place) {
       gg.gain.setValueAtTime(0.0001, now); gg.gain.exponentialRampToValueAtTime(0.05 * (1 - 0.6 * g), now + 0.005); gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
       o.connect(gg); gg.connect(bus.ambience.in); o.start(now); o.stop(now + 0.15);
     }
+    const gap = birdGap(p.zone, p.time, p.season);
+    if ((a.nextBird -= 0.25) <= 0) { a.nextBird = gap ? gap * (0.5 + Math.random()) : 4; if (gap) bird(0.6 + 0.4 * g); }
+    if ((a.nextKnock -= 0.25) <= 0 && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
     if ((a.nextChime -= 0.25) <= 0 && gust > 0.62) {   // an eave bell, only when the wind is up
       a.nextChime = 18 + Math.random() * 30;
       const f0 = [hz(86), hz(89), hz(91), hz(94)][Math.floor(Math.random() * 4)];   // D F G Bb: tuned to the music's mode

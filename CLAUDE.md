@@ -65,10 +65,14 @@ node tests/e2e/run.cjs moods photo  # only the scenarios named
 pnpm run verify                     # check + unit + smoke: run this before pushing anything that touches app/
 node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
+node tools/inside.cjs tools/out/hall-views --views [level]   # every indoor view a level registers in app/levels/<level>/hall-views.js (default t00)
 node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose)
+node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
+node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~6 min)
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
+node tools/steps.mjs                # his steps (steps.js): dry stone, after rain with puddles, snow, a hall's floor → tools/out/steps/*.mp3
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)
 python3 tools/textures.py <dir of Poly Haven jpgs>   # repack the scanned surfaces into app/shared/textures/
 ```
@@ -97,7 +101,7 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
 `?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
-`?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
+`?debug` (the dev server only, `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, and `__part()` switches for each part and pass; the backtick key shows or hides it; the published build leaves it out), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
 page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.
@@ -113,7 +117,7 @@ way; the same workflow runs every scenario once a week and on demand. A red `ver
 
 **One page, one scene.** `app/index.html` holds the canvas and the interface; `app/yard.js` is the whole walk, outdoors and in. Stepping through a hall's door closes a veil (`#veil`), moves the walker into that hall's room, and opens it again.
 
-**Indoors (`app/src/interior.js`).** Every hall the plan marks with `hall: { id, kind, name }` can be entered: `put()` records its door, where to stand on coming out and which way to face (`site.halls`), and `buildInteriors` builds one room for each, side by side sixty metres under the courts, furnished by `kind` (`buddha`, `figure`, `chan`, `tea`, `library`, `patriarch`, `pavilion`). What stands and hangs overhead is `app/src/framing.js`: the room's columns stand on the building's own column lines (`hall.xs/zs`, scaled into the room), leaving out any that would stand on the dais, in the way to the altar or before a frame; crescent beams run front to back on their cap blocks and into brackets in the walls; and the ceiling follows the kind (`CEILING`): coffered with a caisson over the figure, plain small squares in the library, or the roof open to the rafters. `room.frame` holds it as data and `tests/unit/interior.test.mjs` checks that every column carries a beam, every beam rests on something, and every frame and the altar can still be walked to. While he is inside, `walker.setRoom(room)` replaces the plan with the room's floor, walls and furniture; the courts are not drawn, the sun is put out and the room's lamps are lit (`indoors()` in `yard.js`). The Buddha and pedestal models (`app/shared/models/*.glb`, as published: meshopt and Basis packed) are fetched once and stood in every hall with an altar. Along each room's side walls hang frames (the first in each hall holds a small ink painting drawn by `app/src/leaves.js`): what hangs in one is data, `GALLERY["<hall>-w1"] = { title, text, image }` in `interior.js`, shown when a visitor stands before it and presses E. Beside the great Buddha and in three other halls stand scans of real sculpture that two museums publish as public domain (`STAND` in `interior.js` says which stands where; `app/shared/models/`, thinned and vertex-painted by `tools/statues.py`; fetched when a hall is first entered; `__statues()` reports them). They are placeholders until the project carves its own, and `docs/JINGSHAN.md` says which only stand in for another figure. This is where the story's artworks go. Beside the leaves hang real works (`app/src/works.js` and `app/levels/t00/gallery/`, both written by `tools/gallery.py` from openly licensed museum records; `HANG` there says which hall): standing before one and pressing E opens a card (`#piece`) with the picture, an encyclopedia note and the museum's source line, which must stay with it. `__work(slug)` opens one; `__work()` reports it. `?in=<hall id>` starts inside a hall. The indoor cameras (a view of each hall's furniture and one of its ceiling) are `HALL_VIEWS` in `app/levels/t00/hall-views.js`, separate from the six locked acceptance views in `site.views`; `node tools/inside.cjs tools/out/hall-views --views` draws all sixteen, and `hallViewURL` makes a one-click address for one.
+**Indoors (`app/src/interior.js`).** Every hall the plan marks with `hall: { id, kind, name }` can be entered: `put()` records its door, where to stand on coming out and which way to face (`site.halls`), and `buildInteriors` builds one room for each, side by side sixty metres under the courts, furnished by `kind` (`buddha`, `figure`, `chan`, `tea`, `library`, `patriarch`, `pavilion`). What stands and hangs overhead is `app/src/framing.js`: the room's columns stand on the building's own column lines (`hall.xs/zs`, scaled into the room), leaving out any that would stand on the dais, in the way to the altar or before a frame; crescent beams run front to back on their cap blocks and into brackets in the walls; and the ceiling follows the kind (`CEILING`): coffered with a caisson over the figure, plain small squares in the library, or the roof open to the rafters. `room.frame` holds it as data and `tests/unit/interior.test.mjs` checks that every column carries a beam, every beam rests on something, and every frame and the altar can still be walked to. While he is inside, `walker.setRoom(room)` replaces the plan with the room's floor, walls and furniture; the courts are not drawn, the sun is put out and the room's lamps are lit (`indoors()` in `yard.js`). The Buddha and pedestal models (`app/shared/models/*.glb`, as published: meshopt and Basis packed) are fetched once and stood in every hall with an altar. Along each room's side walls hang frames (the first in each hall holds a small ink painting drawn by `app/src/leaves.js`): what hangs in one is data, `GALLERY["<hall>-w1"] = { title, text, image }` in `interior.js`, shown when a visitor stands before it and presses E. Beside the great Buddha and in three other halls stand scans of real sculpture that two museums publish as public domain (`STAND` in `interior.js` says which stands where; `app/shared/models/`, thinned and vertex-painted by `tools/statues.py`; fetched when a hall is first entered; `__statues()` reports them). They are placeholders until the project carves its own, and `docs/JINGSHAN.md` says which only stand in for another figure. This is where the story's artworks go. Beside the leaves hang real works (`app/src/works.js` and `app/levels/t00/gallery/`, both written by `tools/gallery.py` from openly licensed museum records; `HANG` there says which hall): standing before one and pressing E opens a card (`#piece`) with the picture, an encyclopedia note and the museum's source line, which must stay with it. `__work(slug)` opens one; `__work()` reports it. `?in=<hall id>` starts inside a hall. The indoor cameras (a view of each hall's furniture and one of its ceiling) are `HALL_VIEWS` in `app/levels/t00/hall-views.js`, separate from the six locked acceptance views in `site.views`; `node tools/inside.cjs tools/out/hall-views --views t00` draws all sixteen (the level is the folder under `app/levels/`; a later temple keeps its own table there and passes its own name), and `hallViewURL` makes a one-click address for one.
 
 **Courtyard pipeline (`app/yard.js`).** Creates the renderer, then composes the modules in `app/src/` in a fixed order: `createMaterials` → `buildSite` → `createWalker` → sky → ground → backdrop → bamboo → props → post → trees → drift → `mergeStatic` (everything built so far, batched per material into a few zones along the axis; a mesh that must stay itself sets `userData.keep`) → mood → monk. It owns input (drag to look, tap the floor to walk, tap bell/drum to strike, WASD), the frame loop, and the quality governor. Everything else is a module exposing one `create*`/`build*` function.
 
@@ -163,7 +167,10 @@ springs driven by speed and turning, and the skirt's bones are shortened whereve
 `update(dt, speed, pose, t, surfaceAt, grounding)`; pose `"bind"` shows the A-pose, and
 `node tools/portrait.js summer-day bind` renders it front, side and back to set beside the drawing. A sculpted or
 generated mesh can take this one's place with the same bone names, bound in the same A-pose and proportions
-(`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. In third person
+(`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. One does: the body the owner
+made with Meshy from the drawing (`tools/novice.mjs` → `app/shared/models/novice.glb`) is fetched after the first frames by
+`app/src/novice.js` and worn through `monk.dress()`, which swaps the geometry of the four skinned parts and nothing else;
+`?body=code` keeps the one built here, and so does a failed or ill-fitting fetch. The hat and the beads are still built here. In third person
 the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
 its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something. It never gets
 there in one frame: `createFollow` moves it on critically damped springs (times taken from 《小王子》's camera; a friend
@@ -193,7 +200,17 @@ upper, summit), a zone that counts only after two seconds, one phrase maker per 
 on the audio clock; on a change of place it drops the notes not yet begun and fades what sounds over 3.5 s (never the whole
 theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xiao, a held fifth) through `createPlayer` on
 any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
-The music steps back inside `strike()` for the bell and drum. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
+The music steps back inside `strike()` for the bell and drum. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
+His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
+shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
+paving (`puddleAt`, the paving shader's own puddle pattern ported to JS), and snow (a shower of tiny breaks following the
+push of the foot). All are worked out sample by sample, so `tools/steps.mjs` renders the same steps, and `LEVEL` sets
+them against each other: dry stone the quietest, snow the loudest. For every shoe `monk.steps` reports, `yard.js` asks
+`walker.floorAt` what floor it is (`room`, a building's `stone` or `wood`, the approach's `path`, the courts' `paving`)
+and `underfoot()` what that sounds like in this mood: a hall's floor and a roofed platform are dry, the swept axis path
+of the court is never snow, autumn has dried. `footstep()` in `audio.js` plays it on the effects bus (so in a hall it
+has the hall's reverb), never before the visitor's first touch has let the place be heard. `__steps(kind?)` reports
+how many of each have been heard, or plays one.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
 fireflies in the air; both are driven only by the mood. Nothing drifts indoors, and no snow lies on a room's floor:
@@ -212,6 +229,30 @@ the bell's three strokes, the library's line, storage under `yunjing.journey.v1`
 rings on the ground, the action button, how each observance unfolds, the seal toast, the book; it reaches the walk only
 through the small object `yard.js` hands it (`walkTo`, `stage`, `strike`, `where`, `onTick`…). `goshuin.js` draws the
 page of seals. Hooks: `__journey()`, `__rite(id)`, `__enter()`, `__book()`, `__places`, `__inside(id|null)`, `__halls`, `__gallery`, `__figures()`.
+
+**What his hands do (`rites.js`).** game.js says when an observance happens; `rites.js` says how it is done. Each is a
+run of timed passages (`play(secs, fn, on)`, on the clock, not on frames) that write into `act`, which `yard.js` hands to
+`monk.update` with his pose (`grounding.act`: `bow`, `twist`, `nod`, `breath`, and for either hand a place in the world
+to reach, the way its fingers and palm turn, and a weight), and move the thing he holds. The bell: a rope hangs from the
+end of the log, out past the platform (`LOG` in `site.js`); he draws it back and lets go, three strokes to one press,
+and `logSwing` keeps the log from passing into the bronze. Tea: his bowl (made in `rites.js`, not merged into the table)
+is lifted in both hands and tilted at his lips three times. Incense: three sticks between his palms, raised to the brow,
+three bows, a step up to the low stand before the cushion (`places.incense.front`, `.bowl`), set in the ash, where they
+stay and smoke (also after a reload). Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
+out. `__riteClock(ms)` holds the observances' clock and steps it, so a moment can be photographed; `__rites()` reports
+all of it. The hand offsets (lips, brow, rope) were set against the novice's present proportions.
+
+**Seats.** Every cushion and stool is a seat: `site.seats` out of doors (the three stools at the tea table, the summit
+mat), and `seat()` / `sitAt()` in `interior.js` for the rooms (`{ at, top, face, room }`). Where nothing else is offered
+within a step or two of one, the button says 坐下 and he is drawn going over and down onto it (`sitDown` in `game.js`);
+he stays until he is sent elsewhere. A new cushion or stool must be registered the same way; `rites.test.mjs` holds it.
+
+**The close of the chapter.** This temple is the prologue, where a visitor learns how the walk goes. Sitting on the
+summit is the last thing: before the other six seals its mat is only a seat. When the seventh is earned there, `finale`
+(`game.js`) hands the eye to `rites.close` (`y.cine(fn)`: round before him, back down the steps, up until the pavilion
+stands whole), says the closing words one at a time (`CLOSING`: they end on something unanswered, for a chapter not
+yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
+`__ending()` plays it again.
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
 hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
@@ -277,12 +318,13 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__trail()`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
 ## Working notes
 
+- **Every effect in the game has a recorded source** (the owner's rule, 2026-11-15): when you add or change anything a visitor sees, hears or does, add or amend its row in `docs/t00/SOURCES.md` in the same commit, with how far the source was checked (原文 read, quoted second-hand, photo, reference project, owner's choice, or plainly 按常理/自拟 when there is none). Never pass an inference off as a source.
 - Code comments are in English and written as prose describing the place, not the code; commit messages and PR titles follow Conventional Commits as AGENTS.md sets out; the README and docs are in Chinese. Keep that split.
 - Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles. Later the same day, with rafters, the wood outside the walls and the gate's detail added, the first court cost 9.3 ms on the high tier and 4.7 ms on the low; the measured walk (`?tour=120x3`, high tier, 1080p) averaged 61 frames a second with a 95th-percentile frame of 21 ms. Switching trees or bamboo off changes nothing on that card; the mirror pass is about 1.8 ms and is drawn only on the level of the forecourt and first court. None of this says what a Mac or a phone does.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.

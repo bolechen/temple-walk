@@ -1,5 +1,8 @@
-// Shown before the large module graph loads. Percentages count completed work,
-// not elapsed time or downloaded bytes: scene stages 70%, surfaces 20%, frames 10%.
+// The loading bar on the title, and the way to try again. It is the first module on the page, so Vite puts it at the
+// head of the one bundle and it runs before the temple begins to be built; its listeners then catch anything that
+// fails while the place is made. (It cannot speak if the bundle itself never arrives.) It is still written as a plain
+// script, so the unit test can run it on its own. Percentages count completed work, not elapsed time or downloaded
+// bytes: scene stages 70%, surfaces 20%, frames 10%.
 (() => {
   const panel = document.getElementById("loading"), bar = document.getElementById("loadProgress");
   const label = document.getElementById("loadLabel"), percent = document.getElementById("loadPercent");

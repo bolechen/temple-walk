@@ -9,7 +9,7 @@ const get = (base, path) => new Promise((resolve, reject) => {
 test("the test server serves the site, and only the site, and only to this machine", { skip: !lib && "Playwright is not installed" }, async () => {
   const s = await lib.serve(); try {
     assert.equal(new URL(s.base).hostname, "127.0.0.1");
-    assert.equal((await get(s.base, "/")).status, 200); assert.equal((await get(s.base, "/loading.js")).status, 200);
+    assert.equal((await get(s.base, "/")).status, 200); assert.equal((await get(s.base, "/favicon.svg")).status, 200);
     for (const path of ["/../CLAUDE.md", "/..%2FCLAUDE.md", "/%2e%2e/CLAUDE.md", "/assets/../../CLAUDE.md", "/..%5CCLAUDE.md", "//etc/passwd", "/%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd"])
       assert.equal((await get(s.base, path)).status, 404, `${path} climbed out of the app`);
     assert.equal((await get(s.base, "/%E0%A4%A")).status, 404, "a bad escape should be refused, not thrown on");

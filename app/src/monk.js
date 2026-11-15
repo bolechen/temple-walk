@@ -334,11 +334,14 @@ export function createMonk() {
       robeParts.push(finish(sweep(fr, [[-wd, -0.002], [-wd, 0.002], [wd, 0.002], [wd, -0.002], [-wd, -0.002]]), PAL.sash, IDX.sashTail, true));
     }
   }
-  // The straps that hold the hat: over each shoulder and down his front, tucked under the sash.
+  // The straps that hold the hat: over each shoulder and down his front, tucked under the sash. They are part of this
+  // robe, and are also kept on their own: the sculpted body (`dress`) has no straps, and the hat needs them.
+  const strapParts = [];
   for (const s of [1, -1]) {
     const c = [s * 0.05, 0.78, 0];
     const g = [Bk(s * 0.05, 0.74), Bk(s * 0.058, 0.8), [s * 0.064, 0.95, -0.2, ...c], [s * 0.068, 1.0, 0, ...c], [s * 0.074, 0.95, 0.2, ...c], F(s * 0.082, 0.79), F(s * 0.086, 0.72), F(s * 0.088, 0.655)];
-    robeParts.push(band(onBody(g, 40, 0.0042), flat(0.0075, 0.0028), PAL.strap));
+    const strap = band(onBody(g, 40, 0.0042), flat(0.0075, 0.0028), PAL.strap);
+    robeParts.push(strap); strapParts.push(strap.clone());
   }
 
   // ---- Trousers and leg wraps: full below the hem, slim where the robe always covers them ----
@@ -382,8 +385,9 @@ export function createMonk() {
   const beadM = new THREE.MeshStandardMaterial({ color: 0x9a6038, roughness: 0.34, envMapIntensity: 0.9 });
   const skinned = (parts, mat) => { const m = new THREE.SkinnedMesh(mergeGeometries(parts), mat); m.frustumCulled = false; m.receiveShadow = true; group.add(m); return m; };
   const skin = skinned(skinParts, skinM), robe = skinned(robeParts, clothM), legs = skinned(legParts, clothM), shoes = skinned(shoeParts, shoeM);
+  const straps = skinned(strapParts, clothM); straps.visible = false;   // shown when the sculpted body replaces the robe that carried them
   const skeleton = new THREE.Skeleton(bones);
-  for (const m of [skin, robe, legs, shoes]) m.bind(skeleton);
+  for (const m of [skin, robe, legs, shoes, straps]) m.bind(skeleton);
   const rigid = (geo, mat, parent) => { const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; parent.add(m); return m; };
 
   // The beads: thirty-two turned beads on a loop that lies over his shoulders and hangs to his chest.
@@ -451,13 +455,19 @@ export function createMonk() {
     return out.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
   }
   // The skirt is lifted off any step it would pass into: its bones are shortened, never more than the cloth needs.
-  const rp = robe.geometry.attributes.position.array, rsi = robe.geometry.attributes.skinIndex.array, rsw = robe.geometry.attributes.skinWeight.array;
   const SK = SKIRT.map((n) => IDX[n]), hem = [];
-  for (let i = 0; i < torsoCount; i++) {
-    const y = rp[i * 3 + 1]; if (y > 0.5) continue;
-    const w = []; let W = 0; for (let k = 0; k < 4; k++) { const b = SK.indexOf(rsi[i * 4 + k]); if (b >= 0 && rsw[i * 4 + k] > 0) { w.push([b, rsw[i * 4 + k]]); W += rsw[i * 4 + k]; } }
-    if (W > 0.05) hem.push({ i, drop: Math.max(0.05, 0.6 - y), w, W });
+  let rp, rsi, rsw;
+  // Which of the robe's vertices the skirt bones carry, and how far each hangs: the first `count` vertices are the robe's
+  // body (in the robe built here, the sleeves, collar and sash come after them; a sculpted robe is all body).
+  function setupHem(count) {
+    rp = robe.geometry.attributes.position.array; rsi = robe.geometry.attributes.skinIndex.array; rsw = robe.geometry.attributes.skinWeight.array; hem.length = 0;
+    for (let i = 0; i < count; i++) {
+      const y = rp[i * 3 + 1]; if (y > 0.5) continue;
+      const w = []; let W = 0; for (let k = 0; k < 4; k++) { const b = SK.indexOf(rsi[i * 4 + k]); if (b >= 0 && rsw[i * 4 + k] > 0) { w.push([b, rsw[i * 4 + k]]); W += rsw[i * 4 + k]; } }
+      if (W > 0.05) hem.push({ i, drop: Math.max(0.05, 0.6 - y), w, W });
+    }
   }
+  setupHem(torsoCount);
   const mats = bones.map(() => new THREE.Matrix4()), hemBones = [IDX.hips, ...SK];
   const skinPoint = (i, out) => {
     const x = rp[i * 3], y = rp[i * 3 + 1], z = rp[i * 3 + 2]; out.set(0, 0, 0);
@@ -479,19 +489,39 @@ export function createMonk() {
     B.hips.updateMatrixWorld(true);
   }
 
+  let dressed = false;
   return {
-    group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat }, steps,
+    group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat, straps }, steps,
+    get dressed() { return dressed; },
+    // Put the sculpted body (tools/novice.mjs, app/shared/models/novice.glb) on the skeleton in place of the one built here:
+    // `geometries` holds a skinned geometry for each of skin, robe, legs and shoes, its joints numbered as `skeleton.bones`
+    // are, `material` is what they are drawn with, `robeColor` the robe's own colour (for the lap he sits on). The skeleton,
+    // its bind pose and everything `update` does are unchanged; what was built here is let go.
+    dress(geometries, material, robeColor) {
+      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) {
+        const g = geometries[name]; if (!g?.attributes.skinIndex || !g.attributes.skinWeight) throw new Error(`the sculpted ${name} is not skinned`);
+        mesh.geometry.dispose(); mesh.geometry = g; mesh.material = material;
+      }
+      setupHem(robe.geometry.attributes.position.count);
+      straps.visible = true;
+      if (robeColor !== undefined) { const c = new THREE.Color(robeColor), a = lap.geometry.attributes.color; for (let i = 0; i < a.count; i++) a.setXYZ(i, c.r, c.g, c.b); a.needsUpdate = true; }
+      dressed = true;
+    },
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
     // `speed` in metres a second. `pose`: false to stand or walk, true or "pray" for palms together, "sit" to sit with
     // legs folded, "hop" in the air, "bind" for the A-pose he is bound in. `surfaceAt(x, z)` is the ground under a
     // point; `grounding.heightAt` the smooth height his body follows, `grounding.stairs` whether he is on a stair.
+    // `grounding.act` is what an observance asks of him over the pose (rites.js): `bow` and `twist` of the trunk and
+    // `nod` of the head in radians, `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
+    // reach (`hands.left.at`), which way its fingers and palm turn there, and how far it has gone over (`w`, 0 to 1).
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
       if (pose === "bind") { legs.visible = shoes.visible = true; lap.visible = false; group.updateMatrixWorld(true); return; }
       const pray = pose === true || pose === "pray", sit = pose === "sit", hop = pose === "hop", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
+      const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, air = act && act.breath != null ? act.breath : null;
       seat += ((sit ? 1 : 0) - seat) * ease(3.5);
       gait += ((speed > 0.05 && !sit ? 1 : 0) - gait) * ease(8);
       palms += ((pray ? 1 : 0) - palms) * ease(4);
@@ -520,10 +550,12 @@ export function createMonk() {
       const twist = -0.045 * (lead[0] - lead[1]);
       B.hips.position.y += 0.0025 * breathe * (1 - gait);
       B.hips.rotation.set(0, twist, 0.022 * Math.sin(phase) * gait);
-      B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.04 * seat, -twist * 0.5, 0);
-      B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe, -twist * 0.9, -0.012 * Math.sin(phase) * gait);
+      B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.04 * seat + 0.5 * bow, -twist * 0.5 + 0.5 * turnTo, 0);
+      B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe + 0.4 * bow - 0.035 * (air || 0), -twist * 0.9 + 0.5 * turnTo, -0.012 * Math.sin(phase) * gait);
       B.neck.rotation.x = -0.03 * gait;
-      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) + 0.2 * palms + 0.14 * seat + 0.015 * Math.sin(phase * 2) * gait, twist * 0.4, -0.018 * Math.sin(phase) * gait);
+      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) + 0.2 * palms + 0.14 * seat + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4, -0.018 * Math.sin(phase) * gait);
+      // A breath taken on purpose shows: the chest fills and rises, the shoulders with it; the head keeps its size.
+      if (air !== null) { const k = 0.5 + 0.5 * air; B.chest.scale.set(1 + 0.035 * k, 1, 1 + 0.06 * k); B.neck.scale.set(1 / (1 + 0.035 * k), 1, 1 / (1 + 0.06 * k)); B.chest.position.y += 0.007 * k; for (const [n] of SIDES) B[n + "Shoulder"].position.y += 0.006 * k; }
 
       // The legs reach for the ground under each shoe.
       const legsShown = seat < 0.45, thigh = [0, 0];
@@ -582,6 +614,23 @@ export function createMonk() {
         anchor.getWorldQuaternion(tq).multiply(handFrame(inLap, s, tq2));
         la.getWorldQuaternion(qa); hd.quaternion.copy(qa.invert().multiply(tq));
         qa.copy(ua.quaternion); qb.copy(la.quaternion); qc.copy(hd.quaternion);
+        ua.quaternion.slerpQuaternions(q0, qa, w); la.quaternion.slerpQuaternions(q1, qb, w); hd.quaternion.slerpQuaternions(q2, qc, w);
+      });
+
+      // A hand sent somewhere by an observance goes there over whatever the pose had it doing: the elbow down and a
+      // little out, the fingers and the palm turned as asked.
+      if (act && act.hands) SIDES.forEach(([n, s]) => {
+        const h = act.hands[n]; if (!h || !h.at || !(h.w > 0)) return;
+        const ua = B[n + "UpperArm"], la = B[n + "LowerArm"], hd = B[n + "Hand"];
+        q0.copy(ua.quaternion); q1.copy(la.quaternion); q2.copy(hd.quaternion);
+        group.updateMatrixWorld(true);
+        reach(ua, la, UPPER, FORE, tv.copy(h.at), tv2.set(s * 0.8, -1, -0.35).applyQuaternion(gq), -1);
+        ua.updateMatrixWorld(true);
+        if (h.fingers && h.palm) {
+          _y.copy(h.fingers).negate().normalize(); _z.copy(h.palm); _x.crossVectors(_y, _z).normalize(); _z.crossVectors(_x, _y);
+          tq.setFromRotationMatrix(_m.makeBasis(_x, _y, _z)); la.getWorldQuaternion(qa); hd.quaternion.copy(qa.invert().multiply(tq));
+        } else hd.quaternion.copy(q2);
+        const w = Math.min(1, h.w); qa.copy(ua.quaternion); qb.copy(la.quaternion); qc.copy(hd.quaternion);
         ua.quaternion.slerpQuaternions(q0, qa, w); la.quaternion.slerpQuaternions(q1, qb, w); hd.quaternion.slerpQuaternions(q2, qc, w);
       });
 
