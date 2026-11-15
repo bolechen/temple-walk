@@ -198,7 +198,7 @@ forms, so it is not for name boards), "Yunjing Bang" (Yuji Boku, a heavy brush r
 "Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `pnpm run check` fails if a character is used that the cut does not hold.
 
-**The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small red lozenge
+**The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small vermilion seal
 (`#way`) sits on the picture where the next place lies, or at the edge toward it, with the distance in steps; it leaves with
 the goal. The visit's metres and minutes are kept under `yunjing.visit.v1` and told on the book's page. `__visit()` reports them.
 
@@ -211,6 +211,18 @@ pause menu only when the stack is empty; closing gives the focus back to what op
 `ui.open(id, { onClose })` / `ui.close(id)`, never by setting `hidden` (it is kept in step for the tests). A new sheet is a
 `<dialog class="layer">` plus one `ui.layer(id, …)` call. No UI library: comparable web games hand-write their DOM too
 (`docs/t00/decisions.md`, "界面").
+
+**Ink on paper (`app/src/ui.css`, `app/src/paper.js`).** The interface's look, chosen by the owner from two drawn
+directions: over the picture nothing has a box (words with a little shade under them; the five things at the edge are
+slips of paper written down the page); what opens over the walk is a sheet of paper with a torn edge (class `paper`);
+what is chosen is circled in vermilion (`aria-pressed`); the one button that matters on a sheet is a seal (`stamp`); keys
+are written as letters with a stroke under them. `paper.js` draws the paper grain, a dry brush stroke, the ring and the
+seal once in canvases when the page opens and hands them to the stylesheet as `--paper-tile`, `--brush-ink`,
+`--brush-light`, `--enso-light`, `--enso-red`, `--stamp`; a `ResizeObserver` gives every `.paper` its own torn edge
+(`--deckle`, a mask) and every slip at the edge its whole torn paper (`--sheet`, a picture: a mask on a button is not
+drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and paper colours, type sizes) are at the top of
+`ui.css`; every rule there reads without the drawn textures. The running hand borrows the kai's upright punctuation
+(`unicode-range`) so that a slip written down the page has its commas in place.
 
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
 opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, volume, the key card, and
@@ -237,7 +249,7 @@ to `__probe` rather than reaching into the page from a test.
 - Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles. Later the same day, with rafters, the wood outside the walls and the gate's detail added, the first court cost 9.3 ms on the high tier and 4.7 ms on the low; the measured walk (`?tour=120x3`, high tier, 1080p) averaged 61 frames a second with a 95th-percentile frame of 21 ms. Switching trees or bamboo off changes nothing on that card; the mirror pass is about 1.8 ms and is drawn only on the level of the forecourt and first court. None of this says what a Mac or a phone does.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`pnpm run check` guards this).
-- The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `index.html` says `[hidden]{display:none !important}`.
+- The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `src/ui.css` (linked first thing in `index.html`) says `[hidden]{display:none !important}`.
 - When a shape in a screenshot will not be explained, do not guess at materials: ask `__pick(x, y)` what is there. A pale
   sheet across the gate's roof was chased through tiles, boards, normals and hills for hours; it was a mist sprite
   (`props.js`) hanging in front of the building. Mist sheets stay outside the walls.
