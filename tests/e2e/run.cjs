@@ -366,8 +366,9 @@ const scenarios = {
   } },
   // From behind him and through his eyes.
   views: { tier: 2, async run(b, base) {
-    // `devpose` is a dev-server aid (src/devpose.js): the published build must neither carry it nor touch the address.
-    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose");
+    // `devpose` and `debug` are dev-server aids (src/devpose.js, src/debug.js): the published build must neither carry
+    // them nor touch the address, and shows no panel.
+    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug");
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.keyboard.press("v"); await t.page.waitForTimeout(600);
@@ -385,7 +386,7 @@ const scenarios = {
     // With his back to the court's east wall, the eye comes in close rather than passing through it.
     await t.page.evaluate(() => window.__pose(20.5, 30, -Math.PI / 2, -0.05)); await t.frames(3);
     p = await t.probe(); expect(p.camDist < 1.6, "the eye went through the court wall: " + p.camDist);
-    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose" && window.__devpose === undefined), "the published page should leave ?devpose alone");
+    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug" && window.__devpose === undefined && window.__debug === undefined && !document.getElementById("debug") && !document.querySelector(".lil-gui")), "the published page should leave ?devpose and ?debug alone");
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
@@ -572,6 +573,37 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Space jumps: he leaves the ground, comes down where he stood (or a little on, if he was walking), and nothing else happens.
+  // The switches behind the debug panel, on the published page: each part of the scene and each pass can be put out
+  // and back while the walk goes on, a named view can be jumped to, and a room still hides the courts.
+  parts: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=medium&cam=0,24,0,0.1&view=first&season=autumn&time=dusk", { viewport: { width: 640, height: 360 } });
+    const part = (n, on) => t.page.evaluate(([n, on]) => window.__part(n, on), [n, on]);
+    const census = () => t.page.evaluate(() => window.__census());
+    const all = await t.page.evaluate(() => window.__part());
+    for (const n of ["site", "sky", "ground", "backdrop", "bamboo", "props", "trees", "drift", "reflect", "bloom", "shadow"]) expect(all[n] === true, `"${n}" should be offered and drawn: ` + JSON.stringify(all));
+    expect(!("monk" in all) && !("interior" in all) && (await part("monk", false)) === null, "the novice and the rooms are the walk's to show, not the panel's");
+    expect((await part("bamboo", false)) === false && (await census()).bamboo.hidden, "the bamboo did not go out");
+    expect((await part("bamboo", true)) === true && !(await census()).bamboo.hidden, "the bamboo did not come back");
+    let y = await t.state(); expect(y.planar === 0.5, "the medium tier draws the mirror: " + y.planar);
+    await part("reflect", false); y = await t.state(); expect(y.planar === 0, "the mirror did not go out");
+    await part("reflect", true); y = await t.state(); expect(y.planar === 0.5, "the mirror did not come back at the tier's size");
+    for (const n of ["bloom", "shadow"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    expect(y.season === "autumn" && y.time === "dusk" && y.view === "first" && y.fov > 0, "__yard should say the hour and the view: " + JSON.stringify(y));
+    // A named view, without loading again; an unknown one is refused.
+    expect(await t.page.evaluate(() => window.__show("gate")), "__show refused a named view"); y = await t.state();
+    expect(y.x === 0 && y.z === 49.5, "__show did not stand him at the gate view: " + JSON.stringify([y.x, y.z]));
+    expect(!(await t.page.evaluate(() => window.__show("nowhere"))), "__show should refuse a view that does not exist");
+    // Indoors the courts stay hidden even when switched on; out again, a part switched off stays off.
+    await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.state()).room === "chan", 60000, "could not go into the meditation hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
+    expect((await part("site", true)) === true && (await census()).site.hidden, "a court was drawn inside a room");
+    await part("site", false);
+    expect(await t.page.evaluate(() => window.__show("court")), "__show could not leave the room"); y = await t.state();
+    expect(!y.inside && y.z === 29 && (await census()).site.hidden, "out of the room, a part switched off should stay off: " + JSON.stringify([y.inside, y.z]));
+    expect((await part("site", true)) === true && !(await census()).site.hidden, "the buildings did not come back outdoors");
+    await t.frames(2); const p = await t.probe(); expect(p.lum > 12 && p.lum < 245, "the picture is blank after the switches: " + p.lum.toFixed(1));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 640, height: 400 } });
     const sample = () => t.page.evaluate(() => { window.__jump = []; const read = () => { const s = window.__yard(); window.__jump.push([s.footY, s.jumping, s.z]); if (window.__jump.length < 400 && (s.jumping || window.__jump.length < 3)) requestAnimationFrame(read); }; requestAnimationFrame(read); });
