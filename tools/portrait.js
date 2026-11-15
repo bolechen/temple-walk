@@ -1,6 +1,6 @@
 // Close views of the novice from the front, the side and behind, standing and with palms together (or, with `bind`,
 // in the A-pose he is bound in), found in the picture wherever the photograph's eye has him.
-// usage: node tools/portrait.js [season-time] [bind]   → tools/out/portrait.png
+// usage: node tools/portrait.js [season-time] [bind] [sculpt]   → tools/out/portrait.png
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out");
@@ -15,14 +15,15 @@ const srv = http.createServer((req, res) => {
 (async () => {
   await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
   const [season = "summer", time = "day"] = (process.argv[2] || "").split("-");
+  const sculpt = process.argv.includes("sculpt");   // the sculpted body, which the page wears only when asked (?body=sculpt)
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 1500, height: 760 }, deviceScaleFactor: 2 });
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05${sculpt ? "&body=sculpt" : ""}`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
-  await p.waitForFunction(() => window.__yard().dressed === true, null, { timeout: 60000 }).catch(() => console.log("the sculpted body did not arrive; he is shown as built in code"));   // his body is fetched after the first frames
+  if (sculpt) await p.waitForFunction(() => window.__yard().dressed === true, null, { timeout: 60000 }).catch(() => console.log("the sculpted body did not arrive; he is shown as built in code"));   // fetched after the first frames
   // `bind` as a second argument shows him front, side and back in the A-pose he is bound in, to set beside the drawing.
-  const bind = process.argv[3] === "bind", W = bind ? 225 : 150, H = 320;   // each view, in page pixels (drawn at twice that)
+  const bind = process.argv.includes("bind"), W = bind ? 225 : 150, H = 320;   // each view, in page pixels (drawn at twice that)
   const poses = bind ? [[Math.PI, "bind"], [Math.PI * 1.5, "bind"], [0, "bind"]] : [[Math.PI, false], [Math.PI + 0.9, false], [0, false], [Math.PI, true], [Math.PI - 0.7, true]];
   // The photograph keeps the eye where the walk left it, a few steps behind him and to one side: turn it round him
   // with the view, zoom until he fills the panel (no further than keeps him in the picture), and cut the panel round him.

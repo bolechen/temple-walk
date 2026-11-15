@@ -133,8 +133,10 @@ const well = createWell(scene, site.places.well.pool, wellDrip); onDrop(() => we
 
 await loading.step("石阶");
 const monk = createMonk(); part("monk", () => scene.add(monk.group));
-// His sculpted body comes after the first frames; until then (and with ?body=code) he is the figure built in code.
-if (Q.get("body") !== "code") loadNovice(monk).catch(() => {});
+// He is the figure built in code. The sculpted body's cloth tears at its texture seams when he walks, climbs or sits,
+// so until its weights are mended it is fetched (after the first frames) only for ?body=sculpt; ?body=code asks for
+// what he already wears.
+if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
 
 await loading.step("行走");
 // ---- The hour and the season ----------------------------------------------------

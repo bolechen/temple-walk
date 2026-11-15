@@ -470,10 +470,12 @@ three.js，换了等于重写，测试和性能调校都得重来。值得接的
   每个顶点的骨骼权重取自**代码建的小沙弥**同一部位最近的几个顶点（它是照同一张图、同一身高、同一 A-pose 做的，叠起来相差 2–3 厘米，所以裙摆骨骼、袖子随手臂、腿的权重都沿用调好的），
   边界上的顶点两边的权重取平均，免得接缝裂开；贴图压成 1024 的 WebP。关节编号写在 `extras.bones`，运行时核对，对不上就拒绝换。
 - **运行时**：`createMonk()` 仍是同步的，Node 测试照用；`monk.dress(几何, 材质, 袍色)` 把四个蒙皮网格的几何换成新的，骨架、绑定姿势、`update()` 和裙摆提升（`setupHem`，对新袍子重算）都不变。
-  `app/src/novice.js` 在首帧之后取 `shared/models/novice.glb`，取不到或对不上就静默保持代码建的那个。`?body=code` 强制用代码建的。`__yard().dressed` 报告换上没有。
+  `app/src/novice.js` 在首帧之后取 `shared/models/novice.glb`，取不到或对不上就静默保持代码建的那个。`__yard().dressed` 报告换上没有。
+  **2026-11-15 起默认关闭**：线上发现雕刻的身体在走路、上台阶、打坐时布料会撕开（贴图接缝处的骨骼权重不对），所以页面默认穿代码建的小沙弥；
+  只有地址带 `?body=sculpt` 才取雕刻的身体（`?body=code` 仍可写，等于默认）。`novice.glb`、`novice.js`、`monk.dress()`、`tools/novice.mjs` 和单测都留着，修权重要用；修好并看过画面之后再改回默认。
   斗笠和念珠仍是代码建的，挂在原来的骨头上；帽子的两条背带原来是袍子网格的一部分，现在单独成一个网格（`parts.straps`），换身体后显示。
 - **测试**：`tests/unit/novice.test.mjs`（关节编号、身高与落地、权重完整、袍子和鞋的权重、鞋不拿另一只脚的权重、走路时脚底着地、裤子不比绑定姿势多露出一厘米以上）；
-  `edges.test.mjs` 和 `pnpm run edges` 现在两个身体都过；`boot` 场景等 `dressed`。`tests/unit/novice-glb.mjs` 是 Node 里读这个 GLB 几何的小解析器（不要贴图，不要加载器）。
+  `edges.test.mjs` 和 `pnpm run edges` 现在两个身体都过；`boot` 场景现在断言默认没有换上（`dressed === false`），`views` 场景用 `?body=sculpt` 等 `dressed`；`node tools/portrait.js summer-day sculpt` 看雕刻的身体。`tests/unit/novice-glb.mjs` 是 Node 里读这个 GLB 几何的小解析器（不要贴图，不要加载器）。
 - **已知**：Meshy 的原模型里，左大腿外侧、袍摆上方 x≈0.17 m 处灯笼裤向外鼓出袍子约 4 厘米（绑定姿势下就有，走路时没有变糟）；脸和手比代码建的细，近看是一个更像插画的小孩，不是水墨写实，这是业主确认过的设定方向。
 - **还没做**：斗笠和念珠要不要也生成（我的建议是念珠保持代码建，斗笠可以单独生成）；GPU 上的帧成本（`tools/gpu-render.sh`，多了约 2 万三角面和三张 1024 贴图）；Meshy 的服务条款全文没有读，公开发布前请业主自己确认。
 

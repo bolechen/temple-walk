@@ -28,7 +28,7 @@ const scenarios = {
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
-    await t.until(async () => (await t.state()).dressed === true, 90000, "the sculpted body never arrived on the novice (app/shared/models/novice.glb)");   // fetched after the first frames; a missing or ill-fitting file leaves him as built in code, and this fails
+    expect((await t.state()).dressed === false, "a visitor should meet the novice built in code: the sculpted body is worn only with ?body=sculpt until its cloth stops tearing");
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
       expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
@@ -404,7 +404,9 @@ const scenarios = {
   views: { tier: 2, async run(b, base) {
     // `devpose` and `debug` are dev-server aids (src/devpose.js, src/debug.js): the published build must neither carry
     // them nor touch the address, and shows no panel.
-    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug");
+    // `body=sculpt` asks for the sculpted body, which the page no longer wears unasked: this is where it is seen to arrive.
+    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug&body=sculpt");
+    await t.until(async () => (await t.state()).dressed === true, 90000, "the sculpted body never arrived on the novice (app/shared/models/novice.glb)");   // fetched after the first frames; a missing or ill-fitting file leaves him as built in code, and this fails
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.keyboard.press("v"); await t.page.waitForTimeout(600);
@@ -422,7 +424,7 @@ const scenarios = {
     // With his back to the court's east wall, the eye comes in close rather than passing through it.
     await t.page.evaluate(() => window.__pose(20.5, 30, -Math.PI / 2, -0.05)); await t.frames(3);
     p = await t.probe(); expect(p.camDist < 1.6, "the eye went through the court wall: " + p.camDist);
-    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug" && window.__devpose === undefined && window.__debug === undefined && !document.getElementById("debug") && !document.querySelector(".lil-gui")), "the published page should leave ?devpose and ?debug alone");
+    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug&body=sculpt" && window.__devpose === undefined && window.__debug === undefined && !document.getElementById("debug") && !document.querySelector(".lil-gui")), "the published page should leave ?devpose and ?debug alone");
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
