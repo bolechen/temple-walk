@@ -1,24 +1,29 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-15T04:04:29.804Z",
+  "generated_at": "2026-11-15T04:16:19.732Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "7075a34c6b49c50b6dcbc167abd8924029fad525",
-    "url": "https://github.com/bolechen/temple-walk/commit/7075a34c6b49c50b6dcbc167abd8924029fad525"
+    "sha": "af5afede33e07766f884bdec3f2eb994be71b45e",
+    "url": "https://github.com/bolechen/temple-walk/commit/af5afede33e07766f884bdec3f2eb994be71b45e"
   },
   "delivery": {
     "schema_version": 1,
     "scene_id": "T00",
-    "summary": "留影以风景为主：简洁界面、默认横幅、全景清晰，无景深。",
+    "summary": "小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
     "changes": [
-      "默认只保留快门、设置和收起，画幅/远近/人物收入折叠面板",
-      "默认16:9广角，人物可选；移除点选对焦、景深shader和深度贴图",
-      "补桌面/触控photo-ui与原有导出照片回归"
+      "外形按 A-pose 三视图：身高 1.18 米、头约四分之一；赭红短袖宽袍到膝、交领右衽、米色中衣；同色腰带左前打结、两条带尾；灰褐灯笼裤收进米色绑腿；深灰布鞋浅色鞋底；三十二颗木念珠；竹斗笠背在背上，两条背带压进腰带",
+      "骨骼：root（上台阶的平滑高度）→ hips、spine、chest、neck、head，两侧 Shoulder/UpperArm/LowerArm/Hand/UpperLeg/LowerLeg/Foot；另有 robeFront/Back/Left/Right、sashTail、hat。皮肤、袍、裤、鞋四个蒙皮网格，权重手写；念珠和斗笠刚性挂骨。绘制从 25 次减到 6 次，三角形从约 2.7 万增到约 3.9 万",
+      "动作：腿用两骨 IK 踩到每只鞋下的地面（台阶上一步一级），够不到时骨盆下沉；走路时一只鞋底始终贴地；合掌掌心相对、指尖朝上，打坐双手掌心向上落在腿上",
+      "袍摆被同侧膝盖推开、随步与转身摆动、碰到台阶时缩起；袍内的裤腿收细，单元测试保证站立和整个步态里裤子不从袍子穿出",
+      "他不再往只画一次的阴影图里投影（原来会在他载入时站的地方留下一个不动的影子），改为接收建筑的阴影；脚下仍是软影",
+      "pose \"bind\" 回到 A-pose；node tools/portrait.js <季节-时辰> bind 出正、侧、背三视图，可与设定图并排对照"
     ],
     "known_issues": [
       "A06 blocked：没有目标设备（Mac/手机）的 120 秒×3 测量；T4 上三次平均 60.4, 60.1, 60.5 帧/秒，不能代表目标设备",
       "最后一轮复核针对 dfc9909；之后加的构造细部、光照图和游戏层没有再复核。顶点合并让载入多花约两三秒（T4 主机上载入约 13 秒）",
+      "小沙弥：T4 上首院 high 1080p 绘制 11.23→9.07 ms、low 手机尺寸 6.20→4.64 ms（各一次 Job，含实例差异，见 HANDOFF）；Mac 和手机仍未测；仍是代码建模，不是雕刻或生成的模型；手指和袖口没有单独的骨骼；打坐时腿上的那团布仍是旧的光滑形体",
+      "小沙弥截图：poses.jpg 出自本提交；apose.jpg 与 walking.jpg 用同一份 monk.js 在变基到 c9cfac8 之前渲染，背景里的匾额是旧的",
       "A02 只有程序行走的录像与自动化测试，没有真人正常速度往返的录像",
       "四轮复核后没有未关闭的阻断或严重项；剩 36 条轻微项（18 条有改善未到位、18 条未动）和 9 条已修未复核，见 docs/t00/review-log.json",
       "石阶踢面和两侧墙同一种石头且无压顶；石阶砌缝的暗带延到墙上；院地积水里屋顶倒影的直边仍显眼",
@@ -28,28 +33,32 @@
       "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG"
     ],
     "evidence": [
-      "tests/e2e/run.cjs: photo-ui / photo",
-      "docs/PHOTO-MODE.md"
+      "docs/t00/evidence/monk/apose.jpg",
+      "docs/t00/evidence/monk/poses.jpg",
+      "docs/t00/evidence/monk/walking.jpg",
+      "tests/unit/monk.test.mjs",
+      "tests/unit/stairs.test.mjs",
+      "docs/HANDOFF.md"
     ],
-    "record_commit": "8e4cb3f98e60ece11d9ef291a387469618fd92b2",
+    "record_commit": "af5afede33e07766f884bdec3f2eb994be71b45e",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43675101411,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43675101411",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43676016392,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43676016392",
     "checks": {
-      "syntax": "success",
-      "unit": "success",
-      "e2e": "skipped"
+      "syntax": "pending",
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "7075a34c6b49c50b6dcbc167abd8924029fad525",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43675101411"
