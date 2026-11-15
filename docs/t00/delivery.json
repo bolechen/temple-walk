@@ -1,8 +1,15 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "大殿前一对「庭前柏树子」小柏（5.2 m、5.6 m）不再倒伏在铺地上：枝长随树高缩放，每根枝和挂帘的最低处离地至少 0.4 m，小树的枝叶长到近地、整体是下宽上窄的锥形；碰撞体按新冠幅收窄，沙弥不会在看不见的树墙前停住。其余柳杉、枫树、银杏的几何逐顶点与上一提交相同。开发方自评：对比图见 docs/t00/evidence/trees/；未在 T4 或目标设备上测帧，不是验收结论。上一轮的摘要仍然成立，见下方变更与证据。 台阶垂带重做：所有台阶共用的 stairGeo 里，每侧垂带原是三件对不上的东西（斜放的长方块、平顶方块、三片悬空的镂空三角板），藏经楼台阶旁因此有一块方块和几条细斜片；现在是一整块沿坡的垂带石，下面墩和象眼实心到地，五条单测对任意台阶高度成立。进山石阶两侧原来的「墙」就是那块平顶方块，随之消失，CAM-01、CAM-02 的画面变了，证据图没有重拍。另有一条单测：可走处相邻两点高差不超过 0.45 米。试玩头晕：第三人称跟拍的眼睛不再跳（被柱子、钟鼓楼挡住时一帧拉近最多 6 米、越过台基一帧上下 0.67 米），拉近、退回、侧移、抬升都改成临界阻尼平滑，时间取自《小王子》的 ThirdPersonCamera；细柱横穿视线先不躲；走路有加减速；第一人称点头按步子算；实地视野加宽（第三人称 50°、第一人称 65°）并可在歇脚菜单里调，定格验收机位仍是 44°/52°。开发方自评，没有找人复测，手机帧率未测。边缘与碰撞（Issue #16）：沙弥有宽度而行走判断只移动一个点，新增的全场扫查（pnpm run edges）在整改前报出 66 处身体进入实体，整改并把树木纳入后为 0 处；EDGE-001、EDGE-002 标为 fixed_pending_retest，是否关闭由独立评审复测决定，真人录像、殿内房间和镜头没有覆盖。同一轮按所有者当天的要求：匾额照真寺重画（大殿「釋迦寶殿」取自无准师范原迹）、殿内挂 17 件真迹并附百科卡片、殿内往外看改为实景、各殿换上博物馆 CC0 的文物扫描作占位造像、留影改为所见即所拍、资源按关卡与共享重排并接入 pnpm、发布流程由约 8 分钟降到约 2 分钟。六机位截图、录像与 T4 帧记录出自提交 420fcdc。开发方自评，不是验收结论。 全寺跟拍眼睛扫描和檐廊下跳检查进了单元测试；扫描发现并修掉钟楼撞钟木挡住视线的一处。界面这一轮：所有者选了纸本方向。画面上不放框，字直接落在画面上；右侧是竖写的纸签条；弹层是毛边宣纸，选中项用朱笔圈，最要紧的按钮是一方朱印；签有朱丝栏，竖排标点改正。纹理由 app/src/paper.js 现画，样式拆到 app/src/ui.css。殿内屋顶与梁架重做：殿内柱位取自殿外开间，柱子都托着梁（月梁落在栌斗上，梁头进墙有丁头栱），按殿的等级做平棊加藻井、平闇或彻上明造；顶上的裸点光换成长明灯，南墙开直棂窗，殿内木色按色板另做。开发方自评，截图见 docs/t00/evidence/interior/，梁架未经结构评审。观音殿檐下：第三人称跟拍的眼睛不再进到檐廊的格扇、柱子和檐椽斗拱里；燃灯灯台挪开，西半边檐廊处处可以跳下。界面这一轮：所有盖在画面上的界面收到 app/src/ui.js 的一个栈上，不接任何第三方 UI 库。菜单、朱印帐、照片、画作卡、签改成原生 <dialog>：背后的页面不能操作，焦点留在弹层里，人物站住，只认弹层自己的按键。Esc 只关最上面一层，栈空了才打开歇脚菜单；关掉时焦点回到打开它的按钮。配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
+  "summary": "控件这一轮：行走时画面上常驻的只剩留影、歇脚两张签条和左上角的小朱印（点它打开朱印帐）；换视角改为拉近到底；手机上没有跳跃按钮，摇杆平时只剩淡淡一圈。时节在第一次集齐七印后才可选，重新朝山后仍可选。大殿前一对「庭前柏树子」小柏（5.2 m、5.6 m）不再倒伏在铺地上：枝长随树高缩放，每根枝和挂帘的最低处离地至少 0.4 m，小树的枝叶长到近地、整体是下宽上窄的锥形；碰撞体按新冠幅收窄，沙弥不会在看不见的树墙前停住。其余柳杉、枫树、银杏的几何逐顶点与上一提交相同。开发方自评：对比图见 docs/t00/evidence/trees/；未在 T4 或目标设备上测帧，不是验收结论。上一轮的摘要仍然成立，见下方变更与证据。 台阶垂带重做：所有台阶共用的 stairGeo 里，每侧垂带原是三件对不上的东西（斜放的长方块、平顶方块、三片悬空的镂空三角板），藏经楼台阶旁因此有一块方块和几条细斜片；现在是一整块沿坡的垂带石，下面墩和象眼实心到地，五条单测对任意台阶高度成立。进山石阶两侧原来的「墙」就是那块平顶方块，随之消失，CAM-01、CAM-02 的画面变了，这两张证据图已在 a7c7772 上重拍。另有一条单测：可走处相邻两点高差不超过 0.45 米。试玩头晕：第三人称跟拍的眼睛不再跳（被柱子、钟鼓楼挡住时一帧拉近最多 6 米、越过台基一帧上下 0.67 米），拉近、退回、侧移、抬升都改成临界阻尼平滑，时间取自《小王子》的 ThirdPersonCamera；细柱横穿视线先不躲；走路有加减速；第一人称点头按步子算；实地视野加宽（第三人称 50°、第一人称 65°）并可在歇脚菜单里调，定格验收机位仍是 44°/52°。开发方自评，没有找人复测，手机帧率未测。边缘与碰撞（Issue #16）：沙弥有宽度而行走判断只移动一个点，新增的全场扫查（pnpm run edges）在整改前报出 66 处身体进入实体，整改并把树木纳入后为 0 处；EDGE-001、EDGE-002 标为 fixed_pending_retest，是否关闭由独立评审复测决定，真人录像、殿内房间和镜头没有覆盖。同一轮按所有者当天的要求：匾额照真寺重画（大殿「釋迦寶殿」取自无准师范原迹）、殿内挂 17 件真迹并附百科卡片、殿内往外看改为实景、各殿换上博物馆 CC0 的文物扫描作占位造像、留影改为所见即所拍、资源按关卡与共享重排并接入 pnpm、发布流程由约 8 分钟降到约 2 分钟。六机位截图、录像与 T4 帧记录出自提交 420fcdc。开发方自评，不是验收结论。 全寺跟拍眼睛扫描和檐廊下跳检查进了单元测试；扫描发现并修掉钟楼撞钟木挡住视线的一处。界面这一轮：所有者选了纸本方向。画面上不放框，字直接落在画面上；右侧是竖写的纸签条；弹层是毛边宣纸，选中项用朱笔圈，最要紧的按钮是一方朱印；签有朱丝栏，竖排标点改正。纹理由 app/src/paper.js 现画，样式拆到 app/src/ui.css。殿内屋顶与梁架重做：殿内柱位取自殿外开间，柱子都托着梁（月梁落在栌斗上，梁头进墙有丁头栱），按殿的等级做平棊加藻井、平闇或彻上明造；顶上的裸点光换成长明灯，南墙开直棂窗，殿内木色按色板另做。开发方自评，截图见 docs/t00/evidence/interior/，梁架未经结构评审。观音殿檐下：第三人称跟拍的眼睛不再进到檐廊的格扇、柱子和檐椽斗拱里；燃灯灯台挪开，西半边檐廊处处可以跳下。界面这一轮：所有盖在画面上的界面收到 app/src/ui.js 的一个栈上，不接任何第三方 UI 库。菜单、朱印帐、照片、画作卡、签改成原生 <dialog>：背后的页面不能操作，焦点留在弹层里，人物站住，只认弹层自己的按键。Esc 只关最上面一层，栈空了才打开歇脚菜单；关掉时焦点回到打开它的按钮。配乐接入：七印集一个七音主题，按地点生成乐句，换场平滑过渡，钟鼓让位，音乐、山声、音效分开调节。小沙弥按所有者给的 A-pose 三视图重做为蒙皮角色，并在 A-pose 里绑定到 VRM 命名的人形骨骼；腿用两骨 IK 踩实每级台阶，合掌与打坐用手臂 IK，袍摆、带尾、斗笠在弹簧上摆动。开发方自评：截图与设定图对照见 docs/t00/evidence/monk/；未在 T4 或目标设备上测帧时，不是验收结论。",
   "changes": [
+    "index.html：右侧签条只剩留影、歇脚；朱印改为左上角的小朱印按钮（#bookBtn），印文是下一处的首字，七印后为「圆」；去掉身外、时节两张签条和跃按钮；拍照设置与歇脚菜单加时节、时辰两行（need-seasons），键位卡的 T 一项同样只在四时打开后显示",
+    "yard.js：滚轮或双指拉到最近后继续推，切到第一视角，往外拉回第三视角（攒够一点才切，避免误触）；V 键直接切换；T 键只在四时打开后打开时节面板；摇杆按下时才显出来",
+    "journey.js：新增 opened（第一次集齐七印的时刻，旧存档里已集齐的也算）和 told，reset 后保留；opened()、told()、tell()",
+    "game.js：按 journey.opened() 设置 body.seasons；朱印帐末页写「山中四时，自此由你」；合上朱印帐或入山 14 秒后，底部提示说一次「时节已开」",
+    "hints.js：手机上的入山提示改为双指开合；得印提示改为点左上角的小印；新增 seasons 提示",
+    "ui.css：#bookBtn、.sr、need-seasons；摇杆按下前淡到 0.3；手机上一会儿不碰屏幕，签条淡到 0.45；去掉跃按钮的样式",
+    "测试：tests/unit/journey.test.mjs 两项；e2e 新增 seasons 场景；boot、views、moods、layers、phone 场景随控件改动更新（滚轮切换视角、首访不给时节、手机上没有跃）",
     "app/src/trees.js：树高低于 18 m 的柳杉，枝长按 h/18 缩放；每根枝及其下挂的帘，最低点都钳制在地面以上 0.4 m；小树的枝从 0.9 m 起，不留老树那样的光杆；低层枝条用每棵树自己的随机种子，不占全林共用的随机序列",
     "app/src/site.js：小柏的碰撞体由 h×0.58 改为 h×0.2（约 1.04 m、1.12 m），与新冠幅的实际伸展一致；其余树的碰撞体保留 main 的取值；tools/edges.mjs 在全部可站位置上检查",
     "tests/unit/trees.test.mjs（新增）：院内每棵柳杉都长出枝叶；枝叶不低于地面 0.3 m；小树冠幅窄于树高；小树枝叶低于 1 m",
@@ -74,9 +81,12 @@
     "docs/LITTLEPRINCE-TEARDOWN.md 新增「角色移动、碰撞与相机」一节：从小王子线上包的脚本类名和 IL2CPP 字段名对照两边的做法（只有名字，没有代码）",
     "工程化（所有者 2026-11-15 决定）：接入 Vite 8 与 TypeScript 7。源码直接 import three，不再拷贝到 app/vendor/three；pnpm dev 为开发服务器，pnpm build 出 dist/，发布、端到端测试、出图与 GPU 作业都改为打开 dist/（tools/site.cjs 按需重建）；按名字取的资源经 app/src/assets.js 从页面地址定位；pnpm typecheck 纳入 check 流程与两条工作流",
     "所有者 2026-11-15 的另三个决定已记入文档：代码暂不开源、保留所有权利；佛像与莲座模型归所有者所有、可随项目分发；山门竖匾保持虚构的「雲徑禪寺」（不改为真寺名）",
-    "类型检查扩大到 app/ 全部模块（所有者要求）：加入 @types/three，补 JSDoc 标注；颜色与位置由展开数组的 setRGB/set 改为等价的 fromArray"
+    "类型检查扩大到 app/ 全部模块（所有者要求）：加入 @types/three，补 JSDoc 标注；颜色与位置由展开数组的 setRGB/set 改为等价的 fromArray",
+    "2026-11-15 分享卡片：复用现有实机宣传封面为 app/shared/og/temple-walk.jpg（1920×1080 JPEG），页面增加 Open Graph、Twitter 大图卡片、简介与新域名 canonical；共享资源沿用现有 Vite 复制流程。"
   ],
   "known_issues": [
+    "双指拉近切换视角只在桌面滚轮上自动测过，手机上的双指手势没有在真机上试过",
+    "走完七印大约要二三十分钟，没有走完的人只会看到自己来时的那一季",
     "冬天小柏几乎全白，看不出底下的深绿：积雪系数 snow: 0.8 是按大柳杉调的，小树的枝叶小而密，整株被雪盖住。未改",
     "对比图的冬天一行几乎全是雾和雪，不足以判断冬天的效果；修前列是 origin/main 4601819，不是 765f2b2",
     "e2e:smoke 的 15 个场景是分次跑通的，没有一次完整的 verify；rebase 后重跑了 check、单测、edges、boot 和 camera",
@@ -117,11 +127,12 @@
     "大殿正脊下有一道透天的缝；山门通道斜看像窄缝；上段石阶和挡墙仍是同一种毛石",
     "远竹仍是平片；柳杉轮廓仍显涂抹；墙面污痕仍偏均匀；瓦面偏平",
     "录像为 webm（非 mp4），截图为由 PNG 转存的 JPEG",
-    "进山三段石阶下半段两侧原来的「墙」是垂带的平顶方块，重做后没有了，两侧是沿坡的垂带石；ART-08（两侧墙没有压顶）、NEW-02（砌缝延到墙上）说的就是它，要对着新图重新判断；docs/t00/evidence/ 的 CAM-01、CAM-02 没有重拍，验收项没有改动",
+    "进山三段石阶下半段两侧原来的「墙」是垂带的平顶方块，重做后没有了，两侧是沿坡的垂带石；ART-08（两侧墙没有压顶）、NEW-02（砌缝延到墙上）说的就是它，要对着新图重新判断；CAM-01、CAM-02 已于 a7c7772 在 T4 上重拍，CAM-06 因殿前小柏重立也一并重拍（evidence/M4/manifest.json 里这三张各带自己的提交号），其余三个机位、录像和帧记录仍是 420fcdc 的；验收项没有改动",
     "垂带重做只在软件渲染的截图里看过（藏经楼、主殿、一级平台、进山石阶、山门），没有在 Mac 或手机上走过",
     "佛像与莲座仍在库里（来源 CDN 对 GitHub 构建机返回 403）；所有者 2026-11-15 确认其归本人所有、可随项目分发，原始作者信息仍未记录",
     "类型检查（checkJs）已覆盖 app/ 全部模块并使用 @types/three，但没有开 strict；页面元素查找和场景遍历回调标为 any；没有文件改成 .ts；「引擎／关卡」代码拆分未做",
-    "接入 Vite 后发布的是打包后的 dist/（单个约 1 MB 的脚本，gzip 约 314 KB）；本机只跑了 boot、halls、stairs、drop 四个端到端场景和开发服务器的一次载入，其余场景与 T4 测量未在打包后的站点上重跑，本轮没有新的性能数字"
+    "接入 Vite 后发布的是打包后的 dist/（单个约 1 MB 的脚本，gzip 约 314 KB）；本机只跑了 boot、halls、stairs、drop 四个端到端场景和开发服务器的一次载入，其余场景与 T4 测量未在打包后的站点上重跑，本轮没有新的性能数字",
+    "分享平台可能缓存旧卡片；本轮分享元信息不代表游戏独立验收或手机性能通过。"
   ],
   "evidence": [
     "docs/t00/evidence/trees/young-cedars-before-after.jpg",
@@ -168,6 +179,33 @@
     "tools/music.mjs → tools/out/music/report.json（本地生成，不入库）",
     "docs/t00/MUSIC.md",
     "接入 Vite 的提交：pnpm run check（0 问题）、pnpm typecheck（0 错误）、pnpm test（全部通过）、pnpm run edges（0 处超限）、node tests/e2e/run.cjs boot halls stairs drop（在 dist/ 上通过）、Vite 开发服务器载入一次无报错",
-    "类型检查全覆盖的提交：pnpm typecheck 0 错误、pnpm test 138 项通过、node tests/e2e/run.cjs boot moods halls 在 dist/ 上通过；此前 5864213 的发布流程（run 140）成功"
-  ]
+    "类型检查全覆盖的提交：pnpm typecheck 0 错误、pnpm test 138 项通过、node tests/e2e/run.cjs boot moods halls 在 dist/ 上通过；此前 5864213 的发布流程（run 140）成功",
+    "app/shared/og/temple-walk.jpg",
+    "app/index.html（Open Graph 与 Twitter 元信息）",
+    "OG 分享卡片提交：隔离的 origin/main 工作区 pnpm run verify 通过（check、typecheck、138 项单测、18 个 smoke 场景）；dist/index.html 元信息及 dist/shared/og/temple-walk.jpg 与源文件一致。"
+  ],
+  "domain_binding": {
+    "date": "2026-11-15",
+    "domain": "temple.rushiwowen.co",
+    "hosting": "GitHub Pages (existing workflow)",
+    "dns": {
+      "type": "CNAME",
+      "target": "bolechen.github.io",
+      "verified": "Cloudflare authoritative nameserver and public DNS-over-HTTPS return CNAME"
+    },
+    "verification": {
+      "http": "301 redirect to HTTPS",
+      "https": "200 OK with valid certificate; GitHub https_certificate.state=approved; https_enforced=true",
+      "legacy_url": "https://bolechen.github.io/temple-walk/ returns 301 to https://temple.rushiwowen.co/",
+      "browser": "Ego Chromium: title 山门之外 · 云径禅寺, loading completes, 入山 opens game scene; Resource Timing reports no HTTP error responses",
+      "deployment": "Existing pages.yml workflow dispatch run 43714364111 completed success; restored game dist after prior Jekyll README deployment"
+    },
+    "evidence": [
+      "https://github.com/bolechen/temple-walk/settings/pages",
+      "https://api.github.com/repos/bolechen/temple-walk/pages",
+      "https://github.com/bolechen/temple-walk/actions/runs/43714364111",
+      "https://temple.rushiwowen.co/"
+    ],
+    "note": "Domain verification only; no change to CI/deployment or independent game acceptance status."
+  }
 }

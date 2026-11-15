@@ -92,3 +92,26 @@ test("standing in a place's circle finds it; standing between two finds the near
   assert.equal(placeAt(places, 0.5, 0), "a"); assert.equal(placeAt(places, 2, 0), "b");
   assert.equal(placeAt(places, 10, 10), null); assert.equal(placeAt(places, 50.5, 50.5), "c");
 });
+
+test("the seasons open when the book is first filled, are told of once, and stay open when the book is begun again", () => {
+  const mem = memory(), j = createJourney(mem);
+  assert.equal(j.opened(), false, "a new visitor chooses no season");
+  for (const { id } of SEALS) { if (id !== "sit") j.earn(id); }
+  assert.equal(j.opened(), false, "six seals are not yet the whole book");
+  j.earn("sit");
+  assert.equal(j.opened(), true, "the seventh seal opens the seasons");
+  assert.equal(j.told(), false); j.tell(); assert.equal(j.told(), true);
+  j.reset();
+  assert.equal(j.count(), 0, "重新朝山 empties the book");
+  assert.equal(j.opened(), true, "but the seasons stay open for the second walk");
+  assert.equal(j.told(), true, "and are not announced again");
+  const again = createJourney(mem);
+  assert.equal(again.opened(), true, "remembered between visits");
+});
+
+test("a book filled before the seasons were kept still opens them", () => {
+  const old = memory(JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(SEALS.map((s, i) => [s.id, 10 + i])), strikes: 3, verse: null, done: 99 }));
+  assert.equal(createJourney(old).opened(), true);
+  const half = memory(JSON.stringify({ v: 1, born: 1, seals: { bell: 5 }, strikes: 3, verse: null, done: null, opened: "x" }));
+  assert.equal(createJourney(half).opened(), false, "a damaged mark does not open them");
+});

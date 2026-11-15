@@ -200,7 +200,8 @@ export function buildSite(M) {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
     const bottom = i === 2 ? 4 : y0 - 0.2 < 0 ? 0 : y0 - 0.2;
     stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(st.geo.translate(0, y0, L.zS));
-    for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
+    // The summit's edge is the low plaster wall built below (the same line), not a second, stone one under its tiles.
+    if (i < 2) for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
     paving.push({ level: i + 1, y: L.y + 0.012, x: L.x, zS: L.zS, zN: L.zN });
     const pad = BODY + 0.02;   // the treads are walked clear of the cheek stones by his own width
     walk.ramps.push({ x0: -L.stair / 2 + pad, x1: L.stair / 2 - pad, z0: L.zS - 0.8, z1: L.zS + st.run + 0.3, base: y0,   // a little past its foot, so no sliver of ground is left without a height; and past its head, through the parapet's keep
@@ -266,7 +267,10 @@ export function buildSite(M) {
   const body = [[], [], [], []], ridge = [], capPos = [], capUv = [], capIdx = [], T = 0.42;
   function wall(x0, z0, x1, z1, lvl = 0, H = SITE.wallH) {
     const y = lvl ? LEVELS[lvl - 1].y : 0, alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), len = alongX ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
-    body[lvl].push(box(alongX ? len : T, H, alongX ? T : len, (x0 + x1) / 2, y + H / 2, (z0 + z1) / 2));
+    // The tiles sit on the wall: at the wall's two faces their underside is H + 0.338 above its foot, so the plaster is
+    // carried up to there and no sky shows between the two. The eaves stay where they were (out of his reach).
+    const Hb = H + 0.33;
+    body[lvl].push(box(alongX ? len : T, Hb, alongX ? T : len, (x0 + x1) / 2, y + Hb / 2, (z0 + z1) / 2));
     ridge.push(box(alongX ? len : 0.16, 0.14, alongX ? 0.16 : len, (x0 + x1) / 2, y + H + 0.5, (z0 + z1) / 2));
     for (const s of [-1, 1]) {   // two tiled slopes
       const b = capPos.length / 3;
@@ -287,7 +291,7 @@ export function buildSite(M) {
   for (const sx of [-1, 1]) {
     wall(sx * X, T1.zS, sx * X, SITE.zS); wall(sx * X, T1.zN, sx * X, T1.zS, 1); wall(sx * X, T2.zN, sx * X, T2.zS, 2);
     wall(sx * X, T2.zN, sx * (TOP.stair / 2 + 0.6), T2.zN, 2);                      // the back of the terrace, open where the stair climbs
-    wall(sx * TOP.x, TOP.zN, sx * TOP.x, TOP.zS, 3, 1.15); wall(sx * TOP.x, TOP.zS, sx * (TOP.stair / 2 + 0.6), TOP.zS, 3, 1.15);   // a low wall round the summit
+    wall(sx * TOP.x, TOP.zN, sx * TOP.x, TOP.zS, 3, 1.15); wall(sx * TOP.x, TOP.zS, sx * (TOP.stair / 2 + 0.5), TOP.zS, 3, 1.15);   // a low wall round the summit
   }
   wall(-TOP.x, TOP.zN, TOP.x, TOP.zN, 3, 1.15);
   body.forEach((b, i) => { if (b.length) root.add(mesh(footAt(merge(b), i ? LEVELS[i - 1].y : 0), M.plaster())); });
@@ -535,6 +539,10 @@ export function createWalker(site) {
       const p = post(x, z, 0.15);
       if (p) { if (p.r !== undefined) return p.r < 0.45 ? "post" : true; const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; }
       if (carved(x, z) !== null) return false;
+      // He stands on a terrace: the eye stays over it too, and does not step out past its edge to look back at him along
+      // the wall's outer face. Past the front edge it may be only where the wall is open to the stair (the view back down
+      // the flight); over the stair itself it has been let through above, as carved floor.
+      for (const L of LEVELS) if (Math.abs(foot - L.y) < 0.6 && (Math.abs(x) > L.x || z < L.zN || (z > L.zS && Math.abs(x) > L.stair / 2 + 0.5))) return true;
       let top = -Infinity, own = false;
       for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);
       for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.own) own = true; else top = Math.max(top, foot + 5.5); }

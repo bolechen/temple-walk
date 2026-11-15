@@ -13,7 +13,7 @@ const scenarios = {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.
     expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "山门之外" && (await t.page.textContent("#title .sub")).includes("云径禅寺"), "the title is missing");
-    expect(!(await t.page.isVisible("#viewBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
+    expect(!(await t.page.isVisible("#photoBtn")) && !(await t.page.isVisible("#bookBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
     expect(await t.page.evaluate(() => document.fonts.check('40px "Yunjing Brush"', "云径禅寺") && document.fonts.check('20px "Yunjing Serif"', "朱印") && document.fonts.check('20px "Yunjing Kai"', "朱印")), "the temple's own typefaces did not load");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
     await t.page.keyboard.press("Space"); await t.until(() => t.page.evaluate(() => document.getElementById("title").hidden), 30000, "the title never left");
@@ -30,9 +30,14 @@ const scenarios = {
     await t.frames(10);
     await t.until(async () => (await t.state()).dressed === true, 90000, "the sculpted body never arrived on the novice (app/shared/models/novice.glb)");   // fetched after the first frames; a missing or ill-fitting file leaves him as built in code, and this fails
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
+    { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
+      expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
     expect(p.camDist > 3.2, `the first sight of the place should not be the back of his head: the eye is ${p.camDist} m behind him`);
     expect(p.lum > 12 && p.lum < 245, "the picture is blank: mean " + p.lum.toFixed(1));
-    for (const id of ["viewBtn", "moodBtn", "photoBtn", "bookBtn"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
+    for (const id of ["photoBtn", "menuBtn", "bookBtn"]) expect(await t.page.isVisible("#" + id), `#${id} is not on screen`);
+    // Only those: the view changes with the wheel or two fingers, the season is not offered to a first visit, and there is no jump button.
+    for (const id of ["viewBtn", "moodBtn", "jumpBtn"]) expect(!(await t.page.$("#" + id)), `#${id} should no longer sit on the picture`);
+    expect(!(await t.page.evaluate(() => document.body.classList.contains("seasons"))) && !(await t.page.isVisible('[data-season="winter"]')), "a first visit should not be offered the seasons");
     // What is said about the controls is said once, on arriving, and then the picture is left alone.
     const hud = () => t.page.evaluate(() => window.__hud());
     expect((await hud()).said.includes("walk") && (await t.page.textContent("#hint")).includes("行走"), "an arriving visitor was not told how to walk");
@@ -118,13 +123,58 @@ const scenarios = {
         expect((await t.page.evaluate(() => window.__menu ? document.getElementById("menu").hidden : true)), "Esc on the card also opened the pause menu");
       }
       const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
+      // The hall's registered camera pose must stand on open floor here too: check the real page, not just the plan.
+      const view = require("../../tools/hall-views.cjs").find((v) => v.hall === h.id);
+      await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), view.abs);
+      await t.frames(2); const cam = await t.probe();
+      expect(cam.lum > 8 && cam.lum < 235 && (await t.state()).h < -50, `${h.name}: the registered camera sees nothing (${cam.lum.toFixed(0)})`);
       const spot = await t.page.evaluate((id) => Object.entries(window.__gallery).find(([k]) => k.startsWith(id + "-"))[1].at, h.id);
       await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0), spot); await t.until(async () => ((await t.journey()).look || "").startsWith(h.id + "-"), 30000, `${h.name}: no frame to look at`);
       await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, `could not leave ${h.name}`);
       await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(3);
       s = await t.state(); expect(Math.hypot(s.x - h.out[0], s.z - h.out[1]) < 0.3 && !s.inside, `${h.name}: came out in the wrong place or went straight back in: ${JSON.stringify(s)}`);
     }
+    // From the summit pavilion, the door-view cube camera is so far from the middle of the mountain that a
+    // sky dome left at the origin falls beyond its far plane. Every pixel above the hills must be night sky,
+    // not a black hole: sample the doorway's upper band on the page's own drawing buffer.
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 30000, "could not go into the summit pavilion");
+    await t.page.evaluate(() => window.__pose(420, 5.9, -3.14, -0.226)); await t.frames(3);
+    const skyBand = await t.page.evaluate(() => {
+      const c = document.getElementById("yardGl"), a = document.createElement("canvas");
+      a.width = c.width; a.height = c.height;
+      window.__probe();   // the doorway has been drawn with its own post pass before pixels are read
+      a.getContext("2d").drawImage(c, 0, 0);
+      const x = Math.round(a.width * 0.4), y = Math.round(a.height * 0.14), d = a.getContext("2d").getImageData(x, y, Math.round(a.width * 0.2), Math.round(a.height * 0.12)).data;
+      let dark = 0, n = 0; for (let i = 0; i < d.length; i += 4) { n++; if ((d[i] + d[i + 1] + d[i + 2]) / 3 < 25) dark++; }
+      return dark / n;
+    });
+    expect(skyBand < 0.02, `the sky seen through the summit door is a black hole: ${(skyBand * 100).toFixed(1)}% dark`);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the summit pavilion");
     await t.shot("e2e-halls"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // In winter he leaves his prints in the snow of the court; indoors no snow lies on the floor and none falls,
+  // even when the hour is changed while he is inside, and the prints by the door are still there when he comes out.
+  snow: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&season=winter&time=day&cam=6.5,19.5,0,0&view=third");
+    expect((await t.page.evaluate(() => window.__trail())).on, "in winter the snow should be ready to take his prints");
+    // Off the swept axis, through the snow of the court, toward the door of the meditation hall.
+    await t.page.evaluate(() => window.__walk([[6.5, 17], [6.5, 14.5]])); await t.until(async () => (await t.state()).target === null && (await t.state()).route === 0, 240000, "he never walked across the snow");
+    const walked = await t.page.evaluate(() => window.__trail()); expect(walked.stamps >= 6 && walked.last, "five metres of snow should hold more prints than " + walked.stamps);
+    // Standing where he stopped and looking down the way he came, the prints darken the snow.
+    await t.page.evaluate(() => window.__view("first"));
+    const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
+      return t.page.evaluate(() => { const seen = window.__probe().lum; window.__trail(false); return window.__probe().lum - seen; }); };   // in one go: the next frame shows them again
+    const dark = await look(); await t.shot("e2e-snow-prints"); expect(dark > 0.6, `his prints should show in the snow: they darken the picture by ${dark.toFixed(2)} ` + JSON.stringify(walked));
+    await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.state()).room === "chan", 60000, "could not go into the meditation hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(2);
+    let p = await t.probe(); expect(p.snow === 0 && !p.drift, `indoors no snow should lie or fall: snow ${p.snow}, falling ${p.drift}`);
+    await t.page.evaluate(() => window.__mood("winter", "night")); await t.frames(2);
+    p = await t.probe(); expect(p.snow === 0 && !p.drift, `a change of hour indoors let the snow in: snow ${p.snow}, falling ${p.drift}`);
+    await t.page.evaluate(() => window.__mood("winter", "day")); await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 60000, "could not come out");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared"); await t.frames(2);
+    p = await t.probe(); expect(p.snow === 1 && p.drift, `outdoors again the snow should lie and fall: snow ${p.snow}, falling ${p.drift}`);
+    const still = await look(); expect(still > 0.6, `his prints were forgotten while he was in the hall: they darken the picture by ${still.toFixed(2)}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.
   pilgrimage: { tier: 2, async run(b, base) {
@@ -247,7 +297,8 @@ const scenarios = {
     expect(seen["winter-day"].lum > seen["summer-day"].lum, "snow should brighten the court");
     // The controls on screen do the same thing.
     await t.page.evaluate(() => document.body.classList.remove("bare"));
-    await t.page.click("#moodBtn"); expect(await t.page.isVisible("#moodPanel"), "the season panel did not open");
+    await t.page.evaluate(() => document.body.classList.add("seasons"));   // as once the book has been filled (the seasons scenario does it for real)
+    await t.page.keyboard.press("t"); expect(await t.page.isVisible("#moodPanel"), "the season panel did not open");
     await t.page.click('[data-season="autumn"]'); await t.page.click('[data-time="dusk"]');
     const p = await t.probe(); expect(p.season === "autumn" && p.time === "dusk", "the panel's buttons did not change the season");
     expect((await t.page.getAttribute('[data-season="autumn"]', "aria-pressed")) === "true", "the chosen season is not marked");
@@ -256,17 +307,25 @@ const scenarios = {
   } },
   // From behind him and through his eyes.
   views: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third");
+    // `devpose` is a dev-server aid (src/devpose.js): the published build must neither carry it nor touch the address.
+    const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose");
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
-    await t.page.click("#viewBtn"); await t.page.waitForTimeout(600);
-    p = await t.probe(); expect(p.view === "first" && !p.monk && p.camDist < 0.8, "first person: the eye should be his own: " + JSON.stringify(p));
-    expect((await t.page.textContent("#viewBtn")) === "眼中", "the button should name the view");
-    await t.page.click("#viewBtn"); await t.page.waitForTimeout(1500);
+    await t.page.keyboard.press("v"); await t.page.waitForTimeout(600);
+    p = await t.probe(); expect(p.view === "first" && !p.monk && p.monkBox === null && p.camDist < 0.8, "first person: the eye should be his own: " + JSON.stringify(p));
+    await t.page.keyboard.press("v"); await t.page.waitForTimeout(1500);
     p = await t.probe(); expect(p.view === "third" && p.monk, "back to third person");
+    // Without a button: drawing the eye all the way in to him, and on, puts it behind his eyes; drawing it out stands it behind him again.
+    await t.page.mouse.move(400, 300); for (let i = 0; i < 6; i++) { await t.page.mouse.wheel(0, -300); await t.frames(1); }
+    expect((await t.probe()).view === "third", "a few notches in should only bring the eye nearer");
+    for (let i = 0; i < 16; i++) { await t.page.mouse.wheel(0, -300); await t.frames(1); }
+    expect((await t.probe()).view === "first", "pushing on past the nearest should give him his own eyes");
+    for (let i = 0; i < 6; i++) { await t.page.mouse.wheel(0, 300); await t.frames(1); }
+    p = await t.probe(); expect(p.view === "third" && p.monk, "drawing out of his eyes should stand the eye behind him again");
     // With his back to the court's east wall, the eye comes in close rather than passing through it.
     await t.page.evaluate(() => window.__pose(20.5, 30, -Math.PI / 2, -0.05)); await t.frames(3);
     p = await t.probe(); expect(p.camDist < 1.6, "the eye went through the court wall: " + p.camDist);
+    expect(await t.page.evaluate(() => location.search === "?q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose" && window.__devpose === undefined), "the published page should leave ?devpose alone");
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
@@ -300,7 +359,7 @@ const scenarios = {
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
-      await t.page.keyboard.press("Escape"); expect(!(await t.probe()).photo && (await t.page.isVisible("#viewBtn")), "second Escape should return to walking");
+      await t.page.keyboard.press("Escape"); expect(!(await t.probe()).photo && (await t.page.isVisible("#photoBtn")), "second Escape should return to walking");
       await t.page.click("#photoBtn"); expect(!(await t.page.isVisible("#photoSettings")), "settings should stay folded on re-entry");
       p = await t.probe(); expect(p.zoom === 1 && Math.abs(p.fov - before.fov) < 0.01, "the camera should open afresh on the view, not where the last one was left");
       await t.shot(touch ? "photo-clean-touch" : "photo-clean-desktop");
@@ -319,7 +378,7 @@ const scenarios = {
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.click("#photoBtn", { timeout: 120000 }); await t.frames(3);
     for (const id of ["photoBar", "shutter", "photoClose"]) expect(await t.page.isVisible("#" + id), `#${id} missing in photograph mode`);
-    expect(!(await t.page.isVisible("#viewBtn")), "the walking controls should leave");
+    expect(!(await t.page.isVisible("#photoBtn")), "the walking controls should leave");
     let p = await t.probe(); expect(p.photo && p.monk && p.aspect === "screen", "seen from behind him, the photograph should start as the view was, the novice in it");
     const wide = p.fov;
     await t.page.click("#photoSettingsToggle");
@@ -344,7 +403,7 @@ const scenarios = {
     await t.until(() => t.page.isVisible("#print"), 120000, "the print never appeared");
     expect((await t.page.getAttribute("#saveLink", "href")).startsWith("blob:"), "nothing to save"); expect(/秋暮/.test(await t.page.getAttribute("#saveLink", "download")), "the file should be named for the season and hour");
     await t.page.click("#printBack"); await t.page.click("#photoClose"); await t.page.waitForTimeout(500);
-    p = await t.probe(); expect(!p.photo && (await t.page.isVisible("#viewBtn")), "did not return to walking");
+    p = await t.probe(); expect(!p.photo && (await t.page.isVisible("#photoBtn")), "did not return to walking");
     expect((await t.state()).running, "the walk did not resume"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // With a keyboard and mouse, as such games are played: W walks, Shift hurries, E does what is offered, V and B and P open things.
@@ -394,8 +453,10 @@ const scenarios = {
   layers: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
     const ui = () => t.page.evaluate(() => window.__ui());
+    await t.page.keyboard.press("t"); let u = await ui(); expect(!u.stack.length, "before the book is filled T offers no seasons: " + JSON.stringify(u));
+    await t.page.evaluate(() => document.body.classList.add("seasons"));   // as once it has been
     await t.page.keyboard.press("h"); await t.page.keyboard.press("t");
-    let u = await ui(); expect(u.stack.join() === "keys,moodPanel" && !u.modal, "H then T should lay two panels: " + JSON.stringify(u));
+    u = await ui(); expect(u.stack.join() === "keys,moodPanel" && !u.modal, "H then T should lay two panels: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "keys" && (await t.page.isVisible("#keys")) && !(await t.page.isVisible("#moodPanel")), "Esc should put away only the top panel: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.page.isVisible("#menu")), "the second Esc should close the keys, not bring the menu: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "menu" && u.modal && u.focus === "menu", "with nothing open Esc brings the menu, and the focus goes into it: " + JSON.stringify(u));
@@ -415,6 +476,39 @@ const scenarios = {
     await t.page.click("#photoBtn"); await t.page.click("#photoSettingsToggle"); u = await ui(); expect(u.stack.join() === "photo,photoSettings" && !u.modal, "the settings should lie over the raised camera: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "photo" && u.focus === "photoSettingsToggle", "Esc folds the settings and leaves the focus on their button: " + JSON.stringify(u));
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.probe()).photo, "the next Esc lowers the camera: " + JSON.stringify(u));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The seasons are the visitor's once the book has been filled: not offered before, offered after in the photograph's
+  // settings, the pause menu and T, said once, and still open after 重新朝山 empties the book for a second walk.
+  seasons: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    const offered = () => t.page.evaluate(() => document.body.classList.contains("seasons"));
+    expect(!(await offered()), "a new visitor should not be offered the seasons");
+    await t.page.click("#photoBtn"); await t.page.click("#photoSettingsToggle");
+    expect(await t.page.isVisible("#photoSettings") && !(await t.page.isVisible('#photoSettings [data-season="winter"]')), "the photograph's settings offer seasons too early");
+    await t.page.keyboard.press("Escape"); await t.page.keyboard.press("Escape");
+    await t.page.keyboard.press("Escape"); expect(await t.page.isVisible("#menu") && !(await t.page.isVisible('#menu [data-season="winter"]')), "the menu offers seasons too early");
+    await t.page.keyboard.press("Escape");
+    // A full book, as the page itself stores it, and a fresh visit.
+    await t.page.evaluate((ids) => localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 })), ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"]);
+    await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(await offered(), "a filled book should open the seasons");
+    await t.page.keyboard.press("Escape"); expect(await t.page.isVisible('#menu [data-season="winter"]') && await t.page.isVisible('#menu [data-time="night"]'), "the menu should offer the seasons and hours");
+    await t.page.click('#menu [data-season="winter"]'); await t.page.click('#menu [data-time="dusk"]');
+    let p = await t.probe(); expect(p.season === "winter" && p.time === "dusk", "the menu's seasons did not change the place: " + JSON.stringify([p.season, p.time]));
+    await t.page.keyboard.press("Escape");
+    await t.page.click("#photoBtn"); await t.page.click("#photoSettingsToggle");
+    expect(await t.page.isVisible('#photoSettings [data-season="spring"]'), "the photograph's settings should offer the seasons");
+    await t.page.click('#photoSettings [data-season="spring"]'); expect((await t.probe()).season === "spring", "the photograph's seasons did not change the place");
+    await t.page.keyboard.press("Escape"); await t.page.keyboard.press("Escape");
+    await t.page.keyboard.press("t"); expect(await t.page.isVisible("#moodPanel"), "T should open the seasons once they are the visitor's"); await t.page.keyboard.press("Escape");
+    // Begin the book again: the seals go, the seasons stay, and closing the book says once that they are open.
+    await t.page.click("#bookBtn"); await t.until(() => t.page.isVisible("#book"), 60000, "the seal at the top left did not open the book");
+    await t.page.click("#bookReset"); await t.page.click("#bookReset");
+    await t.until(async () => !(await t.page.isVisible("#book")), 20000, "重新朝山 did not close the book");
+    const j = await t.journey(); expect(j.count === 0 && j.opened && j.told, "重新朝山 should empty the book and keep the seasons, having said so: " + JSON.stringify({ count: j.count, opened: j.opened, told: j.told }));
+    expect(await offered() && (await t.page.evaluate(() => window.__hud().said)).includes("seasons"), "the seasons should stay open, and the visitor be told");
+    await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Space jumps: he leaves the ground, comes down where he stood (or a little on, if he was walking), and nothing else happens.
@@ -519,7 +613,8 @@ const scenarios = {
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first", { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
-    for (const id of ["viewBtn", "moodBtn", "photoBtn"]) {
+    expect(!(await t.page.$("#jumpBtn")), "a phone is not given a jump button: the porch's 下台阶 shows where it is needed");
+    for (const id of ["photoBtn", "menuBtn", "bookBtn"]) {
       const r = await t.page.evaluate((i) => { const b = document.getElementById(i).getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight]; }, id);
       expect(r[0] >= 0 && r[1] >= 0 && r[2] <= r[4] && r[3] <= r[5], `#${id} hangs off the screen`); expect(r[2] - r[0] >= 40 && r[3] - r[1] >= 38, `#${id} is too small to tap`);
     }

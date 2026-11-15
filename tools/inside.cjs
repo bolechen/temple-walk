@@ -1,7 +1,9 @@
 // Renders views inside the halls, which the named views of tools/shots.js cannot reach: each job names a hall, a pose
 // and optionally a view and extra address parameters, and the picture's mean colour and the frame's load are printed.
 // usage: node tools/inside.cjs <out dir> '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}, ...]'
-//   abs = [x, z, yaw, pitch] in the room's own place (rooms stand sixty metres apart in the order of site.halls);
+//   or   node tools/inside.cjs <out dir> --views   (each hall's registered views, app/levels/t00/hall-views.js)
+//   abs = [x, z, yaw, pitch] in the room's absolute place (rooms stand sixty metres apart in the order of site.halls).
+//   A registered view gives [dx, z, yaw, pitch] from the room's centre line; --views adds the room's own offset.
 //   view = "first" | "third"; qs = more address parameters, e.g. "time=night".
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
@@ -14,7 +16,7 @@ const srv = http.createServer((req, res) => {
   if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><style>body{margin:0}</style><body>' + fs.readFileSync(p, "utf8"));
   fs.createReadStream(p).pipe(res);
 });
-const jobs = JSON.parse(process.argv[3]);   // [{hall, name, rel:[dx,dz], yaw, pitch, view}]
+const jobs = process.argv[3] === "--views" ? require("./hall-views.cjs") : JSON.parse(process.argv[3]);   // [{hall, name, abs:[x,z,yaw,pitch], view, qs}]
 (async () => {
   await new Promise((r) => srv.listen(0, "127.0.0.1", r));
   const base = `http://127.0.0.1:${srv.address().port}/`;
