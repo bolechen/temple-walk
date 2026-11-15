@@ -115,7 +115,7 @@ export function frameRoom(M, add, { K, hall, Y, focus, clear }) {
   }
   const lowAO = (base) => (x, y, z) => base * (0.75 + 0.25 * Math.min(1, (Math.min(wx - Math.abs(x - focus.ox), wz - Math.abs(z)) + 0.3) / 2.5));
   const some = (list, mat, ao) => list.length && add(merge(list), mat, ao);   // a hall of one bay's depth has no free columns
-  some(shafts, M.woodV); some(bases, M.monolith); some(caps, M.woodX, lowAO(0.55)); some(wood, M.woodX, lowAO(0.5));
+  some(shafts, M.pillar); some(bases, M.monolith); some(caps, M.beamX, lowAO(0.55)); some(wood, M.beamX, lowAO(0.5));
 
   let roofAt = () => H;
   if (kind === "open") { const o = openRoof(M, add, B, H, top, lowAO); roofAt = o.roofAt; members.gable = o.gable; members.boards = o.boards; }
@@ -151,7 +151,7 @@ function flatCeiling(M, add, { wx, wz }, H, kind, cell, focus, inX, bw, lowAO) {
   if (hole) caisson(M, add, hole, H, frame, gilt, rib);
   // Far from the lamps and close to the walls the panels darken; over the open floor they keep the light.
   const ao = lowAO(kind === "plain" ? 0.62 : 0.7);
-  add(merge(panels), kind === "plain" ? M.pingan : M.coffer, ao); add(merge(rib), M.woodX, lowAO(0.5)); add(merge(frame), M.woodX, lowAO(0.48));
+  add(merge(panels), kind === "plain" ? M.pingan : M.coffer, ao); add(merge(rib), M.beamX, lowAO(0.5)); add(merge(frame), M.beamX, lowAO(0.48));
   if (gilt.length) add(merge(gilt), M.gilt, () => 0.8);
 }
 
@@ -226,9 +226,9 @@ function openRoof(M, add, { wx, wz, inX }, H, top, lowAO) {
   const shape = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z, y)));
   for (const s of [1, -1]) gable.push(footAt(new THREE.ExtrudeGeometry(shape, { depth: 0.3, bevelEnabled: false }).rotateY(-Math.PI / 2).translate(s > 0 ? wx + 0.3 : -wx, 0, 0), H - 30));
   const high = (x, y) => THREE.MathUtils.clamp(1 - (y - H) / (R + 0.5), 0, 1);
-  add(merge(purl), M.woodX, (x, y, z) => lowAO(0.5)(x, y, z) * (0.7 + 0.3 * high(x, y)));
-  add(merge(wood), M.woodX, lowAO(0.5)); add(merge(raft), M.woodX, (x, y, z) => 0.42 + 0.18 * high(x, y));
-  add(merge(boards), M.woodZ, (x, y, z) => lowAO(0.36)(x, y, z) * (0.65 + 0.35 * high(x, y))); add(merge(gable), M.plaster(), (x, y) => 0.5 + 0.3 * high(x, y));
+  add(merge(purl), M.beamX, (x, y, z) => lowAO(0.5)(x, y, z) * (0.7 + 0.3 * high(x, y)));
+  add(merge(wood), M.beamX, lowAO(0.5)); add(merge(raft), M.beamX, (x, y, z) => 0.42 + 0.18 * high(x, y));
+  add(merge(boards), M.beamZ, (x, y, z) => lowAO(0.36)(x, y, z) * (0.65 + 0.35 * high(x, y))); add(merge(gable), M.plaster(), (x, y) => 0.5 + 0.3 * high(x, y));
   // How high the boards are over a point: what a lamp's chain hangs from. And, as data, the gables' outline and the
   // boards' line from wall to ridge to wall (front to back, in z), for the tests.
   const boardsLine = []; for (let k = 0; k <= 2 * n; k++) { const kk = n - Math.abs(n - k); boardsLine.push([(k < n ? -1 : 1) * zk(kk), lift(kk) + rr + 0.01]); }

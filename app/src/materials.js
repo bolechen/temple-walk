@@ -47,10 +47,10 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
 
 export function createMaterials() {
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
-  const wood = (key, grain, turn) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
+  const wood = (key, grain, turn, base = ".125,.07,.05") => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
     vec3 q=vWP.${turn}*vec3(.95,.5,.95), w=triW(vWN.${turn});
     vec3 A=triA(tWoodA,q,w)/mWood; vec4 Nr=triN(tWoodN,q,w);
-    col=vec3(.125,.07,.05)*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // old dark timber, its red long faded; each member its own tone
+    col=vec3(${base})*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // old dark timber, its red long faded; each member its own tone
     float weather=smoothstep(.36,.7,fbm3(vWP*.6+3.)+.25*n2(vec2((vWP.x+vWP.z)*7.,vWP.y*.5))); col=mix(col,vec3(.13,.118,.1)*A,weather*.55);   // bleached silver where the rain runs
     float damp=smoothstep(2.2,.9,vWP.y+fbm3(vWP*.8)*.8);          // feet of columns stay damp and dark
     col*=mix(1.,.62,damp); rough_=mix(Nr.w*.92,.5,damp);
@@ -101,6 +101,9 @@ export function createMaterials() {
   return {
     interior,
     woodV: wood("woodV", "9.,1.1,9.", "xyz"), woodX: wood("woodX", "1.1,9.,9.", "yxz"), woodZ: wood("woodZ", "9.,9.,1.1", "xzy"),
+    // Indoors (framing.js): the beams, ribs and purlins in the deep, reddish-grey timber of the palette's timber under the
+    // eaves, and the columns in vermilion faded almost to brown, as the palette asks for posts (docs/ART-SPEC.md).
+    beamX: wood("beamX", "1.1,9.,9.", "yxz", ".07,.058,.047"), beamZ: wood("beamZ", "9.,9.,1.1", "xzy", ".07,.058,.047"), pillar: wood("pillar", "9.,1.1,9.", "xyz", ".17,.06,.04"),
     plaster,
 
     // vUv2 = (metres along the eave, metres up the slope). Rows of half-round cover tiles over pan tiles.
