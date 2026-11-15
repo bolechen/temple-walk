@@ -56,6 +56,11 @@ export function createSky(renderer, scene, quality, focus) {
   scene.add(sun, sun.target, hemi);
 
   return {
+    // The dome is finite. A door-view cube camera on the summit porch is more than a hundred metres from the
+    // middle of the mountain; from there its far side lies beyond that camera's 700 m far plane, leaving a black
+    // hole above the hills. For one capture the sphere is centred on the cube camera, so every face sees sky.
+    // The shader reads local position as the view direction, so no direction is changed by the move.
+    at(x, y, z) { dome.position.set(x, y, z); },
     update: (t) => { u.uT.value = t; },
     // Indoors neither the sun nor much of the sky reaches: the lamps do the work. The next setMood restores them.
     indoors() { sun.intensity = 0; hemi.intensity *= 0.3; },

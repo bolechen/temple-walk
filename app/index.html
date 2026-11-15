@@ -1,11 +1,30 @@
 <meta charset="utf-8">
 <title>山门之外 · 云径禅寺</title>
+<meta name="description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
+<link rel="canonical" href="https://temple.rushiwowen.co/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="山门之外">
+<meta property="og:title" content="山门之外 · 云径禅寺">
+<meta property="og:description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
+<meta property="og:url" content="https://temple.rushiwowen.co/">
+<meta property="og:image" content="https://temple.rushiwowen.co/shared/og/temple-walk.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1920">
+<meta property="og:image:height" content="1080">
+<meta property="og:image:alt" content="山门之外：小沙弥站在暮色中的云径禅寺大殿前。">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="山门之外 · 云径禅寺">
+<meta name="twitter:description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
+<meta name="twitter:image" content="https://temple.rushiwowen.co/shared/og/temple-walk.jpg">
+<meta name="twitter:image:alt" content="山门之外：小沙弥站在暮色中的云径禅寺大殿前。">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="src/ui.css">
 
 <div class="view" id="yardView">
   <canvas id="yardGl"></canvas>
   <p id="moodTag" class="fade"></p>
+  <button id="bookBtn" type="button" aria-label="朱印帐"><i class="seal-mark">印</i><span class="sr">朱印</span></button>
   <p id="goal" class="fade"></p>
   <div id="way" class="fade" aria-hidden="true"><i></i><span></span></div>
   <div id="keys" class="paper" hidden><h2>键位</h2><dl>
@@ -14,21 +33,17 @@
     <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
     <dt><kbd>Space</kbd></dt><dd>跳，台沿处下台阶</dd>
-    <dt><kbd>T</kbd></dt><dd>时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上，歇脚</dd>
+    <dt class="need-seasons"><kbd>T</kbd></dt><dd class="need-seasons">时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上，歇脚</dd>
   </dl><p>按 H 收起</p></div>
   <div id="cross"></div>
   <div id="stick"><div id="knob"></div></div>
   <p id="say"></p>
   <button class="ink-btn" id="act" type="button" hidden></button>
   <button class="chip" id="dropBtn" type="button" hidden>下台阶</button>
-  <button class="chip" id="jumpBtn" type="button" aria-label="跳">跃</button>
   <div id="breath" hidden><span id="breathWord">吸</span></div>
   <p class="caption" id="hint"></p>
   <div class="rail">
-    <button class="chip" id="viewBtn" type="button" aria-label="切换第一视角和第三视角">身外</button>
-    <button class="chip" id="moodBtn" type="button" aria-label="选择季节和时辰">时节</button>
     <button class="chip" id="photoBtn" type="button" aria-label="拍照">留影</button>
-    <button class="chip" id="bookBtn" type="button" aria-label="打开朱印帐">朱印</button>
     <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置">歇脚</button>
   </div>
   <dialog class="layer" id="menu" aria-label="歇脚" hidden><div class="card paper">
@@ -38,6 +53,8 @@
     <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
     <div class="set"><label for="setFov">视野</label><input id="setFov" type="range" min="-6" max="16" step="1"></div>
     <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
+    <div class="set need-seasons"><span>时节</span><div class="opts"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div></div>
+    <div class="set need-seasons"><span>时辰</span><div class="opts"><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></div>
     <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setMusic">乐声</label><input id="setMusic" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setAmbience">山声</label><input id="setAmbience" type="range" min="0" max="1" step="0.05"></div>
@@ -61,6 +78,7 @@
     <fieldset><legend>远近</legend><div class="row">
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
     </div></fieldset>
+    <fieldset class="need-seasons"><legend>时节</legend><div class="row"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div><div class="row"><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></fieldset>
     <fieldset><legend>人物</legend><div class="row">
       <button class="chip" id="monkToggle" aria-pressed="false" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button" disabled>合掌</button>
     </div></fieldset>

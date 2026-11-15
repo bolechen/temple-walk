@@ -133,8 +133,16 @@ body.entered:not(.photo):not(.bare) #yardView::before { opacity: 1; }
 
 #moodTag { position: absolute; z-index: 2; left: max(28px, env(safe-area-inset-left, 0px)); top: calc(24px + env(safe-area-inset-top, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .24em; color: var(--on-2); text-shadow: var(--lift); pointer-events: none; }
 /* The next place: a small seal with its first character, then the name. */
-#goal { position: absolute; z-index: 2; left: max(28px, env(safe-area-inset-left, 0px)); top: calc(56px + env(safe-area-inset-top, 0px)); margin: 0; display: flex; align-items: center; gap: 12px; color: var(--on); text-shadow: var(--lift); pointer-events: none; }
-#goal i { font-style: normal; width: 24px; height: 24px; font-size: 15px; transform: rotate(-3deg); text-shadow: none; }
+#goal { position: absolute; z-index: 2; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 50px); top: calc(56px + env(safe-area-inset-top, 0px)); margin: 0; display: flex; align-items: center; gap: 12px; color: var(--on); text-shadow: var(--lift); pointer-events: none; }
+/* The book: a small seal at the top left, always there while he walks, its character the first of the next place. */
+#bookBtn { position: absolute; z-index: 3; left: max(22px, env(safe-area-inset-left, 0px)); top: calc(50px + env(safe-area-inset-top, 0px)); width: 44px; height: 44px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
+#bookBtn .seal-mark { width: 28px; height: 28px; font-size: 16px; font-style: normal; transform: rotate(-3deg); filter: drop-shadow(0 1px 6px rgba(0,0,0,.45)); transition: transform .3s var(--ease); }
+#bookBtn:hover .seal-mark { transform: rotate(-6deg) scale(1.08); }
+body.photo #bookBtn, body.bare #bookBtn, body:not(.entered) #bookBtn { display: none; }
+/* Said to a screen reader, not shown. */
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* The seasons and hours are offered only once the book has been filled once (game.js sets body.seasons). */
+body:not(.seasons) .need-seasons { display: none !important; }
 #goal span { display: grid; gap: 4px; font: 400 21px/1 var(--kai); letter-spacing: var(--track); }
 #goal small { font-size: var(--t-xs); letter-spacing: .2em; color: var(--on-2); }
 /* The way there: the same small seal on the picture where it lies, or at the edge toward it, with how far. */
@@ -160,13 +168,13 @@ body:has(dialog.layer[open]) #act, body:has(dialog.layer[open]) #say, body:has(d
 /* ---- The five things at the edge: slips of paper written down the page ---- */
 .rail { position: absolute; z-index: 4; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 9px; justify-items: end; transition: opacity 1.2s ease; }
 @media (pointer: fine) { body.calm .rail { opacity: 0; } body.held .rail { opacity: 0; pointer-events: none; } .rail:hover, .rail:focus-within { opacity: 1 !important; } }
+@media (pointer: coarse) { body.calm .rail { opacity: .45; } }
 .rail { filter: drop-shadow(0 2px 8px rgba(0,0,0,.35)); }
 /* Each slip is its torn paper drawn whole as a picture (--sheet, src/paper.js): a mask on a button is not drawn by every
    browser, so the buttons here carry none. */
 .rail .chip { writing-mode: vertical-rl; width: 36px; min-width: 0; min-height: 70px; padding: 10px 0; font-size: 15px; letter-spacing: .3em; text-indent: 0; color: var(--ink-2); text-shadow: none; background: var(--sheet, linear-gradient(172deg, var(--paper-hi), var(--paper-lo))) 0 0 / 100% 100% no-repeat; transition: transform .3s var(--ease); }
 .rail .chip::after { left: auto; right: 3px; top: 16%; bottom: 16%; width: 6px; height: auto; transform: none; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; }
 .rail .chip:hover { transform: translateX(-3px); }
-.rail .chip .count { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-top: 4px; writing-mode: horizontal-tb; font: 400 11px/1 var(--kai); letter-spacing: 0; color: #f4ede0; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; }   /* the count of seals, a small seal under the word */
 @media (pointer: coarse) { .rail .chip { width: 42px; min-height: 76px; font-size: 16px; } }
 /* A short window (a phone held sideways): the slips lie down so all five still fit. */
 @media (max-height: 560px) { .rail { grid-auto-flow: column; gap: 6px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); } .rail .chip { writing-mode: horizontal-tb; width: auto; min-height: 40px; padding: 8px 10px; font-size: 14px; letter-spacing: .2em; } .rail .chip::after { left: 14%; right: 14%; top: auto; bottom: 3px; width: auto; height: 3px; } }
@@ -228,10 +236,6 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 
 /* ---- Small things for the hand ---- */
 #dropBtn { position: absolute; right: 18px; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
-#jumpBtn { position: absolute; right: max(84px, calc(env(safe-area-inset-right, 0px) + 84px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); width: 58px; height: 58px; border-radius: 50%; padding: 0; text-indent: 0; letter-spacing: 0; font-size: 18px; color: var(--ink-2); text-shadow: none; background: var(--paper-ground); filter: drop-shadow(0 2px 10px rgba(0,0,0,.4)); z-index: 4; display: none; }
-#jumpBtn::after { content: none; }
-@media (pointer: coarse) { #jumpBtn { display: block; } }
-body.photo #jumpBtn, body.bare #jumpBtn, body:not(.entered) #jumpBtn { display: none; }
 
 /* ---- The seal that answers an observance ---- */
 #toast { position: absolute; left: 50%; top: 24%; transform: translate(-50%, -50%); z-index: 40; display: grid; justify-items: center; gap: 12px; pointer-events: none; opacity: 0; transition: opacity .9s ease; text-align: center; }
@@ -313,6 +317,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #cross { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(237,232,220,.7); box-shadow: 0 0 0 1px rgba(11,10,9,.5); display: none; pointer-events: none; }
 body.held #cross { display: block; }
 #stick { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px)); width: 118px; height: 118px; border-radius: 50%; background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .85; touch-action: none; display: none; place-items: center; z-index: 4; }
+#stick { opacity: .3; transition: opacity .4s var(--ease); } #stick.held { opacity: .9; transition-duration: .1s; }   /* faint until a thumb is on it */
 #knob { width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, var(--paper-hi), var(--paper-lo)); box-shadow: 0 2px 10px rgba(0,0,0,.35); opacity: .8; pointer-events: none; }
 @media (pointer: coarse) { #stick { display: grid; } #keys, #act kbd { display: none; } .caption { bottom: auto; top: calc(96px + env(safe-area-inset-top, 0px)); padding-bottom: 0; font-size: var(--t-s); } }
 body.photo #keys, body.photo #stick, body.photo #cross, body.bare #keys, body.bare #stick, body:not(.entered) #keys, body:not(.entered) #stick { display: none; }
