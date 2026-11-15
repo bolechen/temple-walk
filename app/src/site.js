@@ -136,7 +136,7 @@ export function buildSite(M) {
   // evergreens that stand clear of everything in the corners before the great hall. trees.js grows them; the plan
   // only says where they stand, how tall, and that they are in the way: a trunk is a round thing as wide as it
   // is grown at the knee, where its roots still spread it.
-  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.58 : (0.2 + h * 0.012) * 1.75) : (0.09 + h * 0.019) * 1.8 + (kind === "maple" ? 0.1 : 0));   // a young evergreen's boughs sweep the ground all round it; a maple forks low and crooked
+  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.2 : (0.2 + h * 0.012) * 1.75) : (0.09 + h * 0.019) * 1.8 + (kind === "maple" ? 0.1 : 0));   // a young evergreen is clothed to the knee, so it is in the way as far as its boughs reach; a maple forks low and crooked
   for (const [x, z, h, lvl] of [[-13.6, 54.4, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-15.5, 1.8, 5.2, 0], [15.5, 1.8, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
