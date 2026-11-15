@@ -5,12 +5,12 @@ import vm from 'node:vm';
 import * as THREE from '../../app/vendor/three/build/three.module.js';
 
 // Exercise the actual event registrations without constructing/rendering the temple.
-function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: false }) {
+function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: false }, inside = false) {
   const source = fs.readFileSync(new URL('../../app/yard.js', import.meta.url), 'utf8');
   const handlers = new Map();
   const canvas = { style: {}, setPointerCapture() {}, addEventListener(name, fn) { handlers.set('canvas:' + name, fn); } };
   const document = { pointerLockElement: null, addEventListener(name, fn) { handlers.set('document:' + name, fn); } };
-  const c = vm.createContext({ THREE, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, settings: { get: () => set } });
+  const c = vm.createContext({ THREE, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set } });
   vm.runInContext(source.slice(source.indexOf('const touches = new Map()'), source.indexOf('const lift = (e)')), c);
   return {
     send(target, name, values = {}) { handlers.get(target + ':' + name)({ pointerId: 1, pointerType: 'mouse', clientX: 100, clientY: 100, ...values }); },
@@ -65,4 +65,11 @@ test('the visitor\'s own settings turn the head faster and, if asked, the other 
   assert.ok(Math.abs(flipped.state().pitch + plain.state().pitch) < 1e-9 && flipped.state().yaw === plain.state().yaw, 'inverted look reverses up and down only');
   const drag = controls('first', false, { sens: 1, invertY: true }); drag.send('canvas', 'pointerdown'); drag.send('canvas', 'pointermove', { clientX: 120, clientY: 120 });
   assert.ok(Math.sign(drag.state().pitch) === Math.sign(flipped.state().pitch), 'a drag follows the same setting');
+});
+
+test('first person: indoors the eye lifts to the ceiling, outdoors no higher than before; the view from behind is unchanged', () => {
+  const up = (view, inside) => { const c = controls(view, false, { sens: 1, invertY: false }, inside); c.lock(); c.send('document', 'mousemove', { movementX: 0, movementY: -5000 }); return c.state().pitch; };
+  assert.equal(up('first', false), 0.5);
+  assert.equal(up('first', true), 0.9);
+  assert.equal(up('third', true), up('third', false));
 });

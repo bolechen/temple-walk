@@ -47,10 +47,10 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
 
 export function createMaterials() {
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
-  const wood = (key, grain, turn) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
+  const wood = (key, grain, turn, base = ".125,.07,.05") => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
     vec3 q=vWP.${turn}*vec3(.95,.5,.95), w=triW(vWN.${turn});
     vec3 A=triA(tWoodA,q,w)/mWood; vec4 Nr=triN(tWoodN,q,w);
-    col=vec3(.125,.07,.05)*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // old dark timber, its red long faded; each member its own tone
+    col=vec3(${base})*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // old dark timber, its red long faded; each member its own tone
     float weather=smoothstep(.36,.7,fbm3(vWP*.6+3.)+.25*n2(vec2((vWP.x+vWP.z)*7.,vWP.y*.5))); col=mix(col,vec3(.13,.118,.1)*A,weather*.55);   // bleached silver where the rain runs
     float damp=smoothstep(2.2,.9,vWP.y+fbm3(vWP*.8)*.8);          // feet of columns stay damp and dark
     col*=mix(1.,.62,damp); rough_=mix(Nr.w*.92,.5,damp);
@@ -101,6 +101,9 @@ export function createMaterials() {
   return {
     interior,
     woodV: wood("woodV", "9.,1.1,9.", "xyz"), woodX: wood("woodX", "1.1,9.,9.", "yxz"), woodZ: wood("woodZ", "9.,9.,1.1", "xzy"),
+    // Indoors (framing.js): the beams, ribs and purlins in the deep, reddish-grey timber of the palette's timber under the
+    // eaves, and the columns in vermilion faded almost to brown, as the palette asks for posts (docs/ART-SPEC.md).
+    beamX: wood("beamX", "1.1,9.,9.", "yxz", ".07,.058,.047"), beamZ: wood("beamZ", "9.,9.,1.1", "xzy", ".07,.058,.047"), pillar: wood("pillar", "9.,1.1,9.", "xyz", ".17,.06,.04"),
     plaster,
 
     // vUv2 = (metres along the eave, metres up the slope). Rows of half-round cover tiles over pan tiles.
@@ -175,6 +178,39 @@ export function createMaterials() {
     rafters: procMat("rafters", { roughness: 1, envMapIntensity: 0, metalness: 0 }, `
       float r=abs(fract(vUv2.x/.3)-.5); float raft=1.-smoothstep(.16,.2,r);
       col=woodCol(vWP,vec3(9.,9.,1.1))*mix(.34,.42,raft); ao_=min(ao_,.42); emit_=col*uAmb*.03; rough_=1.;`, { snow: false }),
+    // The panels of a coffered ceiling (pingqi), vUv2 in panels: each a dull blue-green ground darkened by centuries of
+    // incense, an eight-petalled flower in faded ochre inside a pale ring. A v of 1000 or more is ground alone (the
+    // boards of a caisson).
+    coffer: procMat("coffer", { roughness: 0.95, envMapIntensity: 0.1 }, `
+      vec2 id=floor(vUv2), q=fract(vUv2)-.5; float r=length(q), a=atan(q.y,q.x), fw=fwidth(r)*1.5+.004;
+      col=vec3(.05,.066,.062)*(.82+.36*h21(id));
+      if(vUv2.y>=500.){ col=vec3(.15,.085,.055)*(.85+.3*fbm3(vWP*2.)); col=mix(col,vec3(.3,.24,.13),smoothstep(.455,.475,abs(fract(vUv2.x*8.)-.5))*.55); }   // the caisson's boards in faded vermilion, ruled in old gold where they meet
+      else {
+        float pr=.19+.06*cos(a*8.), pet=1.-smoothstep(-fw,fw,r-pr), edge=1.-smoothstep(.006,.006+fw,abs(r-pr));
+        float ring=1.-smoothstep(.01,.01+fw,abs(r-.39)), eye=1.-smoothstep(.055,.055+fw,r);
+        float corner=1.-smoothstep(.0,fw*2.,length(abs(q)-.5)-.09);
+        col=mix(col,vec3(.09,.075,.05),pet*.5); col=mix(col,vec3(.15,.135,.1),max(edge,ring)*.45); col=mix(col,vec3(.17,.13,.07),max(eye,corner*.6)*.8);
+      }
+      float wear=smoothstep(.3,.75,fbm3(vWP*1.4+vec3(id.x,0.,id.y)*.37)); col=mix(col,col*.5+vec3(.01,.009,.007),wear*.7);   // smoke has dulled some panels more than others
+      rough_=.95; emit_=col*uAmb*.02;`, { snow: false }),
+    // A plain small-squared ceiling (ping'an): bare boards between the ribs.
+    pingan: procMat("pingan", { roughness: 0.95, envMapIntensity: 0.1 }, `
+      col=woodCol(vWP,vec3(9.,1.1,9.))*.62*(.9+.2*h21(floor(vWP.xz/.4))); rough_=.95; emit_=col*uAmb*.02;`, { snow: false }),
+    // Window paper on the inside of the south wall, the day coming through it; at night it is only paper.
+    paper: procMat("paper", { roughness: 1, envMapIntensity: 0 }, `
+      col=vec3(.66,.64,.58)*(.94+.06*n3(vWP*11.)); rough_=1.;
+      emit_=vec3(.58,.6,.6)*uAmb*.3*(.8+.2*vUv2.y);`, { snow: false }),
+    // Old gilding, rubbed through to the lacquer where hands and smoke have been.
+    gilt: procMat("gilt", { roughness: 0.42, metalness: 0.7, envMapIntensity: 0.6 }, `
+      float w=smoothstep(.45,.75,fbm3(vWP*7.)); col=mix(vec3(.5,.36,.14),vec3(.12,.06,.04),w*.6); rough_=mix(.38,.8,w);`, { snow: false }),
+    // A temple banner (fan): old silk faded to the colour of straw, a narrow indigo edge, two painted bands; vUv2 runs
+    // across and up the cloth.
+    banner: procMat("banner", { roughness: 0.95, envMapIntensity: 0.1, side: THREE.DoubleSide }, `
+      vec2 q=vUv2; float edge=step(q.x,.07)+step(.93,q.x), band=step(abs(q.y-.78),.012)+step(abs(q.y-.3),.012);
+      col=vec3(.42,.36,.26)*(.82+.3*fbm3(vWP*vec3(4.,1.5,4.))); col=mix(col,vec3(.11,.12,.15),min(edge+band,1.)*.85); rough_=.95;`, { snow: false }),
+    // The horn panes of a hanging lamp, lit from within.
+    lampglass: procMat("lampglass", { roughness: 0.8, envMapIntensity: 0.1 }, `
+      col=vec3(.45,.33,.2); emit_=vec3(1.,.62,.3)*(.15+.5*uLamp)*(.75+.25*sin(vUv2.y*3.14));`, { snow: false }),
     // The lip of snow along an eave: drawn only when it has snowed.
     snowlip: procMat("snowlip", { roughness: 0.9, envMapIntensity: 0.3, side: THREE.DoubleSide }, "if(uSnow<.5) discard; col=vec3(.8,.84,.9)*(.92+.1*fbm3(vWP*3.)); rough_=.85; ao_=1.;", { snow: false }),
     fascia: procMat("fascia", { roughness: 0.8, envMapIntensity: 0.3, side: THREE.DoubleSide }, "col=woodCol(vWP,vec3(1.1,9.,1.1))*.6; ao_=.8;"),

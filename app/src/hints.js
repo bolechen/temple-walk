@@ -39,7 +39,7 @@ export function createHints({ off = false, ui = null } = {}) {
       tip("walk", coarse ? "推左下的圆盘行走　·　拖动画面环顾　·　右侧「身外」换视角" : `${K("W", "A", "S", "D")}行走　·　点一下画面，以鼠标环顾　·　${K("V")}换视角　·　${K("H")}键位`, 12);
     },
     held() { tip("held", `${K("Esc")}松开鼠标　·　${K("滚轮")}远近　·　单击敲钟击鼓`, 7); },
-    indoors() { if (!coarse) tip("view", `${K("V")}换成自己的眼睛看　·　画框前${K("E")}细看`, 7); else tip("view", "走到画框前，可以细看", 6); },
+    indoors() { if (!coarse) tip("view", `${K("V")}换成自己的眼睛看，可以举头看殿顶　·　画框前${K("E")}细看`, 8); else tip("view", "走到画框前，可以细看；也可以举头看看殿顶", 7); },
     seal() { tip("book", coarse ? "朱印收在右侧的「朱印」里" : `${K("B")}翻看朱印帐`, 7); },
     photo() { drop(); },
     mood() { flash("moodTag", 6); },

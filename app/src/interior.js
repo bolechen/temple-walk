@@ -2,6 +2,8 @@
 // courts, furnished for what the hall is (an altar and its figures, meditation platforms, tea tables, shelves of
 // sutras), and along its side walls a row of hanging frames that are empty for now. Each frame is a place where
 // something will be shown and told later; what hangs in it is data (GALLERY below, by the frame's id).
+// Overhead is the hall's own timber (framing.js): columns on the bays the building shows outside, beams resting on
+// them, and the ceiling its rank calls for, from a caisson over the Buddha to a roof open to the rafters.
 //
 // The rooms are built far below the courts, side by side (the paving above hides them), and the walker is moved
 // into one at its hall's door.
@@ -11,18 +13,20 @@ import { WORKS, HANG } from "./works.js";
 import { GLTFLoader } from "../vendor/three/jsm/loaders/GLTFLoader.js";
 import { KTX2Loader } from "../vendor/three/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "../vendor/three/jsm/libs/meshopt_decoder.module.js";
-import { box, merge, mesh, footAt } from "./geo.js";
+import { box, merge, mesh, footAt, BODY } from "./geo.js";
+import { frameRoom, CEILING, bays } from "./framing.js";
 
 const FLOOR = -60;
-// What each kind of hall is like inside: width, depth, height, and how it is furnished.
+// What each kind of hall is like inside: width, depth and the height of its walls. Where its columns stand comes from
+// the building's own bays (framing.js), and how it is furnished from its kind (below).
 export const KINDS = {
-  buddha:    { w: 26.4, d: 16.8, h: 7.6, cols: [-9, -4.5, 4.5, 9] },
-  figure:    { w: 15, d: 11, h: 5.6, cols: [-4.5, 4.5] },
-  chan:      { w: 17, d: 9, h: 4.8, cols: [] },
-  tea:       { w: 17, d: 9, h: 4.8, cols: [] },
-  library:   { w: 19, d: 11, h: 6.2, cols: [-5, 5] },
-  patriarch: { w: 12, d: 9, h: 4.8, cols: [] },
-  pavilion:  { w: 15, d: 15, h: 5.2, cols: [-4.5, 4.5] },
+  buddha:    { w: 26.4, d: 16.8, h: 7.6 },
+  figure:    { w: 15, d: 11, h: 5.6 },
+  chan:      { w: 17, d: 9, h: 4.8 },
+  tea:       { w: 17, d: 9, h: 4.8 },
+  library:   { w: 19, d: 11, h: 6.2 },
+  patriarch: { w: 12, d: 9, h: 4.8 },
+  pavilion:  { w: 15, d: 15, h: 5.2 },
 };
 // What hangs in a frame, by its id ("main-w1" is the first frame on the great hall's west wall). `title` and `text`
 // are shown when a visitor stands before it; `image` (a URL) replaces the blank paper. The story will be written here.
@@ -99,25 +103,20 @@ function paper() {   // a hanging scroll's blank sheet
 
 // One room. `hall`: { id, kind } from the plan; `ox`: where along the row of rooms it stands.
 function buildRoom(M, hall, ox, figures) {
-  const K = KINDS[hall.kind] || KINDS.patriarch, Y = FLOOR, g = new THREE.Group(), solids = [], dim = () => 0.42, deep = () => 0.26;
+  const K = KINDS[hall.kind] || KINDS.patriarch, Y = FLOOR, g = new THREE.Group(), solids = [], dim = () => 0.42;
+  // Where a column must not stand: on what is in the way already, on a cushion, where a visitor stops (`keep`).
+  const keep = [], seat = (x, z, r = 0.32) => (keep.push({ x, z, r }), cushion().translate(x, Y, z));
   const R = { id: hall.id, y: Y, x0: ox - K.w / 2, x1: ox + K.w / 2, z0: -K.d / 2, z1: K.d / 2, h: K.h, door: [ox, K.d / 2 - 1.6], exitZ: K.d / 2 - 0.7, cx: ox };
   const add = (geo, mat, ao = dim) => { const m = mesh(geo.translate(ox, 0, 0), mat, { ao }); g.add(m); return m; };
   const block = (x0, x1, z0, z1) => solids.push({ x0: ox + x0, x1: ox + x1, z0, z1 });
   const W = K.w + 0.6, D = K.d + 0.6, wx = K.w / 2 + 0.3, zs = K.d / 2 + 0.3, zn = -K.d / 2 - 0.3, flames = [];
   const flame = (x, y, z, r = 0.03) => { const f = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8).scale(1, 2, 1), M.flame); f.position.set(ox + x, Y + y, z); g.add(f); flames.push(f); };
-  // Floor, walls with the door in the south one, and a dark timber ceiling crossed by beams.
+  // Floor, and walls with the door in the south one. Under an open roof the front and back walls stand a little higher,
+  // to the boards, and the side walls rise in gables (framing.js); under a ceiling all four stop at it.
+  const hw = CEILING[hall.kind] === "open" ? K.h + 0.45 : K.h;
   add(box(W, 0.4, D, 0, Y - 0.2, 0), M.stone, () => 0.6);
-  add(footAt(merge([box(W, K.h, 0.3, 0, Y + K.h / 2, zn - 0.15), box(0.3, K.h, D, -wx - 0.15, Y + K.h / 2, 0), box(0.3, K.h, D, wx + 0.15, Y + K.h / 2, 0),
-    box(W / 2 - 1.5, K.h, 0.3, -(W / 4 + 0.75), Y + K.h / 2, zs + 0.15), box(W / 2 - 1.5, K.h, 0.3, W / 4 + 0.75, Y + K.h / 2, zs + 0.15), box(3, K.h - 3.3, 0.3, 0, Y + 3.3 + (K.h - 3.3) / 2, zs + 0.15)]), Y - 30), M.plaster());
-  const beams = [box(W, 0.5, D, 0, Y + K.h + 0.25, 0)]; for (let z = -K.d / 2 + 2; z < K.d / 2; z += 3) beams.push(box(W, 0.4, 0.28, 0, Y + K.h - 0.5, z));
-  add(merge(beams), M.woodX, deep);
-  const trim = []; for (const sx of [-1, 1]) trim.push(box(0.1, 1.0, D, sx * (wx - 0.05), Y + 0.5, 0), box(0.12, 0.2, D, sx * (wx - 0.06), Y + Math.min(5.2, K.h - 0.9), 0));
-  trim.push(box(W, 1.0, 0.1, 0, Y + 0.5, zn + 0.05), box(W, 0.2, 0.12, 0, Y + Math.min(5.2, K.h - 0.9), zn + 0.06)); add(merge(trim), M.woodX);
-  if (K.cols.length) {
-    const cols = [], bases = [];
-    for (const x of K.cols) for (const z of [K.d * 0.18, -K.d * 0.18]) { cols.push(new THREE.CylinderGeometry(0.25, 0.29, K.h - 0.5, 20).translate(x, Y + (K.h - 0.5) / 2 + 0.1, z)); bases.push(lathe([[0, 0], [0.48, 0], [0.5, 0.05], [0.4, 0.14], [0.34, 0.22], [0, 0.22]], 20).translate(x, Y, z)); block(x - 0.48, x + 0.48, z - 0.48, z + 0.48); }
-    add(merge(cols), M.woodV); add(merge(bases), M.monolith);
-  }
+  add(footAt(merge([box(W, hw, 0.3, 0, Y + hw / 2, zn - 0.15), box(0.3, K.h, D, -wx - 0.15, Y + K.h / 2, 0), box(0.3, K.h, D, wx + 0.15, Y + K.h / 2, 0),
+    box(W / 2 - 1.5, hw, 0.3, -(W / 4 + 0.75), Y + hw / 2, zs + 0.15), box(W / 2 - 1.5, hw, 0.3, W / 4 + 0.75, Y + hw / 2, zs + 0.15), box(3, hw - 3.3, 0.3, 0, Y + 3.3 + (hw - 3.3) / 2, zs + 0.15)]), Y - 30), M.plaster());
   const cushion = () => lathe([[0, 0], [0.26, 0], [0.3, 0.03], [0.3, 0.07], [0.26, 0.1], [0, 0.11]], 24);
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
@@ -132,46 +131,46 @@ function buildRoom(M, hall, ox, figures) {
     add(table(big ? 2.6 : 1.8, 0.7, 0.86, 0, tz), M.woodX); block(-(big ? 1.6 : 1.2), big ? 1.6 : 1.2, tz - 0.6, tz + 0.6);
     add(merge([lathe([[0, 0.02], [0.1, 0.02], [0.17, 0.08], [0.2, 0.17], [0.18, 0.22], [0.14, 0.22], [0.13, 0.18], [0, 0.16]], 24).translate(0, Y + 0.895, tz), ...[-1, 1].map((sx) => lathe([[0, 0], [0.08, 0], [0.03, 0.04], [0.025, 0.26], [0.07, 0.3], [0.07, 0.32], [0, 0.32]], 16).translate(sx * 0.6, Y + 0.895, tz))]), M.bronze, () => 0.8);
     for (const sx of [-1, 1]) flame(sx * 0.6, 1.26, tz, 0.016);
-    add(merge([-1.1, 0, 1.1].map((x) => cushion().translate(x, Y, tz + 1.75))), M.straw, () => 0.7);
+    add(merge([-1.1, 0, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7);
     for (const sx of [-1, 1]) lampStand(sx * (big ? 3.3 : 2.2), tz + 0.2);
     altar.position.set(ox, Y + ah, (az0 + az1) / 2);
     if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
     else later.push((get) => get(stand.centre[0], stand.centre[1]).then((o) => altar.add(o)));
     for (const [file, x, z, h] of stand.beside || []) later.push((get) => get(file, h).then((o) => { o.position.set(x, 0, z); o.rotation.y = -Math.sign(x) * 0.12; altar.add(o); }));   // turned a little toward the middle
     if (big) places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id };
-    lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, K.h - 2.4, tz + 0.8, 0xffe6c4, big ? 11 : 7, 16]);
+    lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, big ? K.h - 2.4 : K.h - 2.0, big ? tz + 0.8 : tz + 1.8, 0xffe6c4, big ? 11 : 7, 16, true]);
   } else if (hall.kind === "chan") {
     // The meditation hall: long sitting platforms down both sides, a cushion at every place, the aisle between.
     const plat = [], seats = [];
-    for (const sx of [-1, 1]) { plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) seats.push(cushion().translate(x, Y + 0.42, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); }
+    for (const sx of [-1, 1]) { plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) seats.push(seat(x, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0)).translate(0, 0.42, 0)); }
     add(merge(plat), M.woodX); add(merge(seats), M.straw, () => 0.7);
     block(-K.w / 2 + 1.5, K.w / 2 - 1.5, -K.d / 2, -K.d / 2 + 2.2); block(-K.w / 2 + 1.5, -1.6, K.d / 2 - 4.4, K.d / 2 - 2.4); block(1.6, K.w / 2 - 1.5, K.d / 2 - 4.4, K.d / 2 - 2.4);
-    lampStand(0, -K.d / 2 + 3.2); lightAt.push([0, 2.0, -K.d / 2 + 3.2, 0xffa050, 9, 14], [0, K.h - 1.4, 0.5, 0xffe6c4, 6, 14]);
+    lampStand(0, -K.d / 2 + 3.2); lightAt.push([0, 2.0, -K.d / 2 + 3.2, 0xffa050, 9, 14], [0, K.h - 1.4, 0.5, 0xffe6c4, 6, 14, true]);
   } else if (hall.kind === "tea") {
     // The tea house: tables with stools, each set with a ewer and bowls.
     const wood = [], glaze = [], iron = [];
     for (const [x, z] of [[-5, -1.4], [0, -2.2], [5, -1.4]]) {
       wood.push(table(1.3, 0.8, 0.78, x, z)); block(x - 0.75, x + 0.75, z - 0.5, z + 0.5);
-      for (const [a, c] of [[0, 0.95], [0, -0.95], [1.05, 0]]) wood.push(lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 18).translate(x + a, Y, z + c));
+      for (const [a, c] of [[0, 0.95], [0, -0.95], [1.05, 0]]) keep.push({ x: x + a, z: z + c, r: 0.22 }), wood.push(lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 18).translate(x + a, Y, z + c));
       for (const a of [-0.2, 0.25]) glaze.push(lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 20).translate(x + a, Y + 0.815, z + 0.1));
       iron.push(lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.12], [0.07, 0.19], [0.035, 0.22], [0.03, 0.27], [0.045, 0.29], [0, 0.29]], 20).translate(x - 0.42, Y + 0.815, z - 0.15));
     }
     add(merge(wood), M.woodX); add(merge(glaze), M.glaze, () => 0.8); add(merge(iron), M.iron, () => 0.8);
-    lampStand(-K.w / 2 + 1.4, -K.d / 2 + 1.4); lampStand(K.w / 2 - 1.4, -K.d / 2 + 1.4); lightAt.push([-K.w / 2 + 1.4, 1.9, -K.d / 2 + 1.4, 0xffa050, 8, 13], [K.w / 2 - 1.4, 1.9, -K.d / 2 + 1.4, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14]);
+    lampStand(-K.w / 2 + 1.4, -K.d / 2 + 1.4); lampStand(K.w / 2 - 1.4, -K.d / 2 + 1.4); lightAt.push([-K.w / 2 + 1.4, 1.9, -K.d / 2 + 1.4, 0xffa050, 8, 13], [K.w / 2 - 1.4, 1.9, -K.d / 2 + 1.4, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14, true]);
   } else if (hall.kind === "library") {
     // The library: tall cases of sutra boxes along the back wall and standing in rows, and a desk to read at.
     const cases = [], boxes = []; let s = 13; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
     const shelf = (x, z, w) => { cases.push(box(w, 3.6, 0.5, x, Y + 1.8, z)); block(x - w / 2 - 0.1, x + w / 2 + 0.1, z - 0.45, z + 0.45); for (let r = 0; r < 6; r++) for (let c = -w / 2 + 0.25; c < w / 2 - 0.1; c += 0.3) if (rnd() < 0.86) boxes.push(box(0.24, 0.2 + rnd() * 0.22, 0.34, x + c, Y + 0.34 + r * 0.56, z + 0.12)); };
     shelf(-5.5, -K.d / 2 + 0.6, 6); shelf(5.5, -K.d / 2 + 0.6, 6); for (const x of [-6, 6]) shelf(x, -1.2, 4.4);
     add(merge(cases), M.woodZ); add(merge(boxes), M.lacquer, () => 0.6);
-    add(table(1.8, 0.8, 0.74, 0, -1.6), M.woodX); block(-1.1, 1.1, -2.2, -1.0); add(cushion().translate(0, Y, -0.6), M.straw, () => 0.7);
-    lampStand(-1.6, -1.6); lightAt.push([-1.6, 1.9, -1.6, 0xffa050, 9, 14], [0, K.h - 1.6, 0, 0xffe6c4, 8, 16]);
+    add(table(1.8, 0.8, 0.74, 0, -1.6), M.woodX); block(-1.1, 1.1, -2.2, -1.0); add(seat(0, -0.6), M.straw, () => 0.7);
+    lampStand(-1.6, -1.6); lightAt.push([-1.6, 1.9, -1.6, 0xffa050, 9, 14], [0, K.h - 1.6, 0, 0xffe6c4, 8, 16, true]);
   } else {
     // A plain hall: a table, cushions, a lamp. (The patriarchs' hall and the summit pavilion: their walls are the point.)
     add(table(1.8, 0.7, 0.8, 0, -K.d / 2 + 1.6), M.woodX); block(-1.1, 1.1, -K.d / 2 + 1, -K.d / 2 + 2.2);
     if (stand.table) later.push((get) => get(stand.table[0], stand.table[1]).then((o) => { o.position.set(ox, Y + 0.82, -K.d / 2 + 1.5); g.add(o); }));   // the patriarch's likeness, on the table
-    add(merge([-0.9, 0.9].map((x) => cushion().translate(x, Y, -K.d / 2 + 3.2))), M.straw, () => 0.7);
-    lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14]);
+    add(merge([-0.9, 0.9].map((x) => seat(x, -K.d / 2 + 3.2))), M.straw, () => 0.7);
+    lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14, true]);
   }
   // Through the doorway: the court outside, as it stood when he came in. The room is not where the hall is (it lies
   // under the hill), so the view cannot simply be left open. Instead a picture of all that surrounds the hall's own
@@ -206,9 +205,61 @@ function buildRoom(M, hall, ox, figures) {
     g.add(sheet); spots[id] = { at: [ox + x + (west ? 1.7 : -1.7), z], face: west ? -Math.PI / 2 : Math.PI / 2, r: 1.3, item: { id, ...it }, room: hall.id };
   }
   add(merge(frames), M.woodZ);
+
+  // The frame and what is overhead (framing.js). A column may not stand where something is already in the way, on a
+  // cushion, where a visitor stops before a frame or the altar, in the way from the door, or under the caisson.
+  const focusZ = hall.kind === "pavilion" ? 0 : (hall.kind === "buddha" || hall.kind === "figure") ? altar.position.z : null;
+  const stops = [...Object.values(places).map((p) => ({ x: p.at[0] - ox, z: p.at[1], r: 0.8 * p.r })), ...Object.values(spots).map((p) => ({ x: p.at[0] - ox, z: p.at[1], r: 0.5 }))];   // before a frame he needs only room to stand
+  const lane = { x0: -0.9, x1: 0.9, z0: Math.min(0, ...Object.values(places).map((p) => p.at[1])), z1: zs }, hollow = focusZ === null ? null : { x0: -2.2, x1: 2.2, z0: focusZ - 2.2, z1: focusZ + 2.2 };
+  const inside = (q, x, z, r) => x > q.x0 - r && x < q.x1 + r && z > q.z0 - r && z < q.z1 + r;
+  const clear = (x, z, r) => solids.some((q) => inside({ x0: q.x0 - ox, x1: q.x1 - ox, z0: q.z0, z1: q.z1 }, x, z, r + 0.05)) || inside(lane, x, z, r) || (hollow && inside(hollow, x, z, r))
+    || [...keep, ...stops].some((c) => Math.hypot(x - c.x, z - c.z) < r + c.r + 0.1);
+  const timber = frameRoom(M, add, { K, hall, Y, focus: { ox, z: focusZ ?? 0 }, clear });
+  for (const c of timber.cols) block(c.x - 0.29 - BODY, c.x + 0.29 + BODY, c.z - 0.29 - BODY, c.z + 0.29 + BODY);
+  // The dado at the foot of the walls and a rail higher up; on the back wall the rail is left out where it would run
+  // through the brackets under the beams' ends.
+  const rail = Y + Math.min(5.2, K.h - 0.9), trim = [];
+  for (const sx of [-1, 1]) trim.push(box(0.1, 1.0, D, sx * (wx - 0.05), Y + 0.5, 0), box(0.12, 0.2, D, sx * (wx - 0.06), rail, 0));
+  trim.push(box(W, 1.0, 0.1, 0, Y + 0.5, zn + 0.05)); if (rail + 0.15 < timber.members.colTop - 0.32) trim.push(box(W, 0.2, 0.12, 0, rail, zn + 0.06));
+  add(merge(trim), M.woodX);
+  // The windows of the front wall seen from inside: in each bay clear of the door's leaves, upright bars (zhiling) over
+  // paper with the day behind it. From outside these bays are lattice; inside they are where the daylight comes from.
+  {
+    const { xs } = bays(hall, K), bars = [], paperG = [], sill = 1.0, head = Math.min(3.1, K.h - 1.3);
+    for (let i = 1; i < xs.length; i++) {
+      let x0 = xs[i - 1], x1 = xs[i]; const leaves = 3.15;   // the door's leaves stand folded back within this of the middle
+      if (x0 < -leaves && x1 > -leaves) x1 = -leaves; else if (x0 < leaves && x1 > leaves) x0 = leaves; else if (x0 > -leaves && x1 < leaves) continue;
+      const w = Math.min(x1 - x0 - 0.7, 2.6); if (w < 1.0) continue;
+      const cx = (x0 + x1) / 2, cy = Y + (sill + head) / 2, h = head - sill, z = zs - 0.04;
+      bars.push(box(w + 0.24, 0.12, 0.12, cx, Y + sill - 0.06, z), box(w + 0.24, 0.12, 0.12, cx, Y + head + 0.06, z), box(0.12, h, 0.12, cx - w / 2 - 0.06, cy, z), box(0.12, h, 0.12, cx + w / 2 + 0.06, cy, z));
+      for (let k = 1, n = Math.round(w / 0.14); k < n; k++) bars.push(box(0.045, h, 0.06, cx - w / 2 + (k * w) / n, cy, z));
+      paperG.push(new THREE.PlaneGeometry(w, h, 1, 1).rotateY(Math.PI).translate(cx, cy, zs - 0.006));
+    }
+    if (bars.length) { add(merge(bars), M.woodX, () => 0.6); add(merge(paperG), M.paper, () => 1); }
+  }
+  // The hanging lamp: a bronze cap and bowl round panes of horn, on a chain from the beam or the boards above. Its
+  // light is the room's one light from high up, so that what is overhead is lit from something there to see.
+  for (const L of lightAt) if (L[6]) {
+    const [x, y, z] = L, up = timber.roofAt(x, z), top = Y + y + 0.3;
+    add(merge([new THREE.CylinderGeometry(0.012, 0.012, up - top, 5).translate(x, (up + top) / 2, z),
+      lathe([[0, 0.3], [0.08, 0.3], [0.22, 0.2], [0.21, 0.17], [0, 0.17]], 16).translate(x, Y + y, z), lathe([[0, -0.2], [0.1, -0.2], [0.2, -0.12], [0.19, -0.1], [0, -0.1]], 16).translate(x, Y + y, z)]), M.bronze, () => 0.8);
+    add(new THREE.CylinderGeometry(0.17, 0.15, 0.28, 12, 1, true).translate(x, Y + y + 0.035, z), M.lampglass, () => 1);
+  }
+  // Before the great hall's altar, two banners (fan) hang from the ceiling either side, faded indigo, not red.
+  if (hall.kind === "buddha") {
+    const cloth = [];
+    for (const sx of [-1, 1]) {
+      const L = K.h - 2.3, gb = new THREE.PlaneGeometry(0.56, L, 2, 14), p = gb.attributes.position;
+      // Hung from its peak, the head a shallow triangle, the foot drawn to a point; a slow fold down its length.
+      for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); if (y > L / 2 - 1e-6 && Math.abs(x) > 0.01) p.setY(i, y - 0.28); if (y < -L / 2 + 1e-6 && Math.abs(x) < 0.01) p.setY(i, y - 0.3); p.setZ(i, 0.05 * Math.sin(y * 1.7 + sx)); }
+      gb.computeVertexNormals(); cloth.push(gb.translate(sx * 6.9, Y + K.h - 0.12 - L / 2, altar.position.z + 2.0));
+    }
+    add(merge(cloth), M.banner, () => 0.85);
+  }
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
   // `hang()`: fetch and mount this hall's works, the first time someone comes in.
-  return { group: g, room: { ...R, solids }, lights, flames, spots, places, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
+  const m = timber.members, frame = { ...m, cols: m.cols.map((c) => ({ ...c, x: c.x + ox })), beams: m.beams.map((q) => ({ ...q, x: q.x + ox })), ties: m.ties.map((q) => ({ ...q, x0: q.x0 + ox, x1: q.x1 + ox })), wx: m.wx, ox };
+  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.

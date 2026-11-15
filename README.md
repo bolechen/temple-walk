@@ -171,6 +171,7 @@ node tools/shots.js court@autumn-dusk@third
 | `app/index.html`、`app/yard.js` | 界面、场景组装、行走、相机、画质与转场 |
 | `app/src/building.js`、`site.js`、`geo.js` | 参数化建筑、总平面、台阶、台地和碰撞 |
 | `app/src/interior.js` | 八座可进入的 3D 房间及待补剧情画框 |
+| `app/src/framing.js` | 殿内的柱网、梁架和天花：柱位取自殿外开间，平棊与藻井、平闇或彻上明造 |
 | `app/src/materials.js`、`textures.js`、`ground.js` | 材质、扫描细节、铺地与局部倒影 |
 | `app/src/bamboo.js`、`trees.js`、`backdrop.js` | 近景植被和远景环境 |
 | `app/src/sky.js`、`mood.js`、`props.js`、`post.js`、`drift.js` | 天光、季节时辰、器物、后期和飘落物 |
