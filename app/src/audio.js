@@ -17,7 +17,7 @@ export function setLevels(o) {
 }
 // For the tests: is anything sounding, how loud, and at which frequencies; on one bus, or everything together.
 export function listen(which) {
-  const tap = (which && bus[which] && bus[which].tap) || bus.all;
+  const tap = !which || which === "all" ? bus.all : bus[which] && bus[which].tap;   // a bus that does not exist is off, not the whole mix
   if (!tap) return { state: "off" };
   const t = new Float32Array(tap.fftSize), f = new Float32Array(tap.frequencyBinCount); tap.getFloatTimeDomainData(t); tap.getFloatFrequencyData(f);
   let rms = 0; for (const v of t) rms += v * v;

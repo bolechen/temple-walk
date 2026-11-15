@@ -115,15 +115,17 @@ export function createVoices(ctx, out) {
 export function createPlayer(ctx, out, seed = 1) {
   const level = ctx.createGain(); level.gain.value = 0; level.connect(out);
   const voices = createVoices(ctx, level), conductor = createConductor(seed);
-  let queue = [], last = null, phrases = 0;
+  let queue = [], last = null, phrases = 0, faded = false;
   return {
     conductor, voices, level,
-    tick(now, zone, seals, mood, ahead = 1.5) {
+    tick(now, zone, seals, mood, ahead = 0.6) {
       const p = conductor.tick(now, zone, seals, mood);
-      if (p && p.cut) { queue = []; level.gain.setTargetAtTime(0, now, p.fade / 4); }                     // leaving: fade what sounds
+      if (p && p.cut) { queue = []; faded = true; level.gain.setTargetAtTime(0, now, p.fade / 4); }       // leaving: fade what sounds
       else if (p) {
-        last = p; phrases++; level.gain.setTargetAtTime(SECTION_LEVEL[p.section] ?? 0.8, now, 1.2);        // arriving: a few seconds to settle
-        queue = p.events.map((e) => ({ ...e, when: p.start + e.at })).sort((a, b) => a.when - b.when);
+        // Arriving: the level is back within half a second, and after a fade the first notes wait for it.
+        last = p; phrases++; level.gain.setTargetAtTime(SECTION_LEVEL[p.section] ?? 0.8, now, 0.15);
+        const wait = faded ? 0.5 : 0; faded = false;
+        queue = p.events.map((e) => ({ ...e, when: p.start + e.at + wait })).sort((a, b) => a.when - b.when);
       }
       while (queue.length && queue[0].when < now + ahead) { const e = queue.shift(); voices.play(e, e.when); }   // voices.play may be replaced (the render tool's stems)
       return p;

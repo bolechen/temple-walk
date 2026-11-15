@@ -13,6 +13,19 @@ const steps = (ms) => ms.slice(1).map((m, i) => (((degree(m) - degree(ms[i])) % 
 const THEME_STEPS = "," + steps(THEME.map((n) => n.m)).join(",") + ",";
 const holdsTheme = (events) => { const ms = events.filter((e) => MELODY.has(e.voice)).sort((a, b) => a.at - b.at).map((e) => e.m); return ("," + steps(ms).join(",") + ",").includes(THEME_STEPS); };
 
+test("an instrument's range moves a whole line, not single notes: the melody keeps its shape", () => {
+  const shape = (es, v) => { const ms = es.filter((e) => e.voice === v).map((e) => e.m); return ms.slice(1).map((m, i) => m - ms[i]).join(); };
+  const theme = THEME.slice(1).map((n, i) => n.m - THEME[i].m).join();
+  for (const s of SEASONS) for (const t of TIMES) {
+    const p = makePhrase("complete", { r: rng(1), seals: 7, mood: moodMusic(s, t) });
+    for (const v of new Set(p.events.filter((e) => MELODY.has(e.voice)).map((e) => e.voice))) if (p.events.filter((e) => e.voice === v).length === 7) assert.equal(shape(p.events, v), theme, `${s}-${t}: the ${v}'s theme lost its shape`);
+  }
+  for (const sec of ["stair", "upper", "summit", "grove", "gate"]) for (const s of SEASONS) for (const t of TIMES) for (let seed = 1; seed < 60; seed++) {
+    const p = makePhrase(sec, { r: rng(seed), seals: 3, mood: moodMusic(s, t) });
+    for (const v of ["qin", "xiao"]) { const ms = p.events.filter((e) => e.voice === v).map((e) => e.m); for (let i = 1; i < ms.length; i++) assert.ok(Math.abs(ms[i] - ms[i - 1]) <= 12, `${sec} ${s}-${t} seed ${seed}: the ${v} leaps ${ms[i] - ms[i - 1]}`); }
+  }
+});
+
 test("a step in the mode keeps a note in the mode", () => {
   for (let m = 40; m < 90; m++) if (inMode(m)) for (const k of [-3, -1, 1, 2]) assert.ok(inMode(step(m, k)) && Math.sign(step(m, k) - m) === Math.sign(k));
 });
@@ -108,13 +121,13 @@ test("a ten-minute visit: one phrase at a time, none cut, none twice running, an
     for (const p of phrases) if (p.seals < 7) assert.ok(!holdsTheme(p.events), `the whole theme with ${p.seals} seals`);
     assert.ok(phrases.some((p) => p.section === "complete" && p.seals === 7), "the seventh seal brings the whole theme");
     assert.ok(phrases.some((p) => p.section === "gate" && p.first), `${season}-${time}: the gate's first phrase was never heard`);
-    assert.ok(cuts.every((x) => x.section !== "complete"), "the whole theme must never be cut");
+    assert.ok(cuts.every((x) => x.section !== "complete"), "the whole theme must never be cut outdoors");
     // After each settled change of place the old music fades and the new place's begins within FADE + 1.5 s (a few
     // tenths more for the tick), unless the whole theme was sounding, which is let finish.
     for (const ch of changes.slice(1)) {
       const before = phrases.filter((p) => p.start < ch.t).at(-1), next = phrases.find((p) => p.start >= ch.t);
       if (!next || (before && before.section === "complete" && before.notesEnd > ch.t)) continue;
-      assert.ok(next.start - ch.t <= FADE + 1.5 + 0.5, `${season}-${time}: ${ch.zone} took ${(next.start - ch.t).toFixed(1)} s to be heard`);
+      assert.ok(next.start - ch.t <= FADE + 1.5 + 0.5 || (before && before.notesEnd - ch.t <= FADE + 0.3 && next.start - before.notesEnd <= 1.5 + 0.5), `${season}-${time}: ${ch.zone} took ${(next.start - ch.t).toFixed(1)} s to be heard`);
     }
   }
 });

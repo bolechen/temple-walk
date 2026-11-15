@@ -162,17 +162,27 @@ function voicing(events, mood) {
   });
 }
 const fit = (m, [lo, hi]) => { while (m < lo) m += 12; while (m > hi) m -= 12; return m; };
+// Each voice's line in a phrase is moved by one octave for all its notes, the one that leaves the fewest outside the
+// instrument (and the smallest move among those), so the melody keeps its shape; only what still will not fit is folded.
+function fold(events) {
+  const by = {}; for (const e of events) (by[e.voice] ||= []).push(e);
+  for (const v in by) {
+    const [lo, hi] = RANGE[v]; let best = 0, worst = Infinity;
+    for (const k of [0, -1, 1, -2, 2, -3, 3]) { const bad = by[v].filter((e) => e.m + 12 * k < lo || e.m + 12 * k > hi).length; if (bad < worst) { worst = bad; best = k; } }
+    for (const e of by[v]) e.m = fit(e.m + 12 * best, [lo, hi]);
+  }
+  return events;
+}
 
 // A phrase, made ready to play: events in seconds from its start, voiced for the mood, each in its instrument's range,
 // plucked notes let ring, the flute one note at a time.
 export function makePhrase(section, opts) {
   const { r, seals = 0, first = false, mood = moodMusic() } = opts, s = { seals, first, xiao: mood.xiao };
   const p = PHRASES[section](r, s), beat = 60 / mood.tempo;
-  const events = voicing(p.events, mood).map((e) => {
-    const lift = e.voice === "qin" || e.voice === "xiao" ? mood.octave : 0;
+  const events = fold(voicing(p.events, mood).map((e) => ({ ...e, m: e.m + (e.voice === "qin" || e.voice === "xiao" ? mood.octave : 0) }))).map((e) => {
     const dur = e.dur + (e.ring && e.voice !== "xiao" ? 1.5 : 0);
     const { ring, ...rest } = e;
-    return { ...rest, m: fit(e.m + lift, RANGE[e.voice]), at: e.at * beat, dur: dur * beat, vel: e.voice === "pad" ? Math.min(1, e.vel * mood.pad) : e.vel, ...(e.voice === "xiao" ? { slide: undefined } : {}) };
+    return { ...rest, at: e.at * beat, dur: dur * beat, vel: e.voice === "pad" ? Math.min(1, e.vel * mood.pad) : e.vel, ...(e.voice === "xiao" ? { slide: undefined } : {}) };
   }).sort((a, b) => a.at - b.at);
   const flute = events.filter((e) => e.voice === "xiao");
   for (let i = 0; i + 1 < flute.length; i++) flute[i].dur = Math.min(flute[i].dur, flute[i + 1].at - flute[i].at - 0.06);
@@ -185,7 +195,8 @@ export function makePhrase(section, opts) {
 // Called a few times a second with the audio clock, the place he is settled in, the seals and the mood. Returns the
 // phrase to start (with its start time), or { cut } when the place has changed under a sounding phrase, or null.
 // On a change of place the old phrase's notes not yet begun are dropped and what sounds fades over FADE seconds; the
-// new place begins 1.5 s after. A rest is simply cut short. Only the whole theme, after the seventh seal, is never cut.
+// new place begins 1.5 s after. A rest is simply cut short; so is a phrase with less than FADE left, by waiting it out.
+// The whole theme, after the seventh seal, is cut only by going indoors.
 export const FADE = 3.5;
 export function createConductor(seed = 1) {
   const r = rng(seed), heard = new Set();
@@ -197,7 +208,9 @@ export function createConductor(seed = 1) {
       const want = completeDue && zone !== "hall" ? "complete" : zone;
       const changed = (want === "complete" && section !== "complete") || zone !== startedIn;
       if (now < notesEnd) {
-        if (!changed || cutting || section === "complete") return null;   // a phrase is sounding, and he is where it began
+        // A phrase is sounding: let it be where he still is, when it is nearly over, or when it is the whole theme
+        // (unless he has gone indoors, where there is no melody).
+        if (!changed || cutting || notesEnd - now <= FADE || (section === "complete" && zone !== "hall")) return null;
         cutting = true; cuts++; if (first) heard.delete(section);         // a first hearing cut short will be heard again
         notesEnd = now + FADE; restEnd = notesEnd + 1.5;
         return { cut: true, at: now, fade: FADE };
