@@ -1,70 +1,66 @@
 {
  "scene_id": "T00",
- "commit": "0e960f09442cd56b156175f195663c0ed1ff15e0",
- "captured": "2026-11-14T21:58:40.583Z",
+ "commit": "420fcdcbbf1fb92b0562d24c6432bfa38232e2d1",
+ "captured": "2026-11-15T08:51:33.407Z",
  "how": "tools/gpu-render.sh on a Hugging Face Job: the real page in headless Chromium on an NVIDIA Tesla T4 (ANGLE/Vulkan). Not offline rendering; not the target device.",
  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
- "note": "The job does not carry app/m (the statue models), which are indoors and off this route; their 404s are ignored there. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450, one walk up and back made by the page itself (diagnostic, not a person at the controls). extra-hall-platform.jpg is the named view hall, looking at the great hall's base and railing.",
+ "browser_flavour": "angle-vulkan+new-headless",
+ "note": "The job does not carry the statue models (app/shared/models), which are indoors and off this route; their 404s are ignored there. Screenshots are JPEG (quality 92) re-encoded from the job's PNGs to keep the repository small; the film is WebM, 800x450, one walk up and back made by the page itself (diagnostic, not a person at the controls). extra-hall-platform.jpg is the named view hall; extra-tea-court.jpg is the named view teatable.",
  "files": [
   {
    "file": "CAM-01.jpg",
-   "bytes": 658257,
-   "sha256": "91bbb31022b2418c0efda1fb496ace6afdce04a8e94f10f2a1e782c870aabe46",
-   "kind": "runtime screenshot"
+   "bytes": 657379,
+   "sha256": "c1ffae2593b22ead4add66b3b05c68445e95de61520515209861d95e05296963"
   },
   {
    "file": "CAM-02.jpg",
-   "bytes": 537213,
-   "sha256": "7a6623cc8d5caeff9faecc07c834072b6ed2c0508b06d4ccc3d8637c91e0a72a",
-   "kind": "runtime screenshot"
+   "bytes": 535907,
+   "sha256": "c2d7ee379349823327477d7df6f99093f13c6c355a908379d9a39b4274da04ad"
   },
   {
    "file": "CAM-03.jpg",
-   "bytes": 474633,
-   "sha256": "4fdc94ace23a1e7d976e9e0a53ad7f13cc3b90e95a4f8a140f21ab122868e73a",
-   "kind": "runtime screenshot"
+   "bytes": 457080,
+   "sha256": "346590bb03f747a20ff81ed3ee70c12d76b192fe9f4b4fe449877496f0585392"
   },
   {
    "file": "CAM-04.jpg",
-   "bytes": 389063,
-   "sha256": "7056228c002ade58f7376ae79c04ad9e6cd03bbc90a5520165f88112ee0b9484",
-   "kind": "runtime screenshot"
+   "bytes": 389625,
+   "sha256": "0f22c762def8da14e6b04995a1889d432f0d71e8487aeaf753335242f9402c67"
   },
   {
    "file": "CAM-05.jpg",
-   "bytes": 384858,
-   "sha256": "37b631f47a70ffd7219062c025576657681ee30dccfe80d9d26d6fe1ca627434",
-   "kind": "runtime screenshot"
+   "bytes": 385053,
+   "sha256": "d1f8382de865dcf9e79bbf602b82070deb5b302be1b3df127b0fc2aa03621964"
   },
   {
    "file": "CAM-06.jpg",
-   "bytes": 495590,
-   "sha256": "8971b92d995ff2d7b538cdeeb1053a34cc0a5cc8b713f3ed2047b2d0cc1504a1",
-   "kind": "runtime screenshot"
+   "bytes": 492117,
+   "sha256": "fd37ad2996211710d79b774eaf800967b14987725556c7118869ef2b141fe612"
   },
   {
    "file": "console.txt",
    "bytes": 66,
-   "sha256": "f523ea5464317d374d94c3c0c41bd64f09187a95cf6c0cc1496e210274d9ab21",
-   "kind": "log"
+   "sha256": "f523ea5464317d374d94c3c0c41bd64f09187a95cf6c0cc1496e210274d9ab21"
   },
   {
    "file": "extra-hall-platform.jpg",
-   "bytes": 467555,
-   "sha256": "49ba6cd872e06a0d347d8d1b80a27a7206fed84acd15cf2262fbbd11c18c2292",
-   "kind": "runtime screenshot"
+   "bytes": 518752,
+   "sha256": "5bc8fa0faeccfab97888ffe2771e1a2110d7d1bbc8f96c9399f4b28700e4c696"
+  },
+  {
+   "file": "extra-tea-court.jpg",
+   "bytes": 368343,
+   "sha256": "80f72e73f446d2362031b85a508f38c9c4343ed805d4c5ae5d588720a6ea7570"
   },
   {
    "file": "frame-times.csv",
-   "bytes": 252114,
-   "sha256": "459d98b07eefcce3df844856ddd6ecbbb72f621137e76be468e512ce165012b1",
-   "kind": "diagnostic"
+   "bytes": 239790,
+   "sha256": "857d80cdfffb80d89a278efe22ae0f32f3d1e75b1d832c71ba8cfe83a9561fc3"
   },
   {
    "file": "walkthrough.webm",
-   "bytes": 20818046,
-   "sha256": "6cd40dc93002dd2268ca4b1d4750b467abc9dfcccba97d2d80ac2f1d2458cfba",
-   "kind": "diagnostic"
+   "bytes": 19786568,
+   "sha256": "c474cb7a8e913552719b905e284d5716c860083c2b2a9fbad28ae704a7ff9518"
   }
  ]
 }
