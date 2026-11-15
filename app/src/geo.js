@@ -44,21 +44,61 @@ export function stairProfile(rise) {
   const count = Math.max(1, Math.round(rise / STAIR.rise));
   return { count, height: rise / count, tread: STAIR.tread, run: STAIR.tread * count, nosing: STAIR.nosing };
 }
-export function stairGeo(w, rise) {
+// A cheek stone lies along the slope beside the treads, a little proud of their noses; at its head it runs level
+// into the platform's edge, at its foot it is cut square with the lowest nose. Under it the side of the flight is
+// closed: a pier against the platform, and between pier and stone a panel set back from their face.
+// All of it keeps within CHEEK of the treads and between the head of the flight and 6 cm past its foot, which is
+// the ground the plan's `walk.posts` close to the walker for every flight (a unit test holds it to that).
+const CHEEK_STONE = Object.freeze({ width: 0.42, over: 0.05, lip: 0.02, pier: 0.2, back: 0.035, band: 0.12 });
+export function cheekProfile(rise) {
+  const { height: sh, tread: sd, run, nosing } = stairProfile(rise), k = sh / sd, C = CHEEK_STONE;
+  const top = (z) => Math.min(rise + C.lip, rise + C.over + k * (sd + nosing - z));   // level at the head, then the line of the noses and a little over
+  const thick = sh + C.over + 0.02;                                                     // so that its foot stands in the ground
+  return { top, under: (z) => top(z) - thick, head: sd + nosing + (C.over - C.lip) / k, foot: run + nosing, slope: k, ...C };
+}
+// What is left of a convex outline (counter-clockwise) on the inner side of a line through `a` along `d`, moved in by `m`.
+function keep(poly, [ax, ay], [dx, dy], m = 0) {
+  const l = Math.hypot(dx, dy), side = ([x, y]) => ((y - ay) * dx - (x - ax) * dy) / l - m, out = [];
+  poly.forEach((p, j) => { const q = poly[(j + 1) % poly.length], dp = side(p), dq = side(q);
+    if (dp >= 0) out.push(p);
+    if ((dp >= 0) !== (dq >= 0)) { const t = dp / (dp - dq); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); } });
+  return out;
+}
+// The same outline with every side moved in by `m`.
+const inset = (pts, m) => pts.reduce((poly, a, i) => { const b = pts[(i + 1) % pts.length]; return keep(poly, a, [b[0] - a[0], b[1] - a[1]], m); }, pts);
+// An outline with a smaller one, standing on the same foot line, taken out of it: what is left is a band round its
+// other sides. Both run counter-clockwise and begin at the left end of the foot line.
+const banded = (outer, inner) => [outer[0], inner[0], ...inner.slice(2).reverse(), inner[1], ...outer.slice(1)];
+// An outline drawn in the flight's side view (z across, y up), made a slab from `x0` to `x1`.
+function slab(outline, x0, x1) {
+  const sh = new THREE.Shape(outline.map(([z, y]) => new THREE.Vector2(z, y)));
+  return new THREE.ExtrudeGeometry(sh, { depth: Math.abs(x1 - x0), bevelEnabled: false }).rotateY(-Math.PI / 2).translate(Math.max(x0, x1), 0, 0);
+}
+// `sides`: which sides have a cheek (-1 and +1 in x). A flight of one or two steps has none.
+export function stairGeo(w, rise, { sides = [-1, 1] } = {}) {
   const { count: N, height: sh, tread: sd, run, nosing } = stairProfile(rise), parts = [];
   // Each tread is a slab that oversails its riser by a thumb's length: the dark line under it is what lets a flight
   // be read as steps from below, even on a day without shadows.
   for (let i = 0; i < N; i++) { const top = sh * (N - i); parts.push(box(w, top - 0.06, sd, 0, (top - 0.06) / 2, sd * (i + 0.5)), box(w, 0.06, sd + nosing, 0, top - 0.03, sd * (i + 0.5) + nosing / 2)); }
-  if (N > 2) for (const sx of [-1, 1]) {
-    const len = Math.hypot(run, rise);
-    parts.push(new THREE.BoxGeometry(0.42, 0.26, len + 0.1).rotateX(Math.atan2(rise, run)).translate(sx * (w / 2 + 0.21), rise / 2 - 0.02, run / 2),
-      box(0.42, rise / 2, run, sx * (w / 2 + 0.21), rise / 4 - 0.1, run / 2));
-    // Under each cheek stone, on a flight tall enough to show it: the triangle of its side, cut back in three steps.
-    if (rise >= 0.85) for (let k = 0; k < 3; k++) {
-      const m = 0.1 + k * 0.13, y0 = m * 0.6, z0 = m, z1 = run - m * 2.2, y1 = (rise - 0.3) * (1 - (z0 + m) / run) - m * 0.4; if (z1 - z0 < 0.3 || y1 - y0 < 0.15) break;
-      const tri = new THREE.Shape([new THREE.Vector2(z0, y0), new THREE.Vector2(z1, y0), new THREE.Vector2(z0, y1)]), hole = new THREE.Path([new THREE.Vector2(z0 + 0.05, y0 + 0.04), new THREE.Vector2(z0 + 0.05, y1 - 0.1), new THREE.Vector2(z1 - 0.16, y0 + 0.04)]);
-      tri.holes.push(hole);
-      parts.push(new THREE.ExtrudeGeometry(tri, { depth: 0.03, bevelEnabled: false }).rotateY(-Math.PI / 2).translate(sx * (w / 2 + 0.42 + 0.03 * (3 - k)) + (sx > 0 ? 0 : 0.03), 0, 0));
+  if (N > 2 && sides.length) {
+    const c = cheekProfile(rise), flat = rise + c.lip, under = c.under(0), base = -0.1, end = c.foot - 0.01;
+    // The stone and the pier, one piece the full width.
+    const stone = [[0, base], [c.pier, base], [c.pier, under], [c.head, under], [c.foot, c.under(c.foot)], [c.foot, c.top(c.foot)], [c.head, flat], [0, flat]];
+    // The panel under the stone, let a finger into the pier and the stone. On a flight tall enough to show it, it
+    // is cut back twice more toward its middle, each cut a hand in from the pier and from the stone and running
+    // down into the ground: what shows is a line of shadow along those two sides, and no ledge to catch the light.
+    const panel = [[c.pier - 0.01, base], [end, base], [end, c.under(end) + 0.01], [c.head, under + 0.01], [c.pier - 0.01, under + 0.01]];
+    const deep = [[c.pier, -50], [c.head + (under + 50) / c.slope, -50], [c.head, under], [c.pier, under]];   // the same field, carried far below the ground
+    const cut = (m) => { if (rise < 0.85) return null;
+      const q = keep(inset(deep, m), [0, base], [1, 0]), i = q.findIndex(([z, y]) => y < base + 1e-6 && z < c.pier + m + 1e-6);
+      const seen = keep(q, [0, 0], [1, 0]), zs = seen.map(([z]) => z), ys = seen.map(([, y]) => y);   // what of it stands above the ground
+      return i >= 0 && seen.length >= 3 && Math.max(...zs) - Math.min(...zs) > 0.3 && Math.max(...ys) > 0.2 ? [...q.slice(i), ...q.slice(0, i)] : null; };   // too small to read as a panel
+    const cut1 = cut(c.band), cut2 = cut1 && cut(c.band * 2);
+    for (const sx of sides) {
+      const at = (d) => [sx * w / 2, sx * (w / 2 + c.width - d)];
+      parts.push(slab(stone, ...at(0)), slab(cut1 ? banded(panel, cut1) : panel, ...at(c.back)));
+      if (cut1) parts.push(slab(cut2 ? banded(cut1, cut2) : cut1, ...at(c.back * 2)));
+      if (cut2) parts.push(slab(cut2, ...at(c.back * 3)));
     }
   }
   return { geo: merge(parts), run };

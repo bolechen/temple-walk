@@ -70,3 +70,74 @@ test('sideways and reverse stair flights agree with the visible treads', () => {
     for(let z=.013;z<stair.run+.049;z+=.027){const v=new THREE.Vector3(0,rise+1,z).applyAxisAngle(new THREE.Vector3(0,1,0),angle);ray.set(v,new THREE.Vector3(0,-1,0));const y=ray.intersectObject(mesh)[0]?.point.y??0;assert.ok(Math.abs(w.heightAt(v.x,v.z)-y)<1e-5);}
   }
 });
+
+// ---- The cheeks: the stones that stand along either side of a flight ----
+// Every level builds its stairs with stairGeo, at whatever height its platforms and terraces need, so these hold for
+// any rise and width and not only for the ones this temple happens to have.
+const STEP = { tread: .34, nosing: .05 }, CHEEK_REACH = .55;
+const shape = (rise) => { const n = Math.max(1, Math.round(rise / .18)); return { n, sh: rise / n, run: STEP.tread * n }; };
+const RISES = [.45, .5, .6, .9, 1.26, 1.5, 2.4, 2.8, 4, 6, 14.8], WIDTHS = [3, 5.2];
+const solid = (geo) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial()); m.updateMatrixWorld(true); return m; };
+
+test('a flight stays inside the ground its collision is drawn for', () => {
+  for (const rise of RISES) for (const w of WIDTHS) {
+    const { run } = shape(rise), p = stairGeo(w, rise).geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), at = `rise=${rise}, w=${w}: a point at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`;
+      assert.ok(Math.abs(x) <= w / 2 + CHEEK_REACH + 1e-6, `${at} is wider than the cheek's keep`);
+      assert.ok(z >= -1e-6 && z <= run + .06 + 1e-6, `${at} is past the head or the foot of the flight (run ${run.toFixed(2)})`);
+      assert.ok(y >= -.1 - 1e-6 && y <= rise + .03, `${at} is under the ground or over the platform (${rise})`);
+    }
+  }
+});
+test('a cheek stands a little proud of every tread beside it, and no higher', () => {
+  const ray = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0);
+  for (const rise of RISES) for (const w of WIDTHS) {
+    const { n, sh } = shape(rise), m = solid(stairGeo(w, rise).geo);
+    for (const sx of [-1, 1]) for (let i = 0; i < n; i++) {
+      const z = STEP.tread * (i + 1) + STEP.nosing - .01, nose = rise - sh * i;
+      ray.set(new THREE.Vector3(sx * (w / 2 + .21), rise + 1, z), down);
+      const y = ray.intersectObject(m)[0]?.point.y ?? -Infinity;
+      assert.ok(y >= nose + .015 && y <= nose + .09, `rise=${rise}, w=${w}, side ${sx}: beside tread ${i} (top ${nose.toFixed(2)}) the cheek stands at ${y.toFixed(3)}`);
+    }
+  }
+});
+test('seen from the side a cheek is stone down to the ground: no slot under it, no step end showing', () => {
+  const ray = new THREE.Raycaster();
+  for (const rise of RISES) for (const w of WIDTHS) {
+    const { sh, run } = shape(rise), m = solid(stairGeo(w, rise).geo), k = sh / STEP.tread;
+    for (const sx of [-1, 1]) for (let z = .03; z < run; z += Math.max(.07, run / 60)) {
+      const top = Math.min(rise, rise + k * (STEP.tread + STEP.nosing - z));   // the line of the tread noses
+      for (let y = .03; y < top - .02; y += Math.max(.05, rise / 40)) {
+        ray.set(new THREE.Vector3(sx * (w / 2 + 5), y, z), new THREE.Vector3(-sx, 0, 0));
+        const hit = ray.intersectObject(m)[0], x = hit ? Math.abs(hit.point.x) : 0;
+        assert.ok(x >= w / 2 + .25, `rise=${rise}, w=${w}, side ${sx}: at z=${z.toFixed(2)}, y=${y.toFixed(2)} the eye goes in to ${hit ? (x - w / 2).toFixed(2) + ' m from the treads' : 'nothing at all'}`);
+      }
+    }
+  }
+});
+test('nothing beside a flight looks up at the sky but the top of its cheek stones', () => {
+  // A ledge under the stone catches the light and shows as a pale slit against the shaded side of the flight.
+  // (A face buried in the stone is no ledge: only one a visitor standing beside the flight could see counts.)
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3(), ray = new THREE.Raycaster();
+  for (const rise of RISES) for (const w of WIDTHS) {
+    const { sh } = shape(rise), k = sh / STEP.tread, geo = stairGeo(w, rise).geo, p = geo.attributes.position;
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); m.updateMatrixWorld(true);
+    for (let i = 0; i < p.count; i += 3) {
+      a.fromBufferAttribute(p, i); b.fromBufferAttribute(p, i + 1); c.fromBufferAttribute(p, i + 2);
+      n.subVectors(b, a).cross(c.clone().sub(a)); if (n.length() < 1e-9) continue; n.normalize();
+      const at = new THREE.Vector3().add(a).add(b).add(c).divideScalar(3);
+      if (Math.abs(at.x) <= w / 2 + 1e-6 || n.y < .3 || at.y < 0) continue;
+      const noses = Math.min(rise, rise + k * (STEP.tread + STEP.nosing - at.z));
+      if (at.y >= noses + .01) continue;                                             // the top of the stone itself
+      ray.set(at.clone().addScaledVector(n, 1e-3), new THREE.Vector3(Math.sign(at.x), 1, 0).normalize());
+      assert.ok(ray.intersectObject(m).length > 0, `rise=${rise}, w=${w}: a face at (${at.x.toFixed(2)}, ${at.y.toFixed(2)}, ${at.z.toFixed(2)}) looks up from under the cheek stone`);
+    }
+  }
+});
+test('a flight of two steps has no cheeks, and a flight can be asked for one cheek or none', () => {
+  const widest = (geo) => { const p = geo.attributes.position; let lo = 0, hi = 0; for (let i = 0; i < p.count; i++) { lo = Math.min(lo, p.getX(i)); hi = Math.max(hi, p.getX(i)); } return [lo, hi]; };
+  assert.deepEqual(widest(stairGeo(4, .3).geo), [-2, 2]);
+  assert.deepEqual(widest(stairGeo(4, 1.5, { sides: [] }).geo), [-2, 2]);
+  const [lo, hi] = widest(stairGeo(4, 1.5, { sides: [1] }).geo); assert.equal(lo, -2); assert.ok(hi > 2.3);
+});
