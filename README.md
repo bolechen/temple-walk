@@ -110,7 +110,7 @@ node tools/shots.js court@autumn-dusk@third
 - `?q=low|medium|high`：锁定画质；不指定时自动选择并可降级。
 - `?shot=1`：冻结时间、隐藏界面，用于截图。
 - `?fast=1`：加速自动行走测试；不能据此宣称正常速度手动验收通过。
-- `?in=<殿名>&cam=<房间坐标>`：直接开在殿内某个机位；`node tools/inside.cjs tools/out/hall-views --views` 一次出八座殿各两张（陈设与屋顶），机位表在 `app/levels/t00/hall-views.js`。
+- `?in=<殿名>&cam=<房间坐标>`：直接开在殿内某个机位；`node tools/inside.cjs tools/out/hall-views --views [关卡]` 一次出该关卡登记的全部殿内机位（不写关卡时是 `t00`：八座殿各两张，陈设与屋顶），机位表在 `app/levels/<关卡>/hall-views.js`；写了没有机位表的关卡会直接报错并列出有表的关卡。
 - `?devpose`：只在 `pnpm dev` 下生效。走动时把当前位置、朝向、视角、季节时辰和所在殿写回地址栏（替换，不增加历史），改代码整页刷新后回到原处；按 C 复制当前机位链接。发布包不含这段代码。
 
 真实 GPU 渲染工具见 `tools/gpu-render.sh`。运行 Hugging Face Jobs 需要自己的账号、权限与预算，可能产生费用；不是启动游戏的必要条件。

@@ -120,7 +120,7 @@ const scenarios = {
       }
       const p = await t.probe(); expect(p.lum > 8 && p.lum < 235, `${h.name}: the room is blank (${p.lum.toFixed(0)})`);
       // The hall's registered camera pose must stand on open floor here too: check the real page, not just the plan.
-      const view = require("../../tools/hall-views.cjs").find((v) => v.hall === h.id);
+      const view = require("../../tools/hall-views.cjs").views("t00").find((v) => v.hall === h.id);
       await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), view.abs);
       await t.frames(2); const cam = await t.probe();
       expect(cam.lum > 8 && cam.lum < 235 && (await t.state()).h < -50, `${h.name}: the registered camera sees nothing (${cam.lum.toFixed(0)})`);
