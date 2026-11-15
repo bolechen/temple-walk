@@ -52,6 +52,9 @@ test("the plan registers what the rest of the page reads", () => {
   assert.ok(!site.hall.inside(...site.hall.out), "leaving the hall must not re-enter it");
 });
 
+// The highest step a child takes without thinking about it: a porch step, a kerb, a landing. Anything taller is a
+// place he must not simply walk up or off (the porches he may hop down from are their own planned leap).
+const STEP_UP = 0.45;
 // Flood outward from where the visit begins, a quarter-metre at a time, stepping only where a child could.
 function reach(from) {
   const S = 0.25, key = (i, j) => i * 100000 + j, seen = new Set(), todo = [[Math.round(from[0] / S), Math.round(from[1] / S)]];
@@ -60,7 +63,7 @@ function reach(from) {
     const [i, j] = todo.pop(), x = i * S, z = j * S, h = walker.heightAt(x, z);
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const a = i + di, b = j + dj, k = key(a, b); if (seen.has(k)) continue;
-      const nx = a * S, nz = b * S; if (walker.blocked(nx, nz) || Math.abs(walker.heightAt(nx, nz) - h) > 0.45) continue;
+      const nx = a * S, nz = b * S; if (walker.blocked(nx, nz) || Math.abs(walker.heightAt(nx, nz) - h) > STEP_UP) continue;
       seen.add(k); todo.push([a, b]);
     }
   }
@@ -108,6 +111,25 @@ test("the columns of the open pavilions stand in the way", () => {
   }
   assert.ok(site.walk.posts.filter((r) => r.r !== undefined).length >= 100, "every outer column of every building is a post");
   assert.ok(!walker.blocked(5.2, APPROACH.zA1 + 2.75), "the middle of the half-way pavilion is open floor");
+});
+// The walk itself sets no limit on a step: wherever nothing blocks him, he stands at the height of what is under him.
+// So the plan must never leave two open spots side by side at heights a child could not step between, or he would
+// rise onto a porch or drop off a terrace in one stride. Searched on a grid no coarser than his hurried stride in one
+// frame (4.2 m/s for a twentieth of a second), and in every direction, without the limit the walk-to test assumes.
+// Today the tallest such step is 0.3 m, at the landings by the bamboo start.
+test("nowhere he can walk is there a step taller than a child's", () => {
+  const S = 0.2, key = (i, j) => i * 100000 + j, start = [Math.round(site.start[0] / S), Math.round(site.start[1] / S)], seen = new Set([key(...start)]), todo = [start];
+  let worst = { d: 0 };
+  while (todo.length) {
+    const [i, j] = todo.pop(), x = i * S, z = j * S, h = walker.heightAt(x, z);
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const a = i + di, b = j + dj, nx = a * S, nz = b * S; if (walker.blocked(nx, nz)) continue;
+      const d = Math.abs(walker.heightAt(nx, nz) - h); if (d > worst.d) worst = { d, x, z, nx, nz };
+      const k = key(a, b); if (!seen.has(k)) { seen.add(k); todo.push([a, b]); }
+    }
+  }
+  assert.ok(seen.size > 50000, `the flood should cover the whole walk, not ${seen.size} spots`);
+  assert.ok(worst.d <= STEP_UP, `a step of ${worst.d.toFixed(2)} m between (${worst.x?.toFixed(1)}, ${worst.z?.toFixed(1)}) and (${worst.nx?.toFixed(1)}, ${worst.nz?.toFixed(1)})`);
 });
 test("walls, halls and the hillside keep the visitor out", () => {
   const can = reach([site.start[0], site.start[1]]), [T1, T2] = LEVELS;
