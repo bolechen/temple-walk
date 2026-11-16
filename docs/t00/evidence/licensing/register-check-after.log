@@ -1,0 +1,17 @@
+# after filling the register, 2026-11-16
+# Subtest: the register's file column is read as the paths it names
+ok 1 - the register's file column is read as the paths it names
+# Subtest: every asset file under app/ that goes into the site has a row in the register
+ok 2 - every asset file under app/ that goes into the site has a row in the register
+# Subtest: every file under app/ that the register names is there
+ok 3 - every file under app/ that the register names is there
+# Subtest: every row says whether it may be sold with the game, whether it must be credited, where its terms are and when they were read
+ok 4 - every row says whether it may be sold with the game, whether it must be credited, where its terms are and when they were read
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 79.705097

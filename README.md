@@ -166,6 +166,7 @@ node tools/shots.js court@autumn-dusk@third
 - **字体**：本地子集、来源及相关许可见 [tools/fonts.py](tools/fonts.py) 和 [app/shared/fonts/OFL.txt](app/shared/fonts/OFL.txt)。
 - **Three.js 与扩展**：由 pnpm 管理（`three@0.186.0`，MIT），由 Vite 打进站点；只有 Basis 转码器在安装时拷到 `app/vendor/basis/`（Git 忽略），其 LICENSE 一并拷入。
 - **参考图片与其他素材**：保留来源、作者、版本和用途记录；不能笼统由项目代码许可覆盖。
+- **能否商用**：2026-11-16 按收费上架的口径逐件核对过，见 [docs/t00/LICENSING-AUDIT.md](docs/t00/LICENSING-AUDIT.md)（开发方对公开条款的整理，不是法律意见）；每件的结论在 `docs/t00/asset-register.csv` 的 `commercial_use` 一栏，`app/` 下新加的素材文件不登记，单元测试会失败。
 
 删除当前文件不等于移除 Git 历史中的内容。若发现真实凭据，先撤销或轮换，再按影响范围处理历史；如发现安全漏洞，请避免在公开 Issue 中贴出凭据、个人数据或真实敏感文件内容。
 

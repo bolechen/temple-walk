@@ -1,0 +1,322 @@
+{
+ "checked_on": "2026-11-16",
+ "met_api": {
+  "2000.325": {
+   "objectID": 39534,
+   "isPublicDomain": true,
+   "title": "Excerpt from “Song of Leyou Park”",
+   "objectDate": "13th century",
+   "creditLine": "Gift of Sylvan Barnet and William Burto, in honor of Tajima Mitsuru, 2000",
+   "objectURL": "https://www.metmuseum.org/art/collection/search/39534"
+  },
+  "1989.363.24": {
+   "objectID": 40276,
+   "isPublicDomain": true,
+   "title": "Chan master riding a mule",
+   "objectDate": "before 1249",
+   "creditLine": "Bequest of John M. Crawford Jr., 1988",
+   "objectURL": "https://www.metmuseum.org/art/collection/search/40276"
+  },
+  "1982.2.1": {
+   "objectID": 40278,
+   "isPublicDomain": true,
+   "title": "Meeting between Yaoshan and Li Ao",
+   "objectDate": "before 1256",
+   "creditLine": "Edward Elliott Family Collection, Purchase, The Dillon Fund Gift, 1982",
+   "objectURL": "https://www.metmuseum.org/art/collection/search/40278"
+  },
+  "65.29.2": {
+   "objectID": 42716,
+   "isPublicDomain": true,
+   "title": "Buddha of Medicine Bhaishajyaguru (Yaoshi fo)",
+   "objectDate": "ca. 1319",
+   "creditLine": "Gift of Arthur M. Sackler, in honor of his parents, Isaac and Sophie Sackler, 1965",
+   "objectURL": "https://www.metmuseum.org/art/collection/search/42716"
+  },
+  "2015.300.254a–l": {
+   "objectID": 75292,
+   "isPublicDomain": true,
+   "title": "Six of the Twelve Divine Generals (Jūni shinshō)",
+   "objectDate": "early 14th century",
+   "creditLine": "Mary Griggs Burke Collection, Gift of the Mary and Jackson Burke Foundation, 2015",
+   "objectURL": "https://www.metmuseum.org/art/collection/search/75292"
+  }
+ },
+ "cma_api": {
+  "1938.422": {
+   "share_license_status": "CC0",
+   "title": "Medicine Master Buddha and the Twelve Divine Generals",
+   "creation_date": "1200s",
+   "creditline": "Edward L. Whittemore Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1938.422",
+   "sketchfab_url": null
+  },
+  "1958.427.1": {
+   "share_license_status": "CC0",
+   "title": "Dragon",
+   "creation_date": "c. 1250–79",
+   "creditline": "Purchase from the J. H. Wade Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1958.427.1",
+   "sketchfab_url": null
+  },
+  "1958.427.2": {
+   "share_license_status": "CC0",
+   "title": "Tiger",
+   "creation_date": "c. 1250–79",
+   "creditline": "Purchase from the J. H. Wade Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1958.427.2",
+   "sketchfab_url": null
+  },
+  "1961.421.1": {
+   "share_license_status": "CC0",
+   "title": "Scholar Reclining and Watching Rising Clouds, Poem by Wang Wei",
+   "creation_date": "c. 1256",
+   "creditline": "John L. Severance Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1961.421.1",
+   "sketchfab_url": null
+  },
+  "1964.44": {
+   "share_license_status": "CC0",
+   "title": "Bodhidharma Crossing the Yangzi on a Reed",
+   "creation_date": "1300s",
+   "creditline": "John L. Severance Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1964.44",
+   "sketchfab_url": null
+  },
+  "1967.211": {
+   "share_license_status": "CC0",
+   "title": "The Second Coming of the Fifth Patriarch",
+   "creation_date": "c. mid-1300s",
+   "creditline": "Purchase from the J. H. Wade Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1967.211",
+   "sketchfab_url": null
+  },
+  "1970.2": {
+   "share_license_status": "CC0",
+   "title": "Shakyamuni Emerging from the Mountains",
+   "creation_date": "1244",
+   "creditline": "John L. Severance Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1970.2",
+   "sketchfab_url": null
+  },
+  "1970.64": {
+   "share_license_status": "CC0",
+   "title": "Lotus Sutra with a Frontispiece",
+   "creation_date": "late 1100s",
+   "creditline": "John L. Severance Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1970.64",
+   "sketchfab_url": null
+  },
+  "1972.160": {
+   "share_license_status": "CC0",
+   "title": "White-Robed Guanyin",
+   "creation_date": "late 1200s",
+   "creditline": "Leonard C. Hanna Jr. Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1972.160",
+   "sketchfab_url": null
+  },
+  "1976.91": {
+   "share_license_status": "CC0",
+   "title": "Seated Arhat with Two Attendants",
+   "creation_date": "late 1200s",
+   "creditline": "John L. Severance Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1976.91",
+   "sketchfab_url": null
+  },
+  "1977.200": {
+   "share_license_status": "CC0",
+   "title": "Water Buffalo and Herdboys",
+   "creation_date": "late 1200s–early 1300s",
+   "creditline": "Gift of Herbert F. Leisy in memory of his wife, Helen Stamp Leisy",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1977.200",
+   "sketchfab_url": null
+  },
+  "1978.47.1": {
+   "share_license_status": "CC0",
+   "title": "White-Robed Guanyin",
+   "creation_date": "late 1200s–early 1300s",
+   "creditline": "Purchase from the J. H. Wade Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1978.47.1",
+   "sketchfab_url": null
+  },
+  "1981.53": {
+   "share_license_status": "CC0",
+   "title": "Eleven-Headed Guanyin",
+   "creation_date": "1100–1200",
+   "creditline": "Purchase from the J. H. Wade Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1981.53",
+   "sketchfab_url": "https://sketchfab.com/models/a8581040a43346718e1daadca397f3d0"
+  },
+  "1988.20": {
+   "share_license_status": "CC0",
+   "title": "Landscape with Woodcutters Returning Home",
+   "creation_date": "1200s",
+   "creditline": "Leonard C. Hanna Jr. Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1988.20",
+   "sketchfab_url": null
+  },
+  "1997.11": {
+   "share_license_status": "CC0",
+   "title": "Standing Bodhisattva",
+   "creation_date": "1500s",
+   "creditline": "Leonard C. Hanna Jr. Fund",
+   "copyright": null,
+   "url": "https://clevelandart.org/art/1997.11",
+   "sketchfab_url": "https://sketchfab.com/models/1a57a0d6609145b486ed5b1d3e9ec7fb"
+  }
+ },
+ "mia_api": {
+  "2016.33.35": {
+   "id": 124303,
+   "rights_type": "Public Domain",
+   "public_access": 1,
+   "title": "Standing Arhat",
+   "dated": "6th century",
+   "image_copyright": null
+  },
+  "62.14": {
+   "id": 1473,
+   "rights_type": "Public Domain",
+   "public_access": 1,
+   "title": "Figure of a Monk",
+   "dated": "9th-10th century",
+   "image_copyright": null
+  },
+  "99.178.4": {
+   "id": 31240,
+   "rights_type": "Public Domain",
+   "public_access": 1,
+   "title": "Amoghasiddhi Buddha",
+   "dated": "1403–24",
+   "image_copyright": null
+  },
+  "99.24.2": {
+   "id": 32122,
+   "rights_type": "Public Domain",
+   "public_access": 1,
+   "title": "Avalokiteshvara Bodhisattva in the Water-Moon Form (Shuiyue Guanyin)",
+   "dated": "12th century",
+   "image_copyright": null
+  },
+  "98.62a-h": {
+   "id": 5788,
+   "rights_type": "Public Domain",
+   "public_access": 1,
+   "title": "Seated Avalokiteshvara Bodhisattva (Guanyin)",
+   "dated": "late 11th–early 12th century",
+   "image_copyright": null
+  }
+ },
+ "sketchfab_api": {
+  "1a57a0d6609145b486ed5b1d3e9ec7fb": {
+   "license": "CC0 Public Domain",
+   "user": "clevelandart",
+   "name": "1997.11 Standing Bodhisattva",
+   "viewerUrl": "https://sketchfab.com/3d-models/199711-standing-bodhisattva-1a57a0d6609145b486ed5b1d3e9ec7fb"
+  },
+  "2c865894453743a49f8e82d57e4f0a8d": {
+   "license": "CC0 Public Domain",
+   "user": "artsmia",
+   "name": "Seated bodhisattva Guanyin, 12th C. CE",
+   "viewerUrl": "https://sketchfab.com/3d-models/seated-bodhisattva-guanyin-12th-c-ce-2c865894453743a49f8e82d57e4f0a8d"
+  },
+  "33699be99fd64375bf0371c0e0c12f70": {
+   "license": "CC0 Public Domain",
+   "user": "artsmia",
+   "name": "Chinese Amoghasiddhi Buddha, 1403 - 1424 CE",
+   "viewerUrl": "https://sketchfab.com/3d-models/chinese-amoghasiddhi-buddha-1403-1424-ce-33699be99fd64375bf0371c0e0c12f70"
+  },
+  "5f209e2a3efa4ec18fae8daea2426af9": {
+   "license": "CC0 Public Domain",
+   "user": "artsmia",
+   "name": "Standing Arhat, 6th C CE, China",
+   "viewerUrl": "https://sketchfab.com/3d-models/standing-arhat-6th-c-ce-china-5f209e2a3efa4ec18fae8daea2426af9"
+  },
+  "a8581040a43346718e1daadca397f3d0": {
+   "license": "CC0 Public Domain",
+   "user": "clevelandart",
+   "name": "1981.53 Eleven-Headed Guanyin",
+   "viewerUrl": "https://sketchfab.com/3d-models/198153-eleven-headed-guanyin-a8581040a43346718e1daadca397f3d0"
+  },
+  "c6efb650b99c45928b3f0c9b89006a60": {
+   "license": "CC0 Public Domain",
+   "user": "artsmia",
+   "name": "10th C BCE Chinese monk",
+   "viewerUrl": "https://sketchfab.com/3d-models/10th-c-bce-chinese-monk-c6efb650b99c45928b3f0c9b89006a60"
+  },
+  "f3316610c8b740c595c22ca1d7df54ca": {
+   "license": "CC0 Public Domain",
+   "user": "artsmia",
+   "name": "12th C CE Water-Moon Guanyin",
+   "viewerUrl": "https://sketchfab.com/3d-models/12th-c-ce-water-moon-guanyin-f3316610c8b740c595c22ca1d7df54ca"
+  }
+ },
+ "objaverse_metadata": {},
+ "polyhaven_api": {
+  "brushed_concrete_2": {
+   "name": "Brushed Concrete 2",
+   "authors": [
+    "Dario Barresi",
+    "Dimitrios Savva"
+   ]
+  },
+  "fine_grained_wood": {
+   "name": "Fine Grained Wood",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "forest_leaves_03": {
+   "name": "Forest Leaves 03",
+   "authors": [
+    "Rob Tuytel",
+    "Dimitrios Savva"
+   ]
+  },
+  "hessian_230": {
+   "name": "Hessian 230",
+   "authors": [
+    "colormass",
+    "Rico Cilliers"
+   ]
+  },
+  "japanese_cedar_bark": {
+   "name": "Japanese Cedar Bark",
+   "authors": [
+    "Charlotte Baglioni"
+   ]
+  },
+  "medieval_blocks_03": {
+   "name": "Medieval Blocks 03",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "snow_02": {
+   "name": "Snow 02",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "worn_mossy_plasterwall": {
+   "name": "Worn Mossy Plasterwall",
+   "authors": [
+    "Amal Kumar"
+   ]
+  }
+ }
+}
