@@ -33,7 +33,10 @@ const measure = () => {
   }
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let n = walk.nextNode(); n; n = walk.nextNode()) { const el = n.parentElement; if (!n.textContent.trim() || !el || !shown(el) || (top && !top.contains(el)) || seen.has(el)) continue; seen.add(el); const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 11.9) tiny.push(`${el.id || el.className || el.tagName} "${n.textContent.trim().slice(0, 10)}" ${fs}px`); }
-  return { small, tiny, off, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
+  // A sheet that scrolls must carry its paper itself (class `scrolls`): paper drawn behind the words is only as tall as
+  // the part in sight and is drawn away with them, leaving the rest of the sheet bare.
+  const bare = [...document.querySelectorAll(".paper:not(.scrolls)")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY)).map((el) => el.id || el.parentElement.id + " ." + el.className);
+  return { small, tiny, off, bare, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
 };
 (async () => {
   await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
@@ -47,8 +50,8 @@ const measure = () => {
       if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
       await p.waitForTimeout(name === "slip" ? 9000 : name === "book" ? 7000 : 2500);
       const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
-      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
-      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
+      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
+      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
       if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); }
     }
     if (errs.length) { console.log("page errors:", errs); bad += errs.length; }

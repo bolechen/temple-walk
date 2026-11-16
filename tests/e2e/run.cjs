@@ -944,6 +944,9 @@ const scenarios = {
       expect(r[0] >= 0 && r[1] >= 0 && r[2] <= r[4] && r[3] <= r[5], `#${id} hangs off the screen`); expect(r[2] - r[0] >= 40 && r[3] - r[1] >= 38, `#${id} is too small to tap`);
     }
     expect(await t.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight), "the page scrolls");
+    // A sheet that scrolls carries its own paper: paper drawn behind the words is drawn away with them (seen on a phone, the pause menu's lower rows bare).
+    const bare = await t.page.evaluate(() => [...document.querySelectorAll(".paper:not(.scrolls)")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY)).map((el) => el.id || el.parentElement.id));
+    expect(bare.length === 0, "these sheets scroll but leave their paper behind: " + bare.join(", "));
     expect(await t.page.isVisible("#stick") && !(await t.page.isVisible("#keys")), "a phone should be given a thumb-stick, not a list of keys");
     expect((await t.page.textContent("#hint")).includes("圆盘"), "a phone should be told about the thumb-stick, not about keys");
     const z0 = (await t.state()).z; await t.page.touchscreen.tap(195, 560);   // the paving a few steps ahead of him
