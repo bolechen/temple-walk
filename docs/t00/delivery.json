@@ -1,44 +1,28 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
+  "summary": "每个同仓库 PR 有独立预览地址：pages.yml 检查通过后，把同一份 dist/ 上传为 Cloudflare Worker temple-walk-preview 的预览 pr-<编号>；PR 评论给出随推送更新的最新地址、每个提交的固定地址和六个验收机位链接，失败时写明未部署及旧地址对应的提交，PR 关闭时删除预览。正式站点仍是 GitHub Pages。开发方陈述，不是验收结论。",
   "changes": [
-    "instruments.js：bell() 与 hillEcho()，嗡音撞后涌起约 45 秒、基音约 34 秒、高分音先散；撞木闷响代替清脆起音；撞钟时音乐让位 14 秒",
-    "audio.js：脚步单独一路送混响（室外 0.07、殿内 0.4），仍受「音效」滑杆控制；每步在落脚后固定 60 毫秒发声（monk.steps[].late），慢帧也不乱拍",
-    "steps.js：LEVEL 干石、湿石 +6 dB，水洼 +5 dB，雪 +4 dB，次序不变",
-    "檐下滴水只在雨后（夏多春少），秋天和雪天没有",
-    "SOURCES.md 补脚步一行并更新大钟、滴水、混响三行；MUSIC.md 音效列表加脚步",
-    "测试：bell.test.mjs；monk.test.mjs 检查落脚时刻；sound 场景补上被注释吞掉的等帧，竹击和鸟叫改为真的听山声总线，钟声 8 秒后仍在",
-    "进度随时保存（所有者要求）：位置每两秒和离开页面时保存；回来时标题页盖在上回所在处，给「接着走」和「从头走起」（后者问两次，清空朱印从竹径走起），并写明「上回走到某处」；首次到访仍只有「入山」",
-    "朱印帐当地图（所有者要求）：翻开朱印帐，点一枚已得的印，合帐、暗场、回到得印的那一处",
-    "移动端界面（所有者要求）：页面自带 doctype 与 viewport（此前线上页面没有，手机上按约 980 像素宽缩小显示）；触控目标不小于 44 像素；歇脚菜单不高过屏幕并可上下拖动，底部一排固定，横握时分两栏；画作卡片的「看过了」吸在底部；禁止橡皮筋回弹与长按选字；新增 tools/mobile-audit.cjs（修改前列出 60 项，修改后 0 项）",
-    "CI 提速（所有者要求，保证交付质量的前提下）：不看画面的浏览器场景改为「场景照建但不画」运行（keys 128→41 秒、layers 138→45、phone 134→30、resume 215→96）；看画面的场景不变；推送时的回归流程不再重复发布流程已做的检查、类型检查和单元测试；每周全量运行拆成四台机器并行；「坐遍所有坐具」从 rites 拆成独立的 seats 场景"
+    "wrangler.jsonc（新增）：Worker temple-walk-preview，只托管 dist/ 静态资源，workers_dev 关闭、preview_urls 打开、previews 块为空",
+    ".github/workflows/pages.yml：PR 路径加 wrangler.jsonc；verify 对本仓库 PR 上传 dist/；新增 preview 作业（npx wrangler@4.162.0 preview --name pr-<编号>，tag 为短 SHA、message 为完整 SHA），无论成功或失败都更新 PR 评论；被新推送取消的运行不评论",
+    ".github/workflows/preview-cleanup.yml（新增）：PR 关闭时删除对应预览，没有预览时视为无事可做",
+    "tools/preview/comment.cjs（新增）：生成并原地更新唯一一条 PR 评论；机位链接读取 docs/t00/camera-manifest.json",
+    "docs/PREVIEWS.md（新增）、CONTRIBUTING.md 链接；.gitignore 忽略 .wrangler/",
+    "Cloudflare 侧（仓库外）：建 Worker temple-walk-preview，生产版本是一页占位说明（预览路由需要已有生产版本），workers.dev 根地址关闭；仓库 Secret CLOUDFLARE_PREVIEW_TOKEN（Workers Scripts Write）与 Variable CLOUDFLARE_ACCOUNT_ID"
   ],
   "known_issues": [
-    "新钟声、新脚步音量还没有人试听；改前改后对比 MP3 由开发者本地生成（tools/out/ab，不入库）",
-    "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
-    "小沙弥雕刻的身体（novice.glb）在走路、上台阶、打坐时布料会撕开（贴图接缝处骨骼权重不对）；2026-11-15 起默认关闭，页面穿代码建的身体，地址加 ?body=sculpt 才换上；权重未修",
-    "鸟叫没有人听过；SOURCES.md 表末列出还没核到原文的出处",
-    "竹竿相碰没有人听过；鸟叫没做",
-    "龙井的滴水声没有人听过；涟漪只在软件渲染下看过；渗水是贴面薄片",
-    "双指拉近切换视角只在桌面滚轮上自动测过，手机上的双指手势没有在真机上试过",
-    "走完七印大约要二三十分钟，没有走完的人只会看到自己来时的那一季",
-    "冬天小柏几乎全白，看不出底下的深绿：积雪系数 snow: 0.8 是按大柳杉调的，小树的枝叶小而密，整株被雪盖住。未改",
-    "对比图的冬天一行几乎全是雾和雪，不足以判断冬天的效果；修前列是 origin/main 4601819，不是 765f2b2",
-    "e2e:smoke 的 15 个场景是分次跑通的，没有一次完整的 verify；rebase 后重跑了 check、单测、edges、boot 和 camera",
-    "这对小柏的三角形约增 1.4 k（hall 视角 1,603,200 → 1,604,644）；未在 T4 上单独测帧",
-    "CI 的 boot 场景（「the walking controls should wait behind the title」）曾在 main 的 7136549（#28）与本分支 4de49e0 上失败。main 的原因已确认：测试服务器把 .css 当成 application/octet-stream 发送，Chrome 拒绝了新拆出的 app/src/ui.css，修复见 #29（487770d）。本分支 4de49e0 的失败未单独确认原因；之后的 head（含 #29）上 verify 通过",
-    "移动端只在无头 Chromium 的手机模拟（触屏、三种尺寸）下审计和截图，没有在真实的 iPhone 或安卓机上看过；Safari 的地址栏伸缩、安全区和 100dvh 的实际表现未验证",
-    "回到得印处是直接换位（暗场），不走过去；在殿内保存的位置回来时落在殿门外；用 ?cam、?enter 等参数打开时不保存也不恢复位置",
-    "「不画场景」的场景不再覆盖渲染：渲染由 boot、halls、snow、moods、views、photo、photo-ui、menu、parts、rites、stairs、drop 覆盖；四台并行的每周流程尚未在 GitHub 上实际跑过一次"
+    "令牌是账户级 Workers Scripts Write，对同账户另外 3 个 Worker 也有写权限；OAuth 不能经 API 创建单 Worker 令牌，需要时在后台创建 Individual Workers Admin 令牌后覆盖同名 Secret",
+    "Workers Previews 仍是 open beta（Wrangler 4.162.0）；命令或行为变化可能使 preview 作业失败，失败会写在 PR 评论里",
+    "fork 的 PR 没有预览；只改文档的 PR 不触发 pages.yml，也没有预览",
+    "预览地址公开、无需登录；未接 Cloudflare Access",
+    "六机位前后对比图未做，只在评论里给出机位链接",
+    "预览只在本机 curl 与 CI 运行中验证，未在手机上打开过"
   ],
   "evidence": [
-    "tests/unit/bell.test.mjs",
-    "tests/unit/monk.test.mjs",
-    "tests/unit/steps.test.mjs",
-    "tests/e2e/run.cjs: sound / steps / snow / music / rites",
-    "docs/t00/SOURCES.md",
-    "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」"
+    "本地：两次 wrangler preview（setup-a、setup-b）在补上占位生产版本后首页返回 200（11,841 字节），之前为 Cloudflare 1042；用 CI 令牌部署和删除预览均成功，测试预览已删除",
+    "本 PR 的 pages.yml 运行与 PR 评论（以运行结果为准，不在此预写）",
+    "docs/PREVIEWS.md",
+    "tools/preview/comment.cjs"
   ],
   "domain_binding": {
     "date": "2026-11-15",
