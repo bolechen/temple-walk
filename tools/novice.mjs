@@ -12,7 +12,7 @@
 //      code, which was drawn from the same turnaround, is the same height and is bound in the same pose: so the skirt
 //      bones, the sleeves that follow the arm and the legs all keep the weights they were tuned with;
 //   5. packs the three textures as 1024 px WebP.
-// (With NOVICE_WELD=1, between 4 and 5, copies of one point take one weight: a trial for issue #80, see 4b.)
+// (With NOVICE_WELD=<n>, between 4 and 5, copies of one point take one weight, then are smoothed: issue #80, see 4b.)
 // (extras.robeColor is the robe's average colour as sRGB hex, for the cloth of the lap he sits on.)
 //
 // The file written holds four meshes named after the parts, each with POSITION, NORMAL, TEXCOORD_0, JOINTS_0 and
@@ -126,15 +126,19 @@ for (let i = 0; i < nv; i++) {
   const top = [...total].sort((a, b) => b[1] - a[1]).slice(0, 4), s = top.reduce((a, [, v]) => a + v, 0);
   top.forEach(([b, v], k) => { J[i * 4 + k] = b; W[i * 4 + k] = v / s; });
 }
-// ---- 4b. (trial, issue #80 route A; off unless NOVICE_WELD=1) one weight for every copy of one point ----
-// Copies of a point on either side of a texture seam took their weights apart and part when he moves. NOVICE_WELD=1
-// gives them the same weights (tools/novice-weld.mjs); NOVICE_WELD=<n> also smooths them n times along the surface.
-// The shipped novice.glb was built without it; tools/novice-weld-trial.mjs measures what it would change.
+// ---- 4b. one weight for every copy of one point (issue #80, route A; NOVICE_WELD=<n>) ----
+// Copies of a point on either side of a texture seam took their weights apart and parted when he moved: the tears at the
+// cuffs, the wrists and the hem. NOVICE_WELD=1 gives every copy of a point the same weights (tools/novice-weld.mjs);
+// NOVICE_WELD=<n> also smooths them n - 1 times along the surface, within each part. Where two parts meet, the point
+// takes the weights of one: a shoe over the trousers, the robe over the skin and the trousers. The novice.glb that ships
+// was built with NOVICE_WELD=5 (docs/t00/asset-register.csv); without it the file is the one the tears were seen in.
+const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 };
 if (process.env.NOVICE_WELD) {
   const { weldWeights } = await import("./novice-weld.mjs");
-  const r = weldWeights(P0, J, W, { smooth: Math.max(0, (+process.env.NOVICE_WELD || 1) - 1), index: I0 });
+  const rank = Int8Array.from(vparts, (s) => Math.max(...[...s].map((p) => RANK[PARTS[p]])));
+  const r = weldWeights(P0, J, W, { smooth: Math.max(0, (+process.env.NOVICE_WELD || 1) - 1), index: I0, rank });
   J.set(r.J); W.set(r.W);
-  console.log(`welded weights: ${nv} vertices in ${r.groups} points`);
+  console.log(`welded weights: ${nv} vertices in ${r.groups} points, smoothed ${Math.max(0, (+process.env.NOVICE_WELD || 1) - 1)} times`);
 }
 
 // ---- 5. write: one mesh per part, one material ----
