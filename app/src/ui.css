@@ -88,7 +88,7 @@ button { -webkit-tap-highlight-color: transparent; }
    no selecting its label. What is there to be read (a note, a line of verse) can still be selected. */
 button, a, input, .chip { touch-action: manipulation; }
 body { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-#pieceNote, #pieceLink, #pieceCredit, #pieceTitle, #pieceBy, #pieceFacts, #slipText, #slipFrom, #bookHint { -webkit-user-select: text; user-select: text; }
+#pieceNote, #pieceLink, #pieceCredit, #pieceProcessed, #pieceTitle, #pieceBy, #pieceFacts, #slipText, #slipFrom, #bookHint { -webkit-user-select: text; user-select: text; }
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
 
 /* ---- Paper ---- */
@@ -360,7 +360,8 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 #pieceFacts dt { color: #8a2a1e; letter-spacing: .2em; font-family: var(--kai); } #pieceFacts dd { margin: 0; }
 #pieceNote { margin: 16px 0 0; font: 400 clamp(15px, 1.25vw, 17px)/1.95 var(--serif); text-align: justify; }
 #pieceLink { margin: 12px 0 0; padding-left: 12px; border-left: 2px solid #8a2a1e; font: 400 14px/1.8 var(--kai); color: #4a443b; }
-#pieceCredit { margin: 14px 0 0; font: 400 12px/1.6 var(--serif); color: #6f675b; word-break: break-all; }
+#pieceCredit, #pieceProcessed { margin: 14px 0 0; font: 400 12px/1.6 var(--serif); color: #6f675b; word-break: break-all; }
+#pieceCredit + #pieceProcessed { margin-top: 4px; }
 /* The way out stays in reach however long the entry is: it rides at the foot of the sheet as the entry is drawn past. */
 #piece .ink-btn { margin-top: 18px; justify-self: start; position: sticky; bottom: 0; z-index: 1; box-shadow: 0 0 0 10px var(--paper), 0 -14px 14px -4px var(--paper); background-color: var(--paper); }
 #piece article { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
@@ -484,3 +485,17 @@ body.ending .rail, body.ending #bookBtn, body.ending #goal, body.ending #way, bo
 
 /* Each language's name is set as that language sets it, whatever the page around it: no wide spacing for "English". */
 [data-lang] { letter-spacing: .04em !important; text-indent: 0 !important; }
+
+/* The page of thanks and sources, opened from the pause menu (src/credits.js). */
+#credits { position: absolute; inset: 0; z-index: 46; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+.credits-card { width: min(92vw, 560px); box-sizing: border-box; padding: 30px 34px 16px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; color: var(--ink-1); }
+.credits-card h2 { margin: 0 0 14px; text-align: center; font: 400 32px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
+.credits-card h3 { margin: 18px 0 6px; font: 400 var(--t-m)/1.5 var(--kai); letter-spacing: .2em; color: #8a2a1e; }
+.credits-card p { margin: 6px 0; font: 400 var(--t-s)/1.85 var(--kai); letter-spacing: .04em; color: var(--ink-2); overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; }
+.credits-card ul { margin: 6px 0; padding: 0; list-style: none; font: 400 var(--t-s)/1.7 var(--kai); }
+.credits-card li { padding: 3px 0; display: flex; flex-wrap: wrap; gap: 0 10px; align-items: baseline; }
+.credits-card li span { font: 400 var(--t-xs)/1.6 var(--serif); color: var(--ink-3); overflow-wrap: anywhere; }
+.credits-card a { color: var(--ink-1); text-decoration: underline; text-decoration-color: #8a2a1e; text-underline-offset: 3px; }
+.credits-card a:focus-visible { outline: 2px solid #8a2a1e; outline-offset: 2px; }
+.credits-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: linear-gradient(to top, var(--paper-hi) 72%, rgba(242,236,224,0)); }
+@media (max-width: 400px) { .credits-card { padding: 26px 22px 16px; } .credits-card h2 { font-size: 28px; } }

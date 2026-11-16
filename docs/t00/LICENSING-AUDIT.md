@@ -229,3 +229,22 @@ ColBase 14 件逐一是（标题照 `works.js`）：禅院额字“释迦宝殿�
 
 ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loading...」），本次用 Playwright 的无头 Chromium 打开；其余接口用 curl 直接取，原始返回摘要存 [`api-responses-2026-11-16.json`](evidence/licensing/api-responses-2026-11-16.json)。
 本次没有联系任何第三方，没有发邮件，没有注册账号。
+
+## 九、已补齐（issue #113）
+
+前文不改。第四节里「conditional」的 22 项，条件已逐项补上，登记表 `asset-register.csv` 对应行改为 `yes`（`checked_on` 2026-11-16，补齐在同一天）；`unverified` 的 7 项没有动，等所有者回答第五节。没有换任何素材。
+
+| 项 | 怎么补的 | 看哪里 |
+|---|---|---|
+| ColBase 14 件馆藏图 | 卡片在馆方来源行（`Source: ColBase (条目地址)`，按原文不译）之下加一行加工说明，写法照 ColBase 利用规约的示例「『ColBase』（URL）を加工して作成」：「「ColBase」（URL）加工而成：缩小并转为 WebP。」，裁切过的写「裁切、缩小并转为 WebP」（现在 14 件都只是缩小转码，没有裁切）。数据是 `works.js` 每件的 `processed` 字段（`tools/gallery.py` 写出），文字走 `t()`，日、英、韩各有译文。鸣谢页也列了这 14 件，各链到条目页 | `src/credits.js`（`processedLine`）、`tests/unit/credits.test.mjs`、e2e `lang`（日文卡片）、`docs/t00/evidence/licensing/fix/` 四种语言的卡片截图 |
+| 名匾「釋迦寶殿」`CALLIG-shijia` | 鸣谢页「名匾」一节写明出典（TB-1446 条目地址）和加工（分离墨迹、裁切为四字） | 鸣谢页、`credits.test.mjs` |
+| 鸣谢与来源页 | 歇脚菜单加「鸣谢」，打开一张纸（`#credits`，`ui.layer`）：馆藏三家（ColBase 14 件逐件、克利夫兰与大都会、不暗示馆方认可）、名匾、三维扫描（Mia、克利夫兰）、Poly Haven 与七位作者、字体及各自的 OFL 版权行、程序库，并链到第三方许可汇总和字体许可全文。文字走 `t()`，四种语言都有；馆方来源行不译 | `src/credits.js`、`index.html` 的 `#credits`、e2e `menu`（开页、14+1 个 ColBase 链接、两份许可文件能打开）、`tools/mobile-audit.cjs` |
+| 字体保留名 `FONT-kai`、`FONT-hand-ko` | 子集文件的 name 表换成项目自己的名字：`Yunjing Kai`（PostScript `YunjingKai-Regular`）、`Yunjing Hand KO`（`YunjingHandKO-Regular`），Nanum 的商标记录（name 7）去掉；版权、许可记录照原样保留。`tools/fonts.py` 的 `cut()` 切字时自动改（`RENAMED`），已切好的文件可用 `python3 tools/fonts.py --rename` 就地改。新检查 `tests/unit/fonts.test.mjs`（在 Node 里直接读 `.woff2` 的 name 表）：16 个字体文件的名字记录不含各自 OFL 声明的保留名；先让它失败（`hand-ko.woff2` 的 name 1、3、4、6、7 含 Nanum），再改。为了鸣谢页的新字，还用原始 TTF（google/fonts、lxgw v1.530）重切了十六个文件里的字集，所有原有字的字形逐个比对没有变 | `fonts.test.mjs`、`pnpm run check` |
+| 第三方许可声明 `LIB-three`、`LIB-meshopt`、`LIB-lil-gui`、`LIB-stats` | `tools/notices.mjs` 写 `app/shared/licenses/THIRD-PARTY-NOTICES.txt`：three.js、meshoptimizer 的 MIT 全文读自 `node_modules`，lil-gui、stats.js、Basis 的 LICENSE 与 NOTICE 取自各自仓库、放在同目录；它随 `shared/` 进 `dist/shared/licenses/`，鸣谢页有链接。`vite.config.mjs` 的构建收尾在文件缺失、缺任一库的名字时让构建失败 | `tests/unit/notices.test.mjs`（把站点真的建到临时目录，查五个库的名字、四份 MIT 与 Apache-2.0 全文、版权行）、e2e `menu` 在页面里打开这份文件 |
+| Basis `LIB-basis` | `tools/setup.mjs` 不再拷 three.js 的 MIT，改拷 Basis 自己的 Apache-2.0 `LICENSE` 和 `NOTICE`（放在 `app/shared/licenses/`，因为没有任何安装的包带着它们）到 `app/vendor/basis/`；同样的两份也在汇总里 | `notices.test.mjs`（`dist/vendor/basis/LICENSE`、`NOTICE`） |
+
+**还没做到的，如实写在这里**
+- 评审时仍请再开一次大都会、Mia 的政策页（第八节，当时 HTTP 429）；这次没有重核，登记表里它们本来就是 `yes`。
+- 鸣谢页里的 Poly Haven、三维扫描、字体三节是「建议写」的内容，不是条款要求；写了不会有害，主创认为多余可以删。
+- 日、英、韩的译文是开发方初稿，未经母语者审读（与其余界面一致，见 `docs/t00/I18N.md`）。
+- 重切字体让几张字面变大了：`brush-ja` +57 KB、`xing-ja` +58 KB、`seal-ja` +25 KB、`hand-ko` +12 KB，原因是这些面的字集按整张翻译表算，而鸣谢页并不用它们写字（见 PR 里的取舍问题）。

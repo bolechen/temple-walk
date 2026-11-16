@@ -90,7 +90,8 @@
     "tests/unit/edges.test.mjs：跳跃测试（两张茶案、至少 24 个方向、走与 Shift、每次落地再跳，逐帧不进茶案与身位，落地都在前廊 0.45 米）；膝下测试（草垫、门槛、蒲团）",
     "tests/e2e/run.cjs jump：三段真实按键（W、Shift+W、空格）在茶案前起跳，逐帧取样",
     "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
-    "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
+    "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令",
+    "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。"
   ],
   "known_issues": [
     "STR3-01、02 未经评审方复核",
