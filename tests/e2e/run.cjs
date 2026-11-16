@@ -979,6 +979,12 @@ const scenarios = {
     const look = async (q, w = 480, h = 200) => { const t = await open(b, base, q, { viewport: { width: w, height: h } }); await t.frames(2); const p = await t.probe(); expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close(); return p; };
     let p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
     expect(p.post.depth && p.post.gtao && p.post.lut && p.post.halation && !p.post.dof && p.layers > 0, "the high tier at dusk, walking: " + JSON.stringify([p.post, p.layers]));
+    // The colour table is baked when the hour changes, never per frame (it once was, at 20 ms of CPU a frame).
+    { const t = await open(b, base, "q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk", { viewport: { width: 320, height: 160 } }); await t.frames(2);
+      const n0 = (await t.probe()).post.bakes; await t.frames(6); const n1 = (await t.probe()).post.bakes;
+      expect(n0 >= 1 && n1 === n0, `the colour table was baked again while walking: ${n0} → ${n1}`);
+      await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
+      expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
     p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
     expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
     p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk&off=gtao,lut,halation,layers,dof");

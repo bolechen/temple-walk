@@ -102,6 +102,8 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
   let mood = null, dof = 0;
   // What can be switched while walking; the shadow's softness and the leaves' shadows are decided at load.
   const on = { gtao: !!gtao && !off.has("gtao"), halation: !off.has("halation"), lut: !off.has("lut"), dof: depth && !!quality.dof && !off.has("dof") };
+  // `bake`: the hour has changed, so the colour table is baked again (32³ colours on the CPU: never every frame).
+  let baked = null, bakes = 0;
   const apply = () => {
     if (!mood) return;
     const hal = on.halation ? mood.hal ?? 0 : 0;
@@ -109,7 +111,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
     bloom.strength = mood.bloom * (1 + 0.6 * hal);
     const p = mood.lut || IDENTITY;
     g.uLut.value = on.lut && !isIdentity(p) ? 1 : 0;
-    if (g.uLut.value) { lut.image.data.set(bakeLut(p)); lut.needsUpdate = true; }
+    if (g.uLut.value && baked !== p) { lut.image.data.set(bakeLut(p)); lut.needsUpdate = true; baked = p; bakes++; }
     g.uAO.value = on.gtao ? mood.ao ?? 0.6 : 0; if (gtao) gtao.enabled = on.gtao;
     g.uDof.value.z = on.dof && dof > 0 ? 1 : 0;
   };
@@ -123,10 +125,10 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
     },
     setMood(m) { mood = m; g.uSh.value.set(...m.sh); g.uHi.value.set(...m.hi); g.uSat.value = m.sat; g.uLift.value = m.lift; g.uExp.value = m.exp; g.uCon.value = m.con ?? 1.1; apply(); },
     // The depth of field's focus, in metres (0: none). Only a fixed view or a photograph sets it.
-    focus(metres) { dof = metres; g.uDof.value.x = Math.max(0.5, metres || 1); apply(); },
+    focus(metres) { dof = metres; g.uDof.value.x = Math.max(0.5, metres || 1); g.uDof.value.z = on.dof && dof > 0 ? 1 : 0; },
     // Switch one of the passes while walking; returns whether it is now drawn (null: no such pass on this tier).
     part(name, state) { if (!(name in on) || (name === "gtao" && !gtao) || (name === "dof" && !depth)) return null; on[name] = !!state; apply(); return on[name]; },
     parts: () => ({ ...on }),
-    state: () => ({ depth, gtao: !!gtao && on.gtao, halation: on.halation && (mood?.hal ?? 0) > 0, lut: !!g.uLut.value, dof: !!g.uDof.value.z, focus: dof }),
+    state: () => ({ depth, gtao: !!gtao && on.gtao, halation: on.halation && (mood?.hal ?? 0) > 0, lut: !!g.uLut.value, dof: !!g.uDof.value.z, focus: dof, bakes }),
   };
 }
