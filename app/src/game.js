@@ -10,6 +10,7 @@ import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell } from "./audio.js";
 import { createRites } from "./rites.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
+import { track } from "./analytics.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -80,6 +81,7 @@ export function createGame(y) {
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
   function earned(id) {
+    track("demo.seal", { id, count: journey.count() });
     chime(1, journey.count()); refresh();
     const el = $("toast"), d = SEAL[id]; if (!el) return;
     $("toastSeal").src = sealStamp(d.seal, 220, { seed: SEALS.indexOf(d) + 11 }).toDataURL(); $("toastLine").textContent = id === "sutra" && journey.verse ? journey.verse.text : d.line; $("toastName").textContent = `${d.place} · ${d.seal}`;
@@ -90,8 +92,9 @@ export function createGame(y) {
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; if (full && !closing) complete(); }, 900); if (!full) y.hints?.say.seal(); }, 4200 * Math.max(fast, 0.3));
   }
   // ---- A full book: its own seal, while the music plays the whole theme once (score.js), then the page of seals ----
-  let completing = false;
+  let completing = false, completed = false;
   function complete() {
+    if (!completed) { completed = true; track("demo.complete", { count: journey.count(), seconds: Math.round(visit.seconds) }); }
     const el = $("toast"); if (completing || !el) { openBook(); return; }
     completing = true;
     $("toastSeal").src = sealStamp("七印圆满", 220, { seed: 29 }).toDataURL(); $("toastName").textContent = "云径禅寺 · 七印圆满";
@@ -198,7 +201,7 @@ export function createGame(y) {
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
     // Seen, or passed over: either way it is not shown again on this walk. The seals left over can still be earned.
-    journey.close();
+    if (journey.close()) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
     refresh(); if (journey.done()) complete(); else openBook();
   }
   window.addEventListener("struck", (e) => {
@@ -294,7 +297,7 @@ export function createGame(y) {
   window.__goBack = (id) => goBack(id);
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
-  $("bookReset")?.addEventListener("click", (e) => { if (/** @type {HTMLElement} */ (e.currentTarget).textContent === "重新朝山") { /** @type {HTMLElement} */ (e.currentTarget).textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
+  $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.textContent === "重新朝山") { b.textContent = "再点一次，清空朱印"; return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 
   // ---- The title ----
   const title = $("title");
@@ -319,10 +322,15 @@ export function createGame(y) {
   $("againBtn")?.addEventListener("click", (e) => {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
+    track("demo.restart", { from: "title", seals: journey.count() });
     journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); left = null; b.dataset.asked = "";
     const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter();
   });
-  const enter = () => { if (entered) return; entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
+  const enter = () => {
+    if (entered) return;
+    track("demo.enter", { resumed: !!(left && titleOffer(journey.count(), SEALS.length, left, y.start).going), seals: journey.count(), tier: y.tier || "" });
+    entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); setTimeout(announce, 14000 * fast);   // after the first line about walking has gone
+  };
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
   refresh(); rites.restore({ incense: journey.has("incense") });
 

@@ -6,12 +6,23 @@
     "domain": "temple.rushiwowen.co",
     "dashboard": "https://u.rushiwowen.co/websites/e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42",
     "date": "2026-11-16",
-    "scope": "独立统计 Demo 访问，不与如是我闻主站合并；仅限正式域名，尊重 Do Not Track。",
-    "limitations": "仅统计接入后的访问；浏览器拦截、Do Not Track 和来源未传递会影响统计完整性。",
+    "scope": "独立统计 Demo 访问和序章里程碑，不与如是我闻主站合并；仅限正式域名，尊重 Do Not Track。",
+    "limitations": "仅统计接入后的访问。浏览器拦截、Do Not Track 和来源未传递会影响完整性。事件只记里程碑，不记脚步、镜头或帧率；接入前的游玩无法补回。",
     "evidence": [
       "app/index.html：沿用 buddhist-say 的 defer、data-domains、data-do-not-track、data-exclude-hash 与 data-performance 配置",
-      "Umami 后台已创建山门之外 Demo 独立站点；上线数据以实际仪表盘为准",
-      "pnpm run check、pnpm run typecheck、220 项单元测试、pnpm run build 与 pnpm run e2e:quick 均通过；构建产物只含一个正式域名专用追踪脚本"
+      "app/src/analytics.js：demo.ready、demo.enter、demo.seal、demo.complete、demo.ending、demo.restart 只在 temple.rushiwowen.co 上报",
+      "app/loading.js：首次加载失败上报 demo.load_error，失败一次只记一次",
+      "tests/unit/analytics.test.mjs、tests/unit/loading.test.mjs",
+      "pnpm run check、pnpm run typecheck、229 项单元测试与 pnpm run e2e:quick 通过；本地与预览域名不上报"
+    ],
+    "events": [
+      "demo.ready",
+      "demo.load_error",
+      "demo.enter",
+      "demo.seal",
+      "demo.complete",
+      "demo.ending",
+      "demo.restart"
     ]
   },
   "community": {
