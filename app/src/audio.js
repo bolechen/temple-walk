@@ -60,11 +60,18 @@ function room(inside) {
   for (const k of ["music", "ambience", "effects"]) { const b = bus[k]; b.sendOut.gain.setTargetAtTime(inside ? 0 : b.wet, t, 0.7); b.sendIn.gain.setTargetAtTime(inside ? b.wet * 1.1 : 0, t, 0.7); }
 }
 // The music steps back while the bell or the drum speaks, and comes back of itself.
-let ducked = { until: 0, depth: 1 };
+let ducked = { until: 0, depth: 1 }, rest = 1;
 function duck(depth, secs) {
   if (!bus.music) return; const t = ctx.currentTime, g = bus.music.duck.gain;
-  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(depth, t, 0.15); g.setTargetAtTime(1, t + secs, 2.2);
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(Math.min(depth, rest), t, 0.15); g.setTargetAtTime(rest, t + secs, 2.2);
   ducked = { until: t + secs, depth };
+}
+// While he sits on after his tea the music stays back, so that the place itself is what is heard: the wind in the
+// court, the kettle's steam, a bell if someone strikes it. It comes back slowly when he stands.
+export function hush(on) {
+  rest = on ? 0.35 : 1; if (!bus.music) return;
+  const t = ctx.currentTime, g = bus.music.duck.gain;
+  if (t >= ducked.until) { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(rest, t, on ? 1.6 : 2.4); }
 }
 function partial(freq, gain, decay, t0, type = "sine", to = bus.effects.in) {
   const o = ctx.createOscillator(), g = ctx.createGain();
@@ -275,6 +282,6 @@ export function musicState() {
   const now = ctx.currentTime, c = music.player.conductor;
   return { state: ctx.state, clock: now, started: true, starts, players, zone: music.keeper.stable, candidate: music.keeper.candidate, section: c.section,
     place: c.place, phrases: music.player.phrases, cuts: c.cuts, playing: now < c.notesEnd, resting: now >= c.notesEnd && now < c.restEnd, pending: music.player.pending,
-    sounding: music.player.voices.sounding, seals, duck: +bus.music.duck.gain.value.toFixed(3), ducked: now < ducked.until, level: +bus.music.level.gain.value.toFixed(3),
+    sounding: music.player.voices.sounding, seals, hushed: rest < 1, duck: +bus.music.duck.gain.value.toFixed(3), ducked: now < ducked.until, level: +bus.music.level.gain.value.toFixed(3),
     placeLevel: +music.player.level.gain.value.toFixed(3), room: roomNow ? "hall" : "court", levels: { ...levels }, sig: music.player.last && music.player.last.sig };
 }

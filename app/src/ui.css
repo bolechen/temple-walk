@@ -160,6 +160,8 @@ body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
 #act:hover .enso { transform: rotate(-8deg) scale(1.04); }
 #act .enso kbd { margin: 0; border: 0; padding: 0; font-size: 14px; color: var(--on-2); }
 #act span { text-indent: 0; margin-right: calc(-1 * var(--track-wide)); }
+/* While the log is still swinging out from the last stroke the rope cannot be drawn yet: the ring rests, faint. */
+#act.wait { opacity: .45; } #act.wait .enso { transform: scale(.94); }
 #say { position: absolute; left: 0; right: 0; bottom: calc(176px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(19px, 3.1vmin, 26px)/1.6 var(--kai); letter-spacing: .16em; color: var(--on); text-shadow: var(--lift), 0 0 24px rgba(0,0,0,.4); opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
 #say.on { opacity: 1; }
 /* Under an open sheet the picture's own words step back, so nothing shows through the veil. */

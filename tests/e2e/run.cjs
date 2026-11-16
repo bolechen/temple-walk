@@ -217,17 +217,32 @@ const scenarios = {
     const t = await open(b, base, "q=low&fast=1&seed=4");
     const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
+    const word = () => t.page.getAttribute("#act", "data-word"), offered = (w, what) => t.until(async () => (await t.page.isVisible("#act")) && (await word()) === w, 30000, `"${w}" was not offered ${what}`);
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
-    // The bell: stand in its ring and take the rope; he rings it three times.
-    await at("bell"); await t.until(() => t.page.isVisible("#act"), 30000, "standing before the bell offered nothing");
-    expect((await t.page.getAttribute("#act", "data-word")) === "撞钟", "the button should say what can be done");
-    await t.page.click("#act");
+    // The summit first, with nothing else in the book: three breaths, its seal, and the prologue closes all the same,
+    // with words about this walk only, then the book with what is still to be found.
+    await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    const lines = new Set(); await t.until(async () => { lines.add(await t.page.evaluate(() => window.__rites().line)); return (await t.page.evaluate(() => window.__rites().ended)) === 1; }, 120000, "the chapter never closed with only one seal");
+    const said = [...lines].join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
+    await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
+    expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
+    await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
+    // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
+    await offered("起身", "while he sits on the summit"); await t.page.click("#act"); await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
+    await at("sit"); await t.frames(3); await t.page.waitForTimeout(800); expect((await word()) !== "静坐", "the summit offered the close a second time");
+    // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
+    await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
+    await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring the bell");
+    await t.page.click("#act"); await t.page.waitForTimeout(300); expect((await t.journey()).strikes === 1, "a press while the log swung rang the bell");
+    for (const n of [2, 3]) { await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.ready)), 30000, "the rope never came back to hand"); await t.page.click("#act"); await t.until(async () => (await t.journey()).strikes === n, 30000, `the stroke ${n} did not sound`); }
     await seal("bell", "the bell"); expect((await t.page.textContent("#toastName")).includes("闻钟") && (await t.page.getAttribute("#toastSeal", "src")).startsWith("data:image"), "no seal was shown");
-    expect((await t.page.textContent("#bookBtn")).includes("一"), "the book's button should count the seals");
-    // Tea, the well, the lamp: walk into the ring, press, wait.
-    for (const [id, word] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
-      await at(id); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 30000, `nothing offered at ${id}`);
-      await t.page.click("#act"); await seal(id, id);
+    expect((await t.page.textContent("#bookBtn")).includes("二"), "the book's button should count the seals");
+    await t.page.keyboard.press("Escape"); await t.until(async () => (await t.journey()).rite === null, 20000, "Esc did not let the rope go");
+    // Tea, the well, the lamp: walk into the ring, press, wait. After the tea he stays until he is stood up.
+    for (const [id, w] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
+      await at(id); await offered(w, `at ${id}`); await t.page.click("#act"); await seal(id, id);
+      if (id === "tea") { await offered("起身", "after the tea"); await t.page.click("#act"); await t.until(async () => (await t.journey()).rite === null, 20000, "he did not get up from the tea"); }
     }
     expect((await t.journey()).lampLit, "the lamp should stay lit");
     // The library gives a line, which must be taken.
@@ -236,27 +251,41 @@ const scenarios = {
     await t.page.click("#slipTake"); await seal("sutra", "the library"); expect((await t.journey()).verse.text === line, "the line was not kept");
     // The book survives leaving and coming back.
     await t.page.reload(); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
-    expect((await t.page.textContent("#titleSeals")).includes("五"), "the title should say how many seals are held");
+    expect((await t.page.textContent("#titleSeals")).includes("六"), "the title should say how many seals are held");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled); await t.page.click("#enterBtn");
-    j = await t.journey(); expect(j.count === 5 && j.lampLit && j.next === "incense", "the book was not remembered: " + JSON.stringify(j));
-    // The summit is the last thing: before the other six are done its mat is only a seat, and gives no seal.
-    await at("sit"); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered on the summit"); await t.page.click("#act");
-    await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) === 1, 30000, "he did not sit down on the summit mat"); expect(!(await t.journey()).seals.sit, "the summit gave its seal before the rest was done");
-    // Incense, in the great hall: the sticks are set in the ash and stay there.
+    j = await t.journey(); expect(j.count === 6 && j.lampLit && j.next === "incense" && j.closed > 0, "the book was not remembered: " + JSON.stringify(j));
+    // Incense, in the great hall, is the seventh: the full book has its own seal and opens, and the close is not played again.
     await t.page.evaluate(() => window.__inside(true)); await t.until(() => t.inHall(), 30000, "could not go in");
-    await at("incense"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 30000, "nothing offered before the altar"); await t.page.click("#act");
+    await at("incense"); await offered("上香", "before the altar"); await t.page.click("#act");
     await seal("incense", "the incense"); expect((await t.page.evaluate(() => window.__rites().incense)).planted, "the sticks are not standing in the ash");
-    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
-    // Then the summit: three breaths, the seventh seal, the close of the chapter with its words, and the book.
-    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 30000, "could not come out");
-    await at("sit"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 30000, "nothing offered on the summit"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
-    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed");
-    expect((await t.page.evaluate(() => window.__rites().line)).length > 6, "no closing words were said");
+    await t.until(async () => (await t.page.isVisible("#toast")) && (await t.page.textContent("#toastName")).includes("七印圆满"), 60000, "a full book was not marked");
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
+    expect((await t.page.evaluate(() => window.__rites().ended)) === 0, "the close played again for the seventh seal");
     expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
-    await t.page.click("#bookClose"); expect(!(await t.page.isVisible("#act")), "nothing should be offered once every seal is held");
+    await t.page.click("#bookClose"); expect((await word()) !== "上香" || !(await t.page.isVisible("#act")), "the incense should not be offered again");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // A book kept by an older version: a filled one has seen the close and is not shown it on the summit again; one
+  // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
+  oldbook: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0");
+    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);
+    const summit = async () => { await at("sit"); await t.frames(3); await t.page.waitForTimeout(800); return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
+    const load = async (book, ended) => { await t.page.evaluate(([bk, e]) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify(bk)); if (e) localStorage.setItem("yunjing.ending.v1", "1"); else localStorage.removeItem("yunjing.ending.v1"); }, [book, ended]);
+      await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 }); };
+    const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
+    await load({ v: 1, born: 1, seals: Object.fromEntries(all.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 }, false);
+    let j = await t.journey(); expect(j.count === 7 && j.closed === 20, "a filled old book should have seen the close: " + JSON.stringify(j));
+    expect((await summit()) !== "静坐", "a filled old book was offered the close again");
+    await load({ v: 1, born: 1, seals: { bell: 4, tea: 5 }, strikes: 3, verse: null, done: null }, true);
+    j = await t.journey(); expect(j.count === 2 && j.closed > 0, "the old note that the close was seen was lost: " + JSON.stringify(j));
+    expect(!(await t.page.evaluate(() => localStorage.getItem("yunjing.ending.v1"))), "the old note should be folded into the book");
+    expect((await summit()) !== "静坐", "an old book whose close was seen was offered it again");
+    await load({ v: 1, born: 1, seals: { bell: 4, sit: 5 }, strikes: 3, verse: null, done: null }, false);
+    j = await t.journey(); expect(j.count === 2 && !j.closed, "an old book that never closed should not be marked closed: " + JSON.stringify(j));
+    expect((await summit()) === "静坐", "an old book whose summit seal came before the close should be offered it");
+    await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // What his hands do, at the pace a visitor sees it: the rope drawn and the bell rung three times, the bowl lifted
@@ -268,11 +297,19 @@ const scenarios = {
     const seen = (what, fn, ms = 120000) => t.page.waitForFunction(fn, null, { timeout: ms, polling: 100 }).catch(() => { throw new Error(what); });
     const R = () => t.page.evaluate(() => window.__rites());
     // The bell.
+    // The bell: the first press takes the rope and rings once; every stroke after it is one more press, when the log
+    // has come back off the bronze. Nothing rings by itself, and walking off (here Esc) lets the rope go.
     await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
     await seen("he never took the rope", () => window.__rites().bell.grip > 0.9);
     await seen("the log was never drawn back", () => window.__rites().bell.log > 0.15);
-    await t.until(async () => (await t.journey()).seals.bell > 0, 120000, "three strokes were not rung");
-    let r = await R(); expect(r.bell.log >= -0.181, "the log went into the bell: " + r.bell.log);
+    await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring");
+    let lo = 0; const low = async () => { lo = Math.min(lo, (await R()).bell.log); };
+    await t.page.waitForTimeout(6000); await low(); expect((await t.journey()).strikes === 1 && (await R()).bell.pulls === 1, "the bell rang again without a press");
+    for (const n of [2, 3]) { await seen("the rope never came back to hand", () => window.__rites().bell.ready); await t.page.click("#act"); await t.until(async () => { await low(); return (await t.journey()).strikes === n; }, 30000, `stroke ${n} did not sound`); }
+    await t.until(async () => (await t.journey()).seals.bell > 0, 30000, "three strokes earned no seal");
+    let r = await R(); expect(lo >= -0.181 && r.bell.log >= -0.181, "the log went into the bell: " + lo);
+    expect((await t.journey()).rite === "bell" && r.bell.grip > 0.9, "he should still hold the rope after the third stroke");
+    await t.page.keyboard.press("Escape");
     await t.until(async () => (await R()).bell.grip === 0 && (await t.journey()).rite === null, 60000, "he never let the rope go");
     // Tea: the bowl leaves the table, is tilted at his lips three times, and is set down again.
     await at("tea"); await offered("吃茶"); await t.page.click("#act");
@@ -280,6 +317,11 @@ const scenarios = {
     await seen("the bowl was never tilted to drink", () => window.__rites().tea.tilt > 0.3);
     await t.until(async () => (await t.journey()).seals.tea > 0, 120000, "no seal for tea"); r = await R();
     expect(r.tea.sips === 3 && Math.abs(r.tea.lift) < 0.01 && r.tea.held === 0, "the bowl is not back on the table after three sips: " + JSON.stringify(r.tea));
+    // And he sits on: breathing, now and then looking out over the court, until 起身.
+    expect((await t.journey()).rite === "tea", "he should stay at the table after his tea");
+    await offered("起身"); await seen("he never looked up from the table", () => Math.abs(window.__rites().look) > 0.2, 60000);
+    expect((await R()).breath !== null, "he is not breathing as he sits"); await t.shot("e2e-tea-linger");
+    await t.page.click("#act"); await t.until(async () => (await t.journey()).rite === null && !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
     // Any stool may be sat on: the one across the table.
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => { const s = window.__seats[2]; window.__pose(s.at[0] + 0.5, s.at[1] - 0.9, 0, 0); });
