@@ -1,0 +1,22 @@
+test_actual_input_runtime (test_validate_review.EvidenceTests.test_actual_input_runtime) ... ok
+test_closed_issue_needs_retest (test_validate_review.EvidenceTests.test_closed_issue_needs_retest) ... ok
+test_diagnostic_does_not_prove_input (test_validate_review.EvidenceTests.test_diagnostic_does_not_prove_input) ... ok
+test_forged_hash (test_validate_review.EvidenceTests.test_forged_hash) ... ok
+test_generated_image_is_not_runtime (test_validate_review.EvidenceTests.test_generated_image_is_not_runtime) ... ok
+test_gpu_is_not_target_device (test_validate_review.EvidenceTests.test_gpu_is_not_target_device) ... ok
+test_malformed_arrays (test_validate_review.EvidenceTests.test_malformed_arrays) ... ok
+test_no_change (test_validate_review.EvidenceTests.test_no_change) ... ok
+test_open_major_prevents_acceptance (test_validate_review.EvidenceTests.test_open_major_prevents_acceptance) ... ok
+test_path_escape (test_validate_review.EvidenceTests.test_path_escape) ... ok
+test_publish_requires_version (test_validate_review.EvidenceTests.test_publish_requires_version) ... ok
+test_stale_commit (test_validate_review.EvidenceTests.test_stale_commit) ... ok
+test_unfilled_template_rejected (test_validate_review.EvidenceTests.test_unfilled_template_rejected) ... ok
+test_valid_local_evidence (test_validate_review.EvidenceTests.test_valid_local_evidence) ... ok
+test_escape_symlink (test_validate_review.InstallationTests.test_escape_symlink) ... ok
+test_install_and_idempotence (test_validate_review.InstallationTests.test_install_and_idempotence) ... ok
+test_refuse_modified_and_explicit_replace (test_validate_review.InstallationTests.test_refuse_modified_and_explicit_replace) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.219s
+
+OK

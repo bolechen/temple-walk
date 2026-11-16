@@ -1,0 +1,15 @@
+{"step":"ready","ms":29900,"t":"2026-11-16T02:09:10.842Z"}
+{"step":"entered","x":21.3,"z":91.5,"h":-14.5,"frames":27,"inside":false,"t":"2026-11-16T02:10:05.154Z"}
+{"step":"walk-W","seg":0,"from":[21.3,91.5,-14.5],"to":[21.3,86.05,-13.77],"dz":-5.45,"frames":68,"wallMs":169278,"t":"2026-11-16T02:13:25.723Z"}
+{"step":"walk-W","seg":1,"from":[21.3,86.05,-13.77],"to":[21.3,82.19,-11.59],"dz":-3.86,"frames":68,"wallMs":166856,"t":"2026-11-16T02:16:29.915Z"}
+{"step":"walk-W","seg":2,"from":[21.3,82.19,-11.59],"to":[21.3,77.53,-10.5],"dz":-4.66,"frames":68,"wallMs":144883,"t":"2026-11-16T02:19:10.041Z"}
+{"step":"walk-W","seg":3,"from":[21.3,77.53,-10.5],"to":[21.3,75.52,-10.5],"dz":-2.01,"frames":68,"wallMs":117372,"t":"2026-11-16T02:21:20.359Z"}
+{"step":"walk-W","seg":4,"from":[21.3,75.52,-10.5],"to":[21.3,75.52,-10.5],"dz":0,"frames":68,"wallMs":115972,"t":"2026-11-16T02:23:29.209Z"}
+{"step":"menu-open","stack":["menu"],"modal":true,"t":"2026-11-16T02:23:49.705Z"}
+{"step":"menu-tap-drag","yawPitchBefore":[0,0.04],"yawPitchAfter":[0,0.04],"targetBefore":null,"targetAfter":null,"t":"2026-11-16T02:25:50.269Z"}
+{"step":"menu-inputs","stackAfter":["menu"],"moved":0,"viewBefore":"third","viewAfter":"third","photo":false,"camDist":[6.11,6.11],"t":"2026-11-16T02:25:57.411Z"}
+{"step":"menu-closed","stack":[],"t":"2026-11-16T02:26:18.913Z"}
+{"step":"photo-visible-controls","vis":["photoClose","photoSettingsToggle","shutter"],"t":"2026-11-16T02:26:41.763Z"}
+{"step":"photo-taken","img":{"w":1700,"h":1130},"t":"2026-11-16T02:27:13.159Z"}
+{"step":"end","errors":[],"t":"2026-11-16T02:27:25.731Z"}
+probe exit 0
