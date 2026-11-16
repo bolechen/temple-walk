@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-16T04:09:49.618Z",
+  "generated_at": "2026-11-16T04:18:23.412Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "6486b89027c8a88095dd3955c14cdaac16368a48",
-    "url": "https://github.com/bolechen/temple-walk/commit/6486b89027c8a88095dd3955c14cdaac16368a48"
+    "sha": "924da559f2d189b697f8cff45e9517336209cf7f",
+    "url": "https://github.com/bolechen/temple-walk/commit/924da559f2d189b697f8cff45e9517336209cf7f"
   },
   "delivery": {
     "analytics": {
@@ -22,6 +22,44 @@
         "Umami 后台已创建山门之外 Demo 独立站点；上线数据以实际仪表盘为准",
         "pnpm run check、pnpm run typecheck、220 项单元测试、pnpm run build 与 pnpm run e2e:quick 均通过；构建产物只含一个正式域名专用追踪脚本"
       ]
+    },
+    "community": {
+      "date": "2026-11-16",
+      "summary": "内测反馈群入口：标题页右上角「内测反馈群」、歇脚菜单「加入内测反馈群」，点开同一张宣纸卡片显示微信群二维码。二维码与配置放 R2，不入 Git；换码只需上传新图并改 current.json，不用发版本。开发方陈述，不是验收结论。",
+      "storage": {
+        "bucket": "buddhist-say（Cloudflare R2，与如是我闻共用）",
+        "config": "https://static.rushiwowen.co/temple-walk/community/current.json",
+        "image": "https://static.rushiwowen.co/temple-walk/community/wechat-20261116.jpg",
+        "image_sha256": "1859280a02637d8e5bf9f86189fa1855c1ce525499a14a0b86a39d52c5e3b6f3",
+        "cache": "current.json：Cache-Control no-cache，边缘 DYNAMIC；图片按日期命名，public max-age=31536000 immutable",
+        "expires_at": "2026-11-23T00:00:00+08:00（按二维码截图上的「11月23日前有效」设定，未核对微信实际失效时刻）",
+        "replace": "上传新的 wechat-<日期>.jpg，再覆盖 current.json 的 image 与 expiresAt；enabled: false 可暂停展示"
+      },
+      "changes": [
+        "app/src/community.js（新增）：读取 R2 上的 current.json，校验 enabled / image / 带时区的 expiresAt；到期、关闭、加载失败分别显示状态与「重试」，到期瞬间收起旧码；卡片自己处理 Esc（标题页加载期间全局键盘监听尚未注册）",
+        "app/index.html、app/src/ui.css：标题页入口、歇脚菜单入口、community 弹层（原生 dialog，走 ui.js 的弹层栈）；手机上提示长按保存后到微信相册识别，二维码图片允许长按",
+        "app/yard.js：createUI 之后即挂上入群卡片，加载中也能打开",
+        "app/shared/fonts/*：tools/fonts.py 按新字重切（群码稍暂馈想聊欢迎查微择），原始字体取自 google/fonts 与霞鹜文楷 v1.530",
+        "tests/unit/community.test.mjs（新增）：相对图片地址、精确到期、关闭、非法配置与非 http(s) 图片",
+        "tests/e2e/run.cjs 新增 community 场景：拦截 R2 请求返回固定数据，覆盖叠在菜单上、Esc 只关卡片、关后释放图片、过期不显示、503 后重试",
+        ".gitignore：app/local-community/（本地调试用的二维码与配置）"
+      ],
+      "known_issues": [
+        "没有在真实微信里扫码或从相册识别过；iOS Safari、安卓浏览器的长按保存未在真机试过",
+        "二维码 7 天失效，需要人工换码；没有自动续期，也没有到期提醒",
+        "公开地址任何人可直接访问，二维码会被缓存与转发；这是群二维码本身的性质",
+        "R2 bucket 与如是我闻共用，权限按账户的 R2 密钥，没有为本项目单独建 bucket 或令牌",
+        "bang.woff2 未加新字却变小 12 字节，推测是上游 Yuji Boku 版本变化；匾额字形未逐字比对"
+      ],
+      "evidence": [
+        "R2：curl 带 Origin 头，两个对象 200，access-control-allow-origin: *；current.json cf-cache-status DYNAMIC；下载图片 SHA-256 与本地一致",
+        "本地 Vite + ego-browser：桌面标题页、卡片、歇脚菜单入口，390×844 触屏模拟下的标题页与卡片；Esc 在加载中与游戏中的行为、焦点回到打开者（截图含二维码，未入库）"
+      ],
+      "tests": {
+        "unit": "pnpm test：223/223 通过（含 community 三项）",
+        "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm run typecheck 通过",
+        "e2e": "node tests/e2e/run.cjs community menu layers boot phone：5/5 通过；未跑完整 e2e:smoke"
+      }
     },
     "schema_version": 1,
     "scene_id": "T00",
@@ -230,25 +268,25 @@
       "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
       "独立验收结论未改动（independent-review.json 未碰）"
     ],
-    "record_commit": "433eedb3c8bdae5b6e7fef01e3579bca4e1f9d35",
+    "record_commit": "924da559f2d189b697f8cff45e9517336209cf7f",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43802022215,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43802022215",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43803260096,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43803260096",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "in_progress",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "6486b89027c8a88095dd3955c14cdaac16368a48",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43802022215"
