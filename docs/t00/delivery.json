@@ -175,7 +175,7 @@
   "tests": {
     "unit": "pnpm test：210/210 通过（合入 main 的 #51、#53 之后）；新增 journey 三项、rites 一项（logSwing 从当前位置拉回，先失败后通过）",
     "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm typecheck 通过",
-    "e2e": "本地 SwiftShader：oldbook 通过、keys 通过、pilgrimage 通过（289 s）、rites 通过（457 s）；rites 加「两下连按只算一拉」后重跑结果见下一条记录；其余 smoke 场景这一轮没有整套重跑",
+    "e2e": "本地 SwiftShader，在提交 bfe9f6f（#52 合并前最后一版）上：pnpm run e2e:smoke 全部 23 个场景通过——boot、taps、halls、snow、steps、pilgrimage、oldbook、rites、sound、music、moods、views、photo-ui、keys、menu、layers、seasons、parts、jump、drop、stairs、camera、phone。这一轮的 rites 曾因另一会话合入的注释吞掉 leave() 而失败（起身无效），bfe9f6f 修复后通过。tier 3 场景（walk、tap、summit、photo、tour）未跑。smoke 不是在 main 5b713d8 上跑的：其间 main 合入的 4196350（回到上次离开处等）未经本轮 smoke",
     "ci": "PR #52 上 Pages verify（check、单测、build、boot）在各次推送均通过",
     "play_real_input": "tools/play-t00.cjs，正常速度：summit、bell、tea、phone 四段，页面零错误；日志 log-summit-bell-tea.json、log-bell.json、log-phone.json",
     "diagnostic_only": "以下只算诊断证据：把人放到地点旁用 __pose；读状态用 __journey/__rites/__music；端到端用 ?fast=1 的 pilgrimage/oldbook；__ending() 重放；rites 里两下连按是页面内连点按钮"
@@ -188,6 +188,7 @@
     "手机为 Playwright 模拟 iPhone 13 的触摸，未上真机；双指、摇杆起身未在本轮实测（摇杆走开松绳由 __pose 代替）",
     "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
     "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
-    "独立验收结论未改动（independent-review.json 未碰）"
+    "独立验收结论未改动（independent-review.json 未碰）",
+    "e2e tier 3（walk、tap、summit、photo、tour）未跑；main 5b713d8 上未重跑 smoke"
   ]
 }
