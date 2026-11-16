@@ -93,7 +93,7 @@ test("a step sounds as what it comes down on", () => {
   assert.equal(underfoot({ x: 0, z: 0, y: -60, floor: "room", snow: 1, wet: 1 }), "stone");                    // a hall's floor, whatever the weather
   assert.equal(underfoot({ x: 6.5, z: 20, y: 0, floor: "paving", snow: 1 }), "snow");
   assert.equal(underfoot({ x: 0, z: 20, y: 0, floor: "paving", snow: 1 }), "stone");                            // the swept axis path
-  assert.equal(underfoot({ x: 1.9, z: 30, y: 0, floor: "paving", snow: 1 }), "stone");                          // and its kerb
+  assert.equal(underfoot({ x: 1.9, z: 30, y: 0, floor: "paving", snow: 1 }), "snow");                           // its kerb lies under the bank of swept snow (snowfall.js)
   assert.equal(underfoot({ x: 0, z: 70, y: -3, floor: "path", snow: 1 }), "snow");                              // the approach is not swept
   assert.equal(underfoot({ x: 3, z: -2, y: 0.75, floor: "stone", snow: 1 }), "snow");                          // snow lies on the platforms too
   assert.equal(underfoot({ x: 3, z: -2, y: 0.75, floor: "stone", wet: 1 }), "stone");                          // a roofed platform stays dry in rain

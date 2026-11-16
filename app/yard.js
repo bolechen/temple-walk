@@ -20,6 +20,7 @@ import { createBamboo } from "./src/bamboo.js";
 import { createTrees } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
 import { createTrail } from "./src/trail.js";
+import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow } from "./src/eye.js";
@@ -76,6 +77,7 @@ if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
 await loading.step("山路");
 const M = createMaterials();
 const site = buildSite(M);
+const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
 const walker = createWalker(site);
 await loading.step("山门");
@@ -472,7 +474,7 @@ function frame(now) {
   for (const f of monk.steps.splice(0)) {
     if (passing) continue;
     if (!inside) trail.stamp(f);
-    const kind = underfoot({ x: f.x, z: f.z, y: f.y, floor: walker.floorAt(f.x, f.z), snow: inside ? 0 : mood.snow, wet: mood.wet });
+    const kind = underfoot({ x: f.x, z: f.z, y: f.y, floor: walker.floorAt(f.x, f.z), snow: inside ? 0 : mood.snow, wet: mood.wet, roofed: !inside && shelterAt(roofMap, f.x, f.y + 0.05, f.z) > 0.5 });
     footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet, late: f.late || 0 });
   }
   if (!inside) trail.follow(pos.x, pos.z); trail.update(dt);
