@@ -125,7 +125,8 @@ export function buildSite(M) {
       for (const dx of [-0.42, 0, 0.42]) parts.glaze.push(lathe([[0, 0.012], [0.035, 0], [0.04, 0.012], [0.075, 0.05], [0.082, 0.062], [0.076, 0.062], [0.03, 0.02], [0, 0.02]], 14).translate(x + dx, y + 0.37, z + 0.05));
       parts.iron.push(lathe([[0, 0], [0.09, 0], [0.13, 0.05], [0.13, 0.11], [0.07, 0.16], [0.03, 0.17], [0, 0.19]], 12).translate(x + 0.55, y + 0.37, z - 0.12), new THREE.TorusGeometry(0.09, 0.008, 5, 12, Math.PI).translate(x + 0.55, y + 0.53, z - 0.12));
       parts.wood.push(new THREE.CylinderGeometry(0.012, 0.03, 0.11, 8).translate(x - 0.6, y + 0.425, z - 0.12));
-      for (const dx of [-1.12, 1.12]) parts.straw.push(new THREE.CylinderGeometry(0.24, 0.26, 0.08, 14).translate(x + dx, y + 0.04, z + 0.02));
+      for (const dx of [-1.12, 1.12]) { parts.straw.push(new THREE.CylinderGeometry(0.24, 0.26, 0.08, 14).translate(x + dx, y + 0.04, z + 0.02));
+        const [cx, cz] = turn(x + dx, z + 0.02, 1); walk.posts.push({ x: cx - 16.6, z: cz + 14, r: 0.26 }); }   // a cushion is walked round, as the stools are: his shoes do not sink into the straw
       // The table and what stands on it are in the way, with his own width round them; the way past is outside it.
       const [ax, az] = turn(x - 0.75 - BODY, z - 0.26, 1), [bx, bz] = turn(x + 0.75 + BODY, z + 0.26 + BODY, 1);
       walk.posts.push({ x0: Math.min(ax, bx) - 16.6, x1: Math.max(ax, bx) - 16.6, z0: Math.min(az, bz) + 14, z1: Math.max(az, bz) + 14 });
@@ -136,7 +137,7 @@ export function buildSite(M) {
   // evergreens that stand clear of everything in the corners before the great hall. trees.js grows them; the plan
   // only says where they stand, how tall, and that they are in the way: a trunk is a round thing as wide as it
   // is grown at the knee, where its roots still spread it.
-  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.2 : (0.2 + h * 0.012) * 1.75) : (0.09 + h * 0.019) * 1.8 + (kind === "maple" ? 0.1 : 0));   // a young evergreen is clothed to the knee, so it is in the way as far as its boughs reach; a maple forks low and crooked
+  const cedars = [], girth = (kind, h) => (kind === "cedar" ? (h < 8 ? h * 0.2 : (0.2 + h * 0.012) * 1.9) : (0.09 + h * 0.019) * 1.8 + (kind === "maple" ? 0.1 : 0));   // a young evergreen is clothed to the knee, so it is in the way as far as its boughs reach; a maple forks low and crooked
   for (const [x, z, h, lvl] of [[-13.6, 54.4, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-15.5, 1.8, 5.2, 0], [15.5, 1.8, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
@@ -228,7 +229,7 @@ export function buildSite(M) {
     for (const s of [-1, 1]) walk.posts.push(
       { x0: s > 0 ? A.w / 2 - BODY - 0.021 : -A.w / 2 - CHEEK - BODY, x1: s > 0 ? A.w / 2 + CHEEK + BODY : -A.w / 2 + BODY + 0.021, z0: A.top + 0.02, z1: A.zA0 + BODY + 0.06 },
       { x0: A.xTurn + 0.02, x1: A.xB0 + BODY + 0.06, z0: s > 0 ? A.zMid + w2 - BODY - 0.021 : A.zMid - w2 - CHEEK - BODY, z1: s > 0 ? A.zMid + w2 + CHEEK + BODY : A.zMid - w2 + BODY + 0.021 },
-      { x0: s > 0 ? A.xC + A.w / 2 - BODY - 0.021 : A.xC - A.w / 2 - CHEEK - BODY, x1: s > 0 ? A.xC + A.w / 2 + CHEEK + BODY : A.xC - A.w / 2 + BODY + 0.021, z0: A.zA1 + 0.02, z1: A.zC0 + BODY + 0.06 });
+      { x0: s > 0 ? A.xC + A.w / 2 - BODY - 0.021 : A.xC - A.w / 2 - CHEEK - BODY, x1: s > 0 ? A.xC + A.w / 2 + CHEEK + BODY : A.xC - A.w / 2 + BODY + 0.021, z0: A.zA1 - 0.2, z1: A.zC0 + BODY + 0.06 });   // (from a little behind its head: the stone stands a finger proud of the landing there)
     // Landings overlap the flights that reach them by a hand's width, so there is never a seam to fall into.
     walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn + 0.2, z0: A.zA0 - 0.05, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 + 0.2, h: yB });
     // Below that, a third flight coming up from the south, from the landing where the walk begins.
@@ -408,6 +409,8 @@ export function buildSite(M) {
   // A straw cushion at the top of the summit pavilion's steps, facing back down the mountain.
   const porchY = TOP.y + 0.9, porchZ = topZ + 7.5 + 0.8;
   root.add(mesh(cushion().translate(0, porchY, porchZ), M.straw));
+  // It is where he comes out of the pavilion and where he sits: walked onto, not into. Its top is a floor, its own height.
+  walk.decks.push({ x: 0, z: porchZ, r: 0.292, x0: -0.292, x1: 0.292, z0: porchZ - 0.292, z1: porchZ + 0.292, h: porchY + 0.1, floor: "wood" });
   // Whatever can be sat on out of doors: the three stools at the tea table (each turned to the table) and the mat on
   // the summit porch. `top` is the height of the seat; `kind` says how one sits on it: on a stool as on a chair, on a
   // cushion cross-legged. The rooms add their own (interior.js); game.js offers them.
@@ -521,7 +524,7 @@ export function createWalker(site) {
   function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
     let height = null; floor = null;
     const take = (h, f) => { if (height === null || h > height) { height = h; floor = f || "path"; } };
-    for (const d of decks) if (inRect(d, x, z)) take(d.h, d.floor);
+    for (const d of decks) if (d.r !== undefined ? (x - d.x) ** 2 + (z - d.z) ** 2 < d.r * d.r : inRect(d, x, z)) take(d.h, d.floor);   // (a round one is a mat)
     for (const r of ramps) if (inRect(r, x, z)) {
       const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1];
       // A stair is steps, not a slope: he stands on the tread he is over, so his feet never sink into the stone.

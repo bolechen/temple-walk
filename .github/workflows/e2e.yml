@@ -43,6 +43,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: His whole body fits everywhere his feet may go
         run: pnpm run edges
+      - name: The camera's near plane cuts into nothing
+        run: pnpm run nearplane
       - name: Remember the browser between runs
         id: pw
         uses: actions/cache@v4
