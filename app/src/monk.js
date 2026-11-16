@@ -427,7 +427,7 @@ export function createMonk() {
   // ---- What the pose is computed from ----
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
-  let phase = 0, gait = 0, palms = 0, seat = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null;
+  let phase = 0, gait = 0, palms = 0, seat = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false];
   const footY = [null, null], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
@@ -569,15 +569,17 @@ export function createMonk() {
           let ground = -Infinity;
           for (const pr of PROBES) { tv2.copy(pr).applyAxisAngle(UPV, s * TOE_OUT).add(tv); tv2.y = 0; group.localToWorld(tv2); ground = Math.max(ground, surfaceAt ? surfaceAt(tv2.x, tv2.z) : rootY); }
           // At the side of a stair the ground under one shoe can be metres below the treads under the other. That shoe
-          // hangs, a tread below the body at most: reaching for it would bring the pelvis down through the stair.
-          if (surfaceAt && grounding.heightAt && bodyHeight !== null) ground = Math.max(ground, bodyHeight - 0.3);
+          // hangs, a tread below the body at most, and does not count when the pelvis is lowered to reach: reaching for it
+          // would bring him down through the stair.
+          hangs[i] = false;
+          if (surfaceAt && grounding.heightAt && bodyHeight !== null && ground < bodyHeight - 0.3) { ground = bodyHeight - 0.3; hangs[i] = true; }
           if (footY[i] !== null && Math.abs(footY[i] - ground) < 0.6 && dt > 0) ground = Math.max(ground, damp(footY[i], ground, 16, dt));   // down a step gently, never through it
           footY[i] = ground;
           group.localToWorld(targets[i].copy(tv)); targets[i].y = ground + ANKLE + step[i].lift * gait * (stairs ? 0.075 : 0.05);
         });
         // The pelvis comes down when a foot could not otherwise reach its ground.
         let need = 0;
-        SIDES.forEach(([n], i) => { const hip = B[n + "UpperLeg"].getWorldPosition(tv), h = Math.hypot(targets[i].x - hip.x, targets[i].z - hip.z), L = (THIGH + SHIN) * 0.992; need = Math.max(need, hip.y - targets[i].y - Math.sqrt(Math.max(0, L * L - h * h))); });
+        SIDES.forEach(([n], i) => { if (hangs[i] && !hangs[1 - i]) return; const hip = B[n + "UpperLeg"].getWorldPosition(tv), h = Math.hypot(targets[i].x - hip.x, targets[i].z - hip.z), L = (THIGH + SHIN) * 0.992; need = Math.max(need, hip.y - targets[i].y - Math.sqrt(Math.max(0, L * L - h * h))); });
         drop = dt > 0 ? Math.max(need, damp(drop, need, 10, dt)) : need;
         B.hips.position.y -= Math.max(0, drop);
         B.hips.updateMatrixWorld(true);
