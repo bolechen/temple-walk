@@ -72,7 +72,7 @@ const scenarios = {
     await go([[-6, 5.7], [-11.7, 5.5]]); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
-    expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("山门之外"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
+    expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("竹林里的泥"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
     // A column of the row before the dais stands at 9.56 m west of the middle, z = 4.35 (framing.js puts them on the hall's own bays).
     expect(await t.page.evaluate((c) => window.__blocked(c - 9.56, 4.35), cx), "the column this walks into is no longer where the scenario expects it");
     await go([[-9.56, 4.35]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9.56, s.z - 4.35) > 0.45, "he walked through a column");
@@ -178,7 +178,7 @@ const scenarios = {
     // A step is heard on the effects bus, listened to while it sounds (a frame drawn in software takes longer than a
     // step, so it is played and heard within one call). That it crunches rather than thuds is steps.test.mjs's to say.
     const step = await t.page.evaluate(() => { window.__steps(true); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
-    expect(step.rms > 0.002, "a step in the snow made no sound: " + JSON.stringify(step));
+    expect(step.rms > 0.0006, "a step in the snow made no sound: " + JSON.stringify(step));   // silence is 0; how loud is steps.test.mjs's to say
     // Standing where he stopped and looking down the way he came, the prints darken the snow.
     await t.page.evaluate(() => window.__view("first"));
     const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
@@ -216,7 +216,7 @@ const scenarios = {
     const h2 = await heard(); expect(h2.stone >= 3 && h2.wet === h.wet && h2.puddle === h.puddle, "in autumn the court should sound dry: " + JSON.stringify(h2));
     // A step is heard on the effects bus as it sounds (played and listened to within one call).
     const one = await t.page.evaluate(() => { window.__steps("stone"); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
-    expect(one.rms > 0.0008, "a step on stone made no sound: " + JSON.stringify(one));
+    expect(one.rms > 0.0004, "a step on stone made no sound: " + JSON.stringify(one));   // silence is 0; how loud is steps.test.mjs's to say
     await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the main hall");
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
     const s = await t.state(); await walk([[s.x, s.z - 3]], "he never walked in the hall");
@@ -740,6 +740,33 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.probe()).photo, "the next Esc lowers the camera: " + JSON.stringify(u));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The feedback group's card: its JSON and QR code come from R2 (src/community.js), answered here so no real code is
+  // needed. It opens over the pause menu as one more sheet, says when to join by, hides an expired code, and can retry.
+  community: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 900, height: 600 } });
+    const ui = () => t.page.evaluate(() => window.__ui());
+    const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
+    let config = { enabled: true, image: "test.png", expiresAt: "2099-01-01T00:00:00+08:00" }, broken = false;
+    await t.page.route("**/temple-walk/community/**", (r) => r.request().url().endsWith("current.json")
+      ? (broken ? r.fulfill({ status: 503, body: "" }) : r.fulfill({ contentType: "application/json", body: JSON.stringify(config) }))
+      : r.fulfill({ contentType: "image/png", body: PNG }));
+    expect(await t.page.evaluate(() => !document.getElementById("titleCommunity").hidden), "the title should offer the feedback group");
+    await t.page.keyboard.press("Escape"); await t.page.click("#menuCommunity");
+    await t.until(() => t.page.isVisible("#communityImage"), 20000, "the card never showed the code");
+    let u = await ui(); expect(u.stack.join() === "menu,community" && u.modal, "the card should lie over the menu: " + JSON.stringify(u));
+    expect((await t.page.textContent("#communityExpiry")).includes("1月1日") && (await t.page.getAttribute("#communityOriginal", "href")).endsWith("/temple-walk/community/test.png"), "the card should say when to join by and link the image beside its JSON");
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "menu" && u.focus === "menuCommunity", "Esc should put away only the card: " + JSON.stringify(u));
+    expect(!(await t.page.getAttribute("#communityImage", "src")), "a closed card should let go of the code");
+    config = { ...config, expiresAt: "2026-01-01T00:00:00+08:00" }; await t.page.click("#menuCommunity");
+    await t.until(async () => (await t.page.textContent("#communityStatus")).includes("正在更新"), 20000, "an expired code was not withheld");
+    expect(!(await t.page.isVisible("#communityImage")) && (await t.page.isVisible("#communityRetry")), "an expired code must not show");
+    await t.page.click("#communityClose"); broken = true; await t.page.click("#menuCommunity");
+    await t.until(async () => (await t.page.textContent("#communityStatus")).includes("无法加载"), 20000, "a failed load said nothing");
+    broken = false; config = { ...config, expiresAt: "2099-01-01T00:00:00+08:00" }; await t.page.click("#communityRetry");
+    await t.until(() => t.page.isVisible("#communityImage"), 20000, "retrying did not bring the code");
+    await t.page.keyboard.press("Escape"); await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length, "two Esc should close the card and the menu: " + JSON.stringify(u));
+    const errors = t.errors.filter((e) => !e.includes("/temple-walk/community/current.json")); expect(errors.length === 0, errors.join("\n")); await t.close();
+  } },
   // The seasons are the visitor's once the book has been filled: not offered before, offered after in the photograph's
   // settings, the pause menu and T, said once, and still open after 重新朝山 empties the book for a second walk.
   seasons: { tier: 2, async run(b, base) {
@@ -917,6 +944,9 @@ const scenarios = {
       expect(r[0] >= 0 && r[1] >= 0 && r[2] <= r[4] && r[3] <= r[5], `#${id} hangs off the screen`); expect(r[2] - r[0] >= 40 && r[3] - r[1] >= 38, `#${id} is too small to tap`);
     }
     expect(await t.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight), "the page scrolls");
+    // A sheet that scrolls carries its own paper: paper drawn behind the words is drawn away with them (seen on a phone, the pause menu's lower rows bare).
+    const bare = await t.page.evaluate(() => [...document.querySelectorAll(".paper:not(.scrolls)")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY)).map((el) => el.id || el.parentElement.id));
+    expect(bare.length === 0, "these sheets scroll but leave their paper behind: " + bare.join(", "));
     expect(await t.page.isVisible("#stick") && !(await t.page.isVisible("#keys")), "a phone should be given a thumb-stick, not a list of keys");
     expect((await t.page.textContent("#hint")).includes("圆盘"), "a phone should be told about the thumb-stick, not about keys");
     const z0 = (await t.state()).z; await t.page.touchscreen.tap(195, 560);   // the paving a few steps ahead of him
@@ -939,6 +969,22 @@ const scenarios = {
     await t.frames(2); const after = await t.state();
     expect(after.target === null && Math.hypot(after.x - before.x, after.z - before.z) < 0.3, "a drag should turn the view, not walk");
     expect(Math.abs(after.yaw - before.yaw) > 0.3, `a drag of 180 px should turn the view: ${before.yaw} to ${after.yaw}`);
+    // Two fingers drawn apart bring the eye nearer, together send it back (he starts in his own eyes, so first back out).
+    const two = async (from, to) => { await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 195 - from, y: 400, id: 3 }, { x: 195 + from, y: 400, id: 4 }] });
+      for (let k = 1; k <= 8; k++) { const d = from + ((to - from) * k) / 8; await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 195 - d, y: 400, id: 3 }, { x: 195 + d, y: 400, id: 4 }] }); }
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); await t.frames(6); };
+    await two(120, 20); await two(120, 20); const far = (await t.probe()).camDist; await two(30, 140); const near = (await t.probe()).camDist;
+    expect(far > 0.5 && near < far - 0.3, `a pinch should move the eye: drawn together to ${far}, apart to ${near}`);
+    // At the bell and over tea the stick is how a thumb lets go: pushed, he lets go of the rope, or stands up from his stool.
+    const push = async () => { await cdp0.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: sb[0], y: sb[1], id: 8 }] }); await cdp0.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: sb[0], y: sb[1] - 44, id: 8 }] }); await t.frames(4); await cdp0.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
+    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); }, id);
+    const word = () => t.page.getAttribute("#act", "data-word");
+    await at("bell"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "撞钟", 30000, "撞钟 was not offered to a thumb");
+    await t.page.tap("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.grip)) > 0.9, 60000, "a tap did not take the rope");
+    await push(); await t.until(async () => (await t.journey()).rite === null && (await t.page.evaluate(() => window.__rites().bell.grip)) === 0, 30000, "the stick did not let go of the rope");
+    await at("tea"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "吃茶", 30000, "吃茶 was not offered to a thumb");
+    await t.page.tap("#act"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "起身", 120000, "he did not sit on after the tea");
+    await push(); await t.until(async () => (await t.journey()).rite === null && !(await t.state()).staged, 30000, "the stick did not stand him up from the tea");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
 };

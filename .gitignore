@@ -17,3 +17,6 @@ dist/
 
 # Wrangler local state and deployment output
 .wrangler/
+
+# Local-only community invitation and screenshots containing its QR code
+app/local-community/

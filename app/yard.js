@@ -28,11 +28,13 @@ import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
+import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
 import { logSwing, riteNow, pauseRites } from "./src/rites.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
+import { createCommunity } from "./src/community.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose } from "./src/drop.js";
@@ -43,6 +45,7 @@ const Q = new URLSearchParams(location.search);
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
 createPaper();   // the paper, strokes and seals the interface is drawn with (src/paper.js, src/ui.css)
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
+createCommunity(ui);
 const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false;   // what is said about the controls, and when
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
@@ -517,7 +520,7 @@ function frame(now) {
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; track("demo.ready", { tier: quality.name }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -787,7 +790,7 @@ window.__pick = (px, py, n = 6) => {
     return { part, material: m.customProgramCacheKey && /^[a-zA-Z]+$/.test(m.customProgramCacheKey()) ? m.customProgramCacheKey() : m.type, distance: +h.distance.toFixed(2), at: h.point.toArray().map((v) => +v.toFixed(2)), transparent: !!m.transparent, kind: h.object.type }; });
 };
 createGame({
-  hints, ui,
+  hints, ui, tier: quality.name,
   site, walker, scene,
   where: () => ({ x: pos.x, z: pos.z, yaw }),
   // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).

@@ -6,17 +6,66 @@
     "domain": "temple.rushiwowen.co",
     "dashboard": "https://u.rushiwowen.co/websites/e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42",
     "date": "2026-11-16",
-    "scope": "独立统计 Demo 访问，不与如是我闻主站合并；仅限正式域名，尊重 Do Not Track。",
-    "limitations": "仅统计接入后的访问；浏览器拦截、Do Not Track 和来源未传递会影响统计完整性。",
+    "scope": "独立统计 Demo 访问和序章里程碑，不与如是我闻主站合并；仅限正式域名，尊重 Do Not Track。",
+    "limitations": "仅统计接入后的访问。浏览器拦截、Do Not Track 和来源未传递会影响完整性。事件只记里程碑，不记脚步、镜头或帧率；接入前的游玩无法补回。",
     "evidence": [
       "app/index.html：沿用 buddhist-say 的 defer、data-domains、data-do-not-track、data-exclude-hash 与 data-performance 配置",
-      "Umami 后台已创建山门之外 Demo 独立站点；上线数据以实际仪表盘为准",
-      "pnpm run check、pnpm run typecheck、220 项单元测试、pnpm run build 与 pnpm run e2e:quick 均通过；构建产物只含一个正式域名专用追踪脚本"
+      "app/src/analytics.js：demo.ready、demo.enter、demo.seal、demo.complete、demo.ending、demo.restart 只在 temple.rushiwowen.co 上报",
+      "app/loading.js：首次加载失败上报 demo.load_error，失败一次只记一次",
+      "tests/unit/analytics.test.mjs、tests/unit/loading.test.mjs",
+      "pnpm run check、pnpm run typecheck、229 项单元测试与 pnpm run e2e:quick 通过；本地与预览域名不上报"
+    ],
+    "events": [
+      "demo.ready",
+      "demo.load_error",
+      "demo.enter",
+      "demo.seal",
+      "demo.complete",
+      "demo.ending",
+      "demo.restart"
     ]
+  },
+  "community": {
+    "date": "2026-11-16",
+    "summary": "内测反馈群入口：标题页右上角「内测反馈群」、歇脚菜单「加入内测反馈群」，点开同一张宣纸卡片显示微信群二维码。二维码与配置放 R2，不入 Git；换码只需上传新图并改 current.json，不用发版本。开发方陈述，不是验收结论。",
+    "storage": {
+      "bucket": "buddhist-say（Cloudflare R2，与如是我闻共用）",
+      "config": "https://static.rushiwowen.co/temple-walk/community/current.json",
+      "image": "https://static.rushiwowen.co/temple-walk/community/wechat-20261116.jpg",
+      "image_sha256": "1859280a02637d8e5bf9f86189fa1855c1ce525499a14a0b86a39d52c5e3b6f3",
+      "cache": "current.json：Cache-Control no-cache，边缘 DYNAMIC；图片按日期命名，public max-age=31536000 immutable",
+      "expires_at": "2026-11-23T00:00:00+08:00（按二维码截图上的「11月23日前有效」设定，未核对微信实际失效时刻）",
+      "replace": "上传新的 wechat-<日期>.jpg，再覆盖 current.json 的 image 与 expiresAt；enabled: false 可暂停展示"
+    },
+    "changes": [
+      "app/src/community.js（新增）：读取 R2 上的 current.json，校验 enabled / image / 带时区的 expiresAt；到期、关闭、加载失败分别显示状态与「重试」，到期瞬间收起旧码；卡片自己处理 Esc（标题页加载期间全局键盘监听尚未注册）",
+      "app/index.html、app/src/ui.css：标题页入口、歇脚菜单入口、community 弹层（原生 dialog，走 ui.js 的弹层栈）；手机上提示长按保存后到微信相册识别，二维码图片允许长按",
+      "app/yard.js：createUI 之后即挂上入群卡片，加载中也能打开",
+      "app/shared/fonts/*：tools/fonts.py 按新字重切（群码稍暂馈想聊欢迎查微择），原始字体取自 google/fonts 与霞鹜文楷 v1.530",
+      "tests/unit/community.test.mjs（新增）：相对图片地址、精确到期、关闭、非法配置与非 http(s) 图片",
+      "tests/e2e/run.cjs 新增 community 场景：拦截 R2 请求返回固定数据，覆盖叠在菜单上、Esc 只关卡片、关后释放图片、过期不显示、503 后重试",
+      ".gitignore：app/local-community/（本地调试用的二维码与配置）"
+    ],
+    "known_issues": [
+      "没有在真实微信里扫码或从相册识别过；iOS Safari、安卓浏览器的长按保存未在真机试过",
+      "二维码 7 天失效，需要人工换码；没有自动续期，也没有到期提醒",
+      "公开地址任何人可直接访问，二维码会被缓存与转发；这是群二维码本身的性质",
+      "R2 bucket 与如是我闻共用，权限按账户的 R2 密钥，没有为本项目单独建 bucket 或令牌",
+      "bang.woff2 未加新字却变小 12 字节，推测是上游 Yuji Boku 版本变化；匾额字形未逐字比对"
+    ],
+    "evidence": [
+      "R2：curl 带 Origin 头，两个对象 200，access-control-allow-origin: *；current.json cf-cache-status DYNAMIC；下载图片 SHA-256 与本地一致",
+      "本地 Vite + ego-browser：桌面标题页、卡片、歇脚菜单入口，390×844 触屏模拟下的标题页与卡片；Esc 在加载中与游戏中的行为、焦点回到打开者（截图含二维码，未入库）"
+    ],
+    "tests": {
+      "unit": "pnpm test：223/223 通过（含 community 三项）",
+      "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm run typecheck 通过",
+      "e2e": "node tests/e2e/run.cjs community menu layers boot phone：5/5 通过；未跑完整 e2e:smoke"
+    }
   },
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "冬天院中积雪：每进院子中轴一条扫过的路，两边雪埂，路外积雪有厚薄起伏，去掉了硬边和路上的雾状薄雪；屋顶下（门道、钟鼓楼台基、檐廊）不再积雪，只在檐口留一条吹进的薄雪。每个同仓库 PR 有独立预览地址：pages.yml 检查通过后，把同一份 dist/ 上传为 Cloudflare Worker temple-walk-preview 的预览 pr-<编号>；PR 评论给出随推送更新的最新地址、每个提交的固定地址和六个验收机位链接，失败时写明未部署及旧地址对应的提交，PR 关闭时删除预览。正式站点仍是 GitHub Pages。开发方陈述，不是验收结论。 此前的摘要：2026-11-16 玩法与文案打磨：山顶静坐任何时候都给，第一次完成就播序章结尾，不论集了几印（缺印登顶不再被告知「山下还有没做完的事」）；看过与否存进朱印帐（journey.closed），旧存档兼容（集满的算看过，旧的 yunjing.ending.v1 标记并入后删除），每趟只播一次，重新朝山后可再播；结尾后翻开朱印帐写明还空着几处，可以接着补印；七印集齐另有一枚「七印圆满」的印再翻开朱印帐。结束语按这一趟实际做过的事组句（步数、按先后最多三件事、钟按撞了几下说、藏经楼那一句）。撞钟改为一按一下，钟槌荡回来前拉不动，撞满后还能撞，走开或 Esc 松手；吃茶三口后他坐着不走，慢呼吸、转头看院子，配乐退下，按钮「起身」（所有坐具同）。帖文、七印短句、山顶与朱印帐提示按具体的人、器物、动作改写，传说标「相传」。开发方自评，不是验收结论；独立验收未改。 正常速度实测（tools/play-t00.cjs，真键盘/触摸，SwiftShader 软件渲染约 1 帧/秒）：山顶空帐静坐→结尾→朱印帐「帐上还空着六处」→E 起身；撞钟四次按下各响一次（拉到响 1.3–1.4 秒），第三下得印，握绳时切视角，Esc 松手；吃茶三口后坐 40 秒，头部张望 ±0.41，E 起身；模拟手机上全靠点按撞钟两下、吃茶、起身。录像与截图见 docs/t00/evidence/play-2026-11-16/。 上一轮的摘要：声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
+  "summary": "冬天院中积雪：每进院子中轴一条扫过的路，两边雪埂，路外积雪有厚薄起伏，去掉了硬边和路上的雾状薄雪；屋顶下（门道、钟鼓楼台基、檐廊）不再积雪，只在檐口留一条吹进的薄雪。 每个同仓库 PR 有独立预览地址：pages.yml 检查通过后，把同一份 dist/ 上传为 Cloudflare Worker temple-walk-preview 的预览 pr-<编号>；PR 评论给出随推送更新的最新地址、每个提交的固定地址和六个验收机位链接，失败时写明未部署及旧地址对应的提交，PR 关闭时删除预览。正式站点仍是 GitHub Pages。开发方陈述，不是验收结论。 此前的摘要：2026-11-16 玩法与文案打磨：山顶静坐任何时候都给，第一次完成就播序章结尾，不论集了几印（缺印登顶不再被告知「山下还有没做完的事」）；看过与否存进朱印帐（journey.closed），旧存档兼容（集满的算看过，旧的 yunjing.ending.v1 标记并入后删除），每趟只播一次，重新朝山后可再播；结尾后翻开朱印帐写明还空着几处，可以接着补印；七印集齐另有一枚「七印圆满」的印再翻开朱印帐。结束语按这一趟实际做过的事组句（步数、按先后最多三件事、钟按撞了几下说、藏经楼那一句）。撞钟改为一按一下，钟槌荡回来前拉不动，撞满后还能撞，走开或 Esc 松手；吃茶三口后他坐着不走，慢呼吸、转头看院子，配乐退下，按钮「起身」（所有坐具同）。帖文、七印短句、山顶与朱印帐提示按具体的人、器物、动作改写，传说标「相传」。开发方自评，不是验收结论；独立验收未改。 正常速度实测（tools/play-t00.cjs，真键盘/触摸，SwiftShader 软件渲染约 1 帧/秒）：山顶空帐静坐→结尾→朱印帐「帐上还空着六处」→E 起身；撞钟四次按下各响一次（拉到响 1.3–1.4 秒），第三下得印，握绳时切视角，Esc 松手；吃茶三口后坐 40 秒，头部张望 ±0.41，E 起身；模拟手机上全靠点按撞钟两下、吃茶、起身。录像与截图见 docs/t00/evidence/play-2026-11-16/。 上一轮的摘要：声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
   "changes": [
     "新增 app/src/shelter.js：建场景时把 walk.roofs 烘成遮雪图，materials.js 的石面积雪和 steps.js 的脚步（underfoot 的 roofed）都读它；tests/unit/shelter.test.mjs",
     "ground.js 积雪改写；新增 app/src/snowfall.js（同一算法的 JS 版）；steps.js 的脚步按扫过的路判断（任何院子的中轴都是石面，路缘石上是雪埂）；tests/unit/snowfall.test.mjs，steps.test.mjs 路缘石一条改为雪",
@@ -54,7 +103,6 @@
     "六机位前后对比图未做，只在评论里给出机位链接",
     "预览只在本机 curl 与 CI 运行中验证，未在手机上打开过",
     "吃茶后停留时，若是用 __pose 把他放到桌旁，跟拍的眼睛对着他侧面，他偏在画面左边；走过去坐下时眼睛在身后，未专门调",
-    "撞钟第一下要先走到绳前、握绳，软件渲染下很慢；正常设备未测",
     "新钟声、新脚步音量还没有人试听；改前改后对比 MP3 由开发者本地生成（tools/out/ab，不入库）",
     "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
     "小沙弥雕刻的身体（novice.glb）在走路、上台阶、打坐时布料会撕开（贴图接缝处骨骼权重不对）；2026-11-15 起默认关闭，页面穿代码建的身体，地址加 ?body=sculpt 才换上；权重未修",
@@ -79,6 +127,9 @@
     "docs/t00/evidence/snow/gate-front-after.jpg",
     "docs/t00/evidence/snow/bell-tower-after.jpg",
     "docs/t00/evidence/snow/court-after.jpg",
+    "docs/t00/evidence/play-2026-11-16/close-with-deeds/",
+    "docs/t00/evidence/play-2026-11-16/gpu-t4/",
+    "docs/t00/evidence/play-2026-11-16/small-480x300/",
     "本地：两次 wrangler preview（setup-a、setup-b）在补上占位生产版本后首页返回 200（11,841 字节），之前为 Cloudflare 1042；用 CI 令牌部署和删除预览均成功，测试预览已删除",
     "PR #55 的 pages.yml 运行 43792382886（verify、preview 成功）与 PR 评论；固定地址 CAM-01 在无头 Chromium 中载入完成，无 HTTP 错误",
     "docs/PREVIEWS.md",
@@ -215,19 +266,20 @@
   "tests": {
     "unit": "pnpm test：210/210 通过（合入 main 的 #51、#53 之后）；新增 journey 三项、rites 一项（logSwing 从当前位置拉回，先失败后通过）",
     "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm typecheck 通过",
-    "e2e": "本地 SwiftShader：oldbook 通过、keys 通过、pilgrimage 通过（289 s）、rites 通过（457 s）；rites 加「两下连按只算一拉」后重跑结果见下一条记录；其余 smoke 场景这一轮没有整套重跑",
+    "e2e": "本地 SwiftShader：在合入 main 后的 4ef36a6（含 #54 坐凳姿势、#55、#57、4196350 回到上次离开处）上 pnpm run e2e:smoke 全部 25 个场景通过：boot、taps、halls、snow、steps、pilgrimage、oldbook、seats、resume、rites、sound、music、moods、views、photo-ui、keys、menu、layers、seasons、parts、jump、drop、stairs、camera、phone。tier 3：tap、summit、photo、tour 通过；walk 首次失败是因为测试还在找改写前入山帖里的「山门之外」，按新文案改测试（ae79b64）后通过。更早在 bfe9f6f 上 smoke 23 个场景也全部通过；其间 rites 曾因另一会话的注释吞掉 leave()（起身无效）失败，bfe9f6f 修复。",
     "ci": "PR #52 上 Pages verify（check、单测、build、boot）在各次推送均通过",
-    "play_real_input": "tools/play-t00.cjs，正常速度：summit、bell、tea、phone 四段，页面零错误；日志 log-summit-bell-tea.json、log-bell.json、log-phone.json",
-    "diagnostic_only": "以下只算诊断证据：把人放到地点旁用 __pose；读状态用 __journey/__rites/__music；端到端用 ?fast=1 的 pilgrimage/oldbook；__ending() 重放；rites 里两下连按是页面内连点按钮"
+    "play_real_input": "tools/play-t00.cjs，正常速度：summit、bell、tea、phone 四段，页面零错误；日志 log-summit-bell-tea.json、log-bell.json、log-phone.json；main 上（含 afda944）以 480×300 重录撞钟与吃茶（small-480x300/）：约 2.2 帧/秒，第一下 9.0 秒（帧数决定，960×600 时 17–22 秒），之后每拉一次 0.4–0.5 秒内响；吃茶后坐 40 秒配乐 duck=0.35，起身后恢复",
+    "diagnostic_only": "以下只算诊断证据：把人放到地点旁用 __pose；读状态用 __journey/__rites/__music；端到端用 ?fast=1 的 pilgrimage/oldbook；__ending() 重放；rites 里两下连按是页面内连点按钮",
+    "gpu_real_input": "Hugging Face Job，Tesla T4（ANGLE/Vulkan），1280×720 高档，约 32–43 帧/秒，真键盘（tools/gpu/job.cjs 的 rites，证据 docs/t00/evidence/play-2026-11-16/gpu-t4/）：第一次按 E 到第一下响 2.96 秒（含走到绳前、握绳、1.3 秒拉）；响后 0.3 秒再按 E，按钮淡显、ready=false，2.5 秒后仍只 1 拉 1 下——钟槌荡回前按下不算，已由真实按键时间证实；第二、三下按后 1.41、1.43 秒响，第三下得印；6 秒不按不响；Esc 65 毫秒松手。吃茶按 E 后 15.8 秒喝完得印，坐着 20 秒头部转动 -0.56–0，按 E 100 毫秒起身（坐凳为 #54 的坐椅姿势）。放到地点旁仍用 __pose（诊断）；这次运行没有触发声音（无指针手势），音量未读到",
+    "close_with_deeds": "正常速度、真键盘（本地 SwiftShader，main 合入后）：存档预置钟三下、吃茶、观水、得句「看脚下。」、612 步（诊断性预置），标题出现「接着走」，点它入山，__pose 到蒲团旁（诊断），按 E 静坐。结尾实际说的五句：从竹林到这里，走了 612 步。／钟楼的钟，撞过三下，茶寮那碗茶喝到了底，龙井边等过三声滴水。／藏经楼给的那一句，还记着：「看脚下。」／山门之外，还有一条没走过的路。／远处的山里，好像也有一声钟，应了你那几下。随后朱印帐：「帐上还空着二处。穿过大院，登上台阶，进大雄宝殿上一炷香。」页面零错误。证据 docs/t00/evidence/play-2026-11-16/close-with-deeds/（截图只抓到其中三句，五句全文见 log.txt 的 words）",
+    "phone_touch": "e2e phone 场景扩展后通过：模拟手机（390×780，CDP 触摸）双指开合拉远拉近、推摇杆松开钟绳、推摇杆从吃茶后的凳上起身；点按撞钟与吃茶。仍是模拟触摸，不是真机"
   },
   "unverified": [
-    "没有真人试玩；所有录像出自无头 Chromium + SwiftShader，约 1 帧/秒：第一次按撞钟到响约 17–22 秒，主要是走到绳前与握绳要等帧，正常设备上应约 2.3 秒（0.3 + 0.7 握绳 + 1.3 拉），未在 Mac 或手机上测",
-    "「钟槌荡回前按下不算」在这个渲染速度下无法用真实按键的时间间隔演示（页面每帧约 1 秒，等到能按时早已可拉）；只由 rites 场景里页面内连点两下只算一拉来证明",
-    "声音未经人耳：撞钟的余音、吃茶后配乐退下的分寸；无头环境里第一次录像读到 duck 仍为 1，原因：吃茶得印的风铃正让配乐退让，此时调用 hush() 只改了变量，退让结束仍按原先排好的回到 1；另一会话在 afda944 修正（退让期间改的是退让结束后回到的音量），修正后未再录像核对",
-    "缺印结尾的结束语只在「什么都没做」和 fast 模式下看过；做了三件以上、取过一句的组合只在单测式的逻辑里走过，没有正常速度截图",
-    "手机为 Playwright 模拟 iPhone 13 的触摸，未上真机；双指、摇杆起身未在本轮实测（摇杆走开松绳由 __pose 代替）",
+    "手机为 Playwright/CDP 模拟触摸（点按、摇杆松绳与起身、双指开合已覆盖），未上真机",
     "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
     "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
-    "独立验收结论未改动（independent-review.json 未碰）"
+    "独立验收结论未改动（independent-review.json 未碰）",
+    "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
+    "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机"
   ]
 }
