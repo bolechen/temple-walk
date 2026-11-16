@@ -11,7 +11,7 @@ of Art's Open Access (both public domain, CC0).
 The directory holds one folder per work with `source.jpg` and `meta.json` (title, maker, period, holder, the
 encyclopedia note, the credit line, the page it came from) and an `index.json` of them all.
 
-Writes app/levels/t00/gallery/<slug>.webp (the longest side 1280) and app/src/works.js (what the halls and the reading card use).
+Writes app/levels/t00/gallery/<slug>.webp (the longest side 1280) and app/levels/t00/works.js (what the halls and the reading card use).
 Which work hangs in which hall, and in what order along the walls, is the HANG table below.
 """
 import json, os, sys
@@ -57,7 +57,7 @@ def main():
           "// Each is published for free reuse by the museum that holds it; `credit` is the source line to show with it.\n"
           "export const HANG = " + json.dumps(HANG, ensure_ascii=False) + ";\n"
           "export const WORKS = " + json.dumps(data, ensure_ascii=False, indent=1) + ";\n")
-    open(f"{ROOT}/app/src/works.js", "w", encoding="utf-8").write(js)
+    open(f"{ROOT}/app/levels/t00/works.js", "w", encoding="utf-8").write(js)
     print(sum(os.path.getsize(f"{out}/{f}") for f in os.listdir(out)) // 1024, "KB in app/levels/t00/gallery")
 
 if __name__ == "__main__":

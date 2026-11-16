@@ -82,6 +82,7 @@ const scenarios = {
     expect(await t.page.getAttribute('#menu [data-lang="ja"]', "aria-pressed") === "true" && (await words("#menu")).includes("見回す速さ"), "the menu should be in Japanese, with Japanese circled");
     await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('#menu [data-lang="en"]')]);
     await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(await t.page.evaluate(() => sessionStorage.getItem("yunjing.lang.from")) === null, "the page that a language switch opened should have read, and forgotten, where it came from");
     expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
     expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");
     await t.page.evaluate(() => window.__work("muqi-hu-tu")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in English");

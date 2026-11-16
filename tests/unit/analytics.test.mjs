@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { track } from "../../app/src/analytics.js";
+import { track, withLang } from "../../app/src/analytics.js";
 
 function page(hostname, umami) {
   const previousLocation = globalThis.location, previousWindow = globalThis.window;
@@ -13,8 +13,14 @@ test("public milestones reach Umami as short strings", () => {
   const calls = [];
   const restore = page("temple.rushiwowen.co", { track: (...args) => calls.push(args) });
   assert.equal(track("demo.enter", { resumed: true, seals: 2, tier: "low", empty: "" }), true);
-  assert.deepEqual(calls, [["demo.enter", { resumed: "1", seals: "2", tier: "low" }]]);
+  assert.deepEqual(calls, [["demo.enter", { lang: "zh", resumed: "1", seals: "2", tier: "low" }]], "every event carries the language; in Node that is Chinese");
   restore();
+});
+
+test("every event says which language it was read in, and an event's own data does not lose it", () => {
+  assert.deepEqual(withLang({ id: "bell" }, "ja"), { lang: "ja", id: "bell" });
+  assert.deepEqual(withLang(undefined, "ko"), { lang: "ko" });
+  assert.deepEqual(withLang({ tier: "low" }, "en"), { lang: "en", tier: "low" });
 });
 
 test("previews, tests and a missing tracker stay silent", () => {

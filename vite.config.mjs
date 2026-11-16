@@ -8,7 +8,8 @@ const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here,
 const KEPT = ["shared", "levels", "vendor", "favicon.svg"];
 const keep = () => ({
   name: "temple-walk:keep-fetched-files", apply: "build",
-  closeBundle() { for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(dist, f), { recursive: true, filter: (p) => !/\.(py|md)$/.test(p) }); },
+  // A level's scripts are bundled into the page, not shipped as files beside it.
+  closeBundle() { for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(dist, f), { recursive: true, filter: (p) => !/\.(py|md)$/.test(p) && !(p.includes(`${path.sep}levels${path.sep}`) && (p.endsWith(".js") || p.endsWith(`${path.sep}locales`))) }); },
 });
 
 export default defineConfig({

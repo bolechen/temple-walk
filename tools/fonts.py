@@ -14,7 +14,7 @@ Reads every character in app/ (the page and its scripts) and writes app/shared/f
                   the slip drawn in the library, the title on a leaf in a hall)
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
 For the Japanese and English pages (src/i18n.js), `python3 tools/fonts.py --lang ja|en <dir>` cuts their own faces to
-the characters of their tables (src/i18n-ja.js, src/i18n-en.js) and the page's language buttons:
+the characters of their tables (app/locales/*.js, app/levels/t00/locales/*.js) and the page's language buttons:
     ko: serif-ko (Gowun Batang: everything that is read), brush-ko (Song Myung), hand-ko (Nanum Brush Script); chars-ko.txt,
         from GowunBatang-Regular.ttf, SongMyung-Regular.ttf, NanumBrushScript-Regular.ttf and their *-OFL.txt
     ja: kai-ja (Klee One, from which the kai was drawn), serif-ja and seal-ja (Noto Serif JP regular and black),
@@ -39,14 +39,16 @@ ALWAYS = "".join(chr(c) for c in range(0x20, 0x7F)) + "〇一二三四五六七�
 
 def used(skip=()):
     chars = set(ALWAYS)
-    for path in glob.glob(f"{ROOT}/app/*.html") + glob.glob(f"{ROOT}/app/*.js") + glob.glob(f"{ROOT}/app/src/*.js"):
-        if os.path.basename(path) in skip or os.path.basename(path) in TABLES.values() or os.path.basename(path) in WORK_TABLES.values(): continue   # the other languages have faces of their own
+    # A level's own files (levels/t00/works.js, ...) are read too; the translations (app/locales, levels/*/locales) are not
+    # under these patterns, because the other languages have faces of their own.
+    for path in glob.glob(f"{ROOT}/app/*.html") + glob.glob(f"{ROOT}/app/*.js") + glob.glob(f"{ROOT}/app/src/*.js") + glob.glob(f"{ROOT}/app/levels/*/*.js"):
+        if os.path.basename(path) in skip: continue
         chars.update(c for c in open(path, encoding="utf-8").read() if ord(c) > 0x2000 and not 0xE000 <= ord(c) <= 0xF8FF)
     return "".join(sorted(chars))
 
-TABLES = {"ja": "i18n-ja.js", "en": "i18n-en.js", "ko": "i18n-ko.js"}
-# The works' cards in each language (works-ja.js, works-en.js) are written in the same faces.
-WORK_TABLES = {"ja": "works-ja.js", "en": "works-en.js", "ko": "works-ko.js"}
+TABLES = {l: f"locales/{l}.js" for l in ("ja", "en", "ko")}
+# The works' cards in each language (levels/t00/locales/*.js) are written in the same faces.
+WORK_TABLES = {l: f"levels/t00/locales/{l}.js" for l in ("ja", "en", "ko")}
 # The language buttons are each written in their own language, so each language's cut holds its own name.
 OWN_NAME = {"ja": "日本語", "en": "English", "ko": "한국어"}
 
