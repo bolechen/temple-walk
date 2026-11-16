@@ -57,8 +57,11 @@ test("every switch the page offers has a name on the panel", () => {
   assert.deepEqual(Object.keys(LABELS).sort(), offered.sort());
 });
 
-test("the panel is loaded only on the dev server, so the published build carries none of it", () => {
-  assert.match(yard, /if \(import\.meta\.env\.DEV && Q\.has\("debug"\)\) \{\s*const \{ mountDebug \} = await import\("\.\/src\/debug\.js"\)/);
+test("the panel opens by itself on the dev server and on a pull request's preview, and is fetched nowhere else", () => {
+  assert.match(yard, /const PREVIEW = \/-temple-walk-preview\\\.\/\.test\(location\.hostname\);\s*if \(\(import\.meta\.env\.DEV \|\| PREVIEW\) && Q\.get\("debug"\) !== "0"\) \{\s*const \{ mountDebug \} = await import\("\.\/src\/debug\.js"\)/);
+  const host = /-temple-walk-preview\./;
+  for (const h of ["pr-68-temple-walk-preview.bole-chen.workers.dev", "06c1ed68-temple-walk-preview.bole-chen.workers.dev"]) assert.ok(host.test(h), h);
+  for (const h of ["temple.rushiwowen.co", "bolechen.github.io", "127.0.0.1", "temple-walk-preview.example.com"]) assert.ok(!host.test(h), h);
   assert.ok(!/^import .*debug\.js/m.test(yard), "a static import would put it in the published build");
   assert.match(check, /DEV_ONLY = \[path\.join\(root, "src", "debug\.js"\)\]/, "only the dev-only panel is spared the font check");
 });

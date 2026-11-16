@@ -1,4 +1,4 @@
-// A panel for working on the place (`?debug`, on the dev server only): where he stands and what the frame costs,
+// A panel for working on the place (open by itself on the dev server and on a pull request's preview; `?debug=0` keeps it shut): where he stands and what the frame costs,
 // the season and the hour, the named views and the rooms' views to jump to, and a switch for each part of the scene.
 // It reads and acts only through the page's own hooks (window.__yard, __show, __pose, __inside, __mood, __view,
 // __part, __cost, __census), the same the tests use, so it never reaches into the walk. ` (the key left of 1) shows

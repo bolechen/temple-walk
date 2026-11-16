@@ -39,8 +39,9 @@ export const KEY = "yunjing.journey.v1";
 // `opened`: when the four seasons were first opened to the visitor, which is the first time the book was filled. It
 // outlives 重新朝山: a second walk up the mountain may be made in any season. `told`: whether that has been said once.
 // `closed`: when the prologue's close was shown (or passed over) after sitting on the summit. It comes once a walk,
-// whatever else is in the book; 重新朝山 begins a new walk and lets the summit close that one too.
-const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null });
+// whatever else is in the book; 重新朝山 begins a new walk and lets the summit close that one too. `closedSeason`: the
+// season it was last shown in. A change of season lets the summit close the prologue again, once in that season.
+const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null, closedSeason: null });
 
 // `store` is anything with get() → string|null and set(string); the page passes one backed by localStorage.
 // `closedBefore`: the page kept a separate flag that the close had been seen before this book remembered it itself.
@@ -59,6 +60,7 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
         out.told = raw.told === true;
         // Under the rule before this one the close came with the seventh seal, so a filled book has seen it.
         out.closed = Number(raw.closed) > 0 ? Number(raw.closed) : out.done;
+        out.closedSeason = typeof raw.closedSeason === "string" ? raw.closedSeason : null;
         return out;
       }
     } catch {}
@@ -79,7 +81,12 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
     get finished() { return s.done; },
     get closed() { return s.closed; },
     // The prologue closed on the summit. Returns true only the first time in a walk.
-    close() { if (s.closed) return false; s.closed = now(); save(); return true; },
+    close(season = null) { if (s.closed && (season === null || s.closedSeason === season)) return false; s.closed = now(); s.closedSeason = season; save(); return true; },
+    get closedSeason() { return s.closedSeason; },
+    // Has the close been shown in this season? A close kept before seasons were (no season) counts for any, until adopt().
+    closedIn: (season) => !!s.closed && (s.closedSeason === null || s.closedSeason === season),
+    // A close kept before seasons were is taken to have been in the season the visitor is in now.
+    adopt(season) { if (s.closed && s.closedSeason === null && season) { s.closedSeason = season; save(); } },
     // The seals in order, each with the moment it was earned (or null).
     list: () => SEALS.map((d) => ({ ...d, got: s.seals[d.id] || null })),
     // The first observance not yet made, going up the mountain; null once the book is full.
