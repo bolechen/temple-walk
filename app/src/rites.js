@@ -19,7 +19,7 @@ export function logSwing(s, now) {
   if (!s.t0) return 0;
   const g = s.gap ?? 0.18, u = (now - s.t0) / 1000;
   // `s.from` is where it hung when it was taken: a stroke may be begun while the last one still swings.
-  if (u < 0) { const L = (s.lead || 0) / 1000; if (!L || u < -L) return s.from || 0; const k = (u + L) / L; return k < 0.65 ? mix(s.from || 0, LOG_DRAW, ease(k / 0.65)) : LOG_DRAW - (LOG_DRAW + g) * ((k - 0.65) / 0.35) ** 2; }
+  if (u < 0) { const L = (s.lead || 0) / 1000; if (!L || u < -L) return s.from || 0; const k = (u + L) / L; return k < 0.5 ? mix(s.from || 0, LOG_DRAW, ease(k / 0.5)) : k < 0.68 ? LOG_DRAW : LOG_DRAW - (LOG_DRAW + g) * ((k - 0.68) / 0.32) ** 2; }   // drawn back, held a moment, let go
   if (u > 9) return 0;
   const after = (v) => Math.max(-g, -g * Math.exp(-3 * v) + 0.3 * Math.exp(-0.9 * v) * Math.sin(3 * v));
   return s.lead ? after(u) : u < TAP ? -g * (u / TAP) : after(u - TAP);   // a tap sends it straight in
@@ -90,6 +90,7 @@ export function createRites(y, fast = 1) {
     if (bell.grip > 0) bell.end.lerp(between(tB).addScaledVector(dir(0, 0.2, 1, tC), 0.03), bell.grip);
     rope.position.copy(bell.top); tB.subVectors(bell.end, bell.top); const len = tB.length();
     rope.scale.set(1, len, 1); rope.quaternion.setFromUnitVectors(UP, tB.divideScalar(len || 1)); knot.position.copy(bell.end).addScaledVector(tB, 0.03);
+    peal.drawn = Math.max(peal.drawn, d);   // how far the log has been drawn back since he took the rope, for the tests
     if (!bell.held) return;
     // His hands go with the rope: down and in as the log comes back to him, up and out as it goes to the bell; and
     // he leans with it.
@@ -99,11 +100,11 @@ export function createRites(y, fast = 1) {
   // He takes the rope once; after that every stroke is the visitor's: one press, one pull. The log is drawn back
   // from wherever it hangs, so a stroke may follow the last while it still swings, but not until it has come off
   // the bronze and started back (`ready`), and the pull lands on the bell `PULL` seconds after the press.
-  const PULL = 1.0, RESWING = 1.3, peal = { pulls: 0, last: -Infinity, busy: false };
+  const PULL = 1.3, RESWING = 1.3, peal = { pulls: 0, last: -Infinity, busy: false, drawn: 0 };
   const ready = () => bell.held && bell.grip >= 1 && !peal.busy && (riteNow() - peal.last) / 1000 >= RESWING * fast;
   async function takeRope(on) {
     if (!bellS) return false;
-    bell.held = true;
+    bell.held = true; peal.drawn = 0;
     return play(0.7, (u) => { bell.grip = act.hands.left.w = act.hands.right.w = ease(u); }, on);
   }
   async function pull(on) {
@@ -265,7 +266,7 @@ export function createRites(y, fast = 1) {
     restore(has) { if (has.incense) plant(); },
     state: () => ({
       passages: jobs.length, bow: +act.bow.toFixed(3), nod: +act.nod.toFixed(3), breath: act.breath === null ? null : +act.breath.toFixed(3), hands: +Math.max(act.hands.left.w, act.hands.right.w).toFixed(3),
-      bell: { log: bellS ? +bellS.swing.position.z.toFixed(3) : null, grip: +bell.grip.toFixed(3), rope: rope.visible ? +rope.scale.y.toFixed(3) : null, pulls: peal.pulls, ready: ready() },
+      bell: { log: bellS ? +bellS.swing.position.z.toFixed(3) : null, grip: +bell.grip.toFixed(3), rope: rope.visible ? +rope.scale.y.toFixed(3) : null, pulls: peal.pulls, ready: ready(), drawn: +peal.drawn.toFixed(3) },
       look: +act.look.toFixed(3),
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
       incense: { shown: inc.shown, planted: inc.planted, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },

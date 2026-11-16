@@ -177,11 +177,11 @@ export function createGame(y) {
     const from = 3.5, to = 23.5, gap = (to - from) / lines.length;
     return /** @type {[number, string][]} */ (lines.map((l, i) => [from + i * gap, l]));
   }
-  let closing = false, skip = false;
+  let closing = false, skip = false, /** @type {string[]} */ words = [];
   async function finale(on = () => true) {
     const el = $("ending"); if (closing || !el) { openBook(); return; }
     closing = true; skip = false; document.body.classList.add("ending"); el.hidden = false; $("endingTitle").classList.remove("on");
-    const line = $("endingLine"), CLOSING = closingWords(); let shown = -1;
+    const line = $("endingLine"), CLOSING = closingWords(); let shown = -1; words = CLOSING.map((c) => c[1]);
     const pass = () => { skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
     await rites.close(() => on() && !skip, (t) => {
       let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
@@ -281,7 +281,7 @@ export function createGame(y) {
 
   // For the tests.
   window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
-  window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, closing, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
+  window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();
   window.__visit = () => ({ metres: visit.metres, seconds: visit.seconds });
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;

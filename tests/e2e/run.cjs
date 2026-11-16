@@ -223,8 +223,8 @@ const scenarios = {
     // with words about this walk only, then the book with what is still to be found.
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
-    const lines = new Set(); await t.until(async () => { lines.add(await t.page.evaluate(() => window.__rites().line)); return (await t.page.evaluate(() => window.__rites().ended)) === 1; }, 120000, "the chapter never closed with only one seal");
-    const said = [...lines].join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
+    const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
     await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
@@ -304,7 +304,7 @@ const scenarios = {
     // has come back off the bronze. Nothing rings by itself, and walking off (here Esc) lets the rope go.
     await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
     await seen("he never took the rope", () => window.__rites().bell.grip > 0.9);
-    await seen("the log was never drawn back", () => window.__rites().bell.log > 0.15);
+    await seen("the log was never drawn back", () => window.__rites().bell.drawn > 0.15);
     await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring");
     let lo = 0; const low = async () => { lo = Math.min(lo, (await R()).bell.log); };
     await t.page.waitForTimeout(6000); await low(); expect((await t.journey()).strikes === 1 && (await R()).bell.pulls === 1, "the bell rang again without a press");
