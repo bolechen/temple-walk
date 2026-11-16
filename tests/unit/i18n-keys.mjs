@@ -61,7 +61,7 @@ export async function dataKeys() {
   for (const m of read("src/site.js").matchAll(/hall: \{[^}]*name: "([^"]+)"/g)) keys.add(m[1]);
   keys.add("山路上");
   // Words each table needs for the action button and the calligraphy (game.js translates these as they are shown).
-  for (const k of ["撞钟", "起身", "观看", "坐下", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏", "说明"]) keys.add(k);
+  for (const k of ["撞钟", "起身", "观看", "坐下", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏"]) keys.add(k);
   return keys;
 }
 

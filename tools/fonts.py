@@ -38,29 +38,32 @@ ALWAYS = "".join(chr(c) for c in range(0x20, 0x7F)) + "〇一二三四五六七�
 def used(skip=()):
     chars = set(ALWAYS)
     for path in glob.glob(f"{ROOT}/app/*.html") + glob.glob(f"{ROOT}/app/*.js") + glob.glob(f"{ROOT}/app/src/*.js"):
-        if os.path.basename(path) in skip or os.path.basename(path) in TABLES.values(): continue   # the other languages have faces of their own
+        if os.path.basename(path) in skip or os.path.basename(path) in TABLES.values() or os.path.basename(path) in WORK_TABLES.values(): continue   # the other languages have faces of their own
         chars.update(c for c in open(path, encoding="utf-8").read() if ord(c) > 0x2000 and not 0xE000 <= ord(c) <= 0xF8FF)
     return "".join(sorted(chars))
 
 TABLES = {"ja": "i18n-ja.js", "en": "i18n-en.js"}
+# The works' cards in each language (works-ja.js, works-en.js) are written in the same faces.
+WORK_TABLES = {"ja": "works-ja.js", "en": "works-en.js"}
 # The language buttons are each written in their own language, so each language's cut holds its own name.
 OWN_NAME = {"ja": "日本語", "en": "English"}
 
-def table_chars(lang):
-    """Every character a language's table writes (its keys are the Chinese, which the Chinese faces hold)."""
+def table_chars(lang, works=True):
+    """Every character a language's table writes (its keys are the Chinese, which the Chinese faces hold). The works'
+    cards are set only in the kai and the serif, so the brush, the running hand and the seal leave them out."""
     import re
-    src = open(f"{ROOT}/app/src/{TABLES[lang]}", encoding="utf-8").read()
+    src = "".join(open(f"{ROOT}/app/src/{t[lang]}", encoding="utf-8").read() for t in ((TABLES, WORK_TABLES) if works else (TABLES,)))
     values = "".join(json.loads(f'"{v}"') for v in re.findall(r':\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$', src, re.M))
     return "".join(sorted(set(ALWAYS + "‘’“”–—…·「」『』" + values + OWN_NAME[lang])))
 
 def main_lang(lang, src):
-    out = f"{ROOT}/app/shared/fonts"; text = table_chars(lang)
+    out = f"{ROOT}/app/shared/fonts"; text = table_chars(lang); few = table_chars(lang, works=False)
     if lang == "ja":
         cut(TTFont(f"{src}/KleeOne-Regular.ttf"), text, f"{out}/kai-ja.woff2")
-        cut(TTFont(f"{src}/YujiBoku-Regular.ttf"), text, f"{out}/brush-ja.woff2")
-        cut(TTFont(f"{src}/YujiSyuku-Regular.ttf"), text, f"{out}/xing-ja.woff2")
-        for name, w in (("serif-ja", 400), ("seal-ja", 900)):
-            cut(instancer.instantiateVariableFont(TTFont(f"{src}/NotoSerifJP.ttf"), {"wght": w}), text, f"{out}/{name}.woff2")
+        cut(TTFont(f"{src}/YujiBoku-Regular.ttf"), few, f"{out}/brush-ja.woff2")
+        cut(TTFont(f"{src}/YujiSyuku-Regular.ttf"), few, f"{out}/xing-ja.woff2")
+        for name, w, chars in (("serif-ja", 400, text), ("seal-ja", 900, few)):
+            cut(instancer.instantiateVariableFont(TTFont(f"{src}/NotoSerifJP.ttf"), {"wght": w}), chars, f"{out}/{name}.woff2")
         licences = (("Klee One", "KleeOne"), ("Noto Serif JP", "NotoSerifJP"), ("Yuji Syuku", "YujiSyuku"))
     else:
         cut(instancer.instantiateVariableFont(TTFont(f"{src}/EBGaramond.ttf"), {"wght": 400}), text, f"{out}/serif-en.woff2")

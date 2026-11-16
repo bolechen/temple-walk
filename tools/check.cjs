@@ -14,17 +14,18 @@ const DEV_ONLY = [path.join(root, "src", "debug.js")];
 // `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
 // So is the name of each language on its button in index.html, which is written in that language.
 const TABLES = { ja: path.join(root, "src", "i18n-ja.js"), en: path.join(root, "src", "i18n-en.js") };
+const WORK_TABLES = { ja: path.join(root, "src", "works-ja.js"), en: path.join(root, "src", "works-en.js") };
 const cut = (name) => new Set(fs.readFileSync(path.join(root, "shared", "fonts", name), "utf8"));
 const wide = (c) => c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 && c.codePointAt(0) <= 0xf8ff);
 const have = cut("chars.txt"), missing = new Set();
 const own = { ja: "", en: "" };
 const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
-for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !Object.values(TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
+for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
 if (missing.size) { bad++; console.error("characters used but not in app/shared/fonts (run tools/fonts.py): " + [...missing].join("")); }
 for (const [l, f] of Object.entries(TABLES)) {
   const theirs = cut(`chars-${l}.txt`), lacking = new Set();
   // Only the translations: the keys are the Chinese, which the Chinese faces hold.
-  for (const m of fs.readFileSync(f, "utf8").matchAll(/:\s*"((?:[^"\\]|\\.)*)",?\s*$/gm)) for (const c of m[1]) if (wide(c) && !theirs.has(c)) lacking.add(c);
+  for (const m of (fs.readFileSync(f, "utf8") + fs.readFileSync(WORK_TABLES[l], "utf8")).matchAll(/:\s*"((?:[^"\\]|\\.)*)",?\s*$/gm)) for (const c of m[1]) if (wide(c) && !theirs.has(c)) lacking.add(c);
   for (const c of own[l]) if (wide(c) && !theirs.has(c)) lacking.add(c);
   if (lacking.size) { bad++; console.error(`characters in src/i18n-${l}.js but not in its faces (run tools/fonts.py --lang ${l}): ` + [...lacking].join("")); }
 }
