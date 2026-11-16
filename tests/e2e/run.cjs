@@ -355,7 +355,8 @@ const scenarios = {
     await t.until(async () => (await word()) === "上香", 40000, "上香 was not offered"); await t.page.click("#act");
     await t.until(async () => (await R()).planted, 120000, "the sticks were never set in the ash");
     let r = await R(); expect(r.smoke && r.left > 0 && r.left <= 12, "planted sticks should smoke and have time left: " + JSON.stringify(r));
-    expect((await t.journey()).seals.incense > 0, "no seal for the incense");
+    // The seal comes after the bow that follows the planting, a few seconds on: wait for it, as for any passage.
+    await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
     await t.until(async () => !(await t.journey()).rite, 30000, "he did not finish the offering");
     expect((await word()) !== "上香", "incense should not be offered while it burns");
     await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
