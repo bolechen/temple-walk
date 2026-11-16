@@ -37,6 +37,7 @@ import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
 import { createCommunity } from "./src/community.js";
+import { createCredits } from "./src/credits.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose, seatHop } from "./src/drop.js";
@@ -52,6 +53,7 @@ const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").ma
 createPaper();   // the paper, strokes and seals the interface is drawn with (src/paper.js, src/ui.css)
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
 createCommunity(ui);
+createCredits(ui);
 const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false;   // what is said about the controls, and when
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));

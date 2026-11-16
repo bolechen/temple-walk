@@ -76,6 +76,7 @@ const scenarios = {
     // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
     await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open");
     expect((await words("#pieceTitle")) === "出山釈迦図" && /[ぁ-ん]/.test(await words("#pieceNote")) && (await words("#pieceFacts")).includes("東京国立博物館") && (await words("#pieceCredit")).startsWith("Source: ColBase"), "the work's card should be in Japanese: " + (await words("#pieceTitle")));
+    expect((await words("#pieceProcessed")).includes("を加工して作成") && (await words("#pieceProcessed")).includes("TA-617") && await t.page.isVisible("#pieceProcessed"), "a ColBase card should say, in Japanese, that the picture was edited: " + (await words("#pieceProcessed")));
     await t.page.click("#pieceClose");
     // Chosen in the menu: kept, and the page opens again in it.
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
@@ -888,6 +889,14 @@ const scenarios = {
     await t.page.click("#setInvert"); await t.page.evaluate(() => { for (const [id, v] of [["setSens", "1.8"], ["setVolume", "0.3"]]) { const el = document.getElementById(id); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); } });
     await t.page.click('#menu [data-q="medium"]'); expect(await t.page.isVisible("#qualityNote"), "a change of tier should say when it takes effect");
     let st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3 && st.quality === "medium", "the menu did not set what it shows: " + JSON.stringify(st));
+    // The page of thanks opens over the menu, lists the 14 ColBase pictures and links the licence summary the build carries; Esc puts away only it.
+    await t.page.click("#menuCredits"); await t.until(() => t.page.isVisible("#credits"), 10000, "the menu has no way to the page of thanks");
+    { const c = await t.page.evaluate(() => ({ text: document.getElementById("creditsBody").textContent, links: [...document.querySelectorAll("#creditsBody a")].map((a) => a.href), modal: window.__ui().modal }));
+      expect(c.text.includes("ColBase") && c.text.includes("Poly Haven") && c.text.includes("Basis Universal") && c.text.includes("Yunjing Kai"), "the page of thanks lacks a source: " + c.text.slice(0, 120));
+      expect(c.links.filter((h) => /colbase\.nich\.go\.jp\/collection_items\//.test(h)).length === 15, "the page should link 14 ColBase items and the plaque's: " + c.links.length);
+      const notice = c.links.find((h) => /THIRD-PARTY-NOTICES\.txt$/.test(h)), ofl = c.links.find((h) => /OFL\.txt$/.test(h)); expect(notice && ofl, "the page does not link the licence summary and the font licence");
+      for (const [h, name] of [[notice, "three.js"], [notice, "Basis Universal"], [ofl, "SIL OPEN FONT LICENSE"]]) { const body = await t.page.evaluate(async (u) => { const r = await fetch(u); return r.ok ? (await r.text()) : "HTTP " + r.status; }, h); expect(body.toUpperCase().includes(name.toUpperCase()), `${h} should open and name ${name}: ${body.slice(0, 60)}`); } }
+    await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#credits")) && (await t.page.isVisible("#menu")), "Esc should put away the page of thanks and leave the menu");
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#menu")), "Esc should close the menu again");
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });

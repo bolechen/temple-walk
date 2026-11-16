@@ -1,0 +1,117 @@
+{
+ "file": "app/shared/models/novice.glb",
+ "eps": 0.00001,
+ "smooth": 0,
+ "vertices": 17704,
+ "points": 10216,
+ "sharedPoints": 6368,
+ "pairs": 8672,
+ "differing": 0,
+ "crossPart": 1235,
+ "crossDiffering": 0,
+ "worstWeightDiff": 0,
+ "poses": {
+  "bind": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 1,
+    "robeEdgesOver2x": 0
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 1,
+    "robeEdgesOver2x": 0
+   }
+  },
+  "stand": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 3.28,
+    "robeEdgesOver2x": 31
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 3.28,
+    "robeEdgesOver2x": 31
+   }
+  },
+  "pray": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 4.68,
+    "robeEdgesOver2x": 113
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 4.68,
+    "robeEdgesOver2x": 113
+   }
+  },
+  "walk": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 4.54,
+    "robeEdgesOver2x": 88
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 4.54,
+    "robeEdgesOver2x": 88
+   }
+  },
+  "climb": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 5.95,
+    "robeEdgesOver2x": 223
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 5.95,
+    "robeEdgesOver2x": 223
+   }
+  },
+  "chair": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 7.47,
+    "robeEdgesOver2x": 371
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 7.47,
+    "robeEdgesOver2x": 371
+   }
+  },
+  "sit": {
+   "shipped": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 5.47,
+    "robeEdgesOver2x": 208
+   },
+   "welded": {
+    "maxSeparationMm": 0,
+    "pointsOver1mm": 0,
+    "robeMaxStretch": 5.47,
+    "robeEdgesOver2x": 208
+   }
+  }
+ },
+ "bind": {
+  "trousersTopM": 0.423,
+  "robeHemM": 0.164
+ }
+}

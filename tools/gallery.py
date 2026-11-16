@@ -51,7 +51,11 @@ def main():
             rank = m.get("designation") or ""; rank = "" if rank == "none" else rank
             data[slug] = {"title": m["title_zh"], "by": m["artist_zh"], "dates": m.get("artist_dates") or "", "period": m["period_zh"], "medium": m["medium_zh"],
                           "size": m.get("size_cm") or "", "holder": m["holder_zh"], "rank": rank, "note": m["note_zh"], "link": m["jingshan_link_zh"],
-                          "credit": m["credit_line"], "url": m["page_url"], "w": im.width, "h": im.height}
+                          "credit": m["credit_line"], "url": m["page_url"],
+                          # ColBase's terms ask that a reuse say it was edited, apart from the source line: every ColBase picture is shrunk and
+                          # re-encoded as WebP above, and one that CROP trims is said to be cropped too. Other museums' pictures need nothing.
+                          "processed": ("crop" if slug in CROP else "resize") if "colbase.nich.go.jp" in m["page_url"] else "",
+                          "w": im.width, "h": im.height}
             print(f"{slug:28s} {im.width}x{im.height} {os.path.getsize(f'{out}/{slug}.webp') // 1024:4d} KB  {hall}")
     js = ("// The real works that hang in the halls: written by tools/gallery.py from the museums' own records. Do not edit by hand.\n"
           "// Each is published for free reuse by the museum that holds it; `credit` is the source line to show with it.\n"

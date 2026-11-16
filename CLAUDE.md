@@ -68,7 +68,8 @@ node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*
 node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
 node tools/inside.cjs tools/out/hall-views --views [level]   # every indoor view a level registers in app/levels/<level>/hall-views.js (default t00)
 node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose, `sculpt` for the sculpted body)
-node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
+NOVICE_WELD=8 node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code, one weight to a point); its SHA-256 is in docs/t00/asset-register.csv
+node tools/novice-views.cjs [--glb=<file>|--code]  # either body in five poses from four sides on a bare stage, ~20 s → tools/out/novice-views-*.png
 pnpm run edges                      # ~95 s: does his whole body fit everywhere his feet may go, above the knee and (shoes, hem) below it? (add --spots to list where it does not)
 pnpm run nearplane                  # ~80 s: the camera's near plane cuts into nothing along the routes and porches, behind him and from his eyes
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
@@ -180,10 +181,15 @@ generated mesh can take this one's place with the same bone names, bound in the 
 (`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. One exists: the body the owner
 made with Meshy from the drawing (`tools/novice.mjs` → `app/shared/models/novice.glb`), fetched after the first frames by
 `app/src/novice.js` and worn through `monk.dress()`, which swaps the geometry of the four skinned parts and nothing else.
-**It is switched off by default since 2026-11-15**: its cloth tears apart when he walks, climbs stairs or sits (the bone
-weights are wrong at the texture seams), so the page wears the body built here and fetches the sculpted one only with
-`?body=sculpt` (`?body=code` is the default spelled out; a failed or ill-fitting fetch also keeps the built one). Keep
-`novice.glb`, `novice.js`, `monk.dress()`, `tools/novice.mjs` and their tests: the mending needs them. The hat and the beads are built here either way. In third person
+**It is switched off by default since 2026-11-15**, so the page wears the body built here and fetches the sculpted one only
+with `?body=sculpt` (`?body=code` is the default spelled out; a failed or ill-fitting fetch also keeps the built one). Its
+cloth tore at the texture seams, where copies of one point had taken different weights. Since the 2026-11-16 rebuild
+(issue #80, route A: `NOVICE_WELD=8`, steps 4a and 4b of `tools/novice.mjs`, `tools/novice-weld.mjs`) every copy of a
+point takes one weight (`novice.test.mjs` holds them together standing, through a stride and up a flight), and the arms are
+weighted along the arm; it no longer tears standing, with palms together or walking. Sitting it still tears: there are no
+legs under its robe, which needs a layered model (route B). Whether it becomes the default again is the owner's call.
+`node tools/novice-views.cjs [--glb=<file>|--code]` shows either body from four sides in five poses on a bare stage, in
+seconds, frame for frame. Keep `novice.glb`, `novice.js`, `monk.dress()`, `tools/novice.mjs` and their tests. The hat and the beads are built here either way. In third person
 the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
 its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something. It never gets
 there in one frame: `createFollow` moves it on critically damped springs (times taken from 《小王子》's camera; a friend
@@ -333,7 +339,7 @@ app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page
 every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Xing" (Zhi Mang Xing, a running hand: what is written by hand on paper, which is
 the verse under a photograph, the slip drawn in the library and the title on a leaf in a hall; it has no traditional
 forms, so it is not for name boards), "Yunjing Bang" (Yuji Boku, a heavy brush regular hand cut to the name boards' characters only), "Yunjing Serif" and
-"Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
+"Yunjing Seal" (Noto Serif SC regular and black). The kai (LXGW WenKai) and the Korean running hand (Nanum Brush Script) declare Reserved Font Names, so `cut()` writes them with the project's own names inside the file (`RENAMED`: "Yunjing Kai", "Yunjing Hand KO"; copyright and licence records are left as they were; `python3 tools/fonts.py --rename` does it to files already cut), and `tests/unit/fonts.test.mjs` reads every file's name table (in Node, no font library) and fails on a reserved name. Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `pnpm run check` fails if a character is used that the cut does not hold.
 
 **The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small vermilion seal
@@ -365,8 +371,12 @@ drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and pape
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
 opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, how wide the view is (`fov`, degrees
 added to the walk's 50° behind him or 65° from his eyes; the fixed views keep 44°/52°), volume, the key card, and
-a way back to the start of the path. The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
+a way back to the start of the path, and 鸣谢 (the page of thanks and sources, below). The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
 validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
+
+**Thanks and sources (`app/src/credits.js`, `#credits`).** The menu's 鸣谢 opens a sheet of paper (`ui.layer`, a `<dialog class="layer">` holding a `.credits-card.paper`) with what the licences ask to be said (`docs/t00/LICENSING-AUDIT.md` §六): the three museums (the 14 ColBase pictures one by one, each linked to its item page; the plaque's four characters, with their source and what was done to them), the 3D scans, Poly Haven, every typeface with its copyright line, and the libraries, linking `shared/licenses/THIRD-PARTY-NOTICES.txt` and `shared/fonts/OFL.txt`. The words are data in `credits.js` passed through `t()`; names, copyright lines and the museums' own source lines are not translated. A work's card carries, below the museum's source line, a line saying a ColBase picture was edited (`processedLine`, from the `processed` field `tools/gallery.py` writes: `resize` or `crop`), written as ColBase's terms give their example. A new ColBase work needs nothing by hand; a new source of another kind needs a section in `credits.js` and a row in `asset-register.csv`. `__credits()` reports it.
+
+**Third-party licences (`tools/notices.mjs`, `app/shared/licenses/`).** `THIRD-PARTY-NOTICES.txt` is composed by `node tools/notices.mjs` from the installed three.js and meshoptimizer licences and the texts kept beside it (lil-gui, stats.js, Basis Universal's LICENSE and NOTICE), and ships in `dist/shared/licenses/`. `vite.config.mjs` fails the build if it, or `vendor/basis/NOTICE`, is missing or does not name the five libraries; `tools/setup.mjs` copies Basis's own Apache-2.0 text, not three's MIT, to `app/vendor/basis/`. `tests/unit/notices.test.mjs` builds the site into a scratch folder and checks it.
 
 **What is said about the controls (`app/src/hints.js`).** Nothing about the controls stays on the picture. One line at
 the foot of the view says each thing once, when it becomes useful (how to walk on arriving, Esc and the wheel when the
@@ -389,6 +399,7 @@ to `__probe` rather than reaching into the page from a test.
 - Code comments are in English and written as prose describing the place, not the code; commit messages and PR titles follow Conventional Commits as AGENTS.md sets out; the README and docs are in Chinese. Keep that split.
 - Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles. Later the same day, with rafters, the wood outside the walls and the gate's detail added, the first court cost 9.3 ms on the high tier and 4.7 ms on the low; the measured walk (`?tour=120x3`, high tier, 1080p) averaged 61 frames a second with a 95th-percentile frame of 21 ms. Switching trees or bamboo off changes nothing on that card; the mirror pass is about 1.8 ms and is drawn only on the level of the forecourt and first court. None of this says what a Mac or a phone does.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
+- **Below the horizon there is no sky (#114, `tests/unit/horizon.test.mjs`).** A fourth hill ring in `backdrop.js` (R190, between the first two ranges, foot at y = −140) stands behind the grove's southern bands, because the eye at the bamboo start is under the other rings' feet; its foot is hazed by the scene's own fog, the hills' noise is taken on the circle (`ang()`), and the bamboo bands overlap and thin at both ends. A new far part must keep every ray between the horizon and −10° from every walkable place hitting something.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`pnpm run check` guards this).
 - `index.html` carries its own `<!doctype html>`, `lang` and viewport (since 2026-11-16; before that the test servers added them and the published page had neither, so a phone drew it 980 px wide). No server adds anything to it now. `[hidden]` works because `src/ui.css` says `[hidden]{display:none !important}`.
 - **A phone in the hand (`tools/mobile-audit.cjs`).** It opens every surface of the interface as a touch device at three sizes (upright, sideways, small), takes a picture of each and lists every control under 44 px, text under 12 px, anything off the screen and any page that scrolls; it exits 1 if it lists anything. Run it after changing the interface.
