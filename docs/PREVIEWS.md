@@ -1,10 +1,10 @@
 # PR 预览
 
-同一仓库发起的 PR，只要改到网站（`pages.yml` 的 `paths`），通过检查后就会得到一个独立的预览地址，方便合并前在 Mac 和手机上看画面。正式站点仍是 GitHub Pages（<https://temple.rushiwowen.co/>），预览不影响它。
+同一仓库发起的 PR，每次推送（只改文档的也算）通过检查后都会部署一次，得到一个独立的预览地址，方便合并前在 Mac 和手机上看画面。正式站点仍是 GitHub Pages（<https://temple.rushiwowen.co/>），预览不影响它。
 
 ## 地址
 
-PR 里有一条机器人评论，每次推送后原地更新：
+PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR 的最新提交。2026-11-16 之前 `pages.yml` 对 PR 设了 `paths` 过滤，只改文档或交付材料的推送不触发运行，评论和「最新地址」就停在更早的提交上；现在去掉了过滤，代价是只改文档的推送也要跑一遍检查、构建和 `boot`（几分钟）。被更新推送取消的运行不部署也不评论。
 
 - 最新地址 `https://pr-<编号>-temple-walk-preview.bole-chen.workers.dev`：始终是这个 PR 最近一次成功部署的版本。
 - 本提交固定地址 `https://<部署号>-temple-walk-preview.bole-chen.workers.dev`：只对应一个提交，之后推送也不会变。截图、反馈问题和评审请用这个地址，并写上完整提交号。

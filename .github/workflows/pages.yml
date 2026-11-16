@@ -3,8 +3,9 @@ name: Verify and deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Every push to a pull request, documents too, so that its preview and the comment naming it always follow the head
+  # commit (docs/PREVIEWS.md); a path filter here left the comment on an older commit after a push of papers only.
   pull_request:
-    paths: ["app/**", "tests/**", "tools/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tsconfig.json", "wrangler.jsonc", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:

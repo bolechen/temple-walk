@@ -38,6 +38,7 @@
       "replace": "上传新的 wechat-<日期>.jpg，再覆盖 current.json 的 image 与 expiresAt；enabled: false 可暂停展示"
     },
     "changes": [
+    ".github/workflows/pages.yml：去掉 pull_request 的 paths 过滤，PR 的每次推送（只改文档的也算）都部署预览并更新评论，评论始终对应最新提交；docs/PREVIEWS.md 同步",
       "app/src/community.js（新增）：读取 R2 上的 current.json，校验 enabled / image / 带时区的 expiresAt；到期、关闭、加载失败分别显示状态与「重试」，到期瞬间收起旧码；卡片自己处理 Esc（标题页加载期间全局键盘监听尚未注册）",
       "app/index.html、app/src/ui.css：标题页入口、歇脚菜单入口、community 弹层（原生 dialog，走 ui.js 的弹层栈）；手机上提示长按保存后到微信相册识别，二维码图片允许长按",
       "app/yard.js：createUI 之后即挂上入群卡片，加载中也能打开",
