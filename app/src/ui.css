@@ -229,6 +229,12 @@ body.frozen #photoBar, body.frozen #photoClose, body.frozen #photoSettings { vis
 #curtain.shut { display: block; } #curtain.shut i { animation: leaf .2s var(--ease) both; }
 @keyframes leaf { 0% { transform: scaleY(0); } 35% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
 @media (prefers-reduced-motion: reduce) { #curtain.shut i { animation: none; } }
+/* The same leaves, drawn frame by frame by the director (src/director.js) when the eye is moved behind them. */
+#curtain.cut { display: block; } #curtain.cut i { animation: none; }
+/* While the eye is on a place's own shot, the marks over the picture step aside: the way, the next place, the hints,
+   the slips at the edge and the book. What the observance itself needs stays: its button, what is said, the breath,
+   the seal, and the thumb-stick that walks him away. */
+body.directing .rail, body.directing #bookBtn, body.directing #goal, body.directing #way, body.directing #hint, body.directing #moodTag { opacity: 0 !important; pointer-events: none; transition: opacity .6s ease; }
 #photoBar { position: absolute; inset: auto 0 0; display: none; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
 #photoBar button { pointer-events: auto; }
 #photoSettingsToggle { justify-self: start; min-height: 44px; }

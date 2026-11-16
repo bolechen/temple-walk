@@ -112,7 +112,7 @@ export function createGame(y) {
   // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
   const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
   const rites = createRites(y, fast, { burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
-  const end = () => { rite = null; y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
+  const end = () => { rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
@@ -123,6 +123,8 @@ export function createGame(y) {
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
     const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
     y.stage(st);
+    // The eye leaves his shoulder for the place's own shot (src/director.js), and comes back before his hands are done.
+    y.direct(id);
     if (id === "bell") {   // he takes the rope; each press after that is one pull, one stroke, counted as it sounds (below)
       await wait(0.3); if (!on()) return;
       if (!(await rites.takeRope(on))) return;
@@ -140,11 +142,11 @@ export function createGame(y) {
       await rites.linger(on); lingering = false; return;
     }
     else if (id === "incense") { await wait(1.2); if (!on()) return; if (!(await rites.offerIncense(on, st, () => say(d.line, 6)))) { if (!on()) return; say(d.line, 6); await wait(3); } }
-    else if (id === "well") { say(d.line, 6); for (let i = 0; i < 3; i++) { await wait(1.5); if (!on()) return; drop(); } await wait(1.2); }
-    else if (id === "lamp") { await wait(1.8); if (!on()) return; mine.visible = true; say(d.line, 5); await wait(2); }
+    else if (id === "well") { say(d.line, 6); if (!(await rites.watchWell(on, () => drop()))) return; }
+    else if (id === "lamp") { if (!(await rites.lightLamp(on, () => { mine.visible = true; say(d.line, 5); }))) return; }
     else if (id === "sit") {
       const b = $("breath"); b?.removeAttribute("hidden");
-      for (let i = 0; i < 3; i++) { if (b) { b.dataset.phase = "in"; $("breathWord").textContent = "吸"; } if (!(await rites.breathe(1, 4, on))) return; if (b) { b.dataset.phase = "out"; $("breathWord").textContent = "呼"; } if (!(await rites.breathe(-1, 5, on))) return; }
+      for (let i = 0; i < 3; i++) { if (b) { b.dataset.phase = "in"; $("breathWord").textContent = "吸"; } if (!(await rites.breathe(1, 4, on))) return; if (b) { b.dataset.phase = "out"; $("breathWord").textContent = "呼"; } if (!(await rites.breathe(-1, 5, on, i === 2 && closedHere()))) return; }
       b?.setAttribute("hidden", ""); say(d.line, 6);
     } else if (id === "sutra") {
       await wait(1.6); if (!on()) return;
@@ -340,6 +342,19 @@ export function createGame(y) {
     entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); setTimeout(announce, 14000 * fast);   // after the first line about walking has gone
   };
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
+  // ?show=shot-<id>: the observance begun where he stands, with the eye already on its shot (tools/shots.js).
+  // He is put as the observance has him (seated for the tea and the summit, at the rope for the bell, his palms together
+  // elsewhere), not taken through it, so that the picture is the same however slowly the page draws.
+  function pose(id) {
+    const p = places[id]; if (!p || rite) return false;
+    const mineRite = (rite = /** @type {any} */ ({ id, posed: true })), on = () => rite === mineRite;
+    y.stage({ face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } });
+    if (id === "bell") rites.takeRope(on);
+    if (id === "lamp") mine.visible = true;
+    return y.direct(id, { now: true });
+  }
+  window.__poseRite = (id) => pose(id);
+  { const want = (Q.get("show") || "").replace(/^shot-/, ""); if (want && want !== Q.get("show") && places[want]) { const go = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(go); pose(want); } }, 100); } }
   refresh(); rites.restore({ incenseAt: (() => { try { return Number(localStorage.getItem(INCENSE)) || 0; } catch { return 0; } })() });
 
   // For the tests.

@@ -473,6 +473,79 @@ const scenarios = {
     expect((await t.state()).climbs === hopsN + 1, "the meditation hall's cushions lie on a platform as high as a stool: he should hop up onto it too");
     await t.shot("e2e-rites"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The eye goes to each place's own shot while an observance is made (src/director.js), and back: by itself just before
+  // the observance ends, at once on a step, a drag or Esc; it stays on the bell's shot however often the bell is rung;
+  // the pause menu turns it off; a system that asks for reduced motion is given the ink, never a swing; and the camera
+  // raised in the middle of a swing frames the shot.
+  director: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&enter&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+    const at = (id, dx = 0.3, dz = 0.3) => t.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__pose(p.at[0] + d, p.at[1] + e, Math.PI - p.face, 0.05); }, [id, dx, dz]);
+    const offered = (word) => t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 40000, `"${word}" was not offered`);
+    const D = () => t.page.evaluate(() => window.__director());
+    const reach = (what, fn, ms = 90000) => t.page.waitForFunction(fn, null, { timeout: ms, polling: 50 }).catch(async () => { throw new Error(what + " | " + JSON.stringify(await D())); });
+    const quiet = () => t.page.evaluate(() => document.body.classList.contains("directing"));
+    // The lamp: in, rested on, and home again by itself before he is done; the marks over the picture step aside meanwhile.
+    await at("lamp"); await offered("燃灯"); await t.page.click("#act");
+    await reach("the lamp's shot was never gone to", () => window.__director().id === "lamp" && window.__director().phase !== "idle");
+    expect(await quiet(), "the way, the hints and the slips should step aside while the eye is on a shot");
+    await reach("the lamp's shot was never reached", () => window.__director().phase === "hold" || window.__director().phase === "out");
+    await reach("the eye never came back from the lamp by itself", () => window.__director().phase === "idle" && window.__director().backs >= 1, 60000);
+    expect(!(await quiet()), "what steps aside should come back with the eye");
+    await t.until(async () => (await t.journey()).seals.lamp > 0, 60000, "no seal for the lamp");
+    // The well: a step (W) sends the eye home at once, and he leaves the well.
+    await at("well"); await offered("观水"); await t.page.click("#act");
+    await reach("the well's shot was never reached", () => window.__director().id === "well" && window.__director().phase === "hold");
+    const b0 = (await D()).backs; await t.page.keyboard.down("w"); await t.frames(2); await t.page.keyboard.up("w");
+    let d = await D(); expect(d.backs === b0 + 1 && (d.phase === "out" || d.phase === "idle"), "a step did not send the eye home: " + JSON.stringify(d));
+    await reach("the eye never got home from the well", () => window.__director().phase === "idle", 30000);
+    // The bell: on its shot it stays, press after press; Esc lets go of the rope and brings the eye home.
+    await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
+    await reach("the bell's shot was never reached", () => window.__director().id === "bell" && window.__director().phase === "hold");
+    const b1 = (await D()).backs;
+    for (const n of [2, 3]) { await reach("the rope never came back to hand", () => window.__rites().bell.ready, 60000); await t.page.click("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.pulls)) >= n, 40000, `stroke ${n} did not sound`); }
+    d = await D(); expect(d.phase === "hold" && d.id === "bell" && d.backs === b1 && d.w === 1, "ringing again should keep the eye on the bell's shot: " + JSON.stringify(d));
+    expect(await t.page.isVisible("#act"), "撞钟 should still be offered on the bell's shot");
+    await t.page.keyboard.press("Escape");
+    d = await D(); expect(d.phase === "out" || d.phase === "idle", "Esc did not send the eye home: " + JSON.stringify(d));
+    await reach("the eye never got home from the bell", () => window.__director().phase === "idle" && window.__journey().rite === null, 30000);
+    expect(!(await t.page.evaluate(() => window.__ui().stack.includes("menu"))), "Esc on a shot should bring the eye home, not open the pause menu");
+    // Tea: a drag of the view brings the eye home, and he stays at his tea.
+    await at("tea"); await offered("吃茶"); await t.page.click("#act");
+    await reach("the tea's shot was never reached", () => window.__director().id === "tea" && window.__director().phase === "hold");
+    await t.page.mouse.move(480, 270); await t.page.mouse.down(); for (let x = 490; x <= 600; x += 10) await t.page.mouse.move(x, 272); await t.page.mouse.up();
+    d = await D(); expect(d.phase === "out" || d.phase === "idle", "a drag did not send the eye home: " + JSON.stringify(d));
+    expect((await t.journey()).rite === "tea", "a drag should only bring the eye home, not stand him up from his tea");
+    await reach("the eye never got home from the tea", () => window.__director().phase === "idle", 30000);
+    await offered("起身"); await t.page.click("#act"); await t.until(async () => (await t.journey()).rite === null, 20000, "起身 did not stand him up");
+    // The camera raised in the middle of the swing to the bell frames the shot itself.
+    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
+    await reach("the bell's shot was never gone to", () => window.__director().id === "bell" && window.__director().phase !== "idle");
+    await t.page.keyboard.press("p"); await t.until(() => t.page.evaluate(() => window.__probe().photo), 20000, "the camera was not raised");
+    d = await D(); expect(d.phase === "hold" && d.w === 1, "raised in the middle of a swing, the camera should frame the shot: " + JSON.stringify(d));
+    await t.page.keyboard.press("p"); await t.page.keyboard.press("Escape"); await reach("the eye never got home", () => window.__director().phase === "idle" && window.__journey().rite === null, 30000);
+    // Turned off in the pause menu: the bell is rung from where the eye follows him.
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 10000, "the pause menu did not open");
+    expect((await t.page.getAttribute("#setAutocam", "aria-pressed")) === "true", "自动镜头 should be on unless turned off");
+    await t.page.click("#setAutocam"); expect((await t.page.evaluate(() => window.__settings().autocam)) === false, "自动镜头 did not turn off");
+    await t.page.click("#menuResume");
+    const n0 = (await D()).blends + (await D()).cuts;
+    await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
+    await reach("he never took the rope", () => window.__rites().bell.grip > 0.9, 60000); await t.frames(4);
+    d = await D(); expect(d.phase === "idle" && d.blends + d.cuts === n0, "with 自动镜头 off the eye should stay with him: " + JSON.stringify(d));
+    await t.page.keyboard.press("Escape"); await t.until(async () => (await t.journey()).rite === null, 30000, "he never let the rope go");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // Reduced motion: never a swing, only the ink, there and back.
+    const r = await open(b, base, "q=low&enter&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 }, reducedMotion: "reduce" });
+    await r.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, Math.PI, 0.05); });
+    await r.until(async () => (await r.page.isVisible("#act")) && (await r.page.getAttribute("#act", "data-word")) === "撞钟", 40000, "撞钟 was not offered");
+    await r.page.click("#act");
+    let saw = 0; await r.page.waitForFunction(() => window.__director().phase === "hold", null, { timeout: 90000, polling: 50 });
+    d = await r.page.evaluate(() => window.__director()); expect(d.cuts === 1 && d.blends === 0 && d.why === "reduced", "with reduced motion the eye should go behind the ink: " + JSON.stringify(d));
+    await r.page.keyboard.press("Escape"); await r.page.waitForFunction(() => window.__director().phase === "idle", null, { timeout: 60000, polling: 50 });
+    d = await r.page.evaluate(() => window.__director()); expect(d.cuts === 2 && d.blends === 0, "and come home behind it: " + JSON.stringify(d)); saw++;
+    expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
+  } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.
   summit: { tier: 3, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=19.5,0,0,0" + BARE);
