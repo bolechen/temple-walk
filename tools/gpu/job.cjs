@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -18,6 +18,19 @@ const FLAGS = {
   "swiftshader": ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"],
 };
 const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required", "--enable-webgl", "--disable-gpu-driver-bug-workarounds"];
+
+// The site the job was handed, in a form a report can be checked against later: the commit it was built from (as the
+// launcher says, with "+dirty" if app/ had changes not committed), the bundled entry the page loads (its name carries
+// the build's hash), and one SHA-256 over every file's path and contents.
+function fingerprint(dir) {
+  const crypto = require("crypto"), files = [];
+  const walk = (d) => { for (const f of fs.readdirSync(d).sort()) { const p = path.join(d, f); fs.statSync(p).isDirectory() ? walk(p) : files.push(p); } };
+  walk(dir);
+  const all = crypto.createHash("sha256");
+  for (const f of files) all.update(path.relative(dir, f) + "\0" + crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex") + "\n");
+  const html = fs.existsSync(path.join(dir, "index.html")) ? fs.readFileSync(path.join(dir, "index.html"), "utf8") : "";
+  return { commit: process.env.COMMIT || null, entry: (html.match(/assets\/index-[\w-]+\.js/) || [null])[0], files: files.length, sha256: all.digest("hex") };
+}
 
 (async () => {
   fs.mkdirSync(out, { recursive: true });
@@ -43,6 +56,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
       await b.close();
     } catch (e) { report.tried[key] = "launch failed: " + String(e.message).split("\n")[0].slice(0, 160); if (b) await b.close().catch(() => {}); }
   }
+  report.site = fingerprint(root);   // whose code drew these pictures: every file the job was handed, hashed, and the page's bundled entry
   report.using = how; report.renderer = report.tried[how]; console.log("renderer:", how, "→", report.renderer);
   const save = () => fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 2));
   save();
@@ -137,17 +151,18 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
     save();
   }
   // The pictures: a named view, optionally a season and hour and a point of view, drawn large.
-  // A picture is a named view ("court@autumn-dusk@third"), or an object for anything else: { file, query, size, js, wait },
-  // where `query` is the page's address after "?" (e.g. a ?cam= that no named view has) and `js`, if given, is run in the
-  // page (it may return a promise) before the picture is taken.
+  // A picture is a named view ("court@autumn-dusk@third"); or { name, size, q }, a named view drawn at its own size or tier
+  // (the 2.39:1 art views beside 16:9 ones; a tier other than the spec's is added to the file's name); or an object for
+  // anything else: { file, query, size, js, wait }, where `query` is the page's address after "?" (e.g. a ?cam= that no
+  // named view has) and `js`, if given, is run in the page (it may return a promise) before the picture is taken.
   for (const shot of spec.shots || []) {
-    const free = typeof shot === "object", name = free ? shot.file : shot;
-    const [view, when = "", as = ""] = free ? [] : name.split("@"), [season, time] = when.split("-"), size = (free && shot.size) || spec.size || [1920, 1080];
+    const free = typeof shot === "object" && !!shot.file, named = typeof shot === "object" && !free, name = free ? shot.file : named ? shot.name : shot;
+    const [view, when = "", as = ""] = free ? [] : name.split("@"), [season, time] = when.split("-"), size = (typeof shot === "object" && shot.size) || spec.size || [1920, 1080], tier = (named && shot.q) || spec.q || "high";
     try {
-      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: spec.q || "high", show: view, season, time, view: as }), size, spec.scale || 1);
+      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1);
       await page.waitForTimeout(free && shot.wait ? shot.wait : 800);
       if (free && shot.js) await page.evaluate(shot.js);
-      const file = free ? name + ".png" : name.replace(/@/g, "_") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
+      const file = free ? name + ".png" : name.replace(/@/g, "_") + (named && shot.q ? "_" + shot.q : "") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
       const y = await page.evaluate(() => window.__yard()); report.shots.push({ name, file, tris: y.tris, calls: y.calls }); console.log("shot", file); await ctx.close();
     } catch (e) { report.shots.push({ name, error: String(e.message).slice(0, 200) }); console.log("shot failed", name, String(e.message).slice(0, 200)); }
     save();
