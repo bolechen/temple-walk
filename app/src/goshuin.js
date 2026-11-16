@@ -1,7 +1,11 @@
 // The page of seals a visitor carries away: the temple's name in brush, the day, the line the library gave,
 // the temple's own seal pressed over the name, and along the foot the seven small seals of the visit, red where
 // earned and a faint outline where not. One drawing serves the book on screen and the picture that is shared.
-const BRUSH = '"Yunjing Brush", "STKaiti", "KaiTi", serif', SERIF = '"Yunjing Serif", "Songti SC", "STSong", serif', SEAL = '"Yunjing Seal", "Yunjing Serif", "Songti SC", serif';
+// The page is calligraphy: in Japanese it is written in Japanese forms, in English it keeps the
+// temple's own characters, as a seal book from a temple abroad would; only the names under the seals and the line at
+// the foot are in the visitor's language.
+import { t as tr, glyphs, FONT, FACE } from "./i18n.js";
+const BRUSH = FONT.brush, SERIF = FONT.serif, SEAL = FONT.seal;
 const NUM = "〇一二三四五六七八九";
 const digits = (n) => String(n).split("").map((d) => NUM[+d]).join("");
 const dayOf = (n) => (n <= 10 ? ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"][n] : n < 20 ? "十" + NUM[n - 10] : (n < 30 ? "二十" : "三十") + (n % 10 ? NUM[n % 10] : ""));
@@ -33,8 +37,10 @@ export function sealBoxes(n) {
   return Array.from({ length: n }, (_, i) => [(75 + i * pitch - gap / 2) / W, (top - 14) / H, pitch / W, (size + 62) / H]);
 }
 
-export async function drawGoshuin({ seals, verse, when, label, temple = "云径禅寺", url = "" }) {
-  try { await Promise.all([document.fonts.load(`200px "Yunjing Brush"`, temple), document.fonts.load(`40px "Yunjing Serif"`, "奉拜"), document.fonts.load(`80px "Yunjing Seal"`, temple)]); } catch {}
+export async function drawGoshuin({ seals, verse, when, label, temple = glyphs("云径禅寺"), url = "" }) {
+  const homage = glyphs("奉拜"), names = seals.map((sl) => tr(sl.place));
+  if (verse) verse = { text: glyphs(verse.text), from: glyphs(verse.from) };
+  try { await Promise.all([document.fonts.load(`200px ${FACE.brush}`, temple + homage + (verse ? verse.text : "")), document.fonts.load(`40px ${FACE.serif}`, homage + names.join("") + label), document.fonts.load(`80px ${FACE.seal}`, temple + seals.map((sl) => glyphs(sl.seal)).join(""))]); } catch {}
   const W = 1200, H = 1600, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
   let s = 41; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   // Paper: warm, uneven, with its fibres showing.
@@ -49,7 +55,7 @@ export async function drawGoshuin({ seals, verse, when, label, temple = "云径�
   // The temple's seal over the name.
   x.save(); x.translate(W / 2 + 6, 770); x.rotate(-0.03); x.globalCompositeOperation = "multiply"; x.globalAlpha = 0.9; x.drawImage(sealStamp(temple, 360, { seed: 3 }), -180, -180); x.restore();   // pressed over the ink, which shows through
   // To the right: the day. To the left: the line that was given.
-  x.fillStyle = "#2a2622"; x.font = `58px ${BRUSH}`; vertical(x, "奉拜", W - 150, 190, 66);
+  x.fillStyle = "#2a2622"; x.font = `58px ${BRUSH}`; vertical(x, homage, W - 150, 190, 66);
   x.font = `36px ${SERIF}`; x.fillStyle = "#3a352f"; vertical(x, dateLine(when), W - 150, 380, 43);
   x.fillStyle = "#6b6458"; x.font = `28px ${SERIF}`; vertical(x, label.replace(/\s/g, ""), W - 92, 380, 36);
   if (verse) {
@@ -61,11 +67,12 @@ export async function drawGoshuin({ seals, verse, when, label, temple = "云径�
   const n = seals.length, size = 126, gap = (W - 150 - n * size) / (n - 1), y = 1318; let got = 0;
   seals.forEach((sl, i) => {
     const cx = 75 + i * (size + gap) + size / 2;
-    if (sl.got) { got++; x.save(); x.translate(cx, y + size / 2); x.rotate(((i * 37) % 9 - 4) * 0.012); x.globalAlpha = 0.9; x.drawImage(sealStamp(sl.seal, size * 2, { seed: i + 11 }), -size / 2, -size / 2, size, size); x.restore(); }
-    else { x.save(); x.setLineDash([7, 7]); x.strokeStyle = "rgba(90,80,66,.38)"; x.lineWidth = 2; x.strokeRect(cx - size / 2 + 5, y + 5, size - 10, size - 10); x.restore(); x.fillStyle = "rgba(90,80,66,.34)"; x.font = `40px ${SEAL}`; vertical(x, sl.seal, cx, y + size / 2 - 22, 46); }
-    x.fillStyle = sl.got ? "#4a443c" : "rgba(90,80,66,.55)"; x.font = `23px ${SERIF}`; x.fillText(sl.place, cx, y + size + 30);
+    if (sl.got) { got++; x.save(); x.translate(cx, y + size / 2); x.rotate(((i * 37) % 9 - 4) * 0.012); x.globalAlpha = 0.9; x.drawImage(sealStamp(glyphs(sl.seal), size * 2, { seed: i + 11 }), -size / 2, -size / 2, size, size); x.restore(); }
+    else { x.save(); x.setLineDash([7, 7]); x.strokeStyle = "rgba(90,80,66,.38)"; x.lineWidth = 2; x.strokeRect(cx - size / 2 + 5, y + 5, size - 10, size - 10); x.restore(); x.fillStyle = "rgba(90,80,66,.34)"; x.font = `40px ${SEAL}`; vertical(x, glyphs(sl.seal), cx, y + size / 2 - 22, 46); }
+    // A name longer than the space between seals (in English) is set smaller until it fits.
+    x.fillStyle = sl.got ? "#4a443c" : "rgba(90,80,66,.55)"; let fs = 23; x.font = `${fs}px ${SERIF}`; while (fs > 14 && x.measureText(names[i]).width > size + gap - 12) x.font = `${--fs}px ${SERIF}`; x.fillText(names[i], cx, y + size + 30);
   });
-  x.fillStyle = "#8b8475"; x.font = `22px ${SERIF}`; x.fillText(got === n ? "七印圆满" : `已得${NUM[got]}印 · 共七印`, W / 2, H - 78);
+  x.fillStyle = "#8b8475"; x.font = `22px ${SERIF}`; x.fillText(got === n ? tr("七印圆满") : tr("已得{n}印 · 共七印", { n: NUM[got], k: got }), W / 2, H - 78);
   if (url) { x.fillStyle = "#a9a293"; x.font = `19px ${SERIF}`; x.fillText(url, W / 2, H - 44); }
   x.strokeStyle = "rgba(60,50,40,.28)"; x.lineWidth = 2; x.strokeRect(34, 34, W - 68, H - 68);
   return c;

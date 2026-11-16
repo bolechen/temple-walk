@@ -20,7 +20,9 @@ const launch = () => chromium.launch({ args: ["--use-gl=swiftshader", "--enable-
 // A page on the temple. `errors` collects everything the page complains about; a scenario fails if it is not empty at the end.
 async function open(browser, base, query, opts = {}) {
   const { enter, observeLoading, ...ctxOpts } = opts;
-  const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, ...ctxOpts });
+  // The page speaks the browser's language (src/i18n.js); the scenarios are written against the Chinese, so their
+  // browser speaks Chinese unless one asks otherwise (`locale`, or ?lang=).
+  const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, locale: "zh-CN", ...ctxOpts });
   const page = await ctx.newPage(), errors = [];
   page.on("pageerror", (e) => errors.push("page error: " + String(e.stack || e).slice(0, 400)));
   page.on("console", (m) => {

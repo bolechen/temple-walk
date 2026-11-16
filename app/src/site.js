@@ -442,6 +442,12 @@ export function buildSite(M) {
     // before the screen wall, the gate once round it, back through the gate, the first court.
     cam01: [A.xC, A.zC1 - 1.2, 0, 0.3], cam02: [A.xB0 + 1.6, A.zMid + 0.9, -1.35, 0.16], cam03: [0, 63.8, 0, 0.14], cam04: [6.6, 53.4, -0.42, 0.3], cam05: [0.6, 37.6, Math.PI, 0.08], cam06: [0, 29, 0, 0.1],
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
+    // The six views of the art prototype (docs/t00/art-targets.md, A1 to A6), framed to match its pictures at 2.39:1:
+    // the bamboo stair with the half-way pavilion at its head, the gate between the screen wall and its steps, the first
+    // court behind the novice, the tea table before the tea house, the Guanyin hall up its stair, and the look back from
+    // the summit. Each is drawn in the season and hour its picture shows, which the address gives, not the view.
+    art1: [21.4, 78.7, -1.4, 0.2], art2: [2.5, 53.8, -0.18, 0.3], art3: [0, 29, 0, 0.1], art4: [-9.6, 25.0, -0.6, 0.08],
+    art5: [0, T2.zS + 5, 0, 0.22], art6: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
   };
 
   return { root, walk, shade, paving, hall, halls, buildings, views, places, seats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };

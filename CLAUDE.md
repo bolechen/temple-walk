@@ -108,7 +108,7 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
 `?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
-`?debug` (open by itself on the dev server and on a pull request's preview, `?debug=0` keeps it shut; the published site never loads it; `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, the level's completion (`__journey`/`__visit`), and `__part()` switches for each part and pass; the backtick key shows or hides it), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
+`?debug` (open by itself on the dev server and on a pull request's preview, `?debug=0` keeps it shut; the published site never loads it; `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, the level's completion (`__journey`/`__visit`), and `__part()` switches for each part and pass; the backtick key shows or hides it), on the workbench (the dev server and a pull request's preview, the same gate; the published site ignores them) `?seals=all|none|bell,tea…` (a book for that visit only, kept in memory, never stored), `?at=<place id>` (steps in and stands him there) and `?play=ending|<observance>` (and begins it there: the close on the summit mat, or bell, tea, incense, sutra, well, lamp, sit; `game.js`), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
 page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.
@@ -309,6 +309,17 @@ choice. Filling the book the first time opens them (`opened` in `yunjing.journey
 sets `body.seasons`, and everything marked `need-seasons` shows (a row in the photograph's settings, two rows in the pause
 menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
+
+**Three languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese or English, by `?lang=`,
+then the visitor's choice (`yunjing.lang.v1`, set in the pause menu or on the title), then the browser's language. Chinese
+is the text of record: write every line in Chinese and pass it through `t("…", vars)` where it is shown; the Japanese and
+English are found by that Chinese in `i18n-ja.js` and `i18n-en.js` (one entry to a line), and `tests/unit/i18n.test.mjs`
+fails if a line the page may show lacks either. `index.html` is translated by `app/lang.js` before the title paints.
+What is calligraphy (seals, the seal book's page, the title's four characters) goes through `glyphs()`: Japanese forms in
+Japanese, the temple's own characters otherwise. Name boards and the museum notes are not translated. Each language has
+its own faces in front of the Chinese ones (`FONT`/`FACE` in `i18n.js` for canvases; `:lang()` variables in `ui.css`),
+cut by `python3 tools/fonts.py --lang ja|en`. Tests and tools pin their browser to `zh-CN`; the `lang` scenario and
+`node tools/mobile-audit.cjs --lang=ja|en` look at the others.
 
 **Typefaces (`app/shared/fonts/`, `tools/fonts.py`).** Six faces under the SIL Open Font License, cut down to the characters the
 app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page of seals), "Yunjing Kai" (LXGW WenKai:

@@ -3,7 +3,10 @@
 // the frame is large and nothing has to be licensed. `paintLeaf(item)` returns the texture for one frame.
 import * as THREE from "three";
 
-const XING = '"Yunjing Xing", "Yunjing Kai", "STKaiti", "KaiTi", serif', SEAL = '"Yunjing Seal", "Yunjing Serif", "Songti SC", serif';
+import { glyphs, FONT, FACE } from "./i18n.js";
+
+// The title down the leaf is calligraphy: Japanese forms in Japanese, the temple's own characters otherwise.
+const XING = FONT.xing, SEAL = FONT.seal;
 const W = 768, H = 1152, CX = 330, CY = 520;   // the picture sits a little left of centre: the title has the right margin
 
 function tools(x, seed) {
@@ -85,6 +88,7 @@ const MOTIF = {
 };
 
 export function paintLeaf(item) {
+  const title = glyphs(item.title);
   const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   function draw() {
@@ -94,13 +98,13 @@ export function paintLeaf(item) {
     (MOTIF[item.paint] || MOTIF.sit)(t);
     // The title, written down the right side, and a seal under it.
     x.fillStyle = "rgba(24,21,18,.9)"; x.textAlign = "center"; x.textBaseline = "middle"; x.font = `104px ${XING}`;
-    [...item.title].forEach((ch, i) => x.fillText(ch, W - 104, 150 + i * 96));
-    const sy = 150 + [...item.title].length * 96 + 6; x.fillStyle = "rgba(176,40,28,.88)"; x.fillRect(W - 140, sy, 72, 72);
-    x.fillStyle = "#efe6d4"; x.font = `50px ${SEAL}`; x.fillText([...item.title][0], W - 104, sy + 38);
+    [...title].forEach((ch, i) => x.fillText(ch, W - 104, 150 + i * 96));
+    const sy = 150 + [...title].length * 96 + 6; x.fillStyle = "rgba(176,40,28,.88)"; x.fillRect(W - 140, sy, 72, 72);
+    x.fillStyle = "#efe6d4"; x.font = `50px ${SEAL}`; x.fillText([...title][0], W - 104, sy + 38);
     x.strokeStyle = "rgba(60,50,40,.3)"; x.lineWidth = 3; x.strokeRect(34, 34, W - 68, H - 68);
     tex.needsUpdate = true;
   }
   draw();
-  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load(`104px "Yunjing Xing"`, item.title), document.fonts.load(`50px "Yunjing Seal"`, item.title)]).then(draw, () => {});
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load(`104px ${FACE.xing}`, title), document.fonts.load(`50px ${FACE.seal}`, title)]).then(draw, () => {});
   return tex;
 }

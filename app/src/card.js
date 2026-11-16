@@ -1,10 +1,11 @@
 // A photograph, mounted: the picture on a sheet of paper with a line of verse, the name of the place, and a seal.
-const BRUSH = '"Yunjing Brush", "STKaiti", "KaiTi", "Kaiti SC", serif', SERIF = '"Yunjing Serif", "Songti SC", "STSong", serif';
 // The verse is written in a running hand, as a line is added to a picture; the name and the seal keep the brush.
-const XING = '"Yunjing Xing", "Yunjing Kai", "STXingkai", "STKaiti", serif';
+// Each in the visitor's language (src/i18n.js); the seal is cut in the temple's characters (`seal`, two of them).
+import { FONT, FACE } from "./i18n.js";
+const BRUSH = FONT.brush, SERIF = FONT.serif, XING = FONT.xing;
 
-export async function composeCard(shot, { line, label, temple, url }) {
-  try { await Promise.all([document.fonts.load(`80px "Yunjing Xing"`, line), document.fonts.load(`80px "Yunjing Brush"`, temple), document.fonts.load(`30px "Yunjing Serif"`, label)]); } catch {}
+export async function composeCard(shot, { line, label, temple, url, seal = temple }) {
+  try { await Promise.all([document.fonts.load(`80px ${FACE.xing}`, line), document.fonts.load(`80px ${FACE.brush}`, seal), document.fonts.load(`30px ${FACE.serif}`, temple + label)]); } catch {}
   const W = shot.width, H = shot.height, m = Math.round(Math.min(W, H) * 0.055), foot = Math.round(Math.min(W, H) * 0.2);
   const c = document.createElement("canvas"); c.width = W + m * 2; c.height = H + m + foot;
   const x = c.getContext("2d"), u = Math.min(W, H) / 100;
@@ -29,7 +30,7 @@ export async function composeCard(shot, { line, label, temple, url }) {
   x.save(); x.translate(sx + z / 2, sy + z / 2); x.rotate(-0.025); x.fillStyle = "#b02a1f";
   const r = z * 0.12; x.beginPath(); x.roundRect(-z / 2, -z / 2, z, z, r); x.fill();
   x.fillStyle = "#f6efe2"; x.textAlign = "center"; try { x.letterSpacing = "0px"; } catch {} x.font = `${Math.round(z * 0.46)}px ${BRUSH}`;
-  [...temple.slice(0, 2)].forEach((ch, i) => x.fillText(ch, 0, (i - 0.5) * z * 0.46 + z * 0.02));
+  [...seal].slice(0, 2).forEach((ch, i) => x.fillText(ch, 0, (i - 0.5) * z * 0.46 + z * 0.02));
   x.globalCompositeOperation = "destination-out";   // wear in the seal
   for (let i = 0; i < 90; i++) { x.fillStyle = `rgba(0,0,0,${0.25 + rnd() * 0.5})`; x.fillRect((rnd() - 0.5) * z, (rnd() - 0.5) * z, 1 + rnd() * u * 0.4, 1 + rnd() * u * 0.25); }
   x.restore();
