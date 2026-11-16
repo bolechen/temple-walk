@@ -18,7 +18,8 @@ const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THRE
 export function logSwing(s, now) {
   if (!s.t0) return 0;
   const g = s.gap ?? 0.18, u = (now - s.t0) / 1000;
-  if (u < 0) { const L = (s.lead || 0) / 1000; if (!L || u < -L) return 0; const k = (u + L) / L; return k < 0.65 ? LOG_DRAW * ease(k / 0.65) : LOG_DRAW - (LOG_DRAW + g) * ((k - 0.65) / 0.35) ** 2; }
+  // `s.from` is where it hung when it was taken: a stroke may be begun while the last one still swings.
+  if (u < 0) { const L = (s.lead || 0) / 1000; if (!L || u < -L) return s.from || 0; const k = (u + L) / L; return k < 0.5 ? mix(s.from || 0, LOG_DRAW, ease(k / 0.5)) : k < 0.68 ? LOG_DRAW : LOG_DRAW - (LOG_DRAW + g) * ((k - 0.68) / 0.32) ** 2; }   // drawn back, held a moment, let go
   if (u > 9) return 0;
   const after = (v) => Math.max(-g, -g * Math.exp(-3 * v) + 0.3 * Math.exp(-0.9 * v) * Math.sin(3 * v));
   return s.lead ? after(u) : u < TAP ? -g * (u / TAP) : after(u - TAP);   // a tap sends it straight in
@@ -26,9 +27,15 @@ export function logSwing(s, now) {
 const LOG_DRAW = 0.24, TAP = 0.08;
 // The clock the observances keep. A test or a picture tool may hold it still and step it (`__riteClock(ms)` moves it
 // on by so much and holds it there; `__riteClock(null)` lets it run again), so that a moment can be looked at.
-let held = null;
-export const riteNow = () => held ?? performance.now();
-if (typeof window !== "undefined") window.__riteClock = (ms) => { held = ms == null ? null : (held ?? performance.now()) + ms; return held; };
+// While a photograph holds the picture still (`pauseRites`), the clock stops too, and when it runs again it takes up
+// where it stopped: an observance half done is not found finished behind the print.
+let held = null, offset = 0, pausedAt = null;
+export const riteNow = () => held ?? performance.now() - offset;
+export function pauseRites(on) {
+  if (on && pausedAt === null && held === null) { pausedAt = performance.now(); held = pausedAt - offset; }
+  else if (!on && pausedAt !== null) { offset += performance.now() - pausedAt; pausedAt = null; held = null; }
+}
+if (typeof window !== "undefined") window.__riteClock = (ms) => { held = ms == null ? null : (held ?? riteNow()) + ms; return held; };
 
 function softDot() {
   const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
@@ -36,10 +43,12 @@ function softDot() {
   x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c);
 }
 
-export function createRites(y, fast = 1) {
+// `burn`: how many seconds three sticks take to burn down to the ash (five minutes unless a test asks for less);
+// `onPlant(at)`: told the moment, on the wall clock, that they are set in the ash, so the page can keep it.
+export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at) => {} } = {}) {
   const { monk, scene, site, M } = y, B = monk.bones, G = monk.group, places = site.places;
   const hand = () => ({ at: V(), fingers: V(0, 1, 0), palm: V(1, 0, 0), w: 0 });
-  const act = { bow: 0, twist: 0, nod: 0, breath: null, hands: { left: hand(), right: hand() } };
+  const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
   /** @type {[string, number][]} */
   const HANDS = [["left", 1], ["right", -1]];
   // A point and a direction of his own (x to his left, z the way he faces) in the world.
@@ -95,16 +104,27 @@ export function createRites(y, fast = 1) {
     act.bow = -0.55 * d;
     HANDS.forEach(([n, s]) => { const h = act.hands[n]; at(s * 0.012, 0.8 - 0.75 * d + s * 0.034, 0.3 - 0.3 * d, h.at); dir(0, 0.25, 1, h.fingers); dir(-s, 0.1, 0, h.palm); });
   });
-  async function ringBell(on, more) {
+  // He takes the rope once; after that every stroke is the visitor's: one press, one pull. The log is drawn back
+  // from wherever it hangs, so a stroke may follow the last while it still swings, but not until it has come off
+  // the bronze and started back (`ready`), and the pull lands on the bell `PULL` seconds after the press.
+  const PULL = 1.3, RESWING = 1.3, peal = { pulls: 0, last: -Infinity, busy: false, drawn: 0 };
+  const ready = () => bell.held && bell.grip >= 1 && !peal.busy && (riteNow() - peal.last) / 1000 >= RESWING * fast;
+  async function takeRope(on) {
     if (!bellS) return false;
-    bell.held = true;
-    if (!(await play(0.7, (u) => { bell.grip = act.hands.left.w = act.hands.right.w = ease(u); }, on))) return false;
-    for (let n = 0; n < 3 && more() && on(); n++) {
-      const lead = 1300 * fast; bellS.lead = lead; bellS.t0 = riteNow() + lead;
-      if (!(await play(1.3, () => {}, on))) { bellS.t0 = 0; return false; }
-      y.strike("bell", true);
-      if (!(await play(2.6, () => {}, on))) return false;   // it rings; the log swings itself out in his hands
-    }
+    bell.held = true; peal.drawn = 0;
+    return play(0.7, (u) => { bell.grip = act.hands.left.w = act.hands.right.w = ease(u); }, on);
+  }
+  async function pull(on) {
+    if (!bellS || !ready()) return false;
+    peal.busy = true;
+    const lead = PULL * 1000 * fast; bellS.from = bellS.swing.position.z; bellS.lead = lead; bellS.t0 = riteNow() + lead;
+    // Once drawn back the log is going to the bell: if he lets go of the rope halfway, it still swings in and sounds.
+    await play(PULL, () => {}, () => true);
+    // How far the log went back on its way (logSwing, unit-tested), kept for the tests: a slow renderer may not draw that moment.
+    peal.busy = false; bellS.from = 0; peal.last = riteNow(); peal.pulls++; peal.drawn = Math.max(peal.drawn, LOG_DRAW);
+    y.strike("bell", true); return on();
+  }
+  async function letGo(on) {
     await play(0.6, (u) => { bell.grip = act.hands.left.w = act.hands.right.w = 1 - ease(u); }, on);
     bell.held = false; return on();
   }
@@ -142,22 +162,50 @@ export function createRites(y, fast = 1) {
     return play(0.9, (u) => { act.bow = 0.62 * (1 - ease(u)); w(1 - ease(u)); }, on);
   }
 
+  // ---- After the tea: he stays on his stool as long as the visitor lets him ----
+  // The bowl is back on its stand, steaming a little less. His hands come to rest, he breathes slowly, and now and
+  // then he turns to look out over the court and back. Nothing is counted and nothing ends it but the visitor.
+  /** @param {() => boolean} on */
+  async function linger(on) {
+    const t0 = riteNow(), look = { from: 0, to: 0, at: 0 };
+    act.hands.left.w = act.hands.right.w = 0;
+    let next = 6 + Math.random() * 4;
+    while (on()) {
+      if (!(await play(1, () => {
+        const t = (riteNow() - t0) / 1000 / fast, ph = (t % 8) / 8, inn = ph < 0.42;   // a breath every eight seconds, longer out than in
+        act.breath = inn ? -1 + 1.6 * ease(ph / 0.42) : 0.6 - 1.6 * ease((ph - 0.42) / 0.58);
+        if (t > next) { look.from = look.to; look.to = look.to ? 0 : (Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.25); look.at = t; next = t + (look.to ? 5 + Math.random() * 3 : 9 + Math.random() * 8); }
+        const k = ease(Math.min(1, (t - look.at) / 2.4)), v = mix(look.from, look.to, k);
+        act.twist = v * 0.55; act.look = v; act.nod = 0.03 + 0.02 * Math.abs(v);
+      }, on))) break;
+    }
+    act.breath = null; act.twist = act.nod = act.look = 0;
+    return false;
+  }
+
   // ================= Incense =================
   // Three sticks between his palms: raised to the brow, three bows, a step up to the stand, and set in the ash.
-  const I = places.incense, sticks = new THREE.Group(), smoke = wisp(7, { size: 0.07, rise: 0.75, spread: 0.1, life: 5.5, opacity: 0.2, color: 0xdfe6ee }), inc = { planted: false, shown: false };
+  const I = places.incense, sticks = new THREE.Group(), smoke = wisp(7, { size: 0.07, rise: 0.75, spread: 0.1, life: 5.5, opacity: 0.2, color: 0xdfe6ee }), inc = { planted: false, shown: false, at: 0, burnt: false };
   { const wood = new THREE.MeshStandardMaterial({ color: 0x6b2d1c, roughness: 0.9 }), ember = new THREE.MeshBasicMaterial({ color: new THREE.Color(4.5, 1.5, 0.45), fog: false });
     for (const [rz, rx] of [[-0.085, 0.03], [0, -0.045], [0.085, 0.03]]) { const s = new THREE.Group(); s.rotation.set(rx, 0, rz);
       s.add(new THREE.Mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.3, 5).translate(0, 0.15, 0), wood), new THREE.Mesh(new THREE.SphereGeometry(0.0042, 6, 5).translate(0, 0.302, 0), ember)); sticks.add(s); }
     sticks.traverse((o) => { o.userData.part = "incense"; }); sticks.visible = false; scene.add(sticks); }
   const plantAt = I && I.bowl ? V(I.bowl[0], I.bowl[1] - 0.035, I.bowl[2]) : null;
-  const plant = () => { if (!plantAt) return; inc.planted = inc.shown = true; sticks.visible = true; sticks.scale.setScalar(1); sticks.position.copy(plantAt); sticks.quaternion.identity(); smoke.src.copy(plantAt).y += 0.3; smoke.show(true); };
+  // Each stick burns from its tip: what is left of it shortens, the glowing tip comes down with it, and the smoke
+  // rises from lower and lower. At the end the stubs stand in the ash a finger high, cold, and incense may be offered again.
+  const LEFT = 0.16;   // the stub left standing, of the stick's length
+  const burnTo = (k) => { const h = 1 - (1 - LEFT) * Math.min(1, Math.max(0, k)); sticks.children.forEach((g) => { const [wood, tip] = /** @type {any[]} */ (g.children); wood.scale.y = h; tip.position.y = -0.302 * (1 - h); tip.visible = k < 1; }); if (plantAt) smoke.src.copy(plantAt).y += 0.3 * h; };
+  const stand = () => { sticks.visible = true; sticks.scale.setScalar(1); sticks.position.copy(plantAt); sticks.quaternion.identity(); };
+  const plant = (at = Date.now()) => { if (!plantAt) return; inc.planted = inc.shown = true; inc.burnt = false; inc.at = at; stand(); burnTo((Date.now() - at) / (burn * 1000)); smoke.show(true); };
+  const burntOut = () => { if (!plantAt) return; inc.planted = false; inc.burnt = inc.shown = true; stand(); burnTo(1); smoke.show(false); };
+  always.push(() => { if (!inc.planted) return; const k = (Date.now() - inc.at) / (burn * 1000); if (k >= 1) burntOut(); else burnTo(k); });
   // Between his palms: the sticks stand up out of his joined hands and lean as he leans.
   const inHands = () => { between(sticks.position); B.chest.getWorldQuaternion(sticks.quaternion).multiply(qA.setFromAxisAngle(V(1, 0, 0), 0.12)); sticks.position.addScaledVector(tB.set(0, -0.02, 0.012).applyQuaternion(sticks.quaternion), 1); };
   const brow = (k) => HANDS.forEach(([n, s]) => { const h = act.hands[n]; B.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); dir(0, 1, 0.25, h.fingers); dir(-s, 0, 0, h.palm); h.w = k; });
   /** @param {() => boolean} on @param {any} st @param {(what: string) => void} [cue] */
   async function offerIncense(on, st, cue = () => {}) {
     if (!I || !plantAt || inc.planted) return false;
-    sticks.visible = inc.shown = true;
+    inc.burnt = false; burnTo(0); smoke.show(false); sticks.visible = inc.shown = true;   // three new sticks, whole; what was in the ash is cleared
     if (!(await play(0.7, (u) => { sticks.scale.setScalar(Math.max(0.001, ease(u))); inHands(); }, on))) return false;
     if (!(await play(0.9, (u) => { brow(ease(u)); inHands(); }, on))) return false;
     for (let i = 0; i < 3; i++) if (!(await play(1.5, (u) => { act.bow = 0.5 * Math.sin(Math.PI * ease(u)); brow(1); inHands(); }, on))) return false;
@@ -172,7 +220,7 @@ export function createRites(y, fast = 1) {
     const h = act.hands.right; inHands(); const p0 = sticks.position.clone(), q0 = sticks.quaternion.clone();
     if (!(await play(1.2, (u) => { const k = ease(u); act.bow = 0.5 * k; sticks.position.copy(p0).lerp(plantAt, k); sticks.position.y += 0.07 * Math.sin(Math.PI * k); sticks.quaternion.copy(q0).slerp(qB.identity(), k);
       h.at.copy(sticks.position); h.at.y += 0.09; h.at.addScaledVector(dir(-1, 0, 0, tC), 0.02); dir(0, -0.5, 1, h.fingers); dir(1, 0, 0.2, h.palm); h.w = Math.min(1, u * 4); }, on))) return false;
-    plant();
+    plant(); onPlant(inc.at);
     if (!(await play(0.9, (u) => { act.bow = 0.5 * (1 - ease(u)); h.w = 1 - ease(u); }, on))) return false;
     return play(1.6, (u) => { act.bow = 0.5 * Math.sin(Math.PI * ease(u)); }, on);   // and once more, hands together
   }
@@ -221,21 +269,24 @@ export function createRites(y, fast = 1) {
 
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----
   function rest() {
-    act.bow = act.twist = act.nod = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
-    bell.held = false; bell.grip = 0;
+    act.bow = act.twist = act.nod = act.look = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
+    bell.held = false; bell.grip = 0; peal.busy = false;
     if (home) { tea.held = 0; cup.position.copy(home); cup.rotation.set(0, T.face, 0); steam.show(true); }
-    if (inc.planted) plant(); else { sticks.visible = inc.shown = false; }
+    if (inc.planted) { stand(); smoke.show(true); } else if (inc.burnt) burntOut(); else { sticks.visible = inc.shown = false; }
     ring.visible = false;
   }
   return {
-    act, rest, ringBell, drinkTea, offerIncense, breathe, close,
-    // What was done on an earlier visit stays done: the sticks stand in the ash.
-    restore(has) { if (has.incense) plant(); },
+    act, rest, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, close,
+    // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
+    // burning if less than `burn` seconds have passed, and are cold stubs after.
+    restore(has) { if (!has.incenseAt) return; if (Date.now() - has.incenseAt < burn * 1000) plant(has.incenseAt); else burntOut(); },
+    incenseLit: () => inc.planted,
     state: () => ({
       passages: jobs.length, bow: +act.bow.toFixed(3), nod: +act.nod.toFixed(3), breath: act.breath === null ? null : +act.breath.toFixed(3), hands: +Math.max(act.hands.left.w, act.hands.right.w).toFixed(3),
-      bell: { log: bellS ? +bellS.swing.position.z.toFixed(3) : null, grip: +bell.grip.toFixed(3), rope: rope.visible ? +rope.scale.y.toFixed(3) : null },
+      bell: { log: bellS ? +bellS.swing.position.z.toFixed(3) : null, grip: +bell.grip.toFixed(3), rope: rope.visible ? +rope.scale.y.toFixed(3) : null, pulls: peal.pulls, ready: ready(), drawn: +peal.drawn.toFixed(3) },
+      look: +act.look.toFixed(3),
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
-      incense: { shown: inc.shown, planted: inc.planted, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
+      incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
       sit: { breaths: sit.breaths, ring: ring.visible },
       close: { on: END.on, u: +END.u.toFixed(3) },
     }),

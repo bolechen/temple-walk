@@ -198,7 +198,7 @@ child's」：从起点按 0.2 m 网格（不粗于他加速时一帧走的距离
 | `acceleration` / `deceleration` | 7 / 8 m/s² | 原来一下到速、松手立停 → 照搬 |
 | `walkSpeed` / `jogSpeed` / `runSpeed` | 1.5 / 2.4 / 3.5 m/s | 2.1 / 4.2 m/s，没改 |
 | `turnSmoothTime` / `stepSmoothTime` | 0.085 / 0.09 秒 | 台阶上的眼高本来就有约 0.08 秒的平滑 |
-| 键鼠 `yawSensitivity` / `pitchSensitivity` | 每像素 0.11° / 0.09° | 每像素 0.15° / 0.13°（0.0026 / 0.0022 弧度），没改，「歇脚」里可调 |
+| 键鼠 `yawSensitivity` / `pitchSensitivity` | 每像素 0.11° / 0.09° | 每像素 0.15° / 0.13° → 2026-11-16 降为 **0.09° / 0.08°**（0.0016 / 0.0014 弧度）；拖动按视野算，约为光标的 1.6 倍；默认不再锁定鼠标 |
 
 脚本清单里还有一串**按场景写的镜头组件**，说明它在舒适度上下了很多功夫：`CameraOccluder`、`CameraOccluderFade`
 （挡住镜头的东西淡出，镜头不躲）、`VanityCameraComfort`、`BarCameraSafety`、`CourtCameraSafety`、

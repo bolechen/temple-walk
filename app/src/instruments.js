@@ -55,22 +55,30 @@ function fluteWave(ctx) {
 // partials dying first, so the sound darkens as it fades. Each partial is two a fraction of a hertz apart, which gives
 // the slow waver of a cast bell. `echo`, if given, is where the hillside's answer goes.
 export const BELL = { f0: 98, partials: [[0.5, 0.3, 45, 0.45], [1, 0.5, 34, 0.012], [1.19, 0.24, 22, 0.008], [1.5, 0.13, 14, 0.006], [2, 0.21, 11, 0.005], [2.52, 0.1, 6, 0.004], [3.01, 0.065, 4, 0.004], [4.1, 0.04, 2.2, 0.003], [5.4, 0.022, 1.2, 0.003]] };
-export function bell(ctx, out, t, loud = 1, echo = null) {
+// Returns { end, fade(at) }: when it will have stopped, and a way to let it die over a second and a half from `at`.
+export function bell(ctx, out, t, loud = 1, echo = null, f0 = BELL.f0) {
   const g = ctx.createGain(); g.gain.value = 0.45 * loud; g.connect(out); if (echo) g.connect(echo);
-  let end = t;
+  let end = t; const oscs = [];
   BELL.partials.forEach(([r, a, t60, att], k) => {
     for (const [mul, beat, amp] of [[1, 0, 1], [1.0035, 0.25 + 0.12 * k, 0.7]]) {
       const o = ctx.createOscillator(), e = ctx.createGain(), stop = t + t60 + 1.5;
-      o.frequency.value = BELL.f0 * r * mul + beat;
+      o.frequency.value = f0 * r * mul + beat;
       e.gain.setValueAtTime(0.0001, t); e.gain.linearRampToValueAtTime(a * amp, t + att); e.gain.setTargetAtTime(0, t + att, t60 / 6.9);
-      o.connect(e); e.connect(g); o.start(t); o.stop(stop); end = Math.max(end, stop);
+      o.connect(e); e.connect(g); o.start(t); o.stop(stop); end = Math.max(end, stop); oscs.push(o);
     }
   });
   // The log: a dull, low thump of wood on bronze, and the faint knock of its iron-shod end.
   const n = Math.floor(ctx.sampleRate * 0.5), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 5);
   for (const [cut, amp] of [[260, 1.1], [1300, 0.12]]) { const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), v = ctx.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = cut; v.gain.value = amp; s.connect(f); f.connect(v); v.connect(g); s.start(t); }
-  return end;
+  const handle = {
+    end,
+    fade(at) {
+      g.gain.cancelScheduledValues(at); g.gain.setValueAtTime(g.gain.value, at); g.gain.setTargetAtTime(0, at, 0.35);
+      const stop = at + 1.6; for (const o of oscs) { try { o.stop(stop); } catch {} } handle.end = Math.min(handle.end, stop);
+    },
+  };
+  return handle;
 }
 // The hillside answering the bell: one late, dark repeat that dies away, as from the slope across the valley.
 export function hillEcho(ctx, out) {

@@ -27,3 +27,11 @@ export function dropPose(plan, elapsed) {
   return { x: done ? plan.to[0] : plan.from[0] + (plan.to[0] - plan.from[0]) * f, z: done ? plan.to[2] : plan.from[2] + (plan.to[2] - plan.from[2]) * f,
     y: done ? plan.to[1] : plan.from[1] + plan.lift * time - plan.gravity * time * time / 2, done };
 }
+// A hop up onto a seat too high for him to step onto (a stool is a grown man's sitting height and he is a child): his
+// own jump (JUMP in stride.js, after 《小王子》's player, which jumps by its own gravity), or a harder one if the seat asks
+// it, so that he comes down on the seat's top, at its middle, just after the top of his rise. `dropPose` walks it.
+export function seatHop(from, to, speed = 3.0, gravity = 9.8) {
+  const rise = to[1] - from[1], lift = Math.max(speed, Math.sqrt(2 * gravity * (rise + 0.03)));
+  const duration = (lift + Math.sqrt(Math.max(0, lift * lift - 2 * gravity * rise))) / gravity;
+  return { from: [...from], to: [...to], lift, gravity, duration };
+}

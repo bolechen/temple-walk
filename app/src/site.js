@@ -5,7 +5,7 @@
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "three";
-import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK } from "./geo.js";
+import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
 import { buildHall, DOOR } from "./building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
@@ -158,20 +158,22 @@ export function buildSite(M) {
   putTwo({   // on the first terrace: the sutra library
     xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 3.0, steps: 5.2, lamps: false, hall: { id: "library", kind: "library", name: "藏经楼" },
   }, { xs: [-6.4, -2.2, 2.2, 6.4], zs: [2.6, -2.6], colTop: 3.1, overhang: 2.3, rise: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
-  {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark
-    const g = new THREE.Group(), w = 0.95;
+  {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark.
+    // The whole arch stands in front of the wall and below the terrace above it (2.8 m): the crown comes up to the
+    // coping and no higher, so nothing of it shows over the parapet or through it from the terrace behind.
+    const g = new THREE.Group(), w = 0.95, R = w + 0.3, t = 0.28, deep = 2.6, mid = 0.75, jamb = 1.15, crown = jamb + R;   // `deep`: the barrel stretched out of the wall about `mid`, its back just touching the face and its front proud of the sill
     const niche = mesh(merge([
-      box(0.6, 2.0, 1.1, -w - 0.3, 1.0, 0.55), box(0.6, 2.0, 1.1, w + 0.3, 1.0, 0.55),
-      new THREE.TorusGeometry(w + 0.3, 0.32, 8, 18, Math.PI).scale(1, 1, 3.2).translate(0, 2.0, 0.55),
+      box(0.6, jamb, 1.1, -w - 0.3, jamb / 2, 0.55), box(0.6, jamb, 1.1, w + 0.3, jamb / 2, 0.55),
+      new THREE.TorusGeometry(R, t, 8, 18, Math.PI).scale(1, 1, deep).translate(0, jamb, mid),
       box(2.6, 0.24, 0.3, 0, 0.12, 1.25),
     ]), M.rubble); niche.name = "well-niche"; g.add(niche);
-    const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 3.0).translate(0, 1.5, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
+    const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, crown).translate(0, crown / 2, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.15).rotateX(-Math.PI / 2).translate(0, 0.2, 0.62), new THREE.MeshStandardMaterial({ color: 0x0a1210, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.4 }));
-    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.75); board.position.set(0, 3.26, 0.55 + 0.32 * 3.2 + 0.06);   // hung on the face of the arch's crown, which stands two metres deep out of the wall
+    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.65); board.position.set(0, crown, mid + t * deep + 0.06);   // hung on the face of the arch's crown
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
-    g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, 2.0).translate(sx * (w + 0.3), 1.0, 1.103), new THREE.PlaneGeometry(0.9, 1.9).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), 0.95, 0.6)])), M.seep, { ao: () => 0.6 }));
+    g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, jamb).translate(sx * R, jamb / 2, 1.103), new THREE.PlaneGeometry(0.9, jamb - 0.1).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), (jamb - 0.1) / 2, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
-    walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY }, { x0: 13.2 - 1.6 - BODY, x1: 13.2 + 1.6 + BODY, z0: T2.zS - 0.5 - BODY, z1: T2.zS });   // and the crown of its arch, which stands above the terrace behind
+    walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY });
   }
 
   // Flanking halls on the terraces, small and plain, as the real temple has them beside the axis.
@@ -341,7 +343,7 @@ export function buildSite(M) {
 
   // ---- The small observances of a visit (journey.js): the things they are made with, and where to stand ----
   const flame = (x, y, z, glow) => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.016, 10, 8).scale(1, 2.1, 1), M.flame); f.position.set(x, y, z); f.userData.glow = glow; root.add(f); return f; };
-  const cushion = () => lathe([[0, 0], [0.25, 0], [0.288, 0.028], [0.292, 0.06], [0.262, 0.092], [0.1, 0.104], [0, 0.104]], 28);
+  const cushion = () => lathe(CUSHION, 28);
   // A tea table on the court before the tea house, as tea was taken in these monasteries: a table and stools, a ewer
   // of hot water, black bowls on stands. Whoever sits at it looks across the wet stone to the great hall.
   const TEA_T = 0.78, TEA_BOWL = 0.11;   // the table's height; how far from its middle, toward him, his bowl stands
@@ -350,7 +352,7 @@ export function buildSite(M) {
   {
     const P = { straw: [], wood: [], glaze: [], iron: [], lacquer: [] }, y = 0;
     const bowl = () => lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 24);
-    const T = TEA_T, stool = () => lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 20);
+    const T = TEA_T, stool = () => lathe(STOOL, 20);
     // The table: a thick top on four legs joined by stretchers.
     P.wood.push(box(1.3, 0.05, 0.7, 0, T - 0.025, -0.12), box(1.2, 0.06, 0.04, 0, T - 0.09, 0.19), box(1.2, 0.06, 0.04, 0, T - 0.09, -0.43));
     for (const [a, c] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.wood.push(box(0.06, T - 0.05, 0.06, a * 0.58, (T - 0.05) / 2, -0.12 + c * 0.29));
@@ -410,9 +412,10 @@ export function buildSite(M) {
   // It is where he comes out of the pavilion and where he sits: walked onto, not into. Its top is a floor, its own height.
   walk.decks.push({ x: 0, z: porchZ, r: 0.292, x0: -0.292, x1: 0.292, z0: porchZ - 0.292, z1: porchZ + 0.292, h: porchY + 0.1, floor: "wood" });
   // Whatever can be sat on out of doors: the three stools at the tea table (each turned to the table) and the mat on
-  // the summit porch. `top` is the height of the seat. The rooms add their own (interior.js); game.js offers them.
-  const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null }; });
-  seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null });
+  // the summit porch. `top` is the height of the seat; `kind` says how one sits on it: on a stool as on a chair, on a
+  // cushion cross-legged. The rooms add their own (interior.js); game.js offers them.
+  const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null, kind: "stool" }; });
+  seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null, kind: "cushion" });
   // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
   // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
   const places = {

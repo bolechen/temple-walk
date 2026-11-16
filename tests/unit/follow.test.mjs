@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
-import { followEye, createFollow } from "../../app/src/eye.js";
+import { followEye, createFollow, FOLLOW } from "../../app/src/eye.js";
 import { ROUTE } from "../../app/src/tour.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
@@ -84,4 +84,29 @@ test("a column passing between him and the eye is let pass; a wall coming betwee
   for (let i = 0; i < 4; i++) { follow.step(dt, eye()); assert.ok(last - follow.dist < 1.2, "coming in, the eye should not leap"); last = follow.dist; }
   for (let i = 0; i < 60; i++) follow.step(dt, eye());
   assert.ok(follow.dist < 3, `behind a wall the eye should come in to him, but stands ${follow.dist.toFixed(2)} m back`);
+});
+
+// Visitors said the view swam about when they moved the mouse (2026-11-16). Standing still and swinging the view
+// right round, as a hand on a mouse swings it (three radians a second, either way), all over the first court and its
+// towers and steps: the arm sweeps into walls and eaves, and the eye used to be put straight out of them in 3% of the
+// frames, by up to five metres at a time. It now looks a quarter of a second along the turn (`ahead`, as yard.js asks)
+// and comes in before it gets there, or lets something narrow sweep past.
+test("swinging the view round where he stands does not throw the eye about", () => {
+  const spots = []; for (let x = -12; x <= 12; x += 3) for (let z = -4; z <= 28; z += 3) if (!walker.blocked(x, z)) spots.push([x, z]);
+  let frames = 0, put = 0, far = 0, worst = 0;
+  for (const [x, z] of spots) for (const rate of [3, -3]) {
+    const follow = createFollow(), foot = walker.heightAt(x, z), eyeY = walker.eyeAt(x, z);
+    let yaw = 0, side = 1.2;
+    for (let i = 0; i < 60 + Math.round((2 * Math.PI) / 3 / dt); i++) {
+      const turning = i >= 60; if (turning) yaw += rate * dt;
+      const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
+      const at = { x, z, foot, eyeY, yaw, pitch: 0.04, side, reach: 6.2 };
+      follow.step(dt, followEye(walker, at), turning ? followEye(walker, { ...at, yaw: yaw + rate * FOLLOW.ahead }) : null);
+      if (!turning) continue;
+      frames++; if (follow.forced > FLAT) put++; if (follow.forced > FORCED) far++; worst = Math.max(worst, follow.forced);
+    }
+  }
+  if (process.env.FOLLOW_REPORT) console.log("turning", { spots: spots.length, frames, put, far, worst: +worst.toFixed(2) });
+  assert.ok(put <= frames / 100, `the eye was put out of something in ${put} of ${frames} frames`);
+  assert.ok(far <= frames / 600, `the eye was thrown more than a metre in ${far} of ${frames} frames`);
 });

@@ -14,7 +14,7 @@ import { WORKS, HANG } from "./works.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { box, merge, mesh, footAt, BODY } from "./geo.js";
+import { box, merge, mesh, footAt, BODY, STOOL, CUSHION } from "./geo.js";
 import { frameRoom, CEILING, bays } from "./framing.js";
 
 const FLOOR = -60;
@@ -37,14 +37,14 @@ export const KINDS = {
 // of what is told of such mountain monasteries (docs/JINGSHAN.md). They stand in for the artworks the story will
 // hang here later; each has a small ink painting drawn for it (`paint`, see leaves.js); give a frame an `image` and it shows that instead.
 export const GALLERY = {
-  "main-w1": { paint: "gate", title: "入山帖", text: "山门之外是路，山门之内也是路。上来的人各有来处，到了殿前，都只是站一站。" },
-  "chan-w1": { paint: "sit", title: "坐帖", text: "禅堂里没有要学的东西。一炷香的工夫，听得见自己呼吸，就算坐过了。" },
+  "main-w1": { paint: "gate", title: "入山帖", text: "上山的人在山门外的石阶上歇脚，到殿前时，鞋帮上都沾着竹林里的泥。站一站，再进去。" },
+  "chan-w1": { paint: "sit", title: "坐帖", text: "禅堂里一排坐榻，蒲团朝着墙。坐的人点一炷香，香没烧完，谁也不先起身。" },
   "tea-w1": { paint: "tea", title: "茶帖", text: "相传山里的茶宴有十几道规矩，后来渡海东去。小沙弥只记得一条：茶来了，就喝茶。" },
-  "library-w1": { paint: "scroll", title: "经帖", text: "楼上的经卷多数没人翻过。老师父说，请一句带下山，够用很久。" },
-  "yaoshi-w1": { paint: "gourd", title: "药帖", text: "山下的人上来求药，师父先让他们在廊下坐一会儿。坐过之后，要的常常不是药了。" },
-  "guanyin-w1": { paint: "lamp", title: "灯帖", text: "灯是别人点的，也是给别人点的。添一盏的人，往往不知道它照见了谁。" },
+  "library-w1": { paint: "scroll", title: "经帖", text: "楼上的经卷按函排在柜里，函套上落着薄灰。管经的老师父每天开一个柜子，晾一晾，再合上。上山的人可以在檐下请一句话。" },
+  "yaoshi-w1": { paint: "gourd", title: "药帖", text: "山下的人上来求药，师父先请他们在廊下坐着，等一壶水烧开，问家里几口人、地里种的什么。药包好了，麻绳扎两道，让他们带下山。" },
+  "guanyin-w1": { paint: "lamp", title: "灯帖", text: "灯台上一排小盏，油是香客背上山的，灯芯是殿里的师父捻的。夜里风大，守殿的人要起来两回，把吹灭的再点上。" },
   "dahui-w1": { paint: "well", title: "井帖", text: "相传开山那年，龙让出了整座山，只留下这口井。水在暗处，俯身才看得见。" },
-  "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
+  "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。山门外那片竹林，只剩一道浅绿。" },
 };
 // The figures that stand in the halls beside the great Buddha, until the project carves its own: scans of real
 // sculpture which two museums publish as public domain (CC0), thinned and packed by tools/statues.py into
@@ -106,8 +106,9 @@ function paper() {   // a hanging scroll's blank sheet
 function buildRoom(M, hall, ox, figures) {
   const K = KINDS[hall.kind] || KINDS.patriarch, Y = FLOOR, g = new THREE.Group(), solids = [], dim = () => 0.42;
   // Where a column must not stand: on what is in the way already, on a cushion, where a visitor stops (`keep`).
-  // Every cushion and stool is a seat he may take (`seats`: where it is, the height of its top, the way one sits on it).
-  const keep = [], seats = [], sitAt = (x, z, up, face = Math.PI) => seats.push({ at: [ox + x, z], top: Y + up, face, room: hall.id });
+  // Every cushion and stool is a seat he may take (`seats`: where it is, the height of its top, the way one faces on it,
+  // and its kind: a cushion is sat on cross-legged, a stool as a chair).
+  const keep = [], seats = [], sitAt = (x, z, up, face = Math.PI, kind = "cushion") => seats.push({ at: [ox + x, z], top: Y + up, face, room: hall.id, kind });
   const seat = (x, z, r = 0.32, up = 0, face = Math.PI) => (keep.push({ x, z, r }), sitAt(x, z, up + 0.104, face), cushion().translate(x, Y, z));
   const R = { id: hall.id, y: Y, x0: ox - K.w / 2, x1: ox + K.w / 2, z0: -K.d / 2, z1: K.d / 2, h: K.h, door: [ox, K.d / 2 - 1.6], exitZ: K.d / 2 - 0.7, cx: ox };
   const add = (geo, mat, ao = dim) => { const m = mesh(geo.translate(ox, 0, 0), mat, { ao }); g.add(m); return m; };
@@ -120,7 +121,7 @@ function buildRoom(M, hall, ox, figures) {
   add(box(W, 0.4, D, 0, Y - 0.2, 0), M.stone, () => 0.6);
   add(footAt(merge([box(W, hw, 0.3, 0, Y + hw / 2, zn - 0.15), box(0.3, K.h, D, -wx - 0.15, Y + K.h / 2, 0), box(0.3, K.h, D, wx + 0.15, Y + K.h / 2, 0),
     box(W / 2 - 1.5, hw, 0.3, -(W / 4 + 0.75), Y + hw / 2, zs + 0.15), box(W / 2 - 1.5, hw, 0.3, W / 4 + 0.75, Y + hw / 2, zs + 0.15), box(3, hw - 3.3, 0.3, 0, Y + 3.3 + (hw - 3.3) / 2, zs + 0.15)]), Y - 30), M.plaster());
-  const cushion = () => lathe([[0, 0], [0.26, 0], [0.3, 0.03], [0.3, 0.07], [0.26, 0.1], [0, 0.11]], 24);
+  const cushion = () => lathe(CUSHION, 24);   // the same straw cushion as out of doors, whose top is the seat's height
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
   const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
@@ -163,7 +164,7 @@ function buildRoom(M, hall, ox, figures) {
     const wood = [], glaze = [], iron = [];
     for (const [x, z] of [[-5, -1.4], [0, -2.2], [5, -1.4]]) {
       wood.push(table(1.3, 0.8, 0.78, x, z)); block(x - 0.75, x + 0.75, z - 0.5, z + 0.5);
-      for (const [a, c] of [[0, 0.95], [0, -0.95], [1.05, 0]]) keep.push({ x: x + a, z: z + c, r: 0.22 }), sitAt(x + a, z + c, 0.44, Math.atan2(-a, -c)), wood.push(lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 18).translate(x + a, Y, z + c));
+      for (const [a, c] of [[0, 0.95], [0, -0.95], [1.05, 0]]) keep.push({ x: x + a, z: z + c, r: 0.22 }), sitAt(x + a, z + c, 0.44, Math.atan2(-a, -c), "stool"), wood.push(lathe(STOOL, 18).translate(x + a, Y, z + c));
       for (const a of [-0.2, 0.25]) glaze.push(lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 20).translate(x + a, Y + 0.815, z + 0.1));
       iron.push(lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.105, 0.12], [0.07, 0.19], [0.035, 0.22], [0.03, 0.27], [0.045, 0.29], [0, 0.29]], 20).translate(x - 0.42, Y + 0.815, z - 0.15));
     }

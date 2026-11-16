@@ -18,6 +18,7 @@
 
 - [体验原型](https://bolechen.github.io/temple-walk/)
 - [T00 研究、进度与独立验收](https://temple-atlas-research.floralpage64.chatgpt.site/#temple/T00)
+- [T01 宝通寺研究与开发准备](docs/T01-BAOTONG.md)：案头补证、白盒与观察玩法提案、资产顺序、现场采集清单；当前尚无 T01 游戏实现。
 - [Claude / Fable 读取入口 llms.txt](https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt)
 - [开发交接与验收包](https://temple-atlas-research.floralpage64.chatgpt.site/handoff/T00-handoff-v001.zip)
 - [开发方按交接包提交的 T00 交付物](docs/t00/README.md)：启动说明、基线、机位、评审记录、已知问题、验收自报与证据
@@ -112,7 +113,7 @@ node tools/shots.js court@autumn-dusk@third
 - `?fast=1`：加速自动行走测试；不能据此宣称正常速度手动验收通过。
 - `?in=<殿名>&cam=<房间坐标>`：直接开在殿内某个机位；`node tools/inside.cjs tools/out/hall-views --views [关卡]` 一次出该关卡登记的全部殿内机位（不写关卡时是 `t00`：八座殿各两张，陈设与屋顶），机位表在 `app/levels/<关卡>/hall-views.js`；写了没有机位表的关卡会直接报错并列出有表的关卡。
 - `?devpose`：只在 `pnpm dev` 下生效。走动时把当前位置、朝向、视角、季节时辰和所在殿写回地址栏（替换，不增加历史），改代码整页刷新后回到原处；按 C 复制当前机位链接。发布包不含这段代码。
-- `?debug`：只在 `pnpm dev` 下生效。右上角一块调试面板（lil-gui）：位置与命名机位、殿内机位、季节时辰、视角、锁定画质（重新载入）、帧率与面数、`__cost()`、`__census()`，以及按部件和倒影、泛光、阴影的开关。按反引号键（`` ` ``）收起或展开。发布包不含这段代码。
+- `?debug`：只在 `pnpm dev` 下生效。右上角一块调试面板（lil-gui）：位置与命名机位、殿内机位、季节时辰、视角、锁定画质（重新载入）、帧率与面数、`__cost()`、`__census()`，关卡完成状态（朱印、下一处、这一趟），以及按部件和倒影、泛光、阴影的开关。按反引号键（`` ` ``）收起或展开。发布包不含这段代码。
 
 真实 GPU 渲染工具见 `tools/gpu-render.sh`。运行 Hugging Face Jobs 需要自己的账号、权限与预算，可能产生费用；不是启动游戏的必要条件。
 

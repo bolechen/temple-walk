@@ -54,6 +54,19 @@ test("played at their levels, dry stone is the quietest step and snow the loudes
   assert.ok(heard.stone > 0.3 * heard.snow, "a step on stone is too faint to hear beside the snow: " + JSON.stringify(heard));
 });
 
+test("steps stay well under the music, as 小王子 keeps them: no step played behind him is louder than -42 dBFS", () => {
+  // Measured 2026-11-16 from 小王子's shipped files (docs/t00/SOURCES.md): its stone steps sound about 26 dB under its
+  // music, its grass about 22; ours were 12 and 7.5. Lowered by 10 dB, ours sit about 22 and 17.5 under the music: still
+  // a little more present than his, for the bamboo's wind and because ours do not fade with the eye's distance.
+  // As the page plays them outdoors in third person: LEVEL × 0.8 × walking speed 0.975 × the steps' dry send 0.8 × master 0.8.
+  const chain = 0.8 * 0.975 * 0.8 * 0.8;
+  for (const kind of KINDS) {
+    const db = 20 * Math.log10(mean(kind, loudest) * LEVEL[kind] * chain);
+    assert.ok(db <= -42, `${kind} is played at ${db.toFixed(1)} dBFS at its loudest`);
+    assert.ok(db >= -50, `${kind} is played at ${db.toFixed(1)} dBFS: too faint to hear over the wind`);
+  }
+});
+
 test("every step differs, the same step can be heard again, and a hurried step is shorter", () => {
   for (const kind of KINDS) {
     const a = stepSound(kind, SR, { seed: 1 }), b = stepSound(kind, SR, { seed: 2 });
@@ -80,7 +93,7 @@ test("a step sounds as what it comes down on", () => {
   assert.equal(underfoot({ x: 0, z: 0, y: -60, floor: "room", snow: 1, wet: 1 }), "stone");                    // a hall's floor, whatever the weather
   assert.equal(underfoot({ x: 6.5, z: 20, y: 0, floor: "paving", snow: 1 }), "snow");
   assert.equal(underfoot({ x: 0, z: 20, y: 0, floor: "paving", snow: 1 }), "stone");                            // the swept axis path
-  assert.equal(underfoot({ x: 1.9, z: 30, y: 0, floor: "paving", snow: 1 }), "stone");                          // and its kerb
+  assert.equal(underfoot({ x: 1.9, z: 30, y: 0, floor: "paving", snow: 1 }), "snow");                           // its kerb lies under the bank of swept snow (snowfall.js)
   assert.equal(underfoot({ x: 0, z: 70, y: -3, floor: "path", snow: 1 }), "snow");                              // the approach is not swept
   assert.equal(underfoot({ x: 3, z: -2, y: 0.75, floor: "stone", snow: 1 }), "snow");                          // snow lies on the platforms too
   assert.equal(underfoot({ x: 3, z: -2, y: 0.75, floor: "stone", wet: 1 }), "stone");                          // a roofed platform stays dry in rain

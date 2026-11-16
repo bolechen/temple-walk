@@ -58,7 +58,9 @@ test('surface support does not lift the seated pose out of its cushion', () => {
   const monk=createMonk();
   for(let i=0;i<100;i++) monk.update(1/30,0,'sit',i/30,()=>0);
   assert.ok(monk.group.children[0].position.y<-.3);
-  assert.ok(!monk.parts.legs.visible&&!monk.parts.shoes.visible,'seated, the legs are folded away');
+  // seated, the legs are folded on the cushion (the seat's top is y = 0 here), not reaching down for a floor
+  monk.group.updateMatrixWorld(true);
+  for(const s of ['left','right']) assert.ok(monk.bones[s+'Foot'].getWorldPosition(new THREE.Vector3()).y>-0.02,`seated, his ${s} foot reaches below the cushion`);
 });
 
 test('sideways and reverse stair flights agree with the visible treads', () => {

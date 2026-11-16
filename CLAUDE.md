@@ -70,7 +70,9 @@ node tools/portrait.js autumn-dusk  # five close views of the novice, found by _
 node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
 pnpm run edges                      # ~95 s: does his whole body fit everywhere his feet may go, above the knee and (shoes, hem) below it? (add --spots to list where it does not)
 pnpm run nearplane                  # ~80 s: the camera's near plane cuts into nothing along the routes and porches, behind him and from his eyes
-node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~6 min)
+node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
+node tests/e2e/run.cjs seats        # every cushion and stool sat on, hurrying, the place not drawn
+node tools/play-t00.cjs [outdir] [summit bell tea phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic)
 node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -94,6 +96,9 @@ stubbed DOM, `dom-stub.mjs`) and assert on it: every named place can be walked t
 (a flood fill over `heightAt/blocked`), nothing leaks through the walls, stairs have even treads, every named view
 stands on walkable ground, every mood has every field. The end-to-end scenarios in `tests/e2e/run.cjs` drive the real
 page and fail on any page error, console error, failed request or HTTP error; `tests/e2e/lib.cjs` holds what they share.
+A scenario that asks what the page does and never looks at the picture is opened with `+ BARE` (the place built but not
+drawn: `?off=` hides parts and unbuilds nothing), which runs it about three times faster under software rendering; one
+that looks at the picture (`boot`, `halls`, `snow`, `moods`, `views`, `photo`, `photo-ui`, `menu`, `parts`, `rites`, `stairs`, `drop`) draws all of it.
 When you add something a visitor can do, add a scenario (or extend one) that does it; when you add a place, add it to
 `places` in `plan.test.mjs`; when you fix a bug, first make a test fail for it. Wait on frames (`t.frames(n)`), never on
 seconds: software rendering may draw one frame a second or ten.
@@ -103,7 +108,7 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
 `?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
-`?debug` (the dev server only, `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, and `__part()` switches for each part and pass; the backtick key shows or hides it; the published build leaves it out), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
+`?debug` (open by itself on the dev server and on a pull request's preview, `?debug=0` keeps it shut; the published site never loads it; `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, the level's completion (`__journey`/`__visit`), and `__part()` switches for each part and pass; the backtick key shows or hides it), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
 page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.
@@ -111,8 +116,8 @@ visitor's own season and hour, seen from behind the novice.
 Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, type check, unit tests, build, and the `boot`
 scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
-The slower scenarios (`stairs drop`) run beside each publication in `.github/workflows/e2e.yml`, not in its
-way; the same workflow runs every scenario once a week and on demand. A red `verify` means the site was not published: read the uploaded
+The slower scenarios (`stairs drop`, with `pnpm run edges`) run beside each publication in `.github/workflows/e2e.yml`, not in its
+way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a week and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
 ## Architecture
@@ -195,6 +200,11 @@ only draws nearer or farther (the wheel, a pinch, three steps in the settings; `
 The left mouse button on the picture is the shutter (a drag is not); on a touch screen the shutter button is. The
 shutter draws the view again at 1600, 2160 or 2880 px on its long side by quality tier and mounts it on a card with
 the mood's verse, the temple's name and a seal. Tall, square and wide frames are still offered in the settings.
+Pressing it freezes the picture (`freeze` in `yard.js`): the view is drawn once more and copied onto `#still`, the frame
+loop and the observances' clock (`pauseRites`) stop until the print is put away, and the large picture is drawn for that
+same moment; two leaves of ink close and open over it (`#curtain`) with `audio.js`'s `shutterSound`, and the print comes
+with `stampSound`. The viewfinder (`#finder`, `#frame` in `ui.css`): outside the frame the mount's paper, inside four
+corners and, if the visitor asks (`settings.thirds`), the thirds; over the whole view, corners only.
 
 **Sound and music (`audio.js`, `score.js`, `instruments.js`).** Everything is synthesised; no recording is used. `audio.js`
 has three buses (music, the place, effects), each with its own level in the pause menu (`乐声`, `山声`, `音效`, under the
@@ -207,13 +217,17 @@ theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xi
 any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
 The great bell is `bell()` in `instruments.js` (struck with a log: a low hum that swells and lasts about 45 s, the
 fundamental about 34 s, the high partials dying first; `hillEcho` answers it from the slope), so it renders offline too;
-`tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. Water drips from
+`tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. The first time the third stroke sounds on a walk, a dozen birds go up from the tall
+cryptomerias nearest the tower and fly off toward the hills (`flock.js`, one instanced draw, wings beaten in the vertex
+shader; `audio.js`'s `flutter`; not at night, not from indoors; `__flock(go?)`). When the close says a bell answers in
+the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__cues()`). Water drips from
 the eaves only after rain (`place().wet`), not on dry autumn stone or in snow. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
 paving (`puddleAt`, the paving shader's own puddle pattern ported to JS), and snow (a shower of tiny breaks following the
 push of the foot). All are worked out sample by sample, so `tools/steps.mjs` renders the same steps, and `LEVEL` sets
-them against each other: dry stone the quietest, snow the loudest. For every shoe `monk.steps` reports, `yard.js` asks
+them against each other: dry stone the quietest, snow the loudest, all well under the music (a stone step about 22 dB
+under it, after 小王子's, whose files put its own about 26 dB under; `steps.test.mjs` holds the played level). For every shoe `monk.steps` reports, `yard.js` asks
 `walker.floorAt` what floor it is (`room`, a building's `stone` or `wood`, the approach's `path`, the courts' `paving`)
 and `underfoot()` what that sounds like in this mood: a hall's floor and a roofed platform are dry, the swept axis path
 of the court is never snow, autumn has dried. `footstep()` in `audio.js` plays it under the effects slider but on its own
@@ -231,6 +245,9 @@ toe direction); `trail.js` presses the sole into a render target that follows hi
 red, so a roof does not take the prints made under its eave. Every shader that lays snow reads it through `TRAIL`
 (`procMat`'s snow, the paving in `ground.js`); falling snow fills the prints in about two minutes. Indoors nothing is
 stamped and the square stays put. `__trail()` reports it (`__trail(false)`: the next picture without the prints).
+No snow lies under a roof (`shelter.js`): `walk.roofs` is baked when the place is built into a map seen from above
+(each eave footprint and the foot of its beams, the lowest and highest where roofs overlap), which `procMat`'s snow and
+`underfoot`'s `roofed` read; only a strip just inside the eaves takes blown snow. `tests/unit/shelter.test.mjs` holds it.
 
 **The visit as a pilgrimage (`journey.js`, `game.js`, `goshuin.js`).** `journey.js` is book-keeping only (seven seals,
 the bell's three strokes, the library's line, storage under `yunjing.journey.v1`) and is unit-tested in Node.
@@ -247,21 +264,29 @@ end of the log, out past the platform (`LOG` in `site.js`); he draws it back and
 and `logSwing` keeps the log from passing into the bronze. Tea: his bowl (made in `rites.js`, not merged into the table)
 is lifted in both hands and tilted at his lips three times. Incense: three sticks between his palms, raised to the brow,
 three bows, a step up to the low stand before the cushion (`places.incense.front`, `.bowl`), set in the ash, where they
-stay and smoke (also after a reload). Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
+smoke and burn down over five minutes by the wall clock (`?burn=` seconds for a test; when they were set is kept in
+`yunjing.incense.v1`, so a reload finds them as far burnt), leaving cold stubs, after which incense may be offered again. Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
 out. `__riteClock(ms)` holds the observances' clock and steps it, so a moment can be photographed; `__rites()` reports
 all of it. The hand offsets (lips, brow, rope) were set against the novice's present proportions.
 
 **Seats.** Every cushion and stool is a seat: `site.seats` out of doors (the three stools at the tea table, the summit
 mat), and `seat()` / `sitAt()` in `interior.js` for the rooms (`{ at, top, face, room }`). Where nothing else is offered
 within a step or two of one, the button says 坐下; he walks up to the nearest ground beside it and is drawn going over and down onto it (`sitDown` in `game.js`);
-he stays until he is sent elsewhere. A new cushion or stool must be registered the same way; `rites.test.mjs` holds it.
+he stays until he is sent elsewhere. Each seat has a `kind`, and it says how he sits: on a `stool` as on a chair (pose
+`"chair"`: thighs level, shins hanging, hands on his thighs; a stool is a grown man's sitting height, and his feet do not
+reach the floor; a seat higher than he can step onto, a stool or a cushion on the meditation hall's platform, he hops up onto with his own
+`JUMP`, along `seatHop` in `drop.js`), on a `cushion` cross-legged upon it (pose `"sit"`: knees on its edge, shins folded before him, the
+left in front, hands in his lap, left on right). The outlines are `STOOL` and `CUSHION` in `geo.js`, built from by the
+courts and the rooms alike, and `monk.test.mjs` keeps his seated body out of them and off the floor. A new cushion or
+stool must be registered the same way, with its kind; `rites.test.mjs` holds it.
 
 **The close of the chapter.** This temple is the prologue, where a visitor learns how the walk goes. Sitting on the
 summit is the last thing: before the other six seals its mat is only a seat. When the seventh is earned there, `finale`
 (`game.js`) hands the eye to `rites.close` (`y.cine(fn)`: round before him, back down the steps, up until the pavilion
 stands whole), says the closing words one at a time (`CLOSING`: they end on something unanswered, for a chapter not
 yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
-`__ending()` plays it again.
+`__ending()` plays it again. It comes once in each season (`journey.closedIn(season)`, `closedSeason` in the book): after a
+change of season, sitting there plays it again, without the full book's seal a second time.
 
 **Coming back, and going back (`resume.js`, `game.js`).** Where he stands is kept every two seconds and when the page is
 left (`yunjing.place.v1`: place, facing, what to call it). A first visit is offered only 入山; a visitor with a seal, or
@@ -272,7 +297,7 @@ empties the book and starts at the foot of the path). A test or tool that names 
 veil (`y.travel`). `__left()` reports what is kept and offered, `__goBack(id)` goes.
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
-hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
+hurries, dragging with a mouse button held looks round and a click on the ground walks there (or strikes the bell or drum), as a tap does; holding the pointer so that the mouse alone looks round (Esc lets go) is the pause menu's 锁定鼠标 (`settings.lock`, off by default since 2026-11-16, when visitors said the view swam whenever the mouse moved), the wheel moves the eye
 nearer or farther (and on past the nearest into his own eyes, and back out), E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
 T opens the season and hour once they are the visitor's (below). While the pointer is held a click strikes the bell or drum under the dot. On a touch
 screen: a thumb-stick lower left (faint until a thumb is on it), a drag to look, two fingers for nearer and farther (and the view, as the wheel), a tap on the ground to walk there.
@@ -333,9 +358,9 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 
 **Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
-returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
+returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 

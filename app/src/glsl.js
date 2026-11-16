@@ -8,6 +8,8 @@ export const U = {
   uLeaf: { value: new THREE.Color(1, 1, 1) }, uLight: { value: new THREE.Color(1, 1, 1) }, uT: { value: 0 },
   // Where he has walked in the snow (trail.js): the picture of his prints, and where it lies.
   tTrail: { value: null }, uTrail: { value: new THREE.Vector4(0, 0, 1 / 32, 0) },
+  // What the roofs keep dry (shelter.js): the map, and where it lies (zero until the place is built).
+  tShelter: { value: null }, uShelter: { value: new THREE.Vector4(0, 0, 0, 0) },
 };
 
 export const NOISE = /* glsl */`

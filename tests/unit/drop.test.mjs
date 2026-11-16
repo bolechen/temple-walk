@@ -34,3 +34,17 @@ test('landing body clearance includes diagonal corners',()=>{
  const walker={room:null,heightAt:(x,z)=>z<0?.45:0,blocked:(x,z)=>x>.15&&z>1.05};
  assert.equal(findDrop(walker,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1),null);
 });
+
+test("too short to step onto a stool, he hops up onto it with his own jump and comes down on its top", async () => {
+  const { seatHop, dropPose } = await import("../../app/src/drop.js");
+  const from = [0, 0, 0], to = [0.6, 0.44, 0.1], plan = seatHop(from, to, 3.0, 9.8);
+  const start = dropPose(plan, 0), end = dropPose(plan, plan.duration);
+  assert.deepEqual([start.x, start.y, start.z], from, "he takes off where he stood");
+  assert.ok(end.done && Math.abs(end.x - to[0]) < 1e-9 && Math.abs(end.y - to[1]) < 1e-9 && Math.abs(end.z - to[2]) < 1e-9, "he comes down on the seat's top, at its middle");
+  let apex = -Infinity, low = Infinity; for (let t = 0; t <= plan.duration; t += plan.duration / 50) { const p = dropPose(plan, t); apex = Math.max(apex, p.y); low = Math.min(low, p.y); }
+  assert.ok(apex > to[1] && apex < to[1] + 0.15, `over the seat's top, not far over it (apex ${apex.toFixed(3)} m)`);
+  assert.ok(low >= -1e-9, "never below where he took off");
+  assert.ok(plan.duration > 0.25 && plan.duration < 0.6, `a hop, not a float (${plan.duration.toFixed(2)} s)`);
+  assert.ok(plan.lift >= 3.0 && plan.lift < 3.15, `a stool at a grown man's height takes about his own jump (${plan.lift.toFixed(2)} m/s)`);
+  assert.ok(seatHop(from, [0.6, 0.6, 0], 3.0, 9.8).lift > 3.0, "a higher seat asks a harder jump");
+});

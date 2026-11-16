@@ -5,29 +5,31 @@ import * as THREE from "three";
 import { NOISE, WOOD, BUMP, U } from "./glsl.js";
 import { TRI, declare, bind } from "./textures.js";
 import { TRAIL } from "./trail.js";
+import { SHELTER } from "./shelter.js";
 
 // `body` may write: vec3 col, float rough_, float bump_ (metres), float ao_.
 // Every geometry drawn with these needs a float `ao` attribute (see geo.js): occlusion is baked per vertex
 // by whatever built the geometry, because overcast light casts no shadow to do that job.
 // It may also write vec3 emit_: light of its own; and vec3 nd_: a nudge to the surface normal in world space,
 // which is how a scanned surface (textures.js) gives its relief. `tex` names the scans the body samples.
-// Snow settles on whatever faces the sky unless `snow` is false, and takes his footprints (trail.js).
+// Snow settles on whatever faces the sky unless `snow` is false or a roof is over it (shelter.js), and takes his
+// footprints (trail.js).
 export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
-    if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; }
+    if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL : ""))
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : ""))
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
-        ${snow ? `if(uSnow>.001){ float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25); vec3 sr=texture2D(tSnowN,vWP.xz*.7).xyz;
+        ${snow ? `if(uSnow>.001){ float sn_=uSnow*smoothstep(.3,.7,vWN.y)*smoothstep(.2,.5,fbm3(vWP*.8)+.25)*(1.-shelter(vWP)); vec3 sr=texture2D(tSnowN,vWP.xz*.7).xyz;
           vec3 tr_=trail(vWP)*smoothstep(.85,.97,vWN.y); vec3 sc_=vec3(.82,.86,.92)*(.9+.2*sr.z)*mix(vec3(1.),vec3(.6,.65,.76),tr_.x);   // trodden snow: packed, a little grey and blue
           col=mix(col,sc_,sn_*(1.-.25*tr_.x)); rough_=mix(rough_,.82-.12*tr_.x,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8)*(1.-.25*tr_.x),sn_); nd_=mix(nd_,vec3(sr.x*2.-1.,0.,sr.y*2.-1.)*.55*(1.-.6*tr_.x)+vec3(tr_.y,0.,tr_.z),sn_); }` : ""}
         diffuseColor.rgb=col;`)

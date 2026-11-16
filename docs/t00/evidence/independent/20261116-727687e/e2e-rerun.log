@@ -1,0 +1,9 @@
+ok   menu      172s
+ok   layers    162s
+ok   seasons   266s
+ok   rites     511s
+     (music: the step back took 1.58 s of audio time on this machine; the boundary check was skipped)
+FAIL music      71s
+     with the music silenced the drum should still be heard
+1 of 5 scenarios failed
+e2e exit 1

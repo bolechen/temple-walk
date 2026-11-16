@@ -5,13 +5,13 @@
 
 // In the order a visitor meets them going up the mountain. `need` is how many times the thing must be done.
 export const SEALS = [
-  { id: "bell",    seal: "闻钟", place: "钟楼",     act: "撞钟",   need: 3, line: "钟声三下，山门内外都听见了。",       hint: "山门东侧的钟楼里悬着大钟。走到钟前，撞三下。" },
-  { id: "incense", seal: "上香", place: "大雄宝殿", act: "上香",   need: 1, line: "一炷香的工夫，什么也不求。",         hint: "穿过大院，登上台阶，进大雄宝殿上一炷香。" },
+  { id: "bell",    seal: "闻钟", place: "钟楼",     act: "撞钟",   need: 3, line: "第三下的余音，过了很久才散。",       hint: "山门东侧的钟楼里悬着大钟。走到绳前，一下一下撞，撞满三下。" },
+  { id: "incense", seal: "上香", place: "大雄宝殿", act: "上香",   need: 1, line: "三支香插进灰里，烟顺着殿梁往上走。",         hint: "穿过大院，登上台阶，进大雄宝殿上一炷香。" },
   { id: "tea",     seal: "吃茶", place: "茶寮",     act: "吃茶",   need: 1, line: "赵州和尚说：吃茶去。",               hint: "大院西侧的茶寮前摆着茶桌，坐下吃一盏茶。" },
-  { id: "sutra",   seal: "得句", place: "藏经楼",   act: "请一句", need: 1, line: "一句就够了，带着它下山。",           hint: "大殿后面的第一级台地上是藏经楼，在檐下请一句话。" },
-  { id: "well",    seal: "观水", place: "龙井",     act: "观水",   need: 1, line: "龙神让出了整座山，只留下这口井。",   hint: "藏经楼东边的石壁下有一口井，去看看井里的水。" },
+  { id: "sutra",   seal: "得句", place: "藏经楼",   act: "请一句", need: 1, line: "纸签上一句话，收进袖子里。",           hint: "大殿后面的第一级台地上是藏经楼，在檐下请一句话。" },
+  { id: "well",    seal: "观水", place: "龙井",     act: "观水",   need: 1, line: "相传龙让出了整座山，只留下这口井。",   hint: "藏经楼东边的石壁下有一口井，去看看井里的水。" },
   { id: "lamp",    seal: "燃灯", place: "观音殿",   act: "燃灯",   need: 1, line: "一灯能除千年暗。",                   hint: "第二级台地的观音殿前有一座灯台，点一盏灯。" },
-  { id: "sit",     seal: "静坐", place: "凌霄阁",   act: "静坐",   need: 1, line: "回头看，来时的路都在脚下。",         hint: "穿过茶园登上山顶，在凌霄阁前的蒲团上坐一会儿。" },
+  { id: "sit",     seal: "静坐", place: "凌霄阁",   act: "静坐",   need: 1, line: "钟楼、大殿、茶寮的屋顶，一层层都在脚下。", hint: "穿过茶园登上山顶。凌霄阁前有一只蒲团，坐下，跟着地上的圆圈呼吸三次。" },
 ];
 export const SEAL = Object.fromEntries(SEALS.map((s) => [s.id, s]));
 
@@ -38,10 +38,14 @@ export function pickVerse(seed) { const n = VERSES.length, i = ((Math.floor(seed
 export const KEY = "yunjing.journey.v1";
 // `opened`: when the four seasons were first opened to the visitor, which is the first time the book was filled. It
 // outlives 重新朝山: a second walk up the mountain may be made in any season. `told`: whether that has been said once.
-const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told });
+// `closed`: when the prologue's close was shown (or passed over) after sitting on the summit. It comes once a walk,
+// whatever else is in the book; 重新朝山 begins a new walk and lets the summit close that one too. `closedSeason`: the
+// season it was last shown in. A change of season lets the summit close the prologue again, once in that season.
+const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null, closedSeason: null });
 
 // `store` is anything with get() → string|null and set(string); the page passes one backed by localStorage.
-export function createJourney(store, now = () => Date.now()) {
+// `closedBefore`: the page kept a separate flag that the close had been seen before this book remembered it itself.
+export function createJourney(store, now = () => Date.now(), { closedBefore = false } = {}) {
   let s = load();
   function load() {
     try {
@@ -54,12 +58,16 @@ export function createJourney(store, now = () => Date.now()) {
         out.done = Number(raw.done) > 0 ? Number(raw.done) : null;
         out.opened = Number(raw.opened) > 0 ? Number(raw.opened) : out.done;   // a book filled before this was kept counts
         out.told = raw.told === true;
+        // Under the rule before this one the close came with the seventh seal, so a filled book has seen it.
+        out.closed = Number(raw.closed) > 0 ? Number(raw.closed) : out.done;
+        out.closedSeason = typeof raw.closedSeason === "string" ? raw.closedSeason : null;
         return out;
       }
     } catch {}
     return fresh(now());
   }
   const save = () => { try { store.set(JSON.stringify(s)); } catch {} };
+  if (closedBefore && !s.closed) { s.closed = now(); save(); }
   const count = () => SEALS.reduce((n, { id }) => n + (s.seals[id] ? 1 : 0), 0);
 
   const api = {
@@ -71,6 +79,14 @@ export function createJourney(store, now = () => Date.now()) {
     get verse() { return s.verse; },
     get born() { return s.born; },
     get finished() { return s.done; },
+    get closed() { return s.closed; },
+    // The prologue closed on the summit. Returns true only the first time in a walk.
+    close(season = null) { if (s.closed && (season === null || s.closedSeason === season)) return false; s.closed = now(); s.closedSeason = season; save(); return true; },
+    get closedSeason() { return s.closedSeason; },
+    // Has the close been shown in this season? A close kept before seasons were (no season) counts for any, until adopt().
+    closedIn: (season) => !!s.closed && (s.closedSeason === null || s.closedSeason === season),
+    // A close kept before seasons were is taken to have been in the season the visitor is in now.
+    adopt(season) { if (s.closed && s.closedSeason === null && season) { s.closedSeason = season; save(); } },
     // The seals in order, each with the moment it was earned (or null).
     list: () => SEALS.map((d) => ({ ...d, got: s.seals[d.id] || null })),
     // The first observance not yet made, going up the mountain; null once the book is full.

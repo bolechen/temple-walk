@@ -1,7 +1,72 @@
 {
+  "analytics": {
+    "provider": "Umami",
+    "origin": "https://u.rushiwowen.co",
+    "website_id": "e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42",
+    "domain": "temple.rushiwowen.co",
+    "dashboard": "https://u.rushiwowen.co/websites/e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42",
+    "date": "2026-11-16",
+    "scope": "独立统计 Demo 访问和序章里程碑，不与如是我闻主站合并；仅限正式域名，尊重 Do Not Track。",
+    "limitations": "仅统计接入后的访问。浏览器拦截、Do Not Track 和来源未传递会影响完整性。事件只记里程碑，不记脚步、镜头或帧率；接入前的游玩无法补回。",
+    "evidence": [
+      "app/index.html：沿用 buddhist-say 的 defer、data-domains、data-do-not-track、data-exclude-hash 与 data-performance 配置",
+      "app/src/analytics.js：demo.ready、demo.enter、demo.seal、demo.complete、demo.ending、demo.restart 只在 temple.rushiwowen.co 上报",
+      "app/loading.js：首次加载失败上报 demo.load_error，失败一次只记一次",
+      "tests/unit/analytics.test.mjs、tests/unit/loading.test.mjs",
+      "pnpm run check、pnpm run typecheck、229 项单元测试与 pnpm run e2e:quick 通过；本地与预览域名不上报"
+    ],
+    "events": [
+      "demo.ready",
+      "demo.load_error",
+      "demo.enter",
+      "demo.seal",
+      "demo.complete",
+      "demo.ending",
+      "demo.restart"
+    ]
+  },
+  "community": {
+    "date": "2026-11-16",
+    "summary": "内测反馈群入口：标题页右上角「内测反馈群」、歇脚菜单「加入内测反馈群」，点开同一张宣纸卡片显示微信群二维码。二维码与配置放 R2，不入 Git；换码只需上传新图并改 current.json，不用发版本。开发方陈述，不是验收结论。",
+    "storage": {
+      "bucket": "buddhist-say（Cloudflare R2，与如是我闻共用）",
+      "config": "https://static.rushiwowen.co/temple-walk/community/current.json",
+      "image": "https://static.rushiwowen.co/temple-walk/community/wechat-20261116.jpg",
+      "image_sha256": "1859280a02637d8e5bf9f86189fa1855c1ce525499a14a0b86a39d52c5e3b6f3",
+      "cache": "current.json：Cache-Control no-cache，边缘 DYNAMIC；图片按日期命名，public max-age=31536000 immutable",
+      "expires_at": "2026-11-23T00:00:00+08:00（按二维码截图上的「11月23日前有效」设定，未核对微信实际失效时刻）",
+      "replace": "上传新的 wechat-<日期>.jpg，再覆盖 current.json 的 image 与 expiresAt；enabled: false 可暂停展示"
+    },
+    "changes": [
+      ".github/workflows/pages.yml：去掉 pull_request 的 paths 过滤，PR 的每次推送（只改文档的也算）都部署预览并更新评论，评论始终对应最新提交；docs/PREVIEWS.md 同步",
+      "app/src/community.js（新增）：读取 R2 上的 current.json，校验 enabled / image / 带时区的 expiresAt；到期、关闭、加载失败分别显示状态与「重试」，到期瞬间收起旧码；卡片自己处理 Esc（标题页加载期间全局键盘监听尚未注册）",
+      "app/index.html、app/src/ui.css：标题页入口、歇脚菜单入口、community 弹层（原生 dialog，走 ui.js 的弹层栈）；手机上提示长按保存后到微信相册识别，二维码图片允许长按",
+      "app/yard.js：createUI 之后即挂上入群卡片，加载中也能打开",
+      "app/shared/fonts/*：tools/fonts.py 按新字重切（群码稍暂馈想聊欢迎查微择），原始字体取自 google/fonts 与霞鹜文楷 v1.530",
+      "tests/unit/community.test.mjs（新增）：相对图片地址、精确到期、关闭、非法配置与非 http(s) 图片",
+      "tests/e2e/run.cjs 新增 community 场景：拦截 R2 请求返回固定数据，覆盖叠在菜单上、Esc 只关卡片、关后释放图片、过期不显示、503 后重试",
+      ".gitignore：app/local-community/（本地调试用的二维码与配置）"
+    ],
+    "known_issues": [
+      "没有在真实微信里扫码或从相册识别过；iOS Safari、安卓浏览器的长按保存未在真机试过",
+      "二维码 7 天失效，需要人工换码；没有自动续期，也没有到期提醒",
+      "公开地址任何人可直接访问，二维码会被缓存与转发；这是群二维码本身的性质",
+      "R2 bucket 与如是我闻共用，权限按账户的 R2 密钥，没有为本项目单独建 bucket 或令牌",
+      "bang.woff2 未加新字却变小 12 字节，推测是上游 Yuji Boku 版本变化；匾额字形未逐字比对"
+    ],
+    "evidence": [
+      "R2：curl 带 Origin 头，两个对象 200，access-control-allow-origin: *；current.json cf-cache-status DYNAMIC；下载图片 SHA-256 与本地一致",
+      "本地 Vite + ego-browser：桌面标题页、卡片、歇脚菜单入口，390×844 触屏模拟下的标题页与卡片；Esc 在加载中与游戏中的行为、焦点回到打开者（截图含二维码，未入库）"
+    ],
+    "tests": {
+      "unit": "pnpm test：223/223 通过（含 community 三项）",
+      "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm run typecheck 通过",
+      "e2e": "node tests/e2e/run.cjs community menu layers boot phone：5/5 通过；未跑完整 e2e:smoke"
+    }
+  },
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "Issue #16 建筑边缘第二轮（代码提交 4810cd5e40da89d592d61df97717b123646b959d，在 4196350 之上）：覆盖表按构件分列，膝下鞋与袍脚纳入 1 厘米容差，跳跃不进茶案，镜头近裁剪面有检查。开发者状态仍为 fixed_pending_retest，等独立评审复测；真人正常速度录像未录。",
+  "summary": "Issue #16 建筑边缘第二轮（代码提交 4810cd5e40da89d592d61df97717b123646b959d，在 4196350 之上）：覆盖表按构件分列，膝下鞋与袍脚纳入 1 厘米容差，跳跃不进茶案，镜头近裁剪面有检查。开发者状态仍为 fixed_pending_retest，等独立评审复测；真人正常速度录像未录。 上一轮：2026-11-16 晚：换季后序章结尾可再播（每季一次，重播不再出七印圆满印）；上香后三支香从香头往下烧短、火点下移、烟渐低，默认 5 分钟烧到冷香脚，烧完可再上香（不再给印），插香时刻按墙上时钟保存、刷新接着烧；本地 dev 与 PR 预览默认打开调试面板（?debug=0 关闭，正式站不加载）。开发方自评，不是验收结论。 上一轮：冬天院中积雪：每进院子中轴一条扫过的路，两边雪埂，路外积雪有厚薄起伏，去掉了硬边和路上的雾状薄雪；屋顶下（门道、钟鼓楼台基、檐廊）不再积雪，只在檐口留一条吹进的薄雪。 每个同仓库 PR 有独立预览地址：pages.yml 检查通过后，把同一份 dist/ 上传为 Cloudflare Worker temple-walk-preview 的预览 pr-<编号>；PR 评论给出随推送更新的最新地址、每个提交的固定地址和六个验收机位链接，失败时写明未部署及旧地址对应的提交，PR 关闭时删除预览。正式站点仍是 GitHub Pages。开发方陈述，不是验收结论。 此前的摘要：2026-11-16 玩法与文案打磨：山顶静坐任何时候都给，第一次完成就播序章结尾，不论集了几印（缺印登顶不再被告知「山下还有没做完的事」）；看过与否存进朱印帐（journey.closed），旧存档兼容（集满的算看过，旧的 yunjing.ending.v1 标记并入后删除），每趟只播一次，重新朝山后可再播；结尾后翻开朱印帐写明还空着几处，可以接着补印；七印集齐另有一枚「七印圆满」的印再翻开朱印帐。结束语按这一趟实际做过的事组句（步数、按先后最多三件事、钟按撞了几下说、藏经楼那一句）。撞钟改为一按一下，钟槌荡回来前拉不动，撞满后还能撞，走开或 Esc 松手；吃茶三口后他坐着不走，慢呼吸、转头看院子，配乐退下，按钮「起身」（所有坐具同）。帖文、七印短句、山顶与朱印帐提示按具体的人、器物、动作改写，传说标「相传」。开发方自评，不是验收结论；独立验收未改。 正常速度实测（tools/play-t00.cjs，真键盘/触摸，SwiftShader 软件渲染约 1 帧/秒）：山顶空帐静坐→结尾→朱印帐「帐上还空着六处」→E 起身；撞钟四次按下各响一次（拉到响 1.3–1.4 秒），第三下得印，握绳时切视角，Esc 松手；吃茶三口后坐 40 秒，头部张望 ±0.41，E 起身；模拟手机上全靠点按撞钟两下、吃茶、起身。录像与截图见 docs/t00/evidence/play-2026-11-16/。 上一轮的摘要：声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
   "changes": [
     "tools/edges.mjs：每个取样点按构件归类（台基外缘、踏步鼻口、踏步侧沿、门槛、柱础、外檐柱、栏杆端头、墙地接缝、树、摆设）；每格给最近距离与 10 厘米内的站位数，不再只有「最深 0 cm」；栏杆端头位置由 building.js 记在 userData.railEnds（不改画面）",
     "tools/edges.mjs：膝下（离脚底 2–32 厘米）单独一遍；站立、合掌、腾空按整圈，走动步幅只按左右；踏级与能站上去的台面侧面归台阶测试和腿的解算；连步幅也整圈算的最深值记为 worstLowStrict（7.0 cm）；膝上或膝下超过 1 厘米即退出码 1",
@@ -19,14 +84,63 @@
     "山门门槛改为踩上去的一块面，与「跨门槛不踩门槛」的习俗相反（为不穿模）",
     "近裁剪面只沿路线与前廊取样，不是全场；殿内八个房间不在几何扫查里",
     "评审的 tools/review/edge-contacts.mjs 读未蒙皮顶点，对蒙皮沙弥只量到 A 字站姿；该脚本归评审，未改",
-    "pnpm run edges 由约 30 秒变为约 95 秒（多量 30 厘米余量与膝下一遍）"
+    "pnpm run edges 由约 30 秒变为约 95 秒（多量 30 厘米余量与膝下一遍）",
+    "扫过的路只在每进院子的中轴，通往两侧殿堂的路没有扫",
+    "令牌是账户级 Workers Scripts Write，对同账户另外 3 个 Worker 也有写权限；OAuth 不能经 API 创建单 Worker 令牌，需要时在后台创建 Individual Workers Admin 令牌后覆盖同名 Secret",
+    "Workers Previews 仍是 open beta（Wrangler 4.162.0）；命令或行为变化可能使 preview 作业失败，失败会写在 PR 评论里",
+    "fork 的 PR 没有预览；只改文档的 PR 不触发 pages.yml，也没有预览",
+    "预览地址公开、无需登录；未接 Cloudflare Access",
+    "六机位前后对比图未做，只在评论里给出机位链接",
+    "预览只在本机 curl 与 CI 运行中验证，未在手机上打开过",
+    "吃茶后停留时，若是用 __pose 把他放到桌旁，跟拍的眼睛对着他侧面，他偏在画面左边；走过去坐下时眼睛在身后，未专门调",
+    "新钟声、新脚步音量还没有人试听；改前改后对比 MP3 由开发者本地生成（tools/out/ab，不入库）",
+    "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
+    "小沙弥雕刻的身体（novice.glb）在走路、上台阶、打坐时布料会撕开（贴图接缝处骨骼权重不对）；2026-11-15 起默认关闭，页面穿代码建的身体，地址加 ?body=sculpt 才换上；权重未修",
+    "鸟叫没有人听过；SOURCES.md 表末列出还没核到原文的出处",
+    "竹竿相碰没有人听过；鸟叫没做",
+    "龙井的滴水声没有人听过；涟漪只在软件渲染下看过；渗水是贴面薄片",
+    "双指拉近切换视角只在桌面滚轮上自动测过，手机上的双指手势没有在真机上试过",
+    "走完七印大约要二三十分钟，没有走完的人只会看到自己来时的那一季",
+    "冬天小柏几乎全白，看不出底下的深绿：积雪系数 snow: 0.8 是按大柳杉调的，小树的枝叶小而密，整株被雪盖住。未改",
+    "对比图的冬天一行几乎全是雾和雪，不足以判断冬天的效果；修前列是 origin/main 4601819，不是 765f2b2",
+    "e2e:smoke 的 15 个场景是分次跑通的，没有一次完整的 verify；rebase 后重跑了 check、单测、edges、boot 和 camera",
+    "这对小柏的三角形约增 1.4 k（hall 视角 1,603,200 → 1,604,644）；未在 T4 上单独测帧",
+    "CI 的 boot 场景（「the walking controls should wait behind the title」）曾在 main 的 7136549（#28）与本分支 4de49e0 上失败。main 的原因已确认：测试服务器把 .css 当成 application/octet-stream 发送，Chrome 拒绝了新拆出的 app/src/ui.css，修复见 #29（487770d）。本分支 4de49e0 的失败未单独确认原因；之后的 head（含 #29）上 verify 通过",
+    "移动端只在无头 Chromium 的手机模拟（触屏、三种尺寸）下审计和截图，没有在真实的 iPhone 或安卓机上看过；Safari 的地址栏伸缩、安全区和 100dvh 的实际表现未验证",
+    "回到得印处是直接换位（暗场），不走过去；在殿内保存的位置回来时落在殿门外；用 ?cam、?enter 等参数打开时不保存也不恢复位置",
+    "「不画场景」的场景不再覆盖渲染：渲染由 boot、halls、snow、moods、views、photo、photo-ui、menu、parts、rites、stairs、drop 覆盖；四台并行的每周流程尚未在 GitHub 上实际跑过一次"
   ],
   "evidence": [
     "4810cd5e40da89d592d61df97717b123646b959d：pnpm run edges 膝上、膝下全场 0 处超过 1 厘米（docs/t00/edge-coverage.md 由同一提交生成）",
     "4810cd5e40da89d592d61df97717b123646b959d：pnpm run verify（check、单测、e2e smoke）结果见 PR 说明",
     "4810cd5e40da89d592d61df97717b123646b959d：pnpm run nearplane 13 项通过",
     "4810cd5e40da89d592d61df97717b123646b959d：node tests/e2e/run.cjs jump 通过（含茶案三段真实按键）",
-    "docs/t00/edge-remediation.md「第二轮」"
+    "docs/t00/edge-remediation.md「第二轮」",
+    "tests/unit/snowfall.test.mjs",
+    "tests/unit/shelter.test.mjs",
+    "docs/t00/evidence/snow/gate-passage-after.jpg",
+    "docs/t00/evidence/snow/gate-front-after.jpg",
+    "docs/t00/evidence/snow/bell-tower-after.jpg",
+    "docs/t00/evidence/snow/court-after.jpg",
+    "docs/t00/evidence/play-2026-11-16/close-with-deeds/",
+    "docs/t00/evidence/play-2026-11-16/gpu-t4/",
+    "docs/t00/evidence/play-2026-11-16/small-480x300/",
+    "本地：两次 wrangler preview（setup-a、setup-b）在补上占位生产版本后首页返回 200（11,841 字节），之前为 Cloudflare 1042；用 CI 令牌部署和删除预览均成功，测试预览已删除",
+    "PR #55 的 pages.yml 运行 43792382886（verify、preview 成功）与 PR 评论；固定地址 CAM-01 在无头 Chromium 中载入完成，无 HTTP 错误",
+    "docs/PREVIEWS.md",
+    "tools/preview/comment.cjs",
+    "docs/t00/evidence/play-2026-11-16/（summit/bell/tea/phone 的 .webm、截图与 log-*.json）",
+    "tools/play-t00.cjs",
+    "tests/e2e/run.cjs（pilgrimage、oldbook、rites、keys）",
+    "tests/unit/journey.test.mjs",
+    "tests/unit/rites.test.mjs",
+    "docs/t00/SOURCES.md（玩法与仪式、殿内帖文）",
+    "tests/unit/bell.test.mjs",
+    "tests/unit/monk.test.mjs",
+    "tests/unit/steps.test.mjs",
+    "tests/e2e/run.cjs: sound / steps / snow / music / rites",
+    "docs/t00/SOURCES.md",
+    "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」"
   ],
   "domain_binding": {
     "date": "2026-11-15",
@@ -51,5 +165,119 @@
       "https://temple.rushiwowen.co/"
     ],
     "note": "Domain verification only; no change to CI/deployment or independent game acceptance status."
-  }
+  },
+  "copy_changes": [
+    {
+      "where": "山顶（game.js，缺印时）",
+      "before": "山下还有没做完的事。坐一会儿，再下去看看。",
+      "after": "（删去；缺印也可静坐并结尾）初到蒲团前：凌霄阁前这只蒲团，朝着来时的路。"
+    },
+    {
+      "where": "静坐提示（journey.js sit.hint）",
+      "before": "穿过茶园登上山顶，在凌霄阁前的蒲团上坐一会儿。",
+      "after": "穿过茶园登上山顶。凌霄阁前有一只蒲团，坐下，跟着地上的圆圈呼吸三次。"
+    },
+    {
+      "where": "结束语（game.js）",
+      "before": "钟敲过了，茶吃过了，香也上过了。／寺里的路，你已经都认得了。／坐到这里才看见：山门之外，还有一条没走过的路。／远处的山里，好像也有一声钟，应了一下。",
+      "after": "按实际组句，例：从竹林到这里，走了 N 步。／钟楼的钟，撞过三下，茶寮那碗茶喝到了底，龙井边等过三声滴水。／藏经楼给的那一句，还记着：「…」／山门之外，还有一条没走过的路。／远处的山里，好像也有一声钟，应了你那几下。（什么都没做：路上哪里也没停，就到了这里。没撞钟：远处的山里，好像有一声钟，响了一下。）"
+    },
+    {
+      "where": "坐帖（禅堂）",
+      "before": "禅堂里没有要学的东西。一炷香的工夫，听得见自己呼吸，就算坐过了。",
+      "after": "禅堂里一排坐榻，蒲团朝着墙。坐的人点一炷香，香没烧完，谁也不先起身。"
+    },
+    {
+      "where": "经帖（藏经楼）",
+      "before": "楼上的经卷多数没人翻过。老师父说，请一句带下山，够用很久。",
+      "after": "楼上的经卷按函排在柜里，函套上落着薄灰。管经的老师父每天开一个柜子，晾一晾，再合上。上山的人可以在檐下请一句话。"
+    },
+    {
+      "where": "药帖（药师殿）",
+      "before": "山下的人上来求药，师父先让他们在廊下坐一会儿。坐过之后，要的常常不是药了。",
+      "after": "山下的人上来求药，师父先请他们在廊下坐着，等一壶水烧开，问家里几口人、地里种的什么。药包好了，麻绳扎两道，让他们带下山。"
+    },
+    {
+      "where": "灯帖（观音殿）",
+      "before": "灯是别人点的，也是给别人点的。添一盏的人，往往不知道它照见了谁。",
+      "after": "灯台上一排小盏，油是香客背上山的，灯芯是殿里的师父捻的。夜里风大，守殿的人要起来两回，把吹灭的再点上。"
+    },
+    {
+      "where": "顶帖（凌霄阁）",
+      "before": "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。",
+      "after": "登到顶上回头看，一层一层的屋顶都在脚下。山门外那片竹林，只剩一道浅绿。"
+    },
+    {
+      "where": "入山帖（大殿）",
+      "before": "山门之外是路，山门之内也是路。上来的人各有来处，到了殿前，都只是站一站。",
+      "after": "上山的人在山门外的石阶上歇脚，到殿前时，鞋帮上都沾着竹林里的泥。站一站，再进去。"
+    },
+    {
+      "where": "闻钟印",
+      "before": "钟声三下，山门内外都听见了。／提示：走到钟前，撞三下。",
+      "after": "第三下的余音，过了很久才散。／提示：走到绳前，一下一下撞，撞满三下。"
+    },
+    {
+      "where": "上香印",
+      "before": "一炷香的工夫，什么也不求。",
+      "after": "三支香插进灰里，烟顺着殿梁往上走。"
+    },
+    {
+      "where": "得句印（无句时）",
+      "before": "一句就够了，带着它下山。",
+      "after": "纸签上一句话，收进袖子里。"
+    },
+    {
+      "where": "观水印（传说）",
+      "before": "龙神让出了整座山，只留下这口井。",
+      "after": "相传龙让出了整座山，只留下这口井。"
+    },
+    {
+      "where": "静坐印",
+      "before": "回头看，来时的路都在脚下。",
+      "after": "钟楼、大殿、茶寮的屋顶，一层层都在脚下。"
+    },
+    {
+      "where": "朱印帐末页（集满）",
+      "before": "七印圆满。这一页是你的了。山中四时，自此由你。",
+      "after": "七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。"
+    },
+    {
+      "where": "朱印帐（结尾后未满）",
+      "before": "（只有下一处提示）",
+      "after": "帐上还空着N处。＋下一处提示"
+    },
+    {
+      "where": "新增操作提示",
+      "before": "（无）",
+      "after": "握绳后：E 再撞一下，钟槌荡回来才拉得动 · 走开或 Esc 松手（手机：再点「撞钟」撞下一下 · 推圆盘走开，就松了绳）；吃茶后：E 起身 · 也可以一直坐着，看看院子"
+    },
+    {
+      "where": "未改",
+      "before": "吃茶「赵州和尚说：吃茶去」、燃灯「一灯能除千年暗」、茶帖、井帖、馆藏说明 works.js",
+      "after": "保留：前两句已核原文；茶帖井帖已标「相传」；馆藏说明是馆方著录与百科，未发现泛化感悟句"
+    }
+  ],
+  "tests": {
+    "unit": "pnpm test：210/210 通过（合入 main 的 #51、#53 之后）；新增 journey 三项、rites 一项（logSwing 从当前位置拉回，先失败后通过）",
+    "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm typecheck 通过",
+    "e2e": "本地 SwiftShader：在合入 main 后的 4ef36a6（含 #54 坐凳姿势、#55、#57、4196350 回到上次离开处）上 pnpm run e2e:smoke 全部 25 个场景通过：boot、taps、halls、snow、steps、pilgrimage、oldbook、seats、resume、rites、sound、music、moods、views、photo-ui、keys、menu、layers、seasons、parts、jump、drop、stairs、camera、phone。tier 3：tap、summit、photo、tour 通过；walk 首次失败是因为测试还在找改写前入山帖里的「山门之外」，按新文案改测试（ae79b64）后通过。更早在 bfe9f6f 上 smoke 23 个场景也全部通过；其间 rites 曾因另一会话的注释吞掉 leave()（起身无效）失败，bfe9f6f 修复。",
+    "ci": "PR #52 上 Pages verify（check、单测、build、boot）在各次推送均通过",
+    "play_real_input": "tools/play-t00.cjs，正常速度：summit、bell、tea、phone 四段，页面零错误；日志 log-summit-bell-tea.json、log-bell.json、log-phone.json；main 上（含 afda944）以 480×300 重录撞钟与吃茶（small-480x300/）：约 2.2 帧/秒，第一下 9.0 秒（帧数决定，960×600 时 17–22 秒），之后每拉一次 0.4–0.5 秒内响；吃茶后坐 40 秒配乐 duck=0.35，起身后恢复",
+    "diagnostic_only": "以下只算诊断证据：把人放到地点旁用 __pose；读状态用 __journey/__rites/__music；端到端用 ?fast=1 的 pilgrimage/oldbook；__ending() 重放；rites 里两下连按是页面内连点按钮",
+    "gpu_real_input": "Hugging Face Job，Tesla T4（ANGLE/Vulkan），1280×720 高档，约 32–43 帧/秒，真键盘（tools/gpu/job.cjs 的 rites，证据 docs/t00/evidence/play-2026-11-16/gpu-t4/）：第一次按 E 到第一下响 2.96 秒（含走到绳前、握绳、1.3 秒拉）；响后 0.3 秒再按 E，按钮淡显、ready=false，2.5 秒后仍只 1 拉 1 下——钟槌荡回前按下不算，已由真实按键时间证实；第二、三下按后 1.41、1.43 秒响，第三下得印；6 秒不按不响；Esc 65 毫秒松手。吃茶按 E 后 15.8 秒喝完得印，坐着 20 秒头部转动 -0.56–0，按 E 100 毫秒起身（坐凳为 #54 的坐椅姿势）。放到地点旁仍用 __pose（诊断）；这次运行没有触发声音（无指针手势），音量未读到",
+    "close_with_deeds": "正常速度、真键盘（本地 SwiftShader，main 合入后）：存档预置钟三下、吃茶、观水、得句「看脚下。」、612 步（诊断性预置），标题出现「接着走」，点它入山，__pose 到蒲团旁（诊断），按 E 静坐。结尾实际说的五句：从竹林到这里，走了 612 步。／钟楼的钟，撞过三下，茶寮那碗茶喝到了底，龙井边等过三声滴水。／藏经楼给的那一句，还记着：「看脚下。」／山门之外，还有一条没走过的路。／远处的山里，好像也有一声钟，应了你那几下。随后朱印帐：「帐上还空着二处。穿过大院，登上台阶，进大雄宝殿上一炷香。」页面零错误。证据 docs/t00/evidence/play-2026-11-16/close-with-deeds/（截图只抓到其中三句，五句全文见 log.txt 的 words）",
+    "phone_touch": "e2e phone 场景扩展后通过：模拟手机（390×780，CDP 触摸）双指开合拉远拉近、推摇杆松开钟绳、推摇杆从吃茶后的凳上起身；点按撞钟与吃茶。仍是模拟触摸，不是真机",
+    "round_2026_11_16_evening": "单测 232/232；typecheck、check 通过；e2e replay（42 s）、incense（55 s，burn=12）、preview-debug（26 s，以 host-resolver 把 pr-1-temple-walk-preview.test 指到本机）、views 通过；本地 pnpm dev 无参数时面板打开、?debug=0 时不打开"
+  },
+  "unverified": [
+    "香燃烧的样子没有截图目看（截图运行被中止）；燃烧只在 e2e 的状态数值上验证",
+    "换季重播与香燃烧未在真机上试",
+    "手机为 Playwright/CDP 模拟触摸（点按、摇杆松绳与起身、双指开合已覆盖），未上真机",
+    "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
+    "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
+    "独立验收结论未改动（independent-review.json 未碰）",
+    "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
+    "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机"
+  ]
 }
