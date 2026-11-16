@@ -9,6 +9,7 @@ import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom 
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell } from "./audio.js";
 import { createRites } from "./rites.js";
+import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
@@ -72,7 +73,7 @@ export function createGame(y) {
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
   mine.position.fromArray(places.lamp.flame); y.scene.add(mine);
   const refresh = () => {
-    for (const id in rings) rings[id].visible = owed(id) && (places[id].room || null) === y.room();
+    for (const id in rings) rings[id].userData.want = owed(id) && (places[id].room || null) === y.room();   // shown unless the eye is on a shot (below)
     mine.visible = journey.has("lamp");
     const n = journey.count(), next = journey.next(); setSeals(n);   // the music knows how much of its theme has been earned
     // The book is the small seal at the top left: the first character of the next place, or 圆 once the book is full;
@@ -129,7 +130,7 @@ export function createGame(y) {
     const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
-    const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
+    const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? placeLift(p, y.site.seats, y.walker.heightAt) : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
     y.stage(st);
     // The eye leaves his shoulder for the place's own shot (src/director.js), and comes back before his hands are done.
     y.direct(id);
@@ -248,6 +249,8 @@ export function createGame(y) {
           el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -50%)`; el.lastChild.textContent = t("{n} 步", { n: Math.max(1, Math.round(Math.hypot(p.at[0] - w.x, p.at[1] - w.z))) }); } } }
     // How long this visit has been and how far it has gone: told on the last page of the book.
     { const w = y.where(); if (entered) { if (visit.at) { const d = Math.hypot(w.x - visit.at[0], w.z - visit.at[1]); if (d < 3) visit.metres += d; } visit.at = [w.x, w.z]; visit.seconds += dt; if ((visit.save += dt) > 10) { visit.save = 0; keep(); } } }
+    // The brush rings on the ground are a mark for the walk, not part of the place: on an observance's own shot they are not drawn.
+    { const shot = y.directed(); for (const id in rings) rings[id].visible = !!rings[id].userData.want && !shot; }
     for (const id in rings) if (rings[id].visible) rings[id].material.opacity = (0.5 + 0.22 * Math.sin(performance.now() / 900 + id.length)) * (y.night() ? 0.9 : 0.75), rings[id].material.color.setScalar(1).multiply(y.night() ? new THREE.Color(1, 0.86, 0.6) : new THREE.Color(0.06, 0.05, 0.045));
     const nowT = performance.now(); if (nowT - acc < 180) return; acc = nowT;   // a few times a second is enough
     const w = y.where(), free = entered && !rite && !y.busy(), indoors = y.inside();
@@ -363,7 +366,7 @@ export function createGame(y) {
   function pose(id) {
     const p = places[id]; if (!p || rite) return false;
     const mineRite = (rite = /** @type {any} */ ({ id, posed: true })), on = () => rite === mineRite;
-    y.stage({ face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } });
+    y.stage({ face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? placeLift(p, y.site.seats, y.walker.heightAt) : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } });
     if (id === "bell") rites.takeRope(on);
     if (id === "lamp") mine.visible = true;
     return y.direct(id, { now: true });
@@ -388,7 +391,7 @@ export function createGame(y) {
   })();
 
   // For the tests.
-  window.__journey = () => { const n = journey.next(); return { look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
+  window.__journey = () => { const n = journey.next(); return { rings: Object.values(rings).filter((m) => m.visible).length, look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
   window.__hush = (on) => { hush(on); };   // the music held back as when he sits on after tea, or let back
   window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, went, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();

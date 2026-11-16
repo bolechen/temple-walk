@@ -206,8 +206,11 @@ moved, they open; with `prefers-reduced-motion` that is the only way it moves. `
 observance begins and `y.direct(null)` when it ends; `rites.js` sends it home `y.directOut()` seconds before the hands are
 done (`homeward`). Any step, stick, tap on the ground, drag of the view, turn of the held mouse or Esc sends it home at
 once; pressing E again at the bell does not. A door, `travel`, `place`, `__pose` and 回到起点 drop it without a swing.
-While it is away `body.directing` fades the way, the hints, the slips and the book (not the button, what is said, the
-breath or the stick). 自动镜头 in the pause menu (`settings.autocam`, on by default) turns it off; under `?shot` it is off
+While it is away `body.directing` fades the way, the slips and the book (not the button, what is said, the hint line,
+the breath or the stick), and the brush rings on the ground are not drawn. When the eye is sent, `warmShot` draws the
+place once from the shot into a small unseen target (with whatever is marked `userData.warm`, such as the well's
+rings), so nothing it first sees stalls the swing; not `renderer.compile`, which compiles every room under the courts.
+An observance made sitting sets him on its seat's own top (`placeLift` in `site.js`), as sitting down anywhere does. 自动镜头 in the pause menu (`settings.autocam`, on by default) turns it off; under `?shot` it is off
 except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), raised on the way home it is
 with him at once, and a shot does not drift while the camera is up; on a touch screen the slips stay, faint, so 留影 can
 be reached. `tests/unit/director.test.mjs` holds every shot clear of solids, him and his things

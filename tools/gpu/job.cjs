@@ -100,17 +100,20 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
   }
   // The eye going to each place's own shot and back (app/src/director.js): frame times while he stands at the place
   // with the eye following him, while it swings to the shot, while it rests there, and while it swings home after a
-  // step. spec.director = { size, q, places: ["lamp", "well", "bell", "tea", "sutra", "sit"] }. He is put beside each
+  // step. spec.director = { size, q, places: ["lamp", "well", "bell", "tea", "sutra", "sit"], sound: true }. He is put beside each
   // with __pose (diagnostic); the observance is begun with E and left with W (Esc for the bell and the tea, E to take the library's slip).
   if (spec.director) {
     const R = spec.director, size = R.size || [1920, 1080], log = (report.director = { size, q: R.q || "high", places: [] });
     try {
       const { ctx, page } = await open(q({ q: R.q || "high", enter: 1, view: "third", season: "summer", time: "day" }), size, 1);
       const ev = (f, a) => page.evaluate(f, a);
+      // A visitor's first tap lets the place be heard (the sound starts, its reverbs are made); keys alone never do. Here
+      // that happens before anything is measured, as it has for anyone who has walked up to an observance.
+      if (R.sound !== false) { await ev(() => window.__music?.(true)); await page.waitForTimeout(1500); }
       await ev(() => { window.__ft = []; const f = (t) => { window.__ft.push(t); requestAnimationFrame(f); }; requestAnimationFrame(f); });
       const until = async (f, ms, what) => { const t = Date.now(); while (Date.now() - t < ms) { if (await f()) return Date.now() - t; await page.waitForTimeout(10); } throw new Error(what); };
       const mark = () => ev(() => window.__ft.length);
-      const stats = (a, b) => ev(([i, j]) => { const t = window.__ft.slice(i, j), d = t.slice(1).map((v, k) => v - t[k]).sort((x, y) => x - y); if (!d.length) return null; const mean = d.reduce((x, y) => x + y, 0) / d.length; return { frames: d.length, fps: +(1000 / mean).toFixed(1), mean_ms: +mean.toFixed(2), p95_ms: +d[Math.floor(d.length * 0.95)].toFixed(2), max_ms: +d[d.length - 1].toFixed(2) }; }, [a, b]);
+      const stats = (a, b) => ev(([i, j]) => { const t = window.__ft.slice(i, j), raw = t.slice(1).map((v, k) => v - t[k]), d = raw.slice().sort((x, y) => x - y); if (!d.length) return null; const at = raw.indexOf(d[d.length - 1]); const mean = d.reduce((x, y) => x + y, 0) / d.length; return { frames: d.length, fps: +(1000 / mean).toFixed(1), mean_ms: +mean.toFixed(2), p95_ms: +d[Math.floor(d.length * 0.95)].toFixed(2), max_ms: +d[d.length - 1].toFixed(2), max_frame: at, max_at_ms: +(t[at + 1] - t[0]).toFixed(0) }; }, [a, b]);
       for (const id of R.places || ["lamp", "well", "bell", "tea", "sutra", "sit"]) {
         const row = { id };
         try {

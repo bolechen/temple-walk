@@ -434,18 +434,19 @@ export function buildSite(M) {
   // `keep` lists what must stay inside the picture, in the same frame: him, and what his hands are at.
   // First drafts, written here to be judged from the pictures (`shot-<id>` below); docs/t00/SOURCES.md records them as our own drafts.
   const SHOTS = {
-    // From behind him to his right and low, between the tower's columns: the rope, his hands and the bell's lip in one picture.
-    bell: { at: [-1.9, 1.1, -2.2], look: [0.3, 1.0, 1.7], fov: 52, in: 2.0, out: 1.0, drift: { tilt: 0.35, for: 10 }, keep: [[0, 0.1, 0], [0, 1.25, 0], [0, 1.0, 0.34], [0, 1.75, 3.1]] },
-    // Across the table, over the shoulder of whoever would sit there: his bowl near, him beyond; sitting on, it draws back.
-    tea: { at: [0.55, 1.12, 2.55], look: [-0.05, 0.82, 0.75], fov: 40, in: 2.2, out: 1.0, drift: { push: -0.035, side: 0.02, for: 40 }, keep: [[0, 0.5, 0.62], [0, 1.15, 0.62], [0, 0.82, 1.25]] },
-    // Under the eaves, over his right shoulder: his hands, the open book and the holder of slips on the desk.
-    sutra: { at: [-1.0, 1.6, -1.2], look: [0.1, 1.0, 0.6], fov: 46, in: 1.8, out: 1.0, drift: { push: 0.02, for: 8 }, keep: [[0, 0.8, 0], [0, 1.2, 0], [-0.24, 1.0, 0.82]] },   // a near shot: from his waist up
-    // Over his shoulder and down into the pool.
-    well: { at: [-0.8, 2.3, -1.9], look: [0.05, 0.6, 2.0], fov: 48, in: 2.0, out: 1.0, drift: { push: 0.02, for: 10 }, keep: [[0, 0.8, 0], [0, 1.2, 0], [0, 0.2, 2.38]] },   // over his shoulder: from his waist up, and the pool
+    // From behind him to his right and low, between the tower's columns: the rope, his hands and the whole bell, little wall.
+    bell: { at: [-2.6, 0.5, -3.0], look: [0, 1.52, 1.31], fov: 40, in: 2.0, out: 1.0, drift: { side: 0.02, for: 8 }, keep: [[0, 0.1, 0], [0, 1.25, 0], [0, 1.0, 0.34], [0, 1.75, 3.1], [0, 3.5, 3.1]] },
+    // Across the table from his right, low: his bowl near on its stand, him beyond, the ewer at the edge; sitting on, it draws back.
+    tea: { at: [-0.45, 0.98, 2.05], look: [0, 0.85, 0.8], fov: 42, in: 2.2, out: 1.0, drift: { push: -0.03, side: -0.015, for: 30 }, keep: [[0, 0.6, 0.62], [0, 1.15, 0.62], [0, 0.82, 1.13]] },
+    // Under the eaves, from before him to his left, three-quarters: his face, his hands, the book and the holder of slips.
+    sutra: { at: [1.2, 1.3, 0.5], look: [-0.06, 1.0, 0.28], fov: 42, in: 1.8, out: 1.0, drift: { push: 0.015, for: 8 }, keep: [[0, 0.85, 0], [0, 1.2, 0], [0, 0.95, 0.3], [-0.24, 1.0, 0.82]] },   // a near shot: from his waist up
+    // From behind and above his shoulder, down into the niche where the pool lies; the 龍井 board above it kept out of the picture.
+    well: { at: [-0.8, 2.4, -1.6], look: [0.05, 0.3, 2.2], fov: 40, in: 2.0, out: 1.0, drift: { push: 0.015, for: 10 }, keep: [[0, 1.0, 0], [0, 1.2, 0], [0, 0.2, 2.38]] },   // over his shoulder: his head and shoulders, and the pool
     // From before the lamp, his face lit by it; as it is lit the eye steps back half a pace.
     lamp: { at: [0.75, 1.3, 2.45], look: [-0.05, 1.0, 0.3], fov: 42, in: 1.8, out: 1.0, drift: { push: -0.05, for: 6 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.88, 1.38]] },
-    // Low and before him to his left as he breathes: the pavilion behind him, the way he came falling away beside.
-    sit: { at: [1.2, 0.55, 1.45], look: [-0.1, 0.5, 0], fov: 48, in: 2.4, out: 1.2, drift: { push: 0.015, for: 30 }, keep: [[0, 0.1, 0], [0, 0.9, 0]] },
+    // Low, before him and to his right at about 35° (wider would stand the eye over the stair's cheek), clear of the
+    // columns: the pavilion behind him as he breathes.
+    sit: { at: [-1.0, 0.55, 1.4], look: [0, 0.53, 0], fov: 44, in: 2.4, out: 1.2, drift: { push: 0.012, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] },
   };
   for (const id in SHOTS) places[id].shot = SHOTS[id];
 
@@ -536,6 +537,12 @@ function drum(M, t) {
 
 // ---- Walking over the plan ----
 const terrainLevel = (x, z) => terrain(x, z);
+// How high above the floor where he stands an observance made sitting puts him: on the top of the seat registered there
+// (the tea's stool, the summit's mat), as sitting down on any seat does (game.js), less the floor under him.
+export function placeLift(place, seats, heightAt) {
+  const at = place.seat || place.at, seat = seats.find((s) => (s.room || null) === (place.room || null) && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3);
+  return seat ? Math.max(0, seat.top - heightAt(place.at[0], place.at[1])) : place.lift ?? 0.1;
+}
 export function createWalker(site) {
   const { solids, decks, ramps, posts = [], roofs = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;

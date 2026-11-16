@@ -82,3 +82,16 @@ test("a stroke begun while the log still swings draws it back from where it is, 
   for (let t = at; t < at + 9000; t += 5) { const z = logSwing(s, t); jump = Math.max(jump, Math.abs(z - prev)); prev = z; lo = Math.min(lo, z); }
   assert.ok(jump < 0.02, `the log moved ${jump} in 5 ms`); assert.ok(lo >= -0.18 - 1e-9, `the log went into the bell: ${lo}`);
 });
+
+// An observance made sitting (the tea on its stool, the breaths on the summit mat) sets him on the seat's own top,
+// as sitting down on any seat does: on the summit he used to be lifted a further 0.1 m over a mat whose top the floor
+// under him already was, and from before him he was seen hanging over it (review of #87).
+test("an observance made sitting sets him on the top of its seat, not above it", async () => {
+  const { placeLift } = await import("../../app/src/site.js");
+  for (const id of ["tea", "sit"]) {
+    const p = site.places[id], at = p.at, lift = placeLift(p, site.seats, walker.heightAt);
+    const seat = site.seats.find((s) => (s.room || null) === (p.room || null) && Math.hypot(s.at[0] - (p.seat || at)[0], s.at[1] - (p.seat || at)[1]) < 0.3);
+    assert.ok(seat, `${id}: no seat registered where it is made`);
+    assert.ok(Math.abs(walker.heightAt(at[0], at[1]) + lift - seat.top) < 0.005, `${id}: he sits ${(walker.heightAt(at[0], at[1]) + lift - seat.top).toFixed(3)} m off the seat's top`);
+  }
+});

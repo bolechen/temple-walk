@@ -260,10 +260,10 @@ body.frozen #photoBar, body.frozen #photoClose, body.frozen #photoSettings { vis
 @media (prefers-reduced-motion: reduce) { #curtain.shut i { animation: none; } }
 /* The same leaves, drawn frame by frame by the director (src/director.js) when the eye is moved behind them. */
 #curtain.cut { display: block; } #curtain.cut i { animation: none; }
-/* While the eye is on a place's own shot, the marks over the picture step aside: the way, the next place, the hints,
-   the slips at the edge and the book. What the observance itself needs stays: its button, what is said, the breath,
-   the seal, and the thumb-stick that walks him away. */
-body.directing .rail, body.directing #bookBtn, body.directing #goal, body.directing #way, body.directing #hint, body.directing #moodTag { opacity: 0 !important; pointer-events: none; transition: opacity .6s ease; }
+/* While the eye is on a place's own shot, the marks over the picture step aside: the way, the next place, the slips at
+   the edge and the book. What the observance itself needs stays: its button, what is said, the hint of how to go on
+   (each said once, and needed now: E for the next stroke, E to stand), the breath, the seal, the thumb-stick. */
+body.directing .rail, body.directing #bookBtn, body.directing #goal, body.directing #way, body.directing #moodTag { opacity: 0 !important; pointer-events: none; transition: opacity .6s ease; }
 /* On a touch screen the slips are the only way to the camera: they stay, faint, so the shot itself can be photographed. */
 @media (pointer: coarse) { body.directing .rail { opacity: .45 !important; pointer-events: auto; } }
 #photoBar { position: absolute; inset: auto 0 0; display: none; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }

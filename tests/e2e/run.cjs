@@ -538,10 +538,13 @@ const scenarios = {
     // The lamp: in, rested on, and home again by itself before he is done; the marks over the picture step aside meanwhile.
     await at("lamp"); await offered("燃灯"); await t.page.click("#act");
     await reach("the lamp's shot was never gone to", () => window.__director().id === "lamp" && window.__director().phase !== "idle");
-    expect(await quiet(), "the way, the hints and the slips should step aside while the eye is on a shot");
+    expect(await quiet(), "the way and the slips should step aside while the eye is on a shot");
+    expect((await t.journey()).rings === 0, "the brush rings on the ground should not be drawn on a shot");
+    expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("hint")).opacity !== "0" || !document.getElementById("hint").textContent), "the hint line should stay: it says what to do now");
     await reach("the lamp's shot was never reached", () => window.__director().phase === "hold" || window.__director().phase === "out");
     await reach("the eye never came back from the lamp by itself", () => window.__director().phase === "idle" && window.__director().backs >= 1, 60000);
     expect(!(await quiet()), "what steps aside should come back with the eye");
+    await t.frames(2); expect((await t.journey()).rings > 0, "the rings still owed should be drawn again once the eye is home");
     await t.until(async () => (await t.journey()).seals.lamp > 0, 60000, "no seal for the lamp");
     // The well: a step (W) sends the eye home at once, and he leaves the well.
     await at("well"); await offered("观水"); await t.page.click("#act");

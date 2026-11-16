@@ -38,7 +38,7 @@ import { createCommunity } from "./src/community.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose, seatHop } from "./src/drop.js";
-import { createDirector } from "./src/director.js";
+import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, lang, glyphs, setLang } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -890,7 +890,9 @@ createGame({
   direct(id, opts) {
     if (!id) return director.back();
     const p = site.places[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;
-    return director.go(id, p, p.y ?? walker.heightAt(p.at[0], p.at[1]), opts);
+    const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
+    if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
+    return going;
   },
   undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(),
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
@@ -900,7 +902,25 @@ createGame({
   // Where a point of the place falls on the picture: x and y in pixels, and whether it is behind the eye.
   screenOf(x, yy, z) { const v = new THREE.Vector3(x, yy, z).project(camera), r = canvas.getBoundingClientRect(); return { x: r.left + (v.x * 0.5 + 0.5) * r.width, y: r.top + (-v.y * 0.5 + 0.5) * r.height, behind: v.z > 1, w: r.width, h: r.height }; },
 });
-window.__director = () => director.state();
+// What a shot sees first (the inside of the well's niche, the lamps from before them) may never have been drawn: its
+// programs compiled and its textures sent to the card on the frame it first comes into view, a stall in the middle of
+// the swing (138 ms at the well on a T4). They are made ready when the eye is sent, drawn once from the shot into a
+// small picture nobody sees, while he is still only taking his first step into the observance.
+const warmTarget = new THREE.WebGLRenderTarget(64, 36), warmEye = new THREE.PerspectiveCamera();
+function warmShot(p, foot) {
+  if (Q.has("shot")) return;   // a picture tool is already on the shot
+  const o = shotPose(p, p.shot, foot, 0, camera.aspect || 16 / 9);
+  warmEye.copy(camera); warmEye.position.copy(o.p); warmEye.quaternion.copy(o.q); warmEye.fov = o.fov; warmEye.updateProjectionMatrix(); warmEye.updateMatrixWorld();
+  // What is hidden until the observance shows it (the well's rings, which first appear with the first drop, mid-swing)
+  // is shown for this one picture too: it is never on the screen. (Not renderer.compile: that compiles every room
+  // under the courts as well, and the swing stalled on it.)
+  const near = placePointOf(p, foot, [0, 0, 0]), shown = [];
+  scene.traverse((o) => { if (!o.visible && o.userData.warm && o.position.distanceTo(near) < 12) { o.visible = true; shown.push(o); } });   // only what says it may be drawn so (`userData.warm`)
+  const was = renderer.getRenderTarget(); renderer.setRenderTarget(warmTarget); renderer.render(scene, warmEye); renderer.setRenderTarget(was);
+  for (const o of shown) o.visible = false;
+  director.warmed = (director.warmed || 0) + 1;
+}
+window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
 if (Q.has("tour")) setView("first");   // it is measured from his own eyes

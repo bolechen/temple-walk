@@ -22,7 +22,7 @@ export const DIRECT = {
   turn: (120 * Math.PI) / 180,   // a swing that turns the eye further than this is cut behind the ink instead
   drift: (1 * Math.PI) / 180,    // the most the eye may turn of itself, per second, while it rests on a shot
   glide: 0.08,             // and the most it may move of itself, metres a second
-  samples: 48,             // points along a swing tested against walls and roofs
+  samples: 48,             // the fewest points along a swing tested against walls and roofs (more on a long one: one every 8 cm)
   speed: 15,               // the fastest the eye may travel at the steepest of a swing, metres a second (0.25 m a frame)
   wide: 16 / 9,            // the shape of picture a shot's angle of view is written for
   veil: { close: 0.2, held: 0.12, open: 0.26 },   // the ink: how long it takes to close, stays shut, opens (s)
@@ -95,9 +95,12 @@ export function blendPose(a, b, w, centre, out = pose()) {
 // its steepest (smootherstep's steepest is 1.875 times its mean).
 export function needsCut(walker, a, b, centre, foot, secs = Infinity) {
   if (turnBetween(a.q, b.q) > DIRECT.turn) return "turn";
+  // Sampled at least every 8 cm along the way (and never fewer than DIRECT.samples times): a table's leg or a stool is thin.
   const p = pose(), prev = a.p.clone(); let length = 0;
-  for (let k = 1; k <= DIRECT.samples; k++) {
-    blendPose(a, b, k / DIRECT.samples, centre, p); length += p.p.distanceTo(prev); prev.copy(p.p);
+  for (let k = 1; k <= DIRECT.samples; k++) { blendPose(a, b, k / DIRECT.samples, centre, p); length += p.p.distanceTo(prev); prev.copy(p.p); }
+  const n = Math.max(DIRECT.samples, Math.ceil(length / 0.08));
+  for (let k = 1; k <= n; k++) {
+    blendPose(a, b, k / n, centre, p);
     if (walker.eyeShut(p.p.x, p.p.y, p.p.z, foot) === true) return "solid";
     if (p.p.y < walker.landAt(p.p.x, p.p.z) + 0.1) return "solid";
   }
