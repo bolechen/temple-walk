@@ -91,7 +91,8 @@
     "tests/e2e/run.cjs jump：三段真实按键（W、Shift+W、空格）在茶案前起跳，逐帧取样",
     "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
     "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令",
-    "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。"
+    "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。",
+    "docs：景观评审 docs/t00/landscape-review.md（#112，只评审，没有改 app/），后续 issue #114–#119；tools/gpu/job.cjs 可拍任意 ?cam= 地址"
   ],
   "known_issues": [
     "STR3-01、02 未经评审方复核",
@@ -184,7 +185,8 @@
     "tests/unit/steps.test.mjs",
     "tests/e2e/run.cjs: sound / steps / snow / music / rites",
     "docs/t00/SOURCES.md",
-    "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」"
+    "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」",
+    "景观评审：锁定 2d1c7d7e2244fd2d876177b30714962634614ec6，T4（ANGLE/Vulkan）五次运行 20261116-151549/151558/151604/152616/152646 及结尾补拍，图在 docs/t00/evidence/landscape/review-2026-11-16-2d1c7d7/，0 个页面错误"
   ],
   "domain_binding": {
     "date": "2026-11-15",
@@ -333,7 +335,8 @@
     "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
     "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
     "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
-    "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机"
+    "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机",
+    "景观评审的面数与帧时间是估算，未实测；手机未测"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",

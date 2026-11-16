@@ -18,6 +18,7 @@ const SURFACES = [
   ["title", null, null],
   ["walk", "document.getElementById('enterBtn').click()", null],
   ["menu", "window.__menu(true)", "window.__menu(false)"],
+  ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],

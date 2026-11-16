@@ -42,6 +42,7 @@
 - 取舍时以景观为先：排期、性能余量、评审力量有冲突时，先保画面里的山、林、云、天和寺在其中的样子。这和 README 的第一原则「画面精美庄严」一致，并把它落到远景上。
 - 远景（远山、远林、云雾、天空、空气透视）此前不属于美术线（#72，六个机位的光和色调）也不属于结构线，现在单独立项，先评审再改：https://github.com/bolechen/temple-walk/issues/112 。
 - 商店页和预告片（#106）也以景观为主打。
+- 景观评审已交（`docs/t00/landscape-review.md`，#120，锁定 `2d1c7d7`，T4 出图 66 张）：差距按影响排是空气、几何、天，另有开场处的穿帮。后续六项，主创定的顺序（待所有者认可后关 #112）：边界与穿帮 https://github.com/bolechen/temple-walk/issues/114 → 空气透视阶梯 https://github.com/bolechen/temple-walk/issues/115 → 远山重做 https://github.com/bolechen/temple-walk/issues/116 和谷中云海 https://github.com/bolechen/temple-walk/issues/117 → 远林 https://github.com/bolechen/temple-walk/issues/118 、天空 https://github.com/bolechen/temple-walk/issues/119 。
 
 ## 2026-11-16 用户需求（按提出先后）
 
