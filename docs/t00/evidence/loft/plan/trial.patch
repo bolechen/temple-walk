@@ -1,0 +1,91 @@
+diff --git a/app/src/site.js b/app/src/site.js
+index 3743ef7..4cf71f6 100644
+--- a/app/src/site.js
++++ b/app/src/site.js
+@@ -195,8 +195,11 @@ export function buildSite(M) {
+   putStack([
+     { xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁" } },
+     { ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
+-    { ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, crest: 4.0, G: 2.4, platOut: 1.0, rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
++    { ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, crest: 4.0, G: 2.4, platOut: Number(globalThis.LOFT_OUT ?? 1.0), rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
+   ], [0, topZ], 0, 3);
++  // TRIAL ONLY (issue #101, plan stage): the top gallery as floor, so that a view can be stood there. Not for merging.
++  if (globalThis.LOFT_DECK) { const W = 3.9, E = 3.4 + Number(globalThis.LOFT_OUT ?? 1.0) - 0.64, h = 35.31;
++    if (E > W) for (const s of [-1, 1]) walk.decks.push({ x0: -E, x1: E, z0: topZ + (s > 0 ? W : -E), z1: topZ + (s > 0 ? E : -W), h, floor: "wood" }, { x0: s > 0 ? W : -E, x1: s > 0 ? E : -W, z0: topZ - E, z1: topZ + E, h, floor: "wood" }); }
+ 
+   // The stele pavilion beside the approach, at the end of the old path up the mountain.
+   const sp = putStack([
+diff --git a/tools/_loft_plan.cjs b/tools/_loft_plan.cjs
+new file mode 100644
+index 0000000..874014f
+--- /dev/null
++++ b/tools/_loft_plan.cjs
+@@ -0,0 +1,47 @@
++// TRIAL (issue #101 plan stage, not committed as a tool): renders the comparison set with the top gallery at
++// LOFT_OUT metres, injected before the page runs. usage: node tools/_loft_plan.cjs <out> <platOut> [deck] [names...]
++const { chromium } = require("playwright");
++const http = require("http"), fs = require("fs"), path = require("path");
++const root = require("./site.cjs").site();
++const [outDir, platOut, deck, ...names] = process.argv.slice(2);
++const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm" };
++const srv = http.createServer((req, res) => {
++  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
++  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
++  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
++});
++(async () => {
++  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(outDir, { recursive: true });
++  const port = srv.address().port, base = `http://127.0.0.1:${port}/`, bench = `http://pr-1-temple-walk-preview.test:${port}/`;
++  const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
++  const report = {};
++  for (const name of names) {
++    const [kind, arg = "", size = "wide"] = name.split(":");
++    const vp = size === "tall" ? { width: 390, height: 844 } : { width: 1280, height: 720 };
++    const p = await b.newPage({ viewport: vp, deviceScaleFactor: 1, locale: "zh-CN" });
++    const errs = []; p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
++    await p.addInitScript(([o, d]) => { globalThis.LOFT_OUT = o; globalThis.LOFT_DECK = d === "deck"; }, [platOut, deck]);
++    const frames = async (n) => { const f0 = await p.evaluate(() => window.__yard().frames); await p.waitForFunction((f) => window.__yard().frames >= f, f0 + n, { timeout: 300000, polling: 200 }); };
++    if (kind === "ending") {
++      await p.goto(`${bench}?q=high&debug=0&seals=bell&play=ending&season=summer&time=day`, { waitUntil: "commit", timeout: 240000 });
++      await p.waitForFunction(() => window.__rites && window.__rites().closing, null, { timeout: 400000, polling: 300 });
++      await p.evaluate(() => window.__riteClock(0)); await frames(2);
++      const u0 = await p.evaluate(() => window.__rites().close.u);
++      await p.evaluate((ms) => window.__riteClock(ms), Math.max(0, (0.97 - u0) * 30000)); await frames(4); await p.waitForTimeout(800);
++      console.log("close", JSON.stringify(await p.evaluate(() => window.__rites().close)));
++    } else {
++      // view: a named view (`show`) or a camera (`cam`), a season-hour and a view (first|third)
++      const [where, when = "", vw = ""] = arg.split("@"), [season, time] = when.split("-");
++      const q = where.includes(",") ? `cam=${where}` : `show=${where}`;
++      await p.goto(`${base}?shot=1&q=high&${q}` + (season ? `&season=${season}&time=${time}` : "") + (vw ? `&view=${vw}` : ""), { waitUntil: "commit", timeout: 240000 });
++      await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 }); await frames(3); await p.waitForTimeout(1200);
++    }
++    const file = path.join(outDir, `${kind}-${(arg || "last").replace(/[@,]/g, "_")}-${size}.png`);
++    await p.screenshot({ path: file, timeout: 240000 });
++    const y = await p.evaluate(() => { const y = window.__yard(); return { tris: y.tris, calls: y.calls, x: y.x, z: y.z, h: y.h }; });
++    report[path.basename(file)] = { ...y, errors: errs.slice(0, 4) }; console.log(path.basename(file), JSON.stringify(report[path.basename(file)]));
++    await p.close();
++  }
++  fs.writeFileSync(path.join(outDir, `report-${platOut}.json`), JSON.stringify(report, null, 1));
++  await b.close(); srv.close();
++})();
+diff --git a/tests/unit/_probe_ring.mjs b/tests/unit/_probe_ring.mjs
+new file mode 100644
+index 0000000..f0519aa
+--- /dev/null
++++ b/tests/unit/_probe_ring.mjs
+@@ -0,0 +1,15 @@
++import "./dom-stub.mjs";
++import * as THREE from "three";
++globalThis.LOFT_OUT = process.argv[2]; globalThis.LOFT_DECK = true;
++const { buildSite, createWalker } = await import("../../app/src/site.js");
++const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
++const site = buildSite(M), w = createWalker(site), cz = -131.3, H = 35.31, st = 0.04;
++const ok = (x, z) => !w.blocked(x, z) && Math.abs(w.heightAt(x, z) - H) < 1e-6;
++const cells = new Set(), key = (i, j) => i + "," + j, all = [];
++for (let i = -150; i <= 150; i++) for (let j = -150; j <= 150; j++) { const x = i * st, z = cz + j * st; if (ok(x, z)) { cells.add(key(i, j)); all.push([i, j]); } }
++const start = all.find(([i, j]) => i === 0 && j > 0); const seen = new Set([key(...start)]), q = [start];
++while (q.length) { const [i, j] = q.pop(); for (const [a, b] of [[1,0],[-1,0],[0,1],[0,-1]]) { const k = key(i + a, j + b); if (cells.has(k) && !seen.has(k)) { seen.add(k); q.push([i + a, j + b]); } } }
++// narrowest: min free width in front of the columns
++let minAtCol = Infinity; for (const x of [-3.4,-1.2,1.2,3.4]) { let n = 0; for (let j = 0; j < 150; j++) if (cells.has(key(Math.round(x / st), j))) n++; minAtCol = Math.min(minAtCol, n * st); }
++let mid = 0; for (let j = 0; j < 150; j++) if (cells.has(key(Math.round(2.3 / st), j))) mid++;
++console.log({ out: process.argv[2], standable: all.length, connected: seen.size, allConnected: seen.size === all.length, widthAtColumn: +minAtCol.toFixed(2), widthBetween: +(mid * st).toFixed(2), corners: [[1,1],[1,-1],[-1,1],[-1,-1]].map(([a,b]) => cells.has(key(Math.round(a*4.1/st), Math.round(b*4.1/st)))) });
