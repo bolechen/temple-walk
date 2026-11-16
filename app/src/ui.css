@@ -493,9 +493,11 @@ body.ending .rail, body.ending #bookBtn, body.ending #goal, body.ending #way, bo
 .credits-card h3 { margin: 18px 0 6px; font: 400 var(--t-m)/1.5 var(--kai); letter-spacing: .2em; color: #8a2a1e; }
 .credits-card p { margin: 6px 0; font: 400 var(--t-s)/1.85 var(--kai); letter-spacing: .04em; color: var(--ink-2); overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; }
 .credits-card ul { margin: 6px 0; padding: 0; list-style: none; font: 400 var(--t-s)/1.7 var(--kai); }
-.credits-card li { padding: 3px 0; display: flex; flex-wrap: wrap; gap: 0 10px; align-items: baseline; }
+.credits-card li { padding: 0; display: flex; flex-wrap: wrap; gap: 0 10px; align-items: baseline; }
 .credits-card li span { font: 400 var(--t-xs)/1.6 var(--serif); color: var(--ink-3); overflow-wrap: anywhere; }
 .credits-card a { color: var(--ink-1); text-decoration: underline; text-decoration-color: #8a2a1e; text-underline-offset: 3px; }
+.credits-card a.tap { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 400 var(--t-s)/1.4 var(--kai); }
+.credits-card li a.tap { padding-right: 4px; }
 .credits-card a:focus-visible { outline: 2px solid #8a2a1e; outline-offset: 2px; }
 .credits-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: linear-gradient(to top, var(--paper-hi) 72%, rgba(242,236,224,0)); }
 @media (max-width: 400px) { .credits-card { padding: 26px 22px 16px; } .credits-card h2 { font-size: 28px; } }

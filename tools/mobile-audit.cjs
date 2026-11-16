@@ -32,7 +32,11 @@ const measure = () => {
     if (!shown(el) || el.disabled || (top && !top.contains(el))) continue;
     const r = el.getBoundingClientRect(), name = el.id || el.className || el.tagName, label = (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 12);
     if (r.width < 43.5 || r.height < 43.5) small.push(`${name} "${label}" ${Math.round(r.width)}x${Math.round(r.height)}`);
-    if (r.left < -1 || r.top < -1 || r.right > W + 1 || r.bottom > H + 1) off.push(`${name} "${label}" [${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.right)},${Math.round(r.bottom)}]`);
+    // A control further down a sheet that scrolls is on the sheet, not off the screen: it is reached by scrolling the sheet,
+    // which is itself whole on the screen. Only sideways, or a sheet that cannot scroll, still counts.
+    let sheet = el.parentElement; while (sheet && !(/auto|scroll/.test(getComputedStyle(sheet).overflowY) && sheet.scrollHeight > sheet.clientHeight + 1)) sheet = sheet.parentElement;
+    const sr = sheet && sheet.getBoundingClientRect(), onSheet = sheet && sr.top >= -1 && sr.bottom <= H + 1;
+    if (r.left < -1 || r.right > W + 1 || (!onSheet && (r.top < -1 || r.bottom > H + 1))) off.push(`${name} "${label}" [${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.right)},${Math.round(r.bottom)}]`);
   }
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let n = walk.nextNode(); n; n = walk.nextNode()) { const el = n.parentElement; if (!n.textContent.trim() || !el || !shown(el) || (top && !top.contains(el)) || seen.has(el)) continue; seen.add(el); const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 11.9) tiny.push(`${el.id || el.className || el.tagName} "${n.textContent.trim().slice(0, 10)}" ${fs}px`); }

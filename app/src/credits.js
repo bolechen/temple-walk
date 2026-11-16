@@ -2,7 +2,7 @@
 // it to be said (docs/t00/LICENSING-AUDIT.md, §六). The words are data here and go through t() as the page is drawn, so
 // they follow the visitor's language; the names of people, typefaces and museums, the copyright lines and the museums'
 // own source lines are written as their owners write them and are not translated.
-import { t, lang } from "./i18n.js";
+import { t } from "./i18n.js";
 import { asset } from "./assets.js";
 import { WORKS } from "../levels/t00/works.js";
 import { workIn } from "../levels/t00/works-local.js";
@@ -74,19 +74,20 @@ export function creditSections() {
 export function renderCredits(root) {
   const doc = root.ownerDocument; root.textContent = "";
   const a = (href, text) => { const el = doc.createElement("a"); el.href = href; el.textContent = text; el.target = "_blank"; el.rel = "noopener"; return el; };
-  const wide = lang === "en" ? " " : "";
   for (const s of creditSections()) {
     const sec = doc.createElement("section");
     if (s.head) { const h = doc.createElement("h3"); h.textContent = s.head; sec.append(h); }
     for (const p of s.paras) {
       const el = doc.createElement("p");
       if (typeof p === "string") el.textContent = p;
-      else { el.append(p.text + (p.link ? wide : "")); el.append(a(p.href, p.link || p.href.replace(/^https:\/\//, ""))); }
+      else { el.append(p.text); }
       sec.append(el);
+      // A link is a line of its own, as tall as a thumb: inside a sentence it would be a sliver on a phone.
+      if (typeof p !== "string") { const link = a(p.href, p.link || p.href.replace(/^https:\/\//, "")); link.className = "tap"; sec.append(link); }
     }
     if (s.list) {
       const ul = doc.createElement("ul");
-      for (const it of s.list) { const li = doc.createElement("li"); li.append(it.href ? a(it.href, it.text) : it.text); if (it.note) { const n = doc.createElement("span"); n.textContent = it.note; li.append(n); } ul.append(li); }
+      for (const it of s.list) { const li = doc.createElement("li"); li.append(it.href ? Object.assign(a(it.href, it.text), { className: "tap" }) : it.text); if (it.note) { const n = doc.createElement("span"); n.textContent = it.note; li.append(n); } ul.append(li); }
       sec.append(ul);
     }
     root.append(sec);
