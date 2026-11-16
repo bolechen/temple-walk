@@ -894,7 +894,7 @@ createGame({
     if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
     return going;
   },
-  undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(),
+  undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(), directArrived: () => director.state().phase === "hold",
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),

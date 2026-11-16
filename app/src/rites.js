@@ -78,7 +78,9 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // The eye goes back to him that long before his hands are done (src/director.js: the way back takes `directOut()`
   // seconds), so that it arrives as the observance ends rather than starting out after it. `secs` is the passage under
   // way, `u` how far into it, `after` how much more of the observance follows it.
-  const homeward = (u, secs, after = 0) => { if (y.directed?.() && ((1 - u) * secs + after) * fast <= (y.directOut?.() ?? 1)) y.direct(null); };
+  // (Only once the eye has arrived: a swing that takes longer than the observance, from behind him round to a shot
+  // before him, is not turned back half way; the observance's end brings it home instead.)
+  const homeward = (u, secs, after = 0) => { if (y.directed?.() && y.directArrived?.() && ((1 - u) * secs + after) * fast <= (y.directOut?.() ?? 1)) y.direct(null); };
   y.onTick(() => { const now = riteNow(); for (let i = jobs.length - 1; i >= 0; i--) if (jobs[i](now)) jobs.splice(i, 1); for (const f of always) f(now); });
 
   // ---- Smoke and steam: a few soft puffs that rise from a point, spread and thin ----
