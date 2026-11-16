@@ -36,6 +36,7 @@ const DEFAULTS = {
   walkAll: false,               // the whole platform is open floor (covered walks)
   plaque: "",                   // name board over the front: a string, or { text, vertical, gold }
   rail: false,                  // a white stone balustrade round the platform
+  loft: "",                     // an upper storey whose balcony is walked round (its name: the walker counts it only while he is up there)
 };
 
 export function buildHall(M, opts) {
@@ -105,9 +106,12 @@ export function buildHall(M, opts) {
     }
   }
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
-    const parts = [], ends = (g.userData.railEnds = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
+    const parts = [], ends = (g.userData.railEnds = []), runs = (g.userData.railRuns = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
     const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
-      const n = Math.max(1, Math.round((b - a) / 1.5)), d = (b - a) / n;
+      // Round a gallery that is walked, each run has an odd number of bays: its middle, before the door and on the
+      // axis of the view, is a panel to look over, not a post in the eye.
+      let n = Math.max(1, Math.round((b - a) / 1.5)); if (p.loft && n % 2 === 0) n += (b - a) / n > 1.5 ? 1 : -1;
+      const d = (b - a) / n; runs.push({ ax, a, b, fixed, n });
       for (const t of [a, b]) ends.push(ax === "x" ? [t, y, fixed] : [fixed, y, t]);   // where a run stops: at a corner, or where a stair breaks it
       // The posts: eight-sided, each ending in a lotus bud. Between them, from the floor up: a sill, a panel, the
       // basin rail, a short strut in the middle of each bay, and the hand rail.
@@ -491,6 +495,16 @@ export function buildHall(M, opts) {
     if (p.dark && p.front === "lattice") walk.decks.push({ x0: -(1.0 - BODY - 0.01), x1: 1.0 - BODY - 0.01, z0: Z + DOOR.reach, z1: Z + 0.5, h: p.platH });
   }
 
+  // A balcony that is walked round: four strips of floor between the storey's walls and its railing, each kept his
+  // width off the wall (the lattice and sills stand a little proud of the column line) and off the rail. They are
+  // floor only while he is up there (`loft`); the columns in the way are the outer ones above.
+  let loft = null;
+  if (p.loft) {
+    const off = 0.13 + BODY, ex = PX - edgeIn, zf = zF - edgeIn, zb = zB + edgeIn, mk = (x0, x1, z0, z1) => ({ x0, x1, z0, z1, h: p.platH, floor: "wood", loft: p.loft });
+    walk.decks.push(mk(-ex, ex, Z + off, zf), mk(-ex, ex, zb, ZB - off), mk(X + off, ex, zb, zf), mk(-ex, xs[0] - off, zb, zf));
+    loft = { id: p.loft, floor: p.platH, wall: X, edge: PX, rail: PX - 0.16, door: [0, (Z + off + zf) / 2], ceil: topY - 0.15,
+      inner: { x0: xs[0] - 0.13, x1: X + 0.13, z0: ZB - 0.13, z1: Z + 0.13 }, outer: { x0: -PX + 0.23, x1: PX - 0.23, z0: zB + 0.23, z1: zF - 0.23 } };
+  }
   // Only exposed front porch edges of a low, unrailed ground-level platform can be hopped down.
   if (!p.rail && !p.walkAll && p.steps && p.platBase <= 0 && p.platH >= 0.2 && p.platH <= 1.5) {
     const end = X + 0.8, gap = p.steps / 2 + 0.8;
@@ -505,5 +519,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, sets, ping, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
+  return { group: g, walk, plat, sets, ping, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
 }

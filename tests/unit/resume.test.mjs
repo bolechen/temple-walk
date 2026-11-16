@@ -8,9 +8,9 @@ const START = [0, 96];
 test("a place is kept and read back, and a damaged or foreign save is ignored", () => {
   const s = store(); assert.equal(readPlace(s), null);
   assert.ok(writePlace(s, { x: 3.14159, z: -20.5, yaw: 1.23456, label: "钟楼", at: 5 }));
-  assert.deepEqual(readPlace(s), { x: 3.14, z: -20.5, yaw: 1.235, label: "钟楼", at: 5 });
+  assert.deepEqual(readPlace(s), { x: 3.14, z: -20.5, yaw: 1.235, label: "钟楼", at: 5, up: null });
   for (const bad of ["", "{", "null", "[]", '{"x":"3","z":1}', '{"x":1}', '{"x":1e9,"z":0}', '{"x":null,"z":2}']) { s.setItem(PLACE_KEY, bad); assert.equal(readPlace(s), null, bad); }
-  assert.deepEqual(sanitizePlace({ x: 1, z: 2, yaw: "north", label: 7 }), { x: 1, z: 2, yaw: 0, label: "", at: 0 });
+  assert.deepEqual(sanitizePlace({ x: 1, z: 2, yaw: "north", label: 7 }), { x: 1, z: 2, yaw: 0, label: "", at: 0, up: null });
   writePlace(s, { x: 1, z: 2 }); clearPlace(s); assert.equal(readPlace(s), null);
   assert.equal(readPlace({ getItem() { throw new Error("no storage"); } }), null, "a browser that refuses storage is not an error");
   assert.equal(writePlace({ setItem() { throw new Error("full"); } }, { x: 1, z: 2 }), false);
