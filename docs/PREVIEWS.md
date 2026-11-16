@@ -1,6 +1,6 @@
 # PR 预览
 
-同一仓库发起的 PR，每次推送（只改文档的也算）通过检查后都会部署一次，得到一个独立的预览地址，方便合并前在 Mac 和手机上看画面。正式站点仍是 GitHub Pages（<https://temple.rushiwowen.co/>），预览不影响它。
+同一仓库发起的 PR，每次推送（只改文档的也算）通过检查后都会部署一次，得到一个独立的预览地址，方便合并前在 Mac 和手机上看画面。正式站点是 Cloudflare Worker（<https://temple.rushiwowen.co/>），预览不影响它。
 
 ## 地址
 

@@ -40,7 +40,7 @@ jobs:
           site=true
           if [ "${{ github.event_name }}" = "push" ] && [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then
             if files=$(gh api "repos/${{ github.repository }}/compare/$BEFORE...${{ github.sha }}" --jq '.files[].filename' 2>/dev/null) && [ -n "$files" ] && [ "$(echo "$files" | wc -l)" -lt 300 ]; then
-              echo "$files" | grep -qE '^(app/|tests/e2e/|package\.json$|pnpm-lock\.yaml$|vite\.config\.mjs$|tools/(setup\.mjs|site\.cjs)$|\.github/workflows/pages\.yml$)' || site=false
+              echo "$files" | grep -qE '^(app/|tests/e2e/|package\.json$|pnpm-lock\.yaml$|vite\.config\.mjs$|wrangler\.production\.jsonc$|tools/(setup\.mjs|site\.cjs)$|\.github/workflows/pages\.yml$)' || site=false
             fi
           fi
           echo "site=$site" >> "$GITHUB_OUTPUT"; echo "site changed: $site"
@@ -82,11 +82,12 @@ jobs:
       # The site is what Vite built into dist/, the same files the browser above was just driven through.
       - name: Hand the site over for publication
         if: github.event_name != 'pull_request' && steps.changes.outputs.site == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist
-          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
+          include-hidden-files: true
       # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
       # through, handed to the preview job. Pull requests from forks have no access to the Cloudflare token and get none.
       - name: Hand the site over for the pull request's preview
@@ -151,11 +152,20 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
         with:
-          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+          sparse-checkout: wrangler.production.jsonc
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Publish the demo
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx --yes wrangler@4.162.0 deploy -c wrangler.production.jsonc

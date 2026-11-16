@@ -1,0 +1,15 @@
+// The published demo. Previews stay on temple-walk-preview (wrangler.jsonc); do not deploy that Worker.
+{
+  "name": "temple-walk",
+  "compatibility_date": "2026-11-16",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  "routes": [
+    { "pattern": "temple.rushiwowen.co", "custom_domain": true }
+  ]
+}
