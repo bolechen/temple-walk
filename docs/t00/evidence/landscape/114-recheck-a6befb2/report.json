@@ -1,0 +1,195 @@
+{
+  "started": "2026-11-16T21:34:14.457Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [
+    {
+      "name": "turn-bamboo-n_summer-day",
+      "file": "turn-bamboo-n_summer-day.png",
+      "tris": 961212,
+      "calls": 258
+    },
+    {
+      "name": "turn-bamboo-n_autumn-dusk",
+      "file": "turn-bamboo-n_autumn-dusk.png",
+      "tris": 961232,
+      "calls": 270
+    },
+    {
+      "name": "turn-bamboo-n_winter-day",
+      "file": "turn-bamboo-n_winter-day.png",
+      "tris": 955286,
+      "calls": 258
+    },
+    {
+      "name": "turn-bamboo-n_spring-dawn",
+      "file": "turn-bamboo-n_spring-dawn.png",
+      "tris": 961232,
+      "calls": 270
+    },
+    {
+      "name": "turn-bamboo-e_summer-day",
+      "file": "turn-bamboo-e_summer-day.png",
+      "tris": 499726,
+      "calls": 225
+    },
+    {
+      "name": "turn-bamboo-e_autumn-dusk",
+      "file": "turn-bamboo-e_autumn-dusk.png",
+      "tris": 499726,
+      "calls": 227
+    },
+    {
+      "name": "turn-bamboo-e_winter-day",
+      "file": "turn-bamboo-e_winter-day.png",
+      "tris": 499726,
+      "calls": 226
+    },
+    {
+      "name": "turn-bamboo-e_spring-dawn",
+      "file": "turn-bamboo-e_spring-dawn.png",
+      "tris": 499726,
+      "calls": 227
+    },
+    {
+      "name": "turn-bamboo-s_summer-day",
+      "file": "turn-bamboo-s_summer-day.png",
+      "tris": 312068,
+      "calls": 45
+    },
+    {
+      "name": "turn-bamboo-s_autumn-dusk",
+      "file": "turn-bamboo-s_autumn-dusk.png",
+      "tris": 312068,
+      "calls": 47
+    },
+    {
+      "name": "turn-bamboo-s_winter-day",
+      "file": "turn-bamboo-s_winter-day.png",
+      "tris": 312068,
+      "calls": 46
+    },
+    {
+      "name": "turn-bamboo-s_spring-dawn",
+      "file": "turn-bamboo-s_spring-dawn.png",
+      "tris": 312068,
+      "calls": 47
+    },
+    {
+      "name": "turn-bamboo-w_summer-day",
+      "file": "turn-bamboo-w_summer-day.png",
+      "tris": 462044,
+      "calls": 59
+    },
+    {
+      "name": "turn-bamboo-w_autumn-dusk",
+      "file": "turn-bamboo-w_autumn-dusk.png",
+      "tris": 462044,
+      "calls": 61
+    },
+    {
+      "name": "turn-bamboo-w_winter-day",
+      "file": "turn-bamboo-w_winter-day.png",
+      "tris": 460408,
+      "calls": 60
+    },
+    {
+      "name": "turn-bamboo-w_spring-dawn",
+      "file": "turn-bamboo-w_spring-dawn.png",
+      "tris": 462044,
+      "calls": 61
+    },
+    {
+      "name": "lx-e_summer-day",
+      "file": "lx-e_summer-day.png",
+      "tris": 536630,
+      "calls": 217
+    },
+    {
+      "name": "lx-e_autumn-dusk",
+      "file": "lx-e_autumn-dusk.png",
+      "tris": 536630,
+      "calls": 219
+    },
+    {
+      "name": "lx-e_winter-day",
+      "file": "lx-e_winter-day.png",
+      "tris": 530704,
+      "calls": 217
+    },
+    {
+      "name": "lx-e_spring-dawn",
+      "file": "lx-e_spring-dawn.png",
+      "tris": 536630,
+      "calls": 219
+    },
+    {
+      "name": "lx-w_summer-day",
+      "file": "lx-w_summer-day.png",
+      "tris": 487914,
+      "calls": 67
+    },
+    {
+      "name": "lx-w_autumn-dusk",
+      "file": "lx-w_autumn-dusk.png",
+      "tris": 487914,
+      "calls": 69
+    },
+    {
+      "name": "lx-w_winter-day",
+      "file": "lx-w_winter-day.png",
+      "tris": 481988,
+      "calls": 67
+    },
+    {
+      "name": "lx-w_spring-dawn",
+      "file": "lx-w_spring-dawn.png",
+      "tris": 487914,
+      "calls": 69
+    },
+    {
+      "name": "lookback@summer-day",
+      "file": "lookback_summer-day.png",
+      "tris": 935992,
+      "calls": 221
+    },
+    {
+      "name": "lookback@autumn-dusk",
+      "file": "lookback_autumn-dusk.png",
+      "tris": 936012,
+      "calls": 233
+    },
+    {
+      "name": "lookback@winter-day",
+      "file": "lookback_winter-day.png",
+      "tris": 930066,
+      "calls": 221
+    },
+    {
+      "name": "lookback@spring-dawn",
+      "file": "lookback_spring-dawn.png",
+      "tris": 936012,
+      "calls": 233
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "a6befb24f612dc4d43ca1ad49cb307c05f08cd5d",
+    "entry": "assets/index-DWpnq3qw.js",
+    "files": 111,
+    "sha256": "9e5d811bd5f028c65ee0d5e1386e0b83d8081ea33ed7c237617138afd85e6c95"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-16T21:39:52.429Z"
+}
