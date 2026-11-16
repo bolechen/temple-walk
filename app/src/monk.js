@@ -425,7 +425,7 @@ export function createMonk() {
   // ---- What the pose is computed from ----
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
-  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null;
+  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false];
   const footY = [null, null], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
@@ -530,7 +530,7 @@ export function createMonk() {
       if (dt > 0) { turn = damp(turn, dyaw / dt, 8, dt); accel = damp(accel, (speed - lastSpeed) / dt, 6, dt); } lastSpeed = speed;
       // The stride: short steps for short legs; on a stair, a step to each tread.
       const A = stairs ? STAIR.tread / 2 : clamp(0.07 + 0.055 * speed, 0.07, 0.19), rate = stairs ? Math.PI / STAIR.tread : (0.8 * Math.PI) / (2 * A);
-      phase += dt * Math.max(speed, 0.4 * gait) * rate;
+      const pace = Math.max(speed, 0.4 * gait) * rate; phase += dt * pace;
       const step = [0, Math.PI].map((o) => { const u = ((((phase + o) / TAU) % 1) + 1) % 1; if (u < 0.5) return { off: A * (1 - 4 * u), lift: 0 }; const w = (u - 0.5) * 2; return { off: A * (2 * smooth(0, 1, w) - 1), lift: Math.sin(Math.PI * w) }; });
       const lead = step.map((s) => (s.off / A) * gait), breathe = Math.sin(t * 1.6);
 
@@ -570,15 +570,17 @@ export function createMonk() {
           let ground = -Infinity;
           for (const pr of PROBES) { tv2.copy(pr).applyAxisAngle(UPV, s * TOE_OUT).add(tv); tv2.y = 0; group.localToWorld(tv2); ground = Math.max(ground, surfaceAt ? surfaceAt(tv2.x, tv2.z) : rootY); }
           // At the side of a stair the ground under one shoe can be metres below the treads under the other. That shoe
-          // hangs, a tread below the body at most: reaching for it would bring the pelvis down through the stair.
-          if (surfaceAt && grounding.heightAt && bodyHeight !== null) ground = Math.max(ground, bodyHeight - 0.3);
+          // hangs, a tread below the body at most, and does not count when the pelvis is lowered to reach: reaching for it
+          // would bring him down through the stair.
+          hangs[i] = false;
+          if (surfaceAt && grounding.heightAt && bodyHeight !== null && ground < bodyHeight - 0.3) { ground = bodyHeight - 0.3; hangs[i] = true; }
           if (footY[i] !== null && Math.abs(footY[i] - ground) < 0.6 && dt > 0) ground = Math.max(ground, damp(footY[i], ground, 16, dt));   // down a step gently, never through it
           footY[i] = ground;
           group.localToWorld(targets[i].copy(tv)); targets[i].y = ground + ANKLE + step[i].lift * gait * (stairs ? 0.075 : 0.05);
         });
         // The pelvis comes down when a foot could not otherwise reach its ground.
         let need = 0;
-        SIDES.forEach(([n], i) => { const hip = B[n + "UpperLeg"].getWorldPosition(tv), h = Math.hypot(targets[i].x - hip.x, targets[i].z - hip.z), L = (THIGH + SHIN) * 0.992; need = Math.max(need, hip.y - targets[i].y - Math.sqrt(Math.max(0, L * L - h * h))); });
+        SIDES.forEach(([n], i) => { if (hangs[i] && !hangs[1 - i]) return; const hip = B[n + "UpperLeg"].getWorldPosition(tv), h = Math.hypot(targets[i].x - hip.x, targets[i].z - hip.z), L = (THIGH + SHIN) * 0.992; need = Math.max(need, hip.y - targets[i].y - Math.sqrt(Math.max(0, L * L - h * h))); });
         drop = dt > 0 ? Math.max(need, damp(drop, need, 10, dt)) : need;
         B.hips.position.y -= Math.max(0, drop);
         B.hips.updateMatrixWorld(true);
@@ -595,7 +597,9 @@ export function createMonk() {
           const n = Math.floor((phase + i * Math.PI) / TAU), was = lastN[i]; lastN[i] = n;
           if (was === null || n === was || gait < 0.5) return;
           tv.set(0, 0, 0.03).applyAxisAngle(UPV, s * TOE_OUT); tv.x += s * FOOT_X; tv.z += FOOT_Z + step[i].off * gait; group.localToWorld(tv);
-          steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s });
+          // `late`: how long ago in this frame the shoe came down, so the sound can keep an even time on a slow frame.
+          const late = Math.min(dt, ((((phase + i * Math.PI) % TAU) + TAU) % TAU) / Math.max(1e-3, pace));
+          steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s, late });
         });
       } else lastN[0] = lastN[1] = null;
       // Seated, the legs are put where the seat has them, in his own frame, whose floor is the seat's top. On a stool, as

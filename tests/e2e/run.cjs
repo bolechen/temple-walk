@@ -331,15 +331,23 @@ const scenarios = {
     expect(bell.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8), "the bell's fundamental is missing: " + JSON.stringify(bell.peaks));
     await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
     const drum = await t.page.evaluate(() => window.__listen("effects")); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
+    // A great bell is long: eight seconds after the stroke its hum and fundamental are still there.
+    await t.page.waitForTimeout(7000);
+    const late = await t.page.evaluate(() => window.__listen("effects"));
+    expect(late.rms > 0.004 && late.peaks.some(([hz]) => Math.abs(hz - 49) < 6 || Math.abs(hz - 98) < 6), "the bell had died away within eight seconds: " + JSON.stringify(late));
     // The dragon well: silent from the court; standing at it, a drop is heard and rings go out across the water.
     expect((await t.page.evaluate(() => window.__well())).level === 0, "the well is heard from the court");
     const pool = await t.page.evaluate(() => window.__places.well.pool);
-    await t.page.evaluate(([x, , z]) => window.__pose(x, z + 2.6, 0, -0.35), pool);   // the pool is [x, y, z] await t.frames(3);
+    await t.page.evaluate(([x, , z]) => window.__pose(x, z + 2.6, 0, -0.35), pool);   // the pool is [x, y, z]
+    await t.frames(3);
     const w = await t.page.evaluate(() => window.__well(true)); expect(w.level > 0.5, "standing at the well it is not heard: " + JSON.stringify(w));
     await t.frames(3); expect((await t.page.evaluate(() => window.__well())).rings > 0, "the drop sent no ring across the water");
     // Two culms knocking in the bamboo: the sound is made and counted on the place's bus.
-    const k = await t.page.evaluate(() => window.__knock(true)); expect(k.knocks >= 1, "the culms made no knock: " + JSON.stringify(k));
-    const bd = await t.page.evaluate(() => window.__bird(true)); expect(bd.birds >= 1, "no bird sang: " + JSON.stringify(bd));
+    // (Played and listened to within one call, as the steps are: the place's bus carries nothing else here.)
+    const k = await t.page.evaluate(() => { const r = window.__knock(true), t0 = performance.now(); while (performance.now() - t0 < 60); return { ...r, heard: window.__listen("ambience") }; });
+    expect(k.knocks >= 1 && k.heard.rms > 0.0005, "the culms made no knock: " + JSON.stringify(k));
+    const bd = await t.page.evaluate(() => { const r = window.__bird(true), t0 = performance.now(); while (performance.now() - t0 < 140); return { ...r, heard: window.__listen("ambience") }; });
+    expect(bd.birds >= 1 && bd.heard.rms > 0.0003, "no bird sang: " + JSON.stringify(bd));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The music: it begins with the first sound, follows him from place to place once he has settled, ignores pacing

@@ -203,7 +203,10 @@ upper, summit), a zone that counts only after two seconds, one phrase maker per 
 on the audio clock; on a change of place it drops the notes not yet begun and fades what sounds over 3.5 s (never the whole
 theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xiao, a held fifth) through `createPlayer` on
 any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
-The music steps back inside `strike()` for the bell and drum. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
+The great bell is `bell()` in `instruments.js` (struck with a log: a low hum that swells and lasts about 45 s, the
+fundamental about 34 s, the high partials dying first; `hillEcho` answers it from the slope), so it renders offline too;
+`tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. Water drips from
+the eaves only after rain (`place().wet`), not on dry autumn stone or in snow. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
 paving (`puddleAt`, the paving shader's own puddle pattern ported to JS), and snow (a shower of tiny breaks following the
@@ -211,8 +214,9 @@ push of the foot). All are worked out sample by sample, so `tools/steps.mjs` ren
 them against each other: dry stone the quietest, snow the loudest. For every shoe `monk.steps` reports, `yard.js` asks
 `walker.floorAt` what floor it is (`room`, a building's `stone` or `wood`, the approach's `path`, the courts' `paving`)
 and `underfoot()` what that sounds like in this mood: a hall's floor and a roofed platform are dry, the swept axis path
-of the court is never snow, autumn has dried. `footstep()` in `audio.js` plays it on the effects bus (so in a hall it
-has the hall's reverb), never before the visitor's first touch has let the place be heard. `__steps(kind?)` reports
+of the court is never snow, autumn has dried. `footstep()` in `audio.js` plays it under the effects slider but on its own
+sends: nearly dry outdoors, the hall's reverb indoors. Each step is played a fixed 60 ms after the shoe came down
+(`monk.steps[].late` says how far into the frame that was), so steps keep time on slow frames; never before the visitor's first touch has let the place be heard. `__steps(kind?)` reports
 how many of each have been heard, or plays one.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and

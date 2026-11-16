@@ -188,6 +188,16 @@ test("at the side edge of a stair, where the ground under one shoe is metres low
   m.group.updateMatrixWorld(true);
   let lo = Infinity, hi = -Infinity;
   m.group.traverse((o) => { if (!o.isSkinnedMesh) return; for (let i = 0; i < o.geometry.attributes.position.count; i += 5) { const y = skinnedWorld(o, i).y; lo = Math.min(lo, y); hi = Math.max(hi, y); } });
-  assert.ok(lo > top - 0.45, `his lowest point is ${(top - lo).toFixed(2)} m under the treads`);
-  assert.ok(hi > top + 0.8, `his head is only ${(hi - top).toFixed(2)} m over the treads`);
+  assert.ok(lo > top - 0.4, `his lowest point is ${(top - lo).toFixed(2)} m under the treads`);
+  assert.ok(hi > top + 1.05, `his head is only ${(hi - top).toFixed(2)} m over the treads`);
+});
+
+test("each shoe that comes down says how late in the frame it did, so its sound keeps time on a slow frame", () => {
+  for (const dt of [1 / 60, 1 / 20, 1 / 8]) {
+    const m = createMonk(), got = [];
+    for (let i = 0; i < Math.round(6 / dt); i++) { m.update(dt, 2.1, false, i * dt, () => 0, {}); got.push(...m.steps.splice(0)); }
+    assert.ok(got.length >= 8, `at ${Math.round(1 / dt)} frames a second only ${got.length} steps in six seconds`);
+    for (const s of got) assert.ok(s.late >= 0 && s.late <= dt + 1e-9, `a step ${s.late} s late in a frame of ${dt} s`);
+    if (dt > 0.1) assert.ok(got.some((s) => s.late > dt * 0.2), "on slow frames some steps should come down well inside the frame");
+  }
 });

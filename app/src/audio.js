@@ -2,10 +2,11 @@
 // the music (score.js says what, instruments.js plays it). The audio context starts on the first tap, as browsers
 // require. Three buses, each with its own level in the pause menu: music, the place (wind, water, eave bells) and
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
-import { createPlayer, reverb } from "./instruments.js";
+import { createPlayer, reverb, bell, hillEcho } from "./instruments.js";
 import { createZoneKeeper, moodMusic, sealNote, hz } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
-let ctx = null, master = null, comp = null, outVerb = null, inVerb = null;
+let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
+const STEP_WET = { out: 0.07, in: 0.4 };   // how much of a step goes to the court's reverb outdoors, the hall's indoors
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
 // How loud the visitor wants it, 0..1 (the pause menu); remembered if nothing has sounded yet.
 const levels = { volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 };
@@ -15,6 +16,7 @@ export function setLevels(o) {
   if (!ctx) return;
   master.gain.setTargetAtTime(levels.volume, ctx.currentTime, 0.05);
   for (const k of ["music", "ambience", "effects"]) bus[k].level.gain.setTargetAtTime(levels[k], ctx.currentTime, 0.05);
+  steps.level.gain.setTargetAtTime(levels.effects, ctx.currentTime, 0.05);
 }
 // For the tests: is anything sounding, how loud, and at which frequencies; on one bus, or everything together.
 export function listen(which) {
@@ -44,6 +46,12 @@ function start() {
     b.dry.connect(comp); b.sendOut.connect(outVerb); b.sendIn.connect(inVerb);
     b.tap = ctx.createAnalyser(); b.tap.fftSize = 8192; b.tap.smoothingTimeConstant = 0; b.dry.connect(b.tap); b.wet = wet;
   }
+  // His steps: on the effects slider, but nearly dry outdoors (a step in the bamboo is not a step in a walled court)
+  // and in the timber hall's reverb indoors.
+  steps = { level: ctx.createGain(), dry: ctx.createGain(), sendOut: ctx.createGain(), sendIn: ctx.createGain() };
+  steps.level.gain.value = levels.effects; steps.dry.gain.value = 0.8; steps.sendOut.gain.value = STEP_WET.out; steps.sendIn.gain.value = 0;
+  steps.level.connect(steps.dry); steps.level.connect(steps.sendOut); steps.level.connect(steps.sendIn);
+  steps.dry.connect(comp); steps.dry.connect(bus.effects.tap); steps.sendOut.connect(outVerb); steps.sendIn.connect(inVerb);
   // A page in the background is silent, and picks up where it was on return (the audio clock stops with it, so the
   // music does not hurry to catch up).
   document.addEventListener("visibilitychange", () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume().catch(() => {}); });
@@ -58,6 +66,7 @@ function room(inside) {
   if (inside === roomNow) return; roomNow = inside;
   const t = ctx.currentTime;
   for (const k of ["music", "ambience", "effects"]) { const b = bus[k]; b.sendOut.gain.setTargetAtTime(inside ? 0 : b.wet, t, 0.7); b.sendIn.gain.setTargetAtTime(inside ? b.wet * 1.1 : 0, t, 0.7); }
+  steps.sendOut.gain.setTargetAtTime(inside ? 0 : STEP_WET.out, t, 0.7); steps.sendIn.gain.setTargetAtTime(inside ? STEP_WET.in : 0, t, 0.7);
 }
 // The music steps back while the bell or the drum speaks, and comes back of itself.
 let ducked = { until: 0, depth: 1 };
@@ -80,19 +89,16 @@ function thud(t0, dur, cutoff, gain) {   // a short burst of filtered noise: the
   s.connect(f); f.connect(g); g.connect(bus.effects.in); s.start(t0);
 }
 
+let echo = null;
 export function strike(kind, loud = 1) {
   if (!start()) return;
   wake();
   const t = ctx.currentTime + 0.01;
-  duck(kind === "bell" ? 0.18 : 0.5, kind === "bell" ? 9 : 2.5);
+  duck(kind === "bell" ? 0.18 : 0.5, kind === "bell" ? 14 : 2.5);
   if (kind === "bell") {
-    // A large bronze bell: a low hum, a strong fundamental, inharmonic upper partials that die first.
-    // Each partial is doubled a fraction of a hertz apart, which gives the slow beat of a cast bell.
-    const f0 = 98;
-    for (const [r, a, d] of [[0.5, 0.22, 11], [1, 0.5, 9], [1.19, 0.22, 6.5], [1.5, 0.16, 5], [2, 0.2, 4], [2.52, 0.1, 2.8], [3.01, 0.07, 2], [4.1, 0.04, 1.2]]) {
-      partial(f0 * r, a * loud * 0.5, d, t); partial(f0 * r * 1.004 + 0.3, a * loud * 0.35, d * 0.93, t);
-    }
-    thud(t, 0.09, 900, 0.5 * loud);
+    // The great bell (instruments.js), answered by the hillside.
+    if (!echo) echo = hillEcho(ctx, bus.effects.in);
+    bell(ctx, bus.effects.in, t, loud, echo);
   } else {
     // A big barrel drum: a pitch that drops as the skin relaxes, under a thump.
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -141,18 +147,21 @@ export function wellDrip(level = 1) {
 // A shoe coming down (steps.js makes the sound of each kind: "stone", "wet", "puddle", "snow"). It never wakes the
 // audio by itself: until the visitor's first touch has let the place be heard, his steps are silent like everything
 // else. Each step a little to the side of the foot that made it, a little louder on a stair, and never twice the same.
-// In a hall the effects bus goes to the timber hall's reverb, so his steps there sound in the room.
+// Outdoors a step is almost dry; in a hall it sounds in the room.
 const heard = { stone: 0, wet: 0, puddle: 0, snow: 0 };
 let stepSeed = 1;
-export function footstep(kind = "snow", { speed = 2.1, side = 0, loud = 1, wet = 1 } = {}) {
+// `late`: how long ago in the last frame the shoe came down. Every step is played a fixed moment after it happened
+// (STEP_LAG), so they keep an even time even when frames are slow and uneven.
+const STEP_LAG = 0.06;
+export function footstep(kind = "snow", { speed = 2.1, side = 0, loud = 1, wet = 1, late = 0 } = {}) {
   if (!ctx || ctx.state !== "running" || !(kind in LEVEL)) return false;
   const x = stepSound(kind, ctx.sampleRate, { seed: (stepSeed = (stepSeed * 1103515245 + 12345) >>> 0), speed, wet });
   const b = ctx.createBuffer(1, x.length, ctx.sampleRate); b.getChannelData(0).set(x);
   const s = ctx.createBufferSource(), g = ctx.createGain(), pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   s.buffer = b; s.playbackRate.value = 0.94 + 0.12 * ((stepSeed >>> 8) % 1000) / 1000;
   g.gain.value = LEVEL[kind] * loud * (0.8 + 0.2 * Math.min(1, speed / 2.4));
-  s.connect(g); if (pan) { pan.pan.value = side * 0.12; g.connect(pan); pan.connect(bus.effects.in); } else g.connect(bus.effects.in);
-  s.start(ctx.currentTime + 0.005); heard[kind]++;
+  s.connect(g); if (pan) { pan.pan.value = side * 0.12; g.connect(pan); pan.connect(steps.level); } else g.connect(steps.level);
+  s.start(ctx.currentTime + Math.max(0.005, STEP_LAG - Math.min(STEP_LAG, late))); heard[kind]++;
   return true;
 }
 export const stepState = () => ({ crunches: heard.snow, heard: { ...heard }, state: ctx ? ctx.state : "off" });
@@ -205,7 +214,7 @@ export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 // ---- The sound of the place when nothing is happening ----
 // Wind moving through bamboo (filtered noise that swells and falls), now and then two culms knocking together in a
 // gust, birds out on the mountain (never within the walls), water dripping from the eaves after rain, and now and then
-// a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time }: how deep
+// a small bell under an eave. `place()` returns { grove: 0..1, zone, season, time, wet, snow }: how deep
 // in the bamboo the listener stands, which part of the mountain (score.js), and the mood. The music starts with it.
 let ambient = null;
 export function startAmbience(place) {
@@ -232,8 +241,12 @@ export function startAmbience(place) {
     const gust = 0.5 + 0.3 * Math.sin(a.t * 0.11) + 0.2 * Math.sin(a.t * 0.043 + 1.7);
     low.gain.setTargetAtTime(0.5 * gust * (0.35 + 0.65 * g), now, 0.8);
     leaves.gain.setTargetAtTime(0.16 * gust * gust * (0.15 + 0.85 * g), now, 0.6);
-    if ((a.nextDrip -= 0.25) <= 0) {   // a drop falling into standing water
-      a.nextDrip = 0.6 + Math.random() * 4.5;
+    // Water dripping from the eaves after rain: often in summer, less in spring; none once the stone has dried
+    // (autumn) or the water has frozen (snow).
+    const rain = p.snow > 0.01 ? 0 : p.wet ?? 1;
+    if ((a.nextDrip -= 0.25) <= 0 && rain < 0.4) a.nextDrip = 2;
+    else if (a.nextDrip <= 0) {   // a drop falling into standing water
+      a.nextDrip = (0.6 + Math.random() * 4.5) / rain;
       const f = 700 + Math.random() * 900, o = ctx.createOscillator(), gg = ctx.createGain();
       o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f * 1.7, now + 0.06);
       gg.gain.setValueAtTime(0.0001, now); gg.gain.exponentialRampToValueAtTime(0.05 * (1 - 0.6 * g), now + 0.005); gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);

@@ -196,7 +196,7 @@ let down = null, hop = null, leap = null;   // `hop`: a planned drop from a porc
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
 // What the sound needs to know of the place: the bamboo, which part of the mountain (the music follows it), the mood.
 const ZB = zoneBounds(SITE, LEVELS, APPROACH, SCREEN);
-const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time });
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time, wet: mood.wet, snow: mood.snow });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
@@ -458,7 +458,7 @@ function frame(now) {
     if (passing) continue;
     if (!inside) trail.stamp(f);
     const kind = underfoot({ x: f.x, z: f.z, y: f.y, floor: walker.floorAt(f.x, f.z), snow: inside ? 0 : mood.snow, wet: mood.wet });
-    footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet });
+    footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet, late: f.late || 0 });
   }
   if (!inside) trail.follow(pos.x, pos.z); trail.update(dt);
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
