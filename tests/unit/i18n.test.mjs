@@ -1,10 +1,10 @@
 // The page in three languages: which one a visitor gets, how a line is found and filled, and that every line the page
 // may show has its Japanese and its English, with the same blanks to fill.
 import test from "node:test"; import assert from "node:assert/strict";
-import { pickLang, t, has, lang, LANGS, fontsFor, glyphs } from "../../app/src/i18n.js";
-import JA from "../../app/src/i18n-ja.js";
-import EN from "../../app/src/i18n-en.js";
-import KO from "../../app/src/i18n-ko.js";
+import { pickLang, choose, setLang, t, has, lang, langSource, takeSwitch, LANGS, fontsFor, glyphs } from "../../app/src/i18n.js";
+import JA from "../../app/locales/ja.js";
+import EN from "../../app/locales/en.js";
+import KO from "../../app/locales/ko.js";
 import { allKeys, calledKeys } from "./i18n-keys.mjs";
 import { titleOffer } from "../../app/src/resume.js";
 
@@ -21,6 +21,33 @@ test("the language: asked for in the address, else chosen before, else the brows
   assert.equal(lang, "zh", "in Node there is no visitor: Chinese");
   assert.equal(pickLang({ languages: ["ko-KR", "en"] }), "ko");
   assert.deepEqual(LANGS, ["zh", "ja", "en", "ko"]);
+});
+
+test("how the language was come by is told apart: asked for, kept from before, recognised, or nothing to go on", () => {
+  assert.deepEqual(choose({ search: "?lang=ko", stored: "ja" }), { lang: "ko", source: "url" });
+  assert.deepEqual(choose({ stored: "en", languages: ["ja"] }), { lang: "en", source: "saved" });
+  assert.deepEqual(choose({ languages: ["ja-JP"] }), { lang: "ja", source: "browser" });
+  assert.deepEqual(choose({ languages: ["fr-FR"] }), { lang: "en", source: "browser" }, "English for a browser that speaks none of ours counts as recognised");
+  assert.deepEqual(choose({}), { lang: "zh", source: "default" });
+  assert.deepEqual(choose({ search: "?lang=xx" }), { lang: "zh", source: "default" }, "an unknown language is ignored");
+  assert.equal(langSource, "default", "in Node there is no visitor");
+  assert.equal(takeSwitch(), "", "no storage, no switch");
+});
+
+test("a language chosen by hand is kept, and the page that opens next learns where it came from, once", () => {
+  const mem = () => { const m = new Map(); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+  const was = { l: globalThis.localStorage, s: globalThis.sessionStorage, loc: globalThis.location };
+  const local = mem(), session = mem(), loc = { href: "https://temple.example/?lang=zh&q=low", went: "", replace(u) { this.went = u; } };
+  Object.assign(globalThis, { localStorage: local, sessionStorage: session, location: loc });
+  try {
+    assert.equal(setLang("ja"), true);
+    assert.equal(local.getItem("yunjing.lang.v1"), "ja", "the choice is kept");
+    assert.equal(loc.went, "https://temple.example/?q=low", "the page opens again without ?lang= overriding the choice");
+    assert.equal(takeSwitch(), "zh", "the next page is told the language it came from");
+    assert.equal(takeSwitch(), "", "and only once");
+    assert.equal(setLang("zh"), false, "the language already in use is not a choice");
+    session.setItem("yunjing.lang.from", "klingon"); assert.equal(takeSwitch(), "", "an unknown language is not reported");
+  } finally { for (const [k, v] of [["localStorage", was.l], ["sessionStorage", was.s], ["location", was.loc]]) { if (v === undefined) delete globalThis[k]; else globalThis[k] = v; } }
 });
 
 test("a line is the Chinese as written unless another language is asked for; its blanks are filled in any language", () => {
@@ -78,10 +105,10 @@ test("each language draws first in its own faces and falls back to the Chinese o
 });
 
 test("every work in the halls has its Japanese and English card, field for field, and the record shows through where none is", async () => {
-  const { WORKS } = await import("../../app/src/works.js");
-  const { workIn, workTables, FIELDS } = await import("../../app/src/works-local.js");
+  const { WORKS } = await import("../../app/levels/t00/works.js");
+  const { workIn, workTables, FIELDS } = await import("../../app/levels/t00/works-local.js");
   for (const [name, table] of Object.entries(workTables)) {
-    assert.deepEqual(Object.keys(table).sort(), Object.keys(WORKS).sort(), `works-${name}.js should hold exactly the works in works.js`);
+    assert.deepEqual(Object.keys(table).sort(), Object.keys(WORKS).sort(), `levels/t00/locales/${name}.js should hold exactly the works in works.js`);
     for (const [slug, w] of Object.entries(WORKS)) {
       const tr = table[slug];
       assert.deepEqual(Object.keys(tr).sort(), [...FIELDS].sort(), `${name}/${slug}: the fields`);
