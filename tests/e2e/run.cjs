@@ -248,7 +248,7 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // His steps sound as what they come down on: wet stone after summer rain and a splash in a puddle of the court (where
-  // the paving draws one), dry stone in autumn, the floor of a hall.
+  // the paving draws one, and rings spread across it), dry stone in autumn, the floor of a hall.
   steps: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&season=summer&time=day&cam=4,15.5,3.14,0&view=third" + BARE);
     const heard = () => t.page.evaluate(() => window.__steps().heard);
@@ -257,9 +257,13 @@ const scenarios = {
     // Up the court at x = 4: wet stone to z 21, then water standing from z 21.5 (steps.js's puddleAt, the paving's own pattern).
     await walk([[4, 23]], "he never crossed the wet court");
     let h = await heard(); expect(h.wet >= 3 && h.puddle >= 1 && h.snow === 0 && h.stone === 0, "after summer rain the court should sound wet, with a splash in its puddle: " + JSON.stringify(h));
+    // and each step into the puddle sends rings across its water (ground.js), one pair for every splash heard
+    const r = await t.page.evaluate(() => window.__ripples());
+    expect(r && r.made === h.puddle, "every splash should set the puddle rippling: " + JSON.stringify({ r, h }));
     await t.page.evaluate(() => window.__mood("autumn", "day")); await t.frames(2);
     await walk([[4, 17]], "he never crossed the dry court");
     const h2 = await heard(); expect(h2.stone >= 3 && h2.wet === h.wet && h2.puddle === h.puddle, "in autumn the court should sound dry: " + JSON.stringify(h2));
+    expect((await t.page.evaluate(() => window.__ripples())).made === r.made, "dry autumn stone has no water to ripple");
     // A step is heard on the effects bus as it sounds (played and listened to within one call).
     const one = await t.page.evaluate(() => { window.__steps("stone"); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
     expect(one.rms > 0.0004, "a step on stone made no sound: " + JSON.stringify(one));   // silence is 0; how loud is steps.test.mjs's to say
