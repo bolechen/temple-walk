@@ -1925,10 +1925,17 @@
    "issue": "屋面普遍比宋式陡",
    "suggested_fix": "见 docs/t00/structure-review.md S-06",
    "evidence_before": "2026-11-16 结构评审，对《营造法式》卷三、四、五、十三原文；提交 452f14e",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": "8831059",
    "dev_note": "举高由跨度算出（site.js 的 ju）：殿阁楼阁 1/3，禅堂、茶寮、药师殿、大慧院 0.27；屋面改为逐架折下的折线，橑檐方外直檐；上层压着的腰檐、副阶每尺举五寸；攒尖照旧。tests/unit/structure.test.mjs 三项改前失败。「腰檐副阶 1/2」和折屋的十分之一递减没有核到原文，见 SOURCES.md。截图 docs/t00/evidence/structure/phase2-*-after.jpg",
-   "recheck": null,
+   "recheck": {
+    "at_commit": "38ff12b6a2e97eae0e94ce8ba16d7bb9bf7295ea",
+    "evidence": "在 Node 里逐座量举高比与折法；tests/unit/structure.test.mjs；docs/t00/evidence/structure/phase2-*-after.jpg",
+    "by": "Claude（结构评审方）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "殿阁、楼阁举高 1/3，厅堂 0.27，副阶腰檐二分举一，折法每缝减半合卷五原文。遗留：攒尖顶举高仍手填（第四阶段按斗尖亭榭之法），药师殿按厅堂取值待记入 decisions.md"
+   },
    "recheck_history": []
   },
   {
