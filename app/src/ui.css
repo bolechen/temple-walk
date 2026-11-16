@@ -220,6 +220,8 @@ body.thirds #frame .third { display: block; }
 /* The picture held still from the moment the shutter is pressed until the print is put away. */
 #still { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
 body.frozen #still { display: block; }
+/* While the print is out, the camera's own controls step aside so nothing shows through behind the sheet. */
+body.frozen #photoBar, body.frozen #photoClose, body.frozen #photoSettings { visibility: hidden; }
 /* The shutter: two leaves of ink close over the view and open again, and behind them the view has stopped. */
 #curtain { position: absolute; inset: 0; pointer-events: none; display: none; }
 #curtain i { position: absolute; left: 0; right: 0; height: 50%; background: var(--ink); transform: scaleY(0); }
