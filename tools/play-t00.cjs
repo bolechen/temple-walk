@@ -14,7 +14,10 @@ fs.mkdirSync(out, { recursive: true });
 const log = [], note = (run, kind, what, extra = {}) => { const e = { t: new Date().toISOString(), run, kind, what, ...extra }; log.push(e); console.log(run.padEnd(7), kind.padEnd(10), what, Object.keys(extra).length ? JSON.stringify(extra) : ""); };
 
 async function page(b, base, run, query, ctxOpts = {}) {
-  const ctx = await b.newContext({ viewport: { width: 960, height: 600 }, deviceScaleFactor: 1, recordVideo: { dir: out, size: { width: 960, height: 600 } }, ...ctxOpts });
+  // PLAY_SIZE=480x300 draws a smaller picture, so that a software renderer manages more frames and the timing of
+  // presses can be seen nearer to what a real card gives.
+  const [W, H] = (process.env.PLAY_SIZE || "960x600").split("x").map(Number);
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, recordVideo: { dir: out, size: { width: W, height: H } }, ...ctxOpts });
   const p = await ctx.newPage(), errors = [];
   p.on("pageerror", (e) => errors.push(String(e))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
   await p.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });
@@ -59,6 +62,8 @@ const runs = {
   async bell(b, base) {
     const s = await page(b, base, "bell", "q=low&view=third&season=summer&time=day");
     await s.at("bell", 0.3, -0.3); await s.until(async () => (await s.word()) === "撞钟", 30000, "撞钟 not offered"); await s.shot("1-offered");
+    const f0 = await s.p.evaluate(() => window.__yard().frames), c0 = Date.now(); await s.p.waitForTimeout(5000);
+    note("bell", "page", `frame rate here: ${(((await s.p.evaluate(() => window.__yard().frames)) - f0) / ((Date.now() - c0) / 1000)).toFixed(1)} frames/s`);
     const t0 = Date.now(), strikes = async () => (await s.j()).strikes;
     await s.key("e", "first press"); await s.until(async () => (await strikes()) === 1, 30000, "no first stroke");
     const wait = await s.p.evaluate(() => document.getElementById("act").classList.contains("wait")), ready = (await s.r()).bell.ready;
