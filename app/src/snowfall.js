@@ -17,7 +17,7 @@ const mix = (a, b, t) => a + (b - a) * t;
 export function snowAt(x, z, { dB = 5, joint = 0 } = {}) {
   const lane = Math.abs(x) - LANE, bank = Math.exp(-(((lane - 0.32) / 0.3) ** 2)), open = smooth(-0.15, 0.2, lane);
   const deep = 0.5 + 0.6 * fbm2(x * 0.09 + 4, z * 0.09 + 4) + 0.25 * fbm2(x * 0.35 + 8, z * 0.35 + 8) + 0.45 * smooth(0, 0.2, dB) * Math.exp(-Math.max(dB, 0) * 0.7) + 0.35 * bank;
-  const dust = 0.2 + 0.16 * fbm2(x * 1.3 + 2, z * 1.3 + 2) + joint * 0.55, grain = n2(x * 15, z * 15) * 0.4;
+  const dust = 0.15 + 0.14 * fbm2(x * 1.3 + 2, z * 1.3 + 2) + 0.22 * smooth(-0.6, 0, lane) + joint * 0.6, grain = (n2(x * 38, z * 38) * 0.6 + n2(x * 90, z * 90) * 0.4) * 0.35;
   const roof = smooth(-0.3, 0.1, dB);
   return { cover: mix(smooth(0.46, 0.475, dust + grain), smooth(0.15, 0.3, deep), open) * roof, depth: mix(dust, deep, open) * roof, lane: lane < 0 };
 }

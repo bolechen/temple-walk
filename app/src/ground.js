@@ -91,7 +91,7 @@ export function createGround(scene, shade, censer, paving) {
         // out in the open; none under a roof.
         float lane=abs(p.x)-1.7, bank=exp(-pow((lane-.32)/.3,2.)), open=smoothstep(-.15,.2,lane);
         float deep=.5+.6*fbm2(p*.09+4.)+.25*fbm2(p*.35+8.)+.45*smoothstep(0.,.2,dB)*exp(-max(dB,0.)*.7)+.35*bank;
-        float dust=.2+.16*fbm2(p*1.3+2.)+joint*.55, grain=n2(p*15.)*.4, roofS=smoothstep(-.3,.1,dB);
+        float dust=.15+.14*fbm2(p*1.3+2.)+.22*smoothstep(-.6,0.,lane)+joint*.6, grain=(n2(p*38.)*.6+n2(p*90.)*.4)*.35, roofS=smoothstep(-.3,.1,dB);
         float sn=uSnow*mix(smoothstep(.46,.475,dust+grain),smoothstep(.15,.3,deep),open)*roofS, snD=mix(dust,deep,open)*roofS; puddle*=1.-sn; damp*=1.-sn;
         // Snow on the paving is as bright as the same snow on a platform or a roof: the paving is lit by hand for stone
         // a third as pale, and at full brightness the snow was a glowing white with nothing in it.
@@ -99,7 +99,7 @@ export function createGround(scene, shade, censer, paving) {
         vec3 tr=sn>.001?trail(vWP):vec3(0.); sn*=1.-tr.x*smoothstep(.8,.2,sn)*.6;
         vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*.6*(.88+.24*wN.z)*(.86+.14*min(snD,1.3))*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
-        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(sign(p.x)*bank*(lane-.32)*2.4,0.)+(vec2(n2(p*.4),n2(p*.4+5.))-.5)*.35*open)*sn*(1.-tr.x)+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
+        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(sign(p.x)*bank*(lane-.32)*6.,0.)+(vec2(n2(p*.4),n2(p*.4+5.))-.5)*.35*open)*sn*(1.-tr.x)+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
         float ndv=max(dot(N,V),0.), fres=.035+.965*pow(1.-ndv,5.);
         float sun=getShadowMask();
