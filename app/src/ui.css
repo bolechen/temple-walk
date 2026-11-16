@@ -248,7 +248,8 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 #loadProgress::-moz-progress-bar { background: var(--ember); border-radius: 2px; }
 #loadRetry { margin-top: 12px; color: var(--paper); background: transparent; border: 1px solid rgba(237,232,220,.4); padding: 8px 14px; cursor: pointer; font: 14px var(--kai); }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .3em; color: var(--on-2); }
-#titleSet { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); color: var(--on-2); }
+.title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
+.title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 
 /* ---- Small things for the hand ---- */
 #dropBtn { position: absolute; right: 18px; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
@@ -338,6 +339,24 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #menu .row { position: sticky; bottom: -32px; z-index: 1; margin-bottom: -14px; padding: 8px 0 14px; background: linear-gradient(to top, var(--paper-hi) 78%, rgba(242,236,224,0)); }
 #menu .row .chip { font-size: 15px; letter-spacing: .16em; text-indent: .16em; color: var(--ink-3); }
 #menu[hidden] { display: none; }
+.community-invite { border-top: 1px solid rgba(93,85,74,.2); padding-top: 12px; text-align: center; grid-column: 1 / -1; }
+.community-invite .chip { font-size: var(--t-m); color: var(--ink-2); }
+.community-invite p { margin: 4px 0; font: 400 var(--t-xs)/1.7 var(--kai); color: var(--ink-3); letter-spacing: .04em; }
+#community { position: absolute; inset: 0; z-index: 46; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+.community-card { width: min(92vw, 440px); box-sizing: border-box; padding: 30px 30px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; text-align: center; }
+.community-kicker { font: 400 var(--t-xs)/1.5 var(--kai); letter-spacing: .2em; color: var(--ink-3); }
+.community-card h2 { margin: 14px 0 10px; font: 400 34px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; color: var(--ink-1); }
+.community-card header p { margin: 0 0 18px; font: 400 var(--t-s)/1.9 var(--kai); letter-spacing: .08em; color: var(--ink-3); }
+#communityStatus { padding: 28px 8px; font: 400 var(--t-s)/1.9 var(--kai); color: var(--ink-3); }
+.community-image { display: block; margin: 0 auto; width: min(100%, 300px); background: white; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; touch-action: pan-y; }
+.community-image img { display: block; width: 100%; height: auto; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; }
+#communityHelp p { margin: 12px 0 0; font: 400 var(--t-xs)/1.8 var(--kai); letter-spacing: .04em; color: var(--ink-3); }
+#communityExpiry { opacity: .8; }
+.community-mobile { display: none; }
+.community-card footer { position: sticky; bottom: -20px; display: flex; justify-content: center; align-items: center; gap: 16px; margin: 4px 0 -8px; padding: 14px 0 8px; background: linear-gradient(to top, var(--paper-hi) 72%, rgba(242,236,224,0)); }
+.community-card footer .chip { color: var(--ink-3); font-size: var(--t-s); }
+@media (pointer: coarse) { .community-desktop { display: none; } .community-mobile { display: block; } }
+@media (max-width: 400px) { .community-card { padding: 26px 24px 20px; } .community-card h2 { font-size: 30px; } }
 @media (pointer: coarse) { #menuKeys { display: none; } }
 @media (max-width: 400px) { #menu .card { width: min(94vw, 440px); padding: 30px 26px 24px; } }
 /* A phone held sideways: the settings in two columns, the heading and the foot across both. */

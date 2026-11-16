@@ -720,6 +720,33 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length && !(await t.probe()).photo, "the next Esc lowers the camera: " + JSON.stringify(u));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The feedback group's card: its JSON and QR code come from R2 (src/community.js), answered here so no real code is
+  // needed. It opens over the pause menu as one more sheet, says when to join by, hides an expired code, and can retry.
+  community: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 900, height: 600 } });
+    const ui = () => t.page.evaluate(() => window.__ui());
+    const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
+    let config = { enabled: true, image: "test.png", expiresAt: "2099-01-01T00:00:00+08:00" }, broken = false;
+    await t.page.route("**/temple-walk/community/**", (r) => r.request().url().endsWith("current.json")
+      ? (broken ? r.fulfill({ status: 503, body: "" }) : r.fulfill({ contentType: "application/json", body: JSON.stringify(config) }))
+      : r.fulfill({ contentType: "image/png", body: PNG }));
+    expect(await t.page.evaluate(() => !document.getElementById("titleCommunity").hidden), "the title should offer the feedback group");
+    await t.page.keyboard.press("Escape"); await t.page.click("#menuCommunity");
+    await t.until(() => t.page.isVisible("#communityImage"), 20000, "the card never showed the code");
+    let u = await ui(); expect(u.stack.join() === "menu,community" && u.modal, "the card should lie over the menu: " + JSON.stringify(u));
+    expect((await t.page.textContent("#communityExpiry")).includes("1月1日") && (await t.page.getAttribute("#communityOriginal", "href")).endsWith("/temple-walk/community/test.png"), "the card should say when to join by and link the image beside its JSON");
+    await t.page.keyboard.press("Escape"); u = await ui(); expect(u.stack.join() === "menu" && u.focus === "menuCommunity", "Esc should put away only the card: " + JSON.stringify(u));
+    expect(!(await t.page.getAttribute("#communityImage", "src")), "a closed card should let go of the code");
+    config = { ...config, expiresAt: "2026-01-01T00:00:00+08:00" }; await t.page.click("#menuCommunity");
+    await t.until(async () => (await t.page.textContent("#communityStatus")).includes("正在更新"), 20000, "an expired code was not withheld");
+    expect(!(await t.page.isVisible("#communityImage")) && (await t.page.isVisible("#communityRetry")), "an expired code must not show");
+    await t.page.click("#communityClose"); broken = true; await t.page.click("#menuCommunity");
+    await t.until(async () => (await t.page.textContent("#communityStatus")).includes("无法加载"), 20000, "a failed load said nothing");
+    broken = false; config = { ...config, expiresAt: "2099-01-01T00:00:00+08:00" }; await t.page.click("#communityRetry");
+    await t.until(() => t.page.isVisible("#communityImage"), 20000, "retrying did not bring the code");
+    await t.page.keyboard.press("Escape"); await t.page.keyboard.press("Escape"); u = await ui(); expect(!u.stack.length, "two Esc should close the card and the menu: " + JSON.stringify(u));
+    const errors = t.errors.filter((e) => !e.includes("/temple-walk/community/current.json")); expect(errors.length === 0, errors.join("\n")); await t.close();
+  } },
   // The seasons are the visitor's once the book has been filled: not offered before, offered after in the photograph's
   // settings, the pause menu and T, said once, and still open after 重新朝山 empties the book for a second walk.
   seasons: { tier: 2, async run(b, base) {
