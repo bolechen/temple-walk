@@ -1884,7 +1884,7 @@
    "suggested_fix": "见 docs/t00/structure-review.md S-04",
    "evidence_before": "2026-11-16 结构评审，对《营造法式》卷三、四、五、十三原文；提交 452f14e",
    "status": "fixed_pending_retest",
-   "fixed_in": "db2635a",
+   "fixed_in": "db2635a、e5ff050",
    "dev_note": "between() 改为每面心间两朵、其余一朵；心间容不下两朵（间距不足慢栱长 1.32 米）的单间小亭只放一朵。tests/unit/structure.test.mjs 改前失败、改后通过。截图 docs/t00/evidence/structure/phase1-*-after.jpg",
    "recheck": null,
    "recheck_history": []
@@ -1898,8 +1898,8 @@
    "suggested_fix": "见 docs/t00/structure-review.md S-05",
    "evidence_before": "2026-11-16 结构评审，对《营造法式》卷三、四、五、十三原文；提交 452f14e",
    "status": "fixed_pending_retest",
-   "fixed_in": "db2635a",
-   "dev_note": "十三处柱线重排：心间最宽、向两端不增，相邻铺作间距相差不过 0.31 米；大雄宝殿取评审建议的 5.4/4.2/3.9/3.6，其余在总面阔不变下自拟（见 SOURCES.md）。凌霄阁三层由三间改为单间，是为了柱线落在下层柱线上，画面变化较大，请复核时看 phase1-lingxiao-after.jpg",
+   "fixed_in": "db2635a、e5ff050",
+   "dev_note": "十三处柱线重排：心间最宽、向两端不增，相邻铺作间距相差不过 0.31 米；大雄宝殿取评审建议的 5.4/4.2/3.9/3.6，其余在总面阔不变下自拟（见 SOURCES.md）。凌霄阁只改一层；二、三层按所有者对 #82 的评审保持原值（三间等宽），留到第三阶段，测试里只放过这两处，复核时这两层仍不合 S-05",
    "recheck": null,
    "recheck_history": []
   },
