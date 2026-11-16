@@ -20,7 +20,7 @@ const srv = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), p = path.join(root, rel);
   if (!fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-  if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><style>body{margin:0}</style><body>' + fs.readFileSync(p, "utf8"));
+  
   fs.createReadStream(p).pipe(res);
 });
 (async () => {
