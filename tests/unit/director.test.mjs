@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { buildSite, createWalker } from "../../app/src/site.js";
 import { buildInteriors } from "../../app/src/interior.js";
 import { followEye } from "../../app/src/eye.js";
-import { DIRECT, shotPose, blendPose, needsCut, createDirector, placePoint, turnBetween, durations, veilAt, veilShut, veilDone, pose, smoother } from "../../app/src/director.js";
+import { DIRECT, shotPose, blendPose, planSwing, createDirector, placePoint, turnBetween, durations, veilAt, veilShut, veilDone, pose, smoother } from "../../app/src/director.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -91,61 +91,73 @@ function run(director, cam, centre, frames, onFrame = () => {}) {
   }
   cam.position.copy(base.p); cam.quaternion.copy(base.q);
 }
-// The fastest the picture may turn on a swing: the largest turn made over the shortest swing, at smootherstep's
-// steepest (1.875 times the mean), plus the most a shot drifts. 120° over 1.6 s is 2.3° a frame.
-// Coming back it may be quicker: the full 120° over 1.2 s, 3.1° a frame.
-const TURN = THREE.MathUtils.radToDeg(DIRECT.turn) * 1.875 / DIRECT.in[0] * DT + 0.05, TURN_BACK = THREE.MathUtils.radToDeg(DIRECT.turn) * 1.875 / DIRECT.out[1] * DT + 0.05;
-const MOVE = DIRECT.speed * DT + 0.01;   // metres a frame (0.25): the swing travels no faster than DIRECT.speed
+// The fastest the picture may turn on a swing: DIRECT.rate (144° a second at the steepest going there, 2.4° a frame;
+// 190° coming back, 3.2°), plus the most a shot drifts; and it travels no faster than DIRECT.speed (0.25 m a frame).
+const TURN = THREE.MathUtils.radToDeg(DIRECT.rate.in) * DT + 0.05, TURN_BACK = THREE.MathUtils.radToDeg(DIRECT.rate.out) * DT + 0.05;
+const MOVE = DIRECT.speed * DT + 0.01;
 
-test("the swing there and back turns the eye no faster than the limit, goes round him and never through anything; otherwise the ink is drawn", () => {
-  let cuts = 0, blends = 0;
+// Inside something by more than a graze: in it at the point and 3 cm to every side. (A swing sampled every 4 cm may
+// brush the edge of the padding drawn round a low thing, 38 cm out from a lamp table and 5.5 m up, by less than that.)
+const deep = (v, foot) => [[0, 0], [0.03, 0], [-0.03, 0], [0, 0.03], [0, -0.03]].every(([dx, dz]) => walker.eyeShut(v.x + dx, v.y, v.z + dz, foot) === true);
+
+// Every swing is made, never cut (the owner, 2026-11-16: 「打卡时用动画，不要硬切转场」): from twelve directions round each
+// place, there and back, the picture never jumps, never turns or travels faster than the limits, never passes through
+// anything, and the ink is never drawn. A route may go the long way round, over what stands between, or in by his
+// shoulder; it only takes longer.
+test("every swing there and back is made, never cut: within the turn and speed limits, and never through anything", () => {
+  const routes = new Set();
   for (const id of GONE) {
     const p = site.places[id], foot = at(p), centre = centreOf(p, foot);
     for (let k = 0; k < 12; k++) {
-      const yaw = (k / 12) * Math.PI * 2, cam = follower(p, foot, yaw), base = { p: cam.position.clone(), q: cam.quaternion.clone() };
-      let veil = 0, last = null, lastQ = null, jumps = 0;
-      const d = createDirector({ walker, veil: (v) => { veil = v; } });
+      const yaw = (k / 12) * Math.PI * 2, cam = follower(p, foot, yaw), start = cam.position.clone();
+      let veil = 0, last = null, lastQ = null;
+      const d = createDirector({ walker, veil: (v) => { veil = Math.max(veil, v); } });
       assert.ok(d.go(id, p, foot));
       const check = (i, c) => {
         if (last) {
-          const turn = THREE.MathUtils.radToDeg(turnBetween(lastQ, c.quaternion)), move = c.position.distanceTo(last);
-          if (turn > (d.state().phase === "out" ? TURN_BACK : TURN) || move > MOVE) { jumps++; assert.ok(veil >= 0.999, `${id} from yaw ${k * 30}°: the picture jumped ${turn.toFixed(1)}° / ${move.toFixed(2)} m with the ink at ${veil.toFixed(2)}`); }
+          const turn = THREE.MathUtils.radToDeg(turnBetween(lastQ, c.quaternion)), move = c.position.distanceTo(last), lim = d.state().phase === "out" ? TURN_BACK : TURN;
+          assert.ok(turn <= lim && move <= MOVE, `${id} from yaw ${k * 30}°: the picture moved ${turn.toFixed(2)}° / ${move.toFixed(3)} m in a frame (${JSON.stringify(d.state().route)})`);
         }
-        if (!d.state().cut && d.state().w > 0) {
-          assert.ok(walker.eyeShut(c.position.x, c.position.y, c.position.z, foot) !== true, `${id} from yaw ${k * 30}°: the swing passed through something at ${c.position.toArray().map((v) => v.toFixed(2))}`);
-          const r = Math.hypot(c.position.x - centre.x, c.position.z - centre.z), ra = Math.hypot(base.p.x - centre.x, base.p.z - centre.z), rb = Math.hypot(shotPose(p, p.shot, foot).p.x - centre.x, shotPose(p, p.shot, foot).p.z - centre.z);
-          // (the shot itself may drift nearer while it is swung to: by at most DIRECT.glide a second)
-          if (Math.min(ra, rb) >= 0.35) assert.ok(r >= Math.min(ra, rb) - 0.05 - DIRECT.glide * d.state().t, `${id} from yaw ${k * 30}°: the swing came nearer him (${r.toFixed(2)} m) than either end`);
-        }
+        // (Beyond where the following eye stood, the planner's DIRECT.near and 5 cm more, so that the planner is the
+        // stricter of the two; and short of the shot itself.)
+        if (d.state().w > 0 && d.state().w < 0.95 && c.position.distanceTo(start) > DIRECT.near + 0.05) assert.ok(!deep(c.position, foot), `${id} from yaw ${k * 30}°: the swing passed through something at ${c.position.toArray().map((v) => v.toFixed(2))} (${JSON.stringify(d.state().route)})`);
         last = c.position.clone(); lastQ = c.quaternion.clone();
       };
-      run(d, cam, centre, Math.ceil(2.6 / DT), check);
-      const st = d.state(); assert.equal(st.phase, "hold", `${id} from yaw ${k * 30}°: not on the shot after 2.6 s`);
-      if (st.cuts) cuts++; else blends++;
-      d.back(); run(d, cam, centre, Math.ceil(1.6 / DT), check);
-      assert.equal(d.state().phase, "idle", `${id} from yaw ${k * 30}°: not back with him after 1.6 s`);
-      assert.ok(jumps <= 2 * st.cuts + 2 * (d.state().cuts - st.cuts), `${id}: more jumps than cuts`);
+      run(d, cam, centre, 1, check); const planned = d.state().in;   // the first frame plans the route and how long it takes
+      assert.ok(planned <= 6, `${id} from yaw ${k * 30}°: a swing of ${planned.toFixed(1)} s is too slow`);
+      run(d, cam, centre, Math.ceil((planned + 0.2) / DT), check);
+      const st = d.state(); assert.equal(st.phase, "hold", `${id} from yaw ${k * 30}°: not on the shot after ${planned.toFixed(1)} s`);
+      assert.ok(!st.blocked, `${id} from yaw ${k * 30}°: no clear route round him was found`);
+      routes.add(JSON.stringify(st.route));
+      d.back(); run(d, cam, centre, 1, check); const home = d.state().out;
+      assert.ok(home <= 6, `${id} from yaw ${k * 30}°: a way back of ${home.toFixed(1)} s is too slow`);
+      run(d, cam, centre, Math.ceil((home + 0.2) / DT), check);
+      assert.equal(d.state().phase, "idle", `${id} from yaw ${k * 30}°: not back with him`);
+      assert.equal(d.state().cuts, 0, `${id} from yaw ${k * 30}°: a swing was cut`); assert.equal(veil, 0, "the ink was drawn");
     }
   }
   walker.setRoom(null);
-  assert.ok(blends > 20, `only ${blends} swings were made: the shots should mostly be reached by swinging`);
-  assert.ok(cuts > 0, "no swing needed the ink: the fallback is never exercised");
+  assert.ok(routes.size > 1, "every swing went the same way: the other routes are never exercised");
 });
 
-test("the ink: from straight behind him to a shot before him is too far a turn, through a wall is closed, and reduced motion always", () => {
+test("the route: the short way when it is clear and slower when it turns far, round, over or past him when it is not; the ink only for reduced motion", () => {
   const C = new THREE.Vector3(0, 1, 0), a = pose(), b = pose();
-  a.p.set(0, 1.5, 4); a.q.setFromEuler(new THREE.Euler(0, 0, 0)); b.p.set(0, 1.5, -4); b.q.setFromEuler(new THREE.Euler(0, Math.PI, 0));
+  a.p.set(0, 1.5, 4); a.q.setFromRotationMatrix(new THREE.Matrix4().lookAt(a.p, C, new THREE.Vector3(0, 1, 0)));
+  b.p.set(4, 1.5, 0); b.q.setFromRotationMatrix(new THREE.Matrix4().lookAt(b.p, C, new THREE.Vector3(0, 1, 0)));
   const open = { eyeShut: () => null, landAt: () => 0 };
-  assert.equal(needsCut(open, a, b, C, 0), "turn");
-  b.p.set(4, 1.5, 0); b.q.setFromEuler(new THREE.Euler(0, Math.PI / 2, 0));
-  assert.equal(needsCut(open, a, b, C, 0), null, "a quarter turn round him is swung");
-  const wall = { eyeShut: (x, y, z) => (x > 2 && z > 2 ? true : null), landAt: () => 0 };
-  assert.equal(needsCut(wall, a, b, C, 0), "solid", "an arc through a wall is cut");
-  const post = { eyeShut: (x, y, z) => (x > 2 && z > 2 ? "post" : null), landAt: () => 0 };
-  assert.equal(needsCut(post, a, b, C, 0), null, "a column passing across is let through, as the following eye lets it");
-  const ground = { eyeShut: () => null, landAt: () => 3 };
-  assert.equal(needsCut(ground, a, b, C, 0), "solid", "an arc under the ground is cut");
-  assert.equal(needsCut(open, a, b, C, 0, 0.3), "far", "an arc too long for its time is cut");
+  let plan = planSwing(open, a, b, C, 0, { base: 2 });
+  assert.deepEqual(plan.route, {}, "a quarter turn round him in the open is swung the short way"); assert.equal(plan.secs, 2);
+  const behind = pose(); behind.p.set(0, 1.5, -4); behind.q.setFromRotationMatrix(new THREE.Matrix4().lookAt(behind.p, C, new THREE.Vector3(0, 1, 0)));
+  plan = planSwing(open, a, behind, C, 0, { base: 1.6 });
+  assert.ok(plan.secs > 1.6, `half way round him the swing should take longer than its shortest (${plan.secs.toFixed(2)} s)`);
+  const wall = { eyeShut: (x, y, z) => (x > 1.5 && z > 1.5 && y < 3 ? true : null), landAt: () => 0 };
+  plan = planSwing(wall, a, b, C, 0, { base: 2 });
+  assert.ok(plan.route.long || plan.route.lift || plan.route.pinch, "an arc through a wall should go another way: " + JSON.stringify(plan.route));
+  assert.ok(!plan.blocked);
+  const post = { eyeShut: (x, y, z) => (x > 1.5 && z > 1.5 ? "post" : null), landAt: () => 0 };
+  assert.deepEqual(planSwing(post, a, b, C, 0).route, {}, "a column passing across is let through, as the following eye lets it");
+  const shut = { eyeShut: () => true, landAt: () => 0 };
+  assert.ok(planSwing(shut, a, b, C, 0).blocked, "with nothing clear the plan says so, and still swings");
   // With reduced motion, the director moves the eye only behind the ink, and the ink does not draw itself across.
   const p = site.places.lamp, foot = at(p), cam = follower(p, foot, 0.8), seen = [];
   const d = createDirector({ walker, reduced: () => true, veil: (v) => seen.push(v) });

@@ -201,9 +201,12 @@ the eye on the shot at once). The director is a layer under `y.cine`: each frame
 as usual, then `director.apply` mixes it toward the shot (in over 1.6–2.4 s, back over 0.8–1.2 s, smootherstep, round
 him on an arc, timed by the observances' clock `riteNow()` rather than the frame's capped `dt`, so a slow page does not
 leave the eye behind the hands), then a passage that takes the eye (`rites.close`) starts from whatever that gave and lets the director
-go (`y.undirect()`). Where the swing would pass through a wall, a roof, a column's bulk or the ground, turn more than
-120° or travel faster than 15 m/s, the shutter's two ink leaves (`#curtain.cut`, drawn frame by frame) close, the eye is
-moved, they open; with `prefers-reduced-motion` that is the only way it moves. `game.js` calls `y.direct(id)` when the
+go (`y.undirect()`). Every swing is made, never cut (the owner: 打卡时用动画，不要硬切转场): `planSwing` tries the short
+way round him, the long way, over, wide, in by his shoulder, then `wayRound` (a path over a 0.5 m grid of clear points
+round him, pulled taut, on a smooth curve), takes the first clear one (each point tested every 4 cm, the chosen one again
+with a 6 cm margin) and stretches its time so that it never turns faster than 144° a second going there (190° back) nor
+travels faster than 15 m/s. Only with `prefers-reduced-motion` do the shutter's two ink leaves (`#curtain.cut`, drawn
+frame by frame) close, the eye is moved, and they open. `game.js` calls `y.direct(id)` when the
 observance begins and `y.direct(null)` when it ends; `rites.js` sends it home `y.directOut()` seconds before the hands are
 done (`homeward`). Any step, stick, tap on the ground, drag of the view, turn of the held mouse or Esc sends it home at
 once; pressing E again at the bell does not. A door, `travel`, `place`, `__pose` and 回到起点 drop it without a swing.
@@ -216,8 +219,8 @@ An observance made sitting sets him on its seat's own top (`placeLift` in `site.
 except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), raised on the way home it is
 with him at once, and a shot does not drift while the camera is up; on a touch screen the slips stay, faint, so 留影 can
 be reached. `tests/unit/director.test.mjs` holds every shot clear of solids, him and his things
-inside the safe area (NDC within 0.9 at 16:9, 4:3, 9:16, 19.5:9), the drift within 1°/s, every swing within 2.4°
-(back: 3.2°) and 0.25 m a frame unless the ink is shut, and the ink for what cannot be swung; the `director` scenario
+inside the safe area (NDC within 0.9 at 16:9, 4:3, 9:16, 19.5:9), the drift within 1°/s, every swing from twelve
+directions round each place within 2.4° (back: 3.2°) and 0.25 m a frame, through nothing, and never cut; the `director` scenario
 does it in the page. `__director()` reports phase, weight, cuts, swings and the largest turn between frames.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below

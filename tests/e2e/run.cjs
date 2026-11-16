@@ -588,6 +588,8 @@ const scenarios = {
     const b0 = (await D()).backs; await t.page.keyboard.down("w"); await t.frames(2); await t.page.keyboard.up("w");
     d = await D(); expect(d.backs === b0 + 1 && (d.phase === "out" || d.phase === "idle"), "a step did not send the eye home: " + JSON.stringify(d));
     await reach("the eye never got home", () => window.__director().phase === "idle" && window.__journey().rite === null, 30000);
+    // Every swing so far was made, none cut behind the ink (the owner: 打卡时用动画，不要硬切转场).
+    d = await D(); expect(d.cuts === 0 && d.blends > 0, "a swing was cut instead of made: " + JSON.stringify(d));
     // Turned off in the pause menu: the bell is rung from where the eye follows him.
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 10000, "the pause menu did not open");
     expect((await t.page.getAttribute("#setAutocam", "aria-pressed")) === "true", "自动镜头 should be on unless turned off");
@@ -627,6 +629,7 @@ const scenarios = {
     await fsee("the summit's shot was never gone to", () => window.__director().id === "sit" && window.__director().phase !== "idle");
     await fsee("the close never began", () => window.__rites().closing === true, 120000);
     await fsee("the director should let the close have the eye", () => window.__director().phase === "idle", 10000);
+    expect((await f.page.evaluate(() => window.__director().cuts)) === 0, "a swing was cut instead of made (fast page)");
     expect(f.errors.length === 0, f.errors.join("\n")); await f.close();
     // Reduced motion: never a swing, only the ink, there and back.
     const r = await open(b, base, "q=low&enter&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 }, reducedMotion: "reduce" });
