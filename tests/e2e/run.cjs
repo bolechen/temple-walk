@@ -73,6 +73,10 @@ const scenarios = {
     expect((await words("#bookHint")).includes("鐘楼") && (await words("#bookHint")).includes("歩"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
     expect(await t.page.evaluate(() => document.getElementById("bookImg").complete && document.getElementById("bookImg").naturalWidth === 1200), "the seal book was not drawn");
     await t.page.click("#bookClose");
+    // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
+    await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open");
+    expect((await words("#pieceTitle")) === "出山釈迦図" && /[ぁ-ん]/.test(await words("#pieceNote")) && (await words("#pieceFacts")).includes("東京国立博物館") && (await words("#pieceCredit")).startsWith("Source: ColBase"), "the work's card should be in Japanese: " + (await words("#pieceTitle")));
+    await t.page.click("#pieceClose");
     // Chosen in the menu: kept, and the page opens again in it.
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
     expect(await t.page.getAttribute('#menu [data-lang="ja"]', "aria-pressed") === "true" && (await words("#menu")).includes("見回す速さ"), "the menu should be in Japanese, with Japanese circled");
@@ -80,6 +84,9 @@ const scenarios = {
     await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
     expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");
+    await t.page.evaluate(() => window.__work("muqi-hu-tu")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in English");
+    expect((await words("#pieceTitle")) === "Tiger" && (await words("#pieceNote")).startsWith("An ink painting on silk by the Southern Song") && !/[\u3400-\u9fff]/.test((await words("#pieceNote")) + (await words("#pieceFacts"))), "the work's card should be in English: " + (await words("#pieceNote")).slice(0, 80));
+    await t.page.click("#pieceClose");
     // Nothing on the English title is left in Chinese but the calligraphy (the name and its seal).
     const left = await t.page.evaluate(() => [...document.querySelectorAll("#title button, #title p, #title .sub, #title .how")].filter((el) => el.offsetParent && !el.closest("[data-lang]") && /[\u3400-\u9fff]/.test(el.textContent)).map((el) => el.textContent));
     expect(!left.length, "Chinese left on the English title: " + JSON.stringify(left));

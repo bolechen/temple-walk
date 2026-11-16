@@ -11,6 +11,8 @@ import * as THREE from "three";
 import { asset } from "./assets.js";
 import { paintLeaf } from "./leaves.js";
 import { WORKS, HANG } from "./works.js";
+import { workIn } from "./works-local.js";
+import { FONT, lang } from "./i18n.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -63,9 +65,9 @@ const BLANK = { title: "空着的画框", text: "这里以后会挂上一件东�
 
 // A real work, mounted as a scroll is: the picture on a sheet of pale paper, a hair-line round it, and under it the
 // name and the maker in the kai hand. The picture is fetched only when the hall it hangs in is first entered.
-const KAI = '"Yunjing Kai", "STKaiti", "KaiTi", serif';
+const KAI = FONT.kai;
 function mount(slug) {
-  const w = WORKS[slug], c = document.createElement("canvas"); c.width = 768; c.height = 1126; const x = c.getContext("2d");
+  const w = workIn(slug), c = document.createElement("canvas"); c.width = 768; c.height = 1126; const x = c.getContext("2d");
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const sheet = () => {
     const g = x.createLinearGradient(0, 0, 768, 1126); g.addColorStop(0, "#e6dfce"); g.addColorStop(1, "#d6cdb8"); x.fillStyle = g; x.fillRect(0, 0, 768, 1126);
@@ -82,7 +84,10 @@ function mount(slug) {
     x.strokeStyle = "rgba(40,32,24,.55)"; x.lineWidth = 2; x.strokeRect(ix - 1, iy - 1, iw + 2, ih + 2);
     x.fillStyle = "rgba(28,24,20,.92)"; x.textAlign = "center"; x.textBaseline = "middle";
     let fs = 40; x.font = `${fs}px ${KAI}`; while (fs > 24 && x.measureText(w.title).width > 690) x.font = `${--fs}px ${KAI}`;
-    x.fillText(w.title, 384, 996); x.fillStyle = "rgba(70,62,52,.9)"; x.font = `26px ${KAI}`; x.fillText(`${w.by}　${w.period}`.slice(0, 26), 384, 1050);
+    x.fillText(w.title, 384, 996); x.fillStyle = "rgba(70,62,52,.9)";
+    // Under it the maker and the age: cut short in characters, set smaller in letters until it fits.
+    if (lang === "zh") { x.font = `26px ${KAI}`; x.fillText(`${w.by}　${w.period}`.slice(0, 26), 384, 1050); }
+    else { const by = `${w.by} · ${w.period}`; let s = 26; x.font = `${s}px ${KAI}`; while (s > 16 && x.measureText(by).width > 690) x.font = `${--s}px ${KAI}`; x.fillText(by, 384, 1050); }
     x.strokeStyle = "rgba(60,50,40,.3)"; x.lineWidth = 3; x.strokeRect(22, 22, 724, 1082);
     tex.needsUpdate = true;
   };
