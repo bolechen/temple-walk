@@ -160,6 +160,7 @@
   ],
   "evidence": [
     "6bb9ad2（#101）：T4 上 views.loft 高档 1080p 13.87 ms/帧（帧间 21.65 ms）、低档 390×844×3 8.22 ms；同一 Job 首院高档 14.46 ms、lookback 14.01 ms；夏昼、秋暮、冬昼三张，docs/t00/evidence/loft/t4-6bb9ad2/；1.6 与 2.0 米对比 docs/t00/evidence/loft/compare/（SwiftShader）",
+    "7dd4060（#101，第二次 T4，另一个 Job）：views.loft 高档 13.95 ms、低档 7.12 ms；首院高档 13.28 ms、lookback 13.46 ms；两次都高于 geometry-budget.md 的 12 ms 软线，与首院同量级；docs/t00/evidence/loft/t4-7dd4060/report.json（site 指纹为 7dd4060）",
     "claude/monk-80-weld（#80 A 路）：docs/t00/evidence/monk/weld/ —— red-before.txt、green-after.txt、views-{before,after,code}.jpg（五个姿势×正侧背斜俯）、compare-{stand,pray,walk,seated}.jpg（代码身体｜改前｜改后）、portrait-{before,after,code}.jpg、trial-{before,after}.json；平滑档位的比较在 README.md",
     "#100：tests/e2e/run.cjs 新场景 hallexit（第三人称鼠标八殿各点院子方向、第一人称与第三人称触屏各两殿、主殿出门后三点都落在台阶脚之外并走下台阶、院子点大殿进殿、前廊点殿门进殿、前廊点前廊地面不进殿）；修前在主殿一步失败，修后通过（本地 SwiftShader）",
     "0a88f96（#103）：CAM-01～06 在 T4 上重拍，新目录 docs/t00/evidence/acceptance/20261116-0a88f96/（manifest.json、CAM-0N.jpg、compare-CAM-0N.jpg 左旧右新、changes.md）；旧证据 docs/t00/evidence/M4/ 未动，被该目录取代；acceptance-report.json、independent-review.json 未改，验收结论待独立评审在新证据上另做",
