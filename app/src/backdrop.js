@@ -39,7 +39,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
 
 // The land itself outside the walls and on the hill: leaf litter and moss under the bamboo.
 function createEarth(scene, M, terrain) {
-  const g = new THREE.PlaneGeometry(280, 360, 140, 180).rotateX(-Math.PI / 2).translate(0, 0, -50), p = g.attributes.position;
+  const g = new THREE.PlaneGeometry(280, 360, 140, 178).rotateX(-Math.PI / 2).translate(0, 0, -50), p = g.attributes.position;
   for (let i = 0; i < p.count; i++) p.setY(i, terrain(p.getX(i), p.getZ(i)));
   g.computeVertexNormals();
   g.setAttribute("ao", new THREE.BufferAttribute(new Float32Array(p.count).fill(1), 1));
@@ -66,15 +66,15 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
       const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
       // Neighbouring runs of the grove overlap by a stride and each thins out over it, so no run ends in a cut and the two make one stand.
       const north = k < steps.length - 1 ? 11 : 0, south = k > 0 ? 11 : 0;
-      band(x, zb - north, x, za + south, i + k * 3 + 1, tone, base + o * 0.09, [1, 1]); band(-x, za + south, -x, zb - north, i + k * 3 + 20, tone, base + o * 0.09, [1, 1]);
+      band(x, zb - north, x, za + south, i + k * 3 + 1, tone, base + o * 0.09, [1, k === 0 ? 0 : 1]); band(-x, za + south, -x, zb - north, i + k * 3 + 20, tone, base + o * 0.09, [k === 0 ? 0 : 1, 1]);   // the south corner is closed by the band across it
     });
-    band(X + o + 28, zS + o + 2, -X - o - 28, zS + o + 2, i + 40, tone, -19, [1, 1]);
+    band(X + o + 28, zS + o + 2, -X - o - 28, zS + o + 2, i + 40, tone, -19);
     band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3, [1, 1]);
   });
   // Five peaks stand round the temple, each range fainter than the one before.
   // The fourth ring, R190, is the skirt: it stands behind the grove's southern bands and goes down into the mist, so that an eye under the hills' feet sees wood and haze, not sky.
   [[150, 54, 0.5, 0.5, -4], [190, 34, 3.3, 0.62, -140], [215, 78, 2.1, 0.74, -4], [300, 112, 4.4, 0.88, -4]].forEach(([R, Hm, ph, k, foot]) => {   // the nearest is the wooded hill the temple sits in
-    const g = new THREE.CylinderGeometry(R, R, 1, 360, 1, true), p = g.attributes.position;
+    const g = new THREE.CylinderGeometry(R, R, 1, foot < -4 ? 180 : 360, 1, true), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const a = Math.atan2(p.getZ(i), p.getX(i));
       const h = Hm * (0.42 + 0.34 * Math.pow(0.5 + 0.5 * Math.sin(a * 5 + ph), 1.6) + 0.1 * Math.sin(a * 11 + ph * 3) + 0.22 * Math.max(0, -Math.sin(a)));   // higher to the north
