@@ -8,6 +8,8 @@
   const label = document.getElementById("loadLabel"), percent = document.getElementById("loadPercent");
   const retry = document.getElementById("loadRetry"), button = document.getElementById("enterBtn");
   let stages = 0, surfaces = 0, frames = 0, value = 0, done = false, failed = false;
+  // The page's language (lang.js puts it on the window first); on its own, as in its unit test, the words as written.
+  const t = (s) => (typeof window.templeT === "function" ? window.templeT(s) : s);
   const render = () => {
     if (done || failed) return;
     value = Math.max(value, Math.min(99, Math.floor(70 * stages / 10 + 20 * surfaces + 10 * frames / 3)));
@@ -16,7 +18,7 @@
   window.templeLoading = {
     async step(name) {
       if (done || failed) return;
-      stages = Math.min(10, stages + 1); label.textContent = "山路正在铺开 · " + name; render();
+      stages = Math.min(10, stages + 1); label.textContent = t("山路正在铺开") + " · " + name; render();
       // Give the title and progress a chance to paint before the next synchronous build.
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     },
@@ -30,7 +32,7 @@
     fail() {
       if (done || failed) return;
       failed = true; bar.hidden = true; percent.hidden = true;
-      label.textContent = "山路 · 请再来一次"; retry.hidden = false; button.disabled = true;
+      label.textContent = t("山路 · 请再来一次"); retry.hidden = false; button.disabled = true;
       try { if (location.hostname === "temple.rushiwowen.co") window.umami?.track?.("demo.load_error"); } catch {}
     },
   };

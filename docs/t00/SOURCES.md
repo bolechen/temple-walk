@@ -160,6 +160,11 @@
 | 第三人称视角跟手 0.06 秒；转动时眼睛往前看 0.25 秒、提前收近（最快 20 m/s），窄物扫过不躲 | `yard.js`、`eye.js` 的 `FOLLOW.ahead`、`turnSpeed` | Cinemachine 轴的 Accel/Decel Time 的做法（数值自拟）；往前看是自拟，按 `follow.test.mjs` 的原地转圈量出来调 | 做法参考 Unity 文档；数值自拟 |
 | 提示只说一次、用到时才说 | `hints.js` | 自拟 | 自拟 |
 | 去下一处的朱红印标 | `game.js` | 自拟 | 自拟 |
+| 日文、英文界面；按浏览器语言选，歇脚菜单与标题可换 | `i18n.js`、`i18n-ja.js`、`i18n-en.js`、`lang.js` | 所有者要求（「日本用户不少」「一起加英文版」）；译文是开发方的初稿，未经母语者审读（`docs/t00/I18N.md`） | 所有者指定；译文自拟 |
+| 日文版的印、朱印帐用日本字形（聞鐘、喫茶、雲径禅寺、奉拝），「七印圆满」作「七印満願」 | `i18n-ja.js`、`goshuin.js` | 日本寺院御朱印的通行写法（奉拝、満願）；字形按日本常用汉字 | 按常理 |
+| 得句十四句的日文書き下し | `i18n-ja.js` | 按日本禅语书的通行训读自拟，未逐句核对日文出版物 | 自拟 |
+| 得句十四句、照片诗句、殿内小画的英文 | `i18n-en.js` | 开发方自拟的译法 | 自拟 |
+| 日文字体 Klee One、Noto Serif JP、Yuji Boku、Yuji Syuku；英文 EB Garamond | `shared/fonts/*-ja.woff2`、`*-en.woff2` | google/fonts，均 SIL OFL；Klee One 是霞鹜文楷的母本，所以日文与中文同一手笔 | 已核许可 |
 
 ## 得句十四句的核对（2026-11-15）
 

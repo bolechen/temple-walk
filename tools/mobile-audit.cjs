@@ -1,10 +1,12 @@
 // What a phone sees: opens every surface of the interface at a phone's size, upright and on its side, as a touch
 // device, takes a picture of each and lists every control a thumb would miss (smaller than 44 px either way), any
 // text under 12 px, anything that runs off the screen, and whether the page scrolls or zooms when it should not.
-//   node tools/mobile-audit.cjs [out dir]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   (--lang audits the page in Japanese or English, into tools/out/mobile-ja/ or mobile-en/ unless an out dir is named)
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
-const root = require("./site.cjs").site(), out = process.argv[2] || path.join(__dirname, "out", "mobile");
+const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
+const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm" };
 const srv = http.createServer((req, res) => {
   let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
@@ -44,7 +46,7 @@ const measure = () => {
   for (const [shape, vw, vh] of [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640]]) {
     const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
     const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
-    await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day`, { waitUntil: "commit", timeout: 180000 });
+    await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}`, { waitUntil: "commit", timeout: 180000 });
     await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
     for (const [name, open, close] of SURFACES) {
       if (open) await p.evaluate((c) => { (0, eval)(c); }, open);

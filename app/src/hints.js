@@ -2,6 +2,8 @@
 // stays on it: each thing is said once, at the moment it becomes useful, in one line at the foot of the view, and
 // then it leaves. The whole list of keys is a card that H opens. The name of the season and the next place to go
 // show when they change, and again when the visitor has stood still for a while and may be wondering.
+import { t } from "./i18n.js";
+
 const $ = (id) => document.getElementById(id);
 const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
 
@@ -36,13 +38,13 @@ export function createHints({ off = false, ui = null } = {}) {
   const say = {
     entered() {
       stir(); flash("moodTag", 7); flash("goal", 9);
-      tip("walk", coarse ? "推左下的圆盘行走　·　拖动画面环顾　·　双指开合远近，拉近到底，换成自己的眼睛" : `${K("W", "A", "S", "D")}行走　·　按住拖动画面环顾，点地面走去　·　${K("V")}换视角　·　${K("H")}键位`, 12);
+      tip("walk", coarse ? t("推左下的圆盘行走　·　拖动画面环顾　·　双指开合远近，拉近到底，换成自己的眼睛") : t("{wasd}行走　·　按住拖动画面环顾，点地面走去　·　{v}换视角　·　{h}键位", { wasd: K("W", "A", "S", "D"), v: K("V"), h: K("H") }), 12);
     },
-    held() { tip("held", `${K("Esc")}松开鼠标　·　${K("滚轮")}远近　·　单击敲钟击鼓`, 7); },
-    indoors() { if (!coarse) tip("view", `${K("V")}换成自己的眼睛看，可以举头看殿顶　·　画框前${K("E")}细看`, 8); else tip("view", "走到画框前，可以细看；也可以举头看看殿顶", 7); },
-    seal() { tip("book", coarse ? "点左上角的小印，翻看朱印帐" : `${K("B")}或左上角的小印，翻看朱印帐`, 7); },
+    held() { tip("held", t("{esc}松开鼠标　·　{wheel}远近　·　单击敲钟击鼓", { esc: K("Esc"), wheel: K(t("滚轮")) }), 7); },
+    indoors() { if (!coarse) tip("view", t("{v}换成自己的眼睛看，可以举头看殿顶　·　画框前{e}细看", { v: K("V"), e: K("E") }), 8); else tip("view", t("走到画框前，可以细看；也可以举头看看殿顶"), 7); },
+    seal() { tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
-    seasons() { return tip("seasons", coarse ? "时节已开：留影与歇脚里可选" : `时节已开：留影与歇脚里可选　·　${K("T")}时节`, 9); },
+    seasons() { return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
     photo() { drop(); },
     mood() { flash("moodTag", 6); },
     goal() { flash("goal", 8); },
@@ -53,7 +55,7 @@ export function createHints({ off = false, ui = null } = {}) {
     if (off) return;
     walked += moved; if (running && moved > 0) ran = true;
     if (now === "walk" && walked > 4) drop("walk");
-    if (!coarse && !ran && walked > 40) tip("run", `${K("Shift")}快步　·　${K("Space")}跳`, 6);
+    if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
   return { tip, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: shown(), calm: document.body.classList.contains("calm") }) };

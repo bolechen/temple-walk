@@ -17,7 +17,7 @@ const srv = http.createServer((req, res) => {
   const [season = "summer", time = "day"] = (process.argv[2] || "").split("-");
   const sculpt = process.argv.includes("sculpt");   // the sculpted body, which the page wears only when asked (?body=sculpt)
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-  const p = await b.newPage({ viewport: { width: 1500, height: 760 }, deviceScaleFactor: 2 });
+  const p = await b.newPage({ viewport: { width: 1500, height: 760 }, deviceScaleFactor: 2, locale: "zh-CN" });
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
   await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05${sculpt ? "&body=sculpt" : ""}`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });

@@ -1,6 +1,8 @@
 // Where he was when the visitor left: kept from moment to moment, so that coming back offers to go on from there.
 // Book-keeping only (the seals are journey.js's, the settings settings.js's): one key, every value checked on the
 // way in, a damaged save ignored. game.js decides what the title offers; yard.js puts him there.
+import { t } from "./i18n.js";
+
 export const PLACE_KEY = "yunjing.place.v1";
 
 /** What was saved, or null if there is nothing usable: a place on the ground, the way he faced, what to call it. */
@@ -30,10 +32,12 @@ export function labelOf(w, hall, named) {
 /** Whether there is anything to go on from: a seal earned, or a place saved well away from where the path begins. */
 export function hasProgress(seals, place, start) { return seals > 0 || (!!place && Math.hypot(place.x - start[0], place.z - start[1]) > 8); }
 
-/** What the title says and offers. `n` seals of `of`; the words are the page's own, kept here so they are tested with the rule. */
-export function titleOffer(n, of, place, start) {
+/** What the title says and offers. `n` seals of `of`; the words are the page's own, kept here so they are tested with the rule.
+ * The label kept is always the Chinese name (it is the key the translations are found by), so a visitor who changes
+ * language finds it said in the new one. `to` is the language, the visitor's own by default. */
+export function titleOffer(n, of, place, start, to = undefined) {
   const going = hasProgress(n, place, start), digits = "〇一二三四五六七八九";
-  const seals = n >= of ? "七印圆满" : n ? `已得${digits[n]}印` : "";
-  const where = going && place && place.label ? (place.label === "山路上" ? "上回停在山路上" : `上回走到${place.label}`) : "";
-  return { going, enter: going ? "接着走" : "入山", again: going ? "从头走起" : "", confirm: n ? "再点一次：朱印清空，从竹径走起" : "再点一次：回到竹径，从头走起", line: [seals, where].filter(Boolean).join(" · ") };
+  const seals = n >= of ? t("七印圆满", undefined, to) : n ? t("已得{n}印", { n: digits[n], k: n }, to) : "";
+  const where = going && place && place.label ? (place.label === "山路上" ? t("上回停在山路上", undefined, to) : t("上回走到{place}", { place: t(place.label, undefined, to) }, to)) : "";
+  return { going, enter: going ? t("接着走", undefined, to) : t("入山", undefined, to), again: going ? t("从头走起", undefined, to) : "", confirm: n ? t("再点一次：朱印清空，从竹径走起", undefined, to) : t("再点一次：回到竹径，从头走起", undefined, to), line: [seals, where].filter(Boolean).join(" · ") };
 }

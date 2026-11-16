@@ -55,6 +55,38 @@ const scenarios = {
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
+  // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.
+  lang: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE, { enter: false, locale: "ja-JP" });
+    const words = (sel) => t.page.textContent(sel);
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
+    expect(await t.page.evaluate(() => document.documentElement.lang) === "ja" && (await words("#title h1")) === "山門之外" && (await words("#enterBtn")) === "山に入る" && (await t.page.title()).includes("雲径禅寺"), "a Japanese browser should be met by the title in Japanese: " + JSON.stringify([await words("#title h1"), await words("#enterBtn"), await t.page.title()]));
+    expect(await t.page.evaluate(async () => { await document.fonts.load('20px "Yunjing Kai JA"', "山に入る"); return document.fonts.check('20px "Yunjing Kai JA"', "山に入る"); }), "the Japanese kai did not load");
+    expect(!(await t.page.isVisible("#titleCommunity")), "the WeChat group is offered only in Chinese");
+    expect(await t.page.isVisible('.langs [data-lang="en"]') && !(await t.page.isVisible('.langs [data-lang="ja"]')), "the title should offer the other two languages");
+    await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 30000, "the title never left");
+    expect((await words("#goal")).includes("鐘楼") && (await words("#goal")).includes("次は"), "the next place should be named in Japanese: " + (await words("#goal")));
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); });
+    await t.until(async () => (await t.page.isVisible("#act")) && (await words("#act")).includes("鐘を撞く"), 30000, "the bell should be offered in Japanese");
+    await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 20000, "the book did not open");
+    expect((await words("#bookHint")).includes("鐘楼") && (await words("#bookHint")).includes("歩"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
+    expect(await t.page.evaluate(() => document.getElementById("bookImg").complete && document.getElementById("bookImg").naturalWidth === 1200), "the seal book was not drawn");
+    await t.page.click("#bookClose");
+    // Chosen in the menu: kept, and the page opens again in it.
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
+    expect(await t.page.getAttribute('#menu [data-lang="ja"]', "aria-pressed") === "true" && (await words("#menu")).includes("見回す速さ"), "the menu should be in Japanese, with Japanese circled");
+    await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('#menu [data-lang="en"]')]);
+    await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
+    expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");
+    // Nothing on the English title is left in Chinese but the calligraphy (the name and its seal).
+    const left = await t.page.evaluate(() => [...document.querySelectorAll("#title button, #title p, #title .sub, #title .how")].filter((el) => el.offsetParent && !el.closest("[data-lang]") && /[\u3400-\u9fff]/.test(el.textContent)).map((el) => el.textContent));
+    expect(!left.length, "Chinese left on the English title: " + JSON.stringify(left));
+    await t.page.goto(base + "?q=low&lang=zh" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect((await t.page.evaluate(() => document.documentElement.lang)).startsWith("zh") && (await words("#title .sub")).includes("云径禅寺"), "?lang=zh should bring the Chinese back");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Up the old path, round the screen wall, through the gate, across the court, in at the door; incense; out again.
   walk: { tier: 3, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1");   // drawn: it reads his height along the way a few times a second, and not drawn he is up the mountain between two readings
