@@ -133,6 +133,6 @@ test("at the side edge of a stair, where the ground under one shoe is metres low
   m.group.updateMatrixWorld(true);
   let lo = Infinity, hi = -Infinity;
   m.group.traverse((o) => { if (!o.isSkinnedMesh) return; for (let i = 0; i < o.geometry.attributes.position.count; i += 5) { const y = skinnedWorld(o, i).y; lo = Math.min(lo, y); hi = Math.max(hi, y); } });
-  assert.ok(lo > top - 0.45, `his lowest point is ${(top - lo).toFixed(2)} m under the treads`);
-  assert.ok(hi > top + 0.8, `his head is only ${(hi - top).toFixed(2)} m over the treads`);
+  assert.ok(lo > top - 0.4, `his lowest point is ${(top - lo).toFixed(2)} m under the treads`);
+  assert.ok(hi > top + 1.05, `his head is only ${(hi - top).toFixed(2)} m over the treads`);
 });
