@@ -330,7 +330,7 @@ canvas.addEventListener("pointerup", (e) => {
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
     else route = [];
-    if (route.length) { interrupt(); target = route.shift(); }
+    if (route.length) { interrupt(); director.back(); target = route.shift(); }
   }
   down = null;
 });
@@ -888,7 +888,7 @@ createGame({
   // to him; `direct(id, { now })` is there at once (a picture tool), `undirect()` lets go without a swing (a passage takes
   // the eye from it); `directOut()` is how many seconds the way back takes, so an observance can send it that much early.
   direct(id, opts) {
-    if (!id) return director.back();
+    if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
     const p = site.places[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;
     const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
     if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on

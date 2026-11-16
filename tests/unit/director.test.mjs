@@ -210,3 +210,21 @@ test("the well is not gone to: the eye stays with him there (until #99)", () => 
   assert.deepEqual(GONE, ["bell", "incense", "tea", "sutra", "lamp", "sit"]);
   walker.setRoom(null);
 });
+
+// When an observance is over before its swing has arrived (a swing round to a shot before him can take longer than the
+// lamp), the swing goes on to the shot, rests there a beat and only then comes home; it is never turned back half way
+// by the observance. A step of the visitor's still turns it back at once.
+test("an observance over before its swing has arrived lets it arrive, rest a beat, and come home; a step turns it at once", () => {
+  const p = site.places.lamp, foot = at(p), centre = centreOf(p, foot);
+  const d = createDirector({ walker }), cam = follower(p, foot, Math.PI - p.face);
+  d.go("lamp", p, foot); run(d, cam, centre, 20); const w0 = d.state().w;
+  assert.ok(d.state().phase === "in" && w0 > 0 && w0 < 1, "should still be on its way in");
+  d.back({ soft: true }); const ws = [];
+  run(d, cam, centre, Math.ceil((d.state().in + DIRECT.beat + 0.3) / DT), () => ws.push([d.state().phase, d.state().w]));
+  assert.ok(ws.some(([ph]) => ph === "hold"), "it should arrive on the shot"); assert.ok(ws.findIndex(([ph]) => ph === "out") > ws.findIndex(([ph]) => ph === "hold"), "and come home only after it");
+  const holds = ws.filter(([ph]) => ph === "hold").length; assert.ok(holds >= Math.floor(DIRECT.beat / DT) - 1, `it should rest about ${DIRECT.beat} s (${holds} frames)`);
+  assert.ok(ws.slice(0, ws.findIndex(([ph]) => ph === "hold")).every(([, w], i, a) => i === 0 || w >= a[i - 1][1] - 1e-9), "on its way in it never turned back");
+  const e = createDirector({ walker }); e.go("lamp", p, foot); run(e, cam, centre, 20); const we = e.state().w;
+  e.back(); run(e, cam, centre, 1); assert.ok(e.state().phase === "out" && e.state().w <= we, "a step should turn it back at once");
+  walker.setRoom(null);
+});

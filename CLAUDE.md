@@ -208,7 +208,9 @@ with a 6 cm margin) and stretches its time so that it never turns faster than 14
 travels faster than 15 m/s. Only with `prefers-reduced-motion` do the shutter's two ink leaves (`#curtain.cut`, drawn
 frame by frame) close, the eye is moved, and they open. `game.js` calls `y.direct(id)` when the
 observance begins and `y.direct(null)` when it ends; `rites.js` sends it home `y.directOut()` seconds before the hands are
-done (`homeward`), but only once it has arrived (`y.directArrived()`): a swing longer than the observance is not turned back half way. Any step, stick, tap on the ground, drag of the view, turn of the held mouse or Esc sends it home at
+done (`homeward`), but only once it has arrived (`y.directArrived()`); an observance over before its swing has arrived lets it arrive, rest
+`DIRECT.beat` (0.6 s) and then come home (`back({ soft: true })`): the observance never turns a swing back half way, the visitor's
+step, stick, drag, tap on the ground or Esc does, at once. Any step, stick, tap on the ground, drag of the view, turn of the held mouse or Esc sends it home at
 once; pressing E again at the bell does not. A door, `travel`, `place`, `__pose` and 回到起点 drop it without a swing.
 While it is away `body.directing` fades the way, the slips and the book (not the button, what is said, the hint line,
 the breath or the stick), and the brush rings on the ground are not drawn. When the eye is sent, `warmShot` draws the

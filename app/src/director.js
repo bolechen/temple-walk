@@ -25,6 +25,7 @@ export const DIRECT = {
   turn: (120 * Math.PI) / 180,   // (kept for the record: a swing turning further than this used to be cut behind the ink)
   rate: { in: (144 * Math.PI) / 180, out: (190 * Math.PI) / 180 },   // the fastest the eye may turn at the steepest of a swing there, and back (2.4° and 3.2° a frame)
   near: 0.35,              // metres round where the following eye stood within which a swing's first points are not tested
+  beat: 0.6,               // seconds a swing that arrives after its observance is over rests on the shot before coming home
   longest: 4,              // a swing that would need longer than this, on every clear route, takes the clear route that needs least
   drift: (1 * Math.PI) / 180,    // the most the eye may turn of itself, per second, while it rests on a shot
   glide: 0.08,             // and the most it may move of itself, metres a second
@@ -210,9 +211,9 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
   /** "idle" | "in" | "hold" | "out" */
   let phase = "idle", u = 0, t = 0, id = null, place = null, shot = null, foot = 0, dur = durations(), decided = false, hadLast = false;
   /** A cut behind the ink: `s` seconds into it, whether the eye has been moved yet, and to which end (1 the shot, 0 him). @type {null | { s: number, moved: boolean, to: number }} */
-  let ink = null, plan = { route: {}, secs: 0 };
+  let ink = null, plan = { route: {}, secs: 0 }, softBack = false, beat = 0;
   const A = pose(), B = pose(), O = pose(), last = new THREE.Quaternion(), stats = { cuts: 0, blends: 0, backs: 0, turnMax: 0, frames: 0, why: null, route: {}, blocked: false };
-  const reset = () => { phase = "idle"; u = 0; t = 0; ink = null; plan = { route: {}, secs: 0 }; decided = false; hadLast = false; veil(0); quiet(false); };
+  const reset = () => { phase = "idle"; u = 0; t = 0; ink = null; plan = { route: {}, secs: 0 }; softBack = false; beat = 0; decided = false; hadLast = false; veil(0); quiet(false); };
   return {
     /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool). */
     go(name, where, floorY, { now = false } = {}) {
@@ -227,8 +228,12 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
     },
     // Back to the eye that follows him. Called early by an observance (`out` seconds before its hands are done), by any
     // step, drag or Esc of the visitor's, and when the observance ends.
-    back() {
+    // `soft`: the observance is over (it did not ask for this; the visitor did not move): a swing still on its way in
+    // goes on to the shot, rests there a beat (DIRECT.beat), and only then comes home, rather than turning back half way.
+    back({ soft = false } = {}) {
       if (phase === "idle" || phase === "out") return false;
+      if (soft && phase === "in") { softBack = true; return true; }
+      softBack = false;
       stats.backs++; phase = "out"; quiet(false);   // what stepped aside over the picture comes back as the eye starts home
       if (ink && !ink.moved) { ink.to = 0; decided = true; }   // the ink is still closing: it opens on him again, nothing moved
       else decided = false;                                       // (if it is opening on the shot, the way back is decided once it has)
@@ -248,6 +253,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
       if (phase === "idle") return null;
       A.p.copy(camera.position); A.q.copy(camera.quaternion); A.fov = fov;
       if (phase === "hold") t += dt;   // the shot drifts only while it is rested on: a swing goes to, or from, a shot that stands still
+      if (phase === "hold" && softBack && (beat += dt) >= DIRECT.beat) { softBack = false; beat = 0; stats.backs++; phase = "out"; decided = false; quiet(false); }
       shotPose(place, shot, foot, t, camera.aspect || DIRECT.wide, B);
       if (!decided && !ink) {
         // Every swing is made, never cut: a route round him that stands clear of everything, as long as it needs to be
