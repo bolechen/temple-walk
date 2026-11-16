@@ -11,7 +11,7 @@
 | `green-after.txt` | 改后 `novice.test.mjs` 10 条全过 |
 | `views-before.jpg`、`views-after.jpg`、`views-code.jpg` | `node tools/novice-views.cjs`：站立、合掌、走路、坐凳、盘坐五行，每行正、侧、背、斜俯四张；改前、改后、代码身体同一帧 |
 | `compare-stand.jpg`、`compare-pray.jpg`、`compare-walk.jpg`、`compare-seated.jpg` | 从上面三张裁出的并排对照：代码身体、改前、改后 |
-| `portrait-before.jpg`、`portrait-after.jpg`、`portrait-code.jpg` | `node tools/portrait.js summer-day sculpt`（代码身体不加 `sculpt`），在寺里、夏日白天，正、斜、背、合掌两张 |
+| `portrait-before.jpg`、`portrait-after.jpg`、`portrait-code.jpg`、`compare-portrait.jpg` | `node tools/portrait.js summer-day sculpt`（代码身体不加 `sculpt`），在寺里、夏日白天，正、斜、背、合掌两张；改前一组是把旧 `novice.glb` 放进 `dist/` 拍的；`compare-portrait.jpg` 三组上下排 |
 | `trial-before.json`、`trial-after.json` | `node tools/novice-weld-trial.mjs --file=…`：各姿势下重合点最大分离、袍边拉长 |
 
 **舞台图和游戏里不一样**：`novice-views.cjs` 只摆他一个人、一盏灯、灰底，不画寺院（软件渲染下带寺院一张要几分钟，三十分钟只拍了四张）。
