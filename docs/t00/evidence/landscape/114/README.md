@@ -1,6 +1,6 @@
 # #114 地平线下不露天：改前改后（T4）
 
-**现行证据在 `retake-213127-213147/`**（带 `site` 指纹，见其中 `report-*.json`）。早先几次运行与别的会话共用桶里的 `in/`，不能证明各自是各自的代码，已删除重拍。
+**现行证据在 `retake-213127-213147/`**（带 `site` 指纹，见其中 `report-*.json`）。本目录下原有的 `before-*.jpg`、`after-*.jpg`、`compare/`、`report-*.json` 是早先几次运行的图：与别的会话共用桶里的 `in/`、没有站点指纹，**不作证据，以 retake 为准**（按 AGENTS.md，证据只增不改，原件保留）。
 
 - 改前 `before-*.jpg`：`origin/main` a5ed417，Job 20261116-213127，站点指纹 sha256 47640699…（入口 index-C_qXz-p1.js）。
 - 改后 `after-*.jpg`：本分支 df821cc（已合入当时的 main），Job 20261116-213147，站点指纹 sha256 92e99780…（入口 index-DWpnq3qw.js）。
