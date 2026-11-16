@@ -841,7 +841,7 @@ createGame({
   leave: () => interrupt(),
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
-  mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
+  mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),
   onTick: (fn) => ticks.push(fn),
@@ -870,9 +870,12 @@ if (DEVPOSE) {
   });
   window.__devpose = () => devpose.link();
 }
-// ?debug on the dev server: a panel of where he stands, what the frame costs, the hour, and switches for each part
-// (src/debug.js). It acts only through the hooks above. The published build leaves this branch, and the module, out.
-if (import.meta.env.DEV && Q.has("debug")) {
+// The debug panel: where he stands, what the frame costs, the hour, and switches for each part (src/debug.js). It acts
+// only through the hooks above. It opens by itself on the dev server and on a pull request's preview
+// (<deployment>-temple-walk-preview.<account>.workers.dev, docs/PREVIEWS.md); ?debug=0 keeps it shut there. The published
+// site never loads it: the module is a separate chunk fetched only here.
+const PREVIEW = /-temple-walk-preview\./.test(location.hostname);
+if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {
   const { mountDebug } = await import("./src/debug.js");
   await mountDebug({ link: () => (devpose ? devpose.link() : null) });
 }

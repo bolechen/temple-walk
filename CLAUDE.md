@@ -107,7 +107,7 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
 `?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
-`?debug` (the dev server only, `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, the level's completion (`__journey`/`__visit`), and `__part()` switches for each part and pass; the backtick key shows or hides it; the published build leaves it out), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
+`?debug` (open by itself on the dev server and on a pull request's preview, `?debug=0` keeps it shut; the published site never loads it; `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, the level's completion (`__journey`/`__visit`), and `__part()` switches for each part and pass; the backtick key shows or hides it), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
 page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
 visitor's own season and hour, seen from behind the novice.
@@ -263,7 +263,8 @@ end of the log, out past the platform (`LOG` in `site.js`); he draws it back and
 and `logSwing` keeps the log from passing into the bronze. Tea: his bowl (made in `rites.js`, not merged into the table)
 is lifted in both hands and tilted at his lips three times. Incense: three sticks between his palms, raised to the brow,
 three bows, a step up to the low stand before the cushion (`places.incense.front`, `.bowl`), set in the ash, where they
-stay and smoke (also after a reload). Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
+smoke and burn down over five minutes by the wall clock (`?burn=` seconds for a test; when they were set is kept in
+`yunjing.incense.v1`, so a reload finds them as far burnt), leaving cold stubs, after which incense may be offered again. Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
 out. `__riteClock(ms)` holds the observances' clock and steps it, so a moment can be photographed; `__rites()` reports
 all of it. The hand offsets (lips, brow, rope) were set against the novice's present proportions.
 
@@ -283,7 +284,8 @@ summit is the last thing: before the other six seals its mat is only a seat. Whe
 (`game.js`) hands the eye to `rites.close` (`y.cine(fn)`: round before him, back down the steps, up until the pavilion
 stands whole), says the closing words one at a time (`CLOSING`: they end on something unanswered, for a chapter not
 yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
-`__ending()` plays it again.
+`__ending()` plays it again. It comes once in each season (`journey.closedIn(season)`, `closedSeason` in the book): after a
+change of season, sitting there plays it again, without the full book's seal a second time.
 
 **Coming back, and going back (`resume.js`, `game.js`).** Where he stands is kept every two seconds and when the page is
 left (`yunjing.place.v1`: place, facing, what to call it). A first visit is offered only 入山; a visitor with a seal, or

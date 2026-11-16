@@ -43,7 +43,9 @@ function softDot() {
   x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c);
 }
 
-export function createRites(y, fast = 1) {
+// `burn`: how many seconds three sticks take to burn down to the ash (five minutes unless a test asks for less);
+// `onPlant(at)`: told the moment, on the wall clock, that they are set in the ash, so the page can keep it.
+export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at) => {} } = {}) {
   const { monk, scene, site, M } = y, B = monk.bones, G = monk.group, places = site.places;
   const hand = () => ({ at: V(), fingers: V(0, 1, 0), palm: V(1, 0, 0), w: 0 });
   const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
@@ -183,20 +185,27 @@ export function createRites(y, fast = 1) {
 
   // ================= Incense =================
   // Three sticks between his palms: raised to the brow, three bows, a step up to the stand, and set in the ash.
-  const I = places.incense, sticks = new THREE.Group(), smoke = wisp(7, { size: 0.07, rise: 0.75, spread: 0.1, life: 5.5, opacity: 0.2, color: 0xdfe6ee }), inc = { planted: false, shown: false };
+  const I = places.incense, sticks = new THREE.Group(), smoke = wisp(7, { size: 0.07, rise: 0.75, spread: 0.1, life: 5.5, opacity: 0.2, color: 0xdfe6ee }), inc = { planted: false, shown: false, at: 0, burnt: false };
   { const wood = new THREE.MeshStandardMaterial({ color: 0x6b2d1c, roughness: 0.9 }), ember = new THREE.MeshBasicMaterial({ color: new THREE.Color(4.5, 1.5, 0.45), fog: false });
     for (const [rz, rx] of [[-0.085, 0.03], [0, -0.045], [0.085, 0.03]]) { const s = new THREE.Group(); s.rotation.set(rx, 0, rz);
       s.add(new THREE.Mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.3, 5).translate(0, 0.15, 0), wood), new THREE.Mesh(new THREE.SphereGeometry(0.0042, 6, 5).translate(0, 0.302, 0), ember)); sticks.add(s); }
     sticks.traverse((o) => { o.userData.part = "incense"; }); sticks.visible = false; scene.add(sticks); }
   const plantAt = I && I.bowl ? V(I.bowl[0], I.bowl[1] - 0.035, I.bowl[2]) : null;
-  const plant = () => { if (!plantAt) return; inc.planted = inc.shown = true; sticks.visible = true; sticks.scale.setScalar(1); sticks.position.copy(plantAt); sticks.quaternion.identity(); smoke.src.copy(plantAt).y += 0.3; smoke.show(true); };
+  // Each stick burns from its tip: what is left of it shortens, the glowing tip comes down with it, and the smoke
+  // rises from lower and lower. At the end the stubs stand in the ash a finger high, cold, and incense may be offered again.
+  const LEFT = 0.16;   // the stub left standing, of the stick's length
+  const burnTo = (k) => { const h = 1 - (1 - LEFT) * Math.min(1, Math.max(0, k)); sticks.children.forEach((g) => { const [wood, tip] = /** @type {any[]} */ (g.children); wood.scale.y = h; tip.position.y = -0.302 * (1 - h); tip.visible = k < 1; }); if (plantAt) smoke.src.copy(plantAt).y += 0.3 * h; };
+  const stand = () => { sticks.visible = true; sticks.scale.setScalar(1); sticks.position.copy(plantAt); sticks.quaternion.identity(); };
+  const plant = (at = Date.now()) => { if (!plantAt) return; inc.planted = inc.shown = true; inc.burnt = false; inc.at = at; stand(); burnTo((Date.now() - at) / (burn * 1000)); smoke.show(true); };
+  const burntOut = () => { if (!plantAt) return; inc.planted = false; inc.burnt = inc.shown = true; stand(); burnTo(1); smoke.show(false); };
+  always.push(() => { if (!inc.planted) return; const k = (Date.now() - inc.at) / (burn * 1000); if (k >= 1) burntOut(); else burnTo(k); });
   // Between his palms: the sticks stand up out of his joined hands and lean as he leans.
   const inHands = () => { between(sticks.position); B.chest.getWorldQuaternion(sticks.quaternion).multiply(qA.setFromAxisAngle(V(1, 0, 0), 0.12)); sticks.position.addScaledVector(tB.set(0, -0.02, 0.012).applyQuaternion(sticks.quaternion), 1); };
   const brow = (k) => HANDS.forEach(([n, s]) => { const h = act.hands[n]; B.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); dir(0, 1, 0.25, h.fingers); dir(-s, 0, 0, h.palm); h.w = k; });
   /** @param {() => boolean} on @param {any} st @param {(what: string) => void} [cue] */
   async function offerIncense(on, st, cue = () => {}) {
     if (!I || !plantAt || inc.planted) return false;
-    sticks.visible = inc.shown = true;
+    inc.burnt = false; burnTo(0); smoke.show(false); sticks.visible = inc.shown = true;   // three new sticks, whole; what was in the ash is cleared
     if (!(await play(0.7, (u) => { sticks.scale.setScalar(Math.max(0.001, ease(u))); inHands(); }, on))) return false;
     if (!(await play(0.9, (u) => { brow(ease(u)); inHands(); }, on))) return false;
     for (let i = 0; i < 3; i++) if (!(await play(1.5, (u) => { act.bow = 0.5 * Math.sin(Math.PI * ease(u)); brow(1); inHands(); }, on))) return false;
@@ -211,7 +220,7 @@ export function createRites(y, fast = 1) {
     const h = act.hands.right; inHands(); const p0 = sticks.position.clone(), q0 = sticks.quaternion.clone();
     if (!(await play(1.2, (u) => { const k = ease(u); act.bow = 0.5 * k; sticks.position.copy(p0).lerp(plantAt, k); sticks.position.y += 0.07 * Math.sin(Math.PI * k); sticks.quaternion.copy(q0).slerp(qB.identity(), k);
       h.at.copy(sticks.position); h.at.y += 0.09; h.at.addScaledVector(dir(-1, 0, 0, tC), 0.02); dir(0, -0.5, 1, h.fingers); dir(1, 0, 0.2, h.palm); h.w = Math.min(1, u * 4); }, on))) return false;
-    plant();
+    plant(); onPlant(inc.at);
     if (!(await play(0.9, (u) => { act.bow = 0.5 * (1 - ease(u)); h.w = 1 - ease(u); }, on))) return false;
     return play(1.6, (u) => { act.bow = 0.5 * Math.sin(Math.PI * ease(u)); }, on);   // and once more, hands together
   }
@@ -263,19 +272,21 @@ export function createRites(y, fast = 1) {
     act.bow = act.twist = act.nod = act.look = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
     bell.held = false; bell.grip = 0; peal.busy = false;
     if (home) { tea.held = 0; cup.position.copy(home); cup.rotation.set(0, T.face, 0); steam.show(true); }
-    if (inc.planted) plant(); else { sticks.visible = inc.shown = false; }
+    if (inc.planted) { stand(); smoke.show(true); } else if (inc.burnt) burntOut(); else { sticks.visible = inc.shown = false; }
     ring.visible = false;
   }
   return {
     act, rest, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, close,
-    // What was done on an earlier visit stays done: the sticks stand in the ash.
-    restore(has) { if (has.incense) plant(); },
+    // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
+    // burning if less than `burn` seconds have passed, and are cold stubs after.
+    restore(has) { if (!has.incenseAt) return; if (Date.now() - has.incenseAt < burn * 1000) plant(has.incenseAt); else burntOut(); },
+    incenseLit: () => inc.planted,
     state: () => ({
       passages: jobs.length, bow: +act.bow.toFixed(3), nod: +act.nod.toFixed(3), breath: act.breath === null ? null : +act.breath.toFixed(3), hands: +Math.max(act.hands.left.w, act.hands.right.w).toFixed(3),
       bell: { log: bellS ? +bellS.swing.position.z.toFixed(3) : null, grip: +bell.grip.toFixed(3), rope: rope.visible ? +rope.scale.y.toFixed(3) : null, pulls: peal.pulls, ready: ready(), drawn: +peal.drawn.toFixed(3) },
       look: +act.look.toFixed(3),
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
-      incense: { shown: inc.shown, planted: inc.planted, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
+      incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
       sit: { breaths: sit.breaths, ring: ring.visible },
       close: { on: END.on, u: +END.u.toFixed(3) },
     }),

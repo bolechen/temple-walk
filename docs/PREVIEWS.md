@@ -8,7 +8,9 @@ PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR �
 
 - 最新地址 `https://pr-<编号>-temple-walk-preview.bole-chen.workers.dev`：始终是这个 PR 最近一次成功部署的版本。
 - 本提交固定地址 `https://<部署号>-temple-walk-preview.bole-chen.workers.dev`：只对应一个提交，之后推送也不会变。截图、反馈问题和评审请用这个地址，并写上完整提交号。
-- 六个验收机位：按 `docs/t00/camera-manifest.json` 生成的固定机位链接（J01 夏·昼）。
+- 六个验收机位：按 `docs/t00/camera-manifest.json` 生成的固定机位链接（J01 夏·昼），带 `debug=0`，看画面时不出调试面板。
+
+预览地址默认打开调试面板（`app/src/debug.js`：位置、帧耗、季节时辰、机位跳转、各部分开关），反引号键收起或展开，地址加 `?debug=0` 则不打开。本地 `pnpm dev` 也默认打开。正式站点不加载它。
 
 检查或部署失败时，评论会写明这个提交没有部署，并说明「最新地址」仍是哪个旧提交。预览只用来看效果，不代表 CI 全过、目标设备性能或独立验收。workers.dev 预览带 `X-Robots-Tag: noindex`，不会被收录。
 

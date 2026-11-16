@@ -14,7 +14,8 @@ function previewRecord(file) {
 function cameraLinks(base, manifest) {
   if (!fs.existsSync(manifest)) return "";
   const { cameras = [] } = JSON.parse(fs.readFileSync(manifest, "utf8"));
-  return cameras.map((c) => `[${c.id} ${c.label}](${base.replace(/\/$/, "")}/${c.url})`).join(" · ");
+  // The preview opens with the debug panel showing; the acceptance views are looked at without it.
+  return cameras.map((c) => `[${c.id} ${c.label}](${base.replace(/\/$/, "")}/${c.url}${c.url.includes("?") ? "&" : "?"}debug=0)`).join(" · ");
 }
 
 function body({ state, sha, run, record, previous, manifest }) {

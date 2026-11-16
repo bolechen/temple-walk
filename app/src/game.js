@@ -49,9 +49,12 @@ export function createGame(y) {
   const told = () => `这一趟走了 ${Math.round(visit.metres)} 步，在山上 ${Math.max(1, Math.round(visit.seconds / 60))} 分钟。`;
   // ---- On the ground: a ring at every place whose seal is still to be earned ----
   // The summit keeps its ring until the prologue has closed there, whatever else the book holds.
-  const owed = (id) => !journey.has(id) || (id === "sit" && !journey.closed);
+  // A change of season lets it close there again, once in that season (journey.closedIn).
+  const season = () => y.season(), closedHere = () => journey.closedIn(season());
+  journey.adopt(season());   // a close kept before seasons were belongs to the season the visitor is in now
+  const owed = (id) => !journey.has(id) || (id === "sit" && !closedHere());
   // The bell and the tea may be gone back to after their seals: the bell rung again, another bowl drunk.
-  const offered = (id) => owed(id) || id === "bell" || id === "tea";
+  const offered = (id) => owed(id) || id === "bell" || id === "tea" || (id === "incense" && !rites.incenseLit());
   const tex = ensoTexture(), rings = {};
   for (const id in places) {
     const p = places[id], w = id === "sutra" || id === "sit" ? 0.9 : 1.5;
@@ -88,11 +91,12 @@ export function createGame(y) {
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
     // The seventh seal: the book is full. On the summit, when the prologue is about to close, that comes first and
     // the full book after it (finale); anywhere else, it is marked at once.
-    const full = journey.done(), closing = id === "sit" && !journey.closed;
+    const full = journey.done(), closing = id === "sit" && !closedHere();
+    if (full && closing) fullAfterClose = true;
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; if (full && !closing) complete(); }, 900); if (!full) y.hints?.say.seal(); }, 4200 * Math.max(fast, 0.3));
   }
   // ---- A full book: its own seal, while the music plays the whole theme once (score.js), then the page of seals ----
-  let completing = false, completed = false;
+  let completing = false, completed = false, fullAfterClose = false;   // fullAfterClose: the book was filled on the summit, and its seal follows the close
   function complete() {
     if (!completed) { completed = true; track("demo.complete", { count: journey.count(), seconds: Math.round(visit.seconds) }); }
     const el = $("toast"); if (completing || !el) { openBook(); return; }
@@ -104,7 +108,10 @@ export function createGame(y) {
   }
 
   // ---- Each observance ----
-  const rites = createRites(y, fast);
+  // The incense burns for five minutes by the wall clock (`?burn=` seconds for a test), and when it was set in the ash is
+  // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
+  const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
+  const rites = createRites(y, fast, { burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
   const end = () => { rite = null; y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
@@ -148,7 +155,7 @@ export function createGame(y) {
     if (!on()) return;
     const fresh = journey.earn(id); if (fresh) earned(id);
     // The prologue closes here the first time he has sat and breathed on the summit, whatever else is in the book.
-    if (id === "sit" && !journey.closed) { await wait(fresh ? 4.6 : 1.5); if (on()) await finale(on); if (on()) rite = null; return; }
+    if (id === "sit" && !closedHere()) { await wait(fresh ? 4.6 : 1.5); if (on()) await finale(on); if (on()) rite = null; return; }
     if (p.sit) { rite = null; return; }   // he stays seated until he is sent somewhere
     await wait(1.2); if (on()) end();
   }
@@ -200,9 +207,10 @@ export function createGame(y) {
     });
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
-    // Seen, or passed over: either way it is not shown again on this walk. The seals left over can still be earned.
-    if (journey.close()) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
-    refresh(); if (journey.done()) complete(); else openBook();
+    // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
+    // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
+    if (journey.close(season())) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
+    refresh(); if (fullAfterClose) { fullAfterClose = false; complete(); } else openBook();
   }
   window.addEventListener("struck", (e) => {
     if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
@@ -230,7 +238,7 @@ export function createGame(y) {
     const w = y.where(), free = entered && !rite && !y.busy(), indoors = y.inside();
     const room = y.room(), here = free ? placeAt(Object.fromEntries(Object.entries(places).filter(([, p]) => (p.room || null) === room)), w.x, w.z) : null;
     near = here && offered(here) && !(here === "sit" && y.staged()) ? here : null;
-    if (near === "sit" && !journey.closed && !summitSaid) { summitSaid = true; say("凌霄阁前这只蒲团，朝着来时的路。", 6); }
+    if (near === "sit" && !closedHere() && !summitSaid) { summitSaid = true; say("凌霄阁前这只蒲团，朝着来时的路。", 6); }
     // Indoors, standing before a frame on the wall offers a look at what hangs there.
     look = free && indoors && !near ? placeAt(Object.fromEntries(Object.entries(y.gallery).filter(([, p]) => p.room === room)), w.x, w.z) : null;
     // A cushion or a stool within a step or two, when nothing else is offered here and he is not already seated.
@@ -332,7 +340,7 @@ export function createGame(y) {
     entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); setTimeout(announce, 14000 * fast);   // after the first line about walking has gone
   };
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
-  refresh(); rites.restore({ incense: journey.has("incense") });
+  refresh(); rites.restore({ incenseAt: (() => { try { return Number(localStorage.getItem(INCENSE)) || 0; } catch { return 0; } })() });
 
   // For the tests.
   window.__journey = () => { const n = journey.next(); return { look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
