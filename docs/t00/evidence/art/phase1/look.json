@@ -1,6 +1,6 @@
 {
  "before_run": "20261116-142158",
- "after_run": "20261116-185914",
+ "after_run": "20261116-234141",
  "art": {
   "01-bamboo": {
    "before": {
@@ -35,29 +35,27 @@
    "after": {
     "view": "01-bamboo",
     "measures": {
-     "image": "tools/out/gpu/20261116-185914/art1_summer-dawn.png",
-     "L05": 15.5,
-     "L50": 21.8,
-     "L95": 60.5,
-     "range": 45.0,
-     "chroma": 6.5,
-     "light_a": -4.9,
-     "light_b": 5.0,
-     "shade_a": -3.1,
-     "shade_b": 0.3,
-     "split_b": 4.7,
+     "image": "tools/out/gpu/20261116-234141/art1_summer-dawn.png",
+     "L05": 13.5,
+     "L50": 25.1,
+     "L95": 66.1,
+     "range": 52.6,
+     "chroma": 10.5,
+     "light_a": -6.0,
+     "light_b": 6.8,
+     "shade_a": -4.1,
+     "shade_b": 0.9,
+     "split_b": 5.9,
      "bands": [
-      39.1,
-      26.5,
-      24.6,
-      23.3,
-      22.4
+      42.4,
+      29.7,
+      28.9,
+      26.7,
+      24.3
      ]
     },
     "misses": [
-     "L95: 60.5 (want 68.3 ± 6)",
-     "range: 45.0 (want 56.4 ± 8)",
-     "chroma: 6.5 (want 9.8 ± 3)"
+     "split_b: 5.9 (want 0.9 ± 4)"
     ]
    }
   },
@@ -94,31 +92,31 @@
    "after": {
     "view": "02-gate",
     "measures": {
-     "image": "tools/out/gpu/20261116-185914/art2_autumn-dusk.png",
+     "image": "tools/out/gpu/20261116-234141/art2_autumn-dusk.png",
      "L05": 10.3,
-     "L50": 14.6,
-     "L95": 80.8,
-     "range": 70.6,
-     "chroma": 9.0,
+     "L50": 14.1,
+     "L95": 81.0,
+     "range": 70.7,
+     "chroma": 8.1,
      "light_a": 4.1,
-     "light_b": -1.0,
+     "light_b": -0.8,
      "shade_a": 1.6,
-     "shade_b": 2.5,
-     "split_b": -3.5,
+     "shade_b": 2.6,
+     "split_b": -3.3,
      "bands": [
-      43.1,
-      30.5,
-      16.3,
-      22.4,
+      42.7,
+      30.9,
+      15.4,
+      22.3,
       22.1
      ]
     },
     "misses": [
-     "L50: 14.6 (want 21.0 ± 6)",
-     "L95: 80.8 (want 72.2 ± 6)",
-     "light_b: -1.0 (want 5.0 ± 4)",
-     "split_b: -3.5 (want 2.6 ± 4)",
-     "band 1: 43.1 (want 31.4 ± 8)"
+     "L50: 14.1 (want 21.0 ± 6)",
+     "L95: 81.0 (want 72.2 ± 6)",
+     "light_b: -0.8 (want 5.0 ± 4)",
+     "split_b: -3.3 (want 2.6 ± 4)",
+     "band 1: 42.7 (want 31.4 ± 8)"
     ]
    }
   },
@@ -158,27 +156,27 @@
    "after": {
     "view": "03-court",
     "measures": {
-     "image": "tools/out/gpu/20261116-185914/art3_autumn-dusk_third.png",
-     "L05": 13.4,
-     "L50": 33.1,
+     "image": "tools/out/gpu/20261116-234141/art3_autumn-dusk_third.png",
+     "L05": 13.3,
+     "L50": 32.8,
      "L95": 84.3,
-     "range": 70.9,
-     "chroma": 12.8,
+     "range": 71.0,
+     "chroma": 12.0,
      "light_a": 4.9,
-     "light_b": 9.6,
-     "shade_a": 3.8,
-     "shade_b": 5.0,
-     "split_b": 4.7,
+     "light_b": 9.7,
+     "shade_a": 3.9,
+     "shade_b": 4.9,
+     "split_b": 4.8,
      "bands": [
-      53.0,
-      34.9,
-      30.1,
-      34.6,
+      52.7,
+      34.8,
+      29.2,
+      34.5,
       30.2
      ]
     },
     "misses": [
-     "light_b: 9.6 (want 13.8 ± 4)"
+     "light_b: 9.7 (want 13.8 ± 4)"
     ]
    }
   },
@@ -217,29 +215,30 @@
    "after": {
     "view": "04-tea",
     "measures": {
-     "image": "tools/out/gpu/20261116-185914/art4_autumn-dusk.png",
+     "image": "tools/out/gpu/20261116-234141/art4_autumn-dusk.png",
      "L05": 10.2,
-     "L50": 20.8,
-     "L95": 56.9,
-     "range": 46.6,
-     "chroma": 9.0,
-     "light_a": 6.8,
-     "light_b": 10.4,
+     "L50": 20.1,
+     "L95": 57.0,
+     "range": 46.8,
+     "chroma": 8.0,
+     "light_a": 5.8,
+     "light_b": 9.2,
      "shade_a": 1.6,
      "shade_b": 2.5,
-     "split_b": 7.9,
+     "split_b": 6.6,
      "bands": [
-      29.9,
-      22.6,
-      28.3,
+      29.8,
+      21.9,
+      26.8,
       24.1,
       19.8
      ]
     },
     "misses": [
      "L05: 10.2 (want 5.1 ± 4)",
-     "L95: 56.9 (want 46.2 ± 6)",
-     "band 1: 29.9 (want 16.3 ± 8)"
+     "L95: 57.0 (want 46.2 ± 6)",
+     "split_b: 6.6 (want 11.5 ± 4)",
+     "band 1: 29.8 (want 16.3 ± 8)"
     ]
    }
   },
@@ -278,27 +277,32 @@
    "after": {
     "view": "05-terrace",
     "measures": {
-     "image": "tools/out/gpu/20261116-185914/art5_summer-dusk.png",
+     "image": "tools/out/gpu/20261116-234141/art5_summer-dusk.png",
      "L05": 10.9,
-     "L50": 20.8,
-     "L95": 52.2,
-     "range": 41.3,
-     "chroma": 9.3,
-     "light_a": 18.3,
-     "light_b": 12.9,
+     "L50": 21.0,
+     "L95": 71.3,
+     "range": 60.4,
+     "chroma": 9.1,
+     "light_a": 16.7,
+     "light_b": 14.5,
      "shade_a": 2.0,
      "shade_b": 2.8,
-     "split_b": 10.1,
+     "split_b": 11.7,
      "bands": [
-      32.1,
-      21.0,
-      22.5,
-      21.7,
+      35.4,
+      22.4,
+      22.7,
+      21.8,
       20.4
      ]
     },
     "misses": [
-     "light_b: 12.9 (want 6.5 ± 4)"
+     "L95: 71.3 (want 56.4 ± 6)",
+     "range: 60.4 (want 48.8 ± 8)",
+     "chroma: 9.1 (want 12.2 ± 3)",
+     "light_b: 14.5 (want 6.5 ± 4)",
+     "split_b: 11.7 (want 6.1 ± 4)",
+     "band 1: 35.4 (want 25.6 ± 8)"
     ]
    }
   },
@@ -342,30 +346,30 @@
    "after": {
     "view": "06-summit",
     "measures": {
-     "image": "tools/out/gpu/20261116-185914/art6_autumn-dawn.png",
-     "L05": 18.6,
-     "L50": 69.5,
-     "L95": 85.0,
-     "range": 66.4,
-     "chroma": 5.5,
-     "light_a": 2.7,
-     "light_b": 6.7,
-     "shade_a": -1.5,
-     "shade_b": -2.8,
-     "split_b": 9.5,
+     "image": "tools/out/gpu/20261116-234141/art6_autumn-dawn.png",
+     "L05": 18.8,
+     "L50": 69.3,
+     "L95": 85.6,
+     "range": 66.8,
+     "chroma": 5.4,
+     "light_a": 2.8,
+     "light_b": 7.4,
+     "shade_a": -1.4,
+     "shade_b": -2.9,
+     "split_b": 10.3,
      "bands": [
-      76.8,
-      76.4,
-      63.6,
-      32.0,
-      33.3
+      76.9,
+      77.6,
+      63.4,
+      32.9,
+      33.4
      ]
     },
     "misses": [
-     "L50: 69.5 (want 45.6 ± 6)",
-     "band 1: 76.8 (want 65.8 ± 8)",
-     "band 2: 76.4 (want 63.2 ± 8)",
-     "band 3: 63.6 (want 45.1 ± 8)"
+     "L50: 69.3 (want 45.6 ± 6)",
+     "band 1: 76.9 (want 65.8 ± 8)",
+     "band 2: 77.6 (want 63.2 ± 8)",
+     "band 3: 63.4 (want 45.1 ± 8)"
     ]
    }
   }
@@ -373,86 +377,86 @@
  "art_low": {
   "01-bamboo": {
    "high": {
-    "light_b": 5.0,
-    "shade_b": 0.3
+    "light_b": 6.8,
+    "shade_b": 0.9
    },
    "low": {
-    "light_b": 4.9,
-    "shade_b": 1.0
+    "light_b": 5.8,
+    "shade_b": 1.9
    },
    "diff": {
-    "light_b": -0.1,
-    "shade_b": 0.7
+    "light_b": -1.0,
+    "shade_b": 1.0
    }
   },
   "02-gate": {
    "high": {
-    "light_b": -1.0,
-    "shade_b": 2.5
+    "light_b": -0.8,
+    "shade_b": 2.6
    },
    "low": {
-    "light_b": -1.2,
+    "light_b": -1.0,
     "shade_b": 2.7
    },
    "diff": {
     "light_b": -0.2,
-    "shade_b": 0.2
+    "shade_b": 0.1
    }
   },
   "03-court": {
    "high": {
-    "light_b": 9.6,
-    "shade_b": 5.0
+    "light_b": 9.7,
+    "shade_b": 4.9
    },
    "low": {
-    "light_b": 10.5,
+    "light_b": 10.4,
     "shade_b": 5.4
    },
    "diff": {
-    "light_b": 0.9,
-    "shade_b": 0.4
+    "light_b": 0.7,
+    "shade_b": 0.5
    }
   },
   "04-tea": {
    "high": {
-    "light_b": 10.4,
+    "light_b": 9.2,
     "shade_b": 2.5
    },
    "low": {
-    "light_b": 9.5,
+    "light_b": 8.4,
     "shade_b": 2.6
    },
    "diff": {
-    "light_b": -0.9,
+    "light_b": -0.8,
     "shade_b": 0.1
    }
   },
   "05-terrace": {
    "high": {
-    "light_b": 12.9,
+    "light_b": 14.5,
     "shade_b": 2.8
    },
    "low": {
-    "light_b": 13.1,
+    "light_b": 14.5,
     "shade_b": 3.1
    },
    "diff": {
-    "light_b": 0.2,
+    "light_b": 0.0,
     "shade_b": 0.3
    }
   },
   "06-summit": {
    "high": {
-    "light_b": 6.7,
-    "shade_b": -2.8
+    "light_b": 7.4,
+    "shade_b": -2.9
    },
    "low": {
-    "light_b": 6.8,
+    "light_b": 7.6,
     "shade_b": -2.7
    },
    "diff": {
-    "light_b": 0.1,
-    "shade_b": 0.1
+    "light_b": 0.2,
+    "shade_b": 0.2
    }
   }
  },
@@ -460,18 +464,18 @@
   "cam01": {
    "L05": [
     10.9,
-    10.1,
-    -0.8
+    10.2,
+    -0.7
    ],
    "L50": [
     18.2,
-    17.2,
-    -1.0
+    17.4,
+    -0.8
    ],
    "L95": [
     44.5,
-    44.5,
-    0.0
+    45.0,
+    0.5
    ],
    "chroma": [
     8.9,
@@ -482,13 +486,13 @@
   "cam02": {
    "L05": [
     10.4,
-    9.7,
-    -0.7
+    9.8,
+    -0.6
    ],
    "L50": [
     23.0,
-    20.3,
-    -2.7
+    20.4,
+    -2.6
    ],
    "L95": [
     49.5,
@@ -509,8 +513,8 @@
    ],
    "L50": [
     34.0,
-    34.1,
-    0.1
+    34.0,
+    0.0
    ],
    "L95": [
     75.9,
@@ -531,8 +535,8 @@
    ],
    "L50": [
     13.4,
-    13.2,
-    -0.2
+    13.3,
+    -0.1
    ],
    "L95": [
     76.1,
@@ -541,8 +545,8 @@
    ],
    "chroma": [
     3.4,
-    3.3,
-    -0.1
+    3.2,
+    -0.2
    ]
   },
   "cam05": {
@@ -558,8 +562,8 @@
    ],
    "L95": [
     55.7,
-    55.7,
-    0.0
+    55.6,
+    -0.1
    ],
    "chroma": [
     3.2,
@@ -575,8 +579,8 @@
    ],
    "L50": [
     34.2,
-    34.6,
-    0.4
+    35.1,
+    0.9
    ],
    "L95": [
     79.1,
