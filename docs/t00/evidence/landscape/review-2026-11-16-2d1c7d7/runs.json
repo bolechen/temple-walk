@@ -1,0 +1,559 @@
+{
+ "20261116-151549": {
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "started": "2026-11-16T15:19:48.517Z",
+  "finished": "2026-11-16T15:24:00.810Z",
+  "errors": [],
+  "shots": [
+   {
+    "name": "lookback_summer-day",
+    "file": "lookback_summer-day.png",
+    "tris": 936184,
+    "calls": 216
+   },
+   {
+    "name": "lookback_autumn-dusk",
+    "file": "lookback_autumn-dusk.png",
+    "tris": 936204,
+    "calls": 228
+   },
+   {
+    "name": "lookback_winter-day",
+    "file": "lookback_winter-day.png",
+    "tris": 930258,
+    "calls": 216
+   },
+   {
+    "name": "lookback_spring-dawn",
+    "file": "lookback_spring-dawn.png",
+    "tris": 936204,
+    "calls": 228
+   },
+   {
+    "name": "summit_summer-day",
+    "file": "summit_summer-day.png",
+    "tris": 479390,
+    "calls": 65
+   },
+   {
+    "name": "summit_autumn-dusk",
+    "file": "summit_autumn-dusk.png",
+    "tris": 479390,
+    "calls": 67
+   },
+   {
+    "name": "summit_winter-day",
+    "file": "summit_winter-day.png",
+    "tris": 473464,
+    "calls": 65
+   },
+   {
+    "name": "summit_spring-dawn",
+    "file": "summit_spring-dawn.png",
+    "tris": 479390,
+    "calls": 67
+   },
+   {
+    "name": "bamboo-up_summer-day",
+    "file": "bamboo-up_summer-day.png",
+    "tris": 929964,
+    "calls": 218
+   },
+   {
+    "name": "bamboo-up_autumn-dusk",
+    "file": "bamboo-up_autumn-dusk.png",
+    "tris": 929984,
+    "calls": 230
+   },
+   {
+    "name": "bamboo-up_winter-day",
+    "file": "bamboo-up_winter-day.png",
+    "tris": 924038,
+    "calls": 218
+   },
+   {
+    "name": "bamboo-up_spring-dawn",
+    "file": "bamboo-up_spring-dawn.png",
+    "tris": 929984,
+    "calls": 230
+   },
+   {
+    "name": "stair-out_summer-day",
+    "file": "stair-out_summer-day.png",
+    "tris": 437888,
+    "calls": 48
+   },
+   {
+    "name": "stair-out_autumn-dusk",
+    "file": "stair-out_autumn-dusk.png",
+    "tris": 437888,
+    "calls": 50
+   },
+   {
+    "name": "stair-out_winter-day",
+    "file": "stair-out_winter-day.png",
+    "tris": 437888,
+    "calls": 49
+   },
+   {
+    "name": "stair-out_spring-dawn",
+    "file": "stair-out_spring-dawn.png",
+    "tris": 437888,
+    "calls": 50
+   },
+   {
+    "name": "gate-back_summer-day",
+    "file": "gate-back_summer-day.png",
+    "tris": 877268,
+    "calls": 99
+   },
+   {
+    "name": "gate-back_autumn-dusk",
+    "file": "gate-back_autumn-dusk.png",
+    "tris": 877268,
+    "calls": 103
+   },
+   {
+    "name": "gate-back_winter-day",
+    "file": "gate-back_winter-day.png",
+    "tris": 877268,
+    "calls": 101
+   },
+   {
+    "name": "gate-back_spring-dawn",
+    "file": "gate-back_spring-dawn.png",
+    "tris": 877268,
+    "calls": 103
+   },
+   {
+    "name": "court-roofs_summer-day",
+    "file": "court-roofs_summer-day.png",
+    "tris": 1607534,
+    "calls": 296
+   },
+   {
+    "name": "court-roofs_autumn-dusk",
+    "file": "court-roofs_autumn-dusk.png",
+    "tris": 1607574,
+    "calls": 320
+   }
+  ]
+ },
+ "20261116-151558": {
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "started": "2026-11-16T15:20:12.376Z",
+  "finished": "2026-11-16T15:24:41.041Z",
+  "errors": [],
+  "shots": [
+   {
+    "name": "court-roofs_winter-day",
+    "file": "court-roofs_winter-day.png",
+    "tris": 1595682,
+    "calls": 296
+   },
+   {
+    "name": "court-roofs_spring-dawn",
+    "file": "court-roofs_spring-dawn.png",
+    "tris": 1607574,
+    "calls": 320
+   },
+   {
+    "name": "court-east_summer-day",
+    "file": "court-east_summer-day.png",
+    "tris": 1386342,
+    "calls": 519
+   },
+   {
+    "name": "court-east_autumn-dusk",
+    "file": "court-east_autumn-dusk.png",
+    "tris": 1386382,
+    "calls": 543
+   },
+   {
+    "name": "court-east_winter-day",
+    "file": "court-east_winter-day.png",
+    "tris": 1374490,
+    "calls": 519
+   },
+   {
+    "name": "court-east_spring-dawn",
+    "file": "court-east_spring-dawn.png",
+    "tris": 1386382,
+    "calls": 543
+   },
+   {
+    "name": "guanyin-down_summer-day",
+    "file": "guanyin-down_summer-day.png",
+    "tris": 772924,
+    "calls": 162
+   },
+   {
+    "name": "guanyin-down_autumn-dusk",
+    "file": "guanyin-down_autumn-dusk.png",
+    "tris": 772944,
+    "calls": 174
+   },
+   {
+    "name": "guanyin-down_winter-day",
+    "file": "guanyin-down_winter-day.png",
+    "tris": 766998,
+    "calls": 162
+   },
+   {
+    "name": "guanyin-down_spring-dawn",
+    "file": "guanyin-down_spring-dawn.png",
+    "tris": 772944,
+    "calls": 174
+   },
+   {
+    "name": "lx-n_summer-day",
+    "file": "lx-n_summer-day.png",
+    "tris": 472654,
+    "calls": 60
+   },
+   {
+    "name": "lx-n_autumn-dusk",
+    "file": "lx-n_autumn-dusk.png",
+    "tris": 472654,
+    "calls": 62
+   },
+   {
+    "name": "lx-n_winter-day",
+    "file": "lx-n_winter-day.png",
+    "tris": 466728,
+    "calls": 60
+   },
+   {
+    "name": "lx-n_spring-dawn",
+    "file": "lx-n_spring-dawn.png",
+    "tris": 472654,
+    "calls": 62
+   },
+   {
+    "name": "lx-e_summer-day",
+    "file": "lx-e_summer-day.png",
+    "tris": 537606,
+    "calls": 218
+   },
+   {
+    "name": "lx-e_autumn-dusk",
+    "file": "lx-e_autumn-dusk.png",
+    "tris": 537606,
+    "calls": 220
+   },
+   {
+    "name": "lx-e_winter-day",
+    "file": "lx-e_winter-day.png",
+    "tris": 531680,
+    "calls": 218
+   },
+   {
+    "name": "lx-e_spring-dawn",
+    "file": "lx-e_spring-dawn.png",
+    "tris": 537606,
+    "calls": 220
+   },
+   {
+    "name": "lx-s_summer-day",
+    "file": "lx-s_summer-day.png",
+    "tris": 936184,
+    "calls": 216
+   },
+   {
+    "name": "lx-s_autumn-dusk",
+    "file": "lx-s_autumn-dusk.png",
+    "tris": 936204,
+    "calls": 228
+   },
+   {
+    "name": "lx-s_winter-day",
+    "file": "lx-s_winter-day.png",
+    "tris": 930258,
+    "calls": 216
+   },
+   {
+    "name": "lx-s_spring-dawn",
+    "file": "lx-s_spring-dawn.png",
+    "tris": 936204,
+    "calls": 228
+   }
+  ]
+ },
+ "20261116-151604": {
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "started": "2026-11-16T15:19:31.971Z",
+  "finished": "2026-11-16T15:25:53.130Z",
+  "errors": [],
+  "shots": [
+   {
+    "name": "lx-w_summer-day",
+    "file": "lx-w_summer-day.png",
+    "tris": 478890,
+    "calls": 63
+   },
+   {
+    "name": "lx-w_autumn-dusk",
+    "file": "lx-w_autumn-dusk.png",
+    "tris": 478890,
+    "calls": 65
+   },
+   {
+    "name": "lx-w_winter-day",
+    "file": "lx-w_winter-day.png",
+    "tris": 472964,
+    "calls": 63
+   },
+   {
+    "name": "lx-w_spring-dawn",
+    "file": "lx-w_spring-dawn.png",
+    "tris": 478890,
+    "calls": 65
+   },
+   {
+    "name": "art1_summer-dawn",
+    "file": "art1_summer-dawn.png",
+    "tris": 632034,
+    "calls": 99
+   },
+   {
+    "name": "art2_autumn-dusk",
+    "file": "art2_autumn-dusk.png",
+    "tris": 1877184,
+    "calls": 426
+   },
+   {
+    "name": "art3_autumn-dusk",
+    "file": "art3_autumn-dusk.png",
+    "tris": 1929276,
+    "calls": 398
+   },
+   {
+    "name": "art4_autumn-dusk",
+    "file": "art4_autumn-dusk.png",
+    "tris": 1587628,
+    "calls": 324
+   },
+   {
+    "name": "art5_summer-dusk",
+    "file": "art5_summer-dusk.png",
+    "tris": 630046,
+    "calls": 108
+   },
+   {
+    "name": "art6_autumn-dawn",
+    "file": "art6_autumn-dawn.png",
+    "tris": 936224,
+    "calls": 233
+   },
+   {
+    "name": "turn-court-n_summer-day",
+    "file": "turn-court-n_summer-day.png",
+    "tris": 1850988,
+    "calls": 335
+   },
+   {
+    "name": "turn-court-e_summer-day",
+    "file": "turn-court-e_summer-day.png",
+    "tris": 1384812,
+    "calls": 516
+   },
+   {
+    "name": "turn-court-s_summer-day",
+    "file": "turn-court-s_summer-day.png",
+    "tris": 1257164,
+    "calls": 162
+   },
+   {
+    "name": "turn-court-w_summer-day",
+    "file": "turn-court-w_summer-day.png",
+    "tris": 1262140,
+    "calls": 165
+   },
+   {
+    "name": "turn-bamboo-n_summer-day",
+    "file": "turn-bamboo-n_summer-day.png",
+    "tris": 961412,
+    "calls": 257
+   },
+   {
+    "name": "turn-bamboo-e_summer-day",
+    "file": "turn-bamboo-e_summer-day.png",
+    "tris": 499920,
+    "calls": 221
+   },
+   {
+    "name": "turn-bamboo-s_summer-day",
+    "file": "turn-bamboo-s_summer-day.png",
+    "tris": 312268,
+    "calls": 44
+   },
+   {
+    "name": "turn-bamboo-w_summer-day",
+    "file": "turn-bamboo-w_summer-day.png",
+    "tris": 462242,
+    "calls": 57
+   },
+   {
+    "name": "ending_summer-day",
+    "file": "ending_summer-day.png",
+    "tris": 1003006,
+    "calls": 268
+   },
+   {
+    "name": "ending_autumn-dusk",
+    "file": "ending_autumn-dusk.png",
+    "tris": 1003026,
+    "calls": 280
+   },
+   {
+    "name": "ending_winter-day",
+    "file": "ending_winter-day.png",
+    "tris": 997080,
+    "calls": 268
+   },
+   {
+    "name": "ending_spring-dawn",
+    "file": "ending_spring-dawn.png",
+    "tris": 1003026,
+    "calls": 280
+   }
+  ]
+ },
+ "20261116-152616": {
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "started": "2026-11-16T15:26:31.432Z",
+  "finished": "2026-11-16T15:29:40.958Z",
+  "errors": [],
+  "shots": [
+   {
+    "name": "lx-n_summer-day",
+    "file": "lx-n_summer-day.png",
+    "tris": 479376,
+    "calls": 63
+   },
+   {
+    "name": "lx-n_autumn-dusk",
+    "file": "lx-n_autumn-dusk.png",
+    "tris": 479376,
+    "calls": 65
+   },
+   {
+    "name": "lx-n_winter-day",
+    "file": "lx-n_winter-day.png",
+    "tris": 473450,
+    "calls": 63
+   },
+   {
+    "name": "lx-n_spring-dawn",
+    "file": "lx-n_spring-dawn.png",
+    "tris": 479376,
+    "calls": 65
+   },
+   {
+    "name": "lx-e_summer-day",
+    "file": "lx-e_summer-day.png",
+    "tris": 536828,
+    "calls": 215
+   },
+   {
+    "name": "lx-e_autumn-dusk",
+    "file": "lx-e_autumn-dusk.png",
+    "tris": 536828,
+    "calls": 217
+   },
+   {
+    "name": "lx-e_winter-day",
+    "file": "lx-e_winter-day.png",
+    "tris": 530902,
+    "calls": 215
+   },
+   {
+    "name": "lx-e_spring-dawn",
+    "file": "lx-e_spring-dawn.png",
+    "tris": 536828,
+    "calls": 217
+   },
+   {
+    "name": "lx-w_summer-day",
+    "file": "lx-w_summer-day.png",
+    "tris": 488112,
+    "calls": 65
+   },
+   {
+    "name": "lx-w_autumn-dusk",
+    "file": "lx-w_autumn-dusk.png",
+    "tris": 488112,
+    "calls": 67
+   },
+   {
+    "name": "lx-w_winter-day",
+    "file": "lx-w_winter-day.png",
+    "tris": 482186,
+    "calls": 65
+   },
+   {
+    "name": "lx-w_spring-dawn",
+    "file": "lx-w_spring-dawn.png",
+    "tris": 488112,
+    "calls": 67
+   },
+   {
+    "name": "guanyin-down_summer-day",
+    "file": "guanyin-down_summer-day.png",
+    "tris": 772936,
+    "calls": 163
+   },
+   {
+    "name": "guanyin-down_autumn-dusk",
+    "file": "guanyin-down_autumn-dusk.png",
+    "tris": 772956,
+    "calls": 175
+   },
+   {
+    "name": "guanyin-down_winter-day",
+    "file": "guanyin-down_winter-day.png",
+    "tris": 767010,
+    "calls": 163
+   },
+   {
+    "name": "guanyin-down_spring-dawn",
+    "file": "guanyin-down_spring-dawn.png",
+    "tris": 772956,
+    "calls": 175
+   }
+  ]
+ },
+ "20261116-153345": {
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "started": "2026-11-16T15:34:14.578Z",
+  "finished": "2026-11-16T15:37:53.011Z",
+  "errors": [],
+  "shots": [
+   {
+    "name": "ending_summer-day",
+    "file": "ending_summer-day.png",
+    "tris": 932772,
+    "calls": 214
+   },
+   {
+    "name": "ending_autumn-dusk",
+    "file": "ending_autumn-dusk.png",
+    "tris": 932792,
+    "calls": 226
+   },
+   {
+    "name": "ending_winter-day",
+    "file": "ending_winter-day.png",
+    "tris": 926846,
+    "calls": 214
+   },
+   {
+    "name": "ending_spring-dawn",
+    "file": "ending_spring-dawn.png",
+    "tris": 932792,
+    "calls": 226
+   }
+  ],
+  "note": "结尾最后一格：__pose 到山顶蒲团前、__sit(3) 坐下后 __ending()，镜头停稳（__rites().close.u > 0.985）时拍，界面隐去"
+ }
+}

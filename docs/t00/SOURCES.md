@@ -47,7 +47,7 @@
 | 大殿上檐「釋迦寶殿」四字 | `levels/t00/boards/shijia.webp` | 无准师范原迹，东京国立博物馆 TB-1446（ColBase） | 已核原迹图 |
 | 山门竖匾「雲徑禪寺」 | `site.js` | 虚构寺名，所有者 2026-11-15 决定保留 | 所有者指定 |
 | 其余匾用字体 | `plaque.js` | 现代人题字仍在著作权期内，不能照描，改用开源字体（`JINGSHAN.md`） | 自拟取舍 |
-| 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、Yuji Boku、思源宋体两种，均 SIL OFL | 已核许可 |
+| 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、Yuji Boku、思源宋体两种，均 SIL OFL；霞鹜文楷与 Nanum Brush Script（韩文手写体）的原件声明了保留名，子集文件内部改用项目自己的名字 Yunjing Kai、Yunjing Hand KO（`tools/fonts.py` 的 `RENAMED`，`fonts.test.mjs` 检查），版权与许可记录照原样保留 | 已核许可；改名依据 OFL 第 3 条（修改版不得用保留名），#113 |
 
 ## 殿内
 
@@ -69,7 +69,9 @@
 | 长明灯、南墙直棂窗、佛前两条草黄旧绢幡 | `interior.js` | 寺院常见陈设；幡不用红色是因 `JINGSHAN.md` 不用红绸 | 按常理 |
 | 大殿主尊与莲座 | `shared/models/buddha.glb`、`pedestal.glb` | 如是我闻 `/zen`，所有者确认归其所有、可随项目分发 | 所有者指定 |
 | 大殿两侧四尊、药师殿、观音殿、大慧院的像 | `shared/models/*.glb`、`interior.js` 的 `STAND` | 明尼阿波利斯美术馆、克利夫兰美术馆 CC0 扫描，取自 Hugging Face 上的 Objaverse 镜像（`asset-register.csv`）；只是占位 | 已核许可；不是径山原物 |
-| 画框里的真迹（径山住持墨迹、梁楷、张即之、建盏等 17 件） | `levels/t00/works.js`、`levels/t00/gallery/` | ColBase 与大都会博物馆开放获取的馆藏著录，来源行随卡片显示 | 已核原始著录 |
+| 画框里的真迹（径山住持墨迹、梁楷、张即之、建盏等 17 件） | `levels/t00/works.js`、`levels/t00/gallery/` | ColBase 与大都会博物馆开放获取的馆藏著录，来源行随卡片显示（馆方原文，不译）；ColBase 的 14 件在来源行之下另加一行加工说明，写法照其利用规约的示例「『ColBase』（URL）を加工して作成」（`src/credits.js` 的 `processedLine`，`works.js` 每件的 `processed` 字段：`resize` 或 `crop`） | 已核原始著录；加工说明已核规约原文（`docs/t00/evidence/licensing/colbase-term-ja-2026-11-16.txt`），#113 |
+| 鸣谢与来源页（歇脚菜单「鸣谢」） | `src/credits.js`、`index.html` 的 `#credits` | 按 `LICENSING-AUDIT.md` 第六节的署名清单：馆藏三家、名匾、三维扫描、Poly Haven、字体及其版权行、程序库；名匾一节写明出典和加工（分离墨迹、裁切为四字）；链到 `shared/licenses/THIRD-PARTY-NOTICES.txt` 与 `shared/fonts/OFL.txt` | 已核各家条款（见审计报告）；页面文字自拟，日英韩为开发方初稿 |
+| 第三方许可汇总与 Basis 的许可文件 | `shared/licenses/`、`vendor/basis/LICENSE`、`NOTICE` | three.js、meshoptimizer 的 MIT 全文读自安装的包；lil-gui、stats.js、Basis Universal（Apache-2.0，含 NOTICE）取自各自仓库 2026-11-16；`tools/notices.mjs` 合成，构建在缺失时失败 | 原文已读 |
 | 每殿西墙第一幅墨画帖 | `leaves.js` | 自己画的 | 自拟 |
 | 八幅帖的短文（入山、坐、茶、经、药、灯、井、顶） | `interior.js` 的 `GALLERY` | 为这座虚构寺院写的人物与器物，不是史实；只有茶帖（茶宴东传）、井帖（龙让山）写「相传」，出处见上文径山茶宴与龙井；2026-11-16 改写坐、经、药、灯、顶、入山六帖，去掉替玩家下结论的句子 | 自拟 |
 | 门洞里看到的院子 | `yard.js` 的 `lookOut` | 进门时把殿门口四周拍成立方体贴图 | 按常理 |
