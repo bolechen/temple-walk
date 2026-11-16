@@ -30,6 +30,19 @@ const LOG_DRAW = 0.24, TAP = 0.08;
 // While a photograph holds the picture still (`pauseRites`), the clock stops too, and when it runs again it takes up
 // where it stopped: an observance half done is not found finished behind the print.
 let held = null, offset = 0, pausedAt = null;
+// Where the eye must aim so that a point (the top of the pavilion at the close) stays a margin of the picture's height
+// under its upper edge: the aim it was given, raised only as far as that needs. The picture is taller or wider on
+// different screens, and the pavilion taller than it was.
+const _frame = new THREE.PerspectiveCamera();
+/** @param {THREE.Vector3} cam @param {THREE.Vector3} aim @param {THREE.Vector3} top @param {number} fov @param {number} aspect */
+export function aimToFrame(cam, aim, top, fov, aspect, margin = 0.08) {
+  _frame.fov = fov; _frame.aspect = aspect; _frame.updateProjectionMatrix(); _frame.position.copy(cam);
+  const at = (y) => { _frame.lookAt(aim.x, y, aim.z); _frame.updateMatrixWorld(); return _v.copy(top).project(_frame).y; }, want = 1 - 2 * margin;
+  if (at(aim.y) <= want) return aim.clone();
+  let lo = aim.y, hi = aim.y + 60; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (at(mid) <= want) hi = mid; else lo = mid; }
+  return new THREE.Vector3(aim.x, hi, aim.z);
+}
+const _v = new THREE.Vector3();
 export const riteNow = () => held ?? performance.now() - offset;
 export function pauseRites(on) {
   if (on && pausedAt === null && held === null) { pausedAt = performance.now(); held = pausedAt - offset; }
@@ -244,7 +257,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // When the seventh seal is earned he is sitting on the summit. The eye leaves his shoulder: it comes round before
   // him, draws back down the steps and rises until the pavilion stands whole on its mountain, while he goes on
   // breathing and the closing words are said (game.js says them, on `cue`). `secs` is the whole of it.
-  const END = { secs: 30, on: false, u: 0 };
+  const END = { secs: 30, on: false, u: 0, aim: 0 };
   /** @param {() => boolean} on @param {(seconds: number) => void} [cue] */
   async function close(on, cue = () => {}) {
     const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = dir(0, 0, 1).clone(), l = dir(1, 0, 0).clone();
@@ -253,8 +266,11 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     END.on = true; END.u = 0;
     y.cine((camera) => {
       if (!path) { cam0.copy(camera.position); camera.getWorldDirection(look0).multiplyScalar(6).add(cam0);
-        path = new THREE.CatmullRomCurve3([cam0.clone(), P(1.5, 0.75, 3.1), P(3.6, 2.6, 8.5), P(7, 9, 19), P(9, 17, 34)], false, "centripetal");
-        aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), P(0, 5, -6)], false, "centripetal"); }
+        // The last look is raised, if need be, until the pavilion's ridge ornaments stand clear of the picture's top.
+        const far = P(9, 17, 34), roofs = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - o.x, (r.z0 + r.z1) / 2 - o.z) < 16), tall = roofs.sort((p, q) => q.top - p.top)[0];
+        path = new THREE.CatmullRomCurve3([cam0.clone(), P(1.5, 0.75, 3.1), P(3.6, 2.6, 8.5), P(7, 9, 19), far], false, "centripetal");
+        const last = tall ? aimToFrame(far, P(0, 5, -6), new THREE.Vector3((tall.x0 + tall.x1) / 2, tall.top + 1.6, (tall.z0 + tall.z1) / 2), camera.fov, camera.aspect) : P(0, 5, -6);
+        aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
       const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
     });
     const ok = await play(END.secs, (u) => {
@@ -288,7 +304,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
       incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
       sit: { breaths: sit.breaths, ring: ring.visible },
-      close: { on: END.on, u: +END.u.toFixed(3) },
+      close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
     }),
   };
 }

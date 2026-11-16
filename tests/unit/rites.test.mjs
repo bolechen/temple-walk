@@ -82,3 +82,18 @@ test("a stroke begun while the log still swings draws it back from where it is, 
   for (let t = at; t < at + 9000; t += 5) { const z = logSwing(s, t); jump = Math.max(jump, Math.abs(z - prev)); prev = z; lo = Math.min(lo, z); }
   assert.ok(jump < 0.02, `the log moved ${jump} in 5 ms`); assert.ok(lo >= -0.18 - 1e-9, `the log went into the bell: ${lo}`);
 });
+
+test("the closing shot leaves air over the pavilion: its top stays a twelfth of the picture under the upper edge, upright or wide", async () => {
+  const { aimToFrame } = await import("../../app/src/rites.js");
+  assert.equal(typeof aimToFrame, "function", "rites.js has no aimToFrame");
+  const cam = new THREE.Vector3(9, 60, 34), aim = new THREE.Vector3(0, 48, -6), top = new THREE.Vector3(0, 66, -12);
+  for (const [fov, aspect] of [[50, 16 / 9], [50, 9 / 19.5], [65, 4 / 3]]) {
+    const a = aimToFrame(cam, aim, top, fov, aspect, 0.08), c = new THREE.PerspectiveCamera(fov, aspect, 0.1, 500);
+    c.position.copy(cam); c.lookAt(a); c.updateMatrixWorld(); c.updateProjectionMatrix();
+    const y = top.clone().project(c).y;
+    assert.ok(y <= 1 - 2 * 0.08 + 1e-3, `fov ${fov}, aspect ${aspect.toFixed(2)}: the top stands at ${y.toFixed(3)} of the half picture`);
+    assert.ok(a.x === aim.x && a.z === aim.z && a.y >= aim.y, "only the height of the aim is raised");
+  }
+  const low = new THREE.Vector3(0, 50, -12);
+  assert.ok(aimToFrame(cam, aim, low, 50, 16 / 9, 0.08).y === aim.y, "a top already well inside the picture moves nothing");
+});
