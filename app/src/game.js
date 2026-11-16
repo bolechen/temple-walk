@@ -12,6 +12,7 @@ import { createRites } from "./rites.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
+import { processedLine } from "./credits.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -294,6 +295,8 @@ export function createGame(y) {
     // The facts and the note in the visitor's language (levels/t00/works-local.js); the museum's source line stays as published.
     $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && t("{size} 厘米", { size: w.size })], ["收藏", w.holder + (w.rank ? (lang === "en" ? "; " : "　") + w.rank : "")]].filter(([, v]) => v).map(([k, v]) => `<dt>${t(k)}</dt><dd>${v}</dd>`).join("");
     $("pieceNote").textContent = w.note; $("pieceLink").textContent = w.link; $("pieceCredit").textContent = w.credit;
+    // ColBase's terms ask that a picture that was edited say so, apart from the source line (src/credits.js).
+    const edited = processedLine(w); $("pieceProcessed").textContent = edited; $("pieceProcessed").hidden = !edited;
     ui.open("piece", { onClose: () => { y.stage(null); seen.add(spot); } });
   }
   $("pieceClose")?.addEventListener("click", () => ui.close("piece"));

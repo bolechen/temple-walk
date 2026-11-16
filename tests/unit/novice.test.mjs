@@ -115,3 +115,61 @@ test("a body that is not made for this skeleton is refused, and he stays as he w
   const m = createMonk(), bad = { ...geometries, shoes: new THREE.BufferGeometry() };
   assert.throws(() => m.dress(bad, new THREE.MeshStandardMaterial()), /not skinned/);
 });
+
+// Issue #80: where the texture has a seam, or one part of him meets another, two or three copies of a vertex lie at one
+// point. If they take different weights they part when the bones move, and the cloth opens at the cuffs, the wrists and
+// the hem. Every copy of one point must take the same weights, and copies that start together must stay together.
+const coincident = () => {
+  const offs = {}, P = []; let n = 0;
+  for (const p of PARTS) { offs[p] = n; const a = geometries[p].attributes.position.array; for (let i = 0; i < a.length; i++) P.push(a[i]); n += a.length / 3; }
+  const cell = new Map(), groups = new Map(), EPS = 1e-5;
+  for (let i = 0; i < n; i++) {
+    const c = [0, 1, 2].map((k) => Math.round(P[i * 3 + k] / EPS)); let home = -1;
+    for (let dx = -1; dx <= 1 && home < 0; dx++) for (let dy = -1; dy <= 1 && home < 0; dy++) for (let dz = -1; dz <= 1 && home < 0; dz++)
+      for (const j of cell.get(`${c[0] + dx},${c[1] + dy},${c[2] + dz}`) || []) if (Math.hypot(P[i * 3] - P[j * 3], P[i * 3 + 1] - P[j * 3 + 1], P[i * 3 + 2] - P[j * 3 + 2]) < EPS) { home = j; break; }
+    const k = c.join(","); if (!cell.has(k)) cell.set(k, []); cell.get(k).push(i);
+    if (home >= 0) { const g = groups.get(home) || [home]; g.push(i); groups.set(home, g); groups.set(i, g); }
+  }
+  const at = (i) => { const p = PARTS.findLast((q) => offs[q] <= i); return [p, i - offs[p]]; };
+  return { groups: [...new Set(groups.values())].map((g) => g.map(at)), offs };
+};
+
+test("every copy of one point takes the same weights, across a seam and where one part meets another", () => {
+  const { groups } = coincident(); let bad = 0, worst = 0, where = null;
+  const dense = ([p, i]) => { const g = geometries[p].attributes, m = new Map(); for (let k = 0; k < 4; k++) { const w = g.skinWeight.getComponent(i, k); if (w > 0) m.set(g.skinIndex.getComponent(i, k), (m.get(g.skinIndex.getComponent(i, k)) || 0) + w); } return m; };
+  for (const g of groups) {
+    const a = dense(g[0]);
+    for (const c of g.slice(1)) {
+      const b = dense(c); let d = 0; for (const k of new Set([...a.keys(), ...b.keys()])) d = Math.max(d, Math.abs((a.get(k) || 0) - (b.get(k) || 0)));
+      if (d > 1e-6) { bad++; if (d > worst) { worst = d; where = `${g[0][0]} ${g[0][1]} / ${c[0]} ${c[1]}`; } }
+    }
+  }
+  assert.ok(groups.length > 1000, `${groups.length} points with more than one copy`);
+  assert.equal(bad, 0, `${bad} copies take other weights than the first copy of their point (worst ${worst.toFixed(3)}, ${where})`);
+});
+
+test("copies that start at one point stay within a millimetre standing, through a whole stride and up a flight", () => {
+  const { groups } = coincident(), v = new THREE.Vector3(), a = new THREE.Vector3();
+  const look = (m, what) => {
+    m.group.updateMatrixWorld(true); let worst = 0, n = 0;
+    for (const g of groups) {
+      m.parts[g[0][0]].getVertexPosition(g[0][1], a).applyMatrix4(m.parts[g[0][0]].matrixWorld); let s = 0;
+      for (const [p, i] of g.slice(1)) s = Math.max(s, m.parts[p].getVertexPosition(i, v).applyMatrix4(m.parts[p].matrixWorld).distanceTo(a));
+      worst = Math.max(worst, s); if (s > 0.001) n++;
+    }
+    assert.ok(worst <= 0.001, `${what}: ${n} points come apart, at worst ${(worst * 1000).toFixed(1)} mm`);
+  };
+  const m = dressed(createMonk);
+  for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {});
+  look(m, "standing");
+  // one whole stride: the gait settles in the first second, and the next three hold more than one step of each foot
+  const w = dressed(createMonk);
+  for (let i = 0; i < 120; i++) { w.update(1 / 30, 2.1, false, i / 30, () => 0, {}); if (i >= 30 && i % 3 === 0) look(w, `walking, frame ${i}`); }
+  // up a flight of 15 cm risers and 30 cm treads, as the stairs of the courts are
+  const c = dressed(createMonk), step = (z) => Math.max(0, Math.floor(-z / 0.3)) * 0.15, ramp = (z) => Math.max(0, -z) * 0.5;
+  for (let i = 0; i < 90; i++) {
+    const z = -i / 30 * 1.2; c.group.position.set(0, ramp(z), z);
+    c.update(1 / 30, 1.2, false, i / 30, (x, zz) => step(zz), { heightAt: (x, zz) => ramp(zz), stairs: true });
+    if (i >= 30 && i % 3 === 0) look(c, `climbing, frame ${i}`);
+  }
+});

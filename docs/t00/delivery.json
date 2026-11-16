@@ -66,7 +66,7 @@
   },
   "schema_version": 1,
   "scene_id": "T00",
-  "summary": "登上凌霄阁顶层（#101，PR #122）：一层西北角木梯，梯脚按 E 过墨帘到顶层平坐；楼上只有第一人称、绕阁一圈、掉不下去、院子照常画、刷新后仍在楼上。回廊 1.6 米登记为偏差，结构评审方推荐的 2.0 米方案待所有者定（对比图在 evidence/loft/compare/）。开发方陈述，不是验收结论。 另：结构评审修改第三阶段（代码提交 34f2ca2，叠在第二阶段之上）：楼阁上层的柱落到下层柱上，山门上层、藏经楼上层、凌霄阁二三层加平坐。STR3-01、02 为 fixed_pending_retest；凌霄阁按所有者决定只对二层角柱，属部分解决。 另：结构评审修改第二阶段（代码提交 8831059，叠在第一阶段之上）：屋面举高由跨度算出，殿阁楼阁三分之一、厅堂 0.27，屋面改为逐架折下的折线，腰檐副阶每尺举五寸。STR3-06 为 fixed_pending_retest，等结构评审方复核。 另：结构评审修改第一阶段（代码提交 db2635a、e5ff050）：补间铺作心间两朵、其余一朵，全场开间（凌霄阁二、三层除外，按所有者评审留到第三阶段）重排为心间最宽、向外不增，相邻铺作间距相差不过一宋尺。STR3-04、STR3-05 为 fixed_pending_retest，等结构评审方复核，不自验。 另：2026-11-16：本地 dev 与 PR 预览加「直达」参数——?seals= 临时朱印帐（不读写本机存档）、?at= 直接站到打卡点、?play=ending/<仪式> 直接播结尾或开始仪式；预览评论加一行评审直达链接；正式站忽略。属开发与评审工具，不改游戏。 上一轮：Issue #16 建筑边缘第二轮（代码提交 4810cd5e40da89d592d61df97717b123646b959d，在 4196350 之上）：覆盖表按构件分列，膝下鞋与袍脚纳入 1 厘米容差，跳跃不进茶案，镜头近裁剪面有检查。开发者状态仍为 fixed_pending_retest，等独立评审复测；真人正常速度录像未录。 上一轮：2026-11-16 晚：换季后序章结尾可再播（每季一次，重播不再出七印圆满印）；上香后三支香从香头往下烧短、火点下移、烟渐低，默认 5 分钟烧到冷香脚，烧完可再上香（不再给印），插香时刻按墙上时钟保存、刷新接着烧；本地 dev 与 PR 预览默认打开调试面板（?debug=0 关闭，正式站不加载）。开发方自评，不是验收结论。 上一轮：冬天院中积雪：每进院子中轴一条扫过的路，两边雪埂，路外积雪有厚薄起伏，去掉了硬边和路上的雾状薄雪；屋顶下（门道、钟鼓楼台基、檐廊）不再积雪，只在檐口留一条吹进的薄雪。 每个同仓库 PR 有独立预览地址：pages.yml 检查通过后，把同一份 dist/ 上传为 Cloudflare Worker temple-walk-preview 的预览 pr-<编号>；PR 评论给出随推送更新的最新地址、每个提交的固定地址和六个验收机位链接，失败时写明未部署及旧地址对应的提交，PR 关闭时删除预览。正式站点仍是 GitHub Pages。开发方陈述，不是验收结论。 此前的摘要：2026-11-16 玩法与文案打磨：山顶静坐任何时候都给，第一次完成就播序章结尾，不论集了几印（缺印登顶不再被告知「山下还有没做完的事」）；看过与否存进朱印帐（journey.closed），旧存档兼容（集满的算看过，旧的 yunjing.ending.v1 标记并入后删除），每趟只播一次，重新朝山后可再播；结尾后翻开朱印帐写明还空着几处，可以接着补印；七印集齐另有一枚「七印圆满」的印再翻开朱印帐。结束语按这一趟实际做过的事组句（步数、按先后最多三件事、钟按撞了几下说、藏经楼那一句）。撞钟改为一按一下，钟槌荡回来前拉不动，撞满后还能撞，走开或 Esc 松手；吃茶三口后他坐着不走，慢呼吸、转头看院子，配乐退下，按钮「起身」（所有坐具同）。帖文、七印短句、山顶与朱印帐提示按具体的人、器物、动作改写，传说标「相传」。开发方自评，不是验收结论；独立验收未改。 正常速度实测（tools/play-t00.cjs，真键盘/触摸，SwiftShader 软件渲染约 1 帧/秒）：山顶空帐静坐→结尾→朱印帐「帐上还空着六处」→E 起身；撞钟四次按下各响一次（拉到响 1.3–1.4 秒），第三下得印，握绳时切视角，Esc 松手；吃茶三口后坐 40 秒，头部张望 ±0.41，E 起身；模拟手机上全靠点按撞钟两下、吃茶、起身。录像与截图见 docs/t00/evidence/play-2026-11-16/。 上一轮的摘要：声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
+  "summary": "登上凌霄阁顶层（#101，PR #122）：一层西北角木梯，梯脚按 E 过墨帘到顶层平坐；楼上只有第一人称、绕阁一圈、掉不下去、院子照常画、刷新后仍在楼上。回廊 1.6 米登记为偏差，结构评审方推荐的 2.0 米方案待所有者定（对比图在 evidence/loft/compare/）。开发方陈述，不是验收结论。 另：雕刻身体改权重（#80 第二步，A 路）：用 Meshy 原文件以 NOVICE_WELD=8 重建 novice.glb（5178e1a4…），同一点的副本同一份权重（部件交界按 鞋>袍>皮肤>裤 取一份），手臂按在臂上的位置取权重，各部件内平滑 7 次；站立、合掌、走路不再撕裂，坐凳、盘坐仍撕裂（需分层模型，B 路）；默认仍是代码身体。 另：Issue #100（开发方陈述，等主创在预览上复核，状态 fixed_pending_retest）：app/yard.js 点按时的 toHall（点大殿走殿门）只在他站在台基盒子之外时成立；之前他出殿后站在盒子里，射线起点在盒内 intersectsBox 恒真，点哪里都走回殿门。新增端到端场景 hallexit（修前失败：主殿目标为殿门 0,-5.59）。 上一轮：结构评审修改第三阶段（代码提交 34f2ca2，叠在第二阶段之上）：楼阁上层的柱落到下层柱上，山门上层、藏经楼上层、凌霄阁二三层加平坐。STR3-01、02 为 fixed_pending_retest；凌霄阁按所有者决定只对二层角柱，属部分解决。 另：结构评审修改第二阶段（代码提交 8831059，叠在第一阶段之上）：屋面举高由跨度算出，殿阁楼阁三分之一、厅堂 0.27，屋面改为逐架折下的折线，腰檐副阶每尺举五寸。STR3-06 为 fixed_pending_retest，等结构评审方复核。 另：结构评审修改第一阶段（代码提交 db2635a、e5ff050）：补间铺作心间两朵、其余一朵，全场开间（凌霄阁二、三层除外，按所有者评审留到第三阶段）重排为心间最宽、向外不增，相邻铺作间距相差不过一宋尺。STR3-04、STR3-05 为 fixed_pending_retest，等结构评审方复核，不自验。 另：2026-11-16：本地 dev 与 PR 预览加「直达」参数——?seals= 临时朱印帐（不读写本机存档）、?at= 直接站到打卡点、?play=ending/<仪式> 直接播结尾或开始仪式；预览评论加一行评审直达链接；正式站忽略。属开发与评审工具，不改游戏。 上一轮：Issue #16 建筑边缘第二轮（代码提交 4810cd5e40da89d592d61df97717b123646b959d，在 4196350 之上）：覆盖表按构件分列，膝下鞋与袍脚纳入 1 厘米容差，跳跃不进茶案，镜头近裁剪面有检查。开发者状态仍为 fixed_pending_retest，等独立评审复测；真人正常速度录像未录。 上一轮：2026-11-16 晚：换季后序章结尾可再播（每季一次，重播不再出七印圆满印）；上香后三支香从香头往下烧短、火点下移、烟渐低，默认 5 分钟烧到冷香脚，烧完可再上香（不再给印），插香时刻按墙上时钟保存、刷新接着烧；本地 dev 与 PR 预览默认打开调试面板（?debug=0 关闭，正式站不加载）。开发方自评，不是验收结论。 上一轮：冬天院中积雪：每进院子中轴一条扫过的路，两边雪埂，路外积雪有厚薄起伏，去掉了硬边和路上的雾状薄雪；屋顶下（门道、钟鼓楼台基、檐廊）不再积雪，只在檐口留一条吹进的薄雪。 每个同仓库 PR 有独立预览地址：pages.yml 检查通过后，把同一份 dist/ 上传为 Cloudflare Worker temple-walk-preview 的预览 pr-<编号>；PR 评论给出随推送更新的最新地址、每个提交的固定地址和六个验收机位链接，失败时写明未部署及旧地址对应的提交，PR 关闭时删除预览。正式站点仍是 GitHub Pages。开发方陈述，不是验收结论。 此前的摘要：2026-11-16 玩法与文案打磨：山顶静坐任何时候都给，第一次完成就播序章结尾，不论集了几印（缺印登顶不再被告知「山下还有没做完的事」）；看过与否存进朱印帐（journey.closed），旧存档兼容（集满的算看过，旧的 yunjing.ending.v1 标记并入后删除），每趟只播一次，重新朝山后可再播；结尾后翻开朱印帐写明还空着几处，可以接着补印；七印集齐另有一枚「七印圆满」的印再翻开朱印帐。结束语按这一趟实际做过的事组句（步数、按先后最多三件事、钟按撞了几下说、藏经楼那一句）。撞钟改为一按一下，钟槌荡回来前拉不动，撞满后还能撞，走开或 Esc 松手；吃茶三口后他坐着不走，慢呼吸、转头看院子，配乐退下，按钮「起身」（所有坐具同）。帖文、七印短句、山顶与朱印帐提示按具体的人、器物、动作改写，传说标「相传」。开发方自评，不是验收结论；独立验收未改。 正常速度实测（tools/play-t00.cjs，真键盘/触摸，SwiftShader 软件渲染约 1 帧/秒）：山顶空帐静坐→结尾→朱印帐「帐上还空着六处」→E 起身；撞钟四次按下各响一次（拉到响 1.3–1.4 秒），第三下得印，握绳时切视角，Esc 松手；吃茶三口后坐 40 秒，头部张望 ±0.41，E 起身；模拟手机上全靠点按撞钟两下、吃茶、起身。录像与截图见 docs/t00/evidence/play-2026-11-16/。 上一轮的摘要：声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
   "changes": [
     "site.js：凌霄阁三层 loft: \"lingxiao\"，回廊宽与三层出檐只在 LOFT 一处（1.6 / 2.2）；putStack 登记 site.lofts、把下层腰檐在 walk.roofs 里的顶截到上层楼面；views.loft 与 viewUp",
     "site.js createWalker：setLoft(id)，带 loft 标记的楼面只在楼上时才算地；楼上 blocked 只认楼面、eyeShut 不出栏杆内皮",
@@ -77,6 +77,12 @@
     "resume.js：存档的 up 字段；hints.js：「西北角可以登楼。」「楼上用自己的眼睛看，下楼再换视角。」；app/locales 三种语言",
     "tests：loft.test.mjs（新，改动前 9 项失败）、plan、sweeps、resume、i18n-keys、nearplane；tools/edges.mjs 从顶层门口起淹一遍；e2e 新场景 loft",
     "docs：decisions.md「实现时的决定」、SOURCES.md 八行、CLAUDE.md、HANDOFF.md；evidence/loft/compare/、evidence/loft/t4-6bb9ad2/",
+    "tools/novice.mjs：第 4a 步（手臂上的皮肤和袖子按离肩关节多远取上臂、前臂、手的权重）与第 4b 步（NOVICE_WELD=n：同一点的副本同一份权重，部件交界按 鞋>袍>皮肤>裤，各部件内平滑 n−1 次）；tools/novice-weld.mjs 加 rank；tools/novice-weld-trial.mjs 同步",
+    "app/shared/models/novice.glb：NOVICE_WELD=8 重建，SHA-256 57bc0000… → 5178e1a4…；只改关节与权重，位置、法线、UV、面数、贴图不变；默认身体与 ?body= 未改",
+    "tests/unit/novice.test.mjs：两条新测试（重合顶点权重相同；站立、走路一个步态、上台阶时重合点不超过 1 mm），在旧文件上先失败",
+    "tools/novice-views.cjs + tools/novice-stage/：裸舞台上逐帧摆姿势，五个姿势四个方向，约 20 秒；tools/portrait.js 等雕刻身体的时限 60 s → 15 min，等不到就报错",
+    "docs：asset-register（MESHY-novice）、SOURCES（雕刻身体一行）、KNOWN-ISSUES（坐姿仍撕裂）、HANDOFF、CLAUDE.md、docs/t00/evidence/monk/weld/",
+    "yard.js：pointerup 里 toHall 加 !onBase（他的位置在 hall.box 的 xz 范围内时不成立），站在前廊、台阶上点地面就走到点的地方；站在院子里点大殿仍经台阶脚走到殿门",
     "site.js：凌霄阁二层改为五间（±5.4、±3.4、±1.2），三层的柱全部落在二层柱线上（结构评审方复核 #89 的意见；测试一项先失败）",
     "site.js：山门上层 zs ±3（与下层同深，出檐 1.8）、藏经楼上层 zs ±4.2/0 并加回廊栏杆、大殿上檐 zs ±4.3、御碑亭上檐 ±2.0、凌霄阁一层内圈柱线 ±5.4；putStack 给有平坐的上层垫高",
     "building.js：ping（平坐：普拍方、减一跳铺作、白壁、雁翅版），between 对放不下一朵的窄间不放补间；frame 记 cols、ping",
@@ -99,13 +105,16 @@
     "tests/unit/edges.test.mjs：跳跃测试（两张茶案、至少 24 个方向、走与 Shift、每次落地再跳，逐帧不进茶案与身位，落地都在前廊 0.45 米）；膝下测试（草垫、门槛、蒲团）",
     "tests/e2e/run.cjs jump：三段真实按键（W、Shift+W、空格）在茶案前起跳，逐帧取样",
     "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
-    "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
+    "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令",
+    "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。",
+    "docs：景观评审 docs/t00/landscape-review.md（#112，只评审，没有改 app/），后续 issue #114–#119；tools/gpu/job.cjs 可拍任意 ?cam= 地址"
   ],
   "known_issues": [
     "凌霄阁回廊 1.6 米不合《营造法式》（结构评审方答复 #101），登记为偏差；推荐方案（外沿 ±5.4、回廊 2.0、出檐 2.8）待所有者定，定了还要按评审方改平坐构件（重栱、普拍方厚随材广、叉柱）",
     "小沙弥真实眼高约 1.02 米，比扶手高约 10 厘米，看不到观音殿屋顶、藏经楼只露屋脊；第一人称镜头 1.3 米时看得到。待所有者定是否加踏脚或降栏杆",
     "凌霄阁三层竖匾缩小（2.35 → 约 1.7 米），结尾最后一格里可见，待所有者看",
     "楼梯口没有切开藻井，是暗面加边框；楼上没有第三人称（所有者定的第一版）",
+    "雕刻身体（?body=sculpt）坐凳、盘坐时袍子仍撕裂：袍子下面没有腿，需分层模型（#80 B 路）；站立、合掌、走路已修（2026-11-16）",
     "STR3-01、02 未经评审方复核",
     "凌霄阁：二层非角柱（16 根）不在一层柱线上（所有者定的「只对角柱」）；一层梢间 2.1 米、二层五间、三层两次间都没有补间，一层铺作间距不匀",
     "山门上层变深后顶部更重，CAM-04、CAM-05 的验收证据须重拍",
@@ -135,7 +144,6 @@
     "吃茶后停留时，若是用 __pose 把他放到桌旁，跟拍的眼睛对着他侧面，他偏在画面左边；走过去坐下时眼睛在身后，未专门调",
     "新钟声、新脚步音量还没有人试听；改前改后对比 MP3 由开发者本地生成（tools/out/ab，不入库）",
     "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
-    "小沙弥雕刻的身体（novice.glb）在走路、上台阶、打坐时布料会撕开（贴图接缝处骨骼权重不对）；2026-11-15 起默认关闭，页面穿代码建的身体，地址加 ?body=sculpt 才换上；权重未修",
     "鸟叫没有人听过；SOURCES.md 表末列出还没核到原文的出处",
     "竹竿相碰没有人听过；鸟叫没做",
     "龙井的滴水声没有人听过；涟漪只在软件渲染下看过；渗水是贴面薄片",
@@ -152,6 +160,8 @@
   ],
   "evidence": [
     "6bb9ad2（#101）：T4 上 views.loft 高档 1080p 13.87 ms/帧（帧间 21.65 ms）、低档 390×844×3 8.22 ms；同一 Job 首院高档 14.46 ms、lookback 14.01 ms；夏昼、秋暮、冬昼三张，docs/t00/evidence/loft/t4-6bb9ad2/；1.6 与 2.0 米对比 docs/t00/evidence/loft/compare/（SwiftShader）",
+    "claude/monk-80-weld（#80 A 路）：docs/t00/evidence/monk/weld/ —— red-before.txt、green-after.txt、views-{before,after,code}.jpg（五个姿势×正侧背斜俯）、compare-{stand,pray,walk,seated}.jpg（代码身体｜改前｜改后）、portrait-{before,after,code}.jpg、trial-{before,after}.json；平滑档位的比较在 README.md",
+    "#100：tests/e2e/run.cjs 新场景 hallexit（第三人称鼠标八殿各点院子方向、第一人称与第三人称触屏各两殿、主殿出门后三点都落在台阶脚之外并走下台阶、院子点大殿进殿、前廊点殿门进殿、前廊点前廊地面不进殿）；修前在主殿一步失败，修后通过（本地 SwiftShader）",
     "0a88f96（#103）：CAM-01～06 在 T4 上重拍，新目录 docs/t00/evidence/acceptance/20261116-0a88f96/（manifest.json、CAM-0N.jpg、compare-CAM-0N.jpg 左旧右新、changes.md）；旧证据 docs/t00/evidence/M4/ 未动，被该目录取代；acceptance-report.json、independent-review.json 未改，验收结论待独立评审在新证据上另做",
     "0a88f96（#74）：T4 实测首院高档 1080p 10.13 ms（夏昼）/ 10.82 ms（秋暮），192.7 万面 / 354–378 次；低档 390×844 5.64–5.86 ms，86.7 万面；tour 三趟平均 58.6 fps、p95 22.7 ms（最差 25.0）；原始数据 docs/t00/evidence/perf/20261116-0a88f96/，预算页 docs/t00/geometry-budget.md",
     "GPU（Tesla T4，court 高档 1920×1080，一次，run 20261116-121313）：第三阶段 9.38 ms/帧（第二阶段 9.81）；低档 390×844：4.56 ms",
@@ -197,7 +207,8 @@
     "tests/unit/steps.test.mjs",
     "tests/e2e/run.cjs: sound / steps / snow / music / rites",
     "docs/t00/SOURCES.md",
-    "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」"
+    "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」",
+    "景观评审：锁定 2d1c7d7e2244fd2d876177b30714962634614ec6，T4（ANGLE/Vulkan）五次运行 20261116-151549/151558/151604/152616/152646 及结尾补拍，图在 docs/t00/evidence/landscape/review-2026-11-16-2d1c7d7/，0 个页面错误"
   ],
   "domain_binding": {
     "date": "2026-11-15",
@@ -328,10 +339,13 @@
     "round_2026_11_16_evening": "单测 232/232；typecheck、check 通过；e2e replay（42 s）、incense（55 s，burn=12）、preview-debug（26 s，以 host-resolver 把 pr-1-temple-walk-preview.test 指到本机）、views 通过；本地 pnpm dev 无参数时面板打开、?debug=0 时不打开",
     "structure_phase1": "e5ff050（合入 main 后）：pnpm test 260/260；tests/unit/structure.test.mjs 五项；pnpm run check、typecheck 通过。e2e:smoke 31 个场景 30 个通过（含 rites、seats、halls、jump）；incense 在全量运行里失败一次（「no seal for the incense」，当时后台同时在拍图），单独重跑通过，判断是香插好后立刻查朱印的时序，与开间无关，没有改它",
     "structure_phase2": "pnpm test 264/264；check、typecheck 通过；edges 0 处超限；e2e:smoke 31/31",
-    "structure_phase3": "pnpm test 266/266；check、typecheck 通过；edges 0 处超限；e2e:smoke 31/31"
+    "structure_phase3": "pnpm test 266/266；check、typecheck 通过；edges 0 处超限；e2e:smoke 31/31",
+    "monk_80_weld": "novice.test.mjs 两条新测试在旧 novice.glb 上失败（962 个副本权重不同；站立 765 处分开，最远 97 mm），新文件 10/10 通过；其余结果见 PR 说明"
   },
   "unverified": [
     "#101：T4 帧耗只测一次；手机真机没测；预览上没有人亲自登楼走过（关闭条件要所有者在预览上登一次楼）",
+    "#80 A 路：上台阶只有单元测试，没有截图；T4 帧时间未量（面数贴图未变）；改后未在真机上看过",
+    "#100：未在真机、未在 PR 预览上操作；主创需按 issue 关闭条件复核（上香→出殿→点山门方向→走下台阶）",
     "#74：帧耗只在一次 T4 Job 上测，没有重复取平均、没有换 Job 实例；手机真机没有测；殿内帧耗没有测；几何预算的分配比例（结构线 27 万 / #72 10 万面）与低档「只守不增」是开发方的取舍，待所有者定",
     "第三阶段的图是软件渲染；山门的验收证据没有替换",
     "第二阶段没有跑 GPU 帧时间（三角面数 +1.3%，绘制次数不变）",
@@ -347,7 +361,8 @@
     "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
     "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
     "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
-    "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机"
+    "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机",
+    "景观评审的面数与帧时间是估算，未实测；手机未测"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",

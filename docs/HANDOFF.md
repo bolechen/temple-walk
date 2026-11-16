@@ -47,9 +47,55 @@
   - 端到端新场景 `loft`。
 - **没做**：二层不开放；第三人称在窄回廊上的办法（「眼睛沿回廊往侧后方让」）留作后续，要另开 issue；楼梯口没有真的切开藻井，是一块暗面加一圈边框。
 
+## 2026-11-16 夜：雕刻身体改权重（#80 第二步，A 路）
+
+所有者选了「先 A 后 B」，这次只做 A。分支 `claude/monk-80-weld`，评审人是主创；默认身体仍是代码身体，`?body=` 没改。
+
+- **先写了会失败的测试**（`tests/unit/novice.test.mjs` 最后两条）：
+  - 位置重合（小于 1e-5 米）的副本权重相同；
+  - 站立、走路一个步态、上一段 15 厘米踏步的台阶时，重合点相距不超过 1 毫米。
+
+  在旧 `novice.glb` 上失败：962 个副本权重不同，站立时 765 处分开，最远 97 mm。输出见 `docs/t00/evidence/monk/weld/red-before.txt`。
+- **用 Meshy 原文件重建**：`NOVICE_WELD=8 node tools/novice.mjs <原文件>`。
+  - 新的 SHA-256 是 `5178e1a4…`，已登记进 `asset-register.csv`。
+  - 原文件在所有者私有的 Hugging Face bucket（`hf://buckets/bolechen/temple-walk-render/assets/meshy`），不进 git。
+  - 改脚本之前先确认过：原来的 `tools/novice.mjs` 能从原文件重现旧 `novice.glb` 的全部几何和权重（只有 extras 里的源文件名不同）。新文件只改了权重，位置、法线、贴图坐标、面数和贴图都没变。
+- **和比较页不一样的两处**（详见 `docs/t00/evidence/monk/weld/README.md`）：
+  1. 整组取平均会弄坏三条原有检查：下摆、鞋、走路时裤子露出袍子。所以两个部件交界的点只取一个部件的权重（鞋 > 袍 > 皮肤 > 裤），平滑也只在同一部件里做。
+  2. 只焊合时，合掌的袖口拉出一片 25 厘米的浅色三角。原因是雕刻身体的手臂比代码身体张得开，袖子又缝在前臂上，最近邻取错了骨骼。
+     加了第 4a 步：手臂上的皮肤和袖子按离肩多远取上臂、前臂、手的权重。
+- **平滑试了 1、2、3、4、6、8 档**（只焊合），加手臂一步后又试了 4、6、8 档，选 8。
+  - 1 档没过「裤子不多露」；4、6、8 看图都干净；8 档每个姿势被扯开的袍边和最大拉长都最低。
+- **看图**：站立、合掌、走路从正、侧、背、斜俯看都没有碎片。坐凳、盘坐仍然撕裂，写进了 `KNOWN-ISSUES.md`，要 B 路的分层模型。
+- **新工具** `tools/novice-views.cjs`（加 `tools/novice-stage/`）：只摆小沙弥一个人，按单元测试的办法逐帧摆姿势，20 秒出五个姿势、四个方向。
+  在寺里拍一张要几分钟，三十分钟只拍了四张，所以改用这个。光不是游戏的光。
+  - `tools/portrait.js` 等雕刻身体的时限从 60 秒改成 15 分钟。没等到就报错，不再静默改拍代码身体：高档、两倍像素下，60 秒常常不够。
+- **没做的**：B 路（Tripo 加 Auto-Rig Pro）；T4 帧时间（面数和贴图都没变，只改了权重）；要不要改回默认，由所有者看图决定。
+
+## 2026-11-16 夜：景观评审（#112，只评审，没有改 `app/`）
+
+- 评审在 `docs/t00/landscape-review.md`，锁定 `2d1c7d7`，T4 出图 62 张（`docs/t00/evidence/landscape/review-2026-11-16-2d1c7d7/`）。
+- 结论：远景是最弱的一层。
+  - 远山三重和天挤在 L\* 80～89，没有层次，秋暮、春晨的远山比天还亮；
+  - 远山是三圈只有上沿的圆柱，向南回望后两圈被第一圈挡住；
+  - 谷底是空地，远竹是平顶绿墙；
+  - 竹林起点向南看，地平线下露天。
+- 建议顺序：#114 边界与穿帮 → #115 空气透视阶梯（并进 #72 第一阶段一起做）→ #116 远山重做和 #117 云海，然后 #118 远林、#119 天空。
+- `tools/gpu/job.cjs` 现在也能拍任意 `?cam=` 地址，并可先跑一段页面脚本。
+
 ## 2026-11-16 夜：素材商用授权核对（#105）
 
 所有者的话：「开 issue，先核素材商用授权」。按收费上架 Steam 的口径逐件打开来源页核对，结果在 [`docs/t00/LICENSING-AUDIT.md`](t00/LICENSING-AUDIT.md)，登记表 `asset-register.csv` 加了 `commercial_use`、`attribution_required`、`license_url`、`checked_on` 四栏、补了 9 行（现 85 行：56 可商用、22 有条件、0 不可、7 未能核实）。有条件的都是要补的署名或许可声明（ColBase 14 件和名匾缺「加工过」的说明；程序库的许可声明没进产物，Basis 附错了许可文件）和两款字体要改内部名字（霞鹜文楷、Nanum）；未能核实的是 AI 生成或来历没记下的图，问题列在报告第五节，等所有者答。`tests/unit/asset-register.test.mjs`：`app/` 下进产物的素材都要在登记表里有行。没有删、换任何素材。
+
+## 2026-11-16 夜：补齐授权核对查出的 22 项条件（#113）
+
+目标和验收标准在 issue #113；做完的对照和证据写在 PR 里，评审、合并、关 issue 由主创做。
+
+- **作品卡片**：ColBase 的 14 件在来源行之下多一行加工说明（`src/credits.js` 的 `processedLine`；数据是 `works.js` 的 `processed` 字段，由 `tools/gallery.py` 写出）；克利夫兰、大都会的卡片不变。
+- **鸣谢与来源页**：歇脚菜单加「鸣谢」，打开 `#credits`（`ui.layer`，纸上的一张）；内容在 `src/credits.js`，走 `t()`，四种语言；名匾「釋迦寶殿」的出典与加工写在这一页。`window.__credits()` 报告开合和内容。
+- **字体保留名**：`kai.woff2`、`hand-ko.woff2` 内部改名为 Yunjing Kai、Yunjing Hand KO；`tools/fonts.py` 的 `RENAMED` 切字时自动改，`--rename` 就地改已切好的文件；`tests/unit/fonts.test.mjs` 检查全部 16 个字体文件。`tools/fonts.py --lang` 的翻译表路径原来指向已不存在的 `app/src/locales/`，一并改正。
+- **第三方许可**：`app/shared/licenses/` 放 Basis（LICENSE、NOTICE）、lil-gui、stats.js 的许可文本和合成出的 `THIRD-PARTY-NOTICES.txt`（`node tools/notices.mjs`）；构建在缺文件或缺库名时失败（`vite.config.mjs`）；`tools/setup.mjs` 把 Basis 自己的 LICENSE、NOTICE 拷到 `app/vendor/basis/`。
+- **登记表**：22 行改 `yes`，另加一行 `LIC-notices`；`LICENSING-AUDIT.md` 末尾加了第九节「已补齐」。7 项 `unverified` 没动。
 
 ## 2026-11-16 夜：雕刻身体两条路的比较（#80 第一步）
 
@@ -64,6 +110,8 @@
 - 预算页 `docs/t00/geometry-budget.md`，原始数据 `docs/t00/evidence/perf/20261116-0a88f96/`。其中分配比例和低档「只守不增」是待所有者定的取舍。手机真机、重复取平均没有做。
 
 ## 2026-11-16 夜：语言文件归位，语言埋点（最新，先读）
+
+- 2026-11-16 Issue #100（fixed_pending_retest）：出殿后点哪里都走回殿门，是 `yard.js` 的 `toHall` 在他站在台基盒内时恒真；现只在台基之外成立。场景 `hallexit` 守着。
 
 用户的话：「app 目录结构要不要重新组织一下」→「马上要开第二座了，跟 lang 埋点一起做 开 pr」。
 
