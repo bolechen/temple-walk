@@ -1,0 +1,128 @@
+{
+ "census": {
+  "site": {
+   "meshes": 128,
+   "tris": 617290,
+   "hidden": false
+  },
+  "interior": {
+   "meshes": 250,
+   "tris": 424608,
+   "hidden": false
+  },
+  "sky": {
+   "meshes": 1,
+   "tris": 960,
+   "hidden": false
+  },
+  "ground": {
+   "meshes": 4,
+   "tris": 8,
+   "hidden": false
+  },
+  "backdrop": {
+   "meshes": 46,
+   "tris": 52644,
+   "hidden": false
+  },
+  "bamboo": {
+   "meshes": 2,
+   "tris": 128408,
+   "hidden": false
+  },
+  "props": {
+   "meshes": 8,
+   "tris": 1342,
+   "hidden": false
+  },
+  "trees": {
+   "meshes": 6,
+   "tris": 130922,
+   "hidden": false
+  },
+  "drift": {
+   "meshes": 1,
+   "tris": 0,
+   "hidden": true
+  },
+  "Points": {
+   "meshes": 1,
+   "tris": 0,
+   "hidden": true
+  },
+  "Mesh": {
+   "meshes": 12,
+   "tris": 538,
+   "hidden": true
+  },
+  "flock": {
+   "meshes": 1,
+   "tris": 36,
+   "hidden": true
+  },
+  "monk": {
+   "meshes": 8,
+   "tris": 38326,
+   "hidden": true
+  },
+  "rope": {
+   "meshes": 2,
+   "tris": 104,
+   "hidden": false
+  },
+  "wisp": {
+   "meshes": 17,
+   "tris": 34,
+   "hidden": false
+  },
+  "bowl": {
+   "meshes": 2,
+   "tris": 356,
+   "hidden": false
+  },
+  "incense": {
+   "meshes": 6,
+   "tris": 204,
+   "hidden": true
+  },
+  "breath": {
+   "meshes": 1,
+   "tris": 144,
+   "hidden": true
+  }
+ },
+ "yard": {
+  "inside": false,
+  "room": null,
+  "doorway": null,
+  "tier": "high",
+  "scale": 1,
+  "planar": 0.5,
+  "governed": 0,
+  "x": 0,
+  "z": 29,
+  "yaw": 0,
+  "pitch": 0.1,
+  "h": 0,
+  "footY": 0,
+  "groundY": 0,
+  "dropping": false,
+  "staged": null,
+  "climbing": false,
+  "climbs": 0,
+  "pose": null,
+  "jumping": false,
+  "bodyY": 0,
+  "dressed": false,
+  "target": null,
+  "route": 0,
+  "running": true,
+  "frames": 4,
+  "tris": 2519178,
+  "calls": 446,
+  "season": "summer",
+  "time": "day",
+  "view": "first",
+  "fov": 52
+ }
+}

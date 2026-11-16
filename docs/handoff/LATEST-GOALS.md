@@ -48,6 +48,21 @@
 7. **证据只增不改。** `docs/t00/evidence/` 里已被 `delivery.json`、`review-log.json`、验收报告引用的证据，记录的是当时的路径和提交，不移动、不改名、不在原处替换；新证据放新路径，在记录里新增一条，旧的标为被取代。被记录引用的图、日志、`report.json` 入 git；`tools/out/` 的工作截图不入；录像控制体积，长录像放仓库外并记地址和 SHA-256。山门第三阶段改动后，CAM-04、CAM-05 的验收证据要按此重拍。
 8. **每个 issue 都要有独立的 goal 验收标准。** 所有者 2026-11-16 定。正文五节：背景、目标、逐条可判定的验收标准、不在范围内、关闭条件；大工作线可以写目标文件、issue 链过去，但验收标准要在 issue 或目标文件里写全，不能只写「见评审」。规则在 `AGENTS.md`「Issue 与验收标准」，模板 `.github/ISSUE_TEMPLATE/goal.md`。
 
+9. **出殿后点地面折返殿门（用户反馈的 bug）。** 「大雄宝殿上完香，出殿门后，鼠标往寺庙入口处点击，却返回大雄宝殿了，按W键才能下台阶。」主创复现确认。目标和验收：https://github.com/bolechen/temple-walk/issues/100 。
+10. **登上凌霄阁。** 「凌霄阁有三层，能让主角走上去吗？」主创调研后定：只开放顶层，走在真实的平坐上凭栏回望，蒲团和结尾不动，不给朱印；顶层回廊要由 1.0 米加宽到约 1.6 米才站得下人，先出方案再动手。目标和验收：https://github.com/bolechen/temple-walk/issues/101 （在 #89 合入之后）。
+11. **观水机位与按事件的镜头动作**从第 3 条分出：https://github.com/bolechen/temple-walk/issues/99 （在龙井拱券 #76 之后）。
+
+12. **树干。** 「检查树干，独立评审模型是否要重做」。评审结论：不用整套重做，枫的骨架重写，其余局部修。四个 issue，建议顺序 #91 → #92、#93 → #94：根脚与树干交界的台阶、小柳杉（https://github.com/bolechen/temple-walk/issues/91 ）；分叉的枝领与截面积守恒（https://github.com/bolechen/temple-walk/issues/92 ）；枫按鸡爪槭重写（https://github.com/bolechen/temple-walk/issues/93 ）；树皮按树种区分（https://github.com/bolechen/temple-walk/issues/94 ）。
+13. **缩放进出第一人称不唐突。** 「用户反馈缩放的时候，会在第三和第一视角切换，切换的时候有唐突感，搜索业界最佳实践做法」。改为同一台相机连续推近。目标和验收：https://github.com/bolechen/temple-walk/issues/102 。
+14. **踩进水洼有涟漪。** 「小沙弥踩到水面，没有水花，要不要加」→「开 pr 实现」。实现：#86（没有单独的 issue）。
+15. **结构第三阶段后重拍验收证据**（按第 7 条，新证据进新目录）：https://github.com/bolechen/temple-walk/issues/103 ；连同测帧定几何预算 https://github.com/bolechen/temple-walk/issues/74 。
+
+16. **雕刻身体：先比较两条路。** 所有者看了《小王子：星辰之旅》作者的制作流程（生成适合绑定的模型，Blender 里用 Auto-Rig Pro 绑骨蒙皮），「有 Blender，愿意花一定的费用」「有必要的时候，也可以用 Tripo 和付费 Auto-Rig Pro」。先交一页比较（改权重，或重新生成并绑定），购买前列出金额由所有者点头，选定后再做；走重新生成那条路时坐姿也要不撕裂。目标和验收：https://github.com/bolechen/temple-walk/issues/80 。场景仍由代码按法式生成，不改用生成资产。
+
+17. **改形体的从几个方向看。** 所有者问「多角度截图迭代的做法要不要加入工作流」，主创定：加，但只管改形体和改构图的。规则在 `AGENTS.md`「改形体的，从几个方向看」，issue 模板已带这一条。
+
+18. **上 Steam 的可行性。** 所有者转来朋友的建议（「先把Steam页面挂出来收心愿单，预告片重点剪一段NPC在宋代瓦肆自主交互的实机」），要求「思考上 steam 可行性」，随后定「开 issue，先核素材商用授权」。主创评估：可行，建议序章做免费试玩、正式版挂「即将推出」页收心愿单；预告片只用游戏里真实存在的内容（游戏没有 NPC 和瓦肆）；等画面定调、小沙弥身体和自动转场落地后再做页面。总清单：https://github.com/bolechen/temple-walk/issues/106 ；第一项素材商用授权核对：https://github.com/bolechen/temple-walk/issues/105 。收费还是免费、以谁的名义开账号、是否做有 NPC 的宋代世界，三件事待所有者定。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。

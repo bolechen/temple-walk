@@ -1,0 +1,98 @@
+{
+ "scene_id": "T00",
+ "commit": "0a88f9690315965a8578643804f79115752137aa",
+ "commit_subject": "feat(structure): stand the upper storeys over the columns below, on balconies (#89)",
+ "captured": "2026-11-16T14:32:52.802Z",
+ "refs": [
+  "#103"
+ ],
+ "command": "tools/gpu-render.sh t4-small '<job-spec.json>' (spec in ../../perf/20261116-0a88f96/job-spec.json; one Job that also took the #74 measurements). Shots: cam01..cam06 @summer-day@first.",
+ "render": "Tesla T4 on a Hugging Face Job, headless Chromium, ANGLE/Vulkan (not SwiftShader)",
+ "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+ "browser_flavour": "angle-vulkan+new-headless",
+ "preset": "J01 summer · day, first person (?view=first), q=high",
+ "size_px": [
+  1920,
+  1080
+ ],
+ "device_scale_factor": 1,
+ "encoding": "JPEG quality 92 re-encoded from the job's PNGs (as for evidence/M4); compare-*.jpg are 1920x540: left old (evidence/M4), right new, each scaled to 960x540, label drawn in the corner",
+ "page_errors": [],
+ "console": "console.txt in ../../perf/20261116-0a88f96/ (no page errors, console errors or failed requests)",
+ "replaces": "docs/t00/evidence/M4/CAM-01..06.jpg (left in place, untouched)",
+ "camera_manifest": "node tools/cameras.mjs at this commit rewrites docs/t00/camera-manifest.json with no difference",
+ "files": [
+  {
+   "camera": "CAM-01",
+   "file": "CAM-01.jpg",
+   "sha256": "1274ad0ca3ffad2030248f57b837a9b88a8dd775ef05b70148273edd6bcc38fe",
+   "bytes": 683121,
+   "view": "cam01",
+   "url": "?shot=1&q=high&show=cam01&season=summer&time=day&view=first",
+   "tris": 929964,
+   "calls": 218,
+   "previous": "docs/t00/evidence/M4/CAM-01.jpg",
+   "comparison": "compare-CAM-01.jpg"
+  },
+  {
+   "camera": "CAM-02",
+   "file": "CAM-02.jpg",
+   "sha256": "6ec33acffea64b2406515322261d1d749c715ef314d9fee7dac4e91bf0099eb1",
+   "bytes": 594316,
+   "view": "cam02",
+   "url": "?shot=1&q=high&show=cam02&season=summer&time=day&view=first",
+   "tris": 628342,
+   "calls": 85,
+   "previous": "docs/t00/evidence/M4/CAM-02.jpg",
+   "comparison": "compare-CAM-02.jpg"
+  },
+  {
+   "camera": "CAM-03",
+   "file": "CAM-03.jpg",
+   "sha256": "5c7c97460e3b6364fccfe7fce6811f6623b13b92fb9e36fbd09060009a6f65de",
+   "bytes": 459765,
+   "view": "cam03",
+   "url": "?shot=1&q=high&show=cam03&season=summer&time=day&view=first",
+   "tris": 1868418,
+   "calls": 410,
+   "previous": "docs/t00/evidence/M4/CAM-03.jpg",
+   "comparison": "compare-CAM-03.jpg"
+  },
+  {
+   "camera": "CAM-04",
+   "file": "CAM-04.jpg",
+   "sha256": "3ba17b705d52ed2582a0445056f4becfa8513c1879591744d4196a4b2404af44",
+   "bytes": 386589,
+   "view": "cam04",
+   "url": "?shot=1&q=high&show=cam04&season=summer&time=day&view=first",
+   "tris": 1870724,
+   "calls": 387,
+   "previous": "docs/t00/evidence/M4/CAM-04.jpg",
+   "comparison": "compare-CAM-04.jpg"
+  },
+  {
+   "camera": "CAM-05",
+   "file": "CAM-05.jpg",
+   "sha256": "1441afedc068457dbc9af2df81238c07a0ae963213d868760f22986501e55ba0",
+   "bytes": 398048,
+   "view": "cam05",
+   "url": "?shot=1&q=high&show=cam05&season=summer&time=day&view=first",
+   "tris": 935088,
+   "calls": 131,
+   "previous": "docs/t00/evidence/M4/CAM-05.jpg",
+   "comparison": "compare-CAM-05.jpg"
+  },
+  {
+   "camera": "CAM-06",
+   "file": "CAM-06.jpg",
+   "sha256": "304463ad4c332a250a3353749828e9b0857e9b408ed731888cdf6250ea36d9f4",
+   "bytes": 489279,
+   "view": "cam06",
+   "url": "?shot=1&q=high&show=cam06&season=summer&time=day&view=first",
+   "tris": 1850988,
+   "calls": 335,
+   "previous": "docs/t00/evidence/M4/CAM-06.jpg",
+   "comparison": "compare-CAM-06.jpg"
+  }
+ ]
+}

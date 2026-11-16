@@ -1,0 +1,18 @@
+{
+  "seconds": 6,
+  "bench": [
+    {"view":"court","q":"high","size":[1920,1080],"season":"autumn","time":"dusk"},
+    {"view":"court","q":"high","size":[1920,1080],"season":"summer","time":"day"},
+    {"view":"cam06","as":"first","q":"high","size":[1920,1080],"season":"summer","time":"day"},
+    {"view":"court","q":"low","size":[390,844],"scale":3,"season":"autumn","time":"dusk"},
+    {"view":"court","q":"low","size":[390,844],"scale":3,"season":"summer","time":"day"},
+    {"view":"court","q":"high","size":[1920,1080],"season":"summer","time":"day","off":"site"},
+    {"view":"court","q":"high","size":[1920,1080],"season":"summer","time":"day","off":"bamboo"},
+    {"view":"court","q":"high","size":[1920,1080],"season":"summer","time":"day","off":"reflect"},
+    {"view":"court","q":"high","size":[1920,1080],"season":"summer","time":"day","off":"bloom"},
+    {"view":"court","q":"high","size":[1920,1080],"season":"summer","time":"day","off":"site,bamboo,reflect,bloom"}
+  ],
+  "tour": {"runs":"120x3","size":[1920,1080],"q":"high"},
+  "size": [1920,1080],
+  "shots": ["cam01@summer-day@first","cam02@summer-day@first","cam03@summer-day@first","cam04@summer-day@first","cam05@summer-day@first","cam06@summer-day@first"]
+}
