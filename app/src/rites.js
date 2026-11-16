@@ -155,7 +155,7 @@ export function createRites(y, fast = 1) {
   }
 
   // ---- After the tea: he stays on his stool as long as the visitor lets him ----
-  // The bowl is back on its stand, steaming a little less. His hands lie in his lap, he breathes slowly, and now and
+  // The bowl is back on its stand, steaming a little less. His hands come to rest, he breathes slowly, and now and
   // then he turns to look out over the court and back. Nothing is counted and nothing ends it but the visitor.
   /** @param {() => boolean} on */
   async function linger(on) {
