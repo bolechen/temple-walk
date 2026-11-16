@@ -248,7 +248,7 @@ the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__
 the eaves only after rain (`place().wet`), not on dry autumn stone or in snow. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
-paving (`puddleAt`, the paving shader's own puddle pattern ported to JS), and snow (a shower of tiny breaks following the
+paving (`puddleAt`, the paving shader's own puddle pattern ported to JS; each splash also sends two rings across the water, `ground.ripple` and `RIPPLE` in `ground.js`, which only bend the puddle's mirror and sheen; `__ripples()`), and snow (a shower of tiny breaks following the
 push of the foot). All are worked out sample by sample, so `tools/steps.mjs` renders the same steps, and `LEVEL` sets
 them against each other: dry stone the quietest, snow the loudest, all well under the music (a stone step about 22 dB
 under it, after 小王子's, whose files put its own about 26 dB under; `steps.test.mjs` holds the played level). For every shoe `monk.steps` reports, `yard.js` asks
@@ -334,18 +334,18 @@ sets `body.seasons`, and everything marked `need-seasons` shows (a row in the ph
 menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
-**Three languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese or English, by `?lang=`,
+**Four languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese, English or Korean, by `?lang=`,
 then the visitor's choice (`yunjing.lang.v1`, set in the pause menu or on the title), then the browser's language. Chinese
 is the text of record: write every line in Chinese and pass it through `t("…", vars)` where it is shown; the Japanese and
-English are found by that Chinese in `i18n-ja.js` and `i18n-en.js` (one entry to a line), and `tests/unit/i18n.test.mjs`
-fails if a line the page may show lacks either. `index.html` is translated by `app/lang.js` before the title paints.
+English and Korean are found by that Chinese in `i18n-ja.js`, `i18n-en.js` and `i18n-ko.js` (one entry to a line), and
+`tests/unit/i18n.test.mjs` fails if a line the page may show lacks any of them. `index.html` is translated by `app/lang.js` before the title paints.
 What is calligraphy (seals, the seal book's page, the title's four characters) goes through `glyphs()`: Japanese forms in
-Japanese, the temple's own characters otherwise. Name boards are not translated. The works' cards are: `works-ja.js` and
-`works-en.js` hold each work's fields by slug, `workIn(slug)` in `works-local.js` lays them over the Chinese record, and the
-museum's source line stays as published; a work added by `tools/gallery.py` needs both, or `i18n.test.mjs` fails. Each language has
+Japanese, the temple's own characters otherwise. Name boards are not translated. The works' cards are: `works-ja.js`,
+`works-en.js` and `works-ko.js` hold each work's fields by slug, `workIn(slug)` in `works-local.js` lays them over the Chinese record, and the
+museum's source line stays as published; a work added by `tools/gallery.py` needs all three, or `i18n.test.mjs` fails. Each language has
 its own faces in front of the Chinese ones (`FONT`/`FACE` in `i18n.js` for canvases; `:lang()` variables in `ui.css`),
-cut by `python3 tools/fonts.py --lang ja|en`. Tests and tools pin their browser to `zh-CN`; the `lang` scenario and
-`node tools/mobile-audit.cjs --lang=ja|en` look at the others.
+cut by `python3 tools/fonts.py --lang ja|en|ko`. Tests and tools pin their browser to `zh-CN`; the `lang` scenario and
+`node tools/mobile-audit.cjs --lang=ja|en|ko` look at the others.
 
 **Typefaces (`app/shared/fonts/`, `tools/fonts.py`).** Six faces under the SIL Open Font License, cut down to the characters the
 app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page of seals), "Yunjing Kai" (LXGW WenKai:

@@ -90,6 +90,13 @@ const scenarios = {
     // Nothing on the English title is left in Chinese but the calligraphy (the name and its seal).
     const left = await t.page.evaluate(() => [...document.querySelectorAll("#title button, #title p, #title .sub, #title .how")].filter((el) => el.offsetParent && !el.closest("[data-lang]") && /[\u3400-\u9fff]/.test(el.textContent)).map((el) => el.textContent));
     expect(!left.length, "Chinese left on the English title: " + JSON.stringify(left));
+    // Korean, asked for in the address: the title and a work's card in Hangul, in a face of its own.
+    await t.page.goto(base + "?q=low&lang=ko" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
+    expect(await t.page.evaluate(() => document.documentElement.lang) === "ko" && (await words("#title .sub")).includes("운경선사") && ["산에 들기", "이어서 걷기"].includes(await words("#enterBtn")), "?lang=ko should bring the Korean title: " + (await words("#title .sub")) + " / " + (await words("#enterBtn")));
+    expect(await t.page.evaluate(async () => { await document.fonts.load('20px "Yunjing Serif KO"', "산에 들기"); return document.fonts.check('20px "Yunjing Serif KO"', "산에 들기"); }), "the Korean face did not load");
+    await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in Korean");
+    expect((await words("#pieceTitle")) === "출산석가도" && /[가-힣]/.test(await words("#pieceNote")), "the work's card should be in Korean: " + (await words("#pieceTitle")));
+    await t.page.click("#pieceClose");
     await t.page.goto(base + "?q=low&lang=zh" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     expect((await t.page.evaluate(() => document.documentElement.lang)).startsWith("zh") && (await words("#title .sub")).includes("云径禅寺"), "?lang=zh should bring the Chinese back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -241,7 +248,7 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // His steps sound as what they come down on: wet stone after summer rain and a splash in a puddle of the court (where
-  // the paving draws one), dry stone in autumn, the floor of a hall.
+  // the paving draws one, and rings spread across it), dry stone in autumn, the floor of a hall.
   steps: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&season=summer&time=day&cam=4,15.5,3.14,0&view=third" + BARE);
     const heard = () => t.page.evaluate(() => window.__steps().heard);
@@ -250,9 +257,13 @@ const scenarios = {
     // Up the court at x = 4: wet stone to z 21, then water standing from z 21.5 (steps.js's puddleAt, the paving's own pattern).
     await walk([[4, 23]], "he never crossed the wet court");
     let h = await heard(); expect(h.wet >= 3 && h.puddle >= 1 && h.snow === 0 && h.stone === 0, "after summer rain the court should sound wet, with a splash in its puddle: " + JSON.stringify(h));
+    // and each step into the puddle sends rings across its water (ground.js), one pair for every splash heard
+    const r = await t.page.evaluate(() => window.__ripples());
+    expect(r && r.made === h.puddle, "every splash should set the puddle rippling: " + JSON.stringify({ r, h }));
     await t.page.evaluate(() => window.__mood("autumn", "day")); await t.frames(2);
     await walk([[4, 17]], "he never crossed the dry court");
     const h2 = await heard(); expect(h2.stone >= 3 && h2.wet === h.wet && h2.puddle === h.puddle, "in autumn the court should sound dry: " + JSON.stringify(h2));
+    expect((await t.page.evaluate(() => window.__ripples())).made === r.made, "dry autumn stone has no water to ripple");
     // A step is heard on the effects bus as it sounds (played and listened to within one call).
     const one = await t.page.evaluate(() => { window.__steps("stone"); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
     expect(one.rms > 0.0004, "a step on stone made no sound: " + JSON.stringify(one));   // silence is 0; how loud is steps.test.mjs's to say

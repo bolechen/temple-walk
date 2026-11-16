@@ -13,13 +13,13 @@ const DEV_ONLY = [path.join(root, "src", "debug.js")];
 // The Japanese and English tables (src/i18n-ja.js, src/i18n-en.js) are written in faces of their own, cut by
 // `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
 // So is the name of each language on its button in index.html, which is written in that language.
-const TABLES = { ja: path.join(root, "src", "i18n-ja.js"), en: path.join(root, "src", "i18n-en.js") };
-const WORK_TABLES = { ja: path.join(root, "src", "works-ja.js"), en: path.join(root, "src", "works-en.js") };
+const TABLES = { ja: path.join(root, "src", "i18n-ja.js"), en: path.join(root, "src", "i18n-en.js"), ko: path.join(root, "src", "i18n-ko.js") };
+const WORK_TABLES = { ja: path.join(root, "src", "works-ja.js"), en: path.join(root, "src", "works-en.js"), ko: path.join(root, "src", "works-ko.js") };
 const cut = (name) => new Set(fs.readFileSync(path.join(root, "shared", "fonts", name), "utf8"));
 const wide = (c) => c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 && c.codePointAt(0) <= 0xf8ff);
 const have = cut("chars.txt"), missing = new Set();
-const own = { ja: "", en: "" };
-const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
+const own = { ja: "", en: "", ko: "" };
+const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en|ko)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
 for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
 if (missing.size) { bad++; console.error("characters used but not in app/shared/fonts (run tools/fonts.py): " + [...missing].join("")); }
 for (const [l, f] of Object.entries(TABLES)) {

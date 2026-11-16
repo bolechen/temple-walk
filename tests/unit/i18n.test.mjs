@@ -4,6 +4,7 @@ import test from "node:test"; import assert from "node:assert/strict";
 import { pickLang, t, has, lang, LANGS, fontsFor, glyphs } from "../../app/src/i18n.js";
 import JA from "../../app/src/i18n-ja.js";
 import EN from "../../app/src/i18n-en.js";
+import KO from "../../app/src/i18n-ko.js";
 import { allKeys, calledKeys } from "./i18n-keys.mjs";
 import { titleOffer } from "../../app/src/resume.js";
 
@@ -12,13 +13,14 @@ test("the language: asked for in the address, else chosen before, else the brows
   assert.equal(pickLang({ languages: ["ja-JP", "en-US"] }), "ja");
   assert.equal(pickLang({ languages: ["en-GB"] }), "en");
   assert.equal(pickLang({ languages: ["zh-TW", "ja"] }), "zh", "traditional Chinese reads the Chinese page");
-  assert.equal(pickLang({ languages: ["ko-KR", "ja"] }), "ja", "the first of the browser's languages that is one of ours");
-  assert.equal(pickLang({ languages: ["ko-KR", "fr"] }), "en", "a browser that speaks none of the three is given English");
+  assert.equal(pickLang({ languages: ["fr-FR", "ja"] }), "ja", "the first of the browser's languages that is one of ours");
+  assert.equal(pickLang({ languages: ["fr-FR", "de"] }), "en", "a browser that speaks none of ours is given English");
   assert.equal(pickLang({ stored: "en", languages: ["ja"] }), "en", "a choice made before outlasts the browser");
   assert.equal(pickLang({ search: "?lang=ja", stored: "en", languages: ["zh"] }), "ja", "the address outlasts everything");
   assert.equal(pickLang({ search: "?lang=xx", stored: "fr", languages: ["ja"] }), "ja", "an unknown language is ignored");
   assert.equal(lang, "zh", "in Node there is no visitor: Chinese");
-  assert.deepEqual(LANGS, ["zh", "ja", "en"]);
+  assert.equal(pickLang({ languages: ["ko-KR", "en"] }), "ko");
+  assert.deepEqual(LANGS, ["zh", "ja", "en", "ko"]);
 });
 
 test("a line is the Chinese as written unless another language is asked for; its blanks are filled in any language", () => {
@@ -38,7 +40,7 @@ test("a line is the Chinese as written unless another language is asked for; its
 test("every line the page may show has its Japanese and its English", async () => {
   const keys = await allKeys();
   assert.ok(keys.size > 250, `found only ${keys.size} lines: the reader of the sources has lost its way`);
-  for (const [name, table] of [["ja", JA], ["en", EN]]) {
+  for (const [name, table] of [["ja", JA], ["en", EN], ["ko", KO]]) {
     const missing = [...keys].filter((k) => !has(k, name));
     assert.deepEqual(missing, [], `src/i18n-${name}.js lacks these lines`);
     // A table may not keep lines the page no longer has: they would be read by no one and mended by no one.
@@ -50,7 +52,7 @@ test("every line the page may show has its Japanese and its English", async () =
 test("each translation keeps the blanks of its Chinese, and the markup in it", () => {
   const blanks = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).filter((b) => b !== "k" && b !== "n").sort();
   const tags = (s) => [...s.matchAll(/<\/?(\w+)/g)].map((m) => m[0]).sort();
-  for (const [name, table] of [["ja", JA], ["en", EN]]) {
+  for (const [name, table] of [["ja", JA], ["en", EN], ["ko", KO]]) {
     for (const [zh, out] of Object.entries(table)) {
       assert.ok(out.trim(), `${name}: an empty line for ${zh}`);
       assert.deepEqual(blanks(out), blanks(zh), `${name}: the blanks of ${zh}`);
@@ -64,12 +66,14 @@ test("each translation keeps the blanks of its Chinese, and the markup in it", (
 test("the lines are written for their language: no Chinese-only characters left in the English, kana nowhere but the Japanese", () => {
   const calligraphy = new Set(["山门之外", "朝<br>山", "印", "云径", "圆", "奉拜"]);
   for (const [zh, out] of Object.entries(EN)) if (!calligraphy.has(zh)) assert.ok(!/[㐀-鿿぀-ヿ]/.test(out), `en: ${zh} → ${out}`);
+  for (const [zh, out] of Object.entries(KO)) if (!calligraphy.has(zh)) assert.ok(!/[\u3400-\u9fff\u3040-\u30ff]/.test(out), `ko: ${zh} → ${out}`);
   for (const k of calledKeys().keys()) assert.ok(!/[぀-ヿ]/.test(k), `the Chinese of record has kana in it: ${k}`);
 });
 
 test("each language draws first in its own faces and falls back to the Chinese ones", () => {
-  assert.match(fontsFor("ja").kai, /^"Yunjing Kai JA", "Yunjing Kai"/);
-  assert.match(fontsFor("en").xing, /^"Yunjing Hand EN", "Yunjing Xing"/);
+  assert.match(fontsFor("ja").kai, /^"Yunjing Kai JA", "Yunjing Serif JA", "Yunjing Kai"/);
+  assert.match(fontsFor("ko").brush, /^"Yunjing Brush KO", "Yunjing Serif KO", "Yunjing Brush"/, "a heading face short of a letter falls back to the reading face first");
+  assert.match(fontsFor("en").xing, /^"Yunjing Hand EN", "Yunjing Serif EN", "Yunjing Xing"/);
   assert.match(fontsFor("zh").brush, /^"Yunjing Brush"/);
 });
 
@@ -85,6 +89,7 @@ test("every work in the halls has its Japanese and English card, field for field
       for (const f of FIELDS) assert.equal(!!tr[f].trim(), !!String(w[f] || "").trim(), `${name}/${slug}.${f}`);
       if (name === "en") for (const f of FIELDS) assert.ok(!/[㐀-鿿぀-ヿ]/.test(tr[f]), `en/${slug}.${f} has characters in it: ${tr[f].slice(0, 40)}`);
       if (name === "ja") assert.ok(/[぀-ヿ]/.test(tr.note), `ja/${slug}: the note should be written in Japanese, not left in Chinese`);
+      if (name === "ko") for (const f of FIELDS) assert.ok(!/[\u3400-\u9fff\u3040-\u30ff]/.test(tr[f]), `ko/${slug}.${f} is not in Hangul: ${tr[f].slice(0, 40)}`);
       const shown = workIn(slug, name);
       assert.equal(shown.credit, w.credit, "the museum's source line stays as published");
       assert.equal(shown.size, w.size);

@@ -506,6 +506,7 @@ function frame(now) {
     if (passing) continue;
     if (!inside) trail.stamp(f);
     const kind = underfoot({ x: f.x, z: f.z, y: f.y, floor: walker.floorAt(f.x, f.z), snow: inside ? 0 : mood.snow, wet: mood.wet, roofed: !inside && shelterAt(roofMap, f.x, f.y + 0.05, f.z) > 0.5 });
+    if (kind === "puddle") ground.ripple?.(f.x, f.y, f.z);
     footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet, late: f.late || 0 });
   }
   if (!inside) trail.follow(pos.x, pos.z); trail.update(dt);
@@ -553,7 +554,7 @@ function frame(now) {
 
   for (const fn of ticks) fn(dt, t);
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
-  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); flock.update(still ? 0 : dt, t); drift.update(t, camera.position, pxH);
+  U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); ground.update?.(still ? 0 : dt); flock.update(still ? 0 : dt, t); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) s.swing.position.z = logSwing(s, riteNow());   // drawn back and let go, or only tapped: it touches the bell and swings itself out
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
@@ -782,6 +783,13 @@ window.__probe = () => {
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
     photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox() };
+};
+// Rings on the water: how many made, how many spreading. `__ripples(true)` sets a step's worth going at his feet;
+// `__ripples([x, z, age])` one at that spot as if made `age` seconds ago, so a still picture can hold them.
+window.__ripples = (go) => {
+  if (Array.isArray(go)) ground.ripple?.(go[0], walker.heightAt(go[0], go[1]), go[1], go[2] || 0);
+  else if (go) ground.ripple?.(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
+  return ground.ripples?.() || null;
 };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };

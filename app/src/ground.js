@@ -6,6 +6,11 @@ import { declare, bind } from "./textures.js";
 import { TRAIL } from "./trail.js";
 
 const MAX_LAMPS = 14;
+// A step into standing water sends two rings across it, the second a moment behind the first, as the well's drop
+// does (well.js), but smaller and quicker: a cloth shoe set down in a shallow puddle, not a drop from a height. No
+// spray: after rain a child walking slowly lifts none. The rings run only where the paving draws standing water, and
+// they show as the water's mirror and sheen bending, not as lines drawn on it.
+export const RIPPLE = { max: 6, speed: 0.3, life: 2.0, lag: 0.25, width: 0.06 };
 
 export function createGround(scene, shade, censer, paving) {
   const rt = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
@@ -31,12 +36,15 @@ export function createGround(scene, shade, censer, paving) {
   const blank = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1); blank.needsUpdate = true;
   // The paving is lit by hand (it has a mirror to mix in), but it takes the sun's shadows from the same map as everything
   // else: at dawn and dusk the long shadows of the halls lie across the court.
+  // The rings now spreading, shared by every stretch of paving: (x, z, age in seconds, height of the stone).
+  const rip = { value: Array.from({ length: RIPPLE.max }, () => new THREE.Vector4(0, 0, 99, -999)) };
+  let ripNext = 0, ripMade = 0;
   const pave = (list, mirror, censerAt, lm = bake(list)) => new THREE.ShaderMaterial({
     lights: true,
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, tTrail: U.tTrail, uTrail: U.uTrail, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -60,6 +68,22 @@ export function createGround(scene, shade, censer, paving) {
       ` + NOISE + declare(["stone", "snow"]) + TRAIL + /* glsl */`
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet;
       uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
+      uniform vec4 uRip[${RIPPLE.max}];
+      // The slope of the water where his steps have set it moving: each ring a short train of waves at its front,
+      // weaker as it widens and dying away over its life.
+      vec2 ripples(vec2 p, float y){
+        vec2 s=vec2(0.);
+        for(int i=0;i<${RIPPLE.max};i++){
+          vec4 R=uRip[i]; if(R.z>=${RIPPLE.life.toFixed(2)}||abs(R.w-y)>.3) continue;
+          vec2 d=p-R.xy; float r=length(d); if(r>.9) continue;
+          for(int k=0;k<2;k++){
+            float age=R.z-float(k)*${RIPPLE.lag.toFixed(2)}; if(age<=0.) continue;
+            float f=r-(.02+age*${RIPPLE.speed.toFixed(2)}), life=1.-age/${RIPPLE.life.toFixed(2)};
+            s+=d/max(r,.001)*cos(f*55.)*exp(-f*f/${(RIPPLE.width ** 2).toFixed(5)})*life*life*(k==0?1.:.6)/(1.+r*3.);
+          }
+        }
+        return s;
+      }
       void main(){
         vec2 p=vWP.xz;
         // Running-bond slabs, each a slightly different stone.
@@ -100,6 +124,7 @@ export function createGround(scene, shade, censer, paving) {
         vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*.6*(.88+.24*wN.z)*(.86+.14*min(snD,1.3))*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
         vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(sign(p.x)*bank*(lane-.32)*6.,0.)+(vec2(n2(p*.4),n2(p*.4+5.))-.5)*.35*open)*sn*(1.-tr.x)+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
+        vec2 rp=puddle>.01?ripples(p,vWP.y)*puddle:vec2(0.); g+=rp*.5;
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
         float ndv=max(dot(N,V),0.), fres=.035+.965*pow(1.-ndv,5.);
         float sun=getShadowMask();
@@ -107,7 +132,7 @@ export function createGround(scene, shade, censer, paving) {
         // After dark every lamp lays a warm pool on the stone round its foot.
         if(uLamp>.01){ float pool=0.; for(int i=0;i<${MAX_LAMPS};i++){ vec4 L=uLamps[i]; if(L.w<=0.) break; vec2 dl=p-L.xy; pool+=L.w*exp(-dot(dl,dl)/(L.z*L.z)); } lit+=(alb*.55+.03)*vec3(1.,.56,.25)*min(pool,1.2)*uLamp*.85; }
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.
-        vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle);
+        vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,puddle)+rp*.03;
         // Standing water mirrors; stone that is only damp gives back a soft, pale light with no shapes in it.
         vec3 sky=uFog*mix(.9,1.06,ndv), refl=sky;
         if(uReflOn>.5){ vec3 sharp=texture2D(tRefl,ruv,0.).rgb, soft=mix(texture2D(tRefl,ruv,6.).rgb,sky,.88); if(!(sharp.r>=0.)) sharp=sky; if(!(soft.r>=0.)) soft=sky; refl=mix(soft,sharp,puddle); }
@@ -139,6 +164,11 @@ export function createGround(scene, shade, censer, paving) {
         L.mat.uniforms.uLamps.value.forEach((v, i) => { const l = mine[i]; if (l) v.set(l.x, l.z, l.reach, Math.min(1.4, 0.5 + 0.5 / Math.max(0.6, l.y - L.y))); else v.set(0, 0, 1, 0); });
       }
     },
+    // A shoe set down in a puddle at (x, y, z): two rings start from it (`age`: as if it came down that long ago).
+    ripple(x, y, z, age = 0) { rip.value[ripNext].set(x, z, age, y); ripNext = (ripNext + 1) % RIPPLE.max; ripMade++; },
+    // The rings spread with the clock (`dt` 0 while time stands still for a picture).
+    update(dt) { for (const v of rip.value) if (v.z < 99) v.z = v.z + dt > RIPPLE.life + RIPPLE.lag ? 99 : v.z + dt; },
+    ripples: () => ({ made: ripMade, live: rip.value.filter((v) => v.z < 99).length }),
     resize(w, h, on) { if (on) rt.setSize(Math.max(64, w), Math.max(64, h)); has = !!on; mat.uniforms.uReflOn.value = on ? 1 : 0; },
     // Whether the mirror is being drawn this frame. When it is not, the paving falls back to the sky's sheen
     // instead of showing whatever the mirror last held.
