@@ -311,8 +311,10 @@ export function startAmbience(place) {
     room(p.zone === "hall");
     // Gusts: two slow waves that sometimes meet.
     const gust = 0.5 + 0.3 * Math.sin(a.t * 0.11) + 0.2 * Math.sin(a.t * 0.043 + 1.7);
-    low.gain.setTargetAtTime(0.5 * gust * (0.35 + 0.65 * g), now, 0.8);
-    leaves.gain.setTargetAtTime(0.16 * gust * gust * (0.15 + 0.85 * g), now, 0.6);
+    // Deep in the bamboo the wind is the floor of the sound, not its loudest part: about 5 dB under what it was, so
+    // that the music and his steps are heard over it there (2026-11-16); in the first court (g 0.12) it is unchanged.
+    low.gain.setTargetAtTime(0.5 * gust * (0.41 + 0.15 * g), now, 0.8);
+    leaves.gain.setTargetAtTime(0.16 * gust * gust * (0.21 + 0.353 * g), now, 0.6);
     // Water dripping from the eaves after rain: often in summer, less in spring; none once the stone has dried
     // (autumn) or the water has frozen (snow).
     const rain = p.snow > 0.01 ? 0 : p.wet ?? 1;
