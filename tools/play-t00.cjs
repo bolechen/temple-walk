@@ -113,21 +113,26 @@ const runs = {
     secs = await watch("never came home from the lamp", (d) => d.phase === "idle"); note("director", "page", `home by itself ${secs} s later`, await D()); await s.shot("4-lamp-home");
     // The well: W.
     await s.at("well"); await s.until(async () => (await s.word()) === "观水", 30000, "观水 not offered"); await s.key("e", "观水");
-    secs = await watch("never reached the well's shot", (d) => d.id === "well" && d.phase === "hold"); note("director", "page", `on the well's shot ${secs} s after the press`); await s.shot("5-well-shot");
+    // (A software renderer draws about a frame a second and the swing moves by frames while the well keeps the clock, so
+    // the well may be done before the eye arrives: W is pressed once the eye has left him, wherever it has got to.)
+    secs = await watch("the eye never left him for the well", (d) => d.id === "well" && (d.phase === "in" || d.phase === "hold")); note("director", "page", `going to the well's shot ${secs} s after the press`, await D()); await s.shot("5-well-shot");
     await s.p.keyboard.down("w"); note("director", "input", "key W held · walk away"); await s.p.waitForTimeout(400);
     note("director", "diagnostic", "0.4 s after W", await D()); await s.p.keyboard.up("w");
-    secs = await watch("never came home from the well", (d) => d.phase === "idle", 30000); note("director", "page", `home ${secs} s after W was let go`); await s.shot("6-well-home");
+    secs = await watch("never came home from the well", (d) => d.phase === "idle", 120000); note("director", "page", `home ${secs} s after W was let go`); await s.shot("6-well-home");
     // The bell: presses on its shot.
     await s.at("bell", 0.3, -0.3); await s.until(async () => (await s.word()) === "撞钟", 30000, "撞钟 not offered"); await s.key("e", "撞钟");
     secs = await watch("never reached the bell's shot", (d) => d.id === "bell" && d.phase === "hold"); note("director", "page", `on the bell's shot ${secs} s after the press`); await s.shot("7-bell-shot");
     for (const n of [2, 3]) { await s.until(async () => (await s.r()).bell.ready, 30000, "rope not ready"); await s.key("e", `撞钟 ${n}`); await s.until(async () => (await s.r()).bell.pulls >= n, 30000, `stroke ${n}`); note("director", "diagnostic", `after stroke ${n}`, await D()); }
     await s.shot("8-bell-third"); await s.key("Escape", "let go of the rope");
-    secs = await watch("never came home from the bell", (d) => d.phase === "idle", 30000); note("director", "page", `home ${secs} s after Esc`, { button: await s.word() });
+    secs = await watch("never came home from the bell", (d) => d.phase === "idle", 120000); note("director", "page", `home ${secs} s after Esc`, { button: await s.word() });
     // The tea: a drag.
     await s.at("tea"); await s.until(async () => (await s.word()) === "吃茶", 30000, "吃茶 not offered"); await s.key("e", "吃茶");
     secs = await watch("never reached the tea's shot", (d) => d.id === "tea" && d.phase === "hold", 90000); note("director", "page", `on the tea's shot ${secs} s after the press`); await s.shot("9-tea-shot");
-    await s.p.mouse.move(480, 300); await s.p.mouse.down(); for (let x = 490; x <= 640; x += 15) await s.p.mouse.move(x, 302); await s.p.mouse.up(); note("director", "input", "mouse drag 160 px · look round");
-    secs = await watch("never came home from the tea", (d) => d.phase === "idle", 30000); note("director", "page", `home ${secs} s after the drag`, { rite: (await s.j()).rite }); await s.shot("10-tea-home");
+    { const vp = s.p.viewportSize(), cx = vp.width * 0.35, cy = vp.height * 0.3;   // above the button, which sits mid-picture on a small page
+      note("director", "diagnostic", "under the pointer before the drag", await s.p.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return { el: e && (e.id || e.tagName), yaw: window.__yard().yaw, ui: window.__ui() }; }, [cx, cy]));
+      await s.p.mouse.move(cx, cy); await s.p.mouse.down(); for (let x = 10; x <= 160; x += 15) await s.p.mouse.move(cx + x, cy + 2); await s.p.mouse.up(); } note("director", "input", "mouse drag 160 px · look round");
+    note("director", "diagnostic", "just after the drag", { ...(await D()), yaw: await s.p.evaluate(() => window.__yard().yaw) });
+    secs = await watch("never came home from the tea", (d) => d.phase === "idle", 120000); note("director", "page", `home ${secs} s after the drag`, { rite: (await s.j()).rite }); await s.shot("10-tea-home");
     await s.key("e", "起身"); await s.until(async () => (await s.j()).rite === null, 20000, "did not rise");
     note("director", "diagnostic", "the whole run", await D());
     await s.end();
