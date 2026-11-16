@@ -201,3 +201,50 @@ test("each shoe that comes down says how late in the frame it did, so its sound 
     if (dt > 0.1) assert.ok(got.some((s) => s.late > dt * 0.2), "on slow frames some steps should come down well inside the frame");
   }
 });
+
+// Standing up: his body rises off the seat over a second, and his shoes must find the floor all the way, not hang
+// through it while the seated legs let go. The group is moved as yard.js moves it: on the seat's top while seated,
+// on the floor the moment he is sent away, and he walks off.
+for (const [pose, top] of [["chair", 0.44], ["sit", 0.1]]) {
+  test(`getting up from ${pose === "chair" ? "a stool" : "a cushion"}, his shoes never go under the floor`, () => {
+    const m = createMonk(), shoes = m.parts.shoes, n = shoes.geometry.attributes.position.count, floor = () => 0;
+    m.group.position.set(0, top, 0);
+    for (let i = 0; i < 90; i++) m.update(1 / 30, 0, pose, i / 30, floor, { heightAt: floor });
+    m.group.position.set(0, 0, 0);
+    let worst = Infinity, at = -1;
+    for (let i = 0; i < 60; i++) {
+      m.group.position.z += 1.5 / 30;
+      m.update(1 / 30, i < 3 ? 0 : 1.5, false, 3 + i / 30, floor, { heightAt: floor });
+      m.group.updateMatrixWorld(true); m.skeleton.update();
+      let low = Infinity; for (let k = 0; k < n; k += 3) low = Math.min(low, skinnedWorld(shoes, k).y);
+      if (low < worst) { worst = low; at = i; }
+    }
+    assert.ok(worst > -0.02, `${(-worst * 100).toFixed(1)} cm of his shoe went under the floor, ${at} frames after he got up`);
+  });
+}
+
+// At the tea table (site.js: top 0.78 m high and 5 cm thick, its near edge 0.39 m before him, a rail 0.06 m deep under
+// that edge 0.43 m before him), on a stool 0.44 m high: his knees go under the table and touch neither top nor rail.
+test("at the tea table his knees go under the top and clear the rail beneath its edge", () => {
+  const m = seated("chair", 0.44), seatTop = 0.44, T = 0.78;
+  const boxes = [["top", [-0.65, 0.65], [T - 0.05 - seatTop, T - seatTop], [0.39, 1.09]], ["rail", [-0.6, 0.6], [T - 0.12 - seatTop, T - 0.06 - seatTop], [0.41, 0.45]]];
+  for (const [name, [x0, x1], [y0, y1], [z0, z1]] of boxes) {
+    let worst = -Infinity, where = null;
+    for (const [n, v] of body(m)) { const d = Math.min(v.x - x0, x1 - v.x, v.y - y0, y1 - v.y, v.z - z0, z1 - v.z); if (d > worst) { worst = d; where = `${n} at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`; } }
+    assert.ok(worst < 0.005, `his ${where} is ${(worst * 1000).toFixed(0)} mm inside the table's ${name}`);
+  }
+});
+
+// From a stool to a cushion, as the game sends him (sitDown walks him over, so he stands between the two): he gets up,
+// takes a few steps, and folds onto the cushion; nothing of him goes under the floor on the way.
+test("from a stool, a few steps, and onto a cushion: nothing of him goes under the floor", () => {
+  const m = createMonk(), floor = () => 0; let worst = Infinity, when = "";
+  const look = (what) => { m.group.updateMatrixWorld(true); m.skeleton.update(); for (const [, v] of body(m)) if (v.y < worst) { worst = v.y; when = what; } };
+  m.group.position.set(0, 0.44, 0);
+  for (let i = 0; i < 90; i++) m.update(1 / 30, 0, "chair", i / 30, floor, { heightAt: floor });
+  m.group.position.set(0, 0, 0);
+  for (let i = 0; i < 30; i++) { m.group.position.z += 1.2 / 30; m.update(1 / 30, i < 3 ? 0 : 1.2, false, 3 + i / 30, floor, { heightAt: floor }); look("walking over"); }
+  for (let i = 0; i < 12; i++) { m.group.position.y = 0.1 * (i + 1) / 12; m.update(1 / 30, 0, "sit", 4 + i / 30, floor, { heightAt: floor }); look("sitting down"); }
+  for (let i = 0; i < 60; i++) { m.update(1 / 30, 0, "sit", 4.4 + i / 30, floor, { heightAt: floor }); look("settling"); }
+  assert.ok(worst > -0.02, `${(-worst * 100).toFixed(1)} cm of him went under the floor while ${when}`);
+});
