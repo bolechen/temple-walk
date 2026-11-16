@@ -10,7 +10,7 @@ const CJK = /[㐀-鿿　-〿＀-￯]/;
 // Chinese), and the tables themselves.
 export const SKIP = ["src/debug.js", "src/tour.js", "src/community.js", "src/i18n.js", "src/i18n-ja.js", "src/i18n-en.js", "src/works.js"];
 // Each language button is written in its own language, and is never translated.
-export const OWN_NAMES = ["中文", "日本語", "English"];
+export const OWN_NAMES = ["中文", "日本語", "English", "한국어"];
 
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 const unquote = (q, s) => (q === "`" ? s : JSON.parse(`"${s.replace(/\\'/g, "'")}"`));

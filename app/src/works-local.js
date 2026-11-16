@@ -4,10 +4,11 @@
 import { WORKS } from "./works.js";
 import JA from "./works-ja.js";
 import EN from "./works-en.js";
+import KO from "./works-ko.js";
 import { lang } from "./i18n.js";
 
 /** @type {Record<string, Record<string, Record<string, string>>>} */
-const TABLES = { ja: JA, en: EN };
+const TABLES = { ja: JA, en: EN, ko: KO };
 export const FIELDS = ["title", "by", "dates", "period", "medium", "holder", "rank", "note", "link"];
 
 /** One work as the visitor reads it, or null. @param {string} slug @param {string=} to */
