@@ -138,6 +138,8 @@
     "「不画场景」的场景不再覆盖渲染：渲染由 boot、halls、snow、moods、views、photo、photo-ui、menu、parts、rites、stairs、drop 覆盖；四台并行的每周流程尚未在 GitHub 上实际跑过一次"
   ],
   "evidence": [
+    "0a88f96（#103）：CAM-01～06 在 T4 上重拍，新目录 docs/t00/evidence/acceptance/20261116-0a88f96/（manifest.json、CAM-0N.jpg、compare-CAM-0N.jpg 左旧右新、changes.md）；旧证据 docs/t00/evidence/M4/ 未动，被该目录取代；acceptance-report.json、independent-review.json 未改，验收结论待独立评审在新证据上另做",
+    "0a88f96（#74）：T4 实测首院高档 1080p 10.13 ms（夏昼）/ 10.82 ms（秋暮），192.7 万面 / 354–378 次；低档 390×844 5.64–5.86 ms，86.7 万面；tour 三趟平均 58.6 fps、p95 22.7 ms（最差 25.0）；原始数据 docs/t00/evidence/perf/20261116-0a88f96/，预算页 docs/t00/geometry-budget.md",
     "GPU（Tesla T4，court 高档 1920×1080，一次，run 20261116-121313）：第三阶段 9.38 ms/帧（第二阶段 9.81）；低档 390×844：4.56 ms",
     "34f2ca2：structure.test.mjs 新增两项改前失败、改后通过；pnpm test 266/266；pnpm run edges 0 处超限（平坐白壁改动前的同一几何上跑的）",
     "34f2ca2：docs/t00/evidence/structure/phase3-*-after.jpg",
@@ -315,13 +317,14 @@
     "structure_phase3": "pnpm test 266/266；check、typecheck 通过；edges 0 处超限；e2e:smoke 31/31"
   },
   "unverified": [
+    "#74：帧耗只在一次 T4 Job 上测，没有重复取平均、没有换 Job 实例；手机真机没有测；殿内帧耗没有测；几何预算的分配比例（结构线 27 万 / #72 10 万面）与低档「只守不增」是开发方的取舍，待所有者定",
     "第三阶段的图是软件渲染；山门的验收证据没有替换",
     "第二阶段没有跑 GPU 帧时间（三角面数 +1.3%，绘制次数不变）",
     "脚步降音量后只在无头 Chromium 测过响度，真机上是否「若隐若现」待所有者亲自听",
     "GPU 帧时间每个阶段只跑了一次，没有重复取平均；结尾最后一格的余量是在截图上目测量的",
-    "第二阶段的 cam01–cam06 是软件渲染重拍，未替换验收证据；殿内没有重拍（这一阶段不动殿内）",
+    "第二阶段的 cam01–cam06 是软件渲染重拍，未替换验收证据；殿内没有重拍（这一阶段不动殿内）（#103：六机位已在 0a88f96 上于 T4 重拍，被 docs/t00/evidence/acceptance/20261116-0a88f96/ 取代；殿内仍未重拍）",
     "没有跑 GPU 帧时间（几何略减，绘制次数不变）",
-    "cam01–cam06 与殿内 16 张已在 e5ff050 上用软件渲染重拍并逐张看过（docs/t00/evidence/structure/phase1-cam01-06-after.jpg、phase1-hall-views-*-after.jpg），但没有替换验收证据图，acceptance-report.json 未改；上线前仍需按验收口径重拍 CAM-04、CAM-05",
+    "cam01–cam06 与殿内 16 张已在 e5ff050 上用软件渲染重拍并逐张看过（docs/t00/evidence/structure/phase1-cam01-06-after.jpg、phase1-hall-views-*-after.jpg），但没有替换验收证据图，acceptance-report.json 未改；上线前仍需按验收口径重拍 CAM-04、CAM-05（#103：六机位已在 0a88f96 上于 T4 重拍，被 docs/t00/evidence/acceptance/20261116-0a88f96/ 取代；殿内仍未重拍）",
     "独立验收结论未改动（independent-review.json 未碰）",
     "香燃烧的样子没有截图目看（截图运行被中止）；燃烧只在 e2e 的状态数值上验证",
     "换季重播与香燃烧未在真机上试",
