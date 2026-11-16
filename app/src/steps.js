@@ -139,30 +139,30 @@ function h21(x, y) {
   const d = f(px * f(px + 34.23) + py * f(py + 34.23)); px = f(px + d); py = f(py + d);
   return fr(f(px * py));
 }
-function n2(x, y) {
+export function n2(x, y) {
   const ix = Math.floor(x), iy = Math.floor(y); let fx = x - ix, fy = y - iy;
   fx = fx * fx * fx * (fx * (fx * 6 - 15) + 10); fy = fy * fy * fy * (fy * (fy * 6 - 15) + 10);
   const a = h21(ix, iy), b = h21(ix + 1, iy), c = h21(ix, iy + 1), d = h21(ix + 1, iy + 1);
   return a + (b - a) * fx + (c - a + (d - c - (b - a)) * fx) * fy;
 }
-function fbm2(x, y) {
+export function fbm2(x, y) {
   let a = 0.5, s = 0;
   for (let i = 0; i < 5; i++) { s += a * n2(x, y); const nx = 1.62 * x - 1.22 * y + 17, ny = 1.22 * x + 1.62 * y + 17; x = nx; y = ny; a *= 0.5; }
   return s;
 }
 const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+import { snowAt } from "./snowfall.js";
 export function puddleAt(x, z, wet) {
   return smooth(0.57, 0.61, fbm2(x * 0.17 + 3, z * 0.17 + 3) + (wet - 1) * 0.34);
 }
 
 // What a shoe coming down at (x, z) sounds like: "snow", "stone", "wet" or "puddle". `floor` is the walker's
-// (`floorAt`): a hall's floor is dry stone; snow lies everywhere outdoors except on the court's swept axis path and its
-// kerbs (the paving shader keeps that path clear: `path` and `kerb` in ground.js); a roofed platform stays dry in rain;
+// (`floorAt`): a hall's floor is dry stone; snow lies everywhere outdoors except in the lane swept down the middle of
+// every court (snowfall.js, as the paving shader draws it; the bank of swept snow beside it is snow); a roofed platform stays dry in rain;
 // the open stone of the courts, the approach and the terraces is as wet as the mood says, and the courts hold puddles.
 export function underfoot({ x, z, y, floor, snow = 0, wet = 0 }) {
   if (floor === "room") return "stone";
-  const swept = floor === "paving" && Math.abs(y) < 0.05 && z > -0.95 && z < 53.9 && Math.abs(x) < 2.02;
-  if (snow > 0.01) return swept ? "stone" : "snow";
+  if (snow > 0.01) return floor === "paving" && snowAt(x, z).lane ? "stone" : "snow";
   if (floor === "stone" || floor === "wood") return "stone";
   if (floor === "paving" && puddleAt(x, z, wet) > 0.5) return "puddle";
   return wet > 0.4 ? "wet" : "stone";   // spring and summer rain; autumn's stone has dried

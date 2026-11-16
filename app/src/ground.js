@@ -85,15 +85,21 @@ export function createGround(scene, shade, censer, paving) {
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; float dB=(lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.)?texture2D(tShade,lmUv).r*${SPAN}.-.5:2.5;
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
-        // Snow lies where no one has walked: thin on the path, deep in the corners.
-        float sn=uSnow*smoothstep(.2,.5,fbm2(p*.22+1.)+.48-(path?.8:0.)-(kerb?.35:0.))*smoothstep(-.2,.7,dB); puddle*=1.-sn; damp*=1.-sn;
+        // Snow (snowfall.js does the same sums for his steps and the tests). Down the middle of every court a lane is swept
+        // each morning: a dusting on its stone, grainy and clean-edged, snow packed in the joints, the swept snow banked
+        // along both sides over the kerbs. Off the lane it lies deeper against walls and platforms and in long low waves
+        // out in the open; none under a roof.
+        float lane=abs(p.x)-1.7, bank=exp(-pow((lane-.32)/.3,2.)), open=smoothstep(-.15,.2,lane);
+        float deep=.5+.6*fbm2(p*.09+4.)+.25*fbm2(p*.35+8.)+.45*smoothstep(0.,.2,dB)*exp(-max(dB,0.)*.7)+.35*bank;
+        float dust=.2+.16*fbm2(p*1.3+2.)+joint*.55, grain=n2(p*15.)*.4, roofS=smoothstep(-.3,.1,dB);
+        float sn=uSnow*mix(smoothstep(.46,.475,dust+grain),smoothstep(.15,.3,deep),open)*roofS, snD=mix(dust,deep,open)*roofS; puddle*=1.-sn; damp*=1.-sn;
         // Snow on the paving is as bright as the same snow on a platform or a roof: the paving is lit by hand for stone
         // a third as pale, and at full brightness the snow was a glowing white with nothing in it.
         // Where he has walked the snow is pressed down: darker, a little blue, and in thin snow the stone shows through.
         vec3 tr=sn>.001?trail(vWP):vec3(0.); sn*=1.-tr.x*smoothstep(.8,.2,sn)*.6;
-        vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*.6*(.88+.24*wN.z)*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
+        vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*.6*(.88+.24*wN.z)*(.86+.14*min(snD,1.3))*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
-        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
+        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(sign(p.x)*bank*(lane-.32)*2.4,0.)+(vec2(n2(p*.4),n2(p*.4+5.))-.5)*.35*open)*sn*(1.-tr.x)+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
         float ndv=max(dot(N,V),0.), fres=.035+.965*pow(1.-ndv,5.);
         float sun=getShadowMask();
