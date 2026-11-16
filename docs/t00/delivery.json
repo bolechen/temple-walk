@@ -124,6 +124,7 @@
     "db2635a：tests/unit/structure.test.mjs 改前 4 项失败、改后 5 项通过；pnpm test 253/253",
     "db2635a：pnpm run edges 膝上膝下全场 0 处超过 1 厘米",
     "db2635a：docs/t00/evidence/structure/phase1-*-after.jpg（shots.js 的 hall、fiveroofs、summit、library、guanyin，软件渲染）；改前对照是同目录评审时的 main-hall-front.jpg、gate-upper-storey.jpg（452f14e）",
+    "e5ff050：凌霄阁二、三层恢复后的山顶图 phase1-lingxiao-after.jpg；六机位与殿内十六张的拼图同目录",
     "三角面数（shots.js）：court 1,796,268 → 1,788,088，hall 1,552,378 → 1,543,034，绘制次数不变",
     "4810cd5e40da89d592d61df97717b123646b959d：pnpm run edges 膝上、膝下全场 0 处超过 1 厘米（docs/t00/edge-coverage.md 由同一提交生成）",
     "4810cd5e40da89d592d61df97717b123646b959d：pnpm run verify（check、单测、e2e smoke）结果见 PR 说明",
@@ -283,12 +284,11 @@
     "close_with_deeds": "正常速度、真键盘（本地 SwiftShader，main 合入后）：存档预置钟三下、吃茶、观水、得句「看脚下。」、612 步（诊断性预置），标题出现「接着走」，点它入山，__pose 到蒲团旁（诊断），按 E 静坐。结尾实际说的五句：从竹林到这里，走了 612 步。／钟楼的钟，撞过三下，茶寮那碗茶喝到了底，龙井边等过三声滴水。／藏经楼给的那一句，还记着：「看脚下。」／山门之外，还有一条没走过的路。／远处的山里，好像也有一声钟，应了你那几下。随后朱印帐：「帐上还空着二处。穿过大院，登上台阶，进大雄宝殿上一炷香。」页面零错误。证据 docs/t00/evidence/play-2026-11-16/close-with-deeds/（截图只抓到其中三句，五句全文见 log.txt 的 words）",
     "phone_touch": "e2e phone 场景扩展后通过：模拟手机（390×780，CDP 触摸）双指开合拉远拉近、推摇杆松开钟绳、推摇杆从吃茶后的凳上起身；点按撞钟与吃茶。仍是模拟触摸，不是真机",
     "round_2026_11_16_evening": "单测 232/232；typecheck、check 通过；e2e replay（42 s）、incense（55 s，burn=12）、preview-debug（26 s，以 host-resolver 把 pr-1-temple-walk-preview.test 指到本机）、views 通过；本地 pnpm dev 无参数时面板打开、?debug=0 时不打开",
-    "structure_phase1": "pnpm test 253/253（合并 main 前）；tests/unit/structure.test.mjs 五项；pnpm run edges 0 处超限；e2e smoke 见 PR #82"
+    "structure_phase1": "e5ff050（合入 main 后）：pnpm test 260/260；tests/unit/structure.test.mjs 五项；pnpm run check、typecheck 通过。e2e:smoke 31 个场景 30 个通过（含 rites、seats、halls、jump）；incense 在全量运行里失败一次（「no seal for the incense」，当时后台同时在拍图），单独重跑通过，判断是香插好后立刻查朱印的时序，与开间无关，没有改它"
   },
   "unverified": [
     "没有跑 GPU 帧时间（几何略减，绘制次数不变）",
-    "六个验收机位 cam01–cam06 没有逐张重拍；山门是 CAM-04、CAM-05 的主体，acceptance-report.json 未改",
-    "殿内房间的柱位随柱线变了，只由 interior.test.mjs 查过可走性，没有逐间看图",
+    "cam01–cam06 与殿内 16 张已在 e5ff050 上用软件渲染重拍并逐张看过（docs/t00/evidence/structure/phase1-cam01-06-after.jpg、phase1-hall-views-*-after.jpg），但没有替换验收证据图，acceptance-report.json 未改；上线前仍需按验收口径重拍 CAM-04、CAM-05",
     "独立验收结论未改动（independent-review.json 未碰）",
     "香燃烧的样子没有截图目看（截图运行被中止）；燃烧只在 e2e 的状态数值上验证",
     "换季重播与香燃烧未在真机上试",
