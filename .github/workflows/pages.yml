@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: ["app/**", "tests/**", "tools/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tsconfig.json", ".github/workflows/pages.yml"]
+    paths: ["app/**", "tests/**", "tools/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tsconfig.json", "wrangler.jsonc", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -86,6 +86,64 @@ jobs:
           path: dist
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
+      # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
+      # through, handed to the preview job. Pull requests from forks have no access to the Cloudflare token and get none.
+      - name: Hand the site over for the pull request's preview
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist
+          name: preview-site-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 1
+          include-hidden-files: true
+
+  preview:
+    # Runs after verify whatever it concluded, so a failed check is said on the pull request too; a run cancelled by a
+    # newer push says nothing, because the newer run will.
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.verify.result != 'cancelled'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            wrangler.jsonc
+            tools/preview
+            docs/t00/camera-manifest.json
+          sparse-checkout-cone-mode: false
+      - uses: actions/download-artifact@v4
+        if: needs.verify.result == 'success'
+        with:
+          name: preview-site-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist
+      - uses: actions/setup-node@v4
+        if: needs.verify.result == 'success'
+        with:
+          node-version: 22
+      - name: Upload the preview
+        id: upload
+        if: needs.verify.result == 'success'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PREVIEW_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.ndjson
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: npx --yes wrangler@4.162.0 preview --name "pr-$PR" --ignore-base-config --tag "${SHA:0:7}" --message "$SHA"
+      - name: Say where it is on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          STATE: ${{ steps.upload.outcome == 'success' && 'success' || 'failure' }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          OUTPUT_FILE: ${{ runner.temp }}/wrangler-output.ndjson
+        with:
+          script: await require(`${process.env.GITHUB_WORKSPACE}/tools/preview/comment.cjs`)({ github, context, core })
 
   deploy:
     if: github.event_name != 'pull_request' && needs.verify.outputs.site == 'true'

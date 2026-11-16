@@ -14,3 +14,6 @@ app/vendor/
 
 # What `pnpm build` writes: the site as it is published
 dist/
+
+# Wrangler local state and deployment output
+.wrangler/
