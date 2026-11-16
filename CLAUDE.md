@@ -310,6 +310,17 @@ sets `body.seasons`, and everything marked `need-seasons` shows (a row in the ph
 menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
+**Three languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese or English, by `?lang=`,
+then the visitor's choice (`yunjing.lang.v1`, set in the pause menu or on the title), then the browser's language. Chinese
+is the text of record: write every line in Chinese and pass it through `t("…", vars)` where it is shown; the Japanese and
+English are found by that Chinese in `i18n-ja.js` and `i18n-en.js` (one entry to a line), and `tests/unit/i18n.test.mjs`
+fails if a line the page may show lacks either. `index.html` is translated by `app/lang.js` before the title paints.
+What is calligraphy (seals, the seal book's page, the title's four characters) goes through `glyphs()`: Japanese forms in
+Japanese, the temple's own characters otherwise. Name boards and the museum notes are not translated. Each language has
+its own faces in front of the Chinese ones (`FONT`/`FACE` in `i18n.js` for canvases; `:lang()` variables in `ui.css`),
+cut by `python3 tools/fonts.py --lang ja|en`. Tests and tools pin their browser to `zh-CN`; the `lang` scenario and
+`node tools/mobile-audit.cjs --lang=ja|en` look at the others.
+
 **Typefaces (`app/shared/fonts/`, `tools/fonts.py`).** Six faces under the SIL Open Font License, cut down to the characters the
 app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page of seals), "Yunjing Kai" (LXGW WenKai:
 every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Xing" (Zhi Mang Xing, a running hand: what is written by hand on paper, which is

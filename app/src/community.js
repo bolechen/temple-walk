@@ -1,6 +1,8 @@
 // The beta feedback group's invitation. The QR code is never committed: it and a small JSON that points at it live in
 // R2 (bucket buddhist-say, served from static.rushiwowen.co), so a new code is one upload, not a release. The JSON is
 // read when the card is opened; it may close the invitation, and the code is hidden from its expiry onwards.
+import { lang } from "./i18n.js";
+
 export const COMMUNITY_CONFIG_URL = "https://static.rushiwowen.co/temple-walk/community/current.json";
 
 export function readCommunityConfig(data, base, now = Date.now()) {
@@ -70,6 +72,8 @@ export function createCommunity(ui) {
     if (event.key !== "Escape" || ui.top() !== "community") return;
     event.preventDefault(); event.stopPropagation(); ui.close("community");
   });
+  // The group meets on WeChat and speaks Chinese: it is offered only to a visitor reading the page in Chinese.
+  if (lang !== "zh") return;
   const open = () => { if (ui.open("community", { onClose: clear })) load(); };
   element("titleCommunity").hidden = element("menuCommunityInvite").hidden = false;
   element("titleCommunity").addEventListener("click", open);

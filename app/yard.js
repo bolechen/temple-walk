@@ -39,6 +39,9 @@ import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose, seatHop } from "./src/drop.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
+import { t as tr, lang, glyphs, setLang } from "./src/i18n.js";
+// The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
+const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -75,22 +78,22 @@ if (OFF.has("reflect")) quality.planar = 0;
 if (OFF.has("bloom")) quality.bloom = false;
 if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
 
-await loading.step("山路");
+await loading.step(tr("山路"));
 const M = createMaterials();
 const site = buildSite(M);
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
 const walker = createWalker(site);
-await loading.step("山门");
+await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
-await loading.step("殿堂");
+await loading.step(tr("殿堂"));
 let hallIn = null;   // the room he is in, when he is in one
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
 const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain));
-await loading.step("山林");
+await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea.
 const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
 const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
@@ -103,10 +106,10 @@ const bamboo = part("bamboo", () => createBamboo(scene, [
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
 }, { a2c: quality.msaa > 0, fine: quality.name !== "low" }));
-await loading.step("竹林");
+await loading.step(tr("竹林"));
 const props = part("props", () => createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2));
 const post = createPost(renderer, scene, camera, quality);
-await loading.step("院落");
+await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
@@ -132,7 +135,7 @@ const glows = []; let glowCloud = null;
   ground.setLamps(glows.map((g) => ({ x: g.position.x, y: g.position.y, z: g.position.z, reach: g.scale.x > 1 ? 1.9 : 0.9 })));
 }
 
-await loading.step("树影");
+await loading.step(tr("树影"));
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
 // The dragon well's drops and the rings they send across the water (well.js); the rite's drops ring it too.
@@ -142,14 +145,14 @@ const well = createWell(scene, site.places.well.pool, wellDrip); onDrop(() => we
 const flock = createFlock(scene, site.cedars, site.places.bell.at);
 addEventListener("flush", () => { if (!inside && mood.time !== "night" && flock.flush()) flutter(0.8); });
 
-await loading.step("石阶");
+await loading.step(tr("石阶"));
 const monk = createMonk(); part("monk", () => scene.add(monk.group));
 // He is the figure built in code. The sculpted body's cloth tears at its texture seams when he walks, climbs or sits,
 // so until its weights are mended it is fetched (after the first frames) only for ?body=sculpt; ?body=code asks for
 // what he already wears.
 if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
 
-await loading.step("行走");
+await loading.step(tr("行走"));
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
@@ -167,7 +170,7 @@ function setMood(season, time) {
   renderer.shadowMap.needsUpdate = true;
   document.querySelectorAll("[data-season]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.season === season)));
   document.querySelectorAll("[data-time]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.time === time)));
-  const tag = document.getElementById("moodTag"); if (tag) { if (tag.textContent && tag.textContent !== mood.label) hints.say.mood(); tag.textContent = mood.label; }
+  const tag = document.getElementById("moodTag"), said = moodWords(mood); if (tag) { if (tag.textContent && tag.textContent !== said) hints.say.mood(); tag.textContent = said; }
   afterMood?.();
 }
 setMood(state.season, state.time);
@@ -331,7 +334,7 @@ function startJump() {
   if (ui.covered()) return false;
   leap = { y: footY, v: JUMP.speed }; return true;
 }
-if (dropButton) { dropButton.innerHTML = hints.coarse ? "下台阶" : "<kbd>Space</kbd>下台阶"; dropButton.addEventListener("click", startDrop); }
+if (dropButton) { dropButton.innerHTML = hints.coarse ? tr("下台阶") : tr("<kbd>Space</kbd>下台阶"); dropButton.addEventListener("click", startDrop); }
 
 addEventListener("keydown", (e) => {
   const k = e.key.toLowerCase(); keys[k] = true; if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -587,7 +590,7 @@ async function capture(at = null) {
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
-  return composeCard(shot, { line: mood.line, label: mood.label, temple: "云径禅寺", url: location.host + location.pathname.replace(/\/$/, "") });
+  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: tr("云径禅寺"), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") });
 }
 let lastBlob = null;
 // The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,
@@ -614,7 +617,7 @@ on("shutter", async () => {
     const card = await capture(at);
     lastBlob = await new Promise((r) => card.toBlob(r, "image/jpeg", 0.93));
     const url = URL.createObjectURL(lastBlob); $("printImg").src = url; $("saveLink").href = url;
-    $("saveLink").download = `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg`;
+    $("saveLink").download = lang === "zh" ? `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg` : tr("云径禅寺-{mood}.jpg", { mood: `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}` });
     const file = new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" });
     $("shareBtn").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
     ui.open("print", { onClose: () => { if (frozen) freeze(false); } }); stampSound();   // put away by its button or by Esc: the walk goes on
@@ -623,7 +626,7 @@ on("shutter", async () => {
 });
 on("printBack", () => ui.close("print"));
 on("shareBtn", async () => {
-  try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: "云径禅寺", text: mood.line }); } catch {}
+  try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: tr("云径禅寺"), text: tr(mood.line) }); } catch {}
 });
 
 // ---- Through the door ----------------------------------------------------------------
@@ -774,8 +777,8 @@ function openMenu(open) {
   if (ui.open("menu")) { interrupt(); target = null; route = []; }
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
-  $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
-  $("setLock").setAttribute("aria-pressed", String(S.lock)); $("setLock").textContent = S.lock ? "开" : "关";
+  $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? tr("开") : tr("关");
+  $("setLock").setAttribute("aria-pressed", String(S.lock)); $("setLock").textContent = S.lock ? tr("开") : tr("关");
   menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
@@ -791,6 +794,13 @@ function openMenu(open) {
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
+  // The language: each choice is written in its own language; the one in use is circled in the menu and left off the
+  // title. Choosing another opens the page again in it (src/i18n.js).
+  document.querySelectorAll("[data-lang]").forEach((b) => {
+    b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
+    if (b.closest(".langs")) /** @type {HTMLElement} */ (b).hidden = b.dataset.lang === lang;
+    b.addEventListener("click", () => setLang(b.dataset.lang));
+  });
   // Lost, or wedged somewhere he should not be: back to where the path begins.
   on("menuHome", () => { if (inside) indoors(null); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
@@ -867,4 +877,4 @@ if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {
   await mountDebug({ link: () => (devpose ? devpose.link() : null) });
 }
 
-await loading.step("山路");
+await loading.step(tr("山路"));
