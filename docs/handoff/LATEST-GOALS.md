@@ -61,6 +61,8 @@
 
 17. **改形体的从几个方向看。** 所有者问「多角度截图迭代的做法要不要加入工作流」，主创定：加，但只管改形体和改构图的。规则在 `AGENTS.md`「改形体的，从几个方向看」，issue 模板已带这一条。
 
+18. **上 Steam 的可行性。** 所有者转来朋友的建议（「先把Steam页面挂出来收心愿单，预告片重点剪一段NPC在宋代瓦肆自主交互的实机」），要求「思考上 steam 可行性」，随后定「开 issue，先核素材商用授权」。主创评估：可行，建议序章做免费试玩、正式版挂「即将推出」页收心愿单；预告片只用游戏里真实存在的内容（游戏没有 NPC 和瓦肆）；等画面定调、小沙弥身体和自动转场落地后再做页面。总清单：https://github.com/bolechen/temple-walk/issues/106 ；第一项素材商用授权核对：https://github.com/bolechen/temple-walk/issues/105 。收费还是免费、以谁的名义开账号、是否做有 NPC 的宋代世界，三件事待所有者定。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。
