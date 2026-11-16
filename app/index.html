@@ -57,7 +57,7 @@
     <button class="chip" id="photoBtn" type="button" aria-label="拍照">留影</button>
     <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置">歇脚</button>
   </div>
-  <dialog class="layer" id="menu" aria-label="歇脚" hidden><div class="card paper">
+  <dialog class="layer" id="menu" aria-label="歇脚" hidden><div class="card paper scrolls">
     <h2>歇脚<span class="seal-mark" aria-hidden="true">云径</span></h2>
     <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
     <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
@@ -70,13 +70,26 @@
     <div class="set"><label for="setMusic">乐声</label><input id="setMusic" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setAmbience">山声</label><input id="setAmbience" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setEffects">音效</label><input id="setEffects" type="range" min="0" max="1" step="0.05"></div>
+    <div class="community-invite" id="menuCommunityInvite" hidden><button class="chip" id="menuCommunity" type="button">加入内测反馈群</button><p>遇到问题，或有什么想法，来群里聊聊。</p></div>
     <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="stamp" id="menuResume" type="button">继续</button></div>
   </div></dialog>
+  <dialog class="layer" id="community" aria-labelledby="communityTitle" hidden>
+    <div class="community-card paper scrolls">
+      <header><span class="community-kicker">山门之外 · 一起慢慢走</span><h2 id="communityTitle">内测反馈群</h2><p>遇到问题，或有什么想法，<br>欢迎来群里聊聊。</p></header>
+      <p id="communityStatus" role="status" aria-live="polite">群二维码正在加载</p>
+      <a id="communityImageLink" class="community-image" target="_blank" rel="noopener noreferrer" aria-label="查看群二维码原图" hidden><img id="communityImage" alt="山门之外 demo 反馈群微信二维码" width="939" height="1455"></a>
+      <div id="communityHelp" hidden><p class="community-desktop">使用微信扫一扫，扫码加入</p><p class="community-mobile">长按图片保存，再到微信扫一扫中<br>从相册选择图片</p><p id="communityExpiry"></p></div>
+      <footer><button class="chip" id="communityRetry" type="button" hidden>重试</button><a class="chip" id="communityOriginal" target="_blank" rel="noopener noreferrer" hidden>查看原图</a><button class="stamp" id="communityClose" type="button">返回</button></footer>
+    </div>
+  </dialog>
   <div id="moodPanel" class="paper" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
     <div><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
   </div>
-  <div id="frame"></div>
+  <canvas id="still" aria-hidden="true"></canvas>
+  <div id="finder" aria-hidden="true"></div>
+  <div id="frame"><i class="third"></i></div>
+  <div id="curtain" aria-hidden="true"><i></i><i></i></div>
   <button class="chip" id="photoClose" type="button">收起</button>
   <div id="photoBar">
     <button class="chip" id="photoSettingsToggle" type="button" aria-expanded="false" aria-controls="photoSettings">设置</button>
@@ -90,6 +103,9 @@
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
     </div></fieldset>
     <fieldset class="need-seasons"><legend>时节</legend><div class="row"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div><div class="row"><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></fieldset>
+    <fieldset><legend>取景</legend><div class="row">
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button>
+    </div></fieldset>
     <fieldset><legend>人物</legend><div class="row">
       <button class="chip" id="monkToggle" aria-pressed="false" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button" disabled>合掌</button>
     </div></fieldset>
@@ -135,7 +151,7 @@
     <button id="againBtn" type="button" hidden></button>
   </div>
   <p class="how">七处小事 · 七枚朱印</p>
-  <button class="chip" id="titleSet" type="button">设置</button>
+  <div class="title-links"><button class="chip" id="titleCommunity" type="button" hidden>内测反馈群</button><button class="chip" id="titleSet" type="button">设置</button></div>
 </div>
 <!-- The close of the chapter: the closing words, one at a time, then the title of what has ended. -->
 <div id="ending" hidden><p id="endingLine"></p><div id="endingTitle"><b>山门之外</b><span>序章　云径禅寺　完</span><em>下一章，还在路上</em></div><small>轻点略过</small></div>

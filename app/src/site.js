@@ -157,20 +157,22 @@ export function buildSite(M) {
   putTwo({   // on the first terrace: the sutra library
     xs: [-9.4, -5.4, -1.9, 1.9, 5.4, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, rise: 3.0, steps: 5.2, lamps: false, hall: { id: "library", kind: "library", name: "藏经楼" },
   }, { xs: [-6.4, -2.2, 2.2, 6.4], zs: [2.6, -2.6], colTop: 3.1, overhang: 2.3, rise: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
-  {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark
-    const g = new THREE.Group(), w = 0.95;
+  {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark.
+    // The whole arch stands in front of the wall and below the terrace above it (2.8 m): the crown comes up to the
+    // coping and no higher, so nothing of it shows over the parapet or through it from the terrace behind.
+    const g = new THREE.Group(), w = 0.95, R = w + 0.3, t = 0.28, deep = 2.6, mid = 0.75, jamb = 1.15, crown = jamb + R;   // `deep`: the barrel stretched out of the wall about `mid`, its back just touching the face and its front proud of the sill
     const niche = mesh(merge([
-      box(0.6, 2.0, 1.1, -w - 0.3, 1.0, 0.55), box(0.6, 2.0, 1.1, w + 0.3, 1.0, 0.55),
-      new THREE.TorusGeometry(w + 0.3, 0.32, 8, 18, Math.PI).scale(1, 1, 3.2).translate(0, 2.0, 0.55),
+      box(0.6, jamb, 1.1, -w - 0.3, jamb / 2, 0.55), box(0.6, jamb, 1.1, w + 0.3, jamb / 2, 0.55),
+      new THREE.TorusGeometry(R, t, 8, 18, Math.PI).scale(1, 1, deep).translate(0, jamb, mid),
       box(2.6, 0.24, 0.3, 0, 0.12, 1.25),
     ]), M.rubble); niche.name = "well-niche"; g.add(niche);
-    const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 3.0).translate(0, 1.5, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
+    const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, crown).translate(0, crown / 2, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.15).rotateX(-Math.PI / 2).translate(0, 0.2, 0.62), new THREE.MeshStandardMaterial({ color: 0x0a1210, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.4 }));
-    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.75); board.position.set(0, 3.26, 0.55 + 0.32 * 3.2 + 0.06);   // hung on the face of the arch's crown, which stands two metres deep out of the wall
+    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.65); board.position.set(0, crown, mid + t * deep + 0.06);   // hung on the face of the arch's crown
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
-    g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, 2.0).translate(sx * (w + 0.3), 1.0, 1.103), new THREE.PlaneGeometry(0.9, 1.9).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), 0.95, 0.6)])), M.seep, { ao: () => 0.6 }));
+    g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, jamb).translate(sx * R, jamb / 2, 1.103), new THREE.PlaneGeometry(0.9, jamb - 0.1).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), (jamb - 0.1) / 2, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
-    walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY }, { x0: 13.2 - 1.6 - BODY, x1: 13.2 + 1.6 + BODY, z0: T2.zS - 0.5 - BODY, z1: T2.zS });   // and the crown of its arch, which stands above the terrace behind
+    walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY });
   }
 
   // Flanking halls on the terraces, small and plain, as the real temple has them beside the axis.

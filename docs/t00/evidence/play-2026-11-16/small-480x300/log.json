@@ -1,0 +1,246 @@
+[
+ {
+  "t": "2026-11-16T02:42:32.185Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T02:42:32.825Z",
+  "run": "bell",
+  "kind": "diagnostic",
+  "what": "__pose beside bell"
+ },
+ {
+  "t": "2026-11-16T02:42:36.525Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-1-offered.png"
+ },
+ {
+  "t": "2026-11-16T02:42:42.288Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "frame rate here: 2.2 frames/s"
+ },
+ {
+  "t": "2026-11-16T02:42:43.130Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · first press"
+ },
+ {
+  "t": "2026-11-16T02:42:51.292Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · pressed again at once (button faint: true, ready: true)"
+ },
+ {
+  "t": "2026-11-16T02:42:51.686Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "stroke 1 sounded 9.0 s after the press",
+  "say": "一下"
+ },
+ {
+  "t": "2026-11-16T02:42:54.960Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "strokes after the early press: 2, pulls: 2"
+ },
+ {
+  "t": "2026-11-16T02:42:57.738Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-2-stroke1.png"
+ },
+ {
+  "t": "2026-11-16T02:43:01.724Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 3 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T02:43:03.453Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 2 rang 0.4 s after the press",
+  "strikes": 2,
+  "sealed": false,
+  "say": "三下"
+ },
+ {
+  "t": "2026-11-16T02:43:10.881Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 6.5 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T02:43:12.662Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 3 rang 0.5 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T02:43:15.261Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-3-third.png"
+ },
+ {
+  "t": "2026-11-16T02:43:18.601Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 2.5 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T02:43:20.212Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 4 rang 0.5 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T02:43:21.096Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key v · first person while holding the rope"
+ },
+ {
+  "t": "2026-11-16T02:43:24.678Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-4-first-person.png"
+ },
+ {
+  "t": "2026-11-16T02:43:25.409Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key v"
+ },
+ {
+  "t": "2026-11-16T02:43:26.245Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key Escape · let go"
+ },
+ {
+  "t": "2026-11-16T02:43:29.120Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-5-let-go.png"
+ },
+ {
+  "t": "2026-11-16T02:43:30.344Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "after letting go",
+  "rite": null,
+  "button": "撞钟"
+ },
+ {
+  "t": "2026-11-16T02:43:30.400Z",
+  "run": "bell",
+  "kind": "film",
+  "what": "bell.webm",
+  "errors": []
+ },
+ {
+  "t": "2026-11-16T02:43:58.383Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T02:43:58.939Z",
+  "run": "tea",
+  "kind": "diagnostic",
+  "what": "__pose beside tea"
+ },
+ {
+  "t": "2026-11-16T02:44:00.980Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key e · 吃茶"
+ },
+ {
+  "t": "2026-11-16T02:44:12.574Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-1-sip.png"
+ },
+ {
+  "t": "2026-11-16T02:44:25.388Z",
+  "run": "tea",
+  "kind": "page",
+  "what": "seal",
+  "button": "起身"
+ },
+ {
+  "t": "2026-11-16T02:45:07.977Z",
+  "run": "tea",
+  "kind": "page",
+  "what": "sat on for 40 s",
+  "lookRange": [
+   -0.497,
+   0.298
+  ],
+  "hushed": true,
+  "duck": 0.35
+ },
+ {
+  "t": "2026-11-16T02:45:10.885Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-2-sitting-on.png"
+ },
+ {
+  "t": "2026-11-16T02:45:11.838Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key v · first person while sitting"
+ },
+ {
+  "t": "2026-11-16T02:45:15.691Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-3-first-person.png"
+ },
+ {
+  "t": "2026-11-16T02:45:16.640Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key v"
+ },
+ {
+  "t": "2026-11-16T02:45:17.750Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key e · 起身"
+ },
+ {
+  "t": "2026-11-16T02:45:21.764Z",
+  "run": "tea",
+  "kind": "page",
+  "what": "stood up",
+  "hushed": false
+ },
+ {
+  "t": "2026-11-16T02:45:25.027Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-4-up.png"
+ },
+ {
+  "t": "2026-11-16T02:45:25.082Z",
+  "run": "tea",
+  "kind": "film",
+  "what": "tea.webm",
+  "errors": []
+ }
+]
