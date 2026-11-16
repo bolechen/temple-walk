@@ -53,12 +53,21 @@ WORK_TABLES = {l: f"app/levels/t00/locales/{l}.js" for l in ("ja", "en", "ko")}
 # The language buttons are each written in their own language, so each language's cut holds its own name.
 OWN_NAME = {"ja": "日本語", "en": "English", "ko": "한국어"}
 
+def credits_keys():
+    """The Chinese lines of the page of thanks (app/src/credits.js: every t("…") it writes), which are read in the kai and
+    the serif and in no other face."""
+    import re
+    src = open(f"{ROOT}/app/src/credits.js", encoding="utf-8").read()
+    return {json.loads('"' + m + '"') for m in re.findall(r'(?<![\w.$])t\(\s*"((?:[^"\\]|\\.)*)"', src)}
+
 def table_chars(lang, works=True):
     """Every character a language's table writes (its keys are the Chinese, which the Chinese faces hold). The works'
-    cards are set only in the kai and the serif, so the brush, the running hand and the seal leave them out."""
+    cards and the page of thanks are set only in the kai and the serif, so the brush, the running hand and the seal
+    (works=False) leave them out; the page's title, which is drawn in the brush, is not among the credits' own lines."""
     import re
+    skip = set() if works else credits_keys()
     src = "".join(open(f"{ROOT}/{t[lang]}", encoding="utf-8").read() for t in ((TABLES, WORK_TABLES) if works else (TABLES,)))
-    values = "".join(json.loads(f'"{v}"') for v in re.findall(r':\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$', src, re.M))
+    values = "".join(json.loads(f'"{v}"') for k, v in re.findall(r'^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$', src, re.M) if json.loads(f'"{k}"') not in skip)
     return "".join(sorted(set(ALWAYS + "‘’“”–—…·「」『』" + values + OWN_NAME[lang])))
 
 def main_lang(lang, src):
