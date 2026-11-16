@@ -33,8 +33,9 @@ hf buckets create "$BUCKET" --private --exist-ok >/dev/null
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 SITE="$(node -e 'console.log(require("./tools/site.cjs").site())')"   # the built site, staged under the name the job expects
 cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/shared/models" "$STAGE/app/plate.webp"; cp tools/gpu/job.cjs "$STAGE/job.cjs"
-# Each run stages under its own name: two sessions sharing the bucket once overwrote each other's site mid-job.
-hf buckets sync "$STAGE" "hf://buckets/$BUCKET/in/$RUN" --delete >/dev/null
+# Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
+# mid-job (a sync of in/ with --delete removes everything else under it).
+hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
 echo "run $RUN on $FLAVOR"
 hf jobs run --flavor "$FLAVOR" --timeout 25m --name "temple-walk-render-$RUN" \
   -e RUN="$RUN" -e SPEC="$(printf %s "$SPEC" | base64 | tr -d '\n')" \
@@ -42,7 +43,7 @@ hf jobs run --flavor "$FLAVOR" --timeout 25m --name "temple-walk-render-$RUN" \
   mcr.microsoft.com/playwright:v1.63.0-noble \
   bash -c 'set -e; mkdir -p /tmp/run && cd /tmp/run && npm init -y >/dev/null 2>&1 && npm i playwright@1.63.0 >/dev/null 2>&1
     (apt-get update -qq && apt-get install -y -qq libvulkan1 libegl1 libgles2 >/dev/null 2>&1) || echo "could not install the GL loaders; going on"
-    cp "/work/in/$RUN/job.cjs" . && node job.cjs "/work/in/$RUN/app" "/work/out/$RUN" "$SPEC"'
+    cp "/work/runs/$RUN/job.cjs" . && node job.cjs "/work/runs/$RUN/app" "/work/out/$RUN" "$SPEC"'
 mkdir -p tools/out/gpu
 hf buckets sync "hf://buckets/$BUCKET/out/$RUN" "tools/out/gpu/$RUN" >/dev/null
 echo "results in tools/out/gpu/$RUN"
