@@ -42,6 +42,17 @@
 - 两次 GPU 运行作废：别的会话同时用同一个桶的 `in/` 做 `sync --delete`，把正在跑的站点换掉或删掉。`gpu-render.sh` 已改成每次放在 `runs/<run>/`。
 - 证据：`docs/t00/evidence/art/phase1/`（改前改后 art1–art6、cam01–cam06、高低档对照、`look.json`）。
 
+## 2026-11-16 夜：景观评审（#112，只评审，没有改 `app/`）
+
+- 评审在 `docs/t00/landscape-review.md`，锁定 `2d1c7d7`，T4 出图 62 张（`docs/t00/evidence/landscape/review-2026-11-16-2d1c7d7/`）。
+- 结论：远景是最弱的一层。
+  - 远山三重和天挤在 L\* 80～89，没有层次，秋暮、春晨的远山比天还亮；
+  - 远山是三圈只有上沿的圆柱，向南回望后两圈被第一圈挡住；
+  - 谷底是空地，远竹是平顶绿墙；
+  - 竹林起点向南看，地平线下露天。
+- 建议顺序：#114 边界与穿帮 → #115 空气透视阶梯（并进 #72 第一阶段一起做）→ #116 远山重做和 #117 云海，然后 #118 远林、#119 天空。
+- `tools/gpu/job.cjs` 现在也能拍任意 `?cam=` 地址，并可先跑一段页面脚本。
+
 ## 2026-11-16 夜：素材商用授权核对（#105）
 
 所有者的话：「开 issue，先核素材商用授权」。按收费上架 Steam 的口径逐件打开来源页核对，结果在 [`docs/t00/LICENSING-AUDIT.md`](t00/LICENSING-AUDIT.md)，登记表 `asset-register.csv` 加了 `commercial_use`、`attribution_required`、`license_url`、`checked_on` 四栏、补了 9 行（现 85 行：56 可商用、22 有条件、0 不可、7 未能核实）。有条件的都是要补的署名或许可声明（ColBase 14 件和名匾缺「加工过」的说明；程序库的许可声明没进产物，Basis 附错了许可文件）和两款字体要改内部名字（霞鹜文楷、Nanum）；未能核实的是 AI 生成或来历没记下的图，问题列在报告第五节，等所有者答。`tests/unit/asset-register.test.mjs`：`app/` 下进产物的素材都要在登记表里有行。没有删、换任何素材。
@@ -59,6 +70,8 @@
 - 预算页 `docs/t00/geometry-budget.md`，原始数据 `docs/t00/evidence/perf/20261116-0a88f96/`。其中分配比例和低档「只守不增」是待所有者定的取舍。手机真机、重复取平均没有做。
 
 ## 2026-11-16 夜：语言文件归位，语言埋点
+
+- 2026-11-16 Issue #100（fixed_pending_retest）：出殿后点哪里都走回殿门，是 `yard.js` 的 `toHall` 在他站在台基盒内时恒真；现只在台基之外成立。场景 `hallexit` 守着。
 
 用户的话：「app 目录结构要不要重新组织一下」→「马上要开第二座了，跟 lang 埋点一起做 开 pr」。
 

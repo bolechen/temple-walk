@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -137,14 +137,18 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
     save();
   }
   // The pictures: a named view, optionally a season and hour and a point of view, drawn large.
-  // A shot is a name, or { name, size, q } for one drawn at its own size or tier (the 2.39:1 art views beside 16:9 ones).
-  for (const item of spec.shots || []) {
-    const name = typeof item === "string" ? item : item.name;
-    const [view, when = "", as = ""] = name.split("@"), [season, time] = when.split("-"), size = (typeof item === "object" && item.size) || spec.size || [1920, 1080], tier = (typeof item === "object" && item.q) || spec.q || "high";
+  // A picture is a named view ("court@autumn-dusk@third"); or { name, size, q }, a named view drawn at its own size or tier
+  // (the 2.39:1 art views beside 16:9 ones; a tier other than the spec's is added to the file's name); or an object for
+  // anything else: { file, query, size, js, wait }, where `query` is the page's address after "?" (e.g. a ?cam= that no
+  // named view has) and `js`, if given, is run in the page (it may return a promise) before the picture is taken.
+  for (const shot of spec.shots || []) {
+    const free = typeof shot === "object" && !!shot.file, named = typeof shot === "object" && !free, name = free ? shot.file : named ? shot.name : shot;
+    const [view, when = "", as = ""] = free ? [] : name.split("@"), [season, time] = when.split("-"), size = (typeof shot === "object" && shot.size) || spec.size || [1920, 1080], tier = (named && shot.q) || spec.q || "high";
     try {
-      const { ctx, page } = await open(q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1);
-      await page.waitForTimeout(800);
-      const file = name.replace(/@/g, "_") + (typeof item === "object" && item.q ? "_" + item.q : "") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
+      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1);
+      await page.waitForTimeout(free && shot.wait ? shot.wait : 800);
+      if (free && shot.js) await page.evaluate(shot.js);
+      const file = free ? name + ".png" : name.replace(/@/g, "_") + (named && shot.q ? "_" + shot.q : "") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
       const y = await page.evaluate(() => window.__yard()); report.shots.push({ name, file, tris: y.tris, calls: y.calls }); console.log("shot", file); await ctx.close();
     } catch (e) { report.shots.push({ name, error: String(e.message).slice(0, 200) }); console.log("shot failed", name, String(e.message).slice(0, 200)); }
     save();
