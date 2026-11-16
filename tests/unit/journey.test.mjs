@@ -115,3 +115,27 @@ test("a book filled before the seasons were kept still opens them", () => {
   const half = memory(JSON.stringify({ v: 1, born: 1, seals: { bell: 5 }, strikes: 3, verse: null, done: null, opened: "x" }));
   assert.equal(createJourney(half).opened(), false, "a damaged mark does not open them");
 });
+
+test("the prologue closes on the summit whatever else is held, once, and the book still fills afterwards", () => {
+  const store = memory(); let t = 100; let j = createJourney(store, () => t++);
+  j.earn("tea"); assert.equal(j.closed, null, "nothing has closed before the summit");
+  assert.equal(j.earn("sit"), true, "the summit's seal is earned with only one other held");
+  assert.equal(j.close(), true, "the first close is the one that plays"); assert.equal(j.close(), false, "and it plays only once");
+  const when = j.closed; assert.ok(when >= 100);
+  j = createJourney(store, () => t++); assert.equal(j.closed, when, "a reload remembers that the close was seen");
+  for (const s of SEALS) if (s.id === "bell") { j.strike(); j.strike(); j.strike(); } else j.earn(s.id, { verse: pickVerse(1) });
+  assert.equal(j.done(), true, "the seals left over can still be earned after the close"); assert.equal(j.closed, when);
+});
+
+test("an older book keeps its seals, and one whose close was seen before this version is not shown it again", () => {
+  const raw = JSON.stringify({ v: 1, born: 3, seals: { bell: 4, tea: 5 }, strikes: 3, verse: null, done: null });
+  let j = createJourney(memory(raw)); assert.equal(j.count(), 2); assert.equal(j.closed, null);
+  j = createJourney(memory(raw), () => 9, { closedBefore: true }); assert.equal(j.closed, 9, "the old flag that the ending was seen carries over");
+  const full = JSON.stringify({ v: 1, born: 3, seals: Object.fromEntries(SEALS.map((s, i) => [s.id, 10 + i])), strikes: 3, done: 30 });
+  j = createJourney(memory(full)); assert.equal(j.closed, 30, "a book filled under the old rule, where the close came with the seventh seal, has seen it");
+});
+
+test("beginning the book again lets the summit close the new walk", () => {
+  const j = createJourney(memory(), () => 7); j.earn("sit"); j.close(); j.reset();
+  assert.equal(j.closed, null); assert.equal(j.count(), 0);
+});

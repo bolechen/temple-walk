@@ -62,3 +62,12 @@ test("the incense stand is before the cushion, within his reach from where he st
   assert.ok(p.bowl[1] - p.y > 0.5 && p.bowl[1] - p.y < 0.75, "the bowl should stand below his shoulders");
   walker.setRoom(null);
 });
+test("a stroke begun while the log still swings draws it back from where it is, without a jump, and still stops at the bronze", () => {
+  const s = { t0: 10000, lead: 1000, gap: 0.18 };
+  const at = 11500, mid = logSwing(s, at); assert.ok(Math.abs(mid) > 0.02, `the log should still be swinging (${mid})`);
+  s.from = mid; s.t0 = at + 1000; s.lead = 1000;   // the next press, while it swings
+  assert.ok(Math.abs(logSwing(s, at) - mid) < 1e-6, `the log jumped from ${mid} to ${logSwing(s, at)}`);
+  let prev = logSwing(s, at), lo = 0, jump = 0;
+  for (let t = at; t < at + 9000; t += 5) { const z = logSwing(s, t); jump = Math.max(jump, Math.abs(z - prev)); prev = z; lo = Math.min(lo, z); }
+  assert.ok(jump < 0.02, `the log moved ${jump} in 5 ms`); assert.ok(lo >= -0.18 - 1e-9, `the log went into the bell: ${lo}`);
+});

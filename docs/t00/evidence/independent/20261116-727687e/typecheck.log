@@ -1,0 +1,5 @@
+
+> temple-walk@0.1.1 typecheck /tmp/claude-0/-home-user-temple-walk/d7b4f8f1-3235-582f-9dc0-a0c88dc60043/scratchpad/wt
+> tsc -p tsconfig.json
+
+typecheck exit 0
