@@ -69,14 +69,20 @@ export function sweep({ tol = TOL } = {}) {
   const reach = new Uint8Array(nx * nz), foot = new Float32Array(nx * nz), cx = (i) => X0 + (i + 0.5) * G, cz = (j) => Z0 + (j + 0.5) * G;
   const at = (x, z) => { const i = Math.floor((x - X0) / G), j = Math.floor((z - Z0) / G); return i < 0 || j < 0 || i >= nx || j >= nz ? -1 : j * nx + i; };
   const todo = [at(site.start[0], site.start[1])]; reach[todo[0]] = 1; foot[todo[0]] = walker.heightAt(site.start[0], site.start[1]);
-  while (todo.length) {
+  // Then each balcony walked round (site.lofts), from its door, with the walker up there: its floor lies inside the walls
+  // of the storeys below, where nothing on the ground reaches, so the two floods never meet. The walker comes back down
+  // for the rest of the sweep (the stairs and the open ground are asked of it), and each spot keeps the floor it had.
+  const flood = () => { while (todo.length) {
     const c = todo.pop(), i = c % nx, j = (c / nx) | 0, h = foot[c];
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= nx || b >= nz) continue; const n = b * nx + a; if (reach[n]) continue;
       const x = cx(a), z = cz(b); if (walker.blocked(x, z)) continue; const nh = walker.heightAt(x, z); if (Math.abs(nh - h) > 0.45) continue;
       reach[n] = 1; foot[n] = nh; todo.push(n);
     }
-  }
+  } };
+  flood();
+  for (const L of Object.values(site.lofts || {})) { walker.setLoft(L.id); const c = at(L.door[0], L.door[1]); reach[c] = 1; foot[c] = walker.heightAt(L.door[0], L.door[1]); todo.push(c); flood(); }
+  walker.setLoft(null);
   lap("flooded");
   // Coarse tiles: the lowest and highest feet anywhere near, so that most of what is built can be passed over at once.
   const T = 0.8, tx = Math.ceil((X1 - X0) / T), tz = Math.ceil((Z1 - Z0) / T), lo = new Float32Array(tx * tz).fill(Infinity), hi = new Float32Array(tx * tz).fill(-Infinity);
