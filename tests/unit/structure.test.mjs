@@ -56,3 +56,32 @@ test("no two sets stand so near that their long arms would run into each other",
   due.forEach((b, i) => { for (const line of [front(b.frame), side(b.frame)]) for (let k = 1; k < line.length; k++) if (line[k] - line[k - 1] < ARM - 1e-6) { wrong.push(`${label(b, i)}: ${(line[k] - line[k - 1]).toFixed(2)} m apart`); break; } });
   assert.deepEqual(wrong, []);
 });
+
+// The pitch of the roofs (juan 5, 舉折): the ridge stands above the eave purlins by a third of the distance between
+// the front and back purlins on a hall or a storeyed building, by 0.27 of it on a lesser hall (a quarter, and eight
+// parts in a hundred more); a skirt roof under an upper storey rises one in two. Tent roofs are left as they were.
+const LESSER = new Set(["禅堂", "茶寮", "药师殿", "大慧院"]);
+const roofed = site.buildings.filter((b) => b.frame && b.frame.roof && b.frame.xs.length > 1);
+test("the roof over every hall rises by the Fashi's share of its span, within a tenth", () => {
+  const wrong = [];
+  roofed.forEach((b, i) => { const r = b.frame.roof; if (r.tent || b.frame.under) return;
+    const span = 2 * (r.EZ - r.purlin), rise = r.at(r.EZ) - r.at(r.purlin), want = LESSER.has(b.name) ? 0.27 : 1 / 3, got = rise / span;
+    if (Math.abs(got / want - 1) > 0.1) wrong.push(`${label(b, i)}: rises ${got.toFixed(2)} of its span, should be ${want.toFixed(2)}`); });
+  assert.deepEqual(wrong, []);
+});
+test("a skirt roof under an upper storey rises one in two from its eave purlin to the storey's wall", () => {
+  const wrong = [];
+  roofed.forEach((b, i) => { const r = b.frame.roof; if (!b.frame.under) return;
+    const next = roofed[i + 1].frame, d = r.EZ - next.zs[0], got = (r.at(d) - r.at(r.purlin)) / (d - r.purlin);
+    if (Math.abs(got / 0.5 - 1) > 0.1) wrong.push(`${label(b, i)}: rises ${got.toFixed(2)} in one, should be 0.50`); });
+  assert.deepEqual(wrong, []);
+});
+test("a roof is folded, not bent: straight from purlin to purlin, each fall steeper than the one below, and the eave runs out along the lowest", () => {
+  const wrong = [];
+  roofed.forEach((b, i) => { const r = b.frame.roof; if (r.tent || b.frame.under) return;
+    const slope = (d) => (r.at(d + 0.02) - r.at(d - 0.02)) / 0.04, s = []; for (let d = 0.1; d < r.EZ - 0.05; d += 0.1) s.push(slope(d));
+    if (s.some((v, k) => k && v < s[k - 1] - 1e-6)) wrong.push(`${label(b, i)}: the roof grows flatter going up`);
+    const kinds = new Set(s.map((v) => v.toFixed(3))).size; if (kinds > 8) wrong.push(`${label(b, i)}: ${kinds} different slopes: a curve, not falls between purlins`);
+    if (Math.abs(slope(r.purlin * 0.5) - slope(r.purlin + 0.3)) > 1e-6) wrong.push(`${label(b, i)}: the eave does not run out along the lowest fall`); });
+  assert.deepEqual(wrong, []);
+});
