@@ -219,6 +219,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
     go(name, where, floorY, { now = false } = {}) {
       if (!where || !where.shot || where.shot.off || !enabled()) return false;   // `off`: a shot kept in the data but not gone to (it says why)
       if (phase === "idle") { t = 0; hadLast = false; }
+      beat = 0; softBack = false;
       id = name; place = where; shot = where.shot; foot = floorY; dur = durations(shot);
       if (now) { ink = null; veil(0); u = 1; phase = "hold"; decided = true; }
       else if (ink && !ink.moved) { ink.to = 1; phase = "in"; decided = true; }
@@ -228,11 +229,12 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
     },
     // Back to the eye that follows him. Called early by an observance (`out` seconds before its hands are done), by any
     // step, drag or Esc of the visitor's, and when the observance ends.
-    // `soft`: the observance is over (it did not ask for this; the visitor did not move): a swing still on its way in
-    // goes on to the shot, rests there a beat (DIRECT.beat), and only then comes home, rather than turning back half way.
+    // `soft`: the observance is over, or nearly (the visitor did not move): a swing still on its way in goes on to the
+    // shot, and none comes home before it has rested there a beat (DIRECT.beat), rather than turning back half way or on
+    // the frame it arrives.
     back({ soft = false } = {}) {
       if (phase === "idle" || phase === "out") return false;
-      if (soft && phase === "in") { softBack = true; return true; }
+      if (soft && (phase === "in" || beat < DIRECT.beat)) { softBack = true; return true; }   // (on its way, or only just arrived)
       softBack = false;
       stats.backs++; phase = "out"; quiet(false);   // what stepped aside over the picture comes back as the eye starts home
       if (ink && !ink.moved) { ink.to = 0; decided = true; }   // the ink is still closing: it opens on him again, nothing moved
@@ -240,7 +242,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
       return true;
     },
     // Be on the shot now (the camera is raised in the middle of a swing: what is photographed is the shot).
-    finish() { if (phase !== "in") return false; ink = null; veil(0); u = 1; phase = "hold"; decided = true; hadLast = false; return true; },
+    finish() { if (phase !== "in") return false; ink = null; veil(0); u = 1; phase = "hold"; beat = 0; decided = true; hadLast = false; return true; },
     // Let go at once, without a swing: the walk has moved him somewhere else (a door, a journey, a passage that takes the eye).
     drop() { if (phase !== "idle") reset(); },
     active: () => phase !== "idle",
@@ -253,7 +255,8 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
       if (phase === "idle") return null;
       A.p.copy(camera.position); A.q.copy(camera.quaternion); A.fov = fov;
       if (phase === "hold") t += dt;   // the shot drifts only while it is rested on: a swing goes to, or from, a shot that stands still
-      if (phase === "hold" && softBack && (beat += dt) >= DIRECT.beat) { softBack = false; beat = 0; stats.backs++; phase = "out"; decided = false; quiet(false); }
+      if (phase === "hold") beat += dt;   // how long it has rested on the shot
+      if (phase === "hold" && softBack && beat >= DIRECT.beat) { softBack = false; stats.backs++; phase = "out"; decided = false; quiet(false); }
       shotPose(place, shot, foot, t, camera.aspect || DIRECT.wide, B);
       if (!decided && !ink) {
         // Every swing is made, never cut: a route round him that stands clear of everything, as long as it needs to be

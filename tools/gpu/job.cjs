@@ -133,7 +133,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
           row.turn_max_deg = await ev(() => window.__director().turnMax);
           await until(() => ev(() => window.__journey().rite === null), 20000, "the observance did not end");
           await page.waitForTimeout(800);
-        } catch (e) { row.error = String(e.message).slice(0, 200); }
+        } catch (e) { row.error = String(e.message).slice(0, 200); row.state = await ev(() => ({ d: window.__director(), rite: window.__journey().rite, where: window.__yard() && [window.__yard().x, window.__yard().z] })).catch(() => null); }
         log.places.push(row); console.log("director", JSON.stringify(row)); save();
       }
       await ctx.close();
