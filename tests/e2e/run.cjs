@@ -72,7 +72,7 @@ const scenarios = {
     await go([[-6, 5.7], [-11.7, 5.5]]); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
-    expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("山门之外"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
+    expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("竹林里的泥"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
     // A column of the row before the dais stands at 9.56 m west of the middle, z = 4.35 (framing.js puts them on the hall's own bays).
     expect(await t.page.evaluate((c) => window.__blocked(c - 9.56, 4.35), cx), "the column this walks into is no longer where the scenario expects it");
     await go([[-9.56, 4.35]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9.56, s.z - 4.35) > 0.45, "he walked through a column");
@@ -966,6 +966,22 @@ const scenarios = {
     await t.frames(2); const after = await t.state();
     expect(after.target === null && Math.hypot(after.x - before.x, after.z - before.z) < 0.3, "a drag should turn the view, not walk");
     expect(Math.abs(after.yaw - before.yaw) > 0.3, `a drag of 180 px should turn the view: ${before.yaw} to ${after.yaw}`);
+    // Two fingers drawn apart bring the eye nearer, together send it back (he starts in his own eyes, so first back out).
+    const two = async (from, to) => { await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 195 - from, y: 400, id: 3 }, { x: 195 + from, y: 400, id: 4 }] });
+      for (let k = 1; k <= 8; k++) { const d = from + ((to - from) * k) / 8; await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 195 - d, y: 400, id: 3 }, { x: 195 + d, y: 400, id: 4 }] }); }
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); await t.frames(6); };
+    await two(120, 20); await two(120, 20); const far = (await t.probe()).camDist; await two(30, 140); const near = (await t.probe()).camDist;
+    expect(far > 0.5 && near < far - 0.3, `a pinch should move the eye: drawn together to ${far}, apart to ${near}`);
+    // At the bell and over tea the stick is how a thumb lets go: pushed, he lets go of the rope, or stands up from his stool.
+    const push = async () => { await cdp0.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: sb[0], y: sb[1], id: 8 }] }); await cdp0.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: sb[0], y: sb[1] - 44, id: 8 }] }); await t.frames(4); await cdp0.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
+    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); }, id);
+    const word = () => t.page.getAttribute("#act", "data-word");
+    await at("bell"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "撞钟", 30000, "撞钟 was not offered to a thumb");
+    await t.page.tap("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.grip)) > 0.9, 60000, "a tap did not take the rope");
+    await push(); await t.until(async () => (await t.journey()).rite === null && (await t.page.evaluate(() => window.__rites().bell.grip)) === 0, 30000, "the stick did not let go of the rope");
+    await at("tea"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "吃茶", 30000, "吃茶 was not offered to a thumb");
+    await t.page.tap("#act"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "起身", 120000, "he did not sit on after the tea");
+    await push(); await t.until(async () => (await t.journey()).rite === null && !(await t.state()).staged, 30000, "the stick did not stand him up from the tea");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
 };
