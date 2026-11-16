@@ -197,7 +197,36 @@ body:has(dialog.layer[open]) #act, body:has(dialog.layer[open]) #say, body:has(d
 #moodPanel .chip { min-width: 40px; font-size: var(--t-m); text-indent: 0; letter-spacing: 0; }
 
 /* ---- Photograph mode: everything leaves but the frame and the few things that shape the picture ---- */
-#frame { position: absolute; border: 1px solid rgba(243,239,229,.75); box-shadow: 0 0 0 200vmax rgba(8,8,7,.3); pointer-events: none; display: none; }
+/* The viewfinder. Outside the frame lies the paper the print will be mounted on, so what is kept is seen as it will
+   be kept; inside, only four corners in light ink, and the thirds if asked for, faint. A soft darkening at the edges of
+   the view is the finder's own and is not in the picture. Over the whole view (全幅) there is no paper, only the corners. */
+#finder { position: absolute; inset: 0; pointer-events: none; display: none;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(8,7,6,.32) 100%), var(--paper-ground);
+  --fx: 0px; --fy: 0px; --fw: 100%; --fh: 100%;
+  -webkit-mask: linear-gradient(#000 0 0) var(--fx) var(--fy) / var(--fw) var(--fh) no-repeat, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) var(--fx) var(--fy) / var(--fw) var(--fh) no-repeat exclude, linear-gradient(#000 0 0); opacity: .82; }
+body.photo.whole #finder { background: radial-gradient(ellipse at center, transparent 62%, rgba(8,7,6,.3) 100%); -webkit-mask: none; mask: none; opacity: 1; }
+#frame { position: absolute; pointer-events: none; display: none; --c: rgba(243,239,229,.88); --l: 22px; --w: 1.5px;
+  background:
+    linear-gradient(var(--c) 0 0) 0 0 / var(--l) var(--w), linear-gradient(var(--c) 0 0) 0 0 / var(--w) var(--l),
+    linear-gradient(var(--c) 0 0) 100% 0 / var(--l) var(--w), linear-gradient(var(--c) 0 0) 100% 0 / var(--w) var(--l),
+    linear-gradient(var(--c) 0 0) 0 100% / var(--l) var(--w), linear-gradient(var(--c) 0 0) 0 100% / var(--w) var(--l),
+    linear-gradient(var(--c) 0 0) 100% 100% / var(--l) var(--w), linear-gradient(var(--c) 0 0) 100% 100% / var(--w) var(--l);
+  background-repeat: no-repeat; filter: drop-shadow(0 0 1.5px rgba(0,0,0,.55)); }
+#frame .third { position: absolute; inset: 0; display: none; background:
+  linear-gradient(rgba(243,239,229,.22) 0 0) 33.333% 0 / 1px 100%, linear-gradient(rgba(243,239,229,.22) 0 0) 66.667% 0 / 1px 100%,
+  linear-gradient(rgba(243,239,229,.22) 0 0) 0 33.333% / 100% 1px, linear-gradient(rgba(243,239,229,.22) 0 0) 0 66.667% / 100% 1px; background-repeat: no-repeat; }
+body.thirds #frame .third { display: block; }
+/* The picture held still from the moment the shutter is pressed until the print is put away. */
+#still { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+body.frozen #still { display: block; }
+/* The shutter: two leaves of ink close over the view and open again, and behind them the view has stopped. */
+#curtain { position: absolute; inset: 0; pointer-events: none; display: none; }
+#curtain i { position: absolute; left: 0; right: 0; height: 50%; background: var(--ink); transform: scaleY(0); }
+#curtain i:first-child { top: 0; transform-origin: top; } #curtain i:last-child { bottom: 0; transform-origin: bottom; }
+#curtain.shut { display: block; } #curtain.shut i { animation: leaf .2s var(--ease) both; }
+@keyframes leaf { 0% { transform: scaleY(0); } 35% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
+@media (prefers-reduced-motion: reduce) { #curtain.shut i { animation: none; } }
 #photoBar { position: absolute; inset: auto 0 0; display: none; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
 #photoBar button { pointer-events: auto; }
 #photoSettingsToggle { justify-self: start; min-height: 44px; }
@@ -214,7 +243,7 @@ body:has(dialog.layer[open]) #act, body:has(dialog.layer[open]) #say, body:has(d
 #photoSettings p { margin: 14px 0 0; font: 400 var(--t-xs)/1.7 var(--kai); letter-spacing: .08em; color: var(--ink-3); }
 body:not(.photo) #photoSettings { display: none; }
 body.photo .rail, body.photo #moodTag, body.photo #hint, body.photo #say, body.photo #dropBtn { display: none; }
-body.photo #frame { display: block; } body.photo #photoBar { display: grid; } body.photo #photoClose { display: grid; }
+body.photo #frame, body.photo #finder { display: block; } body.photo #photoBar { display: grid; } body.photo #photoClose { display: grid; }
 body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 /* The print, once taken. */
 #print { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }

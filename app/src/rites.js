@@ -27,9 +27,15 @@ export function logSwing(s, now) {
 const LOG_DRAW = 0.24, TAP = 0.08;
 // The clock the observances keep. A test or a picture tool may hold it still and step it (`__riteClock(ms)` moves it
 // on by so much and holds it there; `__riteClock(null)` lets it run again), so that a moment can be looked at.
-let held = null;
-export const riteNow = () => held ?? performance.now();
-if (typeof window !== "undefined") window.__riteClock = (ms) => { held = ms == null ? null : (held ?? performance.now()) + ms; return held; };
+// While a photograph holds the picture still (`pauseRites`), the clock stops too, and when it runs again it takes up
+// where it stopped: an observance half done is not found finished behind the print.
+let held = null, offset = 0, pausedAt = null;
+export const riteNow = () => held ?? performance.now() - offset;
+export function pauseRites(on) {
+  if (on && pausedAt === null && held === null) { pausedAt = performance.now(); held = pausedAt - offset; }
+  else if (!on && pausedAt !== null) { offset += performance.now() - pausedAt; pausedAt = null; held = null; }
+}
+if (typeof window !== "undefined") window.__riteClock = (ms) => { held = ms == null ? null : (held ?? riteNow()) + ms; return held; };
 
 function softDot() {
   const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");

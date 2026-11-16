@@ -224,6 +224,37 @@ export function bird(level = 1) {
 }
 export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 
+// ---- The photograph ----
+// The shutter: a small leaf shutter in a wooden body, two soft clicks thirty milliseconds apart (the blades closing and
+// opening) over a faint knock of the case; nothing electronic. And when the print comes, the seal pressed on it: a dull
+// pad of a stamp on paper, and the paper giving a little under it. Both on the effects bus; the music steps aside briefly.
+const shots = { shutter: 0, stamp: 0 };
+function crack(t, centre, q, gain, secs) {
+  const n = Math.floor(ctx.sampleRate * secs), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6);
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = "bandpass"; f.frequency.value = centre; f.Q.value = q; g.gain.value = gain;
+  s.connect(f); f.connect(g); g.connect(bus.effects.in); s.start(t);
+}
+export function shutterSound() {
+  if (!start()) return; wake();
+  const t = ctx.currentTime + 0.01;
+  duck(0.6, 1);
+  crack(t, 2600, 1.4, 0.5, 0.025); crack(t, 900, 0.9, 0.35, 0.04);              // the blades close
+  crack(t + 0.032, 3100, 1.6, 0.32, 0.02); crack(t + 0.032, 1100, 0.9, 0.22, 0.035);   // and open
+  thud(t, 0.05, 240, 0.25);                                                        // the case
+  shots.shutter++;
+}
+export function stampSound() {
+  if (!start()) return; wake();
+  const t = ctx.currentTime + 0.01;
+  duck(0.7, 1.2);
+  thud(t, 0.09, 190, 0.7);                       // the seal comes down on the paper
+  crack(t + 0.01, 3600, 0.5, 0.06, 0.22);        // the paper gives a little under it
+  shots.stamp++;
+}
+export const photoSounds = () => ({ ...shots, state: ctx ? ctx.state : "off" });
+
 // ---- The sound of the place when nothing is happening ----
 // Wind moving through bamboo (filtered noise that swells and falls), now and then two culms knocking together in a
 // gust, birds out on the mountain (never within the walls), water dripping from the eaves after rain, and now and then

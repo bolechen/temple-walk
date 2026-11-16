@@ -583,7 +583,9 @@ const scenarios = {
       // The camera is raised on exactly what he was looking at: the same eye, angle and distance, the whole view, the novice where he stood.
       let p = await t.probe(), now = await t.state(); expect(p.photo && p.aspect === "screen" && p.zoom === 1 && Math.abs(p.fov - before.fov) < 0.01 && p.monk === before.monk, "the camera should open on the view as it was: " + JSON.stringify([before.fov, p.fov, p.aspect, p.zoom, before.monk, p.monk]));
       expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3 && Math.abs(p.camDist - before.camDist) < 0.05, "raising the camera moved the view: " + JSON.stringify([was.yaw, now.yaw, was.pitch, now.pitch, before.camDist, p.camDist]));
-      expect(!(await t.page.isVisible("#frame")), "the whole view needs no frame drawn over it");
+      // The viewfinder over the whole view: four corners a little in from the edges, no paper laid over it.
+      { const fr = await t.page.evaluate(() => { const r = document.getElementById("frame").getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, whole: document.body.classList.contains("whole"), finder: getComputedStyle(document.getElementById("finder")).display, mask: getComputedStyle(document.getElementById("finder")).maskImage || getComputedStyle(document.getElementById("finder")).webkitMaskImage }; });
+        expect(fr.whole && fr.finder !== "none" && fr.x > 10 && fr.y > 10 && (fr.mask === "none" || !fr.mask), "over the whole view the finder should be corners only: " + JSON.stringify(fr)); }
       if (!touch) {   // a drag does not turn the camera; the wheel draws nearer and farther, within bounds
         await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(640, 240, { steps: 6 }); await t.page.mouse.up(); await t.frames(2);
         now = await t.state(); expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3, "a drag turned the camera"); expect(!(await t.page.isVisible("#print")), "a drag took a photograph");
@@ -598,6 +600,10 @@ const scenarios = {
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
+      // The thirds, off at first, on when asked for, and remembered.
+      expect(!(await t.page.isVisible("#frame .third")), "the thirds should be off until asked for");
+      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third") && (await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not come on");
+      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")), "the thirds did not go off");
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
@@ -609,7 +615,15 @@ const scenarios = {
         await t.page.mouse.click(480, 260); await t.until(() => t.page.isVisible("#print"), 300000, "a click on the picture did not take the photograph");
         const shot = await t.page.evaluate(() => new Promise((r) => { const im = new Image(); im.onload = () => r([im.naturalWidth, im.naturalHeight]); im.src = document.getElementById("printImg").src; }));
         expect(shot[0] >= 1600 && shot[0] > shot[1], "the photograph is not a large picture of the whole view: " + shot);
-        await t.page.click("#printBack");
+        // While the print is out the picture is held still: no frame is drawn, the still covers the view; the shutter
+        // and the seal were heard. (Seconds: nothing is drawn, so there are no frames to wait on.)
+        const sounds = await t.page.evaluate(() => window.__shots());
+        expect(sounds.shutter >= 1 && sounds.stamp >= 1, "the shutter and the seal should sound: " + JSON.stringify(sounds));
+        const f0 = (await t.state()).frames; await t.page.waitForTimeout(1500);
+        const held = await t.page.evaluate(() => ({ frames: window.__yard().frames, frozen: document.body.classList.contains("frozen"), still: getComputedStyle(document.getElementById("still")).display }));
+        expect(held.frozen && held.still !== "none" && held.frames === f0, "the picture should stand still while the print is out: " + JSON.stringify(held) + " from " + f0);
+        await t.page.click("#printBack"); await t.frames(2);
+        expect(!(await t.probe()).frozen && !(await t.page.evaluate(() => document.body.classList.contains("frozen"))), "putting the print away should let the picture move again");
       }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }

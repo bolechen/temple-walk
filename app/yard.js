@@ -11,7 +11,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
+import { strike, shutterSound, stampSound, photoSounds, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
@@ -27,7 +27,7 @@ import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
-import { logSwing, riteNow } from "./src/rites.js";
+import { logSwing, riteNow, pauseRites } from "./src/rites.js";
 import { buildInteriors } from "./src/interior.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
@@ -368,17 +368,24 @@ function frameRect() {
   let h = ch * 0.74, w = h * r; if (w > cw * 0.92) { w = cw * 0.92; h = w / r; }
   return { w, h, x: (cw - w) / 2, y: (ch - h) / 2 };
 }
+// The viewfinder over it (ui.css): the paper outside the frame has a hole cut where the frame is; over the whole view
+// there is no paper, and the corners are drawn a little in from the edges.
 function layoutFrame() {
-  const el = document.getElementById("frame"); if (!el) return;
-  const f = frameRect(); Object.assign(el.style, { left: f.x + "px", top: f.y + "px", width: f.w + "px", height: f.h + "px", display: photo.aspect === "screen" ? "none" : "" });   // the whole view needs no frame drawn on it
+  const el = document.getElementById("frame"), fd = document.getElementById("finder"); if (!el) return;
+  const whole = photo.aspect === "screen", f = frameRect(), inset = whole ? 18 : 0;
+  Object.assign(el.style, { left: f.x + inset + "px", top: f.y + inset + "px", width: f.w - 2 * inset + "px", height: f.h - 2 * inset + "px" });
+  document.body.classList.toggle("whole", whole);
+  if (fd) for (const [k, v] of /** @type {[string, number][]} */ ([["--fx", f.x], ["--fy", f.y], ["--fw", f.w], ["--fh", f.h]])) fd.style.setProperty(k, v + "px");
 }
 const governor = createGovernor(quality, resize);
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
 const load = { tris: 0, calls: 0, ms: 0 };
+let frozen = false;   // a photograph holds the picture still from the shutter until the print is put away
 function frame(now) {
   if (!running) return;
+  if (frozen) { prev = now; requestAnimationFrame(frame); return; }
   governor.tick((now - prev) / 1000); tour?.frame(now); devpose?.tick(now);
   const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
 
@@ -523,7 +530,6 @@ document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("clic
 const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
 ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
 ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () => raise(false) });
-ui.layer("print", { kind: "modal" });
 function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
 function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }
 function raise(open) {
@@ -542,34 +548,57 @@ on("photoBtn", () => setPhoto(true)); on("photoClose", () => setPhoto(false));
 document.querySelectorAll("[data-aspect]").forEach((b) => b.addEventListener("click", () => { photo.aspect = b.dataset.aspect; document.querySelectorAll("[data-aspect]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); layoutFrame(); }));
 document.querySelectorAll("[data-lens]").forEach((b) => b.addEventListener("click", () => { photo.zoom = +b.dataset.lens; document.querySelectorAll("[data-lens]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); lens(); }));
 on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; });
+// The thirds, faint in the viewfinder; kept with the visitor's settings.
+const thirds = (v) => { document.body.classList.toggle("thirds", v); $("thirdsToggle")?.setAttribute("aria-pressed", String(v)); };
+thirds(settings.get().thirds);
+on("thirdsToggle", () => { settings.set("thirds", !settings.get().thirds); thirds(settings.get().thirds); });
 on("prayToggle", (e) => { photo.pray = !photo.pray; e.currentTarget.setAttribute("aria-pressed", String(photo.pray)); });
 
 // Draw the framed part of the view again, large, and mount it on its card.
-async function capture() {
+async function capture(at = null) {
   const [aw, ah] = photo.aspect === "screen" ? [canvas.clientWidth, canvas.clientHeight] : ASPECT[photo.aspect], long = quality.name === "low" ? 1600 : quality.name === "medium" ? 2160 : 2880;   // drawn again far finer than the screen
   const W = aw >= ah ? long : Math.round((long * aw) / ah), H = aw >= ah ? Math.round((long * ah) / aw) : long;
   const f = frameRect(), keepFov = camera.fov;
   camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(keepFov) / 2) * (f.h / canvas.clientHeight)));
   camera.aspect = W / H; camera.updateProjectionMatrix();
   renderer.setPixelRatio(1); renderer.setSize(W, H, false); post.resize(W, H, 1); ground.resize(W >> 1, H >> 1, true);
-  const t = still ? 0 : performance.now() / 1000;
+  const t = still ? 0 : at ?? performance.now() / 1000;   // the moment the shutter was pressed, so the print is what was seen
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
   return composeCard(shot, { line: mood.line, label: mood.label, temple: "云径禅寺", url: location.host + location.pathname.replace(/\/$/, "") });
 }
 let lastBlob = null;
+// The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,
+// the observances' clock): from here until the print is put away nothing in the picture moves. Two leaves of ink close
+// and open over it with the shutter's click; behind the still, the large picture is drawn at that same moment, and the
+// print comes with the seal's press.
+function freeze(on) {
+  frozen = on; document.body.classList.toggle("frozen", on); pauseRites(on);
+  if (!on) { prev = performance.now(); return null; }
+  const t = still ? 0 : performance.now() / 1000, c = $("still");
+  if (quality.planar > 0 && mirrorOn && !inside) ground.render(renderer, camera);
+  post.render(t);
+  c.width = canvas.width; c.height = canvas.height; c.getContext("2d").drawImage(canvas, 0, 0);   // in the same task as the drawing: the buffer is not kept after it
+  return t;
+}
+ui.layer("print", { kind: "modal" });
 on("shutter", async () => {
   const b = $("shutter"); b.disabled = true;
+  const at = freeze(true);
+  shutterSound(); navigator.vibrate?.(12);
+  const c = $("curtain"); c.classList.remove("shut"); void c.offsetWidth; c.classList.add("shut");
   try {
-    const card = await capture();
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));   // let the leaves and the still be drawn before the long work
+    const card = await capture(at);
     lastBlob = await new Promise((r) => card.toBlob(r, "image/jpeg", 0.93));
     const url = URL.createObjectURL(lastBlob); $("printImg").src = url; $("saveLink").href = url;
     $("saveLink").download = `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg`;
     const file = new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" });
     $("shareBtn").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
-    ui.open("print");
-  } finally { b.disabled = false; }
+    ui.open("print", { onClose: () => { if (frozen) freeze(false); } }); stampSound();   // put away by its button or by Esc: the walk goes on
+  } catch (e) { freeze(false); throw e; }
+  finally { b.disabled = false; }
 });
 on("printBack", () => ui.close("print"));
 on("shareBtn", async () => {
@@ -692,10 +721,11 @@ window.__probe = () => {
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    photoSettings: !document.getElementById("photoSettings").hidden, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox() };
+    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox() };
 };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
+window.__shots = photoSounds;   // how many shutters and seals have sounded
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__blocked = (x, z) => walker.blocked(x, z);
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be

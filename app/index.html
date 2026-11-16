@@ -74,7 +74,10 @@
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
     <div><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
   </div>
-  <div id="frame"></div>
+  <canvas id="still" aria-hidden="true"></canvas>
+  <div id="finder" aria-hidden="true"></div>
+  <div id="frame"><i class="third"></i></div>
+  <div id="curtain" aria-hidden="true"><i></i><i></i></div>
   <button class="chip" id="photoClose" type="button">收起</button>
   <div id="photoBar">
     <button class="chip" id="photoSettingsToggle" type="button" aria-expanded="false" aria-controls="photoSettings">设置</button>
@@ -88,6 +91,9 @@
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
     </div></fieldset>
     <fieldset class="need-seasons"><legend>时节</legend><div class="row"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div><div class="row"><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></fieldset>
+    <fieldset><legend>取景</legend><div class="row">
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button>
+    </div></fieldset>
     <fieldset><legend>人物</legend><div class="row">
       <button class="chip" id="monkToggle" aria-pressed="false" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button" disabled>合掌</button>
     </div></fieldset>
