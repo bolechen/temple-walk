@@ -41,8 +41,8 @@ test("below the horizon, from every sampled place, the first opaque thing is lan
 
 test("the hills have no seam: height and colour inputs are continuous where the angle wraps", () => {
   // Every range is a cylinder whose shader reads the angle atan(z, x); a noise sampled on that raw angle jumps at -x.
-  // The shader must therefore wrap it (the `wrap` helper), or the nearest range shows a vertical hard edge.
-  const src = scene.children.filter((o) => o.isMesh && o.material.fragmentShader && o.material.fragmentShader.includes("atan")).map((o) => o.material.fragmentShader);
+  // The shader must therefore wrap it (the `ang` helper), or the nearest range shows a vertical hard edge.
+  const src = scene.children.filter((o) => o.isMesh && o.material.fragmentShader && o.material.fragmentShader.includes("uTop")).map((o) => o.material.fragmentShader);
   assert.ok(src.length >= 3);
-  for (const s of src) assert.ok(/wrapN\(/.test(s), "hill shader samples noise on the raw angle");
+  for (const s of src) assert.ok(/float ang\(/.test(s), "hill shader samples noise on the raw angle");
 });

@@ -5,13 +5,16 @@ import { FOG } from "./sky.js";
 
 const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
-  uniforms: { uT: { value: 0 }, uFog: { value: FOG }, uSeed: { value: seed }, uTone: { value: tone }, uFogD: U.uFogD, uLeaf: U.uLeaf, uLight: U.uLight },
+  uniforms: { uLen: { value: 1 }, uEnds: { value: new THREE.Vector2(0, 0) }, uT: { value: 0 }, uFog: { value: FOG }, uSeed: { value: seed }, uTone: { value: tone }, uFogD: U.uFogD, uLeaf: U.uLeaf, uLight: U.uLight },
   vertexShader: "varying vec2 vU; varying vec3 vWP; void main(){ vU=uv; vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
   fragmentShader: NOISE + /* glsl */`
-    varying vec2 vU; varying vec3 vWP; uniform float uT, uSeed, uTone, uFogD; uniform vec3 uFog, uLeaf, uLight;
+    varying vec2 vU; varying vec3 vWP; uniform float uT, uSeed, uTone, uFogD, uLen; uniform vec2 uEnds; uniform vec3 uFog, uLeaf, uLight;
     void main(){
       float x=vU.x+uSeed*37., y=vU.y, sway=sin(uT*.35+x*.2)*.12*smoothstep(4.,13.,y);
-      float top=10.5+4.5*fbm2(vec2(x*.16,uSeed))+1.2*n2(vec2(x*1.1,3.));
+      // A free end of a band is not cut: the grove thins out over its last metres, the crowns sink and the rest goes into the mist.
+      float ed=min(mix(1., smoothstep(0., 22., vU.x), uEnds.x), mix(1., smoothstep(0., 22., uLen-vU.x), uEnds.y));
+      float thin=ed+(fbm2(vec2(x*.9,y*.35+uSeed))-.5)*.7;
+      float top=(10.5+4.5*fbm2(vec2(x*.16,uSeed))+1.2*n2(vec2(x*1.1,3.)))-(1.-ed)*7.;
       // Culms: thin, slightly leaning.
       float cw=.42, cid=floor(x/cw), cx=(fract(x/cw)-.5)*cw+(h21(vec2(cid,uSeed))-.5)*.3+sway*.4+(y*.02)*(h21(vec2(cid,9.))-.5)*3.;
       float culm=(1.-smoothstep(.022,.04,abs(cx)))*step(y,top-1.5)*step(.25,h21(vec2(cid,4.)));
@@ -21,12 +24,13 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
       float crown=smoothstep(2.5,7.,y)*(1.-smoothstep(top-2.2,top,y));
       float a=smoothstep(.5,.56,leaf*.75+crown*.42)*step(y,top+fbm2(vec2(x*2.3,1.))*1.6-.8);
       a=max(a,step(y,4.6+n2(vec2(x*.8,7.))*1.2));
+      a*=step(.3,thin); culm*=step(.3,thin);
       if(max(a,culm)<.5) discard;
       vec3 c=mix(vec3(.016,.034,.02),vec3(.06,.105,.05),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.09,.12,.065)*uTone,culm*(1.-a));
       c*=.55+.6*smoothstep(0.,12.,y);                                  // darker inside the grove near the ground
       c*=uLeaf*uLight; float d=length(vWP-cameraPosition);
       ${fogMix("c", "d")}
-      c=mix(c,uFog,.3*(1.-uTone));
+      c=mix(c,uFog,.3*(1.-uTone)); c=mix(c,uFog,(1.-ed)*.55);
       gl_FragColor=vec4(c,1.);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
@@ -45,10 +49,10 @@ function createEarth(scene, M, terrain) {
 export function createBackdrop(scene, M, bounds, levels, terrain) {
   createEarth(scene, M, terrain);
   const mats = [], hills = [], H = 17, X = bounds.x, zS = bounds.apron;
-  const band = (x0, z0, x1, z1, seed, tone, base = 0) => {
+  const band = (x0, z0, x1, z1, seed, tone, base = 0, ends = [0, 0]) => {
     const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, H);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len, uv.getY(i) * H);
-    const mat = bambooMat(seed, tone); mats.push(mat);
+    const mat = bambooMat(seed, tone); mat.uniforms.uLen.value = len; mat.uniforms.uEnds.value.set(...ends); mats.push(mat);
     const m = new THREE.Mesh(g, mat);
     m.position.set((x0 + x1) / 2, base + H / 2 - 0.6, (z0 + z1) / 2); m.rotation.y = Math.atan2(-(z1 - z0), x1 - x0);
     scene.add(m);
@@ -59,10 +63,12 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   [[2.2, 1.0], [5.5, 0.82], [10, 0.62]].forEach(([o, tone], i) => {
     steps.forEach(([za, zb, base], k) => {
       const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
-      band(x, zb, x, za, i + k * 3 + 1, tone, base + o * 0.09); band(-x, za, -x, zb, i + k * 3 + 20, tone, base + o * 0.09);
+      // Neighbouring runs of the grove overlap by a stride and each thins out over it, so no run ends in a cut and the two make one stand.
+      const north = k < steps.length - 1 ? 11 : 0, south = k > 0 ? 11 : 0;
+      band(x, zb - north, x, za + south, i + k * 3 + 1, tone, base + o * 0.09, [1, 1]); band(-x, za + south, -x, zb - north, i + k * 3 + 20, tone, base + o * 0.09, [1, 1]);
     });
-    band(X + o + 28, zS + o + 2, -X - o - 28, zS + o + 2, i + 40, tone, -19);
-    band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3);
+    band(X + o + 28, zS + o + 2, -X - o - 28, zS + o + 2, i + 40, tone, -19, [1, 1]);
+    band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3, [1, 1]);
   });
   // Five peaks stand round the temple, each range fainter than the one before.
   [[150, 54, 0.5], [215, 78, 2.1], [300, 112, 4.4]].forEach(([R, Hm, ph]) => {   // the nearest is the wooded hill the temple sits in
@@ -71,16 +77,21 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
       const a = Math.atan2(p.getZ(i), p.getX(i));
       const h = Hm * (0.42 + 0.34 * Math.pow(0.5 + 0.5 * Math.sin(a * 5 + ph), 1.6) + 0.1 * Math.sin(a * 11 + ph * 3) + 0.22 * Math.max(0, -Math.sin(a)));   // higher to the north
       const tops = Hm * (0.022 * Math.sin(a * 83 + ph * 7) + 0.016 * Math.sin(a * 211 + ph) + 0.012 * Math.sin(a * 137 + 1.7));   // the ragged line of tree tops
-      p.setY(i, p.getY(i) > 0 ? Math.max(8, h + tops) : -4);
+      p.setY(i, p.getY(i) > 0 ? Math.max(8, h + tops) : -140);   // the foot goes down into the mist, so that nothing below the land shows the sky
     }
     // A hill is not a flat cut-out: it stands in mist at its foot and darkens toward its crest, and the wood on it has a grain.
-    const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: { uTop: { value: new THREE.Color(0.1, 0.16, 0.13) }, uMist: { value: new THREE.Color(0.6, 0.65, 0.63) }, uH: { value: Hm } },
-      vertexShader: "varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
-      fragmentShader: NOISE + `varying vec3 vP; uniform vec3 uTop, uMist; uniform float uH;
+    const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: { uFogD: U.uFogD, uTop: { value: new THREE.Color(0.1, 0.16, 0.13) }, uMist: { value: new THREE.Color(0.6, 0.65, 0.63) }, uH: { value: Hm } },
+      vertexShader: "varying vec3 vP, vW; void main(){ vP=position; vW=(modelMatrix*vec4(position,1.)).xyz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
+      fragmentShader: NOISE + `varying vec3 vP, vW; uniform vec3 uTop, uMist; uniform float uH, uFogD;
+        // Noise round the circle: the angle jumps from pi to -pi behind the west, and noise on the raw angle jumps with it (a vertical hard edge).
+        float ang(float a,float y,float f){ return fbm3(vec3(cos(a),sin(a),0.)*f+vec3(0.,0.,y)); }
         void main(){ float a=atan(vP.z,vP.x), up=clamp(vP.y/uH,0.,1.);
-          float wood=fbm2(vec2(a*60.,vP.y*.22))*.5+fbm2(vec2(a*190.,vP.y*.7))*.5;
-          float veil=smoothstep(.55,.05,up+(fbm2(vec2(a*9.,up*3.))-.5)*.35);            // mist lying in the folds, thickest low down
+          float wood=ang(a,vP.y*.22,60.)*.5+ang(a,vP.y*.7,190.)*.5;
+          float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35);            // mist lying in the folds, thickest low down
           vec3 c=mix(uTop*(.7+.6*wood),uMist,clamp(veil*.85,0.,1.));
+          // Below the land the hill goes on down into the mist: wooded slope, hazed by the distance it is really at (the scene's own fog), not a white curtain.
+          float fg=1.-exp(-pow(uFogD*length(vW-cameraPosition),2.));
+          c=mix(c,mix(uTop*(.55+.4*wood),uMist,fg),smoothstep(3.,-6.,vP.y));
           gl_FragColor=vec4(c,1.);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
