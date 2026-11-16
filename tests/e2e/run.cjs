@@ -406,9 +406,10 @@ const scenarios = {
     // Any stool may be sat on: the one across the table.
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => { const s = window.__seats[2]; window.__pose(s.at[0] + 0.5, s.at[1] - 0.9, 0, 0); });
-    await offered("坐下"); const before = (await R()).sat; await t.page.click("#act");
+    await offered("坐下"); const before = (await R()).sat, hops = (await t.state()).climbs; await t.page.click("#act");
     await t.until(async () => (await R()).sat === before + 1 && (await t.page.evaluate(() => window.__probe().monkBox)) !== undefined, 30000, "he did not sit on the stool");
     expect((await t.state()).pose === "chair", "on a stool he should sit as on a chair, not cross-legged: " + (await t.state()).pose);
+    expect((await t.state()).climbs === hops + 1, "too short to step onto a stool, he should hop up onto it");
     // Incense in the great hall, and a cushion in the meditation hall.
     await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 30000, "could not go in");
     await at("incense", 0.2); await offered("上香"); await t.page.click("#act");
@@ -421,8 +422,9 @@ const scenarios = {
     await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.page.evaluate(() => window.__journey().entered && window.__yard().doorway !== undefined)), 30000, "could not go into the meditation hall");
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => { const s = window.__seats.find((k) => k.room === "chan"); window.__pose(s.at[0], s.at[1] + (s.face === 0 ? 1.2 : -1.2), 0, 0); });
-    await offered("坐下"); const n = (await R()).sat; await t.page.click("#act"); await t.until(async () => (await R()).sat === n + 1, 30000, "he did not sit on the platform");
+    await offered("坐下"); const n = (await R()).sat, hopsN = (await t.state()).climbs; await t.page.click("#act"); await t.until(async () => (await R()).sat === n + 1, 30000, "he did not sit on the platform");
     expect((await t.state()).pose === "sit", "on a cushion he should sit cross-legged: " + (await t.state()).pose);
+    expect((await t.state()).climbs === hopsN + 1, "the meditation hall's cushions lie on a platform as high as a stool: he should hop up onto it too");
     await t.shot("e2e-rites"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.
