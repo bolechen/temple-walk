@@ -27,7 +27,7 @@ const srv = http.createServer((req, res) => {
   await new Promise((r) => srv.listen(0, "127.0.0.1", r));
   const base = `http://127.0.0.1:${srv.address().port}/`;
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-  const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
+  const p = await b.newPage({ viewport: { width: 1280, height: 720 }, locale: "zh-CN" });
   const errs = []; p.on("pageerror", (e) => errs.push(e.message));
   let cur = null;
   for (const j of jobs) {

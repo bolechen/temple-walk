@@ -119,6 +119,16 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
   return api;
 }
 
+// A book written from `?seals=` on the workbench (the dev server and a pull request's preview): "all", "none", or the
+// seals' ids separated by commas. The page keeps it in memory for that one visit and never stores it. null: no such ask.
+export function bookFrom(spec, now = Date.now()) {
+  if (spec == null) return null;
+  const ids = spec === "all" ? SEALS.map((s) => s.id) : spec === "none" ? [] : String(spec).split(",").map((x) => x.trim()).filter((id) => SEAL[id]);
+  const seals = Object.fromEntries(ids.map((id, i) => [id, Math.max(1, now - (ids.length - i) * 60000)]));
+  const full = ids.length === SEALS.length;
+  return JSON.stringify({ v: 1, born: Math.max(1, now - 3600000), seals, strikes: ids.includes("bell") ? SEAL.bell.need : 0, verse: ids.includes("sutra") ? { text: VERSES[7][0], from: VERSES[7][1] } : null, done: full ? now : null, opened: full ? now : null, told: full });
+}
+
 // The visitor's own browser as the store. Private windows and blocked storage simply forget.
 export function browserStore(key = KEY) {
   return {

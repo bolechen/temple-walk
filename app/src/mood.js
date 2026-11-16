@@ -20,7 +20,7 @@ const SEASON = {
   winter: { cloud: 0.8, wet: 0, snow: 1, leaf: [0.84, 0.9, 0.9], hills: [0.3, 0.33, 0.36], fogK: 1.3, drift: "snow" },
 };
 // One line for the foot of a photograph, by season, for the light hours and the dark.
-const LINES = {
+export const LINES = {
   spring: ["一树花开，无人亦香", "花落夜钟迟"], summer: ["雨过竹声凉", "流萤照石阶"],
   autumn: ["叶落知山空", "一灯红叶深"], winter: ["雪深不闻钟", "雪夜一灯明"],
 };

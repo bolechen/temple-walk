@@ -10,9 +10,25 @@ for (const m of mats.matchAll(/`([^`]*)`/g)) { const last = m[1].trimEnd().split
 // Every character the page writes must be in the typefaces cut for it (tools/fonts.py). The debug panel (src/debug.js)
 // is left out: it exists only on the dev server and is drawn by lil-gui in the system's own font, not in the cut faces.
 const DEV_ONLY = [path.join(root, "src", "debug.js")];
-const have = new Set(fs.readFileSync(path.join(root, "shared", "fonts", "chars.txt"), "utf8")), missing = new Set();
-for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of fs.readFileSync(f, "utf8")) if (c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 && c.codePointAt(0) <= 0xf8ff) && !have.has(c)) missing.add(c);
+// The Japanese and English tables (src/i18n-ja.js, src/i18n-en.js) are written in faces of their own, cut by
+// `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
+// So is the name of each language on its button in index.html, which is written in that language.
+const TABLES = { ja: path.join(root, "src", "i18n-ja.js"), en: path.join(root, "src", "i18n-en.js") };
+const WORK_TABLES = { ja: path.join(root, "src", "works-ja.js"), en: path.join(root, "src", "works-en.js") };
+const cut = (name) => new Set(fs.readFileSync(path.join(root, "shared", "fonts", name), "utf8"));
+const wide = (c) => c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 && c.codePointAt(0) <= 0xf8ff);
+const have = cut("chars.txt"), missing = new Set();
+const own = { ja: "", en: "" };
+const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
+for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
 if (missing.size) { bad++; console.error("characters used but not in app/shared/fonts (run tools/fonts.py): " + [...missing].join("")); }
+for (const [l, f] of Object.entries(TABLES)) {
+  const theirs = cut(`chars-${l}.txt`), lacking = new Set();
+  // Only the translations: the keys are the Chinese, which the Chinese faces hold.
+  for (const m of (fs.readFileSync(f, "utf8") + fs.readFileSync(WORK_TABLES[l], "utf8")).matchAll(/:\s*"((?:[^"\\]|\\.)*)",?\s*$/gm)) for (const c of m[1]) if (wide(c) && !theirs.has(c)) lacking.add(c);
+  for (const c of own[l]) if (wide(c) && !theirs.has(c)) lacking.add(c);
+  if (lacking.size) { bad++; console.error(`characters in src/i18n-${l}.js but not in its faces (run tools/fonts.py --lang ${l}): ` + [...lacking].join("")); }
+}
 // The end-to-end scenarios are written many statements to a line: a // comment set down in the middle of one silences
 // every statement after it, and the scenario then passes without having waited for anything.
 { const e2e = path.join(__dirname, "..", "tests", "e2e", "run.cjs");

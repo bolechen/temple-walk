@@ -17,7 +17,7 @@ async function page(b, base, run, query, ctxOpts = {}) {
   // PLAY_SIZE=480x300 draws a smaller picture, so that a software renderer manages more frames and the timing of
   // presses can be seen nearer to what a real card gives.
   const [W, H] = (process.env.PLAY_SIZE || "960x600").split("x").map(Number);
-  const ctx = await b.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, recordVideo: { dir: out, size: { width: W, height: H } }, ...ctxOpts });
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: "zh-CN", recordVideo: { dir: out, size: { width: W, height: H } }, ...ctxOpts });
   const p = await ctx.newPage(), errors = [];
   p.on("pageerror", (e) => errors.push(String(e))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
   await p.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });

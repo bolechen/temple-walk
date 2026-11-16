@@ -13,12 +13,21 @@ Reads every character in app/ (the page and its scripts) and writes app/shared/f
     xing.woff2    Zhi Mang Xing, a running hand: what is written by hand on paper (the verse under a photograph,
                   the slip drawn in the library, the title on a leaf in a hall)
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
-All six are under the SIL Open Font License 1.1 (app/shared/fonts/OFL.txt): the brush, serif, seal, running hand and board hand from
+For the Japanese and English pages (src/i18n.js), `python3 tools/fonts.py --lang ja|en <dir>` cuts their own faces to
+the characters of their tables (src/i18n-ja.js, src/i18n-en.js) and the page's language buttons:
+    ja: kai-ja (Klee One, from which the kai was drawn), serif-ja and seal-ja (Noto Serif JP regular and black),
+        brush-ja (Yuji Boku), xing-ja (Yuji Syuku); chars-ja.txt
+    en: serif-en (EB Garamond), hand-en (EB Garamond italic); chars-en.txt
+    from <dir>: KleeOne-Regular.ttf, NotoSerifJP.ttf (the variable font), YujiBoku-Regular.ttf, YujiSyuku-Regular.ttf,
+    EBGaramond.ttf, EBGaramond-Italic.ttf (the variable fonts), each from github.com/google/fonts, with their OFL.txt
+    files named KleeOne-OFL.txt, NotoSerifJP-OFL.txt, YujiSyuku-OFL.txt, EBGaramond-OFL.txt.
+What is not in a language's table falls back to the Chinese faces, so the Chinese cut is not touched by it.
+All of them are under the SIL Open Font License 1.1 (app/shared/fonts/OFL.txt): the brush, serif, seal, running hand and board hand from
 github.com/google/fonts, the kai from github.com/lxgw/LxgwWenKai (cut down for the web only, as its licence asks).
 The running hand has no traditional forms; the name boards, which need them, are written in the kai.
 Run it again whenever words are added.
 """
-import os, sys, glob, shutil
+import os, sys, glob, shutil, json
 from fontTools.ttLib import TTFont
 from fontTools.subset import Subsetter, Options
 from fontTools.varLib import instancer
@@ -29,9 +38,43 @@ ALWAYS = "".join(chr(c) for c in range(0x20, 0x7F)) + "〇一二三四五六七�
 def used(skip=()):
     chars = set(ALWAYS)
     for path in glob.glob(f"{ROOT}/app/*.html") + glob.glob(f"{ROOT}/app/*.js") + glob.glob(f"{ROOT}/app/src/*.js"):
-        if os.path.basename(path) in skip: continue
+        if os.path.basename(path) in skip or os.path.basename(path) in TABLES.values() or os.path.basename(path) in WORK_TABLES.values(): continue   # the other languages have faces of their own
         chars.update(c for c in open(path, encoding="utf-8").read() if ord(c) > 0x2000 and not 0xE000 <= ord(c) <= 0xF8FF)
     return "".join(sorted(chars))
+
+TABLES = {"ja": "i18n-ja.js", "en": "i18n-en.js"}
+# The works' cards in each language (works-ja.js, works-en.js) are written in the same faces.
+WORK_TABLES = {"ja": "works-ja.js", "en": "works-en.js"}
+# The language buttons are each written in their own language, so each language's cut holds its own name.
+OWN_NAME = {"ja": "日本語", "en": "English"}
+
+def table_chars(lang, works=True):
+    """Every character a language's table writes (its keys are the Chinese, which the Chinese faces hold). The works'
+    cards are set only in the kai and the serif, so the brush, the running hand and the seal leave them out."""
+    import re
+    src = "".join(open(f"{ROOT}/app/src/{t[lang]}", encoding="utf-8").read() for t in ((TABLES, WORK_TABLES) if works else (TABLES,)))
+    values = "".join(json.loads(f'"{v}"') for v in re.findall(r':\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$', src, re.M))
+    return "".join(sorted(set(ALWAYS + "‘’“”–—…·「」『』" + values + OWN_NAME[lang])))
+
+def main_lang(lang, src):
+    out = f"{ROOT}/app/shared/fonts"; text = table_chars(lang); few = table_chars(lang, works=False)
+    if lang == "ja":
+        cut(TTFont(f"{src}/KleeOne-Regular.ttf"), text, f"{out}/kai-ja.woff2")
+        cut(TTFont(f"{src}/YujiBoku-Regular.ttf"), few, f"{out}/brush-ja.woff2")
+        cut(TTFont(f"{src}/YujiSyuku-Regular.ttf"), few, f"{out}/xing-ja.woff2")
+        for name, w, chars in (("serif-ja", 400, text), ("seal-ja", 900, few)):
+            cut(instancer.instantiateVariableFont(TTFont(f"{src}/NotoSerifJP.ttf"), {"wght": w}), chars, f"{out}/{name}.woff2")
+        licences = (("Klee One", "KleeOne"), ("Noto Serif JP", "NotoSerifJP"), ("Yuji Syuku", "YujiSyuku"))
+    else:
+        cut(instancer.instantiateVariableFont(TTFont(f"{src}/EBGaramond.ttf"), {"wght": 400}), text, f"{out}/serif-en.woff2")
+        cut(instancer.instantiateVariableFont(TTFont(f"{src}/EBGaramond-Italic.ttf"), {"wght": 400}), text, f"{out}/hand-en.woff2")
+        licences = (("EB Garamond", "EBGaramond"),)
+    have = open(f"{out}/OFL.txt", encoding="utf-8").read()
+    with open(f"{out}/OFL.txt", "a", encoding="utf-8") as f:
+        for name, file in licences:
+            if f"---- {name} ----" not in have: f.write(f"\n\n---- {name} ----\n\n" + open(f"{src}/{file}-OFL.txt", encoding="utf-8").read())
+    open(f"{out}/chars-{lang}.txt", "w", encoding="utf-8").write(text)
+    print(len(text), "characters")
 
 def boards():
     """The characters that are written on name boards: every string given to the board painter, old forms included."""
@@ -65,4 +108,5 @@ def main():
     print(len(text), "characters")
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1] == "--lang": main_lang(sys.argv[2], sys.argv[3])
+    else: main()

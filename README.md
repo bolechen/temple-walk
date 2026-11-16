@@ -222,7 +222,7 @@ Claude Code调用 `/temple-review`，Codex调用 `$temple-review`。其他项目
 
 ## 版本与发版
 
-使用 [Release Please](.github/workflows/release-please.yml) 根据 Conventional Commits 维护版本PR、`CHANGELOG.md`、标签与GitHub Release，以 **0.1.0** 接入。当前版本见 [package.json](package.json)，操作与权限说明见 [发版流程](docs/RELEASING.md)。版本PR仍使用 squash 合并；GitHub Pages试玩部署独立运行。
+使用 [Release Please](.github/workflows/release-please.yml) 根据 Conventional Commits 维护版本PR、`CHANGELOG.md`、标签与GitHub Release，以 **0.1.0** 接入。当前版本见 [package.json](package.json)，操作与权限说明见 [发版流程](docs/RELEASING.md)。版本PR仍使用 squash 合并；试玩站由 `pages.yml` 验证后发布到 Cloudflare Worker，独立于版本发布。
 
 ### 开发交付与研究站联动
 

@@ -15,6 +15,15 @@
    kai, which has them. Declared after the running hand, so for these characters this face is the one used. */
 @font-face { font-family: "Yunjing Xing"; src: url("../shared/fonts/kai.woff2") format("woff2"); font-display: swap; unicode-range: U+3001-3002, U+300A-300F, U+FF01, U+FF0C, U+FF1A-FF1B, U+FF1F, U+2014, U+2026; }
 @font-face { font-family: "Yunjing Bang"; src: url("../shared/fonts/bang.woff2") format("woff2"); font-display: swap; }
+/* Japanese and English (src/i18n.js): their own faces first, cut to the words of their tables (tools/fonts.py --lang),
+   and the Chinese faces after them for whatever they lack. A face is fetched only when something is drawn in it. */
+@font-face { font-family: "Yunjing Kai JA"; src: url("../shared/fonts/kai-ja.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Serif JA"; src: url("../shared/fonts/serif-ja.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Seal JA"; src: url("../shared/fonts/seal-ja.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Brush JA"; src: url("../shared/fonts/brush-ja.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Xing JA"; src: url("../shared/fonts/xing-ja.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Serif EN"; src: url("../shared/fonts/serif-en.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Hand EN"; src: url("../shared/fonts/hand-en.woff2") format("woff2"); font-display: swap; }
 
 /* ---- Tokens ---- */
 :root {
@@ -38,6 +47,17 @@
   --paper-ground: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(172deg, var(--paper-hi), var(--paper-lo));
   /* motion */
   --ease: cubic-bezier(.2,.7,.2,1);
+}
+:lang(ja) {
+  --serif: "Yunjing Serif JA", "Yunjing Serif", "Hiragino Mincho ProN", serif; --brush: "Yunjing Brush JA", "Yunjing Brush", serif;
+  --kai: "Yunjing Kai JA", "Yunjing Kai", "Yunjing Serif JA", serif; --xing: "Yunjing Xing JA", "Yunjing Kai JA", "Yunjing Xing", serif;
+  --seal-face: "Yunjing Seal JA", "Yunjing Seal", serif;
+}
+/* English reads in Garamond; what is still in characters (the title, the seals) keeps the temple's brush behind it. */
+:lang(en) {
+  --serif: "Yunjing Serif EN", "Yunjing Serif", Georgia, serif; --brush: "Yunjing Hand EN", "Yunjing Brush", serif;
+  --kai: "Yunjing Serif EN", "Yunjing Kai", Georgia, serif; --xing: "Yunjing Hand EN", "Yunjing Xing", Georgia, serif;
+  --seal-face: "Yunjing Seal", "Yunjing Serif", serif;
 }
 
 /* ---- The page ---- */
@@ -441,3 +461,23 @@ body.ending .rail, body.ending #bookBtn, body.ending #goal, body.ending #way, bo
 #endingTitle em { margin-top: 14px; font: 400 clamp(14px, 2vmin, 18px)/1.4 var(--kai, serif); font-style: normal; letter-spacing: .4em; text-indent: .4em; opacity: .72; }
 #ending small { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font: 400 13px/1 var(--kai, serif); letter-spacing: .2em; color: rgba(243,236,220,.55); }
 @media (prefers-reduced-motion: reduce) { #endingLine, #endingTitle { transition: none; } }
+
+/* ---- In English ----
+   The page was set for characters: spaced wide, and here and there written down the page. Latin letters spaced
+   that wide fall apart, and laid on their side cannot be read, so in English the words are set close and level. The
+   characters that stay (the title, the seals, the seal on a slip) keep their own setting. */
+:root:lang(en) body *:not(.seal-mark):not(h1):not(.mark) { letter-spacing: .01em !important; text-indent: 0 !important; }
+:root:lang(en) .rail .chip { writing-mode: horizontal-tb; width: auto; min-width: 64px; min-height: 44px; padding: 8px 12px; font-size: 15px; }
+:root:lang(en) .rail .chip::after { left: 14%; right: 14%; top: auto; bottom: 3px; width: auto; height: 3px; }
+:root:lang(en) .rail .chip:hover { transform: translateY(-2px); }
+:root:lang(en) #slip .paper { writing-mode: horizontal-tb; height: auto; width: min(86vw, 520px); min-width: 0; gap: 22px; padding: 56px 44px 64px; }
+:root:lang(en) #slip .paper::after { inset: 40px 30px; border-block: 0; border-inline: 1px solid rgba(168,50,31,.32); background: repeating-linear-gradient(to bottom, rgba(168,50,31,0) 0 calc(var(--col) - 1px), rgba(168,50,31,.14) calc(var(--col) - 1px) var(--col)); }
+:root:lang(en) #slipText { font-size: clamp(22px, 3.6vmin, 28px); font-style: normal; line-height: 1.5; }
+:root:lang(en) #slipFrom { align-self: flex-end; line-height: 1.4; }
+:root:lang(en) #slip .seal-mark { left: auto; right: 22px; bottom: 16px; }
+:root:lang(en) #enterBtn, :root:lang(en) #title .sub, :root:lang(en) #title .how, :root:lang(en) #toastName { font-variant: small-caps; }
+/* The languages on the title, each written in its own. */
+.title-links .langs { display: contents; }
+
+/* Each language's name is set as that language sets it, whatever the page around it: no wide spacing for "English". */
+[data-lang] { letter-spacing: .04em !important; text-indent: 0 !important; }
