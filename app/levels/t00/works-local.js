@@ -1,11 +1,11 @@
 // The real works' cards in the visitor's language (src/i18n.js): the Chinese record written by tools/gallery.py
-// (works.js), with the Japanese or English of each field laid over it where there is one (works-ja.js, works-en.js).
+// (works.js), with the Japanese, English or Korean of each field laid over it where there is one (locales/ja.js, en.js, ko.js beside it).
 // The museums' source lines, the sizes and the pictures are the record's own, in every language.
 import { WORKS } from "./works.js";
-import JA from "./works-ja.js";
-import EN from "./works-en.js";
-import KO from "./works-ko.js";
-import { lang } from "./i18n.js";
+import JA from "./locales/ja.js";
+import EN from "./locales/en.js";
+import KO from "./locales/ko.js";
+import { lang } from "../../src/i18n.js";
 
 /** @type {Record<string, Record<string, Record<string, string>>>} */
 const TABLES = { ja: JA, en: EN, ko: KO };

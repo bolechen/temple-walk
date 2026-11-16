@@ -95,3 +95,18 @@ test("an observance made sitting sets him on the top of its seat, not above it",
     assert.ok(Math.abs(walker.heightAt(at[0], at[1]) + lift - seat.top) < 0.005, `${id}: he sits ${(walker.heightAt(at[0], at[1]) + lift - seat.top).toFixed(3)} m off the seat's top`);
   }
 });
+
+test("the closing shot leaves air over the pavilion: its top stays a twelfth of the picture under the upper edge, upright or wide", async () => {
+  const { aimToFrame } = await import("../../app/src/rites.js");
+  assert.equal(typeof aimToFrame, "function", "rites.js has no aimToFrame");
+  const cam = new THREE.Vector3(9, 60, 34), aim = new THREE.Vector3(0, 48, -6), top = new THREE.Vector3(0, 66, -12);
+  for (const [fov, aspect] of [[50, 16 / 9], [50, 9 / 19.5], [65, 4 / 3]]) {
+    const a = aimToFrame(cam, aim, top, fov, aspect, 0.08), c = new THREE.PerspectiveCamera(fov, aspect, 0.1, 500);
+    c.position.copy(cam); c.lookAt(a); c.updateMatrixWorld(); c.updateProjectionMatrix();
+    const y = top.clone().project(c).y;
+    assert.ok(y <= 1 - 2 * 0.08 + 1e-3, `fov ${fov}, aspect ${aspect.toFixed(2)}: the top stands at ${y.toFixed(3)} of the half picture`);
+    assert.ok(a.x === aim.x && a.z === aim.z && a.y >= aim.y, "only the height of the aim is raised");
+  }
+  const low = new THREE.Vector3(0, 50, -12);
+  assert.ok(aimToFrame(cam, aim, low, 50, 16 / 9, 0.08).y === aim.y, "a top already well inside the picture moves nothing");
+});

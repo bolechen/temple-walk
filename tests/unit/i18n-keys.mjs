@@ -1,5 +1,5 @@
-// Every line the page may show, as the Chinese it is written in: what the translation tables (src/i18n-ja.js,
-// src/i18n-en.js) must hold. Read from the sources themselves, so a line added to the page and not to the tables
+// Every line the page may show, as the Chinese it is written in: what the translation tables (locales/ja.js, en.js,
+// ko.js) must hold. Read from the sources themselves, so a line added to the page and not to the tables
 // fails i18n.test.mjs. Shared with nothing else; kept apart so the test reads as a list of rules.
 import fs from "node:fs";
 import path from "node:path";
@@ -8,7 +8,7 @@ const ROOT = new URL("../../app/", import.meta.url).pathname;
 const CJK = /[㐀-鿿　-〿＀-￯]/;
 // Not translated, on purpose: the dev server's panel and measuring walk, the WeChat group's card (offered only in
 // Chinese), and the tables themselves.
-export const SKIP = ["src/debug.js", "src/tour.js", "src/community.js", "src/i18n.js", "src/i18n-ja.js", "src/i18n-en.js", "src/works.js"];
+export const SKIP = ["src/debug.js", "src/tour.js", "src/community.js", "src/i18n.js"];
 // Each language button is written in its own language, and is never translated.
 export const OWN_NAMES = ["中文", "日本語", "English", "한국어"];
 

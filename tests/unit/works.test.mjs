@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-const { WORKS, HANG } = await import("../../app/src/works.js");
+const { WORKS, HANG } = await import("../../app/levels/t00/works.js");
 const { buildSite } = await import("../../app/src/site.js");
 const { KINDS, STAND } = await import("../../app/src/interior.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });

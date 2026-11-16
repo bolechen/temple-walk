@@ -1,6 +1,6 @@
 // The language the page speaks: Chinese, Japanese or English. The temple was written in Chinese, and Chinese stays the
 // text of record: every line in the code is the Chinese, and `t()` hands back its Japanese or English where the visitor
-// reads that and a translation exists (src/i18n-ja.js, src/i18n-en.js, keyed by the Chinese itself). Anything not yet translated is shown as written, so a missing line
+// reads that and a translation exists (locales/ja.js, locales/en.js, locales/ko.js, keyed by the Chinese itself). Anything not yet translated is shown as written, so a missing line
 // never leaves a blank. The name boards, the gallery's museum notes and the debug panel are not translated: the boards
 // are carved in the temple's own characters (a Japanese visitor reads them as kanji; to anyone else they are the
 // temple's calligraphy, as the seals are), and the notes are the museums'
@@ -9,37 +9,51 @@
 // Which language: `?lang=zh|ja|en` for this visit and kept, else what the visitor chose before (`yunjing.lang.v1`), else the
 // browser's first language that is one of ours, else Chinese. Changing it reloads the page, so nothing drawn already
 // (the title, the plaques, the slips on a canvas) has to be drawn again.
-import JA from "./i18n-ja.js";
-import EN from "./i18n-en.js";
-import KO from "./i18n-ko.js";
+import JA from "../locales/ja.js";
+import EN from "../locales/en.js";
+import KO from "../locales/ko.js";
 
 export const LANGS = ["zh", "ja", "en", "ko"];
 export const LANG_KEY = "yunjing.lang.v1";
 
-/** @param {{ search?: string, stored?: string | null, languages?: readonly string[] }} from */
-export function pickLang({ search = "", stored = null, languages = [] } = {}) {
+/**
+ * Which language, and how it was come by: `url` (asked for in the address), `saved` (chosen before), `browser` (the
+ * browser's own language, or English where it speaks none of ours) or `default` (Chinese, nothing to go on). The page's
+ * analytics reports the source, so that what was chosen by hand can be told from what was recognised.
+ * @param {{ search?: string, stored?: string | null, languages?: readonly string[] }} from
+ * @returns {{ lang: string, source: "url" | "saved" | "browser" | "default" }}
+ */
+export function choose({ search = "", stored = null, languages = [] } = {}) {
   const asked = new URLSearchParams(search).get("lang");
-  if (asked && LANGS.includes(asked)) return asked;
-  if (stored && LANGS.includes(stored)) return stored;
+  if (asked && LANGS.includes(asked)) return { lang: asked, source: "url" };
+  if (stored && LANGS.includes(stored)) return { lang: stored, source: "saved" };
   for (const l of languages) {
     const base = String(l).toLowerCase().split("-")[0];
-    if (LANGS.includes(base)) return base;
+    if (LANGS.includes(base)) return { lang: base, source: "browser" };
   }
-  // A visitor whose browser speaks none of the three reads English sooner than Chinese.
-  return languages.length && languages.some((l) => /^[a-z]/i.test(String(l))) ? "en" : "zh";
+  // A visitor whose browser speaks none of ours reads English sooner than Chinese.
+  return languages.length && languages.some((l) => /^[a-z]/i.test(String(l))) ? { lang: "en", source: "browser" } : { lang: "zh", source: "default" };
 }
+/** @param {Parameters<typeof choose>[0]} from */
+export const pickLang = (from) => choose(from).lang;
 
 const read = () => { try { return globalThis.localStorage?.getItem(LANG_KEY) ?? null; } catch { return null; } };
 const keep = (l) => { try { globalThis.localStorage?.setItem(LANG_KEY, l); } catch {} };
 
-/** The language of this visit. In Node (the unit tests, the tools) there is no page, and it is Chinese. */
-export const lang = (() => {
-  if (typeof globalThis.location === "undefined" || typeof globalThis.navigator === "undefined") return "zh";
-  const asked = new URLSearchParams(globalThis.location.search).get("lang");
-  const l = pickLang({ search: globalThis.location.search, stored: read(), languages: globalThis.navigator.languages || [globalThis.navigator.language || ""] });
-  if (asked && LANGS.includes(asked)) keep(asked);
-  return l;
+const SWITCHED = "yunjing.lang.from";
+/** The language of this visit and how it was come by. In Node (the unit tests, the tools) there is no page, and it is Chinese. */
+const picked = (() => {
+  if (typeof globalThis.location === "undefined" || typeof globalThis.navigator === "undefined") return { lang: "zh", source: "default" };
+  const c = choose({ search: globalThis.location.search, stored: read(), languages: globalThis.navigator.languages || [globalThis.navigator.language || ""] });
+  if (c.source === "url") keep(c.lang);
+  return c;
 })();
+export const lang = picked.lang, langSource = picked.source;
+
+/** The language this page was opened from, if it was opened by choosing another one (once: it is forgotten as it is read). */
+export function takeSwitch() {
+  try { const from = globalThis.sessionStorage?.getItem(SWITCHED) || ""; globalThis.sessionStorage?.removeItem(SWITCHED); return LANGS.includes(from) ? from : ""; } catch { return ""; }
+}
 
 /** @type {Record<string, Record<string, string>>} */
 const TABLES = { ja: JA, en: EN, ko: KO };
@@ -122,6 +136,8 @@ export function localize(root = globalThis.document, to = lang) {
 export function setLang(l) {
   if (!LANGS.includes(l) || l === lang) return false;
   keep(l);
+  // The page is opened again at once, and a message sent now may never leave it: the next page tells where it came from.
+  try { globalThis.sessionStorage?.setItem(SWITCHED, lang); } catch {}
   const u = new URL(globalThis.location.href); u.searchParams.delete("lang");
   globalThis.location.replace(u.href);
   return true;

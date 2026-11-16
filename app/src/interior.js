@@ -10,8 +10,8 @@
 import * as THREE from "three";
 import { asset } from "./assets.js";
 import { paintLeaf } from "./leaves.js";
-import { WORKS, HANG } from "./works.js";
-import { workIn } from "./works-local.js";
+import { WORKS, HANG } from "../levels/t00/works.js";
+import { workIn } from "../levels/t00/works-local.js";
 import { FONT, lang } from "./i18n.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
@@ -33,7 +33,7 @@ export const KINDS = {
 };
 // What hangs in a frame, by its id ("main-w1" is the first frame on the great hall's west wall). `title` and `text`
 // are shown when a visitor stands before it; `image` (a URL) replaces the blank paper. The story will be written here.
-// Beside the leaves hang real works (works.js, written by tools/gallery.py): things that survive from the temple this
+// Beside the leaves hang real works (levels/t00/works.js, written by tools/gallery.py): things that survive from the temple this
 // place is drawn from, each shown with its encyclopedia note and the museum's source line.
 // The first leaf in each hall: eight short notes a visitor reads on the way up, written for this imagined temple out
 // of what is told of such mountain monasteries (docs/JINGSHAN.md). They stand in for the artworks the story will

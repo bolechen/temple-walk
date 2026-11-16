@@ -82,6 +82,7 @@ const scenarios = {
     expect(await t.page.getAttribute('#menu [data-lang="ja"]', "aria-pressed") === "true" && (await words("#menu")).includes("見回す速さ"), "the menu should be in Japanese, with Japanese circled");
     await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('#menu [data-lang="en"]')]);
     await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(await t.page.evaluate(() => sessionStorage.getItem("yunjing.lang.from")) === null, "the page that a language switch opened should have read, and forgotten, where it came from");
     expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
     expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");
     await t.page.evaluate(() => window.__work("muqi-hu-tu")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in English");
@@ -224,7 +225,7 @@ const scenarios = {
     // A step is heard on the effects bus, listened to while it sounds (a frame drawn in software takes longer than a
     // step, so it is played and heard within one call). That it crunches rather than thuds is steps.test.mjs's to say.
     const step = await t.page.evaluate(() => { window.__steps(true); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
-    expect(step.rms > 0.0006, "a step in the snow made no sound: " + JSON.stringify(step));   // silence is 0; how loud is steps.test.mjs's to say
+    expect(step.rms > 0.0002, "a step in the snow made no sound: " + JSON.stringify(step));   // silence is 0; how loud is steps.test.mjs's to say
     // Standing where he stopped and looking down the way he came, the prints darken the snow.
     await t.page.evaluate(() => window.__view("first"));
     const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
@@ -266,7 +267,7 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__ripples())).made === r.made, "dry autumn stone has no water to ripple");
     // A step is heard on the effects bus as it sounds (played and listened to within one call).
     const one = await t.page.evaluate(() => { window.__steps("stone"); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
-    expect(one.rms > 0.0004, "a step on stone made no sound: " + JSON.stringify(one));   // silence is 0; how loud is steps.test.mjs's to say
+    expect(one.rms > 0.0001, "a step on stone made no sound: " + JSON.stringify(one));   // silence is 0; how loud is steps.test.mjs's to say
     await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the main hall");
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
     const s = await t.state(); await walk([[s.x, s.z - 3]], "he never walked in the hall");

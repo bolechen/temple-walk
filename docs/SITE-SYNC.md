@@ -20,7 +20,7 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 - `deployment.sha`：最近 100 次主线 push 部署中最后成功版本；与 source 不同则显示尚未部署到当前提交。找不到时显示未知，不推测成功。
 - `independent_review`：独立评审人、完整 reviewed_commit、报告和问题。只有与 source SHA 完全相同才适用于当前版本；旧评审保留但新版本自动显示待复验。
 
-开发者只维护 delivery.json。评审者维护 independent-review.json；此处是协作责任约定，不是仓库写权限隔离。同一源码改动后的旧验收不能自动转为通过。历史 `review-log.json` 不删除。
+开发者只维护 delivery.json。评审者维护 independent-review.json；主创维护 `docs/handoff/LATEST-GOALS.md`（用户需求与所有者决定，见 AGENTS.md「目标记录」）；此处是协作责任约定，不是仓库写权限隔离。同一源码改动后的旧验收不能自动转为通过。历史 `review-log.json` 不删除。
 
 ## 维护、恢复与验收
 

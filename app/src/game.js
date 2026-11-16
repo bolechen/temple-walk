@@ -4,7 +4,7 @@
 // answers it, and the page of seals at the end. yard.js lends it the walker, the novice and the clock (`y`).
 import * as THREE from "three";
 import { asset } from "./assets.js";
-import { workIn } from "./works-local.js";
+import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell } from "./audio.js";
@@ -286,7 +286,7 @@ export function createGame(y) {
     const w = workIn(slug), el = $("piece"); if (!w || !el) return;
     $("pieceImg").src = asset(`levels/t00/gallery/${slug}.webp`); $("pieceImg").alt = w.title;
     $("pieceTitle").textContent = w.title; $("pieceBy").textContent = [w.by, w.dates].filter(Boolean).join(lang === "en" ? " · " : "　");
-    // The facts and the note in the visitor's language (works-local.js); the museum's source line stays as published.
+    // The facts and the note in the visitor's language (levels/t00/works-local.js); the museum's source line stays as published.
     $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && t("{size} 厘米", { size: w.size })], ["收藏", w.holder + (w.rank ? (lang === "en" ? "; " : "　") + w.rank : "")]].filter(([, v]) => v).map(([k, v]) => `<dt>${t(k)}</dt><dd>${v}</dd>`).join("");
     $("pieceNote").textContent = w.note; $("pieceLink").textContent = w.link; $("pieceCredit").textContent = w.credit;
     ui.open("piece", { onClose: () => { y.stage(null); seen.add(spot); } });
