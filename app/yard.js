@@ -750,7 +750,20 @@ window.__pick = (px, py, n = 6) => {
 createGame({
   hints, ui,
   site, walker, scene,
-  where: () => ({ x: pos.x, z: pos.z }),
+  where: () => ({ x: pos.x, z: pos.z, yaw }),
+  // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).
+  place(x, z, turn) { interrupt(); if (inside) indoors(null); pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  start: site.start,
+  // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
+  async travel(x, z, turn, hallId) {
+    if (passing) return false; passing = true; interrupt();
+    if (veil) veil.className = "on"; await pause(700);
+    const hall = hallId ? site.halls.find((h) => h.id === hallId) : null;
+    if (inside && (!hall || hallIn.room.id !== hallId)) indoors(null);
+    if (hall && !inside) indoors(hall);
+    pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.06; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); await pause(250);
+    if (veil) veil.className = ""; passing = false; return true;
+  },
   // Send him along `points` ([x, z] each); `then(true)` when he arrives, `then(false)` if he is stopped or sent elsewhere.
   walkTo(points, then) { interrupt(); route = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); arrive = then || null; },
   stage(o) { stage = o; },

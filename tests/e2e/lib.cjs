@@ -9,8 +9,7 @@ async function serve() {
     let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
     if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-    // The page is published without a document shell (the host supplies one); give it the same minimum here.
-    if (p.endsWith("index.html")) return res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' + fs.readFileSync(p, "utf8"));
+    
     fs.createReadStream(p).pipe(res);
   });
   await new Promise((r) => srv.listen(0, "127.0.0.1", r));

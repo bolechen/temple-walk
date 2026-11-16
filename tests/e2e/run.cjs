@@ -291,6 +291,47 @@ const scenarios = {
     await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Coming back: a first visit is offered only the way in; where he was is kept, and the next visit may go on from
+  // there or begin again.
+  resume: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low", { enter: false });
+    const ready = async () => { await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 }); };
+    await ready(); let L = await t.page.evaluate(() => window.__left());
+    expect((await t.page.textContent("#enterBtn")) === "入山" && !L.again && !L.offer.going, "a first visit should be offered only the way in: " + JSON.stringify(L.offer));
+    await t.page.click("#enterBtn"); const start = await t.state();
+    // He goes up to the bell, earns nothing, and the page is left.
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] - 1.5, p.at[1] - 2, 0.4, 0); });
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && Math.abs(p.x - 14) < 0.2 && p.label === "钟楼"; }, 60000, "where he stands was never kept");
+    await t.page.reload(); await ready(); L = await t.page.evaluate(() => window.__left());
+    expect((await t.page.textContent("#enterBtn")) === "接着走" && L.again && (await t.page.textContent("#againBtn")) === "从头走起", "coming back should offer to go on or begin again: " + JSON.stringify(L.offer));
+    expect((await t.page.textContent("#titleSeals")).includes("上回走到钟楼"), "the title should say where he was: " + (await t.page.textContent("#titleSeals")));
+    await t.shot("e2e-resume"); await t.page.click("#enterBtn"); let st = await t.state();
+    expect(Math.abs(st.x - 14) < 0.3 && Math.abs(st.yaw - 0.4) < 0.05, "he is not where he was left: " + JSON.stringify([st.x, st.z, st.yaw]));
+    // (The observance is started without handing its promise back: the page would wait for the whole of it.)
+    // With a seal in the book, beginning again is asked twice, empties the book and starts at the foot of the path.
+    await t.page.evaluate(() => { const p = window.__places.well; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to lose");
+    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture"); await t.page.waitForTimeout(2600);
+    await t.page.reload(); await ready();
+    expect((await t.page.textContent("#titleSeals")).includes("已得一印"), "the seal was not remembered: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify((await t.journey()).seals));
+    await t.page.click("#againBtn"); expect((await t.page.textContent("#againBtn")).includes("朱印清空") && !(await t.page.evaluate(() => document.body.classList.contains("entered"))), "beginning again should ask a second time");
+    await t.page.click("#againBtn"); await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 20000, "he did not set out again");
+    st = await t.state(); const j = await t.journey();
+    expect(j.count === 0 && Math.abs(st.x - start.x) < 0.3 && Math.abs(st.z - start.z) < 0.6, "beginning again should empty the book and stand him at the start: " + JSON.stringify([j.count, st.x, st.z, start.x, start.z]));
+    // A seal that has been earned is the way back to its place: earn the well's again, walk off, open the book, press the seal.
+    await t.page.evaluate(() => { const p = window.__places.well; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to go back to");
+    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    await t.page.evaluate(() => window.__pose(0, 30, 0, 0)); await t.page.evaluate(() => window.__book());
+    await t.until(() => t.page.isVisible("#book"), 30000, "the book did not open");
+    const go = await t.page.$$eval(".seal-go", (bs) => bs.map((b) => [b.dataset.id, b.getAttribute("aria-label"), b.getBoundingClientRect().width, b.getBoundingClientRect().height]));
+    expect(go.length === 1 && go[0][0] === "well" && go[0][1] === "回到龙井" && go[0][2] >= 40 && go[0][3] >= 44, "only the earned seal should be a way back, and large enough for a thumb: " + JSON.stringify(go));
+    expect(await t.page.isVisible("#bookGo"), "the book should say a seal can be pressed");
+    await t.page.click('.seal-go[data-id="well"]');
+    const well = await t.page.evaluate(() => window.__places.well.at);
+    await t.until(async () => { const y = await t.state(); return !(await t.page.isVisible("#book")) && Math.hypot(y.x - well[0], y.z - well[1]) < 0.2; }, 30000, "pressing the seal did not take him back to the well");
+    expect((await t.page.evaluate(() => window.__rites().went)) === 1, "the way back was not counted");
+    await t.page.waitForTimeout(2600); await t.page.reload(); await ready(); expect((await t.page.textContent("#enterBtn")) === "接着走" && (await t.page.textContent("#titleSeals")).includes("龙井"), "he should be offered to go on from the well: " + (await t.page.textContent("#titleSeals")));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // What his hands do, at the pace a visitor sees it: the rope drawn and the bell rung three times, the bowl lifted
   // and drunk from, a stool and a cushion sat on, the incense bowed with and set in the ash.
   rites: { tier: 2, async run(b, base) {

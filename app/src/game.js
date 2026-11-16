@@ -6,9 +6,10 @@ import * as THREE from "three";
 import { asset } from "./assets.js";
 import { WORKS } from "./works.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
-import { drawGoshuin, sealStamp } from "./goshuin.js";
+import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush } from "./audio.js";
 import { createRites } from "./rites.js";
+import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -37,7 +38,7 @@ export function createGame(y) {
   $("slipTake")?.addEventListener("click", () => ui.close("slip"));
   const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); };
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
-  let sat = 0, ended = 0;
+  let sat = 0, ended = 0, went = 0;
   let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter");
 
   // The visit so far: metres walked and time on the mountain, kept between sittings like the seals.
@@ -72,7 +73,7 @@ export function createGame(y) {
     if (g && g.dataset.word !== word) { if (g.dataset.word) y.hints?.say.goal(); g.dataset.word = word; g.innerHTML = next ? `<span><small>下一处</small>${next.place}</span>` : `<span>七印圆满</span>`; }
     // The seasons and the hours are the visitor's once the book has been filled once (src/ui.css shows what needs them).
     document.body.classList.toggle("seasons", journey.opened());
-    if ($("titleSeals")) $("titleSeals").textContent = n ? (n === 7 ? "七印圆满 · 山门常开" : `已得${"〇一二三四五六七"[n]}印`) : "";
+    if ($("titleSeals") && !entered) offer();
   };
 
   // ---- Words on the page ----
@@ -267,23 +268,62 @@ export function createGame(y) {
     $("bookHint").textContent = next ? `${journey.closed ? `帐上还空着${"〇一二三四五六七"[SEALS.length - journey.count()]}处。` : ""}${next.hint}　${told()}` : `七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。${told()}`;
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
     $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: "云径禅寺 · 朱印" }); } catch {} };
+    // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
+    const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
+    if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
+      SEALS.forEach((d, i) => { if (!journey.has(d.id) || !places[d.id]) return; const b = document.createElement("button"), [l, t, w, h] = boxes[i];
+        b.type = "button"; b.className = "seal-go"; b.dataset.id = d.id; b.setAttribute("aria-label", `回到${d.place}`); b.title = `回到${d.place}`;
+        b.style.cssText = `left:${(l * 100).toFixed(2)}%;top:${(t * 100).toFixed(2)}%;width:${(w * 100).toFixed(2)}%;height:${(h * 100).toFixed(2)}%`;
+        b.addEventListener("click", () => goBack(d.id)); leaf.appendChild(b); });
+      if (journey.count() && $("bookGo")) $("bookGo").hidden = false; }
     $("bookReset").textContent = "重新朝山"; ui.open("book", { onClose: announce });
   }
+  // Back to where a seal was earned: the book closes, the eyes close, and he stands there again.
+  async function goBack(id) {
+    const p = places[id], d = SEAL[id]; if (!p || !journey.has(id) || rite || closing) return;
+    ui.close("book"); if (await y.travel(p.at[0], p.at[1], Math.PI - p.face, p.room || null)) { went++; say(`回到${d.place}。`, 4); }
+  }
+  window.__goBack = (id) => goBack(id);
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
   $("bookReset")?.addEventListener("click", (e) => { if (/** @type {HTMLElement} */ (e.currentTarget).textContent === "重新朝山") { /** @type {HTMLElement} */ (e.currentTarget).textContent = "再点一次，清空朱印"; return; } journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 
   // ---- The title ----
   const title = $("title");
+  // ---- Coming back: where he was is kept from moment to moment, and the title offers to go on from there ----
+  // A first visit is offered only 入山. A visitor who has a seal, or left from somewhere up the mountain, is offered to
+  // go on (接着走) from where they were, or to begin again (从头走起, asked twice: it empties the book).
+  const named = SEALS.filter((d) => places[d.id] && !places[d.id].room).map((d) => ({ place: d.place, at: places[d.id].at }));
+  const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter"));   // a tool or a test that names its own place is left where it asked to be
+  let left = free ? readPlace(localStorage) : null, kept = 0;
+  if (left && y.walker.blocked(left.x, left.z)) left = null;
+  const offer = () => {
+    const o = titleOffer(journey.count(), SEALS.length, left, y.start), b = $("enterBtn"), again = $("againBtn");
+    $("titleSeals").textContent = o.line || (journey.count() === SEALS.length ? "七印圆满 · 山门常开" : "");
+    if (b && !b.disabled) b.textContent = o.enter;
+    if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
+    return o;
+  };
+  if (left && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw);   // the title is shown over where they were
+  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: labelOf(w, y.inside() ? y.hallName() : null, named) }); };
+  y.onTick((dt) => { if ((kept += dt) > 2) { kept = 0; keepPlace(); } });
+  window.addEventListener("pagehide", keepPlace); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") keepPlace(); });
+  $("againBtn")?.addEventListener("click", (e) => {
+    const b = /** @type {HTMLElement} */ (e.currentTarget);
+    if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); left = null; b.dataset.asked = "";
+    const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter();
+  });
   const enter = () => { if (entered) return; entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(n.hint, 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
-  if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; $("enterBtn").textContent = "入山"; } }, 200); } }
+  if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
   refresh(); rites.restore({ incense: journey.has("incense") });
 
   // For the tests.
   window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
   window.__hush = (on) => { hush(on); };   // the music held back as when he sits on after tea, or let back
-  window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
+  window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, went, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();
+  window.__left = () => ({ place: readPlace(localStorage), offer: titleOffer(journey.count(), SEALS.length, left, y.start), again: !!$("againBtn") && !$("againBtn").hidden });
   window.__visit = () => ({ metres: visit.metres, seconds: visit.seconds });
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
   window.__take = () => rite && rite.take && rite.take();

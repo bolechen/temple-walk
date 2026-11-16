@@ -25,6 +25,14 @@ export function sealStamp(text, size, { ink = "#b0281c", seed = 7 } = {}) {
 const vertical = (x, text, cx, top, step) => [...text].forEach((ch, i) => x.fillText(ch, cx, top + i * step));
 
 // `seals`: journey.list(); `verse`: { text, from } or null; `when`: the day shown; `label`: season and hour.
+// Where each of the `n` seals along the foot of the page lies, as fractions of the page (left, top, width, height),
+// its place name under it included: the book lays a button over each seal that has been earned, to go back there.
+const PAGE = { W: 1200, H: 1600, size: 126, top: 1318 };
+export function sealBoxes(n) {
+  const { W, H, size, top } = PAGE, gap = (W - 150 - n * size) / (n - 1), pitch = size + gap;
+  return Array.from({ length: n }, (_, i) => [(75 + i * pitch - gap / 2) / W, (top - 14) / H, pitch / W, (size + 62) / H]);
+}
+
 export async function drawGoshuin({ seals, verse, when, label, temple = "云径禅寺", url = "" }) {
   try { await Promise.all([document.fonts.load(`200px "Yunjing Brush"`, temple), document.fonts.load(`40px "Yunjing Serif"`, "奉拜"), document.fonts.load(`80px "Yunjing Seal"`, temple)]); } catch {}
   const W = 1200, H = 1600, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
