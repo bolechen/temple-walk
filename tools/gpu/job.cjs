@@ -100,7 +100,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
   }
   // The eye going to each place's own shot and back (app/src/director.js): frame times while he stands at the place
   // with the eye following him, while it swings to the shot, while it rests there, and while it swings home after a
-  // step. spec.director = { size, q, places: ["lamp", "well", "bell", "tea", "sutra", "sit"], sound: true }. He is put beside each
+  // step. spec.director = { size, q, places: ["lamp", "bell", "tea", "sutra", "sit"], sound: true }. He is put beside each
   // with __pose (diagnostic); the observance is begun with E and left with W (Esc for the bell and the tea, E to take the library's slip).
   if (spec.director) {
     const R = spec.director, size = R.size || [1920, 1080], log = (report.director = { size, q: R.q || "high", places: [] });
@@ -114,7 +114,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
       const until = async (f, ms, what) => { const t = Date.now(); while (Date.now() - t < ms) { if (await f()) return Date.now() - t; await page.waitForTimeout(10); } throw new Error(what); };
       const mark = () => ev(() => window.__ft.length);
       const stats = (a, b) => ev(([i, j]) => { const t = window.__ft.slice(i, j), raw = t.slice(1).map((v, k) => v - t[k]), d = raw.slice().sort((x, y) => x - y); if (!d.length) return null; const at = raw.indexOf(d[d.length - 1]); const mean = d.reduce((x, y) => x + y, 0) / d.length; return { frames: d.length, fps: +(1000 / mean).toFixed(1), mean_ms: +mean.toFixed(2), p95_ms: +d[Math.floor(d.length * 0.95)].toFixed(2), max_ms: +d[d.length - 1].toFixed(2), max_frame: at, max_at_ms: +(t[at + 1] - t[0]).toFixed(0) }; }, [a, b]);
-      for (const id of R.places || ["lamp", "well", "bell", "tea", "sutra", "sit"]) {
+      for (const id of R.places || ["lamp", "bell", "tea", "sutra", "sit"]) {   // (not the well: its shot waits for #99)
         const row = { id };
         try {
           await ev((k) => { const p = window.__places[k]; window.__pose(p.at[0] + (k === "bell" ? 0.3 : 0.1), p.at[1] + (k === "bell" ? -0.3 : 0.1), Math.PI - p.face, 0.05); }, id);

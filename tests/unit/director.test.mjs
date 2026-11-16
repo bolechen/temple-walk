@@ -17,6 +17,8 @@ const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? 
 const site = buildSite(M), rooms = buildInteriors(M, site.halls), walker = createWalker(site);
 site.places.incense = rooms.places.incense;
 const IDS = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
+// The places the eye is gone to now: the well's shot is kept in the data but not gone to until #99 (its niche is unlit).
+const GONE = IDS.filter((id) => !site.places[id].shot?.off);
 const DT = 1 / 60, SAFE = 0.9;
 // Stand the walker where a place is: in its hall's room if it has one, out of doors otherwise.
 const at = (p) => { walker.setRoom(p.room ? rooms.rooms[p.room].room : null); return p.y ?? walker.heightAt(p.at[0], p.at[1]); };
@@ -97,7 +99,7 @@ const MOVE = DIRECT.speed * DT + 0.01;   // metres a frame (0.25): the swing tra
 
 test("the swing there and back turns the eye no faster than the limit, goes round him and never through anything; otherwise the ink is drawn", () => {
   let cuts = 0, blends = 0;
-  for (const id of IDS) {
+  for (const id of GONE) {
     const p = site.places[id], foot = at(p), centre = centreOf(p, foot);
     for (let k = 0; k < 12; k++) {
       const yaw = (k / 12) * Math.PI * 2, cam = follower(p, foot, yaw), base = { p: cam.position.clone(), q: cam.quaternion.clone() };
@@ -184,4 +186,15 @@ test("a swing round him from behind his shoulder never comes nearer than it star
   const C = new THREE.Vector3(0, 1, 0), a = pose(), b = pose(), o = pose();
   a.p.set(1, 2, 5); b.p.set(4, 1, -1); a.q.identity(); b.q.identity();
   for (let w = 0; w <= 1; w += 0.05) { blendPose(a, b, w, C, o); assert.ok(Math.hypot(o.p.x, o.p.z) >= Math.min(Math.hypot(1, 5), Math.hypot(4, 1)) - 1e-6); }
+});
+
+// The dragon well is watched from where the eye follows him: its shot shows a black niche until the niche is lit and
+// rebuilt (#76), so it is kept in the data, marked `off`, and not gone to. When #99 brings it back, this test changes
+// to expect the shot like the others.
+test("the well is not gone to: the eye stays with him there (until #99)", () => {
+  const p = site.places.well; assert.ok(p.shot && p.shot.off === "#99", "the well's shot should be kept, marked off for #99");
+  const d = createDirector({ walker }); assert.equal(d.go("well", p, at(p)), false, "the eye should not go to the well's shot");
+  assert.equal(d.state().phase, "idle");
+  assert.deepEqual(GONE, ["bell", "incense", "tea", "sutra", "lamp", "sit"]);
+  walker.setRoom(null);
 });

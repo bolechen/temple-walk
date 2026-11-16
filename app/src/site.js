@@ -371,10 +371,12 @@ export function buildSite(M) {
       new THREE.TorusGeometry(0.075, 0.009, 6, 16, Math.PI).rotateZ(-Math.PI / 2).translate(-0.53, T + 0.15, -0.2), new THREE.CylinderGeometry(0.008, 0.016, 0.2, 8).rotateZ(-0.7).translate(-0.28, T + 0.17, -0.2));
     // Stools: his own, and two for company.
     P.wood.push(stool().translate(0, 0, 0.62), stool().translate(0.95, 0, -0.12), stool().translate(0, 0, -0.86));
-    // One branch in a bottle, on the table.
-    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(0.46, 0.78, -0.38));
-    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 18, 0.006, 6),
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 10, 0.004, 5));
+    // One branch in a bottle, on the table: at the corner by his left hand, beside the ewer, out of the way of the eye that
+    // looks across the table at him while he drinks (src/director.js; it stood at the near corner and filled a fifth of that picture).
+    const BX = -0.52, BZ = 0.1;
+    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(BX, 0.78, BZ));
+    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 18, 0.006, 6),
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 10, 0.004, 5));
     const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, lacquer: M.lacquer };
     for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
     // The table stands askew to the court, so it is closed off as three round things along its length; each stool as one.
@@ -447,7 +449,9 @@ export function buildSite(M) {
     // Under the eaves, from before him to his left, three-quarters: his face, his hands, the book and the holder of slips.
     sutra: { at: [1.2, 1.3, 0.5], look: [-0.06, 1.0, 0.28], fov: 42, in: 1.8, out: 1.0, drift: { push: 0.015, for: 8 }, keep: [[0, 0.85, 0], [0, 1.2, 0], [0, 0.95, 0.3], [-0.24, 1.0, 0.82]] },   // a near shot: from his waist up
     // From behind and above his shoulder, down into the niche where the pool lies; the 龍井 board above it kept out of the picture.
-    well: { at: [-0.8, 2.4, -1.6], look: [0.05, 0.3, 2.2], fov: 40, in: 2.0, out: 1.0, drift: { push: 0.015, for: 10 }, keep: [[0, 1.0, 0], [0, 1.2, 0], [0, 0.2, 2.38]] },   // over his shoulder: his head and shoulders, and the pool
+    // (Not gone to for now, `off`: the niche is unlit and its arch is to be rebuilt (#76), so the picture shows a black hole;
+    // the eye stays with him until #99 brings the shot back. The data stays, tested like the rest.)
+    well: { off: "#99", at: [-0.8, 2.4, -1.6], look: [0.05, 0.3, 2.2], fov: 40, in: 2.0, out: 1.0, drift: { push: 0.015, for: 10 }, keep: [[0, 1.0, 0], [0, 1.2, 0], [0, 0.2, 2.38]] },   // over his shoulder: his head and shoulders, and the pool
     // From before the lamp, his face lit by it; as it is lit the eye steps back half a pace.
     lamp: { at: [0.75, 1.3, 2.45], look: [-0.05, 1.0, 0.3], fov: 42, in: 1.8, out: 1.0, drift: { push: -0.05, for: 6 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.88, 1.38]] },
     // Low, before him and to his right at about 35° (wider would stand the eye over the stair's cheek), clear of the

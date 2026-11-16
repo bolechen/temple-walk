@@ -211,6 +211,7 @@ While it is away `body.directing` fades the way, the slips and the book (not the
 the breath or the stick), and the brush rings on the ground are not drawn. When the eye is sent, `warmShot` draws the
 place once from the shot into a small unseen target (with whatever is marked `userData.warm`, such as the well's
 rings), so nothing it first sees stalls the swing; not `renderer.compile`, which compiles every room under the courts.
+A shot marked `off` (the well's, `off: "#99"`: its niche is unlit until #76) is kept in the data and tested, but not gone to.
 An observance made sitting sets him on its seat's own top (`placeLift` in `site.js`), as sitting down anywhere does. 自动镜头 in the pause menu (`settings.autocam`, on by default) turns it off; under `?shot` it is off
 except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), raised on the way home it is
 with him at once, and a shot does not drift while the camera is up; on a touch screen the slips stay, faint, so 留影 can

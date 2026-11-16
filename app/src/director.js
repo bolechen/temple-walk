@@ -130,7 +130,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
   return {
     /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool). */
     go(name, where, floorY, { now = false } = {}) {
-      if (!where || !where.shot || !enabled()) return false;
+      if (!where || !where.shot || where.shot.off || !enabled()) return false;   // `off`: a shot kept in the data but not gone to (it says why)
       if (phase === "idle") { t = 0; hadLast = false; }
       id = name; place = where; shot = where.shot; foot = floorY; dur = durations(shot);
       if (now) { ink = null; veil(0); u = 1; phase = "hold"; decided = true; }

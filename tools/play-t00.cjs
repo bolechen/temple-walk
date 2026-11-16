@@ -98,8 +98,8 @@ const runs = {
     await s.end();
   },
   // The eye going to each place's own shot and back (src/director.js), at a visitor's pace by real keys and the mouse:
-  // the lamp (in, rested on, home by itself before he is done), the well (a step with W brings it home at once), the bell
-  // (three presses on its shot, the eye stays; Esc brings it home), the tea (a drag of the view brings it home).
+  // the lamp (in, rested on, home by itself before he is done), the well (its shot waits for #99: the eye stays with him),
+  // the bell (three presses on its shot, the eye stays; a step with W brings it home), the tea (a drag of the view brings it home).
   // How long each swing took, and whether it was swung or cut behind the ink, is read from __director (diagnostic).
   async director(b, base) {
     const s = await page(b, base, "director", "q=low&view=third&season=summer&time=day");
@@ -111,20 +111,19 @@ const runs = {
     await s.shot("2-lamp-swing"); note("director", "diagnostic", "going to the lamp's shot", await D());
     secs = await watch("never reached the lamp's shot", (d) => d.phase === "hold" || d.phase === "out"); note("director", "page", `on the lamp's shot ${secs} s later`); await s.shot("3-lamp-shot");
     secs = await watch("never came home from the lamp", (d) => d.phase === "idle"); note("director", "page", `home by itself ${secs} s later`, await D()); await s.shot("4-lamp-home");
-    // The well: W.
+    // The well: its shot waits for #99 (the niche is unlit), so the eye stays with him there, all through.
     await s.at("well"); await s.until(async () => (await s.word()) === "观水", 30000, "观水 not offered"); await s.key("e", "观水");
-    // (A software renderer draws about a frame a second and the swing moves by frames while the well keeps the clock, so
-    // the well may be done before the eye arrives: W is pressed once the eye has left him, wherever it has got to.)
-    secs = await watch("the eye never left him for the well", (d) => d.id === "well" && (d.phase === "in" || d.phase === "hold")); note("director", "page", `going to the well's shot ${secs} s after the press`, await D()); await s.shot("5-well-shot");
-    await s.p.keyboard.down("w"); note("director", "input", "key W held · walk away"); await s.p.waitForTimeout(400);
-    note("director", "diagnostic", "0.4 s after W", await D()); await s.p.keyboard.up("w");
-    secs = await watch("never came home from the well", (d) => d.phase === "idle", 120000); note("director", "page", `home ${secs} s after W was let go`); await s.shot("6-well-home");
+    await s.until(async () => (await s.j()).rite === "well", 30000, "the well was not begun");
+    let stayed = true; while ((await s.j()).rite === "well") { if ((await D()).phase !== "idle") stayed = false; await s.p.waitForTimeout(250); }
+    note("director", "page", `at the well the eye ${stayed ? "stayed with him" : "LEFT him"} (its shot waits for #99)`); await s.shot("5-well-followed");
+    // A step (W) sends the eye home at once: at the bell, below.
     // The bell: presses on its shot.
     await s.at("bell", 0.3, -0.3); await s.until(async () => (await s.word()) === "撞钟", 30000, "撞钟 not offered"); await s.key("e", "撞钟");
     secs = await watch("never reached the bell's shot", (d) => d.id === "bell" && d.phase === "hold"); note("director", "page", `on the bell's shot ${secs} s after the press`); await s.shot("7-bell-shot");
     for (const n of [2, 3]) { await s.until(async () => (await s.r()).bell.ready, 30000, "rope not ready"); await s.key("e", `撞钟 ${n}`); await s.until(async () => (await s.r()).bell.pulls >= n, 30000, `stroke ${n}`); note("director", "diagnostic", `after stroke ${n}`, await D()); }
-    await s.shot("8-bell-third"); await s.key("Escape", "let go of the rope");
-    secs = await watch("never came home from the bell", (d) => d.phase === "idle", 120000); note("director", "page", `home ${secs} s after Esc`, { button: await s.word() });
+    await s.shot("8-bell-third"); await s.p.keyboard.down("w"); note("director", "input", "key W held · walk away from the rope"); await s.p.waitForTimeout(400);
+    note("director", "diagnostic", "0.4 s after W", await D()); await s.p.keyboard.up("w");
+    secs = await watch("never came home from the bell", (d) => d.phase === "idle", 120000); note("director", "page", `home ${secs} s after W was let go`, { button: await s.word() });
     // The tea: a drag.
     await s.at("tea"); await s.until(async () => (await s.word()) === "吃茶", 30000, "吃茶 not offered"); await s.key("e", "吃茶");
     secs = await watch("never reached the tea's shot", (d) => d.id === "tea" && d.phase === "hold", 90000); note("director", "page", `on the tea's shot ${secs} s after the press`); await s.shot("9-tea-shot");
