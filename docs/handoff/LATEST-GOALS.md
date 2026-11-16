@@ -57,6 +57,8 @@
 14. **踩进水洼有涟漪。** 「小沙弥踩到水面，没有水花，要不要加」→「开 pr 实现」。实现：#86（没有单独的 issue）。
 15. **结构第三阶段后重拍验收证据**（按第 7 条，新证据进新目录）：https://github.com/bolechen/temple-walk/issues/103 ；连同测帧定几何预算 https://github.com/bolechen/temple-walk/issues/74 。
 
+16. **雕刻身体：先比较两条路。** 所有者看了《小王子：星辰之旅》作者的制作流程（生成适合绑定的模型，Blender 里用 Auto-Rig Pro 绑骨蒙皮），「有 Blender，愿意花一定的费用」。先交一页比较（改权重，或重新生成并绑定），购买前列出金额由所有者点头，选定后再做；走重新生成那条路时坐姿也要不撕裂。目标和验收：https://github.com/bolechen/temple-walk/issues/80 。场景仍由代码按法式生成，不改用生成资产。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。
