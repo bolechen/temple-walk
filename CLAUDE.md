@@ -337,7 +337,7 @@ app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page
 every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Xing" (Zhi Mang Xing, a running hand: what is written by hand on paper, which is
 the verse under a photograph, the slip drawn in the library and the title on a leaf in a hall; it has no traditional
 forms, so it is not for name boards), "Yunjing Bang" (Yuji Boku, a heavy brush regular hand cut to the name boards' characters only), "Yunjing Serif" and
-"Yunjing Seal" (Noto Serif SC regular and black). Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
+"Yunjing Seal" (Noto Serif SC regular and black). The kai (LXGW WenKai) and the Korean running hand (Nanum Brush Script) declare Reserved Font Names, so `cut()` writes them with the project's own names inside the file (`RENAMED`: "Yunjing Kai", "Yunjing Hand KO"; copyright and licence records are left as they were; `python3 tools/fonts.py --rename` does it to files already cut), and `tests/unit/fonts.test.mjs` reads every file's name table (in Node, no font library) and fails on a reserved name. Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `pnpm run check` fails if a character is used that the cut does not hold.
 
 **The way to the next place and the record of the visit (`game.js`).** While the goal line is showing, a small vermilion seal
@@ -369,8 +369,12 @@ drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and pape
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
 opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, how wide the view is (`fov`, degrees
 added to the walk's 50° behind him or 65° from his eyes; the fixed views keep 44°/52°), volume, the key card, and
-a way back to the start of the path. The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
+a way back to the start of the path, and 鸣谢 (the page of thanks and sources, below). The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
 validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
+
+**Thanks and sources (`app/src/credits.js`, `#credits`).** The menu's 鸣谢 opens a sheet of paper (`ui.layer`, a `<dialog class="layer">` holding a `.credits-card.paper`) with what the licences ask to be said (`docs/t00/LICENSING-AUDIT.md` §六): the three museums (the 14 ColBase pictures one by one, each linked to its item page; the plaque's four characters, with their source and what was done to them), the 3D scans, Poly Haven, every typeface with its copyright line, and the libraries, linking `shared/licenses/THIRD-PARTY-NOTICES.txt` and `shared/fonts/OFL.txt`. The words are data in `credits.js` passed through `t()`; names, copyright lines and the museums' own source lines are not translated. A work's card carries, below the museum's source line, a line saying a ColBase picture was edited (`processedLine`, from the `processed` field `tools/gallery.py` writes: `resize` or `crop`), written as ColBase's terms give their example. A new ColBase work needs nothing by hand; a new source of another kind needs a section in `credits.js` and a row in `asset-register.csv`. `__credits()` reports it.
+
+**Third-party licences (`tools/notices.mjs`, `app/shared/licenses/`).** `THIRD-PARTY-NOTICES.txt` is composed by `node tools/notices.mjs` from the installed three.js and meshoptimizer licences and the texts kept beside it (lil-gui, stats.js, Basis Universal's LICENSE and NOTICE), and ships in `dist/shared/licenses/`. `vite.config.mjs` fails the build if it, or `vendor/basis/NOTICE`, is missing or does not name the five libraries; `tools/setup.mjs` copies Basis's own Apache-2.0 text, not three's MIT, to `app/vendor/basis/`. `tests/unit/notices.test.mjs` builds the site into a scratch folder and checks it.
 
 **What is said about the controls (`app/src/hints.js`).** Nothing about the controls stays on the picture. One line at
 the foot of the view says each thing once, when it becomes useful (how to walk on arriving, Esc and the wheel when the
