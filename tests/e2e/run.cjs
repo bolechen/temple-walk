@@ -281,7 +281,10 @@ const scenarios = {
     await load({ v: 1, born: 1, seals: { bell: 4, tea: 5 }, strikes: 3, verse: null, done: null }, true);
     j = await t.journey(); expect(j.count === 2 && j.closed > 0, "the old note that the close was seen was lost: " + JSON.stringify(j));
     expect(!(await t.page.evaluate(() => localStorage.getItem("yunjing.ending.v1"))), "the old note should be folded into the book");
-    expect((await summit()) !== "静坐", "an old book whose close was seen was offered it again");
+    // Its summit seal is still to be earned: sitting there earns it, and the close is not played again.
+    expect((await summit()) === "静坐", "an old book without the summit's seal should still be offered it");
+    await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.sit > 0, 90000, "the summit's seal was not earned");
+    await t.page.waitForTimeout(4000); expect((await t.page.evaluate(() => window.__rites().ended)) === 0 && !(await t.page.evaluate(() => window.__rites().closing)), "the close played again for an old book that had seen it");
     await load({ v: 1, born: 1, seals: { bell: 4, sit: 5 }, strikes: 3, verse: null, done: null }, false);
     j = await t.journey(); expect(j.count === 2 && !j.closed, "an old book that never closed should not be marked closed: " + JSON.stringify(j));
     expect((await summit()) === "静坐", "an old book whose summit seal came before the close should be offered it");
