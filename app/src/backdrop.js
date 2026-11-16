@@ -72,27 +72,28 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
     band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3, [1, 1]);
   });
   // Five peaks stand round the temple, each range fainter than the one before.
-  [[150, 54, 0.5], [215, 78, 2.1], [300, 112, 4.4]].forEach(([R, Hm, ph]) => {   // the nearest is the wooded hill the temple sits in
+  // The fourth ring, R190, is the skirt: it stands behind the grove's southern bands and goes down into the mist, so that an eye under the hills' feet sees wood and haze, not sky.
+  [[150, 54, 0.5, 0.5, -4], [190, 34, 3.3, 0.62, -140], [215, 78, 2.1, 0.74, -4], [300, 112, 4.4, 0.88, -4]].forEach(([R, Hm, ph, k, foot]) => {   // the nearest is the wooded hill the temple sits in
     const g = new THREE.CylinderGeometry(R, R, 1, 360, 1, true), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const a = Math.atan2(p.getZ(i), p.getX(i));
       const h = Hm * (0.42 + 0.34 * Math.pow(0.5 + 0.5 * Math.sin(a * 5 + ph), 1.6) + 0.1 * Math.sin(a * 11 + ph * 3) + 0.22 * Math.max(0, -Math.sin(a)));   // higher to the north
       const tops = Hm * (0.022 * Math.sin(a * 83 + ph * 7) + 0.016 * Math.sin(a * 211 + ph) + 0.012 * Math.sin(a * 137 + 1.7));   // the ragged line of tree tops
-      p.setY(i, p.getY(i) > 0 ? Math.max(8, h + tops) : -140);   // the foot goes down into the mist, so that nothing below the land shows the sky
+      p.setY(i, p.getY(i) > 0 ? Math.max(8, h + tops) : foot);
     }
     // A hill is not a flat cut-out: it stands in mist at its foot and darkens toward its crest, and the wood on it has a grain.
-    const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: { uFogD: U.uFogD, uTop: { value: new THREE.Color(0.1, 0.16, 0.13) }, uMist: { value: new THREE.Color(0.6, 0.65, 0.63) }, uH: { value: Hm } },
+    const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: { uSk: { value: foot < -4 ? 1 : 0 }, uK: { value: k }, uFogD: U.uFogD, uTop: { value: new THREE.Color(0.1, 0.16, 0.13) }, uMist: { value: new THREE.Color(0.6, 0.65, 0.63) }, uH: { value: Hm } },
       vertexShader: "varying vec3 vP, vW; void main(){ vP=position; vW=(modelMatrix*vec4(position,1.)).xyz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
-      fragmentShader: NOISE + `varying vec3 vP, vW; uniform vec3 uTop, uMist; uniform float uH, uFogD;
+      fragmentShader: NOISE + `varying vec3 vP, vW; uniform vec3 uTop, uMist; uniform float uH, uFogD, uSk;
         // Noise round the circle: the angle jumps from pi to -pi behind the west, and noise on the raw angle jumps with it (a vertical hard edge).
         float ang(float a,float y,float f){ return fbm3(vec3(cos(a),sin(a),0.)*f+vec3(0.,0.,y)); }
         void main(){ float a=atan(vP.z,vP.x), up=clamp(vP.y/uH,0.,1.);
           float wood=ang(a,vP.y*.22,60.)*.5+ang(a,vP.y*.7,190.)*.5;
           float fg=1.-exp(-pow(uFogD*length(vW-cameraPosition),2.));
-          float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35)*smoothstep(0.,.4,fg);   // mist lies only as far as the scene's own fog says: a hillside close by is wood, not a white curtain            // mist lying in the folds, thickest low down
+          float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35);            // mist lying in the folds, thickest low down
           vec3 c=mix(uTop*(.7+.6*wood),uMist,clamp(veil*.85,0.,1.));
           // Below the land the hill goes on down into the mist: wooded slope, hazed by the distance it is really at (the scene's own fog), not a white curtain.
-          c=mix(c,mix(uTop*(.55+.4*wood),uMist,fg),smoothstep(3.,-6.,vP.y));
+          c=mix(c,mix(uTop*(.55+.4*wood),uMist,fg),smoothstep(3.,-6.,vP.y)*uSk);
           gl_FragColor=vec4(c,1.);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
@@ -102,6 +103,6 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   });
   return {
     update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
-    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
+    setMood(m) { hills.forEach((h) => { const k = h.uniforms.uK.value, L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
   };
 }
