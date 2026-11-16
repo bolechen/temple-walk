@@ -21,6 +21,10 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 2026-11-16 夜：雕刻身体两条路的比较（#80 第一步）
+
+- 结论在 `docs/t00/monk-body-options.md`：推荐先 A（同位置同权重，实测把走路时重合点的分离从约 19 厘米降到 0；坐姿解决不了，因为袍子下面没有腿）后 B（Tripo 加 Auto-Rig Pro，约 $70；卡点是分层），等所有者选定。试验工具 `tools/novice-weld*.mjs`、`tools/novice-retarget-trial.*`，没改 `novice.glb` 和默认身体。
+
 ## 2026-11-16 夜：语言文件归位，语言埋点（最新，先读）
 
 用户的话：「app 目录结构要不要重新组织一下」→「马上要开第二座了，跟 lang 埋点一起做 开 pr」。

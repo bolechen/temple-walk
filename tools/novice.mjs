@@ -12,6 +12,7 @@
 //      code, which was drawn from the same turnaround, is the same height and is bound in the same pose: so the skirt
 //      bones, the sleeves that follow the arm and the legs all keep the weights they were tuned with;
 //   5. packs the three textures as 1024 px WebP.
+// (With NOVICE_WELD=1, between 4 and 5, copies of one point take one weight: a trial for issue #80, see 4b.)
 // (extras.robeColor is the robe's average colour as sRGB hex, for the cloth of the lap he sits on.)
 //
 // The file written holds four meshes named after the parts, each with POSITION, NORMAL, TEXCOORD_0, JOINTS_0 and
@@ -124,6 +125,16 @@ for (let i = 0; i < nv; i++) {
   for (const part of vparts[i]) { n++; const w = weightsFor(P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2], part); let s = 0; for (const v of w.values()) s += v; for (const [b, v] of w) total.set(b, (total.get(b) || 0) + v / s); }
   const top = [...total].sort((a, b) => b[1] - a[1]).slice(0, 4), s = top.reduce((a, [, v]) => a + v, 0);
   top.forEach(([b, v], k) => { J[i * 4 + k] = b; W[i * 4 + k] = v / s; });
+}
+// ---- 4b. (trial, issue #80 route A; off unless NOVICE_WELD=1) one weight for every copy of one point ----
+// Copies of a point on either side of a texture seam took their weights apart and part when he moves. NOVICE_WELD=1
+// gives them the same weights (tools/novice-weld.mjs); NOVICE_WELD=<n> also smooths them n times along the surface.
+// The shipped novice.glb was built without it; tools/novice-weld-trial.mjs measures what it would change.
+if (process.env.NOVICE_WELD) {
+  const { weldWeights } = await import("./novice-weld.mjs");
+  const r = weldWeights(P0, J, W, { smooth: Math.max(0, (+process.env.NOVICE_WELD || 1) - 1), index: I0 });
+  J.set(r.J); W.set(r.W);
+  console.log(`welded weights: ${nv} vertices in ${r.groups} points`);
 }
 
 // ---- 5. write: one mesh per part, one material ----
