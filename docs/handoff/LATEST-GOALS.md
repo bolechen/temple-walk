@@ -57,7 +57,7 @@
 14. **踩进水洼有涟漪。** 「小沙弥踩到水面，没有水花，要不要加」→「开 pr 实现」。实现：#86（没有单独的 issue）。
 15. **结构第三阶段后重拍验收证据**（按第 7 条，新证据进新目录）：https://github.com/bolechen/temple-walk/issues/103 ；连同测帧定几何预算 https://github.com/bolechen/temple-walk/issues/74 。
 
-16. **雕刻身体：先比较两条路。** 所有者看了《小王子：星辰之旅》作者的制作流程（生成适合绑定的模型，Blender 里用 Auto-Rig Pro 绑骨蒙皮），「有 Blender，愿意花一定的费用」。先交一页比较（改权重，或重新生成并绑定），购买前列出金额由所有者点头，选定后再做；走重新生成那条路时坐姿也要不撕裂。目标和验收：https://github.com/bolechen/temple-walk/issues/80 。场景仍由代码按法式生成，不改用生成资产。
+16. **雕刻身体：先比较两条路。** 所有者看了《小王子：星辰之旅》作者的制作流程（生成适合绑定的模型，Blender 里用 Auto-Rig Pro 绑骨蒙皮），「有 Blender，愿意花一定的费用」「有必要的时候，也可以用 Tripo 和付费 Auto-Rig Pro」。先交一页比较（改权重，或重新生成并绑定），购买前列出金额由所有者点头，选定后再做；走重新生成那条路时坐姿也要不撕裂。目标和验收：https://github.com/bolechen/temple-walk/issues/80 。场景仍由代码按法式生成，不改用生成资产。
 
 ## 协作与自动同步
 
