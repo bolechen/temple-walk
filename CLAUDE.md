@@ -243,6 +243,9 @@ toe direction); `trail.js` presses the sole into a render target that follows hi
 red, so a roof does not take the prints made under its eave. Every shader that lays snow reads it through `TRAIL`
 (`procMat`'s snow, the paving in `ground.js`); falling snow fills the prints in about two minutes. Indoors nothing is
 stamped and the square stays put. `__trail()` reports it (`__trail(false)`: the next picture without the prints).
+No snow lies under a roof (`shelter.js`): `walk.roofs` is baked when the place is built into a map seen from above
+(each eave footprint and the foot of its beams, the lowest and highest where roofs overlap), which `procMat`'s snow and
+`underfoot`'s `roofed` read; only a strip just inside the eaves takes blown snow. `tests/unit/shelter.test.mjs` holds it.
 
 **The visit as a pilgrimage (`journey.js`, `game.js`, `goshuin.js`).** `journey.js` is book-keeping only (seven seals,
 the bell's three strokes, the library's line, storage under `yunjing.journey.v1`) and is unit-tested in Node.

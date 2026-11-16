@@ -158,11 +158,12 @@ export function puddleAt(x, z, wet) {
 
 // What a shoe coming down at (x, z) sounds like: "snow", "stone", "wet" or "puddle". `floor` is the walker's
 // (`floorAt`): a hall's floor is dry stone; snow lies everywhere outdoors except in the lane swept down the middle of
-// every court (snowfall.js, as the paving shader draws it; the bank of swept snow beside it is snow); a roofed platform stays dry in rain;
+// every court (snowfall.js, as the paving shader draws it; the bank of swept snow beside it is snow) and under a roof (`roofed`,
+// shelter.js); a roofed platform stays dry in rain;
 // the open stone of the courts, the approach and the terraces is as wet as the mood says, and the courts hold puddles.
-export function underfoot({ x, z, y, floor, snow = 0, wet = 0 }) {
+export function underfoot({ x, z, y, floor, snow = 0, wet = 0, roofed = false }) {
   if (floor === "room") return "stone";
-  if (snow > 0.01) return floor === "paving" && snowAt(x, z).lane ? "stone" : "snow";
+  if (snow > 0.01 && !roofed) return floor === "paving" && snowAt(x, z).lane ? "stone" : "snow";
   if (floor === "stone" || floor === "wood") return "stone";
   if (floor === "paving" && puddleAt(x, z, wet) > 0.5) return "puddle";
   return wet > 0.4 ? "wet" : "stone";   // spring and summer rain; autumn's stone has dried
