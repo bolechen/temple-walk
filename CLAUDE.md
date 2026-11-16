@@ -90,7 +90,7 @@ Chromium on Vulkan, and brings back `tools/out/gpu/<run>/report.json` and PNGs. 
 to an account that may run Jobs. Each measurement reports frames per second and, more usefully, `cost`: milliseconds
 to draw one frame with the card made to finish it (`window.__cost()`), which leaves out the headless browser's own
 presenting (about 10 ms a frame there). `?off=site,bamboo,reflect,bloom,…` switches parts of the scene off so their
-cost can be measured one at a time; `window.__census()` says what each part weighs in triangles. Measure before and
+cost can be measured one at a time; `window.__census()` says what each part weighs in triangles. Each run stages its site under `runs/<run>/` in the bucket (two sessions syncing the same folder once overwrote each other's site mid-job), and `report.json`'s `site` says whose code drew the pictures: the commit (`+dirty` if `app/` had uncommitted changes), the page's bundled entry and one SHA-256 over every file sent. Measure before and
 after anything that adds geometry or a pass, and write the numbers into `docs/HANDOFF.md`.
 
 **Tests are part of every change.** The unit tests in `tests/unit/` build the real plan in Node (three.js with a
