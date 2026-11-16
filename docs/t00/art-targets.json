@@ -4,7 +4,7 @@
  "note": "[目标值, 允许偏差]；L* 和 a*/b* 是 CIE Lab（D65）",
  "views": {
   "01-bamboo": {
-   "view": "halfway",
+   "view": "art1",
    "season": "summer",
    "time": "dawn",
    "eye": "first",
@@ -60,7 +60,7 @@
    }
   },
   "02-gate": {
-   "view": "gate",
+   "view": "art2",
    "season": "autumn",
    "time": "dusk",
    "eye": "first",
@@ -116,7 +116,7 @@
    }
   },
   "03-court": {
-   "view": "court",
+   "view": "art3",
    "season": "autumn",
    "time": "dusk",
    "eye": "third",
@@ -172,7 +172,7 @@
    }
   },
   "04-tea": {
-   "view": "teatable",
+   "view": "art4",
    "season": "autumn",
    "time": "dusk",
    "eye": "first",
@@ -228,7 +228,7 @@
    }
   },
   "05-terrace": {
-   "view": "guanyin",
+   "view": "art5",
    "season": "summer",
    "time": "dusk",
    "eye": "first",
@@ -284,7 +284,7 @@
    }
   },
   "06-summit": {
-   "view": "lookback",
+   "view": "art6",
    "season": "autumn",
    "time": "dawn",
    "eye": "first",
