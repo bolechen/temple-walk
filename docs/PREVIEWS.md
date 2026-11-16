@@ -1,6 +1,6 @@
 # PR 预览
 
-同一仓库发起的 PR，每次推送（只改文档的也算）通过检查后都会部署一次，得到一个独立的预览地址，方便合并前在 Mac 和手机上看画面。正式站点仍是 GitHub Pages（<https://temple.rushiwowen.co/>），预览不影响它。
+同一仓库发起的 PR，每次推送（只改文档的也算）通过检查后都会部署一次，得到一个独立的预览地址，方便合并前在 Mac 和手机上看画面。正式站点是 Cloudflare Worker（<https://temple.rushiwowen.co/>），预览不影响它。
 
 ## 地址
 
@@ -9,6 +9,10 @@ PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR �
 - 最新地址 `https://pr-<编号>-temple-walk-preview.bole-chen.workers.dev`：始终是这个 PR 最近一次成功部署的版本。
 - 本提交固定地址 `https://<部署号>-temple-walk-preview.bole-chen.workers.dev`：只对应一个提交，之后推送也不会变。截图、反馈问题和评审请用这个地址，并写上完整提交号。
 - 六个验收机位：按 `docs/t00/camera-manifest.json` 生成的固定机位链接（J01 夏·昼），带 `debug=0`，看画面时不出调试面板。
+
+- 评审直达：缺印结尾、七印圆满结尾、冬天结尾，以及撞钟、上香、吃茶、得句、观水、燃灯、静坐，点开就是那一刻（`?seals=`、`?at=`、`?play=`，见下）。
+
+**直达参数**（本地 `pnpm dev` 与预览可用，正式站忽略）：`?seals=all|none|bell,tea…` 只在这一页用一本临时朱印帐，不读也不写本机存的；`?at=<地点>` 跳过标题，直接站到那里（bell、incense、tea、sutra、well、lamp、sit）；`?play=ending` 放到山顶蒲团直接播结尾，`?play=<地点>` 到那里直接开始那件事。可以和 `?season=`、`?time=` 组合。用它们看到的效果只算诊断证据，正式验收仍要按正常速度、真实操作走一遍。
 
 预览地址默认打开调试面板（`app/src/debug.js`：位置、帧耗、季节时辰、机位跳转、各部分开关），反引号键收起或展开，地址加 `?debug=0` 则不打开。本地 `pnpm dev` 也默认打开。正式站点不加载它。
 

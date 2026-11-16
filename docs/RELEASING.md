@@ -30,6 +30,6 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 
 ## 与试玩部署的关系
 
-GitHub Pages仍按现有`pages.yml`在`app/**`改变时验证并部署`main`。GitHub Release是命名的源码版本；试玩网址持续跟随已通过部署验证的主线，不保证与最新发布标签完全相同。仅更新版本文件和日志不会强行重新部署游戏。
+`pages.yml`仍在`app/**`改变时验证`main`，通过后把`dist/`发布到 Cloudflare Worker `temple-walk`。GitHub Release是命名的源码版本；试玩网址持续跟随已通过部署验证的主线，不保证与最新发布标签完全相同。仅更新版本文件和日志不会强行重新部署游戏。
 
 官方说明：[Release Please Action](https://github.com/googleapis/release-please-action)、[manifest配置与初始化](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)。

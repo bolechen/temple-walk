@@ -637,6 +637,27 @@ const scenarios = {
   } },
   // A pull request's preview opens with the debug panel showing, and ?debug=0 keeps it shut. The preview's own name
   // (<deployment>-temple-walk-preview.<account>.workers.dev) is pointed at the test server for the browser alone.
+  // The workbench on a preview: ?seals= is a book for this visit only, ?at= stands him at a place, ?play=ending plays the
+  // close there. The published page (here, the plain test host) ignores them all and keeps the visitor's own book.
+  bench: { tier: 2, async run(b, base) {
+    const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
+    const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
+    try {
+      let t = await open(pb, host, "q=low&fast=1&debug=0&seals=all&at=tea" + BARE, { enter: false });
+      await t.until(async () => (await t.journey()).near === "tea", 120000, "?at=tea did not stand him at the tea table");
+      let j = await t.journey(); expect(j.count === 7 && j.entered, "?seals=all should give a full book and step in: " + JSON.stringify({ count: j.count, entered: j.entered }));
+      expect(!(await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1"))), "?seals= must not write the visitor's own book");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      t = await open(pb, host, "q=low&fast=1&debug=0&seals=bell&play=ending" + BARE, { enter: false });
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().closing || window.__rites().ended > 0)), 120000, "?play=ending did not play the close");
+      expect((await t.journey()).count === 1, "the close should play over the book that was asked for");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    } finally { await pb.close(); }
+    const t = await open(b, base, "q=low&fast=1&seals=all&at=tea&cam=0,30,0,0" + BARE);
+    await t.frames(6); const j = await t.journey();
+    expect(j.count === 0 && j.near !== "tea", "the published page should ignore ?seals= and ?at=: " + JSON.stringify({ count: j.count, near: j.near }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   "preview-debug": { tier: 2, async run(b, base) {
     const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
     const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });

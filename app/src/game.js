@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { asset } from "./assets.js";
 import { workIn } from "./works-local.js";
-import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
+import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell } from "./audio.js";
 import { createRites } from "./rites.js";
@@ -31,7 +31,13 @@ export function createGame(y) {
   const Q = new URLSearchParams(location.search), places = y.site.places, fast = Q.has("fast") ? 0.12 : 1;
   // `yunjing.ending.v1` was the page's own note that the close had been seen, before the book kept it (journey.closed).
   const ENDED = "yunjing.ending.v1", seenBefore = (() => { try { return localStorage.getItem(ENDED) === "1"; } catch { return false; } })();
-  const journey = createJourney(browserStore(), undefined, { closedBefore: seenBefore });
+  // The workbench (the dev server and a pull request's preview, as for the debug panel) may open straight onto a moment:
+  // ?seals=all|none|bell,tea… a book for this visit only, kept in memory, never stored; ?at=<place> stands him there;
+  // ?play=ending|<observance> begins it there. The published site ignores all three.
+  const BENCH = import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname);
+  const seeded = BENCH ? bookFrom(Q.get("seals")) : null;
+  const memoryStore = (v) => ({ get: () => v, set: (x) => { v = x; } });
+  const journey = createJourney(seeded ? memoryStore(seeded) : browserStore(), undefined, { closedBefore: seeded ? false : seenBefore });
   if (seenBefore) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
@@ -322,7 +328,7 @@ export function createGame(y) {
   // A first visit is offered only 入山. A visitor who has a seal, or left from somewhere up the mountain, is offered to
   // go on (接着走) from where they were, or to begin again (从头走起, asked twice: it empties the book).
   const named = SEALS.filter((d) => places[d.id] && !places[d.id].room).map((d) => ({ place: d.place, at: places[d.id].at }));
-  const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter"));   // a tool or a test that names its own place is left where it asked to be
+  const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter") || (BENCH && (Q.has("at") || Q.has("play") || Q.has("seals"))));   // a tool or a test that names its own place is left where it asked to be
   let left = free ? readPlace(localStorage) : null, kept = 0;
   if (left && y.walker.blocked(left.x, left.z)) left = null;
   const offer = () => {
@@ -350,6 +356,21 @@ export function createGame(y) {
   };
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
   refresh(); rites.restore({ incenseAt: (() => { try { return Number(localStorage.getItem(INCENSE)) || 0; } catch { return 0; } })() });
+
+  // ---- The workbench: straight to a place, and straight into what happens there (see BENCH above) ----
+  const goTo = BENCH ? Q.get("play") === "ending" ? "sit" : Q.get("at") || Q.get("play") : null;
+  if (goTo && places[goTo]) (async () => {
+    const p = places[goTo];
+    while (document.body.dataset.ready !== "1") await wait(0.2);
+    enter();
+    await y.travel(p.at[0], p.at[1], Math.PI - p.face, p.room || null);
+    await wait(0.6);
+    const play = Q.get("play");
+    if (play === "ending") {   // he sits on the summit mat, and the close plays
+      const s = y.site.seats.find((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3);
+      if (s) await sitDown(s); await wait(1); finale();
+    } else if (play && SEAL[play]) begin(play);
+  })();
 
   // For the tests.
   window.__journey = () => { const n = journey.next(); return { look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };

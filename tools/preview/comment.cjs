@@ -11,6 +11,13 @@ function previewRecord(file) {
   return lines.filter((r) => r && r.type === "preview").pop() || null;
 }
 
+// Straight to a moment, for review (app/src/game.js's workbench: ?seals=, ?at=, ?play=), on this commit's preview.
+const BENCH = [["缺印结尾", "seals=bell,tea&play=ending"], ["七印圆满结尾", "seals=all&play=ending"], ["冬天结尾", "seals=all&play=ending&season=winter"],
+  ["撞钟", "play=bell"], ["上香", "play=incense"], ["吃茶", "play=tea"], ["得句", "play=sutra"], ["观水", "play=well"], ["燃灯", "play=lamp"], ["静坐", "seals=none&play=sit"]];
+function benchLinks(base) {
+  return BENCH.map(([name, q]) => `[${name}](${base.replace(/\/$/, "")}/?${q}&debug=0)`).join(" · ");
+}
+
 function cameraLinks(base, manifest) {
   if (!fs.existsSync(manifest)) return "";
   const { cameras = [] } = JSON.parse(fs.readFileSync(manifest, "utf8"));
@@ -28,6 +35,7 @@ function body({ state, sha, run, record, previous, manifest }) {
       `| 最新地址（随推送更新） | ${latest} |`,
       `| 本提交固定地址 | ${fixed} |`, "",
       `六个验收机位（本提交，J01 夏·昼）：${cameraLinks(fixed, manifest)}`, "",
+      `评审直达（本提交，不读不写本机朱印帐，属诊断证据）：${benchLinks(fixed)}`, "",
       `由[这次运行](${run})部署：与检查、单测、构建和 \`boot\` 场景同一次运行，部署的是同一份 \`dist/\`。预览只用来看效果，不是验收结论；反馈问题时请附上固定地址或提交号。`].join("\n");
   }
   if (state === "failure") {
