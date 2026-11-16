@@ -311,6 +311,11 @@ const scenarios = {
     await t.page.waitForTimeout(6000); await low(); expect((await t.journey()).strikes === 1 && (await R()).bell.pulls === 1, "the bell rang again without a press");
     for (const n of [2, 3]) { await seen("the rope never came back to hand", () => window.__rites().bell.ready); await t.page.click("#act"); await t.until(async () => { await low(); return (await t.journey()).strikes === n; }, 30000, `stroke ${n} did not sound`); }
     await t.until(async () => (await t.journey()).seals.bell > 0, 30000, "three strokes earned no seal");
+    // Two presses one on the other are one pull: the second comes while the log is still being drawn back.
+    await seen("the rope never came back to hand", () => window.__rites().bell.ready);
+    const p0 = (await R()).bell.pulls; await t.page.evaluate(() => { const b = document.getElementById("act"); b.click(); b.click(); });
+    await t.until(async () => (await R()).bell.pulls > p0, 30000, "the pull after the seal did not ring"); await t.page.waitForTimeout(3000);
+    expect((await R()).bell.pulls === p0 + 1, "two presses at once rang the bell twice");
     let r = await R(); expect(lo >= -0.181 && r.bell.log >= -0.181, "the log went into the bell: " + lo);
     expect((await t.journey()).rite === "bell" && r.bell.grip > 0.9, "he should still hold the rope after the third stroke");
     await t.page.keyboard.press("Escape");
