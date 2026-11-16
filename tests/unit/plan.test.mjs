@@ -146,3 +146,13 @@ test("heights: the courts are level, the stairs climb evenly", () => {
     for (let t = 0.005; t <= 0.995; t += 0.005) { const x = r.low[0] + (r.high[0] - r.low[0]) * t, z = r.low[1] + (r.high[1] - r.low[1]) * t; if (x <= r.x0 || x >= r.x1 || z <= r.z0 || z >= r.z1) continue; const h = walker.heightAt(x, z); if (last !== null) assert.ok(h >= last - 1e-6 && h - last < 0.2, `a stair that does not climb a step at a time near (${x.toFixed(1)}, ${z.toFixed(1)}): ${last.toFixed(2)} to ${h.toFixed(2)}`); last = h; }
   }
 });
+
+test("the dragon well's arch stands in front of the terrace wall and under its edge, so none of it rises through the parapet above", () => {
+  const [, T2] = LEVELS; site.root.updateMatrixWorld(true);
+  for (const name of ["well-niche", "well-board"]) {
+    const o = site.root.getObjectByName(name); assert.ok(o, `${name} is in the plan`);
+    const b = new THREE.Box3().setFromObject(o);
+    assert.ok(b.max.y <= T2.y - 0.05, `${name} reaches ${b.max.y.toFixed(2)} m, above the terrace behind it (${T2.y} m)`);
+    assert.ok(b.min.z >= T2.zS - 0.01, `${name} reaches ${(T2.zS - b.min.z).toFixed(2)} m back into the terrace wall`);
+  }
+});
