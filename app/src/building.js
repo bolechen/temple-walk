@@ -451,7 +451,11 @@ export function buildHall(M, opts) {
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
     const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq), zz = Z + (p.brackets ? 1.3 : 0.45);
-    m.position.set(0, Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08), zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
+    let top = Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08) + m.userData.height / 2;
+    // Over a balcony that is walked round the board hangs over the walk: it is cut smaller, so that its foot is a
+    // grown man's height over the floor and a child at the door looks out under it, not into it.
+    if (p.loft && top - m.userData.height < p.platH + 2.0) { const k = Math.max(0.5, (top - p.platH - 2.0) / m.userData.height); m.scale.setScalar(k); m.userData.height *= k; }
+    m.position.set(0, top - m.userData.height / 2, zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
     g.add(m);
   }
 

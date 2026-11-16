@@ -468,9 +468,9 @@ export function buildSite(M) {
     // the summit. Each is drawn in the season and hour its picture shows, which the address gives, not the view.
     art1: [21.4, 78.7, -1.4, 0.2], art2: [2.5, 53.8, -0.18, 0.3], art3: [0, 29, 0, 0.1], art4: [-9.6, 25.0, -0.6, 0.08],
     art5: [0, T2.zS + 5, 0, 0.22], art6: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
-    // Up on the pavilion's top storey, a step east of its door (a post of the railing stands at neither), looking back
+    // Up on the pavilion's top storey, at its door on the axis (the railing's middle bay is open there), looking back
     // south over every roof below (issue #101). A view up on a balcony is named in `viewUp`.
-    loft: [0.8, topZ + 3.4 + (0.51 + LOFT.out - 0.64) / 2, Math.PI, -0.22],
+    loft: [0, topZ + 3.4 + (0.51 + LOFT.out - 0.64) / 2, Math.PI, -0.22],
   };
   const viewUp = { loft: "lingxiao" };
 
