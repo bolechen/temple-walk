@@ -136,6 +136,7 @@
     "「不画场景」的场景不再覆盖渲染：渲染由 boot、halls、snow、moods、views、photo、photo-ui、menu、parts、rites、stairs、drop 覆盖；四台并行的每周流程尚未在 GitHub 上实际跑过一次"
   ],
   "evidence": [
+    "GPU（Tesla T4，court 高档 1920×1080，一次，run 20261116-121313）：第三阶段 9.38 ms/帧（第二阶段 9.81）；低档 390×844：4.56 ms",
     "34f2ca2：structure.test.mjs 新增两项改前失败、改后通过；pnpm test 266/266；pnpm run edges 0 处超限（平坐白壁改动前的同一几何上跑的）",
     "34f2ca2：docs/t00/evidence/structure/phase3-*-after.jpg",
     "GPU（Tesla T4，court 高档 1920×1080，tools/gpu-render.sh，各一次）：第一阶段 11.09 ms/帧（run 20261116-113637），第二阶段 9.81 ms/帧（run 20261116-113957）；低档 390×844：5.43 → 4.92 ms",
@@ -312,7 +313,6 @@
     "structure_phase3": "pnpm test 266/266；check、typecheck 通过；edges 0 处超限；e2e:smoke 31/31"
   },
   "unverified": [
-    "第三阶段没有跑 GPU 帧时间（三角面数比第二阶段约 +3%，绘制次数不变）",
     "第三阶段的图是软件渲染；山门的验收证据没有替换",
     "第二阶段没有跑 GPU 帧时间（三角面数 +1.3%，绘制次数不变）",
     "GPU 帧时间每个阶段只跑了一次，没有重复取平均；结尾最后一格的余量是在截图上目测量的",
