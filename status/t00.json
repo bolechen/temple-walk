@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-16T15:37:58.929Z",
+  "generated_at": "2026-11-16T18:38:10.217Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "67f1d27aa85c8b35041f78c861447a2cc6edbcf8",
-    "url": "https://github.com/bolechen/temple-walk/commit/67f1d27aa85c8b35041f78c861447a2cc6edbcf8"
+    "sha": "ce61d3e13b98111ce310a4334130fe9c666c6783",
+    "url": "https://github.com/bolechen/temple-walk/commit/ce61d3e13b98111ce310a4334130fe9c666c6783"
   },
   "delivery": {
     "analytics": {
@@ -99,7 +99,8 @@
       "tests/unit/edges.test.mjs：跳跃测试（两张茶案、至少 24 个方向、走与 Shift、每次落地再跳，逐帧不进茶案与身位，落地都在前廊 0.45 米）；膝下测试（草垫、门槛、蒲团）",
       "tests/e2e/run.cjs jump：三段真实按键（W、Shift+W、空格）在茶案前起跳，逐帧取样",
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
-      "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
+      "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令",
+      "docs：景观评审 docs/t00/landscape-review.md（#112，只评审，没有改 app/），后续 issue #114–#119；tools/gpu/job.cjs 可拍任意 ?cam= 地址"
     ],
     "known_issues": [
       "STR3-01、02 未经评审方复核",
@@ -192,7 +193,8 @@
       "tests/unit/steps.test.mjs",
       "tests/e2e/run.cjs: sound / steps / snow / music / rites",
       "docs/t00/SOURCES.md",
-      "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」"
+      "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」",
+      "景观评审：锁定 2d1c7d7e2244fd2d876177b30714962634614ec6，T4（ANGLE/Vulkan）五次运行 20261116-151549/151558/151604/152616/152646 及结尾补拍，图在 docs/t00/evidence/landscape/review-2026-11-16-2d1c7d7/，0 个页面错误"
     ],
     "domain_binding": {
       "date": "2026-11-15",
@@ -341,7 +343,8 @@
       "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
       "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
       "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
-      "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机"
+      "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机",
+      "景观评审的面数与帧时间是估算，未实测；手机未测"
     ],
     "hosting": {
       "provider": "Cloudflare Workers",
@@ -354,25 +357,25 @@
         "https://temple.rushiwowen.co/ 响应 server: cloudflare"
       ]
     },
-    "record_commit": "d623db6dcd74ac6ae8423801f86d8aee82d18be0",
+    "record_commit": "1c389d3325077ce4986b45d15d838ccd3b4a1219",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43898207704,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43898207704",
+    "status": "pending",
+    "conclusion": null,
+    "run_id": 43930840744,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43930840744",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "skipped"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "67f1d27aa85c8b35041f78c861447a2cc6edbcf8",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43898207704"
