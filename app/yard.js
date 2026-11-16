@@ -23,7 +23,7 @@ import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
-import { followEye, createFollow } from "./src/eye.js";
+import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
 import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
@@ -192,6 +192,7 @@ const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
 const follow = createFollow();
+const LOOK_EASE = 0.06, look = { yaw, pitch, vy: 0, vp: 0 };   // the way the view looks this frame, coming round after yaw and pitch
 const WALK = { up: 7, down: 8 }, pace = { v: 0, dir: [0, -1] }, bob = { phase: 0, amp: 0 };   // how fast he gathers and loses speed (m/s²); his speed and the way he goes
 if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 
@@ -221,15 +222,29 @@ const zoom = (k) => {
   const near = reachWant <= 2.6 + 1e-6; reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11);
   if (k < 1 && near) { if ((nudge -= Math.log(k)) > 0.3) { nudge = 0; setView("first"); } } else nudge = 0;
 };
-// With a mouse the view is held the way such games hold it: a click on the picture takes the pointer, moving the
-// mouse looks round, Esc lets go. A touch still drags to look and taps to walk.
+// With a mouse the view turns while a button is held and dragged, as on most pages that show a place in three
+// dimensions, and a click walks there or strikes the bell, as a tap does. Holding the pointer the way first-person
+// games hold it (a click takes it, any movement of the mouse looks round, Esc lets go) is a setting, `lock`: by
+// default it was a surprise to visitors on a web page, and every reach for a button swung the view (2026-11-16).
+// How fast: a drag moves the picture a little faster than the pointer itself moves, 1.6 times for a mouse and 2.2
+// for a finger, which has less room; it was 0.24° a pixel, five times the pointer. A held mouse turns 0.09° a count,
+// about 12 cm of desk to turn right round at 800 dpi, near 《小王子》's 0.11° a pixel (it was 0.15°, 7.7 cm). The
+// counts are asked for unaccelerated where the browser can, and a single report larger than any hand gives (a
+// browser re-centring the hidden pointer) is dropped. (docs/t00/KNOWN-ISSUES.md, 镜头乱飘.)
+const LOOK = { yaw: 0.0016, pitch: 0.0014, spike: 250, mouse: 1.6, touch: 2.2 };
+const dragRate = (type) => THREE.MathUtils.degToRad(camera.fov) / Math.max(240, canvas.clientHeight || 0) * (type === "mouse" ? LOOK.mouse : LOOK.touch);
 const locked = () => document.pointerLockElement === canvas;
+const holdPointer = () => {
+  const plain = () => { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} };
+  try { const p = canvas.requestPointerLock?.({ unadjustedMovement: true }); if (p && p.catch) p.catch(plain); } catch { plain(); }
+};
 const joy = { x: 0, y: 0 };
 document.addEventListener("pointerlockchange", () => { document.body.classList.toggle("held", locked()); if (locked()) hints.say.held(); });
 document.addEventListener("mousemove", (e) => {
   if (!locked() || photo.on) return; const orbit = view === "third";   // with the camera raised, the view is held still
   const S = settings.get();   // in his own eyes and under a roof he may look up as far as the ceiling
-  yaw += e.movementX * 0.0026 * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);
+  if (Math.abs(e.movementX) > LOOK.spike || Math.abs(e.movementY) > LOOK.spike) return;
+  yaw += e.movementX * LOOK.yaw * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * LOOK.pitch * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);
 });
 canvas.addEventListener("pointerdown", (e) => {
   touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing";
@@ -246,7 +261,8 @@ canvas.addEventListener("pointermove", (e) => {
   if (photo.on) { down.moved = true; return; }                                             // the camera does not turn: a drag is only not a click
   const orbit = view === "third";                                                          // round him, or from his eyes
   const S = settings.get();
-  down.moved = true; yaw += dx * 0.0042 * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * 0.0042 * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
+  const k = dragRate(e.pointerType);
+  down.moved = true; yaw += dx * k * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * k * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
@@ -267,8 +283,8 @@ canvas.addEventListener("pointerup", (e) => {
   canvas.style.cursor = photo.on ? "crosshair" : "grab"; lift(e);
   // With the camera raised, the left button on the picture is the shutter.
   if (photo.on) { if (e.pointerType === "mouse" && e.button === 0 && down && !down.moved && ui.top() === "photo" && !$("shutter").disabled) $("shutter").click(); down = null; return; }
-  if (e.pointerType === "mouse" && down && !down.moved) {
-    if (!locked()) { try { canvas.requestPointerLock?.()?.catch?.(() => {}); } catch {} hear(); }
+  if (e.pointerType === "mouse" && down && !down.moved && (locked() || settings.get().lock)) {
+    if (!locked()) { holdPointer(); hear(); }
     else {   // held: a click strikes what the middle of the picture rests on
       ray.setFromCamera(new THREE.Vector2(0, 0), camera); const hit = ray.intersectObjects(site.strikers.map((s) => s.mesh), false)[0];
       if (hit && hit.distance < 32) { const s = site.strikers.find((k) => k.mesh === hit.object); strike(s.kind, Math.min(1, 9 / Math.max(6, hit.distance) + 0.25)); s.t0 = riteNow(); s.lead = 0; window.dispatchEvent(new CustomEvent("struck", { detail: s.kind })); }
@@ -484,22 +500,27 @@ function frame(now) {
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
-  const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp;
+  // From behind him the view comes round a moment after the hand (0.06 s, as a third-person camera's axis eases in
+  // and out), so a jerk of the mouse is not a jerk of the whole place; from his own eyes it turns with the hand.
+  if (view === "first" || follow.fresh || cine) { look.yaw = yaw; look.pitch = pitch; look.vy = look.vp = 0; }
+  else { [look.yaw, look.vy] = damp(look.yaw, yaw, look.vy, LOOK_EASE, dt); [look.pitch, look.vp] = damp(look.pitch, pitch, look.vp, LOOK_EASE, dt); }
   // From his own eyes the view dips a little with each step he takes, and only as much as he is walking (after
   // Saltline: the bob counted in strides and its depth eased in and out with the pace, never switched on and off).
   bob.phase += moved / 0.55; bob.amp += ((still || aloft ? 0 : Math.min(1, speedNow / 2.1)) - bob.amp) * (1 - Math.exp(-dt / 0.15));
   if (view === "first") camera.position.set(pos.x, eyeY + (stage && (stage.pose === "sit" || stage.pose === "chair") ? (stage.lift || 0) + 0.68 : EYE) - (1 - Math.cos(bob.phase * Math.PI * 2)) * 0.006 * bob.amp, pos.z);
   else {
-    const rx = Math.cos(yaw), rz = Math.sin(yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
+    const rx = Math.cos(look.yaw), rz = Math.sin(look.yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const eye = followEye(walker, { x: pos.x, z: pos.z, foot: footY, eyeY, yaw, pitch, side: sideNow, reach: reachWant });
-    camera.position.fromArray(follow.step(dt, eye));
+    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant };
+    // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
+    const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
+    camera.position.fromArray(follow.step(dt, followEye(walker, at), ahead));
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
     monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
     if (monkHidden && !photo.on) monk.group.visible = false;
   }
-  camera.rotation.set(pitch, -yaw, 0, "YXZ");
+  camera.rotation.set(look.pitch, -look.yaw, 0, "YXZ");
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
   if (cine) { cine(camera, dt); monk.group.visible = true; }
   camera.updateMatrixWorld();
@@ -767,6 +788,7 @@ function openMenu(open) {
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
   $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? "开" : "关";
+  $("setLock").setAttribute("aria-pressed", String(S.lock)); $("setLock").textContent = S.lock ? "开" : "关";
   menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
@@ -777,6 +799,7 @@ function openMenu(open) {
   $("setFov").addEventListener("input", (e) => { settings.set("fov", +/** @type {HTMLInputElement} */ (e.target).value); lens(); });
   for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +/** @type {HTMLInputElement} */ (e.target).value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
+  on("setLock", () => { set("lock", !settings.get().lock); if (!settings.get().lock) document.exitPointerLock?.(); });
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
