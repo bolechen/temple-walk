@@ -90,22 +90,22 @@ test("a roof is folded, not bent: straight from purlin to purlin, each fall stee
 // walk round stands on a balcony of its own: a ring of bracket sets a step shorter than the storey's, a board hung
 // round its edge with the railing inside it, and the skirt roof below coming in under it.
 // By the owner's decision (2026-11-16) the Lingxiao pavilion keeps its mass: its second storey answers for its four
-// corner columns only, the rest carried on the balcony's beams, and its top storey, a ring further in than any line
-// of the second, for none.
+// corner columns only, the rest carried on the balcony's beams. Its top storey answers for every column: the second
+// storey is set out in five bays so that each of them has a line under it.
 const pairs = site.buildings.map((b, i) => [b, site.buildings[i + 1]]).filter(([lo]) => lo.frame && lo.frame.under);
 const on = (line, v) => line.some((u) => Math.abs(u - v) < 1e-6);
 test("every column of an upper storey stands over a column of the storey below", () => {
   const wrong = []; let lingxiao = 0;
   for (const [lo, up] of pairs) {
-    const X = Math.max(...up.frame.xs), Z = Math.max(...up.frame.zs), tower = lo.name === "凌霄阁" || (up.name === "凌霄阁" && up.frame.storey === 2);
+    const X = Math.max(...up.frame.xs), Z = Math.max(...up.frame.zs), second = lo.name === "凌霄阁" && up.frame.storey === 1;
     for (const [x, z] of up.frame.cols) {
       const corner = Math.abs(Math.abs(x) - X) < 1e-6 && Math.abs(Math.abs(z) - Z) < 1e-6;
-      if (tower && (up.frame.storey === 2 || !corner)) { lingxiao++; continue; }
+      if (second && !corner) { lingxiao++; continue; }
       if (!on(lo.frame.xs, x) || !on(lo.frame.zs, z)) wrong.push(`${up.name || lo.name} storey ${up.frame.storey + 1}: the column at ${x}, ${z} has nothing under it`);
     }
   }
   assert.deepEqual(wrong, []);
-  assert.equal(lingxiao, 8 + 12, "only the Lingxiao pavilion's second storey (but for its corners) and its third are let off");
+  assert.equal(lingxiao, 16, "only the Lingxiao pavilion's second storey, but for its corners, is let off");
 });
 const DOUBLE_EAVED = new Set(["释迦宝殿", "御碑亭"]);   // one hall under two roofs: no floor between them, so no balcony
 test("a storey over a skirt roof stands on a balcony: bracket sets, a board round its edge, the railing inside, the skirt under it", () => {
@@ -120,4 +120,10 @@ test("a storey over a skirt roof stands on a balcony: bracket sets, a board roun
     const skirt = lo.frame.roof.at(lo.frame.roof.EZ - up.frame.zs[0]);
     if (!(skirt <= g.bottom + 1e-6)) wrong.push(`${who}: the skirt roof (${skirt.toFixed(2)}) comes in above the foot of the balcony's sets (${g.bottom.toFixed(2)})`); }
   assert.deepEqual(wrong, []); assert.equal(n, 4, "the gate, the library and the Lingxiao pavilion's two upper storeys");
+});
+
+test("every column of the Lingxiao pavilion's top storey stands on a line of columns of the second", () => {
+  const i = site.buildings.findIndex((b) => b.name === "凌霄阁" && b.frame?.storey === 2), up = site.buildings[i].frame, lo = site.buildings[i - 1].frame;
+  const hanging = up.cols.filter(([x, z]) => !on(lo.xs, x) || !on(lo.zs, z));
+  assert.equal(up.cols.length, 12); assert.deepEqual(hanging, [], `${hanging.length} of its ${up.cols.length} columns stand over nothing`);
 });
