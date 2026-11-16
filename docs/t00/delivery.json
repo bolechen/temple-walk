@@ -129,6 +129,7 @@
     "「不画场景」的场景不再覆盖渲染：渲染由 boot、halls、snow、moods、views、photo、photo-ui、menu、parts、rites、stairs、drop 覆盖；四台并行的每周流程尚未在 GitHub 上实际跑过一次"
   ],
   "evidence": [
+    "Issue #71：1c06e75551133f94e438ef5428d4f7b61449d4dd（合入 main 后）：e2e smoke 32 个场景全部通过（含 director、lang、bench、preview-debug），本地 SwiftShader；PR #87 的 Pages verify 在同一提交通过",
     "Issue #71：七处机位图 docs/t00/evidence/director-71/shot-*.jpg（六张 T4 出图，上香为本地 SwiftShader 出图）",
     "Issue #71：T4 测帧报告 docs/t00/evidence/director-71/gpu-t4/（燃灯、观水、闻钟、吃茶、静坐、得句补测；表见 HANDOFF.md）",
     "Issue #71：正常速度真实按键录像 docs/t00/evidence/director-71/play-480x300/（director.webm、截图、log.json；__pose 标为 diagnostic）",
@@ -291,7 +292,7 @@
     "close_with_deeds": "正常速度、真键盘（本地 SwiftShader，main 合入后）：存档预置钟三下、吃茶、观水、得句「看脚下。」、612 步（诊断性预置），标题出现「接着走」，点它入山，__pose 到蒲团旁（诊断），按 E 静坐。结尾实际说的五句：从竹林到这里，走了 612 步。／钟楼的钟，撞过三下，茶寮那碗茶喝到了底，龙井边等过三声滴水。／藏经楼给的那一句，还记着：「看脚下。」／山门之外，还有一条没走过的路。／远处的山里，好像也有一声钟，应了你那几下。随后朱印帐：「帐上还空着二处。穿过大院，登上台阶，进大雄宝殿上一炷香。」页面零错误。证据 docs/t00/evidence/play-2026-11-16/close-with-deeds/（截图只抓到其中三句，五句全文见 log.txt 的 words）",
     "phone_touch": "e2e phone 场景扩展后通过：模拟手机（390×780，CDP 触摸）双指开合拉远拉近、推摇杆松开钟绳、推摇杆从吃茶后的凳上起身；点按撞钟与吃茶。仍是模拟触摸，不是真机",
     "round_2026_11_16_evening": "单测 232/232；typecheck、check 通过；e2e replay（42 s）、incense（55 s，burn=12）、preview-debug（26 s，以 host-resolver 把 pr-1-temple-walk-preview.test 指到本机）、views 通过；本地 pnpm dev 无参数时面板打开、?debug=0 时不打开",
-    "round_issue_71": "单测 259/259（新增 director.test.mjs 九项、camera-input 一项、settings 一项）；check、typecheck 通过；e2e smoke 28 个场景通过（含新 director 场景）；play-t00 director 段零错误；mobile-audit 通过"
+    "round_issue_71": "1c06e75 上：单测 267/267；check、typecheck 通过；e2e smoke 32/32（含新 director 场景：七处进机位、W/拖动/Esc 回程、撞钟连按不动、拍照、开关、减少动态、第一人称、结尾接手）；play-t00 director 段零错误（在改用仪式时钟之前的提交上录）；mobile-audit 通过"
   },
   "unverified": [
     "Issue #71 转场没有真人试过晕不晕，没有在 Mac 或手机上试；手机只在 Playwright 模拟里推过摇杆回程（phone 场景）",
