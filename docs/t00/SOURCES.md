@@ -142,6 +142,10 @@
 | 弹层栈、原生 dialog、不用界面库 | `ui.js` | 同类网页游戏都手写 DOM（`decisions.md`「界面」） | 按常理 |
 | 设置存储：一个键、逐项校验、坏存档忽略 | `settings.js` | 仿 wok-ing-dead 的设置存储 | 参考代码 |
 | 键鼠操作、触屏摇杆 | `yard.js` | 一般角色扮演游戏的惯例 | 按常理 |
+| 鼠标默认按住拖动才转、点地面走去，锁定鼠标是选项 | `yard.js`、`settings.js` | 推特试玩反馈「鼠标移动整个镜头乱飘」（2026-11-16）；网页 3D 的惯例（Sketchfab、three.js OrbitControls、街景都是拖动） | 用户反馈；惯例按常理 |
+| 环顾灵敏度：锁定每单位 0.09°，拖动约为光标的 1.6 倍（手指 2.2 倍） | `yard.js` 的 `LOOK` | 《小王子》`yawSensitivity` 每像素 0.11°（`LITTLEPRINCE-TEARDOWN.md`）；Source 引擎 `m_yaw` 0.022（csdb.gg）；倍数自拟 | 参考项目已核；倍数自拟 |
+| 锁定时要原始输入、丢掉单次超过 250 的值 | `yard.js` 的 `holdPointer` | web.dev「disable mouse acceleration」（`unadjustedMovement`）；movementX 偶发大跳值见 Stack Overflow 与 Babylon.js 论坛（其阈值为 100） | 读过网页 |
+| 第三人称视角跟手 0.06 秒；转动时眼睛往前看 0.25 秒、提前收近（最快 20 m/s），窄物扫过不躲 | `yard.js`、`eye.js` 的 `FOLLOW.ahead`、`turnSpeed` | Cinemachine 轴的 Accel/Decel Time 的做法（数值自拟）；往前看是自拟，按 `follow.test.mjs` 的原地转圈量出来调 | 做法参考 Unity 文档；数值自拟 |
 | 提示只说一次、用到时才说 | `hints.js` | 自拟 | 自拟 |
 | 去下一处的朱红印标 | `game.js` | 自拟 | 自拟 |
 
