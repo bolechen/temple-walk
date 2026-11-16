@@ -1,0 +1,299 @@
+{
+  "started": "2026-11-16T14:22:26.341Z",
+  "host": {
+    "gpu": "Tesla T4, 580.178.04, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-cli\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.580.178.04\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-rtcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.580.178.0\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-present.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.580.178\n\tlibnvidia-pkcs11-openssl3.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-ope\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-gtk3.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.580.178.04\n\tlibnvidia-gpucomp.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.580.178\n\tlibnvidia-glvkspirv.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.580\n\tlibnvidia-glsi.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.580.178.04\n\tlibnvidia-glcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.580.178.0\n\tlibnvidia-fbc.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-fbc.so.1\n\tlibnvidia-encode.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-encode.so.1\n\tlibnvidia-encode.so (libc6,x86-64) => /usr/lib64/libnvidia-encode.so\n\tlibnvidia-eglcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-eglcore.so.580.178\n\tlibnvidia-egl-xlib.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-xlib.so.1\n\tlibnvidia-egl-xcb.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-xcb.so.1\n\tlibnvidia-egl-wayland.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-wayland.so.1\n\tlibnvidia-egl-gbm.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-gbm.so.1",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "autumn",
+      "time": "dusk",
+      "fps": 45.3,
+      "ms": 22.08,
+      "cost": 10.82,
+      "loadMs": 15063,
+      "tris": 1927484,
+      "calls": 378,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 42.8,
+      "ms": 23.36,
+      "cost": 10.13,
+      "loadMs": 9420,
+      "tris": 1927444,
+      "calls": 354,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "cam06",
+      "as": "first",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 46.9,
+      "ms": 21.32,
+      "cost": 9.71,
+      "loadMs": 9254,
+      "tris": 1850988,
+      "calls": 335,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "dusk",
+      "fps": 97.4,
+      "ms": 10.27,
+      "cost": 5.86,
+      "loadMs": 9305,
+      "tris": 866908,
+      "calls": 189,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low"
+    },
+    {
+      "view": "court",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "summer",
+      "time": "day",
+      "fps": 98.4,
+      "ms": 10.16,
+      "cost": 5.64,
+      "loadMs": 8732,
+      "tris": 866888,
+      "calls": 177,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "off": "site",
+      "fps": 55.2,
+      "ms": 18.12,
+      "cost": 7.97,
+      "loadMs": 8750,
+      "tris": 700080,
+      "calls": 139,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "off": "bamboo",
+      "fps": 47.9,
+      "ms": 20.88,
+      "cost": 10.08,
+      "loadMs": 9285,
+      "tris": 1670628,
+      "calls": 350,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "off": "reflect",
+      "fps": 54.7,
+      "ms": 18.28,
+      "cost": 8,
+      "loadMs": 9306,
+      "tris": 963756,
+      "calls": 185,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "off": "bloom",
+      "fps": 45.3,
+      "ms": 22.08,
+      "cost": 9.78,
+      "loadMs": 9351,
+      "tris": 1927431,
+      "calls": 341,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "off": "site,bamboo,reflect,bloom",
+      "fps": 61.2,
+      "ms": 16.34,
+      "cost": 6.17,
+      "loadMs": 8420,
+      "tris": 221627,
+      "calls": 62,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    }
+  ],
+  "shots": [
+    {
+      "name": "cam01@summer-day@first",
+      "file": "cam01_summer-day_first.png",
+      "tris": 929964,
+      "calls": 218
+    },
+    {
+      "name": "cam02@summer-day@first",
+      "file": "cam02_summer-day_first.png",
+      "tris": 628342,
+      "calls": 85
+    },
+    {
+      "name": "cam03@summer-day@first",
+      "file": "cam03_summer-day_first.png",
+      "tris": 1868418,
+      "calls": 410
+    },
+    {
+      "name": "cam04@summer-day@first",
+      "file": "cam04_summer-day_first.png",
+      "tris": 1870724,
+      "calls": 387
+    },
+    {
+      "name": "cam05@summer-day@first",
+      "file": "cam05_summer-day_first.png",
+      "tris": 935088,
+      "calls": 131
+    },
+    {
+      "name": "cam06@summer-day@first",
+      "file": "cam06_summer-day_first.png",
+      "tris": 1850988,
+      "calls": 335
+    }
+  ],
+  "errors": [],
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "tour": [
+    {
+      "seconds": 120.01,
+      "frames": 6658,
+      "fps_mean": 55.48055930536795,
+      "p95_ms": 25,
+      "max_ms": 141.4
+    },
+    {
+      "seconds": 120,
+      "frames": 7129,
+      "fps_mean": 59.40655113679962,
+      "p95_ms": 22,
+      "max_ms": 35.6
+    },
+    {
+      "seconds": 120.02,
+      "frames": 7308,
+      "fps_mean": 60.89051122866674,
+      "p95_ms": 21.1,
+      "max_ms": 35.6
+    }
+  ],
+  "finished": "2026-11-16T14:32:52.802Z"
+}

@@ -9,6 +9,9 @@ import { makePlaque } from "./plaque.js";
 export const DOOR = Object.freeze({ reach: BODY + 0.02, half: 1.0 - BODY - 0.01 });
 // How far out from the column line the eave purlin lies, on the last arm of the bracket sets.
 export const PURLIN = 0.88;
+// A balcony under an upper storey: how tall its bracket sets stand, how far they step out, how tall the board hung
+// round its edge is (two timbers), and how far the storey's floor so stands above where the skirt roof meets its wall.
+export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, lift: 1.2 });
 const DEFAULTS = {
   xs: [-6.7, -2.5, 2.5, 6.7],   // column lines across the front
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
@@ -19,6 +22,7 @@ const DEFAULTS = {
   overhang: 2.4,                // eave beyond the columns
   rise: 5.2,                    // how high the ridge stands over the eave purlins (the plan works it out from the span: `ju` in site.js); on a tent roof, eave to peak
   crest: 0,                     // the size its ridge and ridge ornaments are cut to, by the building's rank (0: by its rise)
+  ping: false,                  // an upper storey one can walk round: it stands on a balcony of bracket sets (pingzuo), not straight on the roof below
   skirt: false,                 // a skirt roof: another storey stands on it, and it rises one in two to that storey's wall
   G: 3.3,                       // depth of the end slopes: 0 = plain gable, >= half depth = pyramid
   lift: 0.5, liftLen: 3.6,      // corner upturn and how far along the eave it reaches
@@ -120,6 +124,7 @@ export function buildHall(M, opts) {
   }
 
   // ---- Columns ----
+  let ping = null;
   const sets = [];   // where the bracket sets stand: on the column heads, and between them (`bay` says in which)
   const perimeter = [], COL_R = p.colTop > 3.6 ? 0.27 : 0.2;
   for (const x of xs) for (const z of zs) {
@@ -256,12 +261,34 @@ export function buildHall(M, opts) {
     const spots = perimeter.map((c) => ({ x: c.x, z: c.z, a: Math.atan2(c.ox, c.oz) }));
     // Between the columns (Yingzao Fashi, juan 4, on setting out the sets: two in the middle bay, one in each of the others): two sets in the middle bay of a
     // face, one in every other. A middle bay too narrow for two to stand clear of each other (their long arms are
-    // 1.32 m) keeps one: the single bay of a bell tower or a rest pavilion.
-    const between = (line, i) => { const bays = line.length - 1, a = line[i], b = line[i + 1], n = bays % 2 === 1 && i === (bays - 1) / 2 && Math.abs(b - a) / 3 >= 1.32 - 1e-6 ? 2 : 1; return Array.from({ length: n }, (_, k) => a + ((b - a) * (k + 1)) / (n + 1)); };
+    // 1.32 m) keeps one: the single bay of a bell tower or a rest pavilion. A bay
+    // too narrow even for one has none, and the sets on its two columns stand side by side: the small bays of a tower's upper storeys.
+    const between = (line, i) => { const bays = line.length - 1, a = line[i], b = line[i + 1], w = Math.abs(b - a), n = w < 2 * 1.32 - 1e-6 ? 0 : bays % 2 === 1 && i === (bays - 1) / 2 && w / 3 >= 1.32 - 1e-6 ? 2 : 1; return Array.from({ length: n }, (_, k) => a + ((b - a) * (k + 1)) / (n + 1)); };
     for (const [z, a] of [[Z, 0], [ZB, Math.PI]]) for (let i = 0; i < nx; i++) for (const x of between(xs, i)) spots.push({ x, z, a, bay: i });
     for (const [x, a] of [[xs[0], -Math.PI / 2], [X, Math.PI / 2]]) for (let i = 0; i < zs.length - 1; i++) for (const z of between(zs, i)) spots.push({ x, z, a, bay: i });
     sets.push(...spots);
     add(merge(spots.map((s) => set.clone().rotateY(s.a).translate(s.x, PLATE_TOP, s.z))), M.woodX);
+    // A storey that is walked round stands on a balcony (Yingzao Fashi, juan 4, on the pingzuo): under its floor a ring
+    // of bracket sets a step shorter than its own, one under every set above, on a plate of their own; round the
+    // floor's edge a board twice a timber's depth (the wild-goose-wing board), and the railing inside that. The skirt
+    // roof of the storey below comes in under the plate.
+    if (p.ping) {
+      const PH = PING.sets, y0 = p.platBase - PH, bd = PING.board;
+      const low = merge([
+        box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0),
+        arm(0.9, 0.28, 0), dou(-0.35, 0.49, 0), dou(0.35, 0.49, 0),
+        arm(1.02, 0.28, 0.16, "z"), dou(0, 0.49, PING.reach),
+        arm(0.9, 0.41, PING.reach),
+      ]);
+      add(merge(spots.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX);
+      add(merge([box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, Z), box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, ZB),
+        box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
+      add(merge([box(0.34, 0.12, Z - ZB + 0.4, xs[0], y0 - 0.06, (Z + ZB) / 2), box(0.34, 0.12, Z - ZB + 0.4, X, y0 - 0.06, (Z + ZB) / 2),
+        box(0.06, bd, zF - zB + 0.12, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB + 0.12, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
+      // Behind the sets the wall is limed, as it is between the sets under the eaves, so that they read against it.
+      add(merge([box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, Z - 0.04), box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, ZB + 0.04), box(0.1, PH + 0.3, Z - ZB, xs[0] + 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2), box(0.1, PH + 0.3, Z - ZB, X - 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2)]), M.plaster());
+      ping = { sets: spots.length, reach: PING.reach, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - 0.12 };
+    }
     const o = PURLIN, py = PLATE_TOP + 1.0;   // the eave purlin the outer arms carry
     add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX);
     add(merge([box(0.17, 0.2, Z - ZB + o * 2 + 0.6, xs[0] - o, py, (Z + ZB) / 2), box(0.17, 0.2, Z - ZB + o * 2 + 0.6, X + o, py, (Z + ZB) / 2)]), M.woodZ);
@@ -478,5 +505,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, sets, roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
+  return { group: g, walk, plat, sets, ping, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
 }
