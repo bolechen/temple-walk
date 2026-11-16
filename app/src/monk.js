@@ -530,7 +530,7 @@ export function createMonk() {
       if (dt > 0) { turn = damp(turn, dyaw / dt, 8, dt); accel = damp(accel, (speed - lastSpeed) / dt, 6, dt); } lastSpeed = speed;
       // The stride: short steps for short legs; on a stair, a step to each tread.
       const A = stairs ? STAIR.tread / 2 : clamp(0.07 + 0.055 * speed, 0.07, 0.19), rate = stairs ? Math.PI / STAIR.tread : (0.8 * Math.PI) / (2 * A);
-      phase += dt * Math.max(speed, 0.4 * gait) * rate;
+      const pace = Math.max(speed, 0.4 * gait) * rate; phase += dt * pace;
       const step = [0, Math.PI].map((o) => { const u = ((((phase + o) / TAU) % 1) + 1) % 1; if (u < 0.5) return { off: A * (1 - 4 * u), lift: 0 }; const w = (u - 0.5) * 2; return { off: A * (2 * smooth(0, 1, w) - 1), lift: Math.sin(Math.PI * w) }; });
       const lead = step.map((s) => (s.off / A) * gait), breathe = Math.sin(t * 1.6);
 
@@ -596,7 +596,9 @@ export function createMonk() {
           const n = Math.floor((phase + i * Math.PI) / TAU), was = lastN[i]; lastN[i] = n;
           if (was === null || n === was || gait < 0.5) return;
           tv.set(0, 0, 0.03).applyAxisAngle(UPV, s * TOE_OUT); tv.x += s * FOOT_X; tv.z += FOOT_Z + step[i].off * gait; group.localToWorld(tv);
-          steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s });
+          // `late`: how long ago in this frame the shoe came down, so the sound can keep an even time on a slow frame.
+          const late = Math.min(dt, ((((phase + i * Math.PI) % TAU) + TAU) % TAU) / Math.max(1e-3, pace));
+          steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s, late });
         });
       } else lastN[0] = lastN[1] = null;
 
