@@ -279,6 +279,51 @@ const scenarios = {
   } },
   // A book kept by an older version: a filled one has seen the close and is not shown it on the summit again; one
   // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
+  // The close comes once in each season: sat again in the same season the summit is only a seat; after the season is
+  // changed, sitting there plays it again, and a book already full is not given its seal a second time.
+  replay: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE);
+    const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
+    await t.page.evaluate((ids) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20, opened: 20, told: true, closed: 30, closedSeason: "summer" })); }, all);
+    await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    const summit = async () => { await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }); await t.frames(3); await t.page.waitForTimeout(800); return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
+    expect((await summit()) !== "静坐", "the close was offered again in the season it was seen in");
+    await t.page.evaluate(() => window.__mood("winter", "day"));
+    await t.until(async () => (await summit()) === "静坐", 30000, "a change of season did not offer the close again");
+    await t.page.click("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the close did not play again in winter");
+    await t.until(() => t.page.isVisible("#book"), 60000, "the book did not open after the close");
+    const j = await t.journey(); expect(j.closedSeason === "winter", "the season of the close was not kept: " + j.closedSeason);
+    expect(!(await t.page.textContent("#toastName")).includes("七印圆满") || !(await t.page.isVisible("#toast")), "the full book's seal was shown again on a replay");
+    await t.page.click("#bookClose"); await t.page.keyboard.press("Escape");
+    expect((await summit()) !== "静坐", "the close was offered twice in winter");
+    await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Incense set in the ash burns down (here in twelve seconds rather than five minutes): it shortens and smokes, then
+  // stands cold, and 上香 is offered again; a reload while it burns finds it as far burnt as it was.
+  incense: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&burn=12&in=main&cam=0,0,0,0" + BARE);
+    const R = () => t.page.evaluate(() => window.__rites().incense), word = async () => ((await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null);
+    const at = () => t.page.evaluate(() => { const p = window.__places.incense; window.__pose(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); });
+    await t.until(() => t.inHall(), 60000, "not in the great hall"); await at();
+    await t.until(async () => (await word()) === "上香", 40000, "上香 was not offered"); await t.page.click("#act");
+    await t.until(async () => (await R()).planted, 120000, "the sticks were never set in the ash");
+    let r = await R(); expect(r.smoke && r.left > 0 && r.left <= 12, "planted sticks should smoke and have time left: " + JSON.stringify(r));
+    expect((await t.journey()).seals.incense > 0, "no seal for the incense");
+    await t.until(async () => !(await t.journey()).rite, 30000, "he did not finish the offering");
+    expect((await word()) !== "上香", "incense should not be offered while it burns");
+    await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    r = await R(); expect(r.planted || r.burnt, "a reload lost the incense: " + JSON.stringify(r));
+    await t.until(async () => (await R()).burnt, 60000, "the incense never burnt out");
+    r = await R(); expect(!r.planted && !r.smoke, "burnt-out incense should stand cold: " + JSON.stringify(r));
+    await t.until(() => t.inHall(), 60000, "not back in the great hall"); await at();
+    await t.until(async () => (await word()) === "上香", 40000, "上香 was not offered again once it burnt out");
+    const seal = (await t.journey()).seals.incense; await t.page.click("#act");
+    await t.until(async () => (await R()).planted, 120000, "the second offering was never set in the ash");
+    expect((await t.journey()).seals.incense === seal, "a second offering should not earn the seal again");
+    await t.page.evaluate(() => { localStorage.removeItem("yunjing.journey.v1"); localStorage.removeItem("yunjing.incense.v1"); });
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   oldbook: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0");
     const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);

@@ -139,3 +139,19 @@ test("beginning the book again lets the summit close the new walk", () => {
   const j = createJourney(memory(), () => 7); j.earn("sit"); j.close(); j.reset();
   assert.equal(j.closed, null); assert.equal(j.count(), 0);
 });
+
+test("the close is shown once in each season: after a change of season the summit closes the prologue again", () => {
+  const store = memory(); let t = 10; let j = createJourney(store, () => t++);
+  assert.equal(j.closedIn("summer"), false);
+  assert.equal(j.close("summer"), true); assert.equal(j.closedIn("summer"), true);
+  assert.equal(j.close("summer"), false, "not twice in the same season");
+  assert.equal(j.closedIn("winter"), false, "another season has not seen it");
+  assert.equal(j.close("winter"), true); assert.equal(j.closedIn("winter"), true); assert.equal(j.closedIn("summer"), false, "only the season it was last shown in counts");
+  j = createJourney(store, () => t++); assert.equal(j.closedIn("winter"), true, "the season is remembered across a reload");
+});
+
+test("a close recorded before seasons were kept belongs to the season the visitor is in when it is next read", () => {
+  const j = createJourney(memory(JSON.stringify({ v: 1, born: 1, seals: { sit: 2 }, strikes: 0, closed: 5 })), () => 9);
+  assert.equal(j.closedIn("autumn"), true, "an old close is not replayed on its own"); j.adopt("autumn");
+  assert.equal(j.closedIn("autumn"), true); assert.equal(j.closedIn("spring"), false, "but a change of season plays it again");
+});

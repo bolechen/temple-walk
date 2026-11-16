@@ -813,7 +813,7 @@ createGame({
   leave: () => interrupt(),
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
-  mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
+  mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),
   onTick: (fn) => ticks.push(fn),
