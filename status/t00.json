@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-16T19:25:46.088Z",
+  "generated_at": "2026-11-16T19:54:02.930Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "f303f412f4a52877d9bfeb383d3dc8d58860e324",
-    "url": "https://github.com/bolechen/temple-walk/commit/f303f412f4a52877d9bfeb383d3dc8d58860e324"
+    "sha": "c6c8128a8472f0c445ada89044a713aab19a1af6",
+    "url": "https://github.com/bolechen/temple-walk/commit/c6c8128a8472f0c445ada89044a713aab19a1af6"
   },
   "delivery": {
     "analytics": {
@@ -101,6 +101,7 @@
       "tests/e2e/run.cjs jump：三段真实按键（W、Shift+W、空格）在茶案前起跳，逐帧取样",
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
       "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令",
+      "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。",
       "docs：景观评审 docs/t00/landscape-review.md（#112，只评审，没有改 app/），后续 issue #114–#119；tools/gpu/job.cjs 可拍任意 ?cam= 地址"
     ],
     "known_issues": [
@@ -360,25 +361,25 @@
         "https://temple.rushiwowen.co/ 响应 server: cloudflare"
       ]
     },
-    "record_commit": "f303f412f4a52877d9bfeb383d3dc8d58860e324",
+    "record_commit": "c6c8128a8472f0c445ada89044a713aab19a1af6",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43938632423,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43938632423",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43944087972,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43944087972",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "f303f412f4a52877d9bfeb383d3dc8d58860e324",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43938632423"
