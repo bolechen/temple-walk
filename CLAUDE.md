@@ -69,7 +69,9 @@ node tools/inside.cjs tools/out/hall-views --views [level]   # every indoor view
 node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose, `sculpt` for the sculpted body)
 node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
-node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~6 min)
+node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
+node tests/e2e/run.cjs seats        # every cushion and stool sat on, hurrying, the place not drawn
+node tools/play-t00.cjs [outdir] [summit bell tea phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic)
 node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -93,6 +95,9 @@ stubbed DOM, `dom-stub.mjs`) and assert on it: every named place can be walked t
 (a flood fill over `heightAt/blocked`), nothing leaks through the walls, stairs have even treads, every named view
 stands on walkable ground, every mood has every field. The end-to-end scenarios in `tests/e2e/run.cjs` drive the real
 page and fail on any page error, console error, failed request or HTTP error; `tests/e2e/lib.cjs` holds what they share.
+A scenario that asks what the page does and never looks at the picture is opened with `+ BARE` (the place built but not
+drawn: `?off=` hides parts and unbuilds nothing), which runs it about three times faster under software rendering; one
+that looks at the picture (`boot`, `halls`, `snow`, `moods`, `views`, `photo`, `photo-ui`, `menu`, `parts`, `rites`, `stairs`, `drop`) draws all of it.
 When you add something a visitor can do, add a scenario (or extend one) that does it; when you add a place, add it to
 `places` in `plan.test.mjs`; when you fix a bug, first make a test fail for it. Wait on frames (`t.frames(n)`), never on
 seconds: software rendering may draw one frame a second or ten.
@@ -110,8 +115,8 @@ visitor's own season and hour, seen from behind the novice.
 Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, type check, unit tests, build, and the `boot`
 scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
-The slower scenarios (`stairs drop`) run beside each publication in `.github/workflows/e2e.yml`, not in its
-way; the same workflow runs every scenario once a week and on demand. A red `verify` means the site was not published: read the uploaded
+The slower scenarios (`stairs drop`, with `pnpm run edges`) run beside each publication in `.github/workflows/e2e.yml`, not in its
+way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a week and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
 ## Architecture

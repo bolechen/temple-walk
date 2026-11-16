@@ -1,7 +1,7 @@
 name: End to end, every scenario
 
-# The whole suite takes the better part of an hour without a GPU, so it does not run on every push:
-# once a week, and whenever it is asked for (Actions → this workflow → Run workflow).
+# The whole suite takes the better part of an hour on one machine without a GPU, so it does not run on every push:
+# once a week, and whenever it is asked for (Actions → this workflow → Run workflow), shared among four machines.
 on:
   # Beside every publication, and not in its way: the stairs and the low drop, about three minutes, because walking and
   # collision change most often. The photograph's interface (photo-ui, several minutes on its own) breaks only when the
@@ -26,9 +26,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e:
+  # Beside every publication: what a push most often breaks and the publication's own checks do not walk. The parse,
+  # type and unit checks are not repeated here: "Verify and deploy" runs them on the same commit and is what stands
+  # between a push and the site.
+  regression:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,7 +41,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run check && pnpm run typecheck && pnpm test
       - name: His whole body fits everywhere his feet may go
         run: pnpm run edges
       - name: Remember the browser between runs
@@ -48,15 +51,67 @@ jobs:
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: Walk the whole temple
-        env:
-          SCENARIOS: ${{ github.event_name == 'push' && 'stairs drop' || github.event.inputs.scenarios }}
-        run: node tests/e2e/run.cjs $SCENARIOS
-      - name: Keep the report, the screenshots and the photograph
+      - name: The stairs and the low drop
+        run: node tests/e2e/run.cjs stairs drop
+      - name: Keep the report and the screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-full-${{ github.run_id }}-${{ github.run_attempt }}
+          name: e2e-regression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Every scenario, once a week and when asked: four machines take a quarter of the list each. Asked for by name, the
+  # scenarios named are run on the first machine alone.
+  full:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Is there anything for this machine
+        id: mine
+        run: echo "run=${{ (github.event.inputs.scenarios == '' || github.event.inputs.scenarios == null || matrix.shard == 1) && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.mine.outputs.run == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.mine.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.mine.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.mine.outputs.run == 'true'
+      # A weekly run stands on its own, with no publication beside it: the quick checks go with the first machine.
+      - name: Parse, types, unit tests, and his body against everything built
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
+      - name: Remember the browser between runs
+        if: steps.mine.outputs.run == 'true'
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        if: steps.mine.outputs.run == 'true'
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Walk the whole temple
+        if: steps.mine.outputs.run == 'true'
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          if [ -n "$SCENARIOS" ]; then node tests/e2e/run.cjs $SCENARIOS; else node tests/e2e/run.cjs --shard=${{ matrix.shard }}/4; fi
+      - name: Keep the report, the screenshots and the photograph
+        if: always() && steps.mine.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-full-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 14
           if-no-files-found: ignore

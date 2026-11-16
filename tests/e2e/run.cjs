@@ -1,4 +1,5 @@
 // End-to-end scenarios: a real page in a real browser, driven the way a visitor drives it.
+//   node tests/e2e/run.cjs --shard=1/4  the first of four parts of whatever was asked for (the weekly run shares it among four machines)
 //   node tests/e2e/run.cjs              every scenario (about twenty minutes without a GPU)
 //   node tests/e2e/run.cjs --smoke      tiers 1 and 2: everything but the long walks and the photograph
 //   node tests/e2e/run.cjs --quick      tier 1 only (the page comes up clean): what must pass before anything is published
@@ -7,6 +8,13 @@
 const fs = require("fs"), path = require("path");
 const { serve, launch, open, expect, out } = require("./lib.cjs");
 
+// Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
+// that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
+// opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
+// plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
+// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, rites, stairs, drop), and the long walk that
+// samples his height as he climbs, draw all of it.
+const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   boot: { tier: 1, async run(b, base) {
@@ -49,7 +57,7 @@ const scenarios = {
   } },
   // Up the old path, round the screen wall, through the gate, across the court, in at the door; incense; out again.
   walk: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1");
+    const t = await open(b, base, "q=low&fast=1");   // drawn: it reads his height along the way a few times a second, and not drawn he is up the mountain between two readings
     await t.page.evaluate(() => window.__walk([[21.3, 81.5], [21.3, 77.5], [11, 77.5], [0, 77.5], [0, 62.5], [8.5, 60], [8.5, 49], [0, 46.5], [0, 2], [0, -6.0]]));
     let lo = 0, hi = -99;
     await t.until(async () => { const s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return t.inHall(); }, 700000, "the walk in never reached the hall");
@@ -59,12 +67,15 @@ const scenarios = {
     let s = await t.state(); expect(s.inside && s.h < -50 && s.z > 5, "should stand just inside the door: " + JSON.stringify(s));
     await t.until(() => t.page.evaluate(() => window.__figures() === "here"), 120000, "the figures never arrived"); await t.frames(3); await t.shot("e2e-hall");
     // He can walk about in it, the columns stop him, and a frame on the wall can be looked at.
+    // (The way to the frame keeps clear of the row of columns at z = 4.35, whose reach, his own width added, ends at 5.02.)
     const cx = await t.page.evaluate(() => window.__places.incense.at[0]), go = (pts) => t.page.evaluate(([c, p]) => window.__walk(p.map(([x, z]) => [c + x, z])), [cx, pts]);   // every hall has its own room; this one's middle is at cx
-    await go([[-6, 5], [-11.7, 5.05]]); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
+    await go([[-6, 5.7], [-11.7, 5.5]]); await t.until(async () => (await t.journey()).look === "main-w1", 60000, "standing before a frame offered nothing");
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
     expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("山门之外"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
-    await go([[-9, 3]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9, s.z - 3) > 0.45, "he walked through a column");
+    // A column of the row before the dais stands at 9.56 m west of the middle, z = 4.35 (framing.js puts them on the hall's own bays).
+    expect(await t.page.evaluate((c) => window.__blocked(c - 9.56, 4.35), cx), "the column this walks into is no longer where the scenario expects it");
+    await go([[-9.56, 4.35]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9.56, s.z - 4.35) > 0.45, "he walked through a column");
     // Incense before the altar, then out by the door into the daylight.
     await go([[0, 4], [0, -1.2]]); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 240000, "no way to offer incense");
     await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
@@ -75,13 +86,13 @@ const scenarios = {
   } },
   // At a real walking pace, a tap on the hall leads to its door and through it.
   tap: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&view=first&cam=0.3,2.2,0,0.05", { hasTouch: true });
+    const t = await open(b, base, "q=low&view=first&cam=0.3,2.2,0,0.05" + BARE, { hasTouch: true });
     await t.page.touchscreen.tap(210, 300); await t.until(t.inHall, 300000, "a tap on the hall never led inside");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A tap on the ground sends him to the spot tapped, on every level of the mountain and on the stairs between.
   taps: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0", { hasTouch: true });
+    const t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0" + BARE, { hasTouch: true });
     // Each place: where he stands, which way he looks (0 is uphill, a quarter turn is east), and the least height that proves he is there.
     for (const [name, x, z, yaw, lo] of [["the court", 0, 30, 0, -0.1], ["the first terrace", 12, -40, 0, 2.3], ["the second terrace", 6, -70.5, Math.PI / 2, 5.1], ["the summit", -10, -120.4, Math.PI / 2, 19.9], ["the foot of the path, looking up its steps", 21.3, 91.5, 0, -15]]) {
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, yaw]); await t.frames(2);
@@ -193,7 +204,7 @@ const scenarios = {
   // His steps sound as what they come down on: wet stone after summer rain and a splash in a puddle of the court (where
   // the paving draws one), dry stone in autumn, the floor of a hall.
   steps: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&season=summer&time=day&cam=4,15.5,3.14,0&view=third");
+    const t = await open(b, base, "q=low&season=summer&time=day&cam=4,15.5,3.14,0&view=third" + BARE);
     const heard = () => t.page.evaluate(() => window.__steps().heard);
     const walk = async (pts, what) => { await t.page.evaluate((p) => window.__walk(p), pts); await t.until(async () => (await t.state()).target === null && (await t.state()).route === 0, 240000, what); };
     await t.page.evaluate(() => window.__music(true)); await t.until(async () => (await t.page.evaluate(() => window.__steps())).state === "running", 30000, "the sound never started");
@@ -214,20 +225,34 @@ const scenarios = {
   } },
   // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.
   pilgrimage: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1&seed=4");
+    const t = await open(b, base, "q=low&fast=1&seed=4" + BARE);
     const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
+    const word = () => t.page.getAttribute("#act", "data-word"), offered = (w, what) => t.until(async () => (await t.page.isVisible("#act")) && (await word()) === w, 30000, `"${w}" was not offered ${what}`);
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
-    // The bell: stand in its ring and take the rope; he rings it three times.
-    await at("bell"); await t.until(() => t.page.isVisible("#act"), 30000, "standing before the bell offered nothing");
-    expect((await t.page.getAttribute("#act", "data-word")) === "撞钟", "the button should say what can be done");
-    await t.page.click("#act");
+    // The summit first, with nothing else in the book: three breaths, its seal, and the prologue closes all the same,
+    // with words about this walk only, then the book with what is still to be found.
+    await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
+    const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
+    await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
+    expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
+    await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
+    // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
+    await offered("起身", "while he sits on the summit"); await t.page.click("#act"); await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
+    await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ expect((await word()) !== "静坐", "the summit offered the close a second time");
+    // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
+    await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
+    await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring the bell");
+    for (const n of [2, 3]) { await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.ready)), 30000, "the rope never came back to hand"); await t.page.click("#act"); await t.until(async () => (await t.journey()).strikes === n, 30000, `the stroke ${n} did not sound`); }
     await seal("bell", "the bell"); expect((await t.page.textContent("#toastName")).includes("闻钟") && (await t.page.getAttribute("#toastSeal", "src")).startsWith("data:image"), "no seal was shown");
-    expect((await t.page.textContent("#bookBtn")).includes("一"), "the book's button should count the seals");
-    // Tea, the well, the lamp: walk into the ring, press, wait.
-    for (const [id, word] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
-      await at(id); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 30000, `nothing offered at ${id}`);
-      await t.page.click("#act"); await seal(id, id);
+    expect((await t.page.textContent("#bookBtn")).includes("二"), "the book's button should count the seals");
+    await t.page.keyboard.press("Escape"); await t.until(async () => (await t.journey()).rite === null, 20000, "Esc did not let the rope go");
+    // Tea, the well, the lamp: walk into the ring, press, wait. After the tea he stays until he is stood up.
+    for (const [id, w] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
+      await at(id); await offered(w, `at ${id}`); await t.page.click("#act"); await seal(id, id);
+      if (id === "tea") { await offered("起身", "after the tea"); await t.page.click("#act"); await t.until(async () => (await t.journey()).rite === null, 20000, "he did not get up from the tea"); }
     }
     expect((await t.journey()).lampLit, "the lamp should stay lit");
     // The library gives a line, which must be taken.
@@ -236,33 +261,70 @@ const scenarios = {
     await t.page.click("#slipTake"); await seal("sutra", "the library"); expect((await t.journey()).verse.text === line, "the line was not kept");
     // The book survives leaving and coming back.
     await t.page.reload(); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
-    expect((await t.page.textContent("#titleSeals")).includes("五"), "the title should say how many seals are held");
+    expect((await t.page.textContent("#titleSeals")).includes("六"), "the title should say how many seals are held");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled); await t.page.click("#enterBtn");
-    j = await t.journey(); expect(j.count === 5 && j.lampLit && j.next === "incense", "the book was not remembered: " + JSON.stringify(j));
-    // The summit is the last thing: before the other six are done its mat is only a seat, and gives no seal.
-    await at("sit"); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered on the summit"); await t.page.click("#act");
-    await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) === 1, 30000, "he did not sit down on the summit mat"); expect(!(await t.journey()).seals.sit, "the summit gave its seal before the rest was done");
-    // Incense, in the great hall: the sticks are set in the ash and stay there.
+    j = await t.journey(); expect(j.count === 6 && j.lampLit && j.next === "incense" && j.closed > 0, "the book was not remembered: " + JSON.stringify(j));
+    // Incense, in the great hall, is the seventh: the full book has its own seal and opens, and the close is not played again.
     await t.page.evaluate(() => window.__inside(true)); await t.until(() => t.inHall(), 30000, "could not go in");
-    await at("incense"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 30000, "nothing offered before the altar"); await t.page.click("#act");
+    await at("incense"); await offered("上香", "before the altar"); await t.page.click("#act");
     await seal("incense", "the incense"); expect((await t.page.evaluate(() => window.__rites().incense)).planted, "the sticks are not standing in the ash");
-    await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
-    // Then the summit: three breaths, the seventh seal, the close of the chapter with its words, and the book.
-    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 30000, "could not come out");
-    await at("sit"); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 30000, "nothing offered on the summit"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
-    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed");
-    expect((await t.page.evaluate(() => window.__rites().line)).length > 6, "no closing words were said");
+    await t.until(async () => (await t.page.isVisible("#toast")) && (await t.page.textContent("#toastName")).includes("七印圆满"), 60000, "a full book was not marked");
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
+    expect((await t.page.evaluate(() => window.__rites().ended)) === 0, "the close played again for the seventh seal");
     expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
-    await t.page.click("#bookClose"); expect(!(await t.page.isVisible("#act")), "nothing should be offered once every seal is held");
+    await t.page.click("#bookClose"); expect((await word()) !== "上香" || !(await t.page.isVisible("#act")), "the incense should not be offered again");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // A book kept by an older version: a filled one has seen the close and is not shown it on the summit again; one
+  // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
+  oldbook: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0");
+    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);
+    const summit = async () => { await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
+    const load = async (book, ended) => { await t.page.evaluate(([bk, e]) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify(bk)); if (e) localStorage.setItem("yunjing.ending.v1", "1"); else localStorage.removeItem("yunjing.ending.v1"); }, [book, ended]);
+      await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 }); };
+    const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
+    await load({ v: 1, born: 1, seals: Object.fromEntries(all.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 }, false);
+    let j = await t.journey(); expect(j.count === 7 && j.closed === 20, "a filled old book should have seen the close: " + JSON.stringify(j));
+    expect((await summit()) !== "静坐", "a filled old book was offered the close again");
+    await load({ v: 1, born: 1, seals: { bell: 4, tea: 5 }, strikes: 3, verse: null, done: null }, true);
+    j = await t.journey(); expect(j.count === 2 && j.closed > 0, "the old note that the close was seen was lost: " + JSON.stringify(j));
+    expect(!(await t.page.evaluate(() => localStorage.getItem("yunjing.ending.v1"))), "the old note should be folded into the book");
+    // Its summit seal is still to be earned: sitting there earns it, and the close is not played again.
+    expect((await summit()) === "静坐", "an old book without the summit's seal should still be offered it");
+    await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.sit > 0, 90000, "the summit's seal was not earned");
+    // (Seconds, not frames: the close would follow on game.js's timer, which runs on the clock.)
+    await t.page.waitForTimeout(4000); expect((await t.page.evaluate(() => window.__rites().ended)) === 0 && !(await t.page.evaluate(() => window.__rites().closing)), "the close played again for an old book that had seen it");
+    await load({ v: 1, born: 1, seals: { bell: 4, sit: 5 }, strikes: 3, verse: null, done: null }, false);
+    j = await t.journey(); expect(j.count === 2 && !j.closed, "an old book that never closed should not be marked closed: " + JSON.stringify(j));
+    expect((await summit()) === "静坐", "an old book whose summit seal came before the close should be offered it");
+    await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Every cushion and stool is a seat. This asks only where he ends up, so the place is not drawn and he hurries: it
+  // was the slow half of the rites scenario, which still sits on one stool and one cushion at a visitor's pace.
+  seats: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&enter&view=third&season=summer&time=day" + BARE);
+    const R = () => t.page.evaluate(() => window.__rites());
+    // Every seat there is, indoors and out: put beside it, he goes over and is on it, at its height, turned the way it faces.
+    const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room, kind: k.kind })));
+    let room = null;
+    for (let i = 0; i < seats.length; i++) {
+      const s = seats[i];
+      if ((s.room || null) !== room) { room = s.room || null; await t.page.evaluate((id) => window.__inside(id), room); await t.until(async () => (await t.page.evaluate(() => window.__yard().room)) === room, 40000, `could not go to ${room || "the open"}`); }
+      const from = await t.page.evaluate((k) => { const s = window.__seats[k]; for (let a = 0; a < 24; a++) for (const r of [0.6, 0.9, 1.3]) { const x = s.at[0] + Math.sin(a * 0.2618) * r, z = s.at[1] + Math.cos(a * 0.2618) * r; if (!window.__blocked(x, z)) { window.__pose(x, z, 0, 0); window.__sit(k); return [x, z]; } } return null; }, i);
+      expect(from, `no ground beside seat ${i} in ${room || "the open"}`);
+      await t.until(async () => { const r = await R(); return Math.hypot(r.him[0] - s.at[0], r.him[2] - s.at[1]) < 0.03 && Math.abs(r.him[1] - s.top) < 0.03; }, 40000, `he is not sitting on seat ${i} in ${room || "the open"} (${s.at.map((v) => v.toFixed(1))})`);
+      expect((await t.state()).pose === (s.kind === "stool" ? "chair" : "sit"), `on seat ${i} in ${room || "the open"}, a ${s.kind}, he sits ${(await t.state()).pose}`);
+    }
+    expect((await R()).sat >= seats.length, "not every seat was sat on");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Coming back: a first visit is offered only the way in; where he was is kept, and the next visit may go on from
   // there or begin again.
   resume: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low", { enter: false });
+    const t = await open(b, base, "q=low" + BARE, { enter: false });
     const ready = async () => { await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 }); };
     await ready(); let L = await t.page.evaluate(() => window.__left());
     expect((await t.page.textContent("#enterBtn")) === "入山" && !L.again && !L.offer.going, "a first visit should be offered only the way in: " + JSON.stringify(L.offer));
@@ -309,11 +371,25 @@ const scenarios = {
     const seen = (what, fn, ms = 120000) => t.page.waitForFunction(fn, null, { timeout: ms, polling: 100 }).catch(() => { throw new Error(what); });
     const R = () => t.page.evaluate(() => window.__rites());
     // The bell.
+    // The bell: the first press takes the rope and rings once; every stroke after it is one more press, when the log
+    // has come back off the bronze. Nothing rings by itself, and walking off (here Esc) lets the rope go.
     await at("bell", 0.3, -0.3); await offered("撞钟"); await t.page.click("#act");
     await seen("he never took the rope", () => window.__rites().bell.grip > 0.9);
-    await seen("the log was never drawn back", () => window.__rites().bell.log > 0.15);
-    await t.until(async () => (await t.journey()).seals.bell > 0, 120000, "three strokes were not rung");
-    let r = await R(); expect(r.bell.log >= -0.181, "the log went into the bell: " + r.bell.log);
+    await seen("the log was never drawn back", () => window.__rites().bell.drawn > 0.15);
+    await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring");
+    let lo = 0; const low = async () => { lo = Math.min(lo, (await R()).bell.log); };
+    // (Seconds, not frames: a stroke would come on the observances' clock, not with frames.)
+    await t.page.waitForTimeout(6000); await low(); expect((await t.journey()).strikes === 1 && (await R()).bell.pulls === 1, "the bell rang again without a press");
+    for (const n of [2, 3]) { await seen("the rope never came back to hand", () => window.__rites().bell.ready); await t.page.click("#act"); await t.until(async () => { await low(); return (await t.journey()).strikes === n; }, 30000, `stroke ${n} did not sound`); }
+    await t.until(async () => (await t.journey()).seals.bell > 0, 30000, "three strokes earned no seal");
+    // Two presses one on the other are one pull: the second comes while the log is still being drawn back.
+    await seen("the rope never came back to hand", () => window.__rites().bell.ready);
+    const p0 = (await R()).bell.pulls; await t.page.evaluate(() => { const b = document.getElementById("act"); b.click(); b.click(); });
+    await t.until(async () => (await R()).bell.pulls > p0, 30000, "the pull after the seal did not ring"); await t.page.waitForTimeout(3000);
+    expect((await R()).bell.pulls === p0 + 1, "two presses at once rang the bell twice");
+    let r = await R(); expect(lo >= -0.181 && r.bell.log >= -0.181, "the log went into the bell: " + lo);
+    expect((await t.journey()).rite === "bell" && r.bell.grip > 0.9, "he should still hold the rope after the third stroke");
+    await t.page.keyboard.press("Escape");
     await t.until(async () => (await R()).bell.grip === 0 && (await t.journey()).rite === null, 60000, "he never let the rope go");
     // Tea: the bowl leaves the table, is tilted at his lips three times, and is set down again.
     await at("tea"); await offered("吃茶"); await t.page.click("#act");
@@ -322,6 +398,11 @@ const scenarios = {
     await seen("the bowl was never tilted to drink", () => window.__rites().tea.tilt > 0.3);
     await t.until(async () => (await t.journey()).seals.tea > 0, 120000, "no seal for tea"); r = await R();
     expect(r.tea.sips === 3 && Math.abs(r.tea.lift) < 0.01 && r.tea.held === 0, "the bowl is not back on the table after three sips: " + JSON.stringify(r.tea));
+    // And he sits on: breathing, now and then looking out over the court, until 起身.
+    expect((await t.journey()).rite === "tea", "he should stay at the table after his tea");
+    await offered("起身"); await seen("he never looked up from the table", () => Math.abs(window.__rites().look) > 0.2, 60000);
+    expect((await R()).breath !== null, "he is not breathing as he sits"); await t.shot("e2e-tea-linger");
+    await t.page.click("#act"); await t.until(async () => (await t.journey()).rite === null && !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
     // Any stool may be sat on: the one across the table.
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => { const s = window.__seats[2]; window.__pose(s.at[0] + 0.5, s.at[1] - 0.9, 0, 0); });
@@ -342,40 +423,31 @@ const scenarios = {
     await t.page.evaluate(() => { const s = window.__seats.find((k) => k.room === "chan"); window.__pose(s.at[0], s.at[1] + (s.face === 0 ? 1.2 : -1.2), 0, 0); });
     await offered("坐下"); const n = (await R()).sat; await t.page.click("#act"); await t.until(async () => (await R()).sat === n + 1, 30000, "he did not sit on the platform");
     expect((await t.state()).pose === "sit", "on a cushion he should sit cross-legged: " + (await t.state()).pose);
-    // Every seat there is, indoors and out: put beside it, he goes over and is on it, at its height, turned the way it faces.
-    const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room, kind: k.kind })));
-    let room = "chan";
-    for (let i = 0; i < seats.length; i++) {
-      const s = seats[i];
-      if ((s.room || null) !== room) { room = s.room || null; await t.page.evaluate((id) => window.__inside(id), room); await t.until(async () => (await t.page.evaluate(() => window.__yard().room)) === room, 40000, `could not go to ${room || "the open"}`); }
-      const from = await t.page.evaluate((k) => { const s = window.__seats[k]; for (let a = 0; a < 24; a++) for (const r of [0.6, 0.9, 1.3]) { const x = s.at[0] + Math.sin(a * 0.2618) * r, z = s.at[1] + Math.cos(a * 0.2618) * r; if (!window.__blocked(x, z)) { window.__pose(x, z, 0, 0); window.__sit(k); return [x, z]; } } return null; }, i);
-      expect(from, `no ground beside seat ${i} in ${room || "the open"}`);
-      await t.until(async () => { const r = await R(); return Math.hypot(r.him[0] - s.at[0], r.him[2] - s.at[1]) < 0.03 && Math.abs(r.him[1] - s.top) < 0.03; }, 40000, `he is not sitting on seat ${i} in ${room || "the open"} (${s.at.map((v) => v.toFixed(1))})`);
-      expect((await t.state()).pose === (s.kind === "stool" ? "chair" : "sit"), `on seat ${i} in ${room || "the open"}, a ${s.kind}, he sits ${(await t.state()).pose}`);
-    }
-    expect((await R()).sat >= seats.length, "not every seat was sat on");
     await t.shot("e2e-rites"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.
   summit: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1&cam=19.5,0,0,0");
+    const t = await open(b, base, "q=low&fast=1&cam=19.5,0,0,0" + BARE);
     await t.page.evaluate(() => window.__walk([[19.5, -28], [0, -28], [0, -36], [13.6, -36], [13.6, -60], [0, -61], [0, -69.2], [-13, -69.2], [-13, -89], [0, -89.5], [0, -120], [0, -123]]));
     await t.until(async () => (await t.state()).h > 20.8, 300000, "never reached the summit porch");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A tap on the bell reaches it; the bell and drum sound with the partials they were built from.
   sound: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&show=court");
+    const t = await open(b, base, "q=low&show=court" + BARE);
     await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(700);
     const bell = await t.page.evaluate(() => window.__listen("effects"));   // the effects bus alone: the music shares the bell's G
     expect(bell.state === "running" && bell.rms > 0.003, "the bell made no sound: " + JSON.stringify(bell));
     expect(bell.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8), "the bell's fundamental is missing: " + JSON.stringify(bell.peaks));
-    await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
-    const drum = await t.page.evaluate(() => window.__listen("effects")); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
+    const drum = await t.page.evaluate(() => { window.__strike("drum"); const t0 = performance.now(); while (performance.now() - t0 < 150); return window.__listen("effects"); }); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
     // A great bell is long: eight seconds after the stroke its hum and fundamental are still there.
     await t.page.waitForTimeout(7000);
     const late = await t.page.evaluate(() => window.__listen("effects"));
     expect(late.rms > 0.004 && late.peaks.some(([hz]) => Math.abs(hz - 49) < 6 || Math.abs(hz - 98) < 6), "the bell had died away within eight seconds: " + JSON.stringify(late));
+    // Struck over and over, the bell keeps no more than three strokes ringing: the oldest fades as a new one comes.
+    for (let i = 0; i < 6; i++) { await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(300); }
+    const bells = await t.page.evaluate(() => window.__bells());
+    expect(bells.ringing <= 3 && bells.struck >= 7, "six strokes in a row should leave at most three ringing: " + JSON.stringify(bells));
     // The dragon well: silent from the court; standing at it, a drop is heard and rings go out across the water.
     expect((await t.page.evaluate(() => window.__well())).level === 0, "the well is heard from the court");
     const pool = await t.page.evaluate(() => window.__places.well.pool);
@@ -394,7 +466,7 @@ const scenarios = {
   // The music: it begins with the first sound, follows him from place to place once he has settled, ignores pacing
   // along a boundary, steps back for the bell, answers its own slider, goes indoors with him, and is only ever one.
   music: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,29,0,0&view=first");
+    const t = await open(b, base, "q=low&cam=0,29,0,0&view=first" + BARE);
     const m = () => t.page.evaluate(() => window.__music());
     expect(!(await m()).started, "the music should wait for the visitor's first touch");
     await t.page.evaluate(() => window.__music(true));
@@ -418,10 +490,17 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
-    await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
-    expect((await t.page.evaluate(() => window.__listen("effects"))).rms > 0.003, "with the music silenced the drum should still be heard");
+    // Struck and listened to within one call: a busy page can let the drum die between two calls.
+    const drum = await t.page.evaluate(() => { window.__strike("drum"); const t0 = performance.now(); while (performance.now() - t0 < 150); return window.__listen("effects"); });
+    expect(drum.rms > 0.003, "with the music silenced the drum should still be heard: " + JSON.stringify(drum));
     expect((await t.page.evaluate(() => window.__settings())).music === 0, "the music level was not kept");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0.7"; el.dispatchEvent(new Event("input", { bubbles: true })); }); await t.page.keyboard.press("Escape");
+    // Sitting on after tea hushes the music; standing brings it back. Either holds even when it falls inside the music's
+    // stepping back for a stroke (the drum here, the seal's chime at the tea table): the audio clock, so seconds.
+    await t.page.evaluate(() => { window.__strike("drum"); window.__hush(true); }); await t.page.waitForTimeout(9000);
+    s = await m(); expect(s.hushed && s.duck < 0.45, "sitting down inside a stroke's ducking should leave the music hushed: " + JSON.stringify(s));
+    await t.page.evaluate(() => { window.__strike("drum"); window.__hush(false); }); await t.page.waitForTimeout(9000);
+    s = await m(); expect(!s.hushed && s.duck > 0.9, "standing up inside a stroke's ducking should bring the music back: " + JSON.stringify(s));
     // Into a hall and out: the hall's reverb and music, and still one player however often sound is asked for.
     await t.page.evaluate(() => window.__inside("main"));
     await t.until(async () => { const x = await m(); return x.zone === "hall" && x.room === "hall"; }, 30000, "inside the hall was never heard as the hall");
@@ -571,7 +650,7 @@ const scenarios = {
   } },
   // With a keyboard and mouse, as such games are played: W walks, Shift hurries, E does what is offered, V and B and P open things.
   keys: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 900, height: 600 } });
     expect(!(await t.page.isVisible("#keys")) && !(await t.page.isVisible("#stick")), "nothing about the controls should sit on the picture uninvited");
     await t.page.keyboard.press("h"); expect(await t.page.isVisible("#keys") && (await t.page.textContent("#keys")).includes("行走"), "H should open the list of keys");
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#keys")), "Esc should close the list of keys");
@@ -614,7 +693,7 @@ const scenarios = {
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
   // the focus goes into the sheet and comes back to what opened it.
   layers: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 900, height: 600 } });
     const ui = () => t.page.evaluate(() => window.__ui());
     await t.page.keyboard.press("t"); let u = await ui(); expect(!u.stack.length, "before the book is filled T offers no seasons: " + JSON.stringify(u));
     await t.page.evaluate(() => document.body.classList.add("seasons"));   // as once it has been
@@ -644,7 +723,7 @@ const scenarios = {
   // The seasons are the visitor's once the book has been filled: not offered before, offered after in the photograph's
   // settings, the pause menu and T, said once, and still open after 重新朝山 empties the book for a second walk.
   seasons: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 900, height: 600 } });
     const offered = () => t.page.evaluate(() => document.body.classList.contains("seasons"));
     expect(!(await offered()), "a new visitor should not be offered the seasons");
     await t.page.click("#photoBtn"); await t.page.click("#photoSettingsToggle");
@@ -707,7 +786,7 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   jump: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 640, height: 400 } });
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });
     const sample = () => t.page.evaluate(() => { window.__jump = []; const read = () => { const s = window.__yard(); window.__jump.push([s.footY, s.jumping, s.z]); if (window.__jump.length < 400 && (s.jumping || window.__jump.length < 3)) requestAnimationFrame(read); }; requestAnimationFrame(read); });
     const z0 = (await t.state()).z; await sample(); await t.page.keyboard.press("Space");
     await t.until(async () => (await t.page.evaluate(() => window.__jump.some((j) => j[1]))) && !(await t.state()).jumping, 120000, "Space did not send him up and bring him down");
@@ -773,7 +852,7 @@ const scenarios = {
   } },
   // Click-drag (including trackpad presses) and locked movement must agree on look direction; the raised photo camera does not turn.
   camera: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 900, height: 600 } });
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=first" + BARE, { viewport: { width: 900, height: 600 } });
     for (const mode of ["first", "third", "photo"]) {
       if (mode === "third") await t.page.keyboard.press("v");
       if (mode === "photo") await t.page.click("#photoBtn");
@@ -811,7 +890,7 @@ const scenarios = {
   } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first", { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first" + BARE, { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
     expect(!(await t.page.$("#jumpBtn")), "a phone is not given a jump button: the porch's 下台阶 shows where it is needed");
     for (const id of ["photoBtn", "menuBtn", "bookBtn"]) {
       const r = await t.page.evaluate((i) => { const b = document.getElementById(i).getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight]; }, id);
@@ -846,7 +925,9 @@ const scenarios = {
 
 (async () => {
   const args = process.argv.slice(2), most = args.includes("--quick") ? 1 : args.includes("--smoke") ? 2 : 3, named = args.filter((a) => !a.startsWith("--"));
-  const names = named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most);
+  // --shard=2/4: the second of four parts of the list, taken in turn, so that four machines can share a whole run.
+  const shard = (args.find((a) => a.startsWith("--shard=")) || "").slice(8).split("/").map(Number), part = (list) => (shard.length === 2 && shard[1] > 0 ? list.filter((_, i) => i % shard[1] === shard[0] - 1) : list);
+  const names = part(named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most));
   for (const n of names) if (!scenarios[n]) { console.error(`no scenario "${n}"; there are: ${Object.keys(scenarios).join(", ")}`); process.exit(2); }
   const srv = await serve(), browser = await launch(), report = [];
   for (const n of names) {

@@ -1,0 +1,147 @@
+[
+ {
+  "t": "2026-11-16T01:26:17.432Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T01:26:18.679Z",
+  "run": "bell",
+  "kind": "diagnostic",
+  "what": "__pose beside bell"
+ },
+ {
+  "t": "2026-11-16T01:26:29.334Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-1-offered.png"
+ },
+ {
+  "t": "2026-11-16T01:26:32.090Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · first press"
+ },
+ {
+  "t": "2026-11-16T01:26:51.841Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · pressed again at once (button faint: true, ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:26:53.146Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "stroke 1 sounded 22.5 s after the press",
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T01:26:56.897Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "strokes after the early press: 2, pulls: 2"
+ },
+ {
+  "t": "2026-11-16T01:27:04.472Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-2-stroke1.png"
+ },
+ {
+  "t": "2026-11-16T01:27:10.265Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 3 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:27:15.627Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 2 rang 1.4 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": "三下"
+ },
+ {
+  "t": "2026-11-16T01:27:24.947Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 6.5 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:27:30.190Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 3 rang 1.4 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T01:27:37.261Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-3-third.png"
+ },
+ {
+  "t": "2026-11-16T01:27:42.918Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 2.5 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:27:47.723Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 4 rang 1.3 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T01:27:50.229Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key v · first person while holding the rope"
+ },
+ {
+  "t": "2026-11-16T01:27:57.667Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-4-first-person.png"
+ },
+ {
+  "t": "2026-11-16T01:27:58.934Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key v"
+ },
+ {
+  "t": "2026-11-16T01:28:01.466Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key Escape · let go"
+ },
+ {
+  "t": "2026-11-16T01:28:09.690Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-5-let-go.png"
+ },
+ {
+  "t": "2026-11-16T01:28:13.212Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "after letting go",
+  "rite": null,
+  "button": "撞钟"
+ },
+ {
+  "t": "2026-11-16T01:28:13.446Z",
+  "run": "bell",
+  "kind": "film",
+  "what": "bell.webm",
+  "errors": []
+ }
+]

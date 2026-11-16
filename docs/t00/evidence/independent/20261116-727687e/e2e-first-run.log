@@ -1,0 +1,23 @@
+ok   boot       92s
+ok   stairs     96s
+ok   drop       85s
+ok   camera    185s
+ok   jump       67s
+ok   sound      47s
+ok   steps     183s
+     (music: the step back took 1.55 s of audio time on this machine; the boundary check was skipped)
+FAIL music      71s
+     with the music silenced the drum should still be heard
+ok   photo-ui 1011s
+FAIL menu      143s
+     page.isVisible: Target page, context or browser has been closed
+     Call log:
+     [2m    - checking visibility of locator('#title')[22m
+     
+FAIL layers      0s
+     browser.newContext: Target page, context or browser has been closed
+FAIL seasons     0s
+     browser.newContext: Target page, context or browser has been closed
+FAIL rites       0s
+     browser.newContext: Target page, context or browser has been closed
+5 of 13 scenarios failed
