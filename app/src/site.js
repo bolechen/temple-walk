@@ -6,7 +6,7 @@
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "three";
 import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
-import { PURLIN, buildHall, DOOR } from "./building.js";
+import { PURLIN, PING, buildHall, DOOR } from "./building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
 
@@ -77,7 +77,7 @@ export function buildSite(M) {
     if (base === undefined) shade[lvl].push(place(b.plat, at, q));
     // What stands where, by name: the edge sweep and the tests go round each building by this list.
     buildings.push({ name: opts.hall?.name || opts.plaque?.text || opts.plaque || opts.name || "", ...place(b.plat, at, q), y,
-      frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
+      frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
@@ -96,7 +96,7 @@ export function buildSite(M) {
       o.storey = i; o.under = o.skirt = !!next;   // which storey, and whether another stands on its roof
       if (next) { o.overhang = o.overhang ?? 2.4; o.G = o.xs[o.xs.length - 1] + o.overhang - next.xs[next.xs.length - 1] + 0.4; }
       const b = put(o, at, q, lvl); first = first || b;
-      if (next) foot = b.roofAt(b.EZ - next.zs[0]);
+      if (next) foot = b.roofAt(b.EZ - next.zs[0]) + (next.ping ? PING.lift : 0);
     });
     return first;
   };
@@ -106,7 +106,7 @@ export function buildSite(M) {
   putTwo({   // the gate: you pass through its middle bay, under an upper storey
     xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
     front: "pass", back: "pass", dark: false, timber: true, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
-  }, { timber: true, platOut: 0.85, rail: true, xs: [-6.2, -2.5, 2.5, 6.2], zs: [1.8, -1.8], colTop: 3.0, overhang: 2.1, crest: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
+  }, { timber: true, ping: true, platOut: 0.85, rail: true, xs: [-6.2, -2.5, 2.5, 6.2], zs: [3, -3], colTop: 3.0, overhang: 1.8, crest: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
 
   const strikers = [];
   for (const sx of [-1, 1]) {   // at either end of the gate, completing its five roofs: the bell (east) and the drum (west)
@@ -159,11 +159,11 @@ export function buildSite(M) {
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
     xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
-  }, { xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [5.0, 0, -5.0], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
+  }, { xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [4.3, 0, -4.3], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
     xs: [-9.4, -6.1, -2.5, 2.5, 6.1, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, steps: 5.2, lamps: false, hall: { id: "library", kind: "library", name: "藏经楼" },
-  }, { xs: [-6.1, -2.5, 2.5, 6.1], zs: [2.6, -2.6], colTop: 3.1, overhang: 2.3, crest: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
+  }, { ping: true, platOut: 0.9, rail: true, xs: [-6.1, -2.5, 2.5, 6.1], zs: [4.2, 0, -4.2], colTop: 3.1, overhang: 2.3, crest: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
   {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark.
     // The whole arch stands in front of the wall and below the terrace above it (2.8 m): the crown comes up to the
     // coping and no higher, so nothing of it shows over the parapet or through it from the terrace behind.
@@ -193,15 +193,15 @@ export function buildSite(M) {
 
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
-    { xs: [-7.5, -4.86, -2.1, 2.1, 4.86, 7.5], zs: [7.5, 4.86, 2.1, -2.1, -4.86, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁" } },
-    { xs: [-5.4, -1.8, 1.8, 5.4], zs: [5.4, 1.8, -1.8, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
-    { xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, crest: 4.0, G: 2.4, platOut: 1.0, rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
+    { xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁" } },
+    { ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
+    { ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, crest: 4.0, G: 2.4, platOut: 1.0, rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
   const sp = putStack([
     { xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
-    { xs: [-1.35, 1.35], zs: [1.35, -1.35], colTop: 1.5, overhang: 1.5, rise: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
+    { xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, rise: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
   sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
 
