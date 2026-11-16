@@ -224,17 +224,45 @@ export function bird(level = 1) {
 }
 export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 
+// ---- Two cues of the story ----
+// Wings: a dozen small birds going up at once from a tree, a rattle of quick wingbeats that thins as they climb away,
+// and two or three alarm calls among them.
+const cues = { flutter: 0, farBell: 0 };
+export function flutter(level = 1) {
+  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  const now = ctx.currentTime + 0.02;
+  for (let i = 0; i < 46; i++) {
+    const t = now + Math.pow(i / 46, 1.6) * 2.2 + Math.random() * 0.05, far = 1 - i / 46;
+    crack(t, 900 + Math.random() * 1400, 0.7, 0.05 * level * far, 0.03, bus.ambience.in);
+  }
+  setTimeout(() => { for (let k = 0; k < 3; k++) setTimeout(() => bird(0.7 * level), k * 260); }, 120);
+  cues.flutter++;
+}
+// The close of the chapter: a bell in the far hills answering, another temple's, a tone lower than ours, dark and
+// small with the distance, and given back once more by the valley.
+let farEcho = null;
+export function farBell() {
+  if (!start()) return; wake();
+  const t = ctx.currentTime + 0.05, lp = ctx.createBiquadFilter(), g = ctx.createGain();
+  lp.type = "lowpass"; lp.frequency.value = 650; g.gain.value = 0.32; lp.connect(g); g.connect(bus.effects.in);
+  if (!farEcho) { farEcho = hillEcho(ctx, bus.effects.in); }
+  duck(0.3, 12);
+  bell(ctx, lp, t, 0.9, farEcho, hz(41));   // F2: in the music's mode, below the near bell's G
+  cues.farBell++;
+}
+export const cueState = () => ({ ...cues });
+
 // ---- The photograph ----
 // The shutter: a small leaf shutter in a wooden body, two soft clicks thirty milliseconds apart (the blades closing and
 // opening) over a faint knock of the case; nothing electronic. And when the print comes, the seal pressed on it: a dull
 // pad of a stamp on paper, and the paper giving a little under it. Both on the effects bus; the music steps aside briefly.
 const shots = { shutter: 0, stamp: 0 };
-function crack(t, centre, q, gain, secs) {
+function crack(t, centre, q, gain, secs, to = null) {
   const n = Math.floor(ctx.sampleRate * secs), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6);
   const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   s.buffer = b; f.type = "bandpass"; f.frequency.value = centre; f.Q.value = q; g.gain.value = gain;
-  s.connect(f); f.connect(g); g.connect(bus.effects.in); s.start(t);
+  s.connect(f); f.connect(g); g.connect(to || bus.effects.in); s.start(t);
 }
 export function shutterSound() {
   if (!start()) return; wake();

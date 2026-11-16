@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { WORKS } from "./works.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush } from "./audio.js";
+import { chime, drop, setSeals, hush, farBell } from "./audio.js";
 import { createRites } from "./rites.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 
@@ -189,7 +189,11 @@ export function createGame(y) {
     await rites.close(() => on() && !skip, (t) => {
       let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
       if (t > 25.5) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
-      else if (k !== shown) { shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast); }
+      else if (k !== shown) {
+        shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
+        // When it is said that a bell answers in the far hills, it is heard (audio.js).
+        if (k >= 0 && CLOSING[k][1].startsWith("远处的山里")) farBell();
+      }
     });
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
@@ -199,7 +203,9 @@ export function createGame(y) {
   }
   window.addEventListener("struck", (e) => {
     if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
-    const r = journey.strike(); say(["", "一下", "两下", "三下"][r.strikes] || "", 3); if (r.earned) earned("bell"); else refresh();
+    const r = journey.strike(); say(["", "一下", "两下", "三下"][r.strikes] || "", 3);
+    // The third stroke, the first time on this walk: the birds in the old trees beyond the wall go up (yard.js, flock.js).
+    if (r.earned) { earned("bell"); window.dispatchEvent(new CustomEvent("flush")); } else refresh();
   });
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
 

@@ -235,6 +235,7 @@ const scenarios = {
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
+    expect((await t.page.evaluate(() => window.__cues())).farBell === 1, "the close should end on the far bell answering");
     const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
@@ -459,6 +460,11 @@ const scenarios = {
     // (Played and listened to within one call, as the steps are: the place's bus carries nothing else here.)
     const k = await t.page.evaluate(() => { const r = window.__knock(true), t0 = performance.now(); while (performance.now() - t0 < 60); return { ...r, heard: window.__listen("ambience") }; });
     expect(k.knocks >= 1 && k.heard.rms > 0.0005, "the culms made no knock: " + JSON.stringify(k));
+    // The third stroke of the bell, the first time: the birds in the old trees by the tower go up, with a rattle of wings.
+    await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); });
+    await t.frames(3);
+    const fl = await t.page.evaluate(() => ({ ...window.__flock(), ...window.__cues() }));
+    expect(fl.flights === 1 && fl.flying && fl.flutter >= 1, "the third stroke should send the birds up: " + JSON.stringify(fl));
     const bd = await t.page.evaluate(() => { const r = window.__bird(true), t0 = performance.now(); while (performance.now() - t0 < 140); return { ...r, heard: window.__listen("ambience") }; });
     expect(bd.birds >= 1 && bd.heard.rms > 0.0003, "no bird sang: " + JSON.stringify(bd));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
