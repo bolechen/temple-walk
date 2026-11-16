@@ -486,11 +486,11 @@ const scenarios = {
     for (const p of [[cx + r, cz + r], [cx + r, cz - r], [cx - r, cz - r], [cx - r, cz + r], L.door]) { await t.page.evaluate((q) => window.__walk([q]), p); await t.until(() => at(p, 0.2), 60000, `he did not get round to (${p.map((v) => v.toFixed(2))})`); }
     expect((await t.state()).up === "lingxiao" && Math.abs((await t.state()).h - L.floor) < 0.02, "going round he left the balcony");
     // Straight at the railing, hurrying, and a jump there: he stays on the balcony.
-    await t.page.evaluate((y) => window.__pose(window.__lofts.lingxiao.door[0] + 0.8, window.__lofts.lingxiao.door[1], y, 0), L.face);
+    await t.page.evaluate((y) => window.__pose(window.__lofts.lingxiao.door[0] + 1.3, window.__lofts.lingxiao.door[1], y, 0), L.face);
     await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w"); await t.frames(20); await t.page.keyboard.press("Space"); await t.frames(20); await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift"); await t.frames(10);
     s = await t.state(); expect(Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.z - L.at[1]) <= L.half.edge - 0.16 - 0.38 + 0.02 && !s.jumping, "he went into or over the railing: " + JSON.stringify(s));
     // A tap down on the court below does not send him anywhere.
-    await t.page.evaluate((y) => window.__pose(window.__lofts.lingxiao.door[0] + 0.8, window.__lofts.lingxiao.door[1], y, -0.6), L.face); await t.frames(3);
+    await t.page.evaluate((y) => window.__pose(window.__lofts.lingxiao.door[0] + 1.3, window.__lofts.lingxiao.door[1], y, -0.6), L.face); await t.frames(3);
     const box = await t.page.$("canvas").then((c) => c.boundingBox()); await t.page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.85); await t.frames(5);
     expect(!(await t.state()).target, "a tap on the court far below sent him walking");
     // A photograph up there.
@@ -498,7 +498,7 @@ const scenarios = {
     // Left and opened again, he is still up there.
     await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.up === "lingxiao"; }, 30000, "where he stood up there was never kept");
     await t.page.reload(); await ready();
-    expect((await t.page.textContent("#titleSeals")).includes("凌霄阁上"), "the title should say he was up on the pavilion: " + (await t.page.textContent("#titleSeals")));
+    expect((await t.page.textContent("#titleSeals")).includes("凌霄阁上"), "the title should say he was up on the pavilion: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify(await t.page.evaluate(() => [window.__left(), localStorage.getItem("yunjing.place.v1")])));
     await t.page.click("#enterBtn"); await t.frames(3); s = await t.state();
     expect(s.up === "lingxiao" && Math.abs(s.h - L.floor) < 0.02 && s.view === "first", "coming back he is not up on the balcony: " + JSON.stringify(s));
     await t.shot("e2e-loft");

@@ -20,6 +20,11 @@ export const LEVELS = [
   { y: 20, x: 14, zS: -118.4, zN: -142, stair: 4 },     // the summit: high enough to look back over every roof
 ];
 const [T1, T2, TOP] = LEVELS;
+// The top storey of the summit pavilion is walked round (issue #101): how far its balcony reaches past the columns
+// and how far its eave reaches over that. 1.6 m leaves a child room between wall and rail and is recorded as a
+// departure from the Yingzao Fashi (docs/t00/decisions.md, 登凌霄阁); the structure review prefers the balcony's edge
+// over the second storey's columns (2.0 m) under an eave of about 2.8 m, for the owner to decide. Change it here only.
+export const LOFT = Object.freeze({ out: 1.6, overhang: 2.2 });
 const HILL = { zS: T2.zN, zN: TOP.zS };   // the slope below the summit, crossed only by the stair between the tea rows
 // The way in: the last of the old path up the mountain, a zigzag through the grove. You start at the
 // river-view pavilion, climb north past the ink-stone pool, turn west and climb to the half-way pavilion,
@@ -205,8 +210,7 @@ export function buildSite(M) {
   putStack([
     { xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
     { ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
-    // The top storey is walked round (issue #101): its balcony reaches 1.6 m past the columns, room for a child between wall and rail.
-    { ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, crest: 4.0, G: 2.4, platOut: 1.6, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
+    { ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
@@ -466,7 +470,7 @@ export function buildSite(M) {
     art5: [0, T2.zS + 5, 0, 0.22], art6: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
     // Up on the pavilion's top storey, a step east of its door (a post of the railing stands at neither), looking back
     // south over every roof below (issue #101). A view up on a balcony is named in `viewUp`.
-    loft: [0.8, topZ + 4.15, Math.PI, -0.22],
+    loft: [0.8, topZ + 3.4 + (0.51 + LOFT.out - 0.64) / 2, Math.PI, -0.22],
   };
   const viewUp = { loft: "lingxiao" };
 
