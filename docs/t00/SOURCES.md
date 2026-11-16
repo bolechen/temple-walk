@@ -96,9 +96,10 @@
 | 环境光遮蔽（GTAO），只开高档，半分辨率，用场景本身的深度，远处随雾淡去（#72） | `post.js` | `art-goal.md` 第一阶段（three 自带 `GTAOPass`） | 所有者指定的方向；强度自拟 |
 | 很浅的景深：只在定机位（`?shot`）和拍照取景时开，第三人称对焦在小沙弥身上（#72） | `post.js`、`yard.js` 的 `focusAt` | `art-goal.md` 第一阶段；原型「realistic depth」 | 所有者指定的方向；对焦距离按常理 |
 | 分层的雾：雾气积在低处、往上变薄，山顶回望时远山一层层隔开；夏昼 J01 不分层（#72） | `fog.js`、`glsl.js` 的 `fogLayer`、`mood.js` 的 `fogLayer`、`haze` | 原型 06「Silver-blue mist receding through mountains」；山雾积在谷里是常理 | 所有者指定的方向；物理按常理 |
-| 黄昏：太阳更暖更亮（偏黄橙，不偏紫红），天光少紫，阴影少蓝；晴秋的傍晚灯只是微亮，阴的夏夜傍晚灯早亮、更亮 | `mood.js` | `art-targets.md`「差距的方向」，原型 02、03、04、05 | 所有者指定的方向；灯与云量的关系按常理 |
-| 窗光改为橙红（夏日黄昏更红） | `materials.js` 的 `lattice`、`mood.js` 的 `win` | 原型 05「Warm glowing amber lattice windows against soft indigo dusk」，`art-targets.md` A5 | 所有者指定的方向 |
-| 清晨的天和雾偏银蓝、压暗；夏日清晨是淡青绿的雾 | `mood.js` | 原型 01「Cool jade green…soft morning mist」、06「Silver-blue mist」 | 所有者指定的方向 |
+| 黄昏：太阳更暖更亮（偏黄橙，不偏紫红），天光少紫，阴影少蓝；秋暮的太阳方向以 A3 首院逆光为准 | `mood.js` | `art-targets.md`「差距的方向」，原型 02、03、04、05；太阳方向是主创评审 #125 定的 | 所有者指定的方向；主创评审 |
+| 黄昏的灯按云量亮：晴天的傍晚格窗只微亮（原型 04 的窗是暗的），阴天的傍晚早亮、更亮（原型 05） | `mood.js` 的 `lamp` | 为同时贴近原型 04、05 推出来的规则，没有出处 | 自拟 |
+| 黄昏的窗光为琥珀色（比改前的黄偏橙，不到红；2026-11-16 一度过红，按主创评审 #125 改回） | `materials.js` 的 `lattice`、`mood.js` 的 `win` | 原型 05「Warm glowing amber lattice windows against soft indigo dusk」，`art-targets.md` A5 | 所有者指定的方向 |
+| 清晨的天和雾偏银蓝、压暗；夏日清晨是淡青绿的雾，阳光更亮更白，台阶上有斑驳的亮处 | `mood.js` | 原型 01「Cool jade green…soft morning mist」、06「Silver-blue mist」 | 所有者指定的方向 |
 
 ## 声音
 

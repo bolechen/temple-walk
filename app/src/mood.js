@@ -25,7 +25,7 @@ const TIME = {
            lut: { lift: [0, 0, 0], gamma: [1, 1, 1], gain: [1, 1, 1], sat: 1.06, shadow: [0, 0, 0.005], light: [0.006, 0.002, -0.004] } },
   dusk:  { sun: [-0.82, 0.17, 0.42], sunCol: [1, 0.67, 0.36], sunI: 4.0, hemiS: [0.66, 0.6, 0.64], hemiG: [0.36, 0.27, 0.2], hemiI: 0.8, fog: [0.84, 0.6, 0.47], fogD: 0.008,
            zen: [0.22, 0.3, 0.52], hor: [0.95, 0.7, 0.44], cloud: -0.1, stars: 0.12, glow: 1.3, exp: 1.2, lamp: 1.0, sh: [0.97, 0.97, 1.0], hi: [1.08, 1, 0.86], sat: 1.14, lift: 0.01, con: 1.12, bloom: 0.36, mist: 0.9,
-           hal: 0.7, ao: 0.65, win: [0.9, 0.3, 0.09], fogLayer: [0.6, -4, 16, 2.2], haze: 1,
+           hal: 0.7, ao: 0.65, win: [0.9, 0.44, 0.15], fogLayer: [0.6, -4, 16, 2.2], haze: 1,
            lut: { lift: [0, 0, 0.006], gamma: [1.02, 1, 0.98], gain: [1.02, 1, 0.975], sat: 1.1, shadow: [0.004, 0.002, -0.004], light: [0.014, 0.008, -0.014] } },
   night: { sun: [-0.4, 0.62, 0.55], sunCol: [0.5, 0.64, 1], sunI: 1.0, hemiS: [0.15, 0.21, 0.38], hemiG: [0.04, 0.05, 0.07], hemiI: 0.75, fog: [0.055, 0.085, 0.15], fogD: 0.0072,
            zen: [0.01, 0.022, 0.065], hor: [0.055, 0.095, 0.19], cloud: -0.3, stars: 1, glow: 0.55, exp: 1.3, lamp: 1.5, sh: [0.88, 0.97, 1.14], hi: [1.04, 1, 0.96], sat: 0.96, lift: 0.006, bloom: 0.48, mist: 0.45,
@@ -53,16 +53,16 @@ export function moodOf(season, time) {
   m.hemiI = t.hemiI * (1 + 0.15 * cloud);
   // At dusk the lamps are lit sooner and burn brighter under cloud, when the day goes early; on a clear autumn evening
   // the sky still holds the light and the paper only glows (the prototypes: 05 at a cloudy summer dusk, 03 and 04 clear).
-  if (time === "dusk") m.lamp = t.lamp * (0.45 + 0.75 * cloud);
+  if (time === "dusk") m.lamp = t.lamp * (0.1 + 1.1 * cloud);
   // Summer by day is the picture the place is judged by (J01 in docs/ART-SPEC.md): overcast, just after rain. No sun
   // to speak of, a grey sky darker than the white walls, thin cool mist that leaves what is near perfectly clear.
   if (season === "summer" && time === "day") Object.assign(m, { cloud: 1, sunI: 0.5, sunCol: [0.62, 0.65, 0.66], hills: [0.05, 0.085, 0.07], hemiI: 1.15, hemiS: [0.8, 0.86, 0.87], hemiG: [0.38, 0.4, 0.36],
     fog: [0.47, 0.51, 0.5], fogD: 0.0056, zen: [0.3, 0.335, 0.35], hor: [0.42, 0.455, 0.45], exp: 1.16, sat: 0.98, lift: 0.006, bloom: 0.14, mist: 0.8, glow: 0.3,
     hal: 0, fogLayer: [0, 0, 20, 2], haze: 1, lut: IDENTITY });   // the film's finish leaves J01 as it was: no table, no halation, plain air
   // A summer dawn after rain: pale jade mist in the bamboo, the light cool and green rather than gold (prototype 01).
-  if (season === "summer" && time === "dawn") Object.assign(m, { fog: [0.6, 0.68, 0.64], hor: [0.86, 0.92, 0.86], zen: [0.36, 0.48, 0.6], sunCol: [1, 0.86, 0.68], sat: 1.14 });
-  // A cloudy summer dusk after rain: the deck glows rose under an indigo sky and the lamps burn red-orange (prototype 05).
-  if (season === "summer" && time === "dusk") Object.assign(m, { zen: [0.13, 0.15, 0.4], hor: [0.78, 0.47, 0.56], sunCol: [1, 0.55, 0.45], sunI: m.sunI * 0.6, win: [0.95, 0.22, 0.12] });
+  if (season === "summer" && time === "dawn") Object.assign(m, { fog: [0.6, 0.68, 0.64], hor: [0.9, 0.96, 0.9], zen: [0.38, 0.5, 0.62], sunCol: [0.98, 0.96, 0.86], sunI: m.sunI * 1.6, exp: 1.18, sat: 1.18, lift: 0.008 });
+  // A cloudy summer dusk after rain: the deck glows rose under an indigo sky and the lamps burn amber (prototype 05).
+  if (season === "summer" && time === "dusk") Object.assign(m, { zen: [0.13, 0.15, 0.4], hor: [0.78, 0.47, 0.56], sunCol: [1, 0.55, 0.45], sunI: m.sunI * 0.6, win: [0.95, 0.42, 0.14] });
   if (s.snow && time !== "night") m.fog = t.fog.map((v, i) => v * 0.6 + [0.86, 0.88, 0.92][i] * 0.4);
   m.drift = s.drift === "none" && time === "night" ? "firefly" : s.drift;
   m.line = LINES[season][dark ? 1 : 0];

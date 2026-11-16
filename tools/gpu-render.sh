@@ -37,8 +37,9 @@ cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/shared/models" "$STAGE/app/plate.
 # mid-job (a sync of in/ with --delete removes everything else under it).
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
 echo "run $RUN on $FLAVOR"
+COMMIT="$(git rev-parse HEAD)$(git diff --quiet HEAD -- app || echo +dirty)"   # recorded in report.json with the site's fingerprint
 hf jobs run --flavor "$FLAVOR" --timeout 25m --name "temple-walk-render-$RUN" \
-  -e RUN="$RUN" -e SPEC="$(printf %s "$SPEC" | base64 | tr -d '\n')" \
+  -e RUN="$RUN" -e COMMIT="$COMMIT" -e SPEC="$(printf %s "$SPEC" | base64 | tr -d '\n')" \
   -v "hf://buckets/$BUCKET:/work" \
   mcr.microsoft.com/playwright:v1.63.0-noble \
   bash -c 'set -e; mkdir -p /tmp/run && cd /tmp/run && npm init -y >/dev/null 2>&1 && npm i playwright@1.63.0 >/dev/null 2>&1

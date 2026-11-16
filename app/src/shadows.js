@@ -6,8 +6,9 @@
 // three draws the sun's shadow into a depth texture read through a comparing sampler, which answers "lit or not" and
 // cannot say how deep the blocker is. So the search asks it the same question at four depths: is anything nearer the
 // sun than this point by more than 0.6, 2.5 or 8 metres? The fraction that answers yes at each depth gives the
-// blocker's mean distance, close enough to size the penumbra; a dozen taps over that width then make the shadow.
-// Where nothing in the search disc shades the point (most of what is lit), six taps are all it costs.
+// blocker's mean distance, close enough to size the penumbra; eight taps over that width then make the shadow (each a
+// hardware-filtered comparison of four texels). Where nothing in the search disc shades the point (most of what is
+// lit), four taps are all it costs.
 //
 // It replaces three's own PCF function in the shader chunk, so every material that takes shadows takes these,
 // the hand-lit paving included. It must be called before anything is compiled; the shadow map is still drawn only
@@ -32,11 +33,11 @@ export function softShadowChunk(chunk, { width, height, depth, spread = 0.022, m
     float phi = interleavedGradientNoise( gl_FragCoord.xy ) * PI2;
     vec2 search = perM * ${f(max * 0.75)};
     float near0 = 0.0;
-    for ( int i = 0; i < 6; i ++ ) near0 += 1.0 - texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( i, 6, phi ) * search, shadowCoord.z ) );
+    for ( int i = 0; i < 4; i ++ ) near0 += 1.0 - texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( i, 4, phi ) * search, shadowCoord.z ) );
     if ( near0 < 0.01 ) return 1.0;
     float near1 = 0.0, near2 = 0.0, near3 = 0.0;
-    for ( int i = 0; i < 6; i ++ ) {
-      vec2 p = shadowCoord.xy + vogelDiskSample( i, 6, phi ) * search;
+    for ( int i = 0; i < 4; i ++ ) {
+      vec2 p = shadowCoord.xy + vogelDiskSample( i, 4, phi ) * search;
       near1 += 1.0 - texture( shadowMap, vec3( p, shadowCoord.z - 0.6 * ZM ) );
       near2 += 1.0 - texture( shadowMap, vec3( p, shadowCoord.z - 2.5 * ZM ) );
       near3 += 1.0 - texture( shadowMap, vec3( p, shadowCoord.z - 8.0 * ZM ) );
@@ -46,8 +47,8 @@ export function softShadowChunk(chunk, { width, height, depth, spread = 0.022, m
     float w = clamp( d * ${f(spread)}, ${f(min)}, ${f(max)} );
     vec2 r = perM * w * 0.5;
     float lit = 0.0;
-    for ( int i = 0; i < 12; i ++ ) lit += texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( i, 12, phi + 1.3 ) * r, shadowCoord.z ) );
-    return mix( 1.0, lit / 12.0, shadowIntensity );
+    for ( int i = 0; i < 8; i ++ ) lit += texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( i, 8, phi + 1.3 ) * r, shadowCoord.z ) );
+    return mix( 1.0, lit / 8.0, shadowIntensity );
   }
   float getShadowPCF( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {`;
   return chunk.replace(SIGNATURE, soft);

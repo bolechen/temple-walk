@@ -19,6 +19,19 @@ const FLAGS = {
 };
 const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required", "--enable-webgl", "--disable-gpu-driver-bug-workarounds"];
 
+// The site the job was handed, in a form a report can be checked against later: the commit it was built from (as the
+// launcher says, with "+dirty" if app/ had changes not committed), the bundled entry the page loads (its name carries
+// the build's hash), and one SHA-256 over every file's path and contents.
+function fingerprint(dir) {
+  const crypto = require("crypto"), files = [];
+  const walk = (d) => { for (const f of fs.readdirSync(d).sort()) { const p = path.join(d, f); fs.statSync(p).isDirectory() ? walk(p) : files.push(p); } };
+  walk(dir);
+  const all = crypto.createHash("sha256");
+  for (const f of files) all.update(path.relative(dir, f) + "\0" + crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex") + "\n");
+  const html = fs.existsSync(path.join(dir, "index.html")) ? fs.readFileSync(path.join(dir, "index.html"), "utf8") : "";
+  return { commit: process.env.COMMIT || null, entry: (html.match(/assets\/index-[\w-]+\.js/) || [null])[0], files: files.length, sha256: all.digest("hex") };
+}
+
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const report = { started: new Date().toISOString(), host: { gpu: sh("nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader"), cpu: sh("nproc"), egl: sh("ls /usr/share/glvnd/egl_vendor.d 2>&1"), vulkan: sh("ls /usr/share/vulkan/icd.d /etc/vulkan/icd.d 2>&1"), libs: sh("ldconfig -p | grep -i -E 'nvidia|libEGL|libvulkan' | cut -c1-90 | head -30"), dev: sh("ls /dev | grep -i -E 'nvidia|dri' ; ls /dev/dri 2>&1") }, tried: {}, bench: [], shots: [], errors: [] };
@@ -43,6 +56,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
       await b.close();
     } catch (e) { report.tried[key] = "launch failed: " + String(e.message).split("\n")[0].slice(0, 160); if (b) await b.close().catch(() => {}); }
   }
+  report.site = fingerprint(root);   // whose code drew these pictures: every file the job was handed, hashed, and the page's bundled entry
   report.using = how; report.renderer = report.tried[how]; console.log("renderer:", how, "→", report.renderer);
   const save = () => fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 2));
   save();

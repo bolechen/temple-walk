@@ -30,8 +30,8 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
   if (quality.gtao && depth) {
     gtao = new GTAOPass(scene, camera, 4, 4);
     gtao.setGBuffer(composer.renderTarget1.depthTexture);
-    gtao.updateGtaoMaterial({ radius: 0.7, distanceExponent: 1.4, thickness: 1.2, scale: 1, samples: 12, distanceFallOff: 1, screenSpaceRadius: false });
-    gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+    gtao.updateGtaoMaterial({ radius: 0.7, distanceExponent: 1.4, thickness: 1.2, scale: 1, samples: 8, distanceFallOff: 1, screenSpaceRadius: false });
+    gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 8 });
     gtao.output = GTAOPass.OUTPUT.Off; gtao.needsSwap = false;
     const size = gtao.setSize.bind(gtao); gtao.setSize = (w, h) => size(Math.max(1, w >> 1), Math.max(1, h >> 1));
     composer.addPass(gtao);
