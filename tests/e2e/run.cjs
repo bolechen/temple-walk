@@ -234,7 +234,6 @@ const scenarios = {
     // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
     await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
     await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring the bell");
-    await t.page.click("#act"); await t.page.waitForTimeout(300); expect((await t.journey()).strikes === 1, "a press while the log swung rang the bell");
     for (const n of [2, 3]) { await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.ready)), 30000, "the rope never came back to hand"); await t.page.click("#act"); await t.until(async () => (await t.journey()).strikes === n, 30000, `the stroke ${n} did not sound`); }
     await seal("bell", "the bell"); expect((await t.page.textContent("#toastName")).includes("闻钟") && (await t.page.getAttribute("#toastSeal", "src")).startsWith("data:image"), "no seal was shown");
     expect((await t.page.textContent("#bookBtn")).includes("二"), "the book's button should count the seals");

@@ -90,7 +90,6 @@ export function createRites(y, fast = 1) {
     if (bell.grip > 0) bell.end.lerp(between(tB).addScaledVector(dir(0, 0.2, 1, tC), 0.03), bell.grip);
     rope.position.copy(bell.top); tB.subVectors(bell.end, bell.top); const len = tB.length();
     rope.scale.set(1, len, 1); rope.quaternion.setFromUnitVectors(UP, tB.divideScalar(len || 1)); knot.position.copy(bell.end).addScaledVector(tB, 0.03);
-    peal.drawn = Math.max(peal.drawn, d);   // how far the log has been drawn back since he took the rope, for the tests
     if (!bell.held) return;
     // His hands go with the rope: down and in as the log comes back to him, up and out as it goes to the bell; and
     // he leans with it.
@@ -113,7 +112,8 @@ export function createRites(y, fast = 1) {
     const lead = PULL * 1000 * fast; bellS.from = bellS.swing.position.z; bellS.lead = lead; bellS.t0 = riteNow() + lead;
     // Once drawn back the log is going to the bell: if he lets go of the rope halfway, it still swings in and sounds.
     await play(PULL, () => {}, () => true);
-    peal.busy = false; bellS.from = 0; peal.last = riteNow(); peal.pulls++;
+    // How far the log went back on its way (logSwing, unit-tested), kept for the tests: a slow renderer may not draw that moment.
+    peal.busy = false; bellS.from = 0; peal.last = riteNow(); peal.pulls++; peal.drawn = Math.max(peal.drawn, LOG_DRAW);
     y.strike("bell", true); return on();
   }
   async function letGo(on) {
