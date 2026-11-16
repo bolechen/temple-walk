@@ -226,8 +226,8 @@ His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down o
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
 paving (`puddleAt`, the paving shader's own puddle pattern ported to JS; each splash also sends two rings across the water, `ground.ripple` and `RIPPLE` in `ground.js`, which only bend the puddle's mirror and sheen; `__ripples()`), and snow (a shower of tiny breaks following the
 push of the foot). All are worked out sample by sample, so `tools/steps.mjs` renders the same steps, and `LEVEL` sets
-them against each other: dry stone the quietest, snow the loudest, all well under the music (a stone step about 22 dB
-under it, after 小王子's, whose files put its own about 26 dB under; `steps.test.mjs` holds the played level). For every shoe `monk.steps` reports, `yard.js` asks
+them against each other: dry stone the quietest, snow the loudest, all well under the music (若隐若现, the owner asked: a stone step about 32 dB
+under it, a little fainter than 小王子's, whose files put its own about 26 dB under; `steps.test.mjs` holds the played level). For every shoe `monk.steps` reports, `yard.js` asks
 `walker.floorAt` what floor it is (`room`, a building's `stone` or `wood`, the approach's `path`, the courts' `paving`)
 and `underfoot()` what that sounds like in this mood: a hall's floor and a roofed platform are dry, the swept axis path
 of the court is never snow, autumn has dried. `footstep()` in `audio.js` plays it under the effects slider but on its own

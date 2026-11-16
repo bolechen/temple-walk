@@ -130,8 +130,9 @@ export function stepSound(kind, sampleRate, { seed = 1, speed = 2.1, wet = 1 } =
 // loudness over its loudest 60 ms; `steps.test.mjs` holds the order. Set so that a step on stone is still heard over
 // the wind in the bamboo (2026-11-16: stone and wet stone raised 6 dB, a splash 5 and snow 4, keeping the order), then,
 // the same day, all lowered 10 dB to sit under the music nearer the way 小王子 keeps its steps: measured from its shipped
-// files, its stone steps sound about 26 dB under its music and ours were 12 (docs/t00/SOURCES.md).
-export const LEVEL = { stone: 0.051, wet: 0.054, puddle: 0.07, snow: 0.133 };
+// files, its stone steps sound about 26 dB under its music and ours were 12 (docs/t00/SOURCES.md). Lowered 10 dB more
+// the same day at the owner's word, 若隐若现: now just there in a quiet court and lost under the bamboo's gusts.
+export const LEVEL = { stone: 0.016, wet: 0.017, puddle: 0.022, snow: 0.042 };
 
 // Where water stands on the paving after rain: the same pattern the paving shader draws (`low` and `puddle` in
 // ground.js), worked out here so that a splash is heard where a puddle is seen. 0..1.
