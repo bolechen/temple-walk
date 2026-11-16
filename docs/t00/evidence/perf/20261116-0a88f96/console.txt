@@ -1,0 +1,1 @@
+no page errors, console errors or failed requests during the walk
