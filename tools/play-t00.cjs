@@ -20,7 +20,7 @@ async function page(b, base, run, query, ctxOpts = {}) {
   await p.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   await p.waitForFunction(() => !document.getElementById("enterBtn")?.disabled, null, { timeout: 60000 });
-  if (ctxOpts.hasTouch) await p.tap("#enterBtn", { timeout: 240000 }); else await p.click("#enterBtn");
+  if (ctxOpts.hasTouch) await p.tap("#enterBtn", { timeout: 240000 }); else await p.click("#enterBtn", { timeout: 240000 });
   note(run, "input", ctxOpts.hasTouch ? "tap 入山" : "click 入山");
   const S = { p, ctx, errors,
     j: () => p.evaluate(() => window.__journey()), r: () => p.evaluate(() => window.__rites()),
