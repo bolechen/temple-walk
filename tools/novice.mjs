@@ -12,7 +12,8 @@
 //      code, which was drawn from the same turnaround, is the same height and is bound in the same pose: so the skirt
 //      bones, the sleeves that follow the arm and the legs all keep the weights they were tuned with;
 //   5. packs the three textures as 1024 px WebP.
-// (With NOVICE_WELD=<n>, between 4 and 5, copies of one point take one weight, then are smoothed: issue #80, see 4b.)
+// (Between 4 and 5: the arms are weighted along the arm (4a), and with NOVICE_WELD=<n> copies of one point take one
+// weight, then are smoothed (4b): issue #80.)
 // (extras.robeColor is the robe's average colour as sRGB hex, for the cloth of the lap he sits on.)
 //
 // The file written holds four meshes named after the parts, each with POSITION, NORMAL, TEXCOORD_0, JOINTS_0 and
@@ -126,12 +127,51 @@ for (let i = 0; i < nv; i++) {
   const top = [...total].sort((a, b) => b[1] - a[1]).slice(0, 4), s = top.reduce((a, [, v]) => a + v, 0);
   top.forEach(([b, v], k) => { J[i * 4 + k] = b; W[i * 4 + k] = v / s; });
 }
+// ---- 4a. the arms: along the arm, not from the nearest neighbour (issue #80) ----
+// The sculpt holds its arms wider than the figure built in code (at the wrist about 10 cm higher), and its sleeve is sewn to
+// the forearm where the built figure's hangs loose from the upper arm. So the nearest vertices of that figure to a point
+// of the sculpt's forearm or cuff can be its upper arm or its hand: a strip of forearm hung wholly on the upper arm beside
+// skin hung on the hand, and was drawn out 25 cm long when he put his palms together. On the arm, skin and sleeve take
+// their weights from how far along it they lie instead, measured from the shoulder joint against the skeleton's own upper
+// arm (0.20 m) and forearm (0.15 m): upper arm, then forearm across the elbow, then hand across the wrist, each crossing
+// blended over a few centimetres. "On the arm" is within 7 cm of the line from the shoulder joint to the middle of the
+// sculpt's hand (fading out by 10 cm), and more than 8 cm out along it (fully by 14 cm), so the shoulder, the collar and
+// the body of the robe keep the weights they took.
+{
+  const at = (n) => monk.bones[n].getWorldPosition(new THREE.Vector3());
+  const ramp = (v, a, b) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  let n = 0;
+  for (const side of ["left", "right"]) {
+    const sh = at(side + "UpperArm"), el = at(side + "LowerArm"), wr = at(side + "Hand");
+    const upper = sh.distanceTo(el), fore = el.distanceTo(wr), idx = ["UpperArm", "LowerArm", "Hand"].map((b) => boneNames.indexOf(side + b));
+    const on = (i) => (side === "left") === (P0[i * 3] > 0);
+    // the middle of the sculpt's own hand: its skin beyond the built figure's wrist
+    const hand = new THREE.Vector3(); let hn = 0;
+    for (let i = 0; i < nv; i++) if (on(i) && vparts[i].has(0) && Math.abs(P0[i * 3]) > Math.abs(wr.x) && P0[i * 3 + 1] < 0.7) { hand.x += P0[i * 3]; hand.y += P0[i * 3 + 1]; hand.z += P0[i * 3 + 2]; hn++; }
+    hand.divideScalar(hn); const dir = hand.clone().sub(sh).normalize(), p = new THREE.Vector3();
+    for (let i = 0; i < nv; i++) {
+      if (!on(i) || !(vparts[i].has(0) || vparts[i].has(1)) || vparts[i].has(2) || vparts[i].has(3)) continue;   // skin and robe
+      p.set(P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]).sub(sh);
+      // how far out along the arm (the line runs on behind the shoulder, past his neck: that is not the arm)
+      const r = p.length(), t = p.dot(dir), d = p.clone().sub(dir.clone().multiplyScalar(t)).length();
+      const k = ramp(t, 0.08, 0.14) * (1 - ramp(d, 0.07, 0.1)); if (k <= 0) continue;
+      const toFore = ramp(r, upper - 0.03, upper + 0.03), toHand = ramp(r, upper + fore - 0.03, upper + fore + 0.02);
+      const along = [1 - toFore, toFore * (1 - toHand), toHand], m = new Map();
+      for (let j = 0; j < 4; j++) if (W[i * 4 + j] > 0) m.set(J[i * 4 + j], (m.get(J[i * 4 + j]) || 0) + (1 - k) * W[i * 4 + j]);
+      along.forEach((w, j) => m.set(idx[j], (m.get(idx[j]) || 0) + k * w));
+      const top = [...m].sort((x, y) => y[1] - x[1]).slice(0, 4), s = top.reduce((t, [, w]) => t + w, 0);
+      for (let j = 0; j < 4; j++) { J[i * 4 + j] = top[j] ? top[j][0] : 0; W[i * 4 + j] = top[j] ? top[j][1] / s : 0; }
+      n++;
+    }
+  }
+  console.log(`arms: ${n} vertices weighted along the arm`);
+}
 // ---- 4b. one weight for every copy of one point (issue #80, route A; NOVICE_WELD=<n>) ----
 // Copies of a point on either side of a texture seam took their weights apart and parted when he moved: the tears at the
 // cuffs, the wrists and the hem. NOVICE_WELD=1 gives every copy of a point the same weights (tools/novice-weld.mjs);
 // NOVICE_WELD=<n> also smooths them n - 1 times along the surface, within each part. Where two parts meet, the point
 // takes the weights of one: a shoe over the trousers, the robe over the skin and the trousers. The novice.glb that ships
-// was built with NOVICE_WELD=5 (docs/t00/asset-register.csv); without it the file is the one the tears were seen in.
+// was built with NOVICE_WELD=8 (docs/t00/asset-register.csv); without it the copies keep weights of their own and part again.
 const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 };
 if (process.env.NOVICE_WELD) {
   const { weldWeights } = await import("./novice-weld.mjs");
