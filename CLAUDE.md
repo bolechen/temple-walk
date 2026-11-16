@@ -248,7 +248,12 @@ all of it. The hand offsets (lips, brow, rope) were set against the novice's pre
 **Seats.** Every cushion and stool is a seat: `site.seats` out of doors (the three stools at the tea table, the summit
 mat), and `seat()` / `sitAt()` in `interior.js` for the rooms (`{ at, top, face, room }`). Where nothing else is offered
 within a step or two of one, the button says 坐下; he walks up to the nearest ground beside it and is drawn going over and down onto it (`sitDown` in `game.js`);
-he stays until he is sent elsewhere. A new cushion or stool must be registered the same way; `rites.test.mjs` holds it.
+he stays until he is sent elsewhere. Each seat has a `kind`, and it says how he sits: on a `stool` as on a chair (pose
+`"chair"`: thighs level, shins hanging, hands on his thighs; a stool is a grown man's sitting height, and his feet do not
+reach the floor), on a `cushion` cross-legged upon it (pose `"sit"`: knees on its edge, shins folded before him, the
+left in front, hands in his lap, left on right). The outlines are `STOOL` and `CUSHION` in `geo.js`, built from by the
+courts and the rooms alike, and `monk.test.mjs` keeps his seated body out of them and off the floor. A new cushion or
+stool must be registered the same way, with its kind; `rites.test.mjs` holds it.
 
 **The close of the chapter.** This temple is the prologue, where a visitor learns how the walk goes. Sitting on the
 summit is the last thing: before the other six seals its mat is only a seat. When the seventh is earned there, `finale`

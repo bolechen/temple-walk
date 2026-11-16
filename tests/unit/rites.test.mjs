@@ -44,6 +44,17 @@ test("every cushion and every stool is a seat, and he can come within a step or 
   const all = [...site.seats, ...rooms.seats]; assert.ok(all.length >= 30, `only ${all.length} seats`);
   for (const id of ["main", "chan", "tea", "library", "yaoshi", "guanyin", "dahui", "lingxiao"]) assert.ok(rooms.seats.some((s) => s.room === id), `nothing to sit on in ${id}`);
   assert.equal(site.seats.filter((s) => s.room === null).length, 4, "out of doors: three stools and the summit mat");
+  // How he sits follows what the seat is: on a stool as on a chair, on a cushion cross-legged. A stool stands at a grown
+  // man's sitting height, a cushion low.
+  assert.deepEqual(site.seats.filter((s) => s.room === null).map((s) => s.kind), ["stool", "stool", "stool", "cushion"]);
+  assert.ok(rooms.seats.some((s) => s.kind === "stool") && rooms.seats.some((s) => s.kind === "cushion"), "the rooms have stools and cushions");
+  for (const s of all) {
+    assert.ok(s.kind === "stool" || s.kind === "cushion", `a seat in ${s.room || "the open"} of no kind (${s.kind})`);
+    walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
+    const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0], s.at[1]), h = s.top - floor;
+    const onBench = s.room === "chan" && Math.abs(h - 0.104 - 0.42) < 0.02;   // the meditation hall's cushions lie on its long platforms
+    assert.ok(s.kind === "stool" ? h > 0.4 && h < 0.5 : (h > 0.08 && h < 0.13) || onBench, `a ${s.kind} ${h.toFixed(2)} m high in ${s.room || "the open"}`);
+  }
   for (const s of all) {
     walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
     let near = false; for (let a = 0; a < 24 && !near; a++) for (const r of [0.5, 0.9, 1.3]) { const x = s.at[0] + Math.sin((a / 24) * 6.283) * r, z = s.at[1] + Math.cos((a / 24) * 6.283) * r; if (!walker.blocked(x, z)) { near = true; break; } }

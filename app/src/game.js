@@ -82,6 +82,8 @@ export function createGame(y) {
   // ---- Each observance ----
   const rites = createRites(y, fast);
   const end = () => { rite = null; y.stage(null); rites.rest(); $("breath")?.setAttribute("hidden", ""); };
+  // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
+  const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
     if (rite || !places[id]) return;
     const p = places[id], d = SEAL[id]; $("act")?.setAttribute("hidden", "");
@@ -90,7 +92,7 @@ export function createGame(y) {
     const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
-    const st = { face: p.face, pose: p.sit ? "sit" : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
+    const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
     y.stage(st);
     if (id === "bell") {   // he takes the rope and rings until the three strokes are made; each is counted as it sounds, below
       await wait(0.5); if (!on()) return;
@@ -126,7 +128,7 @@ export function createGame(y) {
     for (let r = 0.25; r <= d && !to; r += 0.05) { const x = s.at[0] + (dx / d) * r, z = s.at[1] + (dz / d) * r; if (!y.walker.blocked(x, z)) to = [x, z]; }
     if (to && Math.hypot(to[0] - w.x, to[1] - w.z) > 0.08) { await Promise.race([new Promise((r) => y.walkTo([to], r)), wait(4)]); if (!on()) return; }
     rite = null; const here = y.where();
-    y.stage({ face: s.face, pose: "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(here.x, here.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
+    y.stage({ face: s.face, pose: s.kind === "stool" ? "chair" : "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(here.x, here.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
   }
   // ---- The close of the chapter: shown once, when the last seal is earned on the summit ----
   // The eye leaves him and the closing words are said one at a time (rites.close moves the eye); then the title of what
