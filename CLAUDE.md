@@ -199,6 +199,11 @@ only draws nearer or farther (the wheel, a pinch, three steps in the settings; `
 The left mouse button on the picture is the shutter (a drag is not); on a touch screen the shutter button is. The
 shutter draws the view again at 1600, 2160 or 2880 px on its long side by quality tier and mounts it on a card with
 the mood's verse, the temple's name and a seal. Tall, square and wide frames are still offered in the settings.
+Pressing it freezes the picture (`freeze` in `yard.js`): the view is drawn once more and copied onto `#still`, the frame
+loop and the observances' clock (`pauseRites`) stop until the print is put away, and the large picture is drawn for that
+same moment; two leaves of ink close and open over it (`#curtain`) with `audio.js`'s `shutterSound`, and the print comes
+with `stampSound`. The viewfinder (`#finder`, `#frame` in `ui.css`): outside the frame the mount's paper, inside four
+corners and, if the visitor asks (`settings.thirds`), the thirds; over the whole view, corners only.
 
 **Sound and music (`audio.js`, `score.js`, `instruments.js`).** Everything is synthesised; no recording is used. `audio.js`
 has three buses (music, the place, effects), each with its own level in the pause menu (`乐声`, `山声`, `音效`, under the
@@ -211,7 +216,10 @@ theme). `instruments.js` plays it (qin as a Karplus-Strong string, harmonics, xi
 any audio context, so `tools/music.mjs` renders the same music offline. `docs/t00/MUSIC.md` maps each place to its music.
 The great bell is `bell()` in `instruments.js` (struck with a log: a low hum that swells and lasts about 45 s, the
 fundamental about 34 s, the high partials dying first; `hillEcho` answers it from the slope), so it renders offline too;
-`tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. Water drips from
+`tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. The first time the third stroke sounds on a walk, a dozen birds go up from the tall
+cryptomerias nearest the tower and fly off toward the hills (`flock.js`, one instanced draw, wings beaten in the vertex
+shader; `audio.js`'s `flutter`; not at night, not from indoors; `__flock(go?)`). When the close says a bell answers in
+the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__cues()`). Water drips from
 the eaves only after rain (`place().wet`), not on dry autumn stone or in snow. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
@@ -342,9 +350,9 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 
 **Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
-returns its mean colour plus season, hour, view, photo state, camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
+returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
