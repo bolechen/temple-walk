@@ -20,7 +20,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "setup": "node tools/setup.mjs",
     "postinstall": "node tools/setup.mjs",
-    "edges": "node tools/edges.mjs"
+    "edges": "node tools/edges.mjs",
+    "nearplane": "node --test tests/slow/*.test.mjs"
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {
