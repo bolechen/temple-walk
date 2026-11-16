@@ -80,7 +80,9 @@ function duck(depth, secs) {
 export function hush(on) {
   rest = on ? 0.35 : 1; if (!bus.music) return;
   const t = ctx.currentTime, g = bus.music.duck.gain;
-  if (t >= ducked.until) { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(rest, t, on ? 1.6 : 2.4); }
+  // Inside a stroke's stepping back, only where it comes back to changes: the return scheduled by duck() is replaced.
+  if (t < ducked.until) { g.cancelScheduledValues(ducked.until); g.setTargetAtTime(rest, ducked.until, 2.2); return; }
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(rest, t, on ? 1.6 : 2.4);
 }
 function partial(freq, gain, decay, t0, type = "sine", to = bus.effects.in) {
   const o = ctx.createOscillator(), g = ctx.createGain();
@@ -96,7 +98,10 @@ function thud(t0, dur, cutoff, gain) {   // a short burst of filtered noise: the
   s.connect(f); f.connect(g); g.connect(bus.effects.in); s.start(t0);
 }
 
-let echo = null;
+// The strokes still ringing. A great bell struck again and again does not pile up without end: no more than three
+// are heard, the oldest fading over a second and a half as a fourth comes.
+let echo = null; const ringing = []; let struck = 0;
+export const bellsRinging = () => { const now = ctx ? ctx.currentTime : 0; while (ringing.length && ringing[0].end < now) ringing.shift(); return { ringing: ringing.length, struck }; };
 export function strike(kind, loud = 1) {
   if (!start()) return;
   wake();
@@ -105,7 +110,8 @@ export function strike(kind, loud = 1) {
   if (kind === "bell") {
     // The great bell (instruments.js), answered by the hillside.
     if (!echo) echo = hillEcho(ctx, bus.effects.in);
-    bell(ctx, bus.effects.in, t, loud, echo);
+    bellsRinging(); while (ringing.length >= 3) ringing.shift().fade(t);
+    ringing.push(bell(ctx, bus.effects.in, t, loud, echo)); struck++;
   } else {
     // A big barrel drum: a pitch that drops as the skin relaxes, under a thump.
     const o = ctx.createOscillator(), g = ctx.createGain();

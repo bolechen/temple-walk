@@ -230,7 +230,7 @@ const scenarios = {
     await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
     // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
     await offered("起身", "while he sits on the summit"); await t.page.click("#act"); await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
-    await at("sit"); await t.frames(3); await t.page.waitForTimeout(800); expect((await word()) !== "静坐", "the summit offered the close a second time");
+    await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ expect((await word()) !== "静坐", "the summit offered the close a second time");
     // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
     await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
     await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring the bell");
@@ -270,7 +270,7 @@ const scenarios = {
   oldbook: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0");
     const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);
-    const summit = async () => { await at("sit"); await t.frames(3); await t.page.waitForTimeout(800); return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
+    const summit = async () => { await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
     const load = async (book, ended) => { await t.page.evaluate(([bk, e]) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify(bk)); if (e) localStorage.setItem("yunjing.ending.v1", "1"); else localStorage.removeItem("yunjing.ending.v1"); }, [book, ended]);
       await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 }); };
     const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
@@ -283,6 +283,7 @@ const scenarios = {
     // Its summit seal is still to be earned: sitting there earns it, and the close is not played again.
     expect((await summit()) === "静坐", "an old book without the summit's seal should still be offered it");
     await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.sit > 0, 90000, "the summit's seal was not earned");
+    // (Seconds, not frames: the close would follow on game.js's timer, which runs on the clock.)
     await t.page.waitForTimeout(4000); expect((await t.page.evaluate(() => window.__rites().ended)) === 0 && !(await t.page.evaluate(() => window.__rites().closing)), "the close played again for an old book that had seen it");
     await load({ v: 1, born: 1, seals: { bell: 4, sit: 5 }, strikes: 3, verse: null, done: null }, false);
     j = await t.journey(); expect(j.count === 2 && !j.closed, "an old book that never closed should not be marked closed: " + JSON.stringify(j));
@@ -306,6 +307,7 @@ const scenarios = {
     await seen("the log was never drawn back", () => window.__rites().bell.drawn > 0.15);
     await t.until(async () => (await t.journey()).strikes === 1, 60000, "the first press did not ring");
     let lo = 0; const low = async () => { lo = Math.min(lo, (await R()).bell.log); };
+    // (Seconds, not frames: a stroke would come on the observances' clock, not with frames.)
     await t.page.waitForTimeout(6000); await low(); expect((await t.journey()).strikes === 1 && (await R()).bell.pulls === 1, "the bell rang again without a press");
     for (const n of [2, 3]) { await seen("the rope never came back to hand", () => window.__rites().bell.ready); await t.page.click("#act"); await t.until(async () => { await low(); return (await t.journey()).strikes === n; }, 30000, `stroke ${n} did not sound`); }
     await t.until(async () => (await t.journey()).seals.bell > 0, 30000, "three strokes earned no seal");
@@ -369,12 +371,15 @@ const scenarios = {
     const bell = await t.page.evaluate(() => window.__listen("effects"));   // the effects bus alone: the music shares the bell's G
     expect(bell.state === "running" && bell.rms > 0.003, "the bell made no sound: " + JSON.stringify(bell));
     expect(bell.peaks.some(([hz]) => Math.abs(hz - 98) < 8 || Math.abs(hz - 196) < 8), "the bell's fundamental is missing: " + JSON.stringify(bell.peaks));
-    await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
-    const drum = await t.page.evaluate(() => window.__listen("effects")); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
+    const drum = await t.page.evaluate(() => { window.__strike("drum"); const t0 = performance.now(); while (performance.now() - t0 < 150); return window.__listen("effects"); }); expect(drum.peaks.some(([hz]) => hz < 120), "the drum has no low end: " + JSON.stringify(drum.peaks));
     // A great bell is long: eight seconds after the stroke its hum and fundamental are still there.
     await t.page.waitForTimeout(7000);
     const late = await t.page.evaluate(() => window.__listen("effects"));
     expect(late.rms > 0.004 && late.peaks.some(([hz]) => Math.abs(hz - 49) < 6 || Math.abs(hz - 98) < 6), "the bell had died away within eight seconds: " + JSON.stringify(late));
+    // Struck over and over, the bell keeps no more than three strokes ringing: the oldest fades as a new one comes.
+    for (let i = 0; i < 6; i++) { await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(300); }
+    const bells = await t.page.evaluate(() => window.__bells());
+    expect(bells.ringing <= 3 && bells.struck >= 7, "six strokes in a row should leave at most three ringing: " + JSON.stringify(bells));
     // The dragon well: silent from the court; standing at it, a drop is heard and rings go out across the water.
     expect((await t.page.evaluate(() => window.__well())).level === 0, "the well is heard from the court");
     const pool = await t.page.evaluate(() => window.__places.well.pool);
@@ -417,10 +422,17 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
-    await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(150);
-    expect((await t.page.evaluate(() => window.__listen("effects"))).rms > 0.003, "with the music silenced the drum should still be heard");
+    // Struck and listened to within one call: a busy page can let the drum die between two calls.
+    const drum = await t.page.evaluate(() => { window.__strike("drum"); const t0 = performance.now(); while (performance.now() - t0 < 150); return window.__listen("effects"); });
+    expect(drum.rms > 0.003, "with the music silenced the drum should still be heard: " + JSON.stringify(drum));
     expect((await t.page.evaluate(() => window.__settings())).music === 0, "the music level was not kept");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0.7"; el.dispatchEvent(new Event("input", { bubbles: true })); }); await t.page.keyboard.press("Escape");
+    // Sitting on after tea hushes the music; standing brings it back. Either holds even when it falls inside the music's
+    // stepping back for a stroke (the drum here, the seal's chime at the tea table): the audio clock, so seconds.
+    await t.page.evaluate(() => { window.__strike("drum"); window.__hush(true); }); await t.page.waitForTimeout(9000);
+    s = await m(); expect(s.hushed && s.duck < 0.45, "sitting down inside a stroke's ducking should leave the music hushed: " + JSON.stringify(s));
+    await t.page.evaluate(() => { window.__strike("drum"); window.__hush(false); }); await t.page.waitForTimeout(9000);
+    s = await m(); expect(!s.hushed && s.duck > 0.9, "standing up inside a stroke's ducking should bring the music back: " + JSON.stringify(s));
     // Into a hall and out: the hall's reverb and music, and still one player however often sound is asked for.
     await t.page.evaluate(() => window.__inside("main"));
     await t.until(async () => { const x = await m(); return x.zone === "hall" && x.room === "hall"; }, 30000, "inside the hall was never heard as the hall");

@@ -11,7 +11,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
+import { strike, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
@@ -700,7 +700,7 @@ window.__capture = async () => { const c = await capture(); return { w: c.width,
 window.__blocked = (x, z) => walker.blocked(x, z);
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
 window.__pose = (x, z, y, p) => { interrupt(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
-window.__listen = listen; window.__strike = strike; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
+window.__listen = listen; window.__strike = strike; window.__bells = bellsRinging; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
 window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
 window.__bird = (go) => { if (go) bird(1); return ambienceState(); };   // a bird now, if asked, and how many have sung
 window.__well = (drip) => { if (drip) { well.ripple(); wellDrip(well.state().level); } return well.state(); };   // a drop now, if asked, and how the well stands
@@ -756,7 +756,7 @@ createGame({
   stage(o) { stage = o; },
   // `drawn`: he has drawn the log back himself (rites.js) and it is meeting the bell now; otherwise it is tapped.
   strike(kind, drawn) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s && !drawn) { s.t0 = riteNow(); s.lead = 0; } window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
-  monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage, seated: () => !!stage && stage.pose === "sit", leave: () => interrupt(),
+  monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage, seated: () => !!stage && (stage.pose === "sit" || stage.pose === "chair"),   // cross-legged, or on a stool as on a chair leave: () => interrupt(),
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
   mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
