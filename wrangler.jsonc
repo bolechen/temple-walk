@@ -1,0 +1,14 @@
+// The Worker that carries one preview per pull request (docs/PREVIEWS.md). It is not the published site: that stays on
+// GitHub Pages. Its production version is a one-line placeholder and its own workers.dev address is switched off; only
+// the previews, each serving the dist/ that pages.yml built and checked for that pull request, are reachable.
+{
+  "name": "temple-walk-preview",
+  "compatibility_date": "2026-11-13",
+  "workers_dev": false,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "none"
+  },
+  "previews": {}
+}

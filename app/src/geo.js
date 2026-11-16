@@ -40,6 +40,22 @@ export const STAIR = Object.freeze({ rise: 0.18, tread: 0.34, nosing: 0.05 });
 export const BODY = 0.38;
 // A stair's cheek stones stand outside its treads, from the edge of the treads to this far beyond.
 export const CHEEK = 0.55;
+
+// What he may sit on, as outlines turned about an upright axis ([radius, height above the floor] in metres): a turned
+// stool of the height a grown man sits at, and a round straw cushion (a 蒲团), wide and low. The courts and the rooms
+// build theirs from these, and the tests hold his seated body out of them.
+export const STOOL = Object.freeze([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]]);
+export const CUSHION = Object.freeze([[0, 0], [0.25, 0], [0.288, 0.028], [0.292, 0.06], [0.262, 0.092], [0.1, 0.104], [0, 0.104]]);
+/** How far a turned outline reaches from its axis at a height above its foot (0 above or below it). */
+export const radiusAt = (outline, y) => {
+  let r = 0;
+  for (let i = 1; i < outline.length; i++) {
+    const [r0, y0] = outline[i - 1], [r1, y1] = outline[i];
+    if (y < Math.min(y0, y1) || y > Math.max(y0, y1)) continue;
+    r = Math.max(r, y1 === y0 ? Math.max(r0, r1) : r0 + ((r1 - r0) * (y - y0)) / (y1 - y0));
+  }
+  return r;
+};
 export function stairProfile(rise) {
   const count = Math.max(1, Math.round(rise / STAIR.rise));
   return { count, height: rise / count, tread: STAIR.tread, run: STAIR.tread * count, nosing: STAIR.nosing };

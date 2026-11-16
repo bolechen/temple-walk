@@ -48,3 +48,7 @@ BREAKING CHANGE: describe the migration required by the new save format.
 ## 向研究 Site 同步
 
 每轮开发同时更新 `docs/t00/delivery.json` 并随 PR 提交。main 合并后，GitHub 自动将交付、实际 CI、部署和独立评审数据同步给 Site，无需 Site 发布权限。详见[自动同步与证据规则](docs/SITE-SYNC.md)。
+
+## PR 预览
+
+改到网站的 PR 通过检查后会自动得到独立预览地址，PR 评论里有最新地址、本提交固定地址和六个验收机位链接；反馈视觉问题时请用固定地址。详见[PR 预览](docs/PREVIEWS.md)。
