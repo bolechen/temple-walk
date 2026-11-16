@@ -235,6 +235,7 @@ const scenarios = {
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
+    expect((await t.page.evaluate(() => window.__cues())).farBell === 1, "the close should end on the far bell answering");
     const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
@@ -308,7 +309,7 @@ const scenarios = {
     const t = await open(b, base, "q=low&fast=1&enter&view=third&season=summer&time=day" + BARE);
     const R = () => t.page.evaluate(() => window.__rites());
     // Every seat there is, indoors and out: put beside it, he goes over and is on it, at its height, turned the way it faces.
-    const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room })));
+    const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room, kind: k.kind })));
     let room = null;
     for (let i = 0; i < seats.length; i++) {
       const s = seats[i];
@@ -316,6 +317,7 @@ const scenarios = {
       const from = await t.page.evaluate((k) => { const s = window.__seats[k]; for (let a = 0; a < 24; a++) for (const r of [0.6, 0.9, 1.3]) { const x = s.at[0] + Math.sin(a * 0.2618) * r, z = s.at[1] + Math.cos(a * 0.2618) * r; if (!window.__blocked(x, z)) { window.__pose(x, z, 0, 0); window.__sit(k); return [x, z]; } } return null; }, i);
       expect(from, `no ground beside seat ${i} in ${room || "the open"}`);
       await t.until(async () => { const r = await R(); return Math.hypot(r.him[0] - s.at[0], r.him[2] - s.at[1]) < 0.03 && Math.abs(r.him[1] - s.top) < 0.03; }, 40000, `he is not sitting on seat ${i} in ${room || "the open"} (${s.at.map((v) => v.toFixed(1))})`);
+      expect((await t.state()).pose === (s.kind === "stool" ? "chair" : "sit"), `on seat ${i} in ${room || "the open"}, a ${s.kind}, he sits ${(await t.state()).pose}`);
     }
     expect((await R()).sat >= seats.length, "not every seat was sat on");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -392,6 +394,7 @@ const scenarios = {
     await t.until(async () => (await R()).bell.grip === 0 && (await t.journey()).rite === null, 60000, "he never let the rope go");
     // Tea: the bowl leaves the table, is tilted at his lips three times, and is set down again.
     await at("tea"); await offered("吃茶"); await t.page.click("#act");
+    await seen("for tea he did not sit on the stool as on a chair", () => window.__yard().pose === "chair");
     await seen("the bowl never left the table", () => window.__rites().tea.lift > 0.1);
     await seen("the bowl was never tilted to drink", () => window.__rites().tea.tilt > 0.3);
     await t.until(async () => (await t.journey()).seals.tea > 0, 120000, "no seal for tea"); r = await R();
@@ -406,6 +409,7 @@ const scenarios = {
     await t.page.evaluate(() => { const s = window.__seats[2]; window.__pose(s.at[0] + 0.5, s.at[1] - 0.9, 0, 0); });
     await offered("坐下"); const before = (await R()).sat; await t.page.click("#act");
     await t.until(async () => (await R()).sat === before + 1 && (await t.page.evaluate(() => window.__probe().monkBox)) !== undefined, 30000, "he did not sit on the stool");
+    expect((await t.state()).pose === "chair", "on a stool he should sit as on a chair, not cross-legged: " + (await t.state()).pose);
     // Incense in the great hall, and a cushion in the meditation hall.
     await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 30000, "could not go in");
     await at("incense", 0.2); await offered("上香"); await t.page.click("#act");
@@ -419,6 +423,7 @@ const scenarios = {
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => { const s = window.__seats.find((k) => k.room === "chan"); window.__pose(s.at[0], s.at[1] + (s.face === 0 ? 1.2 : -1.2), 0, 0); });
     await offered("坐下"); const n = (await R()).sat; await t.page.click("#act"); await t.until(async () => (await R()).sat === n + 1, 30000, "he did not sit on the platform");
+    expect((await t.state()).pose === "sit", "on a cushion he should sit cross-legged: " + (await t.state()).pose);
     await t.shot("e2e-rites"); expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the hall, up both terraces and the stair between the tea rows, to the porch of the summit pavilion.
@@ -455,6 +460,11 @@ const scenarios = {
     // (Played and listened to within one call, as the steps are: the place's bus carries nothing else here.)
     const k = await t.page.evaluate(() => { const r = window.__knock(true), t0 = performance.now(); while (performance.now() - t0 < 60); return { ...r, heard: window.__listen("ambience") }; });
     expect(k.knocks >= 1 && k.heard.rms > 0.0005, "the culms made no knock: " + JSON.stringify(k));
+    // The third stroke of the bell, the first time: the birds in the old trees by the tower go up, with a rattle of wings.
+    await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); });
+    await t.frames(3);
+    const fl = await t.page.evaluate(() => ({ ...window.__flock(), ...window.__cues() }));
+    expect(fl.flights === 1 && fl.flying && fl.flutter >= 1, "the third stroke should send the birds up: " + JSON.stringify(fl));
     const bd = await t.page.evaluate(() => { const r = window.__bird(true), t0 = performance.now(); while (performance.now() - t0 < 140); return { ...r, heard: window.__listen("ambience") }; });
     expect(bd.birds >= 1 && bd.heard.rms > 0.0003, "no bird sang: " + JSON.stringify(bd));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -579,7 +589,9 @@ const scenarios = {
       // The camera is raised on exactly what he was looking at: the same eye, angle and distance, the whole view, the novice where he stood.
       let p = await t.probe(), now = await t.state(); expect(p.photo && p.aspect === "screen" && p.zoom === 1 && Math.abs(p.fov - before.fov) < 0.01 && p.monk === before.monk, "the camera should open on the view as it was: " + JSON.stringify([before.fov, p.fov, p.aspect, p.zoom, before.monk, p.monk]));
       expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3 && Math.abs(p.camDist - before.camDist) < 0.05, "raising the camera moved the view: " + JSON.stringify([was.yaw, now.yaw, was.pitch, now.pitch, before.camDist, p.camDist]));
-      expect(!(await t.page.isVisible("#frame")), "the whole view needs no frame drawn over it");
+      // The viewfinder over the whole view: four corners a little in from the edges, no paper laid over it.
+      { const fr = await t.page.evaluate(() => { const r = document.getElementById("frame").getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, whole: document.body.classList.contains("whole"), finder: getComputedStyle(document.getElementById("finder")).display, mask: getComputedStyle(document.getElementById("finder")).maskImage || getComputedStyle(document.getElementById("finder")).webkitMaskImage }; });
+        expect(fr.whole && fr.finder !== "none" && fr.x > 10 && fr.y > 10 && (fr.mask === "none" || !fr.mask), "over the whole view the finder should be corners only: " + JSON.stringify(fr)); }
       if (!touch) {   // a drag does not turn the camera; the wheel draws nearer and farther, within bounds
         await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(640, 240, { steps: 6 }); await t.page.mouse.up(); await t.frames(2);
         now = await t.state(); expect(Math.abs(now.yaw - was.yaw) < 1e-3 && Math.abs(now.pitch - was.pitch) < 1e-3, "a drag turned the camera"); expect(!(await t.page.isVisible("#print")), "a drag took a photograph");
@@ -594,6 +606,10 @@ const scenarios = {
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
+      // The thirds, off at first, on when asked for, and remembered.
+      expect(!(await t.page.isVisible("#frame .third")), "the thirds should be off until asked for");
+      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third") && (await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not come on");
+      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")), "the thirds did not go off");
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
@@ -605,7 +621,15 @@ const scenarios = {
         await t.page.mouse.click(480, 260); await t.until(() => t.page.isVisible("#print"), 300000, "a click on the picture did not take the photograph");
         const shot = await t.page.evaluate(() => new Promise((r) => { const im = new Image(); im.onload = () => r([im.naturalWidth, im.naturalHeight]); im.src = document.getElementById("printImg").src; }));
         expect(shot[0] >= 1600 && shot[0] > shot[1], "the photograph is not a large picture of the whole view: " + shot);
-        await t.page.click("#printBack");
+        // While the print is out the picture is held still: no frame is drawn, the still covers the view; the shutter
+        // and the seal were heard. (Seconds: nothing is drawn, so there are no frames to wait on.)
+        const sounds = await t.page.evaluate(() => window.__shots());
+        expect(sounds.shutter >= 1 && sounds.stamp >= 1, "the shutter and the seal should sound: " + JSON.stringify(sounds));
+        const f0 = (await t.state()).frames; await t.page.waitForTimeout(1500);
+        const held = await t.page.evaluate(() => ({ frames: window.__yard().frames, frozen: document.body.classList.contains("frozen"), still: getComputedStyle(document.getElementById("still")).display }));
+        expect(held.frozen && held.still !== "none" && held.frames === f0, "the picture should stand still while the print is out: " + JSON.stringify(held) + " from " + f0);
+        await t.page.click("#printBack"); await t.frames(2);
+        expect(!(await t.probe()).frozen && !(await t.page.evaluate(() => document.body.classList.contains("frozen"))), "putting the print away should let the picture move again");
       }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }

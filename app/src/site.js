@@ -5,7 +5,7 @@
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "three";
-import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK } from "./geo.js";
+import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
 import { buildHall, DOOR } from "./building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
@@ -340,7 +340,7 @@ export function buildSite(M) {
 
   // ---- The small observances of a visit (journey.js): the things they are made with, and where to stand ----
   const flame = (x, y, z, glow) => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.016, 10, 8).scale(1, 2.1, 1), M.flame); f.position.set(x, y, z); f.userData.glow = glow; root.add(f); return f; };
-  const cushion = () => lathe([[0, 0], [0.25, 0], [0.288, 0.028], [0.292, 0.06], [0.262, 0.092], [0.1, 0.104], [0, 0.104]], 28);
+  const cushion = () => lathe(CUSHION, 28);
   // A tea table on the court before the tea house, as tea was taken in these monasteries: a table and stools, a ewer
   // of hot water, black bowls on stands. Whoever sits at it looks across the wet stone to the great hall.
   const TEA_T = 0.78, TEA_BOWL = 0.11;   // the table's height; how far from its middle, toward him, his bowl stands
@@ -349,7 +349,7 @@ export function buildSite(M) {
   {
     const P = { straw: [], wood: [], glaze: [], iron: [], lacquer: [] }, y = 0;
     const bowl = () => lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 24);
-    const T = TEA_T, stool = () => lathe([[0, 0], [0.17, 0], [0.2, 0.06], [0.215, 0.22], [0.2, 0.38], [0.17, 0.44], [0, 0.44]], 20);
+    const T = TEA_T, stool = () => lathe(STOOL, 20);
     // The table: a thick top on four legs joined by stretchers.
     P.wood.push(box(1.3, 0.05, 0.7, 0, T - 0.025, -0.12), box(1.2, 0.06, 0.04, 0, T - 0.09, 0.19), box(1.2, 0.06, 0.04, 0, T - 0.09, -0.43));
     for (const [a, c] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.wood.push(box(0.06, T - 0.05, 0.06, a * 0.58, (T - 0.05) / 2, -0.12 + c * 0.29));
@@ -407,9 +407,10 @@ export function buildSite(M) {
   const porchY = TOP.y + 0.9, porchZ = topZ + 7.5 + 0.8;
   root.add(mesh(cushion().translate(0, porchY, porchZ), M.straw));
   // Whatever can be sat on out of doors: the three stools at the tea table (each turned to the table) and the mat on
-  // the summit porch. `top` is the height of the seat. The rooms add their own (interior.js); game.js offers them.
-  const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null }; });
-  seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null });
+  // the summit porch. `top` is the height of the seat; `kind` says how one sits on it: on a stool as on a chair, on a
+  // cushion cross-legged. The rooms add their own (interior.js); game.js offers them.
+  const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null, kind: "stool" }; });
+  seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null, kind: "cushion" });
   // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
   // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
   const places = {

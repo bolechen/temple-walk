@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { WORKS } from "./works.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush } from "./audio.js";
+import { chime, drop, setSeals, hush, farBell } from "./audio.js";
 import { createRites } from "./rites.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 
@@ -103,13 +103,15 @@ export function createGame(y) {
   // ---- Each observance ----
   const rites = createRites(y, fast);
   const end = () => { rite = null; y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
+  // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
+  const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
     if (rite || !places[id]) return;
     const p = places[id], d = SEAL[id]; $("act")?.setAttribute("hidden", "");
     const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
-    const st = { face: p.face, pose: p.sit ? "sit" : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
+    const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
     y.stage(st);
     if (id === "bell") {   // he takes the rope; each press after that is one pull, one stroke, counted as it sounds (below)
       await wait(0.3); if (!on()) return;
@@ -156,7 +158,7 @@ export function createGame(y) {
     for (let r = 0.25; r <= d && !to; r += 0.05) { const x = s.at[0] + (dx / d) * r, z = s.at[1] + (dz / d) * r; if (!y.walker.blocked(x, z)) to = [x, z]; }
     if (to && Math.hypot(to[0] - w.x, to[1] - w.z) > 0.08) { await Promise.race([new Promise((r) => y.walkTo([to], r)), wait(4)]); if (!on()) return; }
     rite = null; const here = y.where();
-    y.stage({ face: s.face, pose: "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(here.x, here.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
+    y.stage({ face: s.face, pose: s.kind === "stool" ? "chair" : "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(here.x, here.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
   }
   // ---- The close of the chapter: shown once, when the last seal is earned on the summit ----
   // The eye leaves him and the closing words are said one at a time (rites.close moves the eye); then the title of what
@@ -187,7 +189,11 @@ export function createGame(y) {
     await rites.close(() => on() && !skip, (t) => {
       let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
       if (t > 25.5) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
-      else if (k !== shown) { shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast); }
+      else if (k !== shown) {
+        shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
+        // When it is said that a bell answers in the far hills, it is heard (audio.js).
+        if (k >= 0 && CLOSING[k][1].startsWith("远处的山里")) farBell();
+      }
     });
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
@@ -197,7 +203,9 @@ export function createGame(y) {
   }
   window.addEventListener("struck", (e) => {
     if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
-    const r = journey.strike(); say(["", "一下", "两下", "三下"][r.strikes] || "", 3); if (r.earned) earned("bell"); else refresh();
+    const r = journey.strike(); say(["", "一下", "两下", "三下"][r.strikes] || "", 3);
+    // The third stroke, the first time on this walk: the birds in the old trees beyond the wall go up (yard.js, flock.js).
+    if (r.earned) { earned("bell"); window.dispatchEvent(new CustomEvent("flush")); } else refresh();
   });
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
 
@@ -319,7 +327,7 @@ export function createGame(y) {
   refresh(); rites.restore({ incense: journey.has("incense") });
 
   // For the tests.
-  window.__journey = () => ({ look, seen: [...seen], ...journey.snapshot(), count: journey.count(), done: journey.done(), near, rite: rite && rite.id, entered, next: journey.next()?.id || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null });
+  window.__journey = () => { const n = journey.next(); return { look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
   window.__hush = (on) => { hush(on); };   // the music held back as when he sits on after tea, or let back
   window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, went, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();
