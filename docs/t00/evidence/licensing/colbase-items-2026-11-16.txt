@@ -1,0 +1,15 @@
+ColBase item pages rendered in headless Chromium, 2026-11-16. Each line: page, holder, 利用規約 link target(s), image download offered.
+https://colbase.nich.go.jp/collection_items/tnm/TB-1446?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TA-617?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TA-143?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1171?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1169?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1437?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TG-2496?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/kyuhaku/G16?locale=ja | 九州国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1209?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/kyuhaku/B17?locale=ja | 九州国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1173?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1174?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/tnm/TB-1198?locale=ja | 東京国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1
+https://colbase.nich.go.jp/collection_items/kyuhaku/A47?locale=ja | 九州国立博物館 | https://colbase.nich.go.jp/pages/term?locale=ja | download links: 1

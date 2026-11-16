@@ -1,0 +1,41 @@
+# 9358ed3 + new test only, register not yet filled, 2026-11-16
+TAP version 13
+# Subtest: the register's file column is read as the paths it names
+ok 1 - the register's file column is read as the paths it names
+  ---
+  duration_ms: 1.443303
+  type: 'test'
+  ...
+# Subtest: every asset file under app/ that goes into the site has a row in the register
+not ok 2 - every asset file under app/ that goes into the site has a row in the register
+  ---
+  duration_ms: 5.824945
+  type: 'test'
+  location: '/home/user/temple-walk/tests/unit/asset-register.test.mjs:59:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    asset files with no row in docs/t00/asset-register.csv:
+      app/favicon.svg
+      app/shared/og/temple-walk.jpg
+      app/vendor/basis/basis_transcoder.wasm
+    + actual - expected
+    
+    + [
+    +   'app/favicon.svg',
+    +   'app/shared/og/temple-walk.jpg',
+    +   'app/vendor/basis/basis_transcoder.wasm'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'app/favicon.svg'
+    1: 'app/shared/og/temple-walk.jpg'
+    2: 'app/vendor/basis/basis_transcoder.wasm'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/user/temple-walk/tests/unit/asset-register.test.mjs:63:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+  ...
