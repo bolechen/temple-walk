@@ -940,6 +940,21 @@ const scenarios = {
     // Where something is offered, Space still jumps and E still does it.
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("Space"); await t.frames(3); expect((await t.journey()).strikes === 0, "Space should not strike the bell any more");
+    // At the tea house's tables (issue 16): held W, then Shift with W, and Space each time he is down, straight at a
+    // table from the porch beside it. Every frame he is outside the table and his width, and he lands on the porch.
+    for (const [x, z, shift] of [[-13.2, 11.3, false], [-13.25, 6.9, true], [-13.2, 16.7, true]]) {
+      const tz = z < 14 ? 9.1 : 18.9; await t.page.evaluate(async () => { if (window.__yard().inside) await window.__inside(null); }); await t.frames(2);
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(-13.83 - x, -(tz - z))]); await t.frames(3);
+      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      if (shift) await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
+      for (let k = 0; k < 3; k++) { await t.page.keyboard.press("Space"); await t.until(async () => !(await t.state()).jumping, 120000, "he did not come down at the tea table"); await t.frames(2); }
+      await t.page.keyboard.up("w"); if (shift) await t.page.keyboard.up("Shift");
+      const tea = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
+      const inside = tea.filter(([px, pz]) => px > -14.09 - 0.37 && px < -13.57 + 0.37 && pz > tz - 0.75 - 0.37 && pz < tz + 0.75 + 0.37);
+      expect(tea.some((q) => q[3]) && inside.length === 0, `jumping at the tea table from (${x}, ${z}) he came within his width of it: ${JSON.stringify(inside.slice(0, 3))} (${tea.length} frames outdoors, ${tea.filter((q) => q[3]).length} in the air)`);
+      expect(tea.filter((q) => !q[3]).every((q) => Math.abs(q[2] - 0.45) < 0.01), `between jumps at the tea table he should stand on the porch (from ${x}, ${z}): ` + JSON.stringify(tea.slice(0, 2)) + JSON.stringify(tea.filter((q) => !q[3] && Math.abs(q[2] - 0.45) >= 0.01).slice(0, 3)));
+    }
+    await t.shot("jump-tea");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A deliberate low ledge hop: normal walking stays blocked; Space or the touch button clears it.

@@ -86,3 +86,39 @@ test("every tree in the courts is in the way, by its trunk and his width, and no
     for (const b of site.buildings) assert.ok(!(x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3), `the ${kind} at (${x}, ${z}) grows through the platform of ${b.name || "a building"}`);
   }
 });
+
+test("a jump at either tea table, from any side, walking or hurrying, neither lands in it nor passes through it", async () => {
+  const { stride, leapStep, JUMP } = await import("../../app/src/stride.js");
+  const tables = site.walk.posts.filter((p) => p.r === undefined && p.x0 > -14.4 && p.x1 < -12.5 && p.z0 > 6 && p.z1 < 22); assert.equal(tables.length, 2);
+  let runs = 0;
+  for (const t of tables) {
+    const cx = (t.x0 + t.x1) / 2, cz = (t.z0 + t.z1) / 2;
+    for (let a = 0; a < 24; a++) for (const speed of [2.1, 4.2]) {   // every way round it the porch allows, at a walk and at a hurry (which way he faces does not matter to where he may be)
+      const dir = [Math.sin((a / 24) * 6.283), Math.cos((a / 24) * 6.283)];
+      let pos = null; for (let r = 1.0; r < 2.6 && !pos; r += 0.05) { const x = cx - dir[0] * r, z = cz - dir[1] * r; if (!walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - 0.45) < 0.01) pos = { x, z }; }
+      if (!pos) continue; runs++;
+      let leap = { y: 0.45, v: JUMP.speed }, landings = 0;
+      for (let f = 0; f < 90; f++) {   // three seconds of holding the key toward the table's middle and pressing Space each time he lands
+        const vx = cx - pos.x, vz = cz - pos.z, l = Math.hypot(vx, vz) || 1;
+        stride(walker, pos, (vx / l) * speed / 30, (vz / l) * speed / 30);
+        assert.ok(!walker.blocked(pos.x, pos.z), `in the air he came to (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)}), inside the table at z=${cz.toFixed(1)}`);
+        assert.ok(!(pos.x > t.x0 && pos.x < t.x1 && pos.z > t.z0 && pos.z < t.z1));
+        const ground = walker.heightAt(pos.x, pos.z), step = leapStep(leap, ground, 1 / 30);
+        assert.ok(step.y >= ground - 1e-9, "he went below the floor");
+        if (step.landed) { landings++; assert.ok(Math.abs(step.y - 0.45) < 1e-6, `he landed at ${step.y.toFixed(2)}, not on the porch's floor`); leap = { y: step.y, v: JUMP.speed }; }
+      }
+      assert.ok(landings >= 3, "he did not come down again");
+    }
+  }
+  assert.ok(runs >= 24, `only ${runs} ways up to the tables could be tried`);
+});
+
+test("below the knee: the tea house's cushions are walked round, and the gate's sill and the summit mat are floors his shoes come down on", () => {
+  const cushions = site.walk.posts.filter((p) => p.r === 0.26 && p.x < -12 && p.x > -15); assert.equal(cushions.length, 4, "a cushion at either end of each tea table");
+  for (const c of cushions) assert.ok(walker.blocked(c.x, c.z) && walker.blocked(c.x + c.r + BODY - 0.02, c.z), `the cushion at (${c.x.toFixed(2)}, ${c.z.toFixed(2)}) can be walked into`);
+  const gate = site.buildings.find((b) => b.name === "万年正续"), sill = [];   // the gate house, platform and all
+  for (let zz = gate.z0; zz < gate.z1; zz += 0.01) sill.push(walker.heightAt(0, zz));
+  const floor = Math.min(...sill.filter((h) => h > 0.1)); assert.ok(Math.max(...sill) - floor > 0.04 && Math.max(...sill) - floor < 0.06, `crossing the gate the floor rises ${(Math.max(...sill) - floor).toFixed(3)} m over the sill, not its 5 cm`);
+  const mat = site.seats.find((s) => s.room === null && s.top > 15); assert.ok(Math.abs(walker.heightAt(mat.at[0], mat.at[1]) - (mat.top - 0.004)) < 0.01, "the summit mat is not a floor to stand on");
+  assert.ok(!walker.blocked(mat.at[0], mat.at[1]), "he can no longer stand on the summit mat, where he comes out of the pavilion and sits");
+});
