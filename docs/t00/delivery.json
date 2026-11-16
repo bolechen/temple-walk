@@ -76,6 +76,8 @@
     "tests/unit/snowfall.test.mjs",
     "tests/unit/shelter.test.mjs",
     "docs/t00/evidence/snow/gate-passage-after.jpg",
+    "docs/t00/evidence/snow/gate-front-after.jpg",
+    "docs/t00/evidence/snow/bell-tower-after.jpg",
     "docs/t00/evidence/snow/court-after.jpg",
     "本地：两次 wrangler preview（setup-a、setup-b）在补上占位生产版本后首页返回 200（11,841 字节），之前为 Cloudflare 1042；用 CI 令牌部署和删除预览均成功，测试预览已删除",
     "PR #55 的 pages.yml 运行 43792382886（verify、preview 成功）与 PR 评论；固定地址 CAM-01 在无头 Chromium 中载入完成，无 HTTP 错误",
