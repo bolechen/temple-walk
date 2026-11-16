@@ -14,3 +14,13 @@
 ## Site 联动与交付
 
 每轮交付更新 [docs/t00/delivery.json](docs/t00/delivery.json)，记录变更、已知问题和证据；遵守 [docs/SITE-SYNC.md](docs/SITE-SYNC.md)。CI 和部署状态由工作流生成，不手写成功。Claude 等开发者不得自行把独立验收改为通过；独立报告绑定完整提交 SHA。`site-status` 是持久数据分支，不按临时分支清理。
+
+## 目标记录
+
+[docs/handoff/LATEST-GOALS.md](docs/handoff/LATEST-GOALS.md) 是用户需求和所有者决定的记录，研究 Site 和独立评审按它判断"要的是什么"。
+
+- **由主创（游戏主创与上线前评审）维护。** 用户在对话里提出一条需求，或在评审里拍板一个取舍，主创在同一轮把它写进 LATEST-GOALS，和对应的 issue、目标文件同一个提交，不留到以后补。
+- 开发方不改 LATEST-GOALS：完成情况写 `delivery.json` 和 `docs/HANDOFF.md`，不把"做到了什么"写成"要做什么"。
+- 它只写需求和去哪里看状态，不写完成；是否在线以实时 JSON 和完整 SHA 为准。被取代的需求就地改写并注明取代了什么、依据是谁哪天的话。
+- PR 改了 `docs/t00/*-goal.md`、`docs/t00/decisions.md` 或 `docs/PHOTO-MODE.md` 而没改 LATEST-GOALS 时，预览评论会提醒一行（`tools/preview/comment.cjs`），不拦合并。
+- 主创每次评审先对一遍：`docs/HANDOFF.md` 里新出现的「所有者定」「用户要求」，LATEST-GOALS 里没有的当场补上。
