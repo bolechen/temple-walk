@@ -37,14 +37,14 @@ export const KINDS = {
 // of what is told of such mountain monasteries (docs/JINGSHAN.md). They stand in for the artworks the story will
 // hang here later; each has a small ink painting drawn for it (`paint`, see leaves.js); give a frame an `image` and it shows that instead.
 export const GALLERY = {
-  "main-w1": { paint: "gate", title: "入山帖", text: "山门之外是路，山门之内也是路。上来的人各有来处，到了殿前，都只是站一站。" },
-  "chan-w1": { paint: "sit", title: "坐帖", text: "禅堂里没有要学的东西。一炷香的工夫，听得见自己呼吸，就算坐过了。" },
+  "main-w1": { paint: "gate", title: "入山帖", text: "上山的人在山门外的石阶上歇脚，到殿前时，鞋帮上都沾着竹林里的泥。站一站，再进去。" },
+  "chan-w1": { paint: "sit", title: "坐帖", text: "禅堂里一排坐榻，蒲团朝着墙。坐的人点一炷香，香没烧完，谁也不先起身。" },
   "tea-w1": { paint: "tea", title: "茶帖", text: "相传山里的茶宴有十几道规矩，后来渡海东去。小沙弥只记得一条：茶来了，就喝茶。" },
-  "library-w1": { paint: "scroll", title: "经帖", text: "楼上的经卷多数没人翻过。老师父说，请一句带下山，够用很久。" },
-  "yaoshi-w1": { paint: "gourd", title: "药帖", text: "山下的人上来求药，师父先让他们在廊下坐一会儿。坐过之后，要的常常不是药了。" },
-  "guanyin-w1": { paint: "lamp", title: "灯帖", text: "灯是别人点的，也是给别人点的。添一盏的人，往往不知道它照见了谁。" },
+  "library-w1": { paint: "scroll", title: "经帖", text: "楼上的经卷按函排在柜里，函套上落着薄灰。管经的老师父每天开一个柜子，晾一晾，再合上。上山的人可以在檐下请一句话。" },
+  "yaoshi-w1": { paint: "gourd", title: "药帖", text: "山下的人上来求药，师父先请他们在廊下坐着，等一壶水烧开，问家里几口人、地里种的什么。药包好了，麻绳扎两道，让他们带下山。" },
+  "guanyin-w1": { paint: "lamp", title: "灯帖", text: "灯台上一排小盏，油是香客背上山的，灯芯是殿里的师父捻的。夜里风大，守殿的人要起来两回，把吹灭的再点上。" },
   "dahui-w1": { paint: "well", title: "井帖", text: "相传开山那年，龙让出了整座山，只留下这口井。水在暗处，俯身才看得见。" },
-  "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。来时的路，原来这么短。" },
+  "lingxiao-w1": { paint: "roofs", title: "顶帖", text: "登到顶上回头看，一层一层的屋顶都在脚下。山门外那片竹林，只剩一道浅绿。" },
 };
 // The figures that stand in the halls beside the great Buddha, until the project carves its own: scans of real
 // sculpture which two museums publish as public domain (CC0), thinned and packed by tools/statues.py into

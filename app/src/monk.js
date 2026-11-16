@@ -514,14 +514,14 @@ export function createMonk() {
     // legs folded, "hop" in the air, "bind" for the A-pose he is bound in. `surfaceAt(x, z)` is the ground under a
     // point; `grounding.heightAt` the smooth height his body follows, `grounding.stairs` whether he is on a stair.
     // `grounding.act` is what an observance asks of him over the pose (rites.js): `bow` and `twist` of the trunk and
-    // `nod` of the head in radians, `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
+    // `nod` of the head in radians, `look` the head turned aside (radians, + to his left), `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
     // reach (`hands.left.at`), which way its fingers and palm turn there, and how far it has gone over (`w`, 0 to 1).
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
       if (pose === "bind") { legs.visible = shoes.visible = true; lap.visible = false; group.updateMatrixWorld(true); return; }
       const pray = pose === true || pose === "pray", sit = pose === "sit", hop = pose === "hop", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
-      const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, air = act && act.breath != null ? act.breath : null;
+      const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       seat += ((sit ? 1 : 0) - seat) * ease(3.5);
       gait += ((speed > 0.05 && !sit ? 1 : 0) - gait) * ease(8);
       palms += ((pray ? 1 : 0) - palms) * ease(4);
@@ -553,7 +553,7 @@ export function createMonk() {
       B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.04 * seat + 0.5 * bow, -twist * 0.5 + 0.5 * turnTo, 0);
       B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe + 0.4 * bow - 0.035 * (air || 0), -twist * 0.9 + 0.5 * turnTo, -0.012 * Math.sin(phase) * gait);
       B.neck.rotation.x = -0.03 * gait;
-      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) + 0.2 * palms + 0.14 * seat + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4, -0.018 * Math.sin(phase) * gait);
+      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) + 0.2 * palms + 0.14 * seat + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4 + 0.6 * look, -0.018 * Math.sin(phase) * gait);
       // A breath taken on purpose shows: the chest fills and rises, the shoulders with it; the head keeps its size.
       if (air !== null) { const k = 0.5 + 0.5 * air; B.chest.scale.set(1 + 0.035 * k, 1, 1 + 0.06 * k); B.neck.scale.set(1 / (1 + 0.035 * k), 1, 1 / (1 + 0.06 * k)); B.chest.position.y += 0.007 * k; for (const [n] of SIDES) B[n + "Shoulder"].position.y += 0.006 * k; }
 
