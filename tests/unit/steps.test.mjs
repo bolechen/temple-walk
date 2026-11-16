@@ -54,16 +54,16 @@ test("played at their levels, dry stone is the quietest step and snow the loudes
   assert.ok(heard.stone > 0.3 * heard.snow, "a step on stone is too faint to hear beside the snow: " + JSON.stringify(heard));
 });
 
-test("steps stay well under the music, as 小王子 keeps them: no step played behind him is louder than -42 dBFS", () => {
+test("steps stay well under the music, as 小王子 keeps them: no step played behind him is louder than -52 dBFS", () => {
   // Measured 2026-11-16 from 小王子's shipped files (docs/t00/SOURCES.md): its stone steps sound about 26 dB under its
   // music, its grass about 22; ours were 12 and 7.5. Lowered by 10 dB, ours sit about 22 and 17.5 under the music: still
-  // a little more present than his, for the bamboo's wind and because ours do not fade with the eye's distance.
+  // a little more present than his. Then 10 dB more at the owner's word (若隐若现): stone about 26 under, as his.
   // As the page plays them outdoors in third person: LEVEL × 0.8 × walking speed 0.975 × the steps' dry send 0.8 × master 0.8.
   const chain = 0.8 * 0.975 * 0.8 * 0.8;
   for (const kind of KINDS) {
     const db = 20 * Math.log10(mean(kind, loudest) * LEVEL[kind] * chain);
-    assert.ok(db <= -42, `${kind} is played at ${db.toFixed(1)} dBFS at its loudest`);
-    assert.ok(db >= -50, `${kind} is played at ${db.toFixed(1)} dBFS: too faint to hear over the wind`);
+    assert.ok(db <= -52, `${kind} is played at ${db.toFixed(1)} dBFS at its loudest`);
+    assert.ok(db >= -60, `${kind} is played at ${db.toFixed(1)} dBFS: too faint to hear at all`);
   }
 });
 

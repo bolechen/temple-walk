@@ -8,7 +8,12 @@
 - 协作契约：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/SITE-SYNC.md
 - 开发交付：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/delivery.json
 - 独立评审：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/independent-review.json
+- 交接与下一步：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/HANDOFF.md
 - 建筑边缘整改：https://github.com/bolechen/temple-walk/issues/16
+- 结构（营造法式）目标：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/structure-goal.md
+- 美术原型目标：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/art-goal.md
+- 观礼自动转场：https://github.com/bolechen/temple-walk/issues/71
+- PR 预览与评审直达：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/PREVIEWS.md
 - 研究 Site：https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt
 
-若 Site 被当前读取环境拒绝，继续使用上述 GitHub 入口，相关图片未实际打开时标未核，不伪造看图结果。WebGL 禁用是测试环境阻塞，不代表线上加载失败。配乐目标目前为提案，不自动实施；需要 HF Job 时先向用户说明用途、预计费用与时间。
+若 Site 被当前读取环境拒绝，继续使用上述 GitHub 入口，相关图片未实际打开时标未核，不伪造看图结果。WebGL 禁用是测试环境阻塞，不代表线上加载失败。配乐已接入游戏但还没有人试听，自动测试不能宣布好听。用直达参数（?seals=、?at=、?play=）看到的效果属诊断证据，不代替正常游玩录像。docs/t00/evidence/ 里已被引用的证据只增不改。需要 HF Job 时先向用户说明用途、预计费用与时间。
