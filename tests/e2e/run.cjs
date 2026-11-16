@@ -90,6 +90,13 @@ const scenarios = {
     // Nothing on the English title is left in Chinese but the calligraphy (the name and its seal).
     const left = await t.page.evaluate(() => [...document.querySelectorAll("#title button, #title p, #title .sub, #title .how")].filter((el) => el.offsetParent && !el.closest("[data-lang]") && /[\u3400-\u9fff]/.test(el.textContent)).map((el) => el.textContent));
     expect(!left.length, "Chinese left on the English title: " + JSON.stringify(left));
+    // Korean, asked for in the address: the title and a work's card in Hangul, in a face of its own.
+    await t.page.goto(base + "?q=low&lang=ko" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
+    expect(await t.page.evaluate(() => document.documentElement.lang) === "ko" && (await words("#title .sub")).includes("운경선사") && ["산에 들기", "이어서 걷기"].includes(await words("#enterBtn")), "?lang=ko should bring the Korean title: " + (await words("#title .sub")) + " / " + (await words("#enterBtn")));
+    expect(await t.page.evaluate(async () => { await document.fonts.load('20px "Yunjing Serif KO"', "산에 들기"); return document.fonts.check('20px "Yunjing Serif KO"', "산에 들기"); }), "the Korean face did not load");
+    await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in Korean");
+    expect((await words("#pieceTitle")) === "출산석가도" && /[가-힣]/.test(await words("#pieceNote")), "the work's card should be in Korean: " + (await words("#pieceTitle")));
+    await t.page.click("#pieceClose");
     await t.page.goto(base + "?q=low&lang=zh" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     expect((await t.page.evaluate(() => document.documentElement.lang)).startsWith("zh") && (await words("#title .sub")).includes("云径禅寺"), "?lang=zh should bring the Chinese back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();

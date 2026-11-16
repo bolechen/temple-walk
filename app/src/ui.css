@@ -24,6 +24,9 @@
 @font-face { font-family: "Yunjing Xing JA"; src: url("../shared/fonts/xing-ja.woff2") format("woff2"); font-display: swap; }
 @font-face { font-family: "Yunjing Serif EN"; src: url("../shared/fonts/serif-en.woff2") format("woff2"); font-display: swap; }
 @font-face { font-family: "Yunjing Hand EN"; src: url("../shared/fonts/hand-en.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Serif KO"; src: url("../shared/fonts/serif-ko.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Brush KO"; src: url("../shared/fonts/brush-ko.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Yunjing Hand KO"; src: url("../shared/fonts/hand-ko.woff2") format("woff2"); font-display: swap; }
 
 /* ---- Tokens ---- */
 :root {
@@ -54,6 +57,12 @@
   --seal-face: "Yunjing Seal JA", "Yunjing Seal", serif;
 }
 /* English reads in Garamond; what is still in characters (the title, the seals) keeps the temple's brush behind it. */
+/* Korean reads in Gowun Batang, heads in Song Myung, writes by hand in Nanum Brush Script; the seals keep the hanja. */
+:lang(ko) {
+  --serif: "Yunjing Serif KO", "Yunjing Serif", serif; --brush: "Yunjing Brush KO", "Yunjing Serif KO", "Yunjing Brush", serif;
+  --kai: "Yunjing Serif KO", "Yunjing Kai", serif; --xing: "Yunjing Hand KO", "Yunjing Serif KO", "Yunjing Xing", serif;
+  --seal-face: "Yunjing Seal", "Yunjing Serif", serif;
+}
 :lang(en) {
   --serif: "Yunjing Serif EN", "Yunjing Serif", Georgia, serif; --brush: "Yunjing Hand EN", "Yunjing Brush", serif;
   --kai: "Yunjing Serif EN", "Yunjing Kai", Georgia, serif; --xing: "Yunjing Hand EN", "Yunjing Xing", Georgia, serif;
@@ -457,6 +466,10 @@ body.ending .rail, body.ending #bookBtn, body.ending #goal, body.ending #way, bo
    that wide fall apart, and laid on their side cannot be read, so in English the words are set close and level. The
    characters that stay (the title, the seals, the seal on a slip) keep their own setting. */
 :root:lang(en) body *:not(.seal-mark):not(h1):not(.mark) { letter-spacing: .01em !important; text-indent: 0 !important; }
+/* Korean is set between words with spaces: the characters' wide spacing is narrowed, and slips may still run down the page. */
+:root:lang(ko) body *:not(.seal-mark):not(h1):not(.mark) { letter-spacing: .04em !important; text-indent: 0 !important; }
+/* A Korean line breaks between words, never inside one. */
+:root:lang(ko) body { word-break: keep-all; overflow-wrap: anywhere; }
 :root:lang(en) .rail .chip { writing-mode: horizontal-tb; width: auto; min-width: 64px; min-height: 44px; padding: 8px 12px; font-size: 15px; }
 :root:lang(en) .rail .chip::after { left: 14%; right: 14%; top: auto; bottom: 3px; width: auto; height: 3px; }
 :root:lang(en) .rail .chip:hover { transform: translateY(-2px); }

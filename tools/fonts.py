@@ -15,6 +15,8 @@ Reads every character in app/ (the page and its scripts) and writes app/shared/f
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
 For the Japanese and English pages (src/i18n.js), `python3 tools/fonts.py --lang ja|en <dir>` cuts their own faces to
 the characters of their tables (src/i18n-ja.js, src/i18n-en.js) and the page's language buttons:
+    ko: serif-ko (Gowun Batang: everything that is read), brush-ko (Song Myung), hand-ko (Nanum Brush Script); chars-ko.txt,
+        from GowunBatang-Regular.ttf, SongMyung-Regular.ttf, NanumBrushScript-Regular.ttf and their *-OFL.txt
     ja: kai-ja (Klee One, from which the kai was drawn), serif-ja and seal-ja (Noto Serif JP regular and black),
         brush-ja (Yuji Boku), xing-ja (Yuji Syuku); chars-ja.txt
     en: serif-en (EB Garamond), hand-en (EB Garamond italic); chars-en.txt
@@ -42,11 +44,11 @@ def used(skip=()):
         chars.update(c for c in open(path, encoding="utf-8").read() if ord(c) > 0x2000 and not 0xE000 <= ord(c) <= 0xF8FF)
     return "".join(sorted(chars))
 
-TABLES = {"ja": "i18n-ja.js", "en": "i18n-en.js"}
+TABLES = {"ja": "i18n-ja.js", "en": "i18n-en.js", "ko": "i18n-ko.js"}
 # The works' cards in each language (works-ja.js, works-en.js) are written in the same faces.
-WORK_TABLES = {"ja": "works-ja.js", "en": "works-en.js"}
+WORK_TABLES = {"ja": "works-ja.js", "en": "works-en.js", "ko": "works-ko.js"}
 # The language buttons are each written in their own language, so each language's cut holds its own name.
-OWN_NAME = {"ja": "日本語", "en": "English"}
+OWN_NAME = {"ja": "日本語", "en": "English", "ko": "한국어"}
 
 def table_chars(lang, works=True):
     """Every character a language's table writes (its keys are the Chinese, which the Chinese faces hold). The works'
@@ -65,6 +67,11 @@ def main_lang(lang, src):
         for name, w, chars in (("serif-ja", 400, text), ("seal-ja", 900, few)):
             cut(instancer.instantiateVariableFont(TTFont(f"{src}/NotoSerifJP.ttf"), {"wght": w}), chars, f"{out}/{name}.woff2")
         licences = (("Klee One", "KleeOne"), ("Noto Serif JP", "NotoSerifJP"), ("Yuji Syuku", "YujiSyuku"))
+    elif lang == "ko":
+        cut(TTFont(f"{src}/GowunBatang-Regular.ttf"), text, f"{out}/serif-ko.woff2")
+        cut(TTFont(f"{src}/SongMyung-Regular.ttf"), few, f"{out}/brush-ko.woff2")
+        cut(TTFont(f"{src}/NanumBrushScript-Regular.ttf"), few, f"{out}/hand-ko.woff2")
+        licences = (("Gowun Batang", "GowunBatang"), ("Song Myung", "SongMyung"), ("Nanum Brush Script", "NanumBrushScript"))
     else:
         cut(instancer.instantiateVariableFont(TTFont(f"{src}/EBGaramond.ttf"), {"wght": 400}), text, f"{out}/serif-en.woff2")
         cut(instancer.instantiateVariableFont(TTFont(f"{src}/EBGaramond-Italic.ttf"), {"wght": 400}), text, f"{out}/hand-en.woff2")

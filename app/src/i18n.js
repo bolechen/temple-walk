@@ -11,8 +11,9 @@
 // (the title, the plaques, the slips on a canvas) has to be drawn again.
 import JA from "./i18n-ja.js";
 import EN from "./i18n-en.js";
+import KO from "./i18n-ko.js";
 
-export const LANGS = ["zh", "ja", "en"];
+export const LANGS = ["zh", "ja", "en", "ko"];
 export const LANG_KEY = "yunjing.lang.v1";
 
 /** @param {{ search?: string, stored?: string | null, languages?: readonly string[] }} from */
@@ -41,7 +42,7 @@ export const lang = (() => {
 })();
 
 /** @type {Record<string, Record<string, string>>} */
-const TABLES = { ja: JA, en: EN };
+const TABLES = { ja: JA, en: EN, ko: KO };
 
 /** A line in the visitor's language. `{name}` in it is filled from `vars`.
  * @param {string} zh @param {Record<string, string | number>=} vars @param {string=} to */
@@ -75,9 +76,13 @@ const ZH = {
 const FACES = {
   ja: { brush: "Yunjing Brush JA", serif: "Yunjing Serif JA", kai: "Yunjing Kai JA", xing: "Yunjing Xing JA", seal: "Yunjing Seal JA" },
   en: { brush: "Yunjing Hand EN", serif: "Yunjing Serif EN", kai: "Yunjing Serif EN", xing: "Yunjing Hand EN", seal: "Yunjing Serif EN" },
+  // Korean: Gowun Batang to read, Song Myung for headings, Nanum Brush Script for what is written by hand. A seal stays in
+  // the temple's characters, as Korean temples keep hanja on their seals.
+  ko: { brush: "Yunjing Brush KO", serif: "Yunjing Serif KO", kai: "Yunjing Serif KO", xing: "Yunjing Hand KO", seal: "Yunjing Seal" },
 };
 /** Font stacks for a canvas, by role, in the given language. */
-export const fontsFor = (to) => /** @type {Record<keyof typeof ZH, string>} */ (Object.fromEntries(Object.entries(ZH).map(([k, v]) => [k, FACES[to] ? `"${FACES[to][k]}", ${v}` : v])));
+// Each role's own face, then the language's reading face (a heading face may hold fewer letters), then the Chinese faces.
+export const fontsFor = (to) => /** @type {Record<keyof typeof ZH, string>} */ (Object.fromEntries(Object.entries(ZH).map(([k, v]) => [k, FACES[to] ? [...new Set([FACES[to][k], FACES[to].serif])].map((f) => `"${f}"`).join(", ") + ", " + v : v])));
 export const FONT = fontsFor(lang);
 /** The first face of each role's stack, for document.fonts.load (which loads only the first face that matches). */
 export const FACE = /** @type {Record<keyof typeof ZH, string>} */ (Object.fromEntries(Object.entries(FONT).map(([k, v]) => [k, v.split(",")[0]])));
@@ -108,7 +113,7 @@ export function localize(root = globalThis.document, to = lang) {
   walk(root);
   if (root === doc) {
     doc.documentElement.lang = to;
-    const og = doc.querySelector('meta[property="og:locale"]'); if (og) og.setAttribute("content", to === "ja" ? "ja_JP" : "en_US");
+    const og = doc.querySelector('meta[property="og:locale"]'); if (og) og.setAttribute("content", { ja: "ja_JP", en: "en_US", ko: "ko_KR" }[to] || "zh_CN");
   }
   return n;
 }
