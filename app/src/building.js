@@ -100,6 +100,7 @@ export function buildHall(M, opts) {
   }
 
   // ---- Columns ----
+  const sets = [];   // where the bracket sets stand: on the column heads, and between them (`bay` says in which)
   const perimeter = [], COL_R = p.colTop > 3.6 ? 0.27 : 0.2;
   for (const x of xs) for (const z of zs) {
     const ox = x === xs[0] ? -1 : x === X ? 1 : 0, oz = z === Z ? 1 : z === ZB ? -1 : 0;
@@ -231,10 +232,15 @@ export function buildHall(M, opts) {
       new THREE.BoxGeometry(0.13, 0.16, 1.5).rotateX(0.4).translate(0, 0.6, 0.6),                      // the slanting arm whose beak shows under the eave
       arm(1.0, 0.8, 0.88),                                                                             // the last arm, under the purlin
     ]);
+    /** @type {{ x: number, z: number, a: number, bay?: number }[]} */
     const spots = perimeter.map((c) => ({ x: c.x, z: c.z, a: Math.atan2(c.ox, c.oz) }));
-    const between = (a, b) => { const n = Math.abs(b - a) > 4.6 ? 2 : 1; return Array.from({ length: n }, (_, i) => a + ((b - a) * (i + 1)) / (n + 1)); };
-    for (const [z, a] of [[Z, 0], [ZB, Math.PI]]) for (let i = 0; i < nx; i++) for (const x of between(xs[i], xs[i + 1])) spots.push({ x, z, a });
-    for (const [x, a] of [[xs[0], -Math.PI / 2], [X, Math.PI / 2]]) for (let i = 0; i < zs.length - 1; i++) for (const z of between(zs[i], zs[i + 1])) spots.push({ x, z, a });
+    // Between the columns (Yingzao Fashi, juan 4, on setting out the sets: two in the middle bay, one in each of the others): two sets in the middle bay of a
+    // face, one in every other. A middle bay too narrow for two to stand clear of each other (their long arms are
+    // 1.32 m) keeps one: the single bay of a bell tower or a rest pavilion.
+    const between = (line, i) => { const bays = line.length - 1, a = line[i], b = line[i + 1], n = bays % 2 === 1 && i === (bays - 1) / 2 && Math.abs(b - a) / 3 >= 1.32 - 1e-6 ? 2 : 1; return Array.from({ length: n }, (_, k) => a + ((b - a) * (k + 1)) / (n + 1)); };
+    for (const [z, a] of [[Z, 0], [ZB, Math.PI]]) for (let i = 0; i < nx; i++) for (const x of between(xs, i)) spots.push({ x, z, a, bay: i });
+    for (const [x, a] of [[xs[0], -Math.PI / 2], [X, Math.PI / 2]]) for (let i = 0; i < zs.length - 1; i++) for (const z of between(zs, i)) spots.push({ x, z, a, bay: i });
+    sets.push(...spots);
     add(merge(spots.map((s) => set.clone().rotateY(s.a).translate(s.x, PLATE_TOP, s.z))), M.woodX);
     const o = 0.88, py = PLATE_TOP + 1.0;   // the eave purlin the outer arms carry
     add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX);
@@ -452,5 +458,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
+  return { group: g, walk, plat, sets, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + p.rise, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
 }
