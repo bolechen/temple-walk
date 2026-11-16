@@ -20,7 +20,7 @@ async function page(b, base, run, query, ctxOpts = {}) {
   await p.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   await p.waitForFunction(() => !document.getElementById("enterBtn")?.disabled, null, { timeout: 60000 });
-  if (ctxOpts.hasTouch) await p.tap("#enterBtn"); else await p.click("#enterBtn");
+  if (ctxOpts.hasTouch) await p.tap("#enterBtn", { timeout: 240000 }); else await p.click("#enterBtn");
   note(run, "input", ctxOpts.hasTouch ? "tap 入山" : "click 入山");
   const S = { p, ctx, errors,
     j: () => p.evaluate(() => window.__journey()), r: () => p.evaluate(() => window.__rites()),
@@ -30,7 +30,7 @@ async function page(b, base, run, query, ctxOpts = {}) {
     shot: async (name) => { await p.screenshot({ path: path.join(out, `${run}-${name}.png`), timeout: 240000 }); note(run, "shot", `${run}-${name}.png`); },
     until: async (fn, ms, what) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return Date.now() - t0; await p.waitForTimeout(250); } throw new Error(`${run}: ${what}`); },
     key: async (k, what) => { await p.keyboard.press(k); note(run, "input", `key ${k}${what ? " · " + what : ""}`); },
-    tap: async (sel, what) => { await p.tap(sel); note(run, "input", `tap ${sel}${what ? " · " + what : ""}`); },
+    tap: async (sel, what) => { await p.tap(sel, { timeout: 240000 }); note(run, "input", `tap ${sel}${what ? " · " + what : ""}`); },
     async end() { const v = p.video(); await ctx.close(); const f = await v.path(); const to = path.join(out, `${run}.webm`); fs.renameSync(f, to); note(run, "film", path.basename(to), { errors }); },
   };
   return S;
@@ -48,6 +48,7 @@ const runs = {
     note("summit", "page", `close began ${((Date.now() - t0) / 1000).toFixed(0)} s after the breath`, { seals: (await s.j()).count });
     const lines = []; let i = 0;
     await s.until(async () => { const r = await s.r(); if (r.line && lines.at(-1) !== r.line) { lines.push(r.line); note("summit", "page", `closing line: ${r.line}`); await s.shot(`3-line${++i}`); } return !r.closing; }, 120000, "the close never ended");
+    note("summit", "page", "every line the close said", { words: (await s.r()).words });
     await s.until(() => s.p.isVisible("#book"), 30000, "no book"); note("summit", "page", "book", { hint: await s.p.textContent("#bookHint") }); await s.shot("4-book");
     await s.key("Escape", "close the book"); await s.until(async () => (await s.word()) === "起身", 20000, "起身 not offered"); await s.shot("5-seated");
     await s.key("e", "起身"); await s.until(async () => !(await s.p.evaluate(() => window.__yard().staged)), 20000, "did not stand");
@@ -60,8 +61,10 @@ const runs = {
     await s.at("bell", 0.3, -0.3); await s.until(async () => (await s.word()) === "撞钟", 30000, "撞钟 not offered"); await s.shot("1-offered");
     const t0 = Date.now(), strikes = async () => (await s.j()).strikes;
     await s.key("e", "first press"); await s.until(async () => (await strikes()) === 1, 30000, "no first stroke");
-    note("bell", "page", `stroke 1 sounded ${((Date.now() - t0) / 1000).toFixed(1)} s after the press`, { say: await s.say() }); await s.shot("2-stroke1");
-    await s.key("e", "pressed again at once"); await s.p.waitForTimeout(2500); note("bell", "page", `strokes after the early press: ${await strikes()}`, { wait: await s.p.evaluate(() => document.getElementById("act").classList.contains("wait")) });
+    const wait = await s.p.evaluate(() => document.getElementById("act").classList.contains("wait")), ready = (await s.r()).bell.ready;
+    await s.key("e", `pressed again at once (button faint: ${wait}, ready: ${ready})`);
+    note("bell", "page", `stroke 1 sounded ${((Date.now() - t0) / 1000).toFixed(1)} s after the press`, { say: await s.say() });
+    await s.p.waitForTimeout(2500); note("bell", "page", `strokes after the early press: ${await strikes()}, pulls: ${(await s.r()).bell.pulls}`); await s.shot("2-stroke1");
     for (const [gap, n] of [[3000, 2], [6500, 3], [2500, 4]]) {
       await s.p.waitForTimeout(gap); const ready = (await s.r()).bell.ready; await s.key("e", `after ${gap / 1000} s more (ready: ${ready})`);
       const t1 = Date.now(); await s.until(async () => (await s.r()).bell.pulls >= (n === 4 ? 4 : n), 30000, `stroke ${n}`);

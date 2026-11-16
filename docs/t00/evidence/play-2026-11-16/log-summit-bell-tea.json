@@ -1,0 +1,372 @@
+[
+ {
+  "t": "2026-11-16T01:05:45.928Z",
+  "run": "summit",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T01:05:45.931Z",
+  "run": "summit",
+  "kind": "diagnostic",
+  "what": "__pose beside sit"
+ },
+ {
+  "t": "2026-11-16T01:05:51.628Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "button: 静坐",
+  "say": "凌霄阁前这只蒲团，朝着来时的路。"
+ },
+ {
+  "t": "2026-11-16T01:05:58.940Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-1-offered.png"
+ },
+ {
+  "t": "2026-11-16T01:06:00.864Z",
+  "run": "summit",
+  "kind": "input",
+  "what": "key e · 静坐"
+ },
+ {
+  "t": "2026-11-16T01:06:14.765Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-2-breath.png"
+ },
+ {
+  "t": "2026-11-16T01:06:45.060Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "close began 29 s after the breath",
+  "seals": 1
+ },
+ {
+  "t": "2026-11-16T01:06:50.468Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "closing line: 从竹林一路走上来。"
+ },
+ {
+  "t": "2026-11-16T01:06:58.421Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-3-line1.png"
+ },
+ {
+  "t": "2026-11-16T01:06:59.571Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "closing line: 路上哪里也没停，就到了这里。"
+ },
+ {
+  "t": "2026-11-16T01:07:05.529Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-3-line2.png"
+ },
+ {
+  "t": "2026-11-16T01:07:06.502Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "closing line: 远处的山里，好像有一声钟，响了一下。"
+ },
+ {
+  "t": "2026-11-16T01:07:12.047Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-3-line3.png"
+ },
+ {
+  "t": "2026-11-16T01:07:19.946Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "book",
+  "hint": "帐上还空着六处。山门东侧的钟楼里悬着大钟。走到绳前，一下一下撞，撞满三下。　这一趟走了 0 步，在山上 1 分钟。"
+ },
+ {
+  "t": "2026-11-16T01:07:25.495Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-4-book.png"
+ },
+ {
+  "t": "2026-11-16T01:07:27.317Z",
+  "run": "summit",
+  "kind": "input",
+  "what": "key Escape · close the book"
+ },
+ {
+  "t": "2026-11-16T01:07:35.622Z",
+  "run": "summit",
+  "kind": "shot",
+  "what": "summit-5-seated.png"
+ },
+ {
+  "t": "2026-11-16T01:07:37.474Z",
+  "run": "summit",
+  "kind": "input",
+  "what": "key e · 起身"
+ },
+ {
+  "t": "2026-11-16T01:07:42.048Z",
+  "run": "summit",
+  "kind": "page",
+  "what": "after standing, button: 坐下",
+  "closed": true
+ },
+ {
+  "t": "2026-11-16T01:07:42.217Z",
+  "run": "summit",
+  "kind": "film",
+  "what": "summit.webm",
+  "errors": []
+ },
+ {
+  "t": "2026-11-16T01:08:24.418Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T01:08:25.774Z",
+  "run": "bell",
+  "kind": "diagnostic",
+  "what": "__pose beside bell"
+ },
+ {
+  "t": "2026-11-16T01:08:38.188Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-1-offered.png"
+ },
+ {
+  "t": "2026-11-16T01:08:40.548Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · first press"
+ },
+ {
+  "t": "2026-11-16T01:08:56.825Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "stroke 1 sounded 17.1 s after the press",
+  "say": "一下"
+ },
+ {
+  "t": "2026-11-16T01:09:05.365Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-2-stroke1.png"
+ },
+ {
+  "t": "2026-11-16T01:09:07.773Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · pressed again at once"
+ },
+ {
+  "t": "2026-11-16T01:09:11.956Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "strokes after the early press: 2",
+  "wait": true
+ },
+ {
+  "t": "2026-11-16T01:09:18.602Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 3 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:09:24.062Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 2 rang 1.3 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": "三下"
+ },
+ {
+  "t": "2026-11-16T01:09:33.829Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 6.5 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:09:38.839Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 3 rang 1.3 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T01:09:45.973Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-3-third.png"
+ },
+ {
+  "t": "2026-11-16T01:09:51.721Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key e · after 2.5 s more (ready: true)"
+ },
+ {
+  "t": "2026-11-16T01:09:56.651Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "pull 4 rang 1.4 s after the press",
+  "strikes": 3,
+  "sealed": true,
+  "say": ""
+ },
+ {
+  "t": "2026-11-16T01:09:59.255Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key v · first person while holding the rope"
+ },
+ {
+  "t": "2026-11-16T01:10:06.861Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-4-first-person.png"
+ },
+ {
+  "t": "2026-11-16T01:10:09.087Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key v"
+ },
+ {
+  "t": "2026-11-16T01:10:11.345Z",
+  "run": "bell",
+  "kind": "input",
+  "what": "key Escape · let go"
+ },
+ {
+  "t": "2026-11-16T01:10:19.627Z",
+  "run": "bell",
+  "kind": "shot",
+  "what": "bell-5-let-go.png"
+ },
+ {
+  "t": "2026-11-16T01:10:23.220Z",
+  "run": "bell",
+  "kind": "page",
+  "what": "after letting go",
+  "rite": null,
+  "button": "撞钟"
+ },
+ {
+  "t": "2026-11-16T01:10:23.400Z",
+  "run": "bell",
+  "kind": "film",
+  "what": "bell.webm",
+  "errors": []
+ },
+ {
+  "t": "2026-11-16T01:11:06.193Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T01:11:07.493Z",
+  "run": "tea",
+  "kind": "diagnostic",
+  "what": "__pose beside tea"
+ },
+ {
+  "t": "2026-11-16T01:11:11.807Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key e · 吃茶"
+ },
+ {
+  "t": "2026-11-16T01:11:39.714Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-1-sip.png"
+ },
+ {
+  "t": "2026-11-16T01:11:54.208Z",
+  "run": "tea",
+  "kind": "page",
+  "what": "seal",
+  "button": "起身"
+ },
+ {
+  "t": "2026-11-16T01:12:37.869Z",
+  "run": "tea",
+  "kind": "page",
+  "what": "sat on for 40 s",
+  "lookRange": [
+   -0.408,
+   0.408
+  ],
+  "hushed": true,
+  "duck": 1
+ },
+ {
+  "t": "2026-11-16T01:12:46.300Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-2-sitting-on.png"
+ },
+ {
+  "t": "2026-11-16T01:12:48.951Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key v · first person while sitting"
+ },
+ {
+  "t": "2026-11-16T01:12:57.198Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-3-first-person.png"
+ },
+ {
+  "t": "2026-11-16T01:12:59.775Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key v"
+ },
+ {
+  "t": "2026-11-16T01:13:02.458Z",
+  "run": "tea",
+  "kind": "input",
+  "what": "key e · 起身"
+ },
+ {
+  "t": "2026-11-16T01:13:07.775Z",
+  "run": "tea",
+  "kind": "page",
+  "what": "stood up",
+  "hushed": false
+ },
+ {
+  "t": "2026-11-16T01:13:15.852Z",
+  "run": "tea",
+  "kind": "shot",
+  "what": "tea-4-up.png"
+ },
+ {
+  "t": "2026-11-16T01:13:16.128Z",
+  "run": "tea",
+  "kind": "film",
+  "what": "tea.webm",
+  "errors": []
+ },
+ {
+  "t": "2026-11-16T01:14:16.642Z",
+  "run": "phone",
+  "kind": "FAILED",
+  "what": "page.tap: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#enterBtn')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"enterBtn\" type=\"button\">入山</button>\u001b[22m\n\u001b[2m  - attempting tap action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - performing tap action\u001b[22m\n"
+ }
+]
