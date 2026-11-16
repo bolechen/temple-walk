@@ -594,10 +594,24 @@ const scenarios = {
     await t.shot("e2e-autumn-dusk");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // A pull request's preview opens with the debug panel showing, and ?debug=0 keeps it shut. The preview's own name
+  // (<deployment>-temple-walk-preview.<account>.workers.dev) is pointed at the test server for the browser alone.
+  "preview-debug": { tier: 2, async run(b, base) {
+    const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
+    const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
+    try {
+      let t = await open(pb, host, "q=low&cam=0,30,0,0" + BARE);
+      await t.until(() => t.page.evaluate(() => !!document.querySelector(".lil-gui")), 60000, "the preview did not open the debug panel");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      t = await open(pb, host, "q=low&cam=0,30,0,0&debug=0" + BARE); await t.frames(6);
+      expect(!(await t.page.evaluate(() => !!document.querySelector(".lil-gui"))), "?debug=0 should keep the panel shut on a preview");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    } finally { await pb.close(); }
+  } },
   // From behind him and through his eyes.
   views: { tier: 2, async run(b, base) {
-    // `devpose` and `debug` are dev-server aids (src/devpose.js, src/debug.js): the published build must neither carry
-    // them nor touch the address, and shows no panel.
+    // `devpose` and `debug` are working aids (src/devpose.js, src/debug.js): the published site must neither show them
+    // nor touch the address (the panel opens only on the dev server and a pull request's preview).
     // `body=sculpt` asks for the sculpted body, which the page no longer wears unasked: this is where it is seen to arrive.
     const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug&body=sculpt");
     await t.until(async () => (await t.state()).dressed === true, 90000, "the sculpted body never arrived on the novice (app/shared/models/novice.glb)");   // fetched after the first frames; a missing or ill-fitting file leaves him as built in code, and this fails
