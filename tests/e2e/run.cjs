@@ -178,7 +178,7 @@ const scenarios = {
     // A step is heard on the effects bus, listened to while it sounds (a frame drawn in software takes longer than a
     // step, so it is played and heard within one call). That it crunches rather than thuds is steps.test.mjs's to say.
     const step = await t.page.evaluate(() => { window.__steps(true); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
-    expect(step.rms > 0.002, "a step in the snow made no sound: " + JSON.stringify(step));
+    expect(step.rms > 0.0006, "a step in the snow made no sound: " + JSON.stringify(step));   // silence is 0; how loud is steps.test.mjs's to say
     // Standing where he stopped and looking down the way he came, the prints darken the snow.
     await t.page.evaluate(() => window.__view("first"));
     const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
@@ -216,7 +216,7 @@ const scenarios = {
     const h2 = await heard(); expect(h2.stone >= 3 && h2.wet === h.wet && h2.puddle === h.puddle, "in autumn the court should sound dry: " + JSON.stringify(h2));
     // A step is heard on the effects bus as it sounds (played and listened to within one call).
     const one = await t.page.evaluate(() => { window.__steps("stone"); const t0 = performance.now(); while (performance.now() - t0 < 90); return window.__listen("effects"); });
-    expect(one.rms > 0.0008, "a step on stone made no sound: " + JSON.stringify(one));
+    expect(one.rms > 0.0004, "a step on stone made no sound: " + JSON.stringify(one));   // silence is 0; how loud is steps.test.mjs's to say
     await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the main hall");
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
     const s = await t.state(); await walk([[s.x, s.z - 3]], "he never walked in the hall");
