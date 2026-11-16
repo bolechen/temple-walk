@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-16T06:21:14.900Z",
+  "generated_at": "2026-11-16T06:49:54.123Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "44f1f533a4e611c4c5482d79caa962dd5c6616b9",
-    "url": "https://github.com/bolechen/temple-walk/commit/44f1f533a4e611c4c5482d79caa962dd5c6616b9"
+    "sha": "3e29fec6bafb3a51f4fcf675e9934ab76a5068b0",
+    "url": "https://github.com/bolechen/temple-walk/commit/3e29fec6bafb3a51f4fcf675e9934ab76a5068b0"
   },
   "delivery": {
     "analytics": {
@@ -289,25 +289,36 @@
       "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
       "没有真人试玩；GPU 证据是 T4 上的无头 Chromium，不能推定 Mac 或手机"
     ],
-    "record_commit": "c49ab553ef2ce306657c9a04ff06b7bae4480670",
+    "hosting": {
+      "provider": "Cloudflare Workers",
+      "worker": "temple-walk",
+      "url": "https://temple.rushiwowen.co/",
+      "date": "2026-11-16",
+      "note": "正式试玩由 Worker 的静态资源提供，域名经 Cloudflare 代理。PR 预览仍使用 temple-walk-preview，不部署到这个 Worker。",
+      "evidence": [
+        "wrangler.production.jsonc",
+        "https://temple.rushiwowen.co/ 响应 server: cloudflare"
+      ]
+    },
+    "record_commit": "3e29fec6bafb3a51f4fcf675e9934ab76a5068b0",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 43815813152,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/43815813152",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 43819447478,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43819447478",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "44f1f533a4e611c4c5482d79caa962dd5c6616b9",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43815813152"
