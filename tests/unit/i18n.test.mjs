@@ -72,3 +72,26 @@ test("each language draws first in its own faces and falls back to the Chinese o
   assert.match(fontsFor("en").xing, /^"Yunjing Hand EN", "Yunjing Xing"/);
   assert.match(fontsFor("zh").brush, /^"Yunjing Brush"/);
 });
+
+test("every work in the halls has its Japanese and English card, field for field, and the record shows through where none is", async () => {
+  const { WORKS } = await import("../../app/src/works.js");
+  const { workIn, workTables, FIELDS } = await import("../../app/src/works-local.js");
+  for (const [name, table] of Object.entries(workTables)) {
+    assert.deepEqual(Object.keys(table).sort(), Object.keys(WORKS).sort(), `works-${name}.js should hold exactly the works in works.js`);
+    for (const [slug, w] of Object.entries(WORKS)) {
+      const tr = table[slug];
+      assert.deepEqual(Object.keys(tr).sort(), [...FIELDS].sort(), `${name}/${slug}: the fields`);
+      // Blank where the record is blank (no rank, no dates), written where it is not.
+      for (const f of FIELDS) assert.equal(!!tr[f].trim(), !!String(w[f] || "").trim(), `${name}/${slug}.${f}`);
+      if (name === "en") for (const f of FIELDS) assert.ok(!/[㐀-鿿぀-ヿ]/.test(tr[f]), `en/${slug}.${f} has characters in it: ${tr[f].slice(0, 40)}`);
+      if (name === "ja") assert.ok(/[぀-ヿ]/.test(tr.note), `ja/${slug}: the note should be written in Japanese, not left in Chinese`);
+      const shown = workIn(slug, name);
+      assert.equal(shown.credit, w.credit, "the museum's source line stays as published");
+      assert.equal(shown.size, w.size);
+      assert.equal(shown.note, tr.note);
+    }
+  }
+  const any = Object.keys(WORKS)[0];
+  assert.equal(workIn(any, "zh"), WORKS[any], "in Chinese the record itself");
+  assert.equal(workIn("no-such-work", "ja"), null);
+});

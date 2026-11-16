@@ -316,7 +316,9 @@ is the text of record: write every line in Chinese and pass it through `t("…",
 English are found by that Chinese in `i18n-ja.js` and `i18n-en.js` (one entry to a line), and `tests/unit/i18n.test.mjs`
 fails if a line the page may show lacks either. `index.html` is translated by `app/lang.js` before the title paints.
 What is calligraphy (seals, the seal book's page, the title's four characters) goes through `glyphs()`: Japanese forms in
-Japanese, the temple's own characters otherwise. Name boards and the museum notes are not translated. Each language has
+Japanese, the temple's own characters otherwise. Name boards are not translated. The works' cards are: `works-ja.js` and
+`works-en.js` hold each work's fields by slug, `workIn(slug)` in `works-local.js` lays them over the Chinese record, and the
+museum's source line stays as published; a work added by `tools/gallery.py` needs both, or `i18n.test.mjs` fails. Each language has
 its own faces in front of the Chinese ones (`FONT`/`FACE` in `i18n.js` for canvases; `:lang()` variables in `ui.css`),
 cut by `python3 tools/fonts.py --lang ja|en`. Tests and tools pin their browser to `zh-CN`; the `lang` scenario and
 `node tools/mobile-audit.cjs --lang=ja|en` look at the others.
