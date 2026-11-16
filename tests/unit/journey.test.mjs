@@ -155,3 +155,13 @@ test("a close recorded before seasons were kept belongs to the season the visito
   assert.equal(j.closedIn("autumn"), true, "an old close is not replayed on its own"); j.adopt("autumn");
   assert.equal(j.closedIn("autumn"), true); assert.equal(j.closedIn("spring"), false, "but a change of season plays it again");
 });
+
+test("a book for the workbench (?seals=) is written from a list, all seven or none, and unknown names are left out", async () => {
+  const { bookFrom } = await import("../../app/src/journey.js");
+  const all = createJourney(memory(bookFrom("all", 100)));
+  assert.equal(all.count(), 7); assert.equal(all.done(), true); assert.equal(all.opened(), true); assert.equal(all.strikes, 3);
+  assert.equal(createJourney(memory(bookFrom("none", 100))).count(), 0);
+  const two = createJourney(memory(bookFrom("bell,tea,ghost", 100)));
+  assert.equal(two.count(), 2); assert.equal(two.has("bell"), true); assert.equal(two.strikes, 3); assert.equal(two.done(), false);
+  assert.equal(bookFrom(null, 100), null, "no ?seals= keeps the visitor's own book");
+});
