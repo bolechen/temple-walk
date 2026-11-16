@@ -48,13 +48,14 @@ function createEarth(scene, M, terrain) {
 
 export function createBackdrop(scene, M, bounds, levels, terrain) {
   createEarth(scene, M, terrain);
-  const mats = [], hills = [], H = 17, X = bounds.x, zS = bounds.apron;
+  const mats = [], hills = [], H = 17, FOOT = 10,   // the grove stands on the slope, so its foot goes ten metres under the lowest ground it meets
+     X = bounds.x, zS = bounds.apron;
   const band = (x0, z0, x1, z1, seed, tone, base = 0, ends = [0, 0]) => {
-    const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, H);
-    const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len, uv.getY(i) * H);
+    const len = Math.hypot(x1 - x0, z1 - z0), g = new THREE.PlaneGeometry(len, H + FOOT);
+    const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len, uv.getY(i) * (H + FOOT) - FOOT);   // the band's height above its foot; the thicket under it is solid
     const mat = bambooMat(seed, tone); mat.uniforms.uLen.value = len; mat.uniforms.uEnds.value.set(...ends); mats.push(mat);
     const m = new THREE.Mesh(g, mat);
-    m.position.set((x0 + x1) / 2, base + H / 2 - 0.6, (z0 + z1) / 2); m.rotation.y = Math.atan2(-(z1 - z0), x1 - x0);
+    m.position.set((x0 + x1) / 2, base + (H - FOOT) / 2 - 0.6, (z0 + z1) / 2); m.rotation.y = Math.atan2(-(z1 - z0), x1 - x0);
     scene.add(m);
   };
   // The grove follows the land uphill in steps, on both sides, and closes behind the approach and above the summit.
@@ -87,10 +88,10 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
         float ang(float a,float y,float f){ return fbm3(vec3(cos(a),sin(a),0.)*f+vec3(0.,0.,y)); }
         void main(){ float a=atan(vP.z,vP.x), up=clamp(vP.y/uH,0.,1.);
           float wood=ang(a,vP.y*.22,60.)*.5+ang(a,vP.y*.7,190.)*.5;
-          float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35);            // mist lying in the folds, thickest low down
+          float fg=1.-exp(-pow(uFogD*length(vW-cameraPosition),2.));
+          float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35)*smoothstep(0.,.4,fg);   // mist lies only as far as the scene's own fog says: a hillside close by is wood, not a white curtain            // mist lying in the folds, thickest low down
           vec3 c=mix(uTop*(.7+.6*wood),uMist,clamp(veil*.85,0.,1.));
           // Below the land the hill goes on down into the mist: wooded slope, hazed by the distance it is really at (the scene's own fog), not a white curtain.
-          float fg=1.-exp(-pow(uFogD*length(vW-cameraPosition),2.));
           c=mix(c,mix(uTop*(.55+.4*wood),uMist,fg),smoothstep(3.,-6.,vP.y));
           gl_FragColor=vec4(c,1.);
           #include <tonemapping_fragment>
