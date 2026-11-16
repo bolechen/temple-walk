@@ -1,0 +1,11 @@
+diagnostic: seeded a book with bell, tea, well, sutra (看脚下。) and 612 steps; reload
+title buttons: enterBtn:接着走, againBtn:从头走起, titleSet:设置
+click enterBtn:接着走
+diagnostic: __pose beside the summit mat
+key E 静坐
+line: 从竹林到这里，走了 612 步。
+line: 山门之外，还有一条没走过的路。
+line: 远处的山里，好像也有一声钟，应了你那几下。
+words: ["从竹林到这里，走了 612 步。","钟楼的钟，撞过三下，茶寮那碗茶喝到了底，龙井边等过三声滴水。","藏经楼给的那一句，还记着：「看脚下。」","山门之外，还有一条没走过的路。","远处的山里，好像也有一声钟，应了你那几下。"]
+book: 帐上还空着二处。穿过大院，登上台阶，进大雄宝殿上一炷香。　这一趟走了 612 步，在山上 15 分钟。
+errors: []

@@ -31,6 +31,7 @@
       if (done || failed) return;
       failed = true; bar.hidden = true; percent.hidden = true;
       label.textContent = "山路 · 请再来一次"; retry.hidden = false; button.disabled = true;
+      try { if (location.hostname === "temple.rushiwowen.co") window.umami?.track?.("demo.load_error"); } catch {}
     },
   };
   retry.addEventListener("click", () => location.reload());

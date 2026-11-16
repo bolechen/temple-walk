@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -37,7 +37,7 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
     try {
       b = await chromium.launch({ channel, args: [...COMMON, ...flags] });
       const p = await b.newPage(); await p.goto(base + "favicon.svg");   // any same-origin page that is not the app will do. It must exist and be shown as a document (a script is, as text; a file this server sends as a download is not), or this flavour is passed over and the frame rates are no longer comparable
-      const gl = await p.evaluate(() => { const c = document.createElement("canvas"), g = c.getContext("webgl2"); if (!g) return "no webgl2"; const e = g.getExtension("WEBGL_debug_renderer_info"); return String(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); });
+      const gl = await p.evaluate(() => { const c = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")   /* the probe page is an SVG document, where createElement makes an SVG element */, g = c.getContext("webgl2"); if (!g) return "no webgl2"; const e = g.getExtension("WEBGL_debug_renderer_info"); return String(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); });
       report.tried[key] = gl; await p.close();
       if ((/NVIDIA|Tesla|GeForce|RTX|Quadro|AMD|Radeon/i.test(gl) && !/SwiftShader|llvmpipe/i.test(gl)) || name === "swiftshader") { browser = b; how = key; break pick; }
       await b.close();
@@ -96,6 +96,44 @@ const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--dis
       const v = page.video(); await ctx.close(); const from = await v.path(); fs.renameSync(from, path.join(out, "walkthrough.webm")); report.film = { file: "walkthrough.webm", seconds: T.film + 10, size: fs2 }; console.log("film", fs.statSync(path.join(out, "walkthrough.webm")).size);
     } catch (e) { report.film = { error: String(e.message).slice(0, 300) }; console.log("film failed", report.film.error); }
     fs.writeFileSync(path.join(out, "console.txt"), (report.errors.length ? report.errors.join("\n") : "no page errors, console errors or failed requests during the walk") + "\n");
+    save();
+  }
+  // The bell and the tea at a visitor's pace, by real key presses, on a card that draws as fast as a visitor's would:
+  // when each press is heard, whether a press made while the log still swings back is one more stroke, and how he sits
+  // on after his tea. He is put beside each with __pose (diagnostic); everything after that is the keyboard.
+  if (spec.rites) {
+    const R = spec.rites, size = R.size || [1280, 720], log = (report.rites = { size, steps: [] }), note = (what, o = {}) => { log.steps.push({ ms: Date.now() - t00, what, ...o }); console.log("rites", what, JSON.stringify(o)); };
+    let t00 = Date.now();
+    try {
+      const { ctx, page } = await open(q({ q: R.q || "high", enter: 1, view: "third", season: "summer", time: "day" }), size, 1, { recordVideo: { dir: out, size: { width: size[0], height: size[1] } } });
+      const ev = (f, a) => page.evaluate(f, a), word = () => ev(() => { const b = document.getElementById("act"); return b && !b.hidden ? b.dataset.word : null; });
+      const until = async (f, ms, what) => { const t = Date.now(); while (Date.now() - t < ms) { if (await f()) return Date.now() - t; await page.waitForTimeout(20); } throw new Error(what); };
+      const fps = async () => { const f0 = await ev(() => window.__yard().frames), c = Date.now(); await page.waitForTimeout(3000); return +(((await ev(() => window.__yard().frames)) - f0) / ((Date.now() - c) / 1000)).toFixed(1); };
+      t00 = Date.now();
+      await ev(() => { const p = window.__places.bell; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, Math.PI, 0.05); }); note("diagnostic: __pose beside the bell");
+      await until(async () => (await word()) === "撞钟", 30000, "撞钟 not offered"); note("frame rate at the bell", { fps: await fps() });
+      const st = () => ev(() => ({ strikes: window.__journey().strikes, pulls: window.__rites().bell.pulls, ready: window.__rites().bell.ready, faint: document.getElementById("act").classList.contains("wait") }));
+      let t = Date.now(); await page.keyboard.press("e"); note("key E (first press)");
+      await until(async () => (await st()).strikes === 1, 30000, "no first stroke"); note("stroke 1 heard", { afterPress: Date.now() - t });
+      await page.waitForTimeout(300); const before = await st(); await page.keyboard.press("e"); note("key E 0.3 s after the stroke, while the log swings back", before);
+      await page.waitForTimeout(2500); note("2.5 s after the early press", await st());
+      for (const n of [2, 3]) {
+        const w = await until(async () => (await st()).ready, 20000, "the rope never came back"); note("rope back in hand", { waited: w });
+        await page.waitForTimeout(n === 2 ? 1500 : 4000); t = Date.now(); const p0 = (await st()).pulls; await page.keyboard.press("e"); note(`key E (stroke ${n})`);
+        await until(async () => (await st()).pulls > p0, 20000, `stroke ${n}`); note(`stroke ${n} heard`, { afterPress: Date.now() - t, ...(await st()), sealed: await ev(() => !!window.__journey().seals.bell) });
+      }
+      await page.screenshot({ path: path.join(out, "rites-bell.png") });
+      await page.waitForTimeout(6000); note("6 s with no press", await st());
+      t = Date.now(); await page.keyboard.press("Escape"); await until(async () => (await ev(() => window.__rites().bell.grip)) === 0, 10000, "never let go"); note("Esc let go", { afterPress: Date.now() - t, button: await word() });
+      await ev(() => { const p = window.__places.tea; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, Math.PI, 0.05); }); note("diagnostic: __pose beside the tea");
+      await until(async () => (await word()) === "吃茶", 30000, "吃茶 not offered"); t = Date.now(); await page.keyboard.press("e"); note("key E (吃茶)");
+      await until(async () => (await ev(() => window.__journey().seals.tea)) > 0, 90000, "no seal for tea"); note("tea drunk, seal", { afterPress: Date.now() - t, button: await word() });
+      const looks = []; const c0 = Date.now(); while (Date.now() - c0 < 20000) { looks.push(await ev(() => window.__rites().look)); await page.waitForTimeout(250); }
+      note("sat on 20 s", { look: [Math.min(...looks), Math.max(...looks)], music: await ev(() => { const m = window.__music && window.__music(); return m ? { hushed: m.hushed, duck: m.duck } : null; }), fps: await fps() });
+      await page.screenshot({ path: path.join(out, "rites-tea.png") });
+      t = Date.now(); await page.keyboard.press("e"); await until(async () => !(await ev(() => window.__yard().staged)), 10000, "did not stand"); note("key E (起身): standing", { afterPress: Date.now() - t });
+      const v = page.video(); await ctx.close(); if (v) fs.renameSync(await v.path(), path.join(out, "rites.webm"));
+    } catch (e) { log.error = String(e.message).slice(0, 300); console.log("rites failed", log.error); }
     save();
   }
   // The pictures: a named view, optionally a season and hour and a point of view, drawn large.

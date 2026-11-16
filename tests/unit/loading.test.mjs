@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-function loader() {
-  const elements = new Map(), handlers = new Map(); let reloads = 0, paints = 0;
+function loader(hostname = "") {
+  const elements = new Map(), handlers = new Map(), tracked = []; let reloads = 0, paints = 0;
   const document = { getElementById(id) { if (!elements.has(id)) elements.set(id, { hidden: false, disabled: true, textContent: '', addEventListener(name, fn) { handlers.set(id + ':' + name, fn); } }); return elements.get(id); } };
-  const context = vm.createContext({ document, window: {}, location: { reload() { reloads++; } }, addEventListener(name, fn) { handlers.set(name, fn); }, requestAnimationFrame(fn) { paints++; queueMicrotask(fn); } });
+  const context = vm.createContext({ document, window: { umami: { track(name) { tracked.push(name); } } }, location: { hostname, reload() { reloads++; } }, addEventListener(name, fn) { handlers.set(name, fn); }, requestAnimationFrame(fn) { paints++; queueMicrotask(fn); } });
   vm.runInContext(fs.readFileSync(new URL('../../app/loading.js', import.meta.url), 'utf8'), context);
-  return { api: context.window.templeLoading, el: id => elements.get(id), event: name => handlers.get(name)(), reloads: () => reloads, paints: () => paints };
+  return { api: context.window.templeLoading, el: id => elements.get(id), event: name => handlers.get(name)(), reloads: () => reloads, paints: () => paints, tracked };
 }
 test('loading follows completed work, yields to paint and reserves 100 for readiness', async () => {
   const t = loader(); let previous = 0;
@@ -32,4 +32,10 @@ test('startup errors expose retry and cannot be reported as complete', () => {
 });
 test('errors after startup do not reopen the loading screen', () => {
   const t = loader(); t.api.finish(); t.event('error'); assert.equal(t.el('loading').hidden, true);
+});
+
+test('a failed public load is counted once and a local failure is not', () => {
+  const local = loader('127.0.0.1'); local.event('error'); assert.deepEqual(local.tracked, []);
+  const live = loader('temple.rushiwowen.co'); live.event('error'); live.event('unhandledrejection');
+  assert.deepEqual(live.tracked, ['demo.load_error']);
 });

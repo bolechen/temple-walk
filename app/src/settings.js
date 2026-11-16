@@ -5,9 +5,9 @@
 export const SETTINGS_KEY = "yunjing.settings.v1";
 export const QUALITIES = ["auto", "low", "medium", "high"];
 export const LEVELS = ["volume", "music", "ambience", "effects"];
-/** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, fov: number, volume: number, music: number, ambience: number, effects: number }} Settings */
+/** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, fov: number, thirds: boolean, volume: number, music: number, ambience: number, effects: number }} Settings */
 /** @type {Readonly<Settings>} */
-export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, fov: 0, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
+export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, fov: 0, thirds: false, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
 export const FOV_RANGE = [-6, 16];   // degrees taken from or added to the angle of view, which differs by view and screen
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -19,6 +19,7 @@ export function sanitize(saved) {
     if (Number.isFinite(saved.sens)) s.sens = clamp(saved.sens, 0.3, 2.5);
     if (typeof saved.invertY === "boolean") s.invertY = saved.invertY;
     if (typeof saved.lock === "boolean") s.lock = saved.lock;
+    if (typeof saved.thirds === "boolean") s.thirds = saved.thirds;   // the thirds drawn faintly in the viewfinder
     if (Number.isFinite(saved.fov)) s.fov = clamp(Math.round(saved.fov), FOV_RANGE[0], FOV_RANGE[1]);
     for (const k of LEVELS) if (Number.isFinite(saved[k])) s[k] = clamp(saved[k], 0, 1);
   }
