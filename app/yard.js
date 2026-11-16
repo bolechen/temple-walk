@@ -5,7 +5,9 @@ import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, terrain } from "./src/site.js";
-import { createSky, FOG, SUN_DIR } from "./src/sky.js";
+import { createSky, FOG, SUN_DIR, SHADOW_BOX } from "./src/sky.js";
+import { layerFog } from "./src/fog.js";
+import { softShadows } from "./src/shadows.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
@@ -73,10 +75,15 @@ const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
 // (?off=bamboo,trees,... ; also reflect, bloom and shadow for the passes). See window.__census().
 const OFF = new Set((Q.get("off") || "").split(",").filter(Boolean));
 const part = (name, make) => { const n = scene.children.length, made = make(); for (const o of scene.children.slice(n)) { o.userData.part = name; if (OFF.has(name)) o.visible = false; } return made; };
-const PLANAR = quality.planar, PASSES = ["reflect", "bloom", "shadow"];   // the mirror as the tier draws it, for switching it back on
+// The film's finish (post.js) adds gtao, halation, lut and dof, and `layers` for the mist's layers (fog.js); these switch
+// while walking. `softshadow` (shadows.js) and `leafshadow` (the bamboo's dappled shadows) are decided at load.
+const PLANAR = quality.planar, PASSES = ["reflect", "bloom", "shadow", "gtao", "halation", "lut", "dof", "layers"];   // the mirror as the tier draws it, for switching it back on
 if (OFF.has("reflect")) quality.planar = 0;
 if (OFF.has("bloom")) quality.bloom = false;
 if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
+// Both rewrite three's shader chunks, so they come before any material is made.
+layerFog();
+if (quality.softShadow && !OFF.has("softshadow")) softShadows(SHADOW_BOX);
 
 await loading.step(tr("山路"));
 const M = createMaterials();
@@ -105,10 +112,10 @@ const bamboo = part("bamboo", () => createBamboo(scene, [
   if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || near(x, z, 2.4, 8.0, A.zA1, A.zA1 + 5.8, 0.6) || near(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || near(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
   if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
   return true;
-}, { a2c: quality.msaa > 0, fine: quality.name !== "low" }));
+}, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
 await loading.step(tr("竹林"));
 const props = part("props", () => createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2));
-const post = createPost(renderer, scene, camera, quality);
+const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
@@ -159,10 +166,14 @@ const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.
                 time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "day" : nowMood.time };
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
+// The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
+// takes them away again).
+const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("layers") ? 0 : L[0], L[1], 1 / L[2], L[3]); if (document.body.classList.contains("indoors")) U.uFogLayer.value.x = 0; };
 function setMood(season, time) {
   state.season = season; state.time = time; mood = moodOf(season, time);
   sky.setMood(mood);
-  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf);
+  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
+  layers();
   backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
@@ -181,6 +192,9 @@ let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.
 // only draws nearer or farther (`zoom`: 1 is the view as it was); it does not turn.
 const photo = { on: false, aspect: "screen", zoom: 1, monk: false, pray: false };
 const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] }, ZOOM = { min: 0.7, max: 6 };
+// Where a fixed view or a photograph is focused (post.js's very shallow depth of field): on him when he is in the
+// picture, otherwise some way into the place.
+const focusAt = () => (monk.group.visible ? camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 0.8, pos.z)) : 18);
 
 // ---- Looking and walking ------------------------------------------------------
 const EYE = 1.3;   // the eye height of a child
@@ -532,6 +546,7 @@ function frame(now) {
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
+  post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
@@ -660,7 +675,7 @@ function lookOut(hall) {
 // Whatever falls through the air (snow, petals, leaves, fireflies) falls outdoors only.
 const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none" && !OFF.has("drift"); });
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
-const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
+const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) hints.say.indoors();
@@ -701,6 +716,8 @@ window.__part = (name, on) => {
   if (on) OFF.delete(name); else OFF.add(name);
   if (name === "reflect") { quality.planar = on ? PLANAR : 0; resize(); }
   else if (name === "bloom") { quality.bloom = !!on; resize(); }
+  else if (name === "layers") layers();
+  else if (["gtao", "halation", "lut", "dof"].includes(name)) { if (post.part(name, on) === null) { OFF.add(name); return null; } }
   else if (name === "shadow") { renderer.shadowMap.enabled = !!on; renderer.shadowMap.needsUpdate = true; scene.traverse((/** @type {any} */ o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); }
   else for (const o of scene.children) if (o.userData.part === name) o.visible = shownNow(name);
   return !OFF.has(name);
@@ -746,7 +763,7 @@ window.__probe = () => {
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox() };
+    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x };
 };
 // Rings on the water: how many made, how many spreading. `__ripples(true)` sets a step's worth going at his feet;
 // `__ripples([x, z, age])` one at that spot as if made `age` seconds ago, so a still picture can hold them.

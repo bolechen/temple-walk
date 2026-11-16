@@ -1,11 +1,18 @@
 // One tier per class of device: render scale, a pixel budget, MSAA samples, the size of the planar
 // reflection relative to the frame, and the shadow map. A governor steps down when frames run long,
 // because no two phones are alike and none can be tested ahead of time.
+// The film's finish (docs/t00/art-goal.md, first stage) is the desktop's: only the high tier keeps the scene's depth
+// (`depth`), lays ambient occlusion from it (`gtao`), softens the sun's shadows by how far they fall (`softShadow`,
+// shadows.js), draws them from a larger map (`shadow` across, `shadowLong` up the mountain: half again as fine as the other tiers)
+// and gives a fixed view or a photograph a shallow depth of field (`dof`). Leaves cast their dappled shadows
+// (`leafShadow`) from the middle tier up. The colour table, the halation and the layered mist cost next to nothing
+// and are everyone's.
 const TIERS = {
-  low:    { name: "low",    scale: 0.75, budget: 1.0e6, msaa: 0, planar: 0,    shadow: 2048, bloom: true },   // no mirror: drawing the temple twice is what a phone cannot afford
-  medium: { name: "medium", scale: 0.9,  budget: 1.6e6, msaa: 2, planar: 0.5,  shadow: 2048, bloom: true },
-  high:   { name: "high",   scale: 1,    budget: 2.4e6, msaa: 4, planar: 0.5,  shadow: 4096, bloom: true },
+  low:    { name: "low",    scale: 0.75, budget: 1.0e6, msaa: 0, planar: 0,    shadow: 1024, shadowLong: 4096, bloom: true, depth: false, gtao: false, softShadow: false, dof: false, leafShadow: false },   // no mirror: drawing the temple twice is what a phone cannot afford
+  medium: { name: "medium", scale: 0.9,  budget: 1.6e6, msaa: 2, planar: 0.5,  shadow: 1024, shadowLong: 4096, bloom: true, depth: false, gtao: false, softShadow: false, dof: false, leafShadow: true },
+  high:   { name: "high",   scale: 1,    budget: 2.4e6, msaa: 4, planar: 0.5,  shadow: 3072, shadowLong: 6144, bloom: true, depth: true,  gtao: true,  softShadow: true,  dof: true,  leafShadow: true },
 };
+export const tiers = () => JSON.parse(JSON.stringify(TIERS));
 
 export function pickQuality(forced) {
   if (TIERS[forced]) return { ...TIERS[forced], fixed: true };

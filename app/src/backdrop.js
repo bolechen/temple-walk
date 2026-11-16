@@ -1,14 +1,14 @@
 // Everything beyond the walls: bamboo, then three ranges of hills lost progressively in the mist.
 import * as THREE from "three";
-import { NOISE, fogMix, U } from "./glsl.js";
+import { NOISE, FOGLAYER, fogMix, U } from "./glsl.js";
 import { FOG } from "./sky.js";
 
 const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
-  uniforms: { uT: { value: 0 }, uFog: { value: FOG }, uSeed: { value: seed }, uTone: { value: tone }, uFogD: U.uFogD, uLeaf: U.uLeaf, uLight: U.uLight },
+  uniforms: { uT: { value: 0 }, uFog: { value: FOG }, uSeed: { value: seed }, uTone: { value: tone }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uLeaf: U.uLeaf, uLight: U.uLight },
   vertexShader: "varying vec2 vU; varying vec3 vWP; void main(){ vU=uv; vec4 w=modelMatrix*vec4(position,1.); vWP=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }",
-  fragmentShader: NOISE + /* glsl */`
-    varying vec2 vU; varying vec3 vWP; uniform float uT, uSeed, uTone, uFogD; uniform vec3 uFog, uLeaf, uLight;
+  fragmentShader: NOISE + FOGLAYER + /* glsl */`
+    varying vec2 vU; varying vec3 vWP; uniform float uT, uSeed, uTone, uFogD; uniform vec3 uFog, uLeaf, uLight; uniform vec4 uFogLayer;
     void main(){
       float x=vU.x+uSeed*37., y=vU.y, sway=sin(uT*.35+x*.2)*.12*smoothstep(4.,13.,y);
       float top=10.5+4.5*fbm2(vec2(x*.16,uSeed))+1.2*n2(vec2(x*1.1,3.));
@@ -25,7 +25,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
       vec3 c=mix(vec3(.016,.034,.02),vec3(.06,.105,.05),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.09,.12,.065)*uTone,culm*(1.-a));
       c*=.55+.6*smoothstep(0.,12.,y);                                  // darker inside the grove near the ground
       c*=uLeaf*uLight; float d=length(vWP-cameraPosition);
-      ${fogMix("c", "d")}
+      ${fogMix("c", "d", "vWP.y")}
       c=mix(c,uFog,.3*(1.-uTone));
       gl_FragColor=vec4(c,1.);
       #include <tonemapping_fragment>
@@ -90,6 +90,6 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   });
   return {
     update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
-    setMood(m) { hills.forEach((h, i) => { const k = [0.5, 0.74, 0.88][i] ?? 0.9, L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
+    setMood(m) { hills.forEach((h, i) => { const k = ([0.5, 0.74, 0.88][i] ?? 0.9) * (m.haze ?? 1), L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
   };
 }

@@ -2,7 +2,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { tierFor, mirrorAt } from "../../app/src/quality.js";
+import { tierFor, mirrorAt, tiers } from "../../app/src/quality.js";
 const { buildSite, createWalker, LEVELS, APPROACH } = await import("../../app/src/site.js");
 
 test("a discrete card starts on the high tier", () => {
@@ -22,4 +22,16 @@ test("the mirror is drawn in the forecourt and first court and on their platform
   assert.ok(!at(0, LEVELS[0].zS - 6) && !at(0, LEVELS[1].zS - 6) && !at(0, LEVELS[2].zS - 6), "not from the terraces above");
   let on = 0, n = 0; for (let z = APPROACH.top + 0.5; z < APPROACH.zA0; z += 0.25) { n++; if (at(0, z)) on++; }
   assert.ok(on / n < 0.15, `the last flight should draw the mirror only near its top, not on ${on} of ${n} samples`);
+});
+
+// The film's finish is the desktop's: the low tier (phones) keeps no depth, lays no occlusion, softens no shadow and
+// focuses no photograph; the leaves' dappled shadows start at the middle tier.
+test("the low tier draws no occlusion, no soft shadows, no depth of field", () => {
+  const T = tiers();
+  for (const k of ["depth", "gtao", "softShadow", "dof", "leafShadow"]) assert.equal(T.low[k], false, `low.${k}`);
+  for (const k of ["depth", "gtao", "softShadow", "dof"]) assert.equal(T.medium[k], false, `medium.${k}`);
+  for (const k of ["depth", "gtao", "softShadow", "dof", "leafShadow"]) assert.equal(T.high[k], true, `high.${k}`);
+  assert.ok(T.medium.leafShadow, "the middle tier casts the leaves' shadows");
+  assert.deepEqual([T.low.shadow, T.low.shadowLong], [1024, 4096], "the low tier's shadow map is as it was");
+  assert.ok(T.high.shadow > 2048 && T.high.shadowLong > 4096, "the high tier's shadow map is finer than before");
 });

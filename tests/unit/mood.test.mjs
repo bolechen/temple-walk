@@ -1,5 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "../../app/src/mood.js";
+import { isIdentity } from "../../app/src/lut.js";
 
 const colour = (c, hi = 1.01) => Array.isArray(c) && c.length === 3 && c.every((v) => Number.isFinite(v) && v >= 0 && v <= hi);
 
@@ -34,3 +35,25 @@ test("the hours differ where they should", () => {
 });
 test("an unknown season or hour falls back instead of throwing", () => { const m = moodOf("monsoon", "noon"); assert.ok(m.sunI > 0); });
 test("the present moment is a real season and hour", () => { const n = moodNow(); assert.ok(SEASONS.includes(n.season) && TIMES.includes(n.time)); });
+
+// The film's finish (docs/t00/art-goal.md, first stage): every season at every hour has its colour table, halation,
+// occlusion strength, lamplight colour and layered mist, all in range.
+test("every season at every hour has the film's finish", () => {
+  const triple = (v, lo, hi) => Array.isArray(v) && v.length === 3 && v.every((x) => Number.isFinite(x) && x >= lo && x <= hi);
+  for (const s of SEASONS) for (const t of TIMES) {
+    const m = moodOf(s, t), at = `${s}/${t}`, L = m.lut;
+    assert.ok(L && triple(L.lift, -0.05, 0.05) && triple(L.gamma, 0.8, 1.25) && triple(L.gain, 0.8, 1.25) && triple(L.shadow, -0.05, 0.05) && triple(L.light, -0.05, 0.05), `${at}.lut`);
+    assert.ok(Number.isFinite(L.sat) && L.sat > 0.7 && L.sat < 1.4, `${at}.lut.sat`);
+    assert.ok(m.hal >= 0 && m.hal <= 1, `${at}.hal`); assert.ok(m.ao >= 0 && m.ao <= 1, `${at}.ao`); assert.ok(m.haze > 0.3 && m.haze <= 1.2, `${at}.haze`);
+    assert.ok(colour(m.win), `${at}.win`);
+    const F = m.fogLayer; assert.ok(Array.isArray(F) && F.length === 4 && F[0] >= 0 && F[0] <= 1 && F[2] > 2 && F[3] >= 1 && F[3] <= 4, `${at}.fogLayer`);
+  }
+});
+test("summer by day, the picture the place is judged by (J01), is left as it was by the finish", () => {
+  const m = moodOf("summer", "day");
+  assert.ok(isIdentity(m.lut), "no colour table"); assert.equal(m.hal, 0, "no halation"); assert.equal(m.fogLayer[0], 0, "plain air"); assert.equal(m.haze, 1, "the far hills as before");
+});
+test("at dusk the lamps burn brighter under cloud than on a clear evening, and never brighter than at night", () => {
+  for (const s of SEASONS) assert.ok(moodOf(s, "dusk").lamp <= moodOf(s, "night").lamp, s);
+  assert.ok(moodOf("summer", "dusk").lamp > moodOf("autumn", "dusk").lamp, "a cloudy summer dusk is lit before a clear autumn one");
+});
