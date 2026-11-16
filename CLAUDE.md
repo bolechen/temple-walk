@@ -70,6 +70,7 @@ node tools/portrait.js autumn-dusk  # five close views of the novice, found by _
 node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
 pnpm run edges                      # ~30 s: does his whole body fit everywhere his feet may go? (add --spots to list where it does not)
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~6 min)
+node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
 node tools/steps.mjs                # his steps (steps.js): dry stone, after rain with puddles, snow, a hall's floor → tools/out/steps/*.mp3
@@ -266,6 +267,14 @@ stands whole), says the closing words one at a time (`CLOSING`: they end on some
 yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
 `__ending()` plays it again.
 
+**Coming back, and going back (`resume.js`, `game.js`).** Where he stands is kept every two seconds and when the page is
+left (`yunjing.place.v1`: place, facing, what to call it). A first visit is offered only 入山; a visitor with a seal, or
+who left from up the mountain, finds the title over where they were, with 接着走 and, smaller, 从头走起 (asked twice: it
+empties the book and starts at the foot of the path). A test or tool that names its own place (`?cam`, `?show`, `?shot`,
+`?in`, `?enter`, `?tour`) is neither moved nor kept. In the book, a button lies over each seal that has been earned
+(`sealBoxes` in `goshuin.js`); pressing it closes the book and takes him back to where that seal was earned, behind the
+veil (`y.travel`). `__left()` reports what is kept and offered, `__goBack(id)` goes.
+
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
 hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
 nearer or farther (and on past the nearest into his own eyes, and back out), E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
@@ -341,7 +350,8 @@ to `__probe` rather than reaching into the page from a test.
 - Frame cost is measured on a Tesla T4 with `tools/gpu-render.sh`; no phone has been measured. Stairs are walked as treads, not slopes (`carved()` in `site.js`), and the columns of open pavilions are `walk.posts`, which stop him even on a floor that is otherwise all open. On 2026-11-14 the main court cost 8.45 ms at 1080p on the high tier (1.1 M triangles, 372 draws, the temple drawn twice for the mirror) and 4.55 ms on the low tier at a phone's size (550 k, 185 draws, no mirror); the day began at 10.4 and 7.4. The frame is bound by triangles and draw calls, not by pixels, and roofs are still most of the triangles. Later the same day, with rafters, the wood outside the walls and the gate's detail added, the first court cost 9.3 ms on the high tier and 4.7 ms on the low; the measured walk (`?tour=120x3`, high tier, 1080p) averaged 61 frames a second with a 95th-percentile frame of 21 ms. Switching trees or bamboo off changes nothing on that card; the mirror pass is about 1.8 ms and is drawn only on the level of the forecourt and first court. None of this says what a Mac or a phone does.
 - `tools/out/` and `tools/*.png` are gitignored; screenshots are for looking at, not committing. `refs/` holds the approved reference images.
 - A shader fragment handed to `procMat` is wrapped in one line of braces: it must not end in a `//` comment (`pnpm run check` guards this).
-- The page has no `<!doctype>` or `<head>` of its own; `[hidden]` only works because `src/ui.css` (linked first thing in `index.html`) says `[hidden]{display:none !important}`.
+- `index.html` carries its own `<!doctype html>`, `lang` and viewport (since 2026-11-16; before that the test servers added them and the published page had neither, so a phone drew it 980 px wide). No server adds anything to it now. `[hidden]` works because `src/ui.css` says `[hidden]{display:none !important}`.
+- **A phone in the hand (`tools/mobile-audit.cjs`).** It opens every surface of the interface as a touch device at three sizes (upright, sideways, small), takes a picture of each and lists every control under 44 px, text under 12 px, anything off the screen and any page that scrolls; it exits 1 if it lists anything. Run it after changing the interface.
 - When a visitor says the novice goes through something (穿模) or cannot get down (走不下来): first `pnpm run edges`,
   which says whether his body goes into anything; if it is clean, it is the eye, so ask `__pick(x, y)` what lies under
   that point of the picture. For "cannot get down", look for a prop where a hop off a porch would land. Make a unit test

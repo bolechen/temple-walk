@@ -1,4 +1,13 @@
+<!doctype html>
+<html lang="zh-Hans">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110e">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <title>山门之外 · 云径禅寺</title>
 <meta name="description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
 <link rel="canonical" href="https://temple.rushiwowen.co/">
@@ -91,8 +100,9 @@
 </div>
 <div id="toast" hidden><img id="toastSeal" alt=""><p id="toastName"></p><p id="toastLine"></p></div>
 <dialog class="layer" id="book" aria-label="朱印帐" hidden>
-  <img id="bookImg" alt="朱印帐：寺名、日期和已得的印">
+  <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
+  <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
   <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
 </dialog>
 <dialog class="layer" id="piece" aria-labelledby="pieceTitle" hidden>
@@ -120,6 +130,7 @@
       <button id="loadRetry" type="button" hidden>再来一次</button>
     </div>
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>
+    <button id="againBtn" type="button" hidden></button>
   </div>
   <p class="how">七处小事 · 七枚朱印</p>
   <button class="chip" id="titleSet" type="button">设置</button>
