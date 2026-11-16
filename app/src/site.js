@@ -73,7 +73,7 @@ export function buildSite(M) {
     if (base === undefined) shade[lvl].push(place(b.plat, at, q));
     // What stands where, by name: the edge sweep and the tests go round each building by this list.
     buildings.push({ name: opts.hall?.name || opts.plaque?.text || opts.plaque || opts.name || "", ...place(b.plat, at, q), y,
-      frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
+      frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, storey: opts.storey || 0, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
@@ -89,6 +89,7 @@ export function buildSite(M) {
     let first, foot = 0;
     storeys.forEach((st, i) => {
       const next = storeys[i + 1], o = i ? { platOut: 0.05, dark: false, steps: 0, ...st, platH: foot - 0.08, platBase: foot - 0.4 } : { ...st };
+      o.storey = i;   // which storey of the stack it is
       if (next) { o.overhang = o.overhang ?? 2.4; o.G = o.xs[o.xs.length - 1] + o.overhang - next.xs[next.xs.length - 1] + 0.4; }
       const b = put(o, at, q, lvl); first = first || b;
       if (next) foot = b.roofAt(b.EZ - next.zs[0]);
@@ -189,8 +190,8 @@ export function buildSite(M) {
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
     { xs: [-7.5, -4.86, -2.1, 2.1, 4.86, 7.5], zs: [7.5, 4.86, 2.1, -2.1, -4.86, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, rise: 2.6, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁" } },
-    { xs: [-4.86, -2.1, 2.1, 4.86], zs: [4.86, 2.1, -2.1, -4.86], colTop: 3.0, overhang: 2.0, rise: 2.2, platOut: 1.0, rail: true },
-    { xs: [-2.1, 2.1], zs: [2.1, -2.1], colTop: 3.0, overhang: 2.2, rise: 4.0, G: 2.4, platOut: 1.0, rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
+    { xs: [-5.4, -1.8, 1.8, 5.4], zs: [5.4, 1.8, -1.8, -5.4], colTop: 3.0, overhang: 2.0, rise: 2.2, platOut: 1.0, rail: true },
+    { xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, rise: 4.0, G: 2.4, platOut: 1.0, rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
