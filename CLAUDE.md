@@ -198,7 +198,8 @@ z the way he faces, y up from the floor there; `SHOTS` in `site.js`, the incense
 `site.views["shot-<id>"]` stands him there for `shots.js` (`?show=shot-<id>` poses him as the observance has him and puts
 the eye on the shot at once). The director is a layer under `y.cine`: each frame `yard.js` works out the following eye
 as usual, then `director.apply` mixes it toward the shot (in over 1.6–2.4 s, back over 0.8–1.2 s, smootherstep, round
-him on an arc), then a passage that takes the eye (`rites.close`) starts from whatever that gave and lets the director
+him on an arc, timed by the observances' clock `riteNow()` rather than the frame's capped `dt`, so a slow page does not
+leave the eye behind the hands), then a passage that takes the eye (`rites.close`) starts from whatever that gave and lets the director
 go (`y.undirect()`). Where the swing would pass through a wall, a roof, a column's bulk or the ground, turn more than
 120° or travel faster than 15 m/s, the shutter's two ink leaves (`#curtain.cut`, drawn frame by frame) close, the eye is
 moved, they open; with `prefers-reduced-motion` that is the only way it moves. `game.js` calls `y.direct(id)` when the
@@ -207,8 +208,9 @@ done (`homeward`). Any step, stick, tap on the ground, drag of the view, turn of
 once; pressing E again at the bell does not. A door, `travel`, `place`, `__pose` and 回到起点 drop it without a swing.
 While it is away `body.directing` fades the way, the hints, the slips and the book (not the button, what is said, the
 breath or the stick). 自动镜头 in the pause menu (`settings.autocam`, on by default) turns it off; under `?shot` it is off
-except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), and a shot does
-not drift while the camera is up. `tests/unit/director.test.mjs` holds every shot clear of solids, him and his things
+except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), raised on the way home it is
+with him at once, and a shot does not drift while the camera is up; on a touch screen the slips stay, faint, so 留影 can
+be reached. `tests/unit/director.test.mjs` holds every shot clear of solids, him and his things
 inside the safe area (NDC within 0.9 at 16:9, 4:3, 9:16, 19.5:9), the drift within 1°/s, every swing within 2.4°
 (back: 3.2°) and 0.25 m a frame unless the ink is shut, and the ink for what cannot be swung; the `director` scenario
 does it in the page. `__director()` reports phase, weight, cuts, swings and the largest turn between frames.

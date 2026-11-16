@@ -215,6 +215,10 @@ const director = createDirector({ walker,
   quiet: (on) => document.body.classList.toggle("directing", on),
 });
 const centre = new THREE.Vector3();
+// The eye's swing keeps the observances' clock (rites.js), not the frames': on a page drawing fewer than twenty frames a
+// second the frame's own step is cut short (`dt` is held to 0.05 s), and a swing timed by it would still be on its way
+// when the lamp is lit and done. The clock stops with a photograph, as the observances do; a long pause is not swung through.
+let directClock = riteNow();
 const menuEl = document.getElementById("menu");
 let down = null, hop = null, leap = null, climb = null, climbFor = null, climbs = 0;   // `hop`: a planned drop from a porch; `leap`: a small jump where he stands, steered as he goes
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
@@ -530,10 +534,11 @@ function frame(now) {
   // eye stands clear of his head, from his own eyes too.
   if (director.active()) {
     centre.set(drawn ? drawn[0] : pos.x, (stage ? drawn[1] : footY) + 0.85, drawn ? drawn[2] : pos.z);
-    const fv = director.apply(camera, photo.on ? 0 : dt, centre, baseFov());
+    const clock = riteNow(), ddt = Math.min(0.25, Math.max(0, (clock - directClock) / 1000)); directClock = clock;
+    const fv = director.apply(camera, photo.on ? 0 : ddt, centre, baseFov());
     if (fv !== directedFov) { directedFov = fv; lens(); }
     if (fv !== null && camera.position.distanceTo(centre) > 1.0) monk.group.visible = photo.on ? photo.monk || view === "first" : true;
-  } else if (directedFov !== null) { directedFov = null; lens(); }
+  } else { directClock = riteNow(); if (directedFov !== null) { directedFov = null; lens(); } }
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
   if (cine) { cine(camera, dt); monk.group.visible = true; }
   camera.updateMatrixWorld();
@@ -582,7 +587,9 @@ function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); i
 function raise(open) {
   ui.close("photoSettings");   // the settings start folded every time the camera is raised
   photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo");
-  if (open) director.finish();   // raised in the middle of a swing to a place's shot: it is the shot that is framed
+  // Raised in the middle of a swing to a place's shot, it is the shot that is framed; raised on the way home, the eye is
+  // with him at once. Either way the ink is not left half shut over the viewfinder.
+  if (open && !director.finish() && director.state().phase === "out") director.drop();
   if (open) {   // the view stays exactly as it was: only walking stops, and the pointer is let go so the buttons can be reached
     target = null; route = []; photo.zoom = 1; photo.monk = view === "third" && monk.group.visible; photo.pray = false; document.exitPointerLock?.();
     $("monkToggle").disabled = view !== "third"; $("monkToggle").setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; $("prayToggle").setAttribute("aria-pressed", "false");

@@ -145,7 +145,8 @@
 | 人形骨骼的 VRM 骨名、手刷权重 | `monk.js` | VRM 命名惯例；蒙皮做法参照 Watercolour 的人物 | 参考项目 |
 | 第三人称跟拍：弹簧时间、侧偏、视角 50°（第一人称 65°） | `eye.js`、`yard.js` | 《小王子》ThirdPersonCamera（`LITTLEPRINCE-TEARDOWN.md`）；有朋友试玩头晕后改 | 参考项目，已核其发布文件 |
 | 打卡点仪式自动转场：跟拍与机位两层混合，由事件切换，不用淡入淡出（`director.js`，叠在 `y.cine` 之下） | `director.js`、`yard.js` | Unity Cinemachine 的 Using / Blending 文档；Unreal Gameplay Cameras 的 `UCameraDirector`（Issue #71 所列） | 转引（链接据 Issue #71，本轮未逐页重读） |
-| 进入 1.6–2.4 秒、回程 0.8–1.2 秒，smootherstep 起停（与临界阻尼一样慢起慢收，但不是同一条曲线；Issue 允许二选一）；回程按要转的角度在区间内放慢，转满 120° 用 1.2 秒 | `director.js` 的 `DIRECT`、`durations` | 主创在 Issue #71 定的区间；临界阻尼起停取自《小王子》ThirdPersonCamera / InteriorCameraZone 的 blendTime（`LITTLEPRINCE-TEARDOWN.md`）；回程放慢是自拟 | 所有者指定（区间）；参考项目；自拟（放慢的算法） |
+| 转场按仪式的时钟（`riteNow`）走，不按每帧（每帧最多 0.05 秒）走，慢设备上镜头不落在仪式后面 | `yard.js` | 自拟（软件渲染录像里燃灯先做完、镜头后到，才改的） | 自拟 |
+| 进入 1.6–2.4 秒、回程 0.8–1.2 秒，smootherstep 起停（与临界阻尼一样慢起慢收，但不是同一条曲线；Issue 允许二选一）；回程按要转的角度在区间内放慢，转满 120° 用 1.2 秒 | `director.js` 的 `DIRECT`、`durations` | 主创在 Issue #71 定的区间；慢起慢收的做法对照《小王子》ThirdPersonCamera 的 SmoothDamp 字段，进屋过渡只见 `InteriorCameraZone` 有个 `blendTime` 字段（`LITTLEPRINCE-TEARDOWN.md`，只读到字段名和跟拍的数值，没有过渡的数值、没见代码）；回程放慢是自拟 | 所有者指定（区间）；参考项目（只到字段名）；自拟（放慢的算法） |
 | 绕小沙弥走弧线：到他胸口的水平距离与高度直线过渡、方位走短的那边，不从他身上穿过 | `director.js` 的 `blendPose` | Issue #71 设计第 2 条 | 所有者指定 |
 | 墨帘兜底：过渡路径（48 个取样点）在墙、檐、柱、地里，或朝向变化超过约 120°，或峰值移动超过 15 m/s 时，用快门的两片墨帘合上、换位、打开（合 0.2 s、停 0.12 s、开 0.26 s） | `director.js` 的 `needsCut`、`veilAt`；`ui.css` 的 `#curtain.cut` | Issue #71 设计第 3 条（120° 与墨帘）；15 m/s、取样点数与帘子时长是自拟 | 所有者指定；自拟（数） |
 | 机位微动：每秒转不超过 1°、移不超过 8 厘米，只在停稳后动，过渡中机位不动；无镜头震动 | `director.js` 的 `shotPose` | Issue #71 设计第 4 条（1°/s、无震动）；8 cm/s 与「过渡中不动」是自拟（让过渡路径与检查的路径一致） | 所有者指定；自拟 |
@@ -153,7 +154,7 @@
 | 玩家优先：WASD、摇杆、点地走、拖动视角、锁定鼠标的移动、Esc 任一输入立刻回程；撞钟连按镜头不动 | `yard.js` | John Nesky《50 Game Camera Mistakes》GDC 2014（据 Issue #71 与 Vice 报道转引） | 转引 |
 | 转场时淡出路标、下一处、提示、签条、朱印帐；保留仪式按钮、说的话、呼吸圈、印、摇杆 | `ui.css` 的 `body.directing` | Issue #71 设计第 7 条（沿用 `body.ending`）；保留摇杆是自拟（触屏上它是走开回程的唯一办法） | 所有者指定；自拟 |
 | 歇脚菜单「自动镜头」，默认开，存进设置；系统要求减少动态时一律墨帘 | `settings.js` 的 `autocam`、`index.html`、`yard.js` | Issue #71 设计第 8 条 | 所有者指定 |
-| 转场中举起相机，直接落到机位，拍到的是机位画面；取景时机位不微动 | `director.js` 的 `finish`、`yard.js` 的 `raise` | Issue #71 设计第 9 条；「取景时不微动」是自拟 | 所有者指定；自拟 |
+| 转场中举起相机，直接落到机位，拍到的是机位画面；回程途中举起则直接回到他身后；取景时机位不微动；触屏上机位期间签条半透明保留（否则手机够不着「留影」） | `director.js` 的 `finish`、`yard.js` 的 `raise`、`ui.css` | Issue #71 设计第 9 条；其余是自拟 | 所有者指定；自拟 |
 | 七处机位（闻钟：身后右侧低位、两柱之间看绳与钟口；上香：殿内右后方对佛；吃茶：隔桌过肩、坐着时缓缓后退横移；得句：檐下右肩后看书案与签筒；观水：肩后俯看井龛；燃灯：灯台前正面；静坐：左前低位） | `site.js` 的 `SHOTS`、`interior.js` 的 `places.incense.shot` | Issue #71 七处机位初稿；具体坐标是开发方按截图试出的初稿，待主创评审定稿 | 自拟（待主创评审） |
 | 角色移动与碰撞的对照 | `site.js`、`eye.js` | 《小王子》与 Saltline（`LITTLEPRINCE-TEARDOWN.md`） | 参考项目 |
 | 膝下也按身位算：茶寮檐下两张茶案两端的草垫绕着走（与庭中茶凳同理）；山门过道的门槛是鞋能踩上去的 5 厘米高的面，不再从鞋里穿过；凌霄阁前的蒲团是一块与草垫同高的地面，从殿里出来就站在上面；两棵大柳杉按根部外撇放宽阻挡；进山第三段石阶的垂带从台阶头往回多挡 20 厘米 | `site.js`、`building.js`、`tools/edges.mjs` | Issue #16 的验收（`docs/reviews/2026-11-14-edges/GOAL.md`）：鞋、袍脚不进实体。门槛被踩上而不是跨过，是为了画面不穿模，真寺进门讲究跨过门槛不踩 | 按常理（踩门槛这一处与习俗相反，照实记下） |

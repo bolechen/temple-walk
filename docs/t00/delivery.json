@@ -70,6 +70,7 @@
   "changes": [
     "app/src/director.js（新）：跟拍与机位两层混合；needsCut 判定墨帘（48 个取样点进墙/檐/柱身/地、转角 > 120°、峰值 > 15 m/s、减少动态）；veilAt 逐帧画 #curtain；shotPose 的微动限 1°/s、8 cm/s，只在停稳后；finish() 供拍照；回程按转角在 0.8–1.2 秒内放慢",
     "app/yard.js：每帧在跟拍之后、y.cine 之前调用 director.apply；拖动、锁定鼠标移动、WASD/摇杆、Esc 回程；进门、travel、place、__pose、回到起点直接放掉；baseFov/zoomed 拆出，机位视角与拍照变焦叠加；y.direct / y.undirect / y.directOut / y.directed；__director()；?show=shot-<id> 殿内机位先进殿",
+    "app/yard.js（第二次提交后）：转场按 riteNow 计时而不是每帧的 dt；回程途中举相机直接放掉；app/src/ui.css：触屏上机位期间签条半透明保留；矮窄屏（≤620×700）歇脚菜单收紧行距",
     "app/src/game.js：仪式开始 y.direct(id)，结束 y.direct(null)；观水、燃灯改调 rites.watchWell / lightLamp；静坐第三口呼气在不放结尾时回程；?show=shot-<id> 用 pose(id) 摆姿势、镜头直接在机位（__poseRite）",
     "app/src/rites.js：homeward 提前回程（上香最后一拜、观水、燃灯、静坐）；watchWell、lightLamp（时序从 game.js 搬来，观水最后一段 1.2→2.0 秒）；rites.close 第一帧从机位画面接手并放掉调度器",
     "app/src/site.js：SHOTS 六处机位写进 places[id].shot；site.views 加 shot-<id>；app/src/interior.js：上香机位写在大殿房间数据里",
@@ -92,7 +93,8 @@
     "Issue #71：表中按事件的镜头动作（跟鸟群仰起、每滴水停在涟漪上、签纸弹出时停住）没做，只做了通用的缓推缓移；黑边没加",
     "Issue #71：从他身后到正面的机位（燃灯、吃茶、静坐）转角超过 120°，多用墨帘而不是弧线",
     "Issue #71：T4 上燃灯、观水第一次转去机位时各有一帧 190 ms、138 ms 的卡顿，原因未查实",
-    "静坐仪式里他坐在蒲团上方约 10 厘米、偏后（早已存在，begin 的 lift 在蒲团顶面上又加 0.1），正面低机位看得出；按 #71「不改人物模型」未改",
+    "Issue #71：机位期间提示行淡出，握绳、坐着时的按键提示看不到（按钮还在）",
+    "静坐仪式里他（monk.group 原点）实测在蒲团顶面上方 0.096 米、在蒲团中心（begin 的 lift 在蒲团顶面上又加 0.1，main 上同一行）；画面上偏后的原因未查；正面低机位看得出；按 #71「不改人物模型」未改",
     "EDGE-001/002 仍为 fixed_pending_retest，未经独立复测，不得标 verified_closed",
     "真人正常速度录像（柱间绕行、茶案绕行）与同机位前后对照图需在真机上录；本环境只有软件渲染",
     "膝下走动时朝前的步幅不按整圈算（被挡住即停步收脚）；整圈读法最深 7.0 cm，发生在正对着走向柱础或垂带、停步之前的一瞬",
