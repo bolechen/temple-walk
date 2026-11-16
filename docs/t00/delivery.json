@@ -149,7 +149,7 @@
   "evidence": [
     "claude/monk-80-weld（#80 A 路）：docs/t00/evidence/monk/weld/ —— red-before.txt、green-after.txt、views-{before,after,code}.jpg（五个姿势×正侧背斜俯）、compare-{stand,pray,walk,seated}.jpg（代码身体｜改前｜改后）、portrait-{before,after,code}.jpg、trial-{before,after}.json；平滑档位的比较在 README.md",
     "#100：tests/e2e/run.cjs 新场景 hallexit（第三人称鼠标八殿各点院子方向、第一人称与第三人称触屏各两殿、主殿出门后三点都落在台阶脚之外并走下台阶、院子点大殿进殿、前廊点殿门进殿、前廊点前廊地面不进殿）；修前在主殿一步失败，修后通过（本地 SwiftShader）",
-    "#114：docs/t00/evidence/landscape/114/（T4，改前 main 67f1d27、改后本分支，四向竹林起点、凌霄阁前东西、石阶转折、山顶回望，四种季节时辰；compare/ 左前右后）",
+    "#114：docs/t00/evidence/landscape/114/retake-213127-213147/（T4，改前 origin/main a5ed417、改后本分支 df821cc，带站点指纹，四向竹林起点、凌霄阁前东西、石阶转折、山顶回望，四种季节时辰；compare/ 左前右后）",
     "0a88f96（#103）：CAM-01～06 在 T4 上重拍，新目录 docs/t00/evidence/acceptance/20261116-0a88f96/（manifest.json、CAM-0N.jpg、compare-CAM-0N.jpg 左旧右新、changes.md）；旧证据 docs/t00/evidence/M4/ 未动，被该目录取代；acceptance-report.json、independent-review.json 未改，验收结论待独立评审在新证据上另做",
     "0a88f96（#74）：T4 实测首院高档 1080p 10.13 ms（夏昼）/ 10.82 ms（秋暮），192.7 万面 / 354–378 次；低档 390×844 5.64–5.86 ms，86.7 万面；tour 三趟平均 58.6 fps、p95 22.7 ms（最差 25.0）；原始数据 docs/t00/evidence/perf/20261116-0a88f96/，预算页 docs/t00/geometry-budget.md",
     "GPU（Tesla T4，court 高档 1920×1080，一次，run 20261116-121313）：第三阶段 9.38 ms/帧（第二阶段 9.81）；低档 390×844：4.56 ms",
