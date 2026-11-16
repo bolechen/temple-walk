@@ -522,5 +522,38 @@
     "calls": 175
    }
   ]
+ },
+ "20261116-153345": {
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "started": "2026-11-16T15:34:14.578Z",
+  "finished": "2026-11-16T15:37:53.011Z",
+  "errors": [],
+  "shots": [
+   {
+    "name": "ending_summer-day",
+    "file": "ending_summer-day.png",
+    "tris": 932772,
+    "calls": 214
+   },
+   {
+    "name": "ending_autumn-dusk",
+    "file": "ending_autumn-dusk.png",
+    "tris": 932792,
+    "calls": 226
+   },
+   {
+    "name": "ending_winter-day",
+    "file": "ending_winter-day.png",
+    "tris": 926846,
+    "calls": 214
+   },
+   {
+    "name": "ending_spring-dawn",
+    "file": "ending_spring-dawn.png",
+    "tris": 932792,
+    "calls": 226
+   }
+  ],
+  "note": "结尾最后一格：__pose 到山顶蒲团前、__sit(3) 坐下后 __ending()，镜头停稳（__rites().close.u > 0.985）时拍，界面隐去"
  }
 }
