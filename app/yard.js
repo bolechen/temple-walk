@@ -756,7 +756,8 @@ createGame({
   stage(o) { stage = o; },
   // `drawn`: he has drawn the log back himself (rites.js) and it is meeting the bell now; otherwise it is tapped.
   strike(kind, drawn) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s && !drawn) { s.t0 = riteNow(); s.lead = 0; } window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
-  monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage, seated: () => !!stage && (stage.pose === "sit" || stage.pose === "chair"),   // cross-legged, or on a stool as on a chair leave: () => interrupt(),
+  monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage, seated: () => !!stage && (stage.pose === "sit" || stage.pose === "chair"),   // cross-legged, or on a stool as on a chair
+  leave: () => interrupt(),
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
   mood: () => mood, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
