@@ -191,20 +191,20 @@
   "tests": {
     "unit": "pnpm test：210/210 通过（合入 main 的 #51、#53 之后）；新增 journey 三项、rites 一项（logSwing 从当前位置拉回，先失败后通过）",
     "check_typecheck": "pnpm run check 0 问题（字体重切后）；pnpm typecheck 通过",
-    "e2e": "本地 SwiftShader，在提交 bfe9f6f（#52 合并前最后一版）上：pnpm run e2e:smoke 全部 23 个场景通过——boot、taps、halls、snow、steps、pilgrimage、oldbook、rites、sound、music、moods、views、photo-ui、keys、menu、layers、seasons、parts、jump、drop、stairs、camera、phone。这一轮的 rites 曾因另一会话合入的注释吞掉 leave() 而失败（起身无效），bfe9f6f 修复后通过。tier 3 场景（walk、tap、summit、photo、tour）未跑。smoke 不是在 main 5b713d8 上跑的：其间 main 合入的 4196350（回到上次离开处等）未经本轮 smoke",
+    "e2e": "本地 SwiftShader：在合入 main 后的 4ef36a6（含 #54 坐凳姿势、#55、#57、4196350 回到上次离开处）上 pnpm run e2e:smoke 全部 25 个场景通过：boot、taps、halls、snow、steps、pilgrimage、oldbook、seats、resume、rites、sound、music、moods、views、photo-ui、keys、menu、layers、seasons、parts、jump、drop、stairs、camera、phone。tier 3：tap、summit、photo、tour 通过；walk 首次失败是因为测试还在找改写前入山帖里的「山门之外」，按新文案改测试（ae79b64）后通过。更早在 bfe9f6f 上 smoke 23 个场景也全部通过；其间 rites 曾因另一会话的注释吞掉 leave()（起身无效）失败，bfe9f6f 修复。",
     "ci": "PR #52 上 Pages verify（check、单测、build、boot）在各次推送均通过",
-    "play_real_input": "tools/play-t00.cjs，正常速度：summit、bell、tea、phone 四段，页面零错误；日志 log-summit-bell-tea.json、log-bell.json、log-phone.json",
+    "play_real_input": "tools/play-t00.cjs，正常速度：summit、bell、tea、phone 四段，页面零错误；日志 log-summit-bell-tea.json、log-bell.json、log-phone.json；main 上（含 afda944）以 480×300 重录撞钟与吃茶（small-480x300/）：约 2.2 帧/秒，第一下 9.0 秒（帧数决定，960×600 时 17–22 秒），之后每拉一次 0.4–0.5 秒内响；吃茶后坐 40 秒配乐 duck=0.35，起身后恢复",
     "diagnostic_only": "以下只算诊断证据：把人放到地点旁用 __pose；读状态用 __journey/__rites/__music；端到端用 ?fast=1 的 pilgrimage/oldbook；__ending() 重放；rites 里两下连按是页面内连点按钮"
   },
   "unverified": [
     "没有真人试玩；所有录像出自无头 Chromium + SwiftShader，约 1 帧/秒：第一次按撞钟到响约 17–22 秒，主要是走到绳前与握绳要等帧，正常设备上应约 2.3 秒（0.3 + 0.7 握绳 + 1.3 拉），未在 Mac 或手机上测",
     "「钟槌荡回前按下不算」在这个渲染速度下无法用真实按键的时间间隔演示（页面每帧约 1 秒，等到能按时早已可拉）；只由 rites 场景里页面内连点两下只算一拉来证明",
-    "声音未经人耳：撞钟的余音、吃茶后配乐退下的分寸；无头环境里第一次录像读到 duck 仍为 1，原因：吃茶得印的风铃正让配乐退让，此时调用 hush() 只改了变量，退让结束仍按原先排好的回到 1；另一会话在 afda944 修正（退让期间改的是退让结束后回到的音量），修正后未再录像核对",
     "缺印结尾的结束语只在「什么都没做」和 fast 模式下看过；做了三件以上、取过一句的组合只在单测式的逻辑里走过，没有正常速度截图",
     "手机为 Playwright 模拟 iPhone 13 的触摸，未上真机；双指、摇杆起身未在本轮实测（摇杆走开松绳由 __pose 代替）",
     "从朱印帐重看结尾没有做（镜头是围着山顶走的）",
     "霞鹜文楷取自最新发行版重切，与上一版字形可能有细微差别，未逐字对比",
     "独立验收结论未改动（independent-review.json 未碰）",
-    "e2e tier 3（walk、tap、summit、photo、tour）未跑；main 5b713d8 上未重跑 smoke"
+    "声音分寸仍未经人耳：吃茶后配乐退到 0.35 已在 main 上读到数值（afda944 修正后），但好不好听没人听过",
+    "「钟槌荡回前按下不算」在 2.2 帧/秒下仍无法用真实按键间隔演示，只由 rites 里页面内连点两下只算一拉证明"
   ]
 }
