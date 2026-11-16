@@ -42,6 +42,22 @@
 - 两次 GPU 运行作废：别的会话同时用同一个桶的 `in/` 做 `sync --delete`，把正在跑的站点换掉或删掉。`gpu-render.sh` 已改成每次放在 `runs/<run>/`。
 - 证据：`docs/t00/evidence/art/phase1/`（改前改后 art1–art6、cam01–cam06、高低档对照、`look.json`）。
 
+## 2026-11-16 夜：素材商用授权核对（#105）
+
+所有者的话：「开 issue，先核素材商用授权」。按收费上架 Steam 的口径逐件打开来源页核对，结果在 [`docs/t00/LICENSING-AUDIT.md`](t00/LICENSING-AUDIT.md)，登记表 `asset-register.csv` 加了 `commercial_use`、`attribution_required`、`license_url`、`checked_on` 四栏、补了 9 行（现 85 行：56 可商用、22 有条件、0 不可、7 未能核实）。有条件的都是要补的署名或许可声明（ColBase 14 件和名匾缺「加工过」的说明；程序库的许可声明没进产物，Basis 附错了许可文件）和两款字体要改内部名字（霞鹜文楷、Nanum）；未能核实的是 AI 生成或来历没记下的图，问题列在报告第五节，等所有者答。`tests/unit/asset-register.test.mjs`：`app/` 下进产物的素材都要在登记表里有行。没有删、换任何素材。
+
+## 2026-11-16 夜：雕刻身体两条路的比较（#80 第一步）
+
+- 结论在 `docs/t00/monk-body-options.md`：推荐先 A（同位置同权重，实测把走路时重合点的分离从约 19 厘米降到 0；坐姿解决不了，因为袍子下面没有腿）后 B（Tripo 加 Auto-Rig Pro，约 $70；卡点是分层），等所有者选定。试验工具 `tools/novice-weld*.mjs`、`tools/novice-retarget-trial.*`，没改 `novice.glb` 和默认身体。
+
+## 2026-11-16 夜：第三阶段后的验收证据重拍与几何预算（#103、#74，只测量，没有改 `app/`）
+
+同一个 main 提交 `0a88f9690315965a8578643804f79115752137aa`，一次 T4 Job（`20261116-142156`，约 10 分钟 GPU 时间）。
+
+- **#103**：CAM-01～06 在 T4 上重拍（J01 夏昼、第一视角、高档、1920×1080、DPR 1），放在 `docs/t00/evidence/acceptance/20261116-0a88f96/`，含 `manifest.json`、六张左旧右新的对照图和 `changes.md`（只描述）。`evidence/M4/` 未动，`acceptance-report.json`、`independent-review.json` 未动。`node tools/cameras.mjs` 重写 `camera-manifest.json` 后无差异。
+- **#74**：首院高档 1080p 画一帧 **10.13 ms**（夏昼）/ 10.82 ms（秋暮），192.7 万面 / 354–378 次；低档 390×844 5.64–5.86 ms，86.7 万面 / 177–189 次；`?tour=120x3` 三趟平均 58.6 fps、p95 22.7 ms（最差一趟 25.0）。2026-11-14 是 8.45 ms / 111 万面 / 372 次，低档 4.55 ms / 55 万面，tour 61 fps、p95 约 22 ms：面数 +74%，一帧 +1.7～2.4 ms。`?off=`：建筑省 2.16 ms，倒影省 2.13 ms，泛光 0.35 ms，竹林 0.05 ms。没有超过 16 ms，所以没有列要砍的项。
+- 预算页 `docs/t00/geometry-budget.md`，原始数据 `docs/t00/evidence/perf/20261116-0a88f96/`。其中分配比例和低档「只守不增」是待所有者定的取舍。手机真机、重复取平均没有做。
+
 ## 2026-11-16 夜：语言文件归位，语言埋点
 
 用户的话：「app 目录结构要不要重新组织一下」→「马上要开第二座了，跟 lang 埋点一起做 开 pr」。
