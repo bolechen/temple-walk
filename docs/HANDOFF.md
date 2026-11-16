@@ -36,6 +36,16 @@
 
 所有者的话：「开 issue，先核素材商用授权」。按收费上架 Steam 的口径逐件打开来源页核对，结果在 [`docs/t00/LICENSING-AUDIT.md`](t00/LICENSING-AUDIT.md)，登记表 `asset-register.csv` 加了 `commercial_use`、`attribution_required`、`license_url`、`checked_on` 四栏、补了 9 行（现 85 行：56 可商用、22 有条件、0 不可、7 未能核实）。有条件的都是要补的署名或许可声明（ColBase 14 件和名匾缺「加工过」的说明；程序库的许可声明没进产物，Basis 附错了许可文件）和两款字体要改内部名字（霞鹜文楷、Nanum）；未能核实的是 AI 生成或来历没记下的图，问题列在报告第五节，等所有者答。`tests/unit/asset-register.test.mjs`：`app/` 下进产物的素材都要在登记表里有行。没有删、换任何素材。
 
+## 2026-11-16 夜：补齐授权核对查出的 22 项条件（#113）
+
+目标和验收标准在 issue #113；做完的对照和证据写在 PR 里，评审、合并、关 issue 由主创做。
+
+- **作品卡片**：ColBase 的 14 件在来源行之下多一行加工说明（`src/credits.js` 的 `processedLine`；数据是 `works.js` 的 `processed` 字段，由 `tools/gallery.py` 写出）；克利夫兰、大都会的卡片不变。
+- **鸣谢与来源页**：歇脚菜单加「鸣谢」，打开 `#credits`（`ui.layer`，纸上的一张）；内容在 `src/credits.js`，走 `t()`，四种语言；名匾「釋迦寶殿」的出典与加工写在这一页。`window.__credits()` 报告开合和内容。
+- **字体保留名**：`kai.woff2`、`hand-ko.woff2` 内部改名为 Yunjing Kai、Yunjing Hand KO；`tools/fonts.py` 的 `RENAMED` 切字时自动改，`--rename` 就地改已切好的文件；`tests/unit/fonts.test.mjs` 检查全部 16 个字体文件。`tools/fonts.py --lang` 的翻译表路径原来指向已不存在的 `app/src/locales/`，一并改正。
+- **第三方许可**：`app/shared/licenses/` 放 Basis（LICENSE、NOTICE）、lil-gui、stats.js 的许可文本和合成出的 `THIRD-PARTY-NOTICES.txt`（`node tools/notices.mjs`）；构建在缺文件或缺库名时失败（`vite.config.mjs`）；`tools/setup.mjs` 把 Basis 自己的 LICENSE、NOTICE 拷到 `app/vendor/basis/`。
+- **登记表**：22 行改 `yes`，另加一行 `LIC-notices`；`LICENSING-AUDIT.md` 末尾加了第九节「已补齐」。7 项 `unverified` 没动。
+
 ## 2026-11-16 夜：雕刻身体两条路的比较（#80 第一步）
 
 - 结论在 `docs/t00/monk-body-options.md`：推荐先 A（同位置同权重，实测把走路时重合点的分离从约 19 厘米降到 0；坐姿解决不了，因为袍子下面没有腿）后 B（Tripo 加 Auto-Rig Pro，约 $70；卡点是分层），等所有者选定。试验工具 `tools/novice-weld*.mjs`、`tools/novice-retarget-trial.*`，没改 `novice.glb` 和默认身体。

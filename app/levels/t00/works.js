@@ -15,6 +15,7 @@ export const WORKS = {
   "link": "作者无准师范是径山万寿寺第三十四代住持，此幅是他寄赠入宋弟子圆尔的额字。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1446)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1446",
+  "processed": "resize",
   "w": 368,
   "h": 1280
  },
@@ -31,6 +32,7 @@ export const WORKS = {
   "link": "径山寺以释迦牟尼佛为本尊，此图所绘即释迦出山；与径山无直接传承关系。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TA-617)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TA-617",
+  "processed": "resize",
   "w": 566,
   "h": 1280
  },
@@ -47,6 +49,7 @@ export const WORKS = {
   "link": "径山寺属禅宗临济宗，图中所绘慧能是禅宗六祖；与径山无直接传承关系。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TA-143)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TA-143",
+  "processed": "resize",
   "w": 558,
   "h": 1280
  },
@@ -63,6 +66,7 @@ export const WORKS = {
   "link": "题赞者痴绝道冲曾任径山寺住持；写这段赞时他住在宁波天童山。",
   "credit": "The Cleveland Museum of Art, John L. Severance Fund (1970.2). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1970.2",
+  "processed": "",
   "w": 571,
   "h": 1280
  },
@@ -79,6 +83,7 @@ export const WORKS = {
   "link": "与径山无直接关系；所画达摩是禅宗初祖，禅寺殿堂里常挂这类祖师像。",
   "credit": "The Cleveland Museum of Art, John L. Severance Fund (1964.44). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1964.44",
+  "processed": "",
   "w": 525,
   "h": 1280
  },
@@ -95,6 +100,7 @@ export const WORKS = {
   "link": "与径山无直接关系；罗汉是释迦的弟子，宋代寺院常成组供奉罗汉画像，此幅是其中一幅的实例。",
   "credit": "The Cleveland Museum of Art, John L. Severance Fund (1976.91). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1976.91",
+  "processed": "",
   "w": 673,
   "h": 1280
  },
@@ -111,6 +117,7 @@ export const WORKS = {
   "link": "题诗者楚石梵琦是元叟行端的法嗣，元叟行端自1322年起住持径山寺。",
   "credit": "The Cleveland Museum of Art, Purchase from the J. H. Wade Fund (1967.211). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1967.211",
+  "processed": "",
   "w": 1280,
   "h": 982
  },
@@ -127,6 +134,7 @@ export const WORKS = {
   "link": "圜悟克勤是大慧宗杲的老师，大慧后来住持径山寺。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1171)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1171",
+  "processed": "resize",
   "w": 1280,
   "h": 1085
  },
@@ -143,6 +151,7 @@ export const WORKS = {
   "link": "虚堂智愚曾任径山兴圣万寿寺住持，日本僧南浦绍明在他门下得法。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1169)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1169",
+  "processed": "resize",
   "w": 1280,
   "h": 510
  },
@@ -159,6 +168,7 @@ export const WORKS = {
   "link": "画上题赞出自径山住持无准师范，落款自署“径山僧师范”。",
   "credit": "The Metropolitan Museum of Art, New York. Bequest of John M. Crawford Jr., 1988 (1989.363.24). Open Access, public domain (CC0).",
   "url": "https://www.metmuseum.org/art/collection/search/40276",
+  "processed": "",
   "w": 657,
   "h": 1280
  },
@@ -175,6 +185,7 @@ export const WORKS = {
   "link": "径山住持无准师范所书，寄赠弟子圆尔，用于禅寺向佛和僧众供奉汤饮的“点汤”仪式。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1437)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1437",
+  "processed": "resize",
   "w": 1280,
   "h": 917
  },
@@ -191,6 +202,7 @@ export const WORKS = {
   "link": "“天目”之名来自径山所在的天目山，相传入宋日本僧人把当地禅寺所用的茶碗带回日本。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TG-2496)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TG-2496",
+  "processed": "resize",
   "w": 1280,
   "h": 972
  },
@@ -207,6 +219,7 @@ export const WORKS = {
   "link": "这类宋代黑釉茶碗在日本称“天目”，其名来自径山所在的天目山一带的禅寺。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/kyuhaku/G16)",
   "url": "https://colbase.nich.go.jp/collection_items/kyuhaku/G16",
+  "processed": "resize",
   "w": 1280,
   "h": 960
  },
@@ -223,6 +236,7 @@ export const WORKS = {
   "link": "张即之与径山住持无准师范有交往，无准及其弟子多学张即之的书法。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1209)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1209",
+  "processed": "resize",
   "w": 1270,
   "h": 1280
  },
@@ -239,6 +253,7 @@ export const WORKS = {
   "link": "书中所记是圜悟克勤的教说，圜悟是径山住持大慧宗杲的老师。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/kyuhaku/B17)",
   "url": "https://colbase.nich.go.jp/collection_items/kyuhaku/B17",
+  "processed": "resize",
   "w": 1280,
   "h": 1074
  },
@@ -255,6 +270,7 @@ export const WORKS = {
   "link": "与径山无直接关系；藏经楼收藏的就是这类写经，此卷是宋代金字写经的实例。",
   "credit": "The Cleveland Museum of Art, John L. Severance Fund (1970.64). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1970.64",
+  "processed": "",
   "w": 1280,
   "h": 405
  },
@@ -271,6 +287,7 @@ export const WORKS = {
   "link": "与径山无直接关系；所绘药师佛即药师殿供奉的主尊，用来说明此殿的用途。",
   "credit": "The Metropolitan Museum of Art, New York. Gift of Arthur M. Sackler, in honor of his parents, Isaac and Sophie Sackler, 1965 (65.29.2). Open Access, public domain (CC0).",
   "url": "https://www.metmuseum.org/art/collection/search/42716",
+  "processed": "",
   "w": 1280,
   "h": 650
  },
@@ -287,6 +304,7 @@ export const WORKS = {
   "link": "与径山无直接关系；所绘药师佛、日光月光菩萨和十二神将，正是药师殿供奉的一组尊像。",
   "credit": "The Cleveland Museum of Art, Edward L. Whittemore Fund (1938.422). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1938.422",
+  "processed": "",
   "w": 707,
   "h": 1280
  },
@@ -303,6 +321,7 @@ export const WORKS = {
   "link": "与径山无直接关系；十二神将是药师佛的护法，药师殿里通常列在主尊两侧。",
   "credit": "The Metropolitan Museum of Art, New York. Mary Griggs Burke Collection, Gift of the Mary and Jackson Burke Foundation, 2015 (2015.300.254a–l). Open Access, public domain (CC0).",
   "url": "https://www.metmuseum.org/art/collection/search/75292",
+  "processed": "",
   "w": 1280,
   "h": 1031
  },
@@ -319,6 +338,7 @@ export const WORKS = {
   "link": "大慧宗杲于绍兴七年（1137）出任径山寺住持，遭流放后于1158年再度住持径山。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1173)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1173",
+  "processed": "resize",
   "w": 1280,
   "h": 745
  },
@@ -335,6 +355,7 @@ export const WORKS = {
   "link": "此信由径山万寿寺住持无准师范所写，答谢圆尔为火灾后重建径山寺捐送一千块木板。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1174)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1174",
+  "processed": "resize",
   "w": 1280,
   "h": 403
  },
@@ -351,6 +372,7 @@ export const WORKS = {
   "link": "痴绝道冲曾任径山寺住持，此跋所题的又是径山前辈住持大慧宗杲的墨迹。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/tnm/TB-1198)",
   "url": "https://colbase.nich.go.jp/collection_items/tnm/TB-1198",
+  "processed": "resize",
   "w": 1280,
   "h": 1030
  },
@@ -367,6 +389,7 @@ export const WORKS = {
   "link": "题赞者镜堂觉圆与无学祖元同时赴日，无学祖元是径山住持无准师范的弟子。",
   "credit": "Source: ColBase (https://colbase.nich.go.jp/collection_items/kyuhaku/A47)",
   "url": "https://colbase.nich.go.jp/collection_items/kyuhaku/A47",
+  "processed": "resize",
   "w": 560,
   "h": 1280
  },
@@ -383,6 +406,7 @@ export const WORKS = {
   "link": "与径山无直接关系；画的是观音殿供奉的白衣观音，题赞者中峰明本是元代声望很高的禅师。",
   "credit": "The Cleveland Museum of Art, Purchase from the J. H. Wade Fund (1978.47.1). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1978.47.1",
+  "processed": "",
   "w": 502,
   "h": 1280
  },
@@ -399,6 +423,7 @@ export const WORKS = {
   "link": "与径山无直接关系；馆方说明白衣观音的信仰起于杭州天竺山，与径山同在杭州一带。",
   "credit": "The Cleveland Museum of Art, Leonard C. Hanna Jr. Fund (1972.160). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1972.160",
+  "processed": "",
   "w": 516,
   "h": 1280
  },
@@ -415,6 +440,7 @@ export const WORKS = {
   "link": "张即之与径山住持无准师范有交往，无准的大字即属张即之一路，其弟子也多学张即之。",
   "credit": "The Metropolitan Museum of Art, New York. Gift of Sylvan Barnet and William Burto, in honor of Tajima Mitsuru, 2000 (2000.325). Open Access, public domain (CC0).",
   "url": "https://www.metmuseum.org/art/collection/search/39534",
+  "processed": "",
   "w": 1280,
   "h": 961
  },
@@ -431,6 +457,7 @@ export const WORKS = {
   "link": "作者牧溪相传出自径山住持无准师范门下。",
   "credit": "The Cleveland Museum of Art, Purchase from the J. H. Wade Fund (1958.427.1). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1958.427.1",
+  "processed": "",
   "w": 579,
   "h": 1280
  },
@@ -447,6 +474,7 @@ export const WORKS = {
   "link": "作者牧溪相传出自径山住持无准师范门下。",
   "credit": "The Cleveland Museum of Art, Purchase from the J. H. Wade Fund (1958.427.2). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1958.427.2",
+  "processed": "",
   "w": 579,
   "h": 1280
  },
@@ -463,6 +491,7 @@ export const WORKS = {
   "link": "与径山无直接关系；作者是杭州南宋宫廷的画家，画的是坐在水边看山看云，正是山顶所见的景象。",
   "credit": "The Cleveland Museum of Art, John L. Severance Fund (1961.421.1). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1961.421.1",
+  "processed": "",
   "w": 1280,
   "h": 1261
  },
@@ -479,6 +508,7 @@ export const WORKS = {
   "link": "题者虚舟普度晚年（1277年）移住径山寺，主持寺院的复兴，1280年去世。",
   "credit": "The Cleveland Museum of Art, Leonard C. Hanna Jr. Fund (1988.20). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1988.20",
+  "processed": "",
   "w": 599,
   "h": 1280
  },
@@ -495,6 +525,7 @@ export const WORKS = {
   "link": "与径山无直接关系；禅宗用牧牛比喻修行，这类画在禅寺里常见。",
   "credit": "The Cleveland Museum of Art, Gift of Herbert F. Leisy in memory of his wife, Helen Stamp Leisy (1977.200). Open Access, public domain (CC0).",
   "url": "https://clevelandart.org/art/1977.200",
+  "processed": "",
   "w": 1280,
   "h": 604
  },
@@ -511,6 +542,7 @@ export const WORKS = {
   "link": "题赞者偃溪广闻早年在径山参学开悟，后来住持径山寺。",
   "credit": "The Metropolitan Museum of Art, New York. Edward Elliott Family Collection, Purchase, The Dillon Fund Gift, 1982 (1982.2.1). Open Access, public domain (CC0).",
   "url": "https://www.metmuseum.org/art/collection/search/40278",
+  "processed": "",
   "w": 1280,
   "h": 466
  }

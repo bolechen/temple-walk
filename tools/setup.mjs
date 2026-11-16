@@ -20,11 +20,14 @@ const say = (...a) => console.log("setup:", ...a);
 function vendor() {
   const require = createRequire(import.meta.url); let pkg;
   try { pkg = path.join(path.dirname(require.resolve("three")), ".."); } catch { throw new Error("three is not installed: run `pnpm install`"); }   // its package.json is not exported; its entry point is build/three.cjs
-  const version = JSON.parse(fs.readFileSync(path.join(pkg, "package.json"), "utf8")).version, out = path.join(ROOT, "app/vendor/basis"), stamp = path.join(out, "VERSION"), files = ["basis_transcoder.js", "basis_transcoder.wasm"];
-  if (!FORCE && fs.existsSync(stamp) && fs.readFileSync(stamp, "utf8").trim() === version && files.every((f) => fs.existsSync(path.join(out, f)))) return say(`the Basis transcoder of three ${version} is already in app/vendor/basis`);
+  const version = JSON.parse(fs.readFileSync(path.join(pkg, "package.json"), "utf8")).version, out = path.join(ROOT, "app/vendor/basis"), stamp = path.join(out, "VERSION"), files = ["basis_transcoder.js", "basis_transcoder.wasm"], notices = ["LICENSE", "NOTICE"];
+  if (!FORCE && fs.existsSync(stamp) && fs.readFileSync(stamp, "utf8").trim() === version && [...files, ...notices].every((f) => fs.existsSync(path.join(out, f)))) return say(`the Basis transcoder of three ${version} is already in app/vendor/basis`);
   fs.rmSync(path.join(ROOT, "app/vendor"), { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
   for (const f of files) fs.copyFileSync(path.join(pkg, "examples/jsm/libs/basis", f), path.join(out, f));
-  fs.copyFileSync(path.join(pkg, "LICENSE"), path.join(out, "LICENSE")); fs.writeFileSync(stamp, version + "\n");
+  // The transcoder is Binomial LLC's Basis Universal, Apache-2.0: its own LICENSE and NOTICE go beside it (three's own LICENSE, which
+  // this once copied, is the MIT text of a different project). They are kept in git, in app/shared/licenses/, because no installed package holds them.
+  for (const [from, to] of [["basis-universal-LICENSE", "LICENSE"], ["basis-universal-NOTICE", "NOTICE"]]) fs.copyFileSync(path.join(ROOT, "app/shared/licenses", from), path.join(out, to));
+  fs.writeFileSync(stamp, version + "\n");
   say(`the Basis transcoder of three ${version} copied to app/vendor/basis`);
 }
 
