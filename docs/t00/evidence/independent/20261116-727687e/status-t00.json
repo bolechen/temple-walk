@@ -1,0 +1,1002 @@
+{
+  "schema_version": 1,
+  "scene_id": "T00",
+  "generated_at": "2026-11-16T02:08:39.547Z",
+  "repository": "https://github.com/bolechen/temple-walk",
+  "source": {
+    "sha": "70a564e3ca70acf71d38cd54aa226ecb15591c2c",
+    "url": "https://github.com/bolechen/temple-walk/commit/70a564e3ca70acf71d38cd54aa226ecb15591c2c"
+  },
+  "delivery": {
+    "schema_version": 1,
+    "scene_id": "T00",
+    "summary": "声音评审后整改：撞钟加长加厚（嗡音约 45 秒、撞木闷响、山坡回声），脚步室外近乎无混响并加响、按落脚时刻发声，檐下滴水只在雨后，脚步补来源登记。",
+    "changes": [
+      "instruments.js：bell() 与 hillEcho()，嗡音撞后涌起约 45 秒、基音约 34 秒、高分音先散；撞木闷响代替清脆起音；撞钟时音乐让位 14 秒",
+      "audio.js：脚步单独一路送混响（室外 0.07、殿内 0.4），仍受「音效」滑杆控制；每步在落脚后固定 60 毫秒发声（monk.steps[].late），慢帧也不乱拍",
+      "steps.js：LEVEL 干石、湿石 +6 dB，水洼 +5 dB，雪 +4 dB，次序不变",
+      "檐下滴水只在雨后（夏多春少），秋天和雪天没有",
+      "SOURCES.md 补脚步一行并更新大钟、滴水、混响三行；MUSIC.md 音效列表加脚步",
+      "测试：bell.test.mjs；monk.test.mjs 检查落脚时刻；sound 场景补上被注释吞掉的等帧，竹击和鸟叫改为真的听山声总线，钟声 8 秒后仍在",
+      "进度随时保存（所有者要求）：位置每两秒和离开页面时保存；回来时标题页盖在上回所在处，给「接着走」和「从头走起」（后者问两次，清空朱印从竹径走起），并写明「上回走到某处」；首次到访仍只有「入山」",
+      "朱印帐当地图（所有者要求）：翻开朱印帐，点一枚已得的印，合帐、暗场、回到得印的那一处",
+      "移动端界面（所有者要求）：页面自带 doctype 与 viewport（此前线上页面没有，手机上按约 980 像素宽缩小显示）；触控目标不小于 44 像素；歇脚菜单不高过屏幕并可上下拖动，底部一排固定，横握时分两栏；画作卡片的「看过了」吸在底部；禁止橡皮筋回弹与长按选字；新增 tools/mobile-audit.cjs（修改前列出 60 项，修改后 0 项）",
+      "CI 提速（所有者要求，保证交付质量的前提下）：不看画面的浏览器场景改为「场景照建但不画」运行（keys 128→41 秒、layers 138→45、phone 134→30、resume 215→96）；看画面的场景不变；推送时的回归流程不再重复发布流程已做的检查、类型检查和单元测试；每周全量运行拆成四台机器并行；「坐遍所有坐具」从 rites 拆成独立的 seats 场景"
+    ],
+    "known_issues": [
+      "新钟声、新脚步音量还没有人试听；改前改后对比 MP3 由开发者本地生成（tools/out/ab，不入库）",
+      "咸淳临安志原书未读到；经幢「仿灵隐」无依据；宋式只核名目未按材分；洗砚池水面无真实倒影（只映天色）",
+      "小沙弥雕刻的身体（novice.glb）在走路、上台阶、打坐时布料会撕开（贴图接缝处骨骼权重不对）；2026-11-15 起默认关闭，页面穿代码建的身体，地址加 ?body=sculpt 才换上；权重未修",
+      "鸟叫没有人听过；SOURCES.md 表末列出还没核到原文的出处",
+      "竹竿相碰没有人听过；鸟叫没做",
+      "龙井的滴水声没有人听过；涟漪只在软件渲染下看过；渗水是贴面薄片",
+      "双指拉近切换视角只在桌面滚轮上自动测过，手机上的双指手势没有在真机上试过",
+      "走完七印大约要二三十分钟，没有走完的人只会看到自己来时的那一季",
+      "冬天小柏几乎全白，看不出底下的深绿：积雪系数 snow: 0.8 是按大柳杉调的，小树的枝叶小而密，整株被雪盖住。未改",
+      "对比图的冬天一行几乎全是雾和雪，不足以判断冬天的效果；修前列是 origin/main 4601819，不是 765f2b2",
+      "e2e:smoke 的 15 个场景是分次跑通的，没有一次完整的 verify；rebase 后重跑了 check、单测、edges、boot 和 camera",
+      "这对小柏的三角形约增 1.4 k（hall 视角 1,603,200 → 1,604,644）；未在 T4 上单独测帧",
+      "CI 的 boot 场景（「the walking controls should wait behind the title」）曾在 main 的 7136549（#28）与本分支 4de49e0 上失败。main 的原因已确认：测试服务器把 .css 当成 application/octet-stream 发送，Chrome 拒绝了新拆出的 app/src/ui.css，修复见 #29（487770d）。本分支 4de49e0 的失败未单独确认原因；之后的 head（含 #29）上 verify 通过",
+      "移动端只在无头 Chromium 的手机模拟（触屏、三种尺寸）下审计和截图，没有在真实的 iPhone 或安卓机上看过；Safari 的地址栏伸缩、安全区和 100dvh 的实际表现未验证",
+      "回到得印处是直接换位（暗场），不走过去；在殿内保存的位置回来时落在殿门外；用 ?cam、?enter 等参数打开时不保存也不恢复位置",
+      "「不画场景」的场景不再覆盖渲染：渲染由 boot、halls、snow、moods、views、photo、photo-ui、menu、parts、rites、stairs、drop 覆盖；四台并行的每周流程尚未在 GitHub 上实际跑过一次"
+    ],
+    "evidence": [
+      "tests/unit/bell.test.mjs",
+      "tests/unit/monk.test.mjs",
+      "tests/unit/steps.test.mjs",
+      "tests/e2e/run.cjs: sound / steps / snow / music / rites",
+      "docs/t00/SOURCES.md",
+      "进度保存、朱印回访与移动端的提交：pnpm run check、pnpm typecheck、pnpm test 通过；node tests/e2e/run.cjs boot resume phone menu layers keys views 全部通过；node tools/mobile-audit.cjs 报「nothing a phone would mind」"
+    ],
+    "domain_binding": {
+      "date": "2026-11-15",
+      "domain": "temple.rushiwowen.co",
+      "hosting": "GitHub Pages (existing workflow)",
+      "dns": {
+        "type": "CNAME",
+        "target": "bolechen.github.io",
+        "verified": "Cloudflare authoritative nameserver and public DNS-over-HTTPS return CNAME"
+      },
+      "verification": {
+        "http": "301 redirect to HTTPS",
+        "https": "200 OK with valid certificate; GitHub https_certificate.state=approved; https_enforced=true",
+        "legacy_url": "https://bolechen.github.io/temple-walk/ returns 301 to https://temple.rushiwowen.co/",
+        "browser": "Ego Chromium: title 山门之外 · 云径禅寺, loading completes, 入山 opens game scene; Resource Timing reports no HTTP error responses",
+        "deployment": "Existing pages.yml workflow dispatch run 43714364111 completed success; restored game dist after prior Jekyll README deployment"
+      },
+      "evidence": [
+        "https://github.com/bolechen/temple-walk/settings/pages",
+        "https://api.github.com/repos/bolechen/temple-walk/pages",
+        "https://github.com/bolechen/temple-walk/actions/runs/43714364111",
+        "https://temple.rushiwowen.co/"
+      ],
+      "note": "Domain verification only; no change to CI/deployment or independent game acceptance status."
+    },
+    "record_commit": "70a564e3ca70acf71d38cd54aa226ecb15591c2c",
+    "kind": "developer_report"
+  },
+  "verification": {
+    "status": "completed",
+    "conclusion": "success",
+    "run_id": 43790120887,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/43790120887",
+    "checks": {
+      "syntax": "pending",
+      "unit": "success",
+      "e2e": "success"
+    },
+    "scope": [
+      "boot"
+    ]
+  },
+  "deployment": {
+    "status": "deployed",
+    "sha": "70a564e3ca70acf71d38cd54aa226ecb15591c2c",
+    "url": "https://bolechen.github.io/temple-walk/",
+    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/43790120887"
+  },
+  "independent_review": {
+    "schema_version": "1.0",
+    "scene_id": "T00",
+    "status": "not_reviewed",
+    "run_id": "t00-20261115-9e78569",
+    "source": {
+      "repository": "https://github.com/bolechen/temple-walk",
+      "ref": "main",
+      "reviewed_commit": "9e78569b77794b6174d698799f42f4e580882039",
+      "code_commit": "9e78569b77794b6174d698799f42f4e580882039",
+      "evidence_commit": null,
+      "observed_head": "7b4a5a0f4635d7520ae2a9e79cc462cf32c1d1b9",
+      "previous_reviewed_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+      "code_equivalence": "none: main advanced to 7b4a5a0f4635d7520ae2a9e79cc462cf32c1d1b9 during the review with app/ changes; this report applies only to 9e78569b77794b6174d698799f42f4e580882039"
+    },
+    "reviewed_commit": "9e78569b77794b6174d698799f42f4e580882039",
+    "reviewer": "Claude 定时独立评审",
+    "reviewer_details": {
+      "method": "commit-traceable independent review",
+      "skill_commit": "c4c3ba5cad3eb9337c3f21c07cbdbd4ac62f3ee3",
+      "checked_at": "2026-11-15T09:30:00Z",
+      "latest_head_pending_retest": "7b4a5a0f4635d7520ae2a9e79cc462cf32c1d1b9"
+    },
+    "change_kind": "ui",
+    "run_status": "completed",
+    "verdict": "not_accepted",
+    "environment": {
+      "os": "managed Linux, 4 cores",
+      "browser": "Playwright Chromium headless shell 1243",
+      "renderer": "SwiftShader (software GL), about 0.4 frames/s at 1280x720",
+      "node": "22.23.4",
+      "credentials": "removed from every subprocess that ran repository code; server bound to 127.0.0.1",
+      "target_device": false
+    },
+    "selection": {
+      "selected": [
+        "diff 6c72023..9e78569 (23 commits)",
+        "parser",
+        "108 unit tests",
+        "validator 17 tests",
+        "developer edges tool",
+        "independent EDGE-001/002 probe",
+        "e2e boot layers menu photo-ui keys jump drop stairs camera phone halls music sound (serial)",
+        "music drum diagnostic",
+        "normal-speed keyboard/mouse from title to first landing",
+        "pause-menu input isolation",
+        "photo mode UI and print",
+        "cam01-cam06 screenshots, opened",
+        "asset register",
+        "status JSON and research Site llms.txt"
+      ],
+      "skipped": [
+        "Mac/phone 120s x3 performance (no device; no HF Job started: SwiftShader evidence sufficed for function, and T4 would not answer the target-device question)",
+        "full five-zone normal-input round trip",
+        "interior screenshots",
+        "listening review of the music",
+        "real touch device and Safari/iOS",
+        "retest on latest HEAD 7b4a5a0f4635d7520ae2a9e79cc462cf32c1d1b9"
+      ],
+      "reason": "Collision, photo, novice, statues, music and UI layer changes. Static, unit, selected e2e and real-input checks were run; visual inspection covered the six fixed cameras and the photo flow."
+    },
+    "checks": [
+      {
+        "id": "C01",
+        "scope": "static",
+        "criterion": "锁定提交源码可解析",
+        "status": "pass",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "36 files checked, 0 problems.",
+        "evidence_ids": [
+          "A-CHECK"
+        ]
+      },
+      {
+        "id": "C02",
+        "scope": "static",
+        "criterion": "锁定提交单元回归通过",
+        "status": "pass",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "108/108 unit tests passed in a credential-free subprocess.",
+        "evidence_ids": [
+          "A-UNIT"
+        ]
+      },
+      {
+        "id": "C03",
+        "scope": "static",
+        "criterion": "评审结构/证据校验器自身回归通过",
+        "status": "pass",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "17/17 validator tests passed.",
+        "evidence_ids": [
+          "A-VALIDATOR"
+        ]
+      },
+      {
+        "id": "C04",
+        "scope": "static",
+        "criterion": "EDGE-001/002 在锁定计划上的碰撞几何",
+        "status": "pass",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "Developer tool `edges` reports 0 cm over for all 15 groups. Independent probe: at all 8 front-eave columns of the previous finding the nearest free centre is post radius + 0.377 m + 0.5–0.7 cm; both tea tables are blocked everywhere within 0.45 m of their centres. This is walker geometry only; animated robe envelope and normal-speed video are not covered.",
+        "evidence_ids": [
+          "A-EDGES",
+          "A-POST-PROBE",
+          "A-EDGE-PROBE"
+        ]
+      },
+      {
+        "id": "C05",
+        "scope": "runtime",
+        "criterion": "受影响 e2e 场景在锁定提交通过",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "SwiftShader, serial. Passed: boot, layers, menu, photo-ui, keys, jump, drop, stairs, phone, halls (phone/halls after a rerun: the first run was killed by this review's own 1500 s timeout). Failed: camera (stale assertion that a drag turns the photo camera, contradicting the intended zoom-only design; harness, high confidence; fixed later in 53d7862, not retested here); music and sound (drum assertions sample 150 ms of wall clock after the strike; under SwiftShader each __listen takes ~600 ms and the drum has already decayed; a diagnostic shows the drum sounding at 54 Hz; harness/environment, medium confidence). First failures kept.",
+        "evidence_ids": [
+          "A-E2E-FIRST",
+          "A-E2E-RETRY",
+          "A-MUSIC-DIAG",
+          "A-DRUM-DIAG"
+        ]
+      },
+      {
+        "id": "C06",
+        "scope": "runtime",
+        "criterion": "完整五区往返可由正常速度实际输入完成",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "Playwright keyboard/mouse events at normal speed (no ?cam, ?fast, __walk or __pose): entered from the title and climbed from the bamboo start (h −14.5) to the first landing (h −10.5). Holding W straight on then walked off the paving onto the leaf-litter slope and stopped against an invisible boundary (UX-08). The zigzag, gate, first court and the return were not covered. Automated input is not a human recording.",
+        "evidence_ids": [
+          "A-INPUT-LOG",
+          "A-INPUT-JSON",
+          "A-IN-START",
+          "A-IN-EDGE"
+        ]
+      },
+      {
+        "id": "C07",
+        "scope": "runtime",
+        "criterion": "歇脚菜单打开时背景不响应输入",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "With the menu open, E, B, P, T, H, V, Enter, Space, held W and the wheel changed nothing: stack stayed [menu], no movement, view and camera distance unchanged. Tapping the ground and dragging behind the menu were not covered by this run.",
+        "evidence_ids": [
+          "A-INPUT-LOG",
+          "A-INPUT-JSON",
+          "A-IN-MENU"
+        ]
+      },
+      {
+        "id": "C08",
+        "scope": "visual",
+        "criterion": "留影：风景优先、简洁界面、远近都清晰、默认16:9横幅",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "Raised camera shows only 收起/设置/快门; the print shows near paving and far bamboo both sharp, so there is no depth of field; the figure is optional (入画 off by default). The default frame is 全幅 (screen aspect, 1700×1130 here; tall on a portrait phone), not the 16:9 横幅 the goal names.",
+        "evidence_ids": [
+          "A-IN-PHOTO",
+          "A-IN-PRINT",
+          "A-INPUT-JSON"
+        ]
+      },
+      {
+        "id": "C09",
+        "scope": "visual",
+        "criterion": "六个固定机位与既有美术问题",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "cam01–cam06 rendered with no page errors and were opened one by one. Wet paving in cam06 is more matte with softer puddles; the stair edges in cam01 are better. Flat bright sky (ART-02), brush-like cedars (ART-10), sky gaps in bamboo (ART-07) and uniform wall weathering (ART-05) remain.",
+        "evidence_ids": [
+          "A-CAM01",
+          "A-CAM02",
+          "A-CAM03",
+          "A-CAM04",
+          "A-CAM05",
+          "A-CAM06",
+          "A-INSPECTION"
+        ]
+      },
+      {
+        "id": "C10",
+        "scope": "visual",
+        "criterion": "殿内墨画、雕塑与新蒙皮小沙弥",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "Third-person novice seen in the real-input screenshots (A-pose-derived figure, hat on back). The halls scenario passed but no interior screenshot was opened; museum statues and ink paintings were not visually checked.",
+        "evidence_ids": [
+          "A-IN-START",
+          "A-E2E-RETRY"
+        ]
+      },
+      {
+        "id": "C11",
+        "scope": "performance",
+        "criterion": "锁定目标 Mac 与手机各完成 120秒×3 性能测量",
+        "status": "blocked",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "No target device. SwiftShader drew about 0.4 frames/s at 1280×720; this says nothing about any device. Historical T4 numbers are not extrapolated.",
+        "evidence_ids": [
+          "A-INSPECTION"
+        ]
+      },
+      {
+        "id": "C12",
+        "scope": "security",
+        "criterion": "素材来源、再分发授权与仓库许可完整可核",
+        "status": "fail",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "Buddha and pedestal licence still 'NOT RECORDED - owner to confirm'; the repository has no LICENSE file. New museum statue scans are recorded with sources but their terms were not independently verified.",
+        "evidence_ids": [
+          "A-ASSETS"
+        ]
+      },
+      {
+        "id": "C13",
+        "scope": "release",
+        "criterion": "仓库状态与部署信息不夸大验收",
+        "status": "partial",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "Status JSON reported source and deployment 9e78569 with CI scope boot only and showed the old review as not applicable. CI success is provenance, not acceptance. The research Site's llms.txt still lists the 954f84d review as the latest independent review.",
+        "evidence_ids": [
+          "A-STATUS",
+          "A-INSPECTION"
+        ]
+      },
+      {
+        "id": "C14",
+        "scope": "runtime",
+        "criterion": "配乐：可辨认主题、过渡与混音的听评",
+        "status": "blocked",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "reason": "No one has listened. Automated scenarios only show buses, ducking and no overlap. Aesthetic acceptance needs a real listening session and a device recording.",
+        "evidence_ids": [
+          "A-E2E-RETRY",
+          "A-MUSIC-DIAG"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "A-CHECK",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/check.log",
+        "sha256": "4fa5bc1c11be23a0d089f2e6b073e1b1ff9abc35db9f9cc3e1b817bd738043c0"
+      },
+      {
+        "id": "A-UNIT",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/unit.log",
+        "sha256": "820869faf7ff7297d356d92aa19d74b48f72f8224ecfac65788e06ca67790d45"
+      },
+      {
+        "id": "A-VALIDATOR",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/validator-tests.log",
+        "sha256": "f82f7af31b79c48a7db21a1cfdd6688fc41e9d50c5280218ddab28b12e728a4e"
+      },
+      {
+        "id": "A-EDGES",
+        "type": "test_log",
+        "mode": "developer_tool",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/edges.log",
+        "sha256": "8ab910c4f0554f5e31eebee3c62fce0a0f6c43276c25f2040d1018c1bdca43e7"
+      },
+      {
+        "id": "A-POST-PROBE",
+        "type": "test_log",
+        "mode": "independent_probe",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/post-probe.json",
+        "sha256": "d0947dc31370502e1a5eca942ab15858f273381694a1f6e41becb430253643b5"
+      },
+      {
+        "id": "A-EDGE-PROBE",
+        "type": "test_log",
+        "mode": "independent_probe",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/edge-probe.json",
+        "sha256": "5ea502fd3200713c430b9a1522c75c73bc8733a3071bf8b274245601551abeb5"
+      },
+      {
+        "id": "A-E2E-FIRST",
+        "type": "test_log",
+        "mode": "automated_e2e",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/e2e-first-run.log",
+        "sha256": "9e448c0309b6b4be307ef9bdf6b8b79b4a5edcb0fe1b6c33a48bd35dda054208"
+      },
+      {
+        "id": "A-E2E-RETRY",
+        "type": "test_log",
+        "mode": "automated_e2e",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/e2e-retry.log",
+        "sha256": "fb8de85c72cca6796351f7f123957015ac36574578943631c0c0cc1bdee7f22b"
+      },
+      {
+        "id": "A-MUSIC-DIAG",
+        "type": "test_log",
+        "mode": "diagnostic",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/e2e-music-diag.log",
+        "sha256": "a45c01d06c392aca52e2424bfd88d95b9c8eed9bc4521f35ed28b581628c871f"
+      },
+      {
+        "id": "A-DRUM-DIAG",
+        "type": "test_log",
+        "mode": "diagnostic",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/drum-diag.log",
+        "sha256": "00207854ff8415bf269069bd88e8cd4b4d1f5dfd472eb62088aedba0be24dc3c"
+      },
+      {
+        "id": "A-INPUT-LOG",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/normal-input.log",
+        "sha256": "9881d55a854ba3d32b39309751545ffd097e21bc7f0d7ca4691a9e41bd9a5323"
+      },
+      {
+        "id": "A-INPUT-JSON",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/normal-input.json",
+        "sha256": "a9ac662d553fde892111883a6d3165eb4e28e36eee335f96635aaf0b4cc60858"
+      },
+      {
+        "id": "A-IN-START",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/normal-01-start.jpg",
+        "sha256": "c8d17d9c37f83c5593b6163b0779eebb1c6bc93c537ec4f85f945a9e503ed42c"
+      },
+      {
+        "id": "A-IN-EDGE",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/normal-02-walk-5.jpg",
+        "sha256": "4aa6c1155e380d0091d16b5d2f72a23d7fd66d2b042f8d8f6c0eb91d0b8700b3"
+      },
+      {
+        "id": "A-IN-MENU",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/normal-03-menu.jpg",
+        "sha256": "12ac23fdfbef040dc99e4fbc23f2093055eba34cd6ac65d18c807267e53a01f2"
+      },
+      {
+        "id": "A-IN-PHOTO",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/normal-04-photo-raised.jpg",
+        "sha256": "7f0336dc0bda364beb634570be07110aecf13f486e4305cef63efd0b13d9828f"
+      },
+      {
+        "id": "A-IN-PRINT",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/normal-05-print.jpg",
+        "sha256": "b5b26f880b395a9ba7d8657721182d0e71ffa4d4a18e6524a04d37905c6ef73d"
+      },
+      {
+        "id": "A-CAM01",
+        "type": "runtime_screenshot",
+        "mode": "named_view",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/cam01.jpg",
+        "sha256": "859eeef84f82b308e9835f58270495c3621a221c46febf28e8e9dd2f595da6dc"
+      },
+      {
+        "id": "A-CAM02",
+        "type": "runtime_screenshot",
+        "mode": "named_view",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/cam02.jpg",
+        "sha256": "f12b97b832923c98f814f3317c49481c5bf7052717c6b1a5b107eb03522725c8"
+      },
+      {
+        "id": "A-CAM03",
+        "type": "runtime_screenshot",
+        "mode": "named_view",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/cam03.jpg",
+        "sha256": "0f841f2ca40ccaee98fa061e463eb224be107b68db724b85db8dcac71fde26cb"
+      },
+      {
+        "id": "A-CAM04",
+        "type": "runtime_screenshot",
+        "mode": "named_view",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/cam04.jpg",
+        "sha256": "56961ea50c6570afd95f3b89dfa7a38f6d60d2a04f3d63ed8b2df14a03e65257"
+      },
+      {
+        "id": "A-CAM05",
+        "type": "runtime_screenshot",
+        "mode": "named_view",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/cam05.jpg",
+        "sha256": "1afc447688daea5da941cef80f16ab9008348be126f900a4c94ceb980d34dbcd"
+      },
+      {
+        "id": "A-CAM06",
+        "type": "runtime_screenshot",
+        "mode": "named_view",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/shots/cam06.jpg",
+        "sha256": "c8e503d0202fbcd146b40ae777879dddbedd381baaf24afdedd7b0cabbecd809"
+      },
+      {
+        "id": "A-INSPECTION",
+        "type": "inspection_note",
+        "mode": "manual_review",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "file": "docs/t00/evidence/independent/20261115-9e78569/inspection.md",
+        "sha256": "0ba06a8ab0d9f9149366d2d6ff3bd20a1e89ed2f9918efe1aca6386b8ebcc1ee"
+      },
+      {
+        "id": "A-ASSETS",
+        "type": "source_file",
+        "mode": "static_read",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "url": "https://github.com/bolechen/temple-walk/blob/9e78569b77794b6174d698799f42f4e580882039/docs/t00/asset-register.csv"
+      },
+      {
+        "id": "A-STATUS",
+        "type": "status_json",
+        "mode": "read",
+        "created_at": "2026-11-15T09:30:00Z",
+        "commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "url": "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
+      }
+    ],
+    "issues": [
+      {
+        "id": "ART-01",
+        "state": "open",
+        "severity": "minor",
+        "finding": "CAM-06 与补充大殿机位的湿铺地仍偏亮，积水倒影边界清楚。",
+        "recommendation": "降低非积水区域亮度与镜面权重，软化积水边界。",
+        "target": "CAM-04/05/06 与大殿月台",
+        "acceptance_condition": "同一锁定提交、同一机位截图中，哑光湿石占主导且少量积水不形成硬直边。",
+        "evidence_ids": [
+          "A-CAM06"
+        ],
+        "retest_note": "9e78569 cam06: paving more matte, puddle reflections softer; needs side-by-side on the hall terrace before closing."
+      },
+      {
+        "id": "ART-02",
+        "state": "open",
+        "severity": "minor",
+        "finding": "CAM-03/04/06 中亮灰天空面积仍大，抢过白墙与木构层级。",
+        "recommendation": "缩小平天空面积并加强林冠、雾山的明度层次。",
+        "target": "全部固定机位",
+        "acceptance_condition": "六机位复测中天空不成为最大最亮平面，远殿仍可读。",
+        "evidence_ids": [
+          "A-CAM03",
+          "A-CAM06"
+        ],
+        "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039"
+      },
+      {
+        "id": "ART-05",
+        "state": "open",
+        "severity": "minor",
+        "finding": "白墙风化仍较均匀，墙脚和压顶下的因果分布不够明显。",
+        "recommendation": "把主要污痕集中到墙脚、滴水线与局部渗水路径。",
+        "target": "CAM-03/04/05",
+        "acceptance_condition": "当前提交固定机位中不再出现整面均匀重复斑驳。",
+        "evidence_ids": [
+          "A-CAM03"
+        ],
+        "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039"
+      },
+      {
+        "id": "ART-07",
+        "state": "open",
+        "severity": "minor",
+        "finding": "竹林冠层仍有重复片状与透亮天空，层次弱于参考图。",
+        "recommendation": "增加近中远竹层级并压低远层透天。",
+        "target": "CAM-01/02/05",
+        "acceptance_condition": "固定机位中竹林形成连续深背景且不出现明显平片轮廓。",
+        "evidence_ids": [
+          "A-CAM01"
+        ],
+        "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039"
+      },
+      {
+        "id": "ART-08",
+        "state": "open",
+        "severity": "minor",
+        "finding": "石阶踢面与侧墙仍接近同材同明度，直缝使开场局部像现浇混凝土。",
+        "recommendation": "区分踏面、踢面、挡墙石材尺度与收边，补挡墙压顶。",
+        "target": "CAM-01/02",
+        "acceptance_condition": "正常视角下每级踏面连续可读，挡墙不再与踢面并成同一砌体。",
+        "evidence_ids": [
+          "A-CAM01"
+        ],
+        "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039"
+      },
+      {
+        "id": "ART-10",
+        "state": "open",
+        "severity": "minor",
+        "finding": "远处柳杉轮廓仍呈细长刷状剪影，建筑背后的树林层次单薄。",
+        "recommendation": "重做远树轮廓与密度分布，减少规则尖锥/毛刷感。",
+        "target": "CAM-03/05/06",
+        "acceptance_condition": "受影响机位中远树有自然团簇和深浅层级，无明显重复刷状轮廓。",
+        "evidence_ids": [
+          "A-CAM06"
+        ],
+        "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039"
+      },
+      {
+        "id": "ART-14",
+        "state": "open",
+        "severity": "minor",
+        "finding": "CAM-06 与补充机位积水里仍有显眼的硬边屋顶倒影。",
+        "recommendation": "限制倒影到洼地并增加粗糙模糊与边缘过渡。",
+        "target": "CAM-06 与大殿月台",
+        "acceptance_condition": "固定机位中倒影边界不再读作几何瑕疵。",
+        "evidence_ids": [
+          "A-CAM06"
+        ],
+        "retest_note": "9e78569 cam06: paving more matte, puddle reflections softer; needs side-by-side on the hall terrace before closing."
+      },
+      {
+        "id": "STR-10",
+        "state": "open",
+        "severity": "minor",
+        "finding": "大殿正脊下仍可见浅色直线，屋脊与屋面连接偏悬浮。",
+        "recommendation": "封闭脊下缝隙并校正正脊、脊端的支承关系。",
+        "target": "CAM-06 与大殿月台",
+        "acceptance_condition": "同机位截图无透天缝或悬浮浅线。",
+        "evidence_ids": [
+          "A-CAM06",
+          "A-HALL"
+        ]
+      },
+      {
+        "id": "STR-14",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "修复提交声称解决竹竿从湿铺地直接长出，但没有匹配版本的独立复测。",
+        "recommendation": "保留待复验；在 CAM-05 与近地补充机位检查根部落点。",
+        "target": "CAM-05",
+        "acceptance_condition": "新运行截图确认竹竿均落在土坡/种植带且无穿铺地。",
+        "evidence_ids": [
+          "A-CAM05"
+        ]
+      },
+      {
+        "id": "UX-08",
+        "state": "open",
+        "severity": "minor",
+        "finding": "前院边缘与部分石阶侧边仍依赖不可见碰撞边界。",
+        "recommendation": "用可见路缘、栏杆或地形边界解释可走范围。",
+        "target": "前院东西边缘、石阶两侧",
+        "acceptance_condition": "真人正常速度往返时不撞不可见墙，视觉边界与碰撞边界一致。",
+        "evidence_ids": [
+          "A-IN-EDGE",
+          "A-INPUT-LOG"
+        ],
+        "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039",
+        "retest_note": "Real keyboard W walked off the first landing's paving onto the slope and stopped against an invisible boundary."
+      },
+      {
+        "id": "UX-10",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "触屏快步与点地取消的修复只有代码/开发自报，没有独立触控复测。",
+        "recommendation": "在真实触控或等效设备上完成点地、摇杆快步与取消路径。",
+        "target": "触屏",
+        "acceptance_condition": "当前提交触控录像显示快步可用、点地失败有明确反馈且无静默取消。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-01",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "台沿空中再次按空格的二次弹跳修复尚未独立复测。",
+        "recommendation": "用正常输入在台沿复现原步骤。",
+        "target": "台沿跳跃",
+        "acceptance_condition": "当前提交录像中一次按键只产生一次跳跃/落地。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-02",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "歇脚菜单拦截后景输入的修复尚未独立复测。",
+        "recommendation": "逐项测试点地、拖动、滚轮、E/V/B/P/T/H。",
+        "target": "歇脚菜单",
+        "acceptance_condition": "菜单打开时背景状态、相机和角色完全不响应上述输入。",
+        "evidence_ids": [],
+        "partial_evidence_ids": [
+          "A-INPUT-JSON",
+          "A-IN-MENU"
+        ],
+        "retest_note": "9e78569: keys E/B/P/T/H/V/Enter/Space, W and wheel ignored behind the menu; ground tap and drag still to test."
+      },
+      {
+        "id": "R3-UX-03",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "殿内回到起点被出殿过场覆盖的修复尚未独立复测。",
+        "recommendation": "从殿内触发回到起点并观察过场结束后位置。",
+        "target": "殿内回到起点",
+        "acceptance_condition": "当前提交中角色保持在起点且不会被传回殿前。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-05",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "山门门槛穿透修复尚未独立复测。",
+        "recommendation": "第一/第三人称正常速度通过门槛并录像。",
+        "target": "山门门槛",
+        "acceptance_condition": "脚部/碰撞与可见门槛关系自然，无穿透或阻滞。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-UX-06",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "跳着进殿后坠落的修复尚未独立复测。",
+        "recommendation": "以正常输入和 fast 诊断各复现一次，正常输入为验收证据。",
+        "target": "殿门过场",
+        "acceptance_condition": "进入殿内后跳跃状态清除且高度保持有效。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-PERF-02",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "山门台基跳跃时倒影中断的修复尚未匹配版本复测。",
+        "recommendation": "在山门台基跳跃并录制倒影连续性。",
+        "target": "山门台基",
+        "acceptance_condition": "当前提交录像中倒影不会因跳跃异常冻结或消失。",
+        "evidence_ids": []
+      },
+      {
+        "id": "R3-PERF-03",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "行走测量载入计时起点修复尚未独立复测。",
+        "recommendation": "比对导航开始、ready 与报告 load_ms。",
+        "target": "?tour",
+        "acceptance_condition": "原始日志证明 load_ms 从导航开始计时且可重复。",
+        "evidence_ids": []
+      },
+      {
+        "id": "PERF-01",
+        "state": "open",
+        "severity": "minor",
+        "finding": "顶点焊接与 T4 数据显示改善，但植物分区、剔除和目标设备成本仍未独立验证。",
+        "recommendation": "在锁定 Mac 与手机上按同一路线测 120 秒×3，并记录原始帧数据与降档行为。",
+        "target": "五区路线与植被密集机位",
+        "acceptance_condition": "两类目标设备均有平均 FPS、p95、分辨率、画质、预热与原始帧数据；不以 T4 外推。",
+        "evidence_ids": [
+          "A-PERF"
+        ]
+      },
+      {
+        "id": "ASSET-01",
+        "state": "open",
+        "severity": "major",
+        "finding": "佛像与须弥座模型原作者和再分发授权仍未记录，仓库代码也没有 LICENSE。",
+        "recommendation": "补齐模型作者、来源、许可或移除不可确认资产；明确项目代码许可。",
+        "target": "app/m/buddha.json、app/m/pedestal.json 与仓库许可",
+        "acceptance_condition": "资产台账包含可核验授权链接/文件且仓库许可明确；内殿实际载入不再依赖被忽略的 404。",
+        "evidence_ids": [
+          "A-ASSETS"
+        ]
+      },
+      {
+        "id": "EVID-01",
+        "state": "open",
+        "severity": "major",
+        "finding": "A02 没有真人以正常速度使用键鼠或触屏完成五区往返的证据；自动 tour、__walk 或加速均只属诊断。",
+        "recommendation": "在匹配提交上录制一次无瞬移、无内部 hook、正常速度的完整往返。",
+        "target": "竹林—石阶—照壁—山门—首院",
+        "acceptance_condition": "录像和输入日志证明实际键鼠/触控完成往返，含加载、进入、转向、上下阶和返回。",
+        "evidence_ids": [
+          "A-WALK"
+        ]
+      },
+      {
+        "id": "EVID-02",
+        "state": "open",
+        "severity": "major",
+        "finding": "锁定提交 9e78569 已换成蒙皮小沙弥并新增殿内雕塑与配乐；本轮有第三人称小沙弥与外景实际截图，但殿内墨画/雕塑仍无打开过的截图，五区正常输入路线未走完。",
+        "recommendation": "在同一源码提交上补录内殿墨画、外景雾效、第三人称小沙弥及正常输入路线；更新交付记录但不重贴旧 SHA。",
+        "target": "内殿八幅墨画、外景雾层、第三人称小沙弥与五区正常输入路线",
+        "acceptance_condition": "新证据清单与文件哈希均绑定同一完整源码 SHA；逐一打开截图/录像确认三个受影响范围，并以正常输入完成路线。",
+        "evidence_ids": [
+          "A-IN-START",
+          "A-INSPECTION"
+        ]
+      },
+      {
+        "id": "EDGE-001",
+        "state": "fixed_pending_retest",
+        "severity": "major",
+        "title": "前檐柱与角色体积相交，影响八座殿堂",
+        "finding": "角色中心止于柱前约0.45–0.46m，但衣袍进入柱身。实际模型静止采样穿入保守柱芯约5.1–11.1cm；行走姿态约8.7–14.7cm。浏览器普通W从前廊诊断点可达到该边界。",
+        "recommendation": "按角色体积与可见动画包络处理共享碰撞；覆盖全部前檐柱并保留门口与前廊通行。方案由Claude选择，不能仅缩小/隐藏人物或封死通路。",
+        "goal": "玩家走近、转身、奔跑和落地时，衣袍、身体与随身物均不进入柱身/柱础。",
+        "acceptance": [
+          "茶寮、禅堂、大雄宝殿、藏经楼、药师殿、大慧院、观音殿、凌霄阁全部前檐柱逐一检查，补山门/亭子柱基。",
+          "正向、斜向、贴边转身、倒退、Shift和跳跃/落地均无持续可见穿插；几何误差≤1cm。",
+          "柱间、楼梯、入口与前廊保持可达，提供同机位前后图和正常速度连续录像。"
+        ],
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "contacts-json",
+          "contacts-idle-json",
+          "outer-browse",
+          "detail-main-column-side",
+          "current-contacts"
+        ],
+        "current_reproduced_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+        "fix_claimed_in": [
+          "91a6343eaa4b44d9f19623a23f283583c32ffb3a",
+          "5c2106b197350795b5baef9ade6a6ad66ea90590"
+        ],
+        "retest_note": "9e78569: walker geometry now holds (independent probe, A-POST-PROBE/A-EDGE-PROBE); animated envelope, turning/backing/Shift/jump and normal-speed before/after video still required to close.",
+        "partial_evidence_ids": [
+          "A-POST-PROBE",
+          "A-EDGE-PROBE",
+          "A-EDGES"
+        ]
+      },
+      {
+        "id": "EDGE-002",
+        "state": "fixed_pending_retest",
+        "severity": "major",
+        "title": "茶寮两张檐下茶案没有阻挡角色",
+        "finding": "(-13.68,9.1)与(-13.68,18.9)桌面中心被walker允许通行，支撑仍为y=0.45；实际静止人物有97个采样顶点落入桌板体积。",
+        "recommendation": "茶案与桌腿具有匹配可见体积的阻挡；合法绕行和原下台阶点继续可用。",
+        "goal": "角色可以绕过茶案，到达入口与下台阶点，不能走进桌板或桌腿。",
+        "acceptance": [
+          "两张茶案均测试正向、两侧、斜角、倒退和Shift；身体、鞋、衣摆无持续穿插。",
+          "空格起跳和落地不穿桌、不落入桌板内部；若允许站桌面须显式设计并测试。",
+          "保留前廊通行与器物落点，提交正常速度前后对照录像。"
+        ],
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "props-json",
+          "detail-tea-table-north",
+          "detail-tea-table-south",
+          "current-props"
+        ],
+        "current_reproduced_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+        "fix_claimed_in": [
+          "91a6343eaa4b44d9f19623a23f283583c32ffb3a",
+          "5c2106b197350795b5baef9ade6a6ad66ea90590"
+        ],
+        "retest_note": "9e78569: walker geometry now holds (independent probe, A-POST-PROBE/A-EDGE-PROBE); animated envelope, turning/backing/Shift/jump and normal-speed before/after video still required to close.",
+        "partial_evidence_ids": [
+          "A-POST-PROBE",
+          "A-EDGE-PROBE",
+          "A-EDGES"
+        ]
+      },
+      {
+        "id": "TEST-01",
+        "state": "fixed_pending_retest",
+        "severity": "minor",
+        "finding": "e2e `camera` 仍断言拍照相机可被拖动转向，与已批准的'只远近、不转向'设计相反，使 `pnpm run verify` 在 9e78569 上为红。",
+        "recommendation": "按设计改断言；之后在新提交上跑 camera 场景。",
+        "target": "tests/e2e/run.cjs camera",
+        "acceptance_condition": "新提交上 camera 场景通过，且断言拍照模式下拖动不改变 yaw/pitch。",
+        "attribution": {
+          "cause": "harness",
+          "confidence": "high"
+        },
+        "fix_claimed_in": [
+          "53d786203a22eb098cefacbb9df3fdd070e910c9"
+        ],
+        "evidence_ids": [
+          "A-E2E-FIRST"
+        ]
+      },
+      {
+        "id": "TEST-02",
+        "state": "open",
+        "severity": "minor",
+        "finding": "music 与 sound 场景在击鼓后等 150 ms 墙钟再采样效果总线；软件渲染下采样调用约 600 ms，鼓声已衰减，两次复现失败。诊断显示鼓声实际存在。",
+        "recommendation": "在页面内用音频时钟定时采样，或按帧/事件等待，不按墙钟。",
+        "target": "tests/e2e/run.cjs music、sound",
+        "acceptance_condition": "SwiftShader 下两个场景连续三次通过，且断言仍能发现真正无声的鼓。",
+        "attribution": {
+          "cause": "harness",
+          "confidence": "medium"
+        },
+        "evidence_ids": [
+          "A-MUSIC-DIAG",
+          "A-DRUM-DIAG"
+        ]
+      },
+      {
+        "id": "PHOTO-01",
+        "state": "open",
+        "severity": "minor",
+        "finding": "留影默认画幅是'全幅'（屏幕比例），不是目标写明的默认 16:9 横幅；竖握手机时默认得到竖图。",
+        "recommendation": "默认选'横幅'16:9，或由用户确认'全幅'可以替代。",
+        "target": "拍照设置默认画幅",
+        "acceptance_condition": "新提交首次举相机即为 16:9（或有用户确认改目标的记录），桌面与竖屏手机各一张照片为证。",
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "A-IN-PRINT",
+          "A-INPUT-JSON"
+        ]
+      }
+    ],
+    "evidence": [
+      "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261115-9e78569",
+      "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json",
+      "https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt",
+      "https://github.com/bolechen/temple-walk/blob/main/docs/reviews/2026-11-14-edges/GOAL.md"
+    ],
+    "publish": {
+      "requested": false,
+      "status": "not_requested",
+      "url": "https://temple-atlas-research.floralpage64.chatgpt.site/",
+      "site_version": null,
+      "hosting_commit": null,
+      "note": "Routine status is synchronized by the site-status workflow; the Site source was not changed. Its llms.txt still lists the 954f84d review as latest."
+    },
+    "limitations": [
+      "SwiftShader only; no target-device performance.",
+      "Automated Playwright input events, not a human recording; route covered only to the first landing.",
+      "Interior visuals and music not inspected/listened to.",
+      "Main advanced to 7b4a5a0f4635d7520ae2a9e79cc462cf32c1d1b9 during review; nothing here applies to it.",
+      "Exterior GPU evidence would exclude statue models and could not establish interior completeness; no GPU job was run."
+    ],
+    "note": "9e78569：解析、108 项单测通过；EDGE-001/002 在走动几何上已成立，转为待复验；歇脚菜单输入隔离与无景深留影经实际输入核对；默认画幅非 16:9；看不见的边界仍在；性能、殿内、配乐听评 blocked；素材授权仍 fail。总体 partial / not_accepted。最新 HEAD 7b4a5a0 待复验。",
+    "supplemental_reviews": [
+      {
+        "run_id": "T00-20261114-edges-3e67700",
+        "reviewed_commit": "3e67700676e20182de846e33c733bdf9bb4e98da",
+        "mechanical_recheck_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+        "report": "docs/reviews/2026-11-14-edges/report.json",
+        "verdict": "not_accepted"
+      },
+      {
+        "run_id": "t00-20261115-6c72023",
+        "reviewed_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
+        "report": "https://github.com/bolechen/temple-walk/blob/7b4a5a0f4635d7520ae2a9e79cc462cf32c1d1b9/docs/t00/independent-review.json",
+        "verdict": "not_accepted"
+      }
+    ],
+    "applies_to_current": false
+  }
+}

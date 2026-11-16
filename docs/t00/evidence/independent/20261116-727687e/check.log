@@ -1,0 +1,6 @@
+
+> temple-walk@0.1.1 check /tmp/claude-0/-home-user-temple-walk/d7b4f8f1-3235-582f-9dc0-a0c88dc60043/scratchpad/wt
+> node tools/check.cjs
+
+48 files checked, 0 problems
+check exit 0
