@@ -61,6 +61,8 @@ export const FOLLOW = {
   postWait: 0.25,   // a column or a trunk may stand between him and the eye this long before it comes in
   inTime: 0.15,     // coming in, past something larger or after that wait
   inSpeed: 8,       // and never faster than this, in metres a second
+  turnSpeed: 20,    // or this, coming in ahead of a wall that the visitor is swinging the view towards (they are turning it)
+  ahead: 0.25,      // how far ahead along a turn of the view the eye looks for what it is about to swing into, in seconds
   outTime: 0.4,     // backing out again once the way is clear
   outSpeed: 5,      // and unhurried about it
   sideTime: 0.3,    // stepping to his side or back behind him
@@ -80,17 +82,22 @@ export function damp(cur, target, vel, time, dt, maxSpeed = Infinity) {
 }
 
 export function createFollow(T = FOLLOW) {
-  let dist = null, vd = 0, side = 0, vs = 0, lift = 0, vl = 0, held = 0, waited = 0, forced = 0;
+  let fresh = true, through = 0, dist = null, vd = 0, side = 0, vs = 0, lift = 0, vl = 0, held = 0, waited = 0, forced = 0;
   return {
     // Back to rest at a distance (a door passed, the view changed): the next frame starts from there.
-    reset(d = null) { dist = d; vd = vs = vl = lift = held = waited = 0; side = null; },
+    reset(d = null) { fresh = true; dist = d; vd = vs = vl = lift = held = waited = through = 0; side = null; },
     get dist() { return dist; },
+    // True from a reset until the next step: the eye has just been put somewhere and nothing it did before carries over.
+    get fresh() { return fresh; },
     get side() { return side; },
     // How far the eye last had to be put straight out of something it would otherwise have been inside.
     get forced() { return forced; },
-    // One frame: `eye` is this frame's followEye. Returns where the eye stands.
-    step(dt, eye) {
-      forced = 0;
+    // One frame: `eye` is this frame's followEye. Returns where the eye stands. `ahead`, if given, is followEye for
+    // where the view will have turned a moment from now: while the visitor swings the view round, a wall that the arm
+    // is about to sweep into brings the eye in before it gets there, not after it is inside (then it can only be put
+    // straight out, and that is a jump of metres).
+    step(dt, eye, ahead = null) {
+      forced = 0; fresh = false;
       if (dist === null) dist = eye.d;
       if (side === null) side = eye.side;
       // To his side: back behind him at once only if where it stands has become a column or a wall.
@@ -101,7 +108,13 @@ export function createFollow(T = FOLLOW) {
       }
       // Behind him. If the eye would stand inside something (the view has swung it into a trunk, or he has walked it
       // into the side of a tower), it is put out by the shortest way: nearer him or farther, or in behind him.
-      if (!eye.open(dist, side)) {
+      // Unless the view is swinging round and the arm will be clear of it a moment from now: then it is something
+      // narrow sweeping past (a wall's end, a tree, the corner of an eave), and like a column it is let through, for
+      // no longer than a column is.
+      const clears = !!ahead && ahead.open(dist, side);
+      const inside = !eye.open(dist, side), passing = inside && clears && through < T.postWait;
+      through = passing ? through + dt : 0;
+      if (inside && !passing) {
         const [px, , pz] = eye.base(dist, side); let best = null;
         for (let sd = side; sd >= -1e-6; sd -= 0.1) for (let k = 0; k <= 2; k += 0.05) for (const to of [dist - k, dist + k]) {
           if (to < 0 || to > eye.d + 1e-6 || (best && k > best.k)) continue;
@@ -112,11 +125,11 @@ export function createFollow(T = FOLLOW) {
         if (!best) best = { to: Math.min(dist, eye.d), sd: eye.side, m: Math.abs(dist - Math.min(dist, eye.d)) };
         forced = Math.max(forced, best.m); dist = best.to; side = best.sd; vd = Math.min(vd, 0); vs = 0;
       }
-      const want = eye.d;
+      const soon = ahead && ahead.d < eye.d, want = soon ? ahead.d : eye.d, stop = soon ? ahead.stop : eye.stop;
       if (want < dist - 1e-4) {
         waited += dt;
         // A column or a trunk crossing the line of sight is let pass; anything larger, or one that stays, is not.
-        if (eye.stop !== "post" || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, T.inSpeed);
+        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? T.turnSpeed : T.inSpeed);
         else vd = 0;
       } else {
         waited = 0;

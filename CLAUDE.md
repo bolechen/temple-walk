@@ -244,6 +244,9 @@ toe direction); `trail.js` presses the sole into a render target that follows hi
 red, so a roof does not take the prints made under its eave. Every shader that lays snow reads it through `TRAIL`
 (`procMat`'s snow, the paving in `ground.js`); falling snow fills the prints in about two minutes. Indoors nothing is
 stamped and the square stays put. `__trail()` reports it (`__trail(false)`: the next picture without the prints).
+No snow lies under a roof (`shelter.js`): `walk.roofs` is baked when the place is built into a map seen from above
+(each eave footprint and the foot of its beams, the lowest and highest where roofs overlap), which `procMat`'s snow and
+`underfoot`'s `roofed` read; only a strip just inside the eaves takes blown snow. `tests/unit/shelter.test.mjs` holds it.
 
 **The visit as a pilgrimage (`journey.js`, `game.js`, `goshuin.js`).** `journey.js` is book-keeping only (seven seals,
 the bell's three strokes, the library's line, storage under `yunjing.journey.v1`) and is unit-tested in Node.
@@ -270,7 +273,8 @@ mat), and `seat()` / `sitAt()` in `interior.js` for the rooms (`{ at, top, face,
 within a step or two of one, the button says 坐下; he walks up to the nearest ground beside it and is drawn going over and down onto it (`sitDown` in `game.js`);
 he stays until he is sent elsewhere. Each seat has a `kind`, and it says how he sits: on a `stool` as on a chair (pose
 `"chair"`: thighs level, shins hanging, hands on his thighs; a stool is a grown man's sitting height, and his feet do not
-reach the floor), on a `cushion` cross-legged upon it (pose `"sit"`: knees on its edge, shins folded before him, the
+reach the floor; a seat higher than he can step onto, a stool or a cushion on the meditation hall's platform, he hops up onto with his own
+`JUMP`, along `seatHop` in `drop.js`), on a `cushion` cross-legged upon it (pose `"sit"`: knees on its edge, shins folded before him, the
 left in front, hands in his lap, left on right). The outlines are `STOOL` and `CUSHION` in `geo.js`, built from by the
 courts and the rooms alike, and `monk.test.mjs` keeps his seated body out of them and off the floor. A new cushion or
 stool must be registered the same way, with its kind; `rites.test.mjs` holds it.
@@ -292,7 +296,7 @@ empties the book and starts at the foot of the path). A test or tool that names 
 veil (`y.travel`). `__left()` reports what is kept and offered, `__goBack(id)` goes.
 
 **How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
-hurries, a click on the picture holds the pointer so that the mouse looks round (Esc lets go), the wheel moves the eye
+hurries, dragging with a mouse button held looks round and a click on the ground walks there (or strikes the bell or drum), as a tap does; holding the pointer so that the mouse alone looks round (Esc lets go) is the pause menu's 锁定鼠标 (`settings.lock`, off by default since 2026-11-16, when visitors said the view swam whenever the mouse moved), the wheel moves the eye
 nearer or farther (and on past the nearest into his own eyes, and back out), E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
 T opens the season and hour once they are the visitor's (below). While the pointer is held a click strikes the bell or drum under the dot. On a touch
 screen: a thumb-stick lower left (faint until a thumb is on it), a drag to look, two fingers for nearer and farther (and the view, as the wheel), a tap on the ground to walk there.
