@@ -46,7 +46,7 @@
 | 大殿上檐「釋迦寶殿」四字 | `levels/t00/boards/shijia.webp` | 无准师范原迹，东京国立博物馆 TB-1446（ColBase） | 已核原迹图 |
 | 山门竖匾「雲徑禪寺」 | `site.js` | 虚构寺名，所有者 2026-11-15 决定保留 | 所有者指定 |
 | 其余匾用字体 | `plaque.js` | 现代人题字仍在著作权期内，不能照描，改用开源字体（`JINGSHAN.md`） | 自拟取舍 |
-| 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、Yuji Boku、思源宋体两种，均 SIL OFL | 已核许可 |
+| 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、Yuji Boku、思源宋体两种，均 SIL OFL；霞鹜文楷与 Nanum Brush Script（韩文手写体）的原件声明了保留名，子集文件内部改用项目自己的名字 Yunjing Kai、Yunjing Hand KO（`tools/fonts.py` 的 `RENAMED`，`fonts.test.mjs` 检查），版权与许可记录照原样保留 | 已核许可；改名依据 OFL 第 3 条（修改版不得用保留名），#113 |
 
 ## 殿内
 
@@ -68,7 +68,9 @@
 | 长明灯、南墙直棂窗、佛前两条草黄旧绢幡 | `interior.js` | 寺院常见陈设；幡不用红色是因 `JINGSHAN.md` 不用红绸 | 按常理 |
 | 大殿主尊与莲座 | `shared/models/buddha.glb`、`pedestal.glb` | 如是我闻 `/zen`，所有者确认归其所有、可随项目分发 | 所有者指定 |
 | 大殿两侧四尊、药师殿、观音殿、大慧院的像 | `shared/models/*.glb`、`interior.js` 的 `STAND` | 明尼阿波利斯美术馆、克利夫兰美术馆 CC0 扫描，取自 Hugging Face 上的 Objaverse 镜像（`asset-register.csv`）；只是占位 | 已核许可；不是径山原物 |
-| 画框里的真迹（径山住持墨迹、梁楷、张即之、建盏等 17 件） | `levels/t00/works.js`、`levels/t00/gallery/` | ColBase 与大都会博物馆开放获取的馆藏著录，来源行随卡片显示 | 已核原始著录 |
+| 画框里的真迹（径山住持墨迹、梁楷、张即之、建盏等 17 件） | `levels/t00/works.js`、`levels/t00/gallery/` | ColBase 与大都会博物馆开放获取的馆藏著录，来源行随卡片显示（馆方原文，不译）；ColBase 的 14 件在来源行之下另加一行加工说明，写法照其利用规约的示例「『ColBase』（URL）を加工して作成」（`src/credits.js` 的 `processedLine`，`works.js` 每件的 `processed` 字段：`resize` 或 `crop`） | 已核原始著录；加工说明已核规约原文（`docs/t00/evidence/licensing/colbase-term-ja-2026-11-16.txt`），#113 |
+| 鸣谢与来源页（歇脚菜单「鸣谢」） | `src/credits.js`、`index.html` 的 `#credits` | 按 `LICENSING-AUDIT.md` 第六节的署名清单：馆藏三家、名匾、三维扫描、Poly Haven、字体及其版权行、程序库；名匾一节写明出典和加工（分离墨迹、裁切为四字）；链到 `shared/licenses/THIRD-PARTY-NOTICES.txt` 与 `shared/fonts/OFL.txt` | 已核各家条款（见审计报告）；页面文字自拟，日英韩为开发方初稿 |
+| 第三方许可汇总与 Basis 的许可文件 | `shared/licenses/`、`vendor/basis/LICENSE`、`NOTICE` | three.js、meshoptimizer 的 MIT 全文读自安装的包；lil-gui、stats.js、Basis Universal（Apache-2.0，含 NOTICE）取自各自仓库 2026-11-16；`tools/notices.mjs` 合成，构建在缺失时失败 | 原文已读 |
 | 每殿西墙第一幅墨画帖 | `leaves.js` | 自己画的 | 自拟 |
 | 八幅帖的短文（入山、坐、茶、经、药、灯、井、顶） | `interior.js` 的 `GALLERY` | 为这座虚构寺院写的人物与器物，不是史实；只有茶帖（茶宴东传）、井帖（龙让山）写「相传」，出处见上文径山茶宴与龙井；2026-11-16 改写坐、经、药、灯、顶、入山六帖，去掉替玩家下结论的句子 | 自拟 |
 | 门洞里看到的院子 | `yard.js` 的 `lookOut` | 进门时把殿门口四周拍成立方体贴图 | 按常理 |
@@ -153,6 +155,7 @@
 |---|---|---|---|
 | 手机上的界面：页面自带 viewport 与 doctype；可点的东西不小于 44 像素；菜单不高过屏幕，横握时分两栏；画作卡片的「看过了」始终够得着 | `index.html`、`ui.css`、`tools/mobile-audit.cjs` | 所有者要求（「优化移动设备下的所有 ui 组件，符合最佳实践」）；44 像素取自 Apple 人机界面指南与 WCAG 2.5.5 的触控目标建议 | 所有者指定；44 像素为通行准则，未逐条核原文 |
 | 小沙弥的造型与比例 | `monk.js` | 所有者画的 A-pose 三视图 | 所有者指定 |
+| 小沙弥的雕刻身体（`?body=sculpt`，默认不用）：Meshy 由去掉斗笠念珠的 A-pose 正面图生成；骨骼权重取自代码身体最近的顶点，手臂按在臂上的位置取，同一点的副本同一份权重（两个部件交界处鞋优先于袍、袍优先于皮肤、皮肤优先于裤），再在各部件里平滑 7 次（2026-11-16，#80 A 路） | `tools/novice.mjs`、`tools/novice-weld.mjs`、`novice.js` | 所有者用 Meshy Pro 生成（`asset-register.csv` MESHY-novice）；改权重的办法是 `docs/t00/monk-body-options.md` 的 A 路，部件优先次序、手臂按位置取权重、平滑 7 次是本次按测试和截图定的（`docs/t00/evidence/monk/weld/README.md`） | 所有者指定（模型与 A 路）；具体参数自拟，依据是实测和截图 |
 | 人形骨骼的 VRM 骨名、手刷权重 | `monk.js` | VRM 命名惯例；蒙皮做法参照 Watercolour 的人物 | 参考项目 |
 | 第三人称跟拍：弹簧时间、侧偏、视角 50°（第一人称 65°） | `eye.js`、`yard.js` | 《小王子》ThirdPersonCamera（`LITTLEPRINCE-TEARDOWN.md`）；有朋友试玩头晕后改 | 参考项目，已核其发布文件 |
 | 打卡点仪式自动转场：跟拍与机位两层混合，由事件切换，不用淡入淡出（`director.js`，叠在 `y.cine` 之下） | `director.js`、`yard.js` | Unity Cinemachine 的 Using / Blending 文档；Unreal Gameplay Cameras 的 `UCameraDirector`（Issue #71 所列） | 转引（链接据 Issue #71，本轮未逐页重读） |

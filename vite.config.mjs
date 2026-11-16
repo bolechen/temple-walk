@@ -6,11 +6,23 @@ import fs from "node:fs"; import path from "node:path"; import { fileURLToPath }
 const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "app"), dist = path.join(here, "dist");
 // What the page fetches by name rather than imports (app/src/assets.js) goes into the site as it lies in app/.
 const KEPT = ["shared", "levels", "vendor", "favicon.svg"];
-const keep = () => ({
-  name: "temple-walk:keep-fetched-files", apply: "build",
-  // A level's scripts are bundled into the page, not shipped as files beside it.
-  closeBundle() { for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(dist, f), { recursive: true, filter: (p) => !/\.(py|md)$/.test(p) && !(p.includes(`${path.sep}levels${path.sep}`) && (p.endsWith(".js") || p.endsWith(`${path.sep}locales`))) }); },
-});
+// What the published site must hold for its libraries' licences (docs/t00/LICENSING-AUDIT.md §三.3): the build fails without them.
+const NOTICES = "shared/licenses/THIRD-PARTY-NOTICES.txt", LIBRARIES = ["three.js", "meshoptimizer", "lil-gui", "stats.js", "Basis Universal"];
+const keep = () => {
+  let out = dist;
+  return {
+    name: "temple-walk:keep-fetched-files", apply: "build",
+    configResolved(config) { out = path.resolve(config.root, config.build.outDir); },
+    // A level's scripts are bundled into the page, not shipped as files beside it.
+    closeBundle() {
+      for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(out, f), { recursive: true, filter: (p) => !/\.(py|md)$/.test(p) && !(p.includes(`${path.sep}levels${path.sep}`) && (p.endsWith(".js") || p.endsWith(`${path.sep}locales`))) });
+      const file = path.join(out, NOTICES), text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+      const lacking = LIBRARIES.filter((l) => !text.includes(l));
+      if (lacking.length) throw new Error(`${NOTICES} is missing from the build or does not name ${lacking.join(", ")} (run node tools/notices.mjs)`);
+      if (!/Apache License/.test(fs.readFileSync(path.join(out, "vendor/basis/LICENSE"), "utf8")) || !fs.existsSync(path.join(out, "vendor/basis/NOTICE"))) throw new Error("vendor/basis must carry Basis Universal's Apache-2.0 LICENSE and its NOTICE (run node tools/setup.mjs --force)");
+    },
+  };
+};
 
 export default defineConfig({
   root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [keep()],

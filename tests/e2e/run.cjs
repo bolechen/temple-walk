@@ -76,6 +76,7 @@ const scenarios = {
     // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
     await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open");
     expect((await words("#pieceTitle")) === "出山釈迦図" && /[ぁ-ん]/.test(await words("#pieceNote")) && (await words("#pieceFacts")).includes("東京国立博物館") && (await words("#pieceCredit")).startsWith("Source: ColBase"), "the work's card should be in Japanese: " + (await words("#pieceTitle")));
+    expect((await words("#pieceProcessed")).includes("を加工して作成") && (await words("#pieceProcessed")).includes("TA-617") && await t.page.isVisible("#pieceProcessed"), "a ColBase card should say, in Japanese, that the picture was edited: " + (await words("#pieceProcessed")));
     await t.page.click("#pieceClose");
     // Chosen in the menu: kept, and the page opens again in it.
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
@@ -399,6 +400,62 @@ const scenarios = {
     expect((await summit()) === "静坐", "an old book whose summit seal came before the close should be offered it");
     await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Issue #100: coming out of a hall, a tap on the court is a walk to the spot tapped, not back to the door. On the
+  // main hall's porch and steps the tap rule "go to the hall's door" must not apply; from the court it still does.
+  hallexit: { tier: 2, async run(b, base) {
+    for (const [view, touch] of [["third", false], ["first", false], ["third", true]]) {
+      const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day` + BARE, { hasTouch: touch });
+      const halls = await t.page.evaluate(() => window.__halls);
+      const tap = (x, y) => touch ? t.page.touchscreen.tap(x, y) : t.page.mouse.click(x, y);
+      const settle = async () => { await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(3); };
+      // Every hall once with the mouse in the third person; the other two ways of looking and the touch screen take two.
+      const all = view === "third" && !touch;
+      for (const h of halls) {
+        if (!all && !["main", "chan"].includes(h.id)) continue;
+        if (h.id === "main" && view === "third") continue;   // the main hall's porch is checked below, with its own bounds
+        await t.page.evaluate((id) => window.__inside(id), h.id); await t.until(async () => (await t.state()).room === h.id, 60000, `could not go into ${h.name}`); await settle();
+        await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, `never came out of ${h.name}`); await settle();
+        const s0 = await t.state();
+        // Facing the court, a tap anywhere on the ground must go where it was aimed, never to the hall's door.
+        const vp = t.page.viewportSize();
+        let set = 0;
+        for (const [fx, fy] of [[0.5, 0.95], [0.5, 0.75], [0.5, 0.65], [0.3, 0.64], [0.7, 0.58], [0.5, 0.55]]) {
+          await tap(vp.width * fx, vp.height * fy); await t.frames(1);
+          const s1 = await t.state();
+          if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
+          set++;
+          expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
+          expect(!(await t.inHall()), `${h.name}: he went back in`);
+          await t.page.evaluate(() => window.__walk([]));
+        }
+        expect(set >= 1, `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
+      }
+      if (view === "third") {
+        // Main hall: out of the door, three taps toward the court; he walks down the steps and does not turn round.
+        await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the main hall"); await settle();
+        await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, "never came out of the main hall"); await settle();
+        const vp = t.page.viewportSize();
+        for (const [fx, fy] of [[0.5, 0.75], [0.5, 0.65], [0.3, 0.64]]) {
+          await tap(vp.width * fx, vp.height * fy); await t.frames(1);
+          const s1 = await t.state();
+          expect(s1.target && s1.target[1] > -0.48, `main hall: a tap on the court from the porch should set a target past the foot of the steps (z > -0.48), got ${s1.target}`);
+        }
+        await t.until(async () => { const s = await t.state(); return !s.target && s.z > -0.48; }, 120000, "he did not walk down the steps");
+        expect(!(await t.inHall()), "main hall: walked back in");
+      }
+      if (view === "first") {
+        // What the rule is for, kept: from the court a tap on the hall leads to its door and in; on the porch a tap on the door goes in, a tap on the porch floor does not.
+        const vp = t.page.viewportSize(), at = async (x, z, yaw, pitch) => { await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), [x, z, yaw, pitch]); await t.frames(3); };
+        await at(0.3, 2.2, 0, 0.05); await tap(vp.width / 2, vp.height * 0.375); await t.until(t.inHall, 300000, "from the court, a tap on the hall never led inside");
+        await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, "never came out"); await settle();
+        await at(0, -3.5, 0, -0.45); await tap(vp.width / 2, vp.height * 0.85); await t.frames(1);
+        const f = await t.state(); expect(f.target && f.target[1] > -5.0 && f.target[1] < -1, `on the porch, a tap on the porch floor should walk there, got ${f.target}`);
+        await t.until(async () => !(await t.state()).target, 120000, "never reached the spot on the porch"); expect(!(await t.inHall()), "a tap on the porch floor took him into the hall");
+        await at(0, -3.5, 0, -0.35); await tap(vp.width / 2, vp.height * 0.5); await t.until(t.inHall, 300000, "on the porch, a tap on the door never led inside");
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
   } },
   // Every cushion and stool is a seat. This asks only where he ends up, so the place is not drawn and he hurries: it
   // was the slow half of the rites scenario, which still sits on one stool and one cushion at a visitor's pace.
@@ -949,6 +1006,14 @@ const scenarios = {
     await t.page.click("#setInvert"); await t.page.evaluate(() => { for (const [id, v] of [["setSens", "1.8"], ["setVolume", "0.3"]]) { const el = document.getElementById(id); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); } });
     await t.page.click('#menu [data-q="medium"]'); expect(await t.page.isVisible("#qualityNote"), "a change of tier should say when it takes effect");
     let st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3 && st.quality === "medium", "the menu did not set what it shows: " + JSON.stringify(st));
+    // The page of thanks opens over the menu, lists the 14 ColBase pictures and links the licence summary the build carries; Esc puts away only it.
+    await t.page.click("#menuCredits"); await t.until(() => t.page.isVisible("#credits"), 10000, "the menu has no way to the page of thanks");
+    { const c = await t.page.evaluate(() => ({ text: document.getElementById("creditsBody").textContent, links: [...document.querySelectorAll("#creditsBody a")].map((a) => a.href), modal: window.__ui().modal }));
+      expect(c.text.includes("ColBase") && c.text.includes("Poly Haven") && c.text.includes("Basis Universal") && c.text.includes("Yunjing Kai"), "the page of thanks lacks a source: " + c.text.slice(0, 120));
+      expect(c.links.filter((h) => /colbase\.nich\.go\.jp\/collection_items\//.test(h)).length === 15, "the page should link 14 ColBase items and the plaque's: " + c.links.length);
+      const notice = c.links.find((h) => /THIRD-PARTY-NOTICES\.txt$/.test(h)), ofl = c.links.find((h) => /OFL\.txt$/.test(h)); expect(notice && ofl, "the page does not link the licence summary and the font licence");
+      for (const [h, name] of [[notice, "three.js"], [notice, "Basis Universal"], [ofl, "SIL OPEN FONT LICENSE"]]) { const body = await t.page.evaluate(async (u) => { const r = await fetch(u); return r.ok ? (await r.text()) : "HTTP " + r.status; }, h); expect(body.toUpperCase().includes(name.toUpperCase()), `${h} should open and name ${name}: ${body.slice(0, 60)}`); } }
+    await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#credits")) && (await t.page.isVisible("#menu")), "Esc should put away the page of thanks and leave the menu");
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#menu")), "Esc should close the menu again");
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
