@@ -68,7 +68,8 @@ node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*
 node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
 node tools/inside.cjs tools/out/hall-views --views [level]   # every indoor view a level registers in app/levels/<level>/hall-views.js (default t00)
 node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose, `sculpt` for the sculpted body)
-node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code); its SHA-256 is in docs/t00/asset-register.csv
+NOVICE_WELD=8 node tools/novice.mjs <Meshy .glb>  # rebuild his sculpted body, app/shared/models/novice.glb, from the Meshy export (thinned, cut into four parts, weights from the figure built in code, one weight to a point); its SHA-256 is in docs/t00/asset-register.csv
+node tools/novice-views.cjs [--glb=<file>|--code]  # either body in five poses from four sides on a bare stage, ~20 s → tools/out/novice-views-*.png
 pnpm run edges                      # ~95 s: does his whole body fit everywhere his feet may go, above the knee and (shoes, hem) below it? (add --spots to list where it does not)
 pnpm run nearplane                  # ~80 s: the camera's near plane cuts into nothing along the routes and porches, behind him and from his eyes
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
@@ -178,10 +179,15 @@ generated mesh can take this one's place with the same bone names, bound in the 
 (`update` starts every frame from this skeleton's rest pose), or after retargeting onto it. One exists: the body the owner
 made with Meshy from the drawing (`tools/novice.mjs` → `app/shared/models/novice.glb`), fetched after the first frames by
 `app/src/novice.js` and worn through `monk.dress()`, which swaps the geometry of the four skinned parts and nothing else.
-**It is switched off by default since 2026-11-15**: its cloth tears apart when he walks, climbs stairs or sits (the bone
-weights are wrong at the texture seams), so the page wears the body built here and fetches the sculpted one only with
-`?body=sculpt` (`?body=code` is the default spelled out; a failed or ill-fitting fetch also keeps the built one). Keep
-`novice.glb`, `novice.js`, `monk.dress()`, `tools/novice.mjs` and their tests: the mending needs them. The hat and the beads are built here either way. In third person
+**It is switched off by default since 2026-11-15**, so the page wears the body built here and fetches the sculpted one only
+with `?body=sculpt` (`?body=code` is the default spelled out; a failed or ill-fitting fetch also keeps the built one). Its
+cloth tore at the texture seams, where copies of one point had taken different weights. Since the 2026-11-16 rebuild
+(issue #80, route A: `NOVICE_WELD=8`, steps 4a and 4b of `tools/novice.mjs`, `tools/novice-weld.mjs`) every copy of a
+point takes one weight (`novice.test.mjs` holds them together standing, through a stride and up a flight), and the arms are
+weighted along the arm; it no longer tears standing, with palms together or walking. Sitting it still tears: there are no
+legs under its robe, which needs a layered model (route B). Whether it becomes the default again is the owner's call.
+`node tools/novice-views.cjs [--glb=<file>|--code]` shows either body from four sides in five poses on a bare stage, in
+seconds, frame for frame. Keep `novice.glb`, `novice.js`, `monk.dress()`, `tools/novice.mjs` and their tests. The hat and the beads are built here either way. In third person
 the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
 its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something. It never gets
 there in one frame: `createFollow` moves it on critically damped springs (times taken from 《小王子》's camera; a friend

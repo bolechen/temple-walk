@@ -155,6 +155,7 @@
 |---|---|---|---|
 | 手机上的界面：页面自带 viewport 与 doctype；可点的东西不小于 44 像素；菜单不高过屏幕，横握时分两栏；画作卡片的「看过了」始终够得着 | `index.html`、`ui.css`、`tools/mobile-audit.cjs` | 所有者要求（「优化移动设备下的所有 ui 组件，符合最佳实践」）；44 像素取自 Apple 人机界面指南与 WCAG 2.5.5 的触控目标建议 | 所有者指定；44 像素为通行准则，未逐条核原文 |
 | 小沙弥的造型与比例 | `monk.js` | 所有者画的 A-pose 三视图 | 所有者指定 |
+| 小沙弥的雕刻身体（`?body=sculpt`，默认不用）：Meshy 由去掉斗笠念珠的 A-pose 正面图生成；骨骼权重取自代码身体最近的顶点，手臂按在臂上的位置取，同一点的副本同一份权重（两个部件交界处鞋优先于袍、袍优先于皮肤、皮肤优先于裤），再在各部件里平滑 7 次（2026-11-16，#80 A 路） | `tools/novice.mjs`、`tools/novice-weld.mjs`、`novice.js` | 所有者用 Meshy Pro 生成（`asset-register.csv` MESHY-novice）；改权重的办法是 `docs/t00/monk-body-options.md` 的 A 路，部件优先次序、手臂按位置取权重、平滑 7 次是本次按测试和截图定的（`docs/t00/evidence/monk/weld/README.md`） | 所有者指定（模型与 A 路）；具体参数自拟，依据是实测和截图 |
 | 人形骨骼的 VRM 骨名、手刷权重 | `monk.js` | VRM 命名惯例；蒙皮做法参照 Watercolour 的人物 | 参考项目 |
 | 第三人称跟拍：弹簧时间、侧偏、视角 50°（第一人称 65°） | `eye.js`、`yard.js` | 《小王子》ThirdPersonCamera（`LITTLEPRINCE-TEARDOWN.md`）；有朋友试玩头晕后改 | 参考项目，已核其发布文件 |
 | 角色移动与碰撞的对照 | `site.js`、`eye.js` | 《小王子》与 Saltline（`LITTLEPRINCE-TEARDOWN.md`） | 参考项目 |

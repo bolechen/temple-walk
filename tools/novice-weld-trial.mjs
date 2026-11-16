@@ -31,7 +31,9 @@ for (const p of PARTS) {
   for (const i of g.index.array) idx.push(i + o);
 }
 const partOf = (i) => PARTS.findLast((p) => offs[p] <= i);
-const welded = weldWeights(P, J, W, { eps: EPS, smooth: SMOOTH, index: idx });
+// where copies of one point belong to two parts, the one tools/novice.mjs gives precedence to
+const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, rank = Int8Array.from({ length: n }, (_, i) => RANK[partOf(i)]);
+const welded = weldWeights(P, J, W, { eps: EPS, smooth: SMOOTH, index: idx, rank });
 
 // ---- the copies, and how many of them disagree as shipped ----
 const members = new Map(); for (let i = 0; i < n; i++) { const g = welded.group[i]; if (!members.has(g)) members.set(g, []); members.get(g).push(i); }

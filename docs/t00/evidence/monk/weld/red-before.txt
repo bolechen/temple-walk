@@ -1,0 +1,107 @@
+TAP version 13
+# Subtest: the file is made for this skeleton: its joints are numbered as monk.js's bones are
+ok 1 - the file is made for this skeleton: its joints are numbered as monk.js's bones are
+  ---
+  duration_ms: 155.098473
+  type: 'test'
+  ...
+# Subtest: he stands 1.18 m tall on the floor, centred, as wide as the one built in code
+ok 2 - he stands 1.18 m tall on the floor, centred, as wide as the one built in code
+  ---
+  duration_ms: 106.244535
+  type: 'test'
+  ...
+# Subtest: the four parts are skinned to the skeleton, every weight whole, and he wears them
+ok 3 - the four parts are skinned to the skeleton, every weight whole, and he wears them
+  ---
+  duration_ms: 85.150951
+  type: 'test'
+  ...
+# Subtest: the robe is weighted where it hangs, as the one built in code is: the chest above, the hem on the skirt's bones
+ok 4 - the robe is weighted where it hangs, as the one built in code is: the chest above, the hem on the skirt's bones
+  ---
+  duration_ms: 78.888342
+  type: 'test'
+  ...
+# Subtest: his forearms and hands go with his arms, his head with his head, his shoes with his feet
+ok 5 - his forearms and hands go with his arms, his head with his head, his shoes with his feet
+  ---
+  duration_ms: 59.501404
+  type: 'test'
+  ...
+# Subtest: walking: a sole is always on the floor, through the whole stride
+ok 6 - walking: a sole is always on the floor, through the whole stride
+  ---
+  duration_ms: 85.695221
+  type: 'test'
+  ...
+# Subtest: the robe covers the trousers above its hem, standing and through a walking stride
+ok 7 - the robe covers the trousers above its hem, standing and through a walking stride
+  ---
+  duration_ms: 5674.20455
+  type: 'test'
+  ...
+# Subtest: a body that is not made for this skeleton is refused, and he stays as he was
+ok 8 - a body that is not made for this skeleton is refused, and he stays as he was
+  ---
+  duration_ms: 46.671764
+  type: 'test'
+  ...
+# Subtest: every copy of one point takes the same weights, across a seam and where one part meets another
+not ok 9 - every copy of one point takes the same weights, across a seam and where one part meets another
+  ---
+  duration_ms: 130.536945
+  type: 'test'
+  location: '/home/user/temple-walk/tests/unit/novice.test.mjs:137:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    962 copies take other weights than the first copy of their point (worst 1.000, skin 251 / robe 8)
+    
+    962 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 962
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/user/temple-walk/tests/unit/novice.test.mjs:148:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: copies that start at one point stay within a millimetre standing, through a whole stride and up a flight
+not ok 10 - copies that start at one point stay within a millimetre standing, through a whole stride and up a flight
+  ---
+  duration_ms: 249.040684
+  type: 'test'
+  location: '/home/user/temple-walk/tests/unit/novice.test.mjs:151:1'
+  failureType: 'testCodeFailure'
+  error: 'standing: 765 points come apart, at worst 97.1 mm'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    look (file:///home/user/temple-walk/tests/unit/novice.test.mjs:160:12)
+    TestContext.<anonymous> (file:///home/user/temple-walk/tests/unit/novice.test.mjs:164:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 8
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6825.362662

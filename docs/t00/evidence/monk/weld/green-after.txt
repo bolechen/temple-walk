@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: the file is made for this skeleton: its joints are numbered as monk.js's bones are
+ok 1 - the file is made for this skeleton: its joints are numbered as monk.js's bones are
+  ---
+  duration_ms: 296.226173
+  type: 'test'
+  ...
+# Subtest: he stands 1.18 m tall on the floor, centred, as wide as the one built in code
+ok 2 - he stands 1.18 m tall on the floor, centred, as wide as the one built in code
+  ---
+  duration_ms: 270.930137
+  type: 'test'
+  ...
+# Subtest: the four parts are skinned to the skeleton, every weight whole, and he wears them
+ok 3 - the four parts are skinned to the skeleton, every weight whole, and he wears them
+  ---
+  duration_ms: 85.856798
+  type: 'test'
+  ...
+# Subtest: the robe is weighted where it hangs, as the one built in code is: the chest above, the hem on the skirt's bones
+ok 4 - the robe is weighted where it hangs, as the one built in code is: the chest above, the hem on the skirt's bones
+  ---
+  duration_ms: 59.333212
+  type: 'test'
+  ...
+# Subtest: his forearms and hands go with his arms, his head with his head, his shoes with his feet
+ok 5 - his forearms and hands go with his arms, his head with his head, his shoes with his feet
+  ---
+  duration_ms: 85.129561
+  type: 'test'
+  ...
+# Subtest: walking: a sole is always on the floor, through the whole stride
+ok 6 - walking: a sole is always on the floor, through the whole stride
+  ---
+  duration_ms: 161.676437
+  type: 'test'
+  ...
+# Subtest: the robe covers the trousers above its hem, standing and through a walking stride
+ok 7 - the robe covers the trousers above its hem, standing and through a walking stride
+  ---
+  duration_ms: 6914.562997
+  type: 'test'
+  ...
+# Subtest: a body that is not made for this skeleton is refused, and he stays as he was
+ok 8 - a body that is not made for this skeleton is refused, and he stays as he was
+  ---
+  duration_ms: 54.876652
+  type: 'test'
+  ...
+# Subtest: every copy of one point takes the same weights, across a seam and where one part meets another
+ok 9 - every copy of one point takes the same weights, across a seam and where one part meets another
+  ---
+  duration_ms: 137.588448
+  type: 'test'
+  ...
+# Subtest: copies that start at one point stay within a millimetre standing, through a whole stride and up a flight
+ok 10 - copies that start at one point stay within a millimetre standing, through a whole stride and up a flight
+  ---
+  duration_ms: 1006.544176
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9299.319784
