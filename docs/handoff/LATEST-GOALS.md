@@ -48,6 +48,10 @@
 7. **证据只增不改。** `docs/t00/evidence/` 里已被 `delivery.json`、`review-log.json`、验收报告引用的证据，记录的是当时的路径和提交，不移动、不改名、不在原处替换；新证据放新路径，在记录里新增一条，旧的标为被取代。被记录引用的图、日志、`report.json` 入 git；`tools/out/` 的工作截图不入；录像控制体积，长录像放仓库外并记地址和 SHA-256。山门第三阶段改动后，CAM-04、CAM-05 的验收证据要按此重拍。
 8. **每个 issue 都要有独立的 goal 验收标准。** 所有者 2026-11-16 定。正文五节：背景、目标、逐条可判定的验收标准、不在范围内、关闭条件；大工作线可以写目标文件、issue 链过去，但验收标准要在 issue 或目标文件里写全，不能只写「见评审」。规则在 `AGENTS.md`「Issue 与验收标准」，模板 `.github/ISSUE_TEMPLATE/goal.md`。
 
+8. **出殿后点地面折返殿门（用户反馈的 bug）。** 「大雄宝殿上完香，出殿门后，鼠标往寺庙入口处点击，却返回大雄宝殿了，按W键才能下台阶。」主创复现确认。目标和验收：https://github.com/bolechen/temple-walk/issues/100 。
+9. **登上凌霄阁。** 「凌霄阁有三层，能让主角走上去吗？」主创调研后定：只开放顶层，走在真实的平坐上凭栏回望，蒲团和结尾不动，不给朱印；顶层回廊要由 1.0 米加宽到约 1.6 米才站得下人，先出方案再动手。目标和验收：https://github.com/bolechen/temple-walk/issues/101 （在 #89 合入之后）。
+10. **观水机位与按事件的镜头动作**从第 3 条分出：https://github.com/bolechen/temple-walk/issues/99 （在龙井拱券 #76 之后）。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。
