@@ -127,8 +127,9 @@ export function stepSound(kind, sampleRate, { seed = 1, speed = 2.1, wet = 1 } =
 }
 // How loud each kind is played, so that they sit together: a step on dry stone is the quietest thing in the temple
 // (about half a step in snow), wet stone a little more, a splash nearly as much as snow. Set against each kind's own
-// loudness over its loudest 60 ms; `steps.test.mjs` holds the order.
-export const LEVEL = { stone: 0.08, wet: 0.085, puddle: 0.12, snow: 0.26 };
+// loudness over its loudest 60 ms; `steps.test.mjs` holds the order. Set so that a step on stone is still heard over
+// the wind in the bamboo (2026-11-16: stone and wet stone raised 6 dB, a splash 5 and snow 4, keeping the order).
+export const LEVEL = { stone: 0.16, wet: 0.17, puddle: 0.22, snow: 0.42 };
 
 // Where water stands on the paving after rain: the same pattern the paving shader draws (`low` and `puddle` in
 // ground.js), worked out here so that a splash is heard where a puddle is seen. 0..1.
