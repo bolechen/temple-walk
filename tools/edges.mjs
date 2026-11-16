@@ -10,6 +10,10 @@
 // would be inside this? Turning on the spot sweeps his whole outline round, so the outline is taken as a solid of
 // revolution; that is the strict reading, and it is the one a visitor sees when he turns beside a column.
 //
+// Below the knee his shoes and the hem of his robe are gone over by themselves (see `outline` and `PARTS`), and each
+// point of what is built is put down as a part of its building (a column's base, a sill, a cheek stone, a rail's end,
+// the foot of a wall), so that the table can say how near he comes to each part, not only that he never got in.
+//
 // What it prints: for each building and each kind of thing (by material), the deepest any part of him can get into
 // it and where he stands when it happens. It exits with an error if anything is deeper than the tolerance.
 import "../tests/unit/dom-stub.mjs";
