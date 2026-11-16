@@ -81,9 +81,10 @@ export function buildHall(M, opts) {
     }
   }
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
-    const parts = [], y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
+    const parts = [], ends = (g.userData.railEnds = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
     const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
       const n = Math.max(1, Math.round((b - a) / 1.5)), d = (b - a) / n;
+      for (const t of [a, b]) ends.push(ax === "x" ? [t, y, fixed] : [fixed, y, t]);   // where a run stops: at a corner, or where a stair breaks it
       // The posts: eight-sided, each ending in a lotus bud. Between them, from the floor up: a sill, a panel, the
       // basin rail, a short strut in the middle of each bay, and the hand rail.
       for (let i = 0; i <= n; i++) { const t = a + i * d, px = ax === "x" ? t : fixed, pz = ax === "x" ? fixed : t;
@@ -422,7 +423,11 @@ export function buildHall(M, opts) {
     if (p.stepsBack) stair(p.stepsBack, -1);
     const passing = p.front === "pass" && p.back === "pass";
     // The way through a gate runs between its open leaves, which stand against the sides with their ledges and studs.
-    if (passing) { const hw = (xs[mid + 1] - xs[mid]) / 2 - (p.timber ? 0.25 + 0.2 + BODY + 0.01 : 0.45); walk.decks.push({ x0: -hw, x1: hw, z0: zB + 0.25, z1: zF - 0.25, h: p.platH }); }
+    if (passing) { const hw = (xs[mid + 1] - xs[mid]) / 2 - (p.timber ? 0.25 + 0.2 + BODY + 0.01 : 0.45); walk.decks.push({ x0: -hw, x1: hw, z0: zB + 0.25, z1: zF - 0.25, h: p.platH });
+      if (p.timber) {   // the sill: a shoe comes down on it, not through it; beyond the way through it lies under the open leaves, where he does not go
+        const sw = (xs[mid + 1] - xs[mid]) / 2; walk.decks.push({ x0: -sw, x1: sw, z0: Z - 0.12, z1: Z + 0.12, h: p.platH + 0.05, floor: "wood" });
+        for (const s of [-1, 1]) walk.posts.push({ x0: s > 0 ? hw : -sw - 0.01, x1: s > 0 ? sw + 0.01 : -hw, z0: Z - 0.13, z1: Z + 0.13 });
+      } }
     else if (p.steps) {   // the porch, and where it meets the head of its stair
       const ex = Math.min(X + 0.8, PX - edgeIn);
       walk.decks.push({ x0: -ex, x1: ex, z0: Z + 0.45, z1: zF - edgeIn, h: p.platH });
