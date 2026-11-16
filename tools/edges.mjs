@@ -247,6 +247,34 @@ export function sweep({ tol = TOL } = {}) {
   return { tolerance: tol, grid: G, knee: KNEE, outline: [...prof].map((r, i) => [+(i * BIN).toFixed(2), +r.toFixed(3)]).filter(([, r]) => r > 0), reach: RMAX, cells, samples, worst: +worst.toFixed(3), worstLow: +worstLow.toFixed(3), worstLowStrict: +worstStrict.toFixed(3), outlineLow: [...prof.low].map((r, i) => [+(i * BIN).toFixed(2), +r.toFixed(3)]).filter(([h, r]) => r > 0 && h < KNEE), low: low.map((q) => ({ ...q, place: where(q.at[0], q.at[2]) })), places: [...rows.values()], spots, coverage, site, walker };
 }
 
+// The same things, part by part: how near he comes to each part of each, above the knee and below it.
+const COLS = ["台基外缘", "踏步鼻口", "踏步侧沿", "门槛", "柱础", "外檐柱", "栏杆端头", "墙地接缝"];
+export function partTables(r) {
+  const cell = (c, name, pass) => {
+    const q = c.parts.find((p) => p.name === name), v = q[pass];
+    if (!q.points) return "此处没有";
+    if (pass === "below" && name === "踏步鼻口") return "台阶测试管（踏级上的脚）";
+    if (pass === "above" && (name === "门槛" || name === "墙地接缝" || name === "柱础")) return "见膝下表";   // they stand within a knee's height of the floor he is on
+    if (!v) return `近不了：离可站处都在 ${MARGIN * 100} cm 外`;
+    return v.cm > 0 ? `**进 ${v.cm} cm**（站在 ${v.at[0]}, ${v.at[2]}）` : `离 ${(-v.cm).toFixed(1)} cm${v.within10 ? `，${v.within10} 处在 10 cm 内` : ""}`;
+  };
+  const head = `| 名称 | ${COLS.join(" | ")} |`, rule = `|---|${COLS.map(() => "---").join("|")}|`;
+  return [`## 逐个构件`, ``,
+    `下面两张表按构件分列：他身体的任何一部分离这个构件最近的距离（「离 n cm」），或进入它的深度（「进 n cm」，超过 1 厘米即不合格）。`,
+    `「n 处在 10 cm 内」是离它不到 10 厘米的站位数，说明那里确实走得到跟前。构件按材料和总平面归类：柱础是外檐柱脚下的石鼓，外檐柱是柱身，`,
+    `踏步鼻口是踏级（台阶可走的那一段，含首末级的前沿），踏步侧沿是垂带石和踏级两端，门槛是贴地 30 厘米内的木构（门槛、地栿、格扇下槛），`,
+    `墙地接缝是贴地 30 厘米内的墙身，栏杆端头是一段栏杆两头（转角与台阶断开处）的望柱。「此处没有」：这座建筑没有这个构件。`,
+    `「近不了」：有这个构件，但他能站的地方都离它 ${MARGIN * 100} 厘米以上：它在台基里、墙后或屋内（原因见上表各侧），或者就是他脚下台面的侧面。`, ``,
+    `### 膝上（身体、袖、行走时的手、背上的笠；转身按整圈算）`, ``, head, rule,
+    ...r.coverage.map((c) => `| ${c.name} | ${COLS.map((n) => cell(c, n, "above")).join(" | ")} |`), ``,
+    `### 膝下（鞋、袍脚，离脚底 2 厘米到 ${KNEE * 100} 厘米）`, ``,
+    `膝下的外廓：站立、合掌、腾空按整圈算；走动时迈出的脚只朝前，所以步幅只按左右算（向前 31 厘米，左右 18 厘米）——正对着走向一物时，`,
+    `他在离它一个身位处被挡住、停步收脚。按整圈连步幅也算，最深 ${(r.worstLowStrict * 100).toFixed(1)} cm（记在 sweep.json 的 \`worstLowStrict\`）。`,
+    `比脚底高出不到它自身高度的东西，进入深度不超过它的高度。站在台阶上的位置、以及他脚下那层地面（能站上去的台面的侧面，鞋会被放到台面上）不计，`,
+    `那是台阶测试和腿的解算管的。全场最深：**${(r.worstLow * 100).toFixed(1)} cm**。`, ``, head, rule,
+    ...r.coverage.map((c) => `| ${c.name} | ${COLS.map((n) => cell(c, n, "below")).join(" | ")} |`), ``];
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const t0 = Date.now(), r = sweep(), { site, walker, ...report } = r;
   console.log(`he reaches ${r.reach.toFixed(3)} m from his centre above the knee; ${r.cells} places to stand, ${r.samples} points of what is built, ${((Date.now() - t0) / 1000).toFixed(1)} s`);
@@ -260,13 +288,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const side = (q) => q.places ? `可达 ${q.places} 处，最深 ${q.deepest_cm} cm` : `不可达：${q.unreachable}`;
     const md = [`# T00 建筑边缘覆盖表`, ``, `由 \`node tools/edges.mjs --table docs/t00/edge-coverage.md\` 生成，勿手改。几何出自提交时的实际总平面与沙弥模型。`, ``,
       `方法：把沙弥中心能到的每一处（${G * 100} 厘米一格，共 ${r.cells} 处）都站一遍，用模型在站立、行走、快走、合掌、腾空各姿态下绕身一周的实际外廓（膝上最宽 ${(r.reach * 100).toFixed(1)} 厘米），`,
-      `去比对场景里每一个面（取样 ${r.samples} 点）。「最深」是身体任何一部分进入该物的最大深度；容差 ${(r.tolerance * 100).toFixed(0)} 厘米。膝盖以下（${KNEE} 米）不计，那是台阶测试管的。`,
+      `去比对场景里每一个面（取样 ${r.samples} 点）。「最深」是身体任何一部分进入该物的最大深度；容差 ${(r.tolerance * 100).toFixed(0)} 厘米。上表只看膝盖以上（${KNEE} 米起）；膝下另算，见「逐个构件」。`,
       `「可达 n 处」指该侧外 1.2 米内他能站的位置数。全场最深：**${(r.worst * 100).toFixed(1)} cm**。`, ``,
       `这是几何扫查，不是真人走查，也不看镜头；殿内房间不在其内。它回答的是「身体会不会进到东西里」，不回答「看起来是否自然」。`, ``,
       `| 名称 | 台基上/其上 | 南侧 | 东侧 | 北侧 | 西侧 | 四角 | 外檐圆柱 | 入口 | 最深 |`, `|---|---|---|---|---|---|---|---|---|---|`,
-      ...r.coverage.map((c) => `| ${c.name} | ${c.on_it.places ? `可站 ${c.on_it.places} 处，最深 ${c.on_it.deepest_cm} cm` : "不可站（实体或屋内）"} | ${side(c.sides.南)} | ${side(c.sides.东)} | ${side(c.sides.北)} | ${side(c.sides.西)} | ${c.corners_reached}/4 可达，最深 ${c.corners_deepest_cm} cm | ${c.round_columns || "—"} | ${c.door || "—"} | ${c.deepest_cm} cm |`), ``];
+      ...r.coverage.map((c) => `| ${c.name} | ${c.on_it.places ? `可站 ${c.on_it.places} 处，最深 ${c.on_it.deepest_cm} cm` : "不可站（实体或屋内）"} | ${side(c.sides.南)} | ${side(c.sides.东)} | ${side(c.sides.北)} | ${side(c.sides.西)} | ${c.corners_reached}/4 可达，最深 ${c.corners_deepest_cm} cm | ${c.round_columns || "—"} | ${c.door || "—"} | ${c.deepest_cm} cm |`), ``,
+      ...partTables(r)];
     fs.writeFileSync(table, md.join("\n")); console.log("wrote", table);
   }
   fs.mkdirSync(OUT.replace(/\/[^/]*$/, ""), { recursive: true }); fs.writeFileSync(OUT, JSON.stringify(report, null, 1));
-  if (r.worst > r.tolerance) { console.log(`\nthe deepest is ${(r.worst * 100).toFixed(1)} cm; the tolerance is ${(r.tolerance * 100).toFixed(1)} cm`); process.exit(1); }
+  console.log(`below the knee (his shoes and hem, ${r.outlineLow.map(([, v]) => v).reduce((a, b) => Math.max(a, b), 0).toFixed(3)} m out at most): deepest ${(r.worstLow * 100).toFixed(1)} cm; turned through a whole circle even while striding, ${(r.worstLowStrict * 100).toFixed(1)} cm`);
+  for (const q of r.low.slice(0, TOP)) console.log(`  ✗ ${q.cm} cm ${q.place}　${q.part}　standing at (${q.at[0]}, ${q.at[2]}) into (${q.into.join(", ")})`);
+  if (r.worst > r.tolerance || r.worstLow > r.tolerance) { console.log(`\nthe deepest is ${(Math.max(r.worst, r.worstLow) * 100).toFixed(1)} cm; the tolerance is ${(r.tolerance * 100).toFixed(1)} cm`); process.exit(1); }
 }

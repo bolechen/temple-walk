@@ -34,6 +34,7 @@ import { createUI } from "./src/ui.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose } from "./src/drop.js";
+import { stride, JUMP, leapStep } from "./src/stride.js";
 
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
@@ -298,8 +299,7 @@ function startDrop() {
   const plan = availableDrop(); if (!plan) return false;
   interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true;
 }
-// Space: a child's jump, a hand and a half high. He can be steered in the air and lands on whatever is under him.
-const JUMP = { speed: 3.0, gravity: 9.8 };
+// Space: a child's jump (stride.js). He can be steered in the air and lands on whatever is under him.
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
   if (ui.covered()) return false;
@@ -402,20 +402,8 @@ function frame(now) {
     if (Q.has("fast")) pace.v = len === 0 ? 0 : 14;
     else pace.v += Math.max(-WALK.down * dt, Math.min(WALK.up * dt, want - pace.v));
     const step = Math.min(f || s || len === 0 ? 1e9 : len, pace.v * dt); vx = pace.dir[0] * step; vz = pace.dir[1] * step;
-    // Take the step; if something is in the way, slide along it, and failing that close the last gap in smaller steps.
-    let moved = false;
-    for (let k = 1; k > 0.1 && !moved; k /= 2) {
-      const sx = vx * k, sz = vz * k;
-      if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; }
-      else if (Math.abs(sx) > 1e-4 && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
-      else if (Math.abs(sz) > 1e-4 && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
-    }
-    // Something round or cornered is square in his way (a column, a table): he goes round it, turning aside by as
-    // little as will let him pass, to whichever hand is nearer the way he was going.
-    for (const a of moved ? [] : [0.5, -0.5, 0.95, -0.95, 1.35, -1.35]) {
-      const c = Math.cos(a), s = Math.sin(a), sx = (vx * c - vz * s) * 0.8, sz = (vx * s + vz * c) * 0.8;
-      if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; break; }
-    }
+    // Take the step, sliding along what is in the way or going round it (stride.js).
+    const moved = stride(walker, pos, vx, vz);
     if (!moved) { target = null; route = []; settle(false); pace.v = 0; }
     // The censer does not stop you: you are eased around it.
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
@@ -425,8 +413,7 @@ function frame(now) {
     flight.elapsed += dt; const p = dropPose(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
     if (p.done) hop = null;
   } else if (leap) {
-    const ground = walker.heightAt(pos.x, pos.z); leap.v -= JUMP.gravity * dt; leap.y += leap.v * dt;
-    if (leap.y <= ground) { footY = ground; leap = null; } else footY = leap.y;                 // down again, on whatever he has come over
+    const step = leapStep(leap, walker.heightAt(pos.x, pos.z), dt); footY = step.y; if (step.landed) leap = null;
   } else footY = walker.heightAt(pos.x, pos.z);
   const aloft = airborne || !!leap;
   // The height the view rides at follows the floor softly; from behind him more softly still, as the up and down of a
