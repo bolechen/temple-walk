@@ -20,7 +20,7 @@ const MOODS = ["summer-day", "autumn-dusk", "winter-day", "summer-night"];
     // clicked, the opening begun, and then held where each picture is wanted.
     await p.goto(`${srv.base}?q=high&view=third&season=${season}&time=${time}${extra}`, { waitUntil: "commit", timeout: 120000 });
     await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
-    await p.click("#enterBtn"); await p.waitForFunction(() => window.__opening().active, null, { timeout: 60000 });
+    await p.evaluate(() => document.getElementById("enterBtn").click()); await p.waitForFunction(() => window.__opening().active, null, { timeout: 120000 });   // (a click from the page itself: a slow page outlasts the browser's wait for a steady button)
     return { p, ctx, errors };
   };
   const frames = async (p, n) => { const f0 = await p.evaluate(() => window.__yard().frames); await p.waitForFunction((f) => window.__yard().frames >= f, f0 + n, { timeout: 300000 }); };
