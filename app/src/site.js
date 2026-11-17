@@ -100,6 +100,8 @@ export function buildSite(M) {
     const y = lvl ? LEVELS[lvl - 1].y : 0;
     storeys.forEach((st, i) => {
       const next = storeys[i + 1], o = i ? { platOut: 0.05, dark: false, steps: 0, ...st, platH: foot - 0.08, platBase: foot - 0.4 } : { ...st };
+      // A balcony walked round whose floor reaches past the columns of the storey below stands on their heads (#101).
+      if (st.loft && i && st.xs[st.xs.length - 1] + st.platOut > storeys[i - 1].xs[storeys[i - 1].xs.length - 1]) o.pingRing = [...storeys[i - 1].xs];
       o.storey = i; o.under = o.skirt = !!next;   // which storey, and whether another stands on its roof
       if (next) { o.overhang = o.overhang ?? 2.4; o.G = o.xs[o.xs.length - 1] + o.overhang - next.xs[next.xs.length - 1] + 0.4; }
       const r0 = walk.roofs.length, b = put(o, at, q, lvl); first = first || b;

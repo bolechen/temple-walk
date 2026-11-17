@@ -36,6 +36,7 @@ const DEFAULTS = {
   walkAll: false,               // the whole platform is open floor (covered walks)
   plaque: "",                   // name board over the front: a string, or { text, vertical, gold }
   rail: false,                  // a white stone balustrade round the platform
+  pingRing: null,               // a balcony standing on the column ring of the storey below (its column lines across), not on its own
   loft: "",                     // an upper storey whose balcony is walked round (its name: the walker counts it only while he is up there)
 };
 
@@ -279,7 +280,7 @@ export function buildHall(M, opts) {
     // of bracket sets a step shorter than its own, one under every set above, on a plate of their own; round the
     // floor's edge a board twice a timber's depth (the wild-goose-wing board), and the railing inside that. The skirt
     // roof of the storey below comes in under the plate.
-    if (p.ping) {
+    if (p.ping && !p.pingRing) {
       const PH = PING.sets, y0 = p.platBase - PH, bd = PING.board;
       const low = merge([
         box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0),
@@ -295,6 +296,27 @@ export function buildHall(M, opts) {
       // Behind the sets the wall is limed, as it is between the sets under the eaves, so that they read against it.
       add(merge([box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, Z - 0.04), box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, ZB + 0.04), box(0.1, PH + 0.3, Z - ZB, xs[0] + 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2), box(0.1, PH + 0.3, Z - ZB, X - 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2)]), M.plaster());
       ping = { sets: spots.length, reach: PING.reach, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - 0.12 };
+    }
+    if (p.ping && p.pingRing) {
+      // A balcony walked round, as the Fashi builds one over a storey below (juan 4, the pingzuo; the structure review on
+      // #101): its bracket sets stand on the column heads of the storey below, on a plate as thick as a timber is deep, the
+      // storey's own columns forked down into them. Each set has its arms doubled (chonggong) and steps out as far as the
+      // floor reaches past that ring, carrying the edge board on its last arm; where the floor ends over the columns, it
+      // does not step out at all.
+      const ring = p.pingRing, RX = ring[ring.length - 1], R = Math.max(0, PX - RX - 0.02), dbl = 0.21 + 0.13, PH = 0.62 + dbl, y0 = p.platBase - PH, bd = PING.board, plate = 0.21;
+      const parts = [box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0), arm(0.9, 0.28, 0), dou(-0.35, 0.49, 0), dou(0.35, 0.49, 0), arm(1.32, 0.62, 0), dou(-0.55, 0.83, 0), dou(0.55, 0.83, 0)];
+      if (R > 0.15) parts.push(arm(R + 0.42, 0.28, (R - 0.28) / 2, "z"), dou(0, 0.49, R), arm(0.9, 0.62, R), dou(-0.35, 0.83, R), dou(0.35, 0.83, R));
+      const low = merge(parts), at = [];
+      for (const x of ring) for (const z of ring) { const ox = x === ring[0] ? -1 : x === RX ? 1 : 0, oz = z === RX ? 1 : z === ring[0] ? -1 : 0; if (ox || oz) at.push({ x, z, a: Math.atan2(ox, oz) }); }
+      add(merge(at.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX);
+      add(merge([box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, RX), box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, -RX),
+        box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
+      add(merge([box(0.34, plate, RX * 2 + 0.4, -RX, y0 - plate / 2, 0), box(0.34, plate, RX * 2 + 0.4, RX, y0 - plate / 2, 0),
+        box(0.06, bd, zF - zB + 0.12, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB + 0.12, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
+      // Behind the sets, between the column heads, the wall of the storey below is limed, so that the sets read against it.
+      const wy = y0 + PH / 2 - 0.15, wh = PH + 0.3;
+      add(merge([box(RX * 2, wh, 0.1, 0, wy, RX - 0.04), box(RX * 2, wh, 0.1, 0, wy, -RX + 0.04), box(0.1, wh, RX * 2, -RX + 0.04, wy, 0), box(0.1, wh, RX * 2, RX - 0.04, wy, 0)]), M.plaster());
+      ping = { sets: at.length, reach: R, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - plate, ring: RX, double: true, plate, spots: at };
     }
     const o = PURLIN, py = PLATE_TOP + 1.0;   // the eave purlin the outer arms carry
     add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX);
