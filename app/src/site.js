@@ -57,7 +57,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] }, shade = [[], [], [], []], halls = [], buildings = [];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [];
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. Only a tent roof is given its `rise` by hand.
@@ -69,6 +69,7 @@ export function buildSite(M) {
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
+    for (const r of b.walk.rails || []) walk.rails.push({ ...place(r, at, q), bottom: r.bottom + y, top: r.top + y });
     for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
     for (const edge of b.walk.drops) {
       const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
@@ -371,10 +372,12 @@ export function buildSite(M) {
       new THREE.TorusGeometry(0.075, 0.009, 6, 16, Math.PI).rotateZ(-Math.PI / 2).translate(-0.53, T + 0.15, -0.2), new THREE.CylinderGeometry(0.008, 0.016, 0.2, 8).rotateZ(-0.7).translate(-0.28, T + 0.17, -0.2));
     // Stools: his own, and two for company.
     P.wood.push(stool().translate(0, 0, 0.62), stool().translate(0.95, 0, -0.12), stool().translate(0, 0, -0.86));
-    // One branch in a bottle, on the table.
-    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(0.46, 0.78, -0.38));
-    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 18, 0.006, 6),
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 10, 0.004, 5));
+    // One branch in a bottle, on the table: at the corner by his left hand, beside the ewer, out of the way of the eye that
+    // looks across the table at him while he drinks (src/director.js; it stood at the near corner and filled a fifth of that picture).
+    const BX = -0.52, BZ = 0.1;
+    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(BX, 0.78, BZ));
+    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 18, 0.006, 6),
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 10, 0.004, 5));
     const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, lacquer: M.lacquer };
     for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
     // The table stands askew to the court, so it is closed off as three round things along its length; each stool as one.
@@ -433,6 +436,30 @@ export function buildSite(M) {
     lamp:    { at: [lampAt[0], lampAt[1] + 1.4], r: 1.5, face: Math.PI, flame: lampMine },
     sit:     { at: [0, porchZ], r: 1.2, face: 0, sit: true },
   };
+  // The shot each observance is seen from while it is made (src/director.js): where the eye stands (`at`) and what it
+  // looks at (`look`), in the place's own frame (x to his left, z the way he faces, y up from the floor there), its angle
+  // of view for a wide picture (`fov`), how long it takes to come and to go (`in`, `out`, seconds), and how it drifts
+  // while it rests (`drift`: `push`, `side`, `rise` in metres a second, `turn`, `tilt` in degrees a second, `for` seconds).
+  // `keep` lists what must stay inside the picture, in the same frame: him, and what his hands are at.
+  // First drafts, written here to be judged from the pictures (`shot-<id>` below); docs/t00/SOURCES.md records them as our own drafts.
+  const SHOTS = {
+    // From behind him to his right and low, between the tower's columns: the rope, his hands and the whole bell, little wall.
+    bell: { at: [-2.6, 0.5, -3.0], look: [0, 1.52, 1.31], fov: 40, in: 2.0, out: 1.0, drift: { side: 0.02, for: 8 }, keep: [[0, 0.1, 0], [0, 1.25, 0], [0, 1.0, 0.34], [0, 1.75, 3.1], [0, 3.5, 3.1]] },
+    // Across the table from his right, low: his bowl near on its stand, him beyond, the ewer at the edge; sitting on, it draws back.
+    tea: { at: [-0.45, 0.98, 2.05], look: [0, 0.85, 0.8], fov: 42, in: 2.2, out: 1.0, drift: { push: -0.03, side: -0.015, for: 30 }, keep: [[0, 0.6, 0.62], [0, 1.15, 0.62], [0, 0.82, 1.13]] },
+    // Under the eaves, from before him to his left, three-quarters: his face, his hands, the book and the holder of slips.
+    sutra: { at: [1.2, 1.3, 0.5], look: [-0.06, 1.0, 0.28], fov: 42, in: 1.8, out: 1.0, drift: { push: 0.015, for: 8 }, keep: [[0, 0.85, 0], [0, 1.2, 0], [0, 0.95, 0.3], [-0.24, 1.0, 0.82]] },   // a near shot: from his waist up
+    // From behind and above his shoulder, down into the niche where the pool lies; the 龍井 board above it kept out of the picture.
+    // (Not gone to for now, `off`: the niche is unlit and its arch is to be rebuilt (#76), so the picture shows a black hole;
+    // the eye stays with him until #99 brings the shot back. The data stays, tested like the rest.)
+    well: { off: "#99", at: [-0.8, 2.4, -1.6], look: [0.05, 0.3, 2.2], fov: 40, in: 2.0, out: 1.0, drift: { push: 0.015, for: 10 }, keep: [[0, 1.0, 0], [0, 1.2, 0], [0, 0.2, 2.38]] },   // over his shoulder: his head and shoulders, and the pool
+    // From before the lamp, his face lit by it; as it is lit the eye steps back half a pace.
+    lamp: { at: [0.75, 1.3, 2.45], look: [-0.05, 1.0, 0.3], fov: 42, in: 1.8, out: 1.0, drift: { push: -0.05, for: 6 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.88, 1.38]] },
+    // Low, before him and to his right at about 35° (wider would stand the eye over the stair's cheek), clear of the
+    // columns: the pavilion behind him as he breathes.
+    sit: { at: [-1.0, 0.55, 1.4], look: [0, 0.53, 0], fov: 44, in: 2.4, out: 1.2, drift: { push: 0.012, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] },
+  };
+  for (const id in SHOTS) places[id].shot = SHOTS[id];
 
   // ---- Named views: one per thing worth looking at. The screenshot tool renders each of them. ----
   const A = APPROACH;
@@ -446,6 +473,9 @@ export function buildSite(M) {
     // The six fixed views the T00 handoff is judged by (docs/t00/camera-manifest.json): bamboo start, stair turn,
     // before the screen wall, the gate once round it, back through the gate, the first court.
     cam01: [A.xC, A.zC1 - 1.2, 0, 0.3], cam02: [A.xB0 + 1.6, A.zMid + 0.9, -1.35, 0.16], cam03: [0, 63.8, 0, 0.14], cam04: [6.6, 53.4, -0.42, 0.3], cam05: [0.6, 37.6, Math.PI, 0.08], cam06: [0, 29, 0, 0.1],
+    // The observances' own shots (src/director.js): ?show=shot-<id> stands him at the place, begins the observance and
+    // puts the eye on its shot at once. The incense is made indoors; its view is added with the hall's room (yard.js).
+    ...Object.fromEntries(Object.entries(places).filter(([, p]) => p.shot).map(([id, p]) => [`shot-${id}`, [p.at[0], p.at[1], Math.PI - p.face, 0.05]])),
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
     // The six views of the art prototype (docs/t00/art-targets.md, A1 to A6), framed to match its pictures at 2.39:1:
     // the bamboo stair with the half-way pavilion at its head, the gate between the screen wall and its steps, the first
@@ -518,8 +548,14 @@ function drum(M, t) {
 
 // ---- Walking over the plan ----
 const terrainLevel = (x, z) => terrain(x, z);
+// How high above the floor where he stands an observance made sitting puts him: on the top of the seat registered there
+// (the tea's stool, the summit's mat), as sitting down on any seat does (game.js), less the floor under him.
+export function placeLift(place, seats, heightAt) {
+  const at = place.seat || place.at, seat = seats.find((s) => (s.room || null) === (place.room || null) && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3);
+  return seat ? Math.max(0, seat.top - heightAt(place.at[0], place.at[1])) : place.lift ?? 0.1;
+}
 export function createWalker(site) {
-  const { solids, decks, ramps, posts = [], roofs = [] } = site.walk;
+  const { solids, decks, ramps, posts = [], roofs = [], rails = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
   // What stands in the way even on a floor: a round thing keeps his centre its own radius and his width away (`pad`);
   // a square one was drawn that much larger where it was put down. They are sorted into two-metre squares, so that
@@ -570,6 +606,9 @@ export function createWalker(site) {
     // on, anywhere else. A building is closed within its walls up to its ridge and over its platform up to the floor;
     // any other wall or tree some way above his head (a court wall is passed over well above it). A column (or a
     // trunk: anything round and thinner than a stride) answers "post" rather than true: the eye may let one pass across the view a moment before giving way.
+    // Is the point within `m` of a railing, round a platform's edge? (The eye that follows him passes over a railing as
+    // over any floor; an eye sent on a swing of its own keeps clear of it, so that the near edge of its lens does not cut into the stone.)
+    railNear(x, y, z, m = 0) { if (room) return false; for (const r of rails) if (x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m && y > r.bottom - m && y < r.top + m) return true; return false; },
     eyeShut(x, y, z, foot) {
       if (room) return shut(x, z);
       for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;
