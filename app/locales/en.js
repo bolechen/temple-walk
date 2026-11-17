@@ -67,6 +67,7 @@ export default {
   "秋": "Autumn",
   "冬": "Winter",
   "时辰": "Hour",
+  "随时辰": "Follow the hour",
   "晨": "Dawn",
   "昼": "Day",
   "暮": "Dusk",
