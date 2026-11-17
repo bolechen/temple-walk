@@ -10,12 +10,13 @@ function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: f
   const handlers = new Map();
   const canvas = { style: {}, clientHeight: 800, setPointerCapture() {}, addEventListener(name, fn) { handlers.set('canvas:' + name, fn); } };
   const document = { pointerLockElement: null, addEventListener(name, fn) { handlers.set('document:' + name, fn); } };
-  const c = vm.createContext({ THREE, camera: { fov: 50 }, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set } });
+  const c = vm.createContext({ THREE, camera: { fov: 50 }, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set }, director: { back() { c.backs = (c.backs || 0) + 1; } } });
   vm.runInContext(source.slice(source.indexOf('const touches = new Map()'), source.indexOf('const lift = (e)')), c);
   return {
     send(target, name, values = {}) { handlers.get(target + ':' + name)({ pointerId: 1, pointerType: 'mouse', clientX: 100, clientY: 100, ...values }); },
     lock() { document.pointerLockElement = canvas; },
     state() { return { yaw: c.yaw, pitch: c.pitch }; },
+    backs: () => c.backs || 0,
   };
 }
 
@@ -89,4 +90,18 @@ test('one report larger than any hand gives (the browser re-centring the hidden 
   c.send('document', 'mousemove', { movementX: 900, movementY: 0 }); c.send('document', 'mousemove', { movementX: 0, movementY: -700 });
   assert.deepEqual(c.state(), { yaw: 0, pitch: 0 });
   c.send('document', 'mousemove', { movementX: 40, movementY: 0 }); assert.ok(c.state().yaw > 0, 'an ordinary movement still turns it');
+});
+
+// While an observance is shown from its place's own shot (src/director.js), a drag of the view or any turn of the held
+// mouse is the visitor wanting to look for themselves: the eye goes back to following him at once. A small tap does not.
+test('a drag or a held mouse sends the eye back from a place\'s shot; a tap does not', () => {
+  for (const view of ['first', 'third']) {
+    const drag = controls(view), locked = controls(view), tap = controls(view);
+    drag.send('canvas', 'pointerdown'); drag.send('canvas', 'pointermove', { clientX: 130, clientY: 100 });
+    locked.lock(); locked.send('document', 'mousemove', { movementX: 4, movementY: 0 });
+    tap.send('canvas', 'pointerdown'); tap.send('canvas', 'pointermove', { clientX: 102, clientY: 101 });
+    assert.ok(drag.backs() > 0, `${view}: a drag should send the eye back`);
+    assert.ok(locked.backs() > 0, `${view}: the held mouse should send the eye back`);
+    assert.equal(tap.backs(), 0, `${view}: a tap that hardly moves should not`);
+  }
 });

@@ -74,7 +74,7 @@ pnpm run edges                      # ~95 s: does his whole body fit everywhere 
 pnpm run nearplane                  # ~80 s: the camera's near plane cuts into nothing along the routes and porches, behind him and from his eyes
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
 node tests/e2e/run.cjs seats        # every cushion and stool sat on, hurrying, the place not drawn
-node tools/play-t00.cjs [outdir] [summit bell tea phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic)
+node tools/play-t00.cjs [outdir] [summit bell tea phone director]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic); `director` films the eye going to each place's shot and back
 node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -197,6 +197,44 @@ building within its walls up to its ridge, its platform only up to the floor (so
 the edge), any other wall some way above his head, and every roof from the foot of its beams to over its ridge
 (`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes,
 and `tests/unit/sweeps.test.mjs` does the same round every building on the plan.
+
+**The eye during an observance (`app/src/director.js`, issue #71).** While the bell, the incense, the tea, the line,
+the well, the lamp or the sitting is made, the eye leaves his shoulder for the place's own shot and comes back. The
+shot is data: `site.places[id].shot = { at, look, fov, in, out, drift, keep }` in the place's own frame (x to his left,
+z the way he faces, y up from the floor there; `SHOTS` in `site.js`, the incense's in its room in `interior.js`), and
+`site.views["shot-<id>"]` stands him there for `shots.js` (`?show=shot-<id>` poses him as the observance has him and puts
+the eye on the shot at once). The director is a layer under `y.cine`: each frame `yard.js` works out the following eye
+as usual, then `director.apply` mixes it toward the shot (in over 1.6–2.4 s, back over 0.8–1.2 s, smootherstep, round
+him on an arc, timed by the observances' clock `riteNow()` rather than the frame's capped `dt`, so a slow page does not
+leave the eye behind the hands), then a passage that takes the eye (`rites.close`) starts from whatever that gave and lets the director
+go (`y.undirect()`). Every swing is made, never cut (the owner: 打卡时用动画，不要硬切转场): `planSwing` tries the short
+way round him, the long way, over, wide, in by his shoulder, then `wayRound` (a path over a 0.5 m grid of clear points
+round him, pulled taut, on a smooth curve), takes the first clear one (each point tested every 4 cm, the chosen one again
+with a 6 cm margin; clear of whatever the following eye may not be in and also of a column, a stool or a tea table, which
+the following eye lets cross the view, and of a railing by 12 cm, `walk.rails` / `walker.railNear`: `inWay`) and stretches its time so that it never turns faster than 144° a second going there (190° back) nor
+travels faster than 15 m/s. Only with `prefers-reduced-motion` do the shutter's two ink leaves (`#curtain.cut`, drawn
+frame by frame) close, the eye is moved, and they open. The way is worked out a little at a time (`planSteps`, a generator,
+at most `DIRECT.budget`, 4 ms, of a frame), the eye waiting where it is until it is known (a frame, at most about a dozen);
+the way back, worked out while the swing goes there, is taken at once if neither end has moved. `node tools/director-swings.mjs`
+measures every swing from twelve directions (time, route, nearest surface of the real meshes, near-plane cuts, frames waited,
+most milliseconds in a frame). `game.js` calls `y.direct(id)` when the
+observance begins and `y.direct(null)` when it ends; `rites.js` sends it home `y.directOut()` seconds before the hands are
+done (`homeward`), but only once it has arrived (`y.directArrived()`); an observance over (or nearly) before its swing has arrived lets it arrive, rest
+`DIRECT.beat` (0.6 s) and then come home (`back({ soft: true })`; no soft return leaves a shot it has rested on for less): the observance never turns a swing back half way, the visitor's
+step, stick, drag, tap on the ground or Esc does, at once. Any step, stick, tap on the ground, drag of the view, turn of the held mouse or Esc sends it home at
+once; pressing E again at the bell does not. A door, `travel`, `place`, `__pose` and 回到起点 drop it without a swing.
+While it is away `body.directing` fades the way, the slips and the book (not the button, what is said, the hint line,
+the breath or the stick), and the brush rings on the ground are not drawn. When the eye is sent, `warmShot` draws the
+place once from the shot into a small unseen target (with whatever is marked `userData.warm`, such as the well's
+rings), so nothing it first sees stalls the swing; not `renderer.compile`, which compiles every room under the courts.
+A shot marked `off` (the well's, `off: "#99"`: its niche is unlit until #76) is kept in the data and tested, but not gone to.
+An observance made sitting sets him on its seat's own top (`placeLift` in `site.js`), as sitting down anywhere does. 自动镜头 in the pause menu (`settings.autocam`, on by default) turns it off; under `?shot` it is off
+except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), raised on the way home it is
+with him at once, and a shot does not drift while the camera is up; on a touch screen the slips stay, faint, so 留影 can
+be reached. `tests/unit/director.test.mjs` holds every shot clear of solids, him and his things
+inside the safe area (NDC within 0.9 at 16:9, 4:3, 9:16, 19.5:9), the drift within 1°/s, every swing from twelve
+directions round each place within 2.4° (back: 3.2°) and 0.25 m a frame, through nothing, and never cut; the `director` scenario
+does it in the page. `__director()` reports phase, weight, cuts, swings and the largest turn between frames.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
@@ -367,7 +405,7 @@ drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and pape
 (`unicode-range`) so that a slip written down the page has its commas in place.
 
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
-opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, how wide the view is (`fov`, degrees
+opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, 自动镜头 (`autocam`: the eye goes to each place's shot during an observance), how wide the view is (`fov`, degrees
 added to the walk's 50° behind him or 65° from his eyes; the fixed views keep 44°/52°), volume, the key card, and
 a way back to the start of the path, and 鸣谢 (the page of thanks and sources, below). The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
 validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
@@ -386,7 +424,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__director()` (the eye during an observance: phase, weight, cuts and swings), `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
