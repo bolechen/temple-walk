@@ -508,6 +508,7 @@ export function createMonk() {
     },
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
+    shadow: patch,
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
     // `speed` in metres a second. `pose`: false to stand or walk, true or "pray" for palms together, "sit" to sit with
     // legs folded (on a cushion), "chair" to sit on a stool as on a chair, "hop" in the air, "bind" for the A-pose he is bound in. `surfaceAt(x, z)` is the ground under a
@@ -699,7 +700,12 @@ export function createMonk() {
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.
       const a = sun.az - group.rotation.y, off = (sun.len - 1) * 0.42;
-      patch.rotation.y = a; patch.scale.set(1, 1, sun.len); patch.position.set(Math.sin(a) * off, 0.03, Math.cos(a) * off); patch.material.opacity = sun.op;
+      // In the air (a jump, a hop off a porch) the patch stays on the floor under him, as far below the group as that floor
+      // is, and thins and spreads with the height (to six tenths as dark and a fifth wider at a jump's top, 0.46 m);
+      // seated, or on the way to a seat, it goes with him as before.
+      const free = 1 - Math.max(seat, perch), under = free > 0 && surfaceAt ? surfaceAt(group.position.x, group.position.z) : 0;
+      const up = free > 0 && Number.isFinite(under) ? Math.max(0, group.position.y - under) * free : 0, jumpAir = Math.min(1, up / 0.46);
+      patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
       group.updateMatrixWorld(true);
     },
   };
