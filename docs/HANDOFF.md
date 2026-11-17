@@ -31,6 +31,13 @@
 - **测试**：`tests/unit/link.test.mjs`（7 项，含阁楼与 `devpose`）、`tests/unit/devpose.test.mjs`（4 项）；e2e `views` 场景在 `dist/` 上调用 `__debugURL()`，再用返回的地址重开一页，断言 `__yard()` 的 x/z/yaw/pitch、view、season、time 一致，且地址不被改写。本地结果：check 72 files 0 问题、typecheck 通过、单测 367/367、views 180 s 通过（SwiftShader）。
 - **没做**：访客入口、管理员口令/彩蛋开关、每区域独立 URL。链接不含仪轨进度、香、快门、推拉、转场。
 
+## 2026-11-17：拖动视角时的右键（Issue #168）
+
+所有者问「要不要屏蔽右键，检查行业做法」后定「按第三种加上」。行业做法：MDN 与 three 的 `OrbitControls` 都只把 `contextmenu` 拦在需要它的元素上；全局屏蔽是反模式（Firefox Shift+右键仍可绕过）。
+
+- 只在 `#yardGl` 的 `contextmenu` 上拦，条件是 `down && down.moved`（指针按下、且拖动已越过点击阈值）；空闲右键、松手后、菜单/卡片/鸣谢等一律保留浏览器菜单。
+- 测试：e2e `views` 三条断言（空闲不拦、拖动中拦、松手恢复），实现前中间那条失败。本地 check/typecheck/单测/views 通过；不在真机上看原生菜单（Playwright 只看 `defaultPrevented`）。
+
 ## 2026-11-16 深夜：美术第一阶段「便宜的电影感」（#72，分支 `claude/art-72-phase1`，待评审）
 
 开发方按 `docs/t00/art-goal.md` 第一阶段做的，评审人是主创；没有自评通过，没有改验收结论。

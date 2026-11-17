@@ -1041,6 +1041,14 @@ const scenarios = {
       "the console's link does not open where he stood: " + JSON.stringify({ before, after }));
     expect(await u.page.evaluate(() => location.search) === "?" + search, "the published page should not write the console's devpose into the address");
     expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A right-click is the browser's own menu, except in the middle of a look-drag, where it can only interrupt: the
+    // canvas takes it just then, and gives it back when the drag is let go.
+    const menu = () => t.page.evaluate(() => { const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true }); document.getElementById("yardGl").dispatchEvent(e); return e.defaultPrevented; });
+    expect((await menu()) === false, "a right-click with no drag should be the browser's own menu");
+    await t.page.mouse.move(210, 400); await t.page.mouse.down(); await t.page.mouse.move(280, 400, { steps: 6 });
+    expect((await menu()) === true, "a right-click in the middle of a look-drag should not open the browser's menu");
+    await t.page.mouse.up();
+    expect((await menu()) === false, "after the drag is let go, the browser's menu should be back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.

@@ -248,6 +248,7 @@
 | 馆藏说明 32 件的日文、英文 | `levels/t00/locales/ja.js`、`en.js`、`levels/t00/works-local.js` | 译自我们自己据馆方著录写的中文说明（`works.js`），未转抄馆方外文著录；日本藏品用日本通行名称；题赞诗句的英文为自拟译法；馆方来源行照原样保留 | 自拟；名称按常理 |
 | 日文字体 Klee One、Noto Serif JP、Yuji Boku、Yuji Syuku；英文 EB Garamond | `shared/fonts/*-ja.woff2`、`*-en.woff2` | google/fonts，均 SIL OFL；Klee One 是霞鹜文楷的母本，所以日文与中文同一手笔 | 已核许可 |
 | 正式站控制台的 `__debugURL()`：返回当前位姿、视角、季节时辰、所在殿室或阁楼的地址（`?cam=…&view=…&season=…&time=…&in=…&up=…&devpose`），只返回字符串，不改访客地址栏、不发往别处 | `app/src/link.js`、`app/yard.js` 的 `__debugURL`、`tests/unit/link.test.mjs`、e2e `views` 场景 | 所有者 2026-11-17 的要求（「加一个隐藏的函数，仅在控制台用，eg getDebugUrl」「开 pr 做」）；地址写法沿用已有的 `?devpose`，`devpose` 在正式页仍是惰性的（本地开发服务器才跟随） | 所有者指定；写法自拟 |
+| 拖动视角时右键不弹浏览器菜单：只在 `#yardGl` 上、且指针按下并已移动时拦 `contextmenu`；空闲右键仍是浏览器自己的菜单，松手即恢复 | `app/yard.js` 的 canvas `contextmenu`、e2e `views` 场景 | 所有者 2026-11-17「按第三种加上」；MDN 建议只挂在需要自定义菜单的区域；three.js `OrbitControls` 只在自身 `domElement` 上拦（右键是平移），`PointerLockControls` 不拦；全局屏蔽是反模式，Firefox 的 Shift+右键还能绕过 | 所有者指定；做法据 MDN 与 three 源码 |
 
 ## 得句十四句的核对（2026-11-15）
 
