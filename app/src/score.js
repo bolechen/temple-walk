@@ -51,6 +51,8 @@ export function createZoneKeeper(hold = 2) {
       if (cand !== stable && now - since >= hold) stable = cand;
       return stable;
     },
+    // Where he is, known at once (the prologue's title says he has come round the screen wall): no two seconds' wait.
+    settle(zone, now) { stable = cand = zone; since = now; },
     get stable() { return stable; },
     get candidate() { return cand; },
   };
@@ -191,6 +193,17 @@ export function makePhrase(section, opts) {
   return { section, first, events, length, rest: p.rest.map((v) => v * mood.rest), sig: section + ":" + events.map((e) => e.voice[0] + e.m).join(",") };
 }
 
+// ---- The prologue's title ----
+// The first time he comes round the screen wall with the gate before him, the title rises and the gate's first phrase
+// begins with it: the theme's first five notes, the first whole phrase of the visit. Its first D is the title's note, so
+// the string is brought forward to sound a moment after the title, the held fifth and the low string with it.
+export const TITLE_LEAD = 0.3;   // seconds from the title to the string's first note
+export function titlePhrase(r, mood = moodMusic()) {
+  const p = makePhrase("gate", { r, seals: 0, first: true, mood }), melody = p.events.filter((e) => e.voice !== "pad" && e.voice !== "low");
+  const d = Math.max(0, Math.min(...melody.map((e) => e.at)) - TITLE_LEAD);
+  return { ...p, events: p.events.map((e) => ({ ...e, at: Math.max(0, e.at - d) })), length: p.length - d };
+}
+
 // ---- The close of the chapter ----
 // Not a phrase of a place but music written to the close (rites.close, game.js's finale): `bell` is when the far bell
 // sounds, `title` when the title comes, in seconds from the start of the close. While the words are said the string
@@ -261,10 +274,15 @@ export function createConductor(seed = 1) {
     // theme still owed waits until it is over.
     close(now, p, zone) {
       if (completeAt < Infinity) { completeDue = true; completeAt = Infinity; }
-      const was = now < notesEnd; section = "ending"; startedIn = zone; first = true; cutting = false; count++; lastSig = p.sig;
+      return this.begin(now, { ...p, section: "ending" }, zone);
+    },
+    // A phrase begun now because something in the walk says so (the close, the prologue's title), whatever was sounding.
+    begin(now, p, zone) {
+      const was = now < notesEnd; section = p.section; startedIn = zone; first = !!p.first; cutting = false; count++; lastSig = p.sig; heard.add(p.section);
       const start = now + (was ? 0.6 : 0.1); notesEnd = start + p.length; restEnd = notesEnd + between(r, p.rest[0], p.rest[1]);
       return { ...p, start, notesEnd, restEnd, n: count, faded: was };
     },
+    heard: (sec) => heard.has(sec),
     // Passed over: what sounds fades as on a change of place, and the place's music comes back after a short rest.
     leave(now) {
       if (section !== "ending" || now >= notesEnd || cutting) return null;

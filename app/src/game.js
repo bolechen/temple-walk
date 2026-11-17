@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose } from "./audio.js";
+import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
 import { placeLift } from "./site.js";
@@ -341,7 +341,7 @@ export function createGame(y) {
   // pilgrimage: kept until the book is emptied (从头走起, 重新朝山). Not on a page that names its own place.
   const TITLED = "yunjing.prologue.v1";
   let titled = (() => { try { return localStorage.getItem(TITLED) === "1"; } catch { return false; } })(), titleShown = 0;
-  const forgetTitle = () => { titled = false; try { localStorage.removeItem(TITLED); } catch {} };
+  const forgetTitle = () => { titled = false; awaitTitle(free); try { localStorage.removeItem(TITLED); } catch {} };
   const prologueTitle = (hold = false) => {
     const el = $("prologue"); if (!el) return;
     titled = true; titleShown++; if (free) { try { localStorage.setItem(TITLED, "1"); } catch {} }
@@ -363,6 +363,7 @@ export function createGame(y) {
   // go on (接着走) from where they were, or to begin again (从头走起, asked twice: it empties the book).
   const named = SEALS.filter((d) => places[d.id] && !places[d.id].room).map((d) => ({ place: d.place, at: places[d.id].at }));
   const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter") || (BENCH && (Q.has("at") || Q.has("play") || Q.has("seals"))));   // a tool or a test that names its own place is left where it asked to be
+  awaitTitle(free && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
   let left = free ? readPlace(localStorage) : null, kept = 0;
   if (left && y.walker.blocked(left.x, left.z)) left = null;
   const offer = () => {

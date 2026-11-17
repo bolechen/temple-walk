@@ -251,7 +251,7 @@ over the picture, the music waits (`holdMusic`) and the line about walking waits
 `yard.js` plays it; `__opening()` reports it, `__openingAt(secs)` holds the eye there for a picture (`node
 tools/opening-views.cjs`: its three movements on three screens, the first frame in four moods). The prologue's title
 (`#prologue`, `prologueTitle` in `game.js`, `atGate`): the first time he comes round the screen wall with the gate before
-him, 序章 云径禅寺 rises down the right of the picture with the theme's first note (`prologueNote`) and fades, once in a
+him, 序章 云径禅寺 rises down the right of the picture with the theme's first note (`prologueNote`), which is the first note of the gate's first phrase begun with it (`titlePhrase` in `score.js`; until the title has risen the gate's place keeps the stair's music, `awaitTitle`), and fades, once in a
 pilgrimage (`yunjing.prologue.v1`, emptied with the book); `__prologue(true)` raises it for a tool.
 `tests/unit/opening.test.mjs` holds the way, the skip, the hold and who sees it; the `opening` scenario plays it in the page.
 
