@@ -8,7 +8,7 @@
   "units": "metres; +x east; +z south (north/uphill is -z); y up",
   "origin": "the centre of the temple gate (山门), ground at 42 m above sea level (SRTM estimate)",
   "height_note": "ground_m is an SRTM estimate (±5-10 m); eye_m is above the local ground. Do not treat either as survey data.",
-  "season_time": "proposal: winter clear morning (T01-J01), alternative late-autumn after rain (T01-J02)",
+  "season_time": "whitebox neutral daylight first; then B01 autumn-fog courtyard as the first art comparison (S58); winter clear with the pagoda shadow on the caitai field as a separate variant; B02 cold dark interior",
   "fov_deg": 44,
   "cameras": [
     {
