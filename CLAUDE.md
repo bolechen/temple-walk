@@ -371,7 +371,7 @@ there is no view button and no jump button.
 **The seasons are earned (`journey.opened()`, `body.seasons`).** A first visit is the visitor's own season and hour and offers no
 choice. Filling the book the first time opens them (`opened` in `yunjing.journey.v1`, kept through 重新朝山): `game.js`
 sets `body.seasons`, and everything marked `need-seasons` shows (a row in the photograph's settings, two rows in the pause
-menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
+menu, T in the key card); the line at the foot of the view says so once (`told`). In the pause menu and the T panel the hour row begins with 随时辰 (`data-follow`), the ring on it by default: the hour follows the visitor's clock (`hourFollow` in `mood.js`, checked every 20 s in `yard.js`, a cut like any change of hour, paused while the camera is up) until a hand picks one (`state.follow = false`), which holds for that page only, is stored nowhere and is gone on reload; pressing 随时辰 returns to the clock (#135). The photograph's own rows are unchanged. `?time=`, `?shot`/`?show`/`?cam` and `__mood()` start with `follow` off. `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
 **Four languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese, English or Korean, by `?lang=`,

@@ -138,7 +138,8 @@
     "yard.js：pointerup 里 toHall 加 !onBase（他的位置在 hall.box 的 xz 范围内时不成立），站在前廊、台阶上点地面就走到点的地方；站在院子里点大殿仍经台阶脚走到殿门",
     "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。",
     "docs：景观评审 docs/t00/landscape-review.md（#112，只评审，没有改 app/），后续 issue #114–#119；tools/gpu/job.cjs 可拍任意 ?cam= 地址",
-    "feat(opening)：入山后的开场镜头（app/src/opening.js，用 director 的限速、inWay、墨帘）；山钟 mountainBell、序章琴音 prologueNote、配乐等交还后才开始 holdMusic；序章标题 #prologue（每趟朝山一次）；竹林范围挪到 site.js 的 GROVE；埋点 opening.played / opening.skipped / opening.title（Issue #110，PR #136）"
+    "feat(opening)：入山后的开场镜头（app/src/opening.js，用 director 的限速、inWay、墨帘）；山钟 mountainBell、序章琴音 prologueNote、配乐等交还后才开始 holdMusic；序章标题 #prologue（每趟朝山一次）；竹林范围挪到 site.js 的 GROVE；埋点 opening.played / opening.skipped / opening.title（Issue #110，PR #136）",
+    "Issue #135 所有者「先做折中」（开发方陈述）：时节开放后，歇脚菜单和 T 面板的时辰一行第一项是「随时辰」，默认圈在它上面，画面跟访客本地的真实时间走，跨过晨/昼/暮/夜的分界时自行换（20 秒查一次，留影举起或冻结时不换；换时辰现状是硬切，没有过渡）；手动选某个时辰只在这一页有效，不写入 localStorage，刷新回到「随时辰」；点「随时辰」立刻回到真实时辰。季节照旧自由选且不保存；留影设置的时辰行不动（在留影里换的时辰放下相机后保留，现状如此）。"
   ],
   "known_issues": [
     "Issue #71：观水转场移到 #99（井龛无光、拱券待 #76）；吃茶挪瓶子后待主创复看；没有真人试过转场晕不晕",
@@ -441,7 +442,8 @@
     "#80 A 路：上台阶只有单元测试，没有截图；T4 帧时间未量（面数贴图未变）；改后未在真机上看过",
     "#100：未在真机、未在 PR 预览上操作；主创需按 issue 关闭条件复核（上香→出殿→点山门方向→走下台阶）",
     "景观评审的面数与帧时间是估算，未实测；手机未测",
-    "开场在手机与 Mac 上的帧时间未测；序章标题文字待所有者看图定（#110）"
+    "开场在手机与 Mac 上的帧时间未测；序章标题文字待所有者看图定（#110）",
+    "#135：换时辰仍是硬切，没有渐变；字体已为新字「随」重切（0358322），未在真机上看过"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",

@@ -1162,6 +1162,26 @@ const scenarios = {
   } },
   // The seasons are the visitor's once the book has been filled: not offered before, offered after in the photograph's
   // settings, the pause menu and T, said once, and still open after 重新朝山 empties the book for a second walk.
+  // #135: with the book filled the hour is "随时辰" (the clock) until a hand chooses one; the choice is for this page only.
+  hour: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&enter=1" + BARE, { viewport: { width: 900, height: 600 } });
+    await t.page.evaluate((ids) => localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 })), ["bell", "incense", "tea", "sutra", "well", "lamp", "summit"]);
+    await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    const pressed = (sel) => t.page.getAttribute(sel, "aria-pressed");
+    await t.page.keyboard.press("Escape");
+    expect(await t.page.$eval('#menu .opts:has([data-follow]) > :first-child', (e) => e.hasAttribute("data-follow")), "「随时辰」 is not the first choice in the menu's hour row");
+    expect(await pressed("#menu [data-follow]") === "true" && await pressed('#menu [data-time="dawn"]') === "false" && await pressed('#menu [data-time="day"]') === "false", "the ring should sit on 「随时辰」, not on the hour that happens to be now");
+    await t.page.click('#menu [data-time="dawn"]');
+    expect((await t.probe()).time === "dawn" && await pressed("#menu [data-follow]") === "false" && await pressed('#menu [data-time="dawn"]') === "true", "choosing 晨 did not hold");
+    await t.page.click("#menu [data-follow]");
+    expect(await pressed("#menu [data-follow]") === "true", "「随时辰」 did not take the ring back");
+    await t.page.click('#menu [data-time="night"]');
+    expect(await t.page.evaluate(() => Object.keys(localStorage).every((k) => !/hour|time|mood|season/i.test(k))), "the chosen hour was stored");
+    await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    await t.page.keyboard.press("Escape");
+    expect(await pressed("#menu [data-follow]") === "true" && await pressed('#menu [data-time="night"]') === "false", "after a reload the hour should be 「随时辰」 again");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   seasons: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 900, height: 600 } });
     const offered = () => t.page.evaluate(() => document.body.classList.contains("seasons"));
