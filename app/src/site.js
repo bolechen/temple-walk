@@ -34,6 +34,28 @@ export const APPROACH = { top: SITE.fore, w: 4, rise: 6, rise2: 4.5, run: steps(
 APPROACH.zMid = (APPROACH.zA0 + APPROACH.zA1) / 2; APPROACH.xB0 = APPROACH.xTurn + APPROACH.run2; APPROACH.xB1 = APPROACH.xB0 + 5.6;
 APPROACH.xC = (APPROACH.xB0 + APPROACH.xB1) / 2; APPROACH.zC0 = APPROACH.zA1 + APPROACH.run3; APPROACH.zC1 = APPROACH.zC0 + 5.4; APPROACH.end = APPROACH.zC1 + 0.4;
 
+// Where the near bamboo grows (bamboo.js): all round the zigzag you arrive by and the forecourt, and beyond the tea; and
+// where it is kept clear, the path and the half-way pavilion. Culms stand 9 to 15 m over the land (`top`). Shared with the
+// opening (opening.js), whose way down keeps over their tops except where it comes down the clear way of the path.
+const nearRect = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
+export const GROVE = {
+  top: 15,
+  areas: [
+    { x0: -28, x1: 44, z0: SITE.fore + 0.8, z1: APPROACH.zC1 + 12, n: 1150 },
+    { x0: -36, x1: -23.2, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 }, { x0: 23.2, x1: 36, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 },
+    { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: HILL.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: HILL.zS, n: 190 },
+  ],
+  /** May bamboo grow here? */
+  keep(x, z) {
+    const A = APPROACH;
+    if (z > SITE.fore - 0.5) return !(nearRect(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || nearRect(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || nearRect(x, z, 2.4, 8.0, A.zA1, A.zA1 + 5.8, 0.6) || nearRect(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || nearRect(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
+    if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
+    return true;
+  },
+  /** Is there bamboo at (x, z) (within an area, and not kept clear)? */
+  grows(x, z) { return GROVE.areas.some((a) => x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1) && GROVE.keep(x, z); },
+};
+
 // Height of the land outside the walls, under the approach, and on the hill.
 export function terrain(x, z) {
   const ax = Math.abs(x), A = APPROACH;

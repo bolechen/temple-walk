@@ -7,7 +7,8 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush, farBell } from "./audio.js";
+import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic } from "./audio.js";
+import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
@@ -338,7 +339,28 @@ export function createGame(y) {
   window.__goBack = (id) => goBack(id);
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
-  $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
+  $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
+
+  // ---- The prologue's title, at the gate ----
+  // The first time he comes round the screen wall with the gate whole before him, 序章 云径禅寺 rises at the side of the
+  // picture with one note of the qin (the theme's first) and fades; it takes nothing from the visitor. Once in each
+  // pilgrimage: kept until the book is emptied (从头走起, 重新朝山). Not on a page that names its own place.
+  const TITLED = "yunjing.prologue.v1";
+  let titled = (() => { try { return localStorage.getItem(TITLED) === "1"; } catch { return false; } })(), titleShown = 0;
+  const forgetTitle = () => { titled = false; try { localStorage.removeItem(TITLED); } catch {} };
+  const prologueTitle = (hold = false) => {
+    const el = $("prologue"); if (!el) return;
+    titled = true; titleShown++; if (free) { try { localStorage.setItem(TITLED, "1"); } catch {} }
+    // Written in the brush, in the temple's own characters (Japanese forms in Japanese, glyphs()); in English and Korean the
+    // line is also said under it in words the visitor reads, as the title page does.
+    const read = lang === "en" || lang === "ko" ? `<small>${t("序章　云径禅寺")}</small>` : "";
+    el.innerHTML = `<b><span>${glyphs("序章")}</span><span>${glyphs("云径禅寺")}</span></b>${read}`;
+    el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on"); prologueNote(); track("opening.title", {});
+    if (!hold) setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 1300); }, 4000 * Math.max(fast, 0.5));
+  };
+  y.onTick(() => { if (!titled && entered && free && !y.inside() && !y.openingActive() && atGate(y.where())) prologueTitle(); });
+  // What the title has done (and, for the picture tools, `__prologue(true)` raises it now, wherever he stands; "hold" keeps it up).
+  window.__prologue = (show) => { if (show === true || show === "hold") prologueTitle(show === "hold"); return { titled, shown: titleShown, on: !!$("prologue")?.classList.contains("on"), text: $("prologue")?.textContent || "" }; };
 
   // ---- The title ----
   const title = $("title");
@@ -371,13 +393,24 @@ export function createGame(y) {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); left = null; b.dataset.asked = "";
-    const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter();
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); forgetTitle(); left = null; b.dataset.asked = "";
+    const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
-  const enter = () => {
+  // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first
+  // (src/opening.js): the bell up on the mountain, the eye coming down to him; the first lines (where to go, how to walk)
+  // wait until the walk is his, and so does the music. A visitor who goes on from where they were steps straight in.
+  const enter = (again = false) => {
     if (entered) return;
-    track("demo.enter", { resumed: !!(left && titleOffer(journey.count(), SEALS.length, left, y.start).going), seals: journey.count(), tier: y.tier || "" });
-    entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast);   // after the first line about walking has gone
+    const resumed = !!(left && titleOffer(journey.count(), SEALS.length, left, y.start).going);
+    track("demo.enter", { resumed, seals: journey.count(), tier: y.tier || "" });
+    const o = openingFor({ seals: journey.count(), place: left, start: y.start, params: Q, again: again === true, autocam: y.autocam(), reduced: y.reduced() });
+    if (o.eye !== "none") holdMusic(true);
+    if (o.bell) mountainBell();   // inside the click that stepped in, so the browser lets it sound
+    entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered");
+    const begin = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
+    if (o.eye === "none") { begin(); return; }
+    track("opening.played", { eye: o.eye, again: again === true });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
   };
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
   // ?show=shot-<id>: the observance begun where he stands, with the eye already on its shot (tools/shots.js).

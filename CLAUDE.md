@@ -75,7 +75,8 @@ pnpm run nearplane                  # ~80 s: the camera's near plane cuts into n
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
 node tests/e2e/run.cjs seats        # every cushion and stool sat on, hurrying, the place not drawn
 node tests/e2e/run.cjs loft         # up the summit pavilion: the stair, round the balcony, a photograph, a reload, down and out (~5 min)
-node tools/play-t00.cjs [outdir] [summit bell tea phone director]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic); `director` films the eye going to each place's shot and back
+node tools/opening-views.cjs [outdir] [--only=frames|moods]   # the opening after 入山: 起/承/落 and the gate's title at 16:9, 4:3 and a phone; the first frame in four moods
+node tools/play-t00.cjs [outdir] [summit bell tea phone director opening opening-phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic); `director` films the eye going to each place's shot and back
 node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -253,6 +254,24 @@ be reached. `tests/unit/director.test.mjs` holds every shot clear of solids, him
 inside the safe area (NDC within 0.9 at 16:9, 4:3, 9:16, 19.5:9), the drift within 1°/s, every swing from twelve
 directions round each place within 2.4° (back: 3.2°) and 0.25 m a frame, through nothing, and never cut; the `director` scenario
 does it in the page. `__director()` reports phase, weight, cuts, swings and the largest turn between frames.
+
+**The opening after 入山 (`app/src/opening.js`, issue #110).** A first visitor (no seal, no kept place; again after
+从头走起; never under `?cam` `?show` `?shot` `?in` `?enter` `?tour` `?at` `?play` `?seals`: `openingFor`) is shown where
+the walk goes before it is theirs: the eye starts below the library's ridge with only the summit pavilion's upper storeys
+over it in the mist, a bell sounds up the mountain (`mountainBell`, our own G, far and light; the close's `farBell` answers
+it), and the eye is drawn back and down over the roofs, the gate and the tops of the bamboo (`GROVE` in `site.js`, shared
+with `yard.js`'s bamboo), into the clear way of the last flight and onto the following eye behind him (`WAY`,
+`openingPlan`). It is held to the director's limits (15 m/s, 144°/s, every point clear by `inWay`), waits on its first
+frame until the page draws steadily (`OPENING.hold`), and ends on the following eye as it is that frame. A click, key,
+tap, wheel or Esc (swallowed: it walks nobody anywhere) brings it down the rest of the same way in 0.8–1.2 s; only
+reduced motion gets the ink; 自动镜头 off skips it (the bell still sounds). While it plays `body.opening` hides what lies
+over the picture, the music waits (`holdMusic`) and the line about walking waits for the hand-over. `y.opening(eye)` in
+`yard.js` plays it; `__opening()` reports it, `__openingAt(secs)` holds the eye there for a picture (`node
+tools/opening-views.cjs`: its three movements on three screens, the first frame in four moods). The prologue's title
+(`#prologue`, `prologueTitle` in `game.js`, `atGate`): the first time he comes round the screen wall with the gate before
+him, 序章 云径禅寺 rises down the right of the picture with the theme's first note (`prologueNote`) and fades, once in a
+pilgrimage (`yunjing.prologue.v1`, emptied with the book); `__prologue(true)` raises it for a tool.
+`tests/unit/opening.test.mjs` holds the way, the skip, the hold and who sees it; the `opening` scenario plays it in the page.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
@@ -442,7 +461,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__director()` (the eye during an observance: phase, weight, cuts and swings), `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
