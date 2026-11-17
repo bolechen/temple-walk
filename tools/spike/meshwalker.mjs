@@ -6,9 +6,12 @@
 // How each question is put to the meshes:
 //   heightAt   a ray straight down from a ceiling over the level (under the lowest eave, above the highest platform);
 //              the highest face that looks up (normal y > 0.5) with CLEAR metres of air above it is the floor.
-//   blocked    he is a standing cylinder of radius BODY from CLIMB above that floor to CLEAR above it: anything drawn
-//              inside that cylinder stops him. A tread lower than CLIMB is stepped onto; a platform's face, a column, a
-//              table, a wall are in the cylinder. Below CLIMB nothing stops him, above CLEAR nothing does (an eave).
+//   blocked    he is the solid of revolution tools/edges.mjs measures from the real models (his reach at every 5 cm of
+//              height, over every pose: outline.json), standing on that floor. Anything drawn from CLIMB above the floor
+//              to CLEAR above it that comes nearer his centre than his reach at its height stops him; a tread lower than
+//              CLIMB is stepped onto; above CLEAR nothing stops him (an eave). What is marked as a thing to walk round
+//              (`userData.walk = "post"`: a cushion, a low table) stops him at every height and is not a floor.
+//              It is baked once into a grid (see `bake`) and read back cell by cell.
 //   eyeShut    the eye is shut if any face is within EYE_R of it, if the first face straight above it is seen from
 //              behind (it is inside a closed solid), or if faces close it in on all four sides and above (inside a
 //              building's shell).
@@ -16,6 +19,18 @@
 import * as THREE from "three";
 import { MeshBVH, SAH } from "three-mesh-bvh";
 import { BODY } from "../../app/src/geo.js";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
+const HEAD = 0.13;   // over the top of his outline (his hat), up to CLEAR
+/** His reach from his centre over the heights [lo, hi] above the floor he stands on. */
+export const BODY_SHAPE = (typeof process !== "undefined" && process.env.SPIKE_BODY) || "outline";   // or "cylinder": BODY at every height, as the written plan has him
+export function reach(lo, hi) {
+  if (BODY_SHAPE === "cylinder") return BODY;
+  let r = 0; const b = OUTLINE.bin;
+  for (let i = Math.max(0, Math.floor(lo / b)); i * b <= hi + 1e-9; i++) r = Math.max(r, i < OUTLINE.reach.length && OUTLINE.reach[i] > 0 ? OUTLINE.reach[i] : HEAD);
+  return r;
+}
 
 export const MW = Object.freeze({
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform is 0.30-0.45)
@@ -25,13 +40,13 @@ export const MW = Object.freeze({
 });
 
 // What is drawn but is not there to stand on or be stopped by: flames, mist, smoke, leaves cut out of cards.
-const airy = (m) => !m || m.type === "ShaderMaterial" || m.type === "PointsMaterial" || m.name === "flame" || m.transparent || m.alphaTest > 0;
+export const airy = (m) => !m || m.type === "ShaderMaterial" || m.type === "PointsMaterial" || m.name === "flame" || m.transparent || m.alphaTest > 0;
 
 /**
  * Gather the triangles of every solid mesh under `root` whose bounds touch `box` into one geometry in world space.
  * @returns {{ bvh: MeshBVH, names: string[], mat: Uint16Array, tris: number, ms: number }}
  */
-export function gather(root, box) {
+export function gather(roots, box, tag = () => null) {
   const t0 = performance.now(), pos = [], mat = [], names = [], ids = new Map(), v = new THREE.Vector3(), tb = new THREE.Box3(), m4 = new THREE.Matrix4();
   const grow = box.clone().expandByScalar(1);
   const take = (geo, world, name) => {
@@ -44,23 +59,24 @@ export function gather(root, box) {
       pos.push(...tri); mat.push(id);
     }
   };
-  root.traverse((o) => {
+  for (const root of [roots].flat()) root.traverse((o) => {
     if (!o.isMesh || o.userData.walk === false) return;
     const m = Array.isArray(o.material) ? o.material[0] : o.material;
     if (airy(m)) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-    const name = o.userData.ground ? "paving" : m.name || m.type;
+    const name = (o.userData.walk === "post" || tag(o) === "post" ? "post:" : "") + (o.userData.ground ? "paving" : m.name || m.type);
     if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); tb.copy(o.geometry.boundingBox).applyMatrix4(m4); if (tb.intersectsBox(grow)) take(o.geometry, m4.clone(), name); } return; }
     tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if (!tb.intersectsBox(grow)) return;
     take(o.geometry, o.matrixWorld, name);
   });
+  const hash = createHash("sha1").update(Float32Array.from(pos)).digest("hex").slice(0, 12);
   const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   const bvh = new MeshBVH(geo, { strategy: SAH, targetLeafSize: 8 });
-  return { bvh, names, mat: Uint16Array.from(mat), tris: mat.length, ms: Math.round(performance.now() - t0) };
+  return { bvh, names, mat: Uint16Array.from(mat), tris: mat.length, hash, ms: Math.round(performance.now() - t0) };
 }
 
 // The 2D distance from (px, pz) to the part of a triangle between heights y0 and y1, seen from above.
-const clipA = new Float64Array(30), clipB = new Float64Array(30);
+const clipA = new Float64Array(30), clipB = new Float64Array(30), slabY = [0, 0];
 function slabDistance(a, b, c, y0, y1, px, pz) {
   let n = 3, src = clipA, dst = clipB;
   src[0] = a.x; src[1] = a.y; src[2] = a.z; src[3] = b.x; src[4] = b.y; src[5] = b.z; src[6] = c.x; src[7] = c.y; src[8] = c.z;
@@ -73,7 +89,8 @@ function slabDistance(a, b, c, y0, y1, px, pz) {
     }
     n = m; const s = src; src = dst; dst = s; if (!n) return Infinity;
   }
-  let best = Infinity, inside = false;
+  let best = Infinity, inside = false; slabY[0] = Infinity; slabY[1] = -Infinity;
+  for (let i = 0; i < n; i++) { slabY[0] = Math.min(slabY[0], src[i * 3 + 1]); slabY[1] = Math.max(slabY[1], src[i * 3 + 1]); }
   for (let i = 0, j = n - 1; i < n; j = i++) {
     const xi = src[i * 3], zi = src[i * 3 + 2], xj = src[j * 3], zj = src[j * 3 + 2];
     if ((zi > pz) !== (zj > pz) && px < ((xj - xi) * (pz - zi)) / (zj - zi + 1e-12) + xi) inside = !inside;
@@ -103,26 +120,40 @@ export function createMeshWalker(o) {
     let above = S.ceil;
     for (const h of hits) {
       const ny = h.face.normal.y, y = h.point.y;
-      if (ny > 0.5 && above - y >= MW.CLEAR - 1e-6) { last = { y, mat: S.names[S.mat[Math.floor(h.face.a / 3)]] }; return last; }
+      const mat = S.names[S.mat[Math.floor(h.face.a / 3)]];
+      if (mat.startsWith("post:")) continue;   // a cushion or a table is walked round, not stood on: look through it to the floor
+      if (ny > 0.5 && above - y >= MW.CLEAR - 1e-6) { last = { y, mat }; return last; }
       above = y;
     }
     last = null; return null;
   }
   const heightAt = (x, z) => { const S = scope(x, z); if (!S) return fallback.heightAt(x, z); const f = floor(S, x, z); return f ? f.y : region.floorY; };
   const tri = (S, i, a, b, c) => { const ix = S.bvh.geometry.index.array; const p = S.bvh.geometry.attributes.position; a.fromBufferAttribute(p, ix[i * 3]); b.fromBufferAttribute(p, ix[i * 3 + 1]); c.fromBufferAttribute(p, ix[i * 3 + 2]); };
-  // What is in his cylinder standing at (x, z): the name of its material, or null.
-  function inBody(S, x, z, r = BODY) {
-    const f = floor(S, x, z), y = f ? f.y : region.floorY, y0 = y + MW.CLIMB, y1 = y + MW.CLEAR;
-    qbox.min.set(x - r, y0, z - r); qbox.max.set(x + r, y1, z + r);
-    let what = null;
+  // What is drawn within `r` of the vertical line through (x, z), from CLIMB over the floor there (from the floor itself,
+  // for a thing marked to be walked round) up to CLEAR: the material it is made of and the heights over the floor
+  // that it takes up there, or null.
+  function inBody(S, x, z, r) {
+    const f = floor(S, x, z), y = f ? f.y : region.floorY, y1 = y + MW.CLEAR;
+    qbox.min.set(x - r, y + 0.02, z - r); qbox.max.set(x + r, y1, z + r);
+    let what = null, lo = Infinity, hi = -Infinity;
+    const ix = S.bvh.geometry.index.array;
     S.bvh.shapecast({
       intersectsBounds: (box) => box.intersectsBox(qbox),
       intersectsTriangle: (t, i) => {
-        if (slabDistance(t.a, t.b, t.c, y0, y1, x, z) < r) { what = S.names[S.mat[Math.floor(S.bvh.geometry.index.array[i * 3] / 3)]]; return true; }
+        const name = S.names[S.mat[Math.floor(ix[i * 3] / 3)]], post = name.startsWith("post:");
+        if (slabDistance(t.a, t.b, t.c, y + (post ? 0.02 : MW.CLIMB), y1, x, z) < r) {
+          if (!what || post) what = name; lo = Math.min(lo, slabY[0] - y); hi = Math.max(hi, slabY[1] - y);
+          if (post) { lo = 0; }
+        }
         return false;
       },
     });
-    return what;
+    return what && { what, lo, hi, floor: y };
+  }
+  // Is (x, y, z) inside a closed solid: the first face a ray meets, going along +x, is seen from behind.
+  function insideSolid(S, x, y, z) {
+    ray.origin.set(x, y, z); ray.direction.set(1, 0, 0);
+    const h = S.bvh.raycastFirst(ray, THREE.DoubleSide); return !!h && h.face.normal.x > 0.2;
   }
   // The floor he may stand on, baked once into a grid as Recast would: the floor's height in every cell; a cell is a
   // border if something drawn stands in it between CLIMB and CLEAR over that floor, or if a neighbour's floor is more than
@@ -133,14 +164,15 @@ export function createMeshWalker(o) {
     const h = new Float32Array(N), border = new Int16Array(N).fill(-1), shut = new Uint8Array(N), cause = new Int16Array(N).fill(-1), LEDGE = S.names.length;
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const f = floor(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step); h[j * nx + i] = f ? f.y : region.floorY; }
     const t1 = performance.now();
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i, w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71); if (w !== null) border[k] = S.names.indexOf(w); }
+    const rad = new Float32Array(N);   // how far a border cell keeps his centre off: his reach at the heights it takes up
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i, w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71); if (w) { border[k] = S.names.indexOf(w.what); rad[k] = reach(w.lo, w.hi); } }
     const t2 = performance.now();
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; if (border[k] >= 0) continue;
-      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; if (h[jj * nx + ii] - h[k] > MW.CLIMB) { border[k] = LEDGE; break; } } }
-    const R = Math.ceil(BODY / step), disk = [];
-    for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) if (Math.hypot(a, b) * step < BODY) disk.push([a, b]);
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const c = border[j * nx + i]; if (c < 0) continue;
-      for (const [a, b] of disk) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (!shut[kk] || (a === 0 && b === 0)) { shut[kk] = 1; cause[kk] = c; } } }
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; if (border[k] >= 0) continue; let up = 0;
+      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; up = Math.max(up, h[jj * nx + ii] - h[k]); }
+      if (up > MW.CLIMB) { border[k] = LEDGE; rad[k] = reach(0, Math.min(up, MW.CLEAR)); } }
+    const disks = new Map(), diskOf = (r) => { const q = Math.round(r * 100); if (!disks.has(q)) { const R = Math.ceil(q / 100 / step), d = []; for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) if (Math.hypot(a, b) * step < q / 100) d.push([a, b]); disks.set(q, d); } return disks.get(q); };
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k0 = j * nx + i, c = border[k0]; if (c < 0) continue; shut[k0] = 1; cause[k0] = c;
+      for (const [a, b] of diskOf(rad[k0])) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (!shut[kk]) { shut[kk] = 1; cause[kk] = c; } } }
     const t3 = performance.now();
     return { x0: box.x0, z0: box.z0, nx, nz, step, h, shut, cause, names: [...S.names, "ledge"], ms: { floor: Math.round(t1 - t0), body: Math.round(t2 - t1), erode: Math.round(t3 - t2) } };
   }
@@ -170,19 +202,26 @@ export function createMeshWalker(o) {
     },
     onGround(x, z) { const S = scope(x, z); if (!S) return fallback.onGround(x, z); if (room) return false; const f = floor(S, x, z); return !f || f.mat === "paving"; },
     onStairs(x, z) { const S = scope(x, z); if (!S) return fallback.onStairs(x, z); const f = floor(S, x, z); return !!f && f.mat === "steps"; },
-    blocked(x, z) { const S = scope(x, z); if (!S) return fallback.blocked(x, z); const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? G.shut[k] === 1 : inBody(S, x, z) !== null; },
+    blocked(x, z) { const S = scope(x, z); if (!S) return fallback.blocked(x, z); const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? G.shut[k] === 1 : !!inBody(S, x, z, BODY); },
     /** What stopped him there (a material name, or "ledge"), or null: for the comparison. */
-    why(x, z) { const S = scope(x, z); if (!S) return undefined; const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? (G.shut[k] ? G.names[G.cause[k]] : null) : inBody(S, x, z); },
+    why(x, z) { const S = scope(x, z); if (!S) return undefined; const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? (G.shut[k] ? G.names[G.cause[k]] : null) : inBody(S, x, z, BODY)?.what ?? null; },
     /** Bake the grids (outdoors over the region, and the room): returns the milliseconds each part took. */
-    bake(step = 0.05) {
-      grids.outdoors = bake({ ...o.outdoors, ceil: region.ceil }, region, step);
-      if (o.room) { const r = o.room.box; grids.room = bake({ ...o.room.data, ceil: o.room.ceil }, r, step); }
+    bake(step = 0.05, cache = null) {
+      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v3.bin`;
+        if (file && cache.exists(file)) return cache.read(file);
+        const g = bake(S, box, step); if (file) cache.write(file, g); return g; };
+      grids.outdoors = one({ ...o.outdoors, ceil: region.ceil }, region, "court");
+      if (o.room) { const r = o.room.box; grids.room = one({ ...o.room.data, ceil: o.room.ceil }, r, "room"); }
       return { outdoors: grids.outdoors.ms, room: grids.room?.ms, cells: grids.outdoors.nx * grids.outdoors.nz + (grids.room ? grids.room.nx * grids.room.nz : 0) };
     },
     grids,
-    wall(x, z) { const S = scope(x, z); if (!S) return fallback.wall(x, z); return inBody(S, x, z, 0.15) !== null; },
+    wall(x, z) { const S = scope(x, z); if (!S) return fallback.wall(x, z); const y = heightAt(x, z); return !!inBody(S, x, z, 0.15) || insideSolid(S, x, y + 0.8, z); },
     eyeShut(x, y, z, foot) { const S = scope(x, z); if (!S) return fallback.eyeShut(x, y, z, foot); return near(S, x, y, z, MW.EYE_R) || enclosed(S, x, y, z); },
-    railNear(x, y, z, m = 0) { const S = scope(x, z); if (!S) return fallback.railNear(x, y, z, m); return m > 0 && near(S, x, y, z, m) && y < heightAt(x, z) + 1.3; },
+    // Near a railing, or anything else that stands up within `m` of the eye below head height (a floor is not counted).
+    railNear(x, y, z, m = 0) { const S = scope(x, z); if (!S) return fallback.railNear(x, y, z, m); if (m <= 0 || y > heightAt(x, z) + 1.3) return false;
+      qbox.min.set(x - m, y - m, z - m); qbox.max.set(x + m, y + m, z + m); tmp.set(x, y, z); let hitIt = false; const sph = new THREE.Sphere(tmp, m);
+      S.bvh.shapecast({ intersectsBounds: (b) => b.intersectsBox(qbox), intersectsTriangle: (t) => { if (Math.abs(t.getNormal(new THREE.Vector3()).y) > 0.5) return false; if (t.intersectsSphere(sph)) { hitIt = true; return true; } return false; } });
+      return hitIt; },
     get lastFloor() { return last; },
   };
   return me;

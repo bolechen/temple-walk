@@ -4,16 +4,14 @@
 // that the walker built from them can say what a shoe comes down on and what stopped him.
 import "../../tests/unit/dom-stub.mjs";
 import * as THREE from "three";
+import { namedMaterials } from "./mats.mjs";
 
 const { buildSite, LEVELS, SITE } = await import("../../app/src/site.js");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createTrees } = await import("../../app/src/trees.js");
 const { createProps } = await import("../../app/src/props.js");
 
-export function namedMaterials() {
-  const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
-  return new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
-}
+export { namedMaterials };
 
 /** Build everything the walk would draw that stands on the ground. @returns {{ site: any, scene: THREE.Scene, rooms: any, ms: Record<string, number> }} */
 export function buildDrawn() {

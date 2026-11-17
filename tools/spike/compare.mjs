@@ -6,27 +6,20 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import sharp from "sharp";
 import * as THREE from "three";
-import { buildDrawn } from "./scene.mjs";
-import { gather, createMeshWalker, MW } from "./meshwalker.mjs";
-const { createWalker, SITE } = await import("../../app/src/site.js");
+import "../../tests/unit/dom-stub.mjs";
+import { namedMaterials } from "./mats.mjs";
+import { MW } from "./meshwalker.mjs";
+import { drawnWalker, REGION } from "./drawn.mjs";
+const { createWalker, buildSite } = await import("../../app/src/site.js?real");
 const { BODY } = await import("../../app/src/geo.js");
 
 const STEP = +(process.argv[2] || 0.05), OUT = process.argv[3] || "tools/out/spike";
 mkdirSync(OUT, { recursive: true });
-export const REGION = { x0: -22, x1: 22, z0: -24, z1: 34, ceil: 3.0, floorY: 0 };
 
 export async function makeWalkers() {
-  const t0 = performance.now();
-  const drawn = buildDrawn();
-  const t1 = performance.now();
-  const old = createWalker(drawn.site);
-  const outdoors = gather(drawn.scene, new THREE.Box3(new THREE.Vector3(REGION.x0, -2, REGION.z0), new THREE.Vector3(REGION.x1, 20, REGION.z1)));
-  const R = drawn.rooms.rooms.main.room;
-  const roomData = gather(drawn.rooms.rooms.main.group, new THREE.Box3(new THREE.Vector3(R.x0, R.y - 1, R.z0), new THREE.Vector3(R.x1, R.y + 20, R.z1)));
-  const t2 = performance.now();
-  const fresh = createMeshWalker({ outdoors, region: REGION, room: { id: "main", data: roomData, ceil: R.y + 2.6, box: { x0: R.x0 - 0.3, x1: R.x1 + 0.3, z0: R.z0 - 0.3, z1: R.z1 + 0.3 } }, fallback: createWalker(drawn.site), earthZ: SITE.fore + 0.3 });
-  const t3 = performance.now(), baked = fresh.bake(+(process.env.BAKE || 0.05)), t4 = performance.now();
-  return { drawn, old, fresh, outdoors, roomData, R, baked, ms: { bake: Math.round(t4 - t3), build: Math.round(t1 - t0), bvh: Math.round(t2 - t1), outdoorsBVH: outdoors.ms, roomBVH: roomData.ms, parts: drawn.ms } };
+  const t0 = performance.now(), site = buildSite(namedMaterials()), t1 = performance.now();
+  const old = createWalker(site), fresh = drawnWalker(site, createWalker(site), { cache: process.env.NOCACHE ? null : undefined });
+  return { drawn: { site }, old, fresh, outdoors: fresh.outdoors, roomData: fresh.roomData, R: fresh.R, baked: fresh.cost.bake, ms: { site: Math.round(t1 - t0), ...fresh.cost } };
 }
 
 // Why the old plan answers as it does at (x, z): which written thing.
