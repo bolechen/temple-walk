@@ -45,6 +45,9 @@ async function open(browser, base, query, opts = {}) {
   await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   // A visitor arriving meets the title first and steps in from it; a scenario may ask to be left at the title.
   if (opts.enter !== false && (await page.isVisible("#title"))) { await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await page.click("#enterBtn"); await page.waitForFunction(() => document.body.classList.contains("entered")); }
+  // A first visitor is shown the mountain before the walk is theirs (src/opening.js); a scenario stepping in this way passes
+  // over it as a visitor may, with Esc, and begins once the walk is handed back (the `opening` scenario watches it whole).
+  if (opts.enter !== false && (await page.evaluate(() => !!window.__opening && window.__opening().active))) { await page.keyboard.press("Escape"); await page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
   const t = {
     page, errors, close: () => ctx.close(),
     state: () => page.evaluate(() => window.__yard()),
