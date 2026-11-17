@@ -1029,6 +1029,18 @@ const scenarios = {
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
+    // The console's link to this view (`__debugURL`, src/link.js): the published page hands out an address that opens on
+    // the same place, look and mood. It carries `devpose`, inert here and followed by a dev server.
+    const link = await t.page.evaluate(() => window.__debugURL());
+    expect(typeof link === "string" && /[?&]cam=0,33,0,-0\.05(&|$)/.test(link) && !/[?&]shot=/.test(link) && /[?&]devpose(&|$)/.test(link), "the console's link is not the address of this view: " + link);
+    const search = new URL(link).search.slice(1), before = await t.state();
+    const u = await open(b, base, search, { enter: false });
+    const after = await u.state();
+    expect(after.x === before.x && after.z === before.z && Math.abs(after.yaw - before.yaw) < 1e-3 && Math.abs(after.pitch - before.pitch) < 1e-3
+      && after.view === before.view && after.season === before.season && after.time === before.time,
+      "the console's link does not open where he stood: " + JSON.stringify({ before, after }));
+    expect(await u.page.evaluate(() => location.search) === "?" + search, "the published page should not write the console's devpose into the address");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
