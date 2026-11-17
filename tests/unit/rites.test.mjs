@@ -111,3 +111,19 @@ test("the closing shot leaves air over the pavilion: its top stays a twelfth of 
   const low = new THREE.Vector3(0, 50, -12);
   assert.ok(aimToFrame(cam, aim, low, 50, 16 / 9, 0.08).y === aim.y, "a top already well inside the picture moves nothing");
 });
+
+test("the closing shot keeps the ridge's end ornaments clear too, the one nearer the eye included", async () => {
+  // A longer eave lengthens the ridge, and the ornament at its near end stands higher in the picture than its middle:
+  // with the top storey 2.4 m out under a 3.2 m eave, framing the middle alone left 7.5% of a wide picture over it.
+  const { aimToFrame } = await import("../../app/src/rites.js");
+  const tall = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - site.lofts.lingxiao.at[0], (r.z0 + r.z1) / 2 - site.lofts.lingxiao.at[1]) < 2).sort((p, q) => q.top - p.top)[0];
+  assert.ok(tall && tall.crest && tall.crest.length === 2, "the pavilion's top roof does not record the tips of its end ornaments");
+  for (const [x, y, z] of tall.crest) assert.ok(y > tall.top - 0.3 && Math.abs(z - (tall.z0 + tall.z1) / 2) < 0.01 && Math.abs(x - (tall.x0 + tall.x1) / 2) > 2, `an ornament tip at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
+  const tops = tall.crest.map(([x, y, z]) => new THREE.Vector3(x, y, z)), cx = (tall.x0 + tall.x1) / 2, cz = (tall.z0 + tall.z1) / 2;
+  const cam = new THREE.Vector3(cx + 9, tall.top - 12, cz + 40), aim = new THREE.Vector3(cx, tall.top - 18, cz);
+  for (const [fov, aspect] of [[50, 16 / 9], [50, 9 / 19.5], [65, 4 / 3]]) {
+    const a = aimToFrame(cam, aim, tops, fov, aspect, 0.08), c = new THREE.PerspectiveCamera(fov, aspect, 0.1, 500);
+    c.position.copy(cam); c.lookAt(a); c.updateMatrixWorld(); c.updateProjectionMatrix();
+    for (const t of tops) assert.ok(t.clone().project(c).y <= 1 - 2 * 0.08 + 1e-3, `fov ${fov}, aspect ${aspect.toFixed(2)}: an ornament at ${t.clone().project(c).y.toFixed(3)}`);
+  }
+});

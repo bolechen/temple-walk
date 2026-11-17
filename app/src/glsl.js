@@ -10,6 +10,12 @@ export const U = {
   tTrail: { value: null }, uTrail: { value: new THREE.Vector4(0, 0, 1 / 32, 0) },
   // What the roofs keep dry (shelter.js): the map, and where it lies (zero until the place is built).
   tShelter: { value: null }, uShelter: { value: new THREE.Vector4(0, 0, 0, 0) },
+  // The colour of lamplight seen through paper (the lattice's glow after dusk), set by the hour (mood.js `win`).
+  uWin: { value: new THREE.Color(0.8, 0.47, 0.18) },
+  // The mist lies in layers (fog.js): how much of it follows the height (0: none, the air the same at every height),
+  // the height it is thickest below, one over the height in which it thins by e, and how many times thicker it may
+  // grow below that height.
+  uFogLayer: { value: new THREE.Vector4(0, 0, 0.04, 2.5) },
 };
 
 export const NOISE = /* glsl */`
@@ -41,6 +47,20 @@ vec3 bumpN(vec3 sp, vec3 N, float h){
   vec3 g=sign(det)*(dhx*r1+dhy*r2); return normalize(abs(det)*N-g);
 }`;
 
-// Distance fog, matching THREE.FogExp2 so hand-written shaders sit in the same air.
+// Layered mist: how much thicker (or thinner) the air is along a line of sight from a height yc to a height yp than
+// the mist's plain density says. The density falls off upward as exp(-(y - base) / H); this is its mean along the line,
+// worked out exactly, then mixed with the plain air by the layer's strength. With no layer (L.x = 0) it is 1.
+export const FOGLAYER = /* glsl */`
+float fogLayer(float yc, float yp, vec4 L){
+  if(L.x<=0.) return 1.;
+  float a=clamp((yc-L.y)*L.z,-L.w,24.), b=clamp((yp-L.y)*L.z,-L.w,24.), d=b-a;
+  float mean=abs(d)<1e-3?exp(-a):(exp(-a)-exp(-b))/d;
+  return 1.-L.x+L.x*mean;
+}`;
+
+// Distance fog, matching THREE.FogExp2 so hand-written shaders sit in the same air; given the height of the point,
+// the mist's layers too (needs FOGLAYER and `uniform vec4 uFogLayer`).
 export const FOG_DENSITY = 0.009;
-export const fogMix = (c, d) => `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)));`;   // needs `uniform float uFogD`
+export const fogMix = (c, d, y) => y
+  ? `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)*fogLayer(cameraPosition.y,${y},uFogLayer)));`
+  : `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)));`;   // needs `uniform float uFogD`

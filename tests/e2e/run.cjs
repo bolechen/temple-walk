@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, rites, stairs, drop), and the long walk that
+// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
@@ -524,6 +524,59 @@ const scenarios = {
     await t.until(async () => { const y = await t.state(); return !(await t.page.isVisible("#book")) && Math.hypot(y.x - well[0], y.z - well[1]) < 0.2; }, 30000, "pressing the seal did not take him back to the well");
     expect((await t.page.evaluate(() => window.__rites().went)) === 1, "the way back was not counted");
     await t.page.waitForTimeout(2600); await t.page.reload(); await ready(); expect((await t.page.textContent("#enterBtn")) === "接着走" && (await t.page.textContent("#titleSeals")).includes("龙井"), "he should be offered to go on from the well: " + (await t.page.textContent("#titleSeals")));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Up the summit pavilion (#101): into its room, to the stair's foot, up behind the veil; round the balcony with his
+  // own eyes (V does not take him out of them), into the railing and not over it, a photograph; the page left and
+  // opened again finds him up there; then down to the stair's foot, the view he had below, and out of the door. It
+  // photographs, so it draws.
+  loft: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&view=third", { enter: false });
+    const ready = async () => { await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 }); };
+    const clear = () => t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted");
+    const act = () => t.page.evaluate(() => { const b = document.getElementById("act"); return b && !b.hidden ? b.dataset.word : null; });
+    const at = async (p, d = 0.2) => { const s = await t.state(); return Math.hypot(s.x - p[0], s.z - p[1]) < d; };
+    await ready(); await t.page.click("#enterBtn"); await t.page.waitForFunction(() => document.body.classList.contains("entered"));
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 30000, "could not go into the summit pavilion"); await clear();
+    expect((await t.page.evaluate(() => window.__hud())).said.includes("stair"), "going in did not say the stair is there: " + JSON.stringify((await t.page.evaluate(() => window.__hud())).said));
+    const foot = (await t.state()).stair; expect(foot, "the summit pavilion's room has no stair");
+    await t.page.evaluate((p) => window.__walk([p]), foot); await t.until(async () => (await act()) === "登楼", 60000, "walking to the stair's foot did not offer 登楼");
+    await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "E at the stair's foot did not take him up"); await clear();
+    const L = await t.page.evaluate(() => window.__lofts.lingxiao); let s = await t.state();
+    expect(!s.inside && s.view === "first" && Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.yaw - L.face) < 0.05 && (await at(L.door, 0.1)), "up there he should stand at the top storey's door, facing south, with his own eyes: " + JSON.stringify(s));
+    expect((await t.page.evaluate(() => window.__music().zone)) === "summit", "the music up there should be the summit's");
+    // Up there he sees with his own eyes only: the summit mat's shot (#87, src/director.js), asked for from the balcony, is refused.
+    expect((await t.page.evaluate(() => window.__direct("sit"))) === false && (await t.page.evaluate(() => window.__director().phase)) === "idle", "a place's shot was taken up on the balcony: " + JSON.stringify(await t.page.evaluate(() => window.__director())));
+    await t.page.keyboard.press("v"); await t.frames(2); s = await t.state();
+    expect(s.view === "first" && (await t.page.evaluate(() => window.__hud())).said.includes("upView"), "V took him out of his own eyes up there, or said nothing: " + s.view);
+    // Round the balcony, every corner turned, and back to the door.
+    const r = (L.half.wall + L.half.edge) / 2, [cx, cz] = L.at;
+    for (const p of [[cx + r, cz + r], [cx + r, cz - r], [cx - r, cz - r], [cx - r, cz + r], L.door]) { await t.page.evaluate((q) => window.__walk([q]), p); await t.until(() => at(p, 0.2), 60000, `he did not get round to (${p.map((v) => v.toFixed(2))})`); }
+    expect((await t.state()).up === "lingxiao" && Math.abs((await t.state()).h - L.floor) < 0.02, "going round he left the balcony");
+    // Straight at the railing, hurrying, and a jump there: he stays on the balcony.
+    await t.page.evaluate((y) => window.__pose(window.__lofts.lingxiao.door[0] + 1.3, window.__lofts.lingxiao.door[1], y, 0), L.face);
+    await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w"); await t.frames(20); await t.page.keyboard.press("Space"); await t.frames(20); await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift"); await t.frames(10);
+    s = await t.state(); expect(Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.z - L.at[1]) <= L.half.edge - 0.16 - 0.38 + 0.02 && !s.jumping, "he went into or over the railing: " + JSON.stringify(s));
+    // A tap down on the court below does not send him anywhere.
+    await t.page.evaluate((y) => window.__pose(window.__lofts.lingxiao.door[0] + 1.3, window.__lofts.lingxiao.door[1], y, -0.6), L.face); await t.frames(3);
+    const box = await t.page.$("canvas").then((c) => c.boundingBox()); await t.page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.85); await t.frames(5);
+    expect(!(await t.state()).target, "a tap on the court far below sent him walking");
+    // A photograph up there.
+    await t.page.evaluate(() => window.__photo(true)); await t.frames(2); const c = await t.page.evaluate(async () => { const k = await window.__capture(); return { w: k.w, h: k.h, size: k.url.length }; }); expect(Math.max(c.w, c.h) >= 1000 && c.size > 100000, "no photograph from the balcony: " + JSON.stringify(c)); await t.page.evaluate(() => window.__photo(false)); await t.frames(2);
+    // Left and opened again, he is still up there.
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.up === "lingxiao"; }, 30000, "where he stood up there was never kept");
+    await t.page.reload(); await ready();
+    expect((await t.page.textContent("#titleSeals")).includes("凌霄阁上"), "the title should say he was up on the pavilion: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify(await t.page.evaluate(() => [window.__left(), localStorage.getItem("yunjing.place.v1")])));
+    await t.page.click("#enterBtn"); await t.frames(3); s = await t.state();
+    expect(s.up === "lingxiao" && Math.abs(s.h - L.floor) < 0.02 && s.view === "first", "coming back he is not up on the balcony: " + JSON.stringify(s));
+    await t.shot("e2e-loft");
+    // Down from the door, to the stair's foot, the view he had below; and out of the hall.
+    await t.page.evaluate((p) => window.__walk([p]), L.door); await t.until(async () => (await act()) === "下楼", 60000, "the door up there did not offer 下楼");
+    await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).room === "lingxiao" && !(await t.state()).up, 30000, "E at the door did not take him down"); await clear();
+    s = await t.state(); expect(Math.hypot(s.x - s.stair[0], s.z - s.stair[1]) < 0.1 && s.h < -50, "coming down he is not at the stair's foot: " + JSON.stringify(s));
+    expect(s.view === "third", "coming down he should see as he did below (from behind him): " + s.view);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the pavilion"); await clear();
+    s = await t.state(); expect(!s.up && !s.inside && s.h > 19, "out of the door he should stand on the summit: " + JSON.stringify(s));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // What his hands do, at the pace a visitor sees it: the rope drawn and the bell rung three times, the bowl lifted
@@ -1229,6 +1282,11 @@ const scenarios = {
     await part("reflect", false); y = await t.state(); expect(y.planar === 0, "the mirror did not go out");
     await part("reflect", true); y = await t.state(); expect(y.planar === 0.5, "the mirror did not come back at the tier's size");
     for (const n of ["bloom", "shadow"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    // The film's finish: the halation, the colour table and the mist's layers switch on every tier; the occlusion and
+    // the depth of field are the high tier's, and the middle tier refuses them (the finish scenario looks at the high).
+    for (const n of ["halation", "lut", "layers"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    for (const n of ["gtao", "dof"]) expect((await part(n, true)) === null, `the medium tier should not offer ${n}`);
+    { const f = (await t.probe()).post; expect(!f.depth && !f.gtao && f.lut && f.halation, "the medium tier's finish: no depth or occlusion, a colour table and halation at dusk: " + JSON.stringify(f)); }
     expect(y.season === "autumn" && y.time === "dusk" && y.view === "first" && y.fov > 0, "__yard should say the hour and the view: " + JSON.stringify(y));
     // A named view, without loading again; an unknown one is refused.
     expect(await t.page.evaluate(() => window.__show("gate")), "__show refused a named view"); y = await t.state();
@@ -1244,6 +1302,29 @@ const scenarios = {
     expect((await part("site", true)) === true && !(await census()).site.hidden, "the buildings did not come back outdoors");
     await t.frames(2); const p = await t.probe(); expect(p.lum > 12 && p.lum < 245, "the picture is blank after the switches: " + p.lum.toFixed(1));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The film's finish on the high tier (docs/t00/art-goal.md, first stage): the scene's depth is kept and the occlusion
+  // drawn from it; at dusk a colour table and halation; the mist lies in layers; a fixed view (?shot) is focused, the walk
+  // is not; each part goes out with ?off=; summer by day (J01) keeps no table, no halation and plain air; the low tier
+  // keeps no depth.
+  finish: { tier: 2, async run(b, base) {
+    const look = async (q, w = 480, h = 200) => { const t = await open(b, base, q, { viewport: { width: w, height: h } }); await t.frames(2); const p = await t.probe(); expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close(); return p; };
+    let p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
+    expect(p.post.depth && p.post.gtao && p.post.lut && p.post.halation && !p.post.dof && p.layers > 0 && p.soft && p.governed === 0, "the high tier at dusk, walking: " + JSON.stringify([p.post, p.layers, p.soft]));
+    // The colour table is baked when the hour changes, never per frame (it once was, at 20 ms of CPU a frame).
+    { const t = await open(b, base, "q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk", { viewport: { width: 320, height: 160 } }); await t.frames(2);
+      const n0 = (await t.probe()).post.bakes; await t.frames(6); const n1 = (await t.probe()).post.bakes;
+      expect(n0 >= 1 && n1 === n0, `the colour table was baked again while walking: ${n0} → ${n1}`);
+      await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
+      expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
+    p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
+    expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
+    p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk&off=gtao,lut,halation,layers,dof");
+    expect(!p.post.gtao && !p.post.lut && !p.post.halation && p.layers === 0, "?off= should put out each part of the finish: " + JSON.stringify([p.post, p.layers]));
+    p = await look("q=high&shot=1&show=cam06");
+    expect(p.season === "summer" && p.time === "day" && !p.post.lut && !p.post.halation && p.layers === 0 && p.post.gtao, "J01 keeps its colour and its air: " + JSON.stringify([p.post, p.layers]));
+    p = await look("q=low&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
+    expect(!p.post.depth && !p.post.gtao && !p.post.dof && p.post.lut && !p.soft, "the low tier keeps no depth, draws no occlusion and no soft shadows: " + JSON.stringify([p.post, p.soft]));
   } },
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });

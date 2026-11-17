@@ -243,7 +243,7 @@ export function createGame(y) {
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
 
   // ---- The button that offers what can be done here ----
-  let acc = 0, look = null, seatHere = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
+  let acc = 0, look = null, seatHere = null, climb = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
   y.onTick((dt) => {
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
     { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
@@ -268,19 +268,29 @@ export function createGame(y) {
     // A cushion or a stool within a step or two, when nothing else is offered here and he is not already seated.
     seatHere = null;
     if (free && !near && !look && !y.staged()) { let best = 1.5; for (const s of y.site.seats) { if ((s.room || null) !== room) continue; const d = Math.hypot(s.at[0] - w.x, s.at[1] - w.z); if (d < best) { best = d; seatHere = s; } } }
+    // At the foot of a stair up to a storey that is walked round, it goes up; up there, at its door, back down (issue #101).
+    climb = null;
+    if (free && !near && !look && !y.staged()) {
+      const st = y.stair(), up = y.up(), L = up && y.lofts[up];
+      if (st && Math.hypot(st.at[0] - w.x, st.at[1] - w.z) < st.r) climb = "登楼";
+      else if (L && Math.hypot(L.door[0] - w.x, L.door[1] - w.z) < 0.9) climb = "下楼";
+      if (climb) seatHere = null;
+    }
     const b = $("act"); if (!b) return;
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
-    const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && free && y.seated();
-    if (held || near || look || seatHere || rise) {
-      const w = held || (near ? SEAL[near].act : look ? "观看" : seatHere ? "坐下" : "起身");
+    const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
+    if (held || near || look || seatHere || climb || rise) {
+      const w = held || (near ? SEAL[near].act : look ? "观看" : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
     if (indoors !== wasIndoors) { wasIndoors = indoors; refresh(); if (indoors) say(room === "main" && !journey.has("incense") ? t("走到佛前的圆相里，上一炷香。") : t(y.hallName()), 5); }
   });
+  const b0 = () => /** @type {HTMLElement} */ ($("act"));
   $("act")?.addEventListener("click", () => {
     if (rite && rite.press) return rite.press();
     if (near) return begin(near);
+    if (climb) { const c = climb; climb = null; b0().hidden = true; return c === "登楼" ? y.climb(y.stair().up) : y.descend(); }
     if (!look) { if (seatHere) sitDown(seatHere); else if (y.seated()) y.leave(); return; }
     const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
     if (it.work) return showWork(it.work, look);
@@ -364,7 +374,14 @@ export function createGame(y) {
   const named = SEALS.filter((d) => places[d.id] && !places[d.id].room).map((d) => ({ place: d.place, at: places[d.id].at }));
   const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter") || (BENCH && (Q.has("at") || Q.has("play") || Q.has("seals"))));   // a tool or a test that names its own place is left where it asked to be
   let left = free ? readPlace(localStorage) : null, kept = 0;
-  if (left && y.walker.blocked(left.x, left.z)) left = null;
+  if (left && left.up && !y.lofts[left.up]) left = null;
+  // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
+  // steps out to the nearest free point a few centimetres off. A place kept up on a balcony is tested on its floor.
+  if (left) {
+    y.walker.setLoft(left.up);
+    if (y.walker.blocked(left.x, left.z)) { let got = null; out: for (let r = 0.01; r <= 0.06; r += 0.01) for (let k = 0; k < 16; k++) { const x = left.x + r * Math.cos((k * Math.PI) / 8), z = left.z + r * Math.sin((k * Math.PI) / 8); if (!y.walker.blocked(x, z)) { got = { x, z }; break out; } } left = got ? { ...left, ...got } : null; }
+    y.walker.setLoft(null);
+  }
   const offer = () => {
     const o = titleOffer(journey.count(), SEALS.length, left, y.start), b = $("enterBtn"), again = $("againBtn");
     $("titleSeals").textContent = o.line || (journey.count() === SEALS.length ? t("七印圆满 · 山门常开") : "");
@@ -372,8 +389,8 @@ export function createGame(y) {
     if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
     return o;
   };
-  if (left && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw);   // the title is shown over where they were
-  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: labelOf(w, y.inside() ? y.hallName() : null, named) }); };
+  if (left && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were
+  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   y.onTick((dt) => { if ((kept += dt) > 2) { kept = 0; keepPlace(); } });
   window.addEventListener("pagehide", keepPlace); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") keepPlace(); });
   $("againBtn")?.addEventListener("click", (e) => {

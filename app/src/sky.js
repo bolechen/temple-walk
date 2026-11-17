@@ -6,6 +6,9 @@ import { NOISE, U } from "./glsl.js";
 export const FOG = new THREE.Color(0.70, 0.745, 0.74);
 // The temple faces south-east down the mountain (+z); morning light comes from the east, front and right.
 export const SUN_DIR = new THREE.Vector3(0.5, 0.68, 0.53).normalize();
+// What the sun's shadow camera covers, in metres (across, up the mountain, and from its near plane to its far):
+// the soft shadows (shadows.js) measure their penumbra in these.
+export const SHADOW_BOX = { width: 124, height: 256, depth: 410 };
 
 export function createSky(renderer, scene, quality, focus) {
   const u = {
@@ -49,8 +52,8 @@ export function createSky(renderer, scene, quality, focus) {
   sun.target.position.set(focus[0], 3, focus[1]);
   // The shadow map is long, like the temple: its long side runs up the mountain (the camera's "up" is north), so
   // the foot of the approach and the summit are both inside it at every hour.
-  sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow / 2, 4096); sun.shadow.radius = 2.5; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.05;
-  Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 128, bottom: -128, near: 10, far: 420 }); sun.shadow.camera.up.set(0, 0, -1);
+  sun.castShadow = true; sun.shadow.mapSize.set(quality.shadow, quality.shadowLong); sun.shadow.radius = 2.5; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.05;
+  Object.assign(sun.shadow.camera, { left: -SHADOW_BOX.width / 2, right: SHADOW_BOX.width / 2, top: SHADOW_BOX.height / 2, bottom: -SHADOW_BOX.height / 2, near: 10, far: 10 + SHADOW_BOX.depth }); sun.shadow.camera.up.set(0, 0, -1);
   const hemi = new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15);
   sun.position.copy(SUN_DIR).multiplyScalar(170).add(at);
   scene.add(sun, sun.target, hemi);
@@ -64,6 +67,9 @@ export function createSky(renderer, scene, quality, focus) {
     update: (t) => { u.uT.value = t; },
     // Indoors neither the sun nor much of the sky reaches: the lamps do the work. The next setMood restores them.
     indoors() { sun.intensity = 0; hemi.intensity *= 0.3; },
+    // The soft shadows (shadows.js) on or off while walking: a negative radius sends the shader back to plain PCF.
+    soft(on) { sun.shadow.radius = on ? Math.abs(sun.shadow.radius) : -Math.abs(sun.shadow.radius); },
+    get softOn() { return sun.shadow.radius > 0; },
     // Everything the hour and the season decide about light. The caller redraws the shadows afterwards.
     setMood(m) {
       SUN_DIR.fromArray(m.sun).normalize(); FOG.fromArray(m.fog);
