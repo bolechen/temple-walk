@@ -25,6 +25,7 @@ export default {
   "朝<br>山": "朝<br>山",
   "再来一次": "Try again",
   "七处小事 · 七枚朱印": "Seven small things · seven seals",
+  "序章　云径禅寺": "Prologue · Yunjing Temple",
   "序章　云径禅寺　完": "Prologue · Yunjing Temple · The End",
   "下一章，还在路上": "The next chapter is still on its way",
   "轻点略过": "Tap to skip",

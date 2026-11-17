@@ -2,7 +2,7 @@
 // the keyboard on a desktop page and touches on an emulated phone. Each run is filmed and photographed, and every
 // press is logged with what the page said back, so that the film can be watched beside the log.
 //
-//   node tools/play-t00.cjs [outdir] [summit bell tea phone director]
+//   node tools/play-t00.cjs [outdir] [summit bell tea phone director opening opening-phone]
 //
 // What is NOT real input, and is marked so in the log as `diagnostic`: putting him beside the place with __pose (the
 // software renderer is too slow to walk the whole mountain at a visitor's pace) and reading the page's state through
@@ -13,7 +13,7 @@ const out = path.resolve(process.argv[2] || "tools/out/play"), only = process.ar
 fs.mkdirSync(out, { recursive: true });
 const log = [], note = (run, kind, what, extra = {}) => { const e = { t: new Date().toISOString(), run, kind, what, ...extra }; log.push(e); console.log(run.padEnd(7), kind.padEnd(10), what, Object.keys(extra).length ? JSON.stringify(extra) : ""); };
 
-async function page(b, base, run, query, ctxOpts = {}) {
+async function page(b, base, run, query, ctxOpts = {}, { watch = false } = {}) {
   // PLAY_SIZE=480x300 draws a smaller picture, so that a software renderer manages more frames and the timing of
   // presses can be seen nearer to what a real card gives.
   const [W, H] = (process.env.PLAY_SIZE || "960x600").split("x").map(Number);
@@ -25,6 +25,9 @@ async function page(b, base, run, query, ctxOpts = {}) {
   await p.waitForFunction(() => !document.getElementById("enterBtn")?.disabled, null, { timeout: 60000 });
   if (ctxOpts.hasTouch) await p.tap("#enterBtn", { timeout: 240000 }); else await p.click("#enterBtn", { timeout: 240000 });
   note(run, "input", ctxOpts.hasTouch ? "tap 入山" : "click 入山");
+  // A first visitor is shown the mountain first (src/opening.js). The runs about other things pass over it as a visitor
+  // may, with Esc; the opening's own runs watch it (`watch`).
+  if (!watch && (await p.evaluate(() => window.__opening().active))) { await p.keyboard.press("Escape"); note(run, "input", "key Escape · pass over the opening"); await p.waitForFunction(() => !window.__opening().active, null, { timeout: 60000 }); }
   const S = { p, ctx, errors,
     j: () => p.evaluate(() => window.__journey()), r: () => p.evaluate(() => window.__rites()),
     word: async () => ((await p.isVisible("#act")) ? p.getAttribute("#act", "data-word") : null),
@@ -39,7 +42,43 @@ async function page(b, base, run, query, ctxOpts = {}) {
   return S;
 }
 
+// The opening, watched (issue #110): what the page says at each moment of it, and pictures at its three movements.
+async function watchOpening(s, run, { skipAt = null, skip = null } = {}) {
+  const O = () => s.p.evaluate(() => window.__opening()); let last = "", shots = 0;
+  const t0 = Date.now();
+  for (;;) {
+    const o = await O();
+    if (o.phase !== last) { note(run, "page", `opening: ${o.phase}`, { waited: o.waited, secs: o.secs, s: o.s, hint: o.hint, bell: o.cues.mountainBell, musicHeld: o.cues.musicHeld, overlay: await s.p.evaluate(() => document.body.classList.contains("opening")) }); last = o.phase; }
+    if (o.phase === "fly" && shots < 3 && o.s >= [0.5, o.length * 0.42, o.length * 0.85][shots]) await s.shot(`${++shots}-${["qi", "cheng", "luo"][shots - 1]}`);
+    if (skip && skipAt !== null && o.phase === "fly" && o.s >= skipAt) { await skip(); skipAt = null; }
+    if (o.phase === "done") break;
+    if (Date.now() - t0 > 240000) throw new Error(`${run}: the opening never ended`);
+    await s.p.waitForTimeout(200);
+  }
+  const o = await O(); note(run, "page", "the walk is handed back", { skipped: o.skipped, cuts: o.cuts, took: Date.now() - t0 });
+  const said = await s.until(async () => (await O()).hint === "walk", 30000, "how to walk was never said"); note(run, "page", `how to walk said ${said} ms after the hand-over`, { line: await s.p.textContent("#hint") });
+  await s.shot("4-handed-back");
+}
 const runs = {
+  // The opening at a visitor's pace, watched whole; then round the screen wall by the keys to the gate, where the
+  // prologue's title rises.
+  async opening(b, base) {
+    const s = await page(b, base, "opening", "q=low&season=summer&time=day", {}, { watch: true });
+    await watchOpening(s, "opening");
+    await s.p.evaluate(() => window.__pose(8.5, 58, -0.3, 0.05)); note("opening", "diagnostic", "__pose before the screen wall, facing the gate");
+    await s.p.keyboard.down("w"); note("opening", "input", "key W held");
+    await s.until(() => s.p.evaluate(() => window.__prologue().on), 90000, "the title never rose"); await s.p.waitForTimeout(1400); await s.p.keyboard.up("w"); note("opening", "input", "key W let go");
+    note("opening", "page", "the prologue's title", await s.p.evaluate(() => window.__prologue())); await s.shot("5-title");
+    await s.until(() => s.p.evaluate(() => !window.__prologue().on), 30000, "the title never left"); note("opening", "page", "the title has gone");
+    await s.end();
+  },
+  // On a phone: tapped 入山, then a tap part of the way down brings the eye to him at once.
+  async "opening-phone"(b, base) {
+    const { devices } = require("playwright");
+    const s = await page(b, base, "opening-phone", "q=low&season=summer&time=day", { ...devices["iPhone 13"], recordVideo: { dir: out, size: { width: 390, height: 664 } } }, { watch: true });
+    await watchOpening(s, "opening-phone", { skipAt: 60, skip: async () => { await s.p.touchscreen.tap(195, 330); note("opening-phone", "input", "tap the picture · skip"); } });
+    await s.end();
+  },
   // A new book, straight to the summit: E to sit, three breaths, the close, the book; E stands him up again.
   async summit(b, base) {
     const s = await page(b, base, "summit", "q=low&view=third&season=summer&time=day");
