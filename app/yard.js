@@ -27,6 +27,7 @@ import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
@@ -159,11 +160,16 @@ if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
 await loading.step(tr("行走"));
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
+// The prologue is where a visitor first meets the place, and it is walked by day, whatever the hour at home (the owner,
+// 2026-11-17): until the book has been filled once, the hour is 昼 and does not follow the clock. The season stays the
+// visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
+const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
+const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
-                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "day" : nowMood.time };
-// The hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's choice lasts this page only
-// and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
-state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam"));
+                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
+// After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
+// choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
+state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`

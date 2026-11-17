@@ -165,3 +165,14 @@ test("a book for the workbench (?seals=) is written from a list, all seven or no
   assert.equal(two.count(), 2); assert.equal(two.has("bell"), true); assert.equal(two.strikes, 3); assert.equal(two.done(), false);
   assert.equal(bookFrom(null, 100), null, "no ?seals= keeps the visitor's own book");
 });
+
+test("the prologue is walked by day until the book has been filled once", async () => {
+  const { filledBefore, createJourney, SEALS } = await import("../../app/src/journey.js");
+  assert.equal(filledBefore(null), false, "a first visit");
+  assert.equal(filledBefore("{"), false, "a damaged save");
+  const m = { text: null, get: () => m.text, set: (t) => { m.text = t; } }, j = createJourney(m);
+  j.earn(SEALS[0].id); assert.ok(m.text, "the begun book is kept");
+  assert.equal(filledBefore(m.text), false, "a book begun but not filled");
+  assert.equal(filledBefore(JSON.stringify({ v: 1, seals: {}, opened: 1700000000000 })), true, "filled once, then begun again (重新朝山)");
+  assert.equal(filledBefore(JSON.stringify({ v: 1, seals: {}, done: 1700000000000 })), true, "filled before `opened` was kept");
+});
