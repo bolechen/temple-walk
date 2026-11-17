@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -89,6 +89,33 @@ function fingerprint(dir) {
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }
     save();
+  }
+  // The opening after 入山 (app/src/opening.js, issue #110): a first visitor's page (nothing named in the address), 入山
+  // clicked, and every frame's time from the click to the hand-over, apart for the wait on the first picture (`hold`) and
+  // the way down (`fly`), with how long the eye waited before it moved. spec.opening = { runs: [{ q, size, scale }], film }.
+  // Compare with `bench` rows of the first court measured in the same job (frame times differ 2–3 ms between jobs).
+  if (spec.opening) {
+    const log = (report.opening = { runs: [] });
+    for (const R of spec.opening.runs || [{ q: "high", size: [1920, 1080] }]) {
+      const size = R.size || [1920, 1080], row = { q: R.q, size, scale: R.scale || 1 };
+      try {
+        row.off = R.off || "";
+        const { ctx, page, loadMs } = await open(q({ q: R.q, season: R.season || "summer", time: R.time || "day", off: R.off }), size, R.scale || 1);
+        row.loadMs = loadMs; const ev = (f, a) => page.evaluate(f, a);
+        await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
+        await ev(() => { window.__ft = []; window.__ph = []; const f = (t) => { window.__ft.push(t); window.__ph.push(window.__opening ? window.__opening().phase : "?"); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+        const t0 = Date.now(); await page.click("#enterBtn");
+        while (Date.now() - t0 < 120000) { if (await ev(() => window.__opening().phase === "done")) break; await page.waitForTimeout(100); }
+        row.took_ms = Date.now() - t0; row.state = await ev(() => window.__opening());
+        row.frames = await ev(() => {
+          const t = window.__ft, ph = window.__ph, start = ph.findIndex((p) => p === "hold");
+          const part = (which) => { const d = []; for (let k = Math.max(1, start + 1); k < t.length; k++) if (which.includes(ph[k])) d.push(t[k] - t[k - 1]); if (!d.length) return null; const s = d.slice().sort((a, b) => a - b), mean = d.reduce((a, b) => a + b, 0) / d.length; return { frames: d.length, fps: +(1000 / mean).toFixed(1), mean_ms: +mean.toFixed(2), p95_ms: +s[Math.floor(s.length * 0.95)].toFixed(2), max_ms: +s[s.length - 1].toFixed(2), over40: d.filter((x) => x > 40).length }; };
+          return { hold: part(["hold"]), fly: part(["fly", "skip"]), all: part(["hold", "fly", "skip"]) };
+        });
+        console.log("opening", JSON.stringify(row)); await ctx.close();
+      } catch (e) { row.error = String(e.message).slice(0, 300); console.log("opening failed", row.error); }
+      log.runs.push(row); save();
+    }
   }
   // The measured walk (app/src/tour.js) and a film of it: spec.tour = { runs: "120x3", size: [1920, 1080], q: "high", film: 95, filmSize: [960, 540] }.
   // The numbers and the film come from separate passes, so that recording does not slow what is being measured.

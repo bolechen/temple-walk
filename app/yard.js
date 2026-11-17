@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
-import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, terrain } from "./src/site.js";
+import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain } from "./src/site.js";
 import { createSky, FOG, SUN_DIR, SHADOW_BOX } from "./src/sky.js";
 import { layerFog } from "./src/fog.js";
 import { softShadows } from "./src/shadows.js";
@@ -42,6 +42,7 @@ import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose, seatHop } from "./src/drop.js";
 import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
+import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, lang, langSource, takeSwitch, glyphs, setLang } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -105,18 +106,9 @@ const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus)
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
 const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain));
 await loading.step(tr("山林"));
-// Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea.
-const hill = { zS: LEVELS[1].zN, zN: LEVELS[2].zS }, A = APPROACH;
-const near = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
-const bamboo = part("bamboo", () => createBamboo(scene, [
-  { x0: -28, x1: 44, z0: SITE.fore + 0.8, z1: A.zC1 + 12, n: 1150 },
-  { x0: -36, x1: -23.2, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 }, { x0: 23.2, x1: 36, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 },
-  { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: hill.zS, n: 190 },
-], terrain, (x, z) => {
-  if (z > SITE.fore - 0.5) return !(near(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || near(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || near(x, z, 2.4, 8.0, A.zA1, A.zA1 + 5.8, 0.6) || near(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || near(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
-  if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
-  return true;
-}, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
+// Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
+// (where it grows and where it is kept clear is GROVE, src/site.js).
+const bamboo = part("bamboo", () => createBamboo(scene, GROVE.areas, terrain, GROVE.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
 await loading.step(tr("竹林"));
 const props = part("props", () => createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2));
 const post = createPost(renderer, scene, camera, quality, OFF);
@@ -227,12 +219,24 @@ const interrupt = () => { settle(false); if (stage) { const st = stage; stage = 
 // The ink is the shutter's two leaves (#curtain), drawn here frame by frame; what lies over the picture fades meanwhile.
 const curtainLeaves = /** @type {HTMLElement[]} */ ([...document.querySelectorAll("#curtain i")]);
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const inkVeil = (k) => { const c = document.getElementById("curtain"); if (!c) return; c.classList.toggle("cut", k > 0); for (const l of curtainLeaves) l.style.transform = k > 0 ? `scaleY(${k.toFixed(3)})` : ""; };
 const director = createDirector({ walker,
   enabled: () => settings.get().autocam && !Q.has("shot") || Q.get("show")?.startsWith("shot-") === true,
   reduced: () => reducedMotion.matches,
-  veil: (k) => { const c = document.getElementById("curtain"); if (!c) return; c.classList.toggle("cut", k > 0); for (const l of curtainLeaves) l.style.transform = k > 0 ? `scaleY(${k.toFixed(3)})` : ""; },
+  veil: inkVeil,
   quiet: (on) => document.body.classList.toggle("directing", on),
 });
+// The opening after 入山 (src/opening.js): the eye on the summit, then down the mountain to him. While it plays nothing
+// lies over the picture (body.opening), and a click, a key, a tap, the wheel or Esc brings it down the rest of the way at
+// once; the event that does so goes no further (it does not walk him, strike the bell or open the menu).
+const opening = createOpening({ veil: inkVeil }), openingEye = { p: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 50 };
+let openingDone = null;
+const endOpening = () => { document.body.classList.remove("opening"); const s = opening.state(); if (openingDone) { const fn = openingDone; openingDone = null; fn(s); } };
+for (const ev of ["keydown", "pointerdown", "wheel"]) addEventListener(ev, (e) => {
+  if (!opening.active()) return;
+  if (!(ev === "keydown" && /** @type {KeyboardEvent} */ (e).repeat)) opening.skip();   // (a key held down from the title does not skip by repeating)
+  e.stopPropagation(); if (ev !== "pointerdown") e.preventDefault();
+}, { capture: true, passive: false });
 const centre = new THREE.Vector3();
 // The eye's swing keeps the observances' clock (rites.js), not the frames': on a page drawing fewer than twenty frames a
 // second the frame's own step is cut short (`dt` is held to 0.05 s), and a swing timed by it would still be on its way
@@ -498,7 +502,7 @@ function frame(now) {
   if (dropButton) dropButton.hidden = !availableDrop();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
-  if (!arrived && document.body.classList.contains("entered")) { arrived = true; hints.say.entered(); }
+  if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); }   // how to walk is said once the walk is his
   if (arrived) hints.step(dt, moved, !!keys.shift, !stage && !photo.on && !aloft);
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
   const want = flight ? Math.atan2(flight.plan.to[0] - flight.plan.from[0], flight.plan.to[2] - flight.plan.from[2]) : stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : heading;
@@ -561,6 +565,14 @@ function frame(now) {
     if (fv !== directedFov) { directedFov = fv; lens(); }
     if (fv !== null && camera.position.distanceTo(centre) > 1.0) monk.group.visible = photo.on ? photo.monk || view === "first" : true;
   } else { directClock = riteNow(); if (directedFov !== null) { directedFov = null; lens(); } }
+  // The opening takes the eye from the following eye it is handed, and gives it back on the frame it ends (src/opening.js).
+  if (opening.active()) {
+    openingEye.p.copy(camera.position); openingEye.q.copy(camera.quaternion);
+    openingEye.fov = baseFov();
+    if (!opening.apply(camera, openingEye)) endOpening();
+    const fv = opening.fov(); if (fv !== directedFov) { directedFov = fv; lens(); }   // the long lens of the first picture, widening
+    if (camera.position.distanceTo(openingEye.p) > 1) monk.group.visible = true;
+  }
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
   if (cine) { cine(camera, dt); monk.group.visible = true; }
   camera.updateMatrixWorld();
@@ -905,6 +917,13 @@ createGame({
   leave: () => interrupt(),
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
+  // The opening after 入山 (src/opening.js): `eye` "fly" or "ink"; resolves with its state when the walk is handed back.
+  opening(eye) {
+    if (opening.active()) return Promise.resolve(opening.state());
+    interrupt(); director.drop(); follow.reset(); document.body.classList.add("opening");
+    return new Promise((done) => { openingDone = done; opening.start(eye); });
+  },
+  openingActive: () => opening.active(), autocam: () => settings.get().autocam, reduced: () => reducedMotion.matches,
   // The place's own shot while an observance is made (src/director.js): `direct(id)` goes to it, `direct(null)` comes back
   // to him; `direct(id, { now })` is there at once (a picture tool), `undirect()` lets go without a swing (a passage takes
   // the eye from it); `directOut()` is how many seconds the way back takes, so an observance can send it that much early.
@@ -941,6 +960,9 @@ function warmShot(p, foot) {
   for (const o of shown) o.visible = false;
   director.warmed = (director.warmed || 0) + 1;
 }
+window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
+// A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
+window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
