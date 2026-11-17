@@ -50,7 +50,7 @@ export function openingFor({ seals = 0, place = null, start, params, again = fal
 // upper storeys show over it, in the mist; then back and up over the main hall's ridge (16.4 m), the first court and
 // the gate (14.6 m), down over the forecourt and the tops of the bamboo (GROVE.top, 15 m over the land), into the clear
 // way of the zigzag stair at its landing, down its last flight, over his head, and in behind him. What it looks at stays the summit until the end, where it becomes the way the following eye looks.
-const WAY = [[0, 17.6, -35.5], [0, 21, -24], [0, 22.5, -6], [0, 21.5, 22], [0, 20.5, 44], [2, 19.5, 60], [7, 16, 70], [14.5, 11, 77.5], [21.3, 2.5, 83.5], [21.6, -8.6, 90.5]];
+const WAY = [[0, 18.2, -28.5], [0, 21, -20], [0, 22.5, -6], [0, 21.5, 22], [0, 20.5, 44], [2, 19.5, 60], [7, 16, 70], [14.5, 11, 77.5], [21.3, 2.5, 83.5], [21.6, -8.6, 90.5]];
 const SUMMIT = [0, 33, -131];
 
 /** The way down to `end` (the following eye: { p, q }), timed. `poseAt(t)` is the eye `t` seconds after it starts to move. */

@@ -26,7 +26,7 @@ const MOODS = ["summer-day", "autumn-dusk", "winter-day", "summer-night"];
     const t = await page(size, "summer-day", "&show=arrive");
     const secs = await t.p.evaluate(() => { window.__openingAt(0); return null; }); await frames(t.p, 3);
     const plan = await t.p.evaluate(() => window.__opening());
-    for (const [label, at] of [["1-qi", 0], ["2-cheng", plan.secs * 0.42], ["3-luo", plan.secs - 1.2]]) {
+    for (const [label, at] of [["1-qi", 0], ["2-cheng", plan.secs * 0.42], ["3-luo", plan.secs - 2.0]]) {
       await t.p.evaluate((s) => window.__openingAt(s), at); await frames(t.p, 3);
       await snap(t, `opening-${label}-${size}`, { at: +at.toFixed(2), eye: await t.p.evaluate(() => window.__yard()) });
     }

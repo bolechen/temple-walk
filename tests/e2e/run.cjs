@@ -734,13 +734,13 @@ const scenarios = {
     const gateYaw = (x, z) => Math.atan2(-x, z - 40);
     await t.page.evaluate(([y]) => window.__pose(6.6, 53.4, y, 0.05), [gateYaw(6.6, 53.4) + Math.PI]); await t.frames(6);
     expect((await t.page.evaluate(() => window.__prologue())).shown === 0, "the title rose for a visitor facing away from the gate");
-    await t.page.evaluate(([y]) => window.__pose(6.0, 57.5, y, 0.05), [gateYaw(6.6, 56)]); await t.frames(3);
+    await t.page.evaluate(([y]) => window.__pose(8.5, 58, y, 0.05), [-0.3]); await t.frames(3);
     expect((await t.page.evaluate(() => window.__prologue())).shown === 0, "the title rose before the screen wall");
     await t.page.keyboard.down("w"); await reach(t, "the title never rose at the gate", () => window.__prologue().on, null, 90000); await t.page.keyboard.up("w");
     let P = await t.page.evaluate(() => window.__prologue()); expect(P.shown === 1 && /序章/.test(P.text) && /云径禅寺/.test(P.text), "the title should say 序章 云径禅寺: " + JSON.stringify(P));
     expect((await t.page.evaluate(() => window.__cues())).prologue === 1, "one note of the qin with the title");
     await reach(t, "the title never left", () => !window.__prologue().on && document.getElementById("prologue").hidden, null, 60000);
-    await t.page.evaluate(([y]) => window.__pose(6.0, 57.5, y, 0.05), [gateYaw(6.6, 56)]); await t.frames(3); await t.page.keyboard.down("w");
+    await t.page.evaluate(([y]) => window.__pose(8.5, 58, y, 0.05), [-0.3]); await t.frames(3); await t.page.keyboard.down("w");
     await t.until(async () => (await t.state()).z < 52, 60000, "he never came round the wall again"); await t.page.keyboard.up("w");
     expect((await t.page.evaluate(() => window.__prologue())).shown === 1, "the title should rise once in a pilgrimage");
     // Coming back: 接着走, no opening, no bell, no title.
