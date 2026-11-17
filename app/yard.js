@@ -5,7 +5,9 @@ import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain } from "./src/site.js";
-import { createSky, FOG, SUN_DIR } from "./src/sky.js";
+import { createSky, FOG, SUN_DIR, SHADOW_BOX } from "./src/sky.js";
+import { layerFog } from "./src/fog.js";
+import { softShadows } from "./src/shadows.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
@@ -38,7 +40,9 @@ import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
-import { findDrop, dropPose, seatHop } from "./src/drop.js";
+import { poseQuery } from "./src/link.js";
+import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
+import { planSteps, clearLine } from "./src/route.js";
 import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
@@ -77,10 +81,15 @@ const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 800);
 // (?off=bamboo,trees,... ; also reflect, bloom and shadow for the passes). See window.__census().
 const OFF = new Set((Q.get("off") || "").split(",").filter(Boolean));
 const part = (name, make) => { const n = scene.children.length, made = make(); for (const o of scene.children.slice(n)) { o.userData.part = name; if (OFF.has(name)) o.visible = false; } return made; };
-const PLANAR = quality.planar, PASSES = ["reflect", "bloom", "shadow"];   // the mirror as the tier draws it, for switching it back on
+// The film's finish (post.js) adds gtao, halation, lut and dof, and `layers` for the mist's layers (fog.js); these switch
+// while walking. `softshadow` (shadows.js) and `leafshadow` (the bamboo's dappled shadows) are decided at load.
+const PLANAR = quality.planar, PASSES = ["reflect", "bloom", "shadow", "gtao", "halation", "lut", "dof", "layers"];   // the mirror as the tier draws it, for switching it back on
 if (OFF.has("reflect")) quality.planar = 0;
 if (OFF.has("bloom")) quality.bloom = false;
 if (OFF.has("shadow")) renderer.shadowMap.enabled = false;
+// Both rewrite three's shader chunks, so they come before any material is made.
+layerFog();
+if (quality.softShadow && !OFF.has("softshadow")) softShadows(SHADOW_BOX);
 
 await loading.step(tr("山路"));
 const M = createMaterials();
@@ -101,10 +110,10 @@ const backdrop = part("backdrop", () => createBackdrop(scene, M, SITE, [LEVELS[0
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is GROVE, src/site.js).
-const bamboo = part("bamboo", () => createBamboo(scene, GROVE.areas, terrain, GROVE.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low" }));
+const bamboo = part("bamboo", () => createBamboo(scene, GROVE.areas, terrain, GROVE.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
 await loading.step(tr("竹林"));
 const props = part("props", () => createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2));
-const post = createPost(renderer, scene, camera, quality);
+const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
@@ -158,10 +167,14 @@ const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.
 state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam"));
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
+// The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
+// takes them away again).
+const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("layers") ? 0 : L[0], L[1], 1 / L[2], L[3]); if (document.body.classList.contains("indoors")) U.uFogLayer.value.x = 0; };
 function setMood(season, time) {
   state.season = season; state.time = time; mood = moodOf(season, time);
   sky.setMood(mood);
-  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf);
+  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
+  layers();
   backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
@@ -181,6 +194,9 @@ let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.
 // only draws nearer or farther (`zoom`: 1 is the view as it was); it does not turn.
 const photo = { on: false, aspect: "screen", zoom: 1, monk: false, pray: false };
 const ASPECT = { tall: [3, 4], square: [1, 1], wide: [16, 9] }, ZOOM = { min: 0.7, max: 6 };
+// Where a fixed view or a photograph is focused (post.js's very shallow depth of field): on him when he is in the
+// picture, otherwise some way into the place.
+const focusAt = () => (monk.group.visible ? camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 0.8, pos.z)) : 18);
 
 // ---- Looking and walking ------------------------------------------------------
 const EYE = 1.3;   // the eye height of a child
@@ -233,6 +249,7 @@ const centre = new THREE.Vector3();
 // when the lamp is lit and done. The clock stops with a photograph, as the observances do; a long pause is not swung through.
 let directClock = riteNow();
 const menuEl = document.getElementById("menu");
+let planning = null, planGoal = null;   // a way round to a tapped spot, being worked out a few milliseconds a frame (route.js)
 let down = null, hop = null, leap = null, climb = null, climbFor = null, climbs = 0;   // `hop`: a planned drop from a porch; `leap`: a small jump where he stands, steered as he goes
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
@@ -340,9 +357,12 @@ canvas.addEventListener("pointerup", (e) => {
       toHall = !inside && !onBase && ray.ray.intersectsBox(hall.box) && pos.z > hall.door.z && pos.z < SITE.zS - 4, onGround = walker.onGround(pos.x, pos.z);
     // Tapping the main hall from its court means "go to its door" (only from the court: standing on its porch or steps he is inside the box, and a tap there is just a tap on the ground); the way there, and back, is over the steps.
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
-    else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
-    else route = [];
-    if (route.length) { interrupt(); director.back(); target = route.shift(); }
+    else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) {
+      // A straight line that is open is walked as it was; one that is shut is searched round (route.js), a few milliseconds a frame, he waiting where he is.
+      if (!walker.blocked(pos.x, pos.z) && clearLine(walker, pos, hit)) route = [hit];
+      else { route = []; interrupt(); director.back(); target = null; planGoal = { x: hit.x, z: hit.z }; planning = planSteps(walker, site.walk.drops, { x: pos.x, z: pos.z }, planGoal); }
+    } else route = [];
+    if (route.length) { planning = null; interrupt(); director.back(); target = route.shift(); }
   }
   down = null;
 });
@@ -359,11 +379,35 @@ function startDrop() {
   const plan = availableDrop(); if (!plan) return false;
   interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true;
 }
+// Facing the unrailed edge of a platform his jump reaches, from below it (drop.js `findClimb`): the way up.
+function availableClimb() {
+  if (hop || leap || inside || stage || passing || photo.on || !document.body.classList.contains("entered") || ui.covered()) return null;
+  const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
+  return findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+}
 // Space: a child's jump (stride.js). He can be steered in the air and lands on whatever is under him.
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
   if (ui.covered()) return false;
+  const plan = availableClimb();   // from below a low porch's edge, the jump goes up onto it
+  if (plan) { interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true; }
   leap = { y: footY, v: JUMP.speed }; return true;
+}
+// On a touch screen, one faint ring lower right, across from the stick: it jumps, and where a porch's edge is before him it
+// is the way down (下台阶) or up (上台), as Space is on a keyboard. It is made only for a coarse pointer, and the porch's own
+// hop-down chip (#dropBtn) is hidden there: this is that button.
+const jumpButton = hints.coarse ? Object.assign(document.createElement("button"), { id: "jumpBtn", type: "button", hidden: true }) : null;
+if (jumpButton) {
+  document.body.appendChild(jumpButton);
+  // pointerdown, not click: a thumb on the stick and another on this are two touches, and the jump should leave as it lands
+  jumpButton.addEventListener("pointerdown", (e) => { e.preventDefault(); if (!startDrop()) startJump(); });
+  jumpButton.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+function labelJump() {
+  if (!jumpButton) return;
+  const kind = availableDrop() ? "drop" : availableClimb() ? "climb" : "jump";
+  if (jumpButton.dataset.k !== kind) { jumpButton.dataset.k = kind; jumpButton.textContent = kind === "drop" ? tr("下台阶") : kind === "climb" ? tr("上台") : tr("跳"); }
+  jumpButton.hidden = !document.body.classList.contains("entered") || photo.on;
 }
 if (dropButton) { dropButton.innerHTML = hints.coarse ? tr("下台阶") : tr("<kbd>Space</kbd>下台阶"); dropButton.addEventListener("click", startDrop); }
 
@@ -440,7 +484,8 @@ function layoutFrame() {
   document.body.classList.toggle("whole", whole);
   if (fd) for (const [k, v] of /** @type {[string, number][]} */ ([["--fx", f.x], ["--fy", f.y], ["--fw", f.w], ["--fh", f.h]])) fd.style.setProperty(k, v + "px");
 }
-const governor = createGovernor(quality, resize);
+// When frames run long the governor gives things up (quality.js): the occlusion and the soft shadows go first, here.
+const governor = createGovernor(quality, () => { if (!quality.gtao) post.off("gtao"); if (!quality.softShadow) sky.soft(false); resize(); });
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
@@ -457,8 +502,11 @@ function frame(now) {
   const f = photo.on || menuUp ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on || menuUp ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
+  if (planning && (f || s)) planning = null;
+  if (planning) { const r = planning.next(); if (r.done) { planning = null; const pts = r.value.points; if (!r.value.reached && planGoal) pts.push({ x: planGoal.x, z: planGoal.z });   // (a spot that cannot be stood on: on to it as far as he can go, as before; a door is walked into this way)
+      if (pts.length && !f && !s) { pts[0].escape = walker.blocked(pos.x, pos.z); route = pts.slice(1); target = pts[0]; } } }
   if (f || s) { interrupt(); director.back(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
-  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) { settle(true); pace.v = 0; } } }
+  else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { const reached = target; target = route.shift() || null; vx = vz = 0; if (reached.drop) { hop = { plan: reached.drop, elapsed: 0, then: [target, ...route].filter(Boolean) }; target = null; route = []; pace.v = 0; } else if (!target) { settle(true); pace.v = 0; } } }
   const len = Math.hypot(vx, vz);
   if (menuUp || photo.on || airborne) pace.v = 0;   // a sheet over the walk, the camera raised, a hop: he stands, or the hop carries him
   // He gathers speed and loses it again over a few steps, as a child walks, rather than starting and stopping dead:
@@ -473,15 +521,16 @@ function frame(now) {
     else pace.v += Math.max(-WALK.down * dt, Math.min(WALK.up * dt, want - pace.v));
     const step = Math.min(f || s || len === 0 ? 1e9 : len, pace.v * dt); vx = pace.dir[0] * step; vz = pace.dir[1] * step;
     // Take the step, sliding along what is in the way or going round it (stride.js).
-    const moved = stride(walker, pos, vx, vz);
+    // (Put down in something that blocks, by a link or a tap's way out, he steps out of it by the first leg of the way.)
+    const moved = target && target.escape && walker.blocked(pos.x, pos.z) ? (pos.x += vx, pos.z += vz, true) : stride(walker, pos, vx, vz);
     if (!moved) { target = null; route = []; settle(false); pace.v = 0; }
     // The censer does not stop you: you are eased around it.
     const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
   if (flight) {
-    flight.elapsed += dt; const p = dropPose(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
-    if (p.done) hop = null;
+    flight.elapsed += dt; const p = (flight.plan.speed ? climbPose : dropPose)(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
+    if (p.done) { hop = null; if (flight.then && flight.then.length) { target = flight.then.shift(); route = flight.then; } }
   } else if (leap) {
     const step = leapStep(leap, walker.heightAt(pos.x, pos.z), dt); footY = step.y; if (step.landed) leap = null;
   } else footY = walker.heightAt(pos.x, pos.z);
@@ -490,6 +539,7 @@ function frame(now) {
   // following camera is what is felt most (《小王子》 smooths it over 0.14 s, its sideways following over 0.06 s).
   eyeY += ((aloft ? footY : walker.eyeAt(pos.x, pos.z)) - eyeY) * (1 - Math.exp(-dt / (view === "third" ? 0.14 : 0.08)));
   if (dropButton) dropButton.hidden = !availableDrop();
+  labelJump();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); }   // how to walk is said once the walk is his
@@ -583,6 +633,7 @@ function frame(now) {
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
+  post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
@@ -718,7 +769,7 @@ function lookOut(hall) {
 // Whatever falls through the air (snow, petals, leaves, fireflies) falls outdoors only.
 const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none" && !OFF.has("drift"); });
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
-const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
+const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
@@ -779,6 +830,16 @@ window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true
 window.__lofts = site.lofts;
 window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
+// The address of the view he has now, for the console: where he stands and looks, the mood, the hall or balcony he is
+// in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and
+// sends nothing anywhere; everything else in the address (the language, the tier, the parts switched off) is kept, and
+// a tool's `shot` is dropped.
+window.__debugURL = () => {
+  const q = new URLSearchParams(location.search); q.delete("shot");
+  return location.origin + location.pathname + poseQuery("?" + q.toString(), { x: pos.x, z: pos.z, yaw, pitch, view,
+    season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, devpose: true,
+    ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) + location.hash;
+};
 // A named view, without loading the place again: out of any room, then stood where the view stands.
 window.__show = (name) => { const v = site.views[name]; if (!v) return false; if (inside) indoors(null); comeDown(); if (site.viewUp[name]) { upstairs(site.lofts[site.viewUp[name]], [v[0], v[1]], v[2]); pitch = v[3]; return true; } window.__pose(v[0], v[1], v[2], v[3]); return true; };
 window.__up = (id) => (id === undefined ? (upIn ? upIn.id : null) : id ? climbTo(site.lofts[id === true ? "lingxiao" : id]) : climbTo(null));   // go up (from the stair's foot), come down (false), or say where he is
@@ -794,6 +855,8 @@ window.__part = (name, on) => {
   if (on) OFF.delete(name); else OFF.add(name);
   if (name === "reflect") { quality.planar = on ? PLANAR : 0; resize(); }
   else if (name === "bloom") { quality.bloom = !!on; resize(); }
+  else if (name === "layers") layers();
+  else if (["gtao", "halation", "lut", "dof"].includes(name)) { if (post.part(name, on) === null) { OFF.add(name); return null; } }
   else if (name === "shadow") { renderer.shadowMap.enabled = !!on; renderer.shadowMap.needsUpdate = true; scene.traverse((/** @type {any} */ o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); }
   else for (const o of scene.children) if (o.userData.part === name) o.visible = shownNow(name);
   return !OFF.has(name);
@@ -839,7 +902,7 @@ window.__probe = () => {
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox() };
+    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level };
 };
 // Rings on the water: how many made, how many spreading. `__ripples(true)` sets a step's worth going at his feet;
 // `__ripples([x, z, age])` one at that spot as if made `age` seconds ago, so a still picture can hold them.
@@ -1010,7 +1073,7 @@ if (Q.has("tour")) tour = createTour(Q.get("tour"), {
 if (DEVPOSE) {
   const { createDevPose } = await import("./src/devpose.js");
   devpose = createDevPose({ where: location, history,
-    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null,
+    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null,
       ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) });   // the written point stands where he stands
   addEventListener("keydown", (e) => {   // C: the address of this view, to the clipboard and the console
     if (e.key.toLowerCase() !== "c" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || ui.modal() || /** @type {Element} */ (e.target)?.tagName === "INPUT") return;

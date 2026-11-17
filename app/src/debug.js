@@ -3,14 +3,14 @@
 // It reads and acts only through the page's own hooks (window.__yard, __show, __pose, __inside, __mood, __view,
 // __part, __cost, __census), the same the tests use, so it never reaches into the walk. ` (the key left of 1) shows
 // or hides it. The panel is lil-gui and the frame graph stats.js, both of which come with three.js.
-import { poseQuery } from "./devpose.js";
+import { poseQuery } from "./link.js";
 
 export const KEY = "Backquote", STORE = "yunjing.debug.v1", EVERY = 250;
 export const SEASONS = ["spring", "summer", "autumn", "winter"], TIMES = ["dawn", "day", "dusk", "night"], TIERS = ["auto", "low", "medium", "high"];
-// What each switch is called on the panel: every part __part() offers, and the three passes.
+// What each switch is called on the panel: every part __part() offers, and the passes.
 export const LABELS = {
   site: "建筑", sky: "天", ground: "铺地", backdrop: "远山与竹屏", bamboo: "竹林", props: "香炉与雾", trees: "树", drift: "飘落",
-  reflect: "倒影", bloom: "泛光", shadow: "阴影",
+  reflect: "倒影", bloom: "泛光", shadow: "阴影", gtao: "环境光遮蔽", halation: "光晕", lut: "调色表", dof: "景深", layers: "分层雾",
 };
 
 // Frames a second over the last stretch, from the walk's own frame counter.
@@ -85,7 +85,7 @@ export async function mountDebug({ link }) {
     await W.__inside(r.hall); W.__pose(...roomPose(r, W.__yard().x));
   });
   at.add({ copy() {
-    const y = W.__yard(), url = link() || location.origin + location.pathname + poseQuery(location.search, { x: y.x, z: y.z, yaw: y.yaw, pitch: y.pitch, view: y.view, season: y.season, time: y.time, room: y.room });
+    const y = W.__yard(), url = link() || location.origin + location.pathname + poseQuery(location.search, { x: y.x, z: y.z, yaw: y.yaw, pitch: y.pitch, view: y.view, season: y.season, time: y.time, room: y.room, up: y.up });
     console.info("[debug]", url); navigator.clipboard?.writeText(url).catch(() => {});
   } }, "copy").name("复制此处链接");
 

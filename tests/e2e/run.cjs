@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, rites, stairs, drop), and the long walk that
+// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
@@ -156,6 +156,16 @@ const scenarios = {
       expect(ahead > 1.5 && ahead < 9 && aside < 0.5, `${name}: the tap should land a few steps straight ahead, not ${ahead.toFixed(1)} m ahead and ${aside.toFixed(1)} m aside at ${s1.target}`);
       await t.until(async () => (await t.state()).target === null, 60000, `${name}: never arrived`);
       const s2 = await t.state(); expect(Math.hypot(s2.x - s1.target[0], s2.z - s1.target[1]) < 0.3, `${name}: stopped short of the tapped spot at ${s2.x}, ${s2.z}`);
+    }
+    // #154: the spot the owner stood at (the tea house porch's south end, in the ring that blocks) and tapped the court from:
+    // he comes out, and by the porch's hop or round it reaches the tapped ground.
+    await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
+    await t.page.evaluate(() => window.__view("third")); await t.frames(2);
+    for (const [px, py] of [[210, 520], [150, 560], [260, 500]]) {
+      await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
+      await t.page.touchscreen.tap(px, py); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
+            await t.until(async () => { const s = await t.state(); return s.target === null && !s.dropping; }, 90000, "he never came out of the tea house porch's south end");
+      const s2 = await t.state(); expect(!(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [s2.x, s2.z])) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
     }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -429,7 +439,8 @@ const scenarios = {
         let set = 0;
         for (const [fx, fy] of [[0.5, 0.95], [0.5, 0.75], [0.5, 0.65], [0.3, 0.64], [0.7, 0.58], [0.5, 0.55]]) {
           await tap(vp.width * fx, vp.height * fy); await t.frames(1);
-          const s1 = await t.state();
+          let s1 = await t.state();
+          for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
@@ -794,7 +805,10 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__prologue())).shown === 0, "the title rose before the screen wall");
     await t.page.keyboard.down("w"); await reach(t, "the title never rose at the gate", () => window.__prologue().on, null, 90000); await t.page.keyboard.up("w");
     let P = await t.page.evaluate(() => window.__prologue()); expect(P.shown === 1 && /序章/.test(P.text) && /云径禅寺/.test(P.text), "the title should say 序章 云径禅寺: " + JSON.stringify(P));
-    expect((await t.page.evaluate(() => window.__cues())).prologue === 1, "one note of the qin with the title");
+    { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
+      expect(cu.prologue === 1, "the title should sound once: " + JSON.stringify(cu));
+      // With the music playing, the title's note is the first note of the gate's first phrase, begun with it.
+      expect(mu.started && mu.state === "running" && cu.titled === 1 && mu.section === "gate", "the gate's first phrase should begin with the title: " + JSON.stringify({ cu, section: mu.section })); }
     await reach(t, "the title never left", () => !window.__prologue().on && document.getElementById("prologue").hidden, null, 60000);
     await t.page.evaluate(([y]) => window.__pose(8.5, 58, y, 0.05), [-0.3]); await t.frames(3); await t.page.keyboard.down("w");
     await t.until(async () => (await t.state()).z < 52, 60000, "he never came round the wall again"); await t.page.keyboard.up("w");
@@ -1015,6 +1029,18 @@ const scenarios = {
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
+    // The console's link to this view (`__debugURL`, src/link.js): the published page hands out an address that opens on
+    // the same place, look and mood. It carries `devpose`, inert here and followed by a dev server.
+    const link = await t.page.evaluate(() => window.__debugURL());
+    expect(typeof link === "string" && /[?&]cam=0,33,0,-0\.05(&|$)/.test(link) && !/[?&]shot=/.test(link) && /[?&]devpose(&|$)/.test(link), "the console's link is not the address of this view: " + link);
+    const search = new URL(link).search.slice(1), before = await t.state();
+    const u = await open(b, base, search, { enter: false });
+    const after = await u.state();
+    expect(after.x === before.x && after.z === before.z && Math.abs(after.yaw - before.yaw) < 1e-3 && Math.abs(after.pitch - before.pitch) < 1e-3
+      && after.view === before.view && after.season === before.season && after.time === before.time,
+      "the console's link does not open where he stood: " + JSON.stringify({ before, after }));
+    expect(await u.page.evaluate(() => location.search) === "?" + search, "the published page should not write the console's devpose into the address");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
@@ -1145,6 +1171,27 @@ const scenarios = {
       for (const [h, name] of [[notice, "three.js"], [notice, "Basis Universal"], [ofl, "SIL OPEN FONT LICENSE"]]) { const body = await t.page.evaluate(async (u) => { const r = await fetch(u); return r.ok ? (await r.text()) : "HTTP " + r.status; }, h); expect(body.toUpperCase().includes(name.toUpperCase()), `${h} should open and name ${name}: ${body.slice(0, 60)}`); } }
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#credits")) && (await t.page.isVisible("#menu")), "Esc should put away the page of thanks and leave the menu");
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#menu")), "Esc should close the menu again");
+    // Laid out for the screen (#134): across on a computer's wide screen with nothing to scroll, one column on a tall one, two on a phone held sideways.
+    await t.page.evaluate(() => document.body.classList.add("seasons"));   // the seasons' rows are the tallest case
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu for the layout check");
+    const lay = async (w, h) => { await t.page.setViewportSize({ width: w, height: h }); await t.frames(2);
+      return t.page.evaluate(() => { const c = document.querySelector("#menu .card"), r = c.getBoundingClientRect(), cs = getComputedStyle(c), a = document.querySelector("#menu .grp-view").getBoundingClientRect(), b = document.querySelector("#menu .grp-ctl").getBoundingClientRect();
+        return { w: r.width, h: r.height, fits: c.scrollHeight <= c.clientHeight, cols: cs.gridTemplateColumns.split(" ").length, side: b.left >= a.right - 1, centred: Math.abs(r.left + r.width / 2 - innerWidth / 2) < 2, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; }); };
+    for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) { const m = await lay(w, h); expect(m.cols === 2 && m.side && m.w > m.h && m.fits && !m.clipped && m.centred && m.inside && m.w <= 960, `the menu should lie across at ${w}x${h}, whole and centred: ` + JSON.stringify(m)); }
+    for (const [w, h] of [[390, 844], [768, 1024]]) { const m = await lay(w, h); expect(m.cols === 1 && m.inside && m.h > m.w, `the menu should stay one column at ${w}x${h}: ` + JSON.stringify(m)); }
+    { const m = await lay(844, 390); expect(m.cols === 2 && m.inside, "a phone held sideways keeps its two columns: " + JSON.stringify(m)); }
+    // Tab goes down the left column, then the right, then the foot: the order the eye reads it in.
+    { await t.page.setViewportSize({ width: 1366, height: 768 }); await t.frames(2); const seq = [];
+      const n = await t.page.evaluate(() => [...document.querySelectorAll("#menu button, #menu input")].filter((e) => e.offsetParent && !e.disabled).length);
+      await t.page.evaluate(() => document.querySelector("#menu .grp-view button, #menu .grp-view input").focus());
+      for (let i = 0; i < n; i++) { seq.push(await t.page.evaluate(() => { const a = document.activeElement; return a.closest(".grp-view") ? "L" : a.closest(".grp-ctl") ? "R" : a.closest("#menu") ? "F" : "?"; })); await t.page.keyboard.press("Tab"); }
+      expect(/^L+R+F+$/.test(seq.join("")), "Tab should go through the left column, then the right, then the foot: " + seq.join("")); }
+    await t.page.setViewportSize({ width: 800, height: 500 }); await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#menu")), 10000, "Esc did not close the menu");
+    // The shortest wide screen, in each language: nothing to scroll (the group's invitation is Chinese only, so Chinese is the tallest).
+    for (const lg of ["ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+      await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
+      const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
+      expect(m.fits && !m.clipped, `the menu should lie whole at 1280x720 in ${lg}: ` + JSON.stringify(m)); await u.close(); }
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3, "the settings were not kept: " + JSON.stringify(st));
@@ -1282,6 +1329,11 @@ const scenarios = {
     await part("reflect", false); y = await t.state(); expect(y.planar === 0, "the mirror did not go out");
     await part("reflect", true); y = await t.state(); expect(y.planar === 0.5, "the mirror did not come back at the tier's size");
     for (const n of ["bloom", "shadow"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    // The film's finish: the halation, the colour table and the mist's layers switch on every tier; the occlusion and
+    // the depth of field are the high tier's, and the middle tier refuses them (the finish scenario looks at the high).
+    for (const n of ["halation", "lut", "layers"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    for (const n of ["gtao", "dof"]) expect((await part(n, true)) === null, `the medium tier should not offer ${n}`);
+    { const f = (await t.probe()).post; expect(!f.depth && !f.gtao && f.lut && f.halation, "the medium tier's finish: no depth or occlusion, a colour table and halation at dusk: " + JSON.stringify(f)); }
     expect(y.season === "autumn" && y.time === "dusk" && y.view === "first" && y.fov > 0, "__yard should say the hour and the view: " + JSON.stringify(y));
     // A named view, without loading again; an unknown one is refused.
     expect(await t.page.evaluate(() => window.__show("gate")), "__show refused a named view"); y = await t.state();
@@ -1297,6 +1349,29 @@ const scenarios = {
     expect((await part("site", true)) === true && !(await census()).site.hidden, "the buildings did not come back outdoors");
     await t.frames(2); const p = await t.probe(); expect(p.lum > 12 && p.lum < 245, "the picture is blank after the switches: " + p.lum.toFixed(1));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The film's finish on the high tier (docs/t00/art-goal.md, first stage): the scene's depth is kept and the occlusion
+  // drawn from it; at dusk a colour table and halation; the mist lies in layers; a fixed view (?shot) is focused, the walk
+  // is not; each part goes out with ?off=; summer by day (J01) keeps no table, no halation and plain air; the low tier
+  // keeps no depth.
+  finish: { tier: 2, async run(b, base) {
+    const look = async (q, w = 480, h = 200) => { const t = await open(b, base, q, { viewport: { width: w, height: h } }); await t.frames(2); const p = await t.probe(); expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close(); return p; };
+    let p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
+    expect(p.post.depth && p.post.gtao && p.post.lut && p.post.halation && !p.post.dof && p.layers > 0 && p.soft && p.governed === 0, "the high tier at dusk, walking: " + JSON.stringify([p.post, p.layers, p.soft]));
+    // The colour table is baked when the hour changes, never per frame (it once was, at 20 ms of CPU a frame).
+    { const t = await open(b, base, "q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk", { viewport: { width: 320, height: 160 } }); await t.frames(2);
+      const n0 = (await t.probe()).post.bakes; await t.frames(6); const n1 = (await t.probe()).post.bakes;
+      expect(n0 >= 1 && n1 === n0, `the colour table was baked again while walking: ${n0} → ${n1}`);
+      await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
+      expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
+    p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
+    expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
+    p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk&off=gtao,lut,halation,layers,dof");
+    expect(!p.post.gtao && !p.post.lut && !p.post.halation && p.layers === 0, "?off= should put out each part of the finish: " + JSON.stringify([p.post, p.layers]));
+    p = await look("q=high&shot=1&show=cam06");
+    expect(p.season === "summer" && p.time === "day" && !p.post.lut && !p.post.halation && p.layers === 0 && p.post.gtao, "J01 keeps its colour and its air: " + JSON.stringify([p.post, p.layers]));
+    p = await look("q=low&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
+    expect(!p.post.depth && !p.post.gtao && !p.post.dof && p.post.lut && !p.soft, "the low tier keeps no depth, draws no occlusion and no soft shadows: " + JSON.stringify([p.post, p.soft]));
   } },
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });
@@ -1315,6 +1390,19 @@ const scenarios = {
     await t.until(async () => (await t.page.evaluate(() => window.__jump.some((j) => j[1]))) && !(await t.state()).jumping, 120000, "he never came down from a running jump");
     await t.page.keyboard.up("w"); js = (await t.page.evaluate(() => window.__jump)).filter((j) => j[1]);
     expect(js.length >= 2 && js[js.length - 1][2] < js[0][2] - 0.02, "he should carry on forward through the air");
+    // #143: from the court, facing the meditation hall's low porch (0.45 m), Space jumps up onto it along an arc of his own jump,
+    // and walking at the same edge still stops him.
+    await t.page.evaluate(() => window.__pose(12.4, 8, Math.PI / 2, 0.1)); await t.frames(3);
+    await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w"); await t.frames(2);
+    expect((await t.state()).x < 12.8, "walking at the porch edge from the court should still stop him");
+    await t.page.evaluate(() => window.__pose(12.4, 8, Math.PI / 2, 0.1)); await t.frames(3);
+    await t.page.evaluate(() => { window.__up = []; window.__upOn = true; const read = () => { const s = window.__yard(); window.__up.push([s.x, s.footY, s.dropping]); if (window.__upOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+    await t.page.keyboard.press("Space");
+    await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0.45 && s.x > 13.2; }, 120000, "Space did not take him up onto the low porch");
+    const up = await t.page.evaluate(() => { window.__upOn = false; return window.__up; });
+    expect(up.filter((q) => q[2]).length >= 3 && up.some((q) => q[1] > 0.2 && q[1] < 0.44) && Math.max(...up.map((q) => q[1])) < 0.47, "the way up should be a rise and a fall, not a teleport, and no higher than his jump: " + JSON.stringify(up.filter((q) => q[2]).map((q) => [q[0], q[1]]).slice(0, 8)));
+    expect(Math.abs((await t.state()).footY - 0.45) < 0.001, "he should stand on the porch");
+    await t.shot("jump-up");
     // Where something is offered, Space still jumps and E still does it.
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("Space"); await t.frames(3); expect((await t.journey()).strikes === 0, "Space should not strike the bell any more");
@@ -1340,15 +1428,16 @@ const scenarios = {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)
       const t = await open(b, base, "q=low&cam=13.65,11,-1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
-      await t.until(() => t.page.isVisible("#dropBtn"), 30000, "the low unrailed porch offers no way down");
+      await t.until(() => t.page.isVisible(touch ? "#jumpBtn" : "#dropBtn"), 30000, "the low unrailed porch offers no way down");
+      if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
       if (!touch) {
         await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
         const edge = await t.state(); expect(edge.h === 0.45 && edge.x > 13.2, "ordinary walking should still stop at the porch edge");
       } else {
-        const r = await t.page.locator("#dropBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
+        const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
       }
       await t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
-      if (touch) await t.page.tap("#dropBtn"); else await t.page.keyboard.press("Space");
+      if (touch) await t.page.tap("#jumpBtn"); else await t.page.keyboard.press("Space");
       await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < 12.7; }, 120000, "the low porch hop never reached its clear landing");
       const samples = await t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
       expect(samples.filter(s => s.dropping).length >= 3 && samples.some(s => s.y > 0.5) && samples.some(s => s.y > 0 && s.y < 0.4), "the hop must rise and descend continuously, not teleport");
@@ -1424,7 +1513,18 @@ const scenarios = {
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first" + BARE, { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
-    expect(!(await t.page.$("#jumpBtn")), "a phone is not given a jump button: the porch's 下台阶 shows where it is needed");
+    // #142: a phone has one faint ring lower right, across from the stick, that jumps and, before a porch's edge, hops down or up.
+    expect(await t.page.isVisible("#jumpBtn"), "a phone should be given a jump ring lower right");
+    { const r = await t.page.evaluate(() => { const b = document.getElementById("jumpBtn").getBoundingClientRect(), k = document.getElementById("stick").getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight, k.right]; });
+      expect(r[2] <= r[4] && r[3] <= r[5] && r[2] - r[0] >= 56 && r[3] - r[1] >= 56 && r[0] > r[4] / 2 && r[0] > r[6], `the jump ring is misplaced or too small: ${r}`); }
+    expect((await t.page.textContent("#jumpBtn")).trim() === "跳", "away from any porch the ring says 跳");
+    { const y0 = (await t.state()).footY; await t.page.evaluate(() => { window.__j = []; window.__jOn = true; const read = () => { window.__j.push(window.__yard().footY); if (window.__jOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      await t.page.touchscreen.tap(...(await t.page.evaluate(() => { const b = document.getElementById("jumpBtn").getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; })));
+      await t.until(async () => (await t.page.evaluate(() => window.__j)).some((h) => h > y0 + 0.2), 60000, "pressing the ring did not take him off the ground");
+      await t.until(async () => !(await t.state()).jumping, 60000, "he never came down"); await t.page.evaluate(() => { window.__jOn = false; });
+      expect(Math.abs((await t.state()).footY - y0) < 0.01, "he should land where he took off"); }
+    // with a sheet open it cannot be pressed
+    await t.page.evaluate(() => window.__menu(true)); await t.frames(2); expect(!(await t.page.isVisible("#jumpBtn")), "the ring should be put away under a sheet"); await t.page.evaluate(() => window.__menu(false)); await t.frames(2);
     for (const id of ["photoBtn", "menuBtn", "bookBtn"]) {
       const r = await t.page.evaluate((i) => { const b = document.getElementById(i).getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight]; }, id);
       expect(r[0] >= 0 && r[1] >= 0 && r[2] <= r[4] && r[3] <= r[5], `#${id} hangs off the screen`); expect(r[2] - r[0] >= 40 && r[3] - r[1] >= 38, `#${id} is too small to tap`);

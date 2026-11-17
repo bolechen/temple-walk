@@ -3,7 +3,7 @@
 // require. Three buses, each with its own level in the pause menu: music, the place (wind, water, eave bells) and
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
 import { createPlayer, createVoices, reverb, bell, hillEcho } from "./instruments.js";
-import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase } from "./score.js";
+import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePhrase, rng } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
 const STEP_WET = { out: 0.07, in: 0.4 };   // how much of a step goes to the court's reverb outdoors, the hall's indoors
@@ -227,7 +227,7 @@ export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 // ---- Two cues of the story ----
 // Wings: a dozen small birds going up at once from a tree, a rattle of quick wingbeats that thins as they climb away,
 // and two or three alarm calls among them.
-const cues = { flutter: 0, farBell: 0, mountainBell: 0, prologue: 0, ending: 0, passed: 0 };
+const cues = { flutter: 0, farBell: 0, mountainBell: 0, prologue: 0, titled: 0, ending: 0, passed: 0 };
 export function flutter(level = 1) {
   if (!ctx || ctx.state !== "running" || level <= 0) return;
   const now = ctx.currentTime + 0.02;
@@ -262,10 +262,22 @@ export function mountainBell() {
   bell(ctx, lp, t, 0.8, hillBellEcho);
   cues.mountainBell++;
 }
-// The prologue's title (game.js): one note on the qin, the theme's first, as the gate first stands whole before him.
-let titleVoices = null;
+// The prologue's title (game.js): as the gate first stands whole before him, the gate's first phrase begins with the
+// title, its first D the title's note (score.js's titlePhrase). If the music is not playing yet, or the gate's first
+// phrase has already been heard, the title has its one note on the qin, the theme's first, as before.
+let titleVoices = null, titleAwaited = false;
+// Until the title has risen, the gate's place keeps the stair's music, so that its first phrase is saved for the title.
+export function awaitTitle(on) { titleAwaited = !!on; }
 export function prologueNote() {
+  titleAwaited = false;
   if (!start()) return; wake();
+  if (music && !musicHeld && ctx.state === "running" && !music.player.conductor.heard("gate")) {
+    const p = music.place(), now = ctx.currentTime;
+    music.keeper.settle("gate", now);
+    music.player.begin(now, titlePhrase(rng((Date.now() / 1000) | 0), moodMusic(p.season, p.time)), "gate");
+    cues.prologue++; cues.titled++;
+    return;
+  }
   if (!titleVoices) titleVoices = createVoices(ctx, bus.effects.in);
   duck(0.6, 3);
   titleVoices.play({ voice: "qin", m: THEME[0].m, dur: 3.2, vel: 0.9, slide: null }, ctx.currentTime + 0.05);
@@ -379,7 +391,7 @@ function startMusic(place) {
   music = { keeper, player, place };
   const tick = () => {
     if (ctx.state !== "running") return;
-    const p = place(), now = ctx.currentTime, zone = keeper.update(p.zone || "court", now);
+    const p = place(), now = ctx.currentTime, zone = keeper.update(titleAwaited && p.zone === "gate" ? "stair" : p.zone || "court", now);
     player.tick(now, zone, seals, moodMusic(p.season, p.time));
   };
   tick(); setInterval(tick, 250);

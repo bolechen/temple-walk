@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL, endingPhrase, ENDING, COMPLETE_AFTER } from "../../app/src/score.js";
+import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL, endingPhrase, ENDING, COMPLETE_AFTER, titlePhrase, TITLE_LEAD } from "../../app/src/score.js";
 const { buildSite, SITE, LEVELS, APPROACH, SCREEN } = await import("../../app/src/site.js");
 import * as THREE from "three";
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -199,4 +199,32 @@ test("the close's music begins at once, is cut only when passed over, and the wh
   for (u = q.start + 6; u < q.start + 6 + FADE; u += 0.25) assert.equal(d.tick(u, "summit", 3, mood), null, "something began while the close faded");
   assert.equal(createConductor(1).leave(0), null, "there is nothing to pass over when no close is sounding");
   assert.ok(COMPLETE_AFTER > 0 && COMPLETE_AFTER < 8);
+});
+
+// ---- The prologue's title and the gate's first phrase, as one ----
+test("with the prologue's title the gate's first phrase begins, its first note the title's D, a moment after", () => {
+  for (const s of SEASONS) for (const t of TIMES) {
+    const p = titlePhrase(rng(3), moodMusic(s, t)), id = `${s}-${t}`, melody = p.events.filter((e) => MELODY.has(e.voice)).sort((a, b) => a.at - b.at);
+    assert.ok(Math.abs(melody[0].at - TITLE_LEAD) < 1e-9, `${id}: the first note comes ${melody[0].at.toFixed(2)} s after the title`);
+    assert.equal(((melody[0].m - THEME[0].m) % 12 + 12) % 12, 0, `${id}: the title's note is not the theme's D`);
+    assert.deepEqual(steps(melody.slice(0, 5).map((e) => e.m)), steps(THEME.slice(0, 5).map((n) => n.m)), `${id}: the gate's first phrase lost its shape`);
+    assert.ok(p.events.every((e) => e.at >= 0) && p.section === "gate" && p.first, `${id}: not the gate's first phrase`);
+  }
+});
+
+test("the title's phrase, begun over the stair's music, is not cut, and the gate's first phrase is not heard twice", () => {
+  const mood = moodMusic(), c = createConductor(11), keeper = createZoneKeeper(2), log = [];
+  let t = 0; for (; t < 40; t += 0.25) { const p = c.tick(t, keeper.update("stair", t), 0, mood); if (p && !p.cut) log.push(p); }
+  keeper.settle("gate", t); const q = c.begin(t, titlePhrase(rng(2), mood), "gate");
+  assert.ok(q.start - t <= 0.6 + 1e-9 && c.heard("gate"), "the title's phrase did not begin at once");
+  for (; t < q.notesEnd + 60; t += 0.25) {
+    const p = c.tick(t, keeper.update("gate", t), 0, mood);
+    if (p && p.cut) assert.fail(`the title's phrase was cut at ${(t - q.start).toFixed(1)} s`);
+    if (p) { assert.ok(p.start >= q.notesEnd, "a phrase began over the title's"); assert.ok(!(p.section === "gate" && p.first), "the gate's first phrase came again"); }
+  }
+});
+
+test("wherever the title can rise, he is already in the gate's music", async () => {
+  const { GATE } = await import("../../app/src/opening.js");
+  for (let z = GATE.zN + 0.05; z < GATE.zS; z += 0.25) for (let x = -GATE.x + 0.05; x < GATE.x; x += 0.5) assert.equal(zoneOf(x, z, false, B), "gate", `the title may rise at ${x.toFixed(1)}, ${z.toFixed(1)}, which is not the gate's place`);
 });

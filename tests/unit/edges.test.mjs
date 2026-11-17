@@ -114,7 +114,7 @@ test("a jump at either tea table, from any side, walking or hurrying, neither la
 });
 
 test("below the knee: the tea house's cushions are walked round, and the gate's sill and the summit mat are floors his shoes come down on", () => {
-  const cushions = site.walk.posts.filter((p) => p.r === 0.26 && p.x < -12 && p.x > -15); assert.equal(cushions.length, 4, "a cushion at either end of each tea table");
+  const cushions = site.walk.posts.filter((p) => p.r === 0.292 && p.x < -12 && p.x > -15); assert.equal(cushions.length, 4, "a cushion at either end of each tea table");
   for (const c of cushions) assert.ok(walker.blocked(c.x, c.z) && walker.blocked(c.x + c.r + BODY - 0.02, c.z), `the cushion at (${c.x.toFixed(2)}, ${c.z.toFixed(2)}) can be walked into`);
   const gate = site.buildings.find((b) => b.name === "万年正续"), sill = [];   // the gate house, platform and all
   for (let zz = gate.z0; zz < gate.z1; zz += 0.01) sill.push(walker.heightAt(0, zz));
