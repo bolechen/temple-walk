@@ -67,6 +67,27 @@
     "returns_the_same_way": true,
     "note": "x east, z south (north is -z); waypoints are draft and follow the OSM building centres"
   },
+  "checkpoints": {
+    "system": "山行记·七记（见 CHECKPOINTS.md）；不做集齐门槛，不评分",
+    "main": [
+      { "id": "C01", "name": "入山·领香", "zone": "Z1/Z2", "mark": "入" },
+      { "id": "C02", "name": "看水·圣僧桥", "zone": "Z2", "mark": "水" },
+      { "id": "C04", "name": "认石·大殿阶", "zone": "Z3", "mark": "石" },
+      { "id": "C07", "name": "寻字·摩崖", "zone": "Z4", "mark": "字" },
+      { "id": "C08", "name": "寻塔·旧草图", "zone": "Z4", "mark": "图" },
+      { "id": "C10", "name": "数罗汉", "zone": "Z4", "mark": "罗汉" },
+      { "id": "C11", "name": "绕塔·三圈", "zone": "Z5", "mark": "塔" }
+    ],
+    "optional": [
+      { "id": "C06", "name": "听钟", "zone": "Z2/Z3", "mark": "钟" },
+      { "id": "C09", "name": "数亭·法界宫五亭顶", "zone": "Z4", "mark": "亭" },
+      { "id": "C12", "name": "看影·塔影田", "zone": "Z5", "mark": "影", "season": "winter clear afternoon" },
+      { "id": "C13", "name": "留影·黄墙", "zone": "Z4", "mark": "相" },
+      { "id": "C14", "name": "遇猫", "zone": "Z4/Z5", "mark": "猫" },
+      { "id": "C15", "name": "回望·城市", "zone": "Z5", "mark": "城" }
+    ],
+    "not_doing": ["求财/求姻缘", "敲万斤钟", "拓摩崖", "登塔（第一版）", "喂猫", "摘菜薹", "数罗汉换签诗"]
+  },
   "lighting": {
     "preset": "proposal T01-J01 winter clear morning (or T01-J02 late autumn after rain)",
     "main_light": "low warm sun from the south-east; cool sky fill; city haze in the distance",
