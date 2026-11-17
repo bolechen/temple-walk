@@ -439,7 +439,8 @@ const scenarios = {
         let set = 0;
         for (const [fx, fy] of [[0.5, 0.95], [0.5, 0.75], [0.5, 0.65], [0.3, 0.64], [0.7, 0.58], [0.5, 0.55]]) {
           await tap(vp.width * fx, vp.height * fy); await t.frames(1);
-          const s1 = await t.state();
+          let s1 = await t.state();
+          for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
