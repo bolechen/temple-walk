@@ -1,0 +1,64 @@
+asset_id,file,type,source,author_or_origin,license,modified,used_for,status,commercial_use,attribution_required,license_url,checked_on
+TEX-wood,app/shared/textures/wood_a.webp + wood_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,柱、梁、栿、门、斗拱（调成深褐/灰褐）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-stone,app/shared/textures/stone_a.webp + stone_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,台基、月台、踏道、柱础、地面,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-blocks,app/shared/textures/blocks_a.webp + blocks_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,灰砖墙、台基侧面、围墙（T05 需更细灰砖）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-plaster,app/shared/textures/plaster_a.webp + plaster_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,殿内白灰墙、壁画地仗、外檐土朱墙,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-bark,app/shared/textures/bark_a.webp + bark_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,院树（少量）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-leaves,app/shared/textures/leaves_a.webp + leaves_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,院树叶（少量；不用竹叶）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-snow,app/shared/textures/snow_a.webp + snow_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,雪后变体的屋顶/台基/院子,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-weave,app/shared/textures/weave_a.webp + weave_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,幡、帘、供桌围（第一版少用）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+FONT-cn,app/shared/fonts/*-cn.*,typeface,Ma Shan Zheng / LXGW WenKai / Zhi Mang Xing / Yuji Boku / Noto Serif SC,see T00 asset-register,SIL OFL 1.1,cut by tools/fonts.py; reserved names renamed,T05 新增文字需重裁,reuse,yes,yes (OFL notice),https://openfontlicense.org/,2026-11-17
+FONT-ja-en-ko,app/shared/fonts/*-ja|en|ko.*,typeface,see T00 asset-register,see T00 asset-register,SIL OFL 1.1,cut by tools/fonts.py,日/英/韩界面,reuse,yes,yes (OFL notice),https://openfontlicense.org/,2026-11-17
+LIB-three,package.json / app/vendor,library,three.js 0.186.0,three.js,MIT,as published,engine,reuse,yes,yes,https://github.com/mrdoob/three.js/blob/dev/LICENSE,2026-11-17
+LIB-meshopt,package.json / app/vendor,library,meshoptimizer,meshoptimizer,MIT,as published,engine,reuse,yes,yes,https://github.com/zeux/meshoptimizer/blob/master/LICENSE.md,2026-11-17
+LIB-basis,package.json / app/vendor,library,Basis Universal transcoder,Basis,Apache-2.0,as published,engine,reuse,yes,yes,https://github.com/BinomialLLC/basis_universal/blob/master/LICENSE,2026-11-17
+LIB-lil-gui,package.json / app/vendor,library,lil-gui,lil-gui,MIT,as published,dev panel,reuse,yes,yes,https://github.com/georgealways/lil-gui/blob/master/LICENSE,2026-11-17
+LIB-stats,package.json / app/vendor,library,stats.js,stats.js,MIT,as published,dev stats,reuse,yes,yes,https://github.com/mrdoob/stats.js/blob/master/LICENSE,2026-11-17
+MODEL-buddha,app/shared/models/buddha.glb,3D model (GLB),rushiwowen.co / zen-v2,owned by project owner,owned by the project owner; distributed with this project by the owner decision of 2026-11-15,as published (meshopt+Basis),比例占位/远景（不作七佛之一）,reuse,yes (owner),no,,2026-11-17
+MODEL-pedestal,app/shared/models/pedestal.glb,3D model (GLB),rushiwowen.co / zen-v2,owned by project owner,owned by the project owner; distributed with this project by the owner decision of 2026-11-15,as published,佛座比例占位,reuse,yes (owner),no,,2026-11-17
+TOOL-build-walk,app/src/,code,project own,project,project own,existing,buildHall/stairGeo/walk/geo/materials/framing/interior,reuse,yes,no,,2026-11-17
+TOOL-render-test,tools/ + tests/,code/tools,project own,project,project own,existing,shots.js/inside.cjs/edges/nearplane/mobile-audit/gpu-render,reuse,yes,no,,2026-11-17
+TOOL-asset-pipeline,tools/,code/tools,project own,project,project own,existing,textures.py/fonts.py/gallery.py/boards.py,reuse,yes,no,,2026-11-17
+BLD-liao-hall,app/src/ or app/levels/t05/,procedural geometry,T05 project,project,project own,to be made,辽代殿堂：九间×五间、单檐庑殿、减柱、彻上明造、七铺作,planned,yes,no,,2026-11-17
+BLD-platform-yuetai,app/levels/t05/,procedural geometry,T05 project,project,project own,to be made,3 米台基、37×15 月台、18 级踏道、钟亭/碑亭,planned,yes,no,,2026-11-17
+BLD-roof-tiles,app/src/,procedural geometry/material,T05 project,project,project own,to be made,单檐五脊庑殿、青灰瓦、脊饰,planned,yes,no,,2026-11-17
+BLD-bracket,app/src/,procedural geometry,T05 project,project,project own,to be made,七铺作双抄双下昂；柱头/补间/转角三种先做,planned,yes,no,,2026-11-17
+BLD-door-window,app/src/,procedural geometry,T05 project,project,project own,to be made,三门四窗、板门/直棂窗、门钉/门簪、三块竖匾,planned,yes,no,,2026-11-17
+BLD-frame,app/src/,procedural geometry,T05 project,project,project own,to be made,八缝梁架、四椽栿/六椽栿、驼峰、槫、椽；彻上明造,planned,yes,no,,2026-11-17
+BLD-wuliang,app/levels/t05/,procedural geometry,T05 project,project,project own,to be made,无量殿/天王殿：清初、五间（一说三间）、单檐歇山、16.14×12.22,planned,yes,no,,2026-11-17
+SCU-seven-buddhas,app/levels/t05/,original sculpture,T05 project,project,project own,to be made,七佛原创群像：不同手印/头向/袈裟/胸衣/座/背光；不作复制品,planned,yes,no,,2026-11-17
+SCU-attendants,app/levels/t05/,original sculpture,T05 project,project,project own,to be made,14 尊胁侍菩萨：一佛二胁侍、姿态各异、不命名,planned,yes,no,,2026-11-17
+SCU-guardians,app/levels/t05/,original sculpture,T05 project,project,project own,to be made,2 尊天王：佛坛两端、持降魔杵、3.5–4 米,planned,yes,no,,2026-11-17
+SCU-back-guanyin,app/levels/t05/,original sculpture,T05 project,project,project own,to be made,倒坐观音（明、面北）；第一版可省,planned,yes,no,,2026-11-17
+SCU-altar,app/levels/t05/,procedural geometry,T05 project,project,project own,to be made,佛坛 37.5×4.8×0.87；七座须弥座/莲座；供桌/香炉,planned,yes,no,,2026-11-17
+PAINT-caihua,app/levels/t05/,original painting/material,T05 project,project,project own,to be made,原创梁架彩画：朱红衬地、矿物绿/白/黄丹、飞天/网目纹/宝相花,planned,yes,no,,2026-11-17
+PAINT-mural-east-west,app/levels/t05/,original painting/material,T05 project,project,project own,to be made,原创东西墙十佛壁画：5+5、约 3.2×2.9 米/尊,planned,yes,no,,2026-11-17
+PAINT-mural-north,app/levels/t05/,original painting/material,T05 project,project,project own,to be made,原创北墙八菩萨、南尽间十一面观音,planned,yes,no,,2026-11-17
+LGT-f01,app/src/,lighting preset,T05 project,project,project own,to be made,F01 入口漫射天光：南门/四窗唯一光源、3–4 EV 光比、无直射佛像,planned,yes,no,,2026-11-17
+LGT-altar-fill,app/src/,lighting,T05 project,project,project own,to be made,极弱 altar lamp（设计补光，不声称现场原有）,planned,yes,no,,2026-11-17
+SFX-courtyard,app/src/audio.js,synthesised sound,T05 project,project,project own,to be made,院外县城低声、风、鸟、远处车流,planned,yes,no,,2026-11-17
+SFX-steps,app/src/steps.js,synthesised sound,T05 project,project,project own,to be made,砖/石/门槛/雪后闷响四种脚步,planned,yes,no,,2026-11-17
+SFX-hall-reverb,app/src/audio.js,synthesised reverb,T05 project,project,project own,to be made,大殿长混响 4–6 秒 IR（生成，不录）,planned,yes,no,,2026-11-17
+SFX-door,app/src/audio.js,synthesised sound,T05 project,project,project own,to be made,门轴/木构/香灰：稀疏、短,planned,yes,no,,2026-11-17
+SFX-birds,app/src/audio.js,synthesised sound,T05 project,project,project own,to be made,鸟（不辨种）：院外/门洞、白天,planned,yes,no,,2026-11-17
+MUS-t05,app/src/score.js,synthesised music,T05 project,project,project own,to be made,可选：进门/回到中央各一小段；默认无配乐,planned,yes,no,,2026-11-17
+UI-i18n-t05,app/levels/t05/locales/,text,T05 project,project,project own,to be made,T05 四语文字与观察页,planned,yes,no,,2026-11-17
+REF-osm,docs/t05/osm-buildings.csv,derived map data,OpenStreetMap / Overpass API,© OpenStreetMap contributors,ODbL,computed by this research,白盒布局/定位,reference,yes,yes (ODbL),https://www.openstreetmap.org/copyright,2026-11-17
+REF-srtm,docs/t05/elevation-grid.csv,derived elevation data,opentopodata / SRTM 30m,NASA/USGS,public domain (SRTM),queried by this research,白盒高程参考（不能读台基）,reference,yes,no,https://api.opentopodata.org/,2026-11-17
+REF-commons-fengguosi,"research only, not shipped",photographs,Wikimedia Commons Category:Fengguo Temple,various,CC BY-SA / PD (per file),none,研究、配色、构图参考,reference,conditional,yes if shipped,https://commons.wikimedia.org/wiki/Category:Fengguo_Temple,2026-11-17
+REF-official-pages,"research only, not shipped",web pages,辽宁省文旅厅、辽宁省政府、义县政府,government,read-only reference,none,史实/景区资料,reference,unknown,cite source,,2026-11-17
+REF-papers,"research only, not shipped",papers/survey reports,杜仙洲 1961; 丁垚/成丽 2008; 温玉清 2008/2009; 杨烈 2011; 刘畅等 2012,authors/publishers,read-only reference,none,形制/测绘/修缮,reference,unknown,cite source,https://www.dpm.org.cn/Uploads/File/2018/06/15/u5b23645d4749d.pdf,2026-11-17
+REF-met-vairocana,"research only, not shipped",artwork photograph,https://www.metmuseum.org/art/collection/search/73200,The Metropolitan Museum of Art,Met Open Access (public domain/CC0),none (reference only),辽代佛的宝冠/面相/衣纹参考（2006.284）,reference,yes,no (credit requested; no Met marks),https://www.metmuseum.org/policies/image-resources,2026-11-17
+REF-cma-liao,"research only, not shipped",artwork photographs,https://clevelandart.org/art/1976.14 ; /1974.90 ; /1980.24,Cleveland Museum of Art,CC0,none (reference only),辽代菩萨/文殊/普贤坐骑参考,reference,yes,no (CC0; credit requested),https://creativecommons.org/publicdomain/zero/1.0/,2026-11-17
+WORK-cma-guanyin-1976-14,(planned) app/levels/t05/gallery/cma-guanyin-1976-14.webp,artwork photograph,https://clevelandart.org/art/1976.14,佚名; Cleveland Museum of Art (1976.14),Cleveland Open Access (CC0),resize to 1280 px WebP (planned),无量殿/天王殿辽代造像小展：观音菩萨、辽 900s、鎏金铜、高 43.8 cm,candidate,yes,no (CC0; credit requested),https://creativecommons.org/publicdomain/zero/1.0/,2026-11-17
+WORK-cma-manjusri-1974-90,(planned) app/levels/t05/gallery/cma-manjusri-1974-90.webp,artwork photograph,https://clevelandart.org/art/1974.90,佚名; Cleveland Museum of Art (1974.90),Cleveland Open Access (CC0),resize to 1280 px WebP (planned),无量殿/天王殿辽代造像小展：文殊骑狮、辽 900s、铜、高 17 cm,candidate,yes,no (CC0; credit requested),https://creativecommons.org/publicdomain/zero/1.0/,2026-11-17
+WORK-cma-elephant-1980-24,(planned) app/levels/t05/gallery/cma-elephant-1980-24.webp,artwork photograph,https://clevelandart.org/art/1980.24,佚名; Cleveland Museum of Art (1980.24),Cleveland Open Access (CC0),resize to 1280 px WebP (planned),无量殿/天王殿辽代造像小展：普贤六牙白象、辽约 1000s、鎏金铜、高 18.5 cm,candidate,yes,no (CC0; credit requested),https://creativecommons.org/publicdomain/zero/1.0/,2026-11-17
+WORK-met-vairocana-2006-284,(planned) app/levels/t05/gallery/met-vairocana-2006-284.webp,artwork photograph,https://www.metmuseum.org/art/collection/search/73200,佚名; The Metropolitan Museum of Art (2006.284),Met Open Access (public domain/CC0),resize to 1280 px WebP (planned),无量殿/天王殿辽代造像小展：毗卢遮那佛、11 世纪中国（通常定辽）、鎏金铜、高 21.9 cm,candidate,yes,no (CC0; credit requested; no Met marks),https://www.metmuseum.org/policies/image-resources,2026-11-17
+BLK-temple-photos,do not use,blocked,奉国寺现场照片（Commons/网页/社交媒体）,,,,,blocked,no,,,2026-11-17
+BLK-caihua-photos,do not use,blocked,奉国寺梁架彩画照片/拓片,,,,,blocked,no,,,2026-11-17
+BLK-mural-photos,do not use,blocked,奉国寺壁画照片/揭取件照片,,,,,blocked,no,,,2026-11-17
+BLK-survey-drawings,do not use,blocked,梁思成/杜仙洲/天津大学/中国文化遗产研究院测绘图,,,,,blocked,no,,,2026-11-17
+BLK-modern-calligraphy,do not use,blocked,乾隆/刘钟麟原迹的描摹（形制可用，字不可描）,,,,,blocked,no,,,2026-11-17
+BLK-3d-scan,do not use,blocked,未授权的奉国寺三维扫描/摄影测量,,,,,blocked,no,,,2026-11-17
+BLK-ai-images,do not use,blocked,AI 生成的「奉国寺实景」,,,,,blocked,no,,,2026-11-17
+BLK-travel-blog-measurement,do not use,blocked,旅游攻略/自媒体数字当测绘,,,,,blocked,no,,,2026-11-17

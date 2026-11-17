@@ -1,0 +1,168 @@
+{
+  "scene_id": "T05",
+  "name": "寂明寺（暂名）",
+  "real": "辽宁义县奉国寺",
+  "chapter": "七佛同堂",
+  "revision": "research draft, 2026-11-17",
+  "status": "draft; not implemented; positions to be fixed after the first whitebox",
+  "units": "metres; +x east; +z south; y up",
+  "origin": "the centre of the 大雄殿 front column line; hall floor y=0; courtyard y=-3.0",
+  "height_note": "ground_m is the local floor's approximate absolute elevation: courtyard 67.0 and hall/月台 70.0, derived from SRTM ~70 m (±5-10 m) and the documented 3 m platform; eye_m is above that floor. SRTM cannot resolve the platform. Do not treat either as survey data.",
+  "season_time": "whitebox neutral daylight first; then T05-J01 winter-clear with F01 entrance diffuse light; T05-J02 after snow as a separate variant; see ART.md",
+  "fov_deg": 50,
+  "cameras": [
+    {
+      "id": "cam01",
+      "name": "院落远望",
+      "station": "A",
+      "purpose": "first sight of the nine-bay hall; the platform and the roof read together; the interior is not yet visible",
+      "position": { "x": 0.0, "z": 55.0, "ground_m": 67.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 11.0 },
+      "fov_deg": 50,
+      "must_show": [
+        "九间立面与三门四窗",
+        "3 米台基与月台",
+        "单檐五脊庑殿顶与青灰瓦",
+        "三块竖匾的剪影",
+        "月台东西的钟亭／碑亭"
+      ],
+      "must_not": [
+        "重檐／歇山／琉璃瓦",
+        "七间或五间的殿身",
+        "把 T00/T01 的殿式刷成赭红当 T05",
+        "屋脊被树／旗杆切断",
+        "塔／城市天际线抢主体"
+      ],
+      "notes": "The hall is 48.2 m wide and about 21 m to the ridge; from 55 m a 50° lens at +11° holds the platform base to the ridge. This is the 'big, but cannot see inside' beat."
+    },
+    {
+      "id": "cam02",
+      "name": "台基",
+      "station": "B",
+      "purpose": "the 3 m platform presses the visitor down; the door is a narrow dark band above",
+      "position": { "x": 0.0, "z": 17.0, "ground_m": 67.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 18.0 },
+      "fov_deg": 50,
+      "must_show": [
+        "踏道的石级与垂带",
+        "3 米台基的侧面",
+        "月台边缘",
+        "檐柱与七铺作斗拱",
+        "门洞的暗"
+      ],
+      "must_not": [
+        "整座屋顶",
+        "悬空的台基",
+        "1 米以下的台明",
+        "把台基做成 T00 的薄台"
+      ],
+      "notes": "The ridge is deliberately out of frame; the visitor should feel the platform's height first. Steps are 18 risers, 0.16–0.17 m each, as a proposal."
+    },
+    {
+      "id": "cam03",
+      "name": "殿门中央",
+      "station": "C",
+      "purpose": "the threshold; the door frame crops the row; the first faces come out of the dark",
+      "position": { "x": 0.0, "z": 0.6, "ground_m": 70.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 8.0 },
+      "fov_deg": 50,
+      "must_show": [
+        "门框在画面左右边缘",
+        "中央三尊佛",
+        "佛坛与背光",
+        "梁架",
+        "从门到佛坛的光梯度"
+      ],
+      "must_not": [
+        "一张看全七尊",
+        "平顶／藻井",
+        "七尊相同",
+        "舞台追光或满堂亮"
+      ],
+      "notes": "At about 19 m from the altar, a 50° lens covers about 18 m across: the central three, not the seven. This is the 'first face' beat; do not back out too far."
+    },
+    {
+      "id": "cam04",
+      "name": "侧向观看",
+      "station": "D",
+      "purpose": "walk the east aisle; the seven are seen in profile and are visibly different",
+      "position": { "x": 19.0, "z": -8.0, "ground_m": 70.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 305.0, "pitch_deg": 5.0 },
+      "fov_deg": 50,
+      "must_show": [
+        "七佛的侧面／半侧面",
+        "手印／袈裟／胸衣的差异",
+        "14 尊胁侍的前后节奏",
+        "至少一尊天王",
+        "侧壁十佛壁画",
+        "内柱列"
+      ],
+      "must_not": [
+        "佛像背面",
+        "把胁侍做成弟子／梵天／帝释",
+        "把壁画做成彩画",
+        "把七尊做成一样的侧影"
+      ],
+      "notes": "Yaw 305° looks north-west along the row; the east wall is behind the camera. This is the 'they are not the same' beat."
+    },
+    {
+      "id": "cam05",
+      "name": "仰视梁架",
+      "station": "E",
+      "purpose": "under the inner bay, look up: no ceiling, the whole frame is exposed",
+      "position": { "x": 0.0, "z": -12.0, "ground_m": 70.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 58.0 },
+      "fov_deg": 55,
+      "must_show": [
+        "彻上明造",
+        "八缝梁架",
+        "四椽栿／六椽栿",
+        "驼峰与槫",
+        "七铺作斗拱",
+        "彩画飞天／网目纹／宝相花"
+      ],
+      "must_not": [
+        "平顶／藻井",
+        "清式彩画",
+        "裁掉梁头",
+        "把梁架做成一团黑"
+      ],
+      "notes": "Pitch 58°; keep the central Buddha's head at the bottom edge if possible. This is the 'from human scale to the roof' beat."
+    },
+    {
+      "id": "cam06",
+      "name": "回到中央",
+      "station": "F",
+      "purpose": "back on the axis; the order is understood, but the seven still cannot fit in one frame",
+      "position": { "x": 0.0, "z": -2.0, "ground_m": 70.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 9.0 },
+      "fov_deg": 65,
+      "must_show": [
+        "中轴",
+        "中央四至五尊",
+        "佛坛与背光",
+        "两侧尽间各一尊的局部"
+      ],
+      "must_not": [
+        "声称一张看全七尊",
+        "裁掉中央佛头",
+        "把七尊做成复制品",
+        "把两端硬塞进画面"
+      ],
+      "notes": "Even at 65°, the 48.2 m hall is wider than the frame. If evidence needs the whole row, use a three-frame stitch or a pan, not an in-game ultra-wide."
+    }
+  ],
+  "route_note": "The hall is 48.2 m wide and the seven span about 38 m; no single 44–65° frame shows all seven. The whole is understood by walking, not by one camera. A three-frame panorama may be used in evidence, not as an in-game camera.",
+  "to_verify_after_whitebox": [
+    "every camera stands on walkable ground",
+    "cam01 holds the platform base to the ridge",
+    "cam02 keeps the ridge out of frame",
+    "cam03 shows the central three without cutting the central Buddha's head",
+    "cam04 has a clear side aisle of at least 3 m",
+    "cam05 does not clip the beams or the roof",
+    "cam06 does not claim to show all seven",
+    "the door light is a narrow band, not a wash",
+    "the hall reads as nine bays, not seven or five",
+    "the roof reads as a single-eave hip roof with grey tiles"
+  ]
+}

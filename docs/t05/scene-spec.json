@@ -1,0 +1,172 @@
+{
+  "scene_id": "T05",
+  "name": "寂明寺（暂名）",
+  "real": "辽宁义县奉国寺",
+  "game": "山门之外",
+  "chapter": "七佛同堂",
+  "revision": "research draft, 2026-11-17",
+  "status": "research_only; no scene has been built; see acceptance criteria in PLAN.md",
+  "source_of_truth": "this pack; numbers marked 推算 come from OSM/SRTM or published measurements and are not a new survey",
+  "units": "metres; +x east; +z south; y up; origin at the centre of the 大雄殿 front column line, hall floor y=0; courtyard y=-3.0",
+  "zones": [
+    {
+      "id": "Z1",
+      "name": "院落远望",
+      "connects_to": ["Z2"],
+      "objects": [
+        "院子（无量殿与大雄殿之间）",
+        "无量殿／天王殿（清初，16.14×12.22 米）",
+        "大雄殿九间立面",
+        "3 米台基",
+        "月台",
+        "东六角钟亭、西四角碑亭",
+        "青灰瓦屋顶",
+        "院墙／地面"
+      ],
+      "floor": "courtyard, local y=-3.0; SRTM about 67 m",
+      "collision": "courtyard is a deck; 无量殿 is a solid; the hall platform is a solid with steps; 钟亭/碑亭 are solids"
+    },
+    {
+      "id": "Z2",
+      "name": "台基与月台",
+      "connects_to": ["Z1", "Z3"],
+      "objects": [
+        "18 级踏道（提案）",
+        "3 米台基",
+        "37×15 米月台（摘要）",
+        "檐柱 28 根",
+        "七铺作斗拱",
+        "三门四窗",
+        "三块竖匾"
+      ],
+      "floor": "platform and 月台, local y=0; SRTM about 70 m",
+      "collision": "steps are ramps; platform/月台 are decks; columns are posts; the hall wall is a solid with three doors"
+    },
+    {
+      "id": "Z3",
+      "name": "殿门与中轴",
+      "connects_to": ["Z2", "Z4", "Z5"],
+      "objects": [
+        "中央门阈",
+        "中央三尊佛",
+        "佛坛",
+        "背光",
+        "梁架",
+        "门框",
+        "光梯度"
+      ],
+      "floor": "hall floor, local y=0",
+      "collision": "the threshold is walkable; the altar is a solid; the statues are posts"
+    },
+    {
+      "id": "Z4",
+      "name": "侧向与群像",
+      "connects_to": ["Z3", "Z5"],
+      "objects": [
+        "七佛侧面/手印",
+        "14 尊胁侍菩萨",
+        "2 尊天王",
+        "东西墙十佛壁画",
+        "内柱 20 根",
+        "侧向通道"
+      ],
+      "floor": "hall floor, local y=0",
+      "collision": "side aisle is a deck; statues/altar are posts/solids; columns are posts; walls are solids"
+    },
+    {
+      "id": "Z5",
+      "name": "梁架与回到中央",
+      "connects_to": ["Z3", "Z4"],
+      "objects": [
+        "彻上明造",
+        "八缝梁架",
+        "四椽栿／六椽栿",
+        "驼峰",
+        "七铺作斗拱",
+        "梁架彩画（飞天／网目纹／宝相花）",
+        "中轴"
+      ],
+      "floor": "hall floor, local y=0",
+      "collision": "beams/roofs are eye-only (walk.roofs); the altar/statues are posts; no ceiling to stand on"
+    }
+  ],
+  "route": {
+    "waypoints_xz": [
+      [0, 55],
+      [0, 17],
+      [0, 0.6],
+      [19, -8],
+      [0, -12],
+      [0, -2]
+    ],
+    "length_one_way_m": 105,
+    "climb_m": 3.0,
+    "returns_the_same_way": true,
+    "note": "x east, z south; the six stations are A-F in SITE.md; the route is a design proposal, not a survey"
+  },
+  "checkpoints": {
+    "system": "观察页·三页（整体／人物／梁架，见 CHECKPOINTS.md）；不做集齐门槛，不评分",
+    "stations": [
+      { "id": "C01", "name": "院落远望", "zone": "Z1", "position_xz": [0, 55] },
+      { "id": "C02", "name": "台基", "zone": "Z2", "position_xz": [0, 17] },
+      { "id": "C03", "name": "殿门中央", "zone": "Z3", "position_xz": [0, 0.6] },
+      { "id": "C04", "name": "侧向观看", "zone": "Z4", "position_xz": [19, -8] },
+      { "id": "C05", "name": "仰视梁架", "zone": "Z5", "position_xz": [0, -12] },
+      { "id": "C06", "name": "回到中央", "zone": "Z3/Z5", "position_xz": [0, -2] }
+    ],
+    "pages": [
+      { "id": "P1", "name": "整体", "mark": "横墨", "trigger": "C01 look at facade >=3 s; C02 look up (pitch >=25 deg) >=2 s" },
+      { "id": "P2", "name": "人物", "mark": "七点", "trigger": "C03 look at central Buddha >=3 s; C04 see >=3 different Buddhas and >=2 attendants" },
+      { "id": "P3", "name": "梁架", "mark": "斜墨", "trigger": "C05 pitch >=40 deg >=3 s and walk >=3 m along the beam line" }
+    ],
+    "quiet": [
+      { "id": "Q1", "name": "台基石缝／补石", "zone": "Z2" },
+      { "id": "Q2", "name": "门槛／门钉磨损", "zone": "Z3" },
+      { "id": "Q3", "name": "七佛手印差异", "zone": "Z4" },
+      { "id": "Q4", "name": "胁侍站姿／衣纹", "zone": "Z4" },
+      { "id": "Q5", "name": "梁架彩画飞天", "zone": "Z5" }
+    ],
+    "not_doing": [
+      "七佛＝七种人格／能力／愿望",
+      "求财／求姻缘／求健康",
+      "触摸佛像／佛坛／壁画／彩画／碑刻",
+      "上佛坛／绕到佛坛背后",
+      "敲钟／敲鼓／烧香／点烛",
+      "拓碑／拓摩崖",
+      "闪光灯／快门声",
+      "战斗／射击／追逐",
+      "收集七佛／七件法器／七个印章"
+    ]
+  },
+  "lighting": {
+    "preset": "F01 入口漫射天光（资料库原页本轮 401；以下为转译，见 ART.md）",
+    "main_light": "diffuse sky through the south doors and four windows; no direct sun on the statues; courtyard about 3-4 EV brighter than the altar",
+    "local_light": "one very weak altar lamp may be added for legibility, marked as a design fill; no stage light",
+    "fog": "light winter haze outside; none inside; no snow/petals indoors",
+    "wetness": "dry stone and brick in the winter-clear baseline; wet after rain; snow variant outside only",
+    "colour": "ochre-red, dark gold, mineral green, deep timber frame; grey-green tiles; no global orange grade"
+  },
+  "cameras": "camera-manifest.json",
+  "deferred": [
+    "整座寺院（山门／牌坊／西宫禅院／配殿）",
+    "钟亭／碑亭内部",
+    "绕佛坛背后／倒坐观音",
+    "七佛／胁侍／天王的最终精模",
+    "彩画／壁画的逐铺逐幅精绘",
+    "2025 年修缮的脚手架／围挡",
+    "16 种季时",
+    "多人／NPC",
+    "音乐（可选）"
+  ],
+  "unknowns": [
+    "台基／月台／踏道的准确尺寸与高差",
+    "佛坛的长深高与七佛中心间距",
+    "七佛逐尊手印／头向／袈裟／胸衣纹样；拘留孙／尸弃的手印",
+    "14 胁侍的身份与逐尊排列",
+    "壁画逐幅年代／尺寸／病害",
+    "彩画逐铺粉本／颜料／修复记录",
+    "2025 年屋面修缮的现状与封闭范围",
+    "寺内声压／混响时间",
+    "目标手机的性能"
+  ]
+}
