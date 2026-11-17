@@ -42,3 +42,29 @@ test("a young cedar is clothed nearly to the ground, not bare below like an old 
     assert.ok(low < 1.0, `the ${c[4]} m cedar at ${c[0]}, ${c[2]} is bare to ${low.toFixed(2)} m`);
   }
 });
+
+// Where the foot takes over from the trunk (#91): at the top of the foot, its ring is the trunk's ring at that height,
+// the same radius within a hundredth and the same centre within a centimetre, so that the tree is one piece from the
+// ground up. The trunk is measured on its own curve, the foot on its own geometry.
+const everyTree = (() => { const scene = new THREE.Group(); return createTrees(scene, M, site.trees.filter((t) => !t[5])); })();
+const trunkAt = (j, y) => { let lo = 0, hi = 1; const P = new THREE.Vector3(); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; j.curve.getPoint(mid, P); if (P.y < y) lo = mid; else hi = mid; } j.curve.getPoint(lo, P); return { r: j.r0 + (j.r1 - j.r0) * lo, x: P.x, z: P.z }; };
+const footTop = (j) => { const P = j.foot.attributes.position, R = j.ring, pts = []; for (let k = 0; k < R; k++) pts.push([P.getX(k), P.getY(k), P.getZ(k)]);
+  const cx = pts.reduce((s, p) => s + p[0], 0) / R, cz = pts.reduce((s, p) => s + p[2], 0) / R, r = pts.reduce((s, p) => s + Math.hypot(p[0] - cx, p[2] - cz), 0) / R; return { y: pts[0][1], r, x: cx, z: cz }; };
+test("at the top of every tree's foot, the foot is the trunk: radius within 1%, centre within 1 cm", () => {
+  assert.ok(everyTree.joints && everyTree.joints.length >= 15, `only ${everyTree.joints ? everyTree.joints.length : 0} feet reported`);
+  const wrong = [];
+  for (const j of everyTree.joints) { const f = footTop(j), t = trunkAt(j, f.y), dr = Math.abs(f.r / t.r - 1), dc = Math.hypot(f.x - t.x, f.z - t.z);
+    if (dr > 0.01 || dc > 0.01) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: radius ${(dr * 100).toFixed(1)}% off, centre ${(dc * 100).toFixed(1)} cm off`); }
+  assert.deepEqual(wrong, []);
+});
+test("the trunk is drawn with as many sides as its foot where they meet", () => {
+  for (const j of everyTree.joints) assert.equal(j.sides, j.ring, `${j.kind} ${j.h} m: a ${j.sides}-sided trunk on a ${j.ring}-sided foot`);
+});
+test("a young cedar's trunk is slender: 0.12 to 0.2 m across", () => {
+  for (const j of everyTree.joints.filter((k) => k.kind === "cedar" && k.h < 8)) { const d = 2 * trunkAt(j, j.y + 1.3).r; assert.ok(d >= 0.12 && d <= 0.2, `the ${j.h} m cedar is ${d.toFixed(3)} m across at breast height`); }
+});
+test("a cedar's branches end inside the foliage they carry", () => {
+  assert.ok(everyTree.branches && everyTree.branches.length > 50, "no branches reported");
+  const out = everyTree.branches.filter((b) => b.inside > 1e-3);
+  assert.deepEqual(out.map((b) => `${b.h} m cedar: ${(b.inside * 100).toFixed(0)} cm beyond its spray`).slice(0, 8), []);
+});
