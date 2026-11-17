@@ -17,7 +17,7 @@ const srv = http.createServer((req, res) => {
 const SURFACES = [
   ["title", null, null],
   ["walk", "document.getElementById('enterBtn').click()", null],
-  ["menu", "window.__menu(true)", "window.__menu(false)"],
+  ["menu", "document.body.classList.add('seasons'); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
