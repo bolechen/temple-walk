@@ -87,3 +87,21 @@ test("the log that strikes the bell is kept out of the eye's way too", () => {
     assert.ok(!h, `at (${x.toFixed(2)}, ${z.toFixed(2)}) the eye looks through ${h?.object.material.name} at (${h?.point.toArray().map((v) => v.toFixed(2))})`);
   }
 });
+
+// Up on the summit pavilion's top storey the view is his own eyes only (issue #101): from every spot he can stand on
+// up there, nothing built stands between the balcony's floor and his eyes, nor within a hand of them.
+test("up on the summit pavilion's balcony, his own eyes are in the open", () => {
+  const L = site.lofts.lingxiao, ray = new THREE.Raycaster(), meshes = [], bad = []; let n = 0;
+  site.root.traverse((o) => { if (o.isMesh && !o.userData.soft) meshes.push(o); });
+  const near = meshes.filter((o) => { const b = new THREE.Box3().setFromObject(o); return b.max.y > L.floor && b.min.y < L.floor + 2 && b.distanceToPoint(new THREE.Vector3(L.at[0], L.floor + 1, L.at[1])) < 8; });
+  walker.setLoft("lingxiao");
+  try {
+    for (let x = L.at[0] - L.half.edge; x <= L.at[0] + L.half.edge; x += 0.1) for (let z = L.at[1] - L.half.edge; z <= L.at[1] + L.half.edge; z += 0.1) {
+      if (walker.blocked(x, z)) continue; n++;
+      ray.set(new THREE.Vector3(x, L.floor + 0.05, z), new THREE.Vector3(0, 1, 0)); ray.far = 1.3 + 0.12;
+      const h = ray.intersectObjects(near, false)[0]; if (h) bad.push(`(${x.toFixed(2)}, ${z.toFixed(2)}): ${h.object.material.name} at ${h.point.y.toFixed(2)}`);
+    }
+  } finally { walker.setLoft(null); }
+  assert.ok(n > 300, `only ${n} spots up there`);
+  assert.equal(bad.length, 0, `${bad.length} of ${n} spots have something over the floor up to his eyes:\n` + bad.slice(0, 10).join("\n"));
+});
