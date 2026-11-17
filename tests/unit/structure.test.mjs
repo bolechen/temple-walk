@@ -129,10 +129,10 @@ test("every column of the Lingxiao pavilion's top storey stands on a line of col
 });
 
 // Grades of timber (juan 4, 材): a building's brackets, beams, columns and rafters are all cut to its cai, and the cai
-// is chosen by the building's size: the second grade for the great hall of seven bays, less for a hall of five, less
-// again for the side halls, and the sixth for towers and pavilions. And at every corner of a roof a corner beam runs
+// is chosen by the building's size: the second grade for the great hall of seven bays (its skirt a grade less), the
+// fourth for a hall of five bays of the lesser kind, the fifth for the small side halls, and the sixth for towers and pavilions. And at every corner of a roof a corner beam runs
 // out from the corner set to the eave (juan 5, 陽馬), with a smaller one riding on it that turns up at its end.
-const CAI = { "大雄宝殿": 0.256, "释迦宝殿": 0.256, "观音殿": 0.232, "万年正续": 0.232, "云径禅寺": 0.232, "藏经楼": 0.232, "禅堂": 0.205, "茶寮": 0.205, "药师殿": 0.205, "大慧院": 0.205, "御碑亭": 0.186 };
+const CAI = { "大雄宝殿": 0.232, "释迦宝殿": 0.256, "观音殿": 0.232, "万年正续": 0.232, "云径禅寺": 0.232, "藏经楼": 0.232, "禅堂": 0.223, "茶寮": 0.223, "药师殿": 0.205, "大慧院": 0.205, "御碑亭": 0.186 };
 const FEN = { ludou: 32, nidao: 62, hua: 72, man: 92, ling: 72 };   // the great block's side, and the lengths of the four arms, in fen (a fifteenth of the cai)
 test("each building is cut to the cai of its rank", () => {
   const wrong = [];

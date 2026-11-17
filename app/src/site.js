@@ -122,7 +122,7 @@ export function buildSite(M) {
     if (sx > 0) { const r = walk.roofs[walk.roofs.length - 1]; r.core = { ...r.core, z0: Math.min(r.core.z0, SITE.zS - LOG.near - LOG.len - 0.1) }; }
   }
   // Facing each other across the court: the meditation hall, and the tea house.
-  const side = { cai: 0.205, xs: [-8, -5.2, -2.2, 2.2, 5.2, 8], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.6, overhang: 1.7, lodge: true, crest: 3.0, G: 2.2, lamps: false, steps: 3.0 };
+  const side = { cai: 0.223, xs: [-8, -5.1, -2.2, 2.2, 5.1, 8], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.6, overhang: 1.7, lodge: true, crest: 3.0, G: 2.2, lamps: false, steps: 3.0 };
   put({ ...side, plaque: { text: "禅堂", style: "wood" }, hall: { id: "chan", kind: "chan", name: "禅堂" } }, [16.6, 14], 3);
   // The tea house's porch is deeper than its neighbour's: wide enough to walk round the two tables set under its eave.
   const tea = put({ ...side, platOut: 1.6, plaque: { text: "吃茶去", style: "wood" }, hall: { id: "tea", kind: "tea", name: "茶寮" } }, [-16.6, 14], 1);
@@ -160,7 +160,7 @@ export function buildSite(M) {
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
-    cai: 0.256, xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
+    cai: 0.232, xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
   }, { cai: 0.256, xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [4.3, 0, -4.3], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
