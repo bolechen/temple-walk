@@ -234,7 +234,7 @@ const centre = new THREE.Vector3();
 // when the lamp is lit and done. The clock stops with a photograph, as the observances do; a long pause is not swung through.
 let directClock = riteNow();
 const menuEl = document.getElementById("menu");
-let planning = null;   // a way round to a tapped spot, being worked out a few milliseconds a frame (route.js)
+let planning = null, planGoal = null;   // a way round to a tapped spot, being worked out a few milliseconds a frame (route.js)
 let down = null, hop = null, leap = null, climb = null, climbFor = null, climbs = 0;   // `hop`: a planned drop from a porch; `leap`: a small jump where he stands, steered as he goes
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
@@ -344,7 +344,7 @@ canvas.addEventListener("pointerup", (e) => {
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) {
       // A straight line that is open is walked as it was; one that is shut is searched round (route.js), a few milliseconds a frame, he waiting where he is.
       if (!walker.blocked(pos.x, pos.z) && clearLine(walker, pos, hit)) route = [hit];
-      else { route = []; interrupt(); director.back(); target = null; planning = planSteps(walker, site.walk.drops, { x: pos.x, z: pos.z }, { x: hit.x, z: hit.z }); }
+      else { route = []; interrupt(); director.back(); target = null; planGoal = { x: hit.x, z: hit.z }; planning = planSteps(walker, site.walk.drops, { x: pos.x, z: pos.z }, planGoal); }
     } else route = [];
     if (route.length) { planning = null; interrupt(); director.back(); target = route.shift(); }
   }
@@ -462,7 +462,8 @@ function frame(now) {
   const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
   if (planning && (f || s)) planning = null;
-  if (planning) { const r = planning.next(); if (r.done) { planning = null; const pts = r.value.points; if (pts.length && !f && !s) { pts[0].escape = walker.blocked(pos.x, pos.z); route = pts.slice(1); target = pts[0]; } } }
+  if (planning) { const r = planning.next(); if (r.done) { planning = null; const pts = r.value.points; if (!r.value.reached && planGoal) pts.push({ x: planGoal.x, z: planGoal.z });   // (a spot that cannot be stood on: on to it as far as he can go, as before; a door is walked into this way)
+      if (pts.length && !f && !s) { pts[0].escape = walker.blocked(pos.x, pos.z); route = pts.slice(1); target = pts[0]; } } }
   if (f || s) { interrupt(); director.back(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { const reached = target; target = route.shift() || null; vx = vz = 0; if (reached.drop) { hop = { plan: reached.drop, elapsed: 0, then: [target, ...route].filter(Boolean) }; target = null; route = []; pace.v = 0; } else if (!target) { settle(true); pace.v = 0; } } }
   const len = Math.hypot(vx, vz);
