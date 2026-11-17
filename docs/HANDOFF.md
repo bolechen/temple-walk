@@ -21,6 +21,16 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 2026-11-17：正式站控制台取当前视角的链接（Issue #165）
+
+用户的原话：「如何在生产环境获取可本地调试同步视角和位置的 debug url」→「有办法留个管理员开关吗，彩蛋」→「加一个隐藏的函数，仅在控制台用，eg getDebugUrl」→「开 pr 做」。做的是最后一条：一个只在控制台用的钩子，不做口令、不做界面、不改地址栏。
+
+- **`__debugURL()`**（`app/yard.js`，地址写法在 `app/src/link.js`）：返回当前位姿、视角、季节时辰、所在殿室（`in`）或阁楼（`up`）的完整地址，例如 `https://…/?q=low&cam=2.1,-63.37,0.12,-0.05&view=third&season=autumn&time=dusk&devpose`。写进地址栏的是零；其它参数（`lang`、`q`、`off`）保留，工具的 `shot` 去掉。
+- **`devpose` 是惰性的**：正式页不加载 `devpose.js`；把链接贴到 `pnpm dev` 打开时，地址才跟随，且视场角保持行走时的 50°/65°，与线上看到的一致。不带它则是定格机位的 44°/52°。
+- **抽出的 `link.js`**：`poseQuery` 从 `devpose.js` 搬到 `app/src/link.js`（加 `up` 与 `devpose` 参数），开发分支、调试面板与线上钩子共用一份取整/边界逻辑；`devpose.js` 仍只在开发服务器动态加载，发布包仍不含它。调试面板「复制此处链接」顺带带上阁楼的 `up`。
+- **测试**：`tests/unit/link.test.mjs`（7 项，含阁楼与 `devpose`）、`tests/unit/devpose.test.mjs`（4 项）；e2e `views` 场景在 `dist/` 上调用 `__debugURL()`，再用返回的地址重开一页，断言 `__yard()` 的 x/z/yaw/pitch、view、season、time 一致，且地址不被改写。本地结果：check 72 files 0 问题、typecheck 通过、单测 367/367、views 180 s 通过（SwiftShader）。
+- **没做**：访客入口、管理员口令/彩蛋开关、每区域独立 URL。链接不含仪轨进度、香、快门、推拉、转场。
+
 ## 2026-11-16 深夜：美术第一阶段「便宜的电影感」（#72，分支 `claude/art-72-phase1`，待评审）
 
 开发方按 `docs/t00/art-goal.md` 第一阶段做的，评审人是主创；没有自评通过，没有改验收结论。
