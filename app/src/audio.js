@@ -2,8 +2,8 @@
 // the music (score.js says what, instruments.js plays it). The audio context starts on the first tap, as browsers
 // require. Three buses, each with its own level in the pause menu: music, the place (wind, water, eave bells) and
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
-import { createPlayer, reverb, bell, hillEcho } from "./instruments.js";
-import { createZoneKeeper, moodMusic, sealNote, hz } from "./score.js";
+import { createPlayer, createVoices, reverb, bell, hillEcho } from "./instruments.js";
+import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
 const STEP_WET = { out: 0.07, in: 0.4 };   // how much of a step goes to the court's reverb outdoors, the hall's indoors
@@ -227,7 +227,7 @@ export const ambienceState = () => ({ knocks, birds, running: !!ambient });
 // ---- Two cues of the story ----
 // Wings: a dozen small birds going up at once from a tree, a rattle of quick wingbeats that thins as they climb away,
 // and two or three alarm calls among them.
-const cues = { flutter: 0, farBell: 0 };
+const cues = { flutter: 0, farBell: 0, mountainBell: 0, prologue: 0, ending: 0, passed: 0 };
 export function flutter(level = 1) {
   if (!ctx || ctx.state !== "running" || level <= 0) return;
   const now = ctx.currentTime + 0.02;
@@ -246,11 +246,39 @@ export function farBell() {
   const t = ctx.currentTime + 0.05, lp = ctx.createBiquadFilter(), g = ctx.createGain();
   lp.type = "lowpass"; lp.frequency.value = 650; g.gain.value = 0.32; lp.connect(g); g.connect(bus.effects.in);
   if (!farEcho) { farEcho = hillEcho(ctx, bus.effects.in); }
-  duck(0.3, 12);
+  if (!closing()) duck(0.3, 12);   // the close's own music has already made room for it
   bell(ctx, lp, t, 0.9, farEcho, hz(41));   // F2: in the music's mode, below the near bell's G
   cues.farBell++;
 }
-export const cueState = () => ({ ...cues });
+// The opening (opening.js): the same bell up on the mountain, struck once as the first visitor steps in. Far and light,
+// the top rolled off by the distance, the hillside giving it back; our own bell's G, not the far temple's F of the close
+// (farBell): the two are a pair, the first heard going up, the other answering at the end.
+let hillBellEcho = null;
+export function mountainBell() {
+  if (!start()) return; wake();
+  const t = ctx.currentTime + 0.25, lp = ctx.createBiquadFilter(), g = ctx.createGain();
+  lp.type = "lowpass"; lp.frequency.value = 900; g.gain.value = 0.42; lp.connect(g); g.connect(bus.effects.in);
+  if (!hillBellEcho) hillBellEcho = hillEcho(ctx, bus.effects.in);
+  bell(ctx, lp, t, 0.8, hillBellEcho);
+  cues.mountainBell++;
+}
+// The prologue's title (game.js): one note on the qin, the theme's first, as the gate first stands whole before him.
+let titleVoices = null;
+export function prologueNote() {
+  if (!start()) return; wake();
+  if (!titleVoices) titleVoices = createVoices(ctx, bus.effects.in);
+  duck(0.6, 3);
+  titleVoices.play({ voice: "qin", m: THEME[0].m, dur: 3.2, vel: 0.9, slide: null }, ctx.currentTime + 0.05);
+  cues.prologue++;
+}
+// While the opening plays, the music waits: the bell is the only voice, and the grove's music begins when the walk is
+// handed back (startAmbience still starts the wind at once).
+let musicHeld = false, heldPlace = null;
+export function holdMusic(on) {
+  musicHeld = !!on;
+  if (!musicHeld && heldPlace && ctx && !music) { startMusic(heldPlace); heldPlace = null; }
+}
+export const cueState = () => ({ ...cues, musicHeld });
 
 // ---- The photograph ----
 // The shutter: a small leaf shutter in a wooden body, two soft clicks thirty milliseconds apart (the blades closing and
@@ -304,7 +332,7 @@ export function startAmbience(place) {
   };
   const low = layer("bandpass", 420, 0.5), leaves = layer("highpass", 2600, 0.3);
   ambient = { low, leaves, t: 0, nextDrip: 1.5, nextChime: 14, nextKnock: 4, nextBird: 3 };
-  startMusic(place);
+  if (musicHeld) heldPlace = place; else startMusic(place);
   const tick = () => {
     if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
     const p = place(), now = ctx.currentTime, g = p.grove, a = ambient; a.t += 0.25;
@@ -348,7 +376,7 @@ function startMusic(place) {
   if (music) return;
   players++;
   const keeper = createZoneKeeper(2), player = createPlayer(ctx, bus.music.in, (Date.now() / 1000) | 0);
-  music = { keeper, player };
+  music = { keeper, player, place };
   const tick = () => {
     if (ctx.state !== "running") return;
     const p = place(), now = ctx.currentTime, zone = keeper.update(p.zone || "court", now);
@@ -356,6 +384,16 @@ function startMusic(place) {
   };
   tick(); setInterval(tick, 250);
 }
+// The close of the chapter: its own music, written to the close's timeline (score.js's endingPhrase), begun at once.
+// `bell` and `title`: seconds from now to the far bell and to the title. Passed over, it fades as on a change of place.
+const closing = () => !!music && music.player.conductor.section === "ending" && ctx.currentTime < music.player.conductor.notesEnd;
+export function closeMusic(at = {}) {
+  if (!music || ctx.state !== "running") return false;
+  const p = music.place(), now = ctx.currentTime;
+  music.player.close(now, endingPhrase(moodMusic(p.season, p.time), at), music.keeper.stable || p.zone || "summit"); cues.ending++;
+  return true;
+}
+export function passClose() { if (music && music.player.leave(ctx.currentTime)) cues.passed++; }
 // For the tests and tools: what the music is doing.
 export function musicState() {
   if (!music) return { state: ctx ? ctx.state : "off", started: false, starts, players };
