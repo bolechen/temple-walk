@@ -1,0 +1,96 @@
+{
+  "scene_id": "T01",
+  "name": "栖岚寺（暂名）",
+  "game": "山门之外",
+  "chapter": "城中入山",
+  "revision": "research draft, 2026-11-17",
+  "status": "research_only; no scene has been built; see acceptance criteria in PLAN.md",
+  "source_of_truth": "this pack; numbers marked 推算 come from OSM/SRTM and are not survey data",
+  "units": "metres; +y up; north/uphill is -z; the visitor arrives from +z; origin at the temple gate",
+  "zones": [
+    {
+      "id": "Z1",
+      "name": "街边门口",
+      "connects_to": ["Z2"],
+      "objects": ["武珞路一侧的人行道/栏杆/公交候车亭", "地铁口下行楼梯（体块）", "山门（黄墙、蓝底金匾、朱红门联、琥珀琉璃瓦）", "一对仿明石狮"],
+      "floor": "street level, about 41.5 m (SRTM estimate)",
+      "collision": "street is a deck; the gate's middle bay is walkable; side bays are solids"
+    },
+    {
+      "id": "Z2",
+      "name": "池桥与首院",
+      "connects_to": ["Z1", "Z3"],
+      "objects": ["放生池", "圣僧桥", "钟楼（东）", "鼓楼（西）", "弥勒殿/天王殿", "咸丰九年铁钟", "明雕石狮"],
+      "floor": "first terrace, about 43 m",
+      "collision": "pool is a void; bridge is a deck; tower columns are posts; the hall is a solid with a door"
+    },
+    {
+      "id": "Z3",
+      "name": "台阶与殿侧",
+      "connects_to": ["Z2", "Z4"],
+      "objects": ["大雄宝殿（面阔五间、庑殿顶）", "月台/台阶", "三株银杏", "香炉", "殿内释迦/迦叶/阿难、文殊/普贤、十八罗汉（占位）"],
+      "floor": "third terrace, about 47 m; the hall's platform about 1 m higher",
+      "collision": "stairs are ramps; the hall is a solid with a door; the ginkgo trunks are posts"
+    },
+    {
+      "id": "Z4",
+      "name": "林下折路",
+      "connects_to": ["Z3", "Z5"],
+      "objects": ["玉佛殿/藏经楼", "万佛殿", "罗汉堂（旧法界宫，五亭顶）", "摩崖石刻 5 处（东岩、寿泉、栖霞岩、翠屏、狮子峰）", "珊瑚朴/麻栎/黑松", "环山小路"],
+      "floor": "fourth to sixth terraces, about 53–74 m; the upper path is steeper",
+      "collision": "terraces are decks; stairs are ramps; the cliff boulders and tree trunks are posts; the cliff face is a solid"
+    },
+    {
+      "id": "Z5",
+      "name": "看塔与回望",
+      "connects_to": ["Z4"],
+      "objects": ["洪山宝塔（八角七层，高约 45 m）", "塔院/石阶/铁栏", "塔影田（菜薹）", "回望城市的机位"],
+      "floor": "seventh terrace, about 90 m (SRTM estimate)",
+      "collision": "the pagoda is a solid (no entry in v1); the tower yard is a deck; the field is not walkable; the field path is a deck"
+    }
+  ],
+  "route": {
+    "waypoints_xz": [
+      [0, 25],
+      [0, 0],
+      [0, -29],
+      [7, -85],
+      [9, -120],
+      [12, -170],
+      [16, -220],
+      [30, -275],
+      [75, -300],
+      [95, -295]
+    ],
+    "length_one_way_m": 330,
+    "climb_m": "about 30 m by the proposed terraces, about 48 m by SRTM; not survey data",
+    "returns_the_same_way": true,
+    "note": "x east, z south (north is -z); waypoints are draft and follow the OSM building centres"
+  },
+  "lighting": {
+    "preset": "proposal T01-J01 winter clear morning (or T01-J02 late autumn after rain)",
+    "main_light": "low warm sun from the south-east; cool sky fill; city haze in the distance",
+    "local_light": "hall lamps and incense at dawn/dusk; no lamp at noon",
+    "fog": "light winter haze toward the city; the wooded hill stays darker and clearer",
+    "wetness": "stone dry in winter clear; wet after rain; the yellow wall shows damp at its foot"
+  },
+  "cameras": "camera-manifest.json",
+  "deferred": [
+    "塔内与登塔",
+    "玉佛殿/藏经楼室内",
+    "罗汉堂五百罗汉",
+    "密宗曼陀罗图像",
+    "七印/结尾",
+    "全城远景/长江/黄鹤楼",
+    "16 种季时",
+    "多人/NPC"
+  ],
+  "unknowns": [
+    "各殿面阔/进深/台基/屋顶的实测",
+    "塔的逐层尺寸与今天能否登塔",
+    "摩崖八景的准确位置与逐字录文",
+    "法界宫五亭顶的尺寸与连接",
+    "现场声压与五段声场的实际差异",
+    "目标手机的性能"
+  ]
+}
