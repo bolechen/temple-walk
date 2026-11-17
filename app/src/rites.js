@@ -34,10 +34,12 @@ let held = null, offset = 0, pausedAt = null;
 // under its upper edge: the aim it was given, raised only as far as that needs. The picture is taller or wider on
 // different screens, and the pavilion taller than it was.
 const _frame = new THREE.PerspectiveCamera();
-/** @param {THREE.Vector3} cam @param {THREE.Vector3} aim @param {THREE.Vector3} top @param {number} fov @param {number} aspect */
+// Given several points (the ornaments at both ends of the ridge), the one highest in the picture is the one kept clear.
+/** @param {THREE.Vector3} cam @param {THREE.Vector3} aim @param {THREE.Vector3 | THREE.Vector3[]} top @param {number} fov @param {number} aspect */
 export function aimToFrame(cam, aim, top, fov, aspect, margin = 0.08) {
   _frame.fov = fov; _frame.aspect = aspect; _frame.updateProjectionMatrix(); _frame.position.copy(cam);
-  const at = (y) => { _frame.lookAt(aim.x, y, aim.z); _frame.updateMatrixWorld(); return _v.copy(top).project(_frame).y; }, want = 1 - 2 * margin;
+  const tops = Array.isArray(top) ? top : [top];
+  const at = (y) => { _frame.lookAt(aim.x, y, aim.z); _frame.updateMatrixWorld(); return Math.max(...tops.map((t) => _v.copy(t).project(_frame).y)); }, want = 1 - 2 * margin;
   if (at(aim.y) <= want) return aim.clone();
   let lo = aim.y, hi = aim.y + 60; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (at(mid) <= want) hi = mid; else lo = mid; }
   return new THREE.Vector3(aim.x, hi, aim.z);
@@ -295,7 +297,8 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
         // The last look is raised, if need be, until the pavilion's ridge ornaments stand clear of the picture's top.
         const far = P(9, 17, 34), roofs = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - o.x, (r.z0 + r.z1) / 2 - o.z) < 16), tall = roofs.sort((p, q) => q.top - p.top)[0];
         path = new THREE.CatmullRomCurve3([cam0.clone(), P(1.5, 0.75, 3.1), P(3.6, 2.6, 8.5), P(7, 9, 19), far], false, "centripetal");
-        const last = tall ? aimToFrame(far, P(0, 5, -6), new THREE.Vector3((tall.x0 + tall.x1) / 2, tall.top + 1.6, (tall.z0 + tall.z1) / 2), camera.fov, camera.aspect) : P(0, 5, -6);
+        const tops = [new THREE.Vector3((tall?.x0 + tall?.x1) / 2, tall?.top + 1.6, (tall?.z0 + tall?.z1) / 2), ...(tall?.crest || []).map(([x, cy, z]) => new THREE.Vector3(x, cy, z))];
+        const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
         aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
       const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
     });

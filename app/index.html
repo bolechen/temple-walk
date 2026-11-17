@@ -66,7 +66,7 @@
     <div class="set"><label for="setFov">视野</label><input id="setFov" type="range" min="-6" max="16" step="1"></div>
     <div class="set"><span>自动镜头</span><button class="chip" id="setAutocam" type="button" aria-pressed="true">开</button></div>
     <div class="set need-seasons"><span>时节</span><div class="opts"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div></div>
-    <div class="set need-seasons"><span>时辰</span><div class="opts"><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></div>
+    <div class="set need-seasons"><span>时辰</span><div class="opts"><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></div>
     </div>
     <div class="grp grp-ctl">
     <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
@@ -99,7 +99,7 @@
   </dialog>
   <div id="moodPanel" class="paper" hidden>
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
-    <div><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
+    <div><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
   </div>
   <canvas id="still" aria-hidden="true"></canvas>
   <div id="finder" aria-hidden="true"></div>
