@@ -30,6 +30,10 @@ export const OPENING = {
   hold: { frames: 6, ms: 50, least: 1.6, most: 3.5 },
   skip: [0.8, 1.2],        // seconds the rest of the way takes when the visitor will not wait
   still: 3.2,              // with reduced motion: seconds the summit is held before the ink closes
+  // The first picture is taken with a long lens (an angle of view of `fov` degrees, the walk's eye has 50), so that the
+  // pavilion is the picture and the library's roof only its foot; it widens to the following eye's over the first
+  // `widen` of the way. (A change of angle is not a turn: the director's limits are on turning and travelling.)
+  fov: 30, widen: 0.45,
 };
 // The address parameters with which a test or a tool names its own place: no opening, no bell (game.js leaves such a page where it asked to be).
 export const SILENT = ["cam", "show", "shot", "in", "enter", "tour", "at", "play", "seals"];
@@ -51,7 +55,7 @@ export function openingFor({ seals = 0, place = null, start, params, again = fal
 // the gate (14.6 m), down over the forecourt and the tops of the bamboo (GROVE.top, 15 m over the land), into the clear
 // way of the zigzag stair at its landing, down its last flight, over his head, and in behind him. What it looks at stays the summit until the end, where it becomes the way the following eye looks.
 const WAY = [[0, 18.2, -28.5], [0, 21, -20], [0, 22.5, -6], [0, 21.5, 22], [0, 20.5, 44], [2, 19.5, 60], [7, 16, 70], [14.5, 11, 77.5], [21.3, 2.5, 83.5], [21.6, -8.6, 90.5]];
-const SUMMIT = [0, 33, -131];
+const SUMMIT = [0, 31, -131];   // the middle of the pavilion's upper storeys
 
 /** The way down to `end` (the following eye: { p, q }), timed. `poseAt(t)` is the eye `t` seconds after it starts to move. */
 export function openingPlan(end) {
@@ -72,15 +76,17 @@ export function openingPlan(end) {
   };
   const m = new THREE.Matrix4(), look = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
   /** The eye `s` metres along the way. */
-  const poseAtS = (s, out = { p: new THREE.Vector3(), q: new THREE.Quaternion() }) => {
+  const endFov = end.fov ?? 50;
+  const poseAtS = (s, out = { p: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 50 }) => {
     const u = Math.min(1, Math.max(0, s / length));
     path.getPointAt(u, out.p);
     look.copy(summit).lerp(far, smoother((u - 0.55) / 0.45));
     out.q.setFromRotationMatrix(m.lookAt(out.p, look, UP));
+    out.fov = OPENING.fov + (endFov - OPENING.fov) * smoother(u / OPENING.widen);
     if (u >= 1) out.q.copy(end.q);
     return out;
   };
-  return { end: { p: end.p.clone(), q: end.q.clone() }, length, secs, sAt, poseAtS, poseAt: (t, out) => poseAtS(sAt(t), out), speed: (t) => (sAt(t + 0.01) - sAt(t)) / 0.01 };
+  return { end: { p: end.p.clone(), q: end.q.clone(), fov: endFov }, length, secs, sAt, poseAtS, poseAt: (t, out) => poseAtS(sAt(t), out), speed: (t) => (sAt(t + 0.01) - sAt(t)) / 0.01 };
 }
 
 /**
@@ -95,7 +101,8 @@ export function createOpening({ now = () => performance.now(), veil = (/** @type
   let skip = null;   // { s0, v0, at, secs }: the rest of the way, quickly
   let pinned = null;  // a tool's: the eye held this many seconds into the way down (pin)
   let ink = null;    // { at, moved }
-  const O = { p: new THREE.Vector3(), q: new THREE.Quaternion() }, P = { p: new THREE.Vector3(), q: new THREE.Quaternion() }, D = new THREE.Quaternion(), I = new THREE.Quaternion();
+  let fovNow = null;   // the angle of view the opening asks for this frame (null: the walk's own)
+  const O = { p: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 50 }, P = { p: new THREE.Vector3(), q: new THREE.Quaternion() }, D = new THREE.Quaternion(), I = new THREE.Quaternion();
   const sNow = (clock) => {
     if (phase === "hold" || !plan) return 0;
     if (pinned !== null && !skip) return plan.sAt(pinned);
@@ -120,9 +127,11 @@ export function createOpening({ now = () => performance.now(), veil = (/** @type
       return true;
     },
     active: () => phase !== "idle" && phase !== "done",
+    /** The angle of view the opening asks for this frame, or null when the walk's own serves. */
+    fov: () => (phase === "idle" || phase === "done" ? null : fovNow),
     /** For the picture tools: hold the eye `secs` seconds into the way down (null lets it go on from there). */
     pin(secs) { if (secs === null || secs === undefined) { if (pinned !== null && phase === "fly") t0 = now() - pinned * 1000; pinned = null; return; } pinned = Math.max(0, +secs); if (phase === "idle" || phase === "done" || phase === "hold") { mode = "fly"; phase = "fly"; plan = null; skip = ink = null; } },
-    /** @param {THREE.Camera} camera @param {{ p: THREE.Vector3, q: THREE.Quaternion }} A */
+    /** @param {THREE.Camera} camera @param {{ p: THREE.Vector3, q: THREE.Quaternion, fov?: number }} A */
     apply(camera, A) {
       if (phase === "idle" || phase === "done") return false;
       const clock = now(), gap = clock - last; last = clock;
@@ -139,7 +148,7 @@ export function createOpening({ now = () => performance.now(), veil = (/** @type
         const k = (clock - ink.at) / 1000; veil(veilAt(k));
         if (!ink.moved && k >= veilShut()) ink.moved = true;
         if (k >= veilDone()) { veil(0); phase = "done"; camera.position.copy(A.p); camera.quaternion.copy(A.q); return false; }
-        if (ink.moved) { camera.position.copy(A.p); camera.quaternion.copy(A.q); return true; }
+        if (ink.moved) { camera.position.copy(A.p); camera.quaternion.copy(A.q); fovNow = null; return true; }
         s = 0;
       }
       plan.poseAtS(s, O);
@@ -148,7 +157,7 @@ export function createOpening({ now = () => performance.now(), veil = (/** @type
       const w = smoother((s / plan.length - (1 - OPENING.settle)) / OPENING.settle);
       P.p.copy(A.p).sub(plan.end.p).multiplyScalar(w).add(O.p);
       D.copy(plan.end.q).invert().premultiply(A.q); P.q.copy(O.q).premultiply(I.identity().slerp(D, w));
-      camera.position.copy(P.p); camera.quaternion.copy(P.q);
+      camera.position.copy(P.p); camera.quaternion.copy(P.q); fovNow = O.fov + ((A.fov ?? plan.end.fov) - plan.end.fov) * w;
       if (s >= plan.length - 1e-6 && (phase === "fly" || phase === "skip")) { phase = "done"; camera.position.copy(A.p); camera.quaternion.copy(A.q); return false; }
       return true;
     },

@@ -215,7 +215,7 @@ const director = createDirector({ walker,
 // The opening after 入山 (src/opening.js): the eye on the summit, then down the mountain to him. While it plays nothing
 // lies over the picture (body.opening), and a click, a key, a tap, the wheel or Esc brings it down the rest of the way at
 // once; the event that does so goes no further (it does not walk him, strike the bell or open the menu).
-const opening = createOpening({ veil: inkVeil }), openingEye = { p: new THREE.Vector3(), q: new THREE.Quaternion() };
+const opening = createOpening({ veil: inkVeil }), openingEye = { p: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 50 };
 let openingDone = null;
 const endOpening = () => { document.body.classList.remove("opening"); const s = opening.state(); if (openingDone) { const fn = openingDone; openingDone = null; fn(s); } };
 for (const ev of ["keydown", "pointerdown", "wheel"]) addEventListener(ev, (e) => {
@@ -553,7 +553,9 @@ function frame(now) {
   // The opening takes the eye from the following eye it is handed, and gives it back on the frame it ends (src/opening.js).
   if (opening.active()) {
     openingEye.p.copy(camera.position); openingEye.q.copy(camera.quaternion);
+    openingEye.fov = baseFov();
     if (!opening.apply(camera, openingEye)) endOpening();
+    const fv = opening.fov(); if (fv !== directedFov) { directedFov = fv; lens(); }   // the long lens of the first picture, widening
     if (camera.position.distanceTo(openingEye.p) > 1) monk.group.visible = true;
   }
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.

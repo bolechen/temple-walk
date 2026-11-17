@@ -79,6 +79,8 @@ test("it starts on the summit and ends on the eye that follows him, to the centi
   assert.ok(first.p.z < -20 && first.p.y > 10, `starts at ${first.p.toArray().map((v) => v.toFixed(1))}`);
   const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(first.q), summit = new THREE.Vector3(0, 36, site.summitPorch[1] - 7.5).sub(first.p).normalize();
   assert.ok(deg(fwd.angleTo(summit)) < 12, "the summit pavilion is before the eye at the first frame");
+  assert.ok(first.fov < 40 && Math.abs(last.fov - A.fov) < 1e-6, `the angle of view goes from ${first.fov}° to ${last.fov}° (the following eye's ${A.fov}°)`);
+  for (let t = 0; t < plan.secs; t += DT) { const a = plan.poseAt(t).fov, b = plan.poseAt(t + DT).fov; assert.ok(Math.abs(b - a) <= 0.25, `the lens widens ${(b - a).toFixed(2)}° in a frame at ${t.toFixed(2)} s`); }
   assert.ok(last.p.distanceTo(A.p) < 0.05, `ends ${last.p.distanceTo(A.p).toFixed(3)} m from the following eye`);
   assert.ok(deg(turnBetween(last.q, A.q)) < 1, `ends ${deg(turnBetween(last.q, A.q)).toFixed(2)}° from the following eye`);
 });
