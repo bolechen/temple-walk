@@ -1883,10 +1883,17 @@
    "issue": "各级建筑同一材等、同一套斗拱",
    "suggested_fix": "见 docs/t00/structure-review.md S-03",
    "evidence_before": "2026-11-16 结构评审，对《营造法式》卷三、四、五、十三原文；提交 452f14e",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": "fcbe81d",
    "dev_note": "buildHall 加 cai（材广），斗拱、阑额、柱径、椽径、出跳、平坐都按它缩放；站点表：大殿 0.256，观音殿、山门、藏经楼 0.232，配殿与凌霄阁一层 0.205，钟鼓楼、亭与凌霄阁二三层 0.186。藏经楼、凌霄阁的取值是自拟的。测试两项（各座用其等级的材；斗拱各件折成分后与卷四相差不过 5%），第一项改前失败",
-   "recheck": null,
+   "recheck": {
+    "at_commit": "017d7322668802b83f7293336bfba6f5f7b503c0",
+    "evidence": "在 Node 里逐座读出材等、斗拱分值、角梁；tests/unit/structure.test.mjs；docs/t00/evidence/structure/phase4-*，含 phase4-main-hall-corner-before-after.jpg 三向对照",
+    "by": "Claude（结构评审方）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "各座按材等缩放：大殿上檐 0.256、副阶 0.232（减殿身一等）、观音殿山门藏经楼 0.232、禅堂茶寮 0.223、药师殿大慧院 0.205、亭与钟鼓楼 0.186；斗拱各件在卷四分值 5% 内。遗留：凌霄阁上下层材不同（建议同材，待所有者取舍）"
+   },
    "recheck_history": []
   },
   {
@@ -1960,10 +1967,17 @@
    "issue": "没有角梁",
    "suggested_fix": "见 docs/t00/structure-review.md S-07",
    "evidence_before": "2026-11-16 结构评审，对《营造法式》卷三、四、五、十三原文；提交 452f14e",
-   "status": "fixed_pending_retest",
+   "status": "verified_closed",
    "fixed_in": "fcbe81d",
    "dev_note": "每个屋角加大角梁（角柱上方到檐角，梁头下削）和子角梁（出头略翘）；风铎改挂子角梁头下；翼角椽根部沿大角梁排开。测试一项改前失败。子角梁的翘度和尺寸自拟。新机位 eavecorner 仰看大殿东南檐角",
-   "recheck": null,
+   "recheck": {
+    "at_commit": "017d7322668802b83f7293336bfba6f5f7b503c0",
+    "evidence": "在 Node 里逐座读出材等、斗拱分值、角梁；tests/unit/structure.test.mjs；docs/t00/evidence/structure/phase4-*，含 phase4-main-hall-corner-before-after.jpg 三向对照",
+    "by": "Claude（结构评审方）",
+    "verdict": "verified_closed",
+    "remaining_severity": "minor",
+    "note": "每角大角梁与子角梁，风铎挂子角梁头，翼角椽沿大角梁排开；大角梁截面合卷五。遗留：子角梁截面略小；攒尖顶只取总举高，未按簇角梁分三折"
+   },
    "recheck_history": []
   },
   {
