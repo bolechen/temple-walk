@@ -947,7 +947,7 @@ function warmShot(p, foot) {
 const WARM_AT = [0.12, 0.25, 0.38, 0.5, 0.62, 0.74, 0.86, 0.95];
 let openingWarmed = 0;
 function warmOpening() {
-  const plan = opening.plan(); if (!plan || openingWarmed >= WARM_AT.length) return;
+  const plan = opening.plan(); if (!plan || openingWarmed >= WARM_AT.length || OFF.has("warm")) return;   // (?off=warm: without it, to measure what it saves)
   const o = plan.poseAtS(plan.length * WARM_AT[openingWarmed++]);
   warmEye.copy(camera); warmEye.position.copy(o.p); warmEye.quaternion.copy(o.q); warmEye.updateMatrixWorld();
   const was = renderer.getRenderTarget(); renderer.setRenderTarget(warmTarget); renderer.render(scene, warmEye); renderer.setRenderTarget(was);

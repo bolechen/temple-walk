@@ -99,7 +99,8 @@ function fingerprint(dir) {
     for (const R of spec.opening.runs || [{ q: "high", size: [1920, 1080] }]) {
       const size = R.size || [1920, 1080], row = { q: R.q, size, scale: R.scale || 1 };
       try {
-        const { ctx, page, loadMs } = await open(q({ q: R.q, season: R.season || "summer", time: R.time || "day" }), size, R.scale || 1);
+        row.off = R.off || "";
+        const { ctx, page, loadMs } = await open(q({ q: R.q, season: R.season || "summer", time: R.time || "day", off: R.off }), size, R.scale || 1);
         row.loadMs = loadMs; const ev = (f, a) => page.evaluate(f, a);
         await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
         await ev(() => { window.__ft = []; window.__ph = []; const f = (t) => { window.__ft.push(t); window.__ph.push(window.__opening ? window.__opening().phase : "?"); requestAnimationFrame(f); }; requestAnimationFrame(f); });
