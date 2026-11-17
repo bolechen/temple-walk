@@ -318,6 +318,15 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .3em; color: var(--on-2); }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
+.title-links .chip { white-space: nowrap; }
+/* A phone: the bar of words (feedback group, settings, the languages) does not fit one row. The languages take a second row of their own
+   and every label stays whole on one line, each a thumb's width and height; the title keeps 16 px from either edge. */
+@media (max-width: 600px) {
+  .title-links { left: max(16px, env(safe-area-inset-left, 0px)); flex-wrap: wrap; justify-content: flex-end; gap: 0 8px; }
+  #title .title-links .langs { display: flex; flex-basis: 100%; justify-content: flex-end; gap: 0 4px; }
+  .title-links .chip { min-width: 44px; padding-left: 10px; padding-right: 10px; }
+  #title .sub { font-size: 12px; margin-left: 16px; margin-right: 16px; letter-spacing: .3em; text-indent: .3em; }
+}
 
 /* ---- Small things for the hand ---- */
 #dropBtn { position: absolute; right: 18px; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
@@ -437,11 +446,10 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
    right what the hands and ears do (turning, the two switches, the four volumes), and across the foot the language and the buttons.
    Tab follows the document order, which is the visual order: left column top to bottom, then the right. */
 @media (min-width: 1024px) and (min-aspect-ratio: 4/3) {
-  #menu .card { width: min(94vw, 960px); grid-template-columns: 1.1fr 1fr; column-gap: 44px; row-gap: 0; align-content: start; padding: 26px 48px 20px; overflow-y: auto; }
+  #menu .card { width: min(94vw, 960px); grid-template-columns: 1fr 1fr; column-gap: 44px; row-gap: 0; align-content: start; padding: 26px 48px 20px; overflow-y: auto; }
   #menu .grp { display: grid; gap: 4px; align-content: start; }
   #menu h2 { grid-column: 1 / -1; font-size: 34px; margin: 0 0 8px; }
-  #menu .set { min-height: 44px; grid-template-columns: 5.4em 1fr; gap: 8px; }
-  #menu .grp-ctl .set { grid-template-columns: 7.6em 1fr; }
+  #menu .set { min-height: 44px; grid-template-columns: 7.6em 1fr; gap: 8px; }   /* one label width in both columns, so every slider is the same length */
   #menu .opts { gap: 2px 6px; flex-wrap: nowrap; }
   #menu .opts .chip { padding-left: 8px; padding-right: 8px; }
   #menu .set:has([data-lang]), #menu .community-invite, #menu .row, #menu .note { grid-column: 1 / -1; }
