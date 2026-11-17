@@ -101,6 +101,19 @@
 | 照片下方的一句（「雨过竹声凉」等八句） | `mood.js` 的 `LINES` | 我们自己写的，不是古诗 | 自拟 |
 | 渲染顺序：烘焙贴图、独立远景、体积雾光、软阴影 | 全局 | Saltline 拆解（`SALTLINE-TEARDOWN.md`） | 参考项目 |
 | 扫描贴图 | `shared/textures/` | Poly Haven，CC0 | 已核许可 |
+| 光晕（halation）：亮处外圈一层偏橙的辉光，只加在泛光的宽层上；夏昼 J01 不加（美术第一阶段，#72） | `post.js`、`mood.js` 的 `hal` | 美术原型 2026-11-16（AI 改图）的提示词「subtle halation」；胶片光晕偏红橙是常理 | 所有者指定的方向；颜色按常理 |
+| 每个季节和时辰一张调色表（三路调色、饱和度、暗部和亮部的分色），夏昼 J01 为恒等（#72） | `lut.js`、`mood.js` 的 `lut`、`post.js` | 美术原型 2026-11-16（AI 改图）；数值按 `art-targets.json` 的读数调 | 所有者指定的方向；数值自拟 |
+| 软阴影：檐影远处软、柱脚处硬（PCSS，按遮挡物离地多高定半影宽），只开高档；阴影图高档 3072×6144（原 2048×4096），仍每换一次时辰才画（#72） | `shadows.js`、`sky.js`、`quality.js` | `art-goal.md` 第一阶段；Saltline 拆解里「软阴影」的顺序；半影宽每米 2.2 厘米是按太阳圆面加薄雾估的 | 参考项目；宽度按常理 |
+| 竹叶投出镂空的斑驳影子（中档以上） | `bamboo.js` | `art-goal.md` 第一阶段；原型 01、04 的叶影 | 所有者指定的方向 |
+| 环境光遮蔽（GTAO），只开高档，半分辨率，用场景本身的深度，远处随雾淡去（#72） | `post.js` | `art-goal.md` 第一阶段（three 自带 `GTAOPass`） | 所有者指定的方向；强度自拟 |
+| 很浅的景深：只在定机位（`?shot`）和拍照取景时开，第三人称对焦在小沙弥身上（#72） | `post.js`、`yard.js` 的 `focusAt` | `art-goal.md` 第一阶段；原型「realistic depth」 | 所有者指定的方向；对焦距离按常理 |
+| 分层的雾：雾气积在低处、往上变薄，山顶回望时远山一层层隔开；夏昼 J01 不分层（#72） | `fog.js`、`glsl.js` 的 `fogLayer`、`mood.js` 的 `fogLayer`、`haze` | 原型 06「Silver-blue mist receding through mountains」；山雾积在谷里是常理 | 所有者指定的方向；物理按常理 |
+| 黄昏：太阳更暖更亮（偏黄橙，不偏紫红），天光少紫，阴影少蓝；秋暮的太阳方向以 A3 首院逆光为准 | `mood.js` | `art-targets.md`「差距的方向」，原型 02、03、04、05；太阳方向是主创评审 #125 定的 | 所有者指定的方向；主创评审 |
+| 黄昏的灯按云量亮：晴天的傍晚格窗只微亮（原型 04 的窗是暗的），阴天的傍晚早亮、更亮（原型 05） | `mood.js` 的 `lamp` | 为同时贴近原型 04、05 推出来的规则，没有出处 | 自拟 |
+| 黄昏的窗光为琥珀色（比改前的黄偏橙，不到红；2026-11-16 一度过红，按主创评审 #125 改回） | `materials.js` 的 `lattice`、`mood.js` 的 `win` | 原型 05「Warm glowing amber lattice windows against soft indigo dusk」，`art-targets.md` A5 | 所有者指定的方向 |
+| 清晨的天和雾偏银蓝、压暗；夏日清晨是淡青绿的雾，阳光更亮更白，台阶上有斑驳的亮处 | `mood.js` | 原型 01「Cool jade green…soft morning mist」、06「Silver-blue mist」 | 所有者指定的方向 |
+| 画质调节器在帧慢时先关环境光遮蔽、再关软阴影，然后才是倒影、分辨率、泛光（2026-11-17，主创评审 #125） | `quality.js` 的 `governorSteps`、`yard.js`、`shadows.js` | 主创评审的要求；先后顺序按「访客最不会注意到的先去」 | 主创评审；顺序自拟 |
+| A2 山门的目标改为秋昼（太阳从南面扫过门面），秋暮的太阳留给首院 | `docs/t00/art-targets.*`、`art-goal.md` | 所有者 2026-11-17 同意主创的建议（经主创转达） | 所有者指定 |
 
 ## 声音
 

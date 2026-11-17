@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, rites, stairs, drop), and the long walk that
+// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
@@ -1282,6 +1282,11 @@ const scenarios = {
     await part("reflect", false); y = await t.state(); expect(y.planar === 0, "the mirror did not go out");
     await part("reflect", true); y = await t.state(); expect(y.planar === 0.5, "the mirror did not come back at the tier's size");
     for (const n of ["bloom", "shadow"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    // The film's finish: the halation, the colour table and the mist's layers switch on every tier; the occlusion and
+    // the depth of field are the high tier's, and the middle tier refuses them (the finish scenario looks at the high).
+    for (const n of ["halation", "lut", "layers"]) { expect((await part(n, false)) === false, n + " did not go out"); await t.frames(2); expect((await part(n, true)) === true, n + " did not come back"); await t.frames(2); }
+    for (const n of ["gtao", "dof"]) expect((await part(n, true)) === null, `the medium tier should not offer ${n}`);
+    { const f = (await t.probe()).post; expect(!f.depth && !f.gtao && f.lut && f.halation, "the medium tier's finish: no depth or occlusion, a colour table and halation at dusk: " + JSON.stringify(f)); }
     expect(y.season === "autumn" && y.time === "dusk" && y.view === "first" && y.fov > 0, "__yard should say the hour and the view: " + JSON.stringify(y));
     // A named view, without loading again; an unknown one is refused.
     expect(await t.page.evaluate(() => window.__show("gate")), "__show refused a named view"); y = await t.state();
@@ -1297,6 +1302,29 @@ const scenarios = {
     expect((await part("site", true)) === true && !(await census()).site.hidden, "the buildings did not come back outdoors");
     await t.frames(2); const p = await t.probe(); expect(p.lum > 12 && p.lum < 245, "the picture is blank after the switches: " + p.lum.toFixed(1));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The film's finish on the high tier (docs/t00/art-goal.md, first stage): the scene's depth is kept and the occlusion
+  // drawn from it; at dusk a colour table and halation; the mist lies in layers; a fixed view (?shot) is focused, the walk
+  // is not; each part goes out with ?off=; summer by day (J01) keeps no table, no halation and plain air; the low tier
+  // keeps no depth.
+  finish: { tier: 2, async run(b, base) {
+    const look = async (q, w = 480, h = 200) => { const t = await open(b, base, q, { viewport: { width: w, height: h } }); await t.frames(2); const p = await t.probe(); expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close(); return p; };
+    let p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
+    expect(p.post.depth && p.post.gtao && p.post.lut && p.post.halation && !p.post.dof && p.layers > 0 && p.soft && p.governed === 0, "the high tier at dusk, walking: " + JSON.stringify([p.post, p.layers, p.soft]));
+    // The colour table is baked when the hour changes, never per frame (it once was, at 20 ms of CPU a frame).
+    { const t = await open(b, base, "q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk", { viewport: { width: 320, height: 160 } }); await t.frames(2);
+      const n0 = (await t.probe()).post.bakes; await t.frames(6); const n1 = (await t.probe()).post.bakes;
+      expect(n0 >= 1 && n1 === n0, `the colour table was baked again while walking: ${n0} → ${n1}`);
+      await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
+      expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
+    p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
+    expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
+    p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk&off=gtao,lut,halation,layers,dof");
+    expect(!p.post.gtao && !p.post.lut && !p.post.halation && p.layers === 0, "?off= should put out each part of the finish: " + JSON.stringify([p.post, p.layers]));
+    p = await look("q=high&shot=1&show=cam06");
+    expect(p.season === "summer" && p.time === "day" && !p.post.lut && !p.post.halation && p.layers === 0 && p.post.gtao, "J01 keeps its colour and its air: " + JSON.stringify([p.post, p.layers]));
+    p = await look("q=low&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
+    expect(!p.post.depth && !p.post.gtao && !p.post.dof && p.post.lut && !p.soft, "the low tier keeps no depth, draws no occlusion and no soft shadows: " + JSON.stringify([p.post, p.soft]));
   } },
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });

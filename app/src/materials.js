@@ -18,14 +18,14 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : ""))
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : ""))
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -173,7 +173,7 @@ export function createMaterials() {
       // each room its own strength, and one leaf in eight dark.
       float leaf=floor(vUv2.x), room=n2(vec2(leaf*.31,2.)), on=step(.125,h21(vec2(leaf,7.)));
       float up=tr?.25:exp(-pow((q.y-.85)/1.25,2.));
-      emit_=mix(vec3(.19,.068,.02),vec3(.8,.47,.18),up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
+      emit_=mix(uWin*vec3(.24,.145,.11),uWin,up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
       float p=smoothstep(.4,.72,fbm3(vWP*5.)); col=mix(vec3(.16,.125,.085),vec3(.16,.27,.22),p*.75);  // verdigris
