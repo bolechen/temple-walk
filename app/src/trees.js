@@ -158,7 +158,14 @@ function foot(y, trunk, top, seed, R = 24) {
     return [c.x + Math.cos(a) * rr, y + h, c.z + Math.sin(a) * rr]; };
   for (let i = 0; i <= rings; i++) for (let k = 0; k <= R; k++) { const p = at(i, k), q = at(i, k + 0.25), e = i < rings ? 0.25 : -0.25, d0 = at(i + e, k), d = i < rings ? d0 : [2 * p[0] - d0[0], 2 * p[1] - d0[1], 2 * p[2] - d0[2]];   // the lowest ring looks back up the foot for its slope: a normal of no length would shade as not-a-number
     const ax = q[0] - p[0], ay = q[1] - p[1], az = q[2] - p[2], bx = d[0] - p[0], by = d[1] - p[1], bz = d[2] - p[2], nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, l = Math.hypot(nx, ny, nz) || 1;
-    pos.push(...p); nor.push(-nx / l, -ny / l, -nz / l); uv.push(k / R, -i / rings * 0.5); }
+    // facing out of the wood; at its top, where it is the trunk, the trunk's own normal, so the light runs on unbroken
+    let ox = nx / l, oy = ny / l, oz = nz / l; const blend = i === 0 ? 1 : i === 1 ? 0.5 : 0;
+    if (blend) { const hh = top * (1 - i / rings), c = trunk(hh), up = trunk(hh + 0.05), dn = trunk(hh - 0.05), tx = up.x - dn.x, tz = up.z - dn.z, tl = Math.hypot(tx, 0.1, tz), Tx = tx / tl, Ty = 0.1 / tl, Tz = tz / tl;
+      let rx = p[0] - c.x, rz = p[2] - c.z; const rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl; const d = rx * Tx + rz * Tz, wx = rx - Tx * d, wy = -Ty * d, wz = rz - Tz * d, wl = Math.hypot(wx, wy, wz) || 1;
+      ox = ox * (1 - blend) + (wx / wl) * blend; oy = oy * (1 - blend) + (wy / wl) * blend; oz = oz * (1 - blend) + (wz / wl) * blend; const ol = Math.hypot(ox, oy, oz) || 1; ox /= ol; oy /= ol; oz /= ol; }
+    else {   // lower down, leaned a little out from the trunk, so the flanks of a root-spur shade softly rather than turning edge-on
+      const c = trunk(top * (1 - i / rings)); let rx = p[0] - c.x, rz = p[2] - c.z; const rl = Math.hypot(rx, rz) || 1; ox += (0.45 * rx) / rl; oz += (0.45 * rz) / rl; const ol = Math.hypot(ox, oy, oz) || 1; ox /= ol; oy /= ol; oz /= ol; }
+    pos.push(...p); nor.push(ox, oy, oz); uv.push(k / R, -i / rings * 0.5); }
   for (let i = 0; i < rings; i++) for (let k = 0; k < R; k++) { const a = i * (R + 1) + k, b = a + R + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return g;
