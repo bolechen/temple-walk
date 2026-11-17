@@ -147,6 +147,7 @@ export function buildSite(M) {
   put({ ...side, plaque: { text: "禅堂", style: "wood" }, hall: { id: "chan", kind: "chan", name: "禅堂" } }, [16.6, 14], 3);
   // The tea house's porch is deeper than its neighbour's: wide enough to walk round the two tables set under its eave.
   const tea = put({ ...side, platOut: 1.6, plaque: { text: "吃茶去", style: "wood" }, hall: { id: "tea", kind: "tea", name: "茶寮" } }, [-16.6, 14], 1);
+  const teaMats = [], drawnSeats = [];   // the tea house's four cushions; every place a cushion or stool is drawn (a test holds each to a seat)
   {   // a low table set for tea under its eave, against the wall: an iron kettle, a whisk, bowls of black glaze, a straw cushion at either end
     const y = tea.platH, z = tea.frontZ + 0.37, parts = { wood: [], glaze: [], iron: [], straw: [] };
     for (const x of [-4.9, 4.9]) {
@@ -154,8 +155,11 @@ export function buildSite(M) {
       for (const dx of [-0.42, 0, 0.42]) parts.glaze.push(lathe([[0, 0.012], [0.035, 0], [0.04, 0.012], [0.075, 0.05], [0.082, 0.062], [0.076, 0.062], [0.03, 0.02], [0, 0.02]], 14).translate(x + dx, y + 0.37, z + 0.05));
       parts.iron.push(lathe([[0, 0], [0.09, 0], [0.13, 0.05], [0.13, 0.11], [0.07, 0.16], [0.03, 0.17], [0, 0.19]], 12).translate(x + 0.55, y + 0.37, z - 0.12), new THREE.TorusGeometry(0.09, 0.008, 5, 12, Math.PI).translate(x + 0.55, y + 0.53, z - 0.12));
       parts.wood.push(new THREE.CylinderGeometry(0.012, 0.03, 0.11, 8).translate(x - 0.6, y + 0.425, z - 0.12));
-      for (const dx of [-1.12, 1.12]) { parts.straw.push(new THREE.CylinderGeometry(0.24, 0.26, 0.08, 14).translate(x + dx, y + 0.04, z + 0.02));
-        const [cx, cz] = turn(x + dx, z + 0.02, 1); walk.posts.push({ x: cx - 16.6, z: cz + 14, r: 0.26 }); }   // a cushion is walked round, as the stools are: his shoes do not sink into the straw
+      for (const dx of [-1.12, 1.12]) { parts.straw.push(lathe(CUSHION, 28).translate(x + dx, y, z + 0.02));
+        const [cx, cz] = turn(x + dx, z + 0.02, 1), [tx, tz] = turn(x, z + 0.02, 1);
+        walk.posts.push({ x: cx - 16.6, z: cz + 14, r: 0.292 });   // a cushion is walked round, as the stools are: his shoes do not sink into the straw
+        // and it is a seat, sat on cross-legged facing the table it lies beside
+        const at = [cx - 16.6, cz + 14]; teaMats.push({ at, top: y + 0.104, face: Math.atan2(tx - cx, tz - cz), room: null, kind: "cushion" }); drawnSeats.push(at); }
       // The table and what stands on it are in the way, with his own width round them; the way past is outside it.
       const [ax, az] = turn(x - 0.75 - BODY, z - 0.26, 1), [bx, bz] = turn(x + 0.75 + BODY, z + 0.26 + BODY, 1);
       walk.posts.push({ x0: Math.min(ax, bx) - 16.6, x1: Math.max(ax, bx) - 16.6, z0: Math.min(az, bz) + 14, z1: Math.max(az, bz) + 14 });
@@ -447,6 +451,7 @@ export function buildSite(M) {
   // cushion cross-legged. The rooms add their own (interior.js); game.js offers them.
   const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null, kind: "stool" }; });
   seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null, kind: "cushion" });
+  drawnSeats.push([0, porchZ], ...seats.slice(0, 3).map((q) => q.at)); seats.push(...teaMats);
   // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
   // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
   const places = {
@@ -507,7 +512,7 @@ export function buildSite(M) {
     art5: [0, T2.zS + 5, 0, 0.22], art6: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
   };
 
-  return { root, walk, shade, paving, hall, halls, buildings, views, places, seats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, halls, buildings, views, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
