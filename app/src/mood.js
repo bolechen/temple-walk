@@ -70,7 +70,13 @@ export function moodOf(season, time) {
   return m;
 }
 // The season and hour it is now, where the visitor is.
-export function moodNow() {
-  const d = new Date(), mo = d.getMonth(), h = d.getHours() + d.getMinutes() / 60;
+export function moodNow(d = new Date()) {
+  const mo = d.getMonth(), h = d.getHours() + d.getMinutes() / 60;
   return { season: SEASONS[Math.floor(((mo + 10) % 12) / 3)], time: h < 5 ? "night" : h < 8 ? "dawn" : h < 16.5 ? "day" : h < 19 ? "dusk" : "night" };
+}
+// While a visit follows the clock (the default; a hour chosen by hand is for that visit only), the hour it should now be, or
+// null when it is already right.
+export function hourFollow(state, d = new Date()) {
+  if (!state.follow) return null;
+  const t = moodNow(d).time; return t === state.time ? null : t;
 }

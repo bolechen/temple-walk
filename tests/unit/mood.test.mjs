@@ -57,3 +57,23 @@ test("at dusk the lamps burn brighter under cloud than on a clear evening, and n
   for (const s of SEASONS) assert.ok(moodOf(s, "dusk").lamp <= moodOf(s, "night").lamp, s);
   assert.ok(moodOf("summer", "dusk").lamp > moodOf("autumn", "dusk").lamp, "a cloudy summer dusk is lit before a clear autumn one");
 });
+// #135: the hour follows the clock unless the visitor chose one for this visit.
+test("moodNow takes a clock, and the hour changes across each boundary", async () => {
+  const { moodNow } = await import("../../app/src/mood.js");
+  const at = (h, m = 0) => moodNow(new Date(2026, 10, 17, h, m)).time;
+  assert.equal(at(4, 59), "night"); assert.equal(at(5, 0), "dawn");
+  assert.equal(at(7, 59), "dawn"); assert.equal(at(8, 0), "day");
+  assert.equal(at(16, 29), "day"); assert.equal(at(16, 30), "dusk");
+  assert.equal(at(18, 59), "dusk"); assert.equal(at(19, 0), "night");
+});
+test("a visit that follows the clock moves on at the boundary; a chosen hour stays", async () => {
+  const { hourFollow } = await import("../../app/src/mood.js");
+  const before = new Date(2026, 10, 17, 7, 59), after = new Date(2026, 10, 17, 8, 1);
+  assert.equal(hourFollow({ follow: true, time: "dawn" }, before), null, "no change before the boundary");
+  assert.equal(hourFollow({ follow: true, time: "dawn" }, after), "day", "crossing 8:00 turns dawn into day");
+  assert.equal(hourFollow({ follow: false, time: "dawn" }, after), null, "a hour chosen by hand is not taken back");
+});
+test("the hour chosen by hand is kept only in memory", async () => {
+  const { readFileSync } = await import("node:fs");
+  for (const f of ["app/yard.js", "app/src/mood.js"]) assert.ok(!/localStorage[^\n]*(follow|hour)/i.test(readFileSync(f, "utf8")), f + " must not store the hour");
+});

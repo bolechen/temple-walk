@@ -88,3 +88,28 @@ for (const [name, path] of Object.entries(routes)) test(`the near plane cuts int
   assert.ok(looks > 100, `only ${looks} looks`);
   assert.equal(bad.length, 0, `${bad.length} of ${looks} looks cut into something:\n` + bad.slice(0, 10).join("\n"));
 });
+
+// Up on the summit pavilion's top storey he sees with his own eyes only (issue #101): round the balcony, at the depth
+// nearest its columns that still lets him by and along its middle, looking ahead, to either side and out over the railing.
+test("the near plane cuts into nothing: round the top storey of the summit pavilion, from his eyes", () => {
+  const L = site.lofts.lingxiao, [cx, cz] = L.at, bad = []; let looks = 0;
+  walker.setLoft("lingxiao");
+  try {
+    for (const r of [L.half.wall + 0.13 + 0.38 + 0.02, (L.half.wall + L.half.edge) / 2, L.half.edge - 0.64 - 0.02]) {
+      const ring = [[cx + r, cz + r], [cx + r, cz - r], [cx - r, cz - r], [cx - r, cz + r], [cx + r, cz + r]];
+      for (let i = 0; i < 4; i++) {
+        const [ax, az] = ring[i], [bx, bz] = ring[i + 1], n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.2), yaw = Math.atan2(bx - ax, -(bz - az));
+        for (let k = 0; k <= n; k++) {
+          const x = ax + ((bx - ax) * k) / n, z = az + ((bz - az) * k) / n; if (walker.blocked(x, z)) continue;
+          const eye = [x, L.floor + EYE, z];
+          for (const L2 of LENSES) for (const turn of [0, Math.PI / 2, -Math.PI / 2]) for (const pitch of [0, -0.5, 0.4]) {
+            looks++; const h = cut(eye, yaw + turn, pitch, L2.first + FOV_RANGE[1], L2.aspect);
+            if (h) bad.push(`at (${x.toFixed(2)}, ${z.toFixed(2)}) turn ${turn.toFixed(2)} pitch ${pitch}, ${L2.name}: ${h.object.material.name} at (${h.point.toArray().map((q) => q.toFixed(2))})`);
+          }
+        }
+      }
+    }
+  } finally { walker.setLoft(null); }
+  assert.ok(looks > 1000, `only ${looks} looks`);
+  assert.equal(bad.length, 0, `${bad.length} of ${looks} looks cut into something:\n` + bad.slice(0, 10).join("\n"));
+});

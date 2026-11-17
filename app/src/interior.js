@@ -194,6 +194,25 @@ function buildRoom(M, hall, ox, figures) {
     add(merge([-0.9, 0.9].map((x) => seat(x, -K.d / 2 + 3.2))), M.straw, () => 0.7);
     lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14, true]);
   }
+  // A hall with a storey that is walked round (the summit pavilion's top) has a stair up to it in the north-west corner,
+  // against the north wall behind the corner column, clear of the frames, the table and the way from the door: a steep
+  // timber stair between two strings, its treads open behind, rising westward into a well cut in the ceiling. It is
+  // not climbed step by step (the room is five metres high, the storey it leads to fourteen): at its foot one goes up,
+  // behind the veil.
+  if (hall.up) {
+    const x0 = -2.8, x1 = -7.3, za = -7.45, zb = -6.65, zc = (za + zb) / 2, w = zb - za, rise = K.h, n = 20, go = (x0 - x1) / n, len = Math.hypot(x0 - x1, rise), tilt = Math.atan2(rise, x0 - x1), wood = [];
+    for (let i = 0; i < n; i++) wood.push(box(go + 0.04, 0.05, w - 0.1, x0 - (i + 0.5) * go, Y + (i + 1) * (rise / n) - 0.025, zc));
+    for (const z of [za + 0.03, zb - 0.03]) wood.push(box(len, 0.3, 0.06, 0, 0, 0).rotateZ(-tilt).translate((x0 + x1) / 2, Y + rise / 2 - 0.05, z));
+    wood.push(box(len - 0.4, 0.06, 0.06, 0, 0, 0).rotateZ(-tilt).translate((x0 + x1) / 2 + 0.15, Y + rise / 2 + 0.82, zb), box(0.1, 1.0, 0.1, x0 - 0.1, Y + 0.5, zb));   // a hand rail on the open side, on a post at the foot
+    // The well in the ceiling the stair rises into: dark above, a frame of boards round it.
+    const wx0 = -K.w / 2, wx1 = x1 + 2.6, wz0 = -K.d / 2, wz1 = zb + 0.15, H = Y + K.h;
+    wood.push(box(wx1 - wx0, 0.16, 0.12, (wx0 + wx1) / 2, H - 0.12, wz1), box(0.12, 0.16, wz1 - wz0, wx1, H - 0.12, (wz0 + wz1) / 2));
+    add(merge(wood), M.woodX);
+    add(new THREE.PlaneGeometry(wx1 - wx0, wz1 - wz0).rotateX(Math.PI / 2).translate((wx0 + wx1) / 2, H - 0.035, (wz0 + wz1) / 2), new THREE.MeshBasicMaterial({ color: 0x0b0907 }), () => 1);
+    block(-K.w / 2, x0 + BODY, -K.d / 2, zb + BODY);
+    // Where he stands to go up, facing the stair (west); where he is set down coming back, facing into the room (east).
+    R.stair = { at: [ox + x0 + 0.5, zc], up: hall.up, face: -Math.PI / 2, back: Math.PI / 2, r: 0.9 };
+  }
   // Through the doorway: the court outside, as it stood when he came in. The room is not where the hall is (it lies
   // under the hill), so the view cannot simply be left open. Instead a picture of all that surrounds the hall's own
   // door is taken as he steps over the threshold (`lookOut` in yard.js), and here it is laid on the inside of a great
