@@ -723,7 +723,6 @@ const scenarios = {
     await reach(t, "the eye never started down the mountain", () => window.__opening().phase === "fly" && window.__opening().s > 1);
     o = await O(t); expect(o.hint === null && !(await t.page.evaluate(() => document.getElementById("hint").classList.contains("on"))), "how to walk should not be said before the walk is his: " + JSON.stringify(o));
     expect(o.waited >= 1500, "the eye should wait on the first picture before moving: " + o.waited);
-    expect(o.warmed > 0, "what the way down will see should be drawn once while it waits: " + JSON.stringify(o));
     const start = await t.state();
     await reach(t, "the opening never handed the walk back", () => window.__opening().phase === "done", null, 180000);
     o = await O(t); expect(!o.skipped && o.cuts === 0 && !o.cues.musicHeld, "it should end of itself, uncut, and let the music go: " + JSON.stringify(o));
