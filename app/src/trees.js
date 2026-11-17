@@ -10,6 +10,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { merge, mesh } from "./geo.js";
 import { U } from "./glsl.js";
 import { SUN_DIR } from "./sky.js";
+import { grow as growBy } from "./spike/gens.js";   // the #162 trial: two trees grown by an existing generator, with ?trees=three|ez
 
 const seeded = (seed) => { let s = seed; return () => ((s = (s * 16807) % 2147483647) / 2147483647); };
 
@@ -205,6 +206,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
   };
   const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
+  const spike = [];
   const beds = [], joints = [], branches = []; let nth = 0;   // (where each foot meets its trunk, and where each cedar branch ends: for the tests)
   // Where the trunk is at `h` above the ground: found on its own curve, its radius tapering as `limb` tapers it.
   const along = (curve, r0, r1, y) => { const P = new THREE.Vector3(), lo0 = curve.getPoint(0).y; return (h) => { const want = Math.max(lo0, y + h); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } curve.getPoint(lo, P); return { x: P.x, z: P.z, r: r0 + (r1 - r0) * lo }; }; };
@@ -215,6 +217,14 @@ export function createTrees(scene, M, spots, opts = {}) {
   const jit = (k) => (rnd() - 0.5) * k;
 
   for (const [x, y, z, kind, h, far0] of spots) {
+    // The #162 trial: the court's west maple and its cedar grown by three's TreeGenerator or by ez-tree, in this
+    // project's bark and leaves, so the three may be set side by side. Every other tree is grown here as before.
+    if (opts.gen && ((kind === "maple" && x === -9.5 && z === 28) || (kind === "cedar" && x === -19 && z === 29))) {
+      const t0 = performance.now(), t = growBy(opts.gen, kind, x, y, z, h, 7, kind === "cedar" ? 0.2 + h * 0.012 : 0.22), centre = V(x, y + h * 0.62, z);
+      wood.push(...t.wood); for (const l of t.leaves) clump(kind, l.p, centre, l.w, kind === "cedar" ? 3 : 5);
+      spike.push({ gen: opts.gen, kind, at: [x, z], stems: t.stems, trunks: t.trunks, ms: performance.now() - t0, wood: t.wood.reduce((n, g) => n + (g.index ? g.index.count : g.attributes.position.count) / 3, 0), leaves: t.leaves.length });
+      continue;
+    }
     if (kind === "cedar") {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
       // A young one is the same tree drawn smaller, its boughs only as long as its height allows, and it is not yet
@@ -295,7 +305,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches,
+    joints, branches, spike,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
