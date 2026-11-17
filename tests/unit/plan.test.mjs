@@ -38,7 +38,8 @@ test("the enclosure is closed either side of the gate: wall meets the gate's end
 test("every named view stands somewhere a visitor could stand", () => {
   for (const [name, [x, z, yaw, pitch]] of Object.entries(site.views)) {
     assert.ok([x, z, yaw, pitch].every(Number.isFinite), name);
-    assert.ok(!walker.blocked(x, z), `view "${name}" is inside something at (${x}, ${z})`);
+    walker.setLoft(site.viewUp[name] || null);   // a view up on a balcony stands on its floor
+    try { assert.ok(!walker.blocked(x, z), `view "${name}" is inside something at (${x}, ${z})`); } finally { walker.setLoft(null); }
   }
 });
 test("the plan registers what the rest of the page reads", () => {
@@ -78,6 +79,10 @@ test("from the first step, every part of the temple can be walked to", () => {
     "the foot of the last stair": [0, T2.zN + 1.5], "the summit": [0, TOP.zS - 3], "the summit pavilion's porch": site.summitPorch,
   };
   for (const [name, [x, z]] of Object.entries(places)) assert.ok(can(x, z), `cannot walk to ${name} (${x}, ${z})`);
+  // The top of the Lingxiao pavilion is reached by the stair in its ground-floor room, behind the veil (loft.test.mjs
+  // walks to the stair's foot); from the door up there, the balcony goes all the way round to its far side.
+  const L = site.lofts.lingxiao; walker.setLoft("lingxiao");
+  try { const up = reach(L.door); assert.ok(up(L.at[0], L.at[1] - (L.half.wall + L.half.edge) / 2, 0.2), "cannot walk round to the north side of the Lingxiao pavilion's top storey"); } finally { walker.setLoft(null); }
 });
 test("every observance of the journey has a place that can be walked to, and they do not crowd each other", async () => {
   const { SEALS } = await import("../../app/src/journey.js"), { placeAt } = await import("../../app/src/journey.js");
