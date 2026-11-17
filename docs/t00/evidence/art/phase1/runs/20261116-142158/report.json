@@ -1,0 +1,239 @@
+{
+  "started": "2026-11-16T14:26:03.922Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "autumn",
+      "time": "dusk",
+      "fps": 44.1,
+      "ms": 22.68,
+      "cost": 10.7,
+      "loadMs": 14986,
+      "tris": 1927484,
+      "calls": 378,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 47,
+      "ms": 21.28,
+      "cost": 9.65,
+      "loadMs": 8961,
+      "tris": 1927444,
+      "calls": 354,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "dusk",
+      "fps": 112.4,
+      "ms": 8.9,
+      "cost": 5.19,
+      "loadMs": 8897,
+      "tris": 866908,
+      "calls": 189,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low"
+    },
+    {
+      "view": "court",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "summer",
+      "time": "day",
+      "fps": 119.9,
+      "ms": 8.34,
+      "cost": 5.01,
+      "loadMs": 8841,
+      "tris": 866888,
+      "calls": 177,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low"
+    }
+  ],
+  "shots": [
+    {
+      "name": "art1@summer-dawn",
+      "file": "art1_summer-dawn.png",
+      "tris": 632034,
+      "calls": 99
+    },
+    {
+      "name": "art2@autumn-dusk",
+      "file": "art2_autumn-dusk.png",
+      "tris": 1877184,
+      "calls": 426
+    },
+    {
+      "name": "art3@autumn-dusk@third",
+      "file": "art3_autumn-dusk_third.png",
+      "tris": 1929276,
+      "calls": 398
+    },
+    {
+      "name": "art4@autumn-dusk",
+      "file": "art4_autumn-dusk.png",
+      "tris": 1587628,
+      "calls": 324
+    },
+    {
+      "name": "art5@summer-dusk",
+      "file": "art5_summer-dusk.png",
+      "tris": 630046,
+      "calls": 108
+    },
+    {
+      "name": "art6@autumn-dawn",
+      "file": "art6_autumn-dawn.png",
+      "tris": 936224,
+      "calls": 233
+    },
+    {
+      "name": "art1@summer-dawn",
+      "file": "art1_summer-dawn_low.png",
+      "tris": 538358,
+      "calls": 99
+    },
+    {
+      "name": "art2@autumn-dusk",
+      "file": "art2_autumn-dusk_low.png",
+      "tris": 836076,
+      "calls": 219
+    },
+    {
+      "name": "art3@autumn-dusk@third",
+      "file": "art3_autumn-dusk_third_low.png",
+      "tris": 870996,
+      "calls": 207
+    },
+    {
+      "name": "art4@autumn-dusk",
+      "file": "art4_autumn-dusk_low.png",
+      "tris": 700614,
+      "calls": 177
+    },
+    {
+      "name": "art5@summer-dusk",
+      "file": "art5_summer-dusk_low.png",
+      "tris": 536370,
+      "calls": 108
+    },
+    {
+      "name": "art6@autumn-dawn",
+      "file": "art6_autumn-dawn_low.png",
+      "tris": 842548,
+      "calls": 233
+    },
+    {
+      "name": "cam01@summer-day",
+      "file": "cam01_summer-day.png",
+      "tris": 929964,
+      "calls": 218
+    },
+    {
+      "name": "cam02@summer-day",
+      "file": "cam02_summer-day.png",
+      "tris": 628342,
+      "calls": 85
+    },
+    {
+      "name": "cam03@summer-day",
+      "file": "cam03_summer-day.png",
+      "tris": 1868418,
+      "calls": 410
+    },
+    {
+      "name": "cam04@summer-day",
+      "file": "cam04_summer-day.png",
+      "tris": 1870724,
+      "calls": 387
+    },
+    {
+      "name": "cam05@summer-day",
+      "file": "cam05_summer-day.png",
+      "tris": 935088,
+      "calls": 131
+    },
+    {
+      "name": "cam06@summer-day",
+      "file": "cam06_summer-day.png",
+      "tris": 1850988,
+      "calls": 335
+    }
+  ],
+  "errors": [],
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "tour": [
+    {
+      "seconds": 120.01,
+      "frames": 7255,
+      "fps_mean": 60.452691082165735,
+      "p95_ms": 21.8,
+      "max_ms": 143.5
+    },
+    {
+      "seconds": 120.01,
+      "frames": 7182,
+      "fps_mean": 59.846110002849755,
+      "p95_ms": 21.4,
+      "max_ms": 35.6
+    },
+    {
+      "seconds": 120.02,
+      "frames": 7245,
+      "fps_mean": 60.366649280183005,
+      "p95_ms": 21.1,
+      "max_ms": 35.5
+    }
+  ],
+  "finished": "2026-11-16T14:36:49.761Z"
+}

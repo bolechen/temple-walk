@@ -1,6 +1,6 @@
 // Wet flagstones with a real mirror in the puddles.
 import * as THREE from "three";
-import { NOISE, fogMix, U } from "./glsl.js";
+import { NOISE, FOGLAYER, fogMix, U } from "./glsl.js";
 import { FOG, SUN_DIR } from "./sky.js";
 import { declare, bind } from "./textures.js";
 import { TRAIL } from "./trail.js";
@@ -43,7 +43,7 @@ export function createGround(scene, shade, censer, paving) {
     lights: true,
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
-      tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
+      tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
       uLamp: U.uLamp, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
@@ -65,8 +65,8 @@ export function createGround(scene, shade, censer, paving) {
       #include <lights_pars_begin>
       #include <shadowmap_pars_fragment>
       #include <shadowmask_pars_fragment>
-      ` + NOISE + declare(["stone", "snow"]) + TRAIL + /* glsl */`
-      varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet;
+      ` + NOISE + FOGLAYER + declare(["stone", "snow"]) + TRAIL + /* glsl */`
+      varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
       uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
       // The slope of the water where his steps have set it moving: each ring a short train of waves at its front,
@@ -139,7 +139,7 @@ export function createGround(scene, shade, censer, paving) {
         if(!(refl.r>=0.)) refl=vec3(0.); refl=min(refl,vec3(32.));
         float kr=fres*mix(.05+damp*.24,1.,puddle)*(1.-joint*.7);
         vec3 c=mix(lit,refl,clamp(kr,0.,1.));
-        ${fogMix("c", "dist")}
+        ${fogMix("c", "dist", "vWP.y")}
         gl_FragColor=vec4(c,1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>

@@ -1,0 +1,597 @@
+{
+ "before_run": "20261116-142158",
+ "after_run": "20261116-234141",
+ "art": {
+  "01-bamboo": {
+   "before": {
+    "view": "01-bamboo",
+    "measures": {
+     "image": "tools/out/gpu/20261116-142158/art1_summer-dawn.png",
+     "L05": 17.0,
+     "L50": 26.9,
+     "L95": 64.4,
+     "range": 47.4,
+     "chroma": 6.5,
+     "light_a": 0.6,
+     "light_b": 6.2,
+     "shade_a": -1.8,
+     "shade_b": 3.3,
+     "split_b": 2.9,
+     "bands": [
+      40.8,
+      31.4,
+      29.5,
+      28.2,
+      27.0
+     ]
+    },
+    "misses": [
+     "L05: 17.0 (want 11.9 ± 4)",
+     "range: 47.4 (want 56.4 ± 8)",
+     "chroma: 6.5 (want 9.8 ± 3)",
+     "light_a: 0.6 (want -5.5 ± 4)"
+    ]
+   },
+   "after": {
+    "view": "01-bamboo",
+    "measures": {
+     "image": "tools/out/gpu/20261116-234141/art1_summer-dawn.png",
+     "L05": 13.5,
+     "L50": 25.1,
+     "L95": 66.1,
+     "range": 52.6,
+     "chroma": 10.5,
+     "light_a": -6.0,
+     "light_b": 6.8,
+     "shade_a": -4.1,
+     "shade_b": 0.9,
+     "split_b": 5.9,
+     "bands": [
+      42.4,
+      29.7,
+      28.9,
+      26.7,
+      24.3
+     ]
+    },
+    "misses": [
+     "split_b: 5.9 (want 0.9 ± 4)"
+    ]
+   }
+  },
+  "02-gate": {
+   "before": {
+    "view": "02-gate",
+    "measures": {
+     "image": "tools/out/gpu/20261116-142158/art2_autumn-dusk.png",
+     "L05": 11.4,
+     "L50": 15.5,
+     "L95": 75.8,
+     "range": 64.5,
+     "chroma": 5.7,
+     "light_a": 9.0,
+     "light_b": -9.1,
+     "shade_a": 0.8,
+     "shade_b": 0.2,
+     "split_b": -9.4,
+     "bands": [
+      41.4,
+      29.3,
+      17.6,
+      22.0,
+      20.6
+     ]
+    },
+    "misses": [
+     "light_b: -9.1 (want 5.0 ± 4)",
+     "split_b: -9.4 (want 2.6 ± 4)",
+     "light_a: 9.0 (want 4.2 ± 4)",
+     "band 1: 41.4 (want 31.4 ± 8)"
+    ]
+   },
+   "after": {
+    "view": "02-gate",
+    "measures": {
+     "image": "tools/out/gpu/20261116-234141/art2_autumn-dusk.png",
+     "L05": 10.3,
+     "L50": 14.1,
+     "L95": 81.0,
+     "range": 70.7,
+     "chroma": 8.1,
+     "light_a": 4.1,
+     "light_b": -0.8,
+     "shade_a": 1.6,
+     "shade_b": 2.6,
+     "split_b": -3.3,
+     "bands": [
+      42.7,
+      30.9,
+      15.4,
+      22.3,
+      22.1
+     ]
+    },
+    "misses": [
+     "L50: 14.1 (want 21.0 ± 6)",
+     "L95: 81.0 (want 72.2 ± 6)",
+     "light_b: -0.8 (want 5.0 ± 4)",
+     "split_b: -3.3 (want 2.6 ± 4)",
+     "band 1: 42.7 (want 31.4 ± 8)"
+    ]
+   }
+  },
+  "03-court": {
+   "before": {
+    "view": "03-court",
+    "measures": {
+     "image": "tools/out/gpu/20261116-142158/art3_autumn-dusk_third.png",
+     "L05": 14.1,
+     "L50": 30.2,
+     "L95": 79.0,
+     "range": 64.9,
+     "chroma": 11.3,
+     "light_a": 9.2,
+     "light_b": 2.4,
+     "shade_a": 2.4,
+     "shade_b": 1.1,
+     "split_b": 1.3,
+     "bands": [
+      50.6,
+      34.1,
+      30.7,
+      31.1,
+      26.1
+     ]
+    },
+    "misses": [
+     "L95: 79.0 (want 86.8 ± 6)",
+     "light_b: 2.4 (want 13.8 ± 4)",
+     "shade_b: 1.1 (want 6.9 ± 3)",
+     "split_b: 1.3 (want 7.0 ± 4)",
+     "light_a: 9.2 (want 5.1 ± 4)",
+     "band 4: 31.1 (want 39.7 ± 8)",
+     "band 5: 26.1 (want 37.6 ± 8)"
+    ]
+   },
+   "after": {
+    "view": "03-court",
+    "measures": {
+     "image": "tools/out/gpu/20261116-234141/art3_autumn-dusk_third.png",
+     "L05": 13.3,
+     "L50": 32.8,
+     "L95": 84.3,
+     "range": 71.0,
+     "chroma": 12.0,
+     "light_a": 4.9,
+     "light_b": 9.7,
+     "shade_a": 3.9,
+     "shade_b": 4.9,
+     "split_b": 4.8,
+     "bands": [
+      52.7,
+      34.8,
+      29.2,
+      34.5,
+      30.2
+     ]
+    },
+    "misses": [
+     "light_b: 9.7 (want 13.8 ± 4)"
+    ]
+   }
+  },
+  "04-tea": {
+   "before": {
+    "view": "04-tea",
+    "measures": {
+     "image": "tools/out/gpu/20261116-142158/art4_autumn-dusk.png",
+     "L05": 11.0,
+     "L50": 19.4,
+     "L95": 59.2,
+     "range": 48.2,
+     "chroma": 6.3,
+     "light_a": 9.6,
+     "light_b": 6.9,
+     "shade_a": 0.5,
+     "shade_b": 0.1,
+     "split_b": 6.9,
+     "bands": [
+      28.5,
+      22.1,
+      27.2,
+      21.6,
+      18.2
+     ]
+    },
+    "misses": [
+     "L05: 11.0 (want 5.1 ± 4)",
+     "L95: 59.2 (want 46.2 ± 6)",
+     "light_b: 6.9 (want 13.1 ± 4)",
+     "split_b: 6.9 (want 11.5 ± 4)",
+     "light_a: 9.6 (want 3.8 ± 4)",
+     "band 1: 28.5 (want 16.3 ± 8)"
+    ]
+   },
+   "after": {
+    "view": "04-tea",
+    "measures": {
+     "image": "tools/out/gpu/20261116-234141/art4_autumn-dusk.png",
+     "L05": 10.2,
+     "L50": 20.1,
+     "L95": 57.0,
+     "range": 46.8,
+     "chroma": 8.0,
+     "light_a": 5.8,
+     "light_b": 9.2,
+     "shade_a": 1.6,
+     "shade_b": 2.5,
+     "split_b": 6.6,
+     "bands": [
+      29.8,
+      21.9,
+      26.8,
+      24.1,
+      19.8
+     ]
+    },
+    "misses": [
+     "L05: 10.2 (want 5.1 ± 4)",
+     "L95: 57.0 (want 46.2 ± 6)",
+     "split_b: 6.6 (want 11.5 ± 4)",
+     "band 1: 29.8 (want 16.3 ± 8)"
+    ]
+   }
+  },
+  "05-terrace": {
+   "before": {
+    "view": "05-terrace",
+    "measures": {
+     "image": "tools/out/gpu/20261116-142158/art5_summer-dusk.png",
+     "L05": 12.4,
+     "L50": 21.8,
+     "L95": 56.8,
+     "range": 44.4,
+     "chroma": 7.1,
+     "light_a": 8.2,
+     "light_b": 19.3,
+     "shade_a": 1.1,
+     "shade_b": 0.4,
+     "split_b": 18.9,
+     "bands": [
+      33.7,
+      21.6,
+      22.9,
+      23.8,
+      19.8
+     ]
+    },
+    "misses": [
+     "L05: 12.4 (want 7.6 ± 4)",
+     "chroma: 7.1 (want 12.2 ± 3)",
+     "light_b: 19.3 (want 6.5 ± 4)",
+     "split_b: 18.9 (want 6.1 ± 4)",
+     "light_a: 8.2 (want 14.7 ± 4)",
+     "band 1: 33.7 (want 25.6 ± 8)"
+    ]
+   },
+   "after": {
+    "view": "05-terrace",
+    "measures": {
+     "image": "tools/out/gpu/20261116-234141/art5_summer-dusk.png",
+     "L05": 10.9,
+     "L50": 21.0,
+     "L95": 71.3,
+     "range": 60.4,
+     "chroma": 9.1,
+     "light_a": 16.7,
+     "light_b": 14.5,
+     "shade_a": 2.0,
+     "shade_b": 2.8,
+     "split_b": 11.7,
+     "bands": [
+      35.4,
+      22.4,
+      22.7,
+      21.8,
+      20.4
+     ]
+    },
+    "misses": [
+     "L95: 71.3 (want 56.4 ± 6)",
+     "range: 60.4 (want 48.8 ± 8)",
+     "chroma: 9.1 (want 12.2 ± 3)",
+     "light_b: 14.5 (want 6.5 ± 4)",
+     "split_b: 11.7 (want 6.1 ± 4)",
+     "band 1: 35.4 (want 25.6 ± 8)"
+    ]
+   }
+  },
+  "06-summit": {
+   "before": {
+    "view": "06-summit",
+    "measures": {
+     "image": "tools/out/gpu/20261116-142158/art6_autumn-dawn.png",
+     "L05": 24.2,
+     "L50": 85.0,
+     "L95": 96.6,
+     "range": 72.4,
+     "chroma": 4.1,
+     "light_a": 1.5,
+     "light_b": 4.0,
+     "shade_a": -0.0,
+     "shade_b": -0.9,
+     "split_b": 4.9,
+     "bands": [
+      89.5,
+      89.4,
+      83.3,
+      49.3,
+      41.7
+     ]
+    },
+    "misses": [
+     "L05: 24.2 (want 16.4 ± 4)",
+     "L50: 85.0 (want 45.6 ± 6)",
+     "L95: 96.6 (want 79.7 ± 6)",
+     "range: 72.4 (want 63.3 ± 8)",
+     "light_b: 4.0 (want 8.2 ± 4)",
+     "split_b: 4.9 (want 9.0 ± 4)",
+     "light_a: 1.5 (want 6.2 ± 4)",
+     "band 1: 89.5 (want 65.8 ± 8)",
+     "band 2: 89.4 (want 63.2 ± 8)",
+     "band 3: 83.3 (want 45.1 ± 8)",
+     "band 4: 49.3 (want 31.0 ± 8)"
+    ]
+   },
+   "after": {
+    "view": "06-summit",
+    "measures": {
+     "image": "tools/out/gpu/20261116-234141/art6_autumn-dawn.png",
+     "L05": 18.8,
+     "L50": 69.3,
+     "L95": 85.6,
+     "range": 66.8,
+     "chroma": 5.4,
+     "light_a": 2.8,
+     "light_b": 7.4,
+     "shade_a": -1.4,
+     "shade_b": -2.9,
+     "split_b": 10.3,
+     "bands": [
+      76.9,
+      77.6,
+      63.4,
+      32.9,
+      33.4
+     ]
+    },
+    "misses": [
+     "L50: 69.3 (want 45.6 ± 6)",
+     "band 1: 76.9 (want 65.8 ± 8)",
+     "band 2: 77.6 (want 63.2 ± 8)",
+     "band 3: 63.4 (want 45.1 ± 8)"
+    ]
+   }
+  }
+ },
+ "art_low": {
+  "01-bamboo": {
+   "high": {
+    "light_b": 6.8,
+    "shade_b": 0.9
+   },
+   "low": {
+    "light_b": 5.8,
+    "shade_b": 1.9
+   },
+   "diff": {
+    "light_b": -1.0,
+    "shade_b": 1.0
+   }
+  },
+  "02-gate": {
+   "high": {
+    "light_b": -0.8,
+    "shade_b": 2.6
+   },
+   "low": {
+    "light_b": -1.0,
+    "shade_b": 2.7
+   },
+   "diff": {
+    "light_b": -0.2,
+    "shade_b": 0.1
+   }
+  },
+  "03-court": {
+   "high": {
+    "light_b": 9.7,
+    "shade_b": 4.9
+   },
+   "low": {
+    "light_b": 10.4,
+    "shade_b": 5.4
+   },
+   "diff": {
+    "light_b": 0.7,
+    "shade_b": 0.5
+   }
+  },
+  "04-tea": {
+   "high": {
+    "light_b": 9.2,
+    "shade_b": 2.5
+   },
+   "low": {
+    "light_b": 8.4,
+    "shade_b": 2.6
+   },
+   "diff": {
+    "light_b": -0.8,
+    "shade_b": 0.1
+   }
+  },
+  "05-terrace": {
+   "high": {
+    "light_b": 14.5,
+    "shade_b": 2.8
+   },
+   "low": {
+    "light_b": 14.5,
+    "shade_b": 3.1
+   },
+   "diff": {
+    "light_b": 0.0,
+    "shade_b": 0.3
+   }
+  },
+  "06-summit": {
+   "high": {
+    "light_b": 7.4,
+    "shade_b": -2.9
+   },
+   "low": {
+    "light_b": 7.6,
+    "shade_b": -2.7
+   },
+   "diff": {
+    "light_b": 0.2,
+    "shade_b": 0.2
+   }
+  }
+ },
+ "cam": {
+  "cam01": {
+   "L05": [
+    10.9,
+    10.2,
+    -0.7
+   ],
+   "L50": [
+    18.2,
+    17.4,
+    -0.8
+   ],
+   "L95": [
+    44.5,
+    45.0,
+    0.5
+   ],
+   "chroma": [
+    8.9,
+    7.9,
+    -1.0
+   ]
+  },
+  "cam02": {
+   "L05": [
+    10.4,
+    9.8,
+    -0.6
+   ],
+   "L50": [
+    23.0,
+    20.4,
+    -2.6
+   ],
+   "L95": [
+    49.5,
+    49.4,
+    -0.1
+   ],
+   "chroma": [
+    5.9,
+    5.4,
+    -0.5
+   ]
+  },
+  "cam03": {
+   "L05": [
+    7.9,
+    7.7,
+    -0.2
+   ],
+   "L50": [
+    34.0,
+    34.0,
+    0.0
+   ],
+   "L95": [
+    75.9,
+    75.9,
+    0.0
+   ],
+   "chroma": [
+    5.2,
+    5.1,
+    -0.1
+   ]
+  },
+  "cam04": {
+   "L05": [
+    7.1,
+    6.9,
+    -0.2
+   ],
+   "L50": [
+    13.4,
+    13.3,
+    -0.1
+   ],
+   "L95": [
+    76.1,
+    76.1,
+    0.0
+   ],
+   "chroma": [
+    3.4,
+    3.2,
+    -0.2
+   ]
+  },
+  "cam05": {
+   "L05": [
+    6.7,
+    6.6,
+    -0.1
+   ],
+   "L50": [
+    12.1,
+    12.0,
+    -0.1
+   ],
+   "L95": [
+    55.7,
+    55.6,
+    -0.1
+   ],
+   "chroma": [
+    3.2,
+    3.1,
+    -0.1
+   ]
+  },
+  "cam06": {
+   "L05": [
+    11.2,
+    10.3,
+    -0.9
+   ],
+   "L50": [
+    34.2,
+    35.1,
+    0.9
+   ],
+   "L95": [
+    79.1,
+    79.1,
+    0.0
+   ],
+   "chroma": [
+    3.9,
+    3.8,
+    -0.1
+   ]
+  }
+ }
+}

@@ -7,10 +7,10 @@ import { poseQuery } from "./devpose.js";
 
 export const KEY = "Backquote", STORE = "yunjing.debug.v1", EVERY = 250;
 export const SEASONS = ["spring", "summer", "autumn", "winter"], TIMES = ["dawn", "day", "dusk", "night"], TIERS = ["auto", "low", "medium", "high"];
-// What each switch is called on the panel: every part __part() offers, and the three passes.
+// What each switch is called on the panel: every part __part() offers, and the passes.
 export const LABELS = {
   site: "建筑", sky: "天", ground: "铺地", backdrop: "远山与竹屏", bamboo: "竹林", props: "香炉与雾", trees: "树", drift: "飘落",
-  reflect: "倒影", bloom: "泛光", shadow: "阴影",
+  reflect: "倒影", bloom: "泛光", shadow: "阴影", gtao: "环境光遮蔽", halation: "光晕", lut: "调色表", dof: "景深", layers: "分层雾",
 };
 
 // Frames a second over the last stretch, from the walk's own frame counter.

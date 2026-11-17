@@ -8,12 +8,13 @@ export const PLACE_KEY = "yunjing.place.v1";
 /** What was saved, or null if there is nothing usable: a place on the ground, the way he faced, what to call it. */
 export function sanitizePlace(saved) {
   if (!saved || typeof saved !== "object") return null;
-  const { x, z, yaw, label, at } = saved;
+  const { x, z, yaw, label, at, up } = saved;
   if (![x, z].every((v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 5000)) return null;
-  return { x, z, yaw: typeof yaw === "number" && Number.isFinite(yaw) ? yaw : 0, label: typeof label === "string" ? label.slice(0, 12) : "", at: typeof at === "number" && Number.isFinite(at) ? at : 0 };
+  return { x, z, yaw: typeof yaw === "number" && Number.isFinite(yaw) ? yaw : 0, label: typeof label === "string" ? label.slice(0, 12) : "", at: typeof at === "number" && Number.isFinite(at) ? at : 0,
+    up: typeof up === "string" && /^[a-z]{1,24}$/.test(up) ? up : null };   // up on a balcony (site.lofts), or on the ground
 }
 export function readPlace(storage) { try { return sanitizePlace(JSON.parse(storage.getItem(PLACE_KEY) || "null")); } catch { return null; } }
-export function writePlace(storage, p) { try { storage.setItem(PLACE_KEY, JSON.stringify({ x: +p.x.toFixed(2), z: +p.z.toFixed(2), yaw: +(p.yaw || 0).toFixed(3), label: p.label || "", at: p.at || Date.now() })); return true; } catch { return false; } }
+export function writePlace(storage, p) { try { storage.setItem(PLACE_KEY, JSON.stringify({ x: +p.x.toFixed(2), z: +p.z.toFixed(2), yaw: +(p.yaw || 0).toFixed(3), label: p.label || "", at: p.at || Date.now(), ...(p.up ? { up: p.up } : {}) })); return true; } catch { return false; } }
 export function clearPlace(storage) { try { storage.removeItem(PLACE_KEY); } catch {} }
 
 /**
