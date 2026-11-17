@@ -29,7 +29,7 @@ T00 的八项交付见 [`../t00/README.md`](../t00/README.md)。T01 现在的状
 | D04 六机位运行截图 | 证据 | 无。不能拿参考照片冒充实机 | — |
 | D05 连续行走录像 | 证据 | 无 | — |
 | D06 性能证据 | 帧耗 | 无。T00 的 T4 数字不能外推到 T01 | `PLAN.md` |
-| D07 资产与权利 | asset-register | 有素材登记草案与来源分级 | `ASSETS.md`、`asset-register.csv` |
+| D07 资产与权利 | asset-register | 有素材登记草案与来源分级；馆藏选件首批 17 幅已列许可与说法 | `ASSETS.md`、`GALLERY.md`、`asset-register.csv` |
 | D08 评审与验收 | review-log、acceptance | 无。本包不是验收 | `PLAN.md` |
 
 T00 的文档清单（`README`、`RUN`、`decisions`、`SOURCES`、`asset-register`、`delivery`、`KNOWN-ISSUES`、`evidence/`）在 T01 还没有对应物。本包先把**调研、来源、素材、空间、机位**做出来；`RUN`、`delivery`、`evidence` 要等有页面和白盒之后才有意义。
@@ -44,6 +44,7 @@ T00 的文档清单（`README`、`RUN`、`decisions`、`SOURCES`、`asset-regist
 | `CULTURE.md` | 年表、人物、传说与史实分层、诗文、匾联、摩崖八景、菜薹文化、可用边界 |
 | `SOURCES.md` | 来源账本 S01–S40，逐条写「读到哪里、能支持什么、不能支持什么」，附矛盾表 |
 | `ASSETS.md` | 可复用 T00 的、必须新制的、公开图库与许可、字体/声音/模型计划 |
+| `GALLERY.md` | 馆藏选件：七座殿的首批 17 幅、逐件著录、许可、卡片说法、与 T00 的去重 |
 | `ART.md` | 美术方向、色板、基准季时提案、六个候选机位与验收口径 |
 | `SOUND.md` | 五段声场、录音清单、合成方案、配乐主题提案 |
 | `CHECKPOINTS.md` | 打卡点设计：七记＋可选六记、触发与反馈、不做清单、技术实现 |
