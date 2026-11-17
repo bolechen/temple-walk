@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.3.0](https://github.com/bolechen/temple-walk/compare/v0.2.0...v0.3.0) (2026-11-17)
+
+
+### Features
+
+* **art:** first art stage, the cheap film look (halation, colour tables, soft shadows, occlusion, layered mist) ([#125](https://github.com/bolechen/temple-walk/issues/125)) ([8e263c4](https://github.com/bolechen/temple-walk/commit/8e263c4ee4c3ad4a87b88494dd17bd1f85cd1981))
+* **camera:** the eye goes to a set view for each observance, by a moving shot and never a cut ([#87](https://github.com/bolechen/temple-walk/issues/87)) ([7e681b6](https://github.com/bolechen/temple-walk/commit/7e681b6a57676816a3315c0219ba4ad37f88d97f))
+* **ground:** 踩进水洼荡开两道涟漪 ([#86](https://github.com/bolechen/temple-walk/issues/86)) ([b8c3561](https://github.com/bolechen/temple-walk/commit/b8c3561026aeb43e5d30fc141571fb1ce7051ff8))
+* **i18n:** 韩文界面与馆藏说明 ([#85](https://github.com/bolechen/temple-walk/issues/85)) ([e16cb7a](https://github.com/bolechen/temple-walk/commit/e16cb7aeb51d3542ec65c1e951c3387a27e3d639))
+* **i18n:** 馆藏说明 32 件的日文、英文 ([#83](https://github.com/bolechen/temple-walk/issues/83)) ([13a32b1](https://github.com/bolechen/temple-walk/commit/13a32b10a2f8ecddb615a77777e5d9391ab97874))
+* **lingxiao:** climb to the summit pavilion's top storey and look back from its gallery ([#122](https://github.com/bolechen/temple-walk/issues/122)) ([af872b7](https://github.com/bolechen/temple-walk/commit/af872b70a43dcc9e5b485eb6782cc6b8bc4c8157))
+* **mood:** the hour follows the clock unless chosen for this visit ([#137](https://github.com/bolechen/temple-walk/issues/137)) ([ad0a125](https://github.com/bolechen/temple-walk/commit/ad0a1257cb34e1e3c56c3a4d078c9d05035c08ba))
+* **music:** the prologue's title and the gate's first phrase as one ([#153](https://github.com/bolechen/temple-walk/issues/153)) ([47a0891](https://github.com/bolechen/temple-walk/commit/47a0891dc9034ca34e52ba82fd27984607629a9c))
+* **music:** 序章结尾有自己的配乐（终章） ([#145](https://github.com/bolechen/temple-walk/issues/145)) ([f866af3](https://github.com/bolechen/temple-walk/commit/f866af3025dc354ba4df2f18701edcd5964e3441))
+* **opening:** 入山后的开场镜头，山门前的序章标题 ([#136](https://github.com/bolechen/temple-walk/issues/136)) ([089a74e](https://github.com/bolechen/temple-walk/commit/089a74e00f4901ffdaa82255f1d5fc5564d32773))
+* **structure:** fold the roofs and raise them by the Fashi's share of their span ([#88](https://github.com/bolechen/temple-walk/issues/88)) ([38ff12b](https://github.com/bolechen/temple-walk/commit/38ff12b6a2e97eae0e94ce8ba16d7bb9bf7295ea))
+* **structure:** stand the upper storeys over the columns below, on balconies ([#89](https://github.com/bolechen/temple-walk/issues/89)) ([0a88f96](https://github.com/bolechen/temple-walk/commit/0a88f9690315965a8578643804f79115752137aa))
+* **structure:** two bracket sets in the middle bay, and bays that narrow outward ([#82](https://github.com/bolechen/temple-walk/issues/82)) ([daa9d27](https://github.com/bolechen/temple-walk/commit/daa9d2761ccd3ee44be60ee3f9cf4eb3d8b06f22))
+
+
+### Bug Fixes
+
+* **assets:** 补齐授权核对的 22 项条件（署名、字体保留名、第三方许可声明） ([#124](https://github.com/bolechen/temple-walk/issues/124)) ([c6c8128](https://github.com/bolechen/temple-walk/commit/c6c8128a8472f0c445ada89044a713aab19a1af6))
+* **audio:** 脚步再降 10 dB，若隐若现 ([#98](https://github.com/bolechen/temple-walk/issues/98)) ([c1abca0](https://github.com/bolechen/temple-walk/commit/c1abca093e753f2a436a531a2ed83ed4dc438c01))
+* **backdrop:** no sky below the horizon; far bamboo ends and hill foot closed into the mist ([#126](https://github.com/bolechen/temple-walk/issues/126)) ([a6befb2](https://github.com/bolechen/temple-walk/commit/a6befb24f612dc4d43ca1ad49cb307c05f08cd5d))
+* **fonts:** 鸣谢页的句子不再计入笔体、行书、印章字面的字集 ([#127](https://github.com/bolechen/temple-walk/issues/127)) ([d7fdab7](https://github.com/bolechen/temple-walk/commit/d7fdab74941efd7f84a9a0a11e036a235a8d2d19))
+* **input:** a tap on the ground finds a way there, not only a straight line ([#157](https://github.com/bolechen/temple-walk/issues/157)) ([3ef6ba5](https://github.com/bolechen/temple-walk/commit/3ef6ba539e9d3f3b7b2bc15e9027fde98be67c83))
+* **input:** tap from the main hall's porch walks there instead of back to its door ([#121](https://github.com/bolechen/temple-walk/issues/121)) ([f303f41](https://github.com/bolechen/temple-walk/commit/f303f412f4a52877d9bfeb383d3dc8d58860e324)), closes [#100](https://github.com/bolechen/temple-walk/issues/100)
+* **monk:** he can jump up onto a low porch his jump reaches ([#155](https://github.com/bolechen/temple-walk/issues/155)) ([ae7c169](https://github.com/bolechen/temple-walk/commit/ae7c169a680de731aff0332f2f313b199ceec12c))
+* **monk:** his shadow stays on the ground when he jumps ([#150](https://github.com/bolechen/temple-walk/issues/150)) ([5b60454](https://github.com/bolechen/temple-walk/commit/5b604540eb2c6a410b191177e7cbcd46d1a9aa88))
+* **monk:** 雕刻身体接缝处同位置同权重 ([#123](https://github.com/bolechen/temple-walk/issues/123)) ([f463b15](https://github.com/bolechen/temple-walk/commit/f463b1524fdffcced1b9ee547e76c2133ebcf8ae))
+* **site:** the four cushions on the tea house porch can be sat on ([#151](https://github.com/bolechen/temple-walk/issues/151)) ([8489f7f](https://github.com/bolechen/temple-walk/commit/8489f7fb5d1e55cfdac4f1922fc492b1c02ba13d))
+* **tools:** stage each GPU run under its own folder and fingerprint the site it drew ([#128](https://github.com/bolechen/temple-walk/issues/128)) ([c3c0252](https://github.com/bolechen/temple-walk/commit/c3c0252f62d0fc08cb010f373f4e729a99342c93)), closes [#72](https://github.com/bolechen/temple-walk/issues/72)
+
 ## [0.2.0](https://github.com/bolechen/temple-walk/compare/v0.1.1...v0.2.0) (2026-11-16)
 
 
