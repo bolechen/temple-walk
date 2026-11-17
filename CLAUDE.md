@@ -384,9 +384,9 @@ veil (`y.travel`). `__left()` reports what is kept and offered, `__goBack(id)` g
 hurries, dragging with a mouse button held looks round and a click on the ground walks there (or strikes the bell or drum), as a tap does; holding the pointer so that the mouse alone looks round (Esc lets go) is the pause menu's 锁定鼠标 (`settings.lock`, off by default since 2026-11-16, when visitors said the view swam whenever the mouse moved), the wheel moves the eye
 nearer or farther (and on past the nearest into his own eyes, and back out), E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, B opens the book, P photographs,
 T opens the season and hour once they are the visitor's (below). While the pointer is held a click strikes the bell or drum under the dot. On a touch
-screen: a thumb-stick lower left (faint until a thumb is on it), a drag to look, two fingers for nearer and farther (and the view, as the wheel), a tap on the ground to walk there.
+screen: a thumb-stick lower left and, across from it lower right, a faint ring (`#jumpBtn`, made only for a coarse pointer, `yard.js`) that jumps and, before a porch's edge, reads 下台阶 (the hop down) or 上台 (the jump up) and does that, as Space does (it takes the porch's old `#dropBtn` chip's place there; pressed on `pointerdown`, so a thumb on the stick and one on the ring work together; the hints line says where it is once, after a long walk), a drag to look, two fingers for nearer and farther (and the view, as the wheel), a tap on the ground to walk there.
 On the picture while he walks there are only two slips at the edge (留影, 歇脚) and the book, which is the small seal at the top left;
-there is no view button and no jump button.
+there is no view button; the jump ring is the owner's call of 2026-11-17 (#142), replacing #39's "no jump button".
 
 **The seasons are earned (`journey.opened()`, `body.seasons`).** A first visit is the visitor's own season and hour and offers no
 choice. Filling the book the first time opens them (`opened` in `yunjing.journey.v1`, kept through 重新朝山): `game.js`

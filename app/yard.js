@@ -373,17 +373,35 @@ function startDrop() {
   const plan = availableDrop(); if (!plan) return false;
   interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true;
 }
+// Facing the unrailed edge of a platform his jump reaches, from below it (drop.js `findClimb`): the way up.
+function availableClimb() {
+  if (hop || leap || inside || stage || passing || photo.on || !document.body.classList.contains("entered") || ui.covered()) return null;
+  const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
+  return findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+}
 // Space: a child's jump (stride.js). He can be steered in the air and lands on whatever is under him.
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
   if (ui.covered()) return false;
-  // Facing the unrailed edge of a platform his jump reaches, from below it, the jump goes up onto it (drop.js `findClimb`).
-  if (!inside && !leap) {
-    const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
-    const plan = findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
-    if (plan) { interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true; }
-  }
+  const plan = availableClimb();   // from below a low porch's edge, the jump goes up onto it
+  if (plan) { interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true; }
   leap = { y: footY, v: JUMP.speed }; return true;
+}
+// On a touch screen, one faint ring lower right, across from the stick: it jumps, and where a porch's edge is before him it
+// is the way down (下台阶) or up (上台), as Space is on a keyboard. It is made only for a coarse pointer, and the porch's own
+// hop-down chip (#dropBtn) is hidden there: this is that button.
+const jumpButton = hints.coarse ? Object.assign(document.createElement("button"), { id: "jumpBtn", type: "button", hidden: true }) : null;
+if (jumpButton) {
+  document.body.appendChild(jumpButton);
+  // pointerdown, not click: a thumb on the stick and another on this are two touches, and the jump should leave as it lands
+  jumpButton.addEventListener("pointerdown", (e) => { e.preventDefault(); if (!startDrop()) startJump(); });
+  jumpButton.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+function labelJump() {
+  if (!jumpButton) return;
+  const kind = availableDrop() ? "drop" : availableClimb() ? "climb" : "jump";
+  if (jumpButton.dataset.k !== kind) { jumpButton.dataset.k = kind; jumpButton.textContent = kind === "drop" ? tr("下台阶") : kind === "climb" ? tr("上台") : tr("跳"); }
+  jumpButton.hidden = !document.body.classList.contains("entered") || photo.on;
 }
 if (dropButton) { dropButton.innerHTML = hints.coarse ? tr("下台阶") : tr("<kbd>Space</kbd>下台阶"); dropButton.addEventListener("click", startDrop); }
 
@@ -511,6 +529,7 @@ function frame(now) {
   // following camera is what is felt most (《小王子》 smooths it over 0.14 s, its sideways following over 0.06 s).
   eyeY += ((aloft ? footY : walker.eyeAt(pos.x, pos.z)) - eyeY) * (1 - Math.exp(-dt / (view === "third" ? 0.14 : 0.08)));
   if (dropButton) dropButton.hidden = !availableDrop();
+  labelJump();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); }   // how to walk is said once the walk is his
