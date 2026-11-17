@@ -640,6 +640,9 @@ setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if 
 // Esc folds the settings, then puts the print away, then lowers the camera.
 const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
 ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
+// On a touch screen the picture is taken with the round button and drawn nearer with two fingers: the line under the
+// camera's settings says so, rather than speaking of a click and a wheel the hand does not have.
+if (hints.coarse) { const how = document.querySelector("#photoSettings > p"); if (how) how.textContent = tr("画面就是你眼前所见 · 点快门即拍 · 双指远近"); }
 ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () => raise(false) });
 function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
 function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }

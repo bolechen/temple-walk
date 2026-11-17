@@ -100,6 +100,7 @@ export default {
   "入画": "In the picture",
   "合掌": "Hands joined",
   "画面就是你眼前所见 · 单击即拍 · 滚轮远近": "The picture is what you see · click to take it · wheel for near and far",
+  "画面就是你眼前所见 · 点快门即拍 · 双指远近": "The picture is what you see · tap the shutter to take it · pinch for near and far",
   "照片": "Photo",
   "刚拍下的照片": "The photo just taken",
   "分享": "Share",
