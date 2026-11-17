@@ -189,7 +189,7 @@
     "山门上层变深后顶部更重，CAM-04、CAM-05 的验收证据须重拍",
     "平坐铺作用单栱一跳，比法式「宜用重栱及逐跳计心」简省",
     "雕刻身体（?body=sculpt）坐凳、盘坐时袍子仍撕裂：袍子下面没有腿，需分层模型（#80 B 路）；站立、合掌、走路已修（2026-11-16）",
-    "开场最长一帧：T4 上每档第一次跑各有一帧约 48 ms（标准 40 ms）；387b063 加了预热，待复测（复测超出已说明的 GPU 额度，等所有者同意）（#110）"
+    "开场最长一帧：T4 上偶有一帧超 40 ms（两个 Job 12 次里 5 次，最多 61.6 ms；p95 ≤ 35 ms）；预热（387b063）复测无改善，原因未查明，未再追加 GPU（#110）"
   ],
   "evidence": [
     "Issue #71 第一轮评审后：docs/t00/evidence/director-71/shot-*.jpg（六张 T4、上香本地）、close-end-*.jpg（结尾最后一格三种画幅）、round2/（T4 报告：声音先启动后观水、燃灯；未先启动时六处全量）",
@@ -266,7 +266,8 @@
     "claude/monk-80-weld（#80 A 路）：docs/t00/evidence/monk/weld/ —— red-before.txt、green-after.txt、views-{before,after,code}.jpg（五个姿势×正侧背斜俯）、compare-{stand,pray,walk,seated}.jpg（代码身体｜改前｜改后）、portrait-{before,after,code}.jpg、trial-{before,after}.json；平滑档位的比较在 README.md",
     "#100：tests/e2e/run.cjs 新场景 hallexit（第三人称鼠标八殿各点院子方向、第一人称与第三人称触屏各两殿、主殿出门后三点都落在台阶脚之外并走下台阶、院子点大殿进殿、前廊点殿门进殿、前廊点前廊地面不进殿）；修前在主殿一步失败，修后通过（本地 SwiftShader）",
     "景观评审：锁定 2d1c7d7e2244fd2d876177b30714962634614ec6，T4（ANGLE/Vulkan）五次运行 20261116-151549/151558/151604/152616/152646 及结尾补拍，图在 docs/t00/evidence/landscape/review-2026-11-16-2d1c7d7/，0 个页面错误",
-    "开场 T4：job 20261117-004357，提交 49f859a，site sha256 7bab19e97b09f9124e466d61efc63a3034d73bbdf612fdd15cbcbfb50bb19647，docs/t00/evidence/opening/gpu-t4/20261117-004357/report.json；同一 Job 首院 高档 43.1 fps、低档 99.2 fps；开场下山段 低档 97.2/96.0 fps；最长一帧 48.8/35.6 ms（高档）、48.0/33.5 ms（低档）"
+    "开场 T4：job 20261117-004357，提交 49f859a，site sha256 7bab19e97b09f9124e466d61efc63a3034d73bbdf612fdd15cbcbfb50bb19647，docs/t00/evidence/opening/gpu-t4/20261117-004357/report.json；同一 Job 首院 高档 43.1 fps、低档 99.2 fps；开场下山段 低档 97.2/96.0 fps；最长一帧 48.8/35.6 ms（高档）、48.0/33.5 ms（低档）",
+    "开场 T4 复测（所有者批准，仅此一次）：job 20261117-005026，提交 b5128d6，site sha256 40d90c668969065bbbf023e461c3671ade25facdea59db84f3fecc263d82cff1，docs/t00/evidence/opening/gpu-t4/20261117-005026/report.json；首院 高档 43.7 fps、低档 111.7 fps；开场下山段 低档 105.2–117.9 fps；最长一帧 8 次里 3 次超 40 ms（无预热 56.2，有预热 61.6、47.7），有无预热都有"
   ],
   "domain_binding": {
     "date": "2026-11-15",
