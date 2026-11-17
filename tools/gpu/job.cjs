@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -110,6 +110,48 @@ function fingerprint(dir) {
       const v = page.video(); await ctx.close(); const from = await v.path(); fs.renameSync(from, path.join(out, "walkthrough.webm")); report.film = { file: "walkthrough.webm", seconds: T.film + 10, size: fs2 }; console.log("film", fs.statSync(path.join(out, "walkthrough.webm")).size);
     } catch (e) { report.film = { error: String(e.message).slice(0, 300) }; console.log("film failed", report.film.error); }
     fs.writeFileSync(path.join(out, "console.txt"), (report.errors.length ? report.errors.join("\n") : "no page errors, console errors or failed requests during the walk") + "\n");
+    save();
+  }
+  // The eye going to each place's own shot and back (app/src/director.js): frame times while he stands at the place
+  // with the eye following him, while it swings to the shot, while it rests there, and while it swings home after a
+  // step. spec.director = { size, q, places: ["lamp", "bell", "tea", "sutra", "sit"], sound: true }. He is put beside each
+  // with __pose (diagnostic); the observance is begun with E and left with W (Esc for the bell and the tea, E to take the library's slip).
+  if (spec.director) {
+    const R = spec.director, size = R.size || [1920, 1080], log = (report.director = { size, q: R.q || "high", places: [] });
+    try {
+      const { ctx, page } = await open(q({ q: R.q || "high", enter: 1, view: "third", season: "summer", time: "day" }), size, 1);
+      const ev = (f, a) => page.evaluate(f, a);
+      // A visitor's first tap lets the place be heard (the sound starts, its reverbs are made); keys alone never do. Here
+      // that happens before anything is measured, as it has for anyone who has walked up to an observance.
+      if (R.sound !== false) { await ev(() => window.__music?.(true)); await page.waitForTimeout(1500); }
+      await ev(() => { window.__ft = []; const f = (t) => { window.__ft.push(t); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+      const until = async (f, ms, what) => { const t = Date.now(); while (Date.now() - t < ms) { if (await f()) return Date.now() - t; await page.waitForTimeout(10); } throw new Error(what); };
+      const mark = () => ev(() => window.__ft.length);
+      const stats = (a, b) => ev(([i, j]) => { const t = window.__ft.slice(i, j), raw = t.slice(1).map((v, k) => v - t[k]), d = raw.slice().sort((x, y) => x - y); if (!d.length) return null; const at = raw.indexOf(d[d.length - 1]); const mean = d.reduce((x, y) => x + y, 0) / d.length; return { frames: d.length, fps: +(1000 / mean).toFixed(1), mean_ms: +mean.toFixed(2), p95_ms: +d[Math.floor(d.length * 0.95)].toFixed(2), max_ms: +d[d.length - 1].toFixed(2), max_frame: at, max_at_ms: +(t[at + 1] - t[0]).toFixed(0) }; }, [a, b]);
+      for (const id of R.places || ["lamp", "bell", "tea", "sutra", "sit"]) {   // (not the well: its shot waits for #99)
+        const row = { id };
+        try {
+          await ev((k) => { const p = window.__places[k]; window.__pose(p.at[0] + (k === "bell" ? 0.3 : 0.1), p.at[1] + (k === "bell" ? -0.3 : 0.1), Math.PI - p.face, 0.05); }, id);
+          await until(() => ev(() => { const b = document.getElementById("act"); return b && !b.hidden && !!b.dataset.word; }), 30000, "nothing offered");
+          await page.waitForTimeout(1500); let m0 = await mark(); await page.waitForTimeout(2500); row.following = await stats(m0, await mark());
+          await page.keyboard.press("e"); await until(() => ev(() => window.__director().phase !== "idle"), 20000, "the eye never left him");
+          m0 = await mark(); await until(() => ev(() => window.__director().phase === "hold"), 20000, "never reached the shot"); row.swing_in = await stats(m0, await mark());
+          row.how_in = await ev(() => { const d = window.__director(); return { cuts: d.cuts, blends: d.blends, why: d.why, in: d.in }; });
+          m0 = await mark(); await page.waitForTimeout(2000); row.on_shot = await stats(m0, await mark());
+          // The line is held out on a slip of paper, a sheet over the walk: nothing walks him away until it is taken (E).
+          if (id === "sutra") await until(() => ev(() => window.__ui().stack.includes("slip")), 20000, "the slip was never held out");
+          const key = id === "bell" || id === "tea" ? "Escape" : id === "sutra" ? "e" : "w";
+          if (key === "w") await page.keyboard.down("w"); else await page.keyboard.press(key);
+          m0 = await mark(); await until(() => ev(() => window.__director().phase === "idle"), 20000, "never came home"); row.swing_out = await stats(m0, await mark());
+          if (key === "w") await page.keyboard.up("w");
+          row.turn_max_deg = await ev(() => window.__director().turnMax);
+          await until(() => ev(() => window.__journey().rite === null), 20000, "the observance did not end");
+          await page.waitForTimeout(800);
+        } catch (e) { row.error = String(e.message).slice(0, 200); row.state = await ev(() => ({ d: window.__director(), rite: window.__journey().rite, where: window.__yard() && [window.__yard().x, window.__yard().z] })).catch(() => null); }
+        log.places.push(row); console.log("director", JSON.stringify(row)); save();
+      }
+      await ctx.close();
+    } catch (e) { log.error = String(e.message).slice(0, 300); console.log("director failed", log.error); }
     save();
   }
   // The bell and the tea at a visitor's pace, by real key presses, on a card that draws as fast as a visitor's would:

@@ -59,6 +59,7 @@ export default {
   "视野": "Field of view",
   "上下反转": "Invert vertical",
   "锁定鼠标": "Lock mouse",
+  "自动镜头": "Auto camera",
   "开": "On",
   "关": "Off",
   "春": "Spring",

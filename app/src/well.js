@@ -19,7 +19,8 @@ export function createWell(scene, at, sound = (level) => {}) {
   const mat = () => new THREE.MeshBasicMaterial({ color: 0x8f9b97, transparent: true, opacity: 0, depthWrite: false, fog: true });
   for (let i = 0; i < 4; i++) {
     const m = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 48).rotateX(-Math.PI / 2), mat());
-    m.visible = false; m.userData.keep = true; m.renderOrder = 2; m.position.set(px, py + 0.004, pz); scene.add(m); rings.push({ m, age: -1 });
+    // `warm`: drawn once, unseen, when the eye is sent to the well's shot (yard.js), so the first drop does not stall the picture.
+    m.visible = false; m.userData.keep = m.userData.warm = true; m.renderOrder = 2; m.position.set(px, py + 0.004, pz); scene.add(m); rings.push({ m, age: -1 });
   }
   // One drop: two rings from the same point, the second a moment behind the first.
   const ripple = () => {
