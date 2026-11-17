@@ -129,6 +129,8 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
     // Switch one of the passes while walking; returns whether it is now drawn (null: no such pass on this tier).
     part(name, state) { if (!(name in on) || (name === "gtao" && !gtao) || (name === "dof" && !depth)) return null; on[name] = !!state; apply(); return on[name]; },
     parts: () => ({ ...on }),
+    // What the quality governor gives up (quality.js): put out for the rest of the visit.
+    off(name) { if (name in on) { on[name] = false; apply(); } },
     state: () => ({ depth, gtao: !!gtao && on.gtao, halation: on.halation && (mood?.hal ?? 0) > 0, lut: !!g.uLut.value, dof: !!g.uDof.value.z, focus: dof, bakes }),
   };
 }

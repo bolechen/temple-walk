@@ -446,7 +446,7 @@ function layoutFrame() {
   if (fd) for (const [k, v] of /** @type {[string, number][]} */ ([["--fx", f.x], ["--fy", f.y], ["--fw", f.w], ["--fh", f.h]])) fd.style.setProperty(k, v + "px");
 }
 // When frames run long the governor gives things up (quality.js): the occlusion and the soft shadows go first, here.
-const governor = createGovernor(quality, () => { if (!quality.gtao) post.part("gtao", false); if (!quality.softShadow) sky.soft(false); resize(); });
+const governor = createGovernor(quality, () => { if (!quality.gtao) post.off("gtao"); if (!quality.softShadow) sky.soft(false); resize(); });
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;

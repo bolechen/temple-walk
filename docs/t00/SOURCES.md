@@ -103,6 +103,8 @@
 | 黄昏的灯按云量亮：晴天的傍晚格窗只微亮（原型 04 的窗是暗的），阴天的傍晚早亮、更亮（原型 05） | `mood.js` 的 `lamp` | 为同时贴近原型 04、05 推出来的规则，没有出处 | 自拟 |
 | 黄昏的窗光为琥珀色（比改前的黄偏橙，不到红；2026-11-16 一度过红，按主创评审 #125 改回） | `materials.js` 的 `lattice`、`mood.js` 的 `win` | 原型 05「Warm glowing amber lattice windows against soft indigo dusk」，`art-targets.md` A5 | 所有者指定的方向 |
 | 清晨的天和雾偏银蓝、压暗；夏日清晨是淡青绿的雾，阳光更亮更白，台阶上有斑驳的亮处 | `mood.js` | 原型 01「Cool jade green…soft morning mist」、06「Silver-blue mist」 | 所有者指定的方向 |
+| 画质调节器在帧慢时先关环境光遮蔽、再关软阴影，然后才是倒影、分辨率、泛光（2026-11-17，主创评审 #125） | `quality.js` 的 `governorSteps`、`yard.js`、`shadows.js` | 主创评审的要求；先后顺序按「访客最不会注意到的先去」 | 主创评审；顺序自拟 |
+| A2 山门的目标改为秋昼（太阳从南面扫过门面），秋暮的太阳留给首院 | `docs/t00/art-targets.*`、`art-goal.md` | 所有者 2026-11-17 同意主创的建议（经主创转达） | 所有者指定 |
 
 ## 声音
 

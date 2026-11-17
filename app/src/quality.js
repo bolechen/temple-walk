@@ -42,14 +42,15 @@ export const mirrorAt = (footY) => footY > -0.6 && footY < 2.0;
 
 // What the governor gives up, in order, on a tier: the film's finish first (the occlusion, then the soft shadows, which
 // a visitor misses least of all), then the mirror, then resolution, then the bloom.
+/** @returns {[string, () => void][]} */
 export function governorSteps(quality) {
-  return [
+  return /** @type {[string, () => void][]} */ ([
     ...(quality.gtao ? [["gtao", () => { quality.gtao = false; }]] : []),
     ...(quality.softShadow ? [["softShadow", () => { quality.softShadow = false; }]] : []),
     ["planar", () => { quality.planar = 0; }],                      // the mirror: it draws the temple a second time
     ["scale", () => { quality.scale *= 0.8; quality.budget *= 0.7; }],
     ["bloom", () => { quality.bloom = false; quality.scale *= 0.85; quality.budget *= 0.8; }],
-  ];
+  ]);
 }
 
 export function createGovernor(quality, apply) {
