@@ -31,6 +31,16 @@
 - **测试**：`tests/unit/link.test.mjs`（7 项，含阁楼与 `devpose`）、`tests/unit/devpose.test.mjs`（4 项）；e2e `views` 场景在 `dist/` 上调用 `__debugURL()`，再用返回的地址重开一页，断言 `__yard()` 的 x/z/yaw/pitch、view、season、time 一致，且地址不被改写。本地结果：check 72 files 0 问题、typecheck 通过、单测 367/367、views 180 s 通过（SwiftShader）。
 - **没做**：访客入口、管理员口令/彩蛋开关、每区域独立 URL。链接不含仪轨进度、香、快门、推拉、转场。
 
+## 2026-11-17：手机息屏不再打断收尾（Issue #169）
+
+用户反馈：「最后一关收尾动画的时候，手机上会息屏，再点开就会让动画取消」。查到的原因与做法：
+
+- **原因**：收尾是 30 秒的被动段落；段落时间来自挂钟（`riteNow` 的 `performance.now() - offset`），页面隐藏时 rAF 停、挂钟照走，回来第一帧的进度直接到末尾；收尾期间任意点击 `#ending` 都跳过，唤醒屏幕的那一下可能被当成点击；页面没有申请屏幕唤醒锁。
+- **唤醒锁**（`app/src/awake.js`）：收尾开始 `hold()`、结束/跳过 `free()`，用 `navigator.wakeLock.request("screen")`；不支持、权限策略或低电量时静默放弃，结束前异常也 `finally` 释放。只在收尾用，开场与其它仪式不加。
+- **时钟冻结**（`app/src/rites.js`）：`setHidden` 在 `visibilitychange` 时冻结 `riteNow`，变可见后从停住处继续；与拍照定格（`pauseRites`）重叠时只算一次。对**所有**仪式生效（同一类问题：茶、钟、香在息屏时也不该“演完”）。
+- **唤醒那一下**（`app/src/game.js` 的 `finale`）：回到可见后 900 毫秒内的点击/键不当作跳过，之后再点才略过。
+- **测试**：`tests/unit/awake.test.mjs` 4 项、`tests/unit/rite-clock.test.mjs` 2 项；e2e 新场景 `screen`（init script 换掉 `navigator.wakeLock` 记录请求/释放，用可覆盖的 `document.hidden` 模拟息屏）：收尾开始时申请、隐藏 0.7 秒里 `close.u` 不前进、唤醒那一击不跳过、1 秒后再点才跳过、结束后释放。本地单测 373/373、`screen` 22 秒通过；`pilgrimage`/`oldbook`/`replay`/`director` 回归见 PR。
+- **未验**：真机（iOS Safari、Android Chrome）上的息屏与唤醒；唤醒锁在低电量/省电模式下是否真被拒绝；`screen` 场景只是替换了 `document.hidden`，没有真的隐藏页面。
 ## 2026-11-17：拖动视角时的右键（Issue #168）
 
 所有者问「要不要屏蔽右键，检查行业做法」后定「按第三种加上」。行业做法：MDN 与 three 的 `OrbitControls` 都只把 `contextmenu` 拦在需要它的元素上；全局屏蔽是反模式（Firefox Shift+右键仍可绕过）。
