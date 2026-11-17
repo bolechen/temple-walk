@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-17T06:16:19.265Z",
+  "generated_at": "2026-11-17T06:29:53.020Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "59dc94163bbfd1e9ffd0b51b9201b40f2df2cadd",
-    "url": "https://github.com/bolechen/temple-walk/commit/59dc94163bbfd1e9ffd0b51b9201b40f2df2cadd"
+    "sha": "3ef6ba539e9d3f3b7b2bc15e9027fde98be67c83",
+    "url": "https://github.com/bolechen/temple-walk/commit/3ef6ba539e9d3f3b7b2bc15e9027fde98be67c83"
   },
   "delivery": {
     "analytics": {
@@ -168,7 +168,8 @@
       "修：post.focus() 每帧重烘调色表（秋暮 23 fps），改为换时辰时才烘",
       "tools/gpu-render.sh：每次运行放在桶的 runs/<run>/；job.cjs：单张图可指定尺寸和档位；shots.js：--size=WxH",
       "site.js：茶寮前廊四个蒲团改用 CUSHION 轮廓并登记为座位（盘腿、面朝各自茶案；碰撞半径 0.292）；site.drawnSeats 记下每处画出的蒲团/凳子，rites.test 要求都有座位（#144，先失败）",
-      "drop.js/yard.js：面朝无栏杆台沿、站在台下时空格跳上去（findClimb/climbPose，REACH=v²/2g 来自 JUMP，台高 ≤ REACH 的 99.5%），茶寮、禅堂 0.45 m 能上，山门 0.5 m 与以上不能；走路碰台沿照旧被挡；半山亭平台走路即可上，不需要跳（#143，先失败）"
+      "drop.js/yard.js：面朝无栏杆台沿、站在台下时空格跳上去（findClimb/climbPose，REACH=v²/2g 来自 JUMP，台高 ≤ REACH 的 99.5%），茶寮、禅堂 0.45 m 能上，山门 0.5 m 与以上不能；走路碰台沿照旧被挡；半山亭平台走路即可上，不需要跳（#143，先失败）",
+      "route.js/yard.js：点地走在直线不通时找路（0.2 m 网格 A*、拉直、每帧 4 ms 分帧）：绕柱桌蒲团、走台阶、台沿跳下省 3 m 以上就跳（与空格同弧线）、不跳上；走不到的落点走最近可达点再朝落点直走；站在挡路圈里先迈出来（#154，先失败）；standing.test 守游戏自己放他的点都不在挡路圈里"
     ],
     "known_issues": [
       "凌霄阁回廊已按所有者定的 2.4 / 3.2 做，平坐重栱、普拍方厚 0.21；叉柱造未做（平坐铺作直接坐在二层柱头上）",
@@ -488,7 +489,8 @@
       "#135：换时辰仍是硬切，没有渐变；字体已为新字「随」重切（0358322），未在真机上看过",
       "美术第一阶段：看法清单没有打勾（留给评审人）；高档 __cost 超 12 ms 软线、一次 tour 的 p95 25.3 ms 超硬线，两台 T4 差异未分开；手机没有测；mobile-audit 没有跑（未改界面，画质分档只加了开关）",
       "#144：触屏上点一次坐下、三张形体证据图（正侧斜俯）未做；坐姿贴茶案的间隙只有单测（monk.test 对桌面与桌腿）",
-      "#143：0.45 m 台只比跳跃顶点低 9 mm，跳上的观感（几乎竖直起跳、最后越沿）待主创看；侧面连拍、真实按键录像、跳上时镜头不抖的专项未做"
+      "#143：0.45 m 台只比跳跃顶点低 9 mm，跳上的观感（几乎竖直起跳、最后越沿）待主创看；侧面连拍、真实按键录像、跳上时镜头不抖的专项未做",
+      "#154：真实点击录像、页面里最大一帧用时、殿内房间与凌霄阁顶层的点地未单独验；3 m 跳下阈值与 0.2 m 网格是自拟"
     ],
     "hosting": {
       "provider": "Cloudflare Workers",
@@ -512,25 +514,25 @@
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
       "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
     ],
-    "record_commit": "ae7c169a680de731aff0332f2f313b199ceec12c",
+    "record_commit": "3ef6ba539e9d3f3b7b2bc15e9027fde98be67c83",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 44029391318,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44029391318",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 44031603115,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44031603115",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "skipped"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "59dc94163bbfd1e9ffd0b51b9201b40f2df2cadd",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44029391318"
