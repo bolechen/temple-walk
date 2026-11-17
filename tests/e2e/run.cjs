@@ -157,6 +157,16 @@ const scenarios = {
       await t.until(async () => (await t.state()).target === null, 60000, `${name}: never arrived`);
       const s2 = await t.state(); expect(Math.hypot(s2.x - s1.target[0], s2.z - s1.target[1]) < 0.3, `${name}: stopped short of the tapped spot at ${s2.x}, ${s2.z}`);
     }
+    // #154: the spot the owner stood at (the tea house porch's south end, in the ring that blocks) and tapped the court from:
+    // he comes out, and by the porch's hop or round it reaches the tapped ground.
+    await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
+    await t.page.evaluate(() => window.__view("third")); await t.frames(2);
+    for (const [px, py] of [[210, 520], [150, 560], [260, 500]]) {
+      await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
+      await t.page.touchscreen.tap(px, py); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
+            await t.until(async () => { const s = await t.state(); return s.target === null && !s.dropping; }, 90000, "he never came out of the tea house porch's south end");
+      const s2 = await t.state(); expect(!(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [s2.x, s2.z])) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
+    }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every hall with a door can be gone into, has a room of its own with frames on its walls, and lets him out again where he came in.
@@ -429,7 +439,8 @@ const scenarios = {
         let set = 0;
         for (const [fx, fy] of [[0.5, 0.95], [0.5, 0.75], [0.5, 0.65], [0.3, 0.64], [0.7, 0.58], [0.5, 0.55]]) {
           await tap(vp.width * fx, vp.height * fy); await t.frames(1);
-          const s1 = await t.state();
+          let s1 = await t.state();
+          for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
