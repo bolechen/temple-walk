@@ -140,8 +140,9 @@ north-west corner of the ground-floor room (`interior.js`, `hall.up`, `room.stai
 the veil (`climbTo`), and comes down (下楼) from the top storey's door. Up there he is out of doors (`inside` false: the courts,
 the sun, the court's echo, the summit's music) and sees with his own eyes only: `setView` refuses the third person and says
 so once; coming down gives back the view he had. A place kept up there carries `up` (`resume.js`). How wide the balcony is and
-how far the top eave reaches are `LOFT` in `site.js` and nowhere else: 1.6 m is recorded as a departure from the Yingzao
-Fashi (`docs/t00/decisions.md`, 登凌霄阁), and the structure review's 2.0 m under a 2.8 m eave is one line away.
+how far the top eave reaches are `LOFT` in `site.js` and nowhere else: 2.4 m out under a 3.2 m eave, the owner's choice of
+2026-11-17. The balcony then reaches past the second storey's column line, so `putStack` sets `pingRing` and its bracket sets
+stand on those columns' heads, one step out to the rim board, as the Yingzao Fashi has a pingzuo (`docs/t00/decisions.md`, 登凌霄阁).
 `views.loft` stands at its door, named in `site.viewUp`; `?up=lingxiao` starts up there (at `?cam` if given); `__up()`,
 `__lofts`; `tests/unit/loft.test.mjs` and the e2e scenario `loft`.
 

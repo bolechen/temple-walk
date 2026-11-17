@@ -24,7 +24,7 @@ const [T1, T2, TOP] = LEVELS;
 // and how far its eave reaches over that. 1.6 m leaves a child room between wall and rail and is recorded as a
 // departure from the Yingzao Fashi (docs/t00/decisions.md, 登凌霄阁); the structure review prefers the balcony's edge
 // over the second storey's columns (2.0 m) under an eave of about 2.8 m, for the owner to decide. Change it here only.
-export const LOFT = Object.freeze({ out: 1.6, overhang: 2.2 });
+export const LOFT = Object.freeze({ out: 2.4, overhang: 3.2 });
 const HILL = { zS: T2.zN, zN: TOP.zS };   // the slope below the summit, crossed only by the stair between the tea rows
 // The way in: the last of the old path up the mountain, a zigzag through the grove. You start at the
 // river-view pavilion, climb north past the ink-stone pool, turn west and climb to the half-way pavilion,
