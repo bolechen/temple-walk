@@ -82,3 +82,13 @@ test("every tree's foot is lit from outside: its normals face away from the trun
   }
   assert.deepEqual(wrong.slice(0, 8), []);
 });
+test("a trunk begins at the top of its foot and shares that ring's corners: nothing of it shows through the foot", () => {
+  const wrong = [];
+  for (const j of everyTree.joints) {
+    const T = j.curve.geo.attributes.position, F = j.foot.attributes.position, top = F.getY(0); let low = Infinity, far = 0;
+    for (let i = 0; i < T.count; i++) low = Math.min(low, T.getY(i));
+    for (let k = 0; k < j.ring; k++) { let near = Infinity; for (let i = 0; i <= j.ring; i++) near = Math.min(near, Math.hypot(T.getX(i) - F.getX(k), T.getY(i) - F.getY(k), T.getZ(i) - F.getZ(k))); far = Math.max(far, near); }
+    if (low < top - 0.001 || far > 0.001) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: trunk reaches ${((top - low) * 100).toFixed(1)} cm into its foot, corners ${(far * 1000).toFixed(1)} mm apart`);
+  }
+  assert.deepEqual(wrong.slice(0, 8), []);
+});
