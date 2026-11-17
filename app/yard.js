@@ -38,7 +38,7 @@ import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
-import { findDrop, dropPose, seatHop } from "./src/drop.js";
+import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
 import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
@@ -362,6 +362,12 @@ function startDrop() {
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
   if (ui.covered()) return false;
+  // Facing the unrailed edge of a platform his jump reaches, from below it, the jump goes up onto it (drop.js `findClimb`).
+  if (!inside && !leap) {
+    const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
+    const plan = findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+    if (plan) { interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true; }
+  }
   leap = { y: footY, v: JUMP.speed }; return true;
 }
 if (dropButton) { dropButton.innerHTML = hints.coarse ? tr("下台阶") : tr("<kbd>Space</kbd>下台阶"); dropButton.addEventListener("click", startDrop); }
@@ -479,7 +485,7 @@ function frame(now) {
     if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
   if (flight) {
-    flight.elapsed += dt; const p = dropPose(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
+    flight.elapsed += dt; const p = (flight.plan.speed ? climbPose : dropPose)(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
     if (p.done) hop = null;
   } else if (leap) {
     const step = leapStep(leap, walker.heightAt(pos.x, pos.z), dt); footY = step.y; if (step.landed) leap = null;
