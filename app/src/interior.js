@@ -154,7 +154,11 @@ function buildRoom(M, hall, ox, figures) {
       add(merge([box(0.34, 0.035, 0.3, 0, Y + sh - 0.018, sz), box(0.3, 0.04, 0.26, 0, Y + sh - 0.06, sz), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.035, sh - 0.03, 0.035, a * 0.14, Y + (sh - 0.03) / 2, sz + c * 0.12)), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz - 0.12), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz + 0.12)]), M.woodX);
       add(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.12, 0.05], [0.13, 0.085], [0.118, 0.085], [0.11, 0.07], [0, 0.07]], 24).translate(0, Y + sh, sz), M.bronze, () => 0.8);
       block(-0.17 - BODY, 0.17 + BODY, sz - 0.15 - BODY, sz + 0.15 + BODY);
-      places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz] };
+      places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz],
+        // Its shot (src/director.js), in the place's frame: low, below his brow, from behind him and well to his right, so
+        // that he stands side-on, the stand with its bowl of ash beside him and the whole Buddha above (from his right
+        // and before him the room is too narrow to hold the figure whole); it draws a little nearer as he offers (our own draft).
+        shot: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, tz + 1.75 - sz], [0, 1.7, 4.55], [0, 4.9, 4.55]] } };
     }
     lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, big ? K.h - 2.4 : K.h - 2.0, big ? tz + 0.8 : tz + 1.8, 0xffe6c4, big ? 11 : 7, 16, true]);
   } else if (hall.kind === "chan") {

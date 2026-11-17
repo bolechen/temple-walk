@@ -105,6 +105,7 @@ export function buildHall(M, opts) {
       }
     }
   }
+  const rails = [];   // each run of railing as the ground it stands on and how high it reaches (walk.rails)
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
     const parts = [], ends = (g.userData.railEnds = []), runs = (g.userData.railRuns = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
     const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
@@ -113,6 +114,8 @@ export function buildHall(M, opts) {
       let n = Math.max(1, Math.round((b - a) / 1.5)); if (p.loft && n % 2 === 0) n += (b - a) / n > 1.5 ? 1 : -1;
       const d = (b - a) / n; runs.push({ ax, a, b, fixed, n });
       for (const t of [a, b]) ends.push(ax === "x" ? [t, y, fixed] : [fixed, y, t]);   // where a run stops: at a corner, or where a stair breaks it
+      const R = 0.12;   // the widest of it, the lotus bud on each post
+      rails.push(ax === "x" ? { x0: a - R, x1: b + R, z0: fixed - R, z1: fixed + R, bottom: y, top: y + 1.29 } : { x0: fixed - R, x1: fixed + R, z0: a - R, z1: b + R, bottom: y, top: y + 1.29 });
       // The posts: eight-sided, each ending in a lotus bud. Between them, from the floor up: a sill, a panel, the
       // basin rail, a short strut in the middle of each bay, and the hand rail.
       for (let i = 0; i <= n; i++) { const t = a + i * d, px = ax === "x" ? t : fixed, pz = ax === "x" ? fixed : t;
@@ -462,7 +465,7 @@ export function buildHall(M, opts) {
   // ---- Where you can stand (local space; the site turns these into world space) ----
   // `posts` stand in the way even on a floor: a round one is { x, z, r } (its real radius; the walker adds his own
   // width), a square one is a rectangle already drawn that much larger than the thing.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] };
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
   // Every column on the outside is round and in the way wherever a floor comes up to it: the walker keeps his
   // whole width off its shaft (a little fatter than the shaft at its swell).

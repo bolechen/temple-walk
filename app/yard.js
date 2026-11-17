@@ -39,6 +39,7 @@ import { createCredits } from "./src/credits.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { findDrop, dropPose, seatHop } from "./src/drop.js";
+import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, lang, langSource, takeSwitch, glyphs, setLang } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -90,6 +91,7 @@ await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
+{ const p = site.places.incense; if (p) site.views["shot-incense"] = [p.at[0], p.at[1], Math.PI - p.face, 0.05]; }   // its shot is indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
@@ -207,6 +209,21 @@ if (view === "third" && !Q.has("cam") && !Q.has("show")) pitch = 0.04;
 let arrive = null, stage = null, cine = null, drawn = null, posed = null; const ticks = [];
 const settle = (ok) => { if (arrive) { const fn = arrive; arrive = null; fn(ok); } };
 const interrupt = () => { settle(false); if (stage) { const st = stage; stage = null; st.leave && st.leave(); } };
+// While an observance is made the eye may leave his shoulder for the place's own shot and come back (src/director.js).
+// The ink is the shutter's two leaves (#curtain), drawn here frame by frame; what lies over the picture fades meanwhile.
+const curtainLeaves = /** @type {HTMLElement[]} */ ([...document.querySelectorAll("#curtain i")]);
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const director = createDirector({ walker,
+  enabled: () => settings.get().autocam && !Q.has("shot") || Q.get("show")?.startsWith("shot-") === true,
+  reduced: () => reducedMotion.matches,
+  veil: (k) => { const c = document.getElementById("curtain"); if (!c) return; c.classList.toggle("cut", k > 0); for (const l of curtainLeaves) l.style.transform = k > 0 ? `scaleY(${k.toFixed(3)})` : ""; },
+  quiet: (on) => document.body.classList.toggle("directing", on),
+});
+const centre = new THREE.Vector3();
+// The eye's swing keeps the observances' clock (rites.js), not the frames': on a page drawing fewer than twenty frames a
+// second the frame's own step is cut short (`dt` is held to 0.05 s), and a swing timed by it would still be on its way
+// when the lamp is lit and done. The clock stops with a photograph, as the observances do; a long pause is not swung through.
+let directClock = riteNow();
 const menuEl = document.getElementById("menu");
 let down = null, hop = null, leap = null, climb = null, climbFor = null, climbs = 0;   // `hop`: a planned drop from a porch; `leap`: a small jump where he stands, steered as he goes
 // The first touch lets the place be heard: deepest in the bamboo on the way up, and again beyond the tea.
@@ -250,6 +267,7 @@ document.addEventListener("mousemove", (e) => {
   if (!locked() || photo.on) return; const orbit = view === "third";   // with the camera raised, the view is held still
   const S = settings.get();   // in his own eyes and under a roof he may look up as far as the ceiling
   if (Math.abs(e.movementX) > LOOK.spike || Math.abs(e.movementY) > LOOK.spike) return;
+  if (e.movementX || e.movementY) director.back();
   yaw += e.movementX * LOOK.yaw * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * LOOK.pitch * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);
 });
 canvas.addEventListener("pointerdown", (e) => {
@@ -268,6 +286,7 @@ canvas.addEventListener("pointermove", (e) => {
   const orbit = view === "third";                                                          // round him, or from his eyes
   const S = settings.get();
   const k = dragRate(e.pointerType);
+  director.back();   // a drag of the view: the visitor wants to look for themselves
   down.moved = true; yaw += dx * k * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * k * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
@@ -315,7 +334,7 @@ canvas.addEventListener("pointerup", (e) => {
     if (toHall) route = onGround ? [hall.foot.clone(), hall.door.clone()] : [hall.door.clone()];
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) route = [hit];
     else route = [];
-    if (route.length) { interrupt(); target = route.shift(); }
+    if (route.length) { interrupt(); director.back(); target = route.shift(); }
   }
   down = null;
 });
@@ -354,7 +373,7 @@ addEventListener("keydown", (e) => {
   else if (k === "v") setView(view === "third" ? "first" : "third"); else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
   else if (k === "h" || k === "?") hints.card();
-  else if (k === "escape") { if (stage) interrupt(); else if (document.body.classList.contains("entered")) openMenu(true); }   // Esc lets go of what he is doing (the rope, a seat); with nothing open or held, it is the pause menu
+  else if (k === "escape") { if (stage || director.holding()) { interrupt(); director.back(); } else if (document.body.classList.contains("entered")) openMenu(true); }   // Esc lets go of what he is doing (the rope, a seat); with nothing open or held, it is the pause menu
 });
 addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
 // A thumb-stick for a touch screen, lower left: push to walk, relative to where he is looking.
@@ -388,11 +407,14 @@ function resize() {
 // `?devpose` (the dev server only) writes `cam` into the address as he walks; the view he comes back to is still the walk's.
 const DEVPOSE = import.meta.env.DEV && Q.has("devpose");
 const FIXED_VIEW = (Q.has("shot") || Q.has("show") || Q.has("cam")) && !DEVPOSE;
-function lens() {
+const baseFov = () => {
   const w = canvas.clientWidth, h = canvas.clientHeight, tall = w < h;
-  const base = FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
-  camera.fov = photo.on ? THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(base) / 2) / photo.zoom)) : base; camera.updateProjectionMatrix();
-}
+  return FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
+};
+// With the camera raised, the angle drawn in or let out by the zoom (from the walk's angle, or from a shot's).
+const zoomed = (base) => (photo.on ? THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(base) / 2) / photo.zoom)) : base);
+let directedFov = null;   // the angle of view the director last asked for, while it has the eye
+function lens() { camera.fov = zoomed(directedFov ?? baseFov()); camera.updateProjectionMatrix(); }
 let pxH = 800;
 // The frame of the photograph, drawn over the view: what is inside it is what will be kept.
 function frameRect() {
@@ -427,7 +449,7 @@ function frame(now) {
   const f = photo.on || menuUp ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on || menuUp ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
   const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
   let vx = 0, vz = 0;
-  if (f || s) { interrupt(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
+  if (f || s) { interrupt(); director.back(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { target = route.shift() || null; vx = vz = 0; if (!target) { settle(true); pace.v = 0; } } }
   const len = Math.hypot(vx, vz);
   if (menuUp || photo.on || airborne) pace.v = 0;   // a sheet over the walk, the camera raised, a hop: he stands, or the hop carries him
@@ -516,6 +538,15 @@ function frame(now) {
     if (monkHidden && !photo.on) monk.group.visible = false;
   }
   camera.rotation.set(look.pitch, -look.yaw, 0, "YXZ");
+  // The place's own shot, mixed over the eye that follows him (src/director.js). In the picture he is drawn whenever the
+  // eye stands clear of his head, from his own eyes too.
+  if (director.active()) {
+    centre.set(drawn ? drawn[0] : pos.x, (stage ? drawn[1] : footY) + 0.85, drawn ? drawn[2] : pos.z);
+    const clock = riteNow(), ddt = Math.min(0.25, Math.max(0, (clock - directClock) / 1000)); directClock = clock;
+    const fv = director.apply(camera, photo.on ? 0 : ddt, centre, baseFov());
+    if (fv !== directedFov) { directedFov = fv; lens(); }
+    if (fv !== null && camera.position.distanceTo(centre) > 1.0) monk.group.visible = photo.on ? photo.monk || view === "first" : true;
+  } else { directClock = riteNow(); if (directedFov !== null) { directedFov = null; lens(); } }
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
   if (cine) { cine(camera, dt); monk.group.visible = true; }
   camera.updateMatrixWorld();
@@ -565,6 +596,9 @@ function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); i
 function raise(open) {
   ui.close("photoSettings");   // the settings start folded every time the camera is raised
   photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo");
+  // Raised in the middle of a swing to a place's shot, it is the shot that is framed; raised on the way home, the eye is
+  // with him at once. Either way the ink is not left half shut over the viewfinder.
+  if (open && !director.finish() && director.state().phase === "out") director.drop();
   if (open) {   // the view stays exactly as it was: only walking stops, and the pointer is let go so the buttons can be reached
     target = null; route = []; photo.zoom = 1; photo.monk = view === "third" && monk.group.visible; photo.pray = false; document.exitPointerLock?.();
     $("monkToggle").disabled = view !== "third"; $("monkToggle").setAttribute("aria-pressed", String(photo.monk)); $("prayToggle").disabled = !photo.monk; $("prayToggle").setAttribute("aria-pressed", "false");
@@ -670,7 +704,7 @@ afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };  
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }
-  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); target = null; route = []; hop = leap = null;
+  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (COURTS.includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   hideDrift(on);
@@ -693,7 +727,7 @@ async function pass(hall) {
 // own floor only, and sees with his own eyes: the view he had below comes back when he comes down.
 function upstairs(L, at = null, turn = null) {
   if (inside) indoors(null);
-  upIn = L || null; walker.setLoft(L ? L.id : null); interrupt(); target = null; route = []; hop = leap = null;
+  upIn = L || null; walker.setLoft(L ? L.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
   if (L) { if (viewBefore === null) viewBefore = view; setView("first"); pos.set(at ? at[0] : L.door[0], EYE, at ? at[1] : L.door[1]); yaw = turn ?? L.face; pitch = -0.12; }
   else if (viewBefore !== null) { const v = viewBefore; viewBefore = null; setView(v); }
   footY = eyeY = walker.heightAt(pos.x, pos.z); heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)); follow.reset(0.6);
@@ -718,6 +752,8 @@ const comeDown = () => { if (upIn) upstairs(null); };   // straight off the balc
 if (Q.has("up") && site.lofts[Q.get("up")]) upstairs(site.lofts[Q.get("up")], Q.has("cam") ? [pose[0], pose[1]] : null, Q.has("cam") ? pose[2] : null);   // ?up=<balcony> begins up there
 else if (Q.has("show") && site.viewUp[Q.get("show")]) upstairs(site.lofts[site.viewUp[Q.get("show")]], [pose[0], pose[1]], pose[2]);
 if (upIn && (Q.has("cam") || Q.has("show"))) pitch = pose[3];
+// ?show=shot-<id> of an observance made in a hall begins inside that hall.
+{ const sp = site.places[(Q.get("show") || "").replace(/^shot-/, "")]; if (Q.get("show")?.startsWith("shot-") && sp?.room && !Q.has("in")) { indoors(site.halls.find((h) => h.id === sp.room)); pos.x = sp.at[0]; pos.z = sp.at[1]; yaw = Math.PI - sp.face; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
@@ -801,7 +837,7 @@ window.__cues = cueState;   // how many times the wings and the far bell have so
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__blocked = (x, z) => walker.blocked(x, z);
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
-window.__pose = (x, z, y, p) => { interrupt(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
+window.__pose = (x, z, y, p) => { interrupt(); director.drop(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike; window.__bells = bellsRinging; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
 window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
 window.__bird = (go) => { if (go) bird(1); return ambienceState(); };   // a bird now, if asked, and how many have sung
@@ -825,6 +861,7 @@ function openMenu(open) {
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
   $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? tr("开") : tr("关");
   $("setLock").setAttribute("aria-pressed", String(S.lock)); $("setLock").textContent = S.lock ? tr("开") : tr("关");
+  $("setAutocam").setAttribute("aria-pressed", String(S.autocam)); $("setAutocam").textContent = S.autocam ? tr("开") : tr("关");
   menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
@@ -835,6 +872,7 @@ function openMenu(open) {
   $("setFov").addEventListener("input", (e) => { settings.set("fov", +/** @type {HTMLInputElement} */ (e.target).value); lens(); });
   for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +/** @type {HTMLInputElement} */ (e.target).value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
+  on("setAutocam", () => { set("autocam", !settings.get().autocam); if (!settings.get().autocam) director.drop(); });
   on("setLock", () => { set("lock", !settings.get().lock); if (!settings.get().lock) document.exitPointerLock?.(); });
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
   on("reloadBtn", () => location.reload());
@@ -848,7 +886,7 @@ function openMenu(open) {
     b.addEventListener("click", () => setLang(b.dataset.lang));
   });
   // Lost, or wedged somewhere he should not be: back to where the path begins.
-  on("menuHome", () => { if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
+  on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
@@ -858,6 +896,16 @@ window.__pick = (px, py, n = 6) => {
   return rc.intersectObjects(scene.children, true).filter((h) => h.object.visible).slice(0, n).map((h) => { const m = /** @type {any} */ (h.object).material || {}; let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; }
     return { part, material: m.customProgramCacheKey && /^[a-zA-Z]+$/.test(m.customProgramCacheKey()) ? m.customProgramCacheKey() : m.type, distance: +h.distance.toFixed(2), at: h.point.toArray().map((v) => +v.toFixed(2)), transparent: !!m.transparent, kind: h.object.type }; });
 };
+// The place's own shot while an observance is made (src/director.js): see `direct` below. `__direct(id)` asks for one, for a test.
+function directShot(id, opts) {
+  if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
+  if (upIn) return false;   // up on a balcony he sees with his own eyes only: no place's shot is taken there
+  const p = site.places[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;
+  const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
+  if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
+  return going;
+}
+window.__direct = (id) => directShot(id);
 createGame({
   hints, ui, tier: quality.name,
   site, walker, scene,
@@ -866,11 +914,11 @@ createGame({
   up: () => (upIn ? upIn.id : null), stair: () => (inside && hallIn.room.stair) || null, lofts: site.lofts,
   climb: (id) => climbTo(site.lofts[id]), descend: () => climbTo(null),
   // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).
-  place(x, z, turn, up = null) { interrupt(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  place(x, z, turn, up = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
   start: site.start,
   // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
   async travel(x, z, turn, hallId) {
-    if (passing) return false; passing = true; interrupt();
+    if (passing) return false; passing = true; interrupt(); director.drop();
     if (veil) veil.className = "on"; await pause(700);
     const hall = hallId ? site.halls.find((h) => h.id === hallId) : null;
     comeDown();
@@ -888,6 +936,11 @@ createGame({
   leave: () => interrupt(),
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
+  // The place's own shot while an observance is made (src/director.js): `direct(id)` goes to it, `direct(null)` comes back
+  // to him; `direct(id, { now })` is there at once (a picture tool), `undirect()` lets go without a swing (a passage takes
+  // the eye from it); `directOut()` is how many seconds the way back takes, so an observance can send it that much early.
+  direct: directShot,
+  undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(), directArrived: () => director.state().phase === "hold",
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),
@@ -895,6 +948,25 @@ createGame({
   // Where a point of the place falls on the picture: x and y in pixels, and whether it is behind the eye.
   screenOf(x, yy, z) { const v = new THREE.Vector3(x, yy, z).project(camera), r = canvas.getBoundingClientRect(); return { x: r.left + (v.x * 0.5 + 0.5) * r.width, y: r.top + (-v.y * 0.5 + 0.5) * r.height, behind: v.z > 1, w: r.width, h: r.height }; },
 });
+// What a shot sees first (the inside of the well's niche, the lamps from before them) may never have been drawn: its
+// programs compiled and its textures sent to the card on the frame it first comes into view, a stall in the middle of
+// the swing (138 ms at the well on a T4). They are made ready when the eye is sent, drawn once from the shot into a
+// small picture nobody sees, while he is still only taking his first step into the observance.
+const warmTarget = new THREE.WebGLRenderTarget(64, 36), warmEye = new THREE.PerspectiveCamera();
+function warmShot(p, foot) {
+  if (Q.has("shot")) return;   // a picture tool is already on the shot
+  const o = shotPose(p, p.shot, foot, 0, camera.aspect || 16 / 9);
+  warmEye.copy(camera); warmEye.position.copy(o.p); warmEye.quaternion.copy(o.q); warmEye.fov = o.fov; warmEye.updateProjectionMatrix(); warmEye.updateMatrixWorld();
+  // What is hidden until the observance shows it (the well's rings, which first appear with the first drop, mid-swing)
+  // is shown for this one picture too: it is never on the screen. (Not renderer.compile: that compiles every room
+  // under the courts as well, and the swing stalled on it.)
+  const near = placePointOf(p, foot, [0, 0, 0]), shown = [];
+  scene.traverse((o) => { if (!o.visible && o.userData.warm && o.position.distanceTo(near) < 12) { o.visible = true; shown.push(o); } });   // only what says it may be drawn so (`userData.warm`)
+  const was = renderer.getRenderTarget(); renderer.setRenderTarget(warmTarget); renderer.render(scene, warmEye); renderer.setRenderTarget(was);
+  for (const o of shown) o.visible = false;
+  director.warmed = (director.warmed || 0) + 1;
+}
+window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
 if (Q.has("tour")) setView("first");   // it is measured from his own eyes

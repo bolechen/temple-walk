@@ -1,0 +1,363 @@
+[
+ {
+  "t": "2026-11-16T09:13:04.432Z",
+  "run": "director",
+  "kind": "input",
+  "what": "click 入山"
+ },
+ {
+  "t": "2026-11-16T09:13:05.101Z",
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "__pose beside lamp"
+ },
+ {
+  "t": "2026-11-16T09:13:09.883Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-1-lamp-offered.png"
+ },
+ {
+  "t": "2026-11-16T09:13:11.091Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 燃灯"
+ },
+ {
+  "t": "2026-11-16T09:13:19.820Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-2-lamp-swing.png"
+ },
+ {
+  "t": 0,
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "going to the lamp's shot",
+  "phase": "out",
+  "id": "lamp",
+  "w": 0,
+  "cut": true,
+  "veil": 0.963,
+  "in": 1.8,
+  "out": 1,
+  "cuts": 1,
+  "blends": 0,
+  "backs": 1,
+  "turnMax": 0,
+  "frames": 7,
+  "why": "solid"
+ },
+ {
+  "t": "2026-11-16T09:13:21.218Z",
+  "run": "director",
+  "kind": "page",
+  "what": "on the lamp's shot 0.7 s later"
+ },
+ {
+  "t": "2026-11-16T09:13:25.073Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-3-lamp-shot.png"
+ },
+ {
+  "t": 0,
+  "run": "director",
+  "kind": "page",
+  "what": "home by itself 0.6 s later",
+  "phase": "idle",
+  "id": "lamp",
+  "w": 0,
+  "cut": false,
+  "veil": 0,
+  "in": 1.8,
+  "out": 1,
+  "cuts": 1,
+  "blends": 0,
+  "backs": 1,
+  "turnMax": 0,
+  "frames": 11,
+  "why": "solid"
+ },
+ {
+  "t": "2026-11-16T09:13:30.148Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-4-lamp-home.png"
+ },
+ {
+  "t": "2026-11-16T09:13:30.804Z",
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "__pose beside well"
+ },
+ {
+  "t": "2026-11-16T09:13:32.732Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 观水"
+ },
+ {
+  "t": 0,
+  "run": "director",
+  "kind": "page",
+  "what": "going to the well's shot 3.7 s after the press",
+  "phase": "in",
+  "id": "well",
+  "w": 0,
+  "cut": true,
+  "veil": 0.156,
+  "in": 2,
+  "out": 1,
+  "cuts": 2,
+  "blends": 0,
+  "backs": 1,
+  "turnMax": 0,
+  "frames": 12,
+  "why": "turn"
+ },
+ {
+  "t": "2026-11-16T09:13:39.634Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-5-well-shot.png"
+ },
+ {
+  "t": "2026-11-16T09:13:39.886Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key W held · walk away"
+ },
+ {
+  "t": 0,
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "0.4 s after W",
+  "phase": "out",
+  "id": "well",
+  "w": 1,
+  "cut": true,
+  "veil": 0.226,
+  "in": 2,
+  "out": 1,
+  "cuts": 2,
+  "blends": 0,
+  "backs": 2,
+  "turnMax": 0,
+  "frames": 21,
+  "why": "turn"
+ },
+ {
+  "t": "2026-11-16T09:13:46.392Z",
+  "run": "director",
+  "kind": "page",
+  "what": "home 5.7 s after W was let go"
+ },
+ {
+  "t": "2026-11-16T09:13:49.583Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-6-well-home.png"
+ },
+ {
+  "t": "2026-11-16T09:13:50.138Z",
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "__pose beside bell"
+ },
+ {
+  "t": "2026-11-16T09:13:51.807Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 撞钟"
+ },
+ {
+  "t": "2026-11-16T09:14:10.917Z",
+  "run": "director",
+  "kind": "page",
+  "what": "on the bell's shot 19.1 s after the press"
+ },
+ {
+  "t": "2026-11-16T09:14:13.130Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-7-bell-shot.png"
+ },
+ {
+  "t": "2026-11-16T09:14:14.159Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 撞钟 2"
+ },
+ {
+  "t": 0.7,
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "after stroke 2",
+  "phase": "hold",
+  "id": "bell",
+  "w": 1,
+  "cut": false,
+  "veil": 0,
+  "in": 2,
+  "out": 1,
+  "cuts": 3,
+  "blends": 1,
+  "backs": 2,
+  "turnMax": 1.39,
+  "frames": 88,
+  "why": "turn"
+ },
+ {
+  "t": "2026-11-16T09:14:17.732Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 撞钟 3"
+ },
+ {
+  "t": 1.15,
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "after stroke 3",
+  "phase": "hold",
+  "id": "bell",
+  "w": 1,
+  "cut": false,
+  "veil": 0,
+  "in": 2,
+  "out": 1,
+  "cuts": 3,
+  "blends": 1,
+  "backs": 2,
+  "turnMax": 1.39,
+  "frames": 97,
+  "why": "turn"
+ },
+ {
+  "t": "2026-11-16T09:14:22.270Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-8-bell-third.png"
+ },
+ {
+  "t": "2026-11-16T09:14:22.982Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key Escape · let go of the rope"
+ },
+ {
+  "t": "2026-11-16T09:14:31.734Z",
+  "run": "director",
+  "kind": "page",
+  "what": "home 7.8 s after Esc",
+  "button": "撞钟"
+ },
+ {
+  "t": "2026-11-16T09:14:32.240Z",
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "__pose beside tea"
+ },
+ {
+  "t": "2026-11-16T09:14:34.200Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 吃茶"
+ },
+ {
+  "t": "2026-11-16T09:14:58.611Z",
+  "run": "director",
+  "kind": "page",
+  "what": "on the tea's shot 24.4 s after the press"
+ },
+ {
+  "t": "2026-11-16T09:15:01.213Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-9-tea-shot.png"
+ },
+ {
+  "t": "2026-11-16T09:15:01.611Z",
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "under the pointer before the drag",
+  "el": "yardGl",
+  "yaw": 3.142,
+  "ui": {
+   "stack": [],
+   "modal": false,
+   "focus": "BODY"
+  }
+ },
+ {
+  "t": "2026-11-16T09:15:18.007Z",
+  "run": "director",
+  "kind": "input",
+  "what": "mouse drag 160 px · look round"
+ },
+ {
+  "t": 0,
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "just after the drag",
+  "phase": "idle",
+  "id": "tea",
+  "w": 0,
+  "cut": false,
+  "veil": 0,
+  "in": 2.2,
+  "out": 1,
+  "cuts": 3,
+  "blends": 4,
+  "backs": 4,
+  "turnMax": 2.76,
+  "frames": 197,
+  "why": "turn",
+  "yaw": 3.857
+ },
+ {
+  "t": "2026-11-16T09:15:19.610Z",
+  "run": "director",
+  "kind": "page",
+  "what": "home 0.4 s after the drag",
+  "rite": "tea"
+ },
+ {
+  "t": "2026-11-16T09:15:22.136Z",
+  "run": "director",
+  "kind": "shot",
+  "what": "director-10-tea-home.png"
+ },
+ {
+  "t": "2026-11-16T09:15:22.788Z",
+  "run": "director",
+  "kind": "input",
+  "what": "key e · 起身"
+ },
+ {
+  "t": 0,
+  "run": "director",
+  "kind": "diagnostic",
+  "what": "the whole run",
+  "phase": "idle",
+  "id": "tea",
+  "w": 0,
+  "cut": false,
+  "veil": 0,
+  "in": 2.2,
+  "out": 1,
+  "cuts": 3,
+  "blends": 4,
+  "backs": 4,
+  "turnMax": 2.76,
+  "frames": 197,
+  "why": "turn"
+ },
+ {
+  "t": "2026-11-16T09:15:23.582Z",
+  "run": "director",
+  "kind": "film",
+  "what": "director.webm",
+  "errors": []
+ }
+]
