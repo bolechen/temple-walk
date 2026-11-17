@@ -16,8 +16,10 @@ const srv = http.createServer((req, res) => {
 // Each surface: how to bring it up, and how to put it away again.
 const SURFACES = [
   ["title", null, null],
-  ["walk", "document.getElementById('enterBtn').click()", null],
-  ["menu", "window.__menu(true)", "window.__menu(false)"],
+  // (a first visit is shown the mountain first, src/opening.js: passed over with Esc as a visitor may, as the eye comes down to him)
+  ["walk", "document.getElementById('enterBtn').click(); setTimeout(() => window.__opening().active && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })), 300)", null],
+  ["prologue", "(() => { window.__pose(6.6, 53.4, Math.atan2(-6.6, 13.4), 0.05); window.__prologue(true); })()", null],
+  ["menu", "document.body.classList.add('seasons'); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
@@ -55,7 +57,7 @@ const measure = () => {
     await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
     for (const [name, open, close] of SURFACES) {
       if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
-      await p.waitForTimeout(name === "slip" ? 9000 : name === "book" ? 7000 : 2500);
+      await p.waitForTimeout(name === "slip" ? 9000 : name === "book" ? 7000 : name === "walk" ? 4000 : 2500);
       const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
       report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
       console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");

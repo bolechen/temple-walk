@@ -47,7 +47,8 @@ def measure(path):
 
 
 def check(view, path):
-    target = json.load(open(TARGETS))["views"][view]["measures"]
+    entry = json.load(open(TARGETS))["views"][view]
+    target = entry["measures"]
     m, misses = measure(path), []
     for key, (want, tol) in target.items():
         if key == "bands":
@@ -56,7 +57,10 @@ def check(view, path):
                 if abs(g - w) > tol: misses.append(f"band {i + 1}: {g} (want {w} ± {tol})")
         elif abs(m[key] - want) > tol:
             misses.append(f"{key}: {m[key]} (want {want} ± {tol})")
-    print(json.dumps({"view": view, "measures": m, "misses": misses}, ensure_ascii=False))
+    out = {"view": view, "measures": m, "misses": misses}
+    if entry.get("rebaseline"):   # the view's hour has changed since its targets were measured: they do not judge it
+        out["rebaseline"] = entry.get("note", True)
+    print(json.dumps(out, ensure_ascii=False))
     return not misses
 
 

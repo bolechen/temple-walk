@@ -9,6 +9,7 @@
 - 开发交付：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/delivery.json
 - 独立评审：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/independent-review.json
 - 交接与下一步：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/HANDOFF.md
+- 关卡手册（做一座寺的顺序）：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/LEVEL-PLAYBOOK.md
 - 建筑边缘整改：https://github.com/bolechen/temple-walk/issues/16
 - 结构（营造法式）目标：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/structure-goal.md
 - 美术原型目标：https://raw.githubusercontent.com/bolechen/temple-walk/main/docs/t00/art-goal.md

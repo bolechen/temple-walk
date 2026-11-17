@@ -43,10 +43,11 @@ test("the bell's log is drawn back, touches the bronze and goes no further, and 
 test("every cushion and every stool is a seat, and he can come within a step or two of each", () => {
   const all = [...site.seats, ...rooms.seats]; assert.ok(all.length >= 30, `only ${all.length} seats`);
   for (const id of ["main", "chan", "tea", "library", "yaoshi", "guanyin", "dahui", "lingxiao"]) assert.ok(rooms.seats.some((s) => s.room === id), `nothing to sit on in ${id}`);
-  assert.equal(site.seats.filter((s) => s.room === null).length, 4, "out of doors: three stools and the summit mat");
+  assert.equal(site.seats.filter((s) => s.room === null).length, 8, "out of doors: three stools, the summit mat and the four cushions of the tea house porch");
+  for (const [x, z] of site.drawnSeats) assert.ok(site.seats.some((q) => q.room === null && Math.hypot(q.at[0] - x, q.at[1] - z) < 0.05), `a cushion or stool is drawn at (${x.toFixed(2)}, ${z.toFixed(2)}) and is no seat`);   // #144: drawn and walked round, but nothing to sit on
   // How he sits follows what the seat is: on a stool as on a chair, on a cushion cross-legged. A stool stands at a grown
   // man's sitting height, a cushion low.
-  assert.deepEqual(site.seats.filter((s) => s.room === null).map((s) => s.kind), ["stool", "stool", "stool", "cushion"]);
+  assert.deepEqual(site.seats.filter((s) => s.room === null).map((s) => s.kind), ["stool", "stool", "stool", "cushion", "cushion", "cushion", "cushion", "cushion"]);
   assert.ok(rooms.seats.some((s) => s.kind === "stool") && rooms.seats.some((s) => s.kind === "cushion"), "the rooms have stools and cushions");
   for (const s of all) {
     assert.ok(s.kind === "stool" || s.kind === "cushion", `a seat in ${s.room || "the open"} of no kind (${s.kind})`);
@@ -83,6 +84,19 @@ test("a stroke begun while the log still swings draws it back from where it is, 
   assert.ok(jump < 0.02, `the log moved ${jump} in 5 ms`); assert.ok(lo >= -0.18 - 1e-9, `the log went into the bell: ${lo}`);
 });
 
+// An observance made sitting (the tea on its stool, the breaths on the summit mat) sets him on the seat's own top,
+// as sitting down on any seat does: on the summit he used to be lifted a further 0.1 m over a mat whose top the floor
+// under him already was, and from before him he was seen hanging over it (review of #87).
+test("an observance made sitting sets him on the top of its seat, not above it", async () => {
+  const { placeLift } = await import("../../app/src/site.js");
+  for (const id of ["tea", "sit"]) {
+    const p = site.places[id], at = p.at, lift = placeLift(p, site.seats, walker.heightAt);
+    const seat = site.seats.find((s) => (s.room || null) === (p.room || null) && Math.hypot(s.at[0] - (p.seat || at)[0], s.at[1] - (p.seat || at)[1]) < 0.3);
+    assert.ok(seat, `${id}: no seat registered where it is made`);
+    assert.ok(Math.abs(walker.heightAt(at[0], at[1]) + lift - seat.top) < 0.005, `${id}: he sits ${(walker.heightAt(at[0], at[1]) + lift - seat.top).toFixed(3)} m off the seat's top`);
+  }
+});
+
 test("the closing shot leaves air over the pavilion: its top stays a twelfth of the picture under the upper edge, upright or wide", async () => {
   const { aimToFrame } = await import("../../app/src/rites.js");
   assert.equal(typeof aimToFrame, "function", "rites.js has no aimToFrame");
@@ -96,4 +110,20 @@ test("the closing shot leaves air over the pavilion: its top stays a twelfth of 
   }
   const low = new THREE.Vector3(0, 50, -12);
   assert.ok(aimToFrame(cam, aim, low, 50, 16 / 9, 0.08).y === aim.y, "a top already well inside the picture moves nothing");
+});
+
+test("the closing shot keeps the ridge's end ornaments clear too, the one nearer the eye included", async () => {
+  // A longer eave lengthens the ridge, and the ornament at its near end stands higher in the picture than its middle:
+  // with the top storey 2.4 m out under a 3.2 m eave, framing the middle alone left 7.5% of a wide picture over it.
+  const { aimToFrame } = await import("../../app/src/rites.js");
+  const tall = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - site.lofts.lingxiao.at[0], (r.z0 + r.z1) / 2 - site.lofts.lingxiao.at[1]) < 2).sort((p, q) => q.top - p.top)[0];
+  assert.ok(tall && tall.crest && tall.crest.length === 2, "the pavilion's top roof does not record the tips of its end ornaments");
+  for (const [x, y, z] of tall.crest) assert.ok(y > tall.top - 0.3 && Math.abs(z - (tall.z0 + tall.z1) / 2) < 0.01 && Math.abs(x - (tall.x0 + tall.x1) / 2) > 2, `an ornament tip at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
+  const tops = tall.crest.map(([x, y, z]) => new THREE.Vector3(x, y, z)), cx = (tall.x0 + tall.x1) / 2, cz = (tall.z0 + tall.z1) / 2;
+  const cam = new THREE.Vector3(cx + 9, tall.top - 12, cz + 40), aim = new THREE.Vector3(cx, tall.top - 18, cz);
+  for (const [fov, aspect] of [[50, 16 / 9], [50, 9 / 19.5], [65, 4 / 3]]) {
+    const a = aimToFrame(cam, aim, tops, fov, aspect, 0.08), c = new THREE.PerspectiveCamera(fov, aspect, 0.1, 500);
+    c.position.copy(cam); c.lookAt(a); c.updateMatrixWorld(); c.updateProjectionMatrix();
+    for (const t of tops) assert.ok(t.clone().project(c).y <= 1 - 2 * 0.08 + 1e-3, `fov ${fov}, aspect ${aspect.toFixed(2)}: an ornament at ${t.clone().project(c).y.toFixed(3)}`);
+  }
 });

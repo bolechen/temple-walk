@@ -113,11 +113,14 @@ test("a storey over a skirt roof stands on a balcony: bracket sets, a board roun
   for (const [lo, up] of pairs) { if (DOUBLE_EAVED.has(up.name)) { if (up.frame.ping) wrong.push(`${up.name}: a balcony between two eaves of one hall`); continue; }
     n++; const g = up.frame.ping, who = `${up.name || lo.name} storey ${up.frame.storey + 1}`;
     if (!g) { wrong.push(`${who}: no balcony`); continue; }
-    if (g.sets !== up.frame.sets.length) wrong.push(`${who}: ${g.sets} sets under the balcony, ${up.frame.sets.length} under the roof`);
+    // A balcony on the column heads of the storey below (the Lingxiao pavilion's top, walked round) has a set on every one
+    // of them, its arms doubled, on a plate as thick as a timber is deep (juan 4: 宜用重栱; 普拍方厚隨材廣).
+    if (g.ring) { if (g.sets !== lo.frame.cols.length) wrong.push(`${who}: ${g.sets} sets on the ring, ${lo.frame.cols.length} columns under it`); if (!g.double) wrong.push(`${who}: the balcony's arms are single`); if (!(g.plate >= 0.2)) wrong.push(`${who}: the plate under the balcony is ${g.plate} thick`); }
+    else if (g.sets !== up.frame.sets.length) wrong.push(`${who}: ${g.sets} sets under the balcony, ${up.frame.sets.length} under the roof`);
     if (!(g.reach < 0.88 && g.reach > 0.3)) wrong.push(`${who}: the balcony's sets should step out less far than the storey's own (${g.reach})`);
     if (!(g.board >= 0.4 && g.board <= 0.45)) wrong.push(`${who}: the board round the balcony should be two cai tall (${g.board})`);
     if (!(g.rail < g.edge)) wrong.push(`${who}: the railing stands outside the board`);
-    const skirt = lo.frame.roof.at(lo.frame.roof.EZ - up.frame.zs[0]);
+    const skirt = lo.frame.roof.at(lo.frame.roof.EZ - (g.ring ?? up.frame.zs[0]));   // where the sets stand: on the storey's own wall line, or on the ring below
     if (!(skirt <= g.bottom + 1e-6)) wrong.push(`${who}: the skirt roof (${skirt.toFixed(2)}) comes in above the foot of the balcony's sets (${g.bottom.toFixed(2)})`); }
   assert.deepEqual(wrong, []); assert.equal(n, 4, "the gate, the library and the Lingxiao pavilion's two upper storeys");
 });

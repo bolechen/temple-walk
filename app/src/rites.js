@@ -34,10 +34,12 @@ let held = null, offset = 0, pausedAt = null;
 // under its upper edge: the aim it was given, raised only as far as that needs. The picture is taller or wider on
 // different screens, and the pavilion taller than it was.
 const _frame = new THREE.PerspectiveCamera();
-/** @param {THREE.Vector3} cam @param {THREE.Vector3} aim @param {THREE.Vector3} top @param {number} fov @param {number} aspect */
+// Given several points (the ornaments at both ends of the ridge), the one highest in the picture is the one kept clear.
+/** @param {THREE.Vector3} cam @param {THREE.Vector3} aim @param {THREE.Vector3 | THREE.Vector3[]} top @param {number} fov @param {number} aspect */
 export function aimToFrame(cam, aim, top, fov, aspect, margin = 0.08) {
   _frame.fov = fov; _frame.aspect = aspect; _frame.updateProjectionMatrix(); _frame.position.copy(cam);
-  const at = (y) => { _frame.lookAt(aim.x, y, aim.z); _frame.updateMatrixWorld(); return _v.copy(top).project(_frame).y; }, want = 1 - 2 * margin;
+  const tops = Array.isArray(top) ? top : [top];
+  const at = (y) => { _frame.lookAt(aim.x, y, aim.z); _frame.updateMatrixWorld(); return Math.max(...tops.map((t) => _v.copy(t).project(_frame).y)); }, want = 1 - 2 * margin;
   if (at(aim.y) <= want) return aim.clone();
   let lo = aim.y, hi = aim.y + 60; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (at(mid) <= want) hi = mid; else lo = mid; }
   return new THREE.Vector3(aim.x, hi, aim.z);
@@ -75,6 +77,12 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     const t0 = riteNow(), T = Math.max(1, secs * 1000 * fast);
     jobs.push((now) => { if (!on()) { done(false); return true; } const u = Math.min(1, (now - t0) / T); fn(u); if (u >= 1) { done(true); return true; } return false; });
   });
+  // The eye goes back to him that long before his hands are done (src/director.js: the way back takes `directOut()`
+  // seconds), so that it arrives as the observance ends rather than starting out after it. `secs` is the passage under
+  // way, `u` how far into it, `after` how much more of the observance follows it.
+  // (Only once the eye has arrived: a swing that takes longer than the observance, from behind him round to a shot
+  // before him, is not turned back half way; the observance's end brings it home instead.)
+  const homeward = (u, secs, after = 0) => { if (y.directed?.() && y.directArrived?.() && ((1 - u) * secs + after) * fast <= (y.directOut?.() ?? 1)) y.direct(null); };
   y.onTick(() => { const now = riteNow(); for (let i = jobs.length - 1; i >= 0; i--) if (jobs[i](now)) jobs.splice(i, 1); for (const f of always) f(now); });
 
   // ---- Smoke and steam: a few soft puffs that rise from a point, spread and thin ----
@@ -235,7 +243,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       h.at.copy(sticks.position); h.at.y += 0.09; h.at.addScaledVector(dir(-1, 0, 0, tC), 0.02); dir(0, -0.5, 1, h.fingers); dir(1, 0, 0.2, h.palm); h.w = Math.min(1, u * 4); }, on))) return false;
     plant(); onPlant(inc.at);
     if (!(await play(0.9, (u) => { act.bow = 0.5 * (1 - ease(u)); h.w = 1 - ease(u); }, on))) return false;
-    return play(1.6, (u) => { act.bow = 0.5 * Math.sin(Math.PI * ease(u)); }, on);   // and once more, hands together
+    return play(1.6, (u) => { act.bow = 0.5 * Math.sin(Math.PI * ease(u)); homeward(u, 1.6); }, on);   // and once more, hands together
   }
 
   // ================= Sitting =================
@@ -243,14 +251,33 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.965, 1, 72).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, fog: false }));
   ring.visible = false; ring.renderOrder = 2; ring.userData.part = "breath"; scene.add(ring);
   const sit = { breaths: 0 };
-  // `to` is 1 for a breath in and -1 for a breath out, taken over `secs`.
-  async function breathe(to, secs, on) {
+  // `to` is 1 for a breath in and -1 for a breath out, taken over `secs`; `last`: the eye goes back to him as it ends
+  // (not when the chapter closes after it: then the close takes the eye from the shot).
+  async function breathe(to, secs, on, last = false) {
     const from = act.breath ?? -1;
     if (to < 0) { ring.visible = true; ring.position.copy(G.position).y += 0.05; ring.material.color.set(y.night() ? 0xffd9a0 : 0x14110e); }
     const ok = await play(secs, (u) => { const k = ease(u); act.breath = mix(from, to, k); act.nod = to < 0 ? 0.05 * k : 0.05 * (1 - k);
-      if (to < 0) { ring.scale.setScalar(0.45 + 1.9 * u); ring.material.opacity = (y.night() ? 0.55 : 0.5) * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - 0.6 * u); } }, on);
+      if (to < 0) { ring.scale.setScalar(0.45 + 1.9 * u); ring.material.opacity = (y.night() ? 0.55 : 0.5) * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - 0.6 * u); }
+      if (last) homeward(u, secs); }, on);
     if (to < 0) { ring.visible = false; if (ok) sit.breaths++; }
     return ok;
+  }
+
+  // ================= The well and the lamp =================
+  // At the dragon well he only watches: a drop falls from the rock every second and a half, three times, each ringing
+  // out across the pool (`drip`), and he watches the last ring go. At the lamp he stands a moment before it, then lights
+  // it (`light`), and stands a moment more in its light. (The timing is what game.js gave them before; it is here so that
+  // the eye can be sent home before they end, as with the others.)
+  /** @param {() => boolean} on @param {() => void} drip */
+  async function watchWell(on, drip) {
+    for (let i = 0; i < 3; i++) { if (!(await play(1.5, () => {}, on))) return false; drip(); }
+    return play(2.0, (u) => homeward(u, 2.0), on);
+  }
+  /** @param {() => boolean} on @param {() => void} light */
+  async function lightLamp(on, light) {
+    if (!(await play(1.8, () => {}, on))) return false;
+    light();
+    return play(2.0, (u) => homeward(u, 2.0), on);
   }
 
   // ================= The close of the chapter =================
@@ -265,11 +292,13 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     let path = null, aim = null;
     END.on = true; END.u = 0;
     y.cine((camera) => {
-      if (!path) { cam0.copy(camera.position); camera.getWorldDirection(look0).multiplyScalar(6).add(cam0);
+      if (!path) { y.undirect?.(); cam0.copy(camera.position);   // from wherever the eye was, the sitting's own shot included
+        camera.getWorldDirection(look0).multiplyScalar(6).add(cam0);
         // The last look is raised, if need be, until the pavilion's ridge ornaments stand clear of the picture's top.
         const far = P(9, 17, 34), roofs = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - o.x, (r.z0 + r.z1) / 2 - o.z) < 16), tall = roofs.sort((p, q) => q.top - p.top)[0];
         path = new THREE.CatmullRomCurve3([cam0.clone(), P(1.5, 0.75, 3.1), P(3.6, 2.6, 8.5), P(7, 9, 19), far], false, "centripetal");
-        const last = tall ? aimToFrame(far, P(0, 5, -6), new THREE.Vector3((tall.x0 + tall.x1) / 2, tall.top + 1.6, (tall.z0 + tall.z1) / 2), camera.fov, camera.aspect) : P(0, 5, -6);
+        const tops = [new THREE.Vector3((tall?.x0 + tall?.x1) / 2, tall?.top + 1.6, (tall?.z0 + tall?.z1) / 2), ...(tall?.crest || []).map(([x, cy, z]) => new THREE.Vector3(x, cy, z))];
+        const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
         aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
       const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
     });
@@ -292,7 +321,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     ring.visible = false;
   }
   return {
-    act, rest, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, close,
+    act, rest, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
     // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     restore(has) { if (!has.incenseAt) return; if (Date.now() - has.incenseAt < burn * 1000) plant(has.incenseAt); else burntOut(); },

@@ -1,0 +1,294 @@
+{
+  "started": "2026-11-17T00:44:39.309Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 43.1,
+      "ms": 23.2,
+      "cost": 10.74,
+      "loadMs": 14016,
+      "tris": 1927044,
+      "calls": 356,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "summer",
+      "time": "day",
+      "fps": 99.2,
+      "ms": 10.08,
+      "cost": 7.02,
+      "loadMs": 8974,
+      "tris": 866688,
+      "calls": 178,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low"
+    }
+  ],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "49f859a04edf1c689decd5799aaa4e1594eb60a6",
+    "entry": "assets/index-D4uTI8BG.js",
+    "files": 111,
+    "sha256": "7bab19e97b09f9124e466d61efc63a3034d73bbdf612fdd15cbcbfb50bb19647"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "opening": {
+    "runs": [
+      {
+        "q": "high",
+        "size": [
+          1920,
+          1080
+        ],
+        "scale": 1,
+        "loadMs": 10164,
+        "took_ms": 15713,
+        "state": {
+          "phase": "done",
+          "mode": "fly",
+          "skipped": false,
+          "cuts": 0,
+          "waited": 1616,
+          "secs": 13.54,
+          "length": 147.2,
+          "s": 147.2,
+          "active": false,
+          "hint": "walk",
+          "cues": {
+            "flutter": 0,
+            "farBell": 0,
+            "mountainBell": 1,
+            "prologue": 0,
+            "musicHeld": false
+          }
+        },
+        "frames": {
+          "hold": {
+            "frames": 73,
+            "fps": 41.5,
+            "mean_ms": 24.11,
+            "p95_ms": 32.5,
+            "max_ms": 201.4,
+            "over40": 1
+          },
+          "fly": {
+            "frames": 700,
+            "fps": 51.7,
+            "mean_ms": 19.35,
+            "p95_ms": 21.9,
+            "max_ms": 48.8,
+            "over40": 1
+          },
+          "all": {
+            "frames": 773,
+            "fps": 50.5,
+            "mean_ms": 19.8,
+            "p95_ms": 22.2,
+            "max_ms": 201.4,
+            "over40": 2
+          }
+        }
+      },
+      {
+        "q": "low",
+        "size": [
+          390,
+          844
+        ],
+        "scale": 3,
+        "loadMs": 8930,
+        "took_ms": 15495,
+        "state": {
+          "phase": "done",
+          "mode": "fly",
+          "skipped": false,
+          "cuts": 0,
+          "waited": 1607,
+          "secs": 13.54,
+          "length": 147.2,
+          "s": 147.2,
+          "active": false,
+          "hint": "walk",
+          "cues": {
+            "flutter": 0,
+            "farBell": 0,
+            "mountainBell": 1,
+            "prologue": 0,
+            "musicHeld": false
+          }
+        },
+        "frames": {
+          "hold": {
+            "frames": 184,
+            "fps": 109.3,
+            "mean_ms": 9.15,
+            "p95_ms": 15.1,
+            "max_ms": 118,
+            "over40": 1
+          },
+          "fly": {
+            "frames": 1316,
+            "fps": 97.2,
+            "mean_ms": 10.29,
+            "p95_ms": 12.3,
+            "max_ms": 48,
+            "over40": 1
+          },
+          "all": {
+            "frames": 1500,
+            "fps": 98.6,
+            "mean_ms": 10.15,
+            "p95_ms": 12.3,
+            "max_ms": 118,
+            "over40": 2
+          }
+        }
+      },
+      {
+        "q": "high",
+        "size": [
+          1920,
+          1080
+        ],
+        "scale": 1,
+        "loadMs": 8954,
+        "took_ms": 15574,
+        "state": {
+          "phase": "done",
+          "mode": "fly",
+          "skipped": false,
+          "cuts": 0,
+          "waited": 1602,
+          "secs": 13.54,
+          "length": 147.2,
+          "s": 147.2,
+          "active": false,
+          "hint": "walk",
+          "cues": {
+            "flutter": 0,
+            "farBell": 0,
+            "mountainBell": 1,
+            "prologue": 0,
+            "musicHeld": false
+          }
+        },
+        "frames": {
+          "hold": {
+            "frames": 79,
+            "fps": 47.2,
+            "mean_ms": 21.17,
+            "p95_ms": 36.2,
+            "max_ms": 112.9,
+            "over40": 2
+          },
+          "fly": {
+            "frames": 722,
+            "fps": 53.3,
+            "mean_ms": 18.75,
+            "p95_ms": 34,
+            "max_ms": 35.6,
+            "over40": 0
+          },
+          "all": {
+            "frames": 801,
+            "fps": 52.7,
+            "mean_ms": 18.99,
+            "p95_ms": 34,
+            "max_ms": 112.9,
+            "over40": 2
+          }
+        }
+      },
+      {
+        "q": "low",
+        "size": [
+          390,
+          844
+        ],
+        "scale": 3,
+        "loadMs": 9019,
+        "took_ms": 15632,
+        "state": {
+          "phase": "done",
+          "mode": "fly",
+          "skipped": false,
+          "cuts": 0,
+          "waited": 1607,
+          "secs": 13.54,
+          "length": 147.2,
+          "s": 147.2,
+          "active": false,
+          "hint": "walk",
+          "cues": {
+            "flutter": 0,
+            "farBell": 0,
+            "mountainBell": 1,
+            "prologue": 0,
+            "musicHeld": false
+          }
+        },
+        "frames": {
+          "hold": {
+            "frames": 132,
+            "fps": 78.3,
+            "mean_ms": 12.77,
+            "p95_ms": 22.1,
+            "max_ms": 134.7,
+            "over40": 1
+          },
+          "fly": {
+            "frames": 1299,
+            "fps": 96,
+            "mean_ms": 10.42,
+            "p95_ms": 12.1,
+            "max_ms": 33.5,
+            "over40": 0
+          },
+          "all": {
+            "frames": 1431,
+            "fps": 94,
+            "mean_ms": 10.64,
+            "p95_ms": 12.4,
+            "max_ms": 134.7,
+            "over40": 1
+          }
+        }
+      }
+    ]
+  },
+  "finished": "2026-11-17T00:47:10.209Z"
+}

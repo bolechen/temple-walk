@@ -1,0 +1,289 @@
+{
+  "started": "2026-11-16T06:48:27.976Z",
+  "host": {
+    "gpu": "Tesla T4, 580.178.04, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-cli\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.580.178.04\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-rtcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.580.178.0\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-present.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.580.178\n\tlibnvidia-pkcs11-openssl3.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-ope\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-gtk3.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.580.178.04\n\tlibnvidia-gpucomp.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.580.178\n\tlibnvidia-glvkspirv.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.580\n\tlibnvidia-glsi.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.580.178.04\n\tlibnvidia-glcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.580.178.0\n\tlibnvidia-fbc.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-fbc.so.1\n\tlibnvidia-encode.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-encode.so.1\n\tlibnvidia-encode.so (libc6,x86-64) => /usr/lib64/libnvidia-encode.so\n\tlibnvidia-eglcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-eglcore.so.580.178\n\tlibnvidia-egl-xlib.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-xlib.so.1\n\tlibnvidia-egl-xcb.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-xcb.so.1\n\tlibnvidia-egl-wayland.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-wayland.so.1\n\tlibnvidia-egl-gbm.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-gbm.so.1",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 45.5,
+      "ms": 21.98,
+      "cost": 10.21,
+      "loadMs": 14243,
+      "tris": 1872702,
+      "calls": 354,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    }
+  ],
+  "shots": [
+    {
+      "name": "shot-bell",
+      "file": "shot-bell.png",
+      "tris": 992352,
+      "calls": 132
+    },
+    {
+      "name": "shot-tea",
+      "file": "shot-tea.png",
+      "tris": 1312512,
+      "calls": 195
+    },
+    {
+      "name": "shot-sutra",
+      "file": "shot-sutra.png",
+      "tris": 563760,
+      "calls": 94
+    },
+    {
+      "name": "shot-well",
+      "file": "shot-well.png",
+      "tris": 531262,
+      "calls": 74
+    },
+    {
+      "name": "shot-lamp",
+      "file": "shot-lamp.png",
+      "tris": 807366,
+      "calls": 195
+    },
+    {
+      "name": "shot-sit",
+      "file": "shot-sit.png",
+      "tris": 514188,
+      "calls": 67
+    }
+  ],
+  "errors": [],
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "director": {
+    "size": [
+      1920,
+      1080
+    ],
+    "q": "high",
+    "places": [
+      {
+        "id": "lamp",
+        "following": {
+          "frames": 156,
+          "fps": 62.5,
+          "mean_ms": 16.01,
+          "p95_ms": 31.7,
+          "max_ms": 33.5
+        },
+        "swing_in": {
+          "frames": 31,
+          "fps": 42.5,
+          "mean_ms": 23.55,
+          "p95_ms": 35.2,
+          "max_ms": 190.7
+        },
+        "how_in": {
+          "cuts": 1,
+          "blends": 0,
+          "why": "turn",
+          "in": 1.8
+        },
+        "on_shot": {
+          "frames": 106,
+          "fps": 53.4,
+          "mean_ms": 18.72,
+          "p95_ms": 21.1,
+          "max_ms": 35.1
+        },
+        "swing_out": {
+          "frames": 29,
+          "fps": 53.9,
+          "mean_ms": 18.56,
+          "p95_ms": 31.7,
+          "max_ms": 33.8
+        },
+        "turn_max_deg": 0
+      },
+      {
+        "id": "well",
+        "following": {
+          "frames": 149,
+          "fps": 60.1,
+          "mean_ms": 16.65,
+          "p95_ms": 32.6,
+          "max_ms": 33.7
+        },
+        "swing_in": {
+          "frames": 114,
+          "fps": 54.6,
+          "mean_ms": 18.32,
+          "p95_ms": 32.5,
+          "max_ms": 137.7
+        },
+        "how_in": {
+          "cuts": 2,
+          "blends": 1,
+          "why": "turn",
+          "in": 2
+        },
+        "on_shot": {
+          "frames": 118,
+          "fps": 59.2,
+          "mean_ms": 16.9,
+          "p95_ms": 34.3,
+          "max_ms": 34.7
+        },
+        "swing_out": {
+          "frames": 54,
+          "fps": 55.7,
+          "mean_ms": 17.94,
+          "p95_ms": 34.3,
+          "max_ms": 35.6
+        },
+        "turn_max_deg": 1.82
+      },
+      {
+        "id": "bell",
+        "following": {
+          "frames": 130,
+          "fps": 52.3,
+          "mean_ms": 19.12,
+          "p95_ms": 21,
+          "max_ms": 35.2
+        },
+        "swing_in": {
+          "frames": 103,
+          "fps": 51.8,
+          "mean_ms": 19.3,
+          "p95_ms": 20.8,
+          "max_ms": 28
+        },
+        "how_in": {
+          "cuts": 2,
+          "blends": 3,
+          "why": "turn",
+          "in": 2
+        },
+        "on_shot": {
+          "frames": 106,
+          "fps": 53,
+          "mean_ms": 18.88,
+          "p95_ms": 20.8,
+          "max_ms": 26.7
+        },
+        "swing_out": {
+          "frames": 49,
+          "fps": 50.4,
+          "mean_ms": 19.85,
+          "p95_ms": 21.7,
+          "max_ms": 22.1
+        },
+        "turn_max_deg": 1.82
+      },
+      {
+        "id": "tea",
+        "following": {
+          "frames": 110,
+          "fps": 43.9,
+          "mean_ms": 22.77,
+          "p95_ms": 24.8,
+          "max_ms": 25.1
+        },
+        "swing_in": {
+          "frames": 24,
+          "fps": 42.2,
+          "mean_ms": 23.71,
+          "p95_ms": 36.9,
+          "max_ms": 44.4
+        },
+        "how_in": {
+          "cuts": 3,
+          "blends": 4,
+          "why": "turn",
+          "in": 2.2
+        },
+        "on_shot": {
+          "frames": 96,
+          "fps": 48,
+          "mean_ms": 20.85,
+          "p95_ms": 22.6,
+          "max_ms": 23.4
+        },
+        "swing_out": {
+          "frames": 26,
+          "fps": 47.4,
+          "mean_ms": 21.11,
+          "p95_ms": 22.4,
+          "max_ms": 22.6
+        },
+        "turn_max_deg": 1.82
+      },
+      {
+        "id": "sutra",
+        "following": {
+          "frames": 136,
+          "fps": 54.3,
+          "mean_ms": 18.42,
+          "p95_ms": 34.8,
+          "max_ms": 35.3
+        },
+        "error": "the eye never left him"
+      },
+      {
+        "id": "sit",
+        "following": {
+          "frames": 139,
+          "fps": 55.5,
+          "mean_ms": 18.01,
+          "p95_ms": 20.7,
+          "max_ms": 35.4
+        },
+        "swing_in": {
+          "frames": 31,
+          "fps": 51.7,
+          "mean_ms": 19.34,
+          "p95_ms": 35.3,
+          "max_ms": 36
+        },
+        "how_in": {
+          "cuts": 5,
+          "blends": 4,
+          "why": "turn",
+          "in": 2.4
+        },
+        "on_shot": {
+          "frames": 120,
+          "fps": 60.6,
+          "mean_ms": 16.51,
+          "p95_ms": 32.7,
+          "max_ms": 34.1
+        },
+        "swing_out": {
+          "frames": 30,
+          "fps": 53.2,
+          "mean_ms": 18.81,
+          "p95_ms": 34.2,
+          "max_ms": 34.9
+        },
+        "turn_max_deg": 1.82
+      }
+    ]
+  },
+  "finished": "2026-11-16T06:51:19.178Z"
+}

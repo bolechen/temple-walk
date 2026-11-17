@@ -235,6 +235,18 @@ test("at the tea table his knees go under the top and clear the rail beneath its
   }
 });
 
+// #144: the four cushions on the tea house porch lie 1.12 m out from the middle of each table, so the table's end is 0.37 m
+// before his knees; its top is 0.31–0.37 m over the porch and its legs stand 0.5 m out, 0.07 m thick.
+test("on a tea house cushion his knees go under the end of the table and clear its legs", () => {
+  const m = seated("sit", 0.104), cushion = 0.104;
+  const boxes = [["top", [-0.26, 0.26], [0.31 - cushion, 0.37 - cushion], [0.37, 1.87]], ["leg", [-0.22, 0.22], [-cushion, 0.31 - cushion], [0.465, 0.535]]];
+  for (const [name, [x0, x1], [y0, y1], [z0, z1]] of boxes) {
+    let worst = -Infinity, where = null;
+    for (const [n, v] of body(m)) { const d = Math.min(v.x - x0, x1 - v.x, v.y - y0, y1 - v.y, v.z - z0, z1 - v.z); if (d > worst) { worst = d; where = `${n} at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`; } }
+    assert.ok(worst < 0.005, `his ${where} is ${(worst * 1000).toFixed(0)} mm inside the table's ${name}`);
+  }
+});
+
 // From a stool to a cushion, as the game sends him (sitDown walks him over, so he stands between the two): he gets up,
 // takes a few steps, and folds onto the cushion; nothing of him goes under the floor on the way.
 test("from a stool, a few steps, and onto a cushion: nothing of him goes under the floor", () => {
@@ -247,4 +259,32 @@ test("from a stool, a few steps, and onto a cushion: nothing of him goes under t
   for (let i = 0; i < 12; i++) { m.group.position.y = 0.1 * (i + 1) / 12; m.update(1 / 30, 0, "sit", 4 + i / 30, floor, { heightAt: floor }); look("sitting down"); }
   for (let i = 0; i < 60; i++) { m.update(1 / 30, 0, "sit", 4.4 + i / 30, floor, { heightAt: floor }); look("settling"); }
   assert.ok(worst > -0.02, `${(-worst * 100).toFixed(1)} cm of him went under the floor while ${when}`);
+});
+
+// #141: the patch is a child of him, and he is lifted as a whole when he jumps; it must stay on the ground below.
+test("his shadow stays on the ground when he is in the air, fainter and a little wider, and is as before when he stands", () => {
+  const m = createMonk(); m.setSun(new THREE.Vector3(0.3, 0.9, 0.2), 1);
+  const base = () => { m.group.updateMatrixWorld(true); return { y: m.shadow.getWorldPosition(new THREE.Vector3()).y, op: m.shadow.material.opacity, w: m.shadow.scale.x }; };
+  const floor = 1.2;
+  m.group.position.y = floor; m.update(1 / 30, 0, false, 0, () => floor);
+  const stand = base();
+  assert.ok(Math.abs(stand.y - (floor + 0.03)) < 0.002, "standing, the patch lies 3 cm over the floor");
+  let prev = stand;
+  for (const h of [0.1, 0.25, 0.46]) {
+    m.group.position.y = floor + h; m.update(1 / 30, 0, "hop", 0, () => floor);
+    const s = base();
+    assert.ok(Math.abs(s.y - (floor + 0.03)) < 0.02, `at ${h} m up the patch is at ${(s.y - floor).toFixed(3)} above the floor`);
+    assert.ok(s.op < prev.op && s.w > prev.w, "the higher, the fainter and wider");
+    prev = s;
+  }
+  assert.ok(Math.abs(prev.op / stand.op - 0.6) < 0.05 && Math.abs(prev.w - 1.2) < 0.03, "at the top: about six tenths as dark, a fifth wider");
+  // down from a porch: the ground under him is a level lower, and the patch goes there
+  m.group.position.y = floor + 0.2; m.update(1 / 30, 0, "hop", 0, () => floor - 0.9);
+  assert.ok(Math.abs(base().y - (floor - 0.9 + 0.03)) < 0.02, "over the lower level the patch is on it");
+  // landed: as before
+  m.group.position.y = floor; m.update(1 / 30, 0, false, 0, () => floor);
+  const back = base(); assert.ok(Math.abs(back.y - stand.y) < 1e-6 && Math.abs(back.op - stand.op) < 1e-6 && Math.abs(back.w - 1) < 1e-6, "landed, the same as standing");
+  // seated, on a seat above the floor, it is as it was
+  m.group.position.y = floor + 0.4; m.update(1 / 30, 0, "chair", 0, () => floor); for (let i = 0; i < 40; i++) m.update(1 / 30, 0, "chair", 0, () => floor);
+  assert.ok(Math.abs(base().y - (floor + 0.4 + 0.03)) < 0.01, "seated, the patch goes with him as before");
 });

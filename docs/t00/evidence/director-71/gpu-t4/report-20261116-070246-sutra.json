@@ -1,0 +1,67 @@
+{
+  "started": "2026-11-16T07:03:15.200Z",
+  "host": {
+    "gpu": "Tesla T4, 580.178.04, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-cli\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.580.178.04\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-rtcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.580.178.0\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-present.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.580.178\n\tlibnvidia-pkcs11-openssl3.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-ope\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-gtk3.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.580.178.04\n\tlibnvidia-gpucomp.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.580.178\n\tlibnvidia-glvkspirv.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.580\n\tlibnvidia-glsi.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.580.178.04\n\tlibnvidia-glcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.580.178.0\n\tlibnvidia-fbc.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-fbc.so.1\n\tlibnvidia-encode.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-encode.so.1\n\tlibnvidia-encode.so (libc6,x86-64) => /usr/lib64/libnvidia-encode.so\n\tlibnvidia-eglcore.so.580.178.04 (libc6,x86-64) => /usr/lib64/libnvidia-eglcore.so.580.178\n\tlibnvidia-egl-xlib.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-xlib.so.1\n\tlibnvidia-egl-xcb.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-xcb.so.1\n\tlibnvidia-egl-wayland.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-wayland.so.1\n\tlibnvidia-egl-gbm.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-egl-gbm.so.1",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "director": {
+    "size": [
+      1920,
+      1080
+    ],
+    "q": "high",
+    "places": [
+      {
+        "id": "sutra",
+        "following": {
+          "frames": 160,
+          "fps": 64.1,
+          "mean_ms": 15.6,
+          "p95_ms": 32.4,
+          "max_ms": 33.3
+        },
+        "swing_in": {
+          "frames": 113,
+          "fps": 63,
+          "mean_ms": 15.87,
+          "p95_ms": 17,
+          "max_ms": 49.4
+        },
+        "how_in": {
+          "cuts": 0,
+          "blends": 1,
+          "why": null,
+          "in": 1.8
+        },
+        "on_shot": {
+          "frames": 132,
+          "fps": 66,
+          "mean_ms": 15.15,
+          "p95_ms": 16.1,
+          "max_ms": 17
+        },
+        "swing_out": {
+          "frames": 56,
+          "fps": 58.7,
+          "mean_ms": 17.05,
+          "p95_ms": 33,
+          "max_ms": 33.7
+        },
+        "turn_max_deg": 2.25
+      }
+    ]
+  },
+  "finished": "2026-11-16T07:03:48.094Z"
+}

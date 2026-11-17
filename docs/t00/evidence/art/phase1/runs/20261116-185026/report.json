@@ -1,0 +1,159 @@
+{
+  "started": "2026-11-16T18:50:56.278Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "autumn",
+      "time": "dusk",
+      "fps": 39.1,
+      "ms": 25.58,
+      "cost": 14.03,
+      "loadMs": 16735,
+      "tris": 1927486,
+      "calls": 380,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 40.6,
+      "ms": 24.63,
+      "cost": 13.2,
+      "loadMs": 9560,
+      "tris": 1927446,
+      "calls": 356,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high"
+    }
+  ],
+  "shots": [
+    {
+      "name": "art1@summer-dawn",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=art1&season=summer&time=dawn\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=art1&s"
+    },
+    {
+      "name": "art2@autumn-dusk",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=art2&season=autumn&time=dusk\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=art2&s"
+    },
+    {
+      "name": "art3@autumn-dusk@third",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=art3&season=autumn&time=dusk&view=third\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&"
+    },
+    {
+      "name": "art4@autumn-dusk",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=art4&season=autumn&time=dusk\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=art4&s"
+    },
+    {
+      "name": "art5@summer-dusk",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=art5&season=summer&time=dusk\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=art5&s"
+    },
+    {
+      "name": "art6@autumn-dawn",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=art6&season=autumn&time=dawn\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=art6&s"
+    },
+    {
+      "name": "art1@summer-dawn",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=low&show=art1&season=summer&time=dawn\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=low&show=art1&sea"
+    },
+    {
+      "name": "art2@autumn-dusk",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=low&show=art2&season=autumn&time=dusk\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=low&show=art2&sea"
+    },
+    {
+      "name": "art3@autumn-dusk@third",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=low&show=art3&season=autumn&time=dusk&view=third\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=low&sh"
+    },
+    {
+      "name": "art4@autumn-dusk",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=low&show=art4&season=autumn&time=dusk\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=low&show=art4&sea"
+    },
+    {
+      "name": "art5@summer-dusk",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=low&show=art5&season=summer&time=dusk\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=low&show=art5&sea"
+    },
+    {
+      "name": "art6@autumn-dawn",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=low&show=art6&season=autumn&time=dawn\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=low&show=art6&sea"
+    },
+    {
+      "name": "cam01@summer-day",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=cam01&season=summer&time=day\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=cam01&"
+    },
+    {
+      "name": "cam02@summer-day",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=cam02&season=summer&time=day\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=cam02&"
+    },
+    {
+      "name": "cam03@summer-day",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=cam03&season=summer&time=day\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=cam03&"
+    },
+    {
+      "name": "cam04@summer-day",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=cam04&season=summer&time=day\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=cam04&"
+    },
+    {
+      "name": "cam05@summer-day",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=cam05&season=summer&time=day\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=cam05&"
+    },
+    {
+      "name": "cam06@summer-day",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:36079/?shot=1&q=high&show=cam06&season=summer&time=day\nCall log:\n  - navigating to \"http://127.0.0.1:36079/?shot=1&q=high&show=cam06&"
+    }
+  ],
+  "errors": [],
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "tour": [
+    {
+      "seconds": 120.02,
+      "frames": 6153,
+      "fps_mean": 51.26820696257743,
+      "p95_ms": 26.6,
+      "max_ms": 160.6
+    },
+    {
+      "seconds": 120,
+      "frames": 6460,
+      "fps_mean": 53.832301547553755,
+      "p95_ms": 24.6,
+      "max_ms": 36.5
+    },
+    {
+      "seconds": 120,
+      "frames": 6547,
+      "fps_mean": 54.557151261722744,
+      "p95_ms": 25.3,
+      "max_ms": 35.7
+    }
+  ],
+  "finished": "2026-11-16T18:58:06.413Z"
+}

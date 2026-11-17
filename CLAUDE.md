@@ -74,7 +74,9 @@ pnpm run edges                      # ~95 s: does his whole body fit everywhere 
 pnpm run nearplane                  # ~80 s: the camera's near plane cuts into nothing along the routes and porches, behind him and from his eyes
 node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cushion, at the pace a visitor sees them (~3 min)
 node tests/e2e/run.cjs seats        # every cushion and stool sat on, hurrying, the place not drawn
-node tools/play-t00.cjs [outdir] [summit bell tea phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic)
+node tests/e2e/run.cjs loft         # up the summit pavilion: the stair, round the balcony, a photograph, a reload, down and out (~5 min)
+node tools/opening-views.cjs [outdir] [--only=frames|moods]   # the opening after 入山: 起/承/落 and the gate's title at 16:9, 4:3 and a phone; the first frame in four moods
+node tools/play-t00.cjs [outdir] [summit bell tea phone director opening opening-phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic); `director` films the eye going to each place's shot and back
 node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
 node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
@@ -100,7 +102,7 @@ stands on walkable ground, every mood has every field. The end-to-end scenarios 
 page and fail on any page error, console error, failed request or HTTP error; `tests/e2e/lib.cjs` holds what they share.
 A scenario that asks what the page does and never looks at the picture is opened with `+ BARE` (the place built but not
 drawn: `?off=` hides parts and unbuilds nothing), which runs it about three times faster under software rendering; one
-that looks at the picture (`boot`, `halls`, `snow`, `moods`, `views`, `photo`, `photo-ui`, `menu`, `parts`, `rites`, `stairs`, `drop`) draws all of it.
+that looks at the picture (`boot`, `halls`, `snow`, `moods`, `views`, `photo`, `photo-ui`, `menu`, `parts`, `finish`, `rites`, `stairs`, `drop`) draws all of it.
 When you add something a visitor can do, add a scenario (or extend one) that does it; when you add a place, add it to
 `places` in `plan.test.mjs`; when you fix a bug, first make a test fail for it. Wait on frames (`t.frames(n)`), never on
 seconds: software rendering may draw one frame a second or ten.
@@ -109,7 +111,7 @@ Run `shots.js` after any visual change and look at the PNGs; a test passing says
 
 URL parameters for manual testing: `?show=<view>`, `?cam=x,z,yaw,pitch`, `?fast=1` (walk 14 m/s instead of 2.1),
 `?shot=1` (freeze time, hide the controls), `?q=low|medium|high` (fix the quality tier, disables the governor),
-`?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title),
+`?season=spring|summer|autumn|winter`, `?time=dawn|day|dusk|night`, `?view=first|third`, `?enter` (skip the title), `?up=lingxiao` (start up on the summit pavilion's balcony),
 `?debug` (open by itself on the dev server and on a pull request's preview, `?debug=0` keeps it shut; the published site never loads it; `app/src/debug.js`: a lil-gui panel that reads and drives the hooks below — position and named or room views, season, hour, tier, `__cost`/`__census`, the level's completion (`__journey`/`__visit`), and `__part()` switches for each part and pass; the backtick key shows or hides it), on the workbench (the dev server and a pull request's preview, the same gate; the published site ignores them) `?seals=all|none|bell,tea…` (a book for that visit only, kept in memory, never stored), `?at=<place id>` (steps in and stands him there) and `?play=ending|<observance>` (and begins it there: the close on the summit mat, or bell, tea, incense, sutra, well, lamp, sit; `game.js`), `?devpose` (the dev server only, `app/src/devpose.js`: the address follows him as `cam`, view, season, hour and `in`, so a reload after a code change puts him back where he stood; C copies the link; the published build leaves it out), `?tour=120x3` (the measured walk: bamboo to first court and back for 120 s, three times, after 10 s of warming up; the
 page then shows mean frame rate and 95th-percentile frame and offers `performance.json` and `frame-times.csv`). With `?shot`, `?show` or
 `?cam` the default is a summer day seen in first person, so old screenshots stay comparable; without them it is the
@@ -119,7 +121,7 @@ Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install,
 scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
 The slower scenarios (`stairs drop`, with `pnpm run edges`) run beside each publication in `.github/workflows/e2e.yml`, not in its
-way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a week and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
+way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a night (19:17 UTC) and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
 ## Architecture
@@ -128,12 +130,29 @@ way, and do not repeat the parse, type and unit checks `verify` has just made; t
 
 **Indoors (`app/src/interior.js`).** Every hall the plan marks with `hall: { id, kind, name }` can be entered: `put()` records its door, where to stand on coming out and which way to face (`site.halls`), and `buildInteriors` builds one room for each, side by side sixty metres under the courts, furnished by `kind` (`buddha`, `figure`, `chan`, `tea`, `library`, `patriarch`, `pavilion`). What stands and hangs overhead is `app/src/framing.js`: the room's columns stand on the building's own column lines (`hall.xs/zs`, scaled into the room), leaving out any that would stand on the dais, in the way to the altar or before a frame; crescent beams run front to back on their cap blocks and into brackets in the walls; and the ceiling follows the kind (`CEILING`): coffered with a caisson over the figure, plain small squares in the library, or the roof open to the rafters. `room.frame` holds it as data and `tests/unit/interior.test.mjs` checks that every column carries a beam, every beam rests on something, and every frame and the altar can still be walked to. While he is inside, `walker.setRoom(room)` replaces the plan with the room's floor, walls and furniture; the courts are not drawn, the sun is put out and the room's lamps are lit (`indoors()` in `yard.js`). The Buddha and pedestal models (`app/shared/models/*.glb`, as published: meshopt and Basis packed) are fetched once and stood in every hall with an altar. Along each room's side walls hang frames (the first in each hall holds a small ink painting drawn by `app/src/leaves.js`): what hangs in one is data, `GALLERY["<hall>-w1"] = { title, text, image }` in `interior.js`, shown when a visitor stands before it and presses E. Beside the great Buddha and in three other halls stand scans of real sculpture that two museums publish as public domain (`STAND` in `interior.js` says which stands where; `app/shared/models/`, thinned and vertex-painted by `tools/statues.py`; fetched when a hall is first entered; `__statues()` reports them). They are placeholders until the project carves its own, and `docs/JINGSHAN.md` says which only stand in for another figure. This is where the story's artworks go. Beside the leaves hang real works (`app/levels/t00/works.js` and `app/levels/t00/gallery/`, both written by `tools/gallery.py` from openly licensed museum records; `HANG` there says which hall): standing before one and pressing E opens a card (`#piece`) with the picture, an encyclopedia note and the museum's source line, which must stay with it. `__work(slug)` opens one; `__work()` reports it. `?in=<hall id>` starts inside a hall. The indoor cameras (a view of each hall's furniture and one of its ceiling) are `HALL_VIEWS` in `app/levels/t00/hall-views.js`, separate from the six locked acceptance views in `site.views`; `node tools/inside.cjs tools/out/hall-views --views t00` draws all sixteen (the level is the folder under `app/levels/`; a later temple keeps its own table there and passes its own name), and `hallViewURL` makes a one-click address for one.
 
+**Up on the summit pavilion (`site.lofts`, `walker.setLoft`, `upstairs()` in `yard.js`; issue #101).** The top storey of
+the Lingxiao pavilion is walked round on its balcony. `buildHall`'s `loft` option lays four strips of floor between the
+storey's walls and its railing (decks tagged `loft: "lingxiao"`) and gives the railing an odd number of bays; `putStack`
+registers the storey in `site.lofts` (floor, door, the way he faces there, the rectangles the eye keeps between) and cuts
+the skirt roof below it out of `walk.roofs` above its floor. Those decks are floor only while `walker.setLoft(id)` says he is
+up there: from the summit below, a tap or a look aimed at the pavilion does not land on them; up there nothing else can be
+stood on (`blocked`), there is no hop down, and `eyeShut` keeps the eye inside the railing. He goes up from the stair in the
+north-west corner of the ground-floor room (`interior.js`, `hall.up`, `room.stair`), pressing E (登楼) at its foot, behind
+the veil (`climbTo`), and comes down (下楼) from the top storey's door. Up there he is out of doors (`inside` false: the courts,
+the sun, the court's echo, the summit's music) and sees with his own eyes only: `setView` refuses the third person and says
+so once; coming down gives back the view he had. A place kept up there carries `up` (`resume.js`). How wide the balcony is and
+how far the top eave reaches are `LOFT` in `site.js` and nowhere else: 2.4 m out under a 3.2 m eave, the owner's choice of
+2026-11-17. The balcony then reaches past the second storey's column line, so `putStack` sets `pingRing` and its bracket sets
+stand on those columns' heads, one step out to the rim board, as the Yingzao Fashi has a pingzuo (`docs/t00/decisions.md`, 登凌霄阁).
+`views.loft` stands at its door, named in `site.viewUp`; `?up=lingxiao` starts up there (at `?cam` if given); `__up()`,
+`__lofts`; `tests/unit/loft.test.mjs` and the e2e scenario `loft`.
+
 **Courtyard pipeline (`app/yard.js`).** Creates the renderer, then composes the modules in `app/src/` in a fixed order: `createMaterials` → `buildSite` → `createWalker` → sky → ground → backdrop → bamboo → props → post → trees → drift → `mergeStatic` (everything built so far, batched per material into a few zones along the axis; a mesh that must stay itself sets `userData.keep`) → mood → monk. It owns input (drag to look, tap the floor to walk, tap bell/drum to strike, WASD), the frame loop, and the quality governor. Everything else is a module exposing one `create*`/`build*` function.
 
 **The plan is data (`app/src/site.js`).** `buildSite(M)` places every building with `put(opts, [x, z], quarterTurns, level, baseY)`, which calls `buildHall` and also registers the building's footprint into two side structures that everything else reads:
 - `walk` = `{solids, decks, ramps}` rectangles. `createWalker` turns these into `heightAt / blocked / onGround`. Decks and ramps are "carved" floors that override solids, so stairs and platforms are walkable even inside a building's blocking box.
   `walk.roofs` is what only the eye must keep out of: each building's eave footprint with the heights its beams,
-  tiles and ridge take up, its walls (`core`) and its platform (`body`, `edge`); `walk.drops` are the porch edges he may hop down from.
+  tiles and ridge take up, its walls (`core`) and its platform (`body`, `edge`); `walk.drops` are the porch edges he may hop down from, and, from the ground below one, jump up onto when the platform is no higher than his own jump reaches (`findClimb`, `REACH` = v²/2g from `JUMP`, in `drop.js`; Space, facing the edge, from outside its 0.5 m apron; the arc is his own `JUMP` and he goes over late, so that his leading foot reaches the edge after the arc has risen above it).
   `walk.posts` stand in the way even on a carved floor: a round one is `{x, z, r}` with its real radius (every outer column of every building), a square one a rectangle drawn already larger than the thing (a table on a porch, the cheek of a stair).
 - **He has a width.** The walker moves a point, but the novice reaches `BODY` (0.38 m, `geo.js`) from it. Whatever stands in his way must keep that point its own shape plus `BODY` off: a round post gets it added by the walker; a solid, a deck's edge or a square post must be drawn with it. A unit test holds `BODY` to the model's measured reach, and `pnpm run edges` (`tools/edges.mjs`, a minute and a half) stands him on every reachable spot of the plan and fails if any part of him is more than a centimetre inside anything built, his shoes and hem below the knee included (there his stride counts only sideways; treads and floors he can step onto are the stair tests' and the leg solver's); `--table docs/t00/edge-coverage.md` writes the building-by-building table, side by side and part by part (column base, sill, cheek, rail end, wall foot). A mat or sill his shoe may come down on is a deck (a round deck `{ x, z, r, h }` is a mat). Run it after moving or adding anything he can walk up to.
 - `shade[level]` rectangles darken the paving under buildings and walls (consumed by `ground.js`).
@@ -158,6 +177,8 @@ the side, and no ledge under the stone looking up at the sky (one shows as a pal
 **Materials: a pattern from the world, fine grain from a scan (`app/src/materials.js`, `glsl.js`, `textures.js`).** `procMat(key, params, body, { tex })` patches `MeshStandardMaterial` so `body` (GLSL) writes `col`, `rough_`, `bump_`, `ao_`, `emit_` and `nd_` (a world-space nudge to the normal) from world position. The large pattern is still worked out in the shader (courses of stone, rows of tile, damp at the foot of a wall); the fine grain comes from scanned surfaces in `app/shared/textures/` (Poly Haven, CC0, packed by `tools/textures.py`: `<name>_a.webp` colour, `<name>_n.jpg` normal x/y + roughness), laid on from three sides (`triA`/`triN`) and divided by the scan's own mean colour so the material's colour stays in charge. Until a scan arrives its mean colour stands in, so the first frame is whole. Every mesh drawn with these needs a per-vertex `ao` attribute; `geo.mesh()` bakes it (`bakeAO`), and `geo.merge()` normalises geometries so they can be batched into one draw per material. The paving (`ground.js`) is lit by hand because of its mirror, but takes the sun's shadows from the same shadow map. Its soft darkening under eaves and along walls comes from a light map baked when the place is built (`bake` in `ground.js`: distance to the nearest of `site.shade`'s rectangles, eight points to the metre), not from a loop in the shader. `mergeStatic` also welds vertices that faces share exactly, which costs a couple of seconds of loading and keeps a third of them.
 
 **Quality (`app/src/quality.js`).** Three tiers (render scale, pixel budget, MSAA, planar reflection scale, shadow map). Mobile UAs always start on `low`; a governor drops scale → reflection → bloom when frames average over 30 ms. `?q=` pins a tier.
+
+**The film's finish (`post.js`, `lut.js`, `shadows.js`, `fog.js`; #72 first stage, `docs/t00/art-goal.md`).** Every tier: halation (a warm tint on the bloom's wide levels, `mood.hal`), a colour table baked per mood from `mood.lut` (three-way grade, saturation, split toning; identity for summer by day, J01) and mist in layers (`fog.js` rewrites three's fog chunks so density falls off with height, `mood.fogLayer`; the shared `U.uFogLayer` reaches every material through a hook under `Material.prototype.onBeforeCompile` that keeps each material's own hook and cache key; zero strength is plain air). High tier only (`depth`, `gtao`, `softShadow`, `dof` in `TIERS`): the composer keeps the scene's depth with its colour (the scene is always drawn into `renderTarget1`), GTAO is worked from that depth at half size (the scene is not drawn twice), PCSS replaces three's PCF function in `shadowmap_pars_fragment` (the blocker's distance found by asking the comparing sampler at four depths), the shadow map is 3072×6144, and a very shallow depth of field is focused only on `?shot` and while the camera is raised. Bamboo sprays cast their cut-out shadows from the middle tier up (`leafShadow`). `?off=gtao,halation,lut,dof,layers` (also `__part()`), `?off=softshadow,leafshadow` at load; `__probe().post` and `.layers` report it; the `finish` scenario checks it.
 
 **The season and the hour (`app/src/mood.js`).** `moodOf(season, time)` returns one table of numbers (sun, sky, fog,
 grade, snow, wetness, lamp light, leaf colours, what drifts in the air, the verse for the photograph). `yard.js`'s
@@ -198,6 +219,62 @@ the edge), any other wall some way above his head, and every roof from the foot 
 (`walk.roofs`). `tests/unit/eaves.test.mjs` raycasts from his head to the eye against the Guanyin hall's real meshes,
 and `tests/unit/sweeps.test.mjs` does the same round every building on the plan.
 
+**The eye during an observance (`app/src/director.js`, issue #71).** While the bell, the incense, the tea, the line,
+the well, the lamp or the sitting is made, the eye leaves his shoulder for the place's own shot and comes back. The
+shot is data: `site.places[id].shot = { at, look, fov, in, out, drift, keep }` in the place's own frame (x to his left,
+z the way he faces, y up from the floor there; `SHOTS` in `site.js`, the incense's in its room in `interior.js`), and
+`site.views["shot-<id>"]` stands him there for `shots.js` (`?show=shot-<id>` poses him as the observance has him and puts
+the eye on the shot at once). The director is a layer under `y.cine`: each frame `yard.js` works out the following eye
+as usual, then `director.apply` mixes it toward the shot (in over 1.6–2.4 s, back over 0.8–1.2 s, smootherstep, round
+him on an arc, timed by the observances' clock `riteNow()` rather than the frame's capped `dt`, so a slow page does not
+leave the eye behind the hands), then a passage that takes the eye (`rites.close`) starts from whatever that gave and lets the director
+go (`y.undirect()`). Every swing is made, never cut (the owner: 打卡时用动画，不要硬切转场): `planSwing` tries the short
+way round him, the long way, over, wide, in by his shoulder, then `wayRound` (a path over a 0.5 m grid of clear points
+round him, pulled taut, on a smooth curve), takes the first clear one (each point tested every 4 cm, the chosen one again
+with a 6 cm margin; clear of whatever the following eye may not be in and also of a column, a stool or a tea table, which
+the following eye lets cross the view, and of a railing by 12 cm, `walk.rails` / `walker.railNear`: `inWay`) and stretches its time so that it never turns faster than 144° a second going there (190° back) nor
+travels faster than 15 m/s. Only with `prefers-reduced-motion` do the shutter's two ink leaves (`#curtain.cut`, drawn
+frame by frame) close, the eye is moved, and they open. The way is worked out a little at a time (`planSteps`, a generator,
+at most `DIRECT.budget`, 4 ms, of a frame), the eye waiting where it is until it is known (a frame, at most about a dozen);
+the way back, worked out while the swing goes there, is taken at once if neither end has moved. `node tools/director-swings.mjs`
+measures every swing from twelve directions (time, route, nearest surface of the real meshes, near-plane cuts, frames waited,
+most milliseconds in a frame). `game.js` calls `y.direct(id)` when the
+observance begins and `y.direct(null)` when it ends; `rites.js` sends it home `y.directOut()` seconds before the hands are
+done (`homeward`), but only once it has arrived (`y.directArrived()`); an observance over (or nearly) before its swing has arrived lets it arrive, rest
+`DIRECT.beat` (0.6 s) and then come home (`back({ soft: true })`; no soft return leaves a shot it has rested on for less): the observance never turns a swing back half way, the visitor's
+step, stick, drag, tap on the ground or Esc does, at once. Any step, stick, tap on the ground, drag of the view, turn of the held mouse or Esc sends it home at
+once; pressing E again at the bell does not. A door, `travel`, `place`, `__pose` and 回到起点 drop it without a swing.
+While it is away `body.directing` fades the way, the slips and the book (not the button, what is said, the hint line,
+the breath or the stick), and the brush rings on the ground are not drawn. When the eye is sent, `warmShot` draws the
+place once from the shot into a small unseen target (with whatever is marked `userData.warm`, such as the well's
+rings), so nothing it first sees stalls the swing; not `renderer.compile`, which compiles every room under the courts.
+A shot marked `off` (the well's, `off: "#99"`: its niche is unlit until #76) is kept in the data and tested, but not gone to.
+An observance made sitting sets him on its seat's own top (`placeLift` in `site.js`), as sitting down anywhere does. 自动镜头 in the pause menu (`settings.autocam`, on by default) turns it off; under `?shot` it is off
+except for the `shot-<id>` views. The camera raised mid-swing lands on the shot (`director.finish()`), raised on the way home it is
+with him at once, and a shot does not drift while the camera is up; on a touch screen the slips stay, faint, so 留影 can
+be reached. `tests/unit/director.test.mjs` holds every shot clear of solids, him and his things
+inside the safe area (NDC within 0.9 at 16:9, 4:3, 9:16, 19.5:9), the drift within 1°/s, every swing from twelve
+directions round each place within 2.4° (back: 3.2°) and 0.25 m a frame, through nothing, and never cut; the `director` scenario
+does it in the page. `__director()` reports phase, weight, cuts, swings and the largest turn between frames.
+
+**The opening after 入山 (`app/src/opening.js`, issue #110).** A first visitor (no seal, no kept place; again after
+从头走起; never under `?cam` `?show` `?shot` `?in` `?enter` `?tour` `?at` `?play` `?seals`: `openingFor`) is shown where
+the walk goes before it is theirs: the eye starts below the library's ridge with only the summit pavilion's upper storeys
+over it in the mist, a bell sounds up the mountain (`mountainBell`, our own G, far and light; the close's `farBell` answers
+it), and the eye is drawn back and down over the roofs, the gate and the tops of the bamboo (`GROVE` in `site.js`, shared
+with `yard.js`'s bamboo), into the clear way of the last flight and onto the following eye behind him (`WAY`,
+`openingPlan`). It is held to the director's limits (15 m/s, 144°/s, every point clear by `inWay`), waits on its first
+frame until the page draws steadily (`OPENING.hold`), and ends on the following eye as it is that frame. A click, key,
+tap, wheel or Esc (swallowed: it walks nobody anywhere) brings it down the rest of the same way in 0.8–1.2 s; only
+reduced motion gets the ink; 自动镜头 off skips it (the bell still sounds). While it plays `body.opening` hides what lies
+over the picture, the music waits (`holdMusic`) and the line about walking waits for the hand-over. `y.opening(eye)` in
+`yard.js` plays it; `__opening()` reports it, `__openingAt(secs)` holds the eye there for a picture (`node
+tools/opening-views.cjs`: its three movements on three screens, the first frame in four moods). The prologue's title
+(`#prologue`, `prologueTitle` in `game.js`, `atGate`): the first time he comes round the screen wall with the gate before
+him, 序章 云径禅寺 rises down the right of the picture with the theme's first note (`prologueNote`), which is the first note of the gate's first phrase begun with it (`titlePhrase` in `score.js`; until the title has risen the gate's place keeps the stair's music, `awaitTitle`), and fades, once in a
+pilgrimage (`yunjing.prologue.v1`, emptied with the book); `__prologue(true)` raises it for a tool.
+`tests/unit/opening.test.mjs` holds the way, the skip, the hold and who sees it; the `opening` scenario plays it in the page.
+
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
 `walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
 
@@ -227,7 +304,7 @@ fundamental about 34 s, the high partials dying first; `hillEcho` answers it fro
 `tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. The first time the third stroke sounds on a walk, a dozen birds go up from the tall
 cryptomerias nearest the tower and fly off toward the hills (`flock.js`, one instanced draw, wings beaten in the vertex
 shader; `audio.js`'s `flutter`; not at night, not from indoors; `__flock(go?)`). When the close says a bell answers in
-the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__cues()`). Water drips from
+the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__cues()`). The close has its own music (`endingPhrase` in `score.js`, begun by `closeMusic` from `finale` with the far bell's and the title's times, faded by `passClose` when passed over): the string gives the theme slowly under the words, only the held fifth sounds under the far bell, and the flute answers with the title and stops on D, not home; the whole theme owed for the seventh seal waits until it is over. Water drips from
 the eaves only after rain (`place().wet`), not on dry autumn stone or in snow. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
@@ -314,7 +391,7 @@ there is no view button and no jump button.
 **The seasons are earned (`journey.opened()`, `body.seasons`).** A first visit is the visitor's own season and hour and offers no
 choice. Filling the book the first time opens them (`opened` in `yunjing.journey.v1`, kept through 重新朝山): `game.js`
 sets `body.seasons`, and everything marked `need-seasons` shows (a row in the photograph's settings, two rows in the pause
-menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
+menu, T in the key card); the line at the foot of the view says so once (`told`). In the pause menu and the T panel the hour row begins with 随时辰 (`data-follow`), the ring on it by default: the hour follows the visitor's clock (`hourFollow` in `mood.js`, checked every 20 s in `yard.js`, a cut like any change of hour, paused while the camera is up) until a hand picks one (`state.follow = false`), which holds for that page only, is stored nowhere and is gone on reload; pressing 随时辰 returns to the clock (#135). The photograph's own rows are unchanged. `?time=`, `?shot`/`?show`/`?cam` and `__mood()` start with `follow` off. `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
 **Four languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese, English or Korean, by `?lang=`,
@@ -367,7 +444,7 @@ drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and pape
 (`unicode-range`) so that a slip written down the page has its commas in place.
 
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
-opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, how wide the view is (`fov`, degrees
+opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, 自动镜头 (`autocam`: the eye goes to each place's shot during an observance), how wide the view is (`fov`, degrees
 added to the walk's 50° behind him or 65° from his eyes; the fixed views keep 44°/52°), volume, the key card, and
 a way back to the start of the path, and 鸣谢 (the page of thanks and sources, below). The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
 validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
@@ -386,7 +463,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
 to `__probe` rather than reaching into the page from a test.
 
