@@ -1,0 +1,55 @@
+asset_id,file,type,source,author_or_origin,license,modified,used_for,status,commercial_use,attribution_required,license_url,checked_on
+TEX-wood,app/shared/textures/wood_a.webp + wood_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,柱、梁、枋、栈道、栏杆（调成老杉木灰黄）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-stone,app/shared/textures/stone_a.webp + stone_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,石阶、洞底、码头（调成丹霞红/湿灰）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-blocks,app/shared/textures/blocks_a.webp + blocks_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,岩口砖砌券洞、挡墙,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-plaster,app/shared/textures/plaster_a.webp + plaster_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,白灰墙、岩面白灰（不是 T01 黄墙）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-bark,app/shared/textures/bark_a.webp + bark_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,杉、松、樟树干,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-leaves,app/shared/textures/leaves_a.webp + leaves_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,杉针、阔叶（需分两套调色）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-weave,app/shared/textures/weave_a.webp + weave_n.jpg,scanned PBR texture,polyhaven.com (T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,蒲团、幡、帘,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+FONT-brush,app/shared/fonts/YunjingBrush,cut font,T00; Ma Shan Zheng,Project / OFL,SIL OFL 1.1,cut by tools/fonts.py,标题、印章,reuse,yes,yes (OFL notice),https://openfontlicense.org,2026-11-17
+FONT-kai,app/shared/fonts/YunjingKai,cut font,T00; LXGW WenKai,Project / OFL,SIL OFL 1.1,cut by tools/fonts.py; reserved name renamed,标签、对白、匾额,reuse,yes,yes (OFL notice),https://openfontlicense.org,2026-11-17
+FONT-xing,app/shared/fonts/YunjingXing,cut font,T00; Zhi Mang Xing,Project / OFL,SIL OFL 1.1,cut by tools/fonts.py,手写、诗、草图,reuse,yes,yes (OFL notice),https://openfontlicense.org,2026-11-17
+FONT-bang,app/shared/fonts/YunjingBang,cut font,T00; Yuji Boku,Project / OFL,SIL OFL 1.1,cut by tools/fonts.py,重笔匾额,reuse,yes,yes (OFL notice),https://openfontlicense.org,2026-11-17
+FONT-serif,app/shared/fonts/YunjingSerif,cut font,T00; Noto Serif SC,Project / OFL,SIL OFL 1.1,cut by tools/fonts.py,正文衬线,reuse,yes,yes (OFL notice),https://openfontlicense.org,2026-11-17
+FONT-seal,app/shared/fonts/YunjingSeal,cut font,T00; Noto Serif SC Black,Project / OFL,SIL OFL 1.1,cut by tools/fonts.py,印章,reuse,yes,yes (OFL notice),https://openfontlicense.org,2026-11-17
+CODE-three,node_modules/three (bundled),library,three.js r186,three.js authors,MIT,bundled by Vite,渲染引擎,reuse,yes,yes (MIT notice),https://github.com/mrdoob/three.js/blob/dev/LICENSE,2026-11-17
+MODEL-buddha,app/shared/models/,3D model,如是我闻 /zen; owner-confirmed,rushiwowen / owner,owner-confirmed project use,meshopt + Basis packed,上层小殿像设占位；需说明是占位,reuse,yes,no (per owner),"(owner confirmation, 2026-11-15)",2026-11-17
+MODEL-pedestal,app/shared/models/,3D model,如是我闻 /zen; owner-confirmed,rushiwowen / owner,owner-confirmed project use,meshopt + Basis packed,佛坛/座占位,reuse,yes,no (per owner),"(owner confirmation, 2026-11-15)",2026-11-17
+TEX-danxia,app/shared/textures/danxia_*.webp (planned),procedural + scanned texture,T02 new; Poly Haven or procedural,Project / Poly Haven (TBD),CC0 or project-owned,none yet,丹霞红岩：层理、湿痕、苔、水痕,planned,yes,no (if CC0),https://polyhaven.com/license,2026-11-17
+TEX-fir,app/shared/textures/fir_*.webp (planned),scanned texture,T02 new; Poly Haven or TEX-wood recolour,Project / Poly Haven (TBD),CC0 or project-owned,none yet,老杉木灰黄、裂纹、节疤,planned,yes,no (if CC0),https://polyhaven.com/license,2026-11-17
+TEX-grassash,app/shared/textures/grassash_*.webp (planned),procedural texture,T02 new,Project,project-owned,none yet,草灰泥屋面,planned,yes,no,(project),2026-11-17
+TEX-lime,app/shared/textures/lime_*.webp (planned),scanned/procedural texture,T02 new; TEX-plaster recolour,Project / Poly Haven (TBD),CC0 or project-owned,none yet,白灰墙、岩面白灰,planned,yes,no (if CC0),https://polyhaven.com/license,2026-11-17
+VEG-fir,app/levels/t02/plants.js (planned),procedural vegetation,T02 new,Project,project-owned,none yet,杉木（林间窄路）,planned,yes,no,(project),2026-11-17
+VEG-moss,app/levels/t02/plants.js (planned),procedural texture/instances,T02 new,Project,project-owned,none yet,苔（岩面、石阶）,planned,yes,no,(project),2026-11-17
+FX-mist,app/levels/t02/fx.js (planned),particle/sprite FX,T02 new,Project,project-owned,none yet,洞口外薄雾,planned,yes,no,(project),2026-11-17
+FX-lightshaft,app/levels/t02/fx.js (planned),volumetric/light FX,T02 new,Project,project-owned,none yet,洞口光（上午）,planned,yes,no,(project),2026-11-17
+CAVE-ganlu,app/levels/t02/cave.js (planned),procedural mesh,T02 new; dimensions from S08/S05,Project,project-owned,none yet,主岩体：洞口 37×32 m、深 27 m,planned,yes,no,(project),2026-11-17
+BLDG-rock-temple,app/levels/t02/buildings.js (planned),procedural building,T02 new; 宋构逻辑 from S02/S06,Project,project-owned,none yet,原创架空木楼：蜃阁/上殿/两阁/库房体块,planned,yes,no,(project),2026-11-17
+BLDG-platform,app/levels/t02/platform.js (planned),procedural structure,T02 new; 状元柱/短柱/横材 from S02,Project,project-owned,none yet,主平台、状元柱、短柱、大引、横材,planned,yes,no,(project),2026-11-17
+BLDG-walkway,app/levels/t02/walkway.js (planned),procedural structure,T02 new; 101 级石阶/栈道 from S08/S18,Project,project-owned,none yet,石阶、侧向栈道、栏杆,planned,yes,no,(project),2026-11-17
+INT-upper-hall,app/levels/t02/interior.js (planned),procedural interior,T02 new,Project,project-owned,none yet,上层小殿：佛坛、像设占位、梁架、残彩,planned,yes,no,(project),2026-11-17
+WATER-lake,app/levels/t02/lake.js (planned),procedural water,T02 new; level 275 m from S17,Project,project-owned,none yet,湖面远景；不做全镜面,planned,yes,no,(project),2026-11-17
+FX-drip,app/levels/t02/fx.js (planned),particle/line FX,T02 new; drip from S01/S05,Project,project-owned,none yet,洞顶滴水、石面涟漪,planned,yes,no,(project),2026-11-17
+SFX-cave-reverb,app/src/audio.js (planned),synthesised audio,T02 new,Project,project-owned,none yet,洞穴混响 3–5 s，暗,planned,yes,no,(project),2026-11-17
+SFX-wood-step,app/src/steps.js (planned),synthesised audio,T02 new; T00 steps.js extended,Project,project-owned,none yet,木板脚步、空腔、吱呀,planned,yes,no,(project),2026-11-17
+SFX-water,app/src/audio.js (planned),synthesised audio,T02 new,Project,project-owned,none yet,湖水、船,planned,yes,no,(project),2026-11-17
+SFX-rain,app/src/audio.js (planned),synthesised audio,T02 new,Project,project-owned,none yet,洞外雨、洞内滴水,planned,yes,no,(project),2026-11-17
+SFX-forest,app/src/audio.js (planned),synthesised audio,T02 new; T00 trees sound extended,Project,project-owned,none yet,风过杉针、鸟、虫,planned,yes,no,(project),2026-11-17
+MUSIC-t02,app/levels/t02/score.js (planned),synthesised music,T02 new,Project,project-owned,none yet,稀疏配乐/主题,planned,yes,no,(project),2026-11-17
+WORK-cv-01,(planned) app/levels/t02/gallery/cma-shakyamuni-triad-2009-342-1.webp,museum image,Cleveland Museum of Art 2009.342.1,Cleveland Museum of Art,CC0,none yet,主殿：华严三圣,candidate,yes,no (courtesy),https://clevelandart.org/art/2009.342.1,2026-11-17
+WORK-up-01,(planned) app/levels/t02/gallery/cma-amitabha-triad-1974-35.webp,museum image,Cleveland Museum of Art 1974.35,Cleveland Museum of Art,CC0,none yet,上殿：西方三圣,candidate,yes,no (courtesy),https://clevelandart.org/art/1974.35,2026-11-17
+WORK-gy-01,(planned) app/levels/t02/gallery/cma-white-robed-guanyin-1972-160.webp,museum image,Cleveland Museum of Art 1972.160,Cleveland Museum of Art,CC0,none yet,观音阁：白衣观音,candidate,yes,no (courtesy),https://clevelandart.org/art/1972.160,2026-11-17
+WORK-na-01,(planned) app/levels/t02/gallery/cma-white-robed-guanyin-1978-47-2.webp,museum image,Cleveland Museum of Art 1978.47.2,Cleveland Museum of Art,CC0,none yet,南安阁：白衣观音（辅）,candidate,yes,no (courtesy),https://clevelandart.org/art/1978.47.2,2026-11-17
+REF-cma-1984.7,(not downloaded),museum object photo,Cleveland Museum of Art 1984.7,Cleveland Museum of Art,CC0,none,水月观音铜像：造像参考，不挂墙,reference,yes,no (courtesy),https://clevelandart.org/art/1984.7,2026-11-17
+REF-cma-1950.579,(not downloaded),museum object photo,Cleveland Museum of Art 1950.579,Cleveland Museum of Art,CC0,none,德化白瓷南海观音：造像参考，不挂墙,reference,yes,no (courtesy),https://clevelandart.org/art/1950.579,2026-11-17
+REF-commons-ganlu,(not downloaded) File:Ganlu Temple.jpg,photo,Wikimedia Commons,Atlaslin,CC BY-SA 3.0,none,外观/崖壁参考,reference,conditional,yes (author + licence + link),https://creativecommons.org/licenses/by-sa/3.0,2026-11-17
+REF-commons-window,(not downloaded) File:Looking out through Ganlu Temple's rounded window.jpg,photo,Wikimedia Commons,Liedward390,CC BY-SA 4.0,none,洞内圆窗/框景参考,reference,conditional,yes (author + licence + link),https://creativecommons.org/licenses/by-sa/4.0,2026-11-17
+REF-commons-lake,(not downloaded) File:大金湖甘露寺 - panoramio.jpg,photo,Wikimedia Commons,江上清风1961,CC BY 3.0,none,湖上远望参考,reference,conditional,yes (author + licence + link),https://creativecommons.org/licenses/by/3.0,2026-11-17
+REF-commons-lookup,(not downloaded) File:仰望大金湖甘露寺 - panoramio.jpg,photo,Wikimedia Commons,江上清风1961,CC BY 3.0,none,洞口仰视参考,reference,conditional,yes (author + licence + link),https://creativecommons.org/licenses/by/3.0,2026-11-17
+REF-commons-bridge,(not downloaded) File:甘露寺景区的状元桥 - panoramio.jpg,photo,Wikimedia Commons,江上清风1961,CC BY 3.0,none,到达路径/状元桥参考,reference,conditional,yes (author + licence + link),https://creativecommons.org/licenses/by/3.0,2026-11-17
+REF-kankyo-pdf,(not redistributed) Kankyo University bulletin 12 (2014) 137-156,academic PDF,Kankyo University,"Suzuki Tomohiro, Nakashima Toshihiro, Asakawa Shigeo",all rights reserved; citation only,none,形制/结构/大佛样比较,reference,no,yes (cite author/journal/pages),(publisher),2026-11-17
+REF-fjnews,(not redistributed) 福建日报 2024-05-21,news article,fjnews.fjsen.com / 福建省文物局,福建日报 / 福建省文物局,all rights reserved; citation only,none,历史/火灾/重建/形制,reference,no,yes (cite),(publisher),2026-11-17
+REF-osm,(API) OSM node 4979842994 + footways,map data,OpenStreetMap,OpenStreetMap contributors,ODbL,queried 2026-11-17,坐标/步道/无建筑轮廓,reference,conditional,yes (© OpenStreetMap contributors),https://www.openstreetmap.org/copyright,2026-11-17
+REF-srtm,(API) opentopodata srtm30m,elevation data,opentopodata / SRTM,NASA / opentopodata,public data (check terms),queried 2026-11-17,山体/湖岸粗剖面,reference,unknown,yes (credit),https://www.opentopodata.org,2026-11-17
+BLK-1959-survey,(not used) 1959 测绘图/1960 模型,survey drawing,福建省文物管理委员会 / 张步骞 / 杜仙洲,—,copyright unclear,none,不描图、不进游戏,blocked,no,unknown,(none),2026-11-17
+BLK-temple-photos,(not used) 寺方/景区照片与文字,photo/text,甘露寺/景区,—,no redistribution permission,none,不直接搬运,blocked,no,unknown,(none),2026-11-17
