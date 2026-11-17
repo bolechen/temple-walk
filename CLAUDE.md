@@ -120,7 +120,7 @@ Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install,
 scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
 The slower scenarios (`stairs drop`, with `pnpm run edges`) run beside each publication in `.github/workflows/e2e.yml`, not in its
-way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a week and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
+way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a night (19:17 UTC) and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
 ## Architecture
@@ -371,7 +371,7 @@ there is no view button and no jump button.
 **The seasons are earned (`journey.opened()`, `body.seasons`).** A first visit is the visitor's own season and hour and offers no
 choice. Filling the book the first time opens them (`opened` in `yunjing.journey.v1`, kept through 重新朝山): `game.js`
 sets `body.seasons`, and everything marked `need-seasons` shows (a row in the photograph's settings, two rows in the pause
-menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
+menu, T in the key card); the line at the foot of the view says so once (`told`). In the pause menu and the T panel the hour row begins with 随时辰 (`data-follow`), the ring on it by default: the hour follows the visitor's clock (`hourFollow` in `mood.js`, checked every 20 s in `yard.js`, a cut like any change of hour, paused while the camera is up) until a hand picks one (`state.follow = false`), which holds for that page only, is stored nowhere and is gone on reload; pressing 随时辰 returns to the clock (#135). The photograph's own rows are unchanged. `?time=`, `?shot`/`?show`/`?cam` and `__mood()` start with `follow` off. `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
 **Four languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese, English or Korean, by `?lang=`,
