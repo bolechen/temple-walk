@@ -121,7 +121,7 @@ Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install,
 scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
 Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
 The slower scenarios (`stairs drop`, with `pnpm run edges`) run beside each publication in `.github/workflows/e2e.yml`, not in its
-way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a week and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
+way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a night (19:17 UTC) and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
 
 ## Architecture
@@ -302,7 +302,7 @@ fundamental about 34 s, the high partials dying first; `hillEcho` answers it fro
 `tests/unit/bell.test.mjs` holds its shape. The music steps back inside `strike()` for the bell (14 s) and drum. The first time the third stroke sounds on a walk, a dozen birds go up from the tall
 cryptomerias nearest the tower and fly off toward the hills (`flock.js`, one instanced draw, wings beaten in the vertex
 shader; `audio.js`'s `flutter`; not at night, not from indoors; `__flock(go?)`). When the close says a bell answers in
-the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__cues()`). Water drips from
+the far hills, `farBell` sounds one, a tone below ours (F2), dark and small (`__cues()`). The close has its own music (`endingPhrase` in `score.js`, begun by `closeMusic` from `finale` with the far bell's and the title's times, faded by `passClose` when passed over): the string gives the theme slowly under the words, only the held fifth sounds under the far bell, and the flute answers with the title and stops on D, not home; the whole theme owed for the seventh seal waits until it is over. Water drips from
 the eaves only after rain (`place().wet`), not on dry autumn stone or in snow. Deep in the bamboo at the start, in the strongest gusts only (`knockReady`), two culms now and then knock together (`knock`; the Chan books' Xiangyan woke at a shard striking bamboo); `__knock(go?)` reports and makes one. Birds (`bird`, `birdGap`) sing only out on the mountain, in the bamboo and on the path up, most at dawn and none at night, and never within the walls, after Chang Jian's 「萬籟此俱寂，惟聞鐘磬音」; `__bird(go?)`. The dragon well (`well.js`) has no running water, as the chronicles have it (one well left when the pool dried): every 7–15 s a drop falls, heard only within nine metres through `audio.js`'s `wellDrip` with the niche's echo, and sends two faint rings across the pool; `__well(drip?)` reports it. A season or hour changes only `moodMusic`'s few numbers.
 His steps are heard (`app/src/steps.js`, unit-tested), as what each comes down on: dry stone (a soft pat of a cloth
 shoe, heel then ball), stone wet after rain (the sole lifting off a film of water), a splash where water stands in the
@@ -389,7 +389,7 @@ there is no view button and no jump button.
 **The seasons are earned (`journey.opened()`, `body.seasons`).** A first visit is the visitor's own season and hour and offers no
 choice. Filling the book the first time opens them (`opened` in `yunjing.journey.v1`, kept through 重新朝山): `game.js`
 sets `body.seasons`, and everything marked `need-seasons` shows (a row in the photograph's settings, two rows in the pause
-menu, T in the key card); the line at the foot of the view says so once (`told`). `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
+menu, T in the key card); the line at the foot of the view says so once (`told`). In the pause menu and the T panel the hour row begins with 随时辰 (`data-follow`), the ring on it by default: the hour follows the visitor's clock (`hourFollow` in `mood.js`, checked every 20 s in `yard.js`, a cut like any change of hour, paused while the camera is up) until a hand picks one (`state.follow = false`), which holds for that page only, is stored nowhere and is gone on reload; pressing 随时辰 returns to the clock (#135). The photograph's own rows are unchanged. `?time=`, `?shot`/`?show`/`?cam` and `__mood()` start with `follow` off. `?season=`/`?time=` and `__mood()` are not gated. The key list (`#keys`) shows only
 where a fine pointer is likely; the stick (`#stick`) only where a coarse one is.
 
 **Four languages (`app/src/i18n.js`, `docs/t00/I18N.md`).** The page speaks Chinese, Japanese, English or Korean, by `?lang=`,

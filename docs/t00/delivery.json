@@ -71,6 +71,7 @@
   "scene_id": "T00",
   "summary": "登上凌霄阁顶层（#101，PR #122）：一层西北角木梯，梯脚按 E 过墨帘到顶层平坐；楼上只有第一人称、绕阁一圈、掉不下去、院子照常画、刷新后仍在楼上。回廊按所有者 2026-11-17 的决定：平坐坐在二层柱头上，楼面挑出 2.4 米、出檐 3.2 米，合法式（对照图在 evidence/loft/width/）。开发方陈述，不是验收结论。 另：Issue #110 入山后的开场镜头与山门前的序章标题（PR #136，开发方陈述，不是验收结论）：第一次来的人先见凌霄阁、听一声山钟，镜头顺山势落到他身后再交还控制；绕过照壁见山门时浮出「序章 云径禅寺」。 上一轮：Issue #71 所有者「打卡时用动画，不要硬切转场」（PR #87，开发方陈述）：转场一律走动画，被挡就换路线（长弧、抬高、绕宽、贴肩、空处寻路），转得远就放慢；墨帘只留给减少动态。 上一轮：雕刻身体改权重（#80 第二步，A 路）：用 Meshy 原文件以 NOVICE_WELD=8 重建 novice.glb（5178e1a4…），同一点的副本同一份权重（部件交界按 鞋>袍>皮肤>裤 取一份），手臂按在臂上的位置取权重，各部件内平滑 7 次；站立、合掌、走路不再撕裂，坐凳、盘坐仍撕裂（需分层模型，B 路）；默认仍是代码身体。 另：Issue #100（开发方陈述，等主创在预览上复核，状",
   "changes": [
+    "score.js/audio.js/game.js：序章结尾有自己的配乐（endingPhrase），按结尾时间线写：远钟处只留和声，出标题时箫接主题、停在 D 不收尾，跳过时淡出；第七印的完整主题等结尾奏完再来",
     "site.js：凌霄阁三层 loft: \"lingxiao\"，回廊宽与三层出檐只在 LOFT 一处（2.4 / 3.2）；楼面挑过二层柱线时 pingRing 让平坐铺作坐在二层柱头上；putStack 登记 site.lofts、把下层腰檐在 walk.roofs 里的顶截到上层楼面；views.loft 与 viewUp",
     "site.js createWalker：setLoft(id)，带 loft 标记的楼面只在楼上时才算地；楼上 blocked 只认楼面、eyeShut 不出栏杆内皮",
     "building.js：loft 选项铺四条楼面、栏杆分奇数段；走得到的平坐上名匾缩到底边离楼面 2 米",
@@ -146,7 +147,8 @@
     "yard.js：pointerup 里 toHall 加 !onBase（他的位置在 hall.box 的 xz 范围内时不成立），站在前廊、台阶上点地面就走到点的地方；站在院子里点大殿仍经台阶脚走到殿门",
     "授权核对 22 项条件补齐（#113）：ColBase 14 件卡片加加工说明（works.js processed、credits.js processedLine）；歇脚菜单加「鸣谢与来源」页（credits.js、#credits，四种语言，含名匾出典与加工）；kai.woff2、hand-ko.woff2 内部改名 Yunjing Kai / Yunjing Hand KO（fonts.py RENAMED，fonts.test.mjs 先失败）；shared/licenses/ 与 THIRD-PARTY-NOTICES.txt 进 dist，构建缺文件即失败（notices.test.mjs 先失败）；setup.mjs 改拷 Basis 的 Apache-2.0 LICENSE 与 NOTICE；登记表 22 行改 yes。开发方陈述，等评审。",
     "docs：景观评审 docs/t00/landscape-review.md（#112，只评审，没有改 app/），后续 issue #114–#119；tools/gpu/job.cjs 可拍任意 ?cam= 地址",
-    "feat(opening)：入山后的开场镜头（app/src/opening.js，用 director 的限速、inWay、墨帘）；山钟 mountainBell、序章琴音 prologueNote、配乐等交还后才开始 holdMusic；序章标题 #prologue（每趟朝山一次）；竹林范围挪到 site.js 的 GROVE；埋点 opening.played / opening.skipped / opening.title（Issue #110，PR #136）"
+    "feat(opening)：入山后的开场镜头（app/src/opening.js，用 director 的限速、inWay、墨帘）；山钟 mountainBell、序章琴音 prologueNote、配乐等交还后才开始 holdMusic；序章标题 #prologue（每趟朝山一次）；竹林范围挪到 site.js 的 GROVE；埋点 opening.played / opening.skipped / opening.title（Issue #110，PR #136）",
+    "Issue #135 所有者「先做折中」（开发方陈述）：时节开放后，歇脚菜单和 T 面板的时辰一行第一项是「随时辰」，默认圈在它上面，画面跟访客本地的真实时间走，跨过晨/昼/暮/夜的分界时自行换（20 秒查一次，留影举起或冻结时不换；换时辰现状是硬切，没有过渡）；手动选某个时辰只在这一页有效，不写入 localStorage，刷新回到「随时辰」；点「随时辰」立刻回到真实时辰。季节照旧自由选且不保存；留影设置的时辰行不动（在留影里换的时辰放下相机后保留，现状如此）。"
   ],
   "known_issues": [
     "凌霄阁回廊已按所有者定的 2.4 / 3.2 做，平坐重栱、普拍方厚 0.21；叉柱造未做（平坐铺作直接坐在二层柱头上）",
@@ -418,6 +420,7 @@
     "round_issue_71": "1c06e75 上：单测 267/267；check、typecheck 通过；e2e smoke 32/32（含新 director 场景：七处进机位、W/拖动/Esc 回程、撞钟连按不动、拍照、开关、减少动态、第一人称、结尾接手）；play-t00 director 段零错误（在改用仪式时钟之前的提交上录）；mobile-audit 通过"
   },
   "unverified": [
+    "序章结尾的配乐只听过离线样片；游戏里（含真机、跳过、换季重播）还没有人听过",
     "#101：T4 帧耗只测一次；手机真机没测；预览上没有人亲自登楼走过（关闭条件要所有者在预览上登一次楼）",
     "Issue #71 转场没有真人试过晕不晕，没有在 Mac 或手机上试；手机只在 Playwright 模拟里推过摇杆回程（phone 场景）",
     "Issue #71 七处机位构图未经主创评审",
@@ -455,7 +458,8 @@
     "#80 A 路：上台阶只有单元测试，没有截图；T4 帧时间未量（面数贴图未变）；改后未在真机上看过",
     "#100：未在真机、未在 PR 预览上操作；主创需按 issue 关闭条件复核（上香→出殿→点山门方向→走下台阶）",
     "景观评审的面数与帧时间是估算，未实测；手机未测",
-    "开场在手机与 Mac 上的帧时间未测；序章标题文字待所有者看图定（#110）"
+    "开场在手机与 Mac 上的帧时间未测；序章标题文字待所有者看图定（#110）",
+    "#135：换时辰仍是硬切，没有渐变；字体已为新字「随」重切（0358322），未在真机上看过"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",

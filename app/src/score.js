@@ -70,7 +70,7 @@ export function moodMusic(season = "summer", time = "day") {
   return m;
 }
 // How loud each place keeps the music, before the visitor's own level (the bus fades to this over a few seconds).
-export const SECTION_LEVEL = { grove: 0.8, stair: 0.9, gate: 1, court: 0.75, hall: 0.55, upper: 0.9, summit: 1, complete: 1 };
+export const SECTION_LEVEL = { grove: 0.8, stair: 0.9, gate: 1, court: 0.75, hall: 0.55, upper: 0.9, summit: 1, complete: 1, ending: 1 };
 
 // ---- Phrases ----
 // A small seeded random, so a visit is varied but a test is repeatable.
@@ -191,6 +191,33 @@ export function makePhrase(section, opts) {
   return { section, first, events, length, rest: p.rest.map((v) => v * mood.rest), sig: section + ":" + events.map((e) => e.voice[0] + e.m).join(",") };
 }
 
+// ---- The close of the chapter ----
+// Not a phrase of a place but music written to the close (rites.close, game.js's finale): `bell` is when the far bell
+// sounds, `title` when the title comes, in seconds from the start of the close. While the words are said the string
+// gives the theme slowly, a little to each line, and does not bring it home; the far bell is heard alone over the held
+// fifth; with the title the flute takes the theme up an octave higher and stops on D, the fifth, not on G: the chapter
+// is not over. Seconds, not beats, and slower than any walk; the mood moves it as it moves the rest.
+export const ENDING = { slow: 1.18, clear: 0.6, rest: [14, 20] };
+export function endingPhrase(mood = moodMusic(), { bell = 19.5, title = 25.5 } = {}) {
+  const b = (60 / mood.tempo) * ENDING.slow, lead = mood.lead === "harm" ? "harm" : "qin", fl = mood.lead === "harm" ? "harm" : "xiao";
+  const up = (v) => (v === "qin" || v === "xiao" ? mood.octave : 0), E = [];
+  const note = (at, voice, m, dur, vel, slide) => E.push({ at, voice, m: m + up(voice), dur, vel, ...(slide && voice === "qin" ? { slide } : {}) });
+  note(0.2, "pad", MODE.tonic, title + 7.5, Math.min(1, 0.62 * mood.pad));       // the held fifth under all of it
+  note(1.0, "low", MODE.tonic, 9, 0.5);
+  // The string's three pieces of the theme: from the first words, halfway to the bell, and one held note that has
+  // died away when the bell comes.
+  const a = 3.7, last = bell - 3.8, mid = a + (last - a) / 2;
+  let t = a; for (const [m, n, sl] of /** @type {[number, number, string?][]} */ ([[62, 1.5], [65, 0.5, "up"], [67, 3, "yin"]])) { note(t, lead, m, n * b + 1.6, 0.62, sl); t += n * b; }
+  t = mid; for (const [m, n] of [[65, 1], [62, 1.6]]) { note(t, lead, m, n * b + 1.6, 0.56); t += n * b; }
+  note(last, lead, 60, Math.min(2 * b + 2.4, bell - last - ENDING.clear), 0.5, "yin");
+  note(last, "low", MODE.tonic, bell - last - ENDING.clear, 0.38);
+  // With the title, the flute, and it ends on D.
+  t = title + 0.1; const tune = [[74, 1.5], [77, 0.5], [79, 2.5], [77, 1], [74, 3.2]];
+  for (const [m, n] of tune) { note(t, fl, m, n * b - 0.06, 0.46); t += n * b; }
+  const events = fold(E).sort((x, y) => x.at - y.at), length = Math.max(...events.map((e) => e.at + Math.min(e.dur, 4)));
+  return { section: "ending", first: true, events, length, rest: ENDING.rest.map((v) => v * mood.rest), sig: "ending:" + events.map((e) => e.voice[0] + e.m).join(",") };
+}
+
 // ---- The conductor: which phrase, and when ----
 // Called a few times a second with the audio clock, the place he is settled in, the seals and the mood. Returns the
 // phrase to start (with its start time), or { cut } when the place has changed under a sounding phrase, or null.
@@ -198,15 +225,20 @@ export function makePhrase(section, opts) {
 // new place begins 1.5 s after. A rest is simply cut short; so is a phrase with less than FADE left, by waiting it out.
 // The whole theme, after the seventh seal, is cut only by going indoors.
 export const FADE = 3.5;
+export const COMPLETE_AFTER = 6;   // seconds from the seventh seal's chime to the whole theme
 export function createConductor(seed = 1) {
   const r = rng(seed), heard = new Set();
-  let section = null, startedIn = null, first = false, notesEnd = -1, restEnd = -1, lastSig = "", completeDue = false, sealsSeen = null, count = 0, cuts = 0, cutting = false;
+  let section = null, startedIn = null, first = false, notesEnd = -1, restEnd = -1, lastSig = "", completeDue = false, completeAt = Infinity, sealsSeen = null, count = 0, cuts = 0, cutting = false;
   return {
     tick(now, zone, seals, mood = moodMusic()) {
-      if (sealsSeen !== null && seals >= 7 && sealsSeen < 7) completeDue = true;   // the seventh seal, earned just now
+      // The seventh seal, earned just now: the whole theme, a few seconds after its chime. On the summit the close
+      // usually follows at once; then the whole theme waits until the close's own music is over.
+      if (sealsSeen !== null && seals >= 7 && sealsSeen < 7) completeAt = now + COMPLETE_AFTER;
       sealsSeen = seals;
+      if (now >= completeAt) { completeDue = true; completeAt = Infinity; }
       const want = completeDue && zone !== "hall" ? "complete" : zone;
       const changed = (want === "complete" && section !== "complete") || zone !== startedIn;
+      if (section === "ending" && !cutting && (now < notesEnd || (now < restEnd && zone === startedIn))) return null;   // the close is never cut but by passing over it, and rests after
       if (now < notesEnd) {
         // A phrase is sounding: let it be where he still is, when it is nearly over, or when it is the whole theme
         // (unless he has gone indoors, where there is no melody).
@@ -224,6 +256,20 @@ export function createConductor(seed = 1) {
       heard.add(sec); lastSig = p.sig; section = sec; startedIn = zone; first = p.first; cutting = false; count++;
       const start = now + 0.15; notesEnd = start + p.length; restEnd = notesEnd + between(r, p.rest[0], p.rest[1]);
       return { ...p, start, notesEnd, restEnd, n: count };
+    },
+    // The close of the chapter: its music begins now, whatever was sounding (which the player fades), and the whole
+    // theme still owed waits until it is over.
+    close(now, p, zone) {
+      if (completeAt < Infinity) { completeDue = true; completeAt = Infinity; }
+      const was = now < notesEnd; section = "ending"; startedIn = zone; first = true; cutting = false; count++; lastSig = p.sig;
+      const start = now + (was ? 0.6 : 0.1); notesEnd = start + p.length; restEnd = notesEnd + between(r, p.rest[0], p.rest[1]);
+      return { ...p, start, notesEnd, restEnd, n: count, faded: was };
+    },
+    // Passed over: what sounds fades as on a change of place, and the place's music comes back after a short rest.
+    leave(now) {
+      if (section !== "ending" || now >= notesEnd || cutting) return null;
+      cutting = true; cuts++; notesEnd = now + FADE; restEnd = notesEnd + 4;
+      return { cut: true, at: now, fade: FADE };
     },
     get section() { return section; },
     get place() { return startedIn; },

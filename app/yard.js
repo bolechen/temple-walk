@@ -24,7 +24,7 @@ import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
-import { moodOf, moodNow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
@@ -153,6 +153,9 @@ await loading.step(tr("行走"));
 const nowMood = moodNow();
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
                 time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "day" : nowMood.time };
+// The hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's choice lasts this page only
+// and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
+state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam"));
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 function setMood(season, time) {
@@ -165,7 +168,8 @@ function setMood(season, time) {
   renderer.toneMappingExposure = mood.exp;
   renderer.shadowMap.needsUpdate = true;
   document.querySelectorAll("[data-season]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.season === season)));
-  document.querySelectorAll("[data-time]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.time === time)));
+  document.querySelectorAll("[data-time]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.time === time && !(state.follow && b.closest("#menu, #moodPanel")))));
+  document.querySelectorAll("[data-follow]").forEach((b) => b.setAttribute("aria-pressed", String(!!state.follow)));
   const tag = document.getElementById("moodTag"), said = moodWords(mood); if (tag) { if (tag.textContent && tag.textContent !== said) hints.say.mood(); tag.textContent = said; }
   afterMood?.();
 }
@@ -595,7 +599,10 @@ const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return
 setView(view);
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
 document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => setMood(b.dataset.season, state.time)));
-document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => setMood(state.season, b.dataset.time)));
+document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.follow = false; setMood(state.season, b.dataset.time); }));
+document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.follow = true; setMood(state.season, moodNow().time); }));
+// Following the clock is live: when the real hour turns, the picture turns with it (setMood has no fade of its own; a change of hour is a cut today).
+setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if (t) setMood(state.season, t); }, 20000);
 
 // ---- Taking a photograph ------------------------------------------------------------
 // The raised camera is a mode on the stack of layers, its settings a panel over it, the print a sheet over both:
@@ -770,7 +777,7 @@ if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
 window.__lofts = site.lofts;
-window.__yard = () => ({ inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // A named view, without loading the place again: out of any room, then stood where the view stands.
 window.__show = (name) => { const v = site.views[name]; if (!v) return false; if (inside) indoors(null); comeDown(); if (site.viewUp[name]) { upstairs(site.lofts[site.viewUp[name]], [v[0], v[1]], v[2]); pitch = v[3]; return true; } window.__pose(v[0], v[1], v[2], v[3]); return true; };
@@ -842,7 +849,7 @@ window.__ripples = (go) => {
   return ground.ripples?.() || null;
 };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
-window.__mood = setMood; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
+window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
 window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.state(); };   // the birds going up now, if asked, and where they are
 window.__cues = cueState;   // how many times the wings and the far bell have sounded   // how many shutters and seals have sounded
