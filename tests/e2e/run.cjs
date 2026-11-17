@@ -1187,11 +1187,13 @@ const scenarios = {
       for (let i = 0; i < n; i++) { seq.push(await t.page.evaluate(() => { const a = document.activeElement; return a.closest(".grp-view") ? "L" : a.closest(".grp-ctl") ? "R" : a.closest("#menu") ? "F" : "?"; })); await t.page.keyboard.press("Tab"); }
       expect(/^L+R+F+$/.test(seq.join("")), "Tab should go through the left column, then the right, then the foot: " + seq.join("")); }
     await t.page.setViewportSize({ width: 800, height: 500 }); await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#menu")), 10000, "Esc did not close the menu");
-    // The shortest wide screen, in each language: nothing to scroll (the group's invitation is Chinese only, so Chinese is the tallest).
-    for (const lg of ["ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+    // Every wide screen, in each language: nothing to scroll and no row wider than its box (English's Follow the hour is the longest hour row).
+    for (const lg of ["zh", "ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
       await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
-      const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
-      expect(m.fits && !m.clipped, `the menu should lie whole at 1280x720 in ${lg}: ` + JSON.stringify(m)); await u.close(); }
+      for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
+        const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
+        expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
+      await u.close(); }
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3, "the settings were not kept: " + JSON.stringify(st));
