@@ -210,9 +210,14 @@ leave the eye behind the hands), then a passage that takes the eye (`rites.close
 go (`y.undirect()`). Every swing is made, never cut (the owner: 打卡时用动画，不要硬切转场): `planSwing` tries the short
 way round him, the long way, over, wide, in by his shoulder, then `wayRound` (a path over a 0.5 m grid of clear points
 round him, pulled taut, on a smooth curve), takes the first clear one (each point tested every 4 cm, the chosen one again
-with a 6 cm margin) and stretches its time so that it never turns faster than 144° a second going there (190° back) nor
+with a 6 cm margin; clear of whatever the following eye may not be in and also of a column, a stool or a tea table, which
+the following eye lets cross the view, and of a railing by 12 cm, `walk.rails` / `walker.railNear`: `inWay`) and stretches its time so that it never turns faster than 144° a second going there (190° back) nor
 travels faster than 15 m/s. Only with `prefers-reduced-motion` do the shutter's two ink leaves (`#curtain.cut`, drawn
-frame by frame) close, the eye is moved, and they open. `game.js` calls `y.direct(id)` when the
+frame by frame) close, the eye is moved, and they open. The way is worked out a little at a time (`planSteps`, a generator,
+at most `DIRECT.budget`, 4 ms, of a frame), the eye waiting where it is until it is known (a frame, at most about a dozen);
+the way back, worked out while the swing goes there, is taken at once if neither end has moved. `node tools/director-swings.mjs`
+measures every swing from twelve directions (time, route, nearest surface of the real meshes, near-plane cuts, frames waited,
+most milliseconds in a frame). `game.js` calls `y.direct(id)` when the
 observance begins and `y.direct(null)` when it ends; `rites.js` sends it home `y.directOut()` seconds before the hands are
 done (`homeward`), but only once it has arrived (`y.directArrived()`); an observance over (or nearly) before its swing has arrived lets it arrive, rest
 `DIRECT.beat` (0.6 s) and then come home (`back({ soft: true })`; no soft return leaves a shot it has rested on for less): the observance never turns a swing back half way, the visitor's

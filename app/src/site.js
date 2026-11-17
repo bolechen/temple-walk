@@ -57,7 +57,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] }, shade = [[], [], [], []], halls = [], buildings = [];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [];
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. Only a tent roof is given its `rise` by hand.
@@ -69,6 +69,7 @@ export function buildSite(M) {
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
+    for (const r of b.walk.rails || []) walk.rails.push({ ...place(r, at, q), bottom: r.bottom + y, top: r.top + y });
     for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
     for (const edge of b.walk.drops) {
       const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
@@ -554,7 +555,7 @@ export function placeLift(place, seats, heightAt) {
   return seat ? Math.max(0, seat.top - heightAt(place.at[0], place.at[1])) : place.lift ?? 0.1;
 }
 export function createWalker(site) {
-  const { solids, decks, ramps, posts = [], roofs = [] } = site.walk;
+  const { solids, decks, ramps, posts = [], roofs = [], rails = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
   // What stands in the way even on a floor: a round thing keeps his centre its own radius and his width away (`pad`);
   // a square one was drawn that much larger where it was put down. They are sorted into two-metre squares, so that
@@ -605,6 +606,9 @@ export function createWalker(site) {
     // on, anywhere else. A building is closed within its walls up to its ridge and over its platform up to the floor;
     // any other wall or tree some way above his head (a court wall is passed over well above it). A column (or a
     // trunk: anything round and thinner than a stride) answers "post" rather than true: the eye may let one pass across the view a moment before giving way.
+    // Is the point within `m` of a railing, round a platform's edge? (The eye that follows him passes over a railing as
+    // over any floor; an eye sent on a swing of its own keeps clear of it, so that the near edge of its lens does not cut into the stone.)
+    railNear(x, y, z, m = 0) { if (room) return false; for (const r of rails) if (x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m && y > r.bottom - m && y < r.top + m) return true; return false; },
     eyeShut(x, y, z, foot) {
       if (room) return shut(x, z);
       for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;

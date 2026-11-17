@@ -2,7 +2,7 @@
 // real plan and the real rooms: every shot stands clear of walls, eaves and columns; he and what his hands are at stay
 // inside the picture's safe area (NDC drawn in by a tenth) from first to last; the swing there and back turns the eye
 // no faster than the following eye's own limits allow (follow.test.mjs) and never passes through anything; and where it
-// would (a wall, a turn of more than about 120°, or a visitor who asks for less motion), the ink is drawn first.
+// would, it goes another way round, more slowly if it must; only for a visitor who asks for less motion is the ink drawn.
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { buildSite, createWalker } from "../../app/src/site.js";
 import { buildInteriors } from "../../app/src/interior.js";
 import { followEye } from "../../app/src/eye.js";
-import { DIRECT, shotPose, blendPose, planSwing, createDirector, placePoint, turnBetween, durations, veilAt, veilShut, veilDone, pose, smoother } from "../../app/src/director.js";
+import { DIRECT, shotPose, blendPose, planSwing, planSteps, createDirector, placePoint, turnBetween, durations, veilAt, veilShut, veilDone, pose, smoother } from "../../app/src/director.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -99,6 +99,11 @@ const MOVE = DIRECT.speed * DT + 0.01;
 // Inside something by more than a graze: in it at the point and 3 cm to every side. (A swing sampled every 4 cm may
 // brush the edge of the padding drawn round a low thing, 38 cm out from a lamp table and 5.5 m up, by less than that.)
 const deep = (v, foot) => [[0, 0], [0.03, 0], [-0.03, 0], [0, 0.03], [0, -0.03]].every(([dx, dz]) => walker.eyeShut(v.x + dx, v.y, v.z + dz, foot) === true);
+// Nearer a column, a stool, a tea table or a railing than the near edge of the lens (a tenth of a metre) can stand off:
+// the following eye lets a column cross the view, but an eye on a swing of its own goes round.
+const grazes = (v, foot) => walker.eyeShut(v.x, v.y, v.z, foot) === "post" || walker.railNear(v.x, v.y, v.z, 0.1);
+// Run frames until the swing's way is worked out (the eye waits where it is meanwhile); how many it took.
+function planned(d, cam, centre, check) { let n = 0; do { run(d, cam, centre, 1, check); n++; } while (d.state().planning && n < 600); return n; }
 
 // Every swing is made, never cut (the owner, 2026-11-16: 「打卡时用动画，不要硬切转场」): from twelve directions round each
 // place, there and back, the picture never jumps, never turns or travels faster than the limits, never passes through
@@ -120,16 +125,21 @@ test("every swing there and back is made, never cut: within the turn and speed l
         }
         // (Beyond where the following eye stood, the planner's DIRECT.near and 5 cm more, so that the planner is the
         // stricter of the two; and short of the shot itself.)
-        if (d.state().w > 0 && d.state().w < 0.95 && c.position.distanceTo(start) > DIRECT.near + 0.05) assert.ok(!deep(c.position, foot), `${id} from yaw ${k * 30}°: the swing passed through something at ${c.position.toArray().map((v) => v.toFixed(2))} (${JSON.stringify(d.state().route)})`);
+        if (d.state().w > 0 && d.state().w < 0.95 && c.position.distanceTo(start) > DIRECT.near + 0.05) {
+          assert.ok(!deep(c.position, foot), `${id} from yaw ${k * 30}°: the swing passed through something at ${c.position.toArray().map((v) => v.toFixed(2))} (${JSON.stringify(d.state().route)})`);
+          assert.ok(!grazes(c.position, foot), `${id} from yaw ${k * 30}°: the swing passed through a column, a stool, a tea table or by a railing at ${c.position.toArray().map((v) => v.toFixed(2))} (${JSON.stringify(d.state().route)})`);
+        }
         last = c.position.clone(); lastQ = c.quaternion.clone();
       };
-      run(d, cam, centre, 1, check); const planned = d.state().in;   // the first frame plans the route and how long it takes
-      assert.ok(planned <= 6, `${id} from yaw ${k * 30}°: a swing of ${planned.toFixed(1)} s is too slow`);
-      run(d, cam, centre, Math.ceil((planned + 0.2) / DT), check);
-      const st = d.state(); assert.equal(st.phase, "hold", `${id} from yaw ${k * 30}°: not on the shot after ${planned.toFixed(1)} s`);
+      const waited = planned(d, cam, centre, check), planned_ = d.state().in;   // the first frames work out the route and how long it takes
+      assert.ok(waited < 600, `${id} from yaw ${k * 30}°: the way was never worked out`);
+      assert.equal(d.state().w, 0, `${id} from yaw ${k * 30}°: the eye moved before its way was known`);
+      assert.ok(planned_ <= 6, `${id} from yaw ${k * 30}°: a swing of ${planned_.toFixed(1)} s is too slow`);
+      run(d, cam, centre, Math.ceil((planned_ + 0.2) / DT), check);
+      const st = d.state(); assert.equal(st.phase, "hold", `${id} from yaw ${k * 30}°: not on the shot after ${planned_.toFixed(1)} s`);
       assert.ok(!st.blocked, `${id} from yaw ${k * 30}°: no clear route round him was found`);
       routes.add(JSON.stringify(st.route));
-      d.back(); run(d, cam, centre, 1, check); const home = d.state().out;
+      d.back(); planned(d, cam, centre, check); const home = d.state().out;
       assert.ok(home <= 6, `${id} from yaw ${k * 30}°: a way back of ${home.toFixed(1)} s is too slow`);
       run(d, cam, centre, Math.ceil((home + 0.2) / DT), check);
       assert.equal(d.state().phase, "idle", `${id} from yaw ${k * 30}°: not back with him`);
@@ -155,7 +165,7 @@ test("the route: the short way when it is clear and slower when it turns far, ro
   assert.ok(plan.route.long || plan.route.lift || plan.route.pinch, "an arc through a wall should go another way: " + JSON.stringify(plan.route));
   assert.ok(!plan.blocked);
   const post = { eyeShut: (x, y, z) => (x > 1.5 && z > 1.5 ? "post" : null), landAt: () => 0 };
-  assert.deepEqual(planSwing(post, a, b, C, 0).route, {}, "a column passing across is let through, as the following eye lets it");
+  assert.notDeepEqual(planSwing(post, a, b, C, 0).route, {}, "a column across the short way is gone round: the following eye lets one cross the view, a swing of its own does not");
   const shut = { eyeShut: () => true, landAt: () => 0 };
   assert.ok(planSwing(shut, a, b, C, 0).blocked, "with nothing clear the plan says so, and still swings");
   // With reduced motion, the director moves the eye only behind the ink, and the ink does not draw itself across.
@@ -227,4 +237,26 @@ test("an observance over before its swing has arrived lets it arrive, rest a bea
   const e = createDirector({ walker }); e.go("lamp", p, foot); run(e, cam, centre, 20); const we = e.state().w;
   e.back(); run(e, cam, centre, 1); assert.ok(e.state().phase === "out" && e.state().w <= we, "a step should turn it back at once");
   walker.setRoom(null);
+});
+
+// The way is worked out a little at a time, so that the frame an observance begins on is not held up: from twelve
+// directions round each place, there and back, the planner never asks the walker about more than a bounded number of
+// points before it pauses to look at the clock (DIRECT.step, and what one step of the search or one point of a route
+// asks beyond it).
+test("a swing's way is worked out a little at a time: the planner pauses after a bounded amount of work", () => {
+  let n = 0, most = 0, total = 0;
+  const counting = Object.create(walker); counting.eyeShut = (...a) => { n++; return walker.eyeShut(...a); };
+  for (const id of GONE) {
+    const p = site.places[id], foot = at(p), centre = centreOf(p, foot), B = shotPose(p, p.shot, foot, 0);
+    for (let k = 0; k < 12; k++) {
+      const cam = follower(p, foot, (k / 12) * Math.PI * 2), A = pose(); A.p.copy(cam.position); A.q.copy(cam.quaternion);
+      for (const opts of [{ base: p.shot.in }, { base: p.shot.out, rate: DIRECT.rate.out }]) {
+        const it = planSteps(counting, A, B, centre, foot, opts);
+        for (let r = (n = 0, it.next()); ; r = (n = 0, it.next())) { most = Math.max(most, n); total++; if (r.done) break; }
+      }
+    }
+  }
+  walker.setRoom(null);
+  assert.ok(most <= DIRECT.step + 700, `the planner asked about ${most} points without pausing`);
+  assert.ok(total > GONE.length * 24, "the planner never paused");
 });

@@ -32,7 +32,9 @@ export const DIRECT = {
   samples: 48,             // the fewest points along a swing tested against walls and roofs (more on a long one: one every 4 cm)
   speed: 15,               // the fastest the eye may travel at the steepest of a swing, metres a second (0.25 m a frame)
   wide: 16 / 9,            // the shape of picture a shot's angle of view is written for
-  veil: { close: 0.2, held: 0.12, open: 0.26 },   // the ink, only for a visitor who asks for reduced motion: close, shut, open (s)
+  veil: { close: 0.2, held: 0.12, open: 0.26 },
+  budget: 4,               // milliseconds of a frame given to working out a swing's way (the rest waits for the next frame)
+  step: 400,               // the work pauses to look at the clock after this many points have been asked about   // the ink, only for a visitor who asks for reduced motion: close, shut, open (s)
 };
 const UP = new THREE.Vector3(0, 1, 0), clamp01 = (u) => Math.min(1, Math.max(0, u));
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -41,6 +43,7 @@ export const smoother = (u) => { u = clamp01(u); return u * u * u * (u * (u * 6 
 export const turnBetween = (a, b) => 2 * Math.acos(Math.min(1, Math.abs(a.dot(b))));
 /** @typedef {{ p: THREE.Vector3, q: THREE.Quaternion, fov: number }} Pose */
 export const pose = () => ({ p: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 50 });
+const copyOf = (/** @type {ReturnType<typeof pose>} */ o) => ({ p: o.p.clone(), q: o.q.clone(), fov: o.fov });
 
 // How long a shot takes to come and to go, kept within the ranges above whatever the data says.
 /** @returns {{ in: number, out: number, back?: number, inNow?: number }} */
@@ -111,28 +114,47 @@ export function blendPose(a, b, w, centre, out = pose(), route = {}) {
   return out;
 }
 
+// Whether an eye on a swing of its own may not pass here: wherever the following eye may not be, and also through a
+// column, a stool or the pieces of a tea table (which the following eye lets cross the view a moment, "post"), or within
+// `m` of a railing round a platform's edge, which the following eye passes over as floor. (The near edge of the lens
+// stands a tenth of a metre ahead of the eye; what comes nearer than that is cut open in the picture.)
+export const inWay = (walker, x, y, z, foot, m = 0.12) => { const s = walker.eyeShut(x, y, z, foot); return s === true || s === "post" || !!walker.railNear?.(x, y, z, m); };
+
 // The ways round tried first, in order: the short way, the long way, over what stands between, wide of it, then in by
 // his shoulder; then a way found through the clear air round him (wayRound).
 export const ROUTES = /** @type {Route[]} */ ([{}, { long: true }, { lift: 1 }, { lift: 2 }, { widen: 0.5 }, { widen: 1 }, { lift: 3 }, { long: true, lift: 1.5 }, { long: true, widen: 0.5 }, { long: true, lift: 3 }, { widen: 0.5, lift: 1.5 }, { pinch: 0.5 }, { pinch: 0.8 }, { long: true, pinch: 0.8 }, { pinch: 0.8, lift: 1 }, { widen: 1.5 }, { long: true, widen: 1 }]);
+// A plan is worked out a little at a time (DIRECT.budget a frame), so that the frame on which an observance begins is
+// not held up while every way round him is tried: the work below pauses (`yield`) whenever it has asked the walker
+// about another DIRECT.step points since it last paused. `drain` does it all at once (the tests, and a tool).
+/** @template T @param {Generator<unknown, T>} it @returns {T} */
+export const drain = (it) => { let r = it.next(); while (!r.done) r = it.next(); return r.value; };
+/** Step `it` until it is done or `until` (performance.now()) has passed; its result, or undefined. @template T @param {Generator<unknown, T>} it @param {number} until */
+export const stepUntil = (it, until) => { for (;;) { const r = it.next(); if (r.done) return r.value; if (performance.now() >= until) return undefined; } };
+// Ask the walker through a counter, so that the work can pause after so many questions.
+const counted = (walker) => { const c = { n: 0, walker, inWay: (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {number} */ foot, m = 0.12) => { c.n++; return inWay(walker, x, y, z, foot, m); } }; return c; };
+
 // A way from `from` to `to` through the air round him that nothing stands in: a grid of points half a metre apart, seven
-// metres each way from his chest and at three heights, each kept only where the eye could stand with 15 cm to spare;
-// the shortest path over it (A*, each step tested at its middle), then pulled taut (a point left out wherever the line
-// past it is clear). Returns the points between, or null when the two cannot be joined.
-export function wayRound(walker, from, to, centre, foot) {
+// metres each way from his chest and at three heights, each kept only where the eye could stand with 15 cm to spare
+// (and 20 cm off a railing); the shortest path over it (A*, each step tested at its middle), then pulled taut (a point
+// left out wherever the line past it is clear). Returns the points between, or null when the two cannot be joined.
+/** @returns {Generator<void, number[][] | null>} */
+export function* wayRoundSteps(walker, from, to, centre, foot, ask = counted(walker)) {
   const S = 0.5, N = 14, lo = Math.min(from.y, to.y), hi = Math.max(from.y, to.y), heights = [lo, (lo + hi) / 2 + 0.4, hi + 1.0];
-  const free = (x, y, z) => y > walker.landAt(x, z) + 0.3 && [[0, 0], [0.15, 0], [-0.15, 0], [0, 0.15], [0, -0.15]].every(([dx, dz]) => walker.eyeShut(x + dx, y, z + dz, foot) !== true);
+  let pause = ask.n + DIRECT.step;
+  const free = (x, y, z) => y > walker.landAt(x, z) + 0.3 && !walker.railNear?.(x, y, z, 0.2) && [[0, 0], [0.15, 0], [-0.15, 0], [0, 0.15], [0, -0.15]].every(([dx, dz]) => !ask.inWay(x + dx, y, z + dz, foot));
   const key = (i, j, l) => (l * (2 * N + 1) + (j + N)) * (2 * N + 1) + (i + N), cell = new Map();
   const at = (i, j, l) => { const k = key(i, j, l); if (!cell.has(k)) cell.set(k, free(centre.x + i * S, heights[l], centre.z + j * S)); return cell.get(k); };
   const pos = (k) => { const i = (k % (2 * N + 1)) - N, j = (Math.floor(k / (2 * N + 1)) % (2 * N + 1)) - N, l = Math.floor(k / (2 * N + 1) ** 2); return new THREE.Vector3(centre.x + i * S, heights[l], centre.z + j * S); };
   const lineClear = (p, q, skipNear = null) => { const n = Math.max(2, Math.ceil(p.distanceTo(q) / 0.1)), v = new THREE.Vector3();
     for (let k = 1; k < n; k++) { v.lerpVectors(p, q, k / n); if (skipNear && v.distanceTo(skipNear) <= DIRECT.near) continue; if (!free(v.x, v.y, v.z)) return false; } return true; };
   // The nearest grid points the two ends can reach in a clear line.
-  const reach = (p, skip) => { let best = null, bd = Infinity;
+  const reach = function* (p, skip) { let best = null, bd = Infinity;
     for (let l = 0; l < 3; l++) for (let i = -N; i <= N; i++) for (let j = -N; j <= N; j++) {
       const q = new THREE.Vector3(centre.x + i * S, heights[l], centre.z + j * S), d = q.distanceTo(p); if (d > 2 || d >= bd || !at(i, j, l)) continue;
-      if (lineClear(p, q, skip)) { best = key(i, j, l); bd = d; } }
+      if (lineClear(p, q, skip)) { best = key(i, j, l); bd = d; }
+      if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; } }
     return best; };
-  const s0 = reach(from, from), s1 = reach(to, null); if (s0 === null || s1 === null) return null;
+  const s0 = yield* reach(from, from), s1 = yield* reach(to, null); if (s0 === null || s1 === null) return null;
   const goal = pos(s1), open = new Map([[s0, pos(s0).distanceTo(goal)]]), g = new Map([[s0, 0]]), came = new Map();
   for (let guard = 0; open.size && guard < 6000; guard++) {
     let k = null, fk = Infinity; for (const [kk, f] of open) if (f < fk) { fk = f; k = kk; }
@@ -143,26 +165,30 @@ export function wayRound(walker, from, to, centre, foot) {
       const nk = key(ni, nj, nl), pn = pos(nk), mid = pk.clone().lerp(pn, 0.5); if (!free(mid.x, mid.y, mid.z)) continue;
       const ng = g.get(k) + pk.distanceTo(pn); if (ng < (g.get(nk) ?? Infinity)) { g.set(nk, ng); came.set(nk, k); open.set(nk, ng + pn.distanceTo(goal)); }
     }
+    if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; }
   }
   if (!came.has(s1) && s0 !== s1) return null;
   const path = [s1]; while (path[0] !== s0) path.unshift(came.get(path[0]));
   const pts = [from.clone(), ...path.map(pos), to.clone()], taut = [pts[0]];
-  for (let k = 1; k < pts.length - 1; k++) if (!lineClear(taut[taut.length - 1], pts[k + 1], k === 1 ? from : null)) taut.push(pts[k]);
+  for (let k = 1; k < pts.length - 1; k++) {
+    if (!lineClear(taut[taut.length - 1], pts[k + 1], k === 1 ? from : null)) taut.push(pts[k]);
+    if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; }
+  }
   return taut.slice(1).map((v) => v.toArray());
 }
+export const wayRound = (walker, from, to, centre, foot) => drain(wayRoundSteps(walker, from, to, centre, foot));
 
 // How a swing from `a` to `b` is to be made: by which route, and how long it must take so that at its steepest
 // (smootherstep's steepest is 1.875 times its mean) the eye turns no faster than `rate` (radians a second) and travels
 // no faster than DIRECT.speed; never quicker than `base` seconds. The first route along which no point is in a wall,
-// among the timbers of a roof, in a column's bulk or under the ground (`walker.eyeShut`; a thin column, "post", is let
-// pass, as the following eye lets it) is taken; sampled at least every 4 cm (8 cm stepped over a lamp table's corner). If none is clear, the one that passes
-// through least is taken and the plan says so (`blocked`): the eye is never cut from one place to another.
-export function planSwing(walker, a, b, centre, foot, { base = 2, rate = DIRECT.rate.in } = {}) {
-  const p = pose(), prev = pose(); let best = null;
-  // After the set ways round: a way found through the clear air round him (wayRound), on a smooth curve.
-  const found = wayRound(walker, a.p, b.p, centre, foot), vias = found ? [{ via: found }] : [];
+// among the timbers of a roof, in a column, a stool or a tea table, by a railing or under the ground (`inWay`) is taken;
+// sampled at least every 4 cm. If none is clear, the one that passes through least is taken and the plan says so
+// (`blocked`): the eye is never cut from one place to another.
+/** @returns {Generator<void, { route: Route, secs: number, shut: number, length: number, blocked?: boolean }>} */
+export function* planSteps(walker, a, b, centre, foot, { base = 2, rate = DIRECT.rate.in } = {}) {
+  const p = pose(), prev = pose(), ask = counted(walker); let best = null, pause = DIRECT.step;
   let quickestClear = null, plainClear = null;   // (plainClear: clear at its points, though it grazes within the margin)
-  for (const route of [...ROUTES, ...vias]) {
+  const judge = function* (route) {
     let length = 0; prev.p.copy(a.p);
     for (let k = 1; k <= DIRECT.samples; k++) { blendPose(a, b, k / DIRECT.samples, centre, p, route); length += p.p.distanceTo(prev.p); prev.p.copy(p.p); }
     const n = Math.max(DIRECT.samples, Math.ceil(length / 0.04));
@@ -171,10 +197,11 @@ export function planSwing(walker, a, b, centre, foot, { base = 2, rate = DIRECT.
       blendPose(a, b, k / n, centre, p, route);
       // (Within DIRECT.near of where the following eye already stood, wherever it was let stand, nothing is counted:
       // it may stand close against the padding drawn round a low thing, a lamp table, and leaving it the way the shot lies
-      // crosses that padding at once.)
-      if (p.p.distanceTo(a.p) > DIRECT.near && (walker.eyeShut(p.p.x, p.p.y, p.p.z, foot) === true || p.p.y < walker.landAt(p.p.x, p.p.z) + 0.1)) shut++;
+      // crosses that padding at once. The shot itself stands clear, tested; the last hand of a metre into it is not looked at.)
+      if (p.p.distanceTo(a.p) > DIRECT.near && p.p.distanceTo(b.p) > 0.12 && (ask.inWay(p.p.x, p.p.y, p.p.z, foot) || p.p.y < walker.landAt(p.p.x, p.p.z) + 0.1)) shut++;
       turnRate = Math.max(turnRate, turnBetween(prev.q, p.q) * n); moveRate = Math.max(moveRate, p.p.distanceTo(prev.p) * n);
       prev.p.copy(p.p); prev.q.copy(p.q);
+      if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; }
     }
     const secs = Math.max(base, (turnRate * 1.875) / rate, (moveRate * 1.875) / DIRECT.speed);
     // A route about to be taken is looked at once more with a margin of 6 cm round each point, so that one which only
@@ -182,18 +209,26 @@ export function planSwing(walker, a, b, centre, foot, { base = 2, rate = DIRECT.
     if (!shut && (!plainClear || secs < plainClear.secs)) plainClear = { route, secs, shut, length };
     if (!shut && (secs <= DIRECT.longest || !quickestClear || secs < quickestClear.secs)) {
       for (let k = 1; k <= n && !shut; k++) {
-        if (p.p.distanceTo(a.p) <= DIRECT.near) { blendPose(a, b, k / n, centre, p, route); if (p.p.distanceTo(a.p) <= DIRECT.near) continue; }
         blendPose(a, b, k / n, centre, p, route);
-        for (const [dx, dz] of [[0.06, 0], [-0.06, 0], [0, 0.06], [0, -0.06]]) if (walker.eyeShut(p.p.x + dx, p.p.y, p.p.z + dz, foot) === true) { shut = 1; break; }
+        if (p.p.distanceTo(a.p) <= DIRECT.near || p.p.distanceTo(b.p) <= 0.12) continue;
+        for (const [dx, dz] of [[0.06, 0], [-0.06, 0], [0, 0.06], [0, -0.06]]) if (ask.inWay(p.p.x + dx, p.p.y, p.p.z + dz, foot)) { shut = 1; break; }
+        if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; }
       }
     }
     const plan = { route, secs, shut, length };
     if (!shut && secs <= DIRECT.longest) return plan;
     if (!shut && (!quickestClear || secs < quickestClear.secs)) quickestClear = plan;
     if (!best || shut < best.shut || (shut === best.shut && secs < best.secs)) best = plan;
-  }
+    return null;
+  };
+  for (const route of ROUTES) { const done = yield* judge(route); if (done) return done; }
+  // After the set ways round, and only if none of them would do: a way found through the clear air round him
+  // (wayRound), on a smooth curve. (The search is the dearest part of a plan, so it is not made when an arc will serve.)
+  const found = yield* wayRoundSteps(walker, a.p, b.p, centre, foot, ask);
+  if (found) { const done = yield* judge({ via: found }); if (done) return done; }
   return quickestClear || plainClear || { ...best, blocked: true };
 }
+export const planSwing = (walker, a, b, centre, foot, opts = {}) => drain(planSteps(walker, a, b, centre, foot, opts));
 
 // How far the ink covers the picture `s` seconds into a cut (0 open, 1 shut), and whether the eye has been moved yet.
 export function veilAt(s) {
@@ -212,15 +247,23 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
   let phase = "idle", u = 0, t = 0, id = null, place = null, shot = null, foot = 0, dur = durations(), decided = false, hadLast = false;
   /** A cut behind the ink: `s` seconds into it, whether the eye has been moved yet, and to which end (1 the shot, 0 him). @type {null | { s: number, moved: boolean, to: number }} */
   let ink = null, plan = { route: {}, secs: 0 }, softBack = false, beat = 0;
+  // A plan still being worked out (`pending`, for the swing about to be made: until it is known the eye waits where it
+  // is), and the way back worked out while the swing goes there (`homeIt` → `home`, from the ends it was planned between).
+  /** @type {null | Generator<void, any>} */ let pending = null, homeIt = null;
+  /** @type {null | { route: Route, secs: number }} */ let home = null;
+  const homeA = pose(), homeB = pose();
   const A = pose(), B = pose(), O = pose(), last = new THREE.Quaternion(), stats = { cuts: 0, blends: 0, backs: 0, turnMax: 0, frames: 0, why: null, route: {}, blocked: false };
-  const reset = () => { phase = "idle"; u = 0; t = 0; ink = null; plan = { route: {}, secs: 0 }; softBack = false; beat = 0; decided = false; hadLast = false; veil(0); quiet(false); };
+  const reset = () => { phase = "idle"; u = 0; t = 0; ink = null; plan = { route: {}, secs: 0 }; softBack = false; beat = 0; decided = false; hadLast = false; pending = homeIt = home = null; veil(0); quiet(false); };
+  const showRoute = () => { stats.route = { ...plan.route, curve: undefined, via: plan.route.via && plan.route.via.map((v) => v.map((c) => +c.toFixed(2))) }; stats.blocked = !!plan.blocked; };
+  // The way back worked out on the way there still serves if neither end has moved since (he stood still, the shot did not drift far).
+  const homeFits = () => home && homeA.p.distanceTo(A.p) < 0.05 && turnBetween(homeA.q, A.q) < 0.02 && homeB.p.distanceTo(B.p) < 0.1 && turnBetween(homeB.q, B.q) < 0.03;
   return {
     /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool). */
     go(name, where, floorY, { now = false } = {}) {
       if (!where || !where.shot || where.shot.off || !enabled()) return false;   // `off`: a shot kept in the data but not gone to (it says why)
       if (phase === "idle") { t = 0; hadLast = false; }
       beat = 0; softBack = false;
-      id = name; place = where; shot = where.shot; foot = floorY; dur = durations(shot);
+      id = name; place = where; shot = where.shot; foot = floorY; dur = durations(shot); pending = null;
       if (now) { ink = null; veil(0); u = 1; phase = "hold"; decided = true; }
       else if (ink && !ink.moved) { ink.to = 1; phase = "in"; decided = true; }
       else { phase = "in"; decided = false; }
@@ -234,6 +277,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
     // the frame it arrives.
     back({ soft = false } = {}) {
       if (phase === "idle" || phase === "out") return false;
+      if (phase === "in" && pending) { stats.backs++; reset(); return true; }   // its way not yet worked out, the eye has not moved: it simply stays with him
       if (soft && (phase === "in" || beat < DIRECT.beat)) { softBack = true; return true; }   // (on its way, or only just arrived)
       softBack = false;
       stats.backs++; phase = "out"; quiet(false);   // what stepped aside over the picture comes back as the eye starts home
@@ -242,7 +286,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
       return true;
     },
     // Be on the shot now (the camera is raised in the middle of a swing: what is photographed is the shot).
-    finish() { if (phase !== "in") return false; ink = null; veil(0); u = 1; phase = "hold"; beat = 0; decided = true; hadLast = false; return true; },
+    finish() { if (phase !== "in") return false; ink = null; veil(0); u = 1; phase = "hold"; beat = 0; decided = true; hadLast = false; pending = null; return true; },
     // Let go at once, without a swing: the walk has moved him somewhere else (a door, a journey, a passage that takes the eye).
     drop() { if (phase !== "idle") reset(); },
     active: () => phase !== "idle",
@@ -264,18 +308,26 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
         // ink. A swing turned back half way keeps the route it was on.
         decided = true;
         if (reduced()) { ink = { s: 0, moved: false, to: phase === "out" ? 0 : 1 }; stats.cuts++; stats.why = "reduced"; }
-        else if (phase === "in" || u >= 1) {
-          plan = planSwing(walker, A, B, centre, foot, phase === "out" ? { base: dur.out, rate: DIRECT.rate.out } : { base: dur.in, rate: DIRECT.rate.in });
-          if (phase === "out") dur.back = plan.secs; else { dur.inNow = plan.secs; dur.back = planSwing(walker, A, B, centre, foot, { base: dur.out, rate: DIRECT.rate.out }).secs; }
-          stats.blends++; stats.route = { ...plan.route, curve: undefined, via: plan.route.via && plan.route.via.map((v) => v.map((c) => +c.toFixed(2))) }; stats.blocked = !!plan.blocked;
-        }
+        else if (phase === "out" && u >= 1 && homeFits()) { plan = home; dur.back = home.secs; stats.blends++; showRoute(); }
+        else if (phase === "in" || u >= 1) pending = planSteps(walker, copyOf(A), copyOf(B), centre.clone(), foot, phase === "out" ? { base: dur.out, rate: DIRECT.rate.out } : { base: dur.in, rate: DIRECT.rate.in });
       }
+      // The plan is worked on for DIRECT.budget of this frame; then, the swing under way, the way back.
+      const until = performance.now() + DIRECT.budget;
+      if (pending) {
+        const done = stepUntil(pending, until);
+        if (done) {
+          pending = null; plan = done; stats.blends++; showRoute();
+          if (phase === "out") dur.back = done.secs;
+          else { dur.inNow = done.secs; homeA.p.copy(A.p); homeA.q.copy(A.q); homeB.p.copy(B.p); homeB.q.copy(B.q); home = null; homeIt = planSteps(walker, copyOf(homeA), copyOf(homeB), centre.clone(), foot, { base: dur.out, rate: DIRECT.rate.out }); }
+        }
+      } else if (homeIt) { const done = stepUntil(homeIt, until); if (done) { homeIt = null; home = done; dur.back = done.secs; } }
       let jumped = false;
       if (ink) {
         ink.s += dt; veil(veilAt(ink.s));
         if (!ink.moved && ink.s >= veilShut()) { ink.moved = true; u = ink.to; jumped = true; }
         if (ink.s >= veilDone()) { ink = null; veil(0); if (phase === "in" && u >= 1) phase = "hold"; }
-      } else if (phase === "in") { u = Math.min(1, u + dt / (dur.inNow || dur.in)); if (u >= 1) phase = "hold"; }
+      } else if (pending) { /* the eye waits where it is until its way is known (a frame or a few) */ }
+      else if (phase === "in") { u = Math.min(1, u + dt / (dur.inNow || dur.in)); if (u >= 1) phase = "hold"; }
       else if (phase === "out") u -= dt / (dur.back || dur.out);
       if (phase === "out" && u <= 0 && !ink) { reset(); return null; }
       blendPose(A, B, smoother(u), centre, O, plan.route);
@@ -286,6 +338,6 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
       last.copy(O.q); hadLast = true; stats.frames++;
       return O.fov;
     },
-    state: () => ({ phase, id, w: +smoother(u).toFixed(3), cut: !!ink, veil: ink ? +veilAt(ink.s).toFixed(3) : 0, t: +t.toFixed(2), in: dur.inNow || dur.in, out: dur.back || dur.out, ...stats, turnMax: +THREE.MathUtils.radToDeg(stats.turnMax).toFixed(2) }),
+    state: () => ({ phase, id, planning: !!pending, w: +smoother(u).toFixed(3), cut: !!ink, veil: ink ? +veilAt(ink.s).toFixed(3) : 0, t: +t.toFixed(2), in: dur.inNow || dur.in, out: dur.back || dur.out, ...stats, turnMax: +THREE.MathUtils.radToDeg(stats.turnMax).toFixed(2) }),
   };
 }
