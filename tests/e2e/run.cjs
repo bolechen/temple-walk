@@ -288,10 +288,13 @@ const scenarios = {
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
     // The summit first, with nothing else in the book: three breaths, its seal, and the prologue closes all the same,
     // with words about this walk only, then the book with what is still to be found.
+    await t.page.evaluate(() => window.__music(true));   // the place heard, so that the close's music can be checked
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
-    expect((await t.page.evaluate(() => window.__cues())).farBell === 1, "the close should end on the far bell answering");
+    { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
+      expect(cu.farBell === 1, "the close should end on the far bell answering");
+      expect(cu.ending === 1 && mu.started, "the close should have its own music: " + JSON.stringify({ cu, section: mu.section })); }
     const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));

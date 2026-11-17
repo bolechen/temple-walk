@@ -169,6 +169,18 @@ export function createPlayer(ctx, out, seed = 1) {
       while (queue.length && queue[0].when < now + ahead) { const e = queue.shift(); voices.play(e, e.when); }   // voices.play may be replaced (the render tool's stems)
       return p;
     },
+    // The close of the chapter (score.js's endingPhrase): begun at once, over a short fade of whatever was sounding.
+    close(now, p, zone) {
+      const q = conductor.close(now, p, zone);
+      if (q.faded) { level.gain.setTargetAtTime(0, now, 0.15); }
+      level.gain.setTargetAtTime(SECTION_LEVEL.ending, q.start, 0.1);
+      queue = q.events.map((e) => ({ ...e, when: q.start + e.at })).sort((a, b) => a.when - b.when); last = q; phrases++; faded = false;
+      return q;
+    },
+    leave(now) {
+      const p = conductor.leave(now); if (!p) return null;
+      queue = []; faded = true; level.gain.setTargetAtTime(0, now, p.fade / 4); return p;
+    },
     get last() { return last; },
     get phrases() { return phrases; },
     get pending() { return queue.length; },

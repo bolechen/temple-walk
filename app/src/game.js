@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic } from "./audio.js";
+import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
 import { placeLift } from "./site.js";
@@ -208,15 +208,18 @@ export function createGame(y) {
     const from = 3.5, to = 23.5, gap = (to - from) / lines.length;
     return /** @type {[number, string][]} */ (lines.map((l, i) => [from + i * gap, l]));
   }
+  const TITLE_AT = 25.5;   // seconds into the close when the title of what has ended comes
   let closing = false, skip = false, /** @type {string[]} */ words = [];
   async function finale(on = () => true) {
     const el = $("ending"); if (closing || !el) { openBook(); return; }
     closing = true; skip = false; document.body.classList.add("ending"); el.hidden = false; $("endingTitle").classList.remove("on");
     const line = $("endingLine"), CLOSING = closingWords(); let shown = -1; words = CLOSING.map((c) => c[1]);
+    // The close has its own music, written to these words: the far bell's line and the title (audio.js, score.js).
+    closeMusic({ bell: CLOSING[bellLine][0], title: TITLE_AT });
     const pass = () => { skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
     await rites.close(() => on() && !skip, (t) => {
       let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
-      if (t > 25.5) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
+      if (t > TITLE_AT) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
       else if (k !== shown) {
         shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
         // When it is said that a bell answers in the far hills, it is heard (audio.js).
@@ -224,6 +227,7 @@ export function createGame(y) {
       }
     });
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
+    if (skip || !on()) passClose();
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
     // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
