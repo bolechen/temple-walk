@@ -1,0 +1,94 @@
+{
+  "scene_id": "T03",
+  "name": "照尘寺（暂名）",
+  "game": "山门之外",
+  "chapter": "寺前有戏",
+  "revision": "research draft, 2026-11-17",
+  "status": "draft; not implemented; positions to be fixed after the first whitebox",
+  "units": "metres; +x east; +z south (north is -z); y up",
+  "origin": "the centroid of Sifang Square, about 26.3195491N 99.8519663E, ground about 2105 m above sea level (SRTM estimate)",
+  "height_note": "ground_m is an SRTM estimate (±5-10 m) and the square is nearly flat; eye_m is above the local ground. Do not treat either as survey data.",
+  "season_time": "S01 autumn soft light (late afternoon, 16:00-17:30) as the base; winter clear and after-rain as separate variants",
+  "fov_deg": 44,
+  "cameras": [
+    {
+      "id": "cam01",
+      "name": "东巷",
+      "purpose": "sound before sight; the lane narrows, the gate opens, the stage eave peeks out",
+      "position": { "x": 72.0, "z": -5.5, "ground_m": 2099.0, "eye_m": 1.65 },
+      "look": { "yaw_deg": 270.0, "pitch_deg": 2.0 },
+      "fov_deg": 44,
+      "must_show": ["东巷石墙/门洞", "东寨门与红砂石路面", "戏台飞檐/屋脊的一角（不与门脊相切）", "远处寺院屋顶"],
+      "must_not": ["一上来就是广场全景", "戏台与东寨门门脊相切", "现代招牌/红灯笼阵"],
+      "notes": "The rehearsal or wood-floor sound should already be audible here; the picture confirms it."
+    },
+    {
+      "id": "cam02",
+      "name": "广场南端",
+      "purpose": "the whole square read at once: gate west, stage east, two locusts, paving",
+      "position": { "x": 0.0, "z": 29.0, "ground_m": 2105.0, "eye_m": 1.65 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 2.0 },
+      "fov_deg": 44,
+      "must_show": ["西侧寺门", "东侧戏台", "两棵古槐", "红砂石广场", "北巷/南侧铺面边缘"],
+      "must_not": ["寺门或戏台被树完全挡住", "广场像generic古镇", "可辨识人脸"],
+      "notes": "The gate and the stage must share the frame; this is the composition the whole chapter is built on."
+    },
+    {
+      "id": "cam03",
+      "name": "寺门内（一帧）",
+      "purpose": "the gate doorway frames the stage; the paving runs from inside the door to the stage",
+      "position": { "x": -16.0, "z": -9.0, "ground_m": 2106.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 118.0, "pitch_deg": 2.0 },
+      "fov_deg": 44,
+      "must_show": ["门洞的框（近景）", "框中的红砂石广场", "戏台（中景）", "戏台三层檐/魁星阁在上方"],
+      "must_not": ["过曝的门外", "戏台被门框切断", "把戏台强行居中（真实轴线可能偏）"],
+      "notes": "The exact standing spot where the doorway frames the stage has to be found on site; OSM suggests the axis is not perfectly east-west."
+    },
+    {
+      "id": "cam04",
+      "name": "戏台侧边",
+      "purpose": "three storeys read from the side: shop, stage, Kuixing pavilion; the added rear stair",
+      "position": { "x": 20.0, "z": 14.0, "ground_m": 2105.0, "eye_m": 1.65 },
+      "look": { "yaw_deg": 305.0, "pitch_deg": 6.0 },
+      "fov_deg": 44,
+      "must_show": ["一层铺面/背面室外楼梯", "二层台口", "三层魁星阁", "对面的寺门与广场"],
+      "must_not": ["把戏台做成空舞台", "三层压成两层", "楼梯像原构"],
+      "notes": "The rear stair is a later addition; it should look like one."
+    },
+    {
+      "id": "cam05",
+      "name": "寺院一进（天井）",
+      "purpose": "the first court: dim, quiet, the Guanyin tower as the end wall",
+      "position": { "x": -22.0, "z": -11.0, "ground_m": 2107.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 270.0, "pitch_deg": 3.0 },
+      "fov_deg": 44,
+      "must_show": ["红砂石天井/排水沟", "观音楼两层重檐悬山", "两侧厢房土坯墙/木窗", "天井上方的天空"],
+      "must_not": ["死黑", "把观音楼做成三层", "进入中殿/大殿"],
+      "notes": "The square should still be audible here, low-passed; the first court is not a sealed room."
+    },
+    {
+      "id": "cam06",
+      "name": "广场回望（换场）",
+      "purpose": "the same square after the loop: stalls packed up, lamps on, fewer people",
+      "position": { "x": 0.0, "z": 0.0, "ground_m": 2105.0, "eye_m": 1.65 },
+      "look": { "yaw_deg": 110.0, "pitch_deg": 2.0 },
+      "fov_deg": 44,
+      "must_show": ["戏台在晚光里", "红砂石长影", "收摊的箱子/扫帚/灯", "巷口有人走（背影/远景）"],
+      "must_not": ["一段表演代替生活", "人群摆拍", "可辨识人脸"],
+      "notes": "This is the 'the square goes on being used' beat; no forced time-skip animation."
+    }
+  ],
+  "framing_rules": [
+    { "order": 1, "camera": "cam01", "amount": "a corner of the stage eave", "method": "sound first, then the eave through the lane and gate" },
+    { "order": 2, "camera": "cam03", "amount": "the stage framed by the doorway", "method": "the visitor finds the spot; no forced camera" },
+    { "order": 3, "camera": "cam04", "amount": "three storeys from the side", "method": "shop, stage, pavilion; the stair looks added" }
+  ],
+  "to_verify_after_whitebox": [
+    "every camera stands on walkable ground",
+    "the stage is never cut by the frame in cam06",
+    "the gate-stage axis offset (official axis vs OSM 10-16 m south) is resolved or kept as a known deviation",
+    "the lane is narrow enough that the square is not visible from cam01",
+    "the first court is audible-but-muffled from cam05",
+    "no recognisable faces anywhere"
+  ]
+}
