@@ -1,0 +1,244 @@
+{
+ "shots": [
+  {
+   "id": "start-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=cam01&season=summer&time=day&view=third",
+   "place": "竹林起点",
+   "view": "cam01"
+  },
+  {
+   "id": "start-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=cam01&season=summer&time=day&view=third",
+   "place": "竹林起点",
+   "view": "cam01"
+  },
+  {
+   "id": "stair-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=cam02&season=summer&time=day&view=third",
+   "place": "石阶折线",
+   "view": "cam02"
+  },
+  {
+   "id": "stair-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=cam02&season=summer&time=day&view=third",
+   "place": "石阶折线",
+   "view": "cam02"
+  },
+  {
+   "id": "screen-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 1,
+   "query": "show=cam03&season=summer&time=day&view=third",
+   "place": "照壁前",
+   "view": "cam03"
+  },
+  {
+   "id": "screen-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 1,
+   "query": "show=cam03&season=summer&time=day&view=third",
+   "place": "照壁前",
+   "view": "cam03"
+  },
+  {
+   "id": "gate-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=gate&season=summer&time=day&view=third",
+   "place": "山门",
+   "view": "gate"
+  },
+  {
+   "id": "gate-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=gate&season=summer&time=day&view=third",
+   "place": "山门",
+   "view": "gate"
+  },
+  {
+   "id": "court-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=court&season=summer&time=day&view=third",
+   "place": "首院",
+   "view": "court"
+  },
+  {
+   "id": "court-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=court&season=summer&time=day&view=third",
+   "place": "首院",
+   "view": "court"
+  },
+  {
+   "id": "hall-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=hall&season=summer&time=day&view=third",
+   "place": "大殿",
+   "view": "hall"
+  },
+  {
+   "id": "hall-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=hall&season=summer&time=day&view=third",
+   "place": "大殿",
+   "view": "hall"
+  },
+  {
+   "id": "lookback-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 1,
+   "query": "show=lookback&season=autumn&time=dusk&view=first",
+   "place": "凌霄阁回望",
+   "view": "lookback"
+  },
+  {
+   "id": "lookback-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 1,
+   "query": "show=lookback&season=autumn&time=dusk&view=first",
+   "place": "凌霄阁回望",
+   "view": "lookback"
+  },
+  {
+   "id": "bell-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=shot-bell&season=summer&time=day&view=third",
+   "place": "撞钟",
+   "view": "shot-bell"
+  },
+  {
+   "id": "bell-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=shot-bell&season=summer&time=day&view=third",
+   "place": "撞钟",
+   "view": "shot-bell"
+  },
+  {
+   "id": "night-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 2,
+   "query": "show=lamps&season=winter&time=night&view=third",
+   "place": "夜",
+   "view": "lamps"
+  },
+  {
+   "id": "night-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 2,
+   "query": "show=lamps&season=winter&time=night&view=third",
+   "place": "夜",
+   "view": "lamps"
+  },
+  {
+   "id": "snow-land",
+   "orient": "land",
+   "size": [
+    3840,
+    2160
+   ],
+   "batch": 1,
+   "query": "show=court&season=winter&time=day&view=third",
+   "place": "雪",
+   "view": "court"
+  },
+  {
+   "id": "snow-port",
+   "orient": "port",
+   "size": [
+    1560,
+    2080
+   ],
+   "batch": 1,
+   "query": "show=court&season=winter&time=day&view=third",
+   "place": "雪",
+   "view": "court"
+  }
+ ]
+}
