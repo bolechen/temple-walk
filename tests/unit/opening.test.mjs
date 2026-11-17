@@ -8,7 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { buildSite, createWalker, SCREEN } from "../../app/src/site.js";
+import { buildSite, createWalker, SCREEN, GROVE, terrain } from "../../app/src/site.js";
 import { followEye } from "../../app/src/eye.js";
 import { DIRECT, turnBetween, inWay } from "../../app/src/director.js";
 import { OPENING, openingFor, openingPlan, createOpening, atGate, SILENT } from "../../app/src/opening.js";
@@ -54,6 +54,16 @@ test("every point of the way stands clear of walls, eaves, columns, railings and
     if (inWay(walker, x, y, z, foot) || y < foot + 0.3) bad.push(o.p.toArray().map((v) => +v.toFixed(2)));
   }
   assert.deepEqual(bad.slice(0, 6), [], `${bad.length} points of the way are inside something`);
+});
+
+test("it keeps over the tops of the bamboo, except down the clear way of the path, so that no culm crosses the picture", () => {
+  const bad = [];
+  for (const o of frames()) {
+    const { x, y, z } = o.p; if (Math.hypot(x - A.p.x, z - A.p.z) < 6) continue;   // where the following eye stands among the culms at the start, as ever
+    const grows = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => GROVE.grows(x + dx, z + dz));   // (a culm leans, and its leaves reach a metre)
+    if (grows && y < terrain(x, z) + GROVE.top + 0.5) bad.push([x, y, z].map((v) => +v.toFixed(1)));
+  }
+  assert.deepEqual(bad.slice(0, 6), [], `${bad.length} points of the way are down among the bamboo`);
 });
 
 test("it never turns or moves faster in a frame than a swing of the director's may", () => {
@@ -121,7 +131,8 @@ test("skipped at any moment, it comes down the rest of the same way in 0.8–1.2
     assert.equal(bad, 0, `skipped at ${at} s: ${bad} frames inside something`);
     assert.ok(cam.position.distanceTo(A.p) < 0.05 && deg(turnBetween(cam.quaternion, A.q)) < 1, `skipped at ${at} s: ends on him`);
     assert.ok(deg(turn) < 8, `skipped at ${at} s: turned ${deg(turn).toFixed(1)}° in one frame`);
-    assert.ok(gap < 3.5, `skipped at ${at} s: a jump of ${gap.toFixed(2)} m in one frame (a cut)`);
+    // Quick, but travelled: no frame steps farther than the eased pace over the rest of the way allows (a cut would).
+    assert.ok(gap <= (1.6 * left) / took / 60 + 0.05, `skipped at ${at} s: a jump of ${gap.toFixed(2)} m in one frame (a cut)`);
     assert.equal(o.state().cuts, 0);
   }
 });
