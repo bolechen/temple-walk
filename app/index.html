@@ -60,20 +60,24 @@
   </div>
   <dialog class="layer" id="menu" aria-label="歇脚" hidden><div class="card paper scrolls">
     <h2>歇脚<span class="seal-mark" aria-hidden="true">云径</span></h2>
+    <div class="grp grp-view">
     <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
     <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
-    <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
     <div class="set"><label for="setFov">视野</label><input id="setFov" type="range" min="-6" max="16" step="1"></div>
-    <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
-    <div class="set"><span>锁定鼠标</span><button class="chip" id="setLock" type="button" aria-pressed="false">关</button></div>
     <div class="set"><span>自动镜头</span><button class="chip" id="setAutocam" type="button" aria-pressed="true">开</button></div>
     <div class="set need-seasons"><span>时节</span><div class="opts"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div></div>
     <div class="set need-seasons"><span>时辰</span><div class="opts"><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></div>
-    <div class="set"><span>文字</span><div class="opts"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></div></div>
+    </div>
+    <div class="grp grp-ctl">
+    <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
+    <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
+    <div class="set"><span>锁定鼠标</span><button class="chip" id="setLock" type="button" aria-pressed="false">关</button></div>
     <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setMusic">乐声</label><input id="setMusic" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setAmbience">山声</label><input id="setAmbience" type="range" min="0" max="1" step="0.05"></div>
     <div class="set"><label for="setEffects">音效</label><input id="setEffects" type="range" min="0" max="1" step="0.05"></div>
+    </div>
+    <div class="set"><span>文字</span><div class="opts"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></div></div>
     <div class="community-invite" id="menuCommunityInvite" hidden><button class="chip" id="menuCommunity" type="button">加入内测反馈群</button><p>遇到问题，或有什么想法，来群里聊聊。</p></div>
     <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuCredits" type="button">鸣谢</button><button class="stamp" id="menuResume" type="button">继续</button></div>
   </div></dialog>
