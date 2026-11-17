@@ -794,7 +794,10 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__prologue())).shown === 0, "the title rose before the screen wall");
     await t.page.keyboard.down("w"); await reach(t, "the title never rose at the gate", () => window.__prologue().on, null, 90000); await t.page.keyboard.up("w");
     let P = await t.page.evaluate(() => window.__prologue()); expect(P.shown === 1 && /序章/.test(P.text) && /云径禅寺/.test(P.text), "the title should say 序章 云径禅寺: " + JSON.stringify(P));
-    expect((await t.page.evaluate(() => window.__cues())).prologue === 1, "one note of the qin with the title");
+    { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
+      expect(cu.prologue === 1, "the title should sound once: " + JSON.stringify(cu));
+      // With the music playing, the title's note is the first note of the gate's first phrase, begun with it.
+      expect(mu.started && mu.state === "running" && cu.titled === 1 && mu.section === "gate", "the gate's first phrase should begin with the title: " + JSON.stringify({ cu, section: mu.section })); }
     await reach(t, "the title never left", () => !window.__prologue().on && document.getElementById("prologue").hidden, null, 60000);
     await t.page.evaluate(([y]) => window.__pose(8.5, 58, y, 0.05), [-0.3]); await t.frames(3); await t.page.keyboard.down("w");
     await t.until(async () => (await t.state()).z < 52, 60000, "he never came round the wall again"); await t.page.keyboard.up("w");

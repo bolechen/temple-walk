@@ -170,10 +170,11 @@ export function createPlayer(ctx, out, seed = 1) {
       return p;
     },
     // The close of the chapter (score.js's endingPhrase): begun at once, over a short fade of whatever was sounding.
-    close(now, p, zone) {
-      const q = conductor.close(now, p, zone);
+    close(now, p, zone) { return this.begin(now, p, zone, conductor.close(now, p, zone)); },
+    // A phrase begun at once (the conductor's begin), over a short fade of whatever was sounding.
+    begin(now, p, zone, q = conductor.begin(now, p, zone)) {
       if (q.faded) { level.gain.setTargetAtTime(0, now, 0.15); }
-      level.gain.setTargetAtTime(SECTION_LEVEL.ending, q.start, 0.1);
+      level.gain.setTargetAtTime(SECTION_LEVEL[q.section] ?? 0.8, q.start, 0.1);
       queue = q.events.map((e) => ({ ...e, when: q.start + e.at })).sort((a, b) => a.when - b.when); last = q; phrases++; faded = false;
       return q;
     },
