@@ -1346,6 +1346,19 @@ const scenarios = {
     await t.until(async () => (await t.page.evaluate(() => window.__jump.some((j) => j[1]))) && !(await t.state()).jumping, 120000, "he never came down from a running jump");
     await t.page.keyboard.up("w"); js = (await t.page.evaluate(() => window.__jump)).filter((j) => j[1]);
     expect(js.length >= 2 && js[js.length - 1][2] < js[0][2] - 0.02, "he should carry on forward through the air");
+    // #143: from the court, facing the meditation hall's low porch (0.45 m), Space jumps up onto it along an arc of his own jump,
+    // and walking at the same edge still stops him.
+    await t.page.evaluate(() => window.__pose(12.4, 8, Math.PI / 2, 0.1)); await t.frames(3);
+    await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w"); await t.frames(2);
+    expect((await t.state()).x < 12.8, "walking at the porch edge from the court should still stop him");
+    await t.page.evaluate(() => window.__pose(12.4, 8, Math.PI / 2, 0.1)); await t.frames(3);
+    await t.page.evaluate(() => { window.__up = []; window.__upOn = true; const read = () => { const s = window.__yard(); window.__up.push([s.x, s.footY, s.dropping]); if (window.__upOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+    await t.page.keyboard.press("Space");
+    await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0.45 && s.x > 13.2; }, 120000, "Space did not take him up onto the low porch");
+    const up = await t.page.evaluate(() => { window.__upOn = false; return window.__up; });
+    expect(up.filter((q) => q[2]).length >= 3 && up.some((q) => q[1] > 0.2 && q[1] < 0.44) && Math.max(...up.map((q) => q[1])) < 0.47, "the way up should be a rise and a fall, not a teleport, and no higher than his jump: " + JSON.stringify(up.filter((q) => q[2]).map((q) => [q[0], q[1]]).slice(0, 8)));
+    expect(Math.abs((await t.state()).footY - 0.45) < 0.001, "he should stand on the porch");
+    await t.shot("jump-up");
     // Where something is offered, Space still jumps and E still does it.
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("Space"); await t.frames(3); expect((await t.journey()).strikes === 0, "Space should not strike the bell any more");
