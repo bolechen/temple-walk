@@ -16,7 +16,7 @@ const srv = http.createServer((req, res) => {
   const errs = []; p.on("pageerror", (e) => errs.push(e.message));
   for (const when of process.argv.slice(3).length ? process.argv.slice(3) : ["summer-day", "autumn-dusk"]) {
     const [season, time] = when.split("-");
-    await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&enter&view=third&cam=0,-4,0,0.02&season=${season}&time=${time}`, { waitUntil: "load" });
+    await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&enter&view=third&show=court&season=${season}&time=${time}`, { waitUntil: "load" });
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
     await p.waitForTimeout(1500);
     await p.screenshot({ path: path.join(out, `${when}-standing.png`) });
