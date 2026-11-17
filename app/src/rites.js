@@ -28,8 +28,9 @@ const LOG_DRAW = 0.24, TAP = 0.08;
 // The clock the observances keep. A test or a picture tool may hold it still and step it (`__riteClock(ms)` moves it
 // on by so much and holds it there; `__riteClock(null)` lets it run again), so that a moment can be looked at.
 // While a photograph holds the picture still (`pauseRites`), the clock stops too, and when it runs again it takes up
-// where it stopped: an observance half done is not found finished behind the print.
-let held = null, offset = 0, pausedAt = null;
+// where it stopped: an observance half done is not found finished behind the print. A page hidden behind a phone's dark
+// screen is the same: no time is kept, and the passage is found where it was (a pause and a hidden page count once).
+let held = null, offset = 0, pausedAt = null, hiddenAt = null;
 // Where the eye must aim so that a point (the top of the pavilion at the close) stays a margin of the picture's height
 // under its upper edge: the aim it was given, raised only as far as that needs. The picture is taller or wider on
 // different screens, and the pavilion taller than it was.
@@ -45,11 +46,22 @@ export function aimToFrame(cam, aim, top, fov, aspect, margin = 0.08) {
   return new THREE.Vector3(aim.x, hi, aim.z);
 }
 const _v = new THREE.Vector3();
-export const riteNow = () => held ?? performance.now() - offset;
-export function pauseRites(on) {
-  if (on && pausedAt === null && held === null) { pausedAt = performance.now(); held = pausedAt - offset; }
-  else if (!on && pausedAt !== null) { offset += performance.now() - pausedAt; pausedAt = null; held = null; }
+export const riteNow = (now = performance.now()) => held ?? ((hiddenAt ?? now) - offset);
+/** The page was hidden (a phone's screen off, another tab) or is seen again: the clock keeps no time while it is away.
+ *  `@param {boolean} hidden @param {number} [now]` */
+export function setHidden(hidden, now = performance.now()) {
+  if (hidden) { if (hiddenAt === null) hiddenAt = now; return; }
+  if (hiddenAt === null) return;
+  if (pausedAt === null && held === null) offset += now - hiddenAt;   // a pause already holds this time: count it once
+  hiddenAt = null;
 }
+export function pauseRites(on, now = performance.now()) {
+  if (on && pausedAt === null && held === null) { pausedAt = now; held = pausedAt - offset; }
+  else if (!on && pausedAt !== null) { offset += now - pausedAt; pausedAt = null; held = null; }
+}
+/** Only for a test: the clock starts again at zero, with nothing holding it. */
+export function resetClock() { held = null; offset = 0; pausedAt = null; hiddenAt = null; }
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") document.addEventListener("visibilitychange", () => setHidden(document.hidden));
 if (typeof window !== "undefined") window.__riteClock = (ms) => { held = ms == null ? null : (held ?? riteNow()) + ms; return held; };
 
 function softDot() {

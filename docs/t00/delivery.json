@@ -164,7 +164,8 @@
     "drop.js/yard.js：面朝无栏杆台沿、站在台下时空格跳上去（findClimb/climbPose，REACH=v²/2g 来自 JUMP，台高 ≤ REACH 的 99.5%），茶寮、禅堂 0.45 m 能上，山门 0.5 m 与以上不能；走路碰台沿照旧被挡；半山亭平台走路即可上，不需要跳（#143，先失败）",
     "route.js/yard.js：点地走在直线不通时找路（0.2 m 网格 A*、拉直、每帧 4 ms 分帧）：绕柱桌蒲团、走台阶、台沿跳下省 3 m 以上就跳（与空格同弧线）、不跳上；走不到的落点走最近可达点再朝落点直走；站在挡路圈里先迈出来（#154，先失败）；standing.test 守游戏自己放他的点都不在挡路圈里",
     "yard.js/ui.css/hints.js/locales：触屏右下角淡圈（#jumpBtn，只对粗指针出现）：按下跳，台沿前读作下台阶/上台，原触屏 #dropBtn 并入；提示行说一次；四种语言（#142）",
-    "link.js/yard.js：正式站控制台 __debugURL() 返回当前位姿、视角、季节时辰、所在殿室/阁楼的地址（?cam=…&view=…&season=…&time=…&in=…&up=…&devpose），不改地址栏、不上报；poseQuery 从 devpose.js 抽到 link.js 由开发分支与线上共用；调试面板的复制链接带上阁楼 up（#165，先失败）"
+    "link.js/yard.js：正式站控制台 __debugURL() 返回当前位姿、视角、季节时辰、所在殿室/阁楼的地址（?cam=…&view=…&season=…&time=…&in=…&up=…&devpose），不改地址栏、不上报；poseQuery 从 devpose.js 抽到 link.js 由开发分支与线上共用；调试面板的复制链接带上阁楼 up（#165，先失败）",
+    "awake.js（新）/game.js：收尾播放期间申请屏幕唤醒锁，结束或跳过时释放，不支持或低电量静默放弃；rites.js：页面隐藏时仪式时钟冻结、可见后接着走，与拍照定格重叠只算一次；game.js：回到可见后 900 ms 内不把点击/键当作跳过（#169，先写测试）"
   ],
   "known_issues": [
     "凌霄阁回廊已按所有者定的 2.4 / 3.2 做，平坐重栱、普拍方厚 0.21；叉柱造未做（平坐铺作直接坐在二层柱头上）",
@@ -308,7 +309,8 @@
     "GPU（T4，court 1920×1080 __cost）：高档秋暮 10.70 → 13.67 / 14.03 ms，夏昼 9.65 → 12.96 / 13.20 ms；低档 5.19/5.01 → 5.44/5.78 ms；tour p95 第2/3趟 21.4/21.1 → 22.2/22.1（run 183337）或 24.6/25.3（run 185026）",
     "look.py 不过线的项数（改前 → 改后）：A1 4→3，A2 4→5，A3 7→1，A4 6→3，A5 6→1，A6 11→4",
     "#114：docs/t00/evidence/landscape/114/（T4，改前 main 67f1d27、改后本分支，四向竹林起点、凌霄阁前东西、石阶转折、山顶回望，四种季节时辰；compare/ 左前右后）",
-    "Issue #165：views 场景在 dist 上调用 __debugURL()，用返回的地址重开，__yard() 的 x/z/yaw/pitch、view、season、time 与调用前一致，地址未被改写（本地 SwiftShader，180 s 通过）"
+    "Issue #165：views 场景在 dist 上调用 __debugURL()，用返回的地址重开，__yard() 的 x/z/yaw/pitch、view、season、time 与调用前一致，地址未被改写（本地 SwiftShader，180 s 通过）",
+    "Issue #169：e2e screen 场景（dist，SwiftShader，22 s）：stub wakeLock 记录 request:screen 与 release；模拟隐藏 0.7 s 时 __rites().close.u 不前进；唤醒那一击不结束收尾，1 s 后再点才跳过；tests/unit/awake.test.mjs 4 项、rite-clock.test.mjs 2 项"
   ],
   "domain_binding": {
     "date": "2026-11-15",
@@ -442,7 +444,8 @@
     "structure_phase3": "pnpm test 266/266；check、typecheck 通过；edges 0 处超限；e2e:smoke 31/31",
     "monk_80_weld": "novice.test.mjs 两条新测试在旧 novice.glb 上失败（962 个副本权重不同；站立 765 处分开，最远 97 mm），新文件 10/10 通过；其余结果见 PR 说明",
     "round_issue_71": "1c06e75 上：单测 267/267；check、typecheck 通过；e2e smoke 32/32（含新 director 场景：七处进机位、W/拖动/Esc 回程、撞钟连按不动、拍照、开关、减少动态、第一人称、结尾接手）；play-t00 director 段零错误（在改用仪式时钟之前的提交上录）；mobile-audit 通过",
-    "round_issue_165": "pnpm run check 72 files 0 问题；typecheck 通过；单测 367/367（link.test.mjs 7 项、devpose.test.mjs 4 项）；node tests/e2e/run.cjs views 通过。CI verify 由 PR 运行，不在本文件手写结论"
+    "round_issue_165": "pnpm run check 72 files 0 问题；typecheck 通过；单测 367/367（link.test.mjs 7 项、devpose.test.mjs 4 项）；node tests/e2e/run.cjs views 通过。CI verify 由 PR 运行，不在本文件手写结论",
+    "round_issue_169": "pnpm run check 73 files 0 问题；typecheck 通过；单测 373/373；e2e screen、pilgrimage、oldbook、replay、director 通过（见 PR）。CI verify 由 PR 运行"
   },
   "unverified": [
     "#91 的对照图是软件渲染；T4 帧时间各量了一次（首院 10.45 → 10.15 ms，山门前 11.53 → 10.89 ms），一次测量不足以说明快了，只说明没有变慢",
@@ -492,7 +495,8 @@
     "#143：0.45 m 台只比跳跃顶点低 9 mm，跳上的观感（几乎竖直起跳、最后越沿）待主创看；侧面连拍、真实按键录像、跳上时镜头不抖的专项未做",
     "#154：真实点击录像、页面里最大一帧用时、殿内房间与凌霄阁顶层的点地未单独验；3 m 跳下阈值与 0.2 m 网格是自拟",
     "#142：真机多点触控（左手摇杆、右手圈）、三种尺寸四种语言的 mobile-audit 截图、推着摇杆按圈的端到端未自动化",
-    "#165：没有在正式域名上手动打开控制台试；链接只复现位姿与光线，不带仪轨进度、香、快门、推拉、转场；没有在真机上用过控制台"
+    "#165：没有在正式域名上手动打开控制台试；链接只复现位姿与光线，不带仪轨进度、香、快门、推拉、转场；没有在真机上用过控制台",
+    "#169：真机（iOS Safari、Android Chrome）上的息屏/唤醒与低电量模式未试；screen 场景只是覆盖 document.hidden，没有真正隐藏页面；唤醒锁未在省电模式下量"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",

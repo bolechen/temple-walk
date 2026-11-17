@@ -772,6 +772,35 @@ const scenarios = {
     d = await r.page.evaluate(() => window.__director()); expect(d.cuts === 2 && d.blends === 0, "and come home behind it: " + JSON.stringify(d)); saw++;
     expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
   } },
+  // A phone's screen going dark in the middle of the close (#169): the passage asks the screen to stay awake (Screen
+  // Wake Lock, recorded by a stub), keeps no time while the page is hidden, does not take the tap that brings the page
+  // back for a skip, and lets the screen go when it is over. `document.hidden` is stood in for here; the page is not
+  // really hidden, but every reader of it is.
+  screen: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
+      window.__wake = [];
+      Object.defineProperty(navigator, "wakeLock", { configurable: true, value: { request: async (type) => { window.__wake.push("request:" + type); return { release: async () => { window.__wake.push("release"); }, addEventListener() {} }; } } });
+      let hidden = false;
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (hidden ? "hidden" : "visible") });
+      window.__setHidden = (v) => { hidden = v; document.dispatchEvent(new Event("visibilitychange")); };
+    } });
+    const R = () => t.page.evaluate(() => window.__rites()), wake = () => t.page.evaluate(() => window.__wake.slice());
+    await t.page.evaluate(() => { void window.__ending(); });   // it is a promise; do not wait for the whole close here
+    await t.until(async () => (await R()).closing === true, 60000, "the close never began");
+    await t.until(async () => (await wake()).includes("request:screen"), 30000, "the close did not ask the screen to stay awake");
+    const u0 = (await R()).close.u;
+    await t.page.evaluate(() => window.__setHidden(true)); await t.page.waitForTimeout(700);
+    const u1 = (await R()).close.u;
+    expect(u1 - u0 < 0.03, "the close kept time behind a dark screen: " + JSON.stringify([u0, u1]));
+    await t.page.evaluate(() => { window.__setHidden(false); document.getElementById("ending").click(); });   // the wake tap, at once
+    expect((await R()).closing === true, "the tap that brought the page back skipped the close");
+    await t.page.waitForTimeout(1000);
+    await t.page.evaluate(() => document.getElementById("ending").click());
+    await t.until(async () => (await R()).ended >= 1, 30000, "a later tap did not pass over the close");
+    await t.until(async () => (await wake()).includes("release"), 15000, "the wake lock was not let go after the close");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain
   // to him before the walk is theirs; nothing lies over the picture meanwhile; the bell sounds at the click and the music
   // waits; the first line about walking comes only after; at the gate the prologue's title rises and leaves, once. A

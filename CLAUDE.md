@@ -368,8 +368,10 @@ stool must be registered the same way, with its kind; `rites.test.mjs` holds it.
 summit is the last thing: before the other six seals its mat is only a seat. When the seventh is earned there, `finale`
 (`game.js`) hands the eye to `rites.close` (`y.cine(fn)`: round before him, back down the steps, up until the pavilion
 stands whole), says the closing words one at a time (`CLOSING`: they end on something unanswered, for a chapter not
-yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
-`__ending()` plays it again. It comes once in each season (`journey.closedIn(season)`, `closedSeason` in the book): after a
+yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it; the close
+asks for a screen wake lock while it plays and lets it go after (`src/awake.js`), the rites' clock keeps no time while the
+page is hidden (`rites.js`: a phone's screen off is not the close finishing), and the tap that wakes a sleeping phone is
+not taken for a skip; `__ending()` plays it again. It comes once in each season (`journey.closedIn(season)`, `closedSeason` in the book): after a
 change of season, sitting there plays it again, without the full book's seal a second time.
 
 **Coming back, and going back (`resume.js`, `game.js`).** Where he stands is kept every two seconds and when the page is
