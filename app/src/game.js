@@ -338,7 +338,7 @@ export function createGame(y) {
   const TITLED = "yunjing.prologue.v1";
   let titled = (() => { try { return localStorage.getItem(TITLED) === "1"; } catch { return false; } })(), titleShown = 0;
   const forgetTitle = () => { titled = false; try { localStorage.removeItem(TITLED); } catch {} };
-  const prologueTitle = () => {
+  const prologueTitle = (hold = false) => {
     const el = $("prologue"); if (!el) return;
     titled = true; titleShown++; if (free) { try { localStorage.setItem(TITLED, "1"); } catch {} }
     // Written in the brush, in the temple's own characters (Japanese forms in Japanese, glyphs()); in English and Korean the
@@ -346,11 +346,11 @@ export function createGame(y) {
     const read = lang === "en" || lang === "ko" ? `<small>${t("序章　云径禅寺")}</small>` : "";
     el.innerHTML = `<b><span>${glyphs("序章")}</span><span>${glyphs("云径禅寺")}</span></b>${read}`;
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on"); prologueNote(); track("opening.title", {});
-    setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 1300); }, 4000 * Math.max(fast, 0.5));
+    if (!hold) setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 1300); }, 4000 * Math.max(fast, 0.5));
   };
   y.onTick(() => { if (!titled && entered && free && !y.inside() && !y.openingActive() && atGate(y.where())) prologueTitle(); });
-  // What the title has done (and, for the picture tools, `__prologue(true)` raises it now, wherever he stands).
-  window.__prologue = (show) => { if (show === true) prologueTitle(); return { titled, shown: titleShown, on: !!$("prologue")?.classList.contains("on"), text: $("prologue")?.textContent || "" }; };
+  // What the title has done (and, for the picture tools, `__prologue(true)` raises it now, wherever he stands; "hold" keeps it up).
+  window.__prologue = (show) => { if (show === true || show === "hold") prologueTitle(show === "hold"); return { titled, shown: titleShown, on: !!$("prologue")?.classList.contains("on"), text: $("prologue")?.textContent || "" }; };
 
   // ---- The title ----
   const title = $("title");
