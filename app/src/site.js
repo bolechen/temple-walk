@@ -75,7 +75,8 @@ export function buildSite(M) {
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
     for (const r of b.walk.rails || []) walk.rails.push({ ...place(r, at, q), bottom: r.bottom + y, top: r.top + y });
-    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
+    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q),
+      crest: r.crest && r.crest.map(([cx, cy, cz]) => { const [x, z] = turn(cx, cz, q); return [x + at[0], cy + y, z + at[1]]; }) });
     for (const edge of b.walk.drops) {
       const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
       walk.drops.push({ a: world(edge.a), b: world(edge.b), normal: turn(...edge.normal, q), top: edge.top + y });

@@ -426,6 +426,9 @@ export function buildHall(M, opts) {
         }
         parts.push(c.translate(s * (gx + 0.25), ridgeY - 0.1, 0));
       }
+      // The tips of the two end ornaments, the highest and outermost points of the roof: what a picture of the whole
+      // building must keep inside its frame (`aimToFrame` at the close).
+      g.userData.crest = [-1, 1].map((s) => [s * (gx + 0.25), ridgeY - 0.1 + 1.36 * k, 0]);
     } else {   // pyramid roof: a finial at the apex
       parts.push(new THREE.LatheGeometry([[0, 0], [0.34, 0], [0.4, 0.12], [0.2, 0.3], [0.3, 0.52], [0.22, 0.78], [0.08, 0.95], [0, 1.3]].map(([a, b]) => new THREE.Vector2(a, b)), 14).translate(0, roofY(0, 0) - 0.1, 0));
     }
@@ -545,7 +548,7 @@ export function buildHall(M, opts) {
   // the floor is open, the building: within its walls up to the ridge, and over the rest of its platform only up to
   // the floor (or the top of its railing), so that from a porch the eye can back out over the edge.
   walk.roofs.push({ x0: -EX - 0.3, x1: EX + 0.3, z0: -EZ - 0.3, z1: EZ + 0.3, bottom: topY - 0.15, inner: head - 0.15, top: EAVE_Y + RISE + 0.3,
-    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
+    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, crest: g.userData.crest || null, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
   return { group: g, walk, plat, sets, ping, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
