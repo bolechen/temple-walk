@@ -122,7 +122,9 @@ export function createMeshWalker(o) {
       const ny = h.face.normal.y, y = h.point.y;
       const mat = S.names[S.mat[Math.floor(h.face.a / 3)]];
       if (mat.startsWith("post:")) continue;   // a cushion or a table is walked round, not stood on: look through it to the floor
-      if (ny > 0.5 && above - y >= MW.CLEAR - 1e-6) { last = { y, mat }; return last; }
+      // The first face looking up is the floor, whatever is over it: if something hangs lower than CLEAR over it, that
+      // thing stands in his way there (the body test sees it), rather than the ray going on down through the solid.
+      if (ny > 0.5) { last = { y, mat, clear: above - y }; return last; }
       above = y;
     }
     last = null; return null;
@@ -164,17 +166,29 @@ export function createMeshWalker(o) {
     const h = new Float32Array(N), border = new Int16Array(N).fill(-1), shut = new Uint8Array(N), cause = new Int16Array(N).fill(-1), LEDGE = S.names.length;
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const f = floor(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step); h[j * nx + i] = f ? f.y : region.floorY; }
     const t1 = performance.now();
-    const rad = new Float32Array(N);   // how far a border cell keeps his centre off: his reach at the heights it takes up
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i, w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71); if (w) { border[k] = S.names.indexOf(w.what); rad[k] = reach(w.lo, w.hi); } }
+    const rad = new Float32Array(N), top = new Float32Array(N), post = new Uint8Array(N);   // top: the highest point of what made a cell a border   // how far a border cell keeps his centre off: his reach at the heights it takes up
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i, w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71); if (w) { border[k] = S.names.indexOf(w.what); rad[k] = reach(w.lo, w.hi); top[k] = w.floor + w.hi; post[k] = w.what.startsWith("post:") ? 1 : 0; } }
     const t2 = performance.now();
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; if (border[k] >= 0) continue; let up = 0;
       for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; up = Math.max(up, h[jj * nx + ii] - h[k]); }
-      if (up > MW.CLIMB) { border[k] = LEDGE; rad[k] = reach(0, Math.min(up, MW.CLEAR)); } }
+      if (up > MW.CLIMB) { border[k] = LEDGE; rad[k] = reach(0, Math.min(up, MW.CLEAR)); top[k] = h[k] + up; } }
     const disks = new Map(), diskOf = (r) => { const q = Math.round(r * 100); if (!disks.has(q)) { const R = Math.ceil(q / 100 / step), d = []; for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) if (Math.hypot(a, b) * step < q / 100) d.push([a, b]); disks.set(q, d); } return disks.get(q); };
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k0 = j * nx + i, c = border[k0]; if (c < 0) continue; shut[k0] = 1; cause[k0] = c;
-      for (const [a, b] of diskOf(rad[k0])) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (!shut[kk]) { shut[kk] = 1; cause[kk] = c; } } }
+      // What made the border keeps him off only where it stands above his feet: the face of a platform, seen from the
+      // court, is no obstacle to him standing on the porch above it.
+      for (const [a, b] of diskOf(rad[k0])) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (!shut[kk] && (post[k0] || top[k0] > h[kk] + MW.CLIMB)) { shut[kk] = 1; cause[kk] = c; } } }
+    // What cannot be walked to from where he comes in (a hall's hollow shell, the top of a table, a railing's cap) is
+    // shut too, as Recast drops the regions its seeds do not reach. Cells are joined eight ways when neither is shut
+    // and the floor steps no more than CLIMB.
+    const UNREACHED = S.names.length + 1;
+    if (box.seeds) { const seen = new Uint8Array(N), q = [];
+      for (const [sx, sz] of box.seeds) { const i = Math.floor((sx - box.x0) / step), j = Math.floor((sz - box.z0) / step), k = j * nx + i; if (i >= 0 && j >= 0 && i < nx && j < nz && !shut[k]) { seen[k] = 1; q.push(k); } }
+      while (q.length) { const k = q.pop(), i = k % nx, j = (k - i) / nx;
+        for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii;
+          if (seen[kk] || shut[kk] || Math.abs(h[kk] - h[k]) > MW.CLIMB || (a && b && (shut[j * nx + ii] || shut[jj * nx + i]))) continue; seen[kk] = 1; q.push(kk); } }
+      for (let k = 0; k < N; k++) if (!shut[k] && !seen[k]) { shut[k] = 1; cause[k] = UNREACHED; } }
     const t3 = performance.now();
-    return { x0: box.x0, z0: box.z0, nx, nz, step, h, shut, cause, names: [...S.names, "ledge"], ms: { floor: Math.round(t1 - t0), body: Math.round(t2 - t1), erode: Math.round(t3 - t2) } };
+    return { x0: box.x0, z0: box.z0, nx, nz, step, h, shut, cause, names: [...S.names, "ledge", "unreached"], ms: { floor: Math.round(t1 - t0), body: Math.round(t2 - t1), erode: Math.round(t3 - t2) } };
   }
   const cell = (G, x, z) => { const i = Math.floor((x - G.x0) / G.step), j = Math.floor((z - G.z0) / G.step); return i < 0 || j < 0 || i >= G.nx || j >= G.nz ? -1 : j * G.nx + i; };
   const grids = {};
@@ -207,7 +221,7 @@ export function createMeshWalker(o) {
     why(x, z) { const S = scope(x, z); if (!S) return undefined; const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? (G.shut[k] ? G.names[G.cause[k]] : null) : inBody(S, x, z, BODY)?.what ?? null; },
     /** Bake the grids (outdoors over the region, and the room): returns the milliseconds each part took. */
     bake(step = 0.05, cache = null) {
-      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v3.bin`;
+      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v7.bin`;
         if (file && cache.exists(file)) return cache.read(file);
         const g = bake(S, box, step); if (file) cache.write(file, g); return g; };
       grids.outdoors = one({ ...o.outdoors, ceil: region.ceil }, region, "court");
@@ -216,7 +230,16 @@ export function createMeshWalker(o) {
     },
     grids,
     wall(x, z) { const S = scope(x, z); if (!S) return fallback.wall(x, z); const y = heightAt(x, z); return !!inBody(S, x, z, 0.15) || insideSolid(S, x, y + 0.8, z); },
-    eyeShut(x, y, z, foot) { const S = scope(x, z); if (!S) return fallback.eyeShut(x, y, z, foot); return near(S, x, y, z, MW.EYE_R) || enclosed(S, x, y, z); },
+    // The eye: shut within EYE_R of anything drawn; and over ground he cannot walk to (a hall's shell, a wall, a
+    // platform's body: cells the bake left unreached, or the very cells something stands in), shut below the topmost
+    // face over that spot, so that it is never inside a building up to its ridge nor inside a wall.
+    eyeShut(x, y, z, foot) {
+      const S = scope(x, z); if (!S) return fallback.eyeShut(x, y, z, foot);
+      if (near(S, x, y, z, MW.EYE_R)) return true;
+      const G = gridFor(x, z), k = G ? cell(G, x, z) : -1;
+      if (k >= 0 && G.shut[k] && G.names[G.cause[k]] === "unreached") { ray.origin.set(x, 80, z); ray.direction.copy(down); const t = S.bvh.raycastFirst(ray, THREE.DoubleSide); if (t && y < t.point.y) return true; }
+      return enclosed(S, x, y, z);
+    },
     // Near a railing, or anything else that stands up within `m` of the eye below head height (a floor is not counted).
     railNear(x, y, z, m = 0) { const S = scope(x, z); if (!S) return fallback.railNear(x, y, z, m); if (m <= 0 || y > heightAt(x, z) + 1.3) return false;
       qbox.min.set(x - m, y - m, z - m); qbox.max.set(x + m, y + m, z + m); tmp.set(x, y, z); let hitIt = false; const sph = new THREE.Sphere(tmp, m);
