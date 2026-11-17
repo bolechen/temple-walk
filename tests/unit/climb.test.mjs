@@ -62,3 +62,14 @@ test("up and down again: from each climbable edge, the hop down from where he ca
     assert.ok(drop || true); if (drop) { const end = dropPose(drop, drop.duration + 1); assert.ok(!walker.blocked(end.x, end.z), "he comes down on open ground"); }
   }
 });
+
+// The half-way pavilion (0.3 m platform, open on every side) is entered by walking: its platform's deck is laid against the
+// landing, its other three sides stand on the slope inside the grove, where there is no ground to stand on below them.
+test("the half-way pavilion's platform is reached on foot from the landing; there is no ground below its other sides", () => {
+  const b = site.buildings.find((q) => q.name === "半山亭"), cx = (b.x0 + b.x1) / 2, mid = (b.z0 + b.z1) / 2;
+  let z = b.z0 - 3, rose = false, blocked = false; const h0 = walker.heightAt(cx, z);
+  for (; z <= mid; z += 0.05) { if (walker.blocked(cx, z)) blocked = true; if (walker.heightAt(cx, z) > h0 + 0.29) rose = true; }
+  assert.ok(rose && !blocked, "walking from the landing straight onto the platform");
+  assert.ok(Math.abs(walker.heightAt(cx, mid) - h0 - 0.3) < 0.01, "the platform is 0.3 m over the landing");
+  for (const [x, zz] of [[b.x0 - 1.2, mid], [b.x1 + 1.2, mid], [cx, b.z1 + 1.2]]) assert.ok(walker.blocked(x, zz), `ground beside the platform at (${x.toFixed(1)}, ${zz.toFixed(1)}) is not somewhere he can stand`);
+});
