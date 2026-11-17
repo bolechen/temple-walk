@@ -235,6 +235,18 @@ test("at the tea table his knees go under the top and clear the rail beneath its
   }
 });
 
+// #144: the four cushions on the tea house porch lie 1.12 m out from the middle of each table, so the table's end is 0.37 m
+// before his knees; its top is 0.31–0.37 m over the porch and its legs stand 0.5 m out, 0.07 m thick.
+test("on a tea house cushion his knees go under the end of the table and clear its legs", () => {
+  const m = seated("sit", 0.104), cushion = 0.104;
+  const boxes = [["top", [-0.26, 0.26], [0.31 - cushion, 0.37 - cushion], [0.37, 1.87]], ["leg", [-0.22, 0.22], [-cushion, 0.31 - cushion], [0.465, 0.535]]];
+  for (const [name, [x0, x1], [y0, y1], [z0, z1]] of boxes) {
+    let worst = -Infinity, where = null;
+    for (const [n, v] of body(m)) { const d = Math.min(v.x - x0, x1 - v.x, v.y - y0, y1 - v.y, v.z - z0, z1 - v.z); if (d > worst) { worst = d; where = `${n} at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`; } }
+    assert.ok(worst < 0.005, `his ${where} is ${(worst * 1000).toFixed(0)} mm inside the table's ${name}`);
+  }
+});
+
 // From a stool to a cushion, as the game sends him (sitDown walks him over, so he stands between the two): he gets up,
 // takes a few steps, and folds onto the cushion; nothing of him goes under the floor on the way.
 test("from a stool, a few steps, and onto a cushion: nothing of him goes under the floor", () => {
