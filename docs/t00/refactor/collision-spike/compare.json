@@ -1,0 +1,581 @@
+{
+ "commit": "73cb183",
+ "params": {
+  "CLIMB": 0.25,
+  "CLEAR": 1.45,
+  "EYE_R": 0.12,
+  "SHELL": 12,
+  "BODY": 0.38
+ },
+ "ms": {
+  "site": 606,
+  "gatherMs": 1105,
+  "bakeMs": 4696,
+  "bake": {
+   "outdoors": {
+    "floor": 1276,
+    "body": 2463,
+    "erode": 248
+   },
+   "room": {
+    "floor": 244,
+    "body": 389,
+    "erode": 76
+   },
+   "cells": 1208720
+  },
+  "tris": 224495
+ },
+ "tris": {
+  "outdoors": 208243,
+  "room": 16252
+ },
+ "court": {
+  "name": "court",
+  "box": {
+   "x0": -22,
+   "x1": 22,
+   "z0": -24,
+   "z1": 34,
+   "ceil": 3,
+   "floorY": 0,
+   "seeds": [
+    [
+     0,
+     20
+    ],
+    [
+     0,
+     30
+    ]
+   ]
+  },
+  "step": 0.05,
+  "points": 1020800,
+  "count": {
+   "same": 558389,
+   "bothShut": 380913,
+   "oldOnly": 69722,
+   "newOnly": 7114,
+   "height": 4662
+  },
+  "share": {
+   "same": 54.7,
+   "bothShut": 37.32,
+   "oldOnly": 6.83,
+   "newOnly": 0.7,
+   "height": 0.46
+  },
+  "msPerPoint": 0.0021,
+  "classes": [
+   {
+    "class": "oldOnly | old: solid.building | new: open",
+    "points": 56843,
+    "m2": 142.11,
+    "box": [
+     -21.07,
+     -23.98,
+     20.48,
+     24.08
+    ]
+   },
+   {
+    "class": "oldOnly | old: post.round | new: open",
+    "points": 6029,
+    "m2": 15.07,
+    "box": [
+     -20.82,
+     -0.72,
+     20.78,
+     30.18
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: ledge",
+    "points": 5509,
+    "m2": 13.77,
+    "box": [
+     -17.32,
+     -3.52,
+     17.33,
+     29.88
+    ]
+   },
+   {
+    "class": "oldOnly | old: solid.wall | new: open",
+    "points": 3448,
+    "m2": 8.62,
+    "box": [
+     -21.38,
+     -23.98,
+     21.38,
+     33.98
+    ]
+   },
+   {
+    "class": "oldOnly | old: post.square | new: open",
+    "points": 3402,
+    "m2": 8.51,
+    "box": [
+     -13.22,
+     -3.57,
+     13.18,
+     19.68
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor earth (0.03)",
+    "points": 2138,
+    "m2": 5.35,
+    "box": [
+     -21.13,
+     -1.13,
+     21.23,
+     30.43
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor earth (0.04)",
+    "points": 1245,
+    "m2": 3.11,
+    "box": [
+     -20.93,
+     -0.92,
+     21.03,
+     30.28
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor earth (0.02)",
+    "points": 1192,
+    "m2": 2.98,
+    "box": [
+     -21.18,
+     -1.22,
+     21.28,
+     30.53
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: unreached",
+    "points": 792,
+    "m2": 1.98,
+    "box": [
+     -12.78,
+     2.03,
+     11.68,
+     29.48
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: iron",
+    "points": 505,
+    "m2": 1.26,
+    "box": [
+     -1.02,
+     12.02,
+     1.03,
+     14.02
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: bark",
+    "points": 160,
+    "m2": 0.4,
+    "box": [
+     -12.72,
+     1.63,
+     -8.47,
+     28.93
+    ]
+   },
+   {
+    "class": "newOnly | old: open.carved | new: woodV",
+    "points": 92,
+    "m2": 0.23,
+    "box": [
+     -14.72,
+     -5.43,
+     14.73,
+     22.28
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor earth (0.05)",
+    "points": 87,
+    "m2": 0.22,
+    "box": [
+     -20.68,
+     -0.77,
+     20.83,
+     29.63
+    ]
+   },
+   {
+    "class": "newOnly | old: open.carved | new: ledge",
+    "points": 56,
+    "m2": 0.14,
+    "box": [
+     -13.92,
+     -4.27,
+     13.93,
+     -4.27
+    ]
+   }
+  ],
+  "reach": {
+   "seed": [
+    0,
+    20
+   ],
+   "count": {
+    "both": 563051,
+    "oldOnly": 7114,
+    "newOnly": 69722,
+    "neither": 380913
+   },
+   "m2": {
+    "both": 1407.6,
+    "oldOnly": 17.8,
+    "newOnly": 174.3,
+    "neither": 952.3
+   },
+   "classes": [
+    {
+     "class": "newOnly | old: solid.building | new: open, reached",
+     "points": 56843,
+     "m2": 142.11,
+     "box": [
+      -21.07,
+      -23.98,
+      20.48,
+      24.08
+     ]
+    },
+    {
+     "class": "newOnly | old: post.round | new: open, reached",
+     "points": 6029,
+     "m2": 15.07,
+     "box": [
+      -20.82,
+      -0.72,
+      20.78,
+      30.18
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: ledge",
+     "points": 5509,
+     "m2": 13.77,
+     "box": [
+      -17.32,
+      -3.52,
+      17.33,
+      29.88
+     ]
+    },
+    {
+     "class": "newOnly | old: solid.wall | new: open, reached",
+     "points": 3448,
+     "m2": 8.62,
+     "box": [
+      -21.38,
+      -23.98,
+      21.38,
+      33.98
+     ]
+    },
+    {
+     "class": "newOnly | old: post.square | new: open, reached",
+     "points": 3402,
+     "m2": 8.51,
+     "box": [
+      -13.22,
+      -3.57,
+      13.18,
+      19.68
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: unreached",
+     "points": 792,
+     "m2": 1.98,
+     "box": [
+      -12.78,
+      2.03,
+      11.68,
+      29.48
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: iron",
+     "points": 505,
+     "m2": 1.26,
+     "box": [
+      -1.02,
+      12.02,
+      1.03,
+      14.02
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: bark",
+     "points": 160,
+     "m2": 0.4,
+     "box": [
+      -12.72,
+      1.63,
+      -8.47,
+      28.93
+     ]
+    },
+    {
+     "class": "oldOnly | old: open.carved | new: woodV",
+     "points": 92,
+     "m2": 0.23,
+     "box": [
+      -14.72,
+      -5.43,
+      14.73,
+      22.28
+     ]
+    },
+    {
+     "class": "oldOnly | old: open.carved | new: ledge",
+     "points": 56,
+     "m2": 0.14,
+     "box": [
+      -13.92,
+      -4.27,
+      13.93,
+      -4.27
+     ]
+    }
+   ]
+  }
+ },
+ "room": {
+  "name": "room",
+  "box": {
+   "x0": 106.5,
+   "x1": 133.5,
+   "z0": -8.700000000000001,
+   "z1": 8.700000000000001
+  },
+  "step": 0.05,
+  "points": 187920,
+  "count": {
+   "same": 141836,
+   "bothShut": 35842,
+   "oldOnly": 3250,
+   "newOnly": 6660,
+   "height": 332
+  },
+  "share": {
+   "same": 75.48,
+   "bothShut": 19.07,
+   "oldOnly": 1.73,
+   "newOnly": 3.54,
+   "height": 0.18
+  },
+  "msPerPoint": 0.0008,
+  "classes": [
+   {
+    "class": "newOnly | old: open | new: woodX",
+    "points": 4482,
+    "m2": 11.21,
+    "box": [
+     106.83,
+     -8.28,
+     133.18,
+     8.37
+    ]
+   },
+   {
+    "class": "oldOnly | old: room.solid | new: open",
+    "points": 3006,
+    "m2": 7.52,
+    "box": [
+     109.22,
+     -7.98,
+     130.78,
+     4.97
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: plaster",
+    "points": 1084,
+    "m2": 2.71,
+    "box": [
+     106.83,
+     -8.38,
+     133.18,
+     8.37
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: woodZ",
+    "points": 576,
+    "m2": 1.44,
+    "box": [
+     106.83,
+     -5.03,
+     133.18,
+     0.02
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: ledge",
+    "points": 518,
+    "m2": 1.3,
+    "box": [
+     107.03,
+     -3.33,
+     132.97,
+     8.37
+    ]
+   },
+   {
+    "class": "oldOnly | old: room.wall | new: open",
+    "points": 244,
+    "m2": 0.61,
+    "box": [
+     118.97,
+     8.42,
+     121.03,
+     8.67
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor straw (0.10)",
+    "points": 180,
+    "m2": 0.45,
+    "box": [
+     118.72,
+     -1.43,
+     121.28,
+     -1.08
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor straw (0.09)",
+    "points": 84,
+    "m2": 0.21,
+    "box": [
+     118.67,
+     -1.48,
+     121.33,
+     -1.03
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor straw (0.07)",
+    "points": 44,
+    "m2": 0.11,
+    "box": [
+     118.63,
+     -1.53,
+     121.38,
+     -0.98
+    ]
+   },
+   {
+    "class": "height | old: open | new: floor straw (0.06)",
+    "points": 24,
+    "m2": 0.06,
+    "box": [
+     118.67,
+     -1.48,
+     121.33,
+     -1.03
+    ]
+   }
+  ],
+  "reach": {
+   "seed": [
+    120,
+    5.6000000000000005
+   ],
+   "count": {
+    "both": 142168,
+    "oldOnly": 6660,
+    "newOnly": 3250,
+    "neither": 35842
+   },
+   "m2": {
+    "both": 355.4,
+    "oldOnly": 16.7,
+    "newOnly": 8.1,
+    "neither": 89.6
+   },
+   "classes": [
+    {
+     "class": "oldOnly | old: open | new: woodX",
+     "points": 4482,
+     "m2": 11.21,
+     "box": [
+      106.83,
+      -8.28,
+      133.18,
+      8.37
+     ]
+    },
+    {
+     "class": "newOnly | old: room.solid | new: open, reached",
+     "points": 3006,
+     "m2": 7.52,
+     "box": [
+      109.22,
+      -7.98,
+      130.78,
+      4.97
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: plaster",
+     "points": 1084,
+     "m2": 2.71,
+     "box": [
+      106.83,
+      -8.38,
+      133.18,
+      8.37
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: woodZ",
+     "points": 576,
+     "m2": 1.44,
+     "box": [
+      106.83,
+      -5.03,
+      133.18,
+      0.02
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: ledge",
+     "points": 518,
+     "m2": 1.3,
+     "box": [
+      107.03,
+      -3.33,
+      132.97,
+      8.37
+     ]
+    },
+    {
+     "class": "newOnly | old: room.wall | new: open, reached",
+     "points": 244,
+     "m2": 0.61,
+     "box": [
+      118.97,
+      8.42,
+      121.03,
+      8.67
+     ]
+    }
+   ]
+  }
+ }
+}

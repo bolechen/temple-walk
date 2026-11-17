@@ -1,0 +1,118 @@
+{
+ "commit": "73cb183",
+ "cs": 0.05,
+ "cfg": {
+  "cs": 0.05,
+  "ch": 0.02,
+  "walkableSlopeAngle": 45,
+  "walkableHeight": 73,
+  "walkableClimb": 12,
+  "walkableRadius": 8,
+  "maxEdgeLen": 240,
+  "maxSimplificationError": 1.3,
+  "minRegionArea": 8,
+  "mergeRegionArea": 20,
+  "maxVertsPerPoly": 6,
+  "detailSampleDist": 6,
+  "detailSampleMaxError": 1,
+  "bounds": [
+   [
+    -22,
+    -1,
+    -24
+   ],
+   [
+    22,
+    4,
+    34
+   ]
+  ]
+ },
+ "ms": {
+  "wasmInit": 40,
+  "build": 655
+ },
+ "polys": 397,
+ "verts": 777,
+ "tris": 208243,
+ "usPerStandQuery": 1.33,
+ "compareWithGrid": {
+  "points": 1020800,
+  "both": 573123,
+  "gridOnly": 59650,
+  "recastOnly": 220743,
+  "neither": 167284,
+  "m2": {
+   "both": 1432.8,
+   "gridOnly": 149.1,
+   "recastOnly": 551.9,
+   "neither": 418.2
+  }
+ },
+ "paths": [
+  {
+   "from": [
+    -13.2,
+    0.45,
+    6.2
+   ],
+   "to": [
+    -8,
+    0,
+    4
+   ],
+   "ms": 1.017,
+   "points": 8,
+   "metres": 16.74,
+   "ok": true
+  },
+  {
+   "from": [
+    0,
+    0,
+    25
+   ],
+   "to": [
+    0,
+    1.5,
+    -4.8
+   ],
+   "ms": 0.078,
+   "points": 3,
+   "metres": 29.91,
+   "ok": true
+  },
+  {
+   "from": [
+    -13.2,
+    0.45,
+    6.2
+   ],
+   "to": [
+    13.5,
+    0.45,
+    18
+   ],
+   "ms": 0.182,
+   "points": 6,
+   "metres": 32.4,
+   "ok": true
+  },
+  {
+   "from": [
+    0,
+    0,
+    25
+   ],
+   "to": [
+    -14.5,
+    1.5,
+    -12
+   ],
+   "ms": 0.164,
+   "points": 12,
+   "metres": 47.69,
+   "ok": true
+  }
+ ]
+}
