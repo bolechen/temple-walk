@@ -251,6 +251,7 @@
 | 收尾动画期间申请屏幕唤醒锁（`navigator.wakeLock.request("screen")`），结束或跳过时释放；申请不到（不支持、权限策略、低电量）不报错 | `app/src/awake.js`、`app/src/game.js` 的 `finale`、`tests/unit/awake.test.mjs` | 用户 2026-11-17 反馈「手机上会息屏，再点开就会让动画取消」；Screen Wake Lock API 据 MDN 与 caniuse（Chrome/Edge 84+、Safari 16.4+、Firefox 126+；只在安全上下文、只对可见页面，系统可拒绝或自动释放） | 用户反馈；API 已核 MDN 与 caniuse |
 | 页面隐藏时仪式时钟不走（`riteNow` 冻结，变可见后接着走）；拍照定格与隐藏重叠只算一次 | `app/src/rites.js` 的 `setHidden`/`riteNow`、`tests/unit/rite-clock.test.mjs` | 同上；挂钟 `performance.now` 在页面隐藏时仍走、rAF 停，回来会直接跳到末尾，所以隐藏时冻结、可见时补回 | 用户反馈；做法按常理 |
 | 收尾中唤醒屏幕的那一下不当作跳过（回到可见后 900 毫秒内不认跳过输入）；再点一下才略过 | `app/src/game.js` 的 `finale`、e2e `screen` 场景 | 用户反馈；900 毫秒的窗口自拟 | 用户反馈；数值自拟 |
+| 拖动视角时右键不弹浏览器菜单：只在 `#yardGl` 上、且指针按下并已移动时拦 `contextmenu`；空闲右键仍是浏览器自己的菜单，松手即恢复 | `app/yard.js` 的 canvas `contextmenu`、e2e `views` 场景 | 所有者 2026-11-17「按第三种加上」；MDN 建议只挂在需要自定义菜单的区域；three.js `OrbitControls` 只在自身 `domElement` 上拦（右键是平移），`PointerLockControls` 不拦；全局屏蔽是反模式，Firefox 的 Shift+右键还能绕过 | 所有者指定；做法据 MDN 与 three 源码 |
 
 ## 得句十四句的核对（2026-11-15）
 

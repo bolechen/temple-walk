@@ -41,6 +41,12 @@
 - **唤醒那一下**（`app/src/game.js` 的 `finale`）：回到可见后 900 毫秒内的点击/键不当作跳过，之后再点才略过。
 - **测试**：`tests/unit/awake.test.mjs` 4 项、`tests/unit/rite-clock.test.mjs` 2 项；e2e 新场景 `screen`（init script 换掉 `navigator.wakeLock` 记录请求/释放，用可覆盖的 `document.hidden` 模拟息屏）：收尾开始时申请、隐藏 0.7 秒里 `close.u` 不前进、唤醒那一击不跳过、1 秒后再点才跳过、结束后释放。本地单测 373/373、`screen` 22 秒通过；`pilgrimage`/`oldbook`/`replay`/`director` 回归见 PR。
 - **未验**：真机（iOS Safari、Android Chrome）上的息屏与唤醒；唤醒锁在低电量/省电模式下是否真被拒绝；`screen` 场景只是替换了 `document.hidden`，没有真的隐藏页面。
+## 2026-11-17：拖动视角时的右键（Issue #168）
+
+所有者问「要不要屏蔽右键，检查行业做法」后定「按第三种加上」。行业做法：MDN 与 three 的 `OrbitControls` 都只把 `contextmenu` 拦在需要它的元素上；全局屏蔽是反模式（Firefox Shift+右键仍可绕过）。
+
+- 只在 `#yardGl` 的 `contextmenu` 上拦，条件是 `down && down.moved`（指针按下、且拖动已越过点击阈值）；空闲右键、松手后、菜单/卡片/鸣谢等一律保留浏览器菜单。
+- 测试：e2e `views` 三条断言（空闲不拦、拖动中拦、松手恢复），实现前中间那条失败。本地 check/typecheck/单测/views 通过；不在真机上看原生菜单（Playwright 只看 `defaultPrevented`）。
 
 ## 2026-11-16 深夜：美术第一阶段「便宜的电影感」（#72，分支 `claude/art-72-phase1`，待评审）
 

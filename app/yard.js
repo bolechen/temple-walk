@@ -318,6 +318,9 @@ canvas.addEventListener("pointermove", (e) => {
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
 const lift = (e) => { touches.delete(e.pointerId); pinch = 0; };
 canvas.addEventListener("pointercancel", (e) => { lift(e); down = null; });
+// A right-click is the browser's own menu, except in the middle of a look-drag: there is nothing on the canvas it could
+// be for, and it would only interrupt the hand that is turning the view. Let go and it is the browser's again.
+canvas.addEventListener("contextmenu", (e) => { if (down?.moved) e.preventDefault(); });
 const ray = new THREE.Raycaster();
 // Where a tap lands on the ground. The ground is not flat: follow the line of sight outward until it first
 // dips below whatever can be stood on there (a court, a terrace, a flight of steps), then close in on that spot.
