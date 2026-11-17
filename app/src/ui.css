@@ -466,7 +466,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
   #menu h2 { grid-column: 1 / -1; font-size: 34px; margin: 0 0 8px; }
   #menu .set { min-height: 44px; grid-template-columns: 7.6em 1fr; gap: 8px; }   /* one label width in both columns, so every slider is the same length */
   #menu .opts { gap: 2px 6px; flex-wrap: nowrap; }
-  #menu .opts .chip { padding-left: 8px; padding-right: 8px; }
+  #menu .opts .chip { padding-left: 6px; padding-right: 6px; }
   #menu .set:has([data-lang]), #menu .community-invite, #menu .row, #menu .note { grid-column: 1 / -1; }
   #menu .grp .note { grid-column: auto; }
   #menu .set:has([data-lang]) { border-top: 1px solid var(--ink-4, rgba(60,50,40,.18)); margin-top: 6px; padding-top: 4px; }
