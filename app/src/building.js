@@ -11,7 +11,7 @@ export const DOOR = Object.freeze({ reach: BODY + 0.02, half: 1.0 - BODY - 0.01 
 export const PURLIN = 0.88;
 // A balcony under an upper storey: how tall its bracket sets stand, how far they step out, how tall the board hung
 // round its edge is (two timbers), and what the plate under the sets and the floor over them add to the height.
-export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, floor: 0.58 });
+export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, floor: 0.58, lift: 1.2 });   // (lift: sets and floor at the 0.21 grade, which a balcony walked round on the ring below keeps)
 const DEFAULTS = {
   xs: [-6.7, -2.5, 2.5, 6.7],   // column lines across the front
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
@@ -37,6 +37,8 @@ const DEFAULTS = {
   walkAll: false,               // the whole platform is open floor (covered walks)
   plaque: "",                   // name board over the front: a string, or { text, vertical, gold }
   rail: false,                  // a white stone balustrade round the platform
+  pingRing: null,               // a balcony standing on the column ring of the storey below (its column lines across), not on its own
+  loft: "",                     // an upper storey whose balcony is walked round (its name: the walker counts it only while he is up there)
 };
 
 export function buildHall(M, opts) {
@@ -108,11 +110,17 @@ export function buildHall(M, opts) {
       }
     }
   }
+  const rails = [];   // each run of railing as the ground it stands on and how high it reaches (walk.rails)
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
-    const parts = [], ends = (g.userData.railEnds = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
+    const parts = [], ends = (g.userData.railEnds = []), runs = (g.userData.railRuns = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
     const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
-      const n = Math.max(1, Math.round((b - a) / 1.5)), d = (b - a) / n;
+      // Round a gallery that is walked, each run has an odd number of bays: its middle, before the door and on the
+      // axis of the view, is a panel to look over, not a post in the eye.
+      let n = Math.max(1, Math.round((b - a) / 1.5)); if (p.loft && n % 2 === 0) n += (b - a) / n > 1.5 ? 1 : -1;
+      const d = (b - a) / n; runs.push({ ax, a, b, fixed, n });
       for (const t of [a, b]) ends.push(ax === "x" ? [t, y, fixed] : [fixed, y, t]);   // where a run stops: at a corner, or where a stair breaks it
+      const R = 0.12;   // the widest of it, the lotus bud on each post
+      rails.push(ax === "x" ? { x0: a - R, x1: b + R, z0: fixed - R, z1: fixed + R, bottom: y, top: y + 1.29 } : { x0: fixed - R, x1: fixed + R, z0: a - R, z1: b + R, bottom: y, top: y + 1.29 });
       // The posts: eight-sided, each ending in a lotus bud. Between them, from the floor up: a sill, a panel, the
       // basin rail, a short strut in the middle of each bay, and the hand rail.
       for (let i = 0; i <= n; i++) { const t = a + i * d, px = ax === "x" ? t : fixed, pz = ax === "x" ? fixed : t;
@@ -277,7 +285,7 @@ export function buildHall(M, opts) {
     // of bracket sets a step shorter than its own, one under every set above, on a plate of their own; round the
     // floor's edge a board twice a timber's depth (the wild-goose-wing board), and the railing inside that. The skirt
     // roof of the storey below comes in under the plate.
-    if (p.ping) {
+    if (p.ping && !p.pingRing) {
       const PH = PING.sets * K, y0 = p.platBase - PH, bd = PING.board * K;
       const low = merge([
         box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0),
@@ -293,6 +301,27 @@ export function buildHall(M, opts) {
       // Behind the sets the wall is limed, as it is between the sets under the eaves, so that they read against it.
       add(merge([box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, Z - 0.04), box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, ZB + 0.04), box(0.1, PH + 0.3, Z - ZB, xs[0] + 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2), box(0.1, PH + 0.3, Z - ZB, X - 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2)]), M.plaster());
       ping = { sets: spots.length, reach: PING.reach * K, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - 0.12 };
+    }
+    if (p.ping && p.pingRing) {
+      // A balcony walked round, as the Fashi builds one over a storey below (juan 4, the pingzuo; the structure review on
+      // #101): its bracket sets stand on the column heads of the storey below, on a plate as thick as a timber is deep, the
+      // storey's own columns forked down into them. Each set has its arms doubled (chonggong) and steps out as far as the
+      // floor reaches past that ring, carrying the edge board on its last arm; where the floor ends over the columns, it
+      // does not step out at all.
+      const ring = p.pingRing, RX = ring[ring.length - 1], R = Math.max(0, PX - RX - 0.02), dbl = 0.21 + 0.13, PH = 0.62 + dbl, y0 = p.platBase - PH, bd = PING.board, plate = 0.21;
+      const parts = [box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0), arm(0.9, 0.28, 0), dou(-0.35, 0.49, 0), dou(0.35, 0.49, 0), arm(1.32, 0.62, 0), dou(-0.55, 0.83, 0), dou(0.55, 0.83, 0)];
+      if (R > 0.15) parts.push(arm(R + 0.42, 0.28, (R - 0.28) / 2, "z"), dou(0, 0.49, R), arm(0.9, 0.62, R), dou(-0.35, 0.83, R), dou(0.35, 0.83, R));
+      const low = merge(parts), at = [];
+      for (const x of ring) for (const z of ring) { const ox = x === ring[0] ? -1 : x === RX ? 1 : 0, oz = z === RX ? 1 : z === ring[0] ? -1 : 0; if (ox || oz) at.push({ x, z, a: Math.atan2(ox, oz) }); }
+      add(merge(at.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX);
+      add(merge([box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, RX), box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, -RX),
+        box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
+      add(merge([box(0.34, plate, RX * 2 + 0.4, -RX, y0 - plate / 2, 0), box(0.34, plate, RX * 2 + 0.4, RX, y0 - plate / 2, 0),
+        box(0.06, bd, zF - zB + 0.12, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB + 0.12, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
+      // Behind the sets, between the column heads, the wall of the storey below is limed, so that the sets read against it.
+      const wy = y0 + PH / 2 - 0.15, wh = PH + 0.3;
+      add(merge([box(RX * 2, wh, 0.1, 0, wy, RX - 0.04), box(RX * 2, wh, 0.1, 0, wy, -RX + 0.04), box(0.1, wh, RX * 2, -RX + 0.04, wy, 0), box(0.1, wh, RX * 2, RX - 0.04, wy, 0)]), M.plaster());
+      ping = { sets: at.length, reach: R, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - plate, ring: RX, double: true, plate, spots: at };
     }
     const o = PUR, py = PLATE_TOP + 1.0 * K;   // the eave purlin the outer arms carry
     add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX);
@@ -421,6 +450,9 @@ export function buildHall(M, opts) {
         }
         parts.push(c.translate(s * (gx + 0.25), ridgeY - 0.1, 0));
       }
+      // The tips of the two end ornaments, the highest and outermost points of the roof: what a picture of the whole
+      // building must keep inside its frame (`aimToFrame` at the close).
+      g.userData.crest = [-1, 1].map((s) => [s * (gx + 0.25), ridgeY - 0.1 + 1.36 * k, 0]);
     } else {   // pyramid roof: a finial at the apex
       parts.push(new THREE.LatheGeometry([[0, 0], [0.34, 0], [0.4, 0.12], [0.2, 0.3], [0.3, 0.52], [0.22, 0.78], [0.08, 0.95], [0, 1.3]].map(([a, b]) => new THREE.Vector2(a, b)), 14).translate(0, roofY(0, 0) - 0.1, 0));
     }
@@ -471,14 +503,18 @@ export function buildHall(M, opts) {
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
     const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq), zz = Z + (p.brackets ? 1.3 : 0.45);
-    m.position.set(0, Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08), zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
+    let top = Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08) + m.userData.height / 2;
+    // Over a balcony that is walked round the board hangs over the walk: it is cut smaller, so that its foot is a
+    // grown man's height over the floor and a child at the door looks out under it, not into it.
+    if (p.loft && top - m.userData.height < p.platH + 2.0) { const k = Math.max(0.5, (top - p.platH - 2.0) / m.userData.height); m.scale.setScalar(k); m.userData.height *= k; }
+    m.position.set(0, top - m.userData.height / 2, zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
     g.add(m);
   }
 
   // ---- Where you can stand (local space; the site turns these into world space) ----
   // `posts` stand in the way even on a floor: a round one is { x, z, r } (its real radius; the walker adds his own
   // width), a square one is a rectangle already drawn that much larger than the thing.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] };
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails };
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
   // Every column on the outside is round and in the way wherever a floor comes up to it: the walker keeps his
   // whole width off its shaft (a little fatter than the shaft at its swell).
@@ -515,6 +551,16 @@ export function buildHall(M, opts) {
     if (p.dark && p.front === "lattice") walk.decks.push({ x0: -(1.0 - BODY - 0.01), x1: 1.0 - BODY - 0.01, z0: Z + DOOR.reach, z1: Z + 0.5, h: p.platH });
   }
 
+  // A balcony that is walked round: four strips of floor between the storey's walls and its railing, each kept his
+  // width off the wall (the lattice and sills stand a little proud of the column line) and off the rail. They are
+  // floor only while he is up there (`loft`); the columns in the way are the outer ones above.
+  let loft = null;
+  if (p.loft) {
+    const off = 0.13 + BODY, ex = PX - edgeIn, zf = zF - edgeIn, zb = zB + edgeIn, mk = (x0, x1, z0, z1) => ({ x0, x1, z0, z1, h: p.platH, floor: "wood", loft: p.loft });
+    walk.decks.push(mk(-ex, ex, Z + off, zf), mk(-ex, ex, zb, ZB - off), mk(X + off, ex, zb, zf), mk(-ex, xs[0] - off, zb, zf));
+    loft = { id: p.loft, floor: p.platH, wall: X, edge: PX, rail: PX - 0.16, door: [0, (Z + off + zf) / 2], ceil: topY - 0.15,
+      inner: { x0: xs[0] - 0.13, x1: X + 0.13, z0: ZB - 0.13, z1: Z + 0.13 }, outer: { x0: -PX + 0.23, x1: PX - 0.23, z0: zB + 0.23, z1: zF - 0.23 } };
+  }
   // Only exposed front porch edges of a low, unrailed ground-level platform can be hopped down.
   if (!p.rail && !p.walkAll && p.steps && p.platBase <= 0 && p.platH >= 0.2 && p.platH <= 1.5) {
     const end = X + 0.8, gap = p.steps / 2 + 0.8;
@@ -526,8 +572,8 @@ export function buildHall(M, opts) {
   // the floor is open, the building: within its walls up to the ridge, and over the rest of its platform only up to
   // the floor (or the top of its railing), so that from a porch the eye can back out over the edge.
   walk.roofs.push({ x0: -EX - 0.3, x1: EX + 0.3, z0: -EZ - 0.3, z1: EZ + 0.3, bottom: topY - 0.15, inner: head - 0.15, top: EAVE_Y + RISE + 0.3,
-    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
+    body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, crest: g.userData.crest || null, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d) };
+  return { group: g, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
 }

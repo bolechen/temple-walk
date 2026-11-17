@@ -24,6 +24,7 @@ async function open(browser, base, query, opts = {}) {
   // browser speaks Chinese unless one asks otherwise (`locale`, or ?lang=).
   const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, locale: "zh-CN", ...ctxOpts });
   const page = await ctx.newPage(), errors = [];
+  if (opts.init) await page.addInitScript(opts.init);   // before the page's own scripts: a stub for an API, a way to hide it
   page.on("pageerror", (e) => errors.push("page error: " + String(e.stack || e).slice(0, 400)));
   page.on("console", (m) => {
     if (m.type() !== "error" || /GPU stall/.test(m.text())) return;
@@ -45,6 +46,9 @@ async function open(browser, base, query, opts = {}) {
   await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   // A visitor arriving meets the title first and steps in from it; a scenario may ask to be left at the title.
   if (opts.enter !== false && (await page.isVisible("#title"))) { await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await page.click("#enterBtn"); await page.waitForFunction(() => document.body.classList.contains("entered")); }
+  // A first visitor is shown the mountain before the walk is theirs (src/opening.js); a scenario stepping in this way passes
+  // over it as a visitor may, with Esc, and begins once the walk is handed back (the `opening` scenario watches it whole).
+  if (opts.enter !== false && (await page.evaluate(() => !!window.__opening && window.__opening().active))) { await page.keyboard.press("Escape"); await page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
   const t = {
     page, errors, close: () => ctx.close(),
     state: () => page.evaluate(() => window.__yard()),

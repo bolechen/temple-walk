@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL } from "../../app/src/score.js";
+import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL, endingPhrase, ENDING, COMPLETE_AFTER, titlePhrase, TITLE_LEAD } from "../../app/src/score.js";
 const { buildSite, SITE, LEVELS, APPROACH, SCREEN } = await import("../../app/src/site.js");
 import * as THREE from "three";
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -156,4 +156,75 @@ test("a quick crossing of the gate still hears its first phrase whole, on some l
 test("the same seed makes the same visit; another seed another", () => {
   const sigs = (s) => visit(s).phrases.map((p) => p.sig).join("|");
   assert.equal(sigs(5), sigs(5)); assert.notEqual(sigs(5), sigs(6));
+});
+
+// ---- The close of the chapter (game.js's finale): music written to its timeline ----
+test("the close's music: the far bell is heard alone, the flute comes with the title, and it ends on D, not home", () => {
+  for (const s of SEASONS) for (const t of TIMES) for (const bell of [18.5, 19.5, 20.2]) {
+    const title = 25.5, p = endingPhrase(moodMusic(s, t), { bell, title }), id = `${s}-${t}, bell at ${bell}`;
+    // Nothing but the held fifth sounds from a little before the far bell until the title.
+    for (const e of p.events) if (e.voice !== "pad") assert.ok(e.at + e.dur <= bell - ENDING.clear + 1e-6 || e.at >= title, `${id}: ${e.voice} ${e.m} sounds over the far bell`);
+    const melody = p.events.filter((e) => MELODY.has(e.voice)), before = melody.filter((e) => e.at < title), after = melody.filter((e) => e.at >= title);
+    assert.ok(before.length >= 5 && after.length >= 4, `${id}: the theme is not given before and after the title`);
+    // The flute (harmonics in winter) answers only once the title is there, an octave above the string.
+    assert.ok(after.every((e) => e.at >= title) && Math.min(...after.map((e) => e.m)) > Math.min(...before.map((e) => e.m)), `${id}: the answer is not above the string`);
+    // Never the whole theme, and the last note is D, the fifth of G: the chapter is not over.
+    assert.ok(!holdsTheme(p.events), `${id}: the close plays the whole theme home`);
+    const lastNote = melody.at(-1).m; assert.equal(((lastNote - MODE.tonic) % 12 + 12) % 12, 7, `${id}: it ends on ${lastNote}, not on D`);
+    for (const e of p.events) { const [lo, hi] = RANGE[e.voice]; assert.ok(e.m >= lo && e.m <= hi, `${id}: ${e.voice} ${e.m} out of range`); assert.ok(inMode(e.m), `${id}: ${e.m} is out of the mode`); }
+    assert.ok(p.length < title + 14, `${id}: the close's music runs on ${p.length.toFixed(1)} s`);
+  }
+});
+
+test("the close's music begins at once, is cut only when passed over, and the whole theme of the seventh seal waits for it", () => {
+  const mood = moodMusic(), c = createConductor(5), log = []; let t = 0, closed = null;
+  // Six seals on the summit, then the seventh (the sitting), and the close 4.6 s later, as game.js has it.
+  for (; t < 30; t += 0.25) { const p = c.tick(t, "summit", 6, mood); if (p && !p.cut) log.push({ ...p }); }
+  const seventh = t;
+  for (; t < seventh + 4.6; t += 0.25) { const p = c.tick(t, "summit", 7, mood); if (p && !p.cut) log.push({ ...p }); }
+  assert.ok(!log.some((p) => p.section === "complete"), "the whole theme came before the close could begin");
+  closed = c.close(t, endingPhrase(mood), "summit");
+  assert.ok(closed.start - t <= 0.6 + 1e-9, "the close's music did not begin at once");
+  for (; t < closed.notesEnd + 40; t += 0.25) {
+    // The eye leaves him; where he is does not change, but even a change of place does not cut it.
+    const zone = t > closed.start + 10 && t < closed.start + 14 ? "upper" : "summit", p = c.tick(t, zone, 7, mood);
+    if (p && p.cut) assert.ok(t >= closed.notesEnd, `the close was cut at ${(t - closed.start).toFixed(1)} s`);
+    else if (p) log.push({ ...p });
+  }
+  const whole = log.find((p) => p.section === "complete");
+  assert.ok(whole && whole.start >= closed.notesEnd, "the whole theme owed for the seventh seal never came after the close");
+  // Passed over: it fades like a change of place, and nothing new begins before the fade is done.
+  const d = createConductor(9); let u = 0; d.tick(u, "summit", 3, mood); const q = d.close(1, endingPhrase(mood), "summit");
+  const cut = d.leave(q.start + 6); assert.ok(cut && cut.cut && cut.fade === FADE, "passing over the close did not fade it");
+  for (u = q.start + 6; u < q.start + 6 + FADE; u += 0.25) assert.equal(d.tick(u, "summit", 3, mood), null, "something began while the close faded");
+  assert.equal(createConductor(1).leave(0), null, "there is nothing to pass over when no close is sounding");
+  assert.ok(COMPLETE_AFTER > 0 && COMPLETE_AFTER < 8);
+});
+
+// ---- The prologue's title and the gate's first phrase, as one ----
+test("with the prologue's title the gate's first phrase begins, its first note the title's D, a moment after", () => {
+  for (const s of SEASONS) for (const t of TIMES) {
+    const p = titlePhrase(rng(3), moodMusic(s, t)), id = `${s}-${t}`, melody = p.events.filter((e) => MELODY.has(e.voice)).sort((a, b) => a.at - b.at);
+    assert.ok(Math.abs(melody[0].at - TITLE_LEAD) < 1e-9, `${id}: the first note comes ${melody[0].at.toFixed(2)} s after the title`);
+    assert.equal(((melody[0].m - THEME[0].m) % 12 + 12) % 12, 0, `${id}: the title's note is not the theme's D`);
+    assert.deepEqual(steps(melody.slice(0, 5).map((e) => e.m)), steps(THEME.slice(0, 5).map((n) => n.m)), `${id}: the gate's first phrase lost its shape`);
+    assert.ok(p.events.every((e) => e.at >= 0) && p.section === "gate" && p.first, `${id}: not the gate's first phrase`);
+  }
+});
+
+test("the title's phrase, begun over the stair's music, is not cut, and the gate's first phrase is not heard twice", () => {
+  const mood = moodMusic(), c = createConductor(11), keeper = createZoneKeeper(2), log = [];
+  let t = 0; for (; t < 40; t += 0.25) { const p = c.tick(t, keeper.update("stair", t), 0, mood); if (p && !p.cut) log.push(p); }
+  keeper.settle("gate", t); const q = c.begin(t, titlePhrase(rng(2), mood), "gate");
+  assert.ok(q.start - t <= 0.6 + 1e-9 && c.heard("gate"), "the title's phrase did not begin at once");
+  for (; t < q.notesEnd + 60; t += 0.25) {
+    const p = c.tick(t, keeper.update("gate", t), 0, mood);
+    if (p && p.cut) assert.fail(`the title's phrase was cut at ${(t - q.start).toFixed(1)} s`);
+    if (p) { assert.ok(p.start >= q.notesEnd, "a phrase began over the title's"); assert.ok(!(p.section === "gate" && p.first), "the gate's first phrase came again"); }
+  }
+});
+
+test("wherever the title can rise, he is already in the gate's music", async () => {
+  const { GATE } = await import("../../app/src/opening.js");
+  for (let z = GATE.zN + 0.05; z < GATE.zS; z += 0.25) for (let x = -GATE.x + 0.05; x < GATE.x; x += 0.5) assert.equal(zoneOf(x, z, false, B), "gate", `the title may rise at ${x.toFixed(1)}, ${z.toFixed(1)}, which is not the gate's place`);
 });

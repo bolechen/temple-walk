@@ -42,6 +42,9 @@ export function createHints({ off = false, ui = null } = {}) {
     },
     held() { tip("held", t("{esc}松开鼠标　·　{wheel}远近　·　单击敲钟击鼓", { esc: K("Esc"), wheel: K(t("滚轮")) }), 7); },
     indoors() { if (!coarse) tip("view", t("{v}换成自己的眼睛看，可以举头看殿顶　·　画框前{e}细看", { v: K("V"), e: K("E") }), 8); else tip("view", t("走到画框前，可以细看；也可以举头看看殿顶"), 7); },
+    // The summit pavilion's room has a stair up to its top storey; up there the view is his own eyes only.
+    stair() { tip("stair", t("西北角可以登楼。"), 7); },
+    upView() { tip("upView", t("楼上用自己的眼睛看，下楼再换视角。"), 6); },
     seal() { tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
     seasons() { return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
@@ -55,6 +58,7 @@ export function createHints({ off = false, ui = null } = {}) {
     if (off) return;
     walked += moved; if (running && moved > 0) ran = true;
     if (now === "walk" && walked > 4) drop("walk");
+    if (coarse && walked > 40) tip("jump", t("右下角的圈是跳　·　台沿前是上台、下台阶"), 6);
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }

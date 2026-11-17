@@ -7,8 +7,11 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush, farBell } from "./audio.js";
+import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
+import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
+import { createAwake } from "./awake.js";
+import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
@@ -30,6 +33,7 @@ function ensoTexture() {
 
 export function createGame(y) {
   const Q = new URLSearchParams(location.search), places = y.site.places, fast = Q.has("fast") ? 0.12 : 1;
+  const awake = createAwake();   // the screen is asked to stay on while the close is played (src/awake.js)
   // `yunjing.ending.v1` was the page's own note that the close had been seen, before the book kept it (journey.closed).
   const ENDED = "yunjing.ending.v1", seenBefore = (() => { try { return localStorage.getItem(ENDED) === "1"; } catch { return false; } })();
   // The workbench (the dev server and a pull request's preview, as for the debug panel) may open straight onto a moment:
@@ -73,7 +77,7 @@ export function createGame(y) {
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
   mine.position.fromArray(places.lamp.flame); y.scene.add(mine);
   const refresh = () => {
-    for (const id in rings) rings[id].visible = owed(id) && (places[id].room || null) === y.room();
+    for (const id in rings) rings[id].userData.want = owed(id) && (places[id].room || null) === y.room();   // shown unless the eye is on a shot (below)
     mine.visible = journey.has("lamp");
     const n = journey.count(), next = journey.next(); setSeals(n);   // the music knows how much of its theme has been earned
     // The book is the small seal at the top left: the first character of the next place, or 圆 once the book is full;
@@ -121,7 +125,7 @@ export function createGame(y) {
   // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
   const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
   const rites = createRites(y, fast, { burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
-  const end = () => { rite = null; y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
+  const end = () => { rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
@@ -130,8 +134,10 @@ export function createGame(y) {
     const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
-    const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? p.lift ?? 0.1 : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
+    const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? placeLift(p, y.site.seats, y.walker.heightAt) : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
     y.stage(st);
+    // The eye leaves his shoulder for the place's own shot (src/director.js), and comes back before his hands are done.
+    y.direct(id);
     if (id === "bell") {   // he takes the rope; each press after that is one pull, one stroke, counted as it sounds (below)
       await wait(0.3); if (!on()) return;
       if (!(await rites.takeRope(on))) return;
@@ -149,11 +155,11 @@ export function createGame(y) {
       await rites.linger(on); lingering = false; return;
     }
     else if (id === "incense") { await wait(1.2); if (!on()) return; if (!(await rites.offerIncense(on, st, () => say(t(d.line), 6)))) { if (!on()) return; say(t(d.line), 6); await wait(3); } }
-    else if (id === "well") { say(t(d.line), 6); for (let i = 0; i < 3; i++) { await wait(1.5); if (!on()) return; drop(); } await wait(1.2); }
-    else if (id === "lamp") { await wait(1.8); if (!on()) return; mine.visible = true; say(t(d.line), 5); await wait(2); }
+    else if (id === "well") { say(t(d.line), 6); if (!(await rites.watchWell(on, () => drop()))) return; }
+    else if (id === "lamp") { if (!(await rites.lightLamp(on, () => { mine.visible = true; say(t(d.line), 5); }))) return; }
     else if (id === "sit") {
       const b = $("breath"); b?.removeAttribute("hidden");
-      for (let i = 0; i < 3; i++) { if (b) { b.dataset.phase = "in"; $("breathWord").textContent = t("吸"); } if (!(await rites.breathe(1, 4, on))) return; if (b) { b.dataset.phase = "out"; $("breathWord").textContent = t("呼"); } if (!(await rites.breathe(-1, 5, on))) return; }
+      for (let i = 0; i < 3; i++) { if (b) { b.dataset.phase = "in"; $("breathWord").textContent = t("吸"); } if (!(await rites.breathe(1, 4, on))) return; if (b) { b.dataset.phase = "out"; $("breathWord").textContent = t("呼"); } if (!(await rites.breathe(-1, 5, on, i === 2 && closedHere()))) return; }
       b?.setAttribute("hidden", ""); say(t(d.line), 6);
     } else if (id === "sutra") {
       await wait(1.6); if (!on()) return;
@@ -204,22 +210,31 @@ export function createGame(y) {
     const from = 3.5, to = 23.5, gap = (to - from) / lines.length;
     return /** @type {[number, string][]} */ (lines.map((l, i) => [from + i * gap, l]));
   }
+  const TITLE_AT = 25.5;   // seconds into the close when the title of what has ended comes
   let closing = false, skip = false, /** @type {string[]} */ words = [];
   async function finale(on = () => true) {
     const el = $("ending"); if (closing || !el) { openBook(); return; }
     closing = true; skip = false; document.body.classList.add("ending"); el.hidden = false; $("endingTitle").classList.remove("on");
     const line = $("endingLine"), CLOSING = closingWords(); let shown = -1; words = CLOSING.map((c) => c[1]);
-    const pass = () => { skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
-    await rites.close(() => on() && !skip, (t) => {
-      let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
-      if (t > 25.5) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
-      else if (k !== shown) {
-        shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
-        // When it is said that a bell answers in the far hills, it is heard (audio.js).
-        if (k >= 0 && k === bellLine) farBell();
-      }
-    });
-    el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
+    // The close has its own music, written to these words: the far bell's line and the title (audio.js, score.js).
+    closeMusic({ bell: CLOSING[bellLine][0], title: TITLE_AT });
+    // A tap wakes a sleeping phone and then reaches the page: that one is not taken for a skip, only a later one is.
+    let back = -Infinity; const seen = () => { if (!document.hidden) back = performance.now(); }; document.addEventListener("visibilitychange", seen);
+    const pass = () => { if (performance.now() - back > 900) skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
+    awake.hold();   // the screen stays on while it is played, where the browser allows (src/awake.js)
+    try {
+      await rites.close(() => on() && !skip, (t) => {
+        let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
+        if (t > TITLE_AT) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
+        else if (k !== shown) {
+          shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
+          // When it is said that a bell answers in the far hills, it is heard (audio.js).
+          if (k >= 0 && k === bellLine) farBell();
+        }
+      });
+    } finally { awake.free(); }
+    el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true); document.removeEventListener("visibilitychange", seen);
+    if (skip || !on()) passClose();
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
     // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
@@ -235,7 +250,7 @@ export function createGame(y) {
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
 
   // ---- The button that offers what can be done here ----
-  let acc = 0, look = null, seatHere = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
+  let acc = 0, look = null, seatHere = null, climb = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
   y.onTick((dt) => {
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
     { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
@@ -247,6 +262,8 @@ export function createGame(y) {
           el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -50%)`; el.lastChild.textContent = t("{n} 步", { n: Math.max(1, Math.round(Math.hypot(p.at[0] - w.x, p.at[1] - w.z))) }); } } }
     // How long this visit has been and how far it has gone: told on the last page of the book.
     { const w = y.where(); if (entered) { if (visit.at) { const d = Math.hypot(w.x - visit.at[0], w.z - visit.at[1]); if (d < 3) visit.metres += d; } visit.at = [w.x, w.z]; visit.seconds += dt; if ((visit.save += dt) > 10) { visit.save = 0; keep(); } } }
+    // The brush rings on the ground are a mark for the walk, not part of the place: on an observance's own shot they are not drawn.
+    { const shot = y.directed(); for (const id in rings) rings[id].visible = !!rings[id].userData.want && !shot; }
     for (const id in rings) if (rings[id].visible) rings[id].material.opacity = (0.5 + 0.22 * Math.sin(performance.now() / 900 + id.length)) * (y.night() ? 0.9 : 0.75), rings[id].material.color.setScalar(1).multiply(y.night() ? new THREE.Color(1, 0.86, 0.6) : new THREE.Color(0.06, 0.05, 0.045));
     const nowT = performance.now(); if (nowT - acc < 180) return; acc = nowT;   // a few times a second is enough
     const w = y.where(), free = entered && !rite && !y.busy(), indoors = y.inside();
@@ -258,19 +275,29 @@ export function createGame(y) {
     // A cushion or a stool within a step or two, when nothing else is offered here and he is not already seated.
     seatHere = null;
     if (free && !near && !look && !y.staged()) { let best = 1.5; for (const s of y.site.seats) { if ((s.room || null) !== room) continue; const d = Math.hypot(s.at[0] - w.x, s.at[1] - w.z); if (d < best) { best = d; seatHere = s; } } }
+    // At the foot of a stair up to a storey that is walked round, it goes up; up there, at its door, back down (issue #101).
+    climb = null;
+    if (free && !near && !look && !y.staged()) {
+      const st = y.stair(), up = y.up(), L = up && y.lofts[up];
+      if (st && Math.hypot(st.at[0] - w.x, st.at[1] - w.z) < st.r) climb = "登楼";
+      else if (L && Math.hypot(L.door[0] - w.x, L.door[1] - w.z) < 0.9) climb = "下楼";
+      if (climb) seatHere = null;
+    }
     const b = $("act"); if (!b) return;
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
-    const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && free && y.seated();
-    if (held || near || look || seatHere || rise) {
-      const w = held || (near ? SEAL[near].act : look ? "观看" : seatHere ? "坐下" : "起身");
+    const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
+    if (held || near || look || seatHere || climb || rise) {
+      const w = held || (near ? SEAL[near].act : look ? "观看" : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
     if (indoors !== wasIndoors) { wasIndoors = indoors; refresh(); if (indoors) say(room === "main" && !journey.has("incense") ? t("走到佛前的圆相里，上一炷香。") : t(y.hallName()), 5); }
   });
+  const b0 = () => /** @type {HTMLElement} */ ($("act"));
   $("act")?.addEventListener("click", () => {
     if (rite && rite.press) return rite.press();
     if (near) return begin(near);
+    if (climb) { const c = climb; climb = null; b0().hidden = true; return c === "登楼" ? y.climb(y.stair().up) : y.descend(); }
     if (!look) { if (seatHere) sitDown(seatHere); else if (y.seated()) y.leave(); return; }
     const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
     if (it.work) return showWork(it.work, look);
@@ -323,7 +350,28 @@ export function createGame(y) {
   window.__goBack = (id) => goBack(id);
   $("bookBtn")?.addEventListener("click", openBook);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
-  $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
+  $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
+
+  // ---- The prologue's title, at the gate ----
+  // The first time he comes round the screen wall with the gate whole before him, 序章 云径禅寺 rises at the side of the
+  // picture with one note of the qin (the theme's first) and fades; it takes nothing from the visitor. Once in each
+  // pilgrimage: kept until the book is emptied (从头走起, 重新朝山). Not on a page that names its own place.
+  const TITLED = "yunjing.prologue.v1";
+  let titled = (() => { try { return localStorage.getItem(TITLED) === "1"; } catch { return false; } })(), titleShown = 0;
+  const forgetTitle = () => { titled = false; awaitTitle(free); try { localStorage.removeItem(TITLED); } catch {} };
+  const prologueTitle = (hold = false) => {
+    const el = $("prologue"); if (!el) return;
+    titled = true; titleShown++; if (free) { try { localStorage.setItem(TITLED, "1"); } catch {} }
+    // Written in the brush, in the temple's own characters (Japanese forms in Japanese, glyphs()); in English and Korean the
+    // line is also said under it in words the visitor reads, as the title page does.
+    const read = lang === "en" || lang === "ko" ? `<small>${t("序章　云径禅寺")}</small>` : "";
+    el.innerHTML = `<b><span>${glyphs("序章")}</span><span>${glyphs("云径禅寺")}</span></b>${read}`;
+    el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on"); prologueNote(); track("opening.title", {});
+    if (!hold) setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 1300); }, 4000 * Math.max(fast, 0.5));
+  };
+  y.onTick(() => { if (!titled && entered && free && !y.inside() && !y.openingActive() && atGate(y.where())) prologueTitle(); });
+  // What the title has done (and, for the picture tools, `__prologue(true)` raises it now, wherever he stands; "hold" keeps it up).
+  window.__prologue = (show) => { if (show === true || show === "hold") prologueTitle(show === "hold"); return { titled, shown: titleShown, on: !!$("prologue")?.classList.contains("on"), text: $("prologue")?.textContent || "" }; };
 
   // ---- The title ----
   const title = $("title");
@@ -332,8 +380,16 @@ export function createGame(y) {
   // go on (接着走) from where they were, or to begin again (从头走起, asked twice: it empties the book).
   const named = SEALS.filter((d) => places[d.id] && !places[d.id].room).map((d) => ({ place: d.place, at: places[d.id].at }));
   const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter") || (BENCH && (Q.has("at") || Q.has("play") || Q.has("seals"))));   // a tool or a test that names its own place is left where it asked to be
+  awaitTitle(free && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
   let left = free ? readPlace(localStorage) : null, kept = 0;
-  if (left && y.walker.blocked(left.x, left.z)) left = null;
+  if (left && left.up && !y.lofts[left.up]) left = null;
+  // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
+  // steps out to the nearest free point a few centimetres off. A place kept up on a balcony is tested on its floor.
+  if (left) {
+    y.walker.setLoft(left.up);
+    if (y.walker.blocked(left.x, left.z)) { let got = null; out: for (let r = 0.01; r <= 0.06; r += 0.01) for (let k = 0; k < 16; k++) { const x = left.x + r * Math.cos((k * Math.PI) / 8), z = left.z + r * Math.sin((k * Math.PI) / 8); if (!y.walker.blocked(x, z)) { got = { x, z }; break out; } } left = got ? { ...left, ...got } : null; }
+    y.walker.setLoft(null);
+  }
   const offer = () => {
     const o = titleOffer(journey.count(), SEALS.length, left, y.start), b = $("enterBtn"), again = $("againBtn");
     $("titleSeals").textContent = o.line || (journey.count() === SEALS.length ? t("七印圆满 · 山门常开") : "");
@@ -341,23 +397,47 @@ export function createGame(y) {
     if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
     return o;
   };
-  if (left && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw);   // the title is shown over where they were
-  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: labelOf(w, y.inside() ? y.hallName() : null, named) }); };
+  if (left && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were
+  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   y.onTick((dt) => { if ((kept += dt) > 2) { kept = 0; keepPlace(); } });
   window.addEventListener("pagehide", keepPlace); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") keepPlace(); });
   $("againBtn")?.addEventListener("click", (e) => {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); left = null; b.dataset.asked = "";
-    const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter();
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); forgetTitle(); left = null; b.dataset.asked = "";
+    const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
-  const enter = () => {
+  // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first
+  // (src/opening.js): the bell up on the mountain, the eye coming down to him; the first lines (where to go, how to walk)
+  // wait until the walk is his, and so does the music. A visitor who goes on from where they were steps straight in.
+  const enter = (again = false) => {
     if (entered) return;
-    track("demo.enter", { resumed: !!(left && titleOffer(journey.count(), SEALS.length, left, y.start).going), seals: journey.count(), tier: y.tier || "" });
-    entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered"); const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast);   // after the first line about walking has gone
+    const resumed = !!(left && titleOffer(journey.count(), SEALS.length, left, y.start).going);
+    track("demo.enter", { resumed, seals: journey.count(), tier: y.tier || "" });
+    const o = openingFor({ seals: journey.count(), place: left, start: y.start, params: Q, again: again === true, autocam: y.autocam(), reduced: y.reduced() });
+    if (o.eye !== "none") holdMusic(true);
+    if (o.bell) mountainBell();   // inside the click that stepped in, so the browser lets it sound
+    entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered");
+    const begin = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
+    if (o.eye === "none") { begin(); return; }
+    track("opening.played", { eye: o.eye, again: again === true });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
   };
   if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
+  // ?show=shot-<id>: the observance begun where he stands, with the eye already on its shot (tools/shots.js).
+  // He is put as the observance has him (seated for the tea and the summit, at the rope for the bell, his palms together
+  // elsewhere), not taken through it, so that the picture is the same however slowly the page draws.
+  function pose(id) {
+    const p = places[id]; if (!p || rite) return false;
+    const mineRite = (rite = /** @type {any} */ ({ id, posed: true })), on = () => rite === mineRite;
+    y.stage({ face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? placeLift(p, y.site.seats, y.walker.heightAt) : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } });
+    if (id === "bell") rites.takeRope(on);
+    if (id === "lamp") mine.visible = true;
+    return y.direct(id, { now: true });
+  }
+  window.__poseRite = (id) => pose(id);
+  { const want = (Q.get("show") || "").replace(/^shot-/, ""); if (want && want !== Q.get("show") && places[want]) { const go = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(go); pose(want); } }, 100); } }
   refresh(); rites.restore({ incenseAt: (() => { try { return Number(localStorage.getItem(INCENSE)) || 0; } catch { return 0; } })() });
 
   // ---- The workbench: straight to a place, and straight into what happens there (see BENCH above) ----
@@ -376,7 +456,7 @@ export function createGame(y) {
   })();
 
   // For the tests.
-  window.__journey = () => { const n = journey.next(); return { look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
+  window.__journey = () => { const n = journey.next(); return { rings: Object.values(rings).filter((m) => m.visible).length, look, seen: [...seen], ...journey.snapshot(), count: journey.count(), total: journey.total, done: journey.done(), earned: journey.list().filter((d) => d.got).map((d) => d.seal), near, rite: rite && rite.id, entered, next: n?.id || null, nextPlace: n?.place || null, nextSeal: n?.seal || null, lampLit: mine.visible, book: page ? [page.width, page.height] : null }; };
   window.__hush = (on) => { hush(on); };   // the music held back as when he sits on after tea, or let back
   window.__rites = () => ({ ...rites.state(), seat: seatHere ? { at: seatHere.at, room: seatHere.room } : null, sat, ended, went, closing, words, him: y.monk.group.position.toArray().map((v) => +v.toFixed(3)), line: $("endingLine")?.textContent || "" });
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();

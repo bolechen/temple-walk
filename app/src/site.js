@@ -20,6 +20,11 @@ export const LEVELS = [
   { y: 20, x: 14, zS: -118.4, zN: -142, stair: 4 },     // the summit: high enough to look back over every roof
 ];
 const [T1, T2, TOP] = LEVELS;
+// The top storey of the summit pavilion is walked round (issue #101): how far its balcony reaches past the columns
+// and how far its eave reaches over that. 1.6 m leaves a child room between wall and rail and is recorded as a
+// departure from the Yingzao Fashi (docs/t00/decisions.md, 登凌霄阁); the structure review prefers the balcony's edge
+// over the second storey's columns (2.0 m) under an eave of about 2.8 m, for the owner to decide. Change it here only.
+export const LOFT = Object.freeze({ out: 2.4, overhang: 3.2 });
 const HILL = { zS: T2.zN, zN: TOP.zS };   // the slope below the summit, crossed only by the stair between the tea rows
 // The way in: the last of the old path up the mountain, a zigzag through the grove. You start at the
 // river-view pavilion, climb north past the ink-stone pool, turn west and climb to the half-way pavilion,
@@ -28,6 +33,28 @@ const steps = (rise) => 0.34 * Math.round(rise / 0.18);
 export const APPROACH = { top: SITE.fore, w: 4, rise: 6, rise2: 4.5, run: steps(6), run2: steps(4.5), zA0: SITE.fore + steps(6), zA1: SITE.fore + steps(6) + 4.6, xTurn: 10, rise3: 4, run3: steps(4) };
 APPROACH.zMid = (APPROACH.zA0 + APPROACH.zA1) / 2; APPROACH.xB0 = APPROACH.xTurn + APPROACH.run2; APPROACH.xB1 = APPROACH.xB0 + 5.6;
 APPROACH.xC = (APPROACH.xB0 + APPROACH.xB1) / 2; APPROACH.zC0 = APPROACH.zA1 + APPROACH.run3; APPROACH.zC1 = APPROACH.zC0 + 5.4; APPROACH.end = APPROACH.zC1 + 0.4;
+
+// Where the near bamboo grows (bamboo.js): all round the zigzag you arrive by and the forecourt, and beyond the tea; and
+// where it is kept clear, the path and the half-way pavilion. Culms stand 9 to 15 m over the land (`top`). Shared with the
+// opening (opening.js), whose way down keeps over their tops except where it comes down the clear way of the path.
+const nearRect = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
+export const GROVE = {
+  top: 15,
+  areas: [
+    { x0: -28, x1: 44, z0: SITE.fore + 0.8, z1: APPROACH.zC1 + 12, n: 1150 },
+    { x0: -36, x1: -23.2, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 }, { x0: 23.2, x1: 36, z0: SITE.zS + 1, z1: SITE.fore + 0.8, n: 130 },
+    { x0: -40, x1: -26.5, z0: LEVELS[2].zN - 5, z1: HILL.zS, n: 190 }, { x0: 26.5, x1: 40, z0: LEVELS[2].zN - 5, z1: HILL.zS, n: 190 },
+  ],
+  /** May bamboo grow here? */
+  keep(x, z) {
+    const A = APPROACH;
+    if (z > SITE.fore - 0.5) return !(nearRect(x, z, -A.w / 2, A.w / 2, SITE.fore, A.zA0, 0.9) || nearRect(x, z, -A.w / 2, A.xB1 + 4.6, A.zA0, A.zA1, 0.8) || nearRect(x, z, 2.4, 8.0, A.zA1, A.zA1 + 5.8, 0.6) || nearRect(x, z, A.xC - A.w / 2, A.xC + A.w / 2, A.zA1, A.zC0, 0.9) || nearRect(x, z, A.xB0, A.xB1 + 6, A.zC0, A.zC1, 0.7));   // clear of the path and the half-way pavilion
+    if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
+    return true;
+  },
+  /** Is there bamboo at (x, z) (within an area, and not kept clear)? */
+  grows(x, z) { return GROVE.areas.some((a) => x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1) && GROVE.keep(x, z); },
+};
 
 // Height of the land outside the walls, under the approach, and on the hill.
 export function terrain(x, z) {
@@ -57,7 +84,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [] }, shade = [[], [], [], []], halls = [], buildings = [];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {};
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. A pointed (tent) roof rises half its span.
@@ -71,14 +98,16 @@ export function buildSite(M) {
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
     for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
-    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q) });
+    for (const r of b.walk.rails || []) walk.rails.push({ ...place(r, at, q), bottom: r.bottom + y, top: r.top + y });
+    for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q),
+      crest: r.crest && r.crest.map(([cx, cy, cz]) => { const [x, z] = turn(cx, cz, q); return [x + at[0], cy + y, z + at[1]]; }) });
     for (const edge of b.walk.drops) {
       const world = point => { const [x, z] = turn(point[0], point[1], q); return [x + at[0], z + at[1]]; };
       walk.drops.push({ a: world(edge.a), b: world(edge.b), normal: turn(...edge.normal, q), top: edge.top + y });
     }
     if (base === undefined) shade[lvl].push(place(b.plat, at, q));
     // What stands where, by name: the edge sweep and the tests go round each building by this list.
-    buildings.push({ name: opts.hall?.name || opts.plaque?.text || opts.plaque || opts.name || "", ...place(b.plat, at, q), y,
+    buildings.push({ name: opts.hall?.name || opts.plaque?.text || opts.plaque || opts.name || "", ...place(b.plat, at, q), y, rail: b.rail,
       frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cai: b.cai, parts: b.parts, corners: b.corners, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
@@ -92,13 +121,25 @@ export function buildSite(M) {
   // A building of several storeys: each lower roof is a skirt whose ridge hides inside the storey above,
   // and each upper storey starts where that skirt meets its walls.
   const putStack = (storeys, at, q = 0, lvl = 0) => {
-    let first, foot = 0;
+    let first, foot = 0, below = null;
+    const y = lvl ? LEVELS[lvl - 1].y : 0;
     storeys.forEach((st, i) => {
       const next = storeys[i + 1], o = i ? { platOut: 0.05, dark: false, steps: 0, ...st, platH: foot - 0.08, platBase: foot - 0.4 } : { ...st };
+      // A balcony walked round whose floor reaches past the columns of the storey below stands on their heads (#101).
+      if (st.loft && i && st.xs[st.xs.length - 1] + st.platOut > storeys[i - 1].xs[storeys[i - 1].xs.length - 1]) o.pingRing = [...storeys[i - 1].xs];
       o.storey = i; o.under = o.skirt = !!next;   // which storey, and whether another stands on its roof
       if (next) { o.overhang = o.overhang ?? 2.4; o.G = o.xs[o.xs.length - 1] + o.overhang - next.xs[next.xs.length - 1] + 0.4; }
-      const b = put(o, at, q, lvl); first = first || b;
-      if (next) foot = b.roofAt(b.EZ - next.zs[0]) + (next.ping ? PING.floor + (PING.sets * (next.cai || 0.21)) / 0.21 : 0);   // a balcony's sets, their plate and its floor stand between the skirt and the storey
+      const r0 = walk.roofs.length, b = put(o, at, q, lvl); first = first || b;
+      // The skirt roof below goes up into this storey's floor and no higher: over the balcony the eye is in the air,
+      // not in its tiles.
+      if (below) for (const r of below) r.top = Math.min(r.top, b.platH + y);
+      below = walk.roofs.slice(r0);
+      if (next) foot = b.roofAt(b.EZ - next.zs[0]) + (!next.ping ? 0 : next.loft ? PING.lift : PING.floor + (PING.sets * (next.cai || 0.21)) / 0.21);   // a balcony's sets, their plate and its floor stand between the skirt and the storey (a walked balcony on the ring below keeps its own lift)
+      if (b.loft) {   // a balcony walked round: where it is, its floor, where its door lets him out and which way he faces there
+        const L = b.loft, f = turn(0, 1, q), [dx, dz] = turn(L.door[0], L.door[1], q);
+        lofts[L.id] = { id: L.id, at: [...at], floor: L.floor + y, ceil: L.ceil + y, half: { wall: L.wall, edge: L.edge }, door: [dx + at[0], dz + at[1]], face: Math.atan2(f[0], -f[1]),
+          inner: place(L.inner, at, q), outer: place(L.outer, at, q), hall: storeys[0].hall?.id || null };
+      }
     });
     return first;
   };
@@ -126,6 +167,7 @@ export function buildSite(M) {
   put({ ...side, plaque: { text: "禅堂", style: "wood" }, hall: { id: "chan", kind: "chan", name: "禅堂" } }, [16.6, 14], 3);
   // The tea house's porch is deeper than its neighbour's: wide enough to walk round the two tables set under its eave.
   const tea = put({ ...side, platOut: 1.6, plaque: { text: "吃茶去", style: "wood" }, hall: { id: "tea", kind: "tea", name: "茶寮" } }, [-16.6, 14], 1);
+  const teaMats = [], drawnSeats = [];   // the tea house's four cushions; every place a cushion or stool is drawn (a test holds each to a seat)
   {   // a low table set for tea under its eave, against the wall: an iron kettle, a whisk, bowls of black glaze, a straw cushion at either end
     const y = tea.platH, z = tea.frontZ + 0.37, parts = { wood: [], glaze: [], iron: [], straw: [] };
     for (const x of [-4.9, 4.9]) {
@@ -133,8 +175,11 @@ export function buildSite(M) {
       for (const dx of [-0.42, 0, 0.42]) parts.glaze.push(lathe([[0, 0.012], [0.035, 0], [0.04, 0.012], [0.075, 0.05], [0.082, 0.062], [0.076, 0.062], [0.03, 0.02], [0, 0.02]], 14).translate(x + dx, y + 0.37, z + 0.05));
       parts.iron.push(lathe([[0, 0], [0.09, 0], [0.13, 0.05], [0.13, 0.11], [0.07, 0.16], [0.03, 0.17], [0, 0.19]], 12).translate(x + 0.55, y + 0.37, z - 0.12), new THREE.TorusGeometry(0.09, 0.008, 5, 12, Math.PI).translate(x + 0.55, y + 0.53, z - 0.12));
       parts.wood.push(new THREE.CylinderGeometry(0.012, 0.03, 0.11, 8).translate(x - 0.6, y + 0.425, z - 0.12));
-      for (const dx of [-1.12, 1.12]) { parts.straw.push(new THREE.CylinderGeometry(0.24, 0.26, 0.08, 14).translate(x + dx, y + 0.04, z + 0.02));
-        const [cx, cz] = turn(x + dx, z + 0.02, 1); walk.posts.push({ x: cx - 16.6, z: cz + 14, r: 0.26 }); }   // a cushion is walked round, as the stools are: his shoes do not sink into the straw
+      for (const dx of [-1.12, 1.12]) { parts.straw.push(lathe(CUSHION, 28).translate(x + dx, y, z + 0.02));
+        const [cx, cz] = turn(x + dx, z + 0.02, 1), [tx, tz] = turn(x, z + 0.02, 1);
+        walk.posts.push({ x: cx - 16.6, z: cz + 14, r: 0.292 });   // a cushion is walked round, as the stools are: his shoes do not sink into the straw
+        // and it is a seat, sat on cross-legged facing the table it lies beside
+        const at = [cx - 16.6, cz + 14]; teaMats.push({ at, top: y + 0.104, face: Math.atan2(tx - cx, tz - cz), room: null, kind: "cushion" }); drawnSeats.push(at); }
       // The table and what stands on it are in the way, with his own width round them; the way past is outside it.
       const [ax, az] = turn(x - 0.75 - BODY, z - 0.26, 1), [bx, bz] = turn(x + 0.75 + BODY, z + 0.26 + BODY, 1);
       walk.posts.push({ x0: Math.min(ax, bx) - 16.6, x1: Math.max(ax, bx) - 16.6, z0: Math.min(az, bz) + 14, z1: Math.max(az, bz) + 14 });
@@ -195,9 +240,9 @@ export function buildSite(M) {
 
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
-    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁" } },
+    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
     { cai: 0.186, ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
-    { cai: 0.186, ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: 2.2, crest: 4.0, G: 2.4, platOut: 1.0, rail: true, plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
+    { cai: 0.186, ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
@@ -373,10 +418,12 @@ export function buildSite(M) {
       new THREE.TorusGeometry(0.075, 0.009, 6, 16, Math.PI).rotateZ(-Math.PI / 2).translate(-0.53, T + 0.15, -0.2), new THREE.CylinderGeometry(0.008, 0.016, 0.2, 8).rotateZ(-0.7).translate(-0.28, T + 0.17, -0.2));
     // Stools: his own, and two for company.
     P.wood.push(stool().translate(0, 0, 0.62), stool().translate(0.95, 0, -0.12), stool().translate(0, 0, -0.86));
-    // One branch in a bottle, on the table.
-    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(0.46, 0.78, -0.38));
-    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 18, 0.006, 6),
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + 0.46, v[1] + 0.78, v[2] - 0.38))), 10, 0.004, 5));
+    // One branch in a bottle, on the table: at the corner by his left hand, beside the ewer, out of the way of the eye that
+    // looks across the table at him while he drinks (src/director.js; it stood at the near corner and filled a fifth of that picture).
+    const BX = -0.52, BZ = 0.1;
+    P.glaze.push(lathe([[0, 0], [0.034, 0], [0.05, 0.05], [0.04, 0.12], [0.014, 0.17], [0.017, 0.2], [0.012, 0.2], [0, 0.17]], 18).translate(BX, 0.78, BZ));
+    P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 18, 0.006, 6),
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 10, 0.004, 5));
     const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, lacquer: M.lacquer };
     for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
     // The table stands askew to the court, so it is closed off as three round things along its length; each stool as one.
@@ -424,6 +471,7 @@ export function buildSite(M) {
   // cushion cross-legged. The rooms add their own (interior.js); game.js offers them.
   const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null, kind: "stool" }; });
   seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null, kind: "cushion" });
+  drawnSeats.push([0, porchZ], ...seats.slice(0, 3).map((q) => q.at)); seats.push(...teaMats);
   // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
   // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
   const places = {
@@ -435,6 +483,30 @@ export function buildSite(M) {
     lamp:    { at: [lampAt[0], lampAt[1] + 1.4], r: 1.5, face: Math.PI, flame: lampMine },
     sit:     { at: [0, porchZ], r: 1.2, face: 0, sit: true },
   };
+  // The shot each observance is seen from while it is made (src/director.js): where the eye stands (`at`) and what it
+  // looks at (`look`), in the place's own frame (x to his left, z the way he faces, y up from the floor there), its angle
+  // of view for a wide picture (`fov`), how long it takes to come and to go (`in`, `out`, seconds), and how it drifts
+  // while it rests (`drift`: `push`, `side`, `rise` in metres a second, `turn`, `tilt` in degrees a second, `for` seconds).
+  // `keep` lists what must stay inside the picture, in the same frame: him, and what his hands are at.
+  // First drafts, written here to be judged from the pictures (`shot-<id>` below); docs/t00/SOURCES.md records them as our own drafts.
+  const SHOTS = {
+    // From behind him to his right and low, between the tower's columns: the rope, his hands and the whole bell, little wall.
+    bell: { at: [-2.6, 0.5, -3.0], look: [0, 1.52, 1.31], fov: 40, in: 2.0, out: 1.0, drift: { side: 0.02, for: 8 }, keep: [[0, 0.1, 0], [0, 1.25, 0], [0, 1.0, 0.34], [0, 1.75, 3.1], [0, 3.5, 3.1]] },
+    // Across the table from his right, low: his bowl near on its stand, him beyond, the ewer at the edge; sitting on, it draws back.
+    tea: { at: [-0.45, 0.98, 2.05], look: [0, 0.85, 0.8], fov: 42, in: 2.2, out: 1.0, drift: { push: -0.03, side: -0.015, for: 30 }, keep: [[0, 0.6, 0.62], [0, 1.15, 0.62], [0, 0.82, 1.13]] },
+    // Under the eaves, from before him to his left, three-quarters: his face, his hands, the book and the holder of slips.
+    sutra: { at: [1.2, 1.3, 0.5], look: [-0.06, 1.0, 0.28], fov: 42, in: 1.8, out: 1.0, drift: { push: 0.015, for: 8 }, keep: [[0, 0.85, 0], [0, 1.2, 0], [0, 0.95, 0.3], [-0.24, 1.0, 0.82]] },   // a near shot: from his waist up
+    // From behind and above his shoulder, down into the niche where the pool lies; the 龍井 board above it kept out of the picture.
+    // (Not gone to for now, `off`: the niche is unlit and its arch is to be rebuilt (#76), so the picture shows a black hole;
+    // the eye stays with him until #99 brings the shot back. The data stays, tested like the rest.)
+    well: { off: "#99", at: [-0.8, 2.4, -1.6], look: [0.05, 0.3, 2.2], fov: 40, in: 2.0, out: 1.0, drift: { push: 0.015, for: 10 }, keep: [[0, 1.0, 0], [0, 1.2, 0], [0, 0.2, 2.38]] },   // over his shoulder: his head and shoulders, and the pool
+    // From before the lamp, his face lit by it; as it is lit the eye steps back half a pace.
+    lamp: { at: [0.75, 1.3, 2.45], look: [-0.05, 1.0, 0.3], fov: 42, in: 1.8, out: 1.0, drift: { push: -0.05, for: 6 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.88, 1.38]] },
+    // Low, before him and to his right at about 35° (wider would stand the eye over the stair's cheek), clear of the
+    // columns: the pavilion behind him as he breathes.
+    sit: { at: [-1.0, 0.55, 1.4], look: [0, 0.53, 0], fov: 44, in: 2.4, out: 1.2, drift: { push: 0.012, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] },
+  };
+  for (const id in SHOTS) places[id].shot = SHOTS[id];
 
   // ---- Named views: one per thing worth looking at. The screenshot tool renders each of them. ----
   const A = APPROACH;
@@ -449,6 +521,9 @@ export function buildSite(M) {
     // The six fixed views the T00 handoff is judged by (docs/t00/camera-manifest.json): bamboo start, stair turn,
     // before the screen wall, the gate once round it, back through the gate, the first court.
     cam01: [A.xC, A.zC1 - 1.2, 0, 0.3], cam02: [A.xB0 + 1.6, A.zMid + 0.9, -1.35, 0.16], cam03: [0, 63.8, 0, 0.14], cam04: [6.6, 53.4, -0.42, 0.3], cam05: [0.6, 37.6, Math.PI, 0.08], cam06: [0, 29, 0, 0.1],
+    // The observances' own shots (src/director.js): ?show=shot-<id> stands him at the place, begins the observance and
+    // puts the eye on its shot at once. The incense is made indoors; its view is added with the hall's room (yard.js).
+    ...Object.fromEntries(Object.entries(places).filter(([, p]) => p.shot).map(([id, p]) => [`shot-${id}`, [p.at[0], p.at[1], Math.PI - p.face, 0.05]])),
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
     // The six views of the art prototype (docs/t00/art-targets.md, A1 to A6), framed to match its pictures at 2.39:1:
     // the bamboo stair with the half-way pavilion at its head, the gate between the screen wall and its steps, the first
@@ -456,9 +531,13 @@ export function buildSite(M) {
     // the summit. Each is drawn in the season and hour its picture shows, which the address gives, not the view.
     art1: [21.4, 78.7, -1.4, 0.2], art2: [2.5, 53.8, -0.18, 0.3], art3: [0, 29, 0, 0.1], art4: [-9.6, 25.0, -0.6, 0.08],
     art5: [0, T2.zS + 5, 0, 0.22], art6: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
+    // Up on the pavilion's top storey, at its door on the axis (the railing's middle bay is open there), looking back
+    // south over every roof below (issue #101). A view up on a balcony is named in `viewUp`.
+    loft: [0, topZ + 3.4 + (0.51 + LOFT.out - 0.64) / 2, Math.PI, -0.22],
   };
+  const viewUp = { loft: "lingxiao" };
 
-  return { root, walk, shade, paving, hall, halls, buildings, views, places, seats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, halls, buildings, lofts, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
@@ -521,8 +600,14 @@ function drum(M, t) {
 
 // ---- Walking over the plan ----
 const terrainLevel = (x, z) => terrain(x, z);
+// How high above the floor where he stands an observance made sitting puts him: on the top of the seat registered there
+// (the tea's stool, the summit's mat), as sitting down on any seat does (game.js), less the floor under him.
+export function placeLift(place, seats, heightAt) {
+  const at = place.seat || place.at, seat = seats.find((s) => (s.room || null) === (place.room || null) && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3);
+  return seat ? Math.max(0, seat.top - heightAt(place.at[0], place.at[1])) : place.lift ?? 0.1;
+}
 export function createWalker(site) {
-  const { solids, decks, ramps, posts = [], roofs = [] } = site.walk;
+  const { solids, decks, ramps, posts = [], roofs = [], rails = [] } = site.walk;
   const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
   // What stands in the way even on a floor: a round thing keeps his centre its own radius and his width away (`pad`);
   // a square one was drawn that much larger where it was put down. They are sorted into two-metre squares, so that
@@ -536,10 +621,13 @@ export function createWalker(site) {
     for (const s of list) { if (s.r !== undefined) { const dx = x - s.x, dz = z - s.z, r = s.r + pad; if (dx * dx + dz * dz < r * r) return s; } else if (inRect(s, x, z)) return s; }
     return null; };
   let floor = null;   // what the highest floor found by the last carved() is made of (building floors say; the rest is the path's stone)
+  // The balcony of a storey that is walked round is floor only while he is up there: from below, a tap or a look aimed
+  // at the building does not land on it, and the ground floor under it is still the ground floor.
+  const lofts = site.lofts || {}; let loft = null;
   function carved(x, z, even) {   // a floor or stair of a building or terrace, if you are on one (`even`: a stair as the slope it follows)
     let height = null; floor = null;
     const take = (h, f) => { if (height === null || h > height) { height = h; floor = f || "path"; } };
-    for (const d of decks) if (d.r !== undefined ? (x - d.x) ** 2 + (z - d.z) ** 2 < d.r * d.r : inRect(d, x, z)) take(d.h, d.floor);   // (a round one is a mat)
+    for (const d of decks) if ((!d.loft || d.loft === loft) && (d.r !== undefined ? (x - d.x) ** 2 + (z - d.z) ** 2 < d.r * d.r : inRect(d, x, z))) take(d.h, d.floor);   // (a round one is a mat)
     for (const r of ramps) if (inRect(r, x, z)) {
       const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1];
       // A stair is steps, not a slope: he stands on the tread he is over, so his feet never sink into the stone.
@@ -553,9 +641,12 @@ export function createWalker(site) {
   // Indoors the plan is set aside: a room is one level floor inside four walls, with its own things in the way.
   let room = null;
   const shut = (x, z) => x < room.x0 || x > room.x1 || z < room.z0 || z > room.z1 || room.solids.some((s) => inRect(s, x, z));
-  const wall = (x, z) => { if (room) return shut(x, z); if (post(x, z, 0.15)) return true; if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; };
+  // Up on a balcony nothing but its own floor is to be stood on: what lies below the railing is far down.
+  const upHere = (x, z) => { const c = carved(x, z); return c !== null && Math.abs(c - lofts[loft].floor) < 1e-6; };
+  const wall = (x, z) => { if (room) return shut(x, z); if (post(x, z, 0.15)) return true; if (loft) return !upHere(x, z); if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; };
   return {
     setRoom(r) { room = r || null; }, get room() { return room; },
+    setLoft(id) { loft = id && lofts[id] ? id : null; }, get loft() { return loft; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },
     // What a shoe comes down on: "room" (a hall's floor), "stone" or "wood" (a building's platform or gallery), "path"
     // (the stone landings and stairs of the approach and the terraces), "paving" (the courts, where water stands after
@@ -573,8 +664,13 @@ export function createWalker(site) {
     // on, anywhere else. A building is closed within its walls up to its ridge and over its platform up to the floor;
     // any other wall or tree some way above his head (a court wall is passed over well above it). A column (or a
     // trunk: anything round and thinner than a stride) answers "post" rather than true: the eye may let one pass across the view a moment before giving way.
+    // Is the point within `m` of a railing, round a platform's edge? (The eye that follows him passes over a railing as
+    // over any floor; an eye sent on a swing of its own keeps clear of it, so that the near edge of its lens does not cut into the stone.)
+    railNear(x, y, z, m = 0) { if (room) return false; for (const r of rails) if (x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m && y > r.bottom - m && y < r.top + m) return true; return false; },
     eyeShut(x, y, z, foot) {
       if (room) return shut(x, z);
+      // On a balcony the eye keeps inside the railing and out of the wall, below the beams of the eave above.
+      if (loft) { const L = lofts[loft]; if (!inRect(L.outer, x, z) || inRect(L.inner, x, z) || y < L.floor + 0.05 || y > L.ceil) return true; const p = post(x, z, 0.15); return p ? "post" : false; }
       for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;
       // A square post is a low thing drawn wide by his body (a table, the cheek of a stair): in the way only of an eye
       // that has come down near the floor it stands on, as it does looking up.
@@ -591,11 +687,12 @@ export function createWalker(site) {
       if (own && top === -Infinity) top = foot + 5.5;   // the cheeks of a building's stair, beyond its platform
       return y < top;
     },
-    onGround: (x, z) => !room && carved(x, z) === null,
-    onStairs: (x, z) => !room && ramps.some(r => inRect(r, x, z) && carved(x, z) <= (r.base || 0) + r.h + 0.01),
+    onGround: (x, z) => !room && !loft && carved(x, z) === null,
+    onStairs: (x, z) => !room && !loft && ramps.some(r => inRect(r, x, z) && carved(x, z) <= (r.base || 0) + r.h + 0.01),
     blocked(x, z) {
       if (room) return shut(x, z);
       if (post(x, z, BODY)) return true;   // a column, a table, the cheek of a stair: in the way even on a floor
+      if (loft) return !upHere(x, z);
       if (carved(x, z) !== null) return false;
       if (Math.abs(x) > SITE.x + 8 || z < SITE.zN || z > APPROACH.end) return true;
       if (z > SITE.zS && Math.abs(x) > 20.5) return true;                                  // the grove closes in on both sides of the forecourt

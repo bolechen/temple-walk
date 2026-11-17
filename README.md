@@ -19,6 +19,7 @@
 - [体验原型](https://bolechen.github.io/temple-walk/)
 - [T00 研究、进度与独立验收](https://temple-atlas-research.floralpage64.chatgpt.site/#temple/T00)
 - [T01 宝通寺研究与开发准备](docs/T01-BAOTONG.md)：案头补证、白盒与观察玩法提案、资产顺序、现场采集清单；当前尚无 T01 游戏实现。
+- [T01 开工前的引擎评估](docs/T01-ENGINE.md)：对照 T00 提交记录和 three.js、Godot、Unity 的公开文档。结论仍是不换；包体和帧耗未经本项目实测。
 - [Claude / Fable 读取入口 llms.txt](https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt)
 - [开发交接与验收包](https://temple-atlas-research.floralpage64.chatgpt.site/handoff/T00-handoff-v001.zip)
 - [开发方按交接包提交的 T00 交付物](docs/t00/README.md)：启动说明、基线、机位、评审记录、已知问题、验收自报与证据

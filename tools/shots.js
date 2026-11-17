@@ -1,5 +1,5 @@
 // Renders every named view of the site (see `views` in app/src/site.js) to tools/out/<name>.png.
-// usage: node tools/shots.js [name ...]     e.g. node tools/shots.js gate library
+// usage: node tools/shots.js [--size=WxH] [name ...]     e.g. node tools/shots.js gate library; --size=1280x536 for the 2.39:1 art views
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out");
@@ -16,11 +16,12 @@ const srv = http.createServer((req, res) => {
   fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`;
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-  const p = await b.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, locale: "zh-CN" });
+  const sized = process.argv.find((a) => a.startsWith("--size=")), [vw0, vh0] = sized ? sized.slice(7).split("x").map(Number) : [1280, 720];
+  const p = await b.newPage({ viewport: { width: vw0, height: vh0 }, deviceScaleFactor: 1, locale: "zh-CN" });
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.stack ? e.stack.slice(0, 500) : e.message));
   p.on("console", (m) => (m.type() === "error" || m.type() === "warning") && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 400)));
-  let names = process.argv.slice(2);
+  let names = process.argv.slice(2).filter((a) => !a.startsWith("--"));
   for (let i = 0; i < Math.max(1, names.length); i++) {
     // A name may carry a season and hour and a view: "court@autumn-dusk@third".
     const [vname, when = "", vw = ""] = (names[i] || "arrive").split("@"), [season, time] = when.split("-");
