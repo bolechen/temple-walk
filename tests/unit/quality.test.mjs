@@ -2,7 +2,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { tierFor, mirrorAt, tiers } from "../../app/src/quality.js";
+import { tierFor, mirrorAt, tiers, createGovernor, governorSteps } from "../../app/src/quality.js";
 const { buildSite, createWalker, LEVELS, APPROACH } = await import("../../app/src/site.js");
 
 test("a discrete card starts on the high tier", () => {
@@ -34,4 +34,20 @@ test("the low tier draws no occlusion, no soft shadows, no depth of field", () =
   assert.ok(T.medium.leafShadow, "the middle tier casts the leaves' shadows");
   assert.deepEqual([T.low.shadow, T.low.shadowLong], [1024, 4096], "the low tier's shadow map is as it was");
   assert.ok(T.high.shadow > 2048 && T.high.shadowLong > 4096, "the high tier's shadow map is finer than before");
+});
+
+// When frames run long the governor gives up the film's finish before anything a visitor would miss more: on the high
+// tier the occlusion first, then the soft shadows, then the mirror; a tier that has neither starts at the mirror.
+test("on slow frames the governor puts out the occlusion, then the soft shadows, then the mirror", () => {
+  const T = tiers();
+  assert.deepEqual(governorSteps({ ...T.high }).map(([n]) => n), ["gtao", "softShadow", "planar", "scale", "bloom"]);
+  assert.deepEqual(governorSteps({ ...T.low }).map(([n]) => n), ["planar", "scale", "bloom"]);
+  const q = { ...T.high }, seen = [];
+  const g = createGovernor(q, () => seen.push({ gtao: q.gtao, soft: q.softShadow, planar: q.planar }));
+  for (let i = 0; i < 30 + 45 * 3; i++) g.tick(0.04);                // 25 frames a second, for long enough to step three times
+  assert.equal(g.level, 3);
+  assert.deepEqual(seen, [{ gtao: false, soft: true, planar: 0.5 }, { gtao: false, soft: false, planar: 0.5 }, { gtao: false, soft: false, planar: 0 }]);
+  const fixed = { ...T.high, fixed: true }, held = createGovernor(fixed, () => assert.fail("a pinned tier is never governed"));
+  for (let i = 0; i < 300; i++) held.tick(0.05);
+  assert.ok(fixed.gtao && fixed.softShadow);
 });

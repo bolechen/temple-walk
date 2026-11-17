@@ -12,7 +12,8 @@
 //
 // It replaces three's own PCF function in the shader chunk, so every material that takes shadows takes these,
 // the hand-lit paving included. It must be called before anything is compiled; the shadow map is still drawn only
-// when the hour changes. `?off=softshadow` leaves three's PCF as it was.
+// when the hour changes. `?off=softshadow` leaves three's PCF as it was; a negative shadow radius on the light (`sky.soft(false)`)
+// falls back to it while walking.
 import * as THREE from "three";
 
 const SIGNATURE = "float getShadow( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {";
@@ -24,7 +25,10 @@ export function softShadowChunk(chunk, { width, height, depth, spread = 0.022, m
   if (!chunk.includes(SIGNATURE)) throw new Error("shadows.js: three's PCF shadow function is not where it was; check the chunk after an upgrade");
   const f = (v) => v.toFixed(6);
   const soft = /* glsl */`
+  float getShadowPCF( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord );
   float getShadow( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+    // A negative radius asks for three's plain PCF: how the quality governor gives the softness up without recompiling.
+    if ( shadowRadius < 0.0 ) return getShadowPCF( shadowMap, shadowMapSize, shadowIntensity, shadowBias, - shadowRadius, shadowCoord );
     shadowCoord.xyz /= shadowCoord.w; shadowCoord.z += shadowBias;
     bool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;
     if ( !( inFrustum && shadowCoord.z <= 1.0 ) ) return 1.0;

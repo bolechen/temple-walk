@@ -40,13 +40,21 @@ export function tierFor(gpu) {
 // under it, nor from the terraces above, whose paving has no mirror.
 export const mirrorAt = (footY) => footY > -0.6 && footY < 2.0;
 
+// What the governor gives up, in order, on a tier: the film's finish first (the occlusion, then the soft shadows, which
+// a visitor misses least of all), then the mirror, then resolution, then the bloom.
+export function governorSteps(quality) {
+  return [
+    ...(quality.gtao ? [["gtao", () => { quality.gtao = false; }]] : []),
+    ...(quality.softShadow ? [["softShadow", () => { quality.softShadow = false; }]] : []),
+    ["planar", () => { quality.planar = 0; }],                      // the mirror: it draws the temple a second time
+    ["scale", () => { quality.scale *= 0.8; quality.budget *= 0.7; }],
+    ["bloom", () => { quality.bloom = false; quality.scale *= 0.85; quality.budget *= 0.8; }],
+  ];
+}
+
 export function createGovernor(quality, apply) {
   // Things are given up in order of how little they will be missed.
-  const steps = [
-    () => { quality.planar = 0; },                                  // the mirror first: it draws the temple a second time
-    () => { quality.scale *= 0.8; quality.budget *= 0.7; },
-    () => { quality.bloom = false; quality.scale *= 0.85; quality.budget *= 0.8; },
-  ];
+  const steps = governorSteps(quality).map(([, fn]) => fn);
   let n = 0, sum = 0, level = 0, frames = 0;
   return {
     get level() { return level; },

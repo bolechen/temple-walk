@@ -62,7 +62,7 @@
   "02-gate": {
    "view": "art2",
    "season": "autumn",
-   "time": "dusk",
+   "time": "day",
    "eye": "first",
    "tier": "high",
    "aspect": "2.39:1",
@@ -113,7 +113,9 @@
      ],
      8
     ]
-   }
+   },
+   "note": "2026-11-17 所有者同意主创建议：秋暮的太阳留给 A3，A2 的目标时辰改为秋昼（太阳从南面扫过门面）。measures 仍是从原型 02（秋暮改图）量的，待重定基准，不能拿来判 A2 是否过线。",
+   "rebaseline": true
   },
   "03-court": {
    "view": "art3",

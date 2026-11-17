@@ -1043,7 +1043,7 @@ const scenarios = {
   finish: { tier: 2, async run(b, base) {
     const look = async (q, w = 480, h = 200) => { const t = await open(b, base, q, { viewport: { width: w, height: h } }); await t.frames(2); const p = await t.probe(); expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close(); return p; };
     let p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
-    expect(p.post.depth && p.post.gtao && p.post.lut && p.post.halation && !p.post.dof && p.layers > 0, "the high tier at dusk, walking: " + JSON.stringify([p.post, p.layers]));
+    expect(p.post.depth && p.post.gtao && p.post.lut && p.post.halation && !p.post.dof && p.layers > 0 && p.soft && p.governed === 0, "the high tier at dusk, walking: " + JSON.stringify([p.post, p.layers, p.soft]));
     // The colour table is baked when the hour changes, never per frame (it once was, at 20 ms of CPU a frame).
     { const t = await open(b, base, "q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk", { viewport: { width: 320, height: 160 } }); await t.frames(2);
       const n0 = (await t.probe()).post.bakes; await t.frames(6); const n1 = (await t.probe()).post.bakes;
@@ -1057,7 +1057,7 @@ const scenarios = {
     p = await look("q=high&shot=1&show=cam06");
     expect(p.season === "summer" && p.time === "day" && !p.post.lut && !p.post.halation && p.layers === 0 && p.post.gtao, "J01 keeps its colour and its air: " + JSON.stringify([p.post, p.layers]));
     p = await look("q=low&cam=0,29,0,0.1&view=first&season=autumn&time=dusk");
-    expect(!p.post.depth && !p.post.gtao && !p.post.dof && p.post.lut, "the low tier keeps no depth and draws no occlusion: " + JSON.stringify(p.post));
+    expect(!p.post.depth && !p.post.gtao && !p.post.dof && p.post.lut && !p.soft, "the low tier keeps no depth, draws no occlusion and no soft shadows: " + JSON.stringify([p.post, p.soft]));
   } },
   jump: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });

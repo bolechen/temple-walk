@@ -32,6 +32,8 @@ test("the soft shadow replaces three's PCF function and keeps it beside, and ref
   assert.ok(out.includes("float getShadowPCF( sampler2DShadow"), "three's own kept under another name");
   assert.ok(out.includes((1 / 124).toFixed(6)) && out.includes((1 / 410).toFixed(6)), "the shadow camera's size reaches the shader");
   assert.ok(out.indexOf("getShadow( sampler2DShadow") < out.indexOf("SHADOWMAP_TYPE_VSM"), "inside the PCF branch");
+  assert.ok(/if \( shadowRadius < 0\.0 \) return getShadowPCF/.test(out), "a negative radius falls back to plain PCF (the governor's switch)");
+  assert.ok(out.indexOf("float getShadowPCF( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord );") < out.indexOf("return getShadowPCF"), "declared before it is called");
   assert.throws(() => softShadowChunk("void main(){}", box));
 });
 // The shader's mean density along a line of sight, worked out exactly, against the same density summed in small steps.

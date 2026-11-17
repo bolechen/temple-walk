@@ -67,6 +67,9 @@ export function createSky(renderer, scene, quality, focus) {
     update: (t) => { u.uT.value = t; },
     // Indoors neither the sun nor much of the sky reaches: the lamps do the work. The next setMood restores them.
     indoors() { sun.intensity = 0; hemi.intensity *= 0.3; },
+    // The soft shadows (shadows.js) on or off while walking: a negative radius sends the shader back to plain PCF.
+    soft(on) { sun.shadow.radius = on ? Math.abs(sun.shadow.radius) : -Math.abs(sun.shadow.radius); },
+    get softOn() { return sun.shadow.radius > 0; },
     // Everything the hour and the season decide about light. The caller redraws the shadows afterwards.
     setMood(m) {
       SUN_DIR.fromArray(m.sun).normalize(); FOG.fromArray(m.fog);
