@@ -1,11 +1,11 @@
 name: End to end, every scenario
 
 # The whole suite takes the better part of an hour on one machine without a GPU, so it does not run on every push:
-# once a week, and whenever it is asked for (Actions → this workflow → Run workflow), shared among four machines.
+# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among four machines.
 on:
   # Beside every publication, and not in its way: the stairs and the low drop, about three minutes, because walking and
   # collision change most often. The photograph's interface (photo-ui, several minutes on its own) breaks only when the
-  # photograph is changed; it waits for the weekly run or a run asked for by hand.
+  # photograph is changed; it waits for the nightly run or a run asked for by hand.
   push:
     branches: [main]
     paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs"]
@@ -16,7 +16,7 @@ on:
         required: false
         default: ""
   schedule:
-    - cron: "17 19 * * 6"
+    - cron: "17 19 * * *"
 
 permissions:
   contents: read
@@ -64,7 +64,7 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  # Every scenario, once a week and when asked: four machines take a quarter of the list each. Asked for by name, the
+  # Every scenario, once a night and when asked: four machines take a quarter of the list each. Asked for by name, the
   # scenarios named are run on the first machine alone.
   full:
     if: github.event_name != 'push'
@@ -89,7 +89,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         if: steps.mine.outputs.run == 'true'
-      # A weekly run stands on its own, with no publication beside it: the quick checks go with the first machine.
+      # A nightly run stands on its own, with no publication beside it: the quick checks go with the first machine.
       - name: Parse, types, unit tests, and his body against everything built
         if: steps.mine.outputs.run == 'true' && matrix.shard == 1
         run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
