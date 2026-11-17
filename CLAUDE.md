@@ -368,8 +368,10 @@ stool must be registered the same way, with its kind; `rites.test.mjs` holds it.
 summit is the last thing: before the other six seals its mat is only a seat. When the seventh is earned there, `finale`
 (`game.js`) hands the eye to `rites.close` (`y.cine(fn)`: round before him, back down the steps, up until the pavilion
 stands whole), says the closing words one at a time (`CLOSING`: they end on something unanswered, for a chapter not
-yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it;
-`__ending()` plays it again. It comes once in each season (`journey.closedIn(season)`, `closedSeason` in the book): after a
+yet made), shows the title of what has ended, and then opens the book. A click, a tap or Esc passes over it; the close
+asks for a screen wake lock while it plays and lets it go after (`src/awake.js`), the rites' clock keeps no time while the
+page is hidden (`rites.js`: a phone's screen off is not the close finishing), and the tap that wakes a sleeping phone is
+not taken for a skip; `__ending()` plays it again. It comes once in each season (`journey.closedIn(season)`, `closedSeason` in the book): after a
 change of season, sitting there plays it again, without the full book's seal a second time.
 
 **Coming back, and going back (`resume.js`, `game.js`).** Where he stands is kept every two seconds and when the page is
@@ -463,7 +465,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, `__debugURL()`
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__look(at, to)` (the eye stood anywhere, looking at a point, for picture tools; `__look()` lets it go), `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, `__debugURL()`
 (the address of the view he has now, for the console: `?cam=…&view=…&season=…&time=…`, with `in`/`up` and an inert
 `devpose`; it writes nothing into the page's address), and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
@@ -471,6 +473,7 @@ to `__probe` rather than reaching into the page from a test.
 
 ## Working notes
 
+- **The highest rule (the owner, 2026-11-18; `AGENTS.md`「最高价值观与铁律」):** reason from first principles and from the goal, not from one instruction; before any development or decision, search GitHub and current practice and record what was found; if an instruction (the owner's or the lead's) is not the best way to the goal, say so and propose a better one, and follow it only once it has been plainly insisted on.
 - **Every issue has its own goal with acceptance criteria** (the owner's rule, 2026-11-16): background, goal, criteria each of which a test, a number, a set of named views or a command can decide, and who closes it after a recheck on which commit (`AGENTS.md`「Issue 与验收标准」, `.github/ISSUE_TEMPLATE/goal.md`). A long goal file may hold them for a whole line of work, linked from the issue, but they are written out in full there or in the issue; a PR reports against them item by item.
 - **Every effect in the game has a recorded source** (the owner's rule, 2026-11-15): when you add or change anything a visitor sees, hears or does, add or amend its row in `docs/t00/SOURCES.md` in the same commit, with how far the source was checked (原文 read, quoted second-hand, photo, reference project, owner's choice, or plainly 按常理/自拟 when there is none). Never pass an inference off as a source.
 - Code comments are in English and written as prose describing the place, not the code; commit messages and PR titles follow Conventional Commits as AGENTS.md sets out; the README and docs are in Chinese. Keep that split.

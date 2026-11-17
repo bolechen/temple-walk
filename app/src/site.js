@@ -87,8 +87,10 @@ export function buildSite(M) {
   const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {};
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
-  // hundred more, 0.27. Only a tent roof is given its `rise` by hand.
-  const ju = (o) => ((o.zs[0] - o.zs[o.zs.length - 1]) + 2 * PURLIN) * (o.lodge ? 0.27 : 1 / 3);
+  // hundred more, 0.27. A pointed (tent) roof rises half its span.
+  const ju = (o) => { const deep = o.zs[0] - o.zs[o.zs.length - 1], tent = !o.skirt && (o.G ?? 3.3) >= o.zs[0] + (o.overhang ?? 2.4);
+    if (tent) return (deep + (o.brackets === false ? 0 : (2 * PURLIN * (o.cai || 0.21)) / 0.21)) / 2;   // a pointed roof: half its span
+    return (deep + (2 * PURLIN * (o.cai || 0.21)) / 0.21) * (o.lodge ? 0.27 : 1 / 3); };
   const put = (opts, at, q = 0, lvl = 0, base) => {
     const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y });
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
@@ -106,7 +108,7 @@ export function buildSite(M) {
     if (base === undefined) shade[lvl].push(place(b.plat, at, q));
     // What stands where, by name: the edge sweep and the tests go round each building by this list.
     buildings.push({ name: opts.hall?.name || opts.plaque?.text || opts.plaque || opts.name || "", ...place(b.plat, at, q), y, rail: b.rail,
-      frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
+      frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cai: b.cai, parts: b.parts, corners: b.corners, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
@@ -132,7 +134,7 @@ export function buildSite(M) {
       // not in its tiles.
       if (below) for (const r of below) r.top = Math.min(r.top, b.platH + y);
       below = walk.roofs.slice(r0);
-      if (next) foot = b.roofAt(b.EZ - next.zs[0]) + (next.ping ? PING.lift : 0);
+      if (next) foot = b.roofAt(b.EZ - next.zs[0]) + (!next.ping ? 0 : next.loft ? PING.lift : PING.floor + (PING.sets * (next.cai || 0.21)) / 0.21);   // a balcony's sets, their plate and its floor stand between the skirt and the storey (a walked balcony on the ring below keeps its own lift)
       if (b.loft) {   // a balcony walked round: where it is, its floor, where its door lets him out and which way he faces there
         const L = b.loft, f = turn(0, 1, q), [dx, dz] = turn(L.door[0], L.door[1], q);
         lofts[L.id] = { id: L.id, at: [...at], floor: L.floor + y, ceil: L.ceil + y, half: { wall: L.wall, edge: L.edge }, door: [dx + at[0], dz + at[1]], face: Math.atan2(f[0], -f[1]),
@@ -145,14 +147,14 @@ export function buildSite(M) {
 
   // ---- Buildings, from the gate uphill ----
   putTwo({   // the gate: you pass through its middle bay, under an upper storey
-    xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
+    cai: 0.232, xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
     front: "pass", back: "pass", dark: false, timber: true, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
-  }, { timber: true, ping: true, platOut: 0.85, rail: true, xs: [-6.2, -2.5, 2.5, 6.2], zs: [3, -3], colTop: 3.0, overhang: 1.8, crest: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
+  }, { cai: 0.232, timber: true, ping: true, platOut: 0.85, rail: true, xs: [-6.2, -2.5, 2.5, 6.2], zs: [3, -3], colTop: 3.0, overhang: 1.8, crest: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
 
   const strikers = [];
   for (const sx of [-1, 1]) {   // at either end of the gate, completing its five roofs: the bell (east) and the drum (west)
     const t = put({
-      xs: [-1.7, 1.7], zs: [1.7, -1.7], platH: 0.6, platOut: 0.9, colTop: 4.4, overhang: 1.5, rise: 3.0, G: 9, lift: 0.6, liftLen: 2.6,
+      cai: 0.186, xs: [-1.7, 1.7], zs: [1.7, -1.7], platH: 0.6, platOut: 0.9, colTop: 4.4, overhang: 1.5, crest: 3.0, G: 9, lift: 0.6, liftLen: 2.6,
       front: "open", back: "open", sides: "open", dark: false, steps: 0, plaque: { text: sx > 0 ? "钟楼" : "鼓楼", style: "wood" },
     }, [sx * 15.5, SITE.zS], 2);
     const thing = sx > 0 ? bell(M, t) : drum(M, t);
@@ -161,7 +163,7 @@ export function buildSite(M) {
     if (sx > 0) { const r = walk.roofs[walk.roofs.length - 1]; r.core = { ...r.core, z0: Math.min(r.core.z0, SITE.zS - LOG.near - LOG.len - 0.1) }; }
   }
   // Facing each other across the court: the meditation hall, and the tea house.
-  const side = { xs: [-8, -5.2, -2.2, 2.2, 5.2, 8], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.6, overhang: 1.7, lodge: true, crest: 3.0, G: 2.2, lamps: false, steps: 3.0 };
+  const side = { cai: 0.223, xs: [-8, -5.1, -2.2, 2.2, 5.1, 8], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.6, overhang: 1.7, lodge: true, crest: 3.0, G: 2.2, lamps: false, steps: 3.0 };
   put({ ...side, plaque: { text: "禅堂", style: "wood" }, hall: { id: "chan", kind: "chan", name: "禅堂" } }, [16.6, 14], 3);
   // The tea house's porch is deeper than its neighbour's: wide enough to walk round the two tables set under its eave.
   const tea = put({ ...side, platOut: 1.6, plaque: { text: "吃茶去", style: "wood" }, hall: { id: "tea", kind: "tea", name: "茶寮" } }, [-16.6, 14], 1);
@@ -203,12 +205,12 @@ export function buildSite(M) {
 
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
-    xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
-  }, { xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [4.3, 0, -4.3], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
+    cai: 0.232, xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
+  }, { cai: 0.256, xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [4.3, 0, -4.3], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
-    xs: [-9.4, -6.1, -2.5, 2.5, 6.1, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, steps: 5.2, lamps: false, hall: { id: "library", kind: "library", name: "藏经楼" },
-  }, { ping: true, platOut: 0.9, rail: true, xs: [-6.1, -2.5, 2.5, 6.1], zs: [4.2, 0, -4.2], colTop: 3.1, overhang: 2.3, crest: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
+    cai: 0.232, xs: [-9.4, -6.1, -2.5, 2.5, 6.1, 9.4], zs: [4.2, 0, -4.2], platH: 1.26, platOut: 1.7, colTop: 5.0, overhang: 2.6, steps: 5.2, lamps: false, hall: { id: "library", kind: "library", name: "藏经楼" },
+  }, { cai: 0.232, ping: true, platOut: 0.9, rail: true, xs: [-6.1, -2.5, 2.5, 6.1], zs: [4.2, 0, -4.2], colTop: 3.1, overhang: 2.3, crest: 4.4, G: 2.9, plaque: "藏经楼" }, [0, T1.zS - 15], 0, 1);
   {   // the dragon well: a vaulted niche of rough stone in the wall of the next terrace, water standing in the dark.
     // The whole arch stands in front of the wall and below the terrace above it (2.8 m): the crown comes up to the
     // coping and no higher, so nothing of it shows over the parapet or through it from the terrace behind.
@@ -228,25 +230,25 @@ export function buildSite(M) {
   }
 
   // Flanking halls on the terraces, small and plain, as the real temple has them beside the axis.
-  const wing = { xs: [-5.4, -2.2, 2.2, 5.4], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.5, overhang: 1.7, lodge: true, crest: 2.9, G: 2.1, lamps: false, steps: 3.0 };
+  const wing = { cai: 0.205, xs: [-5.4, -2.2, 2.2, 5.4], zs: [2.4, -2.4], platH: 0.45, platOut: 1.0, colTop: 3.5, overhang: 1.7, lodge: true, crest: 2.9, G: 2.1, lamps: false, steps: 3.0 };
   put({ ...wing, plaque: { text: "药师殿", style: "navy" }, hall: { id: "yaoshi", kind: "figure", name: "药师殿" } }, [-17.0, T1.zS - 13], 1, 1);   // set back from the library's platform, so that the foot of its stair is not a slot a child must squeeze through
   put({ ...wing, plaque: { text: "大慧院", style: "wood" }, hall: { id: "dahui", kind: "patriarch", name: "大慧院" } }, [16.4, T2.zS - 12], 3, 2);
 
   put({   // on the second terrace: the Guanyin hall, single-eaved and quieter
-    xs: [-9, -5.9, -2.4, 2.4, 5.9, 9], zs: [5, 1.7, -1.7, -5], platH: 0.9, platOut: 1.6, colTop: 4.2, overhang: 2.4, crest: 5.0, G: 3.2, steps: 4.6, plaque: { text: "观音殿", style: "wood" }, hall: { id: "guanyin", kind: "figure", name: "观音殿" },
+    cai: 0.232, xs: [-9, -5.9, -2.4, 2.4, 5.9, 9], zs: [5, 1.7, -1.7, -5], platH: 0.9, platOut: 1.6, colTop: 4.2, overhang: 2.4, crest: 5.0, G: 3.2, steps: 4.6, plaque: { text: "观音殿", style: "wood" }, hall: { id: "guanyin", kind: "figure", name: "观音殿" },
   }, [0, T2.zS - 12.2], 0, 2);
 
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
-    { xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
-    { ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
-    { ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
+    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
+    { cai: 0.186, ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
+    { cai: 0.186, ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
   const sp = putStack([
-    { xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
-    { xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, rise: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
+    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
+    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
   sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
 
@@ -290,7 +292,7 @@ export function buildSite(M) {
     walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
-    const rest = { xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, rise: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
+    const rest = { cai: 0.186, xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, crest: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
       brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
     // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
     // level ground under every column, and the valley to look at.
@@ -511,6 +513,7 @@ export function buildSite(M) {
   const views = {
     arrive: [A.xC, A.zC1 - 1.2, 0, 0.3], pool: [A.xC - 0.5, A.zA1 - 1.2, 0.9, -0.12], second: [A.xB1 - 1.6, A.zMid, -Math.PI / 2, 0.2], halfway: [9.4, A.zMid - 1.2, -2.2, 0.1], stair: [0, A.zA0 - 0.6, 0, 0.3],
     forecourt: [10.5, 60, -0.42, 0.07], front: [0, 62.5, 0, 0.3], fiveroofs: [9.5, 61.5, -0.4, 0.2], screen: [3, 47.5, Math.PI - 0.3, 0.1], stele: [-4, 52, -1.25, 0.12], gate: [0, 49.5, 0, 0.2],
+    eavecorner: [13, 2, 0.6, 0.62],   // up under the main hall's south-east corner: the corner beams, the rafters fanned along them
     court: [0, 29, 0, 0.1], bell: [10.5, 33.5, 2.5, 0.22], drum: [-10.5, 33.5, -2.5, 0.22], teatable: [-10.5, 17.5, -1.9, -0.12], hall: [9.5, 17, -0.5, 0.14], plaque: [0, 6, 0, 0.5],
     teahouse: [-5, 16, -1.35, 0.1], chan: [5, 16, 1.35, 0.1], behind: [19, -22, 0.4, 0.14], terrace: [0, T1.zS + 5.6, 0, 0.25],
     library: [0, T1.zS - 2.5, 0, 0.22], well: [11.6, T2.zS + 5.5, 0.28, 0.1], guanyin: [0, T2.zS + 5, 0, 0.22], yaoshi: [-4, T1.zS - 5.5, -1.0, 0.12], dahui: [4, T2.zS - 3.6, 1.0, 0.12], climb: [0, T2.zN + 1, 0, 0.45],
