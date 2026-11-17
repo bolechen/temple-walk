@@ -256,7 +256,7 @@ pilgrimage (`yunjing.prologue.v1`, emptied with the book); `__prologue(true)` ra
 `tests/unit/opening.test.mjs` holds the way, the skip, the hold and who sees it; the `opening` scenario plays it in the page.
 
 **A tap on the ground (`pickFloor` in `yard.js`).** The line of sight is marched outward until it first dips below
-`walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain.
+`walker.heightAt`, so a tap lands where it was aimed on terraces and stairs, not on a plane at the foot of the mountain. The way there is the straight line when every tenth of a metre of it is open and the floor never steps; when it is shut (a column, a table, a cushion, a porch's edge) `app/src/route.js` searches the floor he can stand on (0.2 m grid, A*, pulled taut), a generator given 4 ms of a frame, he waiting where he is; where a porch has an unrailed edge (`walk.drops`) and the hop down saves at least `ROUTE.hop` (3 m) of walking, the route hops, as Space does; it never hops up (a tap on a platform goes by the stairs); an unreachable spot takes him to the nearest he can reach; and put down inside what blocks (a `?cam` link into a porch's 0.5 m ring), the first leg of the way is a step out of it that does not ask the walker. Keys and the stick are untouched, and any of them, or another tap, cancels the search.
 
 **The photograph (`capture()` in `yard.js`, `app/src/card.js`, `docs/PHOTO-MODE.md`).** Raising the camera (P, or 留影)
 changes nothing in the picture: it is the view he had, whole, with the novice in it if he was. From there the camera
