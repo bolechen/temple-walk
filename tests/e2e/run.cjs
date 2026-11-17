@@ -1058,10 +1058,10 @@ const scenarios = {
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
-      // The thirds, off at first, on when asked for, and remembered.
-      expect(!(await t.page.isVisible("#frame .third")), "the thirds should be off until asked for");
-      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third") && (await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not come on");
-      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")), "the thirds did not go off");
+      // The thirds, on at first, off when put away, and remembered.
+      expect(await t.page.isVisible("#frame .third"), "the thirds should be on until put away");
+      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")) && !(await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not go off");
+      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third"), "the thirds did not come back on");
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");

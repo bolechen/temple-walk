@@ -7,7 +7,7 @@ export const QUALITIES = ["auto", "low", "medium", "high"];
 export const LEVELS = ["volume", "music", "ambience", "effects"];
 /** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, autocam: boolean, fov: number, thirds: boolean, volume: number, music: number, ambience: number, effects: number }} Settings */
 /** @type {Readonly<Settings>} */
-export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, autocam: true, fov: 0, thirds: false, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
+export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, autocam: true, fov: 0, thirds: true, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
 export const FOV_RANGE = [-6, 16];   // degrees taken from or added to the angle of view, which differs by view and screen
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -20,7 +20,10 @@ export function sanitize(saved) {
     if (typeof saved.invertY === "boolean") s.invertY = saved.invertY;
     if (typeof saved.lock === "boolean") s.lock = saved.lock;
     if (typeof saved.autocam === "boolean") s.autocam = saved.autocam;   // the eye goes to a place's own shot while an observance is made
-    if (typeof saved.thirds === "boolean") s.thirds = saved.thirds;   // the thirds drawn faintly in the viewfinder
+    // The thirds drawn faintly in the viewfinder: on unless the visitor has put them away. Before the owner made them the
+    // default (2026-11-17), every save carried `thirds: false` whether or not it was chosen, so only a save that knows the
+    // new default (`rev` 2) may keep them off.
+    if (typeof saved.thirds === "boolean" && (saved.rev === 2 || saved.thirds)) s.thirds = saved.thirds;
     if (Number.isFinite(saved.fov)) s.fov = clamp(Math.round(saved.fov), FOV_RANGE[0], FOV_RANGE[1]);
     for (const k of LEVELS) if (Number.isFinite(saved[k])) s[k] = clamp(saved[k], 0, 1);
   }
@@ -34,8 +37,8 @@ export function createSettings(store) {
     get: () => ({ ...now }),
     set(key, value) {
       if (!(key in DEFAULTS)) return now[key];
-      now = sanitize({ ...now, [key]: value });
-      try { store.set(JSON.stringify(now)); } catch {}   // storage may be full or forbidden; the walk goes on without it
+      now = sanitize({ ...now, [key]: value, rev: 2 });
+      try { store.set(JSON.stringify({ ...now, rev: 2 })); } catch {}   // storage may be full or forbidden; the walk goes on without it
       for (const fn of heard) fn({ ...now }, key);
       return now[key];
     },
