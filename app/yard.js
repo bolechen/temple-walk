@@ -554,6 +554,7 @@ function frame(now) {
   if (opening.active()) {
     openingEye.p.copy(camera.position); openingEye.q.copy(camera.quaternion);
     if (!opening.apply(camera, openingEye)) endOpening();
+    else if (opening.state().phase === "hold") warmOpening();
     if (camera.position.distanceTo(openingEye.p) > 1) monk.group.visible = true;
   }
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
@@ -900,7 +901,7 @@ createGame({
   // The opening after 入山 (src/opening.js): `eye` "fly" or "ink"; resolves with its state when the walk is handed back.
   opening(eye) {
     if (opening.active()) return Promise.resolve(opening.state());
-    interrupt(); director.drop(); follow.reset(); document.body.classList.add("opening");
+    interrupt(); director.drop(); follow.reset(); document.body.classList.add("opening"); openingWarmed = 0;
     return new Promise((done) => { openingDone = done; opening.start(eye); });
   },
   openingActive: () => opening.active(), autocam: () => settings.get().autocam, reduced: () => reducedMotion.matches,
@@ -940,7 +941,18 @@ function warmShot(p, foot) {
   for (const o of shown) o.visible = false;
   director.warmed = (director.warmed || 0) + 1;
 }
-window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
+// What the way down will see is drawn once, a pose a frame, into the small unseen target while the eye waits on the first
+// picture, so that a hall, the gate or the bamboo coming into view for the first time does not stall the way down
+// (on a T4 the first run had one frame of 48 ms a few seconds in, the second none over 36 ms).
+const WARM_AT = [0.12, 0.25, 0.38, 0.5, 0.62, 0.74, 0.86, 0.95];
+let openingWarmed = 0;
+function warmOpening() {
+  const plan = opening.plan(); if (!plan || openingWarmed >= WARM_AT.length) return;
+  const o = plan.poseAtS(plan.length * WARM_AT[openingWarmed++]);
+  warmEye.copy(camera); warmEye.position.copy(o.p); warmEye.quaternion.copy(o.q); warmEye.updateMatrixWorld();
+  const was = renderer.getRenderTarget(); renderer.setRenderTarget(warmTarget); renderer.render(scene, warmEye); renderer.setRenderTarget(was);
+}
+window.__opening = () => ({ ...opening.state(), warmed: openingWarmed, active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
