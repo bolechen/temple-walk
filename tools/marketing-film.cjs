@@ -8,7 +8,7 @@
 //   node tools/marketing-film.cjs --size 1080x1920 --fps 30 --out tools/out/film-v        # locally (SwiftShader: slow)
 //   node tools/marketing-film.cjs --size 270x480 --fps 6 --out tools/out/film-test         # a quick trial
 //   or as a T4 job: tools/marketing-gpu.sh film '{"film":{"size":[1080,1920],"fps":30,"name":"v"}}'  (job.cjs calls run())
-const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
+const fs = require("fs"), os = require("os"), path = require("path"), { execFileSync } = require("child_process");
 const MOOD = "season=autumn&time=dusk", BASE = "q=high&body=code";
 // What each segment is. `url` is the page's address (the same on any machine); `sub` is [line, from, to] in seconds of the segment.
 const SEGMENTS = [
@@ -24,7 +24,7 @@ async function run({ open, out, fps = 30, size, only, maxSecs = 1e9, log = conso
   const fade = (t, a, b, k = 0.7) => Math.max(0, Math.min(1, (t - a) / k, (b - t) / k));
   for (const seg of SEGMENTS) {
     if (only && !only.includes(seg.id)) continue;
-    const dir = path.join(out, seg.id); fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "film-" + seg.id + "-"));   // frames stay on the machine's own disk: the job's output folder is a bucket mount, where a folder of 400 files cannot be removed
     const { ctx, page } = await open(seg.url, size, 1, { locale: "zh-CN" });
     const vertical = size[1] > size[0];
     await page.evaluate(([v]) => {
@@ -43,7 +43,7 @@ async function run({ open, out, fps = 30, size, only, maxSecs = 1e9, log = conso
       await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
       await page.evaluate(() => document.getElementById("enterBtn").click());
       if (await page.evaluate(() => window.__opening().active)) { await page.keyboard.press("Escape"); await page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
-      await page.addStyleTag({ content: "#act,#hint,#goal,#way,#say,.slip,#slips,#book,#bookBtn{opacity:0!important}" });   // what lies over the picture is made clear, nothing is added (display:none would stop E: the page presses only a button it can see)
+      await page.addStyleTag({ content: "#act,#hint,#goal,#way,#say,.slip,#slips,#book,#bookBtn,#photoBtn,#menuBtn,#jumpBtn,#dropBtn,.chip{opacity:0!important}" });   // what lies over the picture is made clear, nothing is added (display:none would stop E: the page presses only a button it can see)
       await page.evaluate(() => { const q = window.__places.bell; window.__pose(q.at[0] + 0.3, q.at[1] - 0.3, Math.PI, 0.05); });
       await page.waitForFunction(() => document.getElementById("act") && document.getElementById("act").dataset.word === "撞钟", null, { timeout: 120000 });
       await page.keyboard.press("e"); await page.evaluate(() => window.__riteClock(0)); await draw(page, 3);
@@ -72,7 +72,7 @@ async function run({ open, out, fps = 30, size, only, maxSecs = 1e9, log = conso
     await ctx.close();
     const mp4 = path.join(out, seg.id + ".mp4");
     execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", path.join(dir, "f%05d.jpg"), "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", "-r", String(fps), mp4]);
-    fs.rmSync(dir, { recursive: true, force: true });
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
     timeline.push({ id: seg.id, kind: seg.kind, url: "?" + seg.url, secs, frames: n, fps, size, file: path.basename(mp4), ...info, end: { x: meta.yard.x, z: meta.yard.z }, bell: meta.rites });
     fs.writeFileSync(path.join(out, "timeline.json"), JSON.stringify(timeline, null, 1));
   }
