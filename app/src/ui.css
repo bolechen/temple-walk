@@ -454,8 +454,9 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 :root:lang(ja) #menu { --set-name: 6.4em; } :root:lang(ja) #menu .set > span, :root:lang(ja) #menu .set > label { letter-spacing: .04em; }
 :root:lang(en) #menu, :root:lang(ko) #menu { --set-name: 6.4em; }
 :root:lang(en) #menu .set > span, :root:lang(en) #menu .set > label, :root:lang(ko) #menu .set > span, :root:lang(ko) #menu .set > label { letter-spacing: .04em; }
-:root:lang(en) #menu .opts, :root:lang(ko) #menu .opts { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; }
-:root:lang(en) #menu .opts:has([data-follow]), :root:lang(ko) #menu .opts:has([data-follow]) { grid-template-columns: repeat(2, max-content); }
+:root:lang(en) #menu .opts { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; }   /* Korean words are as short as Chinese ones and keep the Chinese layout */
+:root:lang(en) #menu .opts:has([data-follow]) { grid-template-columns: repeat(2, max-content); }
+:root:lang(en) #menu .opts:has([data-q]) { display: flex; }   /* Auto, Low, Medium, High are short enough for one line */
 #menu .note { margin: -4px 0 0; font-size: var(--t-xs); letter-spacing: .1em; color: var(--ink-3); } #menu .note .chip { min-height: 44px; padding: 4px 10px; font-size: var(--t-xs); margin-left: .4em; }
 /* The foot of the sheet stays in sight while the settings are drawn past it: the lesser ways (full screen, keys, back to
    the start, thanks) on one line, and under them, in the middle, the seal that goes on, as 合上 closes the page of thanks.
@@ -468,6 +469,34 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 :root:lang(en) #menu .row .chip, :root:lang(ko) #menu .row .chip { letter-spacing: .04em; text-indent: 0; }
 #menu[hidden] { display: none; }
 #menu .grp { display: contents; }   /* narrow and tall: no grouping box, one column as before */
+/* The sheet in four parts, named as the Heart Sutra names the senses (眼 身 耳 意: what is seen, what the body does, what
+   is heard, the words), each one character over a dry stroke, each read aloud and shown on hover in plain words. The three
+   levels under the whole volume stay folded until asked for (分开调), or until one has been moved. */
+#menu .grp-name { grid-column: 1 / -1; display: flex; align-items: flex-end; justify-content: space-between; margin: 10px 0 0; padding-bottom: 6px;
+  background: var(--brush-ink, linear-gradient(rgba(60,50,40,.25), rgba(60,50,40,.25)) 0 100% / 100% 1px no-repeat) 0 100% / 100% 6px no-repeat; }
+#menu .grp-name h3 { margin: 0; font: 400 var(--t-m)/1 var(--kai); letter-spacing: .4em; color: #8a2a1e; }
+/* 分开调 rides at the right end of the ear's own heading, so it costs no row of its own */
+#menu .grp-name .chip { min-height: 44px; margin-bottom: -6px; }
+#menu .grp-view > .grp-name:first-child { margin-top: 0; }
+#menu:not(.mix) .set.sub { display: none; }
+#menu #menuMix { font-size: var(--t-s); color: var(--ink-3); }
+/* A phone held upright: the rows close up (each still a thumb's height), so that all three parts are named on the first
+   sight of the sheet, the sound's above its foot. */
+@media (max-width: 620px) {
+  #menu .card { gap: 0; } #menu .grp-name { margin-top: 4px; } #menu h2 { margin-bottom: 0; font-size: 34px; }
+  /* the four languages on one line (their names are the same whatever the page speaks), wrapping only on the narrowest */
+  #menu .opts:has([data-lang]), :root:lang(en) #menu .opts:has([data-lang]) { display: flex; flex-wrap: wrap; gap: 0 2px; }
+  #menu .opts [data-lang] { padding-inline: 4px; }
+  /* in English the hours stand on one line under Follow the hour */
+  :root:lang(en) #menu .opts:has([data-follow]) { display: flex; flex-wrap: wrap; gap: 0 4px; }
+  :root:lang(en) #menu .opts [data-follow] { flex-basis: 100%; place-items: center start; }
+  /* the testers' group is not offered on the narrow sheet, where it could only be half seen under the foot: a phone
+     reaches it from the title (内测反馈群), and a wide sheet still carries it */
+  #menu .community-invite { display: none !important; }
+}
+/* English needs its choices two and two, which makes the sheet taller: there the title is set smaller and the foot's lesser
+   ways closer, so the foot stays one line. */
+@media (max-width: 620px) { :root:lang(en) #menu .card { padding-top: 10px; } :root:lang(en) #menu .grp-name { margin-top: 2px; } :root:lang(en) #menu h2 { font-size: 30px; } :root:lang(en) #menu .row .chip { font-size: 13px; padding-inline: 4px; } }
 .community-invite { border-top: 1px solid rgba(93,85,74,.2); padding-top: 12px; text-align: center; grid-column: 1 / -1; }
 .community-invite .chip { font-size: var(--t-m); color: var(--ink-2); }
 .community-invite p { margin: 4px 0; font: 400 var(--t-xs)/1.7 var(--kai); color: var(--ink-3); letter-spacing: .04em; }
@@ -498,6 +527,8 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 @media (min-width: 1024px) and (min-aspect-ratio: 4/3) {
   #menu .card { width: min(94vw, 960px); grid-template-columns: 1fr 1fr; column-gap: 44px; row-gap: 0; align-content: start; padding: 26px 48px 20px; overflow-y: auto; }
   #menu .grp { display: grid; gap: 4px; align-content: start; }
+  #menu .grp > .grp-name:first-child { margin-top: 0; }   /* the two columns begin level */
+  #menu .grp-lang { margin-top: 6px; } #menu .grp-lang + .set:has([data-lang]) { border-top: 0; margin-top: 0; padding-top: 0; }
   #menu h2 { grid-column: 1 / -1; font-size: 34px; margin: 0 0 8px; }
   #menu .set { min-height: 44px; grid-template-columns: 7.6em 1fr; gap: 8px; }   /* one label width in both columns, so every slider is the same length */
   #menu .opts { gap: 2px 6px; flex-wrap: nowrap; }
