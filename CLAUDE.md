@@ -444,7 +444,7 @@ slips of paper written down the page); what opens over the walk is a sheet of pa
 what is chosen is circled in vermilion (`aria-pressed`); the one button that matters on a sheet is a seal (`stamp`); keys
 are written as letters with a stroke under them. `paper.js` draws the paper grain, a dry brush stroke, the ring and the
 seal once in canvases when the page opens and hands them to the stylesheet as `--paper-tile`, `--brush-ink`,
-`--brush-light`, `--enso-light`, `--enso-red`, `--stamp`; a `ResizeObserver` gives every `.paper` its own torn edge
+`--brush-light`, `--enso-light`, `--enso-red`, `--stamp`; a `ResizeObserver` gives every `.paper` (also one built after the page opened: a `MutationObserver` on the body's tree hands new ones to it, as the offering sheet's) its own torn edge
 (`--deckle`, a mask) and every slip at the edge its whole torn paper (`--sheet`, a picture: a mask on a button is not
 drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and paper colours, type sizes) are at the top of
 `ui.css`; every rule there reads without the drawn textures. The running hand borrows the kai's upright punctuation

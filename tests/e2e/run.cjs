@@ -1834,6 +1834,9 @@ const scenarios = {
     expect(links[1].href === UTM + "zh-qr" && links[1].text === "付款后可在护持页登记", "the registration link is wrong: " + JSON.stringify(links[1]));
     const qr = await t.page.evaluate(() => { const i = document.getElementById("offeringQrImg"), r = i && i.getBoundingClientRect(); return i && { ok: i.complete && i.naturalWidth === 1152, w: r.width, h: r.height, src: i.getAttribute("src"), shown: !!i.offsetParent }; });
     expect(qr && qr.ok && qr.shown && qr.w >= 220 && qr.h >= 220 && /wechat-support-2026-08-28/.test(qr.src), "the code is not shown whole and large enough: " + JSON.stringify(qr));
+    // The sheet is built after the page opened, and is torn like every sheet (paper.js watches what is added to the body).
+    const torn = await t.page.evaluate(() => document.querySelector(".offering-card").style.getPropertyValue("--deckle") || "");
+    expect(/^url\(/.test(torn), "the offering sheet has no torn edge of its own (--deckle is the plain-rectangle fallback): " + torn.slice(0, 20));
     const words = await t.page.textContent("#offering");
     expect(!/功德无量|供养|募捐/.test(words), "the sheet used a word it must not");
     const zone = await t.page.textContent(".offering-qr"); expect(!/功德|供养|布施|回向/.test(zone) && zone.includes("微信扫码，支持如是我闻与本游戏的制作"), "the code's zone says the wrong thing: " + zone);
