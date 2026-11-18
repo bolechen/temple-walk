@@ -10,7 +10,7 @@ function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: f
   const handlers = new Map();
   const canvas = { style: {}, clientHeight: 800, setPointerCapture() {}, addEventListener(name, fn) { handlers.set('canvas:' + name, fn); } };
   const document = { pointerLockElement: null, addEventListener(name, fn) { handlers.set('document:' + name, fn); } };
-  const c = vm.createContext({ THREE, camera: { fov: 50 }, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set }, director: { back() { c.backs = (c.backs || 0) + 1; } } });
+  const c = vm.createContext({ THREE, camera: { fov: 50 }, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set }, director: { back() { c.backs = (c.backs || 0) + 1; } }, hints: { say: { dragged() {}, nearest() {} } } });
   vm.runInContext(source.slice(source.indexOf('const touches = new Map()'), source.indexOf('const lift = (e)')), c);
   return {
     send(target, name, values = {}) { handlers.get(target + ':' + name)({ pointerId: 1, pointerType: 'mouse', clientX: 100, clientY: 100, ...values }); },

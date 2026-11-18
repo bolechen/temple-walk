@@ -9,12 +9,15 @@ const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
 
 export function createHints({ off = false, ui = null } = {}) {
   const coarse = matchMedia("(pointer: coarse)").matches, line = $("hint"), said = new Set(), timers = {};
-  let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0;
+  let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0, dragged = false;
 
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
+  // A line is a few phrases between middle dots; each is kept whole, so that on a narrow screen the line breaks between
+  // them and not in the middle of one (a dot with no space round it, as in a Korean pair of words, belongs to its phrase).
+  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part : `<span class="phrase">${part}</span>`)).join("");
   function tip(id, html, secs = 7) {
     if (off || !line || said.has(id)) return false;
-    said.add(id); now = id; line.innerHTML = html; line.classList.add("on");
+    said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on");
     clearTimeout(lineT); lineT = setTimeout(() => drop(id), secs * 1000); return true;
   }
   function drop(id) { if (!line || (id && now !== id)) return; line.classList.remove("on"); now = null; }
@@ -38,8 +41,12 @@ export function createHints({ off = false, ui = null } = {}) {
   const say = {
     entered() {
       stir(); flash("moodTag", 7); flash("goal", 9);
-      tip("walk", coarse ? t("推左下的圆盘行走　·　拖动画面环顾　·　双指开合远近，拉近到底，换成自己的眼睛") : t("{wasd}行走　·　按住拖动画面环顾，点地面走去　·　{v}换视角　·　{h}键位", { wasd: K("W", "A", "S", "D"), v: K("V"), h: K("H") }), 12);
+      tip("walk", coarse ? t("推左下的圆盘行走　·　拖动画面环顾") : t("{wasd}行走　·　按住拖动画面环顾，点地面走去　·　{v}换视角　·　{h}键位", { wasd: K("W", "A", "S", "D"), v: K("V"), h: K("H") }), 12);
     },
+    // On a touch screen the rest is said as the hand comes to it: two fingers once the view has first been dragged, and
+    // the way into his own eyes once the eye has first been drawn all the way in to him.
+    dragged() { dragged = true; if (coarse && said.has("walk") && now !== "walk") tip("pinch", t("双指开合，拉远拉近"), 6); },
+    nearest() { if (coarse) tip("eyes", t("再拉近，换成自己的眼睛"), 6); },
     held() { tip("held", t("{esc}松开鼠标　·　{wheel}远近　·　单击敲钟击鼓", { esc: K("Esc"), wheel: K(t("滚轮")) }), 7); },
     indoors() { if (!coarse) tip("view", t("{v}换成自己的眼睛看，可以举头看殿顶　·　画框前{e}细看", { v: K("V"), e: K("E") }), 8); else tip("view", t("走到画框前，可以细看；也可以举头看看殿顶"), 7); },
     // The summit pavilion's room has a stair up to its top storey; up there the view is his own eyes only.
@@ -59,6 +66,9 @@ export function createHints({ off = false, ui = null } = {}) {
     walked += moved; if (running && moved > 0) ran = true;
     if (now === "walk" && walked > 4) drop("walk");
     if (coarse && walked > 40) tip("jump", t("右下角的圈是跳　·　台沿前是上台、下台阶"), 6);
+    // A visitor who walks on and never drags the view would never be told about two fingers: after a good stretch
+    // of the path (60 m, about half a minute at a walk) it is said anyway, once, when no other line is speaking.
+    if (coarse && !dragged && !now && walked > 60) tip("pinch", t("双指开合，拉远拉近"), 6);
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }

@@ -165,3 +165,23 @@ test("a book for the workbench (?seals=) is written from a list, all seven or no
   assert.equal(two.count(), 2); assert.equal(two.has("bell"), true); assert.equal(two.strikes, 3); assert.equal(two.done(), false);
   assert.equal(bookFrom(null, 100), null, "no ?seals= keeps the visitor's own book");
 });
+
+test("the prologue is walked by day until the book has been filled once", async () => {
+  const { filledBefore, createJourney, SEALS } = await import("../../app/src/journey.js");
+  assert.equal(filledBefore(null), false, "a first visit");
+  assert.equal(filledBefore("{"), false, "a damaged save");
+  const m = { text: null, get: () => m.text, set: (t) => { m.text = t; } }, j = createJourney(m);
+  j.earn(SEALS[0].id); assert.ok(m.text, "the begun book is kept");
+  assert.equal(filledBefore(m.text), false, "a book begun but not filled");
+  assert.equal(filledBefore(JSON.stringify({ v: 1, seals: {}, opened: 1700000000000 })), true, "filled once, then begun again (重新朝山)");
+  assert.equal(filledBefore(JSON.stringify({ v: 1, seals: {}, done: 1700000000000 })), true, "filled before `opened` was kept");
+});
+
+test("the book speaks of the walk only once there is one, and of under a minute as under a minute", async () => {
+  const { visitLine } = await import("../../app/src/journey.js");
+  assert.equal(visitLine(0, 30), null, "no steps, nothing said");
+  assert.equal(visitLine(19.4, 600), null, "under twenty steps, nothing said");
+  assert.deepEqual(visitLine(20, 59), { m: 20, min: 1, under: true }, "under a minute is said as under a minute");
+  assert.deepEqual(visitLine(120, 60), { m: 120, min: 1, under: false });
+  assert.deepEqual(visitLine(500, 610), { m: 500, min: 10, under: false });
+});

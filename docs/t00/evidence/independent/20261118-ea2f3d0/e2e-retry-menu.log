@@ -1,0 +1,4 @@
+FAIL menu      435s
+     the menu should lie whole at 1280x720 in en: {"fits":true,"clipped":true}
+1 of 1 scenarios failed
+exit 1

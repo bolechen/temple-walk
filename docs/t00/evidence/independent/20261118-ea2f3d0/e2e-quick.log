@@ -1,0 +1,6 @@
+
+> temple-walk@0.3.0 e2e:quick /tmp/claude-0/rev
+> node tests/e2e/run.cjs --quick
+
+ok   boot       90s
+all 1 scenarios passed

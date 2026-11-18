@@ -131,16 +131,20 @@ export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
 }
 
 // A tapering tube through `pts`, smoothed. Radius runs from r0 to r1.
-function limb(pts, r0, r1, radial = 7, flare = 0) {
+// A trunk standing on a foot starts at `startY`, the foot's top ring, and not below it: its first ring is laid level and
+// begins at the same angle as the foot's, so the two rings share their corners and nothing of the trunk shows through.
+function limb(pts, r0, r1, radial = 7, flare = 0, startY = null) {
   const curve = new THREE.CatmullRomCurve3(pts), n = Math.max(2, (pts.length - 1) * (flare ? 6 : 3)), len = curve.getLength(), pos = [], nor = [], uv = [], idx = [];
   const T = new THREE.Vector3(), Nn = new THREE.Vector3(), B = new THREE.Vector3(), P = new THREE.Vector3(), ref = new THREE.Vector3();
+  let t0 = 0; if (startY !== null) { const want = Math.max(curve.getPoint(0).y, startY); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } t0 = lo; }
   for (let i = 0; i <= n; i++) {
-    const t = i / n; curve.getPoint(t, P); curve.getTangent(t, T);
-    ref.set(Math.abs(T.y) > 0.9 ? 1 : 0, Math.abs(T.y) > 0.9 ? 0 : 1, 0); Nn.crossVectors(T, ref).normalize(); B.crossVectors(T, Nn);
+    const t = t0 + (1 - t0) * (i / n); curve.getPoint(t, P); curve.getTangent(t, T);
+    if (startY !== null && i === 0) { Nn.set(0, 0, -1); B.set(-1, 0, 0); }   // level, and turned as the ring above it is turned (whose frame the upright tangent gives), so the first band does not twist; its corners still fall on the foot's, a quarter turn being a whole number of sides
+    else { ref.set(Math.abs(T.y) > 0.9 ? 1 : 0, Math.abs(T.y) > 0.9 ? 0 : 1, 0); Nn.crossVectors(T, ref).normalize(); B.crossVectors(T, Nn); }
     const r = (r0 + (r1 - r0) * t) * (1 + flare * Math.exp(-(t * len) / 0.4) * (1 + 0.18 * Math.sin(i * 1.7)));   // spreading into roots where it meets the ground
-    for (let k = 0; k <= radial; k++) { const a = (k / radial) * 6.283, cx = Math.cos(a), sx = Math.sin(a); nor.push(Nn.x * cx + B.x * sx, Nn.y * cx + B.y * sx, Nn.z * cx + B.z * sx); pos.push(P.x + (Nn.x * cx + B.x * sx) * r, P.y + (Nn.y * cx + B.y * sx) * r, P.z + (Nn.z * cx + B.z * sx) * r); uv.push(k / radial, t); }
+    for (let k = 0; k <= radial; k++) { const a = (k / radial) * 6.283, cx = Math.cos(a), sx = Math.sin(a), ox = Nn.x * cx + B.x * sx, oy = Nn.y * cx + B.y * sx, oz = Nn.z * cx + B.z * sx, d = startY !== null && i === 0 ? ox * T.x + oy * T.y + oz * T.z : 0, nl = Math.hypot(ox - T.x * d, oy - T.y * d, oz - T.z * d) || 1; nor.push((ox - T.x * d) / nl, (oy - T.y * d) / nl, (oz - T.z * d) / nl); pos.push(P.x + (Nn.x * cx + B.x * sx) * r, P.y + (Nn.y * cx + B.y * sx) * r, P.z + (Nn.z * cx + B.z * sx) * r); uv.push(k / radial, t); }
   }
-  for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+  for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }   // (wound to face outward: seen from outside each face is a front face, as the foot's are)
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return { geo: g, curve };
 }
@@ -204,11 +208,12 @@ export function createTrees(scene, M, spots, opts = {}) {
       if (i < 2) { q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); card(cards.twig, new THREE.PlaneGeometry(s * 1.1, s * 1.1), at, centre, 1); }
     }
   };
-  const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
+  const grow = (pts, r0, r1, radial, flare, startY = null) => { const l = limb(pts, r0, r1, radial, flare, startY); wood.push(l.geo); /** @type {any} */ (l.curve).geo = l.geo; return l.curve; };   // (the tests read a trunk's own rings from it)
+  const footTop = (r) => Math.min(1.1, 0.5 + r * 1.6);   // how high a foot of a trunk this thick swells (and where the trunk itself begins)
   const beds = [], joints = [], branches = []; let nth = 0;   // (where each foot meets its trunk, and where each cedar branch ends: for the tests)
   // Where the trunk is at `h` above the ground: found on its own curve, its radius tapering as `limb` tapers it.
   const along = (curve, r0, r1, y) => { const P = new THREE.Vector3(), lo0 = curve.getPoint(0).y; return (h) => { const want = Math.max(lo0, y + h); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } curve.getPoint(lo, P); return { x: P.x, z: P.z, r: r0 + (r1 - r0) * lo }; }; };
-  const root = (x, y, z, r, far, trunk) => { if (far) return; nth++; const top = Math.min(1.1, 0.5 + r * 1.6), g = foot(y, along(trunk.curve, trunk.r0, trunk.r1, y), top, nth, trunk.sides); wood.push(g); beds.push(bed(x, y, z, r * 3.4 + 0.25, nth));
+  const root = (x, y, z, r, far, trunk) => { if (far) return; nth++; const top = footTop(r), g = foot(y, along(trunk.curve, trunk.r0, trunk.r1, y), top, nth, trunk.sides); wood.push(g); beds.push(bed(x, y, z, r * 3.4 + 0.25, nth));
     joints.push({ ...trunk, foot: g, ring: trunk.sides, y, top, at: [x, z] }); };
   // The fine wood at the end of a branch: a few twigs fanning out, which is what a bare tree is made of.
   const twigs = (p, dir, n = 3, reach = 0.6) => { for (let i = 0; i < n; i++) { const tip = p.clone().add(V(dir.x * reach + jit(reach), reach * (0.2 + rnd() * 0.6), dir.z * reach + jit(reach))); grow([p, p.clone().lerp(tip, 0.5).add(V(jit(0.12), 0.05, jit(0.12))), tip], 0.011, 0.004, 4); } };
@@ -220,7 +225,7 @@ export function createTrees(scene, M, spots, opts = {}) {
       // A young one is the same tree drawn smaller, its boughs only as long as its height allows, and it is not yet
       // bare below: see the end of this block.
       const lean = V(jit(0.5), 0, jit(0.5)), r0 = h < 8 ? 0.035 + h * 0.009 : 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t), size = Math.min(1, h / 18);
-      const sides = far0 ? 12 : 24, shaft = grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, h < 8 ? 0.02 : 0.05, sides, far0 ? 0.4 : 0); root(x, y, z, r0, far0, { curve: shaft, r0, r1: h < 8 ? 0.02 : 0.05, sides, kind, h });
+      const sides = far0 ? 12 : 24, shaft = grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, h < 8 ? 0.02 : 0.05, sides, far0 ? 0.4 : 0, far0 ? null : y + footTop(r0)); root(x, y, z, r0, far0, { curve: shaft, r0, r1: h < 8 ? 0.02 : 0.05, sides, kind, h });
       const whorl = (by) => {   // one tier of boughs round the shaft at `by` above the ground
         const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
@@ -252,7 +257,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     const tall = kind === "ginkgo", top = y + h, centre = V(x, y + h * (tall ? 0.62 : 0.7), z), r0 = 0.09 + h * 0.019;
     if (tall) {
       // Ginkgo: one leader, and boughs that climb away from it.
-      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 24, 0); root(x, y, z, r0, false, { curve: lead, r0, r1: 0.03, sides: 24, kind, h });
+      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 24, 0, y + footTop(r0)); root(x, y, z, r0, false, { curve: lead, r0, r1: 0.03, sides: 24, kind, h });
       let a = rnd() * 6.283;
       for (let t = 0.26; t < 0.97; t += 0.058) {
         a += 2.4 + jit(0.5); const from = lead.getPoint(t), reach = h * (0.36 - t * 0.24) * (0.8 + rnd() * 0.4), rise = reach * (0.75 + rnd() * 0.5);
@@ -266,7 +271,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     } else {
       // The spreading tree: a short crooked trunk that forks low, long boughs that reach out before they rise.
       const forkAt = V(x + jit(0.6), y + h * (0.3 + rnd() * 0.07), z + jit(0.6));
-      const bole = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 24, 0); root(x, y, z, r0, false, { curve: bole, r0, r1: r0 * 0.74, sides: 24, kind, h });
+      const bole = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 24, 0, y + footTop(r0)); root(x, y, z, r0, false, { curve: bole, r0, r1: r0 * 0.74, sides: 24, kind, h });
       const n = 5, a0 = rnd() * 6.283;
       for (let i = 0; i < n; i++) {
         const a = a0 + (i / n) * 6.283 + jit(0.5), reach = h * (0.36 + rnd() * 0.16), rise = h * (0.34 + rnd() * 0.2);

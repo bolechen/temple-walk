@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
-import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom } from "./journey.js";
+import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
@@ -58,7 +58,7 @@ export function createGame(y) {
   const VISIT = "yunjing.visit.v1", visit = { metres: 0, seconds: 0, at: null, save: 0 };
   try { const v = JSON.parse(localStorage.getItem(VISIT) || "null"); if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
   const keep = () => { try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
-  const told = () => t("这一趟走了 {m} 步，在山上 {min} 分钟。", { m: Math.round(visit.metres), min: Math.max(1, Math.round(visit.seconds / 60)) });
+  const told = () => { const l = visitLine(visit.metres, visit.seconds); return !l ? "" : l.under ? t("这一趟走了 {m} 步，在山上不到一分钟。", { m: l.m }) : t("这一趟走了 {m} 步，在山上 {min} 分钟。", { m: l.m, min: l.min }); };
   // ---- On the ground: a ring at every place whose seal is still to be earned ----
   // The summit keeps its ring until the prologue has closed there, whatever else the book holds.
   // A change of season lets it close there again, once in that season (journey.closedIn).
@@ -326,12 +326,18 @@ export function createGame(y) {
   const announce = () => { if (entered && journey.opened() && !journey.told() && y.hints?.say.seasons?.()) journey.tell(); };
   let page = null;
   async function openBook() {
-    const m = y.mood(), next = journey.next();
+    // The page opens at once, as bare paper, and is written on when drawn: on a slow phone the drawing takes a moment,
+    // and a press that seems to do nothing is pressed again.
+    const m = y.mood(), next = journey.next(), leaf0 = $("bookPage");
+    // What the page says is known before it is drawn, so it is written before the page opens.
+    const blank = SEALS.length - journey.count();
+    $("bookHint").textContent = next ? `${journey.closed ? t("帐上还空着{n}处。", { n: "〇一二三四五六七"[blank], k: blank }) : ""}${[t(next.hint), told()].filter(Boolean).join("　")}` : `${t("七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。")}${told()}`;
+    // (an empty book has nothing to begin again: 重新朝山 is offered once there is a seal to give up)
+    if (!ui.isOpen("book")) { leaf0?.classList.add("drawing"); $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); ui.open("book", { onClose: announce }); }
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · "), url: location.host + location.pathname.replace(/\/$/, "") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
+    { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
-    const blank = SEALS.length - journey.count();
-    $("bookHint").textContent = next ? `${journey.closed ? t("帐上还空着{n}处。", { n: "〇一二三四五六七"[blank], k: blank }) : ""}${t(next.hint)}　${told()}` : `${t("七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。")}${told()}`;
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
     $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 朱印") }); } catch {} };
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
@@ -341,8 +347,8 @@ export function createGame(y) {
         b.type = "button"; b.className = "seal-go"; b.dataset.id = d.id; b.setAttribute("aria-label", t("回到{place}", { place: t(d.place) })); b.title = t("回到{place}", { place: t(d.place) });
         b.style.cssText = `left:${(l * 100).toFixed(2)}%;top:${(top * 100).toFixed(2)}%;width:${(w * 100).toFixed(2)}%;height:${(h * 100).toFixed(2)}%`;
         b.addEventListener("click", () => goBack(d.id)); leaf.appendChild(b); });
-      if (journey.count() && $("bookGo")) $("bookGo").hidden = false; }
-    $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; ui.open("book", { onClose: announce });
+      if ($("bookGo")) $("bookGo").hidden = !journey.count(); }
+    leaf0?.classList.remove("drawing");
   }
   // Back to where a seal was earned: the book closes, the eyes close, and he stands there again.
   async function goBack(id) {
@@ -421,7 +427,13 @@ export function createGame(y) {
     if (o.eye !== "none") holdMusic(true);
     if (o.bell) mountainBell();   // inside the click that stepped in, so the browser lets it sound
     entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered");
-    const begin = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
+    // Where to go is said after how to walk has gone (he has taken a few steps, or the line has faded), so that a
+    // visitor arriving is given one thing to read at a time.
+    const begin = () => {
+      let waited = 0;
+      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
+      const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
+    };
     if (o.eye === "none") { begin(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
     y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
