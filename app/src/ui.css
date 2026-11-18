@@ -164,6 +164,8 @@ body.entered:not(.photo):not(.bare) #yardView::before { opacity: 1; }
   transition: opacity 1.2s ease, transform 1.2s ease, visibility 0s 1.2s;
 }
 .caption::before { content: ""; display: block; width: 46px; height: 7px; margin: 0 auto 8px; background: var(--brush-light, linear-gradient(90deg, transparent, rgba(237,232,220,.7), transparent) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .7; }
+/* Each phrase of the line is kept whole on one line where it fits (hints.js wraps them); a longer one still wraps. */
+.caption .phrase { display: inline-block; max-width: 100%; text-indent: 0; }
 .caption.on { opacity: 1; visibility: visible; transform: none; transition: opacity .9s ease, transform .9s ease; }
 .fade { opacity: 0; visibility: hidden; transition: opacity 1.6s ease, visibility 0s 1.6s; }
 .fade.on { opacity: 1; visibility: visible; transition: opacity .9s ease; }
@@ -186,6 +188,9 @@ body:not(.seasons) .need-seasons { display: none !important; }
 #way { position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; display: grid; justify-items: center; gap: 6px; font: 400 var(--t-xs)/1 var(--kai); letter-spacing: .12em; color: var(--on); text-shadow: var(--lift); will-change: transform; }
 #way i { width: 12px; height: 12px; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; box-shadow: 0 0 0 1px rgba(244,237,224,.55), 0 0 10px rgba(0,0,0,.5); }
 body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
+/* On a touch screen the line about the controls is written high on the picture, near the horizon where the way's seal
+   usually rides: while it speaks the seal steps back, so the two are never written over each other. */
+@media (pointer: coarse) { body:has(#hint.caption.on) #way { opacity: 0; visibility: hidden; transition: opacity .6s ease, visibility 0s .6s; } }
 
 /* What can be done here: the ring from the ground, and the word for it. */
 #act {
@@ -344,7 +349,11 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 }
 
 /* ---- Small things for the hand ---- */
-#dropBtn { position: absolute; right: 18px; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+/* The hop down from a porch stands beside the slips at the edge, to the left of their column and level with the lower
+   one, never on them; where the slips lie in a row along the foot of a short window, it stands just above that row. */
+#dropBtn { position: absolute; right: calc(max(22px, env(safe-area-inset-right, 0px)) + 48px); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+@media (pointer: coarse) { #dropBtn { right: calc(max(22px, env(safe-area-inset-right, 0px)) + 56px); } }
+@media (max-height: 560px) { #dropBtn { right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(68px + env(safe-area-inset-bottom, 0px)); } }
 
 /* ---- The seal that answers an observance ---- */
 #toast { position: absolute; left: 50%; top: 24%; transform: translate(-50%, -50%); z-index: 40; display: grid; justify-items: center; gap: 12px; pointer-events: none; opacity: 0; transition: opacity .9s ease; text-align: center; }
@@ -385,7 +394,7 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 #piece { position: absolute; inset: 0; z-index: 36; background: rgba(8,7,6,.94); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); gap: clamp(14px, 3vw, 44px); align-items: center; padding: calc(20px + env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 56px) calc(20px + env(safe-area-inset-bottom, 0px)); }
 #piece figure { margin: 0; height: 100%; min-height: 0; display: grid; place-items: center; }
 #piece img { max-width: 100%; max-height: calc(100dvh - 56px); object-fit: contain; box-shadow: 0 12px 50px rgba(0,0,0,.7); background: #d9d0bc; }
-#piece article { max-height: 100%; overflow: auto; box-sizing: border-box; padding: clamp(22px, 2.8vw, 38px); color: var(--ink-1); }
+#piece article { --pad: clamp(22px, 2.8vw, 38px); max-height: 100%; overflow: auto; box-sizing: border-box; padding: var(--pad); color: var(--ink-1); }
 #pieceTitle { margin: 0; font: 400 clamp(22px, 2.6vw, 32px)/1.35 var(--kai); letter-spacing: .06em; }
 #pieceBy { margin: 6px 0 0; font: 400 15px/1.6 var(--kai); letter-spacing: .12em; color: var(--ink-3); }
 #pieceFacts { margin: 16px 0 0; padding: 14px 0 12px; background: var(--brush-ink, linear-gradient(rgba(60,50,40,.25), rgba(60,50,40,.25))) 0 0 / 100% 8px no-repeat, var(--brush-ink, linear-gradient(rgba(60,50,40,.25), rgba(60,50,40,.25))) 0 100% / 100% 8px no-repeat; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font: 400 14px/1.7 var(--serif); }
@@ -394,10 +403,15 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 #pieceLink { margin: 12px 0 0; padding-left: 12px; border-left: 2px solid #8a2a1e; font: 400 14px/1.8 var(--kai); color: #4a443b; }
 #pieceCredit, #pieceProcessed { margin: 14px 0 0; font: 400 12px/1.6 var(--serif); color: #6f675b; word-break: break-all; }
 #pieceCredit + #pieceProcessed { margin-top: 4px; }
-/* The way out stays in reach however long the entry is: it rides at the foot of the sheet as the entry is drawn past. */
-#piece .ink-btn { margin-top: 18px; justify-self: start; position: sticky; bottom: 0; z-index: 1; box-shadow: 0 0 0 10px var(--paper), 0 -14px 14px -4px var(--paper); background-color: var(--paper); }
+/* The way out stays in reach however long the entry is: a band of paper across the foot of the sheet, the words of the
+   entry passing under its soft upper edge, with the word that closes it in the middle. It reaches over the sheet's own
+   margin at the sides and foot, so that drawn to the end the source line stands clear above it. */
+#piece .ink-btn { position: sticky; bottom: calc(-1 * var(--pad)); z-index: 1; display: grid; box-sizing: border-box; width: calc(100% + 2 * var(--pad)); margin: 14px calc(-1 * var(--pad)) calc(-1 * var(--pad)); padding: 26px 14px calc(var(--pad) * .5 + 12px); background: linear-gradient(to bottom, rgba(230,223,207,0), #e6dfcf 24px); }
+#piece .ink-btn::after { left: calc(50% - 2.4em); right: calc(50% - 2.4em); bottom: calc(var(--pad) * .5 + 2px); }
 #piece article { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-@media (max-width: 760px), (orientation: portrait) { #piece { grid-template-columns: 1fr; grid-template-rows: minmax(0, 42dvh) minmax(0, 1fr); align-items: stretch; } #piece img { max-height: 42dvh; } }
+/* Upright, the picture above and the entry under it: the picture's row is only as tall as the picture (at most 42% of
+   the screen), so a long scroll laid across the top gives the entry the height it does not need. */
+@media (max-width: 760px), (orientation: portrait) { #piece { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-items: stretch; } #piece figure { height: auto; } #piece img { max-height: 42dvh; } }
 /* Sideways on a phone the picture and its entry stand side by side again, the entry scrolling in its half. */
 @media (orientation: landscape) and (max-height: 560px) { #piece { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); align-items: stretch; } #piece img { max-height: calc(100dvh - 40px); } }
 
@@ -422,15 +436,34 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #menu .card::-webkit-scrollbar { display: none; }
 #menu h2 { margin: 0 0 6px; display: flex; align-items: center; justify-content: center; gap: 14px; font: 400 40px/1 var(--brush); letter-spacing: .2em; color: var(--ink-1); }
 #menu h2 .seal-mark { width: 30px; height: 30px; font-size: 12px; writing-mode: vertical-rl; letter-spacing: 0; transform: rotate(-4deg); margin-top: 6px; }
-#menu .set { display: grid; grid-template-columns: 6.4em 1fr; align-items: center; gap: 12px; min-height: 44px; }
-#menu .set > span, #menu .set > label { color: var(--ink-3); letter-spacing: .16em; }
-#menu .opts { display: flex; gap: 2px 14px; flex-wrap: wrap; }
-#menu .opts .chip, #menu .set > .chip { min-width: 44px; font-size: var(--t-m); letter-spacing: .08em; text-indent: .08em; justify-self: start; }
+/* Each row: its name in a column of its own, the choices beside it on one line. The name stands level with the first
+   line of choices; a name too long for its column (in English, Korean) goes onto a second line of its own, between words. */
+#menu .set { display: grid; grid-template-columns: var(--set-name, 5em) 1fr; align-items: start; gap: 10px; min-height: 44px; }
+#menu .set > span, #menu .set > label { display: flex; align-items: center; min-height: 44px; line-height: 1.25; color: var(--ink-3); letter-spacing: .16em; }
+#menu .set > input { align-self: center; }
+#menu .opts { display: flex; gap: 2px 4px; flex-wrap: wrap; }
+#menu .opts .chip, #menu .set > .chip { min-width: 44px; padding-inline: 6px; font-size: var(--t-m); letter-spacing: .08em; text-indent: .08em; justify-self: start; white-space: nowrap; }
+/* Where the choices cannot all stand on one line they are set out on purpose: following the clock on a line of its own
+   with the four hours under it, and the four languages two and two. */
+#menu .opts:has([data-follow]) { display: grid; grid-template-columns: repeat(4, max-content); justify-content: start; }
+#menu .opts [data-follow] { grid-column: 1 / -1; justify-self: start; }
+#menu .opts:has([data-lang]) { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; }
+/* Japanese names are longer than Chinese ones; English and Korean names and choices longer still, so their choices go two and two. */
+:root:lang(ja) #menu { --set-name: 6.4em; } :root:lang(ja) #menu .set > span, :root:lang(ja) #menu .set > label { letter-spacing: .04em; }
+:root:lang(en) #menu, :root:lang(ko) #menu { --set-name: 6.4em; }
+:root:lang(en) #menu .set > span, :root:lang(en) #menu .set > label, :root:lang(ko) #menu .set > span, :root:lang(ko) #menu .set > label { letter-spacing: .04em; }
+:root:lang(en) #menu .opts, :root:lang(ko) #menu .opts { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; }
+:root:lang(en) #menu .opts:has([data-follow]), :root:lang(ko) #menu .opts:has([data-follow]) { grid-template-columns: repeat(2, max-content); }
 #menu .note { margin: -4px 0 0; font-size: var(--t-xs); letter-spacing: .1em; color: var(--ink-3); } #menu .note .chip { min-height: 44px; padding: 4px 10px; font-size: var(--t-xs); margin-left: .4em; }
-#menu .row { display: flex; gap: 4px 10px; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-/* The foot of the sheet (full screen, back to the start, go on) stays in sight while the settings are drawn past it. */
-#menu .row { position: sticky; bottom: -32px; z-index: 1; margin-bottom: -14px; padding: 8px 0 14px; background: linear-gradient(to top, var(--paper-hi) 78%, rgba(242,236,224,0)); }
-#menu .row .chip { font-size: 15px; letter-spacing: .16em; text-indent: .16em; color: var(--ink-3); }
+/* The foot of the sheet stays in sight while the settings are drawn past it: the lesser ways (full screen, keys, back to
+   the start, thanks) on one line, and under them, in the middle, the seal that goes on, as 合上 closes the page of thanks.
+   It reaches down over the sheet's own bottom margin, so that drawn to the end the last row stands clear above it. */
+#menu .card { --pb: 32px; --px: 44px; padding: 38px var(--px) var(--pb); scroll-padding-bottom: calc(112px + var(--pb)); }   /* what is brought into sight is brought above the foot */
+#menu .row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 6px; margin: 4px calc(-1 * var(--px)) calc(-1 * var(--pb)); position: sticky; bottom: calc(-1 * var(--pb)); z-index: 1; padding: 14px var(--px) var(--pb); background: linear-gradient(to top, #e6dfcf calc(100% - 14px), rgba(230,223,207,0)); }
+#menu .row::before { content: ""; order: 1; flex-basis: 100%; height: 4px; }
+#menu .row .stamp { order: 2; }
+#menu .row .chip { font-size: 15px; letter-spacing: .16em; text-indent: .16em; color: var(--ink-3); white-space: nowrap; }
+:root:lang(en) #menu .row .chip, :root:lang(ko) #menu .row .chip { letter-spacing: .04em; text-indent: 0; }
 #menu[hidden] { display: none; }
 #menu .grp { display: contents; }   /* narrow and tall: no grouping box, one column as before */
 .community-invite { border-top: 1px solid rgba(93,85,74,.2); padding-top: 12px; text-align: center; grid-column: 1 / -1; }
@@ -452,11 +485,11 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 @media (pointer: coarse) { .community-desktop { display: none; } .community-mobile { display: block; } }
 @media (max-width: 400px) { .community-card { padding: 26px 24px 20px; } .community-card h2 { font-size: 30px; } }
 @media (pointer: coarse) { #menuKeys { display: none; } }
-@media (max-width: 400px) { #menu .card { width: min(94vw, 440px); padding: 30px 26px 24px; } }
+@media (max-width: 400px) { #menu .card { --pb: 20px; --px: 20px; width: min(94vw, 440px); padding-top: 28px; } }
 /* A small phone held upright: the rows close up (each still a thumb's height) so that the whole sheet, 自动镜头 included, is in sight. */
-@media (max-width: 620px) and (max-height: 700px) { #menu .card { gap: 4px; padding-top: 14px; padding-bottom: 12px; } #menu h2 { margin-bottom: 0; font-size: 30px; } #menu .row { margin-top: 2px; } #menu .set { grid-template-columns: 5.4em 1fr; gap: 6px; } #menu .opts { gap: 2px 0; } }
+@media (max-width: 620px) and (max-height: 700px) { #menu .card { --pb: 12px; gap: 4px; padding-top: 14px; } #menu h2 { margin-bottom: 0; font-size: 30px; } #menu .row { margin-top: 2px; } #menu .set { gap: 6px; } }
 /* A phone held sideways: the settings in two columns, the heading and the foot across both. */
-@media (max-height: 560px) and (min-width: 620px) { #menu .card { width: min(94vw, 780px); grid-template-columns: 1fr 1fr; column-gap: 32px; row-gap: 4px; padding: 18px 34px 16px; } #menu h2, #menu .row, #menu .note { grid-column: 1 / -1; } #menu h2 { font-size: 28px; margin: 0; } #menu .row { margin-top: 2px; } #menu .set { grid-template-columns: 5.4em 1fr; gap: 6px; } #menu .opts { gap: 2px 0; } }
+@media (max-height: 560px) and (min-width: 620px) { #menu .card { --pb: 16px; --px: 34px; width: min(94vw, 780px); grid-template-columns: 1fr 1fr; column-gap: 32px; row-gap: 4px; padding-top: 18px; } #menu h2, #menu .row, #menu .note { grid-column: 1 / -1; } #menu h2 { font-size: 28px; margin: 0; } #menu .row { margin-top: 2px; } #menu .set { gap: 6px; } }
 /* A wide screen (a computer): one sheet laid across. Left the picture (quality, field of view, season, hour; the auto camera joins it),
    right what the hands and ears do (turning, the two switches, the four volumes), and across the foot the language and the buttons.
    Tab follows the document order, which is the visual order: left column top to bottom, then the right. */
@@ -466,6 +499,9 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
   #menu h2 { grid-column: 1 / -1; font-size: 34px; margin: 0 0 8px; }
   #menu .set { min-height: 44px; grid-template-columns: 7.6em 1fr; gap: 8px; }   /* one label width in both columns, so every slider is the same length */
   #menu .opts { gap: 2px 6px; flex-wrap: nowrap; }
+  /* laid across, every row's choices stand on one line again, as the narrow sheet's deliberate second lines are not needed */
+  #menu .opts:has([data-follow]), #menu .opts:has([data-lang]), :root:lang(en) #menu .opts, :root:lang(ko) #menu .opts { display: flex; }
+  #menu .opts [data-follow] { grid-column: auto; }
   #menu .opts .chip { padding-left: 6px; padding-right: 6px; }
   #menu .set:has([data-lang]), #menu .community-invite, #menu .row, #menu .note { grid-column: 1 / -1; }
   #menu .grp .note { grid-column: auto; }
@@ -557,3 +593,7 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 #jumpBtn:active { opacity: .9; transition-duration: .1s; }
 #jumpBtn[hidden] { display: none; }
 @media (pointer: coarse) { #dropBtn { display: none !important; } }   /* the ring is that button on a touch screen */
+/* The ring and the slips at the edge share the lower right: upright, the slips stand above the ring; in a short window,
+   where they lie in a row along the foot, they lie to the ring's left. Neither is ever drawn over the other. */
+@media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 14px + env(safe-area-inset-bottom, 0px)); } }
+@media (pointer: coarse) and (max-height: 560px) { .rail { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: calc(max(22px, env(safe-area-inset-right, 0px)) + 82px + 12px); } }

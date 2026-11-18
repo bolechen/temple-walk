@@ -6,7 +6,7 @@ const mem = (text = null) => { const m = { text, get: () => m.text, set: (t) => 
 test("a new visitor gets the defaults", () => { assert.deepEqual(createSettings(mem()).get(), { ...DEFAULTS }); });
 test("what is set is kept for next time", () => {
   const m = mem(), a = createSettings(m); a.set("sens", 1.6); a.set("invertY", true); a.set("quality", "low"); a.set("volume", 0.25);
-  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, lock: false, autocam: true, fov: 0, thirds: false, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
+  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, lock: false, autocam: true, fov: 0, thirds: true, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
 });
 test("values out of range are brought back into it", () => {
   const s = createSettings(mem()); assert.equal(s.set("sens", 99), 2.5); assert.equal(s.set("sens", -3), 0.3); assert.equal(s.set("volume", 7), 1); assert.equal(s.set("volume", -1), 0);
@@ -23,9 +23,12 @@ test("storage that refuses to write does not stop a change", () => {
 });
 test("a change is announced", () => { const s = createSettings(mem()), seen = []; s.onChange((all, key) => seen.push([key, all[key]])); s.set("sens", 2); s.set("invertY", true); assert.deepEqual(seen, [["sens", 2], ["invertY", true]]); });
 
-test("the viewfinder's thirds are off until asked for, and kept once asked for", () => {
-  const m = mem(), a = createSettings(m); assert.equal(a.get().thirds, false);
+test("the viewfinder's thirds are on until put away, and kept off once put away", () => {
+  const m = mem(), a = createSettings(m); assert.equal(a.get().thirds, true);
+  a.set("thirds", false); assert.equal(createSettings(m).get().thirds, false);
   a.set("thirds", true); assert.equal(createSettings(m).get().thirds, true);
+  // a save from before the thirds were the default carried false without its being chosen: they come on
+  assert.equal(createSettings(mem('{"thirds":false,"sens":1.2}')).get().thirds, true);
 });
 
 test("the eye goes to each place's own shot unless asked not to, and that is kept", () => {

@@ -6,6 +6,7 @@ export default {
   // ---- The loading bar ----
   "山路正在铺开": "Laying out the mountain path",
   "山路 · 请再来一次": "The path · please try again",
+  "浏览器不支持 WebGL 或未开启硬件加速": "WebGL is unavailable — enable hardware acceleration or try another browser",
   "山路": "the path",
   "山门": "the gate",
   "殿堂": "the halls",
@@ -100,6 +101,7 @@ export default {
   "入画": "In the picture",
   "合掌": "Hands joined",
   "画面就是你眼前所见 · 单击即拍 · 滚轮远近": "The picture is what you see · click to take it · wheel for near and far",
+  "画面就是你眼前所见 · 点快门即拍 · 双指远近": "The picture is what you see · tap the shutter to take it · pinch for near and far",
   "照片": "Photo",
   "刚拍下的照片": "The photo just taken",
   "分享": "Share",

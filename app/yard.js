@@ -27,6 +27,7 @@ import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
@@ -46,7 +47,7 @@ import { planSteps, clearLine } from "./src/route.js";
 import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
-import { t as tr, lang, langSource, takeSwitch, glyphs, setLang } from "./src/i18n.js";
+import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
 const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 
@@ -64,7 +65,12 @@ const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? s
 const loading = window.templeLoading;
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("yardGl"));
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+// A browser that cannot draw (no WebGL, or the graphics card turned off for it) is told so in words on the title, with no
+// "try again", since trying again would fail the same way; the module then stops here and builds nothing more.
+const renderer = await (async () => {
+  try { return new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" }); }
+  catch { loading?.fail({ reason: "webgl" }); return new Promise(() => {}); }
+})();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.AgXToneMapping;      // applied by the output pass
 renderer.toneMappingExposure = 1.12;
@@ -160,11 +166,16 @@ if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
 await loading.step(tr("行走"));
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
+// The prologue is where a visitor first meets the place, and it is walked by day, whatever the hour at home (the owner,
+// 2026-11-17): until the book has been filled once, the hour is 昼 and does not follow the clock. The season stays the
+// visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
+const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
+const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
-                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "day" : nowMood.time };
-// The hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's choice lasts this page only
-// and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
-state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam"));
+                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
+// After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
+// choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
+state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -663,6 +674,9 @@ setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if 
 // Esc folds the settings, then puts the print away, then lowers the camera.
 const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
 ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
+// On a touch screen the picture is taken with the round button and drawn nearer with two fingers: the line under the
+// camera's settings says so, rather than speaking of a click and a wheel the hand does not have.
+if (hints.coarse) { const how = document.querySelector("#photoSettings > p"); if (how) how.textContent = tr("画面就是你眼前所见 · 点快门即拍 · 双指远近"); }
 ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () => raise(false) });
 function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
 function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }
@@ -966,13 +980,6 @@ function openMenu(open) {
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
-  // The language: each choice is written in its own language; the one in use is circled in the menu and left off the
-  // title. Choosing another opens the page again in it (src/i18n.js).
-  document.querySelectorAll("[data-lang]").forEach((b) => {
-    b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
-    if (b.closest(".langs")) /** @type {HTMLElement} */ (b).hidden = b.dataset.lang === lang;
-    b.addEventListener("click", () => setLang(b.dataset.lang));
-  });
   // Lost, or wedged somewhere he should not be: back to where the path begins.
   on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }

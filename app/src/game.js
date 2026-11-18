@@ -339,8 +339,9 @@ export function createGame(y) {
         b.type = "button"; b.className = "seal-go"; b.dataset.id = d.id; b.setAttribute("aria-label", t("回到{place}", { place: t(d.place) })); b.title = t("回到{place}", { place: t(d.place) });
         b.style.cssText = `left:${(l * 100).toFixed(2)}%;top:${(top * 100).toFixed(2)}%;width:${(w * 100).toFixed(2)}%;height:${(h * 100).toFixed(2)}%`;
         b.addEventListener("click", () => goBack(d.id)); leaf.appendChild(b); });
-      if (journey.count() && $("bookGo")) $("bookGo").hidden = false; }
-    $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; ui.open("book", { onClose: announce });
+      if ($("bookGo")) $("bookGo").hidden = !journey.count(); }
+    // An empty book has nothing to begin again: 重新朝山 is offered once there is a seal to give up.
+    $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); ui.open("book", { onClose: announce });
   }
   // Back to where a seal was earned: the book closes, the eyes close, and he stands there again.
   async function goBack(id) {
@@ -419,7 +420,13 @@ export function createGame(y) {
     if (o.eye !== "none") holdMusic(true);
     if (o.bell) mountainBell();   // inside the click that stepped in, so the browser lets it sound
     entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered");
-    const begin = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };   // after the first line about walking has gone
+    // Where to go is said after how to walk has gone (he has taken a few steps, or the line has faded), so that a
+    // visitor arriving is given one thing to read at a time.
+    const begin = () => {
+      let waited = 0;
+      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
+      const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
+    };
     if (o.eye === "none") { begin(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
     y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });

@@ -17,6 +17,30 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
   // The page comes up, draws, and offers its controls.
+  // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
+  // title says why in words, offers no "try again", and its language buttons still work, in each language. The renderer
+  // failing to start is what this scenario makes happen, so three's one line about it is expected here and nowhere else;
+  // any other console error or page error still fails it.
+  nogl: { tier: 1, async run(b, base) {
+    const ctx = await b.newContext({ viewport: { width: 900, height: 600 }, locale: "zh-CN" }), page = await ctx.newPage(), errors = [];
+    await page.addInitScript(() => { const get = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (kind, ...rest) { return /webgl/i.test(kind) ? null : get.call(this, kind, ...rest); }; });
+    page.on("pageerror", (e) => errors.push("page error: " + String(e).slice(0, 300)));
+    page.on("console", (m) => { if (m.type() === "error" && !/WebGLRenderer: (A WebGL context could not be created|Error creating WebGL context)/i.test(m.text())) errors.push("console: " + m.text().slice(0, 300)); });
+    page.on("response", (r) => r.status() >= 400 && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+    const said = { zh: "浏览器不支持 WebGL", ja: "WebGL が利用できません", en: "WebGL is unavailable", ko: "WebGL을 사용할 수 없습니다" };
+    const look = () => page.evaluate(() => ({ label: document.getElementById("loadLabel").textContent, retry: !document.getElementById("loadRetry").hidden, enter: !document.getElementById("enterBtn").disabled, lang: document.documentElement.lang }));
+    await page.goto(base + "?q=low", { waitUntil: "commit", timeout: 120000 });
+    await page.waitForFunction(() => /WebGL/.test(document.getElementById("loadLabel").textContent), null, { timeout: 120000 });
+    let s = await look();
+    expect(s.label.includes(said.zh) && !s.retry && !s.enter, "a browser without WebGL should be told why, with no retry and no way in: " + JSON.stringify(s));
+    // The language buttons on the title, which the walk would have bound, still open the page in another language; and so on round.
+    for (const l of ["ja", "en", "ko", "zh"]) {
+      await Promise.all([page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), page.click(`#title [data-lang="${l}"]`)]);
+      await page.waitForFunction((w) => document.getElementById("loadLabel").textContent.includes(w), said[l], { timeout: 120000 });
+      s = await look(); expect(!s.retry && !s.enter, `in ${l} there should still be no retry and no way in: ` + JSON.stringify(s));
+    }
+    expect(errors.length === 0, errors.join("\n")); await ctx.close();
+  } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.
@@ -1108,10 +1132,10 @@ const scenarios = {
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
-      // The thirds, off at first, on when asked for, and remembered.
-      expect(!(await t.page.isVisible("#frame .third")), "the thirds should be off until asked for");
-      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third") && (await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not come on");
-      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")), "the thirds did not go off");
+      // The thirds, on at first, off when put away, and remembered.
+      expect(await t.page.isVisible("#frame .third"), "the thirds should be on until put away");
+      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")) && !(await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not go off");
+      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third"), "the thirds did not come back on");
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
@@ -1309,6 +1333,8 @@ const scenarios = {
   // #135: with the book filled the hour is "随时辰" (the clock) until a hand chooses one; the choice is for this page only.
   hour: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&enter=1" + BARE, { viewport: { width: 900, height: 600 } });
+    // Before the book has been filled the prologue is walked by day, whatever the clock says.
+    expect((await t.probe()).time === "day", "a first visit should be walked by day: " + (await t.probe()).time);
     await t.page.evaluate((ids) => localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 })), ["bell", "incense", "tea", "sutra", "well", "lamp", "summit"]);
     await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     const pressed = (sel) => t.page.getAttribute(sel, "aria-pressed");
