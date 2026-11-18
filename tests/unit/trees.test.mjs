@@ -68,3 +68,17 @@ test("a cedar's branches end inside the foliage they carry", () => {
   const out = everyTree.branches.filter((b) => b.inside > 1e-3);
   assert.deepEqual(out.map((b) => `${b.h} m cedar: ${(b.inside * 100).toFixed(0)} cm beyond its spray`).slice(0, 8), []);
 });
+test("every tree's foot is lit from outside: its normals face away from the trunk, and its top ring's are the trunk's own", () => {
+  const wrong = [];
+  for (const j of everyTree.joints) {
+    const P = j.foot.attributes.position, N = j.foot.attributes.normal, R = j.ring + 1, rings = P.count / R; let worst = 1, top = 0;
+    for (let i = 0; i < rings; i++) for (let k = 0; k < R; k++) {
+      const v = i * R + k, y = P.getY(v); let lo = 0, hi = 1; const C = new THREE.Vector3(); for (let n = 0; n < 40; n++) { const mid = (lo + hi) / 2; j.curve.getPoint(mid, C); if (C.y < Math.max(y, j.curve.getPoint(0).y)) lo = mid; else hi = mid; }
+      j.curve.getPoint(lo, C); const out = new THREE.Vector3(P.getX(v) - C.x, 0, P.getZ(v) - C.z).normalize(), n = new THREE.Vector3(N.getX(v), N.getY(v), N.getZ(v)).normalize();
+      worst = Math.min(worst, n.dot(out));
+      if (i === 0) { const T = j.curve.getTangent(lo), tube = out.clone().addScaledVector(T, -out.dot(T)).normalize(); top = Math.max(top, (Math.acos(Math.min(1, n.dot(tube))) * 180) / Math.PI); }
+    }
+    if (worst <= 0.5 || top >= 5) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: least outward ${worst.toFixed(2)}, top ring ${top.toFixed(1)}° off the trunk`);
+  }
+  assert.deepEqual(wrong.slice(0, 8), []);
+});
