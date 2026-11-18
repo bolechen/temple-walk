@@ -480,10 +480,18 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #menu .mix-toggle .chip { font-size: var(--t-s); color: var(--ink-3); }
 /* A phone held upright: the rows close up (each still a thumb's height), so that all three parts are named on the first
    sight of the sheet, the sound's above its foot. */
-@media (max-width: 620px) { #menu .card { gap: 2px; } #menu .grp-name { margin-top: 8px; } #menu h2 { margin-bottom: 0; } }
+@media (max-width: 620px) {
+  #menu .card { gap: 0; } #menu .grp-name { margin-top: 4px; } #menu h2 { margin-bottom: 0; font-size: 34px; }
+  /* the four languages on one line (their names are the same whatever the page speaks), wrapping only on the narrowest */
+  #menu .opts:has([data-lang]), :root:lang(en) #menu .opts:has([data-lang]) { display: flex; flex-wrap: wrap; gap: 0 2px; }
+  #menu .opts [data-lang] { padding-inline: 4px; }
+  /* in English the hours stand on one line under Follow the hour */
+  :root:lang(en) #menu .opts:has([data-follow]) { display: flex; flex-wrap: wrap; gap: 0 4px; }
+  :root:lang(en) #menu .opts [data-follow] { flex-basis: 100%; place-items: center start; }
+}
 /* English needs its choices two and two, which makes the sheet taller: there the title is set smaller and the foot's lesser
    ways closer, so the foot stays one line. */
-@media (max-width: 620px) { :root:lang(en) #menu h2 { font-size: 30px; } :root:lang(en) #menu .row .chip { font-size: 13px; padding-inline: 4px; } }
+@media (max-width: 620px) { :root:lang(en) #menu .card { padding-top: 14px; } :root:lang(en) #menu h2 { font-size: 30px; } :root:lang(en) #menu .row .chip { font-size: 13px; padding-inline: 4px; } }
 .community-invite { border-top: 1px solid rgba(93,85,74,.2); padding-top: 12px; text-align: center; grid-column: 1 / -1; }
 .community-invite .chip { font-size: var(--t-m); color: var(--ink-2); }
 .community-invite p { margin: 4px 0; font: 400 var(--t-xs)/1.7 var(--kai); color: var(--ink-3); letter-spacing: .04em; }

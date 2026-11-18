@@ -1286,6 +1286,10 @@ const scenarios = {
       await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
       const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name")]; return { names: hs.length, last: hs.length ? Math.round(hs[hs.length - 1].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
       expect(ph.names === 3 && ph.last <= ph.foot, `on a 390x844 phone in ${lg} the sound's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
+      // and the four ways to another language are all there at first sight: each the thing a thumb lands on at its middle,
+      // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
+      const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
+      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
       await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
