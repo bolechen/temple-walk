@@ -48,13 +48,13 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     uCol2: { value: new THREE.Color() }, uCol3: { value: new THREE.Color() }, uPart: { value: 1 }, uNear: { value: 1 }, uPoint: { value: 0 },
     tMap: { value: tMap }, tGround: { value: tGround }, uMapBox: { value: box }, uCh: { value: new THREE.Vector3() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, uLand: { value: 0 },
     uBam: { value: 0 }, uBPart: { value: BAMBOO.part }, uBSize: { value: BAMBOO.size }, uBFall: { value: BAMBOO.fall }, uBSway: { value: BAMBOO.sway }, uBCol: { value: new THREE.Color(...BAMBOO.col[0]) }, uBCol2: { value: new THREE.Color(...BAMBOO.col[1]) },
-    tShelter: U.tShelter, uShelter: U.uShelter };
+    tShelter: U.tShelter, uShelter: U.uShelter, uWind: U.uWind, uWindPath: U.uWindPath };
   const mat = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false,
     vertexShader: /* glsl */`
       ${SHELTER}
       uniform sampler2D tMap, tGround; uniform vec4 uMapBox; uniform vec3 uCh; uniform float uFromTrees, uBoost, uLand, uBam, uBPart, uBSize, uBFall, uBSway;
-      attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; varying float vA; varying float vS; varying float vH; varying float vB; varying float vTum; varying float vRest;
+      attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; uniform vec2 uWind, uWindPath; varying float vA; varying float vS; varying float vH; varying float vB; varying float vTum; varying float vRest;
       void main(){
         vec3 B=vec3(34.,13.,34.), p; float want, life=1., ph=uT, Tf=1e9;
         float isB=step(fract(seed.x*13.7+seed.w*3.1),uBam), fl=mix(uFall,uBFall,isB), sw=mix(uSway,uBSway,isB);
@@ -68,11 +68,13 @@ export function createDrift(scene, count, trees = [], opts = {}) {
           vec2 muv=(b-uMapBox.xy)*uMapBox.zw; vec4 m=texture2D(tMap,muv); float gr=texture2D(tGround,muv).r;
           float inb=step(0.,min(muv.x,muv.y))*step(max(muv.x,muv.y),1.)*step(-500.,gr), k=min(ph/Tf,1.);
           p=vec3(b.x+sin(ph*.7+seed.w*40.)*sw*(1.-k), gr+${LAND.LIE.toFixed(2)}+${LAND.HEIGHT.toFixed(1)}*(1.-k), b.y+cos(ph*.53+seed.w*31.)*sw*.7*(1.-k));
+          p.xz-=uWind*${LAND.HEIGHT.toFixed(1)}*(1.-k)*.6;   // it comes down on the breeze (wind.js), as the censer's smoke leans, to where it lies
           want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
           life=smoothstep(0.,${LAND.IN.toFixed(1)},ph)*(1.-smoothstep(Tf+Tr,P,ph)); vRest=step(Tf,ph); ph=min(ph,Tf);
         } else {
           p=seed.xyz*B;
           p.y-=uT*fl*(.6+.8*seed.w); p.x+=sin(uT*.7+seed.w*40.)*sw; p.z+=cos(uT*.53+seed.w*31.)*sw*.7;
+          p.xz+=uWindPath*(.45+.3*seed.w)*step(0.,fl);   // carried off by the breeze (wind.js), as the censer's smoke leans; not the fireflies
           p=mod(p-uCam+B*.5,B)-B*.5+uCam; p.y+=3.5;
           want=uPart*(1.-shelter(p)); vRest=0.;
         }

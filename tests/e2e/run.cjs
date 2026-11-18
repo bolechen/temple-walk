@@ -1268,6 +1268,29 @@ const scenarios = {
   // (<deployment>-temple-walk-preview.<account>.workers.dev) is pointed at the test server for the browser alone.
   // The workbench on a preview: ?seals= is a book for this visit only, ?at= stands him at a place, ?play=ending plays the
   // close there. The published page (here, the plain test host) ignores them all and keeps the visitor's own book.
+  // The censer before the great hall (#217): at night the ends of the incense glow in the mouth and light it, and the
+  // body round it stays dark; by day the smoke rises and leans with the breeze that carries the falling things; in snow the
+  // cap is white and the warm lip is not; more incense burns at dawn than at dusk.
+  censer: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&shot=1&view=first&cam=0,20,0,0&season=summer&time=night");
+    const look = () => t.page.evaluate(() => { window.__look([0.05, 1.95, 14.6], [0, 1.35, 13]); });
+    await look(); await t.frames(3);
+    const night = await t.page.evaluate(() => window.__censer([[0, 1.49, 0.05], [0, 0.86, 0.565], [0.3, 0.8, 0.48]]));
+    expect(night.ember === 1 && night.incense < 0.2, `night: the incense should be a few glowing ends (${JSON.stringify(night)})`);
+    expect(night.lum[0] > Math.max(night.lum[1], night.lum[2]) * 1.5, `night: the mouth should be brighter than the body round it (${night.lum.map((v) => v?.toFixed(1))})`);
+    await t.page.evaluate(() => window.__mood("autumn", "dawn")); await t.frames(2);
+    const dawn = await t.page.evaluate(() => window.__censer());
+    await t.page.evaluate(() => window.__mood("autumn", "dusk")); await t.frames(2);
+    const dusk = await t.page.evaluate(() => window.__censer());
+    expect(dawn.incense > dusk.incense && dawn.smoke.opacity > dusk.smoke.opacity, "more incense and smoke at dawn than at dusk");
+    expect(dusk.leaves === 1 && dusk.petals === 0, "autumn lays its leaves on the censer");
+    const [wx, wz] = dusk.wind; expect(Math.hypot(wx, wz) > 0.05, `the breeze should blow (${dusk.wind})`);
+    await t.page.evaluate(() => window.__mood("winter", "day")); await look(); await t.frames(3);
+    const snow = await t.page.evaluate(() => window.__censer([[0, 1.935, 0.49], [0, 1.465, 0.452], [0, 1.4, 0.416]]));
+    expect(snow.lum[0] > snow.lum[1] * 1.4 && snow.lum[0] > snow.lum[2] * 1.4, `winter: snow on the eave, none on the warm lip (${snow.lum.map((v) => v?.toFixed(1))})`);
+    await t.shot("e2e-censer-winter");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   bench: { tier: 2, async run(b, base) {
     const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
     const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });

@@ -90,3 +90,51 @@ test("the eye may not stand anywhere inside it, from its feet to its gourd, and 
   assert.ok(!walker.eyeShut(C.x, C.y + CENSER.height + 0.2, C.z, C.y), "over the gourd it is open air");
   assert.ok(!walker.eyeShut(C.x + CENSER.reach + BODY + 0.2, C.y + 1.3, C.z, C.y), "a step off it is open air");
 });
+
+// ---- The incense, the smoke and the seasons (#217, second part) ----
+import { moodOf, SEASONS, TIMES } from "../../app/src/mood.js";
+import { STICKS, smokeAt, createSmoke, censerMaterial } from "../../app/src/censer.js";
+import { WIND_DIR, windAt } from "../../app/src/wind.js";
+import { U } from "../../app/src/glsl.js";
+
+test("every season and hour says how hard the breeze blows and how much incense burns: most at dawn, two or three ends at night", () => {
+  for (const s of SEASONS) {
+    const m = Object.fromEntries(TIMES.map((h) => [h, moodOf(s, h)]));
+    for (const h of TIMES) assert.ok(m[h].wind > 0 && m[h].incense > 0 && m[h].incense <= 1, `${s} ${h}`);
+    assert.ok(m.dawn.incense > m.day.incense && m.day.incense > m.dusk.incense && m.dusk.incense > m.night.incense, s);
+    const lit = Math.round(m.night.incense * STICKS); assert.ok(lit >= 2 && lit <= 4, `${s} night: ${lit} sticks burning`);
+  }
+  assert.ok(moodOf("winter", "day").wind < moodOf("autumn", "day").wind, "the cold is stiller, and the smoke stands straighter");
+});
+
+test("the smoke leans the way the breeze carries the falling things, and only as it rises", () => {
+  const w = windAt(moodOf("autumn", "day").wind, 12), wind = [WIND_DIR[0] * w, WIND_DIR[1] * w];
+  for (let i = 0; i < 6; i++) {
+    const still = smokeAt(i, 1, [0, 0]), blown = smokeAt(i, 1, wind), low = smokeAt(i, 0, wind), low0 = smokeAt(i, 0, [0, 0]);
+    const lean = [blown[0] - still[0], blown[2] - still[2]];
+    assert.ok(lean[0] * WIND_DIR[0] + lean[1] * WIND_DIR[1] > 0.3, `thread ${i} leans ${lean}`);
+    assert.ok(Math.hypot(low[0] - low0[0], low[2] - low0[2]) < 1e-9, `thread ${i} starts at its window whatever the breeze`);
+  }
+  // The page does the same sums: the threads lean by uWind, the drifting things are carried by its sum over time.
+  const smoke = createSmoke(new THREE.Vector3(), U).mesh.material;
+  assert.match(smoke.vertexShader, /uWind\.x\*lean/); assert.match(smoke.vertexShader, /uWind\.y\*lean/);
+  assert.match(fs.readFileSync(new URL("../../app/src/drift.js", import.meta.url), "utf8"), /p\.xz\+=uWindPath\*/);
+  assert.match(fs.readFileSync(new URL("../../app/yard.js", import.meta.url), "utf8"), /U\.uWindPath\.value\.addScaledVector\(U\.uWind\.value, dt\)/);
+});
+
+test("snow lies on the eaves and the cap and not on the warm body, mouth or ears", () => {
+  let ears = 0, eave = 0;
+  for (let i = 0; i < pos.count; i++) { const x = Math.abs(pos.getX(i)), y = pos.getY(i); if (x > CENSER.belly + 0.03 && Math.abs(pos.getZ(i)) < 0.06 && y < 1.9 && Math.hypot(x, pos.getZ(i)) > 0.615) ears = Math.max(ears, y); if (y > 1.9 && y < 2.2) eave = Math.max(eave, y); }
+  const m = censerMaterial((key, params, body) => ({ body, userData: {} }), null);   // the sums handed to procMat
+  const line = m.body.split("\n").find((l) => l.includes("uSnow>"));
+  const from = +line.match(/smoothstep\(([\d.]+),([\d.]+),lp\.y\)/)[1];
+  assert.ok(ears < from, `the ears reach ${ears.toFixed(2)} m, and snow starts at ${from}`);
+  assert.ok(eave > from + 0.05, "the eave is above where snow starts");
+  assert.ok(CENSER.ash + 0.25 < from, "and the mouth well below it");
+});
+
+test("the incense, the ash and the season's leaves and petals are in the censer, and add no draw", () => {
+  const uv = geo.attributes.uv, kinds = new Set();
+  for (let i = 0; i < uv.count; i++) { const k = uv.getX(i); kinds.add(k >= 0 ? "cast" : k > -1.1 ? "iron" : k > -1.5 ? "ash" : k > -3 ? "stick" : k > -3.5 ? "stub" : k > -4.5 ? "leaf" : "petal"); }
+  assert.deepEqual([...kinds].sort(), ["ash", "cast", "iron", "leaf", "petal", "stick", "stub"]);
+});

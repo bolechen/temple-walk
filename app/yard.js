@@ -28,6 +28,7 @@ import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
@@ -638,6 +639,7 @@ function frame(now) {
 
   for (const fn of ticks) fn(dt, t);
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
+  { const w = windAt(mood?.wind ?? 0, t); U.uWind.value.set(WIND_DIR[0] * w, WIND_DIR[1] * w); if (!still) U.uWindPath.value.addScaledVector(U.uWind.value, dt); }   // the breeze (wind.js); a frozen picture keeps its lean
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); ground.update?.(still ? 0 : dt); flock.update(still ? 0 : dt, t); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) s.swing.position.z = logSwing(s, riteNow());   // drawn back and let go, or only tapped: it touches the bell and swings itself out
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
@@ -931,6 +933,17 @@ window.__probe = (points) => {
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
     photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level, at };
+};
+// The censer before the great hall (#217): how much incense burns, whether it glows, the smoke and the breeze; and, for
+// each point given (metres from the censer's foot), how bright the picture is where that point is drawn, 0..255.
+window.__censer = (points = []) => {
+  const t = still ? 0 : performance.now() / 1000;
+  if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
+  const c = document.createElement("canvas"), w = canvas.width, h = canvas.height; c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0);
+  const lum = points.map(([px, py, pz]) => { const v = new THREE.Vector3(site.censer.x + px, site.censer.y + py, site.censer.z + pz).project(camera);
+    const sx = Math.round((v.x + 1) / 2 * w), sy = Math.round((1 - v.y) / 2 * h); if (v.z > 1 || sx < 2 || sy < 2 || sx > w - 3 || sy > h - 3) return null;
+    const d = x.getImageData(sx - 2, sy - 2, 5, 5).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += (d[i] + d[i + 1] + d[i + 2]) / 3; return s / 25; });
+  return { ...props.censer(), wind: U.uWind.value.toArray().map((q) => +q.toFixed(3)), carried: U.uWindPath.value.toArray().map((q) => +q.toFixed(2)), lum };
 };
 // Rings on the water: how many made, how many spreading. `__ripples(true)` sets a step's worth going at his feet;
 // `__ripples([x, z, age])` one at that spot as if made `age` seconds ago, so a still picture can hold them.

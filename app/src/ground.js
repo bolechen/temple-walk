@@ -154,7 +154,8 @@ export function createGround(scene, shade, censer, paving) {
         float lane=abs(p.x)-1.7, bank=exp(-pow((lane-.32)/.3,2.)), open=smoothstep(-.15,.2,lane);
         float deep=.5+.6*fbm2(p*.09+4.)+.25*fbm2(p*.35+8.)+.45*smoothstep(0.,.2,dB)*exp(-max(dB,0.)*.7)+.35*bank;
         float dust=.15+.14*fbm2(p*1.3+2.)+.22*smoothstep(-.6,0.,lane)+joint*.6, grain=(n2(p*38.)*.6+n2(p*90.)*.4)*.35, roofS=smoothstep(-.3,.1,dB);
-        float sn=uSnow*mix(smoothstep(.46,.475,dust+grain),smoothstep(.15,.3,deep),open)*roofS, snD=mix(dust,deep,open)*roofS; puddle*=1.-sn; damp*=1.-sn;
+        float sn=uSnow*mix(smoothstep(.46,.475,dust+grain),smoothstep(.15,.3,deep),open)*roofS*smoothstep(.8,1.4,length(p-uCenser)), snD=mix(dust,deep,open)*roofS; puddle*=1.-sn; damp*=1.-sn;
+        float melt=uSnow*(1.-smoothstep(.8,1.4,length(p-uCenser))); alb*=mix(1.,.6,melt); damp=max(damp,melt);   // round the censer's feet the snow has gone to wet stone (#217)
         // Snow on the paving is as bright as the same snow on a platform or a roof: the paving is lit by hand for stone
         // a third as pale, and at full brightness the snow was a glowing white with nothing in it.
         // Where he has walked the snow is pressed down: darker, a little blue, and in thin snow the stone shows through.
