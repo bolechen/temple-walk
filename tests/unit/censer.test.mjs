@@ -7,15 +7,15 @@ import * as THREE from "three";
 import { buildSite, createWalker } from "../../app/src/site.js";
 import { followEye, createFollow } from "../../app/src/eye.js";
 import { BODY } from "../../app/src/geo.js";
-import { CENSER, CAST, censerGeometry, clearOfCenser } from "../../app/src/censer.js";
+import { CENSER, CAST, censerGeometry, clearOfCenser, reachBands } from "../../app/src/censer.js";
+import fs from "node:fs";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
 const site = buildSite(M), walker = createWalker(site), geo = censerGeometry(), pos = geo.attributes.position;
 
 // How far the censer reaches from its axis, in bands 5 cm high.
-const BAND = 0.05, reach = new Float32Array(Math.ceil(3.2 / BAND));
-for (let i = 0; i < pos.count; i++) { const b = Math.floor(pos.getY(i) / BAND); reach[b] = Math.max(reach[b], Math.hypot(pos.getX(i), pos.getZ(i))); }
+const BAND = 0.05, reach = reachBands(geo, BAND);   // every face in every band it spans, at its farthest corner
 const reachAt = (y) => (y < 0 || y >= reach.length * BAND ? 0 : reach[Math.floor(y / BAND)]);
 
 test("it is the real one's shape and size: 2.7 m to the cap, a small gourd over it, 1.12 m across the belly, three feet and two ears", () => {
@@ -29,6 +29,11 @@ test("it is the real one's shape and size: 2.7 m to the cap, a small gourd over 
   assert.ok(CENSER.legs.some(([x, z]) => Math.abs(x) < 1e-6 && z > 0), "one foot toward the visitor");
   assert.ok(b.max.x > b.max.z + 0.05 && -b.min.x > -b.min.z + 0.05, "the ears stand out on either side, not before and behind");
   assert.ok(reachAt(1.88) >= CENSER.belly, "a pavilion over the lip, under an eave as broad as the belly");
+  // the ears, the thing most seen of it from the front: their outer edge a hand's breadth past the belly, from the root
+  // of the neck to under the lower eave
+  for (const y of [1.45, 1.6, 1.75]) assert.ok(reachAt(y) >= CENSER.belly + 0.09, `the ears at ${y} m reach only ${reachAt(y).toFixed(2)} m`);
+  let lo = 9, hi = 0; for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getZ(i)) < 0.04 && Math.abs(pos.getX(i)) > 0.62 /* past the lower eave's rim, 0.61 */) { lo = Math.min(lo, pos.getY(i)); hi = Math.max(hi, pos.getY(i)); }
+  assert.ok(lo < 1.4 && hi > 1.8 && hi < 1.885, `the ears stand from ${lo.toFixed(2)} to ${hi.toFixed(2)} m`);
 });
 
 test("what is cast on it: the date in one line, the couplet five and five", () => {
@@ -37,10 +42,12 @@ test("what is cast on it: the date in one line, the couplet five and five", () =
   assert.ok(lettered > 0 && lettered < uv.count / 10, "only the plates carry letters");
 });
 
-test("he is kept off it as far as it reaches below his head, and no farther than a hand's breadth more", () => {
+test("he is kept off it as far as it reaches up to the top of his head, and no farther than a hand's breadth more", () => {
   const post = site.walk.posts.find((p) => p.r !== undefined && Math.hypot(p.x - site.censer.x, p.z - site.censer.z) < 1e-6);
   assert.ok(post, "the censer stands in the walk as a round post");
-  let low = 0; for (let y = 0; y < 1.3; y += BAND) low = Math.max(low, reachAt(y));
+  // how tall he is: the top of his measured outline (tools/walk/outline.json), hat and all
+  const outline = JSON.parse(fs.readFileSync(new URL("../../tools/walk/outline.json", import.meta.url), "utf8")), tall = outline.reach.findLastIndex((r) => r > 0) * outline.bin + outline.bin;
+  let low = 0; for (let y = 0; y < tall; y += BAND) low = Math.max(low, reachAt(y));
   assert.ok(post.r >= low - 1e-6, `the post (${post.r}) is narrower than the censer (${low.toFixed(3)})`);
   assert.ok(post.r - low < 0.05, "and not much wider");
   assert.equal(CENSER.reach, post.r);
@@ -89,7 +96,6 @@ import { moodOf, SEASONS, TIMES } from "../../app/src/mood.js";
 import { STICKS, smokeAt, createSmoke, censerMaterial } from "../../app/src/censer.js";
 import { WIND_DIR, windAt } from "../../app/src/wind.js";
 import { U } from "../../app/src/glsl.js";
-import fs from "node:fs";
 
 test("every season and hour says how hard the breeze blows and how much incense burns: most at dawn, two or three ends at night", () => {
   for (const s of SEASONS) {

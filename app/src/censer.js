@@ -38,8 +38,8 @@ const CAP = [[0.32, 2.3], [0.33, 2.34], [0.51, 2.345], [0.53, 2.335], [0.535, 2.
 export const CENSER = Object.freeze({
   height: 2.89, standing: 2.7,  // with the gourd; and to the top of the cap, as the real one stands without it
   belly: 0.56,                  // its widest, below the ears
-  reach: 0.57,                  // how far anything of it reaches from its axis below 1.3 m: what he must keep off
-  ears: 0.67,                   // and the ears' reach, higher up
+  reach: 0.57,                  // how far anything of it reaches from its axis up to 1.2 m, his height with his hat: what he must keep off
+  ears: 0.76,                  // and the ears' reach, higher up (above his head: the eye keeps off them, `eyeR` in site.js)
   windowY: [STOREYS[0].y0, STOREYS[0].y1], ash: 1.478, ashR: 0.315,
   legs: [0, 1, 2].map((i) => { const a = (i / 3) * Math.PI * 2; return [Math.sin(a) * 0.36, Math.cos(a) * 0.36]; }),
 });
@@ -106,14 +106,14 @@ function storey({ r, y0, y1, windows }, first) {
 // An ear: a broad flat plate rising out of the neck, leaning out and then standing up, its top level with the lower
 // eave's underside and turned out a little; the key fret is cast on its faces.
 function ear(side) {
-  const line = [[0.33, 1.16], [0.46, 1.24], [0.54, 1.34], [0.575, 1.46], [0.585, 1.6], [0.59, 1.72], [0.62, 1.8]], half = 0.06;
+  const line = [[0.34, 1.17], [0.45, 1.24], [0.53, 1.33], [0.565, 1.45], [0.575, 1.58], [0.58, 1.67], [0.62, 1.725], [0.7, 1.74]], half = 0.115;   // as tall as the neck and the lower storey, its outer edge a hand's breadth past the belly
   const left = [], right = [];
   line.forEach(([x, y], i) => {
     const [px, py] = line[Math.max(0, i - 1)], [nx, ny] = line[Math.min(line.length - 1, i + 1)], tx = nx - px, ty = ny - py, l = Math.hypot(tx, ty);
     left.push(new THREE.Vector2(x - (ty / l) * half, y + (tx / l) * half)); right.push(new THREE.Vector2(x + (ty / l) * half, y - (tx / l) * half));
   });
   const shape = new THREE.Shape([...left, ...right.reverse()]);
-  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 1, curveSegments: 4 }).translate(0, 0, -0.025);
+  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 1, curveSegments: 4 }).translate(0, 0, -0.03);
   if (side < 0) {   // mirrored, so every face is turned back the right way round
     g.scale(-1, 1, 1);
     for (const a of Object.values(g.attributes)) for (let i = 0; i < a.count; i += 3) for (let c = 0; c < a.itemSize; c++) { const j = (i + 1) * a.itemSize + c, k = (i + 2) * a.itemSize + c, t = a.array[j]; a.array[j] = a.array[k]; a.array[k] = t; }
@@ -124,7 +124,7 @@ function ear(side) {
   for (let i = 0; i < uv.count; i++) {
     if (Math.abs(n.getZ(i)) < 0.9) { uv.setXY(i, -1, -1); continue; }
     const x = Math.abs(p.getX(i)), y = p.getY(i);
-    uv.setXY(i, (3 + Math.min(1, Math.max(0, (x - 0.26) / 0.42))) / COLS, Math.min(1, Math.max(0, (y - 1.08) / 0.8)));
+    uv.setXY(i, (3 + Math.min(1, Math.max(0, (x - 0.26) / 0.58))) / COLS, Math.min(1, Math.max(0, (y - 1.04) / 0.84)));
   }
   return g;
 }
@@ -224,7 +224,7 @@ export function censerMaterial(procMat, tex, at = new THREE.Vector3()) {
         col*=(1.-.4*under)*(1.-.35*among)*mix(.72,1.,smoothstep(.45,.8,lp.y));
         float rim=smoothstep(.57,.6,lr)*smoothstep(1.86,1.88,lp.y)*(1.-step(1.95,lp.y))+smoothstep(.5,.53,lr)*smoothstep(2.33,2.35,lp.y)*(1.-step(2.4,lp.y));
         col=mix(col,col*1.5+vec3(.03,.012,0.),rim*.7);
-        if(kind>=0.){ float g=texture2D(tCast,vUv2).r, e=fwidth(g); col=mix(col*.8,col*1.35+vec3(.04,.02,.01),g); bump_+=g*.004; rough_=mix(rough_,.55,g*(1.-e)); }
+        if(kind>=0.){ float g=texture2D(tCast,vUv2).r, e=fwidth(g); col=mix(col*.7,col*1.9+vec3(.07,.035,.012),g); bump_+=g*.004; rough_=mix(rough_,.55,g*(1.-e)); }
         float wf=wet*(.55+.45*smoothstep(-.4,.6,vWN.y)); col*=1.-.42*wf; rough_=mix(rough_,.22,wf*.85);
         // the inside of the lip and the posts round the ash, lit from below by what burns
         float near=smoothstep(.5,.3,lr)*smoothstep(1.84,1.52,lp.y)*smoothstep(1.4,1.5,lp.y);
@@ -268,10 +268,25 @@ export function censerMaterial(procMat, tex, at = new THREE.Vector3()) {
 const BLANK = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
 BLANK.needsUpdate = true;
 
+// How far a geometry reaches from its axis in each 5 cm band of height: every face is gone over in points two
+// centimetres apart, each counted in its own band, so that a tall face with no corner in a band still fills it.
+export function reachBands(geo, band = 0.05, top = 3.2) {
+  const p = geo.attributes.position, ix = geo.index, out = new Float32Array(Math.ceil(top / band)), n = ix ? ix.count : p.count, v = [0, 0, 0].map(() => [0, 0, 0]);
+  for (let t = 0; t < n; t += 3) {
+    for (let k = 0; k < 3; k++) { const i = ix ? ix.getX(t + k) : t + k; v[k][0] = p.getX(i); v[k][1] = p.getY(i); v[k][2] = p.getZ(i); }
+    const edge = Math.max(Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1], v[0][2] - v[1][2]), Math.hypot(v[1][0] - v[2][0], v[1][1] - v[2][1], v[1][2] - v[2][2]), Math.hypot(v[2][0] - v[0][0], v[2][1] - v[0][1], v[2][2] - v[0][2]));
+    const m = Math.max(1, Math.ceil(edge / 0.02));
+    for (let a = 0; a <= m; a++) for (let c = 0; c <= m - a; c++) {
+      const u = a / m, w = c / m, o = 1 - u - w, x = v[0][0] * o + v[1][0] * u + v[2][0] * w, y = v[0][1] * o + v[1][1] * u + v[2][1] * w, z = v[0][2] * o + v[1][2] * u + v[2][2] * w;
+      const b = Math.floor(y / band); if (b >= 0 && b < out.length) out[b] = Math.max(out[b], Math.hypot(x, z));
+    }
+  }
+  return out;
+}
 // How far the censer reaches from its axis at each height (5 cm bands), measured off its own geometry once.
 let REACH = null;
 export function censerReach(y) {
-  if (!REACH) { const p = censerGeometry().attributes.position; REACH = new Float32Array(Math.ceil(3.2 / 0.05)); for (let i = 0; i < p.count; i++) { const b = Math.floor(p.getY(i) / 0.05); REACH[b] = Math.max(REACH[b], Math.hypot(p.getX(i), p.getZ(i))); } }
+  if (!REACH) REACH = reachBands(censerGeometry());
   return y < 0 || y >= REACH.length * 0.05 ? 0 : REACH[Math.floor(y / 0.05)];
 }
 // The eye that follows him, kept out of the censer: if this frame's eye would stand inside it (coming in toward him
