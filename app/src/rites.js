@@ -386,10 +386,12 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       else { coin.visible = false; coinState.passedAt = performance.now(); coinState.y = S.y; cue("in"); }
     }, on))) return gone();
     if (coin.visible) { coin.visible = false; coinState.passedAt = performance.now(); cue("in"); }
-    // The hand comes back to the prayer, and the second bow.
-    return play(1.5, (u) => {
-      const k = ease(Math.min(1, u * 1.4)); R.w = Lh.w = 1 - k; act.bow = 0.55 * (1 - k) + 0.3 * Math.sin(Math.PI * ease(u));
-      homeward(u, 1.5);
+    // The hand comes back to the prayer (the first third), and the second bow (the middle), while the eye is still on its
+    // shot; the eye starts home a second before the end (`homeward`), as at the other observances.
+    return play(2.6, (u) => {
+      const kh = ease(Math.min(1, u / 0.35)), kb = Math.min(1, Math.max(0, (u - 0.3) / 0.4));
+      R.w = Lh.w = 1 - kh; act.bow = 0.55 * (1 - kh) + 0.32 * Math.sin(Math.PI * kb);
+      homeward(u, 2.6);
     }, on);
   }
 
