@@ -1,2 +1,3 @@
 docs/HANDOFF.md merge=union
 docs/t00/SOURCES.md merge=union
+app/shared/walk/*.bin binary
