@@ -5,14 +5,16 @@
 //     hierarchy (three-mesh-bvh) over it. What is drawn but is not there to stand on or be stopped by is left out
 //     (flames, mist, smoke, leaves cut out of cards: a ShaderMaterial, a transparent or alpha-tested one), except the
 //     ground (ground.js's paving, a ShaderMaterial, marked). A low thing of its own to walk round, not on, is a "post".
-//  2. Floors. A ray straight down each cell's centre meets every face; a face that lies flat enough (|n.y| > 0.5) with
+//     The land (backdrop.js's earth) is never a floor, and nothing under it is: the hillside and the grove outside the
+//     walls are not walked (the written plan has them solid), and the ground plane runs on under them.
+//  2. Floors. A ray straight down each cell's centre meets every face; a face no steeper than 60° (|n.y| ≥ BAKE.SLOPE) with
 //     CLEAR of air over it, to the next face above, is a floor that cell offers (a span), unless that next face looks
-//     up and the floor is inside a closed solid (the ground under a terrace's stone: sideways, east and west, the first
-//     faces are seen from behind). A cell may offer several: the
+//     up and the floor is inside a closed solid (the ground under a terrace's stone: sideways, every way, the first faces
+//     are seen from behind). A cell may offer several: the
 //     court, and a roof far over it.
 //  3. Which floor. From the seeds (where he comes in), a flood from span to span between neighbouring cells, the floor
 //     stepping no more than CLIMB: a roof is never reached, nor a table's top, nor the cap of a railing. Each cell takes
-//     the floor the flood reached first; one it never reached has none.
+//     the highest floor reached; one it never reached has none.
 //  4. What stands in his way, and how near. A cell is a border where something drawn stands in it from just over the
 //     lowest floor round it up to CLEAR over its own (a wall, a column, a cheek stone), where a neighbour's floor is
 //     more than CLIMB above its own (the foot of a ledge: the top of a ledge is not a border, so he may stand at a
@@ -31,10 +33,13 @@ import { NO_FLOOR } from "../../app/src/walkgrid.js";
 
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 1,      // raise when the method changes, so that every grid baked by the old one is stale
+  version: 8,      // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
+  LAND: 0.3,       // how far under the land's surface a floor may lie and still be stood on (a tread set into the slope)
+  SLOPE: 0.5,      // the steepest face that is floor: n.y of 60°, as the spike measured (45°, Recast's default, made the rounded
+                   // edge of the summit's mat a ring of no floor; the hillside is the land and is never floor anyway)
   HEAD: 0.13,      // his reach over the top of his outline (the hat), up to CLEAR
   OLD_STEP: 0.34,  // the most the written plan's floor may step between two cells he walks across (route.js's ROUTE.step)
 });
@@ -87,7 +92,7 @@ export function gather(roots, box, base = 0) {
     const m = Array.isArray(o.material) ? o.material[0] : o.material;
     if (!o.userData.ground && airy(m)) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-    const name = o.userData.ground ? "paving" : (postLike(o, base) ? "post:" : "") + (m.name || m.type);
+    const name = o.userData.ground ? "paving" : o.userData.land ? "land:" + (m.name || m.type) : (postLike(o, base) ? "post:" : "") + (m.name || m.type);
     if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); tb.copy(o.geometry.boundingBox).applyMatrix4(m4); if (tb.intersectsBox(grow)) take(o.geometry, m4.clone(), name); } return; }
     tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if (!tb.intersectsBox(grow)) return;
     take(o.geometry, o.matrixWorld, name);
@@ -141,10 +146,13 @@ const reachBins = (a, b) => TABLE[Math.min(BINS - 1, a) * BINS + Math.min(BINS -
 const MAXR = Math.max(...TABLE);
 const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
-// Is (x, y, z) inside a closed solid: the first face met going east, and the first going west, are both seen from behind.
+// Is (x, y, z) inside a closed solid: the first face met going east, west, north and south is in each case seen from behind.
 const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3());
 function inside(S, x, y, z) {
-  for (const dx of [1, -1]) { side.origin.set(x, y, z); side.direction.set(dx, 0, 0); const h = S.bvh.raycastFirst(side, THREE.DoubleSide); if (!h || h.face.normal.x * dx < 0.2) return false; }
+  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    side.origin.set(x, y, z); side.direction.set(dx, 0, dz); const h = S.bvh.raycastFirst(side, THREE.DoubleSide);
+    if (!h || h.face.normal.x * dx + h.face.normal.z * dz < 0.2) return false;
+  }
   return true;
 }
 
@@ -157,7 +165,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step) {
   const nx = Math.round((box.x1 - box.x0) / step), nz = Math.round((box.z1 - box.z0) / step), N = nx * nz;
   const cx = (i) => box.x0 + (i + 0.5) * step, cz = (j) => box.z0 + (j + 0.5) * step;
   const names = [...S.names, "ledge", "nofloor", "unreached"], LEDGE = S.names.length, NOFLOOR = LEDGE + 1, UNREACHED = LEDGE + 2;
-  const isPost = S.names.map((n) => n.startsWith("post:"));
+  const isPost = S.names.map((n) => n.startsWith("post:")), isLand = S.names.map((n) => n.startsWith("land:"));
   // 2. The floors each cell offers, highest first.
   const start = new Uint32Array(N + 1), ys = [];
   const ray = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3(0, -1, 0)), far = box.top - box.bottom;
@@ -167,37 +175,44 @@ export function bakeGrid(S, box, seeds, step = BAKE.step) {
     ray.origin.set(cx(i), box.top, cz(j));
     const hits = S.bvh.raycast(ray, THREE.DoubleSide, 0, far);
     if (hits.length > 1) hits.sort((a, b) => a.distance - b.distance);
-    let above = box.top, aboveUp = false;
+    let above = box.top, aboveUp = false, land = -Infinity;
     for (const h of hits) {
-      if (isPost[S.mat[(h.face.a / 3) | 0]]) continue;   // a cushion or a low table is walked round, not stood on: look through it
+      const id = S.mat[(h.face.a / 3) | 0];
+      if (isPost[id]) continue;   // a cushion or a low table is walked round, not stood on: look through it
+      // The land is not walked, and what lies more than LAND under it is underground (a tread may be set a little into
+      // the slope where a flight meets it).
+      if (isLand[id]) { if (land === -Infinity) land = h.point.y; continue; }
+      if (h.point.y < land - BAKE.LAND) break;
       const y = h.point.y, ny = h.face.normal.y;
       // (Under a face that looks up, the ray may be inside a closed solid, seeing the inside of its top: the ground under a
       // terrace's stone mass is no floor, however much room the stone leaves over it. Or only under a tile's lip that
       // overhangs a step: asked sideways, below.)
-      if (Math.abs(ny) > 0.5 && above - y >= CLEAR && !(aboveUp && inside(S, h.point.x, y + 0.1, h.point.z))) ys.push(y);
-      above = y; aboveUp = ny > 0.2;
+      if (Math.abs(ny) >= BAKE.SLOPE && above - y >= CLEAR && !(aboveUp && inside(S, h.point.x, y + 0.1, h.point.z))) ys.push(y);
+      aboveUp = Math.abs(above - y) < 0.002 ? aboveUp || ny > 0.2 : ny > 0.2; above = y;   // (faces that meet at one height are one: any of them looking up counts)
     }
   }
   start[N] = ys.length; const Y = Float32Array.from(ys);
   T.push(performance.now());
-  // 3. Which floor: a flood over spans from the seeds.
-  const h = new Float32Array(N).fill(NaN), queue = new Int32Array(N + 1); let qh = 0, qt = 0;
-  const take = (k, y) => { h[k] = y; queue[qt++] = k; };
+  // 3. Which floor: a flood from the seeds over the spans themselves, each its own node (two floors in one cell may both
+  // be reached), stepping no more than CLIMB between neighbouring cells; each cell takes the highest floor reached.
+  const S_N = Y.length, cellOfSpan = new Int32Array(S_N); for (let k = 0; k < N; k++) for (let s = start[k]; s < start[k + 1]; s++) cellOfSpan[s] = k;
+  const reached = new Uint8Array(S_N), queue = new Int32Array(Math.max(N, S_N) + 1); let qh = 0, qt = 0;
   for (const [sx, sz, sy] of seeds) {
     const i = Math.floor((sx - box.x0) / step), j = Math.floor((sz - box.z0) / step), k = j * nx + i;
-    if (i < 0 || j < 0 || i >= nx || j >= nz || start[k] === start[k + 1] || !Number.isNaN(h[k])) continue;
-    let best = Y[start[k]]; for (let s = start[k]; s < start[k + 1]; s++) if (Math.abs(Y[s] - (sy ?? -1e9)) < Math.abs(best - (sy ?? -1e9))) best = Y[s];
-    take(k, best);
+    if (i < 0 || j < 0 || i >= nx || j >= nz || start[k] === start[k + 1]) continue;
+    let best = start[k]; for (let s = start[k]; s < start[k + 1]; s++) if (Math.abs(Y[s] - (sy ?? -1e9)) < Math.abs(Y[best] - (sy ?? -1e9))) best = s;
+    if (!reached[best]) { reached[best] = 1; queue[qt++] = best; }
   }
   while (qh < qt) {
-    const k = queue[qh++], i = k % nx, j = (k - i) / nx, y = h[k];
+    const s0 = queue[qh++], k = cellOfSpan[s0], i = k % nx, j = (k - i) / nx, y = Y[s0];
     for (let d = 0; d < 4; d++) {
       const ii = i + N8[d][0], jj = j + N8[d][1]; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
-      const kk = jj * nx + ii; if (!Number.isNaN(h[kk])) continue;
-      let best = NaN; for (let s = start[kk]; s < start[kk + 1]; s++) if (Math.abs(Y[s] - y) <= CLIMB && !(Math.abs(Y[s] - y) >= Math.abs(best - y))) best = Y[s];
-      if (!Number.isNaN(best)) take(kk, best);
+      const kk = jj * nx + ii;
+      for (let s = start[kk]; s < start[kk + 1]; s++) if (!reached[s] && Math.abs(Y[s] - y) <= CLIMB) { reached[s] = 1; queue[qt++] = s; }
     }
   }
+  const h = new Float32Array(N).fill(NaN);
+  for (let s = 0; s < S_N; s++) if (reached[s]) { const k = cellOfSpan[s]; if (!(Y[s] <= h[k])) h[k] = Y[s]; }
   T.push(performance.now());
   // 4. Borders: what stands up in a cell from the lowest floor round it to CLEAR over its own; the foot of a ledge; the
   // edge of a cell that has no floor. Each border cell keeps the heights it takes up, as world heights.

@@ -1,19 +1,19 @@
 // The place as it is drawn, built in Node for baking the floor (#194): the plan's buildings (buildSite), the ground and
-// the terraces' paving (ground.js, the same meshes the page lays), the censer (props.js, as far as it builds without a
-// canvas), the trees (trees.js) and the rooms under the courts (interior.js). Not the far hills or the bamboo: what
-// the bamboo means to his walking (the grove is walked round, not through) is an intent to be marked where it is
-// drawn, in the migration's third step. Every material is only a name, so that what stops him can be told by it.
+// the terraces' paving (ground.js, the same meshes the page lays), the land the place sits in (backdrop.js's earth), the
+// censer (props.js, as far as it builds without a canvas), the trees (trees.js) and the rooms under the courts
+// (interior.js). Not the bamboo, nor the far hills' painted cards. Every material is only a name, so that what stops him can be told by it.
 //
 // And what the bake is asked for: the grids (where, from which seeds), the places checked for whether they can still be
 // walked to, and the parts of the place each change of walkable floor is counted against.
 import "../../tests/unit/dom-stub.mjs";
 import * as THREE from "three";
 
-const { buildSite, LEVELS, SITE, APPROACH } = await import("../../app/src/site.js");
+const { buildSite, LEVELS, SITE, APPROACH, terrain } = await import("../../app/src/site.js");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createTrees } = await import("../../app/src/trees.js");
 const { createProps } = await import("../../app/src/props.js");
 const { createGround } = await import("../../app/src/ground.js");
+const { createBackdrop } = await import("../../app/src/backdrop.js");
 
 export function namedMaterials() {
   const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
@@ -26,6 +26,10 @@ export function buildDrawn() {
   scene.add(site.root);
   const ground = new THREE.Scene(); createGround(ground, site.shade, site.censer, site.paving);
   ground.traverse((o) => { if (o.isMesh) o.userData.ground = true; }); scene.add(ground);
+  // The land (backdrop.js's earth: the hillside between the terraces, the slope under the grove): it is not walked, as the
+  // written plan has it (the hill and the grove are solid there), and what lies under it is underground.
+  const land = new THREE.Scene(); createBackdrop(land, M, SITE, [LEVELS[0], LEVELS[2]], terrain);
+  land.traverse((o) => { if (o.isMesh && !o.material.transparent && o.material.type !== "ShaderMaterial") o.userData.land = true; else if (o.isMesh) o.userData.walk = false; }); scene.add(land);
   try { createProps(scene, M, site.censer, (SITE.zN + SITE.zS) / 2); } catch { /* the censer is in; the mist and the shafts of light need a canvas, and are not there to stand on */ }
   createTrees(scene, M, site.trees, { a2c: false });
   const rooms = buildInteriors(M, site.halls);
