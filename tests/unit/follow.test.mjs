@@ -37,7 +37,7 @@ function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
       if (prev) {
         const dy = yaw - prev.yaw, ox = prev.c[0] - prev.x, oz = prev.c[2] - prev.z;
         const ex = x + ox * Math.cos(dy) - oz * Math.sin(dy), ez = z + ox * Math.sin(dy) + oz * Math.cos(dy);
-        out.push({ x, z, flat: Math.hypot(c[0] - ex, c[2] - ez), up: Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)), dist: follow.dist, forced: follow.forced });
+        out.push({ x, z, flat: Math.hypot(c[0] - ex, c[2] - ez), up: Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)), dist: follow.dist, forced: follow.forced, inside: walker.eyeShut(c[0], c[1], c[2], foot) === true });
       }
       prev = { c, x, z, yaw, eyeY };
     }
@@ -66,6 +66,10 @@ for (const [name, path] of Object.entries(routes)) {
     if (process.env.FOLLOW_REPORT) console.log(name, { frames: frames.length, flat: +f.flat.toFixed(3), up: +u.up.toFixed(3), forced: put.length, most: most && +most.forced.toFixed(2) });
     assert.ok(!most || most.forced <= FORCED, `the eye was put out of something by ${most?.forced.toFixed(2)} m at ${most && at(most)}`);
     assert.ok(put.length <= frames.length / 200, `the eye was put out of something in ${put.length} of ${frames.length} frames`);
+    // and it is never drawn from inside something: put out the same frame it went in, not the frame after
+    const inside = frames.filter((f) => f.inside);
+    if (process.env.FOLLOW_REPORT) console.log(name, { inside: inside.length });
+    assert.equal(inside.length, 0, `the eye was drawn inside something in ${inside.length} frames, first at ${inside[0] && at(inside[0])}`);
   });
 }
 test("a column passing between him and the eye is let pass; a wall coming between brings it in", () => {
@@ -93,7 +97,7 @@ test("a column passing between him and the eye is let pass; a wall coming betwee
 // and comes in before it gets there, or lets something narrow sweep past.
 test("swinging the view round where he stands does not throw the eye about", () => {
   const spots = []; for (let x = -12; x <= 12; x += 3) for (let z = -4; z <= 28; z += 3) if (!walker.blocked(x, z)) spots.push([x, z]);
-  let frames = 0, put = 0, far = 0, worst = 0;
+  let frames = 0, put = 0, far = 0, worst = 0, inside = 0;
   for (const [x, z] of spots) for (const rate of [3, -3]) {
     const follow = createFollow(), foot = walker.heightAt(x, z), eyeY = walker.eyeAt(x, z);
     let yaw = 0, side = 1.2;
@@ -101,12 +105,13 @@ test("swinging the view round where he stands does not throw the eye about", () 
       const turning = i >= 60; if (turning) yaw += rate * dt;
       const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
       const at = { x, z, foot, eyeY, yaw, pitch: 0.04, side, reach: 6.2 };
-      follow.step(dt, followEye(walker, at), turning ? followEye(walker, { ...at, yaw: yaw + rate * FOLLOW.ahead }) : null);
+      const c = follow.step(dt, followEye(walker, at), turning ? followEye(walker, { ...at, yaw: yaw + rate * FOLLOW.ahead }) : null);
       if (!turning) continue;
+      if (walker.eyeShut(c[0], c[1], c[2], foot) === true) inside++;
       frames++; if (follow.forced > FLAT) put++; if (follow.forced > FORCED) far++; worst = Math.max(worst, follow.forced);
     }
   }
-  if (process.env.FOLLOW_REPORT) console.log("turning", { spots: spots.length, frames, put, far, worst: +worst.toFixed(2) });
+  if (process.env.FOLLOW_REPORT) console.log("turning", { spots: spots.length, frames, put, far, worst: +worst.toFixed(2), inside });
   assert.ok(put <= frames / 100, `the eye was put out of something in ${put} of ${frames} frames`);
   assert.ok(far <= frames / 600, `the eye was thrown more than a metre in ${far} of ${frames} frames`);
 });
