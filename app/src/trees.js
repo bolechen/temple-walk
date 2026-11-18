@@ -139,7 +139,7 @@ export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
 // A branch begins inside its parent (`cap` keeps its first ring within the parent's wood) and its collar swells where it
 // comes out through the parent's surface, `flareAt` metres along it, tapering away outside over `flareLen` and dying
 // faster back inside, so the swelling lies on the parent's bark and not on a lip of its own (#200).
-function limb(pts, rad, r1, radial = 7, flare = 0, flareLen = 0.4, seg = 3, startY = null, flareAt = 0, cap = Infinity) {
+function limb(pts, rad, r1, radial = 7, flare = 0, flareLen = 0.4, seg = 3, startY = null, flareAt = 0, cap = Infinity, tipLen = 1.5) {
   if (typeof rad === "number") { const r0 = rad; rad = (t) => r0 + (r1 - r0) * t; }
   const curve = new THREE.CatmullRomCurve3(pts), len = curve.getLength(), pos = [], nor = [], uv = [], idx = [];
   // the rings crowd towards the start where it swells, so that a collar is round and not faceted
@@ -163,8 +163,9 @@ function limb(pts, rad, r1, radial = 7, flare = 0, flareLen = 0.4, seg = 3, star
     for (let k = 0; k <= radial; k++) { const a = (k / radial) * 6.283, cx = Math.cos(a), sx = Math.sin(a); nor.push(Nn.x * cx + B.x * sx, Nn.y * cx + B.y * sx, Nn.z * cx + B.z * sx); pos.push(P.x + (Nn.x * cx + B.x * sx) * r, P.y + (Nn.y * cx + B.y * sx) * r, P.z + (Nn.z * cx + B.z * sx) * r); uv.push(k / radial, t); }
   }
   for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }   // (wound to face outward: from outside each face is a front face, as the foot's are)
-  // the tip: a short point beyond the last ring, so no limb ends as an open pipe
-  const tip = pos.length / 3; curve.getTangent(1, T); curve.getPoint(1, P).addScaledVector(T, rad(1) * 1.5); pos.push(P.x, P.y, P.z); nor.push(T.x, T.y, T.z); uv.push(0.5, 1);
+  // the tip: a short point beyond the last ring, so no limb ends as an open pipe (on a limb that forks, a low dome
+  // hidden inside the collars of the limbs that leave it, not a point standing up between them)
+  const tip = pos.length / 3; curve.getTangent(1, T); curve.getPoint(1, P).addScaledVector(T, rad(1) * tipLen); pos.push(P.x, P.y, P.z); nor.push(T.x, T.y, T.z); uv.push(0.5, 1);
   for (let k = 0; k < radial; k++) { const a = n * (radial + 1) + k; idx.push(a, a + 1, tip); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return { geo: g, curve, rad };
@@ -291,14 +292,14 @@ export function createTrees(scene, M, spots, opts = {}) {
       const cv = new THREE.CatmullRomCurve3(pts), Q = new THREE.Vector3(), O = new THREE.Vector3(), len = cv.getLength(); let te = 1;
       for (let i = 1; i <= 80; i++) {
         cv.getPoint(i / 80, Q); O.subVectors(Q, parent.P); const al = O.dot(parent.T), rr = O.addScaledVector(parent.T, -al).length();
-        const inside = parent.end && al > 0 ? al < 1.5 * parent.R && rr < parent.R * (1 - al / (1.5 * parent.R)) : rr < parent.R;
+        const inside = parent.end && al > 0 ? al < 0.4 * parent.R && rr < parent.R * (1 - al / (0.4 * parent.R)) : rr < parent.R;
         if (!inside) { te = i / 80; break; }
       }
       flareAt = Math.max(0.005, te * len);
     }
-    // a branch out of a fork at its parent's end swells less where it comes out (more would read as a knot), one out of
+    // a branch out of a fork at its parent's end swells enough to fill the crotch over the parent's low dome, one out of
     // its parent's side into a full collar; a trunk on a foot starts at the foot's top ring
-    const l = limb(pts, rad, 0, L.radial, parent ? (parent.end ? 0.35 : 0.3) : info.flare || 0, parent ? 0.1 : 0.4, L.seg, parent ? null : info.startY ?? null, flareAt, cap); wood.push(l.geo); info.tris += l.geo.index.count / 3; /** @type {any} */ (l.curve).geo = l.geo;   // (the tests read a trunk's own rings from it)
+    const l = limb(pts, rad, 0, L.radial, parent ? (parent.end ? 0.35 : 0.3) : info.flare || 0, parent ? 0.1 : 0.4, L.seg, parent ? null : info.startY ?? null, flareAt, cap, L.end ? 0.4 : 1.5); wood.push(l.geo); info.tris += l.geo.index.count / 3; /** @type {any} */ (l.curve).geo = l.geo;   // (the tests read a trunk's own rings from it)
     let first = null;
     if (parent) {   // its first ring, measured against the parent, for the tests
       const P = l.geo.attributes.position, O = new THREE.Vector3(); first = { R: parent.R, radial: 0, along: -Infinity, end: parent.end, exit: +flareAt.toFixed(3) };
