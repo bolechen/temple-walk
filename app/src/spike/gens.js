@@ -87,10 +87,10 @@ function threeTree(kind, h, seed, r0) {
     const aT = a0 + ((n - 1) / n) * 6.283, dT = V(Math.cos(aT), 0, Math.sin(aT)), sT = V(-dT.z, 0, dT.x), thT = ((44 + rnd() * 10) * Math.PI) / 180, reachT = h * 0.22;
     const lead = bendOut(V(0, yTop, 0), dT, sT, reachT, thT, aT), tpts = [V(0, -0.15, 0), V(0, 0.6, 0), V(0, (starts[0] + yTop) / 2, 0), ...lead];
     const rTop = trunkR(yTop) / (1 + 0.6 * Math.exp(-yTop / 0.22)), tSplit = 3 / (tpts.length - 1);
-    const radT = (t, P) => (t <= tSplit ? trunkR(P.y) : rTop * (1 - 0.4 * ((t - tSplit) / (1 - tSplit))));
+    const radT = (t, P) => (t <= tSplit ? trunkR(P.y) : rTop * (1 - 0.5 * ((t - tSplit) / (1 - tSplit))));   // (the last limb thins to half as it goes)
     out.wood.push(tube(tpts, radT, 10)); out.trunks.push({ x: 0, z: 0, r: trunkR(0) });
     limbs.push({ ratio: null, fork: null, angle: (thT * 180) / Math.PI, start: yTop, end: lead[4].y, reach: reachT, leader: true });
-    crowns.push({ curve: new THREE.CatmullRomCurve3(lead), rad: (t) => rTop * (1 - 0.4 * t), reach: reachT, side: sT, i: n - 1 });
+    crowns.push({ curve: new THREE.CatmullRomCurve3(lead), rad: (t) => rTop * (1 - 0.5 * t), reach: reachT, side: sT, i: n - 1 });
     // the finer wood, grown by the generator on from each limb's end and out from a point along it
     for (const c of crowns) {
       const grow2 = (at, d, len, r) => one({ seed: seed + c.i * 31 + Math.round(len * 100), limb: true, levels: 4, children: [3, 3, 2], branchAngle: [30, 36, 42], angleVariance: 12, lengthRatio: [0.55, 0.55, 0.5], childRadius: [0.577, 0.577, 0.707],
