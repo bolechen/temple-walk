@@ -80,7 +80,7 @@ const measure = () => {
     if (!shown(el) || (top && !top.contains(el)) || !el.textContent.trim()) continue;
     const gs = glyphs(el), cs = getComputedStyle(el), room = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); lines(gs, false);
     const text = gs.map((g) => g.c).join(""), sep = /[\s\u3000]+·[\s\u3000]+/g; let from = 0, m;
-    const check = (a, b) => { const ph = gs.slice(a, b).filter((g) => !g.space); if (ph.length > 1 && ph[0].line !== ph[ph.length - 1].line && ph.reduce((w, g) => w + g.r.width, 0) < room) wrapped.push(`${el.id || el.className} phrase "${text.slice(a, b).trim().slice(0, 14)}" broken though it fits on a line`); };
+    const check = (a, b) => { const ph = gs.slice(a, b).filter((g) => !g.space); if (ph.length > 1 && ph[0].line !== ph[ph.length - 1].line && ph.reduce((w, g) => w + g.r.width, 0) + (parseFloat(cs.letterSpacing) || 0) * ph.length < room) wrapped.push(`${el.id || el.className} phrase "${text.slice(a, b).trim().slice(0, 14)}" broken though it fits on a line`); };
     while ((m = sep.exec(text))) { check(from, m.index); from = m.index + m[0].length; } check(from, text.length);
   }
   // Two controls on the picture lying on each other: a thumb cannot tell which it presses.
