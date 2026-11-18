@@ -1,10 +1,16 @@
 # #217 殿前铁香炉：证据
 
+## `pr1-ears.jpg`（PR 一：照主创的第三条意见改耳）
+
+![改耳前后](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/6fa8293194cc8a8f753819b99763819ecd47d89c/t00/censer-217/pr1-ears.jpg)
+
+只改了耳：耳面宽约 0.23 米，朝前；外缘比腹最宽处宽出约一掌；从颈根斜出再上翻，顶到下层檐下；耳面回纹的明暗对比加大。上排是改耳前（`9dcb526`），下排是改耳后。仓库里只留这一张，前一张拼图在数据集里（见下）。
+
 ## `pr1-form-v2.jpg`（PR 一：形制，照主创的意见改过之后）
 
 ![PR 一形制对照](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/cb07d9cd540f83ce222d706eea556bd0e015d347/t00/censer-217/pr1-form-v2.jpg)
 
-仓库里只留这一张拼图（不到 1 MB）；同一张也传到了数据集，地址和 SHA-256 见 `MANIFEST.json`。参照照片不进仓库，也不进拼图。
+这张现在只在数据集里（地址和 SHA-256 见 `MANIFEST.json`），仓库里只留最新的一张拼图。参照照片不进仓库，也不进拼图。
 
 - **左栏**：照片里看得到的，和看不到时按什么推的。
 - **第一行**：改后（PR 一 `dc48989`）的正面、侧面、俯视。
