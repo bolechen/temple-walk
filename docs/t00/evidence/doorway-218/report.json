@@ -1,0 +1,757 @@
+{
+ "issue": 218,
+ "light": {
+  "what": "main hall, 4 m before the door, first person, 480x300, software rendering (tools/doorway-views.cjs main --moods --dists=4 --angles=0 --size=480x300); door/floor = mean light (linear) of the open door over the stone of the steps and platform edge before it in the same frame (door rect 165,4-315,128; floor 100,240-380,296). Acceptance 4 by day: <= 0.6",
+  "ratios": {
+   "spring-dawn": {
+    "after": 1.45,
+    "before": 0.95
+   },
+   "spring-day": {
+    "after": 0.09,
+    "before": 0.09
+   },
+   "spring-dusk": {
+    "after": 1.5,
+    "before": 1.08
+   },
+   "spring-night": {
+    "after": 2.17,
+    "before": 2.0
+   },
+   "summer-dawn": {
+    "after": 1.58,
+    "before": 0.88
+   },
+   "summer-day": {
+    "after": 0.17,
+    "before": 0.15
+   },
+   "summer-dusk": {
+    "after": 2.9,
+    "before": 1.72
+   },
+   "summer-night": {
+    "after": 3.12,
+    "before": 2.79
+   },
+   "autumn-dawn": {
+    "after": 1.37,
+    "before": 0.95
+   },
+   "autumn-day": {
+    "after": 0.08,
+    "before": 0.08
+   },
+   "autumn-dusk": {
+    "after": 1.08,
+    "before": 0.91
+   },
+   "autumn-night": {
+    "after": 2.16,
+    "before": 1.99
+   },
+   "winter-dawn": {
+    "after": 0.59,
+    "before": 0.34
+   },
+   "winter-day": {
+    "after": 0.07,
+    "before": 0.06
+   },
+   "winter-dusk": {
+    "after": 0.98,
+    "before": 0.56
+   },
+   "winter-night": {
+    "after": 0.97,
+    "before": 0.89
+   }
+  }
+ },
+ "coldStart": {
+  "what": "node tools/doorway-cost.cjs 3 at c5ec834, software rendering, first court, q=high; readyMs from goto to first ready frame; heap is noisy (GC)",
+  "rows": [
+   {
+    "doorways": false,
+    "readyMs": 37394,
+    "heapMB": 256.5,
+    "cubesMB": 0,
+    "taken": [],
+    "worstFaceMs": null
+   },
+   {
+    "doorways": true,
+    "readyMs": 39922,
+    "heapMB": 124.6,
+    "cubesMB": 16.75,
+    "taken": [
+     "chan",
+     "tea",
+     "main",
+     "library"
+    ],
+    "worstFaceMs": 2279.8
+   },
+   {
+    "doorways": false,
+    "readyMs": 41787,
+    "heapMB": 361.6,
+    "cubesMB": 0,
+    "taken": [],
+    "worstFaceMs": null
+   },
+   {
+    "doorways": true,
+    "readyMs": 39450,
+    "heapMB": 123.8,
+    "cubesMB": 16.75,
+    "taken": [
+     "chan",
+     "tea",
+     "main",
+     "library"
+    ],
+    "worstFaceMs": 2405.7
+   },
+   {
+    "doorways": false,
+    "readyMs": 43069,
+    "heapMB": 118.6,
+    "cubesMB": 0,
+    "taken": [],
+    "worstFaceMs": null
+   },
+   {
+    "doorways": true,
+    "readyMs": 40189,
+    "heapMB": 124.4,
+    "cubesMB": 16.75,
+    "taken": [
+     "chan",
+     "tea",
+     "main",
+     "library"
+    ],
+    "worstFaceMs": 2304.8
+   }
+  ]
+ },
+ "t4": [
+  {
+   "run": "20261118-153942",
+   "commit": "05f010187734d94eb9b8b95afaf11b5147439be5",
+   "started": "2026-11-18T15:39:58.021Z",
+   "finished": "2026-11-18T15:42:10.992Z",
+   "bench": [
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 41.1,
+     "cost": 12.57,
+     "tris": 1978872,
+     "calls": 390
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 8,
+     "cost": 15.01,
+     "tris": 1990592,
+     "calls": 410,
+     "doors": {
+      "mb": 16.75,
+      "worstFaceMs": 2955.3,
+      "lastFacesMs": null
+     }
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 97,
+     "cost": 5.92,
+     "tris": 891481,
+     "calls": 194
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 88.2,
+     "cost": 7.67,
+     "tris": 891321,
+     "calls": 192,
+     "doors": {
+      "mb": 3.14,
+      "worstFaceMs": 340.3,
+      "lastFacesMs": null
+     }
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": null,
+     "doorsync": 1,
+     "fps": 40.2,
+     "cost": 13.6,
+     "tris": 1978552,
+     "calls": 386,
+     "doors": {
+      "mb": 16.75,
+      "worstFaceMs": 208.8,
+      "lastFacesMs": null
+     }
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": null,
+     "doorsync": 1,
+     "fps": 91.5,
+     "cost": 7.19,
+     "tris": 891321,
+     "calls": 192,
+     "doors": {
+      "mb": 3.14,
+      "worstFaceMs": 151.2,
+      "lastFacesMs": null
+     }
+    }
+   ]
+  },
+  {
+   "run": "20261118-155234",
+   "commit": "5944ac6174f9b3609001ad83cd3f322225759ee0",
+   "started": "2026-11-18T15:52:51.244Z",
+   "finished": "2026-11-18T15:55:37.854Z",
+   "bench": [
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": null,
+     "doorsync": 1,
+     "fps": 16.3,
+     "cost": 13.68,
+     "tris": 1978936,
+     "calls": 390,
+     "doors": {
+      "mb": 16.75,
+      "worstFaceMs": 4580.2,
+      "lastFacesMs": [
+       125.9,
+       2.9,
+       1.3,
+       1.3,
+       1.2,
+       1.8,
+       1.2,
+       1,
+       0.9,
+       1.2,
+       1.1,
+       1.3,
+       1234.6,
+       21.3,
+       1.9,
+       2,
+       1.9,
+       2.4,
+       1.2,
+       1,
+       0.9,
+       0.8,
+       0.8,
+       0.9
+      ]
+     }
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 39.2,
+     "cost": 15.14,
+     "tris": 1979256,
+     "calls": 394
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 40.3,
+     "cost": 12.93,
+     "tris": 1978936,
+     "calls": 390,
+     "doors": {
+      "mb": 16.75,
+      "worstFaceMs": 242.6,
+      "lastFacesMs": [
+       15.5,
+       2.2,
+       1.4,
+       1.3,
+       1.3,
+       2.2,
+       1.9,
+       1.5,
+       1.3,
+       1.1,
+       1.1,
+       1.2,
+       84.3,
+       10.1,
+       2,
+       2.1,
+       1.7,
+       2.3,
+       1.7,
+       1.5,
+       1.2,
+       1.2,
+       1.1,
+       1.1
+      ]
+     }
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": null,
+     "doorsync": 1,
+     "fps": 70.5,
+     "cost": 6.41,
+     "tris": 891321,
+     "calls": 192,
+     "doors": {
+      "mb": 3.14,
+      "worstFaceMs": 3815.5,
+      "lastFacesMs": [
+       3815.5,
+       2.3,
+       1.4,
+       1.2,
+       1.4,
+       1.6,
+       1.3,
+       0.9,
+       0.9,
+       0.8,
+       1.1,
+       0.8,
+       106.1,
+       2,
+       1.2,
+       1.3,
+       1.2,
+       1.9,
+       1.7,
+       1,
+       0.7,
+       0.7,
+       1,
+       0.9
+      ]
+     }
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 88,
+     "cost": 5.84,
+     "tris": 891673,
+     "calls": 196
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 87.9,
+     "cost": 6.4,
+     "tris": 891513,
+     "calls": 194,
+     "doors": {
+      "mb": 3.14,
+      "worstFaceMs": 165.2,
+      "lastFacesMs": [
+       165.2,
+       2.6,
+       1.5,
+       1.2,
+       1.4,
+       1.5,
+       1.2,
+       1.1,
+       0.8,
+       0.8,
+       0.7,
+       0.7,
+       14.7,
+       1.9,
+       1.2,
+       1.2,
+       1.2,
+       1.7,
+       1.1,
+       0.7,
+       0.7,
+       0.5,
+       0.6,
+       0.9
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "run": "20261118-155719",
+   "commit": "4ec6de6f73b7bd88fa72f913f2cdf16ef8b9c27f",
+   "started": "2026-11-18T15:57:35.719Z",
+   "finished": "2026-11-18T16:01:03.781Z",
+   "bench": [
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 93.8,
+     "cost": 6.54,
+     "tris": 891673,
+     "calls": 196
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 70.1,
+     "cost": 7.03,
+     "tris": 891513,
+     "calls": 194,
+     "doors": {
+      "mb": 3.14,
+      "worstFaceMs": 4210.7,
+      "lastFacesMs": [
+       4210.7,
+       3.6,
+       2,
+       1.7,
+       1.2,
+       1.5,
+       1.4,
+       1,
+       0.8,
+       0.8,
+       1,
+       0.9,
+       107.7,
+       2.5,
+       1.4,
+       1.4,
+       1.3,
+       1.8,
+       1.3,
+       1,
+       0.7,
+       0.7,
+       0.8,
+       1.3
+      ]
+     }
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 89.5,
+     "cost": 6.1,
+     "tris": 891673,
+     "calls": 196
+    },
+    {
+     "q": "low",
+     "size": [
+      390,
+      844
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 90.8,
+     "cost": 6.67,
+     "tris": 891513,
+     "calls": 194,
+     "doors": {
+      "mb": 3.14,
+      "worstFaceMs": 276.1,
+      "lastFacesMs": [
+       276.1,
+       2.6,
+       1.3,
+       1.6,
+       1.5,
+       1.1,
+       1.2,
+       0.8,
+       0.8,
+       0.7,
+       1.1,
+       0.8,
+       14.9,
+       2.5,
+       1.6,
+       1.5,
+       1.5,
+       2.4,
+       1.5,
+       1.2,
+       1,
+       0.9,
+       0.8,
+       1
+      ]
+     },
+     "afterMood": {
+      "steadyMax": 10.5,
+      "changeMax": 163.8,
+      "first": [
+       13.2,
+       163.8,
+       3.1,
+       14.2,
+       13.1,
+       10.7,
+       10.7,
+       10.4,
+       10.8,
+       10.2,
+       10,
+       10.4,
+       9.8,
+       10,
+       10.4,
+       8.9
+      ]
+     }
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 40.4,
+     "cost": 13.64,
+     "tris": 1979256,
+     "calls": 394,
+     "afterMood": {
+      "steadyMax": 26.9,
+      "changeMax": 160.8,
+      "first": [
+       26.4,
+       160.8,
+       30.1,
+       23.9,
+       25.1,
+       24.3,
+       24.5,
+       23.7,
+       21.8,
+       26.6,
+       26.3,
+       26.4,
+       25.1,
+       26,
+       25.5,
+       25.6
+      ]
+     }
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 9.4,
+     "cost": 15,
+     "tris": 1978552,
+     "calls": 386,
+     "doors": {
+      "mb": 16.75,
+      "worstFaceMs": 4501.1,
+      "lastFacesMs": [
+       177.5,
+       3.1,
+       1.8,
+       1.8,
+       1.8,
+       2.6,
+       1.6,
+       1.3,
+       1.1,
+       1.1,
+       1.1,
+       1.4,
+       1519.4,
+       20.9,
+       2.2,
+       1.2,
+       1.3,
+       1.6,
+       1.3,
+       1.1,
+       1.1,
+       1.2,
+       1.1,
+       1.2
+      ]
+     },
+     "afterMood": {
+      "steadyMax": 26.2,
+      "changeMax": 61.6,
+      "first": [
+       25.1,
+       61.6,
+       21.7,
+       30.3,
+       30,
+       28.7,
+       27.4,
+       24,
+       25.5,
+       25.8,
+       23.4,
+       23.7,
+       23.6,
+       23.6,
+       25.2,
+       21.5
+      ]
+     }
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": "doorway",
+     "doorsync": null,
+     "fps": 40.8,
+     "cost": 15.05,
+     "tris": 1979256,
+     "calls": 394
+    },
+    {
+     "q": "high",
+     "size": [
+      1920,
+      1080
+     ],
+     "off": null,
+     "doorsync": null,
+     "fps": 41.1,
+     "cost": 12.47,
+     "tris": 1978936,
+     "calls": 390,
+     "doors": {
+      "mb": 16.75,
+      "worstFaceMs": 187.2,
+      "lastFacesMs": [
+       19.6,
+       2.1,
+       1.5,
+       1.2,
+       1.3,
+       1.6,
+       1.3,
+       0.9,
+       0.7,
+       0.8,
+       0.8,
+       0.9,
+       65.4,
+       7.2,
+       1.3,
+       1.3,
+       1.4,
+       1.5,
+       1.1,
+       0.9,
+       0.8,
+       0.7,
+       0.8,
+       0.8
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "crossing": {
+  "what": "tests/e2e/run.cjs doorway: the altar's horizontal place across the door, as a fraction of the picture's width",
+  "first": 0.0,
+  "third": 0.053
+ }
+}
