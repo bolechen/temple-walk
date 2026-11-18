@@ -177,10 +177,12 @@ function limb(pts, rad, r1, radial = 7, flare = 0, flareLen = 0.4, seg = 3, star
 // and how thick, at `h` above the ground: every ring is centred on it and never thinner than it, so that at `top`,
 // where the swelling begins, the foot's ring is the trunk's own and the tree is one piece. `R` is the trunk's number of
 // sides, so that the two rings meet corner to corner. The bark's grain runs on down it.
+// The spurs are broad lobes, not the points of a star, and low (#92: in winter, standing on the snow, the old ones read as a
+// star cut out of card with a bright edge of snow on each point).
 function foot(y, trunk, top, seed, R = 24) {
   const rings = 12, pos = [], nor = [], uv = [], idx = [], spurs = 5 + (seed % 2), turn = seed * 1.3;
   const at = (i, k) => { const t = i / rings, h = top * (1 - t) - 0.35 * t * t * 3, a = (k / R) * 6.283, swell = Math.max(0, Math.exp(-Math.max(0, h) / (top * 0.3)) - Math.exp(-1 / 0.3)) * (1 - t < 0.08 ? (1 - t) / 0.08 : 1);   // nothing at its top: it leaves the trunk without a collar
-    const spur = Math.pow(0.5 + 0.5 * Math.cos(a * spurs + turn + Math.sin(a * 2 + seed) * 0.5), 2.2), c = trunk(h), rr = c.r * (1 + 0.55 * swell + 1.25 * swell * swell * spur) + (h < 0 ? -h * 0.5 : 0);
+    const spur = Math.pow(0.5 + 0.5 * Math.cos(a * spurs + turn + Math.sin(a * 2 + seed) * 0.5), 1.0), c = trunk(h), rr = c.r * (1 + 0.55 * swell + 0.6 * swell * swell * spur) + (h < 0 ? -h * 0.5 : 0);
     return [c.x + Math.cos(a) * rr, y + h, c.z + Math.sin(a) * rr]; };
   for (let i = 0; i <= rings; i++) for (let k = 0; k <= R; k++) { const p = at(i, k), q = at(i, k + 0.25), e = i < rings ? 0.25 : -0.25, d0 = at(i + e, k), d = i < rings ? d0 : [2 * p[0] - d0[0], 2 * p[1] - d0[1], 2 * p[2] - d0[2]];   // the lowest ring looks back up the foot for its slope: a normal of no length would shade as not-a-number
     const ax = q[0] - p[0], ay = q[1] - p[1], az = q[2] - p[2], bx = d[0] - p[0], by = d[1] - p[1], bz = d[2] - p[2], nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, l = Math.hypot(nx, ny, nz) || 1;
@@ -191,7 +193,7 @@ function foot(y, trunk, top, seed, R = 24) {
       ox = ox * (1 - blend) + (wx / wl) * blend; oy = oy * (1 - blend) + (wy / wl) * blend; oz = oz * (1 - blend) + (wz / wl) * blend; const ol = Math.hypot(ox, oy, oz) || 1; ox /= ol; oy /= ol; oz /= ol; }
     else {   // lower down, leaned a little out from the trunk, so the flanks of a root-spur shade softly rather than turning edge-on
       const c = trunk(top * (1 - i / rings)); let rx = p[0] - c.x, rz = p[2] - c.z; const rl = Math.hypot(rx, rz) || 1; ox += (0.45 * rx) / rl; oz += (0.45 * rz) / rl; const ol = Math.hypot(ox, oy, oz) || 1; ox /= ol; oy /= ol; oz /= ol; }
-    pos.push(...p); nor.push(ox, oy, oz); uv.push(k / R, -i / rings * 0.5); }
+    pos.push(...p); nor.push(ox, oy, oz); uv.push(k / R, -1 - Math.max(0, p[1] - y)); }   // (the bark is grained from the world; its v says how far above the paving it is, below -1 so no limb is taken for it, for the snow drifted against it)
   for (let i = 0; i < rings; i++) for (let k = 0; k < R; k++) { const a = i * (R + 1) + k, b = a + R + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return g;
@@ -359,11 +361,21 @@ export function createTrees(scene, M, spots, opts = {}) {
         const from = t.rings[0].pos, to = t.rings[t.rings.length - 1].pos, d = to.clone().sub(from), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
         // however it hangs, the spray stops short of the ground under it
         const w0 = 0.95 + rnd() * 0.3, l = Math.min(d.length() * 1.12 + 0.3, (from.y - y - 0.45) / Math.max(0.2, Math.cos(droop) + 0.5 * w0 * Math.abs(Math.sin(droop)) * 0)), w = l * w0;
-        if (l < 0.5) continue;
+        if (l < (young ? 0.25 : 0.5)) continue;   // (a young tree's short upper boughs carry their small sprays too: #93)
         q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
         const loc = to.clone().sub(from).applyQuaternion(q.clone().invert()); branches.push({ h, inside: Math.max(0, Math.abs(loc.x) - w / 2, loc.y, -l - loc.y, Math.abs(loc.z) - 0.15) });
         card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), from, from.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);   // (hung from the bough itself, so the bough lies in it)
         if (t.level === 1 && !far0 && rnd() < 0.5) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const hang = from.clone().add(d.clone().multiplyScalar(0.36)), cw = Math.min(l * 0.75, (hang.y - y - 0.45) / 0.9); if (cw > 0.3) card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), hang, from.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
+      }
+      // A young tree is dense from its foot to its point, a narrow cone (#93: its generated boughs thin out up the leader,
+      // where they are short, and the upper half read as bare trunk under a hanging skirt). So up its upper half the leader
+      // is clothed in threes of sprays a sixth of a turn apart (so that two face any eye), every 35 cm, each as wide as the cone is there.
+      if (young && !far0) {
+        const top = y + h - 0.2, foot = y + h * 0.36;
+        for (let yy = y + h * 0.45; yy < top - 0.55; yy += 0.35) {
+          const r = 0.2 * h * Math.min(1, (top - yy) / (top - foot)) * 0.9, l = 0.75, a0 = rnd() * 3.14;
+          for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, a0 + k * 1.047, 0)); const at = V(x, yy + l * 0.45, z); card(cards.cedar, new THREE.PlaneGeometry(2 * r, l).translate(0, -l / 2, 0), at, at.clone().add(V(0, -l, 0)), 0.75 + 0.25 * rnd(), 0.4, 0.2); }
+        }
       }
       const tip = V(x, y + h - 0.2, z); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5 * Math.min(1, h / 18) + 0.4, 2.3 * Math.min(1, h / 18) + 0.5).translate(0, -0.6, 0), tip.clone().add(V(0, 0.9, 0)), tip.clone().add(V(0, -1, 0)), 0.95, 0.4, 0.5); }
     } else if (kind === "ginkgo") {
@@ -422,7 +434,11 @@ export function createTrees(scene, M, spots, opts = {}) {
     census.push({ kind, h, at: [x, z], tris, far: !!far0 });
   }
   scene.add(mesh(merge(wood), M.bark));
-  if (beds.length) { const soil = mesh(merge(beds), M.earth); soil.receiveShadow = true; scene.add(soil); }
+  // The beds the trees stand in. Under snow a bed is buried as the paving round it is, one blanket over both, so in
+  // winter it is not laid at all: drawn, it took a patchy snow of its own over its dark earth and showed as a hard-edged
+  // grey disc against the paving's snow (#92). It stays its own mesh, not merged with the rest, so that it can be put away.
+  let soil = null;
+  if (beds.length) { soil = mesh(merge(beds), M.earth); soil.receiveShadow = true; soil.userData.keep = true; soil.name = "tree-beds"; scene.add(soil); }
 
   const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
   const put = (kind, map, o) => {
@@ -432,13 +448,14 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs, cedars: cedarSkeletons,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons, beds: soil,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
         k.mesh.visible = !!c; if (!c) continue;
         k.mat.color.setRGB(...c); if (kind === "maple") k.mat.map = m.season === "spring" ? tex.blossom : tex.maple;
       }
+      if (soil) soil.visible = !(m.snow > 0.5);
       // Bare twigs show only when the leaves are down.
       if (crowns.twig) { crowns.twig.mesh.visible = m.season === "winter"; crowns.twig.mat.color.setRGB(0.2, 0.16, 0.13); }
     },
