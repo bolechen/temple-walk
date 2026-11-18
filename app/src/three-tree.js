@@ -125,7 +125,7 @@ for ( const key of Object.keys( TreeGenerator.defaults ) ) {
 function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 
 	const sections = Math.max( 3, Math.min( 24, Math.round( length / p.sectionLength ) ) ); // ring count tracks length
-	const radial = Math.max( 3, p.radialSegments - level );
+	const radial = Array.isArray( p.radialSegments ) ? Math.max( 3, p.radialSegments[ Math.min( level, p.radialSegments.length - 1 ) ] ) : Math.max( 3, p.radialSegments - level ); // (added here) or set per level
 	const step = length / sections;
 	const gnarl = p.gnarl[ Math.min( level, p.gnarl.length - 1 ) ];
 	const start = level === 0 ? p.trunkClear : p.childStart; // the trunk carries a clean bole below its crown
