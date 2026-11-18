@@ -13,6 +13,12 @@
    "bytes": 283312,
    "sha256": "933fcb62aaefc188ca4d33c90a0574ac91b2a6744d157a79ad2fe4923ca84fe4",
    "rev": "cb07d9cd540f83ce222d706eea556bd0e015d347"
+  },
+  {
+   "path": "pr2-moods16.jpg",
+   "bytes": 210091,
+   "sha256": "62ff3a0d91fc5c9c803a044b8c1b9c87c79cf3d025d19a2b304ae33fdf02a657",
+   "rev": "6fdc9d6a1e3c2a7116a4a3bc637ee071ea69b772"
   }
  ]
 }
