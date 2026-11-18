@@ -139,12 +139,12 @@ function limb(pts, r0, r1, radial = 7, flare = 0, startY = null) {
   let t0 = 0; if (startY !== null) { const want = Math.max(curve.getPoint(0).y, startY); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } t0 = lo; }
   for (let i = 0; i <= n; i++) {
     const t = t0 + (1 - t0) * (i / n); curve.getPoint(t, P); curve.getTangent(t, T);
-    if (startY !== null && i === 0) { Nn.set(1, 0, 0); B.set(0, 0, -1); }   // level, from +x, turning the way the foot's ring turns
+    if (startY !== null && i === 0) { Nn.set(0, 0, -1); B.set(-1, 0, 0); }   // level, and turned as the ring above it is turned (whose frame the upright tangent gives), so the first band does not twist; its corners still fall on the foot's, a quarter turn being a whole number of sides
     else { ref.set(Math.abs(T.y) > 0.9 ? 1 : 0, Math.abs(T.y) > 0.9 ? 0 : 1, 0); Nn.crossVectors(T, ref).normalize(); B.crossVectors(T, Nn); }
     const r = (r0 + (r1 - r0) * t) * (1 + flare * Math.exp(-(t * len) / 0.4) * (1 + 0.18 * Math.sin(i * 1.7)));   // spreading into roots where it meets the ground
     for (let k = 0; k <= radial; k++) { const a = (k / radial) * 6.283, cx = Math.cos(a), sx = Math.sin(a), ox = Nn.x * cx + B.x * sx, oy = Nn.y * cx + B.y * sx, oz = Nn.z * cx + B.z * sx, d = startY !== null && i === 0 ? ox * T.x + oy * T.y + oz * T.z : 0, nl = Math.hypot(ox - T.x * d, oy - T.y * d, oz - T.z * d) || 1; nor.push((ox - T.x * d) / nl, (oy - T.y * d) / nl, (oz - T.z * d) / nl); pos.push(P.x + (Nn.x * cx + B.x * sx) * r, P.y + (Nn.y * cx + B.y * sx) * r, P.z + (Nn.z * cx + B.z * sx) * r); uv.push(k / radial, t); }
   }
-  for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+  for (let i = 0; i < n; i++) for (let k = 0; k < radial; k++) { const a = i * (radial + 1) + k, b = a + radial + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }   // (wound to face outward: seen from outside each face is a front face, as the foot's are)
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return { geo: g, curve };
 }
