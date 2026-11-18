@@ -44,7 +44,7 @@ export function createGround(scene, shade, censer, paving) {
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -69,6 +69,22 @@ export function createGround(scene, shade, censer, paving) {
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
       uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
+      // Leaves and petals lie where the trees let them fall (fall.js's map, the same one the falling ones read): two layers of
+      // small leaves, each one to a cell of a rotated grid, each laid its own way, more of them at the foot of a wall or a
+      // platform (where the wind and the broom leave them) and few on the swept lane down the middle of a court.
+      uniform sampler2D tFallMap; uniform vec4 uFallBox; uniform float uLitter; uniform vec3 uLitterCh, uLitterCol[4];
+      // One layer: a leaf to a cell of a rotated grid, each its own size (a third of the length to full), its own turn and shape,
+      // some folded so that only half shows. Returns (colour pick, age, coverage, which tree).
+      vec4 litterLayer(vec2 p, float amt, float gk, float a0){
+        float c0=cos(a0), s0=sin(a0); vec2 r=mat2(c0,-s0,s0,c0)*p/.12+a0*9.; vec2 id=floor(r), f=fract(r)-.5;
+        float h=h21(id+a0), on=step(h,amt); vec2 jit=(vec2(h21(id+7.1),h21(id+13.3))-.5)*.25;
+        float ang=h21(id+3.7)*6.2832, ca=cos(ang), sa=sin(ang), big=h21(id+31.7), tree=step(h21(id+8.8),gk);
+        vec2 l=mat2(ca,-sa,sa,ca)*(f-jit)*.12;
+        float len=mix(.017,.05,big*big), wid=len*mix(.4,.62,h21(id+2.2))*mix(1.,1.5,tree);   // the ginkgo's is a broad fan
+        float d=length(l/vec2(len,wid)), fold=h21(id+44.4)<.35?step(-.1*len,l.y):1.;
+        float m=on*fold*smoothstep(1.,.7,d);
+        return vec4(h21(id+21.9),h21(id+5.5),m,tree);
+      }
       // The slope of the water where his steps have set it moving: each ring a short train of waves at its front,
       // weaker as it widens and dying away over its life.
       vec2 ripples(vec2 p, float y){
@@ -109,6 +125,28 @@ export function createGround(scene, shade, censer, paving) {
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; float dB=(lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.)?texture2D(tShade,lmUv).r*${SPAN}.-.5:2.5;
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
+        // Leaves and petals on the stone (autumn and spring; none under a roof or on the swept lane). They lie in drifts: where the
+        // trees drop them (the map, steeply: a few metres past the crown there are few), more at the foot of a wall or a platform
+        // and out of the wind, a little in the open; and they take the stone's own light and shadow like anything on it.
+        if(uLitter>.001){
+          vec2 fuv=(p-uFallBox.xy)*uFallBox.zw;
+          if(fuv.x>0.&&fuv.x<1.&&fuv.y>0.&&fuv.y<1.){
+            vec4 fm=texture2D(tFallMap,fuv); float src=pow(dot(fm.rgb,uLitterCh),5.);
+            if(src>.01){
+              float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
+              float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB);
+              float amt=1.3*src*uLitter*sweep*smoothstep(-.3,.1,dB)*mix(.015,2.4,clump)*(.4+1.6*foot);
+              if(amt>.02) for(int L=0;L<3;L++){
+                vec4 ll=litterLayer(p,amt*(L==0?1.:L==1?.8:.6),fm.a,float(L)*.9+.4);
+                if(ll.z>.01){
+                  float age=clamp(ll.y*.8+.4*smoothstep(.2,.8,fbm2(p*.6+5.)),0.,1.);   // those under the trees longest have gone brown
+                  vec3 lc=ll.w>.5?mix(uLitterCol[2],uLitterCol[3],age):mix(uLitterCol[0],uLitterCol[1],age); lc*=ll.w>.5?.55+.9*ll.x:.75+.5*ll.x;   // the ginkgo's yellow runs from deep to pale, leaf to leaf
+                  alb=mix(alb,lc*mix(1.,.7,smoothstep(.3,.58,low)),ll.z*.9);
+                }
+              }
+            }
+          }
+        }
         // Snow (snowfall.js does the same sums for his steps and the tests). Down the middle of every court a lane is swept
         // each morning: a dusting on its stone, grainy and clean-edged, snow packed in the joints, the swept snow banked
         // along both sides over the kerbs. Off the lane it lies deeper against walls and platforms and in long low waves
