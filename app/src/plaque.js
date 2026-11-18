@@ -122,15 +122,18 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
   if (hand && HANDS[hand] && typeof Image !== "undefined") { const im = new Image(); im.onload = () => { glyphs = im; draw(); }; im.src = asset(HANDS[hand]); }
 
   const cut = band || bare, mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: style === "gold" ? 0.25 : 0.08, envMapIntensity: 0.3, alphaTest: cut ? 0.5 : 0, transparent: false });
+  // Where each character lies on the face, as fractions of its width (u, from the left) and height (v, from the top), and half its
+  // size: for the tests, which look at every character from everywhere it may be seen (plaques.test.mjs).
+  const boxes = chars.map((_, i) => { const [cx, cy] = where(i); return { u: cx / W, v: cy / H, du: (cell * 0.36) / W, dv: (cell * 0.36) / H }; });
   if (!cut) {
     const a = n * 0.6 + 0.45, b = (a * short) / long, w = vertical ? b : a, h = vertical ? a : b;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.07), mat); m.castShadow = true; m.userData.height = h; return m;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.07), mat); m.castShadow = true; m.userData.height = h; m.userData.plaque = { text, w, h, z: 0.035, chars: boxes }; return m;
   }
   // A board with a shaped edge: the painted face, and behind it a dark plank the size of the panel for its thickness.
   const h = bare ? 0.9 : rows >= 4 ? 2.9 : rows === 3 ? 2.35 : 2.3, w = (h * W) / H, g = new THREE.Group();
   const face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); face.position.z = bare ? 0 : 0.04; face.castShadow = !bare; g.add(face);
   if (band) { const back = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, h * 0.84, 0.07), new THREE.MeshStandardMaterial({ color: 0x1c0f0b, roughness: 0.8 })); back.castShadow = true; g.add(back); }
-  g.userData.height = h; return g;
+  g.userData.height = h; g.userData.plaque = { text, w, h, z: 0.04, chars: boxes }; return g;
 }
 
 // The face of the screen wall, as it is at the real temple: no hanging board, but a panel of grey bricks laid on the
