@@ -112,7 +112,7 @@ export function buildSite(M) {
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
       // What is seen through its open door from outside: the dark box behind the leaves, and how the building stands (doorway.js).
-      const box = b.group.children.find((o) => o.userData.doorway); if (box) doorways[opts.hall.id] = { mesh: box, group: b.group, Z: b.frontZ, platH: b.platH };
+      const box = b.group.children.find((o) => o.userData.doorway); if (box) doorways[opts.hall.id] = { mesh: box, flames: b.group.children.filter((o) => o.userData.doorFlame), group: b.group, Z: b.frontZ, platH: b.platH };
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
       // He is inside as soon as he has stepped between the leaves up to the sill: his robe at the door, not through it.
       halls.push({ ...opts.hall, xs: [...opts.xs], zs: [...opts.zs], door: out(0, Z + DOOR.reach + 0.01), out: out(0, Math.min(Z + 0.66, b.zF - 0.4)), outYaw: Math.atan2(f[0], -f[1]),

@@ -43,11 +43,13 @@ function doorMaterial(U, steps) {
       varying vec3 vWP;
       float gap(vec3 ro, vec3 rd, float t){ vec3 q=ro+rd*t-uC; return length(q)-texture(tDist,q).r*${DIST.toFixed(1)}; }
       void main(){
-        vec3 ro=(uW2R*vec4(cameraPosition,1.)).xyz, rd=normalize((uW2R*vec4(vWP,1.)).xyz-ro), inv=1./rd;
+        vec3 ro=(uW2R*vec4(cameraPosition,1.)).xyz, wp=(uW2R*vec4(vWP,1.)).xyz, rd=normalize(wp-ro), inv=1./rd;
+        // Until the room is taken, the dark box as it always was: warmest low down round its lamps (materials.js's interior).
+        float d0=length(vec2(wp.x,(wp.y-1.05)*1.3));
+        vec3 c=mix(vec3(.052,.022,.0095),vec3(.0065,.0045,.003),smoothstep(.15,3.6,d0))*(.75+1.7*uLamp);
         vec3 a=(uMin-ro)*inv, b=(uMax-ro)*inv, lo=min(a,b), hi=max(a,b);
         float tin=max(max(max(lo.x,lo.y),lo.z),0.), tout=min(min(hi.x,hi.y),hi.z);
-        vec3 c=vec3(.006,.0045,.003);
-        if(uHas>.5 && tout>tin){
+        if(uHas>0. && tout>tin){
           float t=tout;
           #if STEPS > 0
             // Into the room from the door, a step at a time, until the line has passed behind what the door sees.
@@ -58,7 +60,7 @@ function doorMaterial(U, steps) {
               t0=t1; g0=g1;
             }
           #endif
-          c=texture(tCol,ro+rd*t-uC).rgb*mix(uGain.x,uGain.y,clamp(uLamp,0.,1.));
+          c=mix(c,texture(tCol,ro+rd*t-uC).rgb*mix(uGain.x,uGain.y,clamp(uLamp,0.,1.)),uHas);
         }
         gl_FragColor=vec4(c,1.);
         #include <fog_fragment>
@@ -77,53 +79,103 @@ function distMaterial() {
 
 // `site.doorways` (the dark box of each hall and how its building stands), `rooms` (buildInteriors), the scene and the
 // renderer. `size`: the colour cube's face in pixels; `steps`: see doorMaterial.
+//
+// Nothing is taken when the page opens (a phone's first load is long enough already). A hall is taken when the visitor
+// first comes within `NEAR` of its door, or sees it within `SEEN`: its figures are fetched (not the works on its walls),
+// then its room is drawn one face of one cube a frame, twelve frames in all, and the room fades in over the dark box
+// that stood there before. A change of season or hour takes again, the same way, only the halls already taken.
+export const NEAR = 40, SEEN = 90, FADE = 0.8;
 export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12 }) {
-  const halls = {}, dm = distMaterial();
-  let sun = null, hemi = null;
+  const halls = {}, dm = distMaterial(), queue = [], frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
+  let sun = null, hemi = null, ready = false, busy = null, worst = 0;
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
     const R = r.room, wx = (R.x1 - R.x0) / 2 + 0.3, zs = R.z1 + 0.3, zn = R.z0 - 0.3;
-    const col = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
-    const dist = new THREE.WebGLCubeRenderTarget(Math.max(64, size / 2), { type: THREE.HalfFloatType });
-    const cam = new THREE.CubeCamera(0.05, 80, col), dcam = new THREE.CubeCamera(0.05, 80, dist);
     const mat = doorMaterial(U, steps), u = mat.uniforms;
-    u.tCol.value = col.texture; u.tDist.value = dist.texture;
     u.uMin.value.set(-wx, 0, zn); u.uMax.value.set(wx, R.h + 0.45, zs); u.uC.value.set(0, EYE, zs - INSET);
-    const C = new THREE.Vector3(R.cx, R.y + EYE, zs - INSET);
     d.mesh.material = mat;
-    halls[h.id] = { hall: h, d, r, col, dist, cam, dcam, mat, C, zs, taken: 0 };
+    const o = { hall: h, d, r, mat, C: new THREE.Vector3(R.cx, R.y + EYE, zs - INSET), zs, door: new THREE.Vector3(), want: false, taken: 0, fade: 0, col: null, dist: null, cam: null, dcam: null };
+    place(o); d.mesh.geometry.computeBoundingSphere();
+    const [x, z] = h.door; o.door.set(x, d.group.position.y + d.platH + 1.5, z);
+    halls[h.id] = o;
   }
+  rooms.ready.then(() => { ready = true; });
   // From the world into the room's own frame (x across, y up from its floor, z toward its door): through the building's
   // inverse placement into its own space, then its floor down to the room's and its front wall onto the room's.
-  const place = (o) => {
+  function place(o) {
     o.d.group.updateMatrixWorld(true);
     const inv = new THREE.Matrix4().copy(o.d.group.matrixWorld).invert();
     o.mat.uniforms.uW2R.value.makeTranslation(0, -o.d.platH, o.zs - o.d.Z).multiply(inv);
+  }
+  // The cubes are made only for a hall that is taken.
+  const cubes = (o) => {
+    if (o.col) return;
+    o.col = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+    o.dist = new THREE.WebGLCubeRenderTarget(Math.max(64, size / 2), { type: THREE.HalfFloatType });
+    o.cam = new THREE.CubeCamera(0.05, 80, o.col); o.dcam = new THREE.CubeCamera(0.05, 80, o.dist);
+    o.cam.position.copy(o.C); o.dcam.position.copy(o.C); o.cam.updateMatrixWorld(); o.dcam.updateMatrixWorld();
+    if (o.cam.coordinateSystem !== renderer.coordinateSystem) { o.cam.coordinateSystem = o.dcam.coordinateSystem = renderer.coordinateSystem; o.cam.updateCoordinateSystem(); o.dcam.updateCoordinateSystem(); }
+    o.mat.uniforms.tCol.value = o.col.texture; o.mat.uniforms.tDist.value = o.dist.texture;
   };
-  // Draw one hall's room onto its cubes: only the rooms drawn, its own lamps lit, the sun out and the sky's light low, as
-  // on going in (yard.js's `dress`), and everything put back as it was.
-  const take = (id) => {
-    const o = halls[id]; if (!o) return false;
-    place(o);
+  // One face of one cube (0–5 colour, 6–11 distance), with only the rooms drawn, this room's lamps lit, the sun out and
+  // the sky's light low, as on going in (yard.js's `dress`); and everything put back as it was.
+  const face = (o, i) => {
     const seen = scene.children.map((c) => c.visible);
     for (const c of scene.children) c.visible = c.userData.part === "interior";
     const lit = o.r.lights.map((l) => l.visible); o.r.lights.forEach((l) => { l.visible = true; });
     const was = { sun: sun?.intensity, hemi: hemi?.intensity, lamp: U.uLamp.value, snow: U.uSnow.value, layer: U.uFogLayer?.value.x, fog: scene.fog };
     if (sun) sun.intensity = 0; if (hemi) hemi.intensity *= 0.3; U.uLamp.value = 1; U.uSnow.value = 0; if (U.uFogLayer) U.uFogLayer.value.x = 0;
-    const target = renderer.getRenderTarget(), xr = renderer.xr.enabled; renderer.xr.enabled = false;
+    const target = renderer.getRenderTarget(), cf = renderer.getActiveCubeFace(), ml = renderer.getActiveMipmapLevel(), xr = renderer.xr.enabled; renderer.xr.enabled = false;
     try {
-      o.cam.position.copy(o.C); o.cam.update(renderer, scene);
-      scene.fog = null; dm.uniforms.uC.value.copy(o.C); scene.overrideMaterial = dm; o.dcam.position.copy(o.C); o.dcam.update(renderer, scene);
+      const deep = i >= 6, k = i % 6, rt = deep ? o.dist : o.col, cam = (deep ? o.dcam : o.cam).children[k];
+      if (deep) { scene.fog = null; dm.uniforms.uC.value.copy(o.C); scene.overrideMaterial = dm; }
+      const mips = rt.texture.generateMipmaps; rt.texture.generateMipmaps = mips && k === 5;   // the mipmaps once all six faces are there
+      renderer.setRenderTarget(rt, k); renderer.render(scene, cam);
+      rt.texture.generateMipmaps = mips;
     } finally {
       scene.overrideMaterial = null; scene.fog = was.fog;
-      renderer.xr.enabled = xr; renderer.setRenderTarget(target);
+      renderer.setRenderTarget(target, cf, ml); renderer.xr.enabled = xr;
       if (sun) sun.intensity = was.sun; if (hemi) hemi.intensity = was.hemi; U.uLamp.value = was.lamp; U.uSnow.value = was.snow; if (U.uFogLayer) U.uFogLayer.value.x = was.layer;
-      o.r.lights.forEach((l, i) => { l.visible = lit[i]; });
-      scene.children.forEach((c, i) => { c.visible = seen[i]; });
+      o.r.lights.forEach((l, j) => { l.visible = lit[j]; });
+      scene.children.forEach((c, j) => { c.visible = seen[j]; });
     }
-    o.mat.uniforms.uHas.value = 1; o.taken++;
-    return true;
   };
-  return { halls, take, takeAll: () => Object.keys(halls).forEach(take), report: () => Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { taken: o.taken, size: o.col.width }])) };
+  const want = (o) => {
+    if (o.want) return; o.want = true;
+    o.r.stand().catch(() => {}).then(() => { if (!queue.includes(o)) queue.push(o); });
+  };
+  // Every frame from outside: who is near or seen, the next face of the hall being taken, and the fading in.
+  const tick = (camera, dt, eye) => {
+    if (camera) { camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)); }
+    for (const o of Object.values(halls)) {
+      if (!o.want) {
+        const far = eye.distanceTo(o.door);
+        if (far < NEAR || (camera && far < SEEN && frustum.intersectsSphere(sphere.copy(o.d.mesh.geometry.boundingSphere).applyMatrix4(o.d.mesh.matrixWorld)))) want(o);
+      }
+      if (o.taken && o.fade < 1) {
+        o.fade = Math.min(1, o.fade + dt / FADE); o.mat.uniforms.uHas.value = o.fade * o.fade * (3 - 2 * o.fade);
+        for (const f of o.d.flames) f.visible = o.fade < 0.5;   // the two points of lamp the dark box had give way to the room's own lamps
+      }
+    }
+    if (!ready) return;
+    if (!busy && queue.length) { queue.sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door)); busy = { o: queue.shift(), i: 0 }; cubes(busy.o); }
+    if (busy) {
+      const t0 = performance.now(); face(busy.o, busy.i++); worst = Math.max(worst, performance.now() - t0);
+      if (busy.i === 12) { busy.o.taken++; busy = null; }
+    }
+  };
+  // The hour or the season changed: the halls already taken are taken again, the room staying as it was meanwhile.
+  const retake = () => { for (const o of Object.values(halls)) if (o.taken && !queue.includes(o) && busy?.o !== o) queue.push(o); };
+  // Everything at once, for a tool that wants every doorway now (and the room shown without fading).
+  const takeAll = async () => {
+    await rooms.ready; await Promise.all(Object.values(halls).map((o) => o.r.stand().catch(() => {})));
+    for (const o of Object.values(halls)) { o.want = true; cubes(o); for (let i = 0; i < 12; i++) face(o, i); o.taken++; o.fade = 1; o.mat.uniforms.uHas.value = 1; for (const f of o.d.flames) f.visible = false; }
+    queue.length = 0; busy = null;
+  };
+  const bytes = () => Object.values(halls).reduce((n, o) => n + (o.col ? (o.col.width ** 2 * 6 * 8 * 4) / 3 + o.dist.width ** 2 * 6 * 8 : 0), 0);   // half floats, four to a texel; the colour's mipmaps a third more
+  // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
+  const seenAt = (id, p) => { const o = halls[id]; if (!o) return null; const R = o.r.room; return p.clone().sub(new THREE.Vector3(R.cx, R.y, 0)).applyMatrix4(m4.copy(o.mat.uniforms.uW2R.value).invert()); };
+  return { halls, tick, retake, takeAll, seenAt,
+    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1) }) };
 }

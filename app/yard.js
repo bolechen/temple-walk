@@ -649,6 +649,7 @@ function frame(now) {
   // approach where the eye is under it. A jump does not change which of these he is in.
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
+  if (doors && !inside) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js), before the mirror that shows them
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);
@@ -790,14 +791,15 @@ function lookOut(hall) {
 const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none" && !OFF.has("drift"); });
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
 const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
-// What is seen of each room from outside, through its door (doorway.js, #218): taken once the figures have come and the
-// figures beside them stood, and again when the hour changes the lamps.
-const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, size: quality.name === "low" ? 128 : 256, steps: quality.name === "low" ? 0 : 12 }) : null;
-let doorsSettled = !doors;
-if (doors) rooms.ready.then(() => Promise.all(Object.keys(doors.halls).map((id) => rooms.rooms[id].hang().catch(() => {})))).then(() => { doors.takeAll(); doorsSettled = true; });
-window.__doorways = () => doors && doors.report();
-window.__doorwaysSettled = () => doorsSettled;
-afterMood = () => { doors?.takeAll(); if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
+// What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
+// near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true)` takes them
+// all at once, for a picture.
+const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, size: quality.name === "low" ? 128 : 256, steps: quality.name === "low" ? 4 : 12 }) : null;
+// Where the altar of a hall stands in the picture (x and y from -1 to 1): from inside, the altar itself; from outside,
+// where its doorway shows it. Going in should not move it (the doorway scenario).
+window.__doorAltar = (id) => { const r = rooms?.rooms[id]; if (!r || !doors) return null; const a = r.altar.getWorldPosition(new THREE.Vector3()), p = inside ? a : doors.seenAt(id, a); camera.updateMatrixWorld(); const n = p.clone().project(camera); return { x: n.x, y: n.y, world: p.toArray() }; };
+window.__doorways = (all) => (!doors ? null : all ? doors.takeAll().then(() => doors.report()) : doors.report());
+afterMood = () => { doors?.retake(); if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }

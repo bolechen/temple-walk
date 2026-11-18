@@ -209,6 +209,41 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every hall with a door can be gone into, has a room of its own with frames on its walls, and lets him out again where he came in.
+  // Seen from outside, a hall's door shows its own room (doorway.js, #218): nothing is taken when the page opens; the
+  // great hall is taken when he comes near it, and fades in; the altar stands where it stood seen through the door when
+  // he goes in; and every hall can be taken.
+  doorway: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=high&view=third&season=summer&time=day&cam=0,60,3.14,0");
+    await t.frames(4);
+    let r = await t.page.evaluate(() => window.__doorways());
+    expect(r && Object.keys(r.halls).length === 8, "every hall that can be entered should have a doorway: " + JSON.stringify(r));
+    expect(Object.values(r.halls).every((h) => !h.taken), "rooms were taken while the page opened, far from any door: " + JSON.stringify(r.halls));
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
+    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 240000, "the great hall's room never came into its doorway");
+    r = await t.page.evaluate(() => window.__doorways()); expect(r.halls.main.taken === 1, "the great hall was taken more than once: " + JSON.stringify(r.halls.main));
+    await t.shot("e2e-doorway");
+    // At the door, then the first frame inside: the altar keeps its place across the picture, seen with his own eyes. From
+    // behind him the eye also comes 2.5 m nearer on going in (he is set down inside the room, interior.js's `door`), so
+    // there the altar moves somewhat more; that is reported, not held (#218).
+    const across = {};
+    for (const view of ["first", "third"]) {
+      await t.page.evaluate((v) => window.__view(v), view);
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0], h.out[1], inYaw]); await t.frames(3);
+      const out = await t.page.evaluate(() => window.__doorAltar("main"));
+      await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(1);
+      const inn = await t.page.evaluate(() => window.__doorAltar("main"));
+      across[view] = { out: +out.x.toFixed(3), in: +inn.x.toFixed(3), moved: +(Math.abs(out.x - inn.x) / 2).toFixed(3) };
+      await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared");
+    }
+    console.log("     the altar across the door, as a fraction of the picture's width:", JSON.stringify(across));
+    expect(across.first.moved <= 0.05, `the altar jumps across the door: ${JSON.stringify(across.first)} (more than 5% of the width)`);
+    r = await t.page.evaluate(() => window.__doorways(true));
+    expect(Object.values(r.halls).every((x) => x.taken >= 1 && x.fade === 1), "not every hall's room could be taken: " + JSON.stringify(r.halls));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));

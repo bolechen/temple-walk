@@ -19,9 +19,9 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, locale: "zh-CN" }), errs = [];
   p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
-  await p.goto(`${base}?shot=1&q=high&view=${arg("view", "first")}&season=${season}&time=${time}` + (before ? "&off=doorway" : ""), { waitUntil: "commit", timeout: 180000 });
+  await p.goto(`${base}?shot=1&q=${arg("q", "high")}&view=${arg("view", "first")}&season=${season}&time=${time}` + (before ? "&off=doorway" : ""), { waitUntil: "commit", timeout: 180000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
-  if (!before) await p.waitForFunction((id) => (window.__doorways()?.[id]?.taken || 0) >= 1 && window.__doorwaysSettled?.(), hallId, { timeout: 240000 }).catch((e) => errs.push(String(e).slice(0, 160)));
+  if (!before) await p.evaluate(() => window.__doorways(true));   // every room taken now, not on the way there
   const door = await p.evaluate((id) => { const h = window.__halls.find((x) => x.id === id); return { out: h.out, yaw: h.outYaw }; }, hallId);
   const fx = -Math.sin(door.yaw), fz = Math.cos(door.yaw);   // from the door outward is the way he faces coming out
   const ox = door.out[0] + Math.sin(door.yaw) * 0.66, oz = door.out[1] - Math.cos(door.yaw) * 0.66;   // the door's own plane
@@ -32,7 +32,7 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
     const x = ox + dx * d, z = oz + dz * d, yaw = Math.atan2(-dx, dz);
     await p.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [x, z, yaw]);
     await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
-    const name = `${hallId}-${d}m-${a}${before ? "-before" : ""}.png`; await p.screenshot({ path: path.join(out, name) }); shots.push(name);
+    const name = `${hallId}-${d}m-${a}${before ? "-before" : ""}${arg("tag", "")}.png`; await p.screenshot({ path: path.join(out, name) }); shots.push(name);
   }
   console.log(JSON.stringify({ shots, doorways: await p.evaluate(() => window.__doorways?.()), errors: [...new Set(errs)].slice(0, 6) }));
   await b.close(); srv.close();
