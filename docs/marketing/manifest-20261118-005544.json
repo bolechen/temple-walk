@@ -1,0 +1,72 @@
+{
+ "run": "20261118-005544",
+ "day": "2026-11-18",
+ "kind": "sample (proves the flow; not the final material, which waits for the redo of trees, hills and novice)",
+ "bucket": "hf://buckets/bolechen/temple-walk-render/marketing/2026-11-18/20261118-005544/",
+ "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+ "gpu_page_time": [
+  "2026-11-18T00:59:41.653Z",
+  "2026-11-18T01:03:32.909Z"
+ ],
+ "job_started_utc": "2026-11-18T00:55:44Z",
+ "job_minutes_about": 8,
+ "site": {
+  "commit": "52c6ed779d3d4864292f6a2b730fbd7a92755266",
+  "entry": "assets/index-_7iiagcX.js",
+  "files": 111,
+  "sha256": "7df93666393f3b68972862872594dd6e724619be669c8a4a148f23507e57944a"
+ },
+ "errors": [],
+ "notes": [
+  "the film script cleanup failed on the bucket mount after encoding (ENOTEMPTY) and left 158 frame jpgs in the bucket; they were removed and the script now keeps frames on local disk (fixed in marketing-film.cjs after this run)",
+  "the first film frame shows two small edge buttons; the script now hides them (also after this run)"
+ ],
+ "spec": {
+  "stills": [
+   {
+    "id": "screen-land",
+    "address": "?shot=1&q=high&body=code&cam=-1.4,63.8,0.07,0.14&season=summer&time=day&view=third",
+    "size": [
+     3840,
+     2160
+    ]
+   },
+   {
+    "id": "lookback-port",
+    "address": "?shot=1&q=high&body=code&show=lookback&season=autumn&time=dusk&view=first",
+    "size": [
+     1560,
+     2080
+    ]
+   }
+  ],
+  "film": {
+   "file": "film/3-bell.mp4",
+   "segment": "3-bell",
+   "size": [
+    1080,
+    1920
+   ],
+   "fps": 30,
+   "seconds": 12,
+   "address": "?q=high&body=code&view=third&season=autumn&time=dusk (入山, Esc, __pose beside the bell, E, __riteClock held and stepped)"
+  }
+ },
+ "files": [
+  {
+   "file": "film/3-bell.mp4",
+   "bytes": 50752456,
+   "sha256": "66f2e87f604ce087ff499271621096a17d28bd59eef9d67117873c84c7b2b352"
+  },
+  {
+   "file": "lookback-port.png",
+   "bytes": 2887830,
+   "sha256": "4369ee1aae9727efabfce3f595ebe76c420539ed77c0d8ea41f6f65d6c98a545"
+  },
+  {
+   "file": "screen-land.png",
+   "bytes": 7015655,
+   "sha256": "300eea9410be311b48f52af8dd2e9c37607be570076b27dda105fcad14a5e78f"
+  }
+ ]
+}
