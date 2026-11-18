@@ -10,6 +10,8 @@ export const withLang = (data, to = lang) => ({ lang: to, ...(data || {}) });
 /** @param {string} name @param {Record<string, string | number | boolean | null | undefined>=} data */
 export function track(name, data) {
   try {
+    // What was asked is kept (the last hundred), sent or not, so that a test can see which events a page makes.
+    const log = (globalThis.__events ||= []); log.push({ name, data: withLang(data) }); if (log.length > 100) log.shift();
     if (globalThis.location?.hostname !== HOST) return false;
     const send = globalThis.window?.umami?.track;
     if (typeof send !== "function") return false;

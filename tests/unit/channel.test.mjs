@@ -1,9 +1,12 @@
 // A build's channel (src/channel.js) decides whether a way to the sponsor page is in it at all (issue #202). The only way
 // to be sure the address is not in a Steam or storefront package is to build each channel and look in what comes out.
-import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import os from "node:os"; import path from "node:path"; import { execFileSync } from "node:child_process"; import { fileURLToPath } from "node:url";
+import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import os from "node:os"; import path from "node:path"; import crypto from "node:crypto"; import { execFileSync } from "node:child_process"; import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const SECRETS = ["rushiwowen.co/donate", "utm_campaign", "offering-box"];   // the address, and its tags, as the web build holds them
+const QR_FILE = "wechat-support-2026-08-28.jpg", QR_SHA = crypto.createHash("sha256").update(fs.readFileSync(path.join(ROOT, "app/web", QR_FILE))).digest("hex");
+/** Files in a built site that are the payment code: by its name, or by its bytes under any name. */
+const codes = (out) => walk(out).filter(([rel, abs]) => /wechat-support/.test(rel) || crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex") === QR_SHA).map(([rel]) => rel);
 const TEXT = /\.(js|mjs|css|html|json|txt|svg|map)$/;
 
 /** Every file under a folder, as [relative path, bytes]. */
@@ -23,6 +26,19 @@ test("the web build holds the sponsor page's address, once, in the file that bui
     try {
       const hits = found(out); assert.ok(hits.some((h) => h.includes("utm_campaign")), `${channel || "default"}: the campaign tags are not in the build`);
       const files = new Set(hits.filter((h) => h.includes("utm_campaign")).map((h) => h.split(":")[0])); assert.equal(files.size, 1, `the address is in ${[...files].join(", ")}`);
+    } finally { fs.rmSync(out, { recursive: true, force: true }); }
+  }
+});
+
+test("the web build carries the payment code once, and the steam and platform builds not at all (by name, by hash, or named in a script)", () => {
+  const web = build("web");
+  try { const c = codes(web); assert.equal(c.length, 1, "the web build holds the code " + c.length + " times: " + c); assert.ok(c[0].startsWith("assets/") || !c[0].startsWith("web/"), c[0]); }
+  finally { fs.rmSync(web, { recursive: true, force: true }); }
+  for (const channel of ["steam", "platform"]) {
+    const out = build(channel);
+    try {
+      assert.deepEqual(codes(out), [], `${channel}: the payment code is in the build`);
+      for (const [rel, abs] of walk(out)) if (TEXT.test(rel)) assert.ok(!/wechat-support|offeringQr/.test(fs.readFileSync(abs, "utf8")), `${channel}: ${rel} names the code`);
     } finally { fs.rmSync(out, { recursive: true, force: true }); }
   }
 });
