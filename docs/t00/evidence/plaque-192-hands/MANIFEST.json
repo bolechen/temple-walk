@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "compare-even.jpg",
+   "bytes": 411476,
+   "sha256": "2e25926613ba6ad88b5be91745b5fe4bb18f7112e504c49990b4de90b0cd424a",
+   "rev": "8d2e1de94bbaebe17ac4698d253d6115e0d51e3e"
+  },
+  {
+   "path": "compare-raw.jpg",
+   "bytes": 407801,
+   "sha256": "ab1de86991064cb9bef23a6457af24ada5f98361874494f99911040f3548ac6d",
+   "rev": "8d2e1de94bbaebe17ac4698d253d6115e0d51e3e"
+  },
+  {
+   "path": "zhang-strip.jpg",
+   "bytes": 311205,
+   "sha256": "1511a31b19d528efd9d00969710fbfa1bfd709319906c9c8d22d59795c93828a",
+   "rev": "8d2e1de94bbaebe17ac4698d253d6115e0d51e3e"
+  }
+ ]
+}
