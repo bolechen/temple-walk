@@ -4,11 +4,11 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 function loader(hostname = "") {
-  const elements = new Map(), handlers = new Map(), tracked = []; let reloads = 0, paints = 0;
+  const elements = new Map(), handlers = new Map(), tracked = [], said = []; let reloads = 0, paints = 0;
   const document = { getElementById(id) { if (!elements.has(id)) elements.set(id, { hidden: false, disabled: true, textContent: '', addEventListener(name, fn) { handlers.set(id + ':' + name, fn); } }); return elements.get(id); } };
-  const context = vm.createContext({ document, window: { umami: { track(name) { tracked.push(name); } } }, location: { hostname, reload() { reloads++; } }, addEventListener(name, fn) { handlers.set(name, fn); }, requestAnimationFrame(fn) { paints++; queueMicrotask(fn); } });
+  const context = vm.createContext({ document, window: { umami: { track(name, data) { tracked.push(name); said.push(data); } } }, location: { hostname, reload() { reloads++; } }, addEventListener(name, fn) { handlers.set(name, fn); }, requestAnimationFrame(fn) { paints++; queueMicrotask(fn); } });
   vm.runInContext(fs.readFileSync(new URL('../../app/loading.js', import.meta.url), 'utf8'), context);
-  return { api: context.window.templeLoading, el: id => elements.get(id), event: name => handlers.get(name)(), reloads: () => reloads, paints: () => paints, tracked };
+  return { api: context.window.templeLoading, el: id => elements.get(id), event: name => handlers.get(name)(), reloads: () => reloads, paints: () => paints, tracked, said };
 }
 test('loading follows completed work, yields to paint and reserves 100 for readiness', async () => {
   const t = loader(); let previous = 0;
@@ -38,4 +38,18 @@ test('a failed public load is counted once and a local failure is not', () => {
   const local = loader('127.0.0.1'); local.event('error'); assert.deepEqual(local.tracked, []);
   const live = loader('temple.rushiwowen.co'); live.event('error'); live.event('unhandledrejection');
   assert.deepEqual(live.tracked, ['demo.load_error']);
+});
+
+// A browser that cannot draw the temple at all (#190): the title says why in words, offers no "try again" (it would fail the
+// same way), and the count says it was this and not a broken load.
+test('a browser without WebGL is told why, is offered no retry, and is counted apart', () => {
+  const live = loader('temple.rushiwowen.co');
+  live.api.fail({ reason: 'webgl' });
+  assert.equal(live.el('loadLabel').textContent, '浏览器不支持 WebGL 或未开启硬件加速');
+  assert.equal(live.el('loadRetry').hidden, true, 'no retry for a browser that cannot draw');
+  assert.equal(live.el('enterBtn').disabled, true);
+  assert.deepEqual(live.tracked, ['demo.load_error']); assert.deepEqual(JSON.parse(JSON.stringify(live.said)), [{ reason: 'webgl' }]);
+  const broken = loader('temple.rushiwowen.co'); broken.event('error');
+  assert.equal(broken.el('loadRetry').hidden, false, 'a load that broke may be tried again');
+  assert.deepEqual(JSON.parse(JSON.stringify(broken.said)), [{ reason: 'error' }]);
 });

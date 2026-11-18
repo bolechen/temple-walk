@@ -17,6 +17,30 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
   // The page comes up, draws, and offers its controls.
+  // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
+  // title says why in words, offers no "try again", and its language buttons still work, in each language. The renderer
+  // failing to start is what this scenario makes happen, so three's one line about it is expected here and nowhere else;
+  // any other console error or page error still fails it.
+  nogl: { tier: 1, async run(b, base) {
+    const ctx = await b.newContext({ viewport: { width: 900, height: 600 }, locale: "zh-CN" }), page = await ctx.newPage(), errors = [];
+    await page.addInitScript(() => { const get = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (kind, ...rest) { return /webgl/i.test(kind) ? null : get.call(this, kind, ...rest); }; });
+    page.on("pageerror", (e) => errors.push("page error: " + String(e).slice(0, 300)));
+    page.on("console", (m) => { if (m.type() === "error" && !/WebGLRenderer: (A WebGL context could not be created|Error creating WebGL context)/i.test(m.text())) errors.push("console: " + m.text().slice(0, 300)); });
+    page.on("response", (r) => r.status() >= 400 && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+    const said = { zh: "浏览器不支持 WebGL", ja: "WebGL が利用できません", en: "WebGL is unavailable", ko: "WebGL을 사용할 수 없습니다" };
+    const look = () => page.evaluate(() => ({ label: document.getElementById("loadLabel").textContent, retry: !document.getElementById("loadRetry").hidden, enter: !document.getElementById("enterBtn").disabled, lang: document.documentElement.lang }));
+    await page.goto(base + "?q=low", { waitUntil: "commit", timeout: 120000 });
+    await page.waitForFunction(() => /WebGL/.test(document.getElementById("loadLabel").textContent), null, { timeout: 120000 });
+    let s = await look();
+    expect(s.label.includes(said.zh) && !s.retry && !s.enter, "a browser without WebGL should be told why, with no retry and no way in: " + JSON.stringify(s));
+    // The language buttons on the title, which the walk would have bound, still open the page in another language; and so on round.
+    for (const l of ["ja", "en", "ko", "zh"]) {
+      await Promise.all([page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), page.click(`#title [data-lang="${l}"]`)]);
+      await page.waitForFunction((w) => document.getElementById("loadLabel").textContent.includes(w), said[l], { timeout: 120000 });
+      s = await look(); expect(!s.retry && !s.enter, `in ${l} there should still be no retry and no way in: ` + JSON.stringify(s));
+    }
+    expect(errors.length === 0, errors.join("\n")); await ctx.close();
+  } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.

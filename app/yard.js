@@ -47,7 +47,7 @@ import { planSteps, clearLine } from "./src/route.js";
 import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
-import { t as tr, lang, langSource, takeSwitch, glyphs, setLang } from "./src/i18n.js";
+import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
 const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 
@@ -65,7 +65,12 @@ const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? s
 const loading = window.templeLoading;
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("yardGl"));
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+// A browser that cannot draw (no WebGL, or the graphics card turned off for it) is told so in words on the title, with no
+// "try again", since trying again would fail the same way; the module then stops here and builds nothing more.
+const renderer = await (async () => {
+  try { return new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" }); }
+  catch { loading?.fail({ reason: "webgl" }); return new Promise(() => {}); }
+})();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.AgXToneMapping;      // applied by the output pass
 renderer.toneMappingExposure = 1.12;
@@ -974,13 +979,6 @@ function openMenu(open) {
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
-  // The language: each choice is written in its own language; the one in use is circled in the menu and left off the
-  // title. Choosing another opens the page again in it (src/i18n.js).
-  document.querySelectorAll("[data-lang]").forEach((b) => {
-    b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
-    if (b.closest(".langs")) /** @type {HTMLElement} */ (b).hidden = b.dataset.lang === lang;
-    b.addEventListener("click", () => setLang(b.dataset.lang));
-  });
   // Lost, or wedged somewhere he should not be: back to where the path begins.
   on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
