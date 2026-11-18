@@ -5,3 +5,5 @@ interface Window { webkitAudioContext?: typeof AudioContext; templeLoading?: any
 interface Window { umami?: { track?: (name: string, data?: Record<string, string>) => void } }
 // Everything this page looks up by selector is an HTML element (it has no SVG or MathML of its own).
 interface ParentNode { querySelectorAll(selectors: string): NodeListOf<HTMLElement> }
+// The build's channel (src/channel.js), defined by vite.config.mjs; absent when the sources are run in Node.
+declare const __CHANNEL__: "web" | "steam" | "platform";

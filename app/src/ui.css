@@ -471,7 +471,13 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 .community-invite { border-top: 1px solid rgba(93,85,74,.2); padding-top: 12px; text-align: center; grid-column: 1 / -1; }
 .community-invite .chip { font-size: var(--t-m); color: var(--ink-2); }
 .community-invite p { margin: 4px 0; font: 400 var(--t-xs)/1.7 var(--kai); color: var(--ink-3); letter-spacing: .04em; }
-#community { position: absolute; inset: 0; z-index: 46; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+#offering { position: absolute; inset: 0; z-index: 46; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+.offering-card { width: min(92vw, 420px); box-sizing: border-box; padding: 30px 30px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; text-align: center; color: var(--ink-1); }
+.offering-card h2 { margin: 0 0 14px; font: 400 34px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
+.offering-card p { margin: 8px 0; font: 400 var(--t-s)/1.9 var(--kai); letter-spacing: .06em; color: var(--ink-2); }
+.offering-card footer { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 18px; }
+.offering-card .stamp { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; text-align: center; line-height: 1.5; }
+.offering-card .chip { min-height: 44px; min-width: 44px; }
 .community-card { width: min(92vw, 440px); box-sizing: border-box; padding: 30px 30px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; text-align: center; }
 .community-kicker { font: 400 var(--t-xs)/1.5 var(--kai); letter-spacing: .2em; color: var(--ink-3); }
 .community-card h2 { margin: 14px 0 10px; font: 400 34px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; color: var(--ink-1); }

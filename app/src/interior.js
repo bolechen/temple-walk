@@ -129,6 +129,7 @@ function buildRoom(M, hall, ox, figures) {
   const cushion = () => lathe(CUSHION, 24);   // the same straw cushion as out of doors, whose top is the seat's height
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
+  let coinBox = null;   // the great hall's 功德箱, registered with the frames below (a spot he stands before and presses E at)
   const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
   const tz = -K.d / 2 + 5.4, lightAt = [];
 
@@ -159,6 +160,26 @@ function buildRoom(M, hall, ox, figures) {
         // that he stands side-on, the stand with its bowl of ash beside him and the whole Buddha above (from his right
         // and before him the room is too narrow to hold the figure whole); it draws a little nearer as he offers (our own draft).
         shot: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, tz + 1.75 - sz], [0, 1.7, 4.55], [0, 4.9, 4.55]] } };
+    }
+    // The 功德箱 (offering box), a step east of the offering table beside the lamp: a lacquered chest on a low plinth under a
+    // lid that overhangs it, a slot in the lid, and on its front a small board with the two characters. Shaped as such boxes
+    // are in working temples (about 0.5 m wide, a man's waist high, a slot on top; no Song or Yuan example survives to copy,
+    // docs/t00/SOURCES.md). He stands before it and presses E to put in a coin (game.js `offerCoin`); it is a piece of furniture
+    // in every build, and only the web build says anything more (src/donate.js).
+    if (big) {
+      const bx = 4.7, bz = tz + 0.45, bw = 0.5, bd = 0.38, bh = 0.84;   // centre, width, depth, height to the lid's top
+      add(merge([box(bw + 0.08, 0.08, bd + 0.08, bx, Y + 0.04, bz), box(bw + 0.07, 0.05, bd + 0.07, bx, Y + bh - 0.025, bz), box(bw - 0.04, 0.02, 0.04, bx, Y + bh - 0.05, bz + bd / 2 - 0.02)]), M.woodX);
+      add(merge([box(bw - 0.04, bh - 0.16, bd - 0.04, bx, Y + 0.08 + (bh - 0.16) / 2, bz), ...[-1, 1].map((sx) => box(0.025, bh - 0.16, bd - 0.01, bx + sx * (bw / 2 - 0.02), Y + 0.08 + (bh - 0.16) / 2, bz))]), M.lacquer, () => 0.7);
+      add(merge([box(0.16, 0.006, 0.026, bx, Y + bh + 0.003, bz - 0.02), box(0.05, 0.1, 0.014, bx, Y + 0.5, bz + bd / 2 + 0.004), box(0.02, 0.04, 0.012, bx, Y + 0.5, bz + bd / 2 + 0.014)]), M.bronze, () => 0.8);   // the slot's brass rim, the lock and its hasp
+      const cv = document.createElement("canvas"); cv.width = 128; cv.height = 192; const cx = cv.getContext("2d");
+      cx.fillStyle = "#1c1612"; cx.fillRect(0, 0, 128, 192); cx.strokeStyle = "#b99a55"; cx.lineWidth = 5; cx.strokeRect(6, 6, 116, 180);
+      cx.fillStyle = "#c9a65a"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.font = `64px ${KAI}`; cx.fillText("功", 64, 62); cx.fillText("德", 64, 134);
+      const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.3).translate(ox + bx, Y + 0.28 + 0.15 + 0.08, bz + bd / 2 + 0.003), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: 0.2, envMapIntensity: 0.3 }));
+      g.add(board);
+      block(bx - bw / 2 - 0.06 - BODY, bx + bw / 2 + 0.06 + BODY, bz - bd / 2 - 0.06 - BODY, bz + bd / 2 + 0.06 + BODY);
+      // Where he stands before it, facing north, and where the coin goes in (world coordinates, for rites.js).
+      coinBox = { at: [ox + bx, bz + bd / 2 + 0.06 + BODY + 0.3], face: Math.PI, r: 1.1, offering: true, slot: [ox + bx, Y + bh + 0.02, bz - 0.02], room: hall.id };
     }
     lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, big ? K.h - 2.4 : K.h - 2.0, big ? tz + 0.8 : tz + 1.8, 0xffe6c4, big ? 11 : 7, 16, true]);
   } else if (hall.kind === "chan") {
@@ -246,6 +267,7 @@ function buildRoom(M, hall, ox, figures) {
     g.add(sheet); spots[id] = { at: [ox + x + (west ? 1.7 : -1.7), z], face: west ? -Math.PI / 2 : Math.PI / 2, r: 1.3, item: { id, ...it }, room: hall.id };
   }
   add(merge(frames), M.woodZ);
+  if (coinBox) spots[`${hall.id}-box`] = { ...coinBox, item: { id: `${hall.id}-box`, title: "功德箱", text: "", offering: true } };
 
   // The frame and what is overhead (framing.js). A column may not stand where something is already in the way, on a
   // cushion, where a visitor stops before a frame or the altar, in the way from the door, or under the caisson.
