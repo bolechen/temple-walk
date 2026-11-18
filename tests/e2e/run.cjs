@@ -1107,10 +1107,10 @@ const scenarios = {
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
-      // The thirds, off at first, on when asked for, and remembered.
-      expect(!(await t.page.isVisible("#frame .third")), "the thirds should be off until asked for");
-      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third") && (await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not come on");
-      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")), "the thirds did not go off");
+      // The thirds, on at first, off when put away, and remembered.
+      expect(await t.page.isVisible("#frame .third"), "the thirds should be on until put away");
+      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")) && !(await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not go off");
+      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third"), "the thirds did not come back on");
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
@@ -1302,6 +1302,8 @@ const scenarios = {
   // #135: with the book filled the hour is "随时辰" (the clock) until a hand chooses one; the choice is for this page only.
   hour: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&enter=1" + BARE, { viewport: { width: 900, height: 600 } });
+    // Before the book has been filled the prologue is walked by day, whatever the clock says.
+    expect((await t.probe()).time === "day", "a first visit should be walked by day: " + (await t.probe()).time);
     await t.page.evaluate((ids) => localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 })), ["bell", "incense", "tea", "sutra", "well", "lamp", "summit"]);
     await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     const pressed = (sel) => t.page.getAttribute(sel, "aria-pressed");

@@ -12,9 +12,12 @@ export function createHints({ off = false, ui = null } = {}) {
   let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0;
 
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
+  // A line is a few phrases between middle dots; each is kept whole, so that on a narrow screen the line breaks between
+  // them and not in the middle of one (a dot with no space round it, as in a Korean pair of words, belongs to its phrase).
+  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part : `<span class="phrase">${part}</span>`)).join("");
   function tip(id, html, secs = 7) {
     if (off || !line || said.has(id)) return false;
-    said.add(id); now = id; line.innerHTML = html; line.classList.add("on");
+    said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on");
     clearTimeout(lineT); lineT = setTimeout(() => drop(id), secs * 1000); return true;
   }
   function drop(id) { if (!line || (id && now !== id)) return; line.classList.remove("on"); now = null; }
