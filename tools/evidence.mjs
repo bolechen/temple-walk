@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const CONFIG = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/evidence.config.json"), "utf8"));
 /** Text beside the pictures stays in git; anything else in an evidence folder is evidence and goes to the store. */
-export const TEXT = new Set(["json", "log", "md", "txt", "cjs", "mjs", "js", "csv", "patch", "html", "yml", "yaml", "sh", "py", "svg"]);
+export const TEXT = new Set(["json", "log", "md", "txt", "cjs", "mjs", "js", "csv", "tsv", "patch", "html", "yml", "yaml", "sh", "py", "svg"]);
 export const LIMIT = 1 << 20;
 export const MANIFEST = "MANIFEST.json";
 
