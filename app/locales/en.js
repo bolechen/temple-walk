@@ -6,6 +6,7 @@ export default {
   // ---- The loading bar ----
   "山路正在铺开": "Laying out the mountain path",
   "山路 · 请再来一次": "The path · please try again",
+  "浏览器不支持 WebGL 或未开启硬件加速": "WebGL is unavailable — enable hardware acceleration or try another browser",
   "山路": "the path",
   "山门": "the gate",
   "殿堂": "the halls",
