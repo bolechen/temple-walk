@@ -72,7 +72,15 @@ function softDot() {
 
 // `burn`: how many seconds three sticks take to burn down to the ash (five minutes unless a test asks for less);
 // `onPlant(at)`: told the moment, on the wall clock, that they are set in the ash, so the page can keep it.
-export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at) => {} } = {}) {
+// The ring the breath lays on the ground, for a breath `k` full (0 empty, 1 full): its radius in metres, measured to the
+// brush's centre line, and how firmly it is drawn. It starts outside his folded knees (about 0.4 m from the seat) and
+// opens to a little under a metre. With reduced motion it keeps its size and only fades.
+export const RING_PLANE = 1 / 0.766;   // the enso texture's centre line lies at 196 of 256 px from its middle: a plane of this side makes a ring of radius 1
+export function breathRing(k, reduced = false) {
+  const u = Math.min(1, Math.max(0, k));
+  return { radius: reduced ? 0.9 : 0.55 + 0.4 * ease(u), opacity: u === 0 ? 0 : 0.78 * Math.min(1, 0.25 + 0.75 * ease(u)) };
+}
+export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at) => {}, enso = null } = {}) {
   const { monk, scene, site, M } = y, B = monk.bones, G = monk.group, places = site.places;
   const hand = () => ({ at: V(), fingers: V(0, 1, 0), palm: V(1, 0, 0), w: 0 });
   const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
@@ -259,19 +267,30 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   }
 
   // ================= Sitting =================
-  // A breath in fills his chest; with each breath out a ring goes out from where he sits.
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.965, 1, 72).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, fog: false }));
+  // A breath in fills his chest, and a ring of brush on the ground round his seat fills with it: it opens and firms as he
+  // breathes in and closes and fades as he breathes out. It lies on the mat's floor and not on the screen, where the
+  // sitting's own shot, from before him and low, had it over his face (#156). One ring does what the ring that went
+  // out with each breath out did too; it is the mark the ground carries for a place (game.js's enso), made to breathe.
+  const ring = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: enso, transparent: true, opacity: 0, depthWrite: false, fog: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
   ring.visible = false; ring.renderOrder = 2; ring.userData.part = "breath"; scene.add(ring);
-  const sit = { breaths: 0 };
+  const sit = { breaths: 0, fill: 0 };
+  // Lays the ring for a breath `k` full (0 out, 1 in) under him.
+  function breathe_ring(k) {
+    const s = breathRing(k, y.reduced?.() ?? false);
+    ring.visible = s.opacity > 0.001; sit.fill = k;
+    if (!ring.visible) return;
+    ring.position.copy(G.position).y += 0.04; ring.rotation.y = 0.6;
+    ring.scale.setScalar(s.radius * RING_PLANE); ring.material.opacity = s.opacity;
+    ring.material.color.set(y.night() ? 0xffd9a0 : 0xf3eddc);   // pale, as the marks the ground carries for a place are: ink would be lost on dark stone
+  }
   // `to` is 1 for a breath in and -1 for a breath out, taken over `secs`; `last`: the eye goes back to him as it ends
   // (not when the chapter closes after it: then the close takes the eye from the shot).
   async function breathe(to, secs, on, last = false) {
     const from = act.breath ?? -1;
-    if (to < 0) { ring.visible = true; ring.position.copy(G.position).y += 0.05; ring.material.color.set(y.night() ? 0xffd9a0 : 0x14110e); }
     const ok = await play(secs, (u) => { const k = ease(u); act.breath = mix(from, to, k); act.nod = to < 0 ? 0.05 * k : 0.05 * (1 - k);
-      if (to < 0) { ring.scale.setScalar(0.45 + 1.9 * u); ring.material.opacity = (y.night() ? 0.55 : 0.5) * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - 0.6 * u); }
+      breathe_ring(to > 0 ? k : 1 - k);
       if (last) homeward(u, secs); }, on);
-    if (to < 0) { ring.visible = false; if (ok) sit.breaths++; }
+    if (to < 0) { breathe_ring(0); if (ok) sit.breaths++; }
     return ok;
   }
 
@@ -317,7 +336,6 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     const ok = await play(END.secs, (u) => {
       END.u = u; const t = u * END.secs, ph = (t % 9) / 9, inn = ph < 0.45;   // a breath every nine seconds: in, then longer out
       act.breath = inn ? -1 + 2 * ease(ph / 0.45) : 1 - 2 * ease((ph - 0.45) / 0.55); act.nod = 0.03;
-      ring.visible = !inn; if (!inn) { const v = (ph - 0.45) / 0.55; ring.position.copy(G.position).y += 0.05; ring.material.color.set(y.night() ? 0xffd9a0 : 0x14110e); ring.scale.setScalar(0.45 + 1.9 * v); ring.material.opacity = 0.5 * Math.sin(Math.PI * Math.min(1, v * 1.2)) * (1 - 0.6 * v); }
       cue(t);
     }, on);
     ring.visible = false; act.breath = null; act.nod = 0; END.on = false; y.cine(null);
@@ -344,7 +362,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       look: +act.look.toFixed(3),
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
       incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
-      sit: { breaths: sit.breaths, ring: ring.visible },
+      sit: { breaths: sit.breaths, ring: ring.visible, fill: +sit.fill.toFixed(3), radius: +ring.scale.x / RING_PLANE },
       close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
     }),
   };

@@ -349,8 +349,7 @@ and `logSwing` keeps the log from passing into the bronze. Tea: his bowl (made i
 is lifted in both hands and tilted at his lips three times. Incense: three sticks between his palms, raised to the brow,
 three bows, a step up to the low stand before the cushion (`places.incense.front`, `.bowl`), set in the ash, where they
 smoke and burn down over five minutes by the wall clock (`?burn=` seconds for a test; when they were set is kept in
-`yunjing.incense.v1`, so a reload finds them as far burnt), leaving cold stubs, after which incense may be offered again. Sitting: `breathe(±1, secs)` fills his chest and sends a ring out on each breath
-out. `__riteClock(ms)` holds the observances' clock and steps it, so a moment can be photographed; `__rites()` reports
+`yunjing.incense.v1`, so a reload finds them as far burnt), leaving cold stubs, after which incense may be offered again. Sitting: `breathe(±1, secs)` fills his chest and fills a ring of brush on the ground round his seat with it (`breathRing(k, reduced)`: the game's own enso texture, radius 0.55 to 0.95 m, only fading under reduced motion); the words 吸/呼 are a small line at the foot of the picture (`#breathWord`), nothing in the middle of the screen (#156). `__riteClock(ms)` holds the observances' clock and steps it, so a moment can be photographed; `__rites()` reports
 all of it. The hand offsets (lips, brow, rope) were set against the novice's present proportions.
 
 **Seats.** Every cushion and stool is a seat: `site.seats` out of doors (the three stools at the tea table, the summit

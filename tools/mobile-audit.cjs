@@ -26,6 +26,9 @@ const SURFACES = [
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],
   ["slip", "(() => { window.__pose(window.__places.sutra.at[0], window.__places.sutra.at[1], 0, 0); window.__rite('sutra'); })()", "window.__take && window.__take()"],
+  // Sitting on the summit (#156): the small word for the breath at the foot, then the line said after the three breaths; both whole on the screen.
+  ["sit", "(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite('sit'); })()", null],
+  ["sitsay", "(async () => { window.__riteClock(0); for (let i = 0; i < 80 && !document.getElementById('say').classList.contains('on'); i++) { window.__riteClock(500); await new Promise((r) => setTimeout(r, 120)); } })()", null],
 ];
 const measure = () => {
   const W = innerWidth, H = innerHeight, small = [], tiny = [], off = [], broken = [], tight = [], seen = new Set();
@@ -52,6 +55,10 @@ const measure = () => {
     if (!shown(el) || !el.textContent.trim()) continue;
     const r = document.createRange(); r.selectNodeContents(el); const q = r.getBoundingClientRect(); if (q.left < 15.5 || q.right > W - 15.5) tight.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 14)}" [${Math.round(q.left)},${Math.round(q.right)}] of ${W}`);
   }
+  for (const el of document.querySelectorAll("#say, #hint, #breathWord")) {
+    if (!shown(el) || !el.textContent.trim()) continue;
+    const r = document.createRange(); r.selectNodeContents(el); const q = r.getBoundingClientRect(); if (q.left < 15.5 || q.right > W - 15.5 || q.top < 0 || q.bottom > H) tight.push(`${el.id} "${el.textContent.trim().slice(0, 14)}" [${Math.round(q.left)},${Math.round(q.right)}] of ${W}`);
+  }
   const chips = [...document.querySelectorAll(".title-links .chip")].filter(shown).map((e) => [e.id || e.dataset.lang, e.getBoundingClientRect()]);
   for (let i = 0; i < chips.length; i++) for (let j = i + 1; j < chips.length; j++) { const a = chips[i][1], b = chips[j][1]; if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) tight.push(`${chips[i][0]} overlaps ${chips[j][0]}`); }
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -71,7 +78,7 @@ const measure = () => {
     await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
     for (const [name, open, close] of SURFACES.filter(([n]) => !ONLY || ONLY.includes(n))) {
       if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
-      await p.waitForTimeout(name === "slip" ? 9000 : name === "book" ? 7000 : name === "walk" ? 4000 : 2500);
+      await p.waitForTimeout(name === "sit" ? 12000 : name === "slip" ? 9000 : name === "book" ? 7000 : name === "walk" ? 4000 : 2500);
       const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
       report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.broken.length + m.tight.length + m.bare.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
       console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "");
