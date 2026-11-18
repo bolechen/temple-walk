@@ -36,6 +36,13 @@ export const VERSES = [
 export function pickVerse(seed) { const n = VERSES.length, i = ((Math.floor(seed) % n) + n) % n; return { text: VERSES[i][0], from: VERSES[i][1] }; }
 
 export const KEY = "yunjing.journey.v1";
+// What the book's page says of the walk so far, or null: nothing before twenty steps, and under a minute is said as
+// under a minute (`under`) rather than rounded up to one. game.js writes the words.
+/** @returns {{ m: number, min: number, under: boolean } | null} */
+export function visitLine(metres, seconds) {
+  if (!(metres >= 20)) return null;
+  return { m: Math.round(metres), min: Math.round(seconds / 60), under: !(seconds >= 60) };
+}
 // Whether a kept book (its stored text) has ever been filled, read before the walk is built: until then the
 // prologue is walked by day (yard.js), and only after it does the hour follow the visitor's clock.
 export function filledBefore(text) {

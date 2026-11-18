@@ -1,0 +1,21 @@
+ok   keys       38s
+ok   jump       79s
+ok   drop       69s
+ok   stairs     77s
+ok   camera     34s
+FAIL menu      436s
+     the menu should lie whole at 1280x720 in en: {"fits":true,"clipped":true}
+ok   layers    238s
+FAIL hallexit 1715s
+     he did not walk down the steps | {"shadowY":0.03,"shadowOp":0.458,"inside":false,"up":null,"stair":null,"room":null,"doorway":null,"tier":"low","scale":0.75,"planar":0,"governed":0,"x":0.5,"z":2.97,"yaw":3.142,"pitch":0.04,"h":0,"footY":0,"groundY":0,"dropping":false,"staged":null,"climbing":false,"climbs":0,"pose":null,"jumping":false,"bodyY":0,"dressed":false,"target":[1.42,16.04],"route":0,"running":true,"frames":1017,"tris":56029,"calls":12,"season":"summer","time":"day","view":"third","fov":62}
+ok   taps      495s
+     (music: the step back took 5.31 s of audio time on this machine; the boundary check was skipped)
+ok   music     314s
+ok   sound     163s
+ok   phone     680s
+FAIL director  241s
+     the hint line should stay: it says what to do now
+FAIL opening   459s
+     he never came round the wall again | {"shadowY":0.03,"shadowOp":0.56,"inside":false,"up":null,"stair":null,"room":null,"doorway":null,"tier":"low","scale":0.75,"planar":0,"governed":0,"x":7.43,"z":54.54,"yaw":-0.3,"pitch":0.05,"h":0,"footY":0,"groundY":0,"dropping":false,"staged":null,"climbing":false,"climbs":0,"pose":null,"jumping":false,"bodyY":0,"dressed":false,"target":null,"route":0,"running":true,"frames":140,"tris":56521,"calls":34,"season":"autumn","time":"night","view":"third","fov":50}
+4 of 14 scenarios failed
+exit 1

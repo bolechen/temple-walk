@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-const { buildSite } = await import("../../app/src/site.js");
+const { buildSite, createWalker } = await import("../../app/src/site.js");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { BODY } = await import("../../app/src/geo.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -72,4 +72,20 @@ test("no vertex in any room is NaN or infinite (one bad vertex blacks out the wh
     if (!m.isMesh) return;
     for (const [n, a] of Object.entries(m.geometry.attributes)) assert.ok(a.array.every(Number.isFinite), `${h.name}: a mesh has a ${n} that is not a number`);
   });
+});
+
+test("every free column in every hall stops him, from all eight directions, a body's width off its shaft", () => {
+  const walker = createWalker(site);
+  for (const h of site.halls) {
+    const room = built.rooms[h.id].room;
+    walker.setRoom(room);
+    for (const c of room.frame.cols) {
+      assert.ok(walker.blocked(c.x, c.z), `${h.name}: the centre of the column at ${c.x - room.frame.ox}, ${c.z} is open floor`);
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4, d = 0.29 + BODY - 0.02;   // the shaft's radius and his own width, less two centimetres
+        assert.ok(walker.blocked(c.x + Math.cos(a) * d, c.z + Math.sin(a) * d), `${h.name}: he can stand ${d.toFixed(2)} m from the column at ${c.x - room.frame.ox}, ${c.z} on its ${k * 45} degree side`);
+      }
+    }
+    walker.setRoom(null);
+  }
 });

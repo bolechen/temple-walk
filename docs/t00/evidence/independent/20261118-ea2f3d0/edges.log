@@ -1,0 +1,22 @@
+
+> temple-walk@0.3.0 edges /tmp/claude-0/rev
+> node tools/edges.mjs
+
+he reaches 0.379 m from his centre above the knee; 1891145 places to stand, 28197659 points of what is built, 109.8 s
+✓ the grounds 1558747 places       0 over  deepest 0.0 cm
+✓ 凌霄阁　　　　　   46180 places       0 over  deepest 0.0 cm
+✓ 观音殿　　　　　   36730 places       0 over  deepest 0.0 cm
+✓ 大慧院　　　　　   16704 places       0 over  deepest 0.0 cm
+✓ 藏经楼　　　　　   35259 places       0 over  deepest 0.0 cm
+✓ 药师殿　　　　　   16426 places       0 over  deepest 0.0 cm
+✓ 大雄宝殿　　　　   64432 places       0 over  deepest 0.0 cm
+✓ 茶寮　　　　　　   21817 places       0 over  deepest 0.0 cm
+✓ 禅堂　　　　　　   23163 places       0 over  deepest 0.0 cm
+✓ 万年正续　　　　   11652 places       0 over  deepest 0.0 cm
+✓ 云径禅寺　　　　   19836 places       0 over  deepest 0.0 cm
+✓ 鼓楼　　　　　　    8548 places       0 over  deepest 0.0 cm
+✓ 钟楼　　　　　　    8548 places       0 over  deepest 0.0 cm
+✓ 御碑亭　　　　　    2512 places       0 over  deepest 0.0 cm
+✓ 半山亭　　　　　   10344 places       0 over  deepest 0.0 cm
+✓ 望江亭　　　　　   10247 places       0 over  deepest 0.0 cm
+below the knee (his shoes and hem, 0.322 m out at most): deepest 0.0 cm; turned through a whole circle even while striding, 7.0 cm
