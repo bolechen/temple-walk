@@ -776,6 +776,10 @@ const scenarios = {
     const act = () => t.page.evaluate(() => { const b = document.getElementById("act"); return b && !b.hidden ? b.dataset.word : null; });
     const at = async (p, d = 0.2) => { const s = await t.state(); return Math.hypot(s.x - p[0], s.z - p[1]) < d; };
     await ready(); await t.page.click("#enterBtn"); await t.page.waitForFunction(() => document.body.classList.contains("entered"));
+    // A first visitor is shown the mountain before the walk is theirs (src/opening.js), and a key pressed meanwhile only passes
+    // over it, so an E at the stair's foot was lost whenever a slow machine was still flying it (#233): hand the walk back first,
+    // as `open()` in lib.cjs does for the scenarios that step in themselves.
+    if (await t.page.evaluate(() => !!window.__opening && window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
     await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 30000, "could not go into the summit pavilion"); await clear();
     expect((await t.page.evaluate(() => window.__hud())).said.includes("stair"), "going in did not say the stair is there: " + JSON.stringify((await t.page.evaluate(() => window.__hud())).said));
     const foot = (await t.state()).stair; expect(foot, "the summit pavilion's room has no stair");
