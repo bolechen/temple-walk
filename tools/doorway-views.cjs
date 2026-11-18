@@ -29,7 +29,7 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
   const moods = process.argv.includes("--moods") ? SEASONS.flatMap((se) => TIMES.map((ti) => [se, ti])) : [[season, time]];
   const shots = [], rects = {};
   for (const [se, ti] of moods) {
-    if (moods.length > 1) { await p.evaluate(([a, c]) => window.__mood(a, c), [se, ti]); if (!before) await p.evaluate(() => window.__doorways(true)); }
+    if (moods.length > 1) { await p.evaluate(([a, c]) => window.__mood(a, c), [se, ti]); if (!before) await p.evaluate((id) => window.__doorways(true, id), hallIds.length === 1 ? hallIds[0] : null); }
     for (const id of hallIds) {
       const door = await p.evaluate((id) => { const h = window.__halls.find((x) => x.id === id); return { out: h.out, yaw: h.outYaw }; }, id);
       const fx = -Math.sin(door.yaw), fz = Math.cos(door.yaw);   // from the door outward is the way he faces coming out

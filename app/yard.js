@@ -792,8 +792,8 @@ const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part ==
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
 const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
 // What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
-// near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true)` takes them
-// all at once, for a picture.
+// near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true[, id])` takes them
+// all (or the one named) at once, for a picture.
 const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, size: quality.name === "low" ? 128 : 256, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, sync: Q.has("doorsync") }) : null;
 // Where the altar of a hall stands in the picture (x and y from -1 to 1): from inside, the altar itself; from outside,
 // where its doorway shows it. Going in should not move it (the doorway scenario).
@@ -808,7 +808,7 @@ window.__doorRect = (id) => {
     return [Math.min(...ps.map((q) => q[0])), Math.min(...ps.map((q) => q[1])), Math.max(...ps.map((q) => q[0])), Math.max(...ps.map((q) => q[1]))].map(Math.round); };
   return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4) };
 };
-window.__doorways = (all) => (!doors ? null : all ? doors.takeAll().then(() => doors.report()) : doors.report());
+window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => doors.report()) : doors.report());
 afterMood = () => { doors?.retake(); if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }

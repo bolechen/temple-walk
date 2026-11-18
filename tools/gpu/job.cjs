@@ -81,7 +81,7 @@ function fingerprint(dir) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
       const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync }), size, b.scale || 1);
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(b.warm || 1500);   // `warm`: longer, for what is taken in its first seconds (the doorways, #218)
       // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
       if (b.walk) await page.evaluate((pts) => { window.__walkerReset?.(); window.__walk(pts); }, b.walk);
       const a = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now() })); await page.waitForTimeout(secs * 1000);
