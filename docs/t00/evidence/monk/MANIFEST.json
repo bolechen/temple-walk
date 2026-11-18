@@ -1,0 +1,90 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "apose.jpg",
+   "bytes": 86569,
+   "sha256": "039d347ec4ad9138cbcd1d60174d290b976ff47a9835cf6602ec21b8bc14f453",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "poses.jpg",
+   "bytes": 157004,
+   "sha256": "ad6b60cb6daf13be89912f36d4e8d86bc7c13ce599ef0ac0275b9e5965555bdc",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "walking.jpg",
+   "bytes": 174241,
+   "sha256": "2a4792bbe6665c4986076cb02acdaa0bdd18710b1487125e9893f7dc8d99bb4f",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/compare-portrait.jpg",
+   "bytes": 478469,
+   "sha256": "9be68e433926e06157918a09cba35a3ca8a80a1689a609b5e7e091ee72fed50e",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/compare-pray.jpg",
+   "bytes": 132781,
+   "sha256": "544b189d755671f072fbda202dc231de9f8b53dd83c10c04f081e66d0a026b5c",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/compare-seated.jpg",
+   "bytes": 138818,
+   "sha256": "80748f17f4f94cf3efcbb86808d0c0fe84a2d29dae5ba7b0f0f42d589783b3f5",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/compare-stand.jpg",
+   "bytes": 127136,
+   "sha256": "f23619b238005dcc3ff5a503378ffc4ac6ec2685acc9a32f60fcf9181e2d32bb",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/compare-walk.jpg",
+   "bytes": 141593,
+   "sha256": "1913ddf6e33a680ded81d4b11060c33198c9645099e048ea556a3d922e56a14a",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/portrait-after.jpg",
+   "bytes": 159003,
+   "sha256": "90b61ea442899a6d35b850f9f3918254a9d40e9763a6d032a6f0dbe23dccea8e",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/portrait-before.jpg",
+   "bytes": 159535,
+   "sha256": "8640498774d4a02404f62ec0438b273afbdb7e5dc6e83e2bc9ca405e7df4425d",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/portrait-code.jpg",
+   "bytes": 155527,
+   "sha256": "99e13020041ee2cad49b79cbcd67048562b033336fc67a1688b2de075dce7dcf",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/views-after.jpg",
+   "bytes": 394366,
+   "sha256": "f77205e8a7901a7eb890451eac8b89d1f09ffc347ade3a174c083d25f265c161",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/views-before.jpg",
+   "bytes": 400815,
+   "sha256": "3662cf176bd9b7d050231a876f27c3354089757f6c9c113282d5fe0a4078f61d",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  },
+  {
+   "path": "weld/views-code.jpg",
+   "bytes": 329811,
+   "sha256": "4f310fd40e6898300fdc5b14812495a57c2d39335b43d98b200d4804ed5547d0",
+   "rev": "f38391a71029516df9b2d16c3c004611a9e1c5d6"
+  }
+ ]
+}

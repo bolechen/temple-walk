@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-three-screens.jpg",
+   "bytes": 121085,
+   "sha256": "0cdc3946b2607a0562116f34804f400aef337bc1c732997e2f4009e72c2d275e",
+   "rev": "e360a58cd8e9350e9af6a304a69bb0fd5bc50063"
+  },
+  {
+   "path": "before-after.jpg",
+   "bytes": 237046,
+   "sha256": "73e1d79ab45ce937e0028cce586019f4ccf6adb64997ce64a21c7cdebd9a75ce",
+   "rev": "e360a58cd8e9350e9af6a304a69bb0fd5bc50063"
+  },
+  {
+   "path": "young-local-before-after.png",
+   "bytes": 477987,
+   "sha256": "397cd8d60f5dd0832d412650eb324aa83250a09a2437ecdbc53f1ea9bea3eff2",
+   "rev": "e360a58cd8e9350e9af6a304a69bb0fd5bc50063"
+  }
+ ]
+}

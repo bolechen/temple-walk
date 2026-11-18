@@ -21,6 +21,14 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 2026-11-18 夜：证据图移出仓库，仓库只留清单（Issue #223，PR #224、迁移 PR）
+
+- **做了什么**：`docs/t00/evidence/` 下 753 个二进制（图和录像，293 MB）传到公开数据集 `bolechen/temple-walk-evidence` 的 `t00/<目录>/`，仓库里留 README、文本和每个目录的 `MANIFEST.json`（路径、字节数、SHA-256、数据集提交号）。证据目录现在 227 个文件、2.77 MB，最大一个 245 KB；整棵树 339 MB → 45 MB。
+- **怎么用**：`node tools/evidence.mjs push|verify|pull|check`（`AGENTS.md`、`CLAUDE.md`）。基础地址只在 `tools/evidence.config.json`。只增不改：重名不同内容拒绝。CI 只做离线 `check`；`verify --all` 手动跑，夜间全量里也跑。
+- **谁受影响**：Site 和独立评审按旧路径读图的，改读清单（`docs/SITE-SYNC.md` 新节）。报告和 JSON 里写的 `docs/t00/evidence/...` 路径没有改字：它是清单里的键，`tests/unit/evidence-refs.test.mjs` 保证每一条要么是仓库里的文件、要么在某份清单里。
+- **没做**：历史里的 300 MB 还在 git 里（不改写历史）；换 R2 另开一条，到时改基础地址、重传。
+- **检出**：`git clone --depth 1`（本沙箱）18.3 秒 / 632 MB → 3.0 秒 / 81 MB。
+
 ## 2026-11-18：藏经楼的纸条放得进屏（Issue #203）
 
 韩文第 8 首（长的那首）在手机横屏下列数太多，纸比屏宽，页面被撑到 891 px。

@@ -7,3 +7,7 @@
 - 改前：main 上结尾一演完就弹出朱印帐，盖住画面；没有拍对照图（改前的画面就是 `far-phone-book.jpg` 那样的纸页）。
 - 手机上提示行写作「翻开朱印帐」，点这一行打开（`far-phone.jpg` 是电脑口径下的键位写法；触屏的写法由 `hints.coarse` 决定，没有单独拍）。
 - 没拍：四种语言。
+
+## 原图在哪里（#223）
+
+本目录的图和录像（4 个文件：4 jpg，共 0.3 MB）不在仓库里：在 Hugging Face 公开数据集 `bolechen/temple-walk-evidence` 的 `t00/ending-far-147/` 下，按提交号钉死。清单 [`MANIFEST.json`](MANIFEST.json) 给出每个文件的路径、字节数、SHA-256 和提交号；一个文件的地址是 `tools/evidence.config.json` 的 `base` + 清单里的 `rev` + `/t00/ending-far-147/<path>`。上文提到的文件名都按这份清单找。整目录取回（核哈希，放进 git 忽略的 `tools/out/evidence/`）：`node tools/evidence.mjs pull docs/t00/evidence/ending-far-147`。

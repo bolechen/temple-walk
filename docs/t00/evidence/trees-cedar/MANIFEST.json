@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cedar-t4-before-after.jpg",
+   "bytes": 439691,
+   "sha256": "7387793c2b611135339641ddc98a90b22c20c978cd7809731d68c66eeed27fd8",
+   "rev": "12e7672bd12e855e9da36315fbe0b7b223cd9adb"
+  },
+  {
+   "path": "cedar-t4-clean-before-after.jpg",
+   "bytes": 696910,
+   "sha256": "937d25dcf78a1fbc35f78a1eb8041273842a3ec29d5718002b51976297b984ff",
+   "rev": "12e7672bd12e855e9da36315fbe0b7b223cd9adb"
+  }
+ ]
+}

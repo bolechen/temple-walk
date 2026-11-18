@@ -9,3 +9,7 @@
 - 此前两次 T4 运行未采用：`20261118-050538`（`ce6ddab`，浏览器语言成了英文，并发现宽屏两栏小标题没对齐）、`20261118-052240`（`6a9a44e`，小标题还是「看 / 手 / 声」，手机上 English、한국어 被底栏盖住）。四次合计约 3.5 分钟页面时间。
 
 85% JPEG 压缩。
+
+## 原图在哪里（#223）
+
+本目录的图和录像（3 个文件：3 jpg，共 0.5 MB）不在仓库里：在 Hugging Face 公开数据集 `bolechen/temple-walk-evidence` 的 `t00/menu-185/` 下，按提交号钉死。清单 [`MANIFEST.json`](MANIFEST.json) 给出每个文件的路径、字节数、SHA-256 和提交号；一个文件的地址是 `tools/evidence.config.json` 的 `base` + 清单里的 `rev` + `/t00/menu-185/<path>`。上文提到的文件名都按这份清单找。整目录取回（核哈希，放进 git 忽略的 `tools/out/evidence/`）：`node tools/evidence.mjs pull docs/t00/evidence/menu-185`。

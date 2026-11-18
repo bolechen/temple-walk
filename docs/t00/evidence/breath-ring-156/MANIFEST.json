@@ -1,0 +1,102 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-16x9-behind-empty.jpg",
+   "bytes": 134560,
+   "sha256": "7e6beef670abb57a0afc520babfdbf7cd032e39d4567dba73b32af815e436b04",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-16x9-behind-full.jpg",
+   "bytes": 135408,
+   "sha256": "15bae80a32c579aafea2ee8867138d3295578373cba676450907b483511e55d5",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-16x9-empty.jpg",
+   "bytes": 104443,
+   "sha256": "90dbde2efdd2d512509b40fce862e727021ad8985a779f817ed0a87f1261da0f",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-16x9-full.jpg",
+   "bytes": 107053,
+   "sha256": "f0bc44f0e092d225198739806ea72b0a09b516237b3240fbb5e3d759518aef33",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-4x3-empty.jpg",
+   "bytes": 83503,
+   "sha256": "ad6a2f29cfcd1525b92ab84141bc201da1f28d88d655012239ee9cf773ee3c17",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-4x3-full.jpg",
+   "bytes": 85618,
+   "sha256": "0367e07c168bd55bedfd1f112492845c8fcdc4787fc9baafe2849cac25079cdd",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-phone-empty.jpg",
+   "bytes": 108057,
+   "sha256": "92ab064d655082c1276392d2475feb08f1fa109b4ff3aa63f19475ffc1784428",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "after-phone-full.jpg",
+   "bytes": 110445,
+   "sha256": "2ffe2e732c68be077af028b65adf463314a718169e46c75831f198659acacd52",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-16x9-behind-empty.jpg",
+   "bytes": 135918,
+   "sha256": "7312b480cc160d298196ed8fd6a44436c9a2d067f476a1a211e238e2b9902ac8",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-16x9-behind-full.jpg",
+   "bytes": 137736,
+   "sha256": "21e31cb59eca64264baa963f45d17a2d6dbe7397e2255bee731569bd4786c1fa",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-16x9-empty.jpg",
+   "bytes": 105060,
+   "sha256": "19fe12090a231670788625750c116a72a8797d9b9b58cd7620d67d7046aa333e",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-16x9-full.jpg",
+   "bytes": 107938,
+   "sha256": "77e7bf6a9c68069cf83b8a9462f706c84525ea5454c32a8715646a9d9d169a42",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-4x3-empty.jpg",
+   "bytes": 84451,
+   "sha256": "e48d85a1af0d2b39eab87ab325e5b951df18de49e9d00d74767a9d2fe925e5aa",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-4x3-full.jpg",
+   "bytes": 86651,
+   "sha256": "25e7588b311d254bcd1312f4d45ffafd0bc5a0af6aad21a75f9747bbdff2da48",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-phone-empty.jpg",
+   "bytes": 108801,
+   "sha256": "37c033848267678e5abae5ef7798d49f2e8621e7c50d1ebaf118fb6115997659",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  },
+  {
+   "path": "before-phone-full.jpg",
+   "bytes": 110687,
+   "sha256": "b86b8cf6487b9c65c9dd0c5ce768be338f42a6d599b8fc3cb575c06026ec075a",
+   "rev": "d26480a887adee33b6ccb5dc6fc113b65ead8029"
+  }
+ ]
+}

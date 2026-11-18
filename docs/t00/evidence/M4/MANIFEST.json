@@ -1,0 +1,60 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "CAM-01.jpg",
+   "bytes": 682656,
+   "sha256": "d55df2f23a66e652800293ced6b18a55b5897eba6fcc03cba24a53256fe92f89",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "CAM-02.jpg",
+   "bytes": 594386,
+   "sha256": "0831e3a93a253acaedfdb31aa70b2eb2eee228e28053b44c1b4e8456879610c8",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "CAM-03.jpg",
+   "bytes": 457080,
+   "sha256": "346590bb03f747a20ff81ed3ee70c12d76b192fe9f4b4fe449877496f0585392",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "CAM-04.jpg",
+   "bytes": 389625,
+   "sha256": "0f22c762def8da14e6b04995a1889d432f0d71e8487aeaf753335242f9402c67",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "CAM-05.jpg",
+   "bytes": 385053,
+   "sha256": "d1f8382de865dcf9e79bbf602b82070deb5b302be1b3df127b0fc2aa03621964",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "CAM-06.jpg",
+   "bytes": 494670,
+   "sha256": "f114e4cb187c30a245711dde43ba40c7fec46f3c37c3fa2bba27c292265395e9",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "extra-hall-platform.jpg",
+   "bytes": 518752,
+   "sha256": "5bc8fa0faeccfab97888ffe2771e1a2110d7d1bbc8f96c9399f4b28700e4c696",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "extra-tea-court.jpg",
+   "bytes": 368343,
+   "sha256": "80f72e73f446d2362031b85a508f38c9c4343ed805d4c5ae5d588720a6ea7570",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  },
+  {
+   "path": "walkthrough.webm",
+   "bytes": 19786568,
+   "sha256": "c474cb7a8e913552719b905e284d5716c860083c2b2a9fbad28ae704a7ff9518",
+   "rev": "5d2782b3ae8df484bb855d8475377d20d3fb366a"
+  }
+ ]
+}

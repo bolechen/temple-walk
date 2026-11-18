@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "young-cedars-before-after.jpg",
+   "bytes": 266840,
+   "sha256": "bcd093777ddf0ca5f6ed58ff49acf165e9cf28e101e92d8c6dc9a3722de73771",
+   "rev": "40b428cb9cffa4b299932c2e476a069130c95ae1"
+  }
+ ]
+}

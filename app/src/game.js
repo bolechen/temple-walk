@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, coin, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
+import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
 import { createAwake } from "./awake.js";
@@ -344,15 +344,23 @@ export function createGame(y) {
   // seal, no reward). Only the public web page then opens a sheet of paper with the link to 如是我闻's sponsor page
   // (src/donate.js, imported here only when `WEB`, so the other builds hold neither the code nor the address).
   let sheet = null;
-  if (WEB) import("./donate.js").then((d) => { d.mountOffering({ ui, lang, onOpen: () => { track("offering.open"); keepPlace(); } }); sheet = true; });
+  if (WEB) import("./donate.js").then((d) => { sheet = d.mountOffering({ ui, lang, onOpen: () => { track("offering.open"); keepPlace(); }, onQr: () => track("offering.qr") }); });
   async function offerCoin(spot) {
     if (rite) return; $("act")?.setAttribute("hidden", "");
     const mineRite = (rite = /** @type {any} */ ({ id: "offering" })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([spot.at], r))) || !on()) { if (on()) rite = null; return; }
-    y.stage({ face: spot.face, pose: "pray", lift: 0, act: rites.act, leave: () => { if (on()) end(); } });
+    // He stands where his arm reaches the slot, exactly, as at the incense stand; the eye goes to the box's own shot (src/director.js).
+    y.put(spot.at[0], spot.at[1]);
+    y.stage({ face: spot.face, pose: "pray", lift: 0, seat: spot.at, act: rites.act, leave: () => { if (on()) end(); } });
+    y.direct(spot.item.id);
+    await wait(1.6); if (!on()) return;   // the eye is on its shot (about two seconds) before his hands begin, as at the incense and the tea
     if (!(await rites.dropCoin(on, spot.slot, () => { coin(); track("offering.coin"); })) || !on()) return;
-    if (WEB && sheet) { await wait(0.5); if (!on()) return; track("offering.sheet"); ui.open("offering", { onClose: () => { if (on()) end(); } }); return; }
-    await wait(0.6); if (on()) end();
+    // The sheet comes once the eye is back on his shoulder (a sheet over a swing half made would freeze it there) and the
+    // last bow is over, and never before the coin is in. In the other builds the coin is all there is.
+    for (let i = 0; i < 40 && y.directed() && on(); i++) await wait(0.1);
+    if (!on()) return;
+    if (WEB && sheet) { await wait(0.4); if (!on()) return; track("offering.sheet"); ui.open("offering", { onClose: () => { if (on()) end(); } }); sheet.opened(); return; }
+    await wait(0.3); if (on()) end();
   }
 
   // ---- A work on the wall, read closely: the picture, and beside it what an encyclopedia would say ----
@@ -494,15 +502,17 @@ export function createGame(y) {
   // He is put as the observance has him (seated for the tea and the summit, at the rope for the bell, his palms together
   // elsewhere), not taken through it, so that the picture is the same however slowly the page draws.
   function pose(id) {
-    const p = places[id]; if (!p || rite) return false;
+    const p = places[id] || y.gallery[id]; if (!p || rite) return false;   // a place, or the 功德箱's spot
     const mineRite = (rite = /** @type {any} */ ({ id, posed: true })), on = () => rite === mineRite;
     y.stage({ face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? placeLift(p, y.site.seats, y.walker.heightAt) : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } });
     if (id === "bell") rites.takeRope(on);
     if (id === "lamp") mine.visible = true;
+    if (p.offering) rites.poseCoin(p.slot, p.at, p.face, y.walker.heightAt(p.at[0], p.at[1]));   // the moment the coin is held over the slot
     return y.direct(id, { now: true });
   }
   window.__poseRite = (id) => pose(id);
-  { const want = (Q.get("show") || "").replace(/^shot-/, ""); if (want && want !== Q.get("show") && places[want]) { const go = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(go); pose(want); } }, 100); } }
+  window.__coin = () => ({ ...coinsHeard(), ...rites.state().coin, directed: y.directed() });   // the coin's own state and when its sound was asked for (a test compares them)
+  { const want = (Q.get("show") || "").replace(/^shot-/, ""); if (want && want !== Q.get("show") && (places[want] || y.gallery[want])) { const go = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(go); pose(want); } }, 100); } }
   refresh(); rites.restore({ incenseAt: (() => { try { return Number(localStorage.getItem(INCENSE)) || 0; } catch { return 0; } })() });
 
   // ---- The workbench: straight to a place, and straight into what happens there (see BENCH above) ----
@@ -530,6 +540,8 @@ export function createGame(y) {
   // For the tests: the slip of paper with the i-th of the library's lines on it (`__slip(null)` puts it away).
   window.__verses = VERSES.length; window.__slip = (i) => { if (i == null) { ui.close("slip"); return null; } const v = pickVerse(i); holdOut(t(v.text), t(v.from), t("收下"), () => {}); return v.text; };
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
+  // For the phone audit and pictures: the offering sheet as it opens after a coin, without the coin (web build only; null when there is none).
+  window.__offeringSheet = () => { if (!(WEB && sheet)) return false; ui.open("offering"); sheet.opened(); return true; };
   window.__take = () => rite && rite.take && rite.take();
   return { near: () => near, rite: () => rite && rite.id };
 }

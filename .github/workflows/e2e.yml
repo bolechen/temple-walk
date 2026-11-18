@@ -93,6 +93,11 @@ jobs:
       - name: Parse, types, unit tests, and his body against everything built
         if: steps.mine.outputs.run == 'true' && matrix.shard == 1
         run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
+      # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
+      # network, so only here and by hand, never in the way of a merge.
+      - name: The evidence in the store is what the manifests say
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: node tools/evidence.mjs verify --all
       - name: Remember the browser between runs
         if: steps.mine.outputs.run == 'true'
         id: pw

@@ -9,3 +9,7 @@
 | 秋暮，前廊 | 0.355 m | 1.53 | 1.50 | 0.691 |
 
 暗斑都在脚下地面上方 3 cm。**没有「改前」图**，也没有秋暮的大院图；夏昼图里阴天的暗斑本来就很淡，从身后看不出，要看得清需要侧面机位（`monkBox` 之外没有现成的侧视），留给主创在预览上看。逐帧的数值断言在 `jump` 场景（`tests/e2e/run.cjs`）和 `monk.test.mjs`。
+
+## 原图在哪里（#223）
+
+本目录的图和录像（2 个文件：2 png，共 1.2 MB）不在仓库里：在 Hugging Face 公开数据集 `bolechen/temple-walk-evidence` 的 `t00/jump-shadow/` 下，按提交号钉死。清单 [`MANIFEST.json`](MANIFEST.json) 给出每个文件的路径、字节数、SHA-256 和提交号；一个文件的地址是 `tools/evidence.config.json` 的 `base` + 清单里的 `rev` + `/t00/jump-shadow/<path>`。上文提到的文件名都按这份清单找。整目录取回（核哈希，放进 git 忽略的 `tools/out/evidence/`）：`node tools/evidence.mjs pull docs/t00/evidence/jump-shadow`。
