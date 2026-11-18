@@ -456,8 +456,9 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 :root:lang(ja) #menu { --set-name: 6.4em; } :root:lang(ja) #menu .set > span, :root:lang(ja) #menu .set > label { letter-spacing: .04em; }
 :root:lang(en) #menu, :root:lang(ko) #menu { --set-name: 6.4em; }
 :root:lang(en) #menu .set > span, :root:lang(en) #menu .set > label, :root:lang(ko) #menu .set > span, :root:lang(ko) #menu .set > label { letter-spacing: .04em; }
-:root:lang(en) #menu .opts, :root:lang(ko) #menu .opts { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; }
-:root:lang(en) #menu .opts:has([data-follow]), :root:lang(ko) #menu .opts:has([data-follow]) { grid-template-columns: repeat(2, max-content); }
+:root:lang(en) #menu .opts { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; }   /* Korean words are as short as Chinese ones and keep the Chinese layout */
+:root:lang(en) #menu .opts:has([data-follow]) { grid-template-columns: repeat(2, max-content); }
+:root:lang(en) #menu .opts:has([data-q]) { display: flex; }   /* Auto, Low, Medium, High are short enough for one line */
 #menu .note { margin: -4px 0 0; font-size: var(--t-xs); letter-spacing: .1em; color: var(--ink-3); } #menu .note .chip { min-height: 44px; padding: 4px 10px; font-size: var(--t-xs); margin-left: .4em; }
 /* The foot of the sheet stays in sight while the settings are drawn past it: the lesser ways (full screen, keys, back to
    the start, thanks) on one line, and under them, in the middle, the seal that goes on, as 合上 closes the page of thanks.
@@ -477,6 +478,12 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #menu .grp-view > .grp-name:first-child { margin-top: 0; }
 #menu:not(.mix) .set.sub { display: none; }
 #menu .mix-toggle .chip { font-size: var(--t-s); color: var(--ink-3); }
+/* A phone held upright: the rows close up (each still a thumb's height), so that all three parts are named on the first
+   sight of the sheet, the sound's above its foot. */
+@media (max-width: 620px) { #menu .card { gap: 2px; } #menu .grp-name { margin-top: 8px; } #menu h2 { margin-bottom: 0; } }
+/* English needs its choices two and two, which makes the sheet taller: there the title is set smaller and the foot's lesser
+   ways closer, so the foot stays one line. */
+@media (max-width: 620px) { :root:lang(en) #menu h2 { font-size: 30px; } :root:lang(en) #menu .row .chip { font-size: 13px; padding-inline: 4px; } }
 .community-invite { border-top: 1px solid rgba(93,85,74,.2); padding-top: 12px; text-align: center; grid-column: 1 / -1; }
 .community-invite .chip { font-size: var(--t-m); color: var(--ink-2); }
 .community-invite p { margin: 4px 0; font: 400 var(--t-xs)/1.7 var(--kai); color: var(--ink-3); letter-spacing: .04em; }
