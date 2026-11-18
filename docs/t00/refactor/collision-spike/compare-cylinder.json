@@ -1,5 +1,5 @@
 {
- "commit": "73cb183",
+ "commit": "880aa04",
  "params": {
   "CLIMB": 0.25,
   "CLEAR": 1.45,
@@ -8,26 +8,26 @@
   "BODY": 0.38
  },
  "ms": {
-  "site": 602,
-  "gatherMs": 1168,
-  "bakeMs": 4549,
+  "site": 658,
+  "gatherMs": 1210,
+  "bakeMs": 6120,
   "bake": {
    "outdoors": {
-    "floor": 1254,
-    "body": 2287,
-    "erode": 251
+    "floor": 1558,
+    "body": 3198,
+    "erode": 328
    },
    "room": {
-    "floor": 246,
-    "body": 403,
-    "erode": 108
+    "floor": 386,
+    "body": 550,
+    "erode": 100
    },
-   "cells": 1208720
+   "cells": 1261520
   },
-  "tris": 224495
+  "tris": 231979
  },
  "tris": {
-  "outdoors": 208243,
+  "outdoors": 215727,
   "room": 16252
  },
  "court": {
@@ -35,7 +35,7 @@
   "box": {
    "x0": -22,
    "x1": 22,
-   "z0": -24,
+   "z0": -27,
    "z1": 34,
    "ceil": 3,
    "floorY": 0,
@@ -51,38 +51,38 @@
    ]
   },
   "step": 0.05,
-  "points": 1020800,
+  "points": 1073600,
   "count": {
-   "same": 556631,
-   "bothShut": 388050,
-   "oldOnly": 62585,
-   "newOnly": 8872,
+   "same": 578033,
+   "bothShut": 407370,
+   "oldOnly": 73889,
+   "newOnly": 9646,
    "height": 4662
   },
   "share": {
-   "same": 54.53,
-   "bothShut": 38.01,
-   "oldOnly": 6.13,
-   "newOnly": 0.87,
-   "height": 0.46
+   "same": 53.84,
+   "bothShut": 37.94,
+   "oldOnly": 6.88,
+   "newOnly": 0.9,
+   "height": 0.43
   },
-  "msPerPoint": 0.0021,
+  "msPerPoint": 0.0025,
   "classes": [
    {
     "class": "oldOnly | old: solid.building | new: open",
-    "points": 50421,
-    "m2": 126.05,
+    "points": 62589,
+    "m2": 156.47,
     "box": [
      -21.07,
-     -23.98,
+     -26.07,
      20.48,
      24.08
     ]
    },
    {
     "class": "oldOnly | old: post.round | new: open",
-    "points": 5458,
-    "m2": 13.65,
+    "points": 5416,
+    "m2": 13.54,
     "box": [
      -20.82,
      -0.72,
@@ -92,30 +92,30 @@
    },
    {
     "class": "newOnly | old: open | new: ledge",
-    "points": 5228,
-    "m2": 13.07,
+    "points": 5267,
+    "m2": 13.17,
     "box": [
-     -17.32,
-     -3.32,
-     17.33,
+     -13.17,
+     1.23,
+     12.73,
      29.88
     ]
    },
    {
     "class": "oldOnly | old: solid.wall | new: open",
-    "points": 3448,
-    "m2": 8.62,
+    "points": 3568,
+    "m2": 8.92,
     "box": [
      -21.38,
-     -23.98,
+     -26.98,
      21.38,
      33.98
     ]
    },
    {
     "class": "oldOnly | old: post.square | new: open",
-    "points": 3258,
-    "m2": 8.15,
+    "points": 2316,
+    "m2": 5.79,
     "box": [
      -12.57,
      -3.57,
@@ -136,11 +136,11 @@
    },
    {
     "class": "newOnly | old: open | new: monolith",
-    "points": 1338,
-    "m2": 3.35,
+    "points": 2106,
+    "m2": 5.27,
     "box": [
      -17.32,
-     -23.98,
+     -26.13,
      17.33,
      -3.07
     ]
@@ -169,8 +169,8 @@
    },
    {
     "class": "newOnly | old: open | new: iron",
-    "points": 825,
-    "m2": 2.06,
+    "points": 850,
+    "m2": 2.13,
     "box": [
      -1.17,
      11.83,
@@ -180,46 +180,35 @@
    },
    {
     "class": "newOnly | old: open | new: unreached",
-    "points": 744,
-    "m2": 1.86,
+    "points": 496,
+    "m2": 1.24,
+    "box": [
+     -0.77,
+     12.23,
+     0.78,
+     13.78
+    ]
+   },
+   {
+    "class": "newOnly | old: open | new: bark",
+    "points": 349,
+    "m2": 0.87,
     "box": [
      -12.78,
-     2.03,
+     1.63,
      11.68,
      29.48
     ]
    },
    {
     "class": "newOnly | old: open.carved | new: woodX",
-    "points": 350,
-    "m2": 0.88,
+    "points": 346,
+    "m2": 0.87,
     "box": [
      -13.92,
      -5.52,
      13.93,
      21.63
-    ]
-   },
-   {
-    "class": "newOnly | old: open | new: bark",
-    "points": 173,
-    "m2": 0.43,
-    "box": [
-     -12.72,
-     1.63,
-     12.38,
-     28.93
-    ]
-   },
-   {
-    "class": "newOnly | old: open.carved | new: woodV",
-    "points": 92,
-    "m2": 0.23,
-    "box": [
-     -14.72,
-     -5.43,
-     14.73,
-     22.28
     ]
    },
    {
@@ -231,6 +220,17 @@
      -0.77,
      20.83,
      29.63
+    ]
+   },
+   {
+    "class": "newOnly | old: open.carved | new: monolith",
+    "points": 60,
+    "m2": 0.15,
+    "box": [
+     -13.88,
+     -5.52,
+     13.73,
+     22.38
     ]
    },
    {
@@ -246,13 +246,24 @@
    },
    {
     "class": "newOnly | old: open | new: woodX",
-    "points": 46,
-    "m2": 0.12,
+    "points": 54,
+    "m2": 0.14,
     "box": [
      -11.07,
      20.68,
      -8.57,
      23.18
+    ]
+   },
+   {
+    "class": "newOnly | old: open.carved | new: woodV",
+    "points": 42,
+    "m2": 0.11,
+    "box": [
+     -14.72,
+     -5.42,
+     14.73,
+     22.13
     ]
    },
    {
@@ -273,33 +284,33 @@
     20
    ],
    "count": {
-    "both": 561293,
-    "oldOnly": 8872,
-    "newOnly": 62585,
-    "neither": 388050
+    "both": 582695,
+    "oldOnly": 9646,
+    "newOnly": 73889,
+    "neither": 407370
    },
    "m2": {
-    "both": 1403.2,
-    "oldOnly": 22.2,
-    "newOnly": 156.5,
-    "neither": 970.1
+    "both": 1456.7,
+    "oldOnly": 24.1,
+    "newOnly": 184.7,
+    "neither": 1018.4
    },
    "classes": [
     {
      "class": "newOnly | old: solid.building | new: open, reached",
-     "points": 50421,
-     "m2": 126.05,
+     "points": 62589,
+     "m2": 156.47,
      "box": [
       -21.07,
-      -23.98,
+      -26.07,
       20.48,
       24.08
      ]
     },
     {
      "class": "newOnly | old: post.round | new: open, reached",
-     "points": 5458,
-     "m2": 13.65,
+     "points": 5416,
+     "m2": 13.54,
      "box": [
       -20.82,
       -0.72,
@@ -309,30 +320,30 @@
     },
     {
      "class": "oldOnly | old: open | new: ledge",
-     "points": 5228,
-     "m2": 13.07,
+     "points": 5267,
+     "m2": 13.17,
      "box": [
-      -17.32,
-      -3.32,
-      17.33,
+      -13.17,
+      1.23,
+      12.73,
       29.88
      ]
     },
     {
      "class": "newOnly | old: solid.wall | new: open, reached",
-     "points": 3448,
-     "m2": 8.62,
+     "points": 3568,
+     "m2": 8.92,
      "box": [
       -21.38,
-      -23.98,
+      -26.98,
       21.38,
       33.98
      ]
     },
     {
      "class": "newOnly | old: post.square | new: open, reached",
-     "points": 3258,
-     "m2": 8.15,
+     "points": 2316,
+     "m2": 5.79,
      "box": [
       -12.57,
       -3.57,
@@ -342,19 +353,19 @@
     },
     {
      "class": "oldOnly | old: open | new: monolith",
-     "points": 1338,
-     "m2": 3.35,
+     "points": 2106,
+     "m2": 5.27,
      "box": [
       -17.32,
-      -23.98,
+      -26.13,
       17.33,
       -3.07
      ]
     },
     {
      "class": "oldOnly | old: open | new: iron",
-     "points": 825,
-     "m2": 2.06,
+     "points": 850,
+     "m2": 2.13,
      "box": [
       -1.17,
       11.83,
@@ -364,19 +375,30 @@
     },
     {
      "class": "oldOnly | old: open | new: unreached",
-     "points": 744,
-     "m2": 1.86,
+     "points": 496,
+     "m2": 1.24,
+     "box": [
+      -0.77,
+      12.23,
+      0.78,
+      13.78
+     ]
+    },
+    {
+     "class": "oldOnly | old: open | new: bark",
+     "points": 349,
+     "m2": 0.87,
      "box": [
       -12.78,
-      2.03,
+      1.63,
       11.68,
       29.48
      ]
     },
     {
      "class": "oldOnly | old: open.carved | new: woodX",
-     "points": 350,
-     "m2": 0.88,
+     "points": 346,
+     "m2": 0.87,
      "box": [
       -13.92,
       -5.52,
@@ -385,25 +407,14 @@
      ]
     },
     {
-     "class": "oldOnly | old: open | new: bark",
-     "points": 173,
-     "m2": 0.43,
+     "class": "oldOnly | old: open.carved | new: monolith",
+     "points": 60,
+     "m2": 0.15,
      "box": [
-      -12.72,
-      1.63,
-      12.38,
-      28.93
-     ]
-    },
-    {
-     "class": "oldOnly | old: open.carved | new: woodV",
-     "points": 92,
-     "m2": 0.23,
-     "box": [
-      -14.72,
-      -5.43,
-      14.73,
-      22.28
+      -13.88,
+      -5.52,
+      13.73,
+      22.38
      ]
     },
     {
@@ -419,13 +430,24 @@
     },
     {
      "class": "oldOnly | old: open | new: woodX",
-     "points": 46,
-     "m2": 0.12,
+     "points": 54,
+     "m2": 0.14,
      "box": [
       -11.07,
       20.68,
       -8.57,
       23.18
+     ]
+    },
+    {
+     "class": "oldOnly | old: open.carved | new: woodV",
+     "points": 42,
+     "m2": 0.11,
+     "box": [
+      -14.72,
+      -5.42,
+      14.73,
+      22.13
      ]
     },
     {
@@ -466,7 +488,7 @@
    "newOnly": 4.27,
    "height": 0.18
   },
-  "msPerPoint": 0.0008,
+  "msPerPoint": 0.0012,
   "classes": [
    {
     "class": "newOnly | old: open | new: woodX",

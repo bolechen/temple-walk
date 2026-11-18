@@ -1,5 +1,5 @@
 {
- "commit": "73cb183",
+ "commit": "880aa04",
  "cs": 0.05,
  "cfg": {
   "cs": 0.05,
@@ -19,7 +19,7 @@
    [
     -22,
     -1,
-    -24
+    -27
    ],
    [
     22,
@@ -30,23 +30,23 @@
  },
  "ms": {
   "wasmInit": 40,
-  "build": 655
+  "build": 752
  },
- "polys": 397,
- "verts": 777,
- "tris": 208243,
- "usPerStandQuery": 1.33,
+ "polys": 429,
+ "verts": 836,
+ "tris": 215727,
+ "usPerStandQuery": 1.39,
  "compareWithGrid": {
-  "points": 1020800,
-  "both": 573123,
-  "gridOnly": 59650,
-  "recastOnly": 220743,
-  "neither": 167284,
+  "points": 1073600,
+  "both": 599573,
+  "gridOnly": 58663,
+  "recastOnly": 223427,
+  "neither": 191937,
   "m2": {
-   "both": 1432.8,
-   "gridOnly": 149.1,
-   "recastOnly": 551.9,
-   "neither": 418.2
+   "both": 1498.9,
+   "gridOnly": 146.7,
+   "recastOnly": 558.6,
+   "neither": 479.8
   }
  },
  "paths": [
@@ -61,7 +61,7 @@
     0,
     4
    ],
-   "ms": 1.017,
+   "ms": 1.201,
    "points": 8,
    "metres": 16.74,
    "ok": true
@@ -77,7 +77,7 @@
     1.5,
     -4.8
    ],
-   "ms": 0.078,
+   "ms": 0.086,
    "points": 3,
    "metres": 29.91,
    "ok": true
@@ -93,7 +93,7 @@
     0.45,
     18
    ],
-   "ms": 0.182,
+   "ms": 0.203,
    "points": 6,
    "metres": 32.4,
    "ok": true
@@ -109,7 +109,7 @@
     1.5,
     -12
    ],
-   "ms": 0.164,
+   "ms": 0.269,
    "points": 12,
    "metres": 47.69,
    "ok": true
