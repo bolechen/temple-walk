@@ -95,7 +95,9 @@ export function buildHall(M, opts) {
   };
 
   const g = new THREE.Group();
-  const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); g.add(m); return m; };
+  // Each mesh says how its occlusion was baked (for the tests): `eave` lit back from the court by `bracketAO`, `position`
+  // by `ao` alone, `own` by something the caller gave.
+  const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); m.userData.ao = o.ao === bracketAO ? "eave" : "ao" in o ? "own" : "position"; g.add(m); return m; };
 
   // ---- Platform and stairs ----
   const run = stairGeo(1, p.platH).run, stairs = (w) => stairGeo(w, p.platH).geo;
@@ -594,5 +596,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, crest: g.userData.crest || null, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
+  return { group: g, aoAt: ao, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
 }
