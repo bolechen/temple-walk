@@ -19,7 +19,7 @@ import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
 import { createSettings, browserSettingsStore } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
-import { createTrees } from "./src/trees.js";
+import { createTrees, geometryHash } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
 import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
@@ -890,6 +890,7 @@ window.__cost = (n = 40) => {
   return +((performance.now() - t0) / n).toFixed(2);
 };
 // What each part of the scene weighs: meshes, and triangles as drawn (instances counted).
+window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null });   // the cedars' grown wood, for the Node/browser check
 window.__census = () => {
   const out = {};
   for (const top of scene.children) {

@@ -320,7 +320,7 @@ sends: nearly dry outdoors, the hall's reverb indoors. Each step is played a fix
 how many of each have been heard, or plays one.
 
 **Trees, drifting things (`trees.js`, `drift.js`).** The trees that show the season and the petals, leaves, snow and
-fireflies in the air; both are driven only by the mood. Nothing drifts indoors, and no snow lies on a room's floor:
+fireflies in the air; both are driven only by the mood. The cryptomerias' wood is grown by three's `TreeGenerator`, vendored as `app/src/three-tree.js` with the changes it lists at its head (collars, closed tips, a child's share of its parent, the skeleton kept for the tests); the same seed gives the same tree in Node and in the browser (`treeseed`). The other trees are still grown by hand. Nothing drifts indoors, and no snow lies on a room's floor:
 `dress()` in `yard.js` sets `uSnow` to 0 after the doorway's view is taken.
 
 **Footprints in the snow (`trail.js`).** `monk.steps` reports each shoe as it comes down (sole centre, ground height,
@@ -465,7 +465,7 @@ at the edge fade while the mouse rests. Add a hint there, not as permanent text 
 `window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
 returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
-`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__look(at, to)` (the eye stood anywhere, looking at a point, for picture tools; `__look()` lets it go), `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, `__debugURL()`
+`__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__trees()` (how many cedars were grown and a fingerprint of their wood, which the `treeseed` scenario compares with the same plan grown in Node), `__look(at, to)` (the eye stood anywhere, looking at a point, for picture tools; `__look()` lets it go), `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, `__debugURL()`
 (the address of the view he has now, for the console: `?cam=…&view=…&season=…&time=…`, with `in`/`up` and an inert
 `devpose`; it writes nothing into the page's address), and `__pick(x, y)`: what lies under a point of the
 picture, nearest first (part of the scene, material, distance, whether it is see-through). The tests and tools depend on these; keep them when refactoring, and add
