@@ -23,7 +23,7 @@ export const BAMBOO = { col: [[0.42, 0.5, 0.15], [0.62, 0.56, 0.17]], size: 0.11
 // Darker and warmer than the falling ones, which are seen against the sky; leaves lying a while go brown. Petals fade to the
 // colour of old paper (the ginkgo is only green in spring, so it shares the petal's).
 export const LITTER = {
-  leaf: [[0.25, 0.085, 0.04], [0.15, 0.09, 0.055], [0.36, 0.27, 0.07], [0.19, 0.14, 0.065]],
+  leaf: [[0.25, 0.085, 0.04], [0.15, 0.09, 0.055], [0.27, 0.2, 0.05], [0.16, 0.115, 0.055]],
   petal: [[0.5, 0.43, 0.42], [0.27, 0.21, 0.18], [0.5, 0.43, 0.42], [0.27, 0.21, 0.18]],
 };
 // Under a crown the cloud is this much denser than its even share, scaled by the source map. Snow and fireflies take no map.

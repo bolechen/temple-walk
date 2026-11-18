@@ -140,7 +140,7 @@ export function createGround(scene, shade, censer, paving) {
                 vec4 ll=litterLayer(p,amt*(L==0?1.:L==1?.8:.6),fm.a,float(L)*.9+.4);
                 if(ll.z>.01){
                   float age=clamp(ll.y*.8+.4*smoothstep(.2,.8,fbm2(p*.6+5.)),0.,1.);   // those under the trees longest have gone brown
-                  vec3 lc=ll.w>.5?mix(uLitterCol[2],uLitterCol[3],age):mix(uLitterCol[0],uLitterCol[1],age); lc*=.75+.5*ll.x;
+                  vec3 lc=ll.w>.5?mix(uLitterCol[2],uLitterCol[3],age):mix(uLitterCol[0],uLitterCol[1],age); lc*=ll.w>.5?.55+.9*ll.x:.75+.5*ll.x;   // the ginkgo's yellow runs from deep to pale, leaf to leaf
                   alb=mix(alb,lc*mix(1.,.7,smoothstep(.3,.58,low)),ll.z*.9);
                 }
               }
