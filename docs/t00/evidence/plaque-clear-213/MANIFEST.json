@@ -1,0 +1,60 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam01_summer-day_first.jpg",
+   "bytes": 184298,
+   "sha256": "1d96e053ce72d6992739f1b2fd9ddc0ea9e18466badd7dc139a644a58e9c4baf",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "cam02_summer-day_first.jpg",
+   "bytes": 161810,
+   "sha256": "76ff87b10dc406aff5c49b1c81015796acae3bccf9ffd8e2514c44e72fc3d23c",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "cam03_summer-day_first.jpg",
+   "bytes": 155347,
+   "sha256": "e1ab3cb25e4d29d00dd7be727112a0d4d2faf3ad41fd795c3b9ad341ae8f496c",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "cam04_summer-day_first.jpg",
+   "bytes": 127571,
+   "sha256": "6ae6570da23089933f452b8db0cca99bfacf815c427dfd0b9d6ad4c32755a0b3",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "cam05_summer-day_first.jpg",
+   "bytes": 117138,
+   "sha256": "65593617f385d3a85cd7adb58b9b21728f994fd96707b0eca8f65cd1db39a5a1",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "cam06_summer-day_first.jpg",
+   "bytes": 166652,
+   "sha256": "3420670d80058d646c6b5e7dcad394cba75c63eabb5d56dc93c6dac9e2da004b",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "hall-3m.jpg",
+   "bytes": 83328,
+   "sha256": "2506987f0613528e010cdcfbe4af1be08740044eba4ee622701621df37c7261f",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "hall-4.5m.jpg",
+   "bytes": 86601,
+   "sha256": "faa44f66fc5e7a5865eafa0f010cd0086900eb53631754809d3fffa08894a360",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  },
+  {
+   "path": "hall-7m.jpg",
+   "bytes": 104127,
+   "sha256": "30fda2fc1347bc5ff139f17f8c898c8a4790e1e6f2eae5c87d89f3b72dbc0619",
+   "rev": "972a32c96a280f8e7dd3f0498acba572165ec05d"
+  }
+ ]
+}
