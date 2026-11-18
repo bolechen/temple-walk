@@ -4,4 +4,4 @@
 import { writeFileSync } from "node:fs";
 const { outline } = await import("../edges.mjs");
 const o = outline();
-writeFileSync(new URL("./outline.json", import.meta.url), JSON.stringify({ bin: 0.05, reach: Array.from(o, (v) => +v.toFixed(3)), low: Array.from(o.low, (v) => +v.toFixed(3)) }) + "\n");
+writeFileSync(new URL("../../app/src/spike/outline.json", import.meta.url), JSON.stringify({ bin: 0.05, reach: Array.from(o, (v) => +v.toFixed(3)), low: Array.from(o.low, (v) => +v.toFixed(3)) }) + "\n");

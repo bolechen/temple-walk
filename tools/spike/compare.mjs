@@ -8,7 +8,7 @@ import sharp from "sharp";
 import * as THREE from "three";
 import "../../tests/unit/dom-stub.mjs";
 import { namedMaterials } from "./mats.mjs";
-import { MW } from "./meshwalker.mjs";
+import { MW } from "../../app/src/spike/meshwalker.js";
 import { drawnWalker, REGION } from "./drawn.mjs";
 const { createWalker, buildSite } = await import("../../app/src/site.js?real");
 const { BODY } = await import("../../app/src/geo.js");

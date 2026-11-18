@@ -18,13 +18,19 @@
 //   floorAt    the material of the face the floor ray stopped on.
 import * as THREE from "three";
 import { MeshBVH, SAH } from "three-mesh-bvh";
-import { BODY } from "../../app/src/geo.js";
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
+import { BODY } from "../geo.js";
+import OUTLINE from "./outline.json" with { type: "json" };
+// A short fingerprint of the gathered triangles (FNV-1a over their bytes), to name a baked grid by what it was baked from.
+function fingerprint(f32) { const u = new Uint32Array(f32.buffer, f32.byteOffset, f32.length); let h = 0x811c9dc5; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619) >>> 0; } return h.toString(16).padStart(8, "0") + u.length.toString(16); }
 const HEAD = 0.13;   // over the top of his outline (his hat), up to CLEAR
+// reach(lo, hi) for every pair of 5 cm bins, so the bake can ask it for every cell it erodes.
+let TABLE = null;
+function reachBins(a, b) {
+  if (!TABLE) { const n = 44; TABLE = new Float32Array(n * n); for (let i = 0; i < n; i++) for (let j = i; j < n; j++) TABLE[i * n + j] = reach(i * OUTLINE.bin, j * OUTLINE.bin); }
+  return TABLE[Math.min(43, a) * 44 + Math.min(43, b)];
+}
 /** His reach from his centre over the heights [lo, hi] above the floor he stands on. */
-export const BODY_SHAPE = (typeof process !== "undefined" && process.env.SPIKE_BODY) || "outline";   // or "cylinder": BODY at every height, as the written plan has him
+export const BODY_SHAPE = (typeof process !== "undefined" && process.env?.SPIKE_BODY) || "outline";   // or "cylinder": BODY at every height, as the written plan has him
 export function reach(lo, hi) {
   if (BODY_SHAPE === "cylinder") return BODY;
   let r = 0; const b = OUTLINE.bin;
@@ -69,14 +75,14 @@ export function gather(roots, box, tag = () => null) {
     tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if (!tb.intersectsBox(grow)) return;
     take(o.geometry, o.matrixWorld, name);
   });
-  const hash = createHash("sha1").update(Float32Array.from(pos)).digest("hex").slice(0, 12);
+  const hash = fingerprint(Float32Array.from(pos));
   const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   const bvh = new MeshBVH(geo, { strategy: SAH, targetLeafSize: 8 });
   return { bvh, names, mat: Uint16Array.from(mat), tris: mat.length, hash, ms: Math.round(performance.now() - t0) };
 }
 
 // The 2D distance from (px, pz) to the part of a triangle between heights y0 and y1, seen from above.
-const clipA = new Float64Array(30), clipB = new Float64Array(30), slabY = [0, 0];
+const clipA = new Float64Array(30), clipB = new Float64Array(30), slabY = [0, 0], nrm = new THREE.Vector3();
 function slabDistance(a, b, c, y0, y1, px, pz) {
   let n = 3, src = clipA, dst = clipB;
   src[0] = a.x; src[1] = a.y; src[2] = a.z; src[3] = b.x; src[4] = b.y; src[5] = b.z; src[6] = c.x; src[7] = c.y; src[8] = c.z;
@@ -134,16 +140,20 @@ export function createMeshWalker(o) {
   // What is drawn within `r` of the vertical line through (x, z), from CLIMB over the floor there (from the floor itself,
   // for a thing marked to be walked round) up to CLEAR: the material it is made of and the heights over the floor
   // that it takes up there, or null.
-  function inBody(S, x, z, r) {
-    const f = floor(S, x, z), y = f ? f.y : region.floorY, y1 = y + MW.CLEAR;
-    qbox.min.set(x - r, y + 0.02, z - r); qbox.max.set(x + r, y1, z + r);
+  // `from`: for the bake, the lowest floor round the cell; everything that stands up from there to CLEAR over this
+  // cell's floor is gathered (faces that look up are floors, not walls, and are left out), and whether it is in his
+  // way is decided later for each cell he might stand in, by the heights it takes up over that cell's own floor.
+  function inBody(S, x, z, r, from = null) {
+    const f = floor(S, x, z), y = f ? f.y : region.floorY, y1 = y + MW.CLEAR, ya = from === null ? null : Math.min(from, y);
+    qbox.min.set(x - r, (ya ?? y) + 0.02, z - r); qbox.max.set(x + r, y1, z + r);
     let what = null, lo = Infinity, hi = -Infinity;
     const ix = S.bvh.geometry.index.array;
     S.bvh.shapecast({
       intersectsBounds: (box) => box.intersectsBox(qbox),
       intersectsTriangle: (t, i) => {
         const name = S.names[S.mat[Math.floor(ix[i * 3] / 3)]], post = name.startsWith("post:");
-        if (slabDistance(t.a, t.b, t.c, y + (post ? 0.02 : MW.CLIMB), y1, x, z) < r) {
+        if (ya !== null && !post && t.getNormal(nrm).y > 0.5) return false;
+        if (slabDistance(t.a, t.b, t.c, ya !== null ? ya + 0.02 : y + (post ? 0.02 : MW.CLIMB), y1, x, z) < r) {
           if (!what || post) what = name; lo = Math.min(lo, slabY[0] - y); hi = Math.max(hi, slabY[1] - y);
           if (post) { lo = 0; }
         }
@@ -166,17 +176,28 @@ export function createMeshWalker(o) {
     const h = new Float32Array(N), border = new Int16Array(N).fill(-1), shut = new Uint8Array(N), cause = new Int16Array(N).fill(-1), LEDGE = S.names.length;
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const f = floor(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step); h[j * nx + i] = f ? f.y : region.floorY; }
     const t1 = performance.now();
-    const rad = new Float32Array(N), top = new Float32Array(N), post = new Uint8Array(N);   // top: the highest point of what made a cell a border   // how far a border cell keeps his centre off: his reach at the heights it takes up
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i, w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71); if (w) { border[k] = S.names.indexOf(w.what); rad[k] = reach(w.lo, w.hi); top[k] = w.floor + w.hi; post[k] = w.what.startsWith("post:") ? 1 : 0; } }
+    const rad = new Float32Array(N), top = new Float32Array(N), bot = new Float32Array(N), post = new Uint8Array(N);   // top: the highest point of what made a cell a border   // how far a border cell keeps his centre off: his reach at the heights it takes up
+    // What stands up from a cell's own floor; what lies below it (a riser, a platform's face, the footing under a sill)
+    // belongs to that floor and is a ledge, taken next.
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i;
+      const w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71, h[k]); if (w) { border[k] = S.names.indexOf(w.what); rad[k] = reach(w.lo, w.hi); top[k] = w.floor + w.hi; bot[k] = w.floor + w.lo; post[k] = w.what.startsWith("post:") ? 1 : 0; } }
     const t2 = performance.now();
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; if (border[k] >= 0) continue; let up = 0;
       for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; up = Math.max(up, h[jj * nx + ii] - h[k]); }
-      if (up > MW.CLIMB) { border[k] = LEDGE; rad[k] = reach(0, Math.min(up, MW.CLEAR)); top[k] = h[k] + up; } }
+      if (up > MW.CLIMB) { border[k] = LEDGE; rad[k] = reach(0, Math.min(up, MW.CLEAR)); top[k] = h[k] + up; bot[k] = h[k]; } }
     const disks = new Map(), diskOf = (r) => { const q = Math.round(r * 100); if (!disks.has(q)) { const R = Math.ceil(q / 100 / step), d = []; for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) if (Math.hypot(a, b) * step < q / 100) d.push([a, b]); disks.set(q, d); } return disks.get(q); };
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k0 = j * nx + i, c = border[k0]; if (c < 0) continue; shut[k0] = 1; cause[k0] = c;
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k0 = j * nx + i, c = border[k0]; if (c < 0) continue;
       // What made the border keeps him off only where it stands above his feet: the face of a platform, seen from the
       // court, is no obstacle to him standing on the porch above it.
-      for (const [a, b] of diskOf(rad[k0])) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (!shut[kk] && (post[k0] || top[k0] > h[kk] + MW.CLIMB)) { shut[kk] = 1; cause[kk] = c; } } }
+      // How far it keeps him off is his reach at the heights it takes up over the floor of the cell he would stand in,
+      // not over its own: a cheek stone or a wall's footing seen from the tread or the porch beside it.
+      const B = OUTLINE.bin;
+      for (const [a, b] of diskOf(BODY + 0.01)) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (shut[kk]) continue;
+        // Over which floor are its heights taken: the border cell's own, if he could step up onto it from here (the
+        // next tread up a flight: what stands on it is measured from the tread), otherwise the one he stands on.
+        const ref = h[k0] >= h[kk] && h[k0] - h[kk] <= MW.CLIMB ? h[k0] : h[kk];
+        const lo = Math.max(post[k0] ? 0 : MW.CLIMB, bot[k0] - ref), hi = Math.min(MW.CLEAR, top[k0] - ref); if (hi < lo) continue;
+        const r = reachBins(Math.floor(lo / B), Math.floor(hi / B)); if (Math.hypot(a, b) * step < r) { shut[kk] = 1; cause[kk] = c; } } }
     // What cannot be walked to from where he comes in (a hall's hollow shell, the top of a table, a railing's cap) is
     // shut too, as Recast drops the regions its seeds do not reach. Cells are joined eight ways when neither is shut
     // and the floor steps no more than CLIMB.
@@ -221,7 +242,7 @@ export function createMeshWalker(o) {
     why(x, z) { const S = scope(x, z); if (!S) return undefined; const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? (G.shut[k] ? G.names[G.cause[k]] : null) : inBody(S, x, z, BODY)?.what ?? null; },
     /** Bake the grids (outdoors over the region, and the room): returns the milliseconds each part took. */
     bake(step = 0.05, cache = null) {
-      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v7.bin`;
+      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v12.bin`;
         if (file && cache.exists(file)) return cache.read(file);
         const g = bake(S, box, step); if (file) cache.write(file, g); return g; };
       grids.outdoors = one({ ...o.outdoors, ceil: region.ceil }, region, "court");

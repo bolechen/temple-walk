@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
 import { mergeStatic } from "./src/geo.js";
+import { swappable, buildDrawnWalker } from "./src/spike/page.js";
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain } from "./src/site.js";
 import { createSky, FOG, SUN_DIR, SHADOW_BOX } from "./src/sky.js";
 import { layerFog } from "./src/fog.js";
@@ -95,7 +96,7 @@ const M = createMaterials();
 const site = buildSite(M);
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
-const walker = createWalker(site);
+const walker = swappable(createWalker(site));   // (#161 spike: ?walker=mesh swaps the drawn walker in below)
 await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
@@ -141,6 +142,10 @@ const glows = []; let glowCloud = null;
 
 await loading.step(tr("树影"));
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
+let drawnCost = null;   // (#161 spike) the drawn walker, made from the meshes before they are batched
+if (Q.get("walker") === "mesh") { const w = buildDrawnWalker(scene, rooms, createWalker(site)); drawnCost = w.cost; walker.swap(w); }
+window.__walker = () => ({ kind: Q.get("walker") === "mesh" ? "mesh" : "written", cost: drawnCost, ...walker.stats() });
+window.__walkerReset = () => walker.reset();
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
 // The dragon well's drops and the rings they send across the water (well.js); the rite's drops ring it too.
 const well = createWell(scene, site.places.well.pool, wellDrip); onDrop(() => well.ripple());

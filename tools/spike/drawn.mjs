@@ -4,14 +4,14 @@
 import * as THREE from "three";
 import fs from "node:fs";
 import { namedMaterials } from "./mats.mjs";
-import { gather, createMeshWalker } from "./meshwalker.mjs";
+import { gather, createMeshWalker } from "../../app/src/spike/meshwalker.js";
 const { LEVELS, SITE } = await import("../../app/src/site.js?real");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createTrees } = await import("../../app/src/trees.js");
 const { createProps } = await import("../../app/src/props.js");
 
 // The trial region, and where he comes into it: the court's middle, and the great hall's room inside its door.
-export const REGION = { x0: -22, x1: 22, z0: -24, z1: 34, ceil: 3.0, floorY: 0, seeds: [[0, 20], [0, 30]] };
+export const REGION = { x0: -22, x1: 22, z0: -27, z1: 34, ceil: 3.0, floorY: 0, seeds: [[0, 20], [0, 30]] };
 const DIR = new URL("../out/spike/cache", import.meta.url).pathname;
 export const diskCache = {
   dir: DIR,

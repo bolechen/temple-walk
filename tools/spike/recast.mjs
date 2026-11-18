@@ -7,7 +7,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import sharp from "sharp";
 import { namedMaterials } from "./mats.mjs";
 import { drawnWalker, REGION } from "./drawn.mjs";
-import { reach as outlineReach } from "./meshwalker.mjs";
+import { reach as outlineReach } from "../../app/src/spike/meshwalker.js";
 const { createWalker, buildSite } = await import("../../app/src/site.js?real");
 const CS = +(process.argv[2] || 0.05), OUT = process.argv[3] || "tools/out/spike"; mkdirSync(OUT, { recursive: true });
 let t = performance.now(); const { init, NavMeshQuery } = await import("recast-navigation"); const { generateSoloNavMesh } = await import("recast-navigation/generators");
