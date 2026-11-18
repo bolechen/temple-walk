@@ -63,29 +63,46 @@ function threeTree(kind, h, seed, r0) {
     // flattening as they go, in two or three tiers; from each limb's end, and from two points along it, the generator
     // grows the finer wood, bending and closing at every tip.
     for (let i = 0; i < 4; i++) rnd();   // (a small seed's first draws are all near nothing)
-    const F = 1.0 + rnd() * 0.4, r0b = 0.115, n = 3 + Math.floor(rnd() * 3), tierN = n >= 5 ? 3 : 2, top = F + (tierN - 1) * 0.15 + 0.06, lean = V((rnd() - 0.5) * 0.08, 0, (rnd() - 0.5) * 0.08);
-    const trunkR = (y) => r0b * (1 - 0.08 * Math.min(1, Math.max(0, y) / top)) * (1 + 0.6 * Math.exp(-Math.max(0, y) / 0.22));
-    const tpts = [V(0, -0.15, 0), V(lean.x * 0.3, 0.5, lean.z * 0.3), V(lean.x * 0.8, F, lean.z * 0.8), V(lean.x, top, lean.z)];
-    out.wood.push(tube(tpts, (t, P) => trunkR(P.y), 10)); out.trunks.push({ x: 0, z: 0, r: trunkR(0) });
-    const ratio = Math.min(0.58, Math.max(0.46, 1 / Math.sqrt(n))), a0 = rnd() * 6.283, limbs = [];   // (the trunk ends just above its highest limb: no stump stands over the fork)
-    for (let i = 0; i < n; i++) {
-      const tier = i % tierN, y0 = F + tier * 0.15, a = a0 + (i / n) * 6.283 + (rnd() - 0.5) * 0.4, dir = V(Math.cos(a), 0, Math.sin(a)), side = V(-dir.z, 0, dir.x);
-      const th = ((50 + rnd() * 12) * Math.PI) / 180, reach = h * 0.22 * (0.85 + rnd() * 0.3) * (1 - tier * 0.12), from = V(lean.x * (y0 / top), y0, lean.z * (y0 / top)).addScaledVector(dir, r0b * 0.3);
-      const pts = [];
-      for (let k = 0; k < 5; k++) { const u = k / 4, rise = (reach / Math.tan(th)) * u * (1 - 0.45 * u); pts.push(from.clone().addScaledVector(dir, reach * u).addScaledVector(side, Math.sin(u * 3 + a) * reach * 0.06 * u).add(V(0, rise, 0))); }
-      const rs = trunkR(y0) * ratio, rad = (t) => rs * (1 - 0.4 * t) * (1 + 0.25 * Math.exp(-(t * reach) / 0.1));
-      out.wood.push(tube(pts, rad, 7)); const curve = new THREE.CatmullRomCurve3(pts);
-      limbs.push({ ratio: rs / trunkR(y0), area: (rs * rs) / (trunkR(y0) * trunkR(y0)), angle: (th * 180) / Math.PI, tier, end: pts[4].y, reach });
-      // the finer wood: on from the limb's end, and out from two points along it
-      const crown = (at, d, len, r) => one({ seed: seed + i * 31 + Math.round(len * 100), limb: true, levels: 4, children: [3, 3, 2], branchAngle: [34, 38, 42], angleVariance: 12, lengthRatio: [0.55, 0.55, 0.5], childRadius: [0.577, 0.577, 0.707],
-        trunkLength: len, trunkRadius: r, taper: 0.3, taperCurve: 0.8, rootFlare: 0, flareFrac: 0.1, minRadius: 0.005, minLength: 0.2, droop: 0.06, upPull: 0.26, gnarl: [0.06, 0.18, 0.24, 0.3],
+    // One short trunk swelling into its roots. Its great limbs leave it one above another, the lowest at 1.2-1.5 m and the
+    // rest up to 2.2 m; each takes three tenths of the wood the trunk carries there (a radius 0.55 of the trunk's), and the
+    // trunk goes on with the rest, until at the top it bends over and is itself the last limb, so no stump stands over
+    // the fork. Every limb rises out at 40-65 degrees from upright, levels off and droops a little at its end.
+    const n = 3 + Math.floor(rnd() * 3), a0 = rnd() * 6.283, r0b = 0.115, SHARE = 0.3, limbs = [];
+    const starts = []; for (let i = 0; i < n - 1; i++) starts.push(1.2 + rnd() * 0.3 + (i / Math.max(1, n - 2)) * (0.7 - rnd() * 0.1));
+    starts.sort((p, q) => p - q); const yTop = Math.min(2.2, starts[starts.length - 1] + 0.25 + rnd() * 0.15);
+    // what the trunk carries at a height: its base, less each limb's share as it is passed (and its swelling at the foot)
+    const carried = (y) => { let A = 1; for (const s0 of starts) if (y > s0) A *= 1 - SHARE; return A; };
+    const trunkR = (y) => r0b * Math.sqrt(carried(y)) * (1 + 0.6 * Math.exp(-Math.max(0, y) / 0.22));
+    const bendOut = (from, dir, side, reach, th, k) => { const pts = []; for (let q = 0; q < 5; q++) { const u = q / 4, A = reach / Math.tan(th), rise = A * (u - (u * u) / 1.4); pts.push(from.clone().addScaledVector(dir, reach * u).addScaledVector(side, Math.sin(u * 3 + k) * reach * 0.07 * u).add(V(0, rise, 0))); } return pts; };
+    const crowns = [];
+    const lateral = (i, y0, total) => {
+      const a = a0 + (i / total) * 6.283 + (rnd() - 0.5) * 0.4, dir = V(Math.cos(a), 0, Math.sin(a)), side = V(-dir.z, 0, dir.x), th = ((48 + rnd() * 14) * Math.PI) / 180, reach = h * 0.2 * (0.85 + rnd() * 0.25);
+      const before = trunkR(y0 - 1e-3) / (1 + 0.6 * Math.exp(-y0 / 0.22)), rs = before * Math.sqrt(SHARE), pts = bendOut(V(0, y0, 0).addScaledVector(dir, before * 0.3), dir, side, reach, th, a);
+      const rad = (t) => rs * (1 - 0.4 * t) * (1 + 0.25 * Math.exp(-(t * reach) / 0.1));
+      out.wood.push(tube(pts, rad, 7)); limbs.push({ ratio: rs / before, fork: (rs * rs + (before * before) * (1 - SHARE)) / (before * before), angle: (th * 180) / Math.PI, start: y0, end: pts[4].y, reach });
+      crowns.push({ curve: new THREE.CatmullRomCurve3(pts), rad, reach, side, i });
+    };
+    starts.forEach((y0, i) => lateral(i, y0, n));
+    // the trunk, and the last limb it becomes
+    const aT = a0 + ((n - 1) / n) * 6.283, dT = V(Math.cos(aT), 0, Math.sin(aT)), sT = V(-dT.z, 0, dT.x), thT = ((44 + rnd() * 10) * Math.PI) / 180, reachT = h * 0.22;
+    const lead = bendOut(V(0, yTop, 0), dT, sT, reachT, thT, aT), tpts = [V(0, -0.15, 0), V(0, 0.6, 0), V(0, (starts[0] + yTop) / 2, 0), ...lead];
+    const rTop = trunkR(yTop) / (1 + 0.6 * Math.exp(-yTop / 0.22)), tSplit = 3 / (tpts.length - 1);
+    const radT = (t, P) => (t <= tSplit ? trunkR(P.y) : rTop * (1 - 0.4 * ((t - tSplit) / (1 - tSplit))));
+    out.wood.push(tube(tpts, radT, 10)); out.trunks.push({ x: 0, z: 0, r: trunkR(0) });
+    limbs.push({ ratio: null, fork: null, angle: (thT * 180) / Math.PI, start: yTop, end: lead[4].y, reach: reachT, leader: true });
+    crowns.push({ curve: new THREE.CatmullRomCurve3(lead), rad: (t) => rTop * (1 - 0.4 * t), reach: reachT, side: sT, i: n - 1 });
+    // the finer wood, grown by the generator on from each limb's end and out from a point along it
+    for (const c of crowns) {
+      const grow2 = (at, d, len, r) => one({ seed: seed + c.i * 31 + Math.round(len * 100), limb: true, levels: 4, children: [3, 3, 2], branchAngle: [30, 36, 42], angleVariance: 12, lengthRatio: [0.55, 0.55, 0.5], childRadius: [0.577, 0.577, 0.707],
+        trunkLength: len, trunkRadius: r, taper: 0.3, taperCurve: 0.8, rootFlare: 0, flareFrac: 0.1, minRadius: 0.005, minLength: 0.2, droop: 0.06, upPull: 0.26, gnarl: [0.08, 0.22, 0.32, 0.4],
         radialSegments: 4, sectionLength: 0.5, childStart: 0.15, trunkClear: 0.12, collar: 0.25 }, at, [d.x, d.y, d.z]);
-      crown(curve.getPoint(0.97), curve.getTangent(1).clone().add(V(0, 1.4, 0)).normalize(), h * 0.42, rs * 0.6);
-      for (const u of n > 3 ? [0.62] : [0.5, 0.78]) { const p = curve.getPoint(u), d = curve.getTangent(u).clone().add(side.clone().multiplyScalar(u < 0.6 ? 1 : -1)).add(V(0, 0.6, 0)).normalize(); crown(p, d, h * 0.22, rad(u) * 0.55); }
+      grow2(c.curve.getPoint(0.97), c.curve.getTangent(1).clone().add(V(0, 1.6, 0)).normalize(), h * 0.38, c.rad(1) * 0.98);
+      const p = c.curve.getPoint(0.6), d = c.curve.getTangent(0.6).clone().add(c.side.clone().multiplyScalar(c.i % 2 ? 1 : -1)).add(V(0, 0.6, 0)).normalize(); grow2(p, d, h * 0.17, c.rad(0.6) * 0.55);
     }
+    const lat = limbs.filter((l) => !l.leader), band = (y) => (y < 1.55 ? 0 : y < 1.9 ? 1 : 2);
     out.leafLevel = 2;
     const forks = out.tubes.filter((t) => t.kids && t.kids.length).map((t) => t.kids.reduce((n, k) => n + k * k, 0) / (t.base * t.base));
-    out.skeleton = { forks, forkHeight: F, trunkD03: 2 * trunkR(0.3), limbs, tiers: tierN, areaSum: limbs.reduce((t, l) => t + l.area, 0) };
+    out.skeleton = { forks, forkHeight: starts[0], topHeight: yTop, trunkD03: 2 * trunkR(0.3), limbs, tiers: new Set(limbs.map((l) => band(l.start))).size, trunkForks: lat.map((l) => l.fork) };
   }
   out.tips = tipsOfTubes(out.tubes, out.leafLevel);
   return out;
