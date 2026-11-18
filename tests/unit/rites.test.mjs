@@ -127,3 +127,17 @@ test("the closing shot keeps the ridge's end ornaments clear too, the one nearer
     for (const t of tops) assert.ok(t.clone().project(c).y <= 1 - 2 * 0.08 + 1e-3, `fov ${fov}, aspect ${aspect.toFixed(2)}: an ornament at ${t.clone().project(c).y.toFixed(3)}`);
   }
 });
+
+// The breath of sitting is a ring of brush on the ground where he sits (#156), not a mark fixed on the screen, where it
+// lay over his face from the sitting's own shot. It fills with the breath in and empties with the breath out.
+test("the breath's ring on the ground grows from his knees to about a metre and fades as it empties", async () => {
+  const { breathRing } = await import("../../app/src/rites.js");
+  assert.equal(typeof breathRing, "function", "rites.js has no breathRing");
+  const empty = breathRing(0), half = breathRing(0.5), full = breathRing(1);
+  assert.ok(empty.opacity === 0, "an empty breath leaves no ring");
+  assert.ok(full.radius >= 0.9 && full.radius <= 1.1, `a full breath's ring is ${full.radius} m`);
+  assert.ok(empty.radius >= 0.45, `the smallest ring is ${empty.radius} m: inside his knees`);
+  assert.ok(empty.radius < half.radius && half.radius < full.radius && empty.opacity < half.opacity && half.opacity < full.opacity, "the ring grows and firms with the breath");
+  const still = [0, 0.5, 1].map((k) => breathRing(k, true));
+  assert.ok(still.every((s) => s.radius === still[0].radius) && still[2].opacity > still[1].opacity && still[1].opacity > still[0].opacity, "reduced motion: it only fades, it does not change size");
+});

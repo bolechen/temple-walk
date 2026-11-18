@@ -2,62 +2,61 @@
   "schema_version": "1.0",
   "scene_id": "T00",
   "status": "partial",
-  "run_id": "t00-20261116-727687e",
+  "run_id": "t00-20261118-ea2f3d0",
   "source": {
     "repository": "https://github.com/bolechen/temple-walk",
     "ref": "main",
-    "reviewed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-    "code_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+    "reviewed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+    "code_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
     "evidence_commit": null,
-    "observed_head": "70a564e3ca70acf71d38cd54aa226ecb15591c2c",
-    "previous_reviewed_commit": "9e78569b77794b6174d698799f42f4e580882039",
-    "code_equivalence": "none: main advanced to 70a564e3ca70acf71d38cd54aa226ecb15591c2c (4196350, 70a564e: resume/visit, ui.css, yard.js, e2e) during the review; this report applies only to 727687edc9d1b22c0fd19ed90ae22e21d5b33c99"
+    "observed_head": "f22b9aba021b113e82ded90dd3c42fab83b4b5f3",
+    "previous_reviewed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+    "code_equivalence": "none: main advanced to f22b9aba021b113e82ded90dd3c42fab83b4b5f3 during the review (#179 interface walk-through: ui.css menu layout, settings thirds default, game/hints/journey/yard; #158 marketing; process docs). This report applies only to ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e."
   },
-  "reviewed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+  "reviewed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
   "reviewer": "Claude 定时独立评审",
   "reviewer_details": {
     "method": "commit-traceable independent review",
     "skill_commit": "c4c3ba5cad3eb9337c3f21c07cbdbd4ac62f3ee3",
-    "checked_at": "2026-11-16T02:40:00Z",
-    "latest_head_pending_retest": "70a564e3ca70acf71d38cd54aa226ecb15591c2c"
+    "checked_at": "2026-11-18T04:10:00Z",
+    "latest_head_pending_retest": "f22b9aba021b113e82ded90dd3c42fab83b4b5f3"
   },
   "change_kind": "ui",
   "run_status": "completed",
   "verdict": "not_accepted",
   "environment": {
-    "os": "managed Linux container (restarted once during the run)",
+    "os": "managed Linux container (worker restarted once between runs; no run was interrupted mid-scenario)",
     "browser": "Playwright Chromium headless shell",
-    "renderer": "SwiftShader (software GL), about 0.4 frames/s at 1280x720",
-    "node": "22.23.4",
-    "credentials": "GH/GitHub/AWS/cloud/HF tokens removed from every subprocess that ran repository code; server bound to 127.0.0.1",
+    "renderer": "SwiftShader (software GL)",
+    "node": "22.23.5",
+    "credentials": "GH/GitHub/AWS/cloud/HF tokens removed from every subprocess that ran repository code; servers bound to 127.0.0.1",
     "target_device": false
   },
   "selection": {
     "selected": [
-      "diff 9e78569..727687e (42 commits, 67 app files)",
+      "diff 727687e..ea2f3d0 (117 commits, 140 app/tests files)",
       "parser",
       "typecheck",
-      "206 unit tests",
+      "378 unit tests",
       "validator 17 tests",
-      "edges (body vs built)",
-      "e2e boot stairs drop camera jump sound steps music photo-ui menu layers seasons rites (serial; menu..rites rerun after container restart; music twice)",
-      "cam01-cam06 screenshots, opened",
-      "normal-speed keyboard/mouse from title to first landing",
-      "pause-menu input isolation (keys, wheel, drag)",
-      "photo UI and print",
-      "asset register",
-      "status JSON and research Site llms.txt"
+      "edges",
+      "e2e boot; keys jump drop stairs camera menu layers hallexit taps music sound phone director opening (serial), one diagnostic retry of the four failures one process each",
+      "cam01-cam06 screenshots, opened, with crops",
+      "normal-speed key/mouse from title through the opening to the first flight",
+      "photo frame on desktop and upright phone, DOF state on the high tier",
+      "static check of photo DOF path, settings thirds default, asset register, LICENSE",
+      "status JSON before writing; open PRs #179/#180 read for context"
     ],
     "skipped": [
-      "Mac/phone 120s x3 performance (no device; no HF Job: T4 cannot answer the target-device question)",
-      "full five-zone normal-input round trip",
-      "16 hall views, statues, ink paintings, gallery works",
-      "listening review of music, bell and steps",
-      "real touch device and Safari/iOS",
-      "halls, phone, keys, snow, moods, views and tier-3 scenarios",
-      "retest on latest HEAD 70a564e3ca70acf71d38cd54aa226ecb15591c2c"
-    ],
-    "reason": "Rites, seats, novice body switch, stair cheeks, audio and UI changes. Static, unit, edges, selected e2e and real-input checks run; visual inspection covered the six fixed cameras, the photo flow and one interior frame."
+      "Mac/phone performance (no device; no HF Job)",
+      "five-zone normal-input round trip and a human recording",
+      "halls, 16 hall views, statues, gallery; loft; ending",
+      "listening review (music Goal reviewed as proposal only)",
+      "real touch device, Safari/iOS",
+      "tier-3 and other tier-2 scenarios (nightly CI runs them; CI success is not acceptance)",
+      "upward view for STR-15, hall terrace view for ART-01, wall close-up for ART-05",
+      "retest on f22b9ab"
+    ]
   },
   "checks": [
     {
@@ -65,10 +64,10 @@
       "scope": "static",
       "criterion": "锁定提交源码可解析",
       "status": "pass",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "pnpm run check: 48 files checked, 0 problems.",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "pnpm run check: 73 files checked, 0 problems.",
       "evidence_ids": [
-        "A-CHECK"
+        "B-CHECK"
       ]
     },
     {
@@ -76,10 +75,10 @@
       "scope": "static",
       "criterion": "锁定提交类型检查通过",
       "status": "pass",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "pnpm typecheck (tsc checkJs over app/) exit 0.",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "pnpm typecheck exit 0.",
       "evidence_ids": [
-        "A-TYPECHECK"
+        "B-TYPECHECK"
       ]
     },
     {
@@ -87,10 +86,10 @@
       "scope": "static",
       "criterion": "锁定提交单元回归通过",
       "status": "pass",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "206/206 unit tests passed in a credential-free subprocess (108 at 9e78569).",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "378/378 unit tests in a credential-free subprocess (206 at 727687e).",
       "evidence_ids": [
-        "A-UNIT"
+        "B-UNIT"
       ]
     },
     {
@@ -98,10 +97,10 @@
       "scope": "static",
       "criterion": "评审结构/证据校验器自身回归通过",
       "status": "pass",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "17/17 validator tests passed.",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "17/17 validator tests.",
       "evidence_ids": [
-        "A-VALIDATOR"
+        "B-VALIDATOR"
       ]
     },
     {
@@ -109,398 +108,424 @@
       "scope": "static",
       "criterion": "角色包络在全部可站立点不进入建成物（EDGE-001/002 几何部分）",
       "status": "pass",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "pnpm run edges: reach 0.379 m, 1,874,444 places, all 15 groups 0 over, deepest 0.0 cm. Walker/body geometry only; animated robe envelope, turning/backing/Shift/jump and normal-speed video are not covered.",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "pnpm run edges: 1,891,145 places, 16 groups 0 over, deepest 0.0 cm; below the knee 0.0 cm. Walker/body geometry only; normal-speed video, turning/backing/Shift/jump envelope not covered.",
       "evidence_ids": [
-        "A-EDGES"
+        "B-EDGES"
       ]
     },
     {
       "id": "C06",
       "scope": "runtime",
       "criterion": "受影响 e2e 场景在锁定提交通过",
-      "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "SwiftShader, serial. First run: boot, stairs, drop, camera, jump, sound, steps, photo-ui ok; music FAIL ('with the music silenced the drum should still be heard', TEST-02); a container restart then killed the browser at menu, so menu/layers/seasons/rites failed with 'browser has been closed' (environment, high confidence; no exit line in the log). Rerun: menu, layers, seasons, rites ok; music FAIL again on the same assertion. First-run log kept unchanged. halls, phone, keys, snow, moods, views and tier-3 walks were not run.",
+      "status": "fail",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "SwiftShader, serial. boot passed. First run of 14: keys jump drop stairs camera layers taps music sound phone passed; menu hallexit director opening failed. One diagnostic retry, one process per scenario: menu failed again on the same assertion (en 1280x720 hour row clipped, product); hallexit, director and opening passed alone (first failures attributed to the runner leaving a failed scenario's pages drawing, harness, the same diagnosis as open PR #180). No timeout or assertion was changed.",
       "evidence_ids": [
-        "A-E2E-FIRST",
-        "A-E2E-RERUN"
+        "B-E2E-QUICK",
+        "B-E2E-FIRST",
+        "B-E2E-RETRY-MENU",
+        "B-E2E-RETRY-HALLEXIT",
+        "B-E2E-RETRY-DIRECTOR",
+        "B-E2E-RETRY-OPENING"
       ]
     },
     {
       "id": "C07",
-      "scope": "runtime",
-      "criterion": "完整五区往返可由正常速度实际输入完成",
+      "scope": "visual",
+      "criterion": "六个验收机位（J01 夏昼雨后）逐张看图",
       "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "Playwright keyboard events at normal speed (no ?cam, ?fast, __walk or __pose): title → 入山 → held W climbed from the bamboo start (h −14.5) to the first landing (h −10.5); holding W straight on then left the paving onto the leaf slope and stopped at z 75.52 against an invisible boundary (UX-08, same spot as 9e78569). Zigzag, gate, first court and return not covered. Automated input is not a human recording.",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "cam01-cam06 rendered at q=high and opened. STR-10, ART-14, STR-14 close; STR-15 gap absent at cam01/cam02 (upward view not taken); ART-02 sky, ART-07 bamboo canopy, ART-10 cryptomeria silhouettes still open; ART-05 not inspected closely. Shots carry the shallow depth of field #125 gives ?shot on the high tier (PHOTO-02).",
       "evidence_ids": [
-        "A-INPUT-LOG",
-        "A-INPUT-JSON",
-        "A-IN-START",
-        "A-IN-WALK3",
-        "A-IN-EDGE"
+        "B-CAM01",
+        "B-CAM02",
+        "B-CAM03",
+        "B-CAM04",
+        "B-CAM05",
+        "B-CAM06",
+        "B-CAM02-CROP",
+        "B-CAM06-RIDGE",
+        "B-CAM06-RIGHT",
+        "B-SHOTS-LOG",
+        "B-INSPECTION"
       ]
     },
     {
       "id": "C08",
       "scope": "runtime",
-      "criterion": "歇脚菜单打开时背景不响应输入",
+      "criterion": "正常速度真实输入：标题→入山→开场→W 行走与拖动视角",
       "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "With the menu open, E/B/P/T/H/V/Enter/Space, held W, the wheel and a drag changed nothing (stack [menu], 0 m moved, yaw/pitch and camera distance unchanged). The intended ground tap at (640,560) landed on the menu's 音效 slider (reviewer harness error), so tapping the ground behind the menu is still not covered. The drag left a blue text selection on menu labels (cosmetic, info).",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "Playwright key/mouse events, no ?cam/?fast/__walk/__pose: real click on 入山, the opening played whole (13.5 s), W held 60 frames moved 5.45 m up the first flight, drag turned yaw 0→0.31, no page errors. Only the start of the route; five-zone round trip not walked; automated events, not a human recording.",
       "evidence_ids": [
-        "A-INPUT-LOG",
-        "A-INPUT-JSON",
-        "A-IN-MENU"
+        "B-PROBE-2",
+        "B-INPUT-TITLE",
+        "B-INPUT-W",
+        "B-PROBE-SCRIPT"
       ]
     },
     {
       "id": "C09",
-      "scope": "visual",
-      "criterion": "留影：风景优先、简洁界面、远近都清晰、默认16:9横幅",
-      "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "Raised camera shows only 收起/设置/快门; print 1700×1130 shows near paving and far bamboo both sharp (no depth of field); photo-ui scenario passed. Default frame is still 全幅 (screen aspect), not the 16:9 横幅 in LATEST-GOALS.md; docs/PHOTO-MODE.md records an owner request for 全幅 that the goal file does not reflect (PHOTO-01).",
+      "scope": "runtime",
+      "criterion": "留影：默认全幅、风景优先、简洁界面、全景清晰无景深",
+      "status": "fail",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "Frame and UI pass: desktop 1280x720 → print 2294x1525, phone 390x844 → 1108x2415, which with card.js's mount is a 16:9 and an upright full-screen picture; finder shows only 收起/设置/快门. Fails 无景深: with the camera raised on the high tier __probe().post reports dof:true, focus 6.18 m (post.focus(... photo.on ? focusAt() : 0) in yard.js, reintroduced by #125 after 8e4cb3f removed it).",
       "evidence_ids": [
-        "A-IN-PHOTO",
-        "A-IN-PRINT",
-        "A-PHOTO-UI",
-        "A-E2E-FIRST"
+        "B-PROBE-1",
+        "B-PROBE-2",
+        "B-PHOTO-DESKTOP",
+        "B-PHOTO-PHONE"
       ]
     },
     {
       "id": "C10",
-      "scope": "visual",
-      "criterion": "六个固定机位与既有美术问题",
-      "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "cam01–cam06 rendered with no page errors and were opened one by one. Stair side walls replaced by low cheek stones: treads read continuously and the cheek no longer merges with the risers (ART-08 closed). New: ground shows through triangular gaps between the tread ends and the right cheek in cam02 (STR-15). cam06 puddles soft, no hard roof reflection. Flat bright sky (ART-02), brush-like cedars (ART-10) and sky gaps in bamboo (ART-07) remain.",
-      "evidence_ids": [
-        "A-CAM01",
-        "A-CAM02",
-        "A-CAM02-CROP",
-        "A-CAM03",
-        "A-CAM04",
-        "A-CAM05",
-        "A-CAM06",
-        "A-INSPECTION"
-      ]
+      "scope": "performance",
+      "criterion": "Mac 与手机目标设备 120 s×3 帧率",
+      "status": "blocked",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "No target device in this environment. No HF Job was started: a T4 cannot answer the Mac/phone question and nothing in this round needed a real GPU to attribute. SwiftShader numbers are not performance evidence.",
+      "evidence_ids": []
     },
     {
       "id": "C11",
-      "scope": "visual",
-      "criterion": "殿内墨画、雕塑、梁架与小沙弥",
-      "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "One interior frame opened (rites scenario end: seated novice on a cushion, coffered ceiling, crescent beam on its cap). Statues, ink paintings, gallery works and the 16 hall views were not rendered or checked. The novice wears the code-built body by default since 2a95580; the sculpted body (?body=sculpt) was not checked.",
-      "evidence_ids": [
-        "A-RITES",
-        "A-E2E-RERUN"
-      ]
-    },
-    {
-      "id": "C12",
-      "scope": "performance",
-      "criterion": "锁定目标 Mac 与手机各完成 120秒×3 性能测量",
-      "status": "blocked",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "No target device. SwiftShader drew about 0.4 frames/s at 1280×720. No HF Job was started: a T4 would not answer the Mac/phone question and this round's changes are mostly audio, rites and the novice. Historical T4 numbers are not extrapolated.",
-      "evidence_ids": [
-        "A-INSPECTION"
-      ]
-    },
-    {
-      "id": "C13",
-      "scope": "security",
-      "criterion": "素材来源、再分发授权与仓库许可完整可核",
-      "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "asset-register.csv now records the Buddha and pedestal as the owner's own models, shipped by the owner's decision of 2026-11-15 with no third-party licence; museum scans list CC0 sources (terms not independently re-verified this round). The repository still has no LICENSE file.",
-      "evidence_ids": [
-        "A-INSPECTION"
-      ]
-    },
-    {
-      "id": "C14",
-      "scope": "release",
-      "criterion": "仓库状态与部署信息不夸大验收",
-      "status": "partial",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "Status JSON at read time: source and deployment 727687e, CI conclusion success with scope boot only, independent_review status not_reviewed (still the 9e78569 report). CI success is provenance, not acceptance. Site llms.txt reachable (HTTP 200) and still names the older edge review as its entry point.",
-      "evidence_ids": [
-        "A-STATUS",
-        "A-INSPECTION"
-      ]
-    },
-    {
-      "id": "C15",
       "scope": "runtime",
-      "criterion": "配乐与新钟声、脚步：听评",
+      "criterion": "殿内、凌霄阁顶层、结尾、配乐/钟声/脚步听评",
       "status": "blocked",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "reason": "No one has listened; delivery.json says the same. sound and steps scenarios passed (buses, ducking, steps per floor), which proves wiring, not taste. Music Goal stays a proposal for review; nothing generated here.",
-      "evidence_ids": [
-        "A-E2E-FIRST",
-        "A-INSPECTION"
-      ]
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reason": "Not run this round (scope and time); the music Goal is reviewed as a proposal only, no music was generated. No listening device.",
+      "evidence_ids": []
     }
   ],
   "artifacts": [
     {
-      "id": "A-CHECK",
+      "id": "B-CHECK",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/check.log",
-      "sha256": "4ec34a404408b7f2a97d5ba0f4849c4494c43b5fe59a22ba2de2a76bb6fefa58"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/check.log",
+      "sha256": "ec54cccb1a9c118665a44d2959eb39ae1efa62f70bdb46afb5bfc7cb9446f49b"
     },
     {
-      "id": "A-TYPECHECK",
+      "id": "B-TYPECHECK",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/typecheck.log",
-      "sha256": "4befcdfffd9a2afbc9e3dfb132ccbea40b740a08294d6bf44a7142cfa68dcc1c"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/typecheck.log",
+      "sha256": "bf0b00d3aaf1f62a8618d6a473d4acf5a1fbd809317b52111cb7c4d11cf24908"
     },
     {
-      "id": "A-UNIT",
+      "id": "B-UNIT",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/unit.log",
-      "sha256": "fa7ba126184811926aca884c28819cb4c653af3633bd2885a36b889911817bdd"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/unit.log",
+      "sha256": "c99b36c1ff45648ad7d40fb4e6b1dee9b6bfc5527b82d691f5e3d8bc460325d7"
     },
     {
-      "id": "A-VALIDATOR",
+      "id": "B-VALIDATOR",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/validator-tests.log",
-      "sha256": "742a93b2f4952123a60cfd33e0df58e95b856809d954ee1bf54a9844a49d18d3"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/validator-tests.log",
+      "sha256": "8275ae5805efc08aab47e3449008488d70a110b6990ed0d4508e09fe19c1729d"
     },
     {
-      "id": "A-EDGES",
+      "id": "B-EDGES",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/edges.log",
-      "sha256": "73e4a4e04f156a8135feb237152e514a7e8653df3634b7f34d8480dd4be74e2f"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/edges.log",
+      "sha256": "5208376bc6b8a1e7540b7cb869b65bf1fe0ebb8caccdd7d9ae06580e76dba2aa"
     },
     {
-      "id": "A-E2E-FIRST",
+      "id": "B-E2E-QUICK",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/e2e-first-run.log",
-      "sha256": "02d40afcfbd9da30a26b8199a37d861ecf22a5ecfecec3cf275a104ba27759c1"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-quick.log",
+      "sha256": "9754d95846bd3f189146672c91d14ae06970d779648246fec721cdaa1c7e7785"
     },
     {
-      "id": "A-E2E-RERUN",
+      "id": "B-E2E-FIRST",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/e2e-rerun.log",
-      "sha256": "0397a8968c5dc7a38694785a8cfb25c4350a73d9100ae2bf35f7992b81faa646"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-first-run.log",
+      "sha256": "04059e9bb9f5594739c972c511e112699804758595ee287f5d90361c588d36d2"
     },
     {
-      "id": "A-SHOTS-LOG",
+      "id": "B-E2E-RETRY-MENU",
       "type": "test_log",
       "mode": "sanitized_subprocess",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots.log",
-      "sha256": "2ebc76ae945eb75c3a56e20033633404cd11cdbdee338dce883762fa4dac10e0"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-menu.log",
+      "sha256": "e4401f8f502c4835d84afe408482983019fb2989f1406cfc4c384f7580348a0e"
     },
     {
-      "id": "A-CAM01",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam01.jpg",
-      "sha256": "1dee053c01d1eaff8ddbb60a0b4a8049288e02bb9e1e84bd4301c34183f1e6b4"
+      "id": "B-E2E-RETRY-HALLEXIT",
+      "type": "test_log",
+      "mode": "sanitized_subprocess",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-hallexit.log",
+      "sha256": "ed231ccb3f834bb5aeac681bbbbbf10520a32b6ec38d3b1ca6571cc074339daa"
     },
     {
-      "id": "A-CAM02",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam02.jpg",
-      "sha256": "1a28b0eb67cac1a5c60091207937e47f6a9fb39c05600acc0ab2545c54965b20"
+      "id": "B-E2E-RETRY-DIRECTOR",
+      "type": "test_log",
+      "mode": "sanitized_subprocess",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-director.log",
+      "sha256": "d1e6d6ff470cc2417b84bed67a4b3a3849a4f3d908c58123122423eb9295abb4"
     },
     {
-      "id": "A-CAM03",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam03.jpg",
-      "sha256": "2d574d7881f6e7e87d9d92455fb8f968813a47db00cb19087f9c9cb97a7066c1"
+      "id": "B-E2E-RETRY-OPENING",
+      "type": "test_log",
+      "mode": "sanitized_subprocess",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-opening.log",
+      "sha256": "4ceadafb36783cff697899844daa3b60a23ea4d3a4d8b4c77723779f99af563e"
     },
     {
-      "id": "A-CAM04",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam04.jpg",
-      "sha256": "a15d47b332fdc976132fe7a66de4695ce525dd24f1a01f76b9ace0661743c9da"
+      "id": "B-SHOTS-LOG",
+      "type": "test_log",
+      "mode": "sanitized_subprocess",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots.log",
+      "sha256": "08931807c3d3afdedce4adc27203e4546b861e6778d9098db28de9e2ae30771c"
     },
     {
-      "id": "A-CAM05",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam05.jpg",
-      "sha256": "9d591db0d7eafa7a020004e27ec16308e099f53b2549580434107f11325e8453"
+      "id": "B-PROBE-1",
+      "type": "test_log",
+      "mode": "diagnostic",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/probe-run1.log",
+      "sha256": "0a5bbeddb0e8d856a21842f108bfb22d55ae2a6344c59f3e4886a65d35771e28"
     },
     {
-      "id": "A-CAM06",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam06.jpg",
-      "sha256": "3f513de9fe269dc6c5a2944d289ae29b76dae6b03b10513106e6869d5e47bbfd"
-    },
-    {
-      "id": "A-CAM02-CROP",
-      "type": "runtime_screenshot",
-      "mode": "fixed_camera",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/cam02-crop.jpg",
-      "sha256": "62301ad8e16f2e874a12e3985dd689462ad42d136dca5114ce24d7107c82eb05"
-    },
-    {
-      "id": "A-PHOTO-UI",
-      "type": "runtime_screenshot",
-      "mode": "e2e_scenario",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/photo-clean-desktop.jpg",
-      "sha256": "8a85c10c24c56731592974dc4083902eae5b1c0e75465245441e304e3faa3593"
-    },
-    {
-      "id": "A-RITES",
-      "type": "runtime_screenshot",
-      "mode": "e2e_scenario",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/e2e-rites.jpg",
-      "sha256": "4b385c3a1966341425fcc26b05768b37347b45c20917c5c5b2fd95bdfdb7dacd"
-    },
-    {
-      "id": "A-INPUT-LOG",
+      "id": "B-PROBE-2",
       "type": "test_log",
       "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/normal-input.log",
-      "sha256": "e070c4b4297bd57252f47f211cbbdea9aa355fbe9fa36090438852f511f36f72"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/probe-run2.log",
+      "sha256": "34a7516e719955f1ce8211383afa63479edfcdce299ecc7058a2e01ee06f0b78"
     },
     {
-      "id": "A-INPUT-JSON",
-      "type": "test_log",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/normal-input.json",
-      "sha256": "09821ddb3224262d41c779e9fa8fcefad4383d1bb6031ece395948a272297900"
-    },
-    {
-      "id": "A-INPUT-PROBE",
+      "id": "B-PROBE-SCRIPT",
       "type": "script",
-      "mode": "reviewer_probe",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/probes/normal-input.cjs",
-      "sha256": "4f5c1471db62bdd9354a9fec93d2b7be2a15c929a631d938dbef106cb99a2799"
+      "mode": "sanitized_subprocess",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/probes/check.cjs",
+      "sha256": "3706b4323eee585986dda53957e7c038a2afd87ccfccd0fbe3784e9f3b7e37e7"
     },
     {
-      "id": "A-IN-START",
-      "type": "runtime_screenshot",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/normal-01-start.jpg",
-      "sha256": "456336fd7360b99a567eee5182f686f4e14d765fecfd8807c1ec353bc57143a7"
+      "id": "B-INSPECTION",
+      "type": "review_notes",
+      "mode": "manual_review",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/inspection.md",
+      "sha256": "af51aaaa70870bf66059676127394b61a2ededf69a35ce6ff233fe60a2940d29"
     },
     {
-      "id": "A-IN-WALK3",
-      "type": "runtime_screenshot",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/normal-02-walk-3.jpg",
-      "sha256": "f670226e47d394639075ec448ae451d8bfb447d7dfe5cd25a8839c68979a2d7b"
-    },
-    {
-      "id": "A-IN-EDGE",
-      "type": "runtime_screenshot",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/normal-02-walk-4.jpg",
-      "sha256": "c84953d15304ddacac652139c25482dd6804dc2e964ebd9d76f70a4a0e7830d4"
-    },
-    {
-      "id": "A-IN-MENU",
-      "type": "runtime_screenshot",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/normal-03-menu.jpg",
-      "sha256": "ba9cc73b906ad2fb7ece8e9cbb6d6197b715388b0547a9e2e744fc1ac7391c32"
-    },
-    {
-      "id": "A-IN-PHOTO",
-      "type": "runtime_screenshot",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/normal-04-photo-raised.jpg",
-      "sha256": "640a6c8d5721af761d7553f5a88516cfc323da4a9d44171ceeb39238f8f57c7a"
-    },
-    {
-      "id": "A-IN-PRINT",
-      "type": "runtime_screenshot",
-      "mode": "user_input",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/shots/normal-05-print.jpg",
-      "sha256": "4011928c9618210340db3eb22a3295c5ac639e7978042f40dedfb2135a338158"
-    },
-    {
-      "id": "A-STATUS",
+      "id": "B-STATUS-BEFORE",
       "type": "status_snapshot",
       "mode": "read_only",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/status-t00.json",
-      "sha256": "13f4283bc0833315aa7249a58d8455e478709084587c79fa7d06253e20b2b6d8"
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/status-t00-before.json",
+      "sha256": "a399ffd01dac496073ead1c36e4d05e10aac6ad4ca79821fd3c083f6471a6797"
     },
     {
-      "id": "A-INSPECTION",
-      "type": "inspection_notes",
-      "mode": "manual_review",
-      "created_at": "2026-11-16T02:40:00Z",
-      "commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "file": "docs/t00/evidence/independent/20261116-727687e/inspection.md",
-      "sha256": "19484e8eea303dc779c72a92fc1d230b2aa9f12b8d713bc175000ae807fed09c"
+      "id": "B-CAM01",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam01.jpg",
+      "sha256": "adbf70938609c2c1bf931379b94248424e4592e0594d3c112fc28af87277d0b8"
+    },
+    {
+      "id": "B-CAM02",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam02.jpg",
+      "sha256": "e65d1dee4f942cc890407d9ff5744b82933531763b126c25cca0f497cff1b7e1"
+    },
+    {
+      "id": "B-CAM03",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam03.jpg",
+      "sha256": "3f7523df0ae4bf27fc1bc4fee81c9149fd1d6cf8ac598f3a486a1ec7b4dfbba0"
+    },
+    {
+      "id": "B-CAM04",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam04.jpg",
+      "sha256": "2ce82d70a1a7a2a55463a4e87e467e2ef7412a66bd6461d234e464655beecb3c"
+    },
+    {
+      "id": "B-CAM05",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam05.jpg",
+      "sha256": "59e358b663a1b1dc6490206771710f4c2b2d5732f9a57f6148bbbbfe56e028ac"
+    },
+    {
+      "id": "B-CAM06",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam06.jpg",
+      "sha256": "72ac0608c11d7ef70c236161d19bb1dd0936c0f1080ffe4fe5182dc47fcc07c0"
+    },
+    {
+      "id": "B-CAM02-CROP",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam02-right-crop.jpg",
+      "sha256": "4ae1c7a5383a42fa9e3c5caae2ff19ae3188ad2b87f778031fd77d77431765b7"
+    },
+    {
+      "id": "B-CAM06-RIDGE",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam06-ridge-crop.jpg",
+      "sha256": "96e88f755114d4f16fa984065182004d734eef2f744b4a46bc6de24d0bb4211d"
+    },
+    {
+      "id": "B-CAM06-RIGHT",
+      "type": "runtime_screenshot",
+      "mode": "fixed_camera",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam06-right-crop.jpg",
+      "sha256": "aa0cba6714d79bd7fe07f2efe2769e15d3688b1b3667cadd3e8b27569af48b32"
+    },
+    {
+      "id": "B-INPUT-TITLE",
+      "type": "runtime_screenshot",
+      "mode": "user_input",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/input-title.jpg",
+      "sha256": "cac3dbdbc4701e75241ea22653c32a8f585e8dfaf10371d76dc1695dfd6df777"
+    },
+    {
+      "id": "B-INPUT-W",
+      "type": "runtime_screenshot",
+      "mode": "user_input",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/input-after-w.jpg",
+      "sha256": "dfc522dd1e5147779fbde4a9e7dc60b9a6e21e9a83790428006fd28ba57ebf86"
+    },
+    {
+      "id": "B-PHOTO-DESKTOP",
+      "type": "runtime_screenshot",
+      "mode": "user_input",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/photo-desktop.jpg",
+      "sha256": "d4319e74acf7bcc95a85f57d4464e285d831e889b9dde98f5085de79729a771a"
+    },
+    {
+      "id": "B-PHOTO-PHONE",
+      "type": "runtime_screenshot",
+      "mode": "user_input",
+      "created_at": "2026-11-18T04:10:00Z",
+      "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/photo-phone.jpg",
+      "sha256": "ee287489dbe6dbd54774728d4c09c3a7c687181a54b2a71a067e847ff5a97be4"
     }
   ],
   "issues": [
+    {
+      "id": "PHOTO-02",
+      "state": "open",
+      "severity": "major",
+      "finding": "举相机时高档开着景深：__probe().post 报 dof:true、focus 6.18 m。yard.js 的 post.focus(Q.has(\"shot\") || photo.on ? focusAt() : 0) 在 #125 重新加入了 8e4cb3f 已移除的拍照景深；docs/PHOTO-MODE.md 仍写「画面始终清晰……移除整个景深pass」。art-goal.md 第一阶段写「高档加很浅的景深，只在定机位和拍照时开」，与所有者确认的留影目标（LATEST-GOALS「不需要景深……远近景都清晰」）冲突。",
+      "recommendation": "拍照时不开景深（photo.on 不再给焦距），或由所有者明确改留影目标；同时决定 ?shot 定机位是否保留，并修正 art-goal.md 与 PHOTO-MODE.md 其一。",
+      "target": "留影（高档）与 docs/PHOTO-MODE.md、docs/t00/art-goal.md",
+      "acceptance_condition": "同一锁定提交高档举相机时 __probe().post.dof 为 false，桌面成片近景与远山同样清晰；或有所有者改目标的记录。",
+      "attribution": {
+        "cause": "product",
+        "confidence": "high"
+      },
+      "evidence_ids": [
+        "B-PROBE-1"
+      ],
+      "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
+    },
+    {
+      "id": "UI-01",
+      "state": "open",
+      "severity": "minor",
+      "finding": "歇脚菜单英文在 1280×720 宽屏下时辰一行被裁（menu 场景首跑与单独重跑同一断言失败：{\"fits\":true,\"clipped\":true}）。开放 PR #180 写明由 #137 加「随时辰」引入、溢出 2 px；#179（f22b9ab）又改了菜单版面。",
+      "recommendation": "合入一种修法后跑 menu/menufit 四语言三尺寸。",
+      "target": "#menu 宽屏布局，en（及 ja/ko）1280×720",
+      "acceptance_condition": "新提交上 menu 场景（或 menufit）四语言在 1280×720、1366×768、1920×1080 均 fits 且无 clipped。",
+      "attribution": {
+        "cause": "product",
+        "confidence": "high"
+      },
+      "evidence_ids": [
+        "B-E2E-FIRST",
+        "B-E2E-RETRY-MENU"
+      ],
+      "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
+    },
+    {
+      "id": "TEST-03",
+      "state": "open",
+      "severity": "minor",
+      "finding": "e2e 运行器在场景抛错后不关闭它开的页面，残留页继续软件渲染，拖慢同一浏览器里后续场景：本轮 menu 失败后 hallexit、director、opening 相继失败，单独进程重跑均通过。",
+      "recommendation": "每个场景结束后关闭所有 context（PR #180 已有此改动，未合并），并保留每场景报告。",
+      "target": "tests/e2e/run.cjs",
+      "acceptance_condition": "新提交上故意让一个场景失败后，同批后续场景结果与单独运行一致。",
+      "attribution": {
+        "cause": "harness",
+        "confidence": "medium"
+      },
+      "evidence_ids": [
+        "B-E2E-FIRST",
+        "B-E2E-RETRY-HALLEXIT",
+        "B-E2E-RETRY-DIRECTOR",
+        "B-E2E-RETRY-OPENING"
+      ],
+      "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
+    },
     {
       "id": "ART-01",
       "state": "open",
@@ -510,9 +535,11 @@
       "target": "CAM-04/05/06 与大殿月台",
       "acceptance_condition": "同一锁定提交、同一机位截图中，哑光湿石占主导且少量积水不形成硬直边。",
       "evidence_ids": [
-        "A-CAM06"
+        "A-CAM06",
+        "B-CAM06"
       ],
-      "retest_note": "727687e cam06: wet paving matte, puddles soft. Hall terrace supplementary view still not taken; stays open."
+      "retest_note": "727687e cam06: wet paving matte, puddles soft. Hall terrace supplementary view still not taken; stays open.",
+      "retest_note_ea2f3d0": "cam06 wet paving matte, puddles soft at ea2f3d0; hall terrace supplementary view still not taken."
     },
     {
       "id": "ART-02",
@@ -524,9 +551,13 @@
       "acceptance_condition": "六机位复测中天空不成为最大最亮平面，远殿仍可读。",
       "evidence_ids": [
         "A-CAM03",
-        "A-CAM06"
+        "A-CAM06",
+        "B-CAM03",
+        "B-CAM04",
+        "B-CAM06"
       ],
-      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99"
+      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_note_ea2f3d0": "cam03/cam04/cam06: pale sky is still the largest and brightest plane."
     },
     {
       "id": "ART-05",
@@ -539,7 +570,8 @@
       "evidence_ids": [
         "A-CAM03"
       ],
-      "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039"
+      "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039",
+      "retest_note_ea2f3d0": "Walls not inspected closely this round."
     },
     {
       "id": "ART-07",
@@ -550,28 +582,11 @@
       "target": "CAM-01/02/05",
       "acceptance_condition": "固定机位中竹林形成连续深背景且不出现明显平片轮廓。",
       "evidence_ids": [
-        "A-CAM01"
-      ],
-      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99"
-    },
-    {
-      "id": "ART-08",
-      "state": "verified_closed",
-      "severity": "minor",
-      "finding": "石阶踢面与侧墙仍接近同材同明度，直缝使开场局部像现浇混凝土。",
-      "recommendation": "区分踏面、踢面、挡墙石材尺度与收边，补挡墙压顶。",
-      "target": "CAM-01/02",
-      "acceptance_condition": "正常视角下每级踏面连续可读，挡墙不再与踢面并成同一砌体。",
-      "evidence_ids": [
-        "A-CAM01"
-      ],
-      "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039",
-      "closed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "retest_evidence_ids": [
         "A-CAM01",
-        "A-CAM02"
+        "B-CAM01"
       ],
-      "retest_note": "727687e cam01/cam02: the tall side walls are replaced by low cheek stones (861874e); every tread reads continuously and the cheek no longer forms one masonry with the risers. The see-through gaps at the tread ends are tracked separately as STR-15."
+      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_note_ea2f3d0": "cam01: canopy still shows bright sky through flat sprays."
     },
     {
       "id": "ART-10",
@@ -582,13 +597,16 @@
       "target": "CAM-03/05/06",
       "acceptance_condition": "受影响机位中远树有自然团簇和深浅层级，无明显重复刷状轮廓。",
       "evidence_ids": [
-        "A-CAM06"
+        "A-CAM06",
+        "B-CAM04",
+        "B-CAM06"
       ],
-      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99"
+      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_note_ea2f3d0": "cam04/cam06: cryptomerias still repeated brush-like spires."
     },
     {
       "id": "ART-14",
-      "state": "open",
+      "state": "verified_closed",
       "severity": "minor",
       "finding": "CAM-06 与补充机位积水里仍有显眼的硬边屋顶倒影。",
       "recommendation": "限制倒影到洼地并增加粗糙模糊与边缘过渡。",
@@ -597,11 +615,17 @@
       "evidence_ids": [
         "A-CAM06"
       ],
-      "retest_note": "727687e cam06: no hard-edged roof reflection in the puddles. Hall terrace supplementary view not taken; stays open."
+      "retest_note": "727687e cam06: no hard-edged roof reflection in the puddles. Hall terrace supplementary view not taken; stays open.",
+      "retest_note_ea2f3d0": "cam06 and the court photo: puddle reflections are soft dark masses, no hard roof edge.",
+      "retest_evidence_ids": [
+        "B-CAM06",
+        "B-PHOTO-DESKTOP"
+      ],
+      "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
     },
     {
       "id": "STR-10",
-      "state": "open",
+      "state": "verified_closed",
       "severity": "minor",
       "finding": "大殿正脊下仍可见浅色直线，屋脊与屋面连接偏悬浮。",
       "recommendation": "封闭脊下缝隙并校正正脊、脊端的支承关系。",
@@ -610,11 +634,17 @@
       "evidence_ids": [
         "A-CAM06",
         "A-HALL"
-      ]
+      ],
+      "retest_note_ea2f3d0": "cam06 ridge crop: ridge sits on the roof, no pale floating line or sky slit.",
+      "retest_evidence_ids": [
+        "B-CAM06",
+        "B-CAM06-RIDGE"
+      ],
+      "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
     },
     {
       "id": "STR-14",
-      "state": "fixed_pending_retest",
+      "state": "verified_closed",
       "severity": "minor",
       "finding": "修复提交声称解决竹竿从湿铺地直接长出，但没有匹配版本的独立复测。",
       "recommendation": "保留待复验；在 CAM-05 与近地补充机位检查根部落点。",
@@ -623,7 +653,14 @@
       "evidence_ids": [
         "A-CAM05"
       ],
-      "retest_note": "727687e cam05: no bamboo culm rises from the paving in this view. Near-ground supplementary view still missing; stays pending."
+      "retest_note": "727687e cam05: no bamboo culm rises from the paving in this view. Near-ground supplementary view still missing; stays pending.",
+      "retest_note_ea2f3d0": "cam03, cam05, cam06 and the court photo: no culm grows out of paving. Scope: these views.",
+      "retest_evidence_ids": [
+        "B-CAM03",
+        "B-CAM05",
+        "B-CAM06"
+      ],
+      "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
     },
     {
       "id": "UX-08",
@@ -638,7 +675,8 @@
         "A-IN-EDGE"
       ],
       "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "retest_note": "727687e: held W at normal speed walked off the first landing onto the leaf slope and stopped at z 75.52 against an invisible boundary, as at 9e78569."
+      "retest_note": "727687e: held W at normal speed walked off the first landing onto the leaf slope and stopped at z 75.52 against an invisible boundary, as at 9e78569.",
+      "retest_note_ea2f3d0": "Not retested: the normal-input walk this round covered only the first flight."
     },
     {
       "id": "UX-10",
@@ -648,7 +686,10 @@
       "recommendation": "在真实触控或等效设备上完成点地、摇杆快步与取消路径。",
       "target": "触屏",
       "acceptance_condition": "当前提交触控录像显示快步可用、点地失败有明确反馈且无静默取消。",
-      "evidence_ids": []
+      "evidence_ids": [
+        "B-E2E-FIRST"
+      ],
+      "retest_note_ea2f3d0": "phone e2e (automated touch) passed; no touch recording, stays pending."
     },
     {
       "id": "R3-UX-01",
@@ -658,7 +699,10 @@
       "recommendation": "用正常输入在台沿复现原步骤。",
       "target": "台沿跳跃",
       "acceptance_condition": "当前提交录像中一次按键只产生一次跳跃/落地。",
-      "evidence_ids": []
+      "evidence_ids": [
+        "B-E2E-FIRST"
+      ],
+      "retest_note_ea2f3d0": "jump and drop e2e passed (automated); no recording."
     },
     {
       "id": "R3-UX-02",
@@ -670,13 +714,15 @@
       "acceptance_condition": "菜单打开时背景状态、相机和角色完全不响应上述输入。",
       "evidence_ids": [
         "A-INPUT-JSON",
-        "A-IN-MENU"
+        "A-IN-MENU",
+        "B-E2E-FIRST"
       ],
       "partial_evidence_ids": [
         "A-INPUT-JSON",
         "A-IN-MENU"
       ],
-      "retest_note": "727687e: keys, held W, wheel and a drag ignored behind the menu. The ground tap landed on the menu's 音效 slider (reviewer harness error), so a tap on the ground behind the menu is still untested."
+      "retest_note": "727687e: keys, held W, wheel and a drag ignored behind the menu. The ground tap landed on the menu's 音效 slider (reviewer harness error), so a tap on the ground behind the menu is still untested.",
+      "retest_note_ea2f3d0": "layers e2e passed; menu e2e failed on layout only (UI-01); no recording."
     },
     {
       "id": "R3-UX-03",
@@ -686,7 +732,8 @@
       "recommendation": "从殿内触发回到起点并观察过场结束后位置。",
       "target": "殿内回到起点",
       "acceptance_condition": "当前提交中角色保持在起点且不会被传回殿前。",
-      "evidence_ids": []
+      "evidence_ids": [],
+      "retest_note_ea2f3d0": "Not retested."
     },
     {
       "id": "R3-UX-05",
@@ -696,7 +743,10 @@
       "recommendation": "第一/第三人称正常速度通过门槛并录像。",
       "target": "山门门槛",
       "acceptance_condition": "脚部/碰撞与可见门槛关系自然，无穿透或阻滞。",
-      "evidence_ids": []
+      "evidence_ids": [
+        "B-EDGES"
+      ],
+      "retest_note_ea2f3d0": "Not retested by recording; edges 0 over."
     },
     {
       "id": "R3-UX-06",
@@ -706,7 +756,8 @@
       "recommendation": "以正常输入和 fast 诊断各复现一次，正常输入为验收证据。",
       "target": "殿门过场",
       "acceptance_condition": "进入殿内后跳跃状态清除且高度保持有效。",
-      "evidence_ids": []
+      "evidence_ids": [],
+      "retest_note_ea2f3d0": "Not retested."
     },
     {
       "id": "R3-PERF-02",
@@ -716,7 +767,8 @@
       "recommendation": "在山门台基跳跃并录制倒影连续性。",
       "target": "山门台基",
       "acceptance_condition": "当前提交录像中倒影不会因跳跃异常冻结或消失。",
-      "evidence_ids": []
+      "evidence_ids": [],
+      "retest_note_ea2f3d0": "Not retested."
     },
     {
       "id": "R3-PERF-03",
@@ -726,7 +778,8 @@
       "recommendation": "比对导航开始、ready 与报告 load_ms。",
       "target": "?tour",
       "acceptance_condition": "原始日志证明 load_ms 从导航开始计时且可重复。",
-      "evidence_ids": []
+      "evidence_ids": [],
+      "retest_note_ea2f3d0": "Not retested."
     },
     {
       "id": "PERF-01",
@@ -738,7 +791,8 @@
       "acceptance_condition": "两类目标设备均有平均 FPS、p95、分辨率、画质、预热与原始帧数据；不以 T4 外推。",
       "evidence_ids": [
         "A-PERF"
-      ]
+      ],
+      "retest_note_ea2f3d0": "Blocked: no target device (C10)."
     },
     {
       "id": "ASSET-01",
@@ -751,7 +805,8 @@
       "evidence_ids": [
         "A-INSPECTION"
       ],
-      "retest_note": "727687e: asset register records owner ownership and the 2026-11-15 decision to ship; still no repository LICENSE."
+      "retest_note": "727687e: asset register records owner ownership and the 2026-11-15 decision to ship; still no repository LICENSE.",
+      "retest_note_ea2f3d0": "Repository still has no LICENSE file; buddha/pedestal rows in asset-register.csv unchanged (owner-owned, distributed by owner's decision of 2026-11-15)."
     },
     {
       "id": "EVID-01",
@@ -762,8 +817,10 @@
       "target": "竹林—石阶—照壁—山门—首院",
       "acceptance_condition": "录像和输入日志证明实际键鼠/触控完成往返，含加载、进入、转向、上下阶和返回。",
       "evidence_ids": [
-        "A-WALK"
-      ]
+        "A-WALK",
+        "B-PROBE-2"
+      ],
+      "retest_note_ea2f3d0": "Normal-input evidence this round covers only the title, the opening and the first flight (C08)."
     },
     {
       "id": "EVID-02",
@@ -776,7 +833,8 @@
       "evidence_ids": [
         "A-RITES",
         "A-INPUT-LOG"
-      ]
+      ],
+      "retest_note_ea2f3d0": "Still open: 117 new commits (loft, opening, director swings, jump button, structure phase 4, art phase 1, trees) mostly unseen in normal play; halls, loft and ending not inspected this round."
     },
     {
       "id": "EDGE-001",
@@ -800,7 +858,8 @@
         "contacts-idle-json",
         "outer-browse",
         "detail-main-column-side",
-        "current-contacts"
+        "current-contacts",
+        "B-EDGES"
       ],
       "current_reproduced_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
       "fix_claimed_in": [
@@ -810,7 +869,8 @@
       "retest_note": "727687e: edges 0 over in all 15 groups at reach 0.379 m. Animated envelope, turning/backing/Shift/jump and normal-speed before/after video still required to close.",
       "partial_evidence_ids": [
         "A-EDGES"
-      ]
+      ],
+      "retest_note_ea2f3d0": "edges 0 over again at ea2f3d0; normal-speed video still missing."
     },
     {
       "id": "EDGE-002",
@@ -833,7 +893,8 @@
         "props-json",
         "detail-tea-table-north",
         "detail-tea-table-south",
-        "current-props"
+        "current-props",
+        "B-EDGES"
       ],
       "current_reproduced_commit": "6c72023d8266c26cb3370c154e254a218c7f116f",
       "fix_claimed_in": [
@@ -843,7 +904,99 @@
       "retest_note": "727687e: edges 0 over (茶寮 22,333 places). Animated envelope and normal-speed video still required to close.",
       "partial_evidence_ids": [
         "A-EDGES"
-      ]
+      ],
+      "retest_note_ea2f3d0": "edges 0 over again at ea2f3d0; normal-speed video still missing."
+    },
+    {
+      "id": "TEST-02",
+      "state": "open",
+      "severity": "minor",
+      "finding": "music 与 sound 场景在击鼓后等 150 ms 墙钟再采样效果总线；软件渲染下采样调用约 600 ms，鼓声已衰减，两次复现失败。诊断显示鼓声实际存在。",
+      "recommendation": "在页面内用音频时钟定时采样，或按帧/事件等待，不按墙钟。",
+      "target": "tests/e2e/run.cjs music、sound",
+      "acceptance_condition": "SwiftShader 下两个场景连续三次通过，且断言仍能发现真正无声的鼓。",
+      "attribution": {
+        "cause": "harness",
+        "confidence": "medium"
+      },
+      "evidence_ids": [
+        "A-E2E-FIRST",
+        "A-E2E-RERUN",
+        "B-E2E-FIRST"
+      ],
+      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_note": "727687e: music failed twice (first run and rerun) on the unchanged assertion that samples the effects bus 150 ms of wall clock after the drum. Not re-diagnosed this round; 9e78569 diagnostic still the basis for harness/environment attribution.",
+      "retest_note_ea2f3d0": "music and sound passed once, but music reported its boundary check skipped (step back took 5.31 s of audio time); three consecutive passes not shown."
+    },
+    {
+      "id": "PHOTO-01",
+      "state": "verified_closed",
+      "severity": "minor",
+      "finding": "留影默认画幅是'全幅'（屏幕比例），不是目标写明的默认 16:9 横幅；竖握手机时默认得到竖图。",
+      "recommendation": "默认选'横幅'16:9，或由用户确认'全幅'可以替代。",
+      "target": "拍照设置默认画幅",
+      "acceptance_condition": "新提交首次举相机即为 16:9（或有用户确认改目标的记录），桌面与竖屏手机各一张照片为证。",
+      "attribution": {
+        "cause": "product",
+        "confidence": "high"
+      },
+      "evidence_ids": [
+        "A-IN-PRINT",
+        "A-INSPECTION"
+      ],
+      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_note": "727687e: first raise is 全幅, print 1700×1130 on a 1280×720 window. docs/PHOTO-MODE.md quotes an owner request (2026-11-15) for 全幅 as default, written by the developer; docs/handoff/LATEST-GOALS.md still says 16:9. Needs the owner to confirm which goal holds.",
+      "retest_note_ea2f3d0": "Target changed by the owner (LATEST-GOALS 已确认：风景留影, 2026-11-16: 默认全幅). Desktop and upright phone first raise both give the screen's own frame.",
+      "retest_evidence_ids": [
+        "B-PHOTO-DESKTOP",
+        "B-PHOTO-PHONE",
+        "B-PROBE-2"
+      ],
+      "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
+    },
+    {
+      "id": "STR-15",
+      "state": "fixed_pending_retest",
+      "severity": "minor",
+      "finding": "CAM-02 石阶右侧垂带与各级踏面端头之间露出三角形缺口，可见后方土坡落叶贴图（9e78569 的同机位挡墙交接处已有同类绿色三角，当时未登记）。",
+      "recommendation": "让垂带侧板与踏面端头封闭，或让地形不穿出垂带内侧；检查所有带垂带的台阶仰视角度。",
+      "target": "CAM-02 及全部 stairGeo 带垂带的台阶",
+      "acceptance_condition": "同一锁定提交 CAM-01/CAM-02 及一个仰视补充机位中，踏面端头与垂带之间不露出土坡或天空。",
+      "attribution": {
+        "cause": "product",
+        "confidence": "medium"
+      },
+      "evidence_ids": [
+        "A-CAM02",
+        "A-CAM02-CROP",
+        "B-CAM01",
+        "B-CAM02",
+        "B-CAM02-CROP"
+      ],
+      "first_seen_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_note_ea2f3d0": "cam01/cam02: no gap between cheek and tread ends. Upward supplementary view not taken."
+    }
+  ],
+  "closed_earlier": [
+    {
+      "id": "ART-08",
+      "state": "verified_closed",
+      "severity": "minor",
+      "finding": "石阶踢面与侧墙仍接近同材同明度，直缝使开场局部像现浇混凝土。",
+      "recommendation": "区分踏面、踢面、挡墙石材尺度与收边，补挡墙压顶。",
+      "target": "CAM-01/02",
+      "acceptance_condition": "正常视角下每级踏面连续可读，挡墙不再与踢面并成同一砌体。",
+      "evidence_ids": [
+        "A-CAM01"
+      ],
+      "current_reproduced_commit": "9e78569b77794b6174d698799f42f4e580882039",
+      "closed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "retest_evidence_ids": [
+        "A-CAM01",
+        "A-CAM02"
+      ],
+      "retest_note": "727687e cam01/cam02: the tall side walls are replaced by low cheek stones (861874e); every tread reads continuously and the cheek no longer forms one masonry with the risers. The see-through gaps at the tread ends are tracked separately as STR-15.",
+      "closed_in_run": "t00-20261116-727687e"
     },
     {
       "id": "TEST-01",
@@ -867,67 +1020,12 @@
       "retest_evidence_ids": [
         "A-E2E-FIRST"
       ],
-      "retest_note": "727687e: camera scenario passed; it asserts that a drag does not change yaw/pitch with the photo camera raised."
-    },
-    {
-      "id": "TEST-02",
-      "state": "open",
-      "severity": "minor",
-      "finding": "music 与 sound 场景在击鼓后等 150 ms 墙钟再采样效果总线；软件渲染下采样调用约 600 ms，鼓声已衰减，两次复现失败。诊断显示鼓声实际存在。",
-      "recommendation": "在页面内用音频时钟定时采样，或按帧/事件等待，不按墙钟。",
-      "target": "tests/e2e/run.cjs music、sound",
-      "acceptance_condition": "SwiftShader 下两个场景连续三次通过，且断言仍能发现真正无声的鼓。",
-      "attribution": {
-        "cause": "harness",
-        "confidence": "medium"
-      },
-      "evidence_ids": [
-        "A-E2E-FIRST",
-        "A-E2E-RERUN"
-      ],
-      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "retest_note": "727687e: music failed twice (first run and rerun) on the unchanged assertion that samples the effects bus 150 ms of wall clock after the drum. Not re-diagnosed this round; 9e78569 diagnostic still the basis for harness/environment attribution."
-    },
-    {
-      "id": "PHOTO-01",
-      "state": "open",
-      "severity": "minor",
-      "finding": "留影默认画幅是'全幅'（屏幕比例），不是目标写明的默认 16:9 横幅；竖握手机时默认得到竖图。",
-      "recommendation": "默认选'横幅'16:9，或由用户确认'全幅'可以替代。",
-      "target": "拍照设置默认画幅",
-      "acceptance_condition": "新提交首次举相机即为 16:9（或有用户确认改目标的记录），桌面与竖屏手机各一张照片为证。",
-      "attribution": {
-        "cause": "product",
-        "confidence": "high"
-      },
-      "evidence_ids": [
-        "A-IN-PRINT",
-        "A-INSPECTION"
-      ],
-      "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "retest_note": "727687e: first raise is 全幅, print 1700×1130 on a 1280×720 window. docs/PHOTO-MODE.md quotes an owner request (2026-11-15) for 全幅 as default, written by the developer; docs/handoff/LATEST-GOALS.md still says 16:9. Needs the owner to confirm which goal holds."
-    },
-    {
-      "id": "STR-15",
-      "state": "open",
-      "severity": "minor",
-      "finding": "CAM-02 石阶右侧垂带与各级踏面端头之间露出三角形缺口，可见后方土坡落叶贴图（9e78569 的同机位挡墙交接处已有同类绿色三角，当时未登记）。",
-      "recommendation": "让垂带侧板与踏面端头封闭，或让地形不穿出垂带内侧；检查所有带垂带的台阶仰视角度。",
-      "target": "CAM-02 及全部 stairGeo 带垂带的台阶",
-      "acceptance_condition": "同一锁定提交 CAM-01/CAM-02 及一个仰视补充机位中，踏面端头与垂带之间不露出土坡或天空。",
-      "attribution": {
-        "cause": "product",
-        "confidence": "medium"
-      },
-      "evidence_ids": [
-        "A-CAM02",
-        "A-CAM02-CROP"
-      ],
-      "first_seen_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99"
+      "retest_note": "727687e: camera scenario passed; it asserts that a drag does not change yaw/pitch with the photo camera raised.",
+      "closed_in_run": "t00-20261116-727687e"
     }
   ],
   "evidence": [
-    "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261116-727687e",
+    "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261118-ea2f3d0",
     "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
   ],
   "publish": {
@@ -940,13 +1038,14 @@
   },
   "limitations": [
     "SwiftShader only; no target-device performance.",
-    "Automated Playwright input events, not a human recording; route covered only to the first landing.",
-    "Interior statues/paintings and the 16 hall views not inspected; music, bell and steps not listened to.",
-    "A container restart interrupted the first e2e run; the interrupted scenarios were rerun, not reinterpreted.",
-    "Main advanced to 70a564e3ca70acf71d38cd54aa226ecb15591c2c during review; nothing here applies to it.",
-    "No GPU job was run; exterior GPU evidence would exclude statue models anyway."
+    "Automated Playwright input events, not a human recording; normal-input route covers only the title, the opening and the first flight.",
+    "Fixed-camera shots taken at q=high carry #125's shallow depth of field.",
+    "Halls, loft, ending and sound not inspected or listened to.",
+    "Main advanced to f22b9aba021b113e82ded90dd3c42fab83b4b5f3 during review; nothing here applies to it.",
+    "No GPU job was run; exterior GPU evidence would exclude statue models anyway.",
+    "Goals recorded at ea2f3d0 but implemented only in f22b9ab (first visit by day, thirds on by default) were not judged against the locked commit."
   ],
-  "note": "727687e：解析、类型检查、206 项单测、edges 全部通过；camera 场景通过，TEST-01 关闭；石阶垂带重做后 ART-08 关闭，但 CAM-02 垂带与踏面端头露出土坡（新 STR-15）；music 场景两次同一断言失败（TEST-02）；正常输入仍在第一平台外落叶坡撞不可见边界（UX-08）；留影默认全幅与目标 16:9 冲突待用户确认；性能、殿内细看、听评 blocked；仓库仍无 LICENSE。总体 partial / not_accepted。最新 HEAD 70a564e 待复验。",
+  "note": "ea2f3d0：解析、类型检查、378 项单测、edges 全部通过。新问题 PHOTO-02（major）：#125 让高档举相机时重新开景深，与所有者确认的「全景清晰无景深」冲突（运行中 dof:true）。UI-01：歇脚菜单英文 1280×720 时辰一行被裁，单独重跑仍失败（修法在开放 PR #180）。TEST-03：运行器失败后残留页拖慢后续场景，hallexit/director/opening 单独重跑通过。关闭 STR-10、ART-14、STR-14、PHOTO-01（所有者改为默认全幅，桌面与竖屏各一张为证）；STR-15 机位上缺口消失，待仰视补拍。性能、殿内、凌霄阁、结尾、听评 blocked；仓库仍无 LICENSE。总体 partial / not_accepted。最新 HEAD f22b9ab 待复验。",
   "supplemental_reviews": [
     {
       "run_id": "T00-20261114-edges-3e67700",
@@ -965,6 +1064,12 @@
       "run_id": "t00-20261115-9e78569",
       "reviewed_commit": "9e78569b77794b6174d698799f42f4e580882039",
       "report": "https://github.com/bolechen/temple-walk/blob/eb5037375497e27a35966c0ba8356a42585a5c4d/docs/t00/independent-review.json",
+      "verdict": "not_accepted"
+    },
+    {
+      "run_id": "t00-20261116-727687e",
+      "reviewed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
+      "report": "https://github.com/bolechen/temple-walk/blob/ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e/docs/t00/independent-review.json",
       "verdict": "not_accepted"
     }
   ]

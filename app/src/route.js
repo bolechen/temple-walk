@@ -4,8 +4,10 @@
 // a tap on a platform is walked there by its steps.
 //
 // The search is a generator, `planSteps`: it runs a few hundred cells at a time and gives the frame back, so that a
-// long way round costs the frame no more than `ROUTE.budget` milliseconds (the way `director.js` does its swings).
+// long way round costs the frame no more than `ROUTE.budget` milliseconds. The search itself is grid.js's, shared with
+// the eye's way round him in director.js; what is here is what a cell of floor is and which cells a step joins.
 import { findDrop } from "./drop.js";
+import { gridSearch } from "./grid.js";
 
 export const ROUTE = Object.freeze({
   cell: 0.2,        // the grid he is searched over, metres
@@ -76,43 +78,32 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
     }
   }
 
-  // A*, eight ways, never cutting a corner, the floor not stepping; the goal is any cell within a stride of the tapped spot.
-  const goalI = ci(to.x), goalJ = cj(to.z), near = (i, j) => Math.hypot(cx(i) - to.x, cz(j) - to.z);
-  const g = new Map(), from_ = new Map(), heap = [], push = (f, k) => { heap.push([f, k]); let a = heap.length - 1; while (a > 0) { const p = (a - 1) >> 1; if (heap[p][0] <= heap[a][0]) break; [heap[p], heap[a]] = [heap[a], heap[p]]; a = p; } };
-  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let a = 0; for (;;) { let l = 2 * a + 1, r = l + 1, m = a; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === a) break; [heap[m], heap[a]] = [heap[a], heap[m]]; a = m; } } return top; };
-  const si = sc.i, sj = sc.j;
-  g.set(id(si, sj), 0); push(near(si, sj), id(si, sj));
-  let best = id(si, sj), bestD = near(si, sj), goal = -1, looked = 0, t0 = performance.now();
-  while (heap.length) {
-    const [, k] = pop(), i = k % W, j = (k - i) / W, gk = g.get(k);
-    if (gk === undefined) continue;
-    const d = near(i, j); if (d < bestD) { bestD = d; best = k; }
-    if (d < 0.3) { goal = k; break; }
-    if (++looked > o.cap) break;
-    if (looked % o.slice === 0 && performance.now() - t0 > o.budget) { yield; t0 = performance.now(); }
-    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
-      if (!di && !dj) continue;
-      const ni = i + di, nj = j + dj; if (ni < 0 || nj < 0 || ni >= W || nj >= H || !isOpen(ni, nj)) continue;
-      if (di && dj && (!isOpen(i + di, j) || !isOpen(i, j + dj))) continue;
-      if (Math.abs(floor.get(id(ni, nj)) - floor.get(k)) > o.step) continue;
-      const nk = id(ni, nj), ng = gk + (di && dj ? 1.4142 : 1) * C;
-      if (ng < (g.get(nk) ?? Infinity)) { g.set(nk, ng); from_.set(nk, k); push(ng + near(ni, nj), nk); }
-    }
-    const link = links.get(k);
-    if (link) {
-      const ti = ci(link.to[0]), tj = cj(link.to[1]), nk = id(ti, tj);
-      if (isOpen(ti, tj)) { const ng = gk + Math.hypot(link.to[0] - cx(i), link.to[1] - cz(j)) + o.hop; if (ng < (g.get(nk) ?? Infinity)) { g.set(nk, ng); from_.set(nk, -k - 1); push(ng + near(ti, tj), nk); } }
-    }
-  }
-  const end = goal >= 0 ? goal : best, chain = [];
-  for (let k = end; k !== undefined; ) { chain.push(k); const p = from_.get(k); if (p === undefined) break; k = p < 0 ? -p - 1 : p; }
-  chain.reverse();
+  // A*, eight ways, never cutting a corner, the floor not stepping; the goal is any cell within a stride of the tapped spot (grid.js).
+  const near = (k) => { const i = k % W; return Math.hypot(cx(i) - to.x, cz((k - i) / W) - to.z); };
+  let t0 = performance.now();
+  const found = yield* gridSearch({
+    start: id(sc.i, sc.j), h: near, goal: (k, d) => d < 0.3, cap: o.cap,
+    pause: (looked) => { if (looked % o.slice !== 0 || performance.now() - t0 <= o.budget) return false; t0 = performance.now(); return true; },
+    edges(k, link) {
+      const i = k % W, j = (k - i) / W, fk = floor.get(k);
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+        if (!di && !dj) continue;
+        const ni = i + di, nj = j + dj; if (ni < 0 || nj < 0 || ni >= W || nj >= H || !isOpen(ni, nj)) continue;
+        if (di && dj && (!isOpen(i + di, j) || !isOpen(i, j + dj))) continue;
+        if (Math.abs(floor.get(id(ni, nj)) - fk) > o.step) continue;
+        link(id(ni, nj), (di && dj ? 1.4142 : 1) * C);
+      }
+      const hop = links.get(k);
+      if (hop) { const ti = ci(hop.to[0]), tj = cj(hop.to[1]); if (isOpen(ti, tj)) link(id(ti, tj), Math.hypot(hop.to[0] - cx(i), hop.to[1] - cz(j)), hop, o.hop); }
+    },
+  });
+  const { chain } = found, bestD = found.bestH;
   // Pull it taut: from each point the farthest one that can be walked to in a straight line; a hop is kept as it stands.
   const pts = [{ x: start.x, z: start.z }];
   for (let n = 1; n < chain.length; n++) {
-    const k = chain[n], prev = chain[n - 1], hop = from_.get(k) < 0;
+    const k = chain[n], prev = chain[n - 1], s = /** @type {{ plan: any, to: number[] } | undefined} */ (found.tag.get(k));
     const p = { x: cx(k % W), z: cz((k - (k % W)) / W) };
-    if (hop) { const s = links.get(prev); pts[pts.length - 1] = { x: cx(prev % W), z: cz((prev - (prev % W)) / W), drop: s.plan }; pts.push({ x: s.to[0], z: s.to[1], landed: true }); }
+    if (s) { pts[pts.length - 1] = { x: cx(prev % W), z: cz((prev - (prev % W)) / W), drop: s.plan }; pts.push({ x: s.to[0], z: s.to[1], landed: true }); }
     else pts.push(p);
   }
   const taut = [pts[0]];
@@ -124,7 +115,7 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
     if (next && !pts[n].drop && !next.landed && !next.drop && clearLine(walker, last, next)) continue;
     taut.push(pts[n]);
   }
-  const reached = goal >= 0 || bestD < 0.3;
+  const reached = found.reached || bestD < 0.3;
   // The tapped spot itself, when it is open and the last leg to it is a line: so that he stops on it, not on a cell.
   const last = taut[taut.length - 1];
   if (reached && !last.drop && !walker.blocked(to.x, to.z) && clearLine(walker, last, to)) taut.push({ x: to.x, z: to.z });

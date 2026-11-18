@@ -28,8 +28,9 @@ const LOG_DRAW = 0.24, TAP = 0.08;
 // The clock the observances keep. A test or a picture tool may hold it still and step it (`__riteClock(ms)` moves it
 // on by so much and holds it there; `__riteClock(null)` lets it run again), so that a moment can be looked at.
 // While a photograph holds the picture still (`pauseRites`), the clock stops too, and when it runs again it takes up
-// where it stopped: an observance half done is not found finished behind the print.
-let held = null, offset = 0, pausedAt = null;
+// where it stopped: an observance half done is not found finished behind the print. A page hidden behind a phone's dark
+// screen is the same: no time is kept, and the passage is found where it was (a pause and a hidden page count once).
+let held = null, offset = 0, pausedAt = null, hiddenAt = null;
 // Where the eye must aim so that a point (the top of the pavilion at the close) stays a margin of the picture's height
 // under its upper edge: the aim it was given, raised only as far as that needs. The picture is taller or wider on
 // different screens, and the pavilion taller than it was.
@@ -45,11 +46,22 @@ export function aimToFrame(cam, aim, top, fov, aspect, margin = 0.08) {
   return new THREE.Vector3(aim.x, hi, aim.z);
 }
 const _v = new THREE.Vector3();
-export const riteNow = () => held ?? performance.now() - offset;
-export function pauseRites(on) {
-  if (on && pausedAt === null && held === null) { pausedAt = performance.now(); held = pausedAt - offset; }
-  else if (!on && pausedAt !== null) { offset += performance.now() - pausedAt; pausedAt = null; held = null; }
+export const riteNow = (now = performance.now()) => held ?? ((hiddenAt ?? now) - offset);
+/** The page was hidden (a phone's screen off, another tab) or is seen again: the clock keeps no time while it is away.
+ *  `@param {boolean} hidden @param {number} [now]` */
+export function setHidden(hidden, now = performance.now()) {
+  if (hidden) { if (hiddenAt === null) hiddenAt = now; return; }
+  if (hiddenAt === null) return;
+  if (pausedAt === null && held === null) offset += now - hiddenAt;   // a pause already holds this time: count it once
+  hiddenAt = null;
 }
+export function pauseRites(on, now = performance.now()) {
+  if (on && pausedAt === null && held === null) { pausedAt = now; held = pausedAt - offset; }
+  else if (!on && pausedAt !== null) { offset += now - pausedAt; pausedAt = null; held = null; }
+}
+/** Only for a test: the clock starts again at zero, with nothing holding it. */
+export function resetClock() { held = null; offset = 0; pausedAt = null; hiddenAt = null; }
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") document.addEventListener("visibilitychange", () => setHidden(document.hidden));
 if (typeof window !== "undefined") window.__riteClock = (ms) => { held = ms == null ? null : (held ?? riteNow()) + ms; return held; };
 
 function softDot() {
@@ -60,7 +72,15 @@ function softDot() {
 
 // `burn`: how many seconds three sticks take to burn down to the ash (five minutes unless a test asks for less);
 // `onPlant(at)`: told the moment, on the wall clock, that they are set in the ash, so the page can keep it.
-export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at) => {} } = {}) {
+// The ring the breath lays on the ground, for a breath `k` full (0 empty, 1 full): its radius in metres, measured to the
+// brush's centre line, and how firmly it is drawn. It starts outside his folded knees (about 0.4 m from the seat) and
+// opens to a little under a metre. With reduced motion it keeps its size and only fades.
+export const RING_PLANE = 1 / 0.766;   // the enso texture's centre line lies at 196 of 256 px from its middle: a plane of this side makes a ring of radius 1
+export function breathRing(k, reduced = false) {
+  const u = Math.min(1, Math.max(0, k));
+  return { radius: reduced ? 0.9 : 0.55 + 0.4 * ease(u), opacity: u === 0 ? 0 : 0.78 * Math.min(1, 0.25 + 0.75 * ease(u)) };
+}
+export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at) => {}, enso = null } = {}) {
   const { monk, scene, site, M } = y, B = monk.bones, G = monk.group, places = site.places;
   const hand = () => ({ at: V(), fingers: V(0, 1, 0), palm: V(1, 0, 0), w: 0 });
   const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
@@ -247,19 +267,30 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   }
 
   // ================= Sitting =================
-  // A breath in fills his chest; with each breath out a ring goes out from where he sits.
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.965, 1, 72).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, fog: false }));
+  // A breath in fills his chest, and a ring of brush on the ground round his seat fills with it: it opens and firms as he
+  // breathes in and closes and fades as he breathes out. It lies on the mat's floor and not on the screen, where the
+  // sitting's own shot, from before him and low, had it over his face (#156). One ring does what the ring that went
+  // out with each breath out did too; it is the mark the ground carries for a place (game.js's enso), made to breathe.
+  const ring = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: enso, transparent: true, opacity: 0, depthWrite: false, fog: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
   ring.visible = false; ring.renderOrder = 2; ring.userData.part = "breath"; scene.add(ring);
-  const sit = { breaths: 0 };
+  const sit = { breaths: 0, fill: 0 };
+  // Lays the ring for a breath `k` full (0 out, 1 in) under him.
+  function breathe_ring(k) {
+    const s = breathRing(k, y.reduced?.() ?? false);
+    ring.visible = s.opacity > 0.001; sit.fill = k;
+    if (!ring.visible) return;
+    ring.position.copy(G.position).y += 0.04; ring.rotation.y = 0.6;
+    ring.scale.setScalar(s.radius * RING_PLANE); ring.material.opacity = s.opacity;
+    ring.material.color.set(y.night() ? 0xffd9a0 : 0xf3eddc);   // pale, as the marks the ground carries for a place are: ink would be lost on dark stone
+  }
   // `to` is 1 for a breath in and -1 for a breath out, taken over `secs`; `last`: the eye goes back to him as it ends
   // (not when the chapter closes after it: then the close takes the eye from the shot).
   async function breathe(to, secs, on, last = false) {
     const from = act.breath ?? -1;
-    if (to < 0) { ring.visible = true; ring.position.copy(G.position).y += 0.05; ring.material.color.set(y.night() ? 0xffd9a0 : 0x14110e); }
     const ok = await play(secs, (u) => { const k = ease(u); act.breath = mix(from, to, k); act.nod = to < 0 ? 0.05 * k : 0.05 * (1 - k);
-      if (to < 0) { ring.scale.setScalar(0.45 + 1.9 * u); ring.material.opacity = (y.night() ? 0.55 : 0.5) * Math.sin(Math.PI * Math.min(1, u * 1.2)) * (1 - 0.6 * u); }
+      breathe_ring(to > 0 ? k : 1 - k);
       if (last) homeward(u, secs); }, on);
-    if (to < 0) { ring.visible = false; if (ok) sit.breaths++; }
+    if (to < 0) { breathe_ring(0); if (ok) sit.breaths++; }
     return ok;
   }
 
@@ -287,6 +318,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   const END = { secs: 30, on: false, u: 0, aim: 0 };
   /** @param {() => boolean} on @param {(seconds: number) => void} [cue] */
   async function close(on, cue = () => {}) {
+    const eye = { p: V(), q: new THREE.Quaternion(), fov: 50 };   // where the eye stood on the last frame: the far view is made of it
     const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = dir(0, 0, 1).clone(), l = dir(1, 0, 0).clone();
     const P = (a, b, c) => o.clone().addScaledVector(l, a).addScaledVector(f, c).setY(o.y + b);
     let path = null, aim = null;
@@ -301,27 +333,46 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
         const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
         aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
       const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
+      eye.p.copy(camera.position); eye.q.copy(camera.quaternion); eye.fov = camera.fov;
     });
     const ok = await play(END.secs, (u) => {
       END.u = u; const t = u * END.secs, ph = (t % 9) / 9, inn = ph < 0.45;   // a breath every nine seconds: in, then longer out
       act.breath = inn ? -1 + 2 * ease(ph / 0.45) : 1 - 2 * ease((ph - 0.45) / 0.55); act.nod = 0.03;
-      ring.visible = !inn; if (!inn) { const v = (ph - 0.45) / 0.55; ring.position.copy(G.position).y += 0.05; ring.material.color.set(y.night() ? 0xffd9a0 : 0x14110e); ring.scale.setScalar(0.45 + 1.9 * v); ring.material.opacity = 0.5 * Math.sin(Math.PI * Math.min(1, v * 1.2)) * (1 - 0.6 * v); }
       cue(t);
     }, on);
     ring.visible = false; act.breath = null; act.nod = 0; END.on = false; y.cine(null);
+    if (path) y.holdEye?.(eye);   // the eye stays where the close left it (the far view); game.js says whether it comes home
     return ok;
+  }
+
+  // ---- A coin for the 功德箱 ----
+  // He bows, palms together; a coin shows between them, is lifted and let go over the slot, falls in (`cue("in")`, where the
+  // sound is made), and he bows again with his hands together. `slot` is where it goes in, in the world (interior.js).
+  const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.0016, 16).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xb08a4a, metalness: 0.8, roughness: 0.35 }));
+  coin.visible = false; coin.userData.keep = true; coin.userData.part = "coin"; scene.add(coin);
+  const palms = (k) => HANDS.forEach(([n, s]) => { const h = act.hands[n]; at(s * 0.0125, 1.0, 0.2, h.at); dir(0, 1, 0.3, h.fingers); dir(-s, 0, 0, h.palm); h.w = k; });
+  /** @param {() => boolean} on @param {number[]} slot @param {(what: string) => void} [cue] */
+  async function dropCoin(on, slot, cue = () => {}) {
+    const S = V().fromArray(slot);
+    if (!(await play(0.8, (u) => { act.bow = 0.3 * ease(u); }, on))) return false;
+    if (!(await play(0.7, (u) => { const k = ease(u); coin.visible = true; between(coin.position); coin.position.y += 0.03 * k; coin.rotation.set(0, G.rotation.y, 0); }, on))) { coin.visible = false; return false; }
+    const from = V().copy(coin.position);
+    if (!(await play(0.55, (u) => { const k = ease(u); coin.position.lerpVectors(from, tA.copy(S).setY(S.y + 0.12), k); coin.rotation.x = 1.4 * k; act.bow = mix(0.3, 0.42, k); }, on))) { coin.visible = false; return false; }
+    if (!(await play(0.22, (u) => { coin.position.copy(S).setY(S.y + 0.12 * (1 - u * u) - 0.0); coin.rotation.x = Math.PI / 2; if (u >= 1) coin.visible = false; }, on))) { coin.visible = false; return false; }
+    coin.visible = false; cue("in");
+    return play(1.2, (u) => { act.bow = 0.42 * (1 - ease(u)) + 0.35 * Math.sin(Math.PI * ease(u)); palms(1); }, on);
   }
 
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----
   function rest() {
     act.bow = act.twist = act.nod = act.look = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
-    bell.held = false; bell.grip = 0; peal.busy = false;
+    bell.held = false; bell.grip = 0; peal.busy = false; coin.visible = false;
     if (home) { tea.held = 0; cup.position.copy(home); cup.rotation.set(0, T.face, 0); steam.show(true); }
     if (inc.planted) { stand(); smoke.show(true); } else if (inc.burnt) burntOut(); else { sticks.visible = inc.shown = false; }
     ring.visible = false;
   }
   return {
-    act, rest, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
+    act, rest, dropCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
     // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     restore(has) { if (!has.incenseAt) return; if (Date.now() - has.incenseAt < burn * 1000) plant(has.incenseAt); else burntOut(); },
@@ -332,7 +383,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       look: +act.look.toFixed(3),
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
       incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
-      sit: { breaths: sit.breaths, ring: ring.visible },
+      sit: { breaths: sit.breaths, ring: ring.visible, fill: +sit.fill.toFixed(3), radius: +ring.scale.x / RING_PLANE },
       close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
     }),
   };

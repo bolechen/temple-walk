@@ -36,12 +36,24 @@ export const VERSES = [
 export function pickVerse(seed) { const n = VERSES.length, i = ((Math.floor(seed) % n) + n) % n; return { text: VERSES[i][0], from: VERSES[i][1] }; }
 
 export const KEY = "yunjing.journey.v1";
+// What the book's page says of the walk so far, or null: nothing before twenty steps, and under a minute is said as
+// under a minute (`under`) rather than rounded up to one. game.js writes the words.
+/** @returns {{ m: number, min: number, under: boolean } | null} */
+export function visitLine(metres, seconds) {
+  if (!(metres >= 20)) return null;
+  return { m: Math.round(metres), min: Math.round(seconds / 60), under: !(seconds >= 60) };
+}
+// Whether a kept book (its stored text) has ever been filled, read before the walk is built: until then the
+// prologue is walked by day (yard.js), and only after it does the hour follow the visitor's clock.
+export function filledBefore(text) {
+  try { const raw = JSON.parse(text || "null"); return !!raw && raw.v === 1 && (Number(raw.opened) > 0 || Number(raw.done) > 0); } catch { return false; }
+}
 // `opened`: when the four seasons were first opened to the visitor, which is the first time the book was filled. It
 // outlives 重新朝山: a second walk up the mountain may be made in any season. `told`: whether that has been said once.
 // `closed`: when the prologue's close was shown (or passed over) after sitting on the summit. It comes once a walk,
 // whatever else is in the book; 重新朝山 begins a new walk and lets the summit close that one too. `closedSeason`: the
 // season it was last shown in. A change of season lets the summit close the prologue again, once in that season.
-const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null, closedSeason: null });
+const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null, closedSeason: null, stamped: null });
 
 // `store` is anything with get() → string|null and set(string); the page passes one backed by localStorage.
 // `closedBefore`: the page kept a separate flag that the close had been seen before this book remembered it itself.
@@ -60,6 +72,8 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
         out.told = raw.told === true;
         // Under the rule before this one the close came with the seventh seal, so a filled book has seen it.
         out.closed = Number(raw.closed) > 0 ? Number(raw.closed) : out.done;
+        // The full book's own seal: a book filled before it was kept separately was shown it at once.
+        out.stamped = "stamped" in raw ? (Number(raw.stamped) > 0 ? Number(raw.stamped) : null) : out.done;
         out.closedSeason = typeof raw.closedSeason === "string" ? raw.closedSeason : null;
         return out;
       }
@@ -82,6 +96,9 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
     get closed() { return s.closed; },
     // The prologue closed on the summit. Returns true only the first time in a walk.
     close(season = null) { if (s.closed && (season === null || s.closedSeason === season)) return false; s.closed = now(); s.closedSeason = season; save(); return true; },
+    // The full book's own seal (七印圆满) is owed once the book is full and has not been shown it; `stamp()` says it has been, once.
+    owed: () => count() === SEALS.length && !s.stamped,
+    stamp() { if (!s.done || s.stamped) return false; s.stamped = now(); save(); return true; },
     get closedSeason() { return s.closedSeason; },
     // Has the close been shown in this season? A close kept before seasons were (no season) counts for any, until adopt().
     closedIn: (season) => !!s.closed && (s.closedSeason === null || s.closedSeason === season),

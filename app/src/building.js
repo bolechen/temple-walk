@@ -9,9 +9,11 @@ import { makePlaque } from "./plaque.js";
 export const DOOR = Object.freeze({ reach: BODY + 0.02, half: 1.0 - BODY - 0.01 });
 // How far out from the column line the eave purlin lies, on the last arm of the bracket sets.
 export const PURLIN = 0.88;
+// How far out from the column line the slanting arm of a bracket set shows its beak (for a cai of 0.21): the end of a box 1.5 long, leaning 0.4, centred 0.6 out.
+export const BEAK = 0.6 + 0.75 * Math.cos(0.4) + 0.065 * Math.sin(0.4);
 // A balcony under an upper storey: how tall its bracket sets stand, how far they step out, how tall the board hung
-// round its edge is (two timbers), and how far the storey's floor so stands above where the skirt roof meets its wall.
-export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, lift: 1.2 });
+// round its edge is (two timbers), and what the plate under the sets and the floor over them add to the height.
+export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, floor: 0.58, lift: 1.2 });   // (lift: sets and floor at the 0.21 grade, which a balcony walked round on the ring below keeps)
 const DEFAULTS = {
   xs: [-6.7, -2.5, 2.5, 6.7],   // column lines across the front
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
@@ -22,6 +24,7 @@ const DEFAULTS = {
   overhang: 2.4,                // eave beyond the columns
   rise: 5.2,                    // how high the ridge stands over the eave purlins (the plan works it out from the span: `ju` in site.js); on a tent roof, eave to peak
   crest: 0,                     // the size its ridge and ridge ornaments are cut to, by the building's rank (0: by its rise)
+  cai: 0.21,                    // the depth of its standard timber, by its rank (Yingzao Fashi, juan 4): brackets, tie beams, columns and rafters are all cut to it
   ping: false,                  // an upper storey one can walk round: it stands on a balcony of bracket sets (pingzuo), not straight on the roof below
   skirt: false,                 // a skirt roof: another storey stands on it, and it rises one in two to that storey's wall
   G: 3.3,                       // depth of the end slopes: 0 = plain gable, >= half depth = pyramid
@@ -42,6 +45,7 @@ const DEFAULTS = {
 
 export function buildHall(M, opts) {
   const p = { ...DEFAULTS, ...opts };
+  const K = p.cai / 0.21, PUR = PURLIN * K;   // every timber of the frame was first drawn for a cai of 0.21 m, and is scaled from that
   const { xs, zs } = p, nx = xs.length - 1, X = xs[nx], Z = zs[0], ZB = zs[zs.length - 1];
   const COL_TOP = p.platH + p.colTop, PLATE_TOP = COL_TOP + 0.12;
   const EX = X + p.overhang, EZ = Z + p.overhang;
@@ -53,10 +57,12 @@ export function buildHall(M, opts) {
   // straight from purlin to purlin, each fall steeper than the one below (the first purlin under the ridge is let down
   // a tenth of the whole rise below the straight line, the next a twentieth below the line from there, and so on), and
   // beyond the eave purlin the rafters run on out along the lowest fall. A skirt roof under an upper storey rises one
-  // in two. A tent roof, over a pavilion or a tower, keeps the hollow curve it had.
-  const tent = !p.skirt && p.G >= EZ, PURLIN_IN = p.brackets ? p.overhang - PURLIN : p.overhang, clampD = (d) => Math.min(Math.max(d, 0), EZ);
+  // in two. A tent roof, over a pavilion or a tower, keeps its hollow curve, and its peak stands half its
+  // span above the eave purlins (juan 5, on pointed pavilions).
+  const tent = !p.skirt && p.G >= EZ, PURLIN_IN = p.brackets ? p.overhang - PUR : p.overhang, clampD = (d) => Math.min(Math.max(d, 0), EZ);
   let profile;
-  if (tent) profile = (d) => p.rise * Math.pow(clampD(d) / EZ, 1.38);
+  // (a tent roof's `rise` is, like a hall's, from its eave purlins to its peak; the hollow curve is drawn from the eave's edge)
+  if (tent) { const whole = p.rise / (1 - Math.pow(PURLIN_IN / EZ, 1.38)); profile = (d) => whole * Math.pow(clampD(d) / EZ, 1.38); }
   else if (p.skirt) profile = (d) => 0.5 * clampD(d);
   else {
     const half = EZ - PURLIN_IN, n = Math.max(2, Math.ceil(half / 1.86)), seg = half / n, h = new Array(n + 1).fill(0); h[n] = p.rise;
@@ -65,7 +71,7 @@ export function buildHall(M, opts) {
     profile = (d) => { d = clampD(d); if (d <= PURLIN_IN) return s0 * d; const u = Math.min(n - 1e-9, (d - PURLIN_IN) / seg), k = Math.floor(u); return s0 * PURLIN_IN + h[k] + (h[k + 1] - h[k]) * (u - k); };
   }
   // The tiles lie on the eave purlin, so the eave's edge hangs as far below it as the lowest fall carries it.
-  const EAVE_Y = tent ? PLATE_TOP + (p.brackets ? 0.75 : 0.2) : PLATE_TOP + 1.05 - profile(PURLIN_IN), RISE = profile(EZ), CREST = p.crest || RISE;
+  const EAVE_Y = tent ? PLATE_TOP + (p.brackets ? 0.75 * K : 0.2) : PLATE_TOP + 1.05 * K - profile(PURLIN_IN), RISE = profile(EZ), CREST = p.crest || RISE;
   function roofY(x, z, eps = 0) {
     const dz = EZ - Math.abs(z), dx = EX - Math.abs(x) + eps;
     const d = dx <= G ? Math.min(dz, dx) : dz;                 // beyond G the end slope stops: that step is the gable
@@ -132,9 +138,9 @@ export function buildHall(M, opts) {
   }
 
   // ---- Columns ----
-  let ping = null;
+  let ping = null; const corners = [];   // the four corner beams, as built: where each starts and ends, its small beam, where its bell hangs
   const sets = [];   // where the bracket sets stand: on the column heads, and between them (`bay` says in which)
-  const perimeter = [], COL_R = p.colTop > 3.6 ? 0.27 : 0.2;
+  const perimeter = [], COL_R = (p.colTop > 3.6 ? 0.27 : 0.2) * K;
   for (const x of xs) for (const z of zs) {
     const ox = x === xs[0] ? -1 : x === X ? 1 : 0, oz = z === Z ? 1 : z === ZB ? -1 : 0;
     if (ox || oz) perimeter.push({ x, z, ox, oz });
@@ -148,7 +154,7 @@ export function buildHall(M, opts) {
   }
 
   // ---- Beams ----
-  const bh = 0.36, by = COL_TOP - bh / 2, topY = COL_TOP - bh;
+  const bh = 0.36 * K, by = COL_TOP - bh / 2, topY = COL_TOP - bh;
   const bx = [], bz = [];
   for (const z of [Z, ZB]) {
     for (let i = 0; i < nx; i++) bx.push(box(xs[i + 1] - xs[i], bh, 0.2, (xs[i] + xs[i + 1]) / 2, by, z));
@@ -271,23 +277,24 @@ export function buildHall(M, opts) {
     // face, one in every other. A middle bay too narrow for two to stand clear of each other (their long arms are
     // 1.32 m) keeps one: the single bay of a bell tower or a rest pavilion. A bay
     // too narrow even for one has none, and the sets on its two columns stand side by side: the small bays of a tower's upper storeys.
-    const between = (line, i) => { const bays = line.length - 1, a = line[i], b = line[i + 1], w = Math.abs(b - a), n = w < 2 * 1.32 - 1e-6 ? 0 : bays % 2 === 1 && i === (bays - 1) / 2 && w / 3 >= 1.32 - 1e-6 ? 2 : 1; return Array.from({ length: n }, (_, k) => a + ((b - a) * (k + 1)) / (n + 1)); };
+    const between = (line, i) => { const bays = line.length - 1, a = line[i], b = line[i + 1], w = Math.abs(b - a), n = w < 2 * 1.32 * K - 1e-6 ? 0 : bays % 2 === 1 && i === (bays - 1) / 2 && w / 3 >= 1.32 * K - 1e-6 ? 2 : 1; return Array.from({ length: n }, (_, k) => a + ((b - a) * (k + 1)) / (n + 1)); };
     for (const [z, a] of [[Z, 0], [ZB, Math.PI]]) for (let i = 0; i < nx; i++) for (const x of between(xs, i)) spots.push({ x, z, a, bay: i });
     for (const [x, a] of [[xs[0], -Math.PI / 2], [X, Math.PI / 2]]) for (let i = 0; i < zs.length - 1; i++) for (const z of between(zs, i)) spots.push({ x, z, a, bay: i });
     sets.push(...spots);
+    set.scale(K, K, K);
     add(merge(spots.map((s) => set.clone().rotateY(s.a).translate(s.x, PLATE_TOP, s.z))), M.woodX);
     // A storey that is walked round stands on a balcony (Yingzao Fashi, juan 4, on the pingzuo): under its floor a ring
     // of bracket sets a step shorter than its own, one under every set above, on a plate of their own; round the
     // floor's edge a board twice a timber's depth (the wild-goose-wing board), and the railing inside that. The skirt
     // roof of the storey below comes in under the plate.
     if (p.ping && !p.pingRing) {
-      const PH = PING.sets, y0 = p.platBase - PH, bd = PING.board;
+      const PH = PING.sets * K, y0 = p.platBase - PH, bd = PING.board * K;
       const low = merge([
         box(0.46, 0.17, 0.46, 0, 0.195, 0), box(0.34, 0.11, 0.34, 0, 0.055, 0),
         arm(0.9, 0.28, 0), dou(-0.35, 0.49, 0), dou(0.35, 0.49, 0),
         arm(1.02, 0.28, 0.16, "z"), dou(0, 0.49, PING.reach),
         arm(0.9, 0.41, PING.reach),
-      ]);
+      ]).scale(K, K, K);
       add(merge(spots.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX);
       add(merge([box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, Z), box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, ZB),
         box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
@@ -295,7 +302,7 @@ export function buildHall(M, opts) {
         box(0.06, bd, zF - zB + 0.12, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB + 0.12, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
       // Behind the sets the wall is limed, as it is between the sets under the eaves, so that they read against it.
       add(merge([box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, Z - 0.04), box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, ZB + 0.04), box(0.1, PH + 0.3, Z - ZB, xs[0] + 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2), box(0.1, PH + 0.3, Z - ZB, X - 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2)]), M.plaster());
-      ping = { sets: spots.length, reach: PING.reach, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - 0.12 };
+      ping = { sets: spots.length, reach: PING.reach * K, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - 0.12 };
     }
     if (p.ping && p.pingRing) {
       // A balcony walked round, as the Fashi builds one over a storey below (juan 4, the pingzuo; the structure review on
@@ -318,7 +325,7 @@ export function buildHall(M, opts) {
       add(merge([box(RX * 2, wh, 0.1, 0, wy, RX - 0.04), box(RX * 2, wh, 0.1, 0, wy, -RX + 0.04), box(0.1, wh, RX * 2, -RX + 0.04, wy, 0), box(0.1, wh, RX * 2, RX - 0.04, wy, 0)]), M.plaster());
       ping = { sets: at.length, reach: R, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - plate, ring: RX, double: true, plate, spots: at };
     }
-    const o = PURLIN, py = PLATE_TOP + 1.0;   // the eave purlin the outer arms carry
+    const o = PUR, py = PLATE_TOP + 1.0 * K;   // the eave purlin the outer arms carry
     add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX);
     add(merge([box(0.17, 0.2, Z - ZB + o * 2 + 0.6, xs[0] - o, py, (Z + ZB) / 2), box(0.17, 0.2, Z - ZB + o * 2 + 0.6, X + o, py, (Z + ZB) / 2)]), M.woodZ);
   }
@@ -365,18 +372,37 @@ export function buildHall(M, opts) {
     // The rafters themselves, under the boards: round the whole eave, one every third of a metre, from the purlin
     // over the brackets out to the edge, and at each corner a fan of them turning from one side to the next.
     {
-      const raf = [], up = new THREE.Vector3(0, 0, 1), d = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), one = new THREE.Vector3(1, 1, 1), mid = new THREE.Vector3();
+      const raf = [], beams = [], up = new THREE.Vector3(0, 0, 1), d = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), one = new THREE.Vector3(1, 1, 1), mid = new THREE.Vector3();
       const stick = (x0, z0, x1, z1) => {
         const y0 = roofY(x0, z0) - 0.27, y1 = roofY(x1, z1) - 0.26; d.set(x1 - x0, y1 - y0, z1 - z0); const L = d.length(); if (L < 0.3) return;
-        q.setFromUnitVectors(up, d.normalize()); raf.push(new THREE.BoxGeometry(0.085, 0.1, L).applyMatrix4(m4.compose(mid.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), q, one)));
+        q.setFromUnitVectors(up, d.normalize()); raf.push(new THREE.BoxGeometry(0.085 * K, 0.1 * K, L).applyMatrix4(m4.compose(mid.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), q, one)));
       };
-      const inn = p.brackets ? 0.8 : 0.15, out = 0.06, gap = 0.34;
+      const inn = p.brackets ? 0.8 * K : 0.15, out = 0.06, gap = 0.34;
       for (let x = -X; x <= X + 1e-6; x += gap) { stick(x, Z + inn, x, EZ - out); stick(x, ZB - inn, x, -EZ + out); }
       for (let z = ZB; z <= Z + 1e-6; z += gap) { stick(X + inn, z, EX - out, z); stick(xs[0] - inn, z, -EX + out, z); }
+      // At each corner a great beam runs out on the diagonal, from over the corner column to the corner of the eave
+      // (Yingzao Fashi, juan 5, on corner beams): deep, its head cut back underneath; on its back rides a smaller one
+      // that runs a little past it and turns up at its end. The corner's rafters are set out along it: their feet
+      // stand on the great beam, the nearer the diagonal the further out, and they fan from it to either eave.
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        const cx = sx > 0 ? X : xs[0], cz = sz > 0 ? Z : ZB, ex = sx * (EX - out), ez = sz * (EZ - out), n = 7;
-        for (let k = 1; k <= n; k++) { const t = k / (n + 1); stick(cx + sx * inn * 0.7, cz + sz * inn * 0.7, t < 0.5 ? cx + (ex - cx) * t * 2 : ex, t < 0.5 ? ez : ez + (cz - ez) * (t - 0.5) * 2); }
+        const cx = sx > 0 ? X : xs[0], cz = sz > 0 ? Z : ZB, ex = sx * (EX - out), ez = sz * (EZ - out), n = 6;
+        const c0 = new THREE.Vector3(cx + sx * inn * 0.5, 0, cz + sz * inn * 0.5), c1 = new THREE.Vector3(sx * (EX - 0.12), 0, sz * (EZ - 0.12));
+        c0.y = roofY(c0.x, c0.z) - 0.3 - 0.2 * K; c1.y = roofY(c1.x, c1.z) - 0.3 - 0.12 * K;
+        const dir = c1.clone().sub(c0), len = dir.length(), bw = 0.26 * K, bd2 = 0.4 * K; dir.normalize();
+        const side = new THREE.Shape([[0, bd2 / 2], [len, bd2 / 2], [len, bd2 * 0.1], [len - 0.35 * K, -bd2 * 0.32], [len - 0.8 * K, -bd2 / 2], [0, -bd2 / 2]].map(([a, b]) => new THREE.Vector2(a, b)));
+        const q2 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir), m2 = new THREE.Matrix4();
+        beams.push(plain(new THREE.ExtrudeGeometry(side, { depth: bw, bevelEnabled: false }).translate(0, 0, -bw / 2)).applyMatrix4(m2.compose(c0, q2, one)));
+        // The small beam on its back: from two thirds of the way out, past the great beam's head, its end turned up.
+        const s0 = c0.clone().addScaledVector(dir, len * 0.62).add(new THREE.Vector3(0, bd2 * 0.62, 0)), flat = new THREE.Vector3(sx, 0, sz).normalize(), tipLen = len * 0.38 + 0.3 * K;
+        const up2 = new THREE.Vector3(flat.x * Math.cos(0.3), Math.sin(0.3) + dir.y * 0.4, flat.z * Math.cos(0.3)).normalize(), tip = s0.clone().addScaledVector(up2, tipLen), cw = 0.18 * K, ch = 0.22 * K;
+        const q3 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), up2);
+        beams.push(new THREE.BoxGeometry(tipLen, ch, cw).translate(tipLen / 2, 0, 0).applyMatrix4(m2.compose(s0, q3, one)));
+        const bell = [tip.x - flat.x * 0.08, tip.y - ch / 2, tip.z - flat.z * 0.08];
+        corners.push({ from: c0.toArray(), to: c1.toArray(), child: { from: s0.toArray(), tip: tip.toArray() }, bell });
+        for (let k = 1; k <= n; k++) { const t = (k - 0.5) / n, u = 0.72 - 1.1 * Math.abs(t - 0.5), fx = c0.x + (c1.x - c0.x) * u, fz = c0.z + (c1.z - c0.z) * u;
+          stick(fx, fz, t < 0.5 ? cx + (ex - cx) * t * 2 : ex, t < 0.5 ? ez : ez + (cz - ez) * (t - 0.5) * 2); }
       }
+      if (beams.length) add(merge(beams), M.woodX, { cast: false });
       if (raf.length) add(merge(raf), M.woodZ, { cast: false });
     }
 
@@ -448,8 +474,8 @@ export function buildHall(M, opts) {
     // Under each corner of the eaves hangs a small bronze wind bell.
     {
       const bells = [];
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        const x = sx * (EX - 0.22), z = sz * (EZ - 0.22), y = roofY(x, z) - 0.36;
+      for (const c of corners) {
+        const [x, y0b, z] = c.bell, y = y0b - 0.2;   // on a short chain under the head of the small corner beam
         bells.push(new THREE.LatheGeometry([[0, 0.14], [0.03, 0.135], [0.045, 0.09], [0.058, 0.02], [0.066, 0], [0.05, 0.005], [0, 0.02]].map(([r, h]) => new THREE.Vector2(r, h)), 10).translate(x, y - 0.14, z),
           new THREE.CylinderGeometry(0.006, 0.006, 0.2, 4).translate(x, y + 0.1, z), new THREE.BoxGeometry(0.05, 0.09, 0.006).translate(x, y - 0.2, z));
       }
@@ -478,12 +504,15 @@ export function buildHall(M, opts) {
   }
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
-    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq), zz = Z + (p.brackets ? 1.3 : 0.45);
+    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq);
+    // Outside the slanting arm's beak, the farthest any timber of a set reaches (BEAK, drawn for a cai of 0.21 and scaled with the
+    // frame), with the board's foot swung back by its lean and a finger of air: not through the beak, which lay over the writing (#213).
+    const lean = pq.vertical ? 0.3 : 0.2, zz = Z + (p.brackets ? Math.max(1.3, BEAK * K + (m.userData.height / 2) * Math.sin(lean) + 0.04 + 0.06) : 0.45);
     let top = Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08) + m.userData.height / 2;
     // Over a balcony that is walked round the board hangs over the walk: it is cut smaller, so that its foot is a
     // grown man's height over the floor and a child at the door looks out under it, not into it.
     if (p.loft && top - m.userData.height < p.platH + 2.0) { const k = Math.max(0.5, (top - p.platH - 2.0) / m.userData.height); m.scale.setScalar(k); m.userData.height *= k; }
-    m.position.set(0, top - m.userData.height / 2, zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
+    m.position.set(0, top - m.userData.height / 2, zz); m.rotation.x = lean;   // its foot on the beam, its head leaning out to be read from below
     g.add(m);
   }
 
@@ -551,5 +580,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, crest: g.userData.crest || null, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, sets, ping, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
+  return { group: g, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
 }

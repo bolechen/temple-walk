@@ -1,0 +1,867 @@
+{
+  "started": "2026-11-18T00:13:07.201Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "16",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 49.8,
+      "ms": 20.08,
+      "cost": 11.21,
+      "loadMs": 14766,
+      "tris": 1676662,
+      "calls": 319,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "kind": "written",
+        "cost": null,
+        "ms": 91.60000000149012,
+        "calls": 31279,
+        "msPerFrame": 0.3064
+      },
+      "at": [
+        -4.8,
+        13.6
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "kind": "mesh",
+        "cost": {
+          "gatherAndBvhMs": 829,
+          "bakeMs": 8928,
+          "bake": {
+            "outdoors": {
+              "floor": 2858,
+              "body": 4401,
+              "erode": 806
+            },
+            "room": {
+              "floor": 310,
+              "body": 511,
+              "erode": 41
+            },
+            "cells": 1261520
+          },
+          "tris": 234247
+        },
+        "ms": 112.70000000996515,
+        "calls": 30403,
+        "msPerFrame": 0.3913
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 47.9,
+      "ms": 20.88,
+      "cost": 10.98,
+      "loadMs": 18586,
+      "tris": 1676662,
+      "calls": 319,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "at": [
+        -4.81,
+        13.58
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 48.6,
+      "ms": 20.58,
+      "cost": 10.73,
+      "loadMs": 8743,
+      "tris": 1676662,
+      "calls": 319,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "kind": "written",
+        "cost": null,
+        "ms": 92.09999999636784,
+        "calls": 30823,
+        "msPerFrame": 0.3154
+      },
+      "at": [
+        -4.8,
+        13.6
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "kind": "mesh",
+        "cost": {
+          "gatherAndBvhMs": 815,
+          "bakeMs": 8554,
+          "bake": {
+            "outdoors": {
+              "floor": 2865,
+              "body": 4387,
+              "erode": 393
+            },
+            "room": {
+              "floor": 311,
+              "body": 511,
+              "erode": 87
+            },
+            "cells": 1261520
+          },
+          "tris": 234247
+        },
+        "ms": 97.30000000493601,
+        "calls": 31451,
+        "msPerFrame": 0.3265
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 49.5,
+      "ms": 20.2,
+      "cost": 10.95,
+      "loadMs": 18318,
+      "tris": 1676662,
+      "calls": 319,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "at": [
+        -4.81,
+        13.57
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 48.8,
+      "ms": 20.49,
+      "cost": 11.16,
+      "loadMs": 9038,
+      "tris": 1676662,
+      "calls": 319,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "kind": "written",
+        "cost": null,
+        "ms": 95.80000000540167,
+        "calls": 30928,
+        "msPerFrame": 0.327
+      },
+      "at": [
+        -4.8,
+        13.6
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "kind": "mesh",
+        "cost": {
+          "gatherAndBvhMs": 815,
+          "bakeMs": 8855,
+          "bake": {
+            "outdoors": {
+              "floor": 2902,
+              "body": 4447,
+              "erode": 592
+            },
+            "room": {
+              "floor": 314,
+              "body": 517,
+              "erode": 83
+            },
+            "cells": 1261520
+          },
+          "tris": 234247
+        },
+        "ms": 103.70000000111759,
+        "calls": 30927,
+        "msPerFrame": 0.3539
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 48.8,
+      "ms": 20.49,
+      "cost": 11.24,
+      "loadMs": 18591,
+      "tris": 1676662,
+      "calls": 319,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "at": [
+        -4.8,
+        13.6
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 115.2,
+      "ms": 8.68,
+      "cost": 4.77,
+      "loadMs": 12305,
+      "tris": 740898,
+      "calls": 162,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "kind": "written",
+        "cost": null,
+        "ms": 217.69999999273568,
+        "calls": 72411,
+        "msPerFrame": 0.3146
+      },
+      "at": [
+        -4.72,
+        13.8
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "kind": "mesh",
+        "cost": {
+          "gatherAndBvhMs": 778,
+          "bakeMs": 9010,
+          "bake": {
+            "outdoors": {
+              "floor": 2878,
+              "body": 4456,
+              "erode": 812
+            },
+            "room": {
+              "floor": 312,
+              "body": 510,
+              "erode": 41
+            },
+            "cells": 1261520
+          },
+          "tris": 234247
+        },
+        "ms": 222.5999999945052,
+        "calls": 69358,
+        "msPerFrame": 0.3378
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 109.6,
+      "ms": 9.12,
+      "cost": 5.01,
+      "loadMs": 18192,
+      "tris": 740898,
+      "calls": 162,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "at": [
+        -4.79,
+        13.63
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 117,
+      "ms": 8.55,
+      "cost": 4.7,
+      "loadMs": 8524,
+      "tris": 740898,
+      "calls": 162,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "kind": "written",
+        "cost": null,
+        "ms": 207.20000000065193,
+        "calls": 73978,
+        "msPerFrame": 0.2947
+      },
+      "at": [
+        -4.79,
+        13.63
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "kind": "mesh",
+        "cost": {
+          "gatherAndBvhMs": 790,
+          "bakeMs": 8899,
+          "bake": {
+            "outdoors": {
+              "floor": 2858,
+              "body": 4399,
+              "erode": 776
+            },
+            "room": {
+              "floor": 314,
+              "body": 511,
+              "erode": 41
+            },
+            "cells": 1261520
+          },
+          "tris": 234247
+        },
+        "ms": 239.0999999921769,
+        "calls": 74923,
+        "msPerFrame": 0.3358
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 118.5,
+      "ms": 8.44,
+      "cost": 4.9,
+      "loadMs": 18117,
+      "tris": 740898,
+      "calls": 162,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "at": [
+        -4.78,
+        13.64
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 112.4,
+      "ms": 8.9,
+      "cost": 4.78,
+      "loadMs": 8483,
+      "tris": 740898,
+      "calls": 162,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "kind": "written",
+        "cost": null,
+        "ms": 235.9999999976717,
+        "calls": 71143,
+        "msPerFrame": 0.3491
+      },
+      "at": [
+        -4.78,
+        13.65
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "kind": "mesh",
+        "cost": {
+          "gatherAndBvhMs": 776,
+          "bakeMs": 8991,
+          "bake": {
+            "outdoors": {
+              "floor": 2908,
+              "body": 4416,
+              "erode": 799
+            },
+            "room": {
+              "floor": 313,
+              "body": 513,
+              "erode": 41
+            },
+            "cells": 1261520
+          },
+          "tris": 234247
+        },
+        "ms": 239.09999999171123,
+        "calls": 73348,
+        "msPerFrame": 0.343
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          0,
+          24
+        ],
+        [
+          0,
+          -4.8
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "fps": 116,
+      "ms": 8.62,
+      "cost": 5.03,
+      "loadMs": 18103,
+      "tris": 740898,
+      "calls": 162,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "at": [
+        -4.78,
+        13.64
+      ]
+    }
+  ],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "038a60a83b0b0382e5dcd6165f1391eeadc66535",
+    "entry": "assets/index-0SF3KxB2.js",
+    "files": 111,
+    "sha256": "a0e32aefcc15be119383c00ae901866dff45d29bf9b4db5e8f831e42a389ec4b"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-18T00:17:46.633Z"
+}

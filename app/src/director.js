@@ -18,6 +18,7 @@
 // close, the eye is put where it is going, and they open again. The visitor comes first: any step, a drag of the view or
 // Esc sends the eye back at once (yard.js), and a toggle in the pause menu turns the whole thing off.
 import * as THREE from "three";
+import { gridSearch } from "./grid.js";
 
 export const DIRECT = {
   in: [1.6, 2.4],          // seconds from the following eye to the shot
@@ -81,6 +82,18 @@ export function shotPose(place, shot, foot, t = 0, aspect = DIRECT.wide, out = p
   return out;
 }
 
+// A shot made of the eye's own pose, for the far view at the close of the chapter: the place is the world itself (no turn,
+// the origin, a floor at 0), so the shot's points are world points, and the shot stands exactly where the eye stands, looking
+// as it looks, with the angle of view it has on this screen (written for the wide picture, as every shot is, so that
+// shotPose gives it back on a narrow one). It drifts only a very little, within the limits above, for the first
+// forty-five seconds, then stands still. Handing the eye to it moves nothing; it comes home by the usual swing.
+/** @param {{ p: THREE.Vector3, q: THREE.Quaternion, fov: number }} eye @param {number} [aspect] */
+export function holdShot(eye, aspect = DIRECT.wide) {
+  const look = new THREE.Vector3(0, 0, -1).applyQuaternion(eye.q).multiplyScalar(10).add(eye.p);
+  const wide = THREE.MathUtils.degToRad(eye.fov), fov = aspect >= DIRECT.wide ? eye.fov : THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(wide / 2) * aspect / DIRECT.wide));
+  return { place: { at: [0, 0], face: 0 }, shot: { at: eye.p.toArray(), look: look.toArray(), fov, drift: { turn: 0.12, for: 45 }, in: 2, out: 1 } };
+}
+
 // The eye `w` of the way from `a` to `b`, along `route` ({ long, lift, pinch }): round `centre` (his chest), its
 // distance from him and its height each going from one to the other and its bearing turning the short way round him,
 // or the long way (`long`); lifted over what stands between by `lift` metres at the middle of the swing, or drawn in
@@ -136,7 +149,7 @@ const counted = (walker) => { const c = { n: 0, walker, inWay: (/** @type {numbe
 // A way from `from` to `to` through the air round him that nothing stands in: a grid of points half a metre apart, seven
 // metres each way from his chest and at three heights, each kept only where the eye could stand with 15 cm to spare
 // (and 20 cm off a railing); the shortest path over it (A*, each step tested at its middle), then pulled taut (a point
-// left out wherever the line past it is clear). Returns the points between, or null when the two cannot be joined.
+// left out wherever the line past it is clear). The search is grid.js's, shared with route.js. Returns the points between, or null when the two cannot be joined.
 /** @returns {Generator<void, number[][] | null>} */
 export function* wayRoundSteps(walker, from, to, centre, foot, ask = counted(walker)) {
   const S = 0.5, N = 14, lo = Math.min(from.y, to.y), hi = Math.max(from.y, to.y), heights = [lo, (lo + hi) / 2 + 0.4, hi + 1.0];
@@ -155,20 +168,22 @@ export function* wayRoundSteps(walker, from, to, centre, foot, ask = counted(wal
       if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; } }
     return best; };
   const s0 = yield* reach(from, from), s1 = yield* reach(to, null); if (s0 === null || s1 === null) return null;
-  const goal = pos(s1), open = new Map([[s0, pos(s0).distanceTo(goal)]]), g = new Map([[s0, 0]]), came = new Map();
-  for (let guard = 0; open.size && guard < 6000; guard++) {
-    let k = null, fk = Infinity; for (const [kk, f] of open) if (f < fk) { fk = f; k = kk; }
-    open.delete(k); if (k === s1) break;
-    const i = (k % (2 * N + 1)) - N, j = (Math.floor(k / (2 * N + 1)) % (2 * N + 1)) - N, l = Math.floor(k / (2 * N + 1) ** 2), pk = pos(k);
-    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) for (let dl = -1; dl <= 1; dl++) {
-      const ni = i + di, nj = j + dj, nl = l + dl; if ((!di && !dj && !dl) || Math.abs(ni) > N || Math.abs(nj) > N || nl < 0 || nl > 2 || !at(ni, nj, nl)) continue;
-      const nk = key(ni, nj, nl), pn = pos(nk), mid = pk.clone().lerp(pn, 0.5); if (!free(mid.x, mid.y, mid.z)) continue;
-      const ng = g.get(k) + pk.distanceTo(pn); if (ng < (g.get(nk) ?? Infinity)) { g.set(nk, ng); came.set(nk, k); open.set(nk, ng + pn.distanceTo(goal)); }
-    }
-    if (ask.n >= pause) { pause = ask.n + DIRECT.step; yield; }
-  }
-  if (!came.has(s1) && s0 !== s1) return null;
-  const path = [s1]; while (path[0] !== s0) path.unshift(came.get(path[0]));
+  // The shortest way over the grid (grid.js, the same search a tap on the ground is walked by), each step tested at its middle.
+  const goal = pos(s1), M = 2 * N + 1;
+  const found = yield* gridSearch({
+    start: s0, h: (k) => pos(k).distanceTo(goal), goal: (k) => k === s1, cap: 6000,
+    pause: () => { if (ask.n < pause) return false; pause = ask.n + DIRECT.step; return true; },
+    edges(k, link) {
+      const i = (k % M) - N, j = (Math.floor(k / M) % M) - N, l = Math.floor(k / M ** 2), pk = pos(k);
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) for (let dl = -1; dl <= 1; dl++) {
+        const ni = i + di, nj = j + dj, nl = l + dl; if ((!di && !dj && !dl) || Math.abs(ni) > N || Math.abs(nj) > N || nl < 0 || nl > 2 || !at(ni, nj, nl)) continue;
+        const nk = key(ni, nj, nl), pn = pos(nk), mid = pk.clone().lerp(pn, 0.5); if (!free(mid.x, mid.y, mid.z)) continue;
+        link(nk, pk.distanceTo(pn));
+      }
+    },
+  });
+  if (!found.prev.has(s1) && s0 !== s1) return null;
+  const path = [s1]; while (path[0] !== s0) path.unshift(/** @type {number} */ (found.prev.get(path[0])));
   const pts = [from.clone(), ...path.map(pos), to.clone()], taut = [pts[0]];
   for (let k = 1; k < pts.length - 1; k++) {
     if (!lineClear(taut[taut.length - 1], pts[k + 1], k === 1 ? from : null)) taut.push(pts[k]);
@@ -258,9 +273,9 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
   // The way back worked out on the way there still serves if neither end has moved since (he stood still, the shot did not drift far).
   const homeFits = () => home && homeA.p.distanceTo(A.p) < 0.05 && turnBetween(homeA.q, A.q) < 0.02 && homeB.p.distanceTo(B.p) < 0.1 && turnBetween(homeB.q, B.q) < 0.03;
   return {
-    /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool). */
-    go(name, where, floorY, { now = false } = {}) {
-      if (!where || !where.shot || where.shot.off || !enabled()) return false;   // `off`: a shot kept in the data but not gone to (it says why)
+    /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool); `force`: even with 自动镜头 off (the far view of the close is not an observance's shot). */
+    go(name, where, floorY, { now = false, force = false } = {}) {
+      if (!where || !where.shot || where.shot.off || (!enabled() && !force)) return false;   // `off`: a shot kept in the data but not gone to (it says why)
       if (phase === "idle") { t = 0; hadLast = false; }
       beat = 0; softBack = false;
       id = name; place = where; shot = where.shot; foot = floorY; dur = durations(shot); pending = null;

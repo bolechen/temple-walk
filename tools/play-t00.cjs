@@ -85,7 +85,7 @@ const runs = {
     await s.at("sit"); await s.until(async () => (await s.word()) === "静坐", 30000, "静坐 not offered");
     note("summit", "page", `button: ${await s.word()}`, { say: await s.say() }); await s.shot("1-offered");
     await s.key("e", "静坐");
-    await s.until(() => s.p.isVisible("#breath"), 60000, "no breath"); await s.shot("2-breath");
+    await s.until(() => s.p.isVisible("#breathWord"), 60000, "no breath"); await s.shot("2-breath");
     const t0 = Date.now(); await s.until(async () => (await s.r()).closing, 120000, "the close never began");
     note("summit", "page", `close began ${((Date.now() - t0) / 1000).toFixed(0)} s after the breath`, { seals: (await s.j()).count });
     const lines = []; let i = 0;

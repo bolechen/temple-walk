@@ -8,8 +8,11 @@ Reads every character in app/ (the page and its scripts) and writes app/shared/f
     serif.woff2   Noto Serif SC, regular: everything that is read
     seal.woff2    Noto Serif SC, black: what is cut into a seal
     kai.woff2     LXGW WenKai: what the page says to the visitor, the labels on its controls
-    bang.woff2    Yuji Boku, a heavy brush regular hand: what is written large on the name boards; cut to the
-                  characters of the boards only (the strings handed to the board painter, in their old forms)
+    bang.woff2    LXGW WenKai TC, bold: what is written large on the name boards, an even brush regular hand in the
+                  traditional forms (#192; it was Yuji Boku, whose characters were not of one weight on a board); cut
+                  to the characters of the boards only (the strings handed to the board painter, in their old forms).
+                  `python3 tools/fonts.py --bang <LXGWWenKaiTC-Bold.ttf>` cuts this one alone (from the LXGW release, or
+                  the npm package @fontsource/lxgw-wenkai-tc, whose woff2 pieces joined make the same font)
     xing.woff2    Zhi Mang Xing, a running hand: what is written by hand on paper (the verse under a photograph,
                   the slip drawn in the library, the title on a leaf in a hall)
     chars.txt     the characters they hold; `npm run check` fails if the app uses one that is missing
@@ -25,8 +28,9 @@ the characters of their tables (app/locales/*.js, app/levels/t00/locales/*.js) a
     files named KleeOne-OFL.txt, NotoSerifJP-OFL.txt, YujiSyuku-OFL.txt, EBGaramond-OFL.txt.
 What is not in a language's table falls back to the Chinese faces, so the Chinese cut is not touched by it.
 All of them are under the SIL Open Font License 1.1 (app/shared/fonts/OFL.txt): the brush, serif, seal, running hand and board hand from
-github.com/google/fonts, the kai from github.com/lxgw/LxgwWenKai. The kai and the Korean running hand (Nanum Brush Script) are cut under the
-project's own names inside the file (RENAMED), because their originals reserve their names.
+github.com/google/fonts, the kai from github.com/lxgw/LxgwWenKai, the board hand from github.com/lxgw/LxgwWenkaiTC. The kai and the Korean
+running hand (Nanum Brush Script) are cut under the project's own names inside the file (RENAMED), because their originals reserve their names;
+so is the board hand, its family's other faces reserving theirs.
 The running hand has no traditional forms; the name boards, which need them, are written in the kai.
 Run it again whenever words are added.
 """
@@ -111,6 +115,7 @@ def boards():
 RENAMED = {
     "kai.woff2": ("Yunjing Kai", "YunjingKai-Regular"),
     "hand-ko.woff2": ("Yunjing Hand KO", "YunjingHandKO-Regular"),
+    "bang.woff2": ("Yunjing Bang", "YunjingBang-Bold"),
 }
 
 def rename(font, family, postscript):
@@ -143,7 +148,7 @@ def main():
     cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), few, f"{out}/brush.woff2")
     cut(TTFont(f"{src}/lxgwwenkai_LXGWWenKai-Regular.ttf"), text, f"{out}/kai.woff2")
     cut(TTFont(f"{src}/zhimangxing_ZhiMangXing-Regular.ttf"), few, f"{out}/xing.woff2")
-    cut(TTFont(f"{src}/yujiboku_YujiBoku-Regular.ttf"), boards(), f"{out}/bang.woff2"); print("boards:", boards())
+    cut_bang(f"{src}/LXGWWenKaiTC-Bold.ttf")
     for name, w in (("serif", 400), ("seal", 900)):
         cut(instancer.instantiateVariableFont(TTFont(f"{src}/notoserifsc_NotoSerifSC[wght].ttf"), {"wght": w}), text if name == "serif" else few, f"{out}/{name}.woff2")
     open(f"{out}/chars.txt", "w", encoding="utf-8").write(text)
@@ -152,9 +157,18 @@ def main():
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- LXGW WenKai ----\n\n" + open(f"{src}/lxgwwenkai_OFL.txt").read())
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Zhi Mang Xing ----\n\n" + open(f"{src}/zhimangxing_OFL.txt").read())
     with open(f"{out}/OFL.txt", "a") as f: f.write("\n\n---- Yuji Boku ----\n\n" + open(f"{src}/yujiboku_OFL.txt").read())
+    with open(f"{out}/OFL.txt", "a") as f: f.write(BANG_OFL)
     print(len(text), "characters")
+
+# The board hand's licence, as its release gives it, appended to OFL.txt after the others.
+BANG_OFL = "\n\n---- LXGW WenKai TC ----\n\nCopyright 2024 The LXGW WenKai Project Authors (https://github.com/lxgw/LxgwWenkaiTC)\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1 (the text above).\n"
+
+def cut_bang(path):
+    """The board hand alone, cut to the boards' characters."""
+    cut(TTFont(path), boards(), f"{ROOT}/app/shared/fonts/bang.woff2"); print("boards:", boards())
 
 if __name__ == "__main__":
     if sys.argv[1] == "--lang": main_lang(sys.argv[2], sys.argv[3])
     elif sys.argv[1] == "--rename": rename_existing()
+    elif sys.argv[1] == "--bang": cut_bang(sys.argv[2])
     else: main()

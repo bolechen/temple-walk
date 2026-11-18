@@ -25,25 +25,28 @@ jobs:
   verify:
     permissions:
       contents: read
+      pull-requests: read   # to read the preview comment: what the preview is showing now (tools/ci/changes.cjs)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       site: ${{ steps.changes.outputs.site }}
     steps:
       - uses: actions/checkout@v4
+      # Whether the site must be built, and the floor baked (tools/ci/changes.cjs holds the list of what is the site's). A push
+      # to main is compared with the commit before; a pull request from this repository with the commit whose build its
+      # preview is showing (the comment says which), so a pull request that first changes code and then only papers keeps
+      # the code's preview, and one whose build failed or was cancelled is built again by the next push.
       - name: Did this push touch the site
         id: changes
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
           BEFORE: ${{ github.event.before }}
-        run: |
-          site=true
-          if [ "${{ github.event_name }}" = "push" ] && [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then
-            if files=$(gh api "repos/${{ github.repository }}/compare/$BEFORE...${{ github.sha }}" --jq '.files[].filename' 2>/dev/null) && [ -n "$files" ] && [ "$(echo "$files" | wc -l)" -lt 300 ]; then
-              echo "$files" | grep -qE '^(app/|tests/e2e/|package\.json$|pnpm-lock\.yaml$|vite\.config\.mjs$|wrangler\.production\.jsonc$|tools/(setup\.mjs|site\.cjs)$|\.github/workflows/pages\.yml$)' || site=false
-            fi
-          fi
-          echo "site=$site" >> "$GITHUB_OUTPUT"; echo "site changed: $site"
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: node tools/ci/changes.cjs
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -53,6 +56,56 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Every script parses, and the typed modules agree with themselves
         run: pnpm run check && pnpm run typecheck
+      # The floor he may stand on (#194): baked from the drawn meshes as a build product (not kept in git), named by the
+      # fingerprint of what it is baked from and kept in the cache under it, this commit's and the base's alike (the base is
+      # main on a pull request, the commit before on a push to main, built from its own code in .main/). No named place may
+      # have become unreachable from where he comes in, on the drawn floor or on the written plan; every part whose
+      # reachable floor changed by more than a square metre is listed in the run's summary. A few seconds when both are in
+      # the cache; a bake (about a minute each) only for a fingerprint not baked before, that is after a change to what is
+      # drawn or to the plan. Before the unit tests, which read the grid, so that the report is in the summary even when they fail.
+      - name: Which floor is to be baked, here and on the base
+        if: steps.changes.outputs.walk == 'true'
+        id: walk
+        env:
+          BASE_REF: ${{ github.event_name == 'pull_request' && github.base_ref || '' }}
+          BEFORE: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: |
+          echo "key=$(node tools/bake-walk.mjs --key)" >> "$GITHUB_OUTPUT"
+          base=""; name=""
+          if [ -n "$BASE_REF" ]; then git fetch --no-tags --depth=1 origin "$BASE_REF" && base=$(git rev-parse FETCH_HEAD) && name=" main"
+          elif [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then git fetch --no-tags --depth=1 origin "$BEFORE" && base="$BEFORE" && name="上一个提交"; fi
+          basekey=none
+          if [ -n "$base" ]; then git worktree add --detach .main "$base" >/dev/null && if [ -f .main/tools/bake-walk.mjs ]; then basekey=$(cd .main && node tools/bake-walk.mjs --key); fi; fi
+          echo "base=$basekey" >> "$GITHUB_OUTPUT"; echo "name=$name" >> "$GITHUB_OUTPUT"
+      - name: Remember baked floors between runs
+        if: steps.changes.outputs.walk == 'true'
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/walk
+          key: walk-t00-${{ steps.walk.outputs.key }}-${{ steps.walk.outputs.base }}
+          restore-keys: |
+            walk-t00-${{ steps.walk.outputs.key }}-
+            walk-t00-
+      # A change that is neither the site's nor the floor's still runs the unit tests, which read the baked floor: take it
+      # from the newest cache (the same fingerprint as main's, since nothing it is made of has changed) rather than bake it cold.
+      - name: Take the newest baked floor, nothing of it having changed
+        if: steps.changes.outputs.walk != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules/.cache/walk
+          key: walk-t00-unchanged-${{ github.run_id }}
+          restore-keys: walk-t00-
+      - name: The floor he may stand on, and what this change did to it
+        if: steps.changes.outputs.walk == 'true'
+        env:
+          WALK_BASE_NAME: ${{ steps.walk.outputs.name }}
+          KEY: ${{ steps.walk.outputs.key }}
+          BASEKEY: ${{ steps.walk.outputs.base }}
+        run: |
+          node tools/bake-walk.mjs
+          if [ "$BASEKEY" != none ]; then (cd .main && WALK_CACHE="$GITHUB_WORKSPACE/node_modules/.cache/walk" node tools/bake-walk.mjs | tail -2); fi
+          find node_modules/.cache/walk -name '*.bin' ! -name "t00-$KEY.bin" ! -name "t00-$BASEKEY.bin" -delete
+          node tools/walk-diff.mjs .main/app/shared/walk/t00.bin --png=tools/out/walk-diff
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
         run: pnpm test
       - name: Build the site
@@ -91,7 +144,7 @@ jobs:
       # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
       # through, handed to the preview job. Pull requests from forks have no access to the Cloudflare token and get none.
       - name: Hand the site over for the pull request's preview
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.changes.outputs.site == 'true'
         uses: actions/upload-artifact@v4
         with:
           path: dist
@@ -118,17 +171,17 @@ jobs:
             docs/t00/camera-manifest.json
           sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4
-        if: needs.verify.result == 'success'
+        if: needs.verify.result == 'success' && needs.verify.outputs.site == 'true'
         with:
           name: preview-site-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
       - uses: actions/setup-node@v4
-        if: needs.verify.result == 'success'
+        if: needs.verify.result == 'success' && needs.verify.outputs.site == 'true'
         with:
           node-version: 22
       - name: Upload the preview
         id: upload
-        if: needs.verify.result == 'success'
+        if: needs.verify.result == 'success' && needs.verify.outputs.site == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PREVIEW_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -141,7 +194,8 @@ jobs:
         if: always()
         uses: actions/github-script@v7
         env:
-          STATE: ${{ steps.upload.outcome == 'success' && 'success' || 'failure' }}
+          # `same`: checked, and nothing of the site changed since the build the preview shows, so nothing was built or uploaded.
+          STATE: ${{ needs.verify.result == 'success' && needs.verify.outputs.site != 'true' && 'same' || (steps.upload.outcome == 'success' && 'success' || 'failure') }}
           SHA: ${{ github.event.pull_request.head.sha }}
           OUTPUT_FILE: ${{ runner.temp }}/wrangler-output.ndjson
         with:

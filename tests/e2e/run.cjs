@@ -17,6 +17,43 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
 const scenarios = {
   // The page comes up, draws, and offers its controls.
+  // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
+  // title says why in words, offers no "try again", and its language buttons still work, in each language. The renderer
+  // failing to start is what this scenario makes happen, so three's one line about it is expected here and nowhere else;
+  // any other console error or page error still fails it.
+  nogl: { tier: 1, async run(b, base) {
+    const ctx = await b.newContext({ viewport: { width: 900, height: 600 }, locale: "zh-CN" }), page = await ctx.newPage(), errors = [];
+    await page.addInitScript(() => { const get = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (kind, ...rest) { return /webgl/i.test(kind) ? null : get.call(this, kind, ...rest); }; });
+    page.on("pageerror", (e) => errors.push("page error: " + String(e).slice(0, 300)));
+    page.on("console", (m) => { if (m.type() === "error" && !/WebGLRenderer: (A WebGL context could not be created|Error creating WebGL context)/i.test(m.text())) errors.push("console: " + m.text().slice(0, 300)); });
+    page.on("response", (r) => r.status() >= 400 && errors.push(`HTTP ${r.status()}: ${r.url()}`));
+    const said = { zh: "浏览器不支持 WebGL", ja: "WebGL が利用できません", en: "WebGL is unavailable", ko: "WebGL을 사용할 수 없습니다" };
+    const look = () => page.evaluate(() => ({ label: document.getElementById("loadLabel").textContent, retry: !document.getElementById("loadRetry").hidden, enter: !document.getElementById("enterBtn").disabled, lang: document.documentElement.lang }));
+    await page.goto(base + "?q=low", { waitUntil: "commit", timeout: 120000 });
+    await page.waitForFunction(() => /WebGL/.test(document.getElementById("loadLabel").textContent), null, { timeout: 120000 });
+    let s = await look();
+    expect(s.label.includes(said.zh) && !s.retry && !s.enter, "a browser without WebGL should be told why, with no retry and no way in: " + JSON.stringify(s));
+    // The language buttons on the title, which the walk would have bound, still open the page in another language; and so on round.
+    for (const l of ["ja", "en", "ko", "zh"]) {
+      await Promise.all([page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), page.click(`#title [data-lang="${l}"]`)]);
+      await page.waitForFunction((w) => document.getElementById("loadLabel").textContent.includes(w), said[l], { timeout: 120000 });
+      s = await look(); expect(!s.retry && !s.enter, `in ${l} there should still be no retry and no way in: ` + JSON.stringify(s));
+    }
+    expect(errors.length === 0, errors.join("\n")); await ctx.close();
+  } },
+  // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
+  // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  treeseed: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE);
+    const page = await t.page.evaluate(() => window.__trees());
+    await import(require("url").pathToFileURL(require("path").join(__dirname, "../unit/dom-stub.mjs")).href);
+    const THREE = await import("three"), { buildSite } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/site.js")).href), { createTrees, geometryHash } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/trees.js")).href);
+    const M = new Proxy({}, { get: (o, k) => (k === "plaster" || k === "interior" ? () => (o["__" + k] ||= new THREE.MeshBasicMaterial()) : (o[k] ||= new THREE.MeshBasicMaterial())) });
+    const node = createTrees(new THREE.Group(), M, buildSite(M).trees, {});
+    expect(page.cedars > 10 && page.cedars === node.cedars.length, `the page grew ${page.cedars} cedars, Node ${node.cedars.length}`);
+    expect(page.hash === geometryHash(node.cedars.map((c) => c.geometry)), `the page's cedars (${page.hash}) are not Node's (${geometryHash(node.cedars.map((c) => c.geometry))})`);
+    await t.close();
+  } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.
@@ -74,7 +111,8 @@ const scenarios = {
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); });
     await t.until(async () => (await t.page.isVisible("#act")) && (await words("#act")).includes("鐘を撞く"), 30000, "the bell should be offered in Japanese");
     await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 20000, "the book did not open");
-    expect((await words("#bookHint")).includes("鐘楼") && (await words("#bookHint")).includes("歩"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
+    // (the walk so far is told only after twenty steps, #185: here he has been posed, not walked)
+    expect((await words("#bookHint")).includes("鐘楼") && (await words("#bookHint")).includes("撞く"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
     expect(await t.page.evaluate(() => document.getElementById("bookImg").complete && document.getElementById("bookImg").naturalWidth === 1200), "the seal book was not drawn");
     await t.page.click("#bookClose");
     // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
@@ -125,9 +163,10 @@ const scenarios = {
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
     expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("竹林里的泥"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
-    // A column of the row before the dais stands at 9.56 m west of the middle, z = 4.35 (framing.js puts them on the hall's own bays).
-    expect(await t.page.evaluate((c) => window.__blocked(c - 9.56, 4.35), cx), "the column this walks into is no longer where the scenario expects it");
-    await go([[-9.56, 4.35]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9.56, s.z - 4.35) > 0.45, "he walked through a column");
+    // The westernmost column of the row before the dais: asked of the page, because the bays have moved it once already (9.56 m, then 10.13 after daa9d27, and this scenario kept the old number for a week).
+    const col = await t.page.evaluate((c) => { const cs = window.__columns("main").filter((k) => Math.abs(k.z - 4.35) < 0.05); return cs.sort((a, b) => a.x - b.x)[0]; }, cx);
+    expect(col && await t.page.evaluate(([x, z]) => window.__blocked(x, z), [col.x, col.z]), "the hall has no column before the dais, or it does not stop him: " + JSON.stringify(col));
+    await t.page.evaluate(([x, z]) => window.__walk([[x, z]]), [col.x, col.z]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - col.x, s.z - col.z) > 0.45, "he walked through a column: he stands " + Math.hypot(s.x - col.x, s.z - col.z).toFixed(2) + " m from the centre of the one at " + col.x + ", " + col.z);
     // Incense before the altar, then out by the door into the daylight.
     await go([[0, 4], [0, -1.2]]); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 240000, "no way to offer incense");
     await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
@@ -300,17 +339,19 @@ const scenarios = {
     // with words about this walk only, then the book with what is still to be found.
     await t.page.evaluate(() => window.__music(true));   // the place heard, so that the close's music can be checked
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(() => t.page.isVisible("#breathWord"), 60000, "no breath to follow"); await seal("sit", "sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
     { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
       expect(cu.farBell === 1, "the close should end on the far bell answering");
       expect(cu.ending === 1 && mu.started, "the close should have its own music: " + JSON.stringify({ cu, section: mu.section })); }
     const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
+    await t.page.keyboard.press("b");   // nothing opens by itself after the close (#147): the book is the visitor's to open
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
     await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
     // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
-    await offered("起身", "while he sits on the summit"); await t.page.click("#act"); await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
+    await offered("起身", "while he sits on the summit"); await t.page.keyboard.press("e");   // (the button is not drawn on the far view, #147: E stands him up all the same)
+    await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
     await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ expect((await word()) !== "静坐", "the summit offered the close a second time");
     // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
     await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
@@ -342,7 +383,7 @@ const scenarios = {
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
     expect((await t.page.evaluate(() => window.__rites().ended)) === 0, "the close played again for the seventh seal");
-    expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
+    await t.until(async () => ((await t.page.getAttribute("#bookSave", "href")) || "").startsWith("blob:"), 60000, "nothing to save"); await t.shot("e2e-book");   // (the page opens as bare paper and is written on when drawn)
     await t.page.click("#bookClose"); expect((await word()) !== "上香" || !(await t.page.isVisible("#act")), "the incense should not be offered again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -350,6 +391,192 @@ const scenarios = {
   // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
   // The close comes once in each season: sat again in the same season the summit is only a seat; after the season is
   // changed, sitting there plays it again, and a book already full is not given its seal a second time.
+  // The far view at the close of the chapter (#147): nothing opens by itself, the eye stays on the pavilion with one line at
+  // the foot, the book is the visitor's to open (B, or that line), shutting it leaves the far view, and a step brings the eye
+  // home by a swing, never a cut.
+  farview: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+    await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered");
+    await t.page.click("#act");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended");
+    const D = () => t.page.evaluate(() => window.__director()), U = () => t.page.evaluate(() => window.__ui());
+    let d = await D(), u = await U();
+    expect(!u.stack.some((l) => /book/.test(JSON.stringify(l))) && !(await t.page.evaluate(() => document.getElementById("book").open)), "the book opened by itself at the end: " + JSON.stringify(u));
+    expect(d.phase === "hold" && d.id === "ending", "the eye is not held on the far view: " + JSON.stringify(d));
+    await t.until(() => t.page.evaluate(() => document.getElementById("hint").classList.contains("on")), 60000, "no line at the foot of the far view");
+    const line = await t.page.textContent("#hint"); expect(/朱印帐/.test(line), "the line does not offer the book: " + line);
+    // (a line said as he sat is gone after its few seconds, which a fast run has not waited out)
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
+    // Nothing but that line lies over the picture, on three screens; the slips at the edge (留影, 歇脚, the book's seal) stay, at the edge.
+    for (const [w, h] of [[960, 540], [800, 600], [390, 844]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      const over = await t.page.evaluate(() => [...document.querySelectorAll("body *")].filter((el) => {
+        if (el.closest("dialog") || ["CANVAS", "SCRIPT", "STYLE", "HEAD"].includes(el.tagName) || el.closest("#hint, #photoBtn, #menuBtn, #bookBtn")) return false;
+        const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+        if (cs.display === "none" || cs.visibility === "hidden" || r.width < 2 || r.height < 2) return false;
+        for (let a = el; a && a !== document.body; a = a.parentElement) if (+getComputedStyle(a).opacity < 0.05) return false;   // faded with its parent
+        if (el.children.length && ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return false;
+        return !!(el.textContent || "").trim() || el.matches("button,img,svg");
+      }).map((el) => `${el.id || el.className || el.tagName}<${(el.textContent || '').trim().slice(0, 12)}>`));
+      expect(over.length === 0, `${w}x${h}: over the far view lie ${over.join(", ")}`);
+    }
+    // B opens the book; shutting it leaves the far view as it was.
+    await t.page.keyboard.press("b"); await t.until(async () => (await U()).modal, 30000, "B did not open the book");
+    await t.page.click("#bookClose"); await t.until(async () => !(await U()).modal, 20000, "the book would not close");
+    d = await D(); expect(d.phase === "hold" && d.id === "ending", "shutting the book left the far view: " + JSON.stringify(d));
+    // The camera raised on the far view keeps it.
+    await t.page.evaluate(() => window.__photo(true)); await t.frames(3); d = await D(); expect(d.phase === "hold" && d.id === "ending", "the photograph left the far view: " + JSON.stringify(d)); await t.page.evaluate(() => window.__photo(false)); await t.frames(2);
+    // A step brings the eye home by a swing: no cut, and no frame turns the picture further than the swing's own limit.
+    await t.page.keyboard.down("w"); await t.until(async () => (await D()).phase === "out" || (await D()).phase === "idle", 60000, "a step did not send the eye home"); await t.page.keyboard.up("w");
+    await t.until(async () => (await D()).phase === "idle", 60000, "the eye never got home");
+    d = await D(); expect(d.cuts === 0 && d.turnMax <= 3.3, "coming home was not a smooth swing: " + JSON.stringify({ cuts: d.cuts, turnMax: d.turnMax }));
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("hint").classList.contains("on")) && /朱印帐/.test(await t.page.textContent("#hint"))), 30000, "the line about the book stayed after the eye went home");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+
+    // On a phone there is no B: the line at the foot is the way to the book, pressed with a thumb; the stick brings the eye home.
+    {
+      const m = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await m.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await m.until(async () => (await m.page.isVisible("#act")) && (await m.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered on the phone");
+      await m.page.tap("#act");
+      await m.until(async () => (await m.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended on the phone");
+      await m.until(async () => (await m.page.evaluate(() => document.getElementById("hint").classList.contains("on"))), 60000, "no line at the foot of the far view on the phone");
+      const said = await m.page.textContent("#hint"); expect(said.trim() === "点这一行，翻开朱印帐" && !/B/.test(said), "on a touch screen the line should say to press it, not name a key: " + said);
+      await m.until(async () => !(await m.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
+      await m.page.tap("#hint"); await m.until(async () => (await m.page.evaluate(() => window.__ui())).modal, 30000, "touching the line did not open the book");
+      await m.page.tap("#bookClose"); await m.until(async () => !(await m.page.evaluate(() => window.__ui())).modal, 20000, "the book would not close");
+      let d2 = await m.page.evaluate(() => window.__director()); expect(d2.phase === "hold" && d2.id === "ending", "shutting the book left the far view on the phone: " + JSON.stringify(d2));
+      // The stick, pushed with a real touch, brings the eye home.
+      const box = await m.page.evaluate(() => { const r = document.getElementById("stick").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+      const cdp = await m.page.context().newCDPSession(m.page);
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: box[0], y: box[1] }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: box[0], y: box[1] - 40 }] });
+      await m.until(async () => ["out", "idle"].includes((await m.page.evaluate(() => window.__director())).phase), 60000, "the stick did not bring the eye home");
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await m.until(async () => (await m.page.evaluate(() => window.__director())).phase === "idle", 60000, "the eye never got home on the phone");
+      d2 = await m.page.evaluate(() => window.__director()); expect(d2.cuts === 0 && d2.turnMax <= 3.3, "coming home by the stick was not a smooth swing: " + JSON.stringify({ cuts: d2.cuts, turnMax: d2.turnMax }));
+      expect(m.errors.length === 0, m.errors.join("\n")); await m.close();
+    }
+
+    // The music is not cut: nothing in the far view passes the close over, so its phrase ends where it was written to, and the picture is still the far view then.
+    {
+      const k = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+      await k.page.evaluate(() => window.__music(true));
+      await k.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await k.until(async () => (await k.page.isVisible("#act")) && (await k.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered for the music");
+      await k.page.click("#act");
+      await k.until(async () => (await k.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended for the music");
+      const m0 = await k.page.evaluate(() => window.__music()), c0 = await k.page.evaluate(() => window.__cues());
+      expect(m0.started && c0.ending === 1 && c0.passed === 0, "the close's music did not begin, or was passed over: " + JSON.stringify({ cues: c0, section: m0.section }));
+      // (the audio clock runs on real time, not the observances' clock: its phrase is some forty seconds long)
+      await k.until(async () => { const m = await k.page.evaluate(() => window.__music()); return m.section === "ending" && !m.playing; }, 120000, "the close's music never played out");
+      const m1 = await k.page.evaluate(() => window.__music()), c1 = await k.page.evaluate(() => window.__cues()), d3 = await k.page.evaluate(() => window.__director());
+      expect(m1.cuts === m0.cuts && c1.passed === 0, "the music was cut before it played out: " + JSON.stringify({ cuts: [m0.cuts, m1.cuts], passed: c1.passed }));
+      expect(d3.phase === "hold" && d3.id === "ending", "the picture left the far view while the music played out: " + JSON.stringify(d3));
+      expect(k.errors.length === 0, k.errors.join("\n")); await k.close();
+    }
+
+    // The full book's own seal is shown when the book is opened after the close, once; a page left before that owes it the next time.
+    {
+      const q = "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE;
+      const z = await open(b, base, q);
+      const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"], stamped = () => z.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.journey.v1") || "{}").stamped || null);
+      await z.page.evaluate((ids) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20, opened: 20, told: true, closed: 30, closedSeason: "summer", stamped: null })); }, all);
+      await z.page.reload({ waitUntil: "commit" }); await z.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await z.page.evaluate(() => { void window.__ending(); });
+      await z.until(async () => (await z.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended with a full book");
+      expect(!(await stamped()) && !(await z.page.isVisible("#toast")) && !(await z.page.evaluate(() => document.getElementById("book").open)), "the full book's seal was shown, or the book opened, by itself after the close");
+      // The page is left before the book was opened: the seal is still owed when it is back.
+      await z.page.reload({ waitUntil: "commit" }); await z.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      expect(!(await stamped()), "the seal was lost by leaving the page");
+      await z.page.keyboard.press("b");
+      await z.until(async () => (await z.page.isVisible("#toast")) && (await z.page.textContent("#toastName")).includes("七印圆满"), 60000, "the full book's seal was not shown when the book was first opened");
+      await z.until(() => z.page.isVisible("#book"), 60000, "the book did not open after its seal");
+      expect(!!(await stamped()), "the seal was shown but not kept");
+      await z.page.click("#bookClose"); await z.page.waitForTimeout(1500);
+      await z.page.keyboard.press("b"); await z.until(() => z.page.isVisible("#book"), 30000, "the book did not open the second time");
+      expect(!((await z.page.isVisible("#toast")) && (await z.page.textContent("#toastName")).includes("七印圆满")), "the full book's seal was shown a second time");
+      expect(z.errors.length === 0, z.errors.join("\n")); await z.close();
+    }
+  } },
+  // The breath of sitting on the summit (#156): a ring on the ground and a small word at the foot of the picture, and nothing
+  // laid over his head or chest, from the sitting's own shot, from behind him and from his own eyes, on four screens.
+  breathring: { tier: 2, async run(b, base) {
+    const SIZES = [[960, 540], [800, 600], [390, 844], [844, 390]];
+    const cases = [["third", true], ["third", false], ["first", true]];
+    for (const [view, autocam] of cases) {
+      const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day&seed=4` + BARE, { viewport: { width: 960, height: 540 }, init: `try{localStorage.setItem("yunjing.settings.v1",JSON.stringify({autocam:${autocam}}))}catch{}` });
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 40000, "静坐 was not offered");
+      await t.page.click("#act");
+      await t.until(() => t.page.isVisible("#breathWord"), 90000, "no word for the breath");
+      await t.page.evaluate(() => window.__riteClock(0));   // the observances' clock held: a moment to look at
+      // The breath goes in; the word is at the foot of the picture, the ring is on the ground, and it grows.
+      let prev = -1;
+      for (const [w, h] of SIZES) {
+        await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+        for (const step of [1500, 2500]) {
+          await t.page.evaluate((ms) => window.__riteClock(ms), step); await t.frames(2);
+          // A passage begun on this very step has drawn nothing yet: let it run a little (the clock is the page's, not frames).
+          for (let i = 0; i < 6 && (await t.page.evaluate(() => window.__rites().sit.fill)) === 0; i++) { await t.page.evaluate(() => window.__riteClock(600)); await t.frames(2); }
+          const r = await t.page.evaluate(() => {
+            const P = window.__probe(), box = P.monkBox, out = [];
+            for (const el of document.querySelectorAll("body *")) {
+              if (el.closest("dialog") || el.tagName === "CANVAS" || el.tagName === "SCRIPT" || el.tagName === "STYLE") continue;
+              const cs = getComputedStyle(el), rc = el.getBoundingClientRect();
+              if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity < 0.05 || rc.width < 2 || rc.height < 2) continue;
+              if (!(el.textContent || "").trim() && !el.matches("button,img,svg")) continue;
+              if (el.children.length && !(el.childNodes.length && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()))) continue;
+              out.push({ id: el.id || el.className || el.tagName, x: rc.left, y: rc.top, w: rc.width, h: rc.height });
+            }
+            return { box, out, word: document.getElementById("breathWord").getBoundingClientRect().toJSON(), ring: window.__rites().sit, breathEl: !!document.getElementById("breath"), vh: innerHeight, vw: innerWidth };
+          });
+          expect(!r.breathEl, "a ring is still fixed to the screen");
+          expect(r.ring.ring === true && r.ring.fill > 0, "the ring on the ground is not drawn while he breathes in: " + JSON.stringify(r.ring));
+          expect(r.word.top > r.vh * 0.5 && r.word.left >= 0 && r.word.right <= r.vw, `the word is not at the foot of the picture: ${JSON.stringify(r.word)}`);
+          if (r.box) { const [bx, by, bw, bh] = r.box, top = [bx, by, bw, bh / 2];
+            for (const e of r.out) expect(!(e.x < top[0] + top[2] && e.x + e.w > top[0] && e.y < top[1] + top[3] && e.y + e.h > top[1]), `${view}${autocam ? "" : " (no autocam)"} ${w}x${h}: ${e.id} lies over his head and chest: ${JSON.stringify({ e, box: r.box })}`); }
+          prev = r.ring.fill;
+        }
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
+  // The slip of paper from the library (#203): each of its lines, in each language, on a phone upright and on its side, lies whole on the
+  // screen: the paper and the button under it inside the picture, the page not wider than the screen, the words not under 12 px.
+  slipfit: { tier: 2, async run(b, base) {
+    const SIZES = [[390, 844], [844, 390]], bad = [];
+    for (const lang of ["zh", "ja", "en", "ko"]) {
+      const t = await open(b, base, `q=low&cam=0,30,0,0&season=summer&time=day&lang=${lang}` + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, locale: { zh: "zh-CN", ja: "ja-JP", en: "en-US", ko: "ko-KR" }[lang] });
+      const n = await t.page.evaluate(() => window.__verses);
+      for (const [w, h] of SIZES) {
+        await t.page.setViewportSize({ width: w, height: h });
+        for (let i = 0; i < (n || 14); i++) {
+          await t.page.evaluate((k) => window.__slip(k), i); await t.frames(2);
+          const r = await t.page.evaluate(() => {
+            const W = innerWidth, H = innerHeight, rc = (id) => document.querySelector(id).getBoundingClientRect(), p = rc("#slip .paper"), b = rc("#slipTake"), x = rc("#slipText"), f = rc("#slipFrom");
+            const px = (id) => parseFloat(getComputedStyle(document.querySelector(id)).fontSize);
+            const within = (q) => q.left >= -0.5 && q.right <= W + 0.5 && q.top >= -0.5 && q.bottom <= H + 0.5;
+            return { W, H, scrollW: document.documentElement.scrollWidth, paper: within(p), button: within(b), text: within(x) && x.left >= p.left - 0.5 && x.right <= p.right + 0.5 && x.top >= p.top - 0.5 && x.bottom <= p.bottom + 0.5, from: within(f), fs: Math.min(px("#slipText"), px("#slipFrom")), box: [p.left, p.top, p.right, p.bottom].map(Math.round) };
+          });
+          if (!(r.paper && r.button && r.text && r.from && r.scrollW <= r.W && r.fs >= 12)) bad.push(`${lang} ${w}x${h} #${i}: ${JSON.stringify(r)}`);
+          await t.page.evaluate(() => window.__slip(null)); await t.frames(1);
+        }
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    expect(bad.length === 0, `${bad.length} slips do not lie whole on the screen:\n  ` + bad.join("\n  "));
+    // A phone turned over while the paper is open: the longest line, in Korean, opened upright and then laid on its side, is fitted again.
+    {
+      const t = await open(b, base, "q=low&cam=0,30,0,0&season=summer&time=day&lang=ko" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, locale: "ko-KR" });
+      await t.page.evaluate(() => window.__slip(8)); await t.frames(2);
+      await t.page.setViewportSize({ width: 844, height: 390 }); await t.frames(3);
+      const r = await t.page.evaluate(() => { const W = innerWidth, H = innerHeight, p = document.querySelector("#slip .paper").getBoundingClientRect(), b = document.getElementById("slipTake").getBoundingClientRect(); return { W, H, scrollW: document.documentElement.scrollWidth, paper: [p.left, p.top, p.right, p.bottom].map(Math.round), button: [b.top, b.bottom].map(Math.round) }; });
+      expect(r.scrollW <= r.W && r.paper[0] >= 0 && r.paper[2] <= r.W && r.paper[1] >= 0 && r.paper[3] <= r.H && r.button[1] <= r.H, "the paper opened upright did not lie whole once the phone was turned over: " + JSON.stringify(r));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   replay: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE);
     const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
@@ -360,6 +587,7 @@ const scenarios = {
     await t.page.evaluate(() => window.__mood("winter", "day"));
     await t.until(async () => (await summit()) === "静坐", 30000, "a change of season did not offer the close again");
     await t.page.click("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the close did not play again in winter");
+    await t.page.keyboard.press("b");   // (opened by the visitor, #147)
     await t.until(() => t.page.isVisible("#book"), 60000, "the book did not open after the close");
     const j = await t.journey(); expect(j.closedSeason === "winter", "the season of the close was not kept: " + j.closedSeason);
     expect(!(await t.page.textContent("#toastName")).includes("七印圆满") || !(await t.page.isVisible("#toast")), "the full book's seal was shown again on a replay");
@@ -772,6 +1000,35 @@ const scenarios = {
     d = await r.page.evaluate(() => window.__director()); expect(d.cuts === 2 && d.blends === 0, "and come home behind it: " + JSON.stringify(d)); saw++;
     expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
   } },
+  // A phone's screen going dark in the middle of the close (#169): the passage asks the screen to stay awake (Screen
+  // Wake Lock, recorded by a stub), keeps no time while the page is hidden, does not take the tap that brings the page
+  // back for a skip, and lets the screen go when it is over. `document.hidden` is stood in for here; the page is not
+  // really hidden, but every reader of it is.
+  screen: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
+      window.__wake = [];
+      Object.defineProperty(navigator, "wakeLock", { configurable: true, value: { request: async (type) => { window.__wake.push("request:" + type); return { release: async () => { window.__wake.push("release"); }, addEventListener() {} }; } } });
+      let hidden = false;
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (hidden ? "hidden" : "visible") });
+      window.__setHidden = (v) => { hidden = v; document.dispatchEvent(new Event("visibilitychange")); };
+    } });
+    const R = () => t.page.evaluate(() => window.__rites()), wake = () => t.page.evaluate(() => window.__wake.slice());
+    await t.page.evaluate(() => { void window.__ending(); });   // it is a promise; do not wait for the whole close here
+    await t.until(async () => (await R()).closing === true, 60000, "the close never began");
+    await t.until(async () => (await wake()).includes("request:screen"), 30000, "the close did not ask the screen to stay awake");
+    // The page is hidden and the close's place read in one breath: a round trip between the two (tens of milliseconds, more on a slow machine) is time the close rightly kept.
+    const u0 = await t.page.evaluate(() => { window.__setHidden(true); return window.__rites().close.u; }); await t.page.waitForTimeout(700);
+    const u1 = (await R()).close.u;
+    expect(u1 - u0 < 0.03, "the close kept time behind a dark screen: " + JSON.stringify([u0, u1]));
+    await t.page.evaluate(() => { window.__setHidden(false); document.getElementById("ending").click(); });   // the wake tap, at once
+    expect((await R()).closing === true, "the tap that brought the page back skipped the close");
+    await t.page.waitForTimeout(1000);
+    await t.page.evaluate(() => document.getElementById("ending").click());
+    await t.until(async () => (await R()).ended >= 1, 30000, "a later tap did not pass over the close");
+    await t.until(async () => (await wake()).includes("release"), 15000, "the wake lock was not let go after the close");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain
   // to him before the walk is theirs; nothing lies over the picture meanwhile; the bell sounds at the click and the music
   // waits; the first line about walking comes only after; at the gate the prologue's title rises and leaves, once. A
@@ -910,7 +1167,10 @@ const scenarios = {
     s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
     await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
     // Its own level, apart from everything else.
-    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
+    // The three levels under the whole volume are folded until asked for (分开调).
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setVolume"), 10000, "the menu has no volume");
+    expect(!(await t.page.isVisible("#setMusic")), "the music's own level should be folded until asked for");
+    await t.page.click("#menuMix"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "分开调 did not open the music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
     // Struck and listened to within one call: a busy page can let the drum die between two calls.
@@ -1041,6 +1301,14 @@ const scenarios = {
       "the console's link does not open where he stood: " + JSON.stringify({ before, after }));
     expect(await u.page.evaluate(() => location.search) === "?" + search, "the published page should not write the console's devpose into the address");
     expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A right-click is the browser's own menu, except in the middle of a look-drag, where it can only interrupt: the
+    // canvas takes it just then, and gives it back when the drag is let go.
+    const menu = () => t.page.evaluate(() => { const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true }); document.getElementById("yardGl").dispatchEvent(e); return e.defaultPrevented; });
+    expect((await menu()) === false, "a right-click with no drag should be the browser's own menu");
+    await t.page.mouse.move(210, 400); await t.page.mouse.down(); await t.page.mouse.move(280, 400, { steps: 6 });
+    expect((await menu()) === true, "a right-click in the middle of a look-drag should not open the browser's menu");
+    await t.page.mouse.up();
+    expect((await menu()) === false, "after the drag is let go, the browser's menu should be back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
@@ -1070,10 +1338,10 @@ const scenarios = {
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
       const panel = await t.page.locator("#photoSettings").boundingBox(); const size = t.page.viewportSize(); expect(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= size.width && panel.y + panel.height <= size.height, "settings leave the viewport");
-      // The thirds, off at first, on when asked for, and remembered.
-      expect(!(await t.page.isVisible("#frame .third")), "the thirds should be off until asked for");
-      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third") && (await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not come on");
-      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")), "the thirds did not go off");
+      // The thirds, on at first, off when put away, and remembered.
+      expect(await t.page.isVisible("#frame .third"), "the thirds should be on until put away");
+      await t.page.click("#thirdsToggle"); expect(!(await t.page.isVisible("#frame .third")) && !(await t.page.evaluate(() => window.__settings().thirds)), "the thirds did not go off");
+      await t.page.click("#thirdsToggle"); expect(await t.page.isVisible("#frame .third"), "the thirds did not come back on");
       await t.page.click("#monkToggle"); await t.frames(1); expect(!(await t.probe()).monk, "he could not step out of the picture");
       await t.page.click("#monkToggle"); await t.frames(1); expect((await t.probe()).monk, "he could not step back into it");
       await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#photoSettings")) && (await t.probe()).photo, "first Escape should close settings only");
@@ -1146,7 +1414,13 @@ const scenarios = {
     await t.page.keyboard.press("v"); expect((await t.probe()).view === "first", "V should change the view"); await t.page.keyboard.press("v");
     const d0 = (await t.probe()).camDist; await t.page.mouse.move(450, 300); for (let i = 0; i < 4; i++) await t.page.mouse.wheel(0, 300); await t.frames(16);
     const d1 = (await t.probe()).camDist; expect(d1 > d0 + 1, `the wheel should draw the eye back: ${d0} to ${d1}`);
-    await t.page.keyboard.press("b"); await t.until(() => t.page.isVisible("#book"), 60000, "B should open the book"); await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#book")), "Esc should close it");
+    // The page is there at once, as paper, before its seals are drawn onto it: within the frame the key was pressed in.
+    const opened = await t.page.evaluate(() => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "b", bubbles: true })); return !!document.getElementById("book").open; });
+    expect(opened, "B should open the book's page at once, not after it is drawn");
+    await t.until(() => t.page.evaluate(() => !document.getElementById("bookPage").classList.contains("drawing")), 60000, "the book's page was never written on");
+    // One seal to a sheet: the book closes with one, and saving or sharing are written in ink.
+    expect(await t.page.evaluate(() => [...document.querySelectorAll("#book .stamp")].filter((e) => e.offsetParent).map((e) => e.id).join()) === "bookClose", "the book should carry exactly one seal, 合上");
+    await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#book")), "Esc should close it");
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -1179,6 +1453,11 @@ const scenarios = {
         return { w: r.width, h: r.height, fits: c.scrollHeight <= c.clientHeight, cols: cs.gridTemplateColumns.split(" ").length, side: b.left >= a.right - 1, centred: Math.abs(r.left + r.width / 2 - innerWidth / 2) < 2, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; }); };
     for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) { const m = await lay(w, h); expect(m.cols === 2 && m.side && m.w > m.h && m.fits && !m.clipped && m.centred && m.inside && m.w <= 960, `the menu should lie across at ${w}x${h}, whole and centred: ` + JSON.stringify(m)); }
     for (const [w, h] of [[390, 844], [768, 1024]]) { const m = await lay(w, h); expect(m.cols === 1 && m.inside && m.h > m.w, `the menu should stay one column at ${w}x${h}: ` + JSON.stringify(m)); }
+    // On a phone held upright the parts can be told at a glance: the ear's heading is in sight without scrolling (#185).
+    { await lay(390, 844); const r = await t.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")], cr = c.getBoundingClientRect(), ear = hs[2].getBoundingClientRect(), foot = document.querySelector("#menu .row").getBoundingClientRect(); return { names: hs.map((e) => e.textContent), said: hs.map((e) => e.getAttribute("aria-label")), bottom: Math.round(ear.bottom), foot: Math.round(foot.top), card: Math.round(cr.bottom) }; });
+      // named as the Heart Sutra names the senses, and read aloud in plain words
+      expect(r.names.join("") === "眼身耳意" && r.said.join("") === "画面操作声音文字", "the menu's parts should be 眼 身 耳 意, read aloud as 画面 操作 声音 文字: " + JSON.stringify(r));
+      expect(r.bottom <= Math.min(r.card, r.foot), "on a 390x844 phone the ear's heading should be in sight without scrolling, above the menu's foot: " + JSON.stringify(r)); }
     { const m = await lay(844, 390); expect(m.cols === 2 && m.inside, "a phone held sideways keeps its two columns: " + JSON.stringify(m)); }
     // Tab goes down the left column, then the right, then the foot: the order the eye reads it in.
     { await t.page.setViewportSize({ width: 1366, height: 768 }); await t.frames(2); const seq = [];
@@ -1187,11 +1466,6 @@ const scenarios = {
       for (let i = 0; i < n; i++) { seq.push(await t.page.evaluate(() => { const a = document.activeElement; return a.closest(".grp-view") ? "L" : a.closest(".grp-ctl") ? "R" : a.closest("#menu") ? "F" : "?"; })); await t.page.keyboard.press("Tab"); }
       expect(/^L+R+F+$/.test(seq.join("")), "Tab should go through the left column, then the right, then the foot: " + seq.join("")); }
     await t.page.setViewportSize({ width: 800, height: 500 }); await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#menu")), 10000, "Esc did not close the menu");
-    // The shortest wide screen, in each language: nothing to scroll (the group's invitation is Chinese only, so Chinese is the tallest).
-    for (const lg of ["ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
-      await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
-      const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
-      expect(m.fits && !m.clipped, `the menu should lie whole at 1280x720 in ${lg}: ` + JSON.stringify(m)); await u.close(); }
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3, "the settings were not kept: " + JSON.stringify(st));
@@ -1202,6 +1476,33 @@ const scenarios = {
     const s = await t.state(); expect(s.z > 85 && s.h < -10 && !(await t.page.isVisible("#menu")), "回到起点 should put him back at the foot of the path: " + JSON.stringify([s.x, s.z, s.h]));
     await t.page.evaluate(() => localStorage.removeItem("yunjing.settings.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The pause menu laid across a wide screen, in every language at three sizes: nothing to scroll and no row wider than its box.
+  // Apart from `menu` so that it can run beside every push: the place is built and not drawn, a minute or two (#177).
+  menufit: { tier: 2, async run(b, base) {
+    // (English's Follow the hour is the longest hour row.)
+    for (const lg of ["zh", "ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+      await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
+      for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
+        const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
+        expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
+      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185)
+      await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
+      const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")]; return { names: hs.length, ear: hs[2] ? Math.round(hs[2].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
+      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
+      // and the four ways to another language are all there at first sight: each the thing a thumb lands on at its middle,
+      // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
+      const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
+      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
+      // and nothing written on the sheet lies half under the foot at first sight: any block of words that shows within the
+      // sheet keeps clear of the foot's box, whatever is added to the menu later (#195: the group's invitation, half hidden)
+      const under = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const cr = c.getBoundingClientRect(), foot = document.querySelector("#menu .row"), f = foot.getBoundingClientRect(), out = [];
+        for (const el of c.querySelectorAll("*")) { if (foot.contains(el) || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+          const st = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width || !r.height || st.visibility === "hidden" || el.closest("[hidden]")) continue;
+          const shows = r.bottom > cr.top && r.top < cr.bottom; if (shows && r.bottom > f.top + 0.5 && r.top < f.bottom - 0.5) out.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 8)}" ${Math.round(r.top)}-${Math.round(r.bottom)}`); }
+        return { foot: Math.round(f.top), out }; });
+      expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
+      await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
   // the focus goes into the sheet and comes back to what opened it.
@@ -1265,6 +1566,8 @@ const scenarios = {
   // #135: with the book filled the hour is "随时辰" (the clock) until a hand chooses one; the choice is for this page only.
   hour: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&enter=1" + BARE, { viewport: { width: 900, height: 600 } });
+    // Before the book has been filled the prologue is walked by day, whatever the clock says.
+    expect((await t.probe()).time === "day", "a first visit should be walked by day: " + (await t.probe()).time);
     await t.page.evaluate((ids) => localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20 })), ["bell", "incense", "tea", "sutra", "well", "lamp", "summit"]);
     await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     const pressed = (sel) => t.page.getAttribute(sel, "aria-pressed");
@@ -1424,6 +1727,25 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A deliberate low ledge hop: normal walking stays blocked; Space or the touch button clears it.
+  // The 功德箱 (#202): a free coin in the great hall, and in the web build a sheet with one link to the sponsor page.
+  offering: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE);
+    await t.page.evaluate(() => window.__inside("main")); await t.frames(3);
+    const box = await t.page.evaluate(() => window.__gallery["main-box"]); expect(box && box.item.offering, "the great hall has no offering box");
+    const kept = async () => { const j = await t.journey(); return JSON.stringify({ seals: j.seals, count: j.count, strikes: j.strikes, earned: j.earned }); }, book = await kept();
+    await t.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), box);
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "合掌", 30000, "standing before the box offered no 合掌");
+    await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#offering"), 120000, "the coin was dropped and no sheet followed");
+    const links = await t.page.$$eval("#offering a", (as) => as.map((a) => ({ href: a.href, target: a.target, rel: a.rel, text: a.textContent })));
+    expect(links.length === 1 && links[0].target === "_blank" && /noopener/.test(links[0].rel), "the sheet should hold exactly one link, to a new tab: " + JSON.stringify(links));
+    expect(links[0].href === "https://rushiwowen.co/donate?utm_source=temple-walk&utm_medium=game&utm_campaign=offering-box&utm_content=zh", "the link is not the sponsor page in Chinese: " + links[0].href);
+    expect(links[0].text === "支持如是我闻与本游戏的制作" && !/功德无量|供养|募捐/.test(await t.page.textContent("#offering")), "the sheet's words are not the agreed ones");
+    expect(JSON.stringify(await t.page.evaluate(() => window.__hud())).match(/功德|护持|如是我闻/) === null, "the hint line spoke of the box");
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#offering")), 20000, "Esc did not put the sheet away");
+    expect((await kept()) === book, "a coin changed the book: " + book + " -> " + (await kept()));
+    await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box");
+  } },
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)
@@ -1585,7 +1907,11 @@ const scenarios = {
   for (const n of names) {
     const t0 = Date.now(); let error = null;
     try { await scenarios[n].run(browser, srv.base); } catch (e) { error = String(e.message || e).slice(0, 1500); }
+    // A scenario that threw left the pages it had opened drawing on, and every later scenario of the shard shared the machine with them (#177).
+    for (const c of browser.contexts()) await c.close().catch(() => {});
     const secs = Math.round((Date.now() - t0) / 1000); report.push({ name: n, ok: !error, secs, error });
+    // Written after every scenario: a shard cut off by the job's time limit still leaves what it had finished (#177).
+    fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "e2e-report.json"), JSON.stringify(report, null, 2));
     console.log(`${error ? "FAIL" : "ok  "} ${n.padEnd(8)} ${String(secs).padStart(4)}s${error ? "\n     " + error.split("\n").join("\n     ") : ""}`);
   }
   await browser.close(); srv.close();

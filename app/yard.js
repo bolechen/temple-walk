@@ -17,9 +17,9 @@ import { strike, flutter, cueState, shutterSound, stampSound, photoSounds, bells
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
-import { createSettings, browserSettingsStore } from "./src/settings.js";
+import { createSettings, browserSettingsStore, DEFAULTS as SETTING_DEFAULTS } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
-import { createTrees } from "./src/trees.js";
+import { createTrees, geometryHash } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
 import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
@@ -27,6 +27,7 @@ import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
@@ -43,10 +44,10 @@ import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
 import { planSteps, clearLine } from "./src/route.js";
-import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
+import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
-import { t as tr, lang, langSource, takeSwitch, glyphs, setLang } from "./src/i18n.js";
+import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
 const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 
@@ -64,7 +65,12 @@ const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? s
 const loading = window.templeLoading;
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("yardGl"));
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+// A browser that cannot draw (no WebGL, or the graphics card turned off for it) is told so in words on the title, with no
+// "try again", since trying again would fail the same way; the module then stops here and builds nothing more.
+const renderer = await (async () => {
+  try { return new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" }); }
+  catch { loading?.fail({ reason: "webgl" }); return new Promise(() => {}); }
+})();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.AgXToneMapping;      // applied by the output pass
 renderer.toneMappingExposure = 1.12;
@@ -160,11 +166,16 @@ if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
 await loading.step(tr("行走"));
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
+// The prologue is where a visitor first meets the place, and it is walked by day, whatever the hour at home (the owner,
+// 2026-11-17): until the book has been filled once, the hour is 昼 and does not follow the clock. The season stays the
+// visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
+const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
+const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
-                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "day" : nowMood.time };
-// The hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's choice lasts this page only
-// and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
-state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam"));
+                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
+// After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
+// choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
+state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -268,6 +279,7 @@ const zoom = (k) => {
   if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); return; }
   if (view === "first") { if (k > 1 && (nudge += Math.log(k)) > 0.3) { nudge = 0; reachWant = 2.6; setView("third"); } else if (k < 1) nudge = 0; return; }
   const near = reachWant <= 2.6 + 1e-6; reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11);
+  if (k < 1 && reachWant <= 2.6 + 1e-6) hints.say.nearest();
   if (k < 1 && near) { if ((nudge -= Math.log(k)) > 0.3) { nudge = 0; setView("first"); } } else nudge = 0;
 };
 // With a mouse the view turns while a button is held and dragged, as on most pages that show a place in three
@@ -312,12 +324,16 @@ canvas.addEventListener("pointermove", (e) => {
   const S = settings.get();
   const k = dragRate(e.pointerType);
   director.back();   // a drag of the view: the visitor wants to look for themselves
+  if (!down.moved) hints.say.dragged();
   down.moved = true; yaw += dx * k * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * k * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
 const lift = (e) => { touches.delete(e.pointerId); pinch = 0; };
 canvas.addEventListener("pointercancel", (e) => { lift(e); down = null; });
+// A right-click is the browser's own menu, except in the middle of a look-drag: there is nothing on the canvas it could
+// be for, and it would only interrupt the hand that is turning the view. Let go and it is the browser's again.
+canvas.addEventListener("contextmenu", (e) => { if (down?.moved) e.preventDefault(); });
 const ray = new THREE.Raycaster();
 // Where a tap lands on the ground. The ground is not flat: follow the line of sight outward until it first
 // dips below whatever can be stood on there (a court, a terrace, a flight of steps), then close in on that spot.
@@ -660,6 +676,9 @@ setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if 
 // Esc folds the settings, then puts the print away, then lowers the camera.
 const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
 ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
+// On a touch screen the picture is taken with the round button and drawn nearer with two fingers: the line under the
+// camera's settings says so, rather than speaking of a click and a wheel the hand does not have.
+if (hints.coarse) { const how = document.querySelector("#photoSettings > p"); if (how) how.textContent = tr("画面就是你眼前所见 · 点快门即拍 · 双指远近"); }
 ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () => raise(false) });
 function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
 function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }
@@ -826,9 +845,12 @@ if (upIn && (Q.has("cam") || Q.has("show"))) pitch = pose[3];
 { const sp = site.places[(Q.get("show") || "").replace(/^shot-/, "")]; if (Q.get("show")?.startsWith("shot-") && sp?.room && !Q.has("in")) { indoors(site.halls.find((h) => h.id === sp.room)); pos.x = sp.at[0]; pos.z = sp.at[1]; yaw = Math.PI - sp.face; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall
 // For the test tools.
-window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
+window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__columns = (id) => (rooms?.rooms?.[id]?.room.frame.cols || []).map((c) => ({ x: c.x, z: c.z }));   // where a hall's free columns stand, for the scenarios that walk into one
+window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
 window.__lofts = site.lofts;
 window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+// For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
+window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // The address of the view he has now, for the console: where he stands and looks, the mood, the hall or balcony he is
 // in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and
@@ -871,6 +893,7 @@ window.__cost = (n = 40) => {
   return +((performance.now() - t0) / n).toFixed(2);
 };
 // What each part of the scene weighs: meshes, and triangles as drawn (instances counted).
+window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null });   // the cedars' grown wood, for the Node/browser check
 window.__census = () => {
   const out = {};
   for (const top of scene.children) {
@@ -957,16 +980,14 @@ function openMenu(open) {
   on("setAutocam", () => { set("autocam", !settings.get().autocam); if (!settings.get().autocam) director.drop(); });
   on("setLock", () => { set("lock", !settings.get().lock); if (!settings.get().lock) document.exitPointerLock?.(); });
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
+  // The three levels under the whole volume are folded away until asked for, and open by themselves when one of them
+  // has been moved from where it began.
+  const mix = (open) => { menuEl.classList.toggle("mix", open); $("menuMix").setAttribute("aria-expanded", String(open)); $("menuMix").textContent = open ? tr("收起") : tr("分开调"); };
+  on("menuMix", () => mix(!menuEl.classList.contains("mix")));
+  { const S = settings.get(); mix(SOUND.slice(1).some(([, k]) => S[k] !== SETTING_DEFAULTS[k])); }
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
-  // The language: each choice is written in its own language; the one in use is circled in the menu and left off the
-  // title. Choosing another opens the page again in it (src/i18n.js).
-  document.querySelectorAll("[data-lang]").forEach((b) => {
-    b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
-    if (b.closest(".langs")) /** @type {HTMLElement} */ (b).hidden = b.dataset.lang === lang;
-    b.addEventListener("click", () => setLang(b.dataset.lang));
-  });
   // Lost, or wedged somewhere he should not be: back to where the path begins.
   on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
@@ -1015,7 +1036,7 @@ createGame({
   // `drawn`: he has drawn the log back himself (rites.js) and it is meeting the bell now; otherwise it is tapped.
   strike(kind, drawn) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s && !drawn) { s.t0 = riteNow(); s.lead = 0; } window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
   monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage, seated: () => !!stage && (stage.pose === "sit" || stage.pose === "chair"),   // cross-legged, or on a stool as on a chair
-  leave: () => interrupt(),
+  leave: () => { interrupt(); director.back(); },   // standing up (起身) brings the eye home too, from the far view as from any shot
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
   // The opening after 入山 (src/opening.js): `eye` "fly" or "ink"; resolves with its state when the walk is handed back.
@@ -1029,6 +1050,10 @@ createGame({
   // to him; `direct(id, { now })` is there at once (a picture tool), `undirect()` lets go without a swing (a passage takes
   // the eye from it); `directOut()` is how many seconds the way back takes, so an observance can send it that much early.
   direct: directShot,
+  // The close of the chapter leaves the eye where it stands, on a shot made of that very pose (`holdShot`): nothing moves
+  // when it is handed over, it drifts a very little, and `direct(null)`, a step, a tap on the ground or Esc bring it home by the
+  // usual swing. Not for an observance: it is gone to with 自动镜头 off too, as the close itself is.
+  holdEye(eye) { const { place, shot } = holdShot(eye, camera.aspect || 16 / 9); return director.go("ending", { ...place, shot }, 0, { now: true, force: true }); },
   undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(), directArrived: () => director.state().phase === "hold",
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),

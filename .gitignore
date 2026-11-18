@@ -12,8 +12,10 @@ __pycache__/
 node_modules/
 app/vendor/
 
-# What `pnpm build` writes: the site as it is published
+# What `pnpm build` writes: the site as it is published, and the floor baked for it (tools/bake-walk.mjs)
 dist/
+app/shared/walk/
+.main/
 
 # Wrangler local state and deployment output
 .wrangler/
