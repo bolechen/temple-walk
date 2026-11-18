@@ -65,7 +65,12 @@ const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? s
 const loading = window.templeLoading;
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("yardGl"));
-(async () => { const renderer = (() => { try { return new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" }); } catch { loading?.fail({ message: "浏览器不支持 WebGL 或未开启硬件加速", retry: false }); return null; } })(); if (!renderer) return;
+// A browser that cannot draw (no WebGL, or the graphics card turned off for it) is told so in words on the title, with no
+// "try again", since trying again would fail the same way; the module then stops here and builds nothing more.
+const renderer = await (async () => {
+  try { return new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" }); }
+  catch { loading?.fail({ reason: "webgl" }); return new Promise(() => {}); }
+})();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.AgXToneMapping;      // applied by the output pass
 renderer.toneMappingExposure = 1.12;
@@ -974,7 +979,7 @@ function openMenu(open) {
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
-  // here he should not be: back to where the path begins.
+  // Lost, or wedged somewhere he should not be: back to where the path begins.
   on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
@@ -1099,4 +1104,3 @@ if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {
 }
 
 await loading.step(tr("山路"));
-})();
