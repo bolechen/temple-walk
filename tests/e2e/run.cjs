@@ -965,7 +965,10 @@ const scenarios = {
     s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
     await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
     // Its own level, apart from everything else.
-    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
+    // The three levels under the whole volume are folded until asked for (分开调).
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setVolume"), 10000, "the menu has no volume");
+    expect(!(await t.page.isVisible("#setMusic")), "the music's own level should be folded until asked for");
+    await t.page.click("#menuMix"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "分开调 did not open the music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
     // Struck and listened to within one call: a busy page can let the drum die between two calls.
@@ -1248,6 +1251,9 @@ const scenarios = {
         return { w: r.width, h: r.height, fits: c.scrollHeight <= c.clientHeight, cols: cs.gridTemplateColumns.split(" ").length, side: b.left >= a.right - 1, centred: Math.abs(r.left + r.width / 2 - innerWidth / 2) < 2, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; }); };
     for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) { const m = await lay(w, h); expect(m.cols === 2 && m.side && m.w > m.h && m.fits && !m.clipped && m.centred && m.inside && m.w <= 960, `the menu should lie across at ${w}x${h}, whole and centred: ` + JSON.stringify(m)); }
     for (const [w, h] of [[390, 844], [768, 1024]]) { const m = await lay(w, h); expect(m.cols === 1 && m.inside && m.h > m.w, `the menu should stay one column at ${w}x${h}: ` + JSON.stringify(m)); }
+    // On a phone held upright the three parts can be told at a glance: the sound's heading is in sight without scrolling (#185).
+    { await lay(390, 844); const r = await t.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name")], cr = c.getBoundingClientRect(), last = hs[hs.length - 1].getBoundingClientRect(), foot = document.querySelector("#menu .row").getBoundingClientRect(); return { names: hs.map((e) => e.textContent), bottom: Math.round(last.bottom), foot: Math.round(foot.top), card: Math.round(cr.bottom) }; });
+      expect(r.names.join("") === "看手声" && r.bottom <= Math.min(r.card, r.foot), "on a 390x844 phone the sound's heading should be in sight without scrolling, above the menu's foot: " + JSON.stringify(r)); }
     { const m = await lay(844, 390); expect(m.cols === 2 && m.inside, "a phone held sideways keeps its two columns: " + JSON.stringify(m)); }
     // Tab goes down the left column, then the right, then the foot: the order the eye reads it in.
     { await t.page.setViewportSize({ width: 1366, height: 768 }); await t.frames(2); const seq = [];
