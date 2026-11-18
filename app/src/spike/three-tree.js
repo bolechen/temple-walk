@@ -96,7 +96,9 @@ TreeGenerator.defaults = {
 	sectionLength: 1.3, // world units per tube segment, so a tall trunk stays smooth
 	childStart: 0.12, // fraction up a sub-branch before children appear
 	trunkClear: 0.25, // fraction of the trunk kept bare before the crown ( raise for a tall clean bole )
-	direction: null // (added here) the way the trunk starts, [ x, y, z ]; null is straight up
+	direction: null, // (added here) the way the trunk starts, [ x, y, z ]; null is straight up
+	collar: 0, // (added here) how much a branch swells where it leaves its parent
+	childRadius: null // (added here) per level, a child's radius as a share of its parent's where it leaves; null keeps the pipe model
 };
 
 // a fluent setter for every default — setSeed(), setLevels(), setChildren(), … — each
@@ -138,6 +140,8 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 
 		// non-linear taper down to ( 1 - taper ) of the base, with a flared root on the trunk
 		let radius = baseRadius * ( ( 1 - p.taper ) + p.taper * Math.pow( 1 - t, p.taperCurve ) );
+		// (added here) a collar where a branch leaves its parent: swollen at its foot, back to its own size within ~0.3 m
+		if ( level > 0 && p.collar > 0 ) radius *= 1 + p.collar * Math.exp( - ( t * length ) / 0.1 );
 		if ( level === 0 && p.rootFlare > 0 ) {
 
 			const flare = Math.max( 0, ( p.flareFrac - t ) / p.flareFrac );
@@ -169,7 +173,8 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 
 	}
 
-	tubes.push( { rings, radial, level } ); // (level added here)
+	const me = { rings, radial, level, base: baseRadius, kids: [] }; // (added here: level, and each fork's radii, for the tests)
+	tubes.push( me );
 
 	if ( level >= p.levels - 1 || length < p.minLength ) return;
 
@@ -179,6 +184,11 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 	const n = p.children[ Math.min( level, p.children.length - 1 ) ];
 	const angle = p.branchAngle[ Math.min( level, p.branchAngle.length - 1 ) ];
 	const pipeDrop = Math.pow( 1 / n, 1 / p.radiusExponent );
+	// (added here) with `childRadius`, each child is that share of this branch's base radius, so the children of a fork
+	// carry about the wood that comes into it; a branch whose children would be finer than `minRadius` forks no more
+	const share = Array.isArray( p.childRadius ) ? p.childRadius[ Math.min( level, p.childRadius.length - 1 ) ] : null;
+	const want = share ? baseRadius * share : Math.max( p.minRadius, baseRadius * pipeDrop );
+	if ( share && want < p.minRadius ) return;
 
 	for ( let i = 0; i < n; i ++ ) {
 
@@ -196,9 +206,11 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 		if ( p.upPull > 0 ) childDir.lerp( UP, p.upPull ).normalize();
 
 		// the pipe-model drop, but never fatter than the wood it leaves nor below the floor
-		const childBase = Math.max( p.minRadius, Math.min( baseRadius * pipeDrop, ring.radius ) );
+		const childBase = Math.min( want, ring.radius ); // (changed here) a share of the parent's own base, never fatter than the wood it leaves
+		me.kids.push( childBase );
 
-		let childLength = length * p.lengthRatio * ( 1 - p.branchLengthFalloff * t );
+		const lr = Array.isArray( p.lengthRatio ) ? p.lengthRatio[ Math.min( level, p.lengthRatio.length - 1 ) ] : p.lengthRatio; // (added here) per level
+		let childLength = length * lr * ( 1 - p.branchLengthFalloff * t );
 		if ( p.lengthVariance > 0 ) childLength *= 1 + ( random() * 2 - 1 ) * p.lengthVariance;
 
 		growBranch( tubes, ring.pos, childDir, childLength, childBase, level + 1, p, random );
@@ -254,8 +266,8 @@ function createGeometry( tubes ) {
 
 	for ( const { rings, radial } of tubes ) {
 
-		vertexCount += rings.length * radial;
-		indexCount += ( rings.length - 1 ) * radial * 6;
+		vertexCount += rings.length * radial + 1; // (added here) and a point closing its end
+		indexCount += ( rings.length - 1 ) * radial * 6 + radial * 3;
 
 	}
 
@@ -316,7 +328,12 @@ function createGeometry( tubes ) {
 
 		}
 
-		vertexOffset += rings.length * radial;
+		// (added here) close the tube's end in a short point, so no branch ends as an open pipe
+		const end = rings[ rings.length - 1 ], tip = vertexOffset + rings.length * radial, last = vertexOffset + ( rings.length - 1 ) * radial;
+		positions[ tip * 3 ] = end.pos.x + end.tangent.x * end.radius * 1.5; positions[ tip * 3 + 1 ] = end.pos.y + end.tangent.y * end.radius * 1.5; positions[ tip * 3 + 2 ] = end.pos.z + end.tangent.z * end.radius * 1.5;
+		normals[ tip * 3 ] = end.tangent.x; normals[ tip * 3 + 1 ] = end.tangent.y; normals[ tip * 3 + 2 ] = end.tangent.z;
+		for ( let j = 0; j < radial; j ++ ) { indices[ indexOffset ++ ] = last + j; indices[ indexOffset ++ ] = last + ( j + 1 ) % radial; indices[ indexOffset ++ ] = tip; }
+		vertexOffset += rings.length * radial + 1;
 
 	}
 

@@ -221,8 +221,8 @@ export function createTrees(scene, M, spots, opts = {}) {
     // project's bark and leaves, so the three may be set side by side. Every other tree is grown here as before.
     if (opts.gen && ((kind === "maple" && x === -9.5 && z === 28) || (kind === "cedar" && x === -19 && z === 29))) {
       const t0 = performance.now(), t = growBy(opts.gen, kind, x, y, z, h, 7, kind === "cedar" ? 0.2 + h * 0.012 : 0.22), centre = V(x, y + h * 0.62, z);
-      wood.push(...t.wood); for (const l of t.leaves) clump(kind, l.p, centre, l.w, kind === "cedar" ? 3 : 5);
-      spike.push({ gen: opts.gen, kind, at: [x, z], stems: t.stems, trunks: t.trunks, ms: performance.now() - t0, wood: t.wood.reduce((n, g) => n + (g.index ? g.index.count : g.attributes.position.count) / 3, 0), leaves: t.leaves.length });
+      wood.push(...t.wood); for (const l of t.leaves) clump(kind, l.p, kind === "cedar" ? l.p.clone().add(V(0, 1.5, 0)) : centre, l.w, kind === "cedar" ? 2 : 5);   // (a cedar's spray shaded from just above it, not from the shaft)
+      spike.push({ gen: opts.gen, kind, at: [x, z], skeleton: t.skeleton, stems: t.stems, trunks: t.trunks, ms: performance.now() - t0, wood: t.wood.reduce((n, g) => n + (g.index ? g.index.count : g.attributes.position.count) / 3, 0), leaves: t.leaves.length });
       continue;
     }
     if (kind === "cedar") {

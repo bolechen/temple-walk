@@ -117,7 +117,7 @@ const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
-const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0, gen: ["three", "ez"].find((g) => g === new URLSearchParams(location.search).get("trees")) }));   // ?trees=three|ez: the #162 trial
+const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0, gen: ["three", "ez", "ezp"].find((g) => g === new URLSearchParams(location.search).get("trees")) }));   // ?trees=three|ez|ezp: the #162 trial
 const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
