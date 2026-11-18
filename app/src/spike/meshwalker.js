@@ -182,9 +182,10 @@ export function createMeshWalker(o) {
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i;
       const w = inBody(S, box.x0 + (i + 0.5) * step, box.z0 + (j + 0.5) * step, step * 0.71, h[k]); if (w) { border[k] = S.names.indexOf(w.what); rad[k] = reach(w.lo, w.hi); top[k] = w.floor + w.hi; bot[k] = w.floor + w.lo; post[k] = w.what.startsWith("post:") ? 1 : 0; } }
     const t2 = performance.now();
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; if (border[k] >= 0) continue; let up = 0;
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; let up = 0;
       for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; up = Math.max(up, h[jj * nx + ii] - h[k]); }
-      if (up > MW.CLIMB) { border[k] = LEDGE; rad[k] = reach(0, Math.min(up, MW.CLEAR)); top[k] = h[k] + up; bot[k] = h[k]; } }
+      // The foot of a ledge; a cell that is already a border for something low standing in it takes the ledge's heights as well.
+      if (up > MW.CLIMB) { if (border[k] < 0) { border[k] = LEDGE; bot[k] = h[k]; top[k] = h[k] + up; } else { bot[k] = Math.min(bot[k], h[k]); top[k] = Math.max(top[k], h[k] + up); } } }
     const disks = new Map(), diskOf = (r) => { const q = Math.round(r * 100); if (!disks.has(q)) { const R = Math.ceil(q / 100 / step), d = []; for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) if (Math.hypot(a, b) * step < q / 100) d.push([a, b]); disks.set(q, d); } return disks.get(q); };
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k0 = j * nx + i, c = border[k0]; if (c < 0) continue;
       // What made the border keeps him off only where it stands above his feet: the face of a platform, seen from the
@@ -242,7 +243,7 @@ export function createMeshWalker(o) {
     why(x, z) { const S = scope(x, z); if (!S) return undefined; const G = gridFor(x, z), k = G ? cell(G, x, z) : -1; return k >= 0 ? (G.shut[k] ? G.names[G.cause[k]] : null) : inBody(S, x, z, BODY)?.what ?? null; },
     /** Bake the grids (outdoors over the region, and the room): returns the milliseconds each part took. */
     bake(step = 0.05, cache = null) {
-      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v12.bin`;
+      const one = (S, box, key) => { const file = cache && `${cache.dir}/bake-${key}-${S.hash}-${step}-${MW.CLIMB}-${MW.CLEAR}-${BODY_SHAPE}-v13.bin`;
         if (file && cache.exists(file)) return cache.read(file);
         const g = bake(S, box, step); if (file) cache.write(file, g); return g; };
       grids.outdoors = one({ ...o.outdoors, ceil: region.ceil }, region, "court");
