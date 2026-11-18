@@ -6,8 +6,9 @@
 // seals at the left; the lesser ones gold on black, on dark blue, or on plain red-brown wood.
 import * as THREE from "three";
 import { asset } from "./assets.js";
+import { WEIGHT } from "./board-weights.js";
 
-// A heavy brush regular hand for what is written large (Yuji Boku), with the kai behind it.
+// A bold brush regular hand in the old forms for what is written large (LXGW WenKai TC, bold; #192), with the kai behind it.
 const FONT = '"Yunjing Bang", "Yunjing Kai", "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", serif', SEAL = '"Yunjing Seal", "Yunjing Serif", "Songti SC", serif';
 // A board is written in the old forms, whatever the page calls the place.
 const OLD = { 双: "雙", 径: "徑", 归: "歸", 万: "萬", 续: "續", 云: "雲", 禅: "禪", 钟: "鐘", 楼: "樓", 宝: "寶", 经: "經", 阁: "閣", 观: "觀", 药: "藥", 师: "師", 龙: "龍", 砚: "硯", 吃: "喫", 释: "釋" };
@@ -51,9 +52,19 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
       const stamp = (col, dx, dy) => { g.globalCompositeOperation = "copy"; g.drawImage(glyphs, 0, glyphs.width * i, glyphs.width, glyphs.width, 0, 0, t.width, t.height); g.globalCompositeOperation = "source-in"; g.fillStyle = col; g.fillRect(0, 0, t.width, t.height); x.drawImage(t, cx - size / 2 + dx, cy - size / 2 + dy, size, size); };
       if (raised) { stamp("rgba(0,0,0,.7)", 5, 6); stamp("#e2cc8a", -2, -3); } stamp(colour, 0, 0); return;
     }
-    x.font = `${Math.round(size * 0.86)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round"; x.lineWidth = Math.max(1.5, size * 0.008);
-    if (raised) { x.fillStyle = "rgba(0,0,0,.7)"; x.fillText(ch, cx + size * 0.012, cy + size * 0.015); x.fillStyle = "#e2cc8a"; x.fillText(ch, cx - size * 0.005, cy - size * 0.007); }
-    x.fillStyle = x.strokeStyle = colour; x.strokeText(ch, cx, cy); x.fillText(ch, cx, cy);
+    // In the board face, each character evened to its neighbours' weight (board-weights.js, tools/board-ink.py): drawn with
+    // a stroke round its outline so many type sizes broader, or that much taken off its edge, so that no character of a
+    // board is lighter or heavier than the others (#192).
+    const px = Math.round(size * 0.86), side = Math.ceil(size * 1.2), m = doc.createElement("canvas"); m.width = m.height = side;
+    const g = m.getContext("2d"), w = (i >= 0 ? WEIGHT[ch] || 0 : 0) * px;
+    const stamp = (col, dx, dy) => {
+      g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, side, side); g.font = `${px}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
+      g.fillStyle = g.strokeStyle = "#fff"; g.fillText(ch, side / 2, side / 2);
+      if (w) { g.globalCompositeOperation = w > 0 ? "source-over" : "destination-out"; g.lineWidth = Math.abs(w); g.strokeText(ch, side / 2, side / 2); }
+      g.globalCompositeOperation = "source-in"; g.fillStyle = col; g.fillRect(0, 0, side, side); x.drawImage(m, cx - side / 2 + dx, cy - side / 2 + dy);
+    };
+    if (raised) { stamp("rgba(0,0,0,.7)", size * 0.012, size * 0.015); stamp("#e2cc8a", -size * 0.005, -size * 0.007); }
+    stamp(colour, 0, 0);
   }
   // A seal: red with the characters left pale, or pale with the characters red.
   function seal(cx, cy, size, word, red = true) {
