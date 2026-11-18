@@ -166,6 +166,10 @@ body.entered:not(.photo):not(.bare) #yardView::before { opacity: 1; }
 .caption::before { content: ""; display: block; width: 46px; height: 7px; margin: 0 auto 8px; background: var(--brush-light, linear-gradient(90deg, transparent, rgba(237,232,220,.7), transparent) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .7; }
 /* Each phrase of the line is kept whole on one line where it fits (hints.js wraps them); a longer one still wraps. */
 .caption .phrase { display: inline-block; max-width: 100%; text-indent: 0; }
+/* The far view at the close (#147): the line at the foot is the way to the book, and a thumb may press it (a hit area taller than the line). */
+body.far #act { opacity: 0 !important; pointer-events: none; }   /* (起身 is the first step: any step, a tap or Esc stands him up and brings the eye home) */
+body.far #hint.on { pointer-events: auto; cursor: pointer; }
+body.far #hint.on::after { content: ""; position: absolute; left: 0; right: 0; top: -14px; bottom: 0; }
 .caption.on { opacity: 1; visibility: visible; transform: none; transition: opacity .9s ease, transform .9s ease; }
 .fade { opacity: 0; visibility: hidden; transition: opacity 1.6s ease, visibility 0s 1.6s; }
 .fade.on { opacity: 1; visibility: visible; transition: opacity .9s ease; }

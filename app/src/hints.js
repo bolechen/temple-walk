@@ -20,6 +20,9 @@ export function createHints({ off = false, ui = null } = {}) {
     said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on");
     clearTimeout(lineT); lineT = setTimeout(() => drop(id), secs * 1000); return true;
   }
+  // A line that stays until it is released (the far view's way to the book): not said once, not faded.
+  function hold(html) { if (off || !line) return false; now = "hold"; line.innerHTML = phrases(html); line.classList.add("on"); clearTimeout(lineT); return true; }
+  function release() { drop("hold"); }
   function drop(id) { if (!line || (id && now !== id)) return; line.classList.remove("on"); now = null; }
   // A label that shows for a while and fades: the season's name, the next place.
   function flash(id, secs = 6) {
@@ -72,5 +75,5 @@ export function createHints({ off = false, ui = null } = {}) {
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
-  return { tip, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: shown(), calm: document.body.classList.contains("calm") }) };
+  return { tip, hold, release, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: shown(), calm: document.body.classList.contains("calm") }) };
 }

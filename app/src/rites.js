@@ -299,6 +299,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   const END = { secs: 30, on: false, u: 0, aim: 0 };
   /** @param {() => boolean} on @param {(seconds: number) => void} [cue] */
   async function close(on, cue = () => {}) {
+    const eye = { p: V(), q: new THREE.Quaternion(), fov: 50 };   // where the eye stood on the last frame: the far view is made of it
     const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = dir(0, 0, 1).clone(), l = dir(1, 0, 0).clone();
     const P = (a, b, c) => o.clone().addScaledVector(l, a).addScaledVector(f, c).setY(o.y + b);
     let path = null, aim = null;
@@ -313,6 +314,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
         const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
         aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
       const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
+      eye.p.copy(camera.position); eye.q.copy(camera.quaternion); eye.fov = camera.fov;
     });
     const ok = await play(END.secs, (u) => {
       END.u = u; const t = u * END.secs, ph = (t % 9) / 9, inn = ph < 0.45;   // a breath every nine seconds: in, then longer out
@@ -321,6 +323,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       cue(t);
     }, on);
     ring.visible = false; act.breath = null; act.nod = 0; END.on = false; y.cine(null);
+    if (path) y.holdEye?.(eye);   // the eye stays where the close left it (the far view); game.js says whether it comes home
     return ok;
   }
 

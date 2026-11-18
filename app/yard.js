@@ -44,7 +44,7 @@ import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
 import { planSteps, clearLine } from "./src/route.js";
-import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
+import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
@@ -1030,7 +1030,7 @@ createGame({
   // `drawn`: he has drawn the log back himself (rites.js) and it is meeting the bell now; otherwise it is tapped.
   strike(kind, drawn) { const s = site.strikers.find((k) => k.kind === kind); strike(kind, 1); if (s && !drawn) { s.t0 = riteNow(); s.lead = 0; } window.dispatchEvent(new CustomEvent("struck", { detail: kind })); },
   monk, M, put(x, z) { pos.x = x; pos.z = z; }, staged: () => !!stage, seated: () => !!stage && (stage.pose === "sit" || stage.pose === "chair"),   // cross-legged, or on a stool as on a chair
-  leave: () => interrupt(),
+  leave: () => { interrupt(); director.back(); },   // standing up (起身) brings the eye home too, from the far view as from any shot
   // Hand the eye to `fn(camera, dt)` for a passage that is shown, or take it back with null.
   cine(fn) { cine = fn || null; if (!fn) follow.reset(); },
   // The opening after 入山 (src/opening.js): `eye` "fly" or "ink"; resolves with its state when the walk is handed back.
@@ -1044,6 +1044,10 @@ createGame({
   // to him; `direct(id, { now })` is there at once (a picture tool), `undirect()` lets go without a swing (a passage takes
   // the eye from it); `directOut()` is how many seconds the way back takes, so an observance can send it that much early.
   direct: directShot,
+  // The close of the chapter leaves the eye where it stands, on a shot made of that very pose (`holdShot`): nothing moves
+  // when it is handed over, it drifts a very little, and `direct(null)`, a step, a tap on the ground or Esc bring it home by the
+  // usual swing. Not for an observance: it is gone to with 自动镜头 off too, as the close itself is.
+  holdEye(eye) { const { place, shot } = holdShot(eye, camera.aspect || 16 / 9); return director.go("ending", { ...place, shot }, 0, { now: true, force: true }); },
   undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(), directArrived: () => director.state().phase === "hold",
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
