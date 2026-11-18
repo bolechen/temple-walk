@@ -6,7 +6,7 @@ The typefaces' licence is in ../fonts/OFL.txt; the pictures and models are credi
 ==============================================================================
 three.js (0.186.0) — MIT
 https://github.com/mrdoob/three.js
-Bundled into the page. Its addons used here: the Basis texture loader, the meshopt decoder.
+Bundled into the page. Its addons used here: the Basis texture loader, the meshopt decoder, and the tree generator (examples/jsm/generators/TreeGenerator.js), copied with changes into app/src/three-tree.js, which grows the cryptomerias' wood.
 ==============================================================================
 
 The MIT License

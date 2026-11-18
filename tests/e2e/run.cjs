@@ -41,6 +41,19 @@ const scenarios = {
     }
     expect(errors.length === 0, errors.join("\n")); await ctx.close();
   } },
+  // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
+  // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  treeseed: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE);
+    const page = await t.page.evaluate(() => window.__trees());
+    await import(require("url").pathToFileURL(require("path").join(__dirname, "../unit/dom-stub.mjs")).href);
+    const THREE = await import("three"), { buildSite } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/site.js")).href), { createTrees, geometryHash } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/trees.js")).href);
+    const M = new Proxy({}, { get: (o, k) => (k === "plaster" || k === "interior" ? () => (o["__" + k] ||= new THREE.MeshBasicMaterial()) : (o[k] ||= new THREE.MeshBasicMaterial())) });
+    const node = createTrees(new THREE.Group(), M, buildSite(M).trees, {});
+    expect(page.cedars > 10 && page.cedars === node.cedars.length, `the page grew ${page.cedars} cedars, Node ${node.cedars.length}`);
+    expect(page.hash === geometryHash(node.cedars.map((c) => c.geometry)), `the page's cedars (${page.hash}) are not Node's (${geometryHash(node.cedars.map((c) => c.geometry))})`);
+    await t.close();
+  } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.

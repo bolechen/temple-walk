@@ -10,6 +10,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { merge, mesh } from "./geo.js";
 import { U } from "./glsl.js";
 import { SUN_DIR } from "./sky.js";
+import { TreeGenerator } from "./three-tree.js";
 
 const seeded = (seed) => { let s = seed; return () => ((s = (s * 16807) % 2147483647) / 2147483647); };
 
@@ -203,6 +204,14 @@ function bed(x, y, z, r, seed) {
 }
 
 // `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
+// A short fingerprint of some geometry, every coordinate rounded to a tenth of a millimetre: the same plan grown in Node
+// and in the browser must give the same one (the cedars' wood is grown from a seed; #161, #162).
+export function geometryHash(geos) {
+  let h = 2166136261;
+  for (const g of geos) { const a = g.attributes.position.array; for (let i = 0; i < a.length; i++) { h ^= Math.round(a[i] * 1e4) | 0; h = Math.imul(h, 16777619) >>> 0; } }
+  return h.toString(16);
+}
+
 export function createTrees(scene, M, spots, opts = {}) {
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
@@ -229,6 +238,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
   };
   const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
+  const cedarSkeletons = [];   // (each cedar's skeleton as the generator grew it: for the tests)
   const beds = [], joints = [], branches = [], forks = [], census = [], limbs = []; let nth = 0;   // (where each foot meets its trunk, where each cedar branch ends, each fork: for the tests)
   // Where the trunk is at `h` above the ground: found on its own curve, as thick as it is drawn there.
   const along = (curve, rad, y) => { const P = new THREE.Vector3(), lo0 = curve.getPoint(0).y; return (h) => { const want = Math.max(lo0, y + h); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } curve.getPoint(lo, P); return { x: P.x, z: P.z, r: rad(lo) }; }; };
@@ -326,41 +336,31 @@ export function createTrees(scene, M, spots, opts = {}) {
   for (const [x, y, z, kind, h, far0] of spots) {
     const info = { kind, h, at: [x, z], base: y, tris: 0 }, w0 = wood.length;
     if (kind === "cedar") {
-      // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
-      // A young one is the same tree drawn smaller, its boughs only as long as its height allows, and it is not yet
-      // bare below: see the end of this block.
-      const lean = V(jit(0.5), 0, jit(0.5)), r0 = h < 8 ? 0.035 + h * 0.009 : 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t), size = Math.min(1, h / 18);
-      const sides = far0 ? 12 : 24, shaft = plan([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], { tip: h < 8 ? 0.02 : 0.05, load: 0.02, radial: sides, seg: 3 });
-      const uAt = (yy) => { let lo = 0, hi = 1; const P = new THREE.Vector3(); for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; shaft.curve.getPoint(mid, P); if (P.y < yy) lo = mid; else hi = mid; } return lo; };
-      const whorl = (by) => {   // one tier of boughs round the shaft at `by` above the ground
-        const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
-        for (let k = 0; k < n; k++) {
-          if (rnd() < 0.14) continue;   // a gap where a bough was lost
-          // and however it hangs, it stops short of the ground under it
-          const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 0.72 + jit(0.3), l = Math.min(len * size * (0.65 + rnd() * 0.6) * (far0 ? 1.25 : 1), (by - 0.2) / Math.cos(droop)), w = l * (0.95 + rnd() * 0.3), far = V(Math.sin(a), 0, Math.cos(a));
-          // the branch the foliage hangs from, laid down the middle of the spray it carries and ending inside it,
-          // as thick as the spray it carries asks
-          const onSpray = (u) => c.clone().addScaledVector(far, u * l * Math.sin(droop)).add(V(0, 0.2 - u * l * Math.cos(droop), 0));
-          let tip = null; if (k % 2 === 0 && !far0) { tip = onSpray(0.85); offshoot(shaft, uAt(c.y), [c.clone(), onSpray(0.45), tip], { tip: 0.012, load: l * w, radial: 5 }); }
-          // a bough: hinged at the trunk, reaching out and down
-          q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
-          if (tip) { const loc = tip.clone().sub(c).sub(V(0, 0.2, 0)).applyQuaternion(q.clone().invert()); branches.push({ h, inside: Math.max(0, Math.abs(loc.x) - w / 2, loc.y, -l - loc.y, Math.abs(loc.z) - 0.15) }); }
-          card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
-          // and a curtain hanging from it, so the tree has depth from every side
-          if (k % 2 === 0 && !far0) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const cw = Math.min(l * 0.75, (by - 0.4) / 0.9); card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), c.clone().addScaledVector(far, l * 0.36), c.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
-        }
-      };
-      for (let by = h * 0.36; by < h * 0.985; by += far0 ? 0.85 : 0.4) whorl(by);   // a tree seen only from afar is grown with half the boughs, each a little larger
-      q.setFromEuler(e.set(0, rnd() * 3, 0)); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5, 2.3).translate(0, -0.6, 0), axis(1).add(V(0, 0.9, 0)), axis(0.9), 0.95, 0.4, 0.5); }
-      // A young tree is clothed nearly to the ground, the lowest boughs short where the paving stops them. They are
-      // grown from a chance of their own, so that every tree after this one keeps the shape it had.
-      if (size < 1) {
-        const wood0 = draw; draw = seeded(Math.abs(Math.round(x * 131 + z * 17)) + 7);
-        for (let by = h * 0.36 - 0.4; by >= Math.max(0.9, h * 0.36 * size); by -= 0.4) whorl(by);
-        draw = wood0;
+      // A cryptomeria, its wood grown by three's TreeGenerator (three-tree.js; #162): one straight shaft swelling into its
+      // roots in one piece, so there is no foot to meet it and no seam; an old tree bare for its lower third, a young one
+      // clothed nearly to the ground and slender (#91); boughs that leave the shaft nearly level, together as thick as the
+      // shaft they leave (each its share of it, so every fork carries what comes into it), shorter towards the top
+      // so the crown is a cone, and sag as they go. Its foliage is this project's own: a spray hung down the middle of
+      // every bough and every twig of a bough, as the cedars were hung before, and a curtain from every other.
+      const young = h < 8, r0 = young ? 0.035 + h * 0.009 : 0.2 + h * 0.012, seed = Math.abs(Math.round(x * 211 + z * 37)) + 13;
+      const gen = /** @type {any} */ (new TreeGenerator(null)), P = young
+        ? { levels: 3, children: [Math.round(h * 8), 3], childRadius: [1 / Math.sqrt(Math.round(h * 8)), 0.577], branchAngle: [100], angleVariance: 12, lengthRatio: [Math.min(0.36, 0.95 / h)], branchLengthFalloff: 0.6,   /* (its wood within the 0.2 h that stops a visitor: girth() in site.js) */ trunkRadius: r0, taper: 0.7, taperCurve: 0.9, rootFlare: 0.3, flareFrac: 0.08, trunkClear: Math.max(0.1, 1.35 / h), droop: 0.05, radialSegments: [12, 4, 3] }
+        : { levels: far0 ? 2 : 3, children: far0 ? [Math.round(h * 1.4)] : [Math.round(h * 2.4), 4], childRadius: far0 ? [1 / Math.sqrt(Math.round(h * 1.4))] : [1 / Math.sqrt(Math.round(h * 2.4)), 0.5], branchAngle: [96, 38], angleVariance: 10, lengthRatio: [0.3, 0.3], branchLengthFalloff: 0.8, trunkRadius: r0, taper: [0.88, 0.45], taperCurve: 0.8, rootFlare: 0.5, flareFrac: 0.06, trunkClear: 0.34, droop: 0.22, radialSegments: far0 ? [6, 3] : [16, 4, 3] };
+      for (const [k, v] of Object.entries({ seed, trunkLength: h, radiusExponent: 2.6, minRadius: 0.012, minLength: 0.4, upPull: 0, gnarl: [0.01, 0.06, 0.1], sectionLength: 1.0, childStart: 0.2, collar: 0.25, ...P })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
+      const m = gen.build(), tubes = m.userData.tubes; m.geometry.translate(x, y - 0.2, z); for (const t of tubes) for (const r of t.rings) r.pos.add(V(x, y - 0.2, z));
+      wood.push(m.geometry); cedarSkeletons.push({ at: [x, z], h, young, far: !!far0, tubes, geometry: m.geometry });
+      for (const t of tubes) {
+        if (t.level < 1) continue;
+        const from = t.rings[0].pos, to = t.rings[t.rings.length - 1].pos, d = to.clone().sub(from), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
+        // however it hangs, the spray stops short of the ground under it
+        const w0 = 0.95 + rnd() * 0.3, l = Math.min(d.length() * 1.12 + 0.3, (from.y - y - 0.45) / Math.max(0.2, Math.cos(droop) + 0.5 * w0 * Math.abs(Math.sin(droop)) * 0)), w = l * w0;
+        if (l < 0.5) continue;
+        q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
+        const loc = to.clone().sub(from).applyQuaternion(q.clone().invert()); branches.push({ h, inside: Math.max(0, Math.abs(loc.x) - w / 2, loc.y, -l - loc.y, Math.abs(loc.z) - 0.15) });
+        card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), from, from.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);   // (hung from the bough itself, so the bough lies in it)
+        if (t.level === 1 && !far0 && rnd() < 0.5) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const hang = from.clone().add(d.clone().multiplyScalar(0.36)), cw = Math.min(l * 0.75, (hang.y - y - 0.45) / 0.9); if (cw > 0.3) card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), hang, from.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
       }
-      const m = settle(shaft, r0), l = paint(shaft, m, { ...info, flare: far0 ? 0.4 : 0, startY: far0 ? null : y + footTop(r0) });
-      root(x, y, z, r0, far0, { curve: l.curve, rad: l.rad, sides, kind, h });
+      const tip = V(x, y + h - 0.2, z); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5 * Math.min(1, h / 18) + 0.4, 2.3 * Math.min(1, h / 18) + 0.5).translate(0, -0.6, 0), tip.clone().add(V(0, 0.9, 0)), tip.clone().add(V(0, -1, 0)), 0.95, 0.4, 0.5); }
     } else if (kind === "ginkgo") {
       // Ginkgo: one leader, and boughs that climb away from it, bending as they go.
       const back = own(x, z, 3), top = y + h, centre = V(x, y + h * 0.62, z), r0 = 0.09 + h * 0.019;
@@ -425,7 +425,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
