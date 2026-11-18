@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cedar-hand-three-ez.jpg",
+   "bytes": 260666,
+   "sha256": "807e4660add5b16d4aedeabbe835604c8ba74ed0c371e8fa0eef474e67fa8187",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "maple-hand-three-ez.jpg",
+   "bytes": 581704,
+   "sha256": "6edfe0d22587a3b8ef7c73c8ea5e5faa7fca2c86e631227aeb278861d8ce4f7e",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round2-close-autumn.jpg",
+   "bytes": 280557,
+   "sha256": "240a95c1e37c2339e8a9f8849bf99c55f7d6652f39ef1b985c0516607217e15b",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round2-close-winter.jpg",
+   "bytes": 248342,
+   "sha256": "7fe86555f8e6f6c0d11740d371b7befcd1f9145837329fc8fc5f4189ba70c2df",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round2-ez-presets.jpg",
+   "bytes": 223494,
+   "sha256": "5061c0b6b6de147979fd0e3fd8f3e1788e378d8c46740757c3ffc731ee73be28",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round2-wide-autumn.jpg",
+   "bytes": 352740,
+   "sha256": "56aa8f909ce831878e4a636b83060cb1b8944b753d5ae7468d219741549d6b65",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round2-wide-winter.jpg",
+   "bytes": 322217,
+   "sha256": "e7b51d3ba7c98570897d19a026aca852c3a91ae689e816e88af97ae84c310a42",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round3-close.jpg",
+   "bytes": 515823,
+   "sha256": "5e59c7e2ac84e5de3ee6dd870c844fe6c71c7dc45c8cd34630ef122bc51c322c",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round3-court.jpg",
+   "bytes": 264731,
+   "sha256": "6ae907317b0c4f62a390484d17254189eb16155fba012104e1b58a87c9b24328",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round3-maple.jpg",
+   "bytes": 280524,
+   "sha256": "9a2d81578f5db9cbcd1779fe6cd205f1fbc67ef8df707183d1c9d676962bfac6",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round3-mid.jpg",
+   "bytes": 302528,
+   "sha256": "b14d01b5ecafe0c5288ccf5b275b4d35c188a09066e0ed2276128e44bc9781ee",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  },
+  {
+   "path": "round3-wide.jpg",
+   "bytes": 346070,
+   "sha256": "cf363cf76669c2159adb45e87e7baca578a381493e3e35d3ef8865f9f4f70460",
+   "rev": "9d583ae902f21cdb6c89add254ad0cf4279ae478"
+  }
+ ]
+}

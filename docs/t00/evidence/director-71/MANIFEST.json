@@ -1,0 +1,138 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "close-end-before-high.jpg",
+   "bytes": 93433,
+   "sha256": "0a7e0b1611476fb617c5ef8d563001ec567cfeaba768a2e7506c09784b128c76",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "close-end-end-43.jpg",
+   "bytes": 81678,
+   "sha256": "b42b43015b6cb9a4741cb3e906cdd9b7c2d0548a4346dc66096f9aa072927170",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "close-end-end-tall.jpg",
+   "bytes": 49743,
+   "sha256": "923e3c498bd5a555cafb9e1f336c9bba5d9133dfcd79546f88842a63f9ec2844",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-1-lamp-offered.jpg",
+   "bytes": 34330,
+   "sha256": "295e4ae07347e581902db2339d8562cadde48d1e3c6ee1588891ce0a41a8c8e3",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-10-tea-home.jpg",
+   "bytes": 27571,
+   "sha256": "cd3c41b5289069aca4650d919e39c52222967f9f25e30552b6d0636cfacfca65",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-2-lamp-swing.jpg",
+   "bytes": 5151,
+   "sha256": "8c33716508e96b4959aad6bbdacc9becb742d7109b8bf71ef58cddc6f40a8e1d",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-3-lamp-shot.jpg",
+   "bytes": 27807,
+   "sha256": "8481bb233851d68290b134aa6f07b3e1ee4903a0c8212d5f5b41705ab986573e",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-4-lamp-home.jpg",
+   "bytes": 26726,
+   "sha256": "af287d57ca30c9274e9ae0375b435695c16c3ae698bb69e8c13d3d144326776f",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-5-well-shot.jpg",
+   "bytes": 6961,
+   "sha256": "a5b68af797d98ea9aa401ad4f0ba16baa2e3fcec17600be92b4f46b84b87c555",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-6-well-home.jpg",
+   "bytes": 26933,
+   "sha256": "85b1068da1114eabfd4351af5716d5300c0b2f11740778a131e1ce68b92d9afc",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-7-bell-shot.jpg",
+   "bytes": 22349,
+   "sha256": "a435db22343e2eae5c7fe3102b13ff035f8d52d993f9ee8f98c5c454cf399218",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-8-bell-third.jpg",
+   "bytes": 24941,
+   "sha256": "2b404c77ef23f7b9a769f6214dd2c83e43d9a419ad6bba7bb6781434ac244acd",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director-9-tea-shot.jpg",
+   "bytes": 25171,
+   "sha256": "99d7a845da7b4cc21bec12d4785c0b2326dd68574133c4d6355902acdc941bcf",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "play-480x300/director.webm",
+   "bytes": 8299713,
+   "sha256": "1430623d5d5a59700012303b45e7251f624f24312e82f1cf95faa2214f486fa9",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "round2/shot-tea.jpg",
+   "bytes": 138895,
+   "sha256": "e6c4939774c56a2ebdd353f65f6c22872a9ce9cb199116893383fa7155216128",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-bell.jpg",
+   "bytes": 311726,
+   "sha256": "f25f8bae16b8a29e99496f7d9a6783fff73755fd71a26567092f7fdedfef0da8",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-incense.jpg",
+   "bytes": 171173,
+   "sha256": "dd2fda2633da86923d7687a41c4cde5f1b3e705ede1ced9f144ad170bc9dac36",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-lamp.jpg",
+   "bytes": 343746,
+   "sha256": "d007d92f98bb1b7f25990e16b8d48343cc4f36134e63e9aa27426ddd9ce5b065",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-sit.jpg",
+   "bytes": 218531,
+   "sha256": "910d7490f2a65f1fb88370c33dc8db6ad51b480d3263728f768885bfe055107c",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-sutra.jpg",
+   "bytes": 278606,
+   "sha256": "5e04553b711193fb30b2b8b601e3c8b8ca48a67549a3f589b551845da50dc384",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-tea.jpg",
+   "bytes": 273769,
+   "sha256": "3a374ff662c4eafec80f52b586d33eeef814f8394304809a6d9287b70b85d9f5",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  },
+  {
+   "path": "shot-well.jpg",
+   "bytes": 250801,
+   "sha256": "9759b62b8276b20c72884ef15f53f39f0233bf8be8b5ff38281c415bcbeb018e",
+   "rev": "ebea956ea067a56279af95a220c8b04dd9688f63"
+  }
+ ]
+}

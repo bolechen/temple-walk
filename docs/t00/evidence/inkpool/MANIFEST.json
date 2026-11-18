@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "inkpool-after.jpg",
+   "bytes": 180678,
+   "sha256": "1dd3895891fad6c9e9fc45db9a8acb9bce7d5f1a9a2b3a27c34b863dbbda6ab4",
+   "rev": "4349d0a7b2ed29ac525a850671e6479b57a41620"
+  },
+  {
+   "path": "inkpool-before.jpg",
+   "bytes": 180779,
+   "sha256": "d63abbad8825d517b6a809fc02db257eccc98049a5a4ac527720beffb5b9a972",
+   "rev": "4349d0a7b2ed29ac525a850671e6479b57a41620"
+  }
+ ]
+}

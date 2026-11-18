@@ -56,6 +56,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Every script parses, and the typed modules agree with themselves
         run: pnpm run check && pnpm run typecheck
+      # Evidence stays out of git (#223): offline only (the store's reachability must never hold up a merge). The
+      # network check is `node tools/evidence.mjs verify --all`, run by hand and in the nightly run.
+      - name: Evidence folders hold no file over 1 MB, and their manifests are well-formed
+        run: node tools/evidence.mjs check
       # The floor he may stand on (#194): baked from the drawn meshes as a build product (not kept in git), named by the
       # fingerprint of what it is baked from and kept in the cache under it, this commit's and the base's alike (the base is
       # main on a pull request, the commit before on a push to main, built from its own code in .main/). No named place may

@@ -1,0 +1,240 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "gate-upper-storey.jpg",
+   "bytes": 143005,
+   "sha256": "da9440a532e2ef6dec4155091f7f7dfb6786072e726dbe70a3a3b39777de5d41",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "main-hall-eave.jpg",
+   "bytes": 107629,
+   "sha256": "0671e0d7811ce4d1af0b8b1fe09357cea9087bdeadab34b0800fcb327dfefd7b",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "main-hall-front.jpg",
+   "bytes": 149744,
+   "sha256": "6b0dcec47b974174d2c631164e7efd405f1a4cff8c4df7f7ea63105c140ad20b",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-cam01-06-after.jpg",
+   "bytes": 254194,
+   "sha256": "f93298cf631ea522dc26e6e94834be4f59bda433de450b97d736b7a804df81ea",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-gate-upper-storey-after.jpg",
+   "bytes": 150893,
+   "sha256": "368a64375d7c18e0707ee7784c1af37d9dc8bc0e3ba545fb52a7c3862973874f",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-guanyin-after.jpg",
+   "bytes": 121444,
+   "sha256": "97e6e8bec39e82ce8a4de848857420279b188e97dfb754fbdd17fe239eabd1aa",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-hall-views-a-after.jpg",
+   "bytes": 165481,
+   "sha256": "a1fc264bd22946b0f2039557be9f175d3a158dbb1902173cabed4745ab26bcfe",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-hall-views-b-after.jpg",
+   "bytes": 166290,
+   "sha256": "c2e6a22f96320a29b737031cc6a795714af8df81d4296eb501b906bb2a6b2667",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-library-after.jpg",
+   "bytes": 103590,
+   "sha256": "eaf1ab0b5d4c7532b85fea8e4318fa8aaa650b734af7414dbd9b5618fac2d003",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-lingxiao-after.jpg",
+   "bytes": 139615,
+   "sha256": "05ec96e2f017e4275cb14268a6f362b10a85dfc3b30252307a11b6cc3352cb7a",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase1-main-hall-front-after.jpg",
+   "bytes": 156621,
+   "sha256": "7d4867ddce61bd92733c7ca25cb686d38464a797c4b256e2be55cd4a469aedbb",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-cam01-06-after.jpg",
+   "bytes": 250911,
+   "sha256": "1f49874d5481169ae09c22f965e1066a1454f15bb5fc786be447c021e7b554e9",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-court-after.jpg",
+   "bytes": 144401,
+   "sha256": "e8bf8ab2da55af45f953807732bd5b02517a42d8f3f18a090af3d13db123afc3",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-ending-last-frame-tall.jpg",
+   "bytes": 35959,
+   "sha256": "8b49afbc0a118841f34675db44fdaa776274411fcdd163662ae233ff31f6656d",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-ending-last-frame-wide.jpg",
+   "bytes": 99403,
+   "sha256": "5b124ddc6f288f14695b859f33fc7787cae183b7d75ce0f3c8ada35706b79607",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-gate-upper-storey-after.jpg",
+   "bytes": 149048,
+   "sha256": "58f35bdbf68e1c692a8fbbf6fbba0d34623ac10fbb78f2ca4791086b683ae1a5",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-guanyin-after.jpg",
+   "bytes": 118546,
+   "sha256": "cf4974736b3a1451142101768e23b53d35e5ccd85a6b465b9697da022c87baa8",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-library-after.jpg",
+   "bytes": 99270,
+   "sha256": "23085214fe2814681d5d345f8b3c0c6b2f7a561922b43f5c962c50bd6b9899de",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-lingxiao-after.jpg",
+   "bytes": 140453,
+   "sha256": "7caf7574c43b0493d85f6d7cc03f1106bced7fae376d0d83223dec8306795bc5",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase2-main-hall-front-after.jpg",
+   "bytes": 151765,
+   "sha256": "63378b53cd4e0f0a3c22b7d55ecba656d8f4bab6c5348588801ee7f22fa074bd",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-art1-6-after.jpg",
+   "bytes": 235485,
+   "sha256": "1558eff06a7b94e3f3d5109df10c5a9e6b1106526aeb615bd322731ae2e9a69f",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-cam01-06-after.jpg",
+   "bytes": 253426,
+   "sha256": "5bb85423836a903daf119d9a7a09b8c9810b1f5d02d89a4a60c3b08224920c64",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-gate-after.jpg",
+   "bytes": 98806,
+   "sha256": "89416bb1420c154daf2f354e80276c66b995f02f6516caceee62b061040a405f",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-gate-upper-storey-after.jpg",
+   "bytes": 151775,
+   "sha256": "638f0d47bfc1a8beedbe1705be9c831c1e121547d6bedc6b96df956f3dc3a022",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-hall-views-after.jpg",
+   "bytes": 332263,
+   "sha256": "027327749ab14a8a0c98263d6afee7565a6175226e0becd98647e76f28fabfe1",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-library-after.jpg",
+   "bytes": 99161,
+   "sha256": "4b22c96b532cd877a78eba4078023dbb98489e8157d58ec548a372bd4c1bda70",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-lingxiao-after.jpg",
+   "bytes": 139341,
+   "sha256": "612abbb62ecd25a42de15cb3b19ba805d425f9ab8b1c74b69fc9aaed82b2d076",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase3-main-hall-front-after.jpg",
+   "bytes": 151848,
+   "sha256": "2ba21e2b4239d12e8cf1cb9a2c5917b71f461cf085ff547c3b033749c70cac05",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-art1-6-after.jpg",
+   "bytes": 236813,
+   "sha256": "19960e3c7c5954fa4c83591843426f5b595e52b5a63f39a350804956a6feeddf",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-cam01-06-after.jpg",
+   "bytes": 254698,
+   "sha256": "4612ddc22435fe0dcea2ff5bd5e1f8a9eed9990c9b7913f004e06948b46cef23",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-court-after.jpg",
+   "bytes": 145986,
+   "sha256": "7642fd6d09290d74f7793c7c42a6f3971c6275897c1bf89d453ee524aa1db3d8",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-eave-corner-after.jpg",
+   "bytes": 102688,
+   "sha256": "c365d93da7028305373ea33833b7ed47dc75203cc350a7a2e2f4f49f87d665c8",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-gate-upper-storey-after.jpg",
+   "bytes": 153004,
+   "sha256": "9906852f678ac24d7bc5419abe35c208a6b2eb3f7b29c2318e3c9727175dbc7f",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-guanyin-after.jpg",
+   "bytes": 118814,
+   "sha256": "9cfd4ddaea7cef8091d60826b48528a79b3cb3993d17d38eb5886673f6b6f494",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-hall-views-after.jpg",
+   "bytes": 332263,
+   "sha256": "027327749ab14a8a0c98263d6afee7565a6175226e0becd98647e76f28fabfe1",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-library-after.jpg",
+   "bytes": 100534,
+   "sha256": "62c6dda665b2fdbe6595c5e23819c59e57d9360a175fe7f0a2e1493c4c4a7834",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-lingxiao-after.jpg",
+   "bytes": 139057,
+   "sha256": "ad7c7d8bf84680c87ff2f1c702b1f288d04dda998958daccbf5b3a3d9130672c",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-main-hall-corner-before-after.jpg",
+   "bytes": 225539,
+   "sha256": "ef5307fa6714de082a6fd15ab9600f89b871a89e1f9c41b992e9a4027832e7b2",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  },
+  {
+   "path": "phase4-main-hall-front-after.jpg",
+   "bytes": 153815,
+   "sha256": "ade646f6b0bf5cad29d5dae23934057c6500758f82ae3374833edf12f22209ca",
+   "rev": "f7b826844b6bf8ab0f672ce969a8e5d41e63b498"
+  }
+ ]
+}

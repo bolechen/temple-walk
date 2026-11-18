@@ -10,3 +10,7 @@
 
 - `foot-normals-before-after.jpg`：首院西侧枫（-9.5, 28），秋昼，第一人称。上排改前（`51d4dcb`），下排改后，同一份 main。五列依次是：所有者机位 `-9.5,31.2,0,0.25`、低头看根部 `-9.5,30,0,-0.4`、正面 `-9.5,30.2,0,0.15`、侧面 `-7.3,28,-1.571,0.15`、仰视 `-9.5,29.0,0,1.2`。
 - `foot-normals-crop.jpg`：正面、侧面、低头三张截出树干下部放大。改前根脚整段发暗，接缝下方是一圈暗带；改后根脚与树干同样明暗。在这个分辨率下看不清接缝处是否还剩一条细线，请评审方复拍判断。
+
+## 原图在哪里（#223）
+
+本目录的图和录像（7 个文件：7 jpg，共 2.4 MB）不在仓库里：在 Hugging Face 公开数据集 `bolechen/temple-walk-evidence` 的 `t00/trees-91/` 下，按提交号钉死。清单 [`MANIFEST.json`](MANIFEST.json) 给出每个文件的路径、字节数、SHA-256 和提交号；一个文件的地址是 `tools/evidence.config.json` 的 `base` + 清单里的 `rev` + `/t00/trees-91/<path>`。上文提到的文件名都按这份清单找。整目录取回（核哈希，放进 git 忽略的 `tools/out/evidence/`）：`node tools/evidence.mjs pull docs/t00/evidence/trees-91`。

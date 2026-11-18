@@ -111,7 +111,10 @@ export function createFollow(T = FOLLOW) {
       // Unless the view is swinging round and the arm will be clear of it a moment from now: then it is something
       // narrow sweeping past (a wall's end, a tree, the corner of an eave), and like a column it is let through, for
       // no longer than a column is.
-      const putOut = () => {
+      const clears = !!ahead && ahead.open(dist, side);
+      const inside = !eye.open(dist, side), passing = inside && clears && through < T.postWait;
+      through = passing ? through + dt : 0;
+      if (inside && !passing) {
         const [px, , pz] = eye.base(dist, side); let best = null;
         for (let sd = side; sd >= -1e-6; sd -= 0.1) for (let k = 0; k <= 2; k += 0.05) for (const to of [dist - k, dist + k]) {
           if (to < 0 || to > eye.d + 1e-6 || (best && k > best.k)) continue;
@@ -121,11 +124,7 @@ export function createFollow(T = FOLLOW) {
         }
         if (!best) best = { to: Math.min(dist, eye.d), sd: eye.side, m: Math.abs(dist - Math.min(dist, eye.d)) };
         forced = Math.max(forced, best.m); dist = best.to; side = best.sd; vd = Math.min(vd, 0); vs = 0;
-      };
-      const clears = !!ahead && ahead.open(dist, side);
-      const inside = !eye.open(dist, side), passing = inside && clears && through < T.postWait;
-      through = passing ? through + dt : 0;
-      if (inside && !passing) putOut();
+      }
       const soon = ahead && ahead.d < eye.d, want = soon ? ahead.d : eye.d, stop = soon ? ahead.stop : eye.stop;
       if (want < dist - 1e-4) {
         waited += dt;
@@ -137,9 +136,6 @@ export function createFollow(T = FOLLOW) {
         const [nd, nv] = damp(dist, want, vd, T.outTime, dt, T.outSpeed);
         if (eye.open(nd, side)) [dist, vd] = [nd, nv]; else vd = 0;               // and backing only into the open
       }
-      // Coming in or swinging round it may have gone into something this very frame (a censer standing between him and
-      // the eye, which it must come in through): it is put out now, not drawn inside it and put out the frame after.
-      if (eye.shut(...eye.base(dist, side)) === true && !passing) putOut();
       const [cx, y, cz] = eye.base(dist, side);
       const wantLift = eye.liftAt(dist, side);
       if (wantLift > lift) { [lift, vl] = damp(lift, wantLift, vl, T.liftUp, dt); held = T.liftHold; }

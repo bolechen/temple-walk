@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "book-quirks.jpg",
+   "bytes": 45722,
+   "sha256": "2f06c4789b630b4c38c0f117b5d37c17d062c850ef1563caf428ca7ed5fa5668",
+   "rev": "0653bd2ad0379f62ef3428f7d939f1cd22e9981f"
+  },
+  {
+   "path": "menu-quirks.jpg",
+   "bytes": 65799,
+   "sha256": "d27a826cdf241c398adf8d5d2af4a43fe0d851c4b5a625c851e553db850c2381",
+   "rev": "0653bd2ad0379f62ef3428f7d939f1cd22e9981f"
+  }
+ ]
+}
