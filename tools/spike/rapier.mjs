@@ -1,3 +1,5 @@
+// Needs the measuring dependencies, which are not on this branch: they are on claude/collision-spike-161-page, or
+// `pnpm add -D @dimforge/rapier3d-compat@0.21.0 recast-navigation@0.44.0` for a run.
 // Rapier (WASM) in Node: how long it takes to start, to take the trial region's triangles as one fixed trimesh, and
 // for its kinematic character controller to move a capsule of his size one step (#161 spike). Only these numbers are
 // asked of it; its package size is in sizes.mjs.

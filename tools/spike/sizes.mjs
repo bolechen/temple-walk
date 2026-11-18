@@ -1,3 +1,4 @@
+// Rapier and Recast are measured here only on claude/collision-spike-161-page, where they are installed.
 // How much each library adds to the published page: a minimal use of it bundled by the same Vite that builds the site
 // (three left out, as the page already carries it), minified, then gzip -9. A .wasm the library loads as a separate
 // file is counted on its own line; one inlined as base64 into the script is counted in the script.

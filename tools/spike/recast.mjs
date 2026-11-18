@@ -1,3 +1,5 @@
+// Needs the measuring dependencies, which are not on this branch: they are on claude/collision-spike-161-page, or
+// `pnpm add -D @dimforge/rapier3d-compat@0.21.0 recast-navigation@0.44.0` for a run.
 // The same triangles through Recast (recast-navigation, WASM): a navigation mesh baked in Node, then asked, every 5 cm
 // over the trial region, whether he may stand there (a polygon under the point, within 3 cm across and 0.3 m up or
 // down) and whether that place joins the court's middle; and a few tapped routes timed (#161 spike).
@@ -7,7 +9,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import sharp from "sharp";
 import { namedMaterials } from "./mats.mjs";
 import { drawnWalker, REGION } from "./drawn.mjs";
-import { reach as outlineReach } from "../../app/src/spike/meshwalker.js";
+import { reach as outlineReach } from "./meshwalker.mjs";
 const { createWalker, buildSite } = await import("../../app/src/site.js?real");
 const CS = +(process.argv[2] || 0.05), OUT = process.argv[3] || "tools/out/spike"; mkdirSync(OUT, { recursive: true });
 let t = performance.now(); const { init, NavMeshQuery } = await import("recast-navigation"); const { generateSoloNavMesh } = await import("recast-navigation/generators");

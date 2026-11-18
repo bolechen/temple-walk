@@ -12,9 +12,6 @@ importers:
         specifier: 0.186.0
         version: 0.186.0
     devDependencies:
-      '@dimforge/rapier3d-compat':
-        specifier: 0.21.0
-        version: 0.21.0
       '@gltf-transform/core':
         specifier: ^4.5.1
         version: 4.5.1
@@ -33,9 +30,6 @@ importers:
       playwright:
         specifier: 1.63.0
         version: 1.63.0
-      recast-navigation:
-        specifier: 0.44.0
-        version: 0.44.0
       sharp:
         specifier: ^0.35.5
         version: 0.35.5
@@ -53,9 +47,6 @@ packages:
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
-
-  '@dimforge/rapier3d-compat@0.21.0':
-    resolution: {integrity: sha512-tCl1HPGwOhn5aCQbgqWbOH+Nx/5fnr3IPAnzQuR7zIhC/raqi2yxC6LhvZqjdI2El5hQgY5RDAwDrAjAi2FdPA==}
 
   '@emnapi/core@2.0.0-beta.2':
     resolution: {integrity: sha512-MzCVoWtcg4Pm2B3je5mMvYMvj3MmBKw+fU7vbsJc9/iT8ip6/eYIHo/Dsm/mr+wsHB6SEyJDuxB09Yy6r/8+4A==}
@@ -233,15 +224,6 @@ packages:
 
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
-
-  '@recast-navigation/core@0.44.0':
-    resolution: {integrity: sha512-N4YO9JBXrGFf3LkrhXmABa7pEwLHvq/gq6o7pLKKu5A4JAp+A5y/9424ps3cVpO1m7ibh3zlXmeewTut9LeXQw==}
-
-  '@recast-navigation/generators@0.44.0':
-    resolution: {integrity: sha512-i2N/sCfuq7IJcSuMmHuX2Uer6oonr9PzFZTrPpwS/e2t+ZpVLHb3DHFY9evKrL2X8diO7sDUDBOpTfW/4Nwucw==}
-
-  '@recast-navigation/wasm@0.44.0':
-    resolution: {integrity: sha512-VNv7xv50cFCdsGd2LdQWZqtLcWXB7nyi4Ilq9t5GMn3GEfCmJEbbeZWSXX5Mgdc4yj71QueTv15V7hPDAQ9gaw==}
 
   '@rolldown/binding-android-arm-eabi@1.2.19':
     resolution: {integrity: sha512-e+Ebe0WT+9tbXmNKPIiC8YrWAHYwug3m6i4p3rZGGulfZri1jtI4HslT+OZnFf/OIHowWF71DTlHwXBP2SiA7A==}
@@ -629,9 +611,6 @@ packages:
   property-graph@4.1.0:
     resolution: {integrity: sha512-AvPcP7XECNWy4LGmFQ77k7un4lSKM4eS29PTvW4ck95uYeLxXPWJM7hLuBqK91FaHqCcgJvIUCuNJjjxKE7VKQ==}
 
-  recast-navigation@0.44.0:
-    resolution: {integrity: sha512-Qu5ETIZZo69uk3lvjJpdgopPUFp95dTmKljckjpSdL1IbdX26837R8j4nC2oHT6tEKViVwkIvy9Zbzyxr27GiQ==}
-
   rolldown@1.2.19:
     resolution: {integrity: sha512-QIiV1J9d0pzN4jeeTH4sjPy0AZ6cAy2cG0ExeoE1+U8Rvj+hR3gYkokx0YbeUNGlZqiQJJ2utcETe0oKXwzsuA==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -724,8 +703,6 @@ packages:
 snapshots:
 
   '@dimforge/rapier3d-compat@0.12.0': {}
-
-  '@dimforge/rapier3d-compat@0.21.0': {}
 
   '@emnapi/core@2.0.0-beta.2':
     dependencies:
@@ -882,17 +859,6 @@ snapshots:
     optional: true
 
   '@oxc-project/types@0.156.0': {}
-
-  '@recast-navigation/core@0.44.0':
-    dependencies:
-      '@recast-navigation/wasm': 0.44.0
-
-  '@recast-navigation/generators@0.44.0':
-    dependencies:
-      '@recast-navigation/core': 0.44.0
-      '@recast-navigation/wasm': 0.44.0
-
-  '@recast-navigation/wasm@0.44.0': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.19':
     optional: true
@@ -1146,11 +1112,6 @@ snapshots:
       source-map-js: 1.2.2
 
   property-graph@4.1.0: {}
-
-  recast-navigation@0.44.0:
-    dependencies:
-      '@recast-navigation/core': 0.44.0
-      '@recast-navigation/generators': 0.44.0
 
   rolldown@1.2.19:
     dependencies:

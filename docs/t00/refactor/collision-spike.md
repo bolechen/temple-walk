@@ -1,7 +1,7 @@
 # 走路、挡路、镜头遮挡从画出来的网格算：试验报告（#161）
 
 > 状态：试验的结论稿。数字在分支 `claude/collision-spike-161` 的提交上量，每节写明是哪个提交（对照、edges、eye、Recast 在 **880aa04**；T4 在 **038a60a**）。
-> 试验代码在 `tools/spike/`（Node 侧）和 `app/src/spike/`（新 walker 本身，页面和 Node 共用），外加 `app/yard.js` 两行（`?walker=mesh` 换上新 walker、给每次查询计时）和 `tools/gpu/job.cjs` 的一个选项（边走边量）。这些都只在分支上，**不合入 main 的 `app/`**。`walk` 数据和现有测试一条未动。
+> 试验代码在 `tools/spike/`（新 walker 是 `tools/spike/meshwalker.mjs`，Node 里用），外加 `tools/gpu/job.cjs` 的一个选项（边走边量）。把它接进页面量 T4 用的完整代码——`app/src/spike/`、`app/yard.js` 两行（`?walker=mesh` 换上新 walker、给每次查询计时）、Rapier 和 Recast 两个量测依赖——留在只读分支 `claude/collision-spike-161-page`（提交 1eba311），**不进 main 的 `app/`**。本 PR 不改 `app/`；`walk` 数据和现有测试一条未动；新依赖只有开发依赖 three-mesh-bvh（工具用，不进站点包）。
 
 ## 结论先说
 
@@ -22,7 +22,7 @@
 
 ## 一、做了什么（验收 1）
 
-`app/src/spike/meshwalker.js` 的 `createMeshWalker` 与 `createWalker` 同形：`heightAt / blocked / onGround / floorAt / eyeShut`，以及 `eyeAt / landAt / onStairs / wall / railNear / setRoom / setLoft / room / loft`。数据只来自画出来的网格：`buildSite` 的 `site.root`、`trees.js` 的树、`props.js` 的香炉、`interior.js` 的房间、`ground.js` 位置上的一张平铺地面（Node 里没有画布，用同尺寸平面代）。试验区域外、上凌霄阁、进别的殿，它把问题交回旧 walker（`fallback`）。`yard.js` 的调用方式不变：`tools/spike/swap.mjs` 是一个 Node 加载钩子，把每一处 `import … from "app/src/site.js"` 换成 `site-swap.mjs`，其中只有 `createWalker` 换了；所以现有单测和 `tools/edges.mjs` 不改一字就跑在新 walker 上。
+`tools/spike/meshwalker.mjs` 的 `createMeshWalker`（页面版在 `claude/collision-spike-161-page` 的 `app/src/spike/meshwalker.js`，同一份代码） 与 `createWalker` 同形：`heightAt / blocked / onGround / floorAt / eyeShut`，以及 `eyeAt / landAt / onStairs / wall / railNear / setRoom / setLoft / room / loft`。数据只来自画出来的网格：`buildSite` 的 `site.root`、`trees.js` 的树、`props.js` 的香炉、`interior.js` 的房间、`ground.js` 位置上的一张平铺地面（Node 里没有画布，用同尺寸平面代）。试验区域外、上凌霄阁、进别的殿，它把问题交回旧 walker（`fallback`）。`yard.js` 的调用方式不变：`tools/spike/swap.mjs` 是一个 Node 加载钩子，把每一处 `import … from "app/src/site.js"` 换成 `site-swap.mjs`，其中只有 `createWalker` 换了；所以现有单测和 `tools/edges.mjs` 不改一字就跑在新 walker 上。
 
 | 问题 | 怎么问网格 |
 |---|---|
@@ -38,7 +38,7 @@
 1. 每格地面高度：上面的射线。
 2. 每格收集**从它自己的地面往上**立着的东西（半径一格对角线的一半，即 3.5 厘米；朝上的面是地面，不收），记下它占的绝对高度范围。标成「绕着走」的东西从地面起就算。
 3. 台沿：邻格地面比本格高出 `CLIMB`（0.25 米：比任何一级踏步 0.10–0.19 高，比最矮的台基 0.30 低）以上，本格（台下那格）是边界，高度范围从本格地面到邻格地面。同一格既有矮东西又是台沿，两段高度取并集。踢面、台基侧面、墙裙这类「在别人地面下面」的东西都按台沿处理。
-4. 收边：对每个边界格周围 `BODY` 内的每个格子，**按站人那一格的地面**量这个边界占的高度（若边界格的地面是他一步跨得上去的，比如上一级踏步，就按那一级量），取其中高过 `CLIMB`、低于 `CLEAR`（1.45 米）的那段，查**他在那段高度上的外廓半径**；距离小于这个半径就关掉。外廓不是一根粗 0.38 米的圆柱，而是 `tools/edges.mjs` 的 `outline()` 从两个身体模型、六种姿势量出来的每 5 厘米高度上的最大伸出（`app/src/spike/outline.json`：脚边 0.34，腰下袖口 0.38，胸口以上 0.14–0.20）。所以台基侧面不挡站在台面上的人，台阶的踢面不挡踩在下一级上的人（Recast 两侧都收，这是不同之处）。
+4. 收边：对每个边界格周围 `BODY` 内的每个格子，**按站人那一格的地面**量这个边界占的高度（若边界格的地面是他一步跨得上去的，比如上一级踏步，就按那一级量），取其中高过 `CLIMB`、低于 `CLEAR`（1.45 米）的那段，查**他在那段高度上的外廓半径**；距离小于这个半径就关掉。外廓不是一根粗 0.38 米的圆柱，而是 `tools/edges.mjs` 的 `outline()` 从两个身体模型、六种姿势量出来的每 5 厘米高度上的最大伸出（`tools/spike/outline.json`：脚边 0.34，腰下袖口 0.38，胸口以上 0.14–0.20）。所以台基侧面不挡站在台面上的人，台阶的踢面不挡踩在下一级上的人（Recast 两侧都收，这是不同之处）。
 5. 洪水填充：从院子中央（殿内从门内一步）出发，八向、地面差不超过 `CLIMB`，填不到的格子也关掉（殿身空壳、桌面、栏杆顶）。
 
 `SPIKE_BODY=cylinder` 把外廓换回旧数据的「处处 0.38」，用来把「身体用什么形状」和「几何从哪来」两件事分开看。
@@ -139,7 +139,7 @@
 
 **包体积**（`sizes.json`：用同一个 Vite 打包各库的最小用法，再 gzip −9）：three-mesh-bvh **17 KB**；recast-navigation 224 KB（其中 wasm 215 KB）；Rapier 内嵌 wasm 的版本 1607 KB，wasm 单独发的版本光 wasm 就 1141 KB。把新 walker 真接进页面后（提交 038a60a），主包 gzip 从 440.8 KB 变成 460.4 KB，**多 19.6 KB**，远低于 300 KB 的线。
 
-**T4**（提交 038a60a，Job `20261118-001241`；`report.json` 带 site 指纹，存为 `t4-report.json`，entry `assets/index-0SF3KxB2.js`，sha256 `a0e32aef…`；spec 存为 `t4-spec.json`）。量法照 `geometry-budget.md`「五之二」：同一个 Job 里旧、新交替，各量三次。页面从 `?cam=0,25,0,0&enter` 进去，交给 `__walk` 一条穿过首院的路线，计 6 秒的帧。`__cost(40)` 是只算画、不算浏览器呈现的每帧毫秒数；「walker」一列是这 6 秒里每帧花在 walker 所有查询上的毫秒数（`?walker=mesh` 时由 `app/src/spike/page.js` 计时，旧 walker 也走同一层计时）。
+**T4**（提交 038a60a，Job `20261118-001241`；`report.json` 带 site 指纹，存为 `t4-report.json`，entry `assets/index-0SF3KxB2.js`，sha256 `a0e32aef…`；spec 存为 `t4-spec.json`）。量法照 `geometry-budget.md`「五之二」：同一个 Job 里旧、新交替，各量三次。页面从 `?cam=0,25,0,0&enter` 进去，交给 `__walk` 一条穿过首院的路线，计 6 秒的帧。`__cost(40)` 是只算画、不算浏览器呈现的每帧毫秒数；「walker」一列是这 6 秒里每帧花在 walker 所有查询上的毫秒数（`?walker=mesh` 时由 `claude/collision-spike-161-page` 上的 `app/src/spike/page.js` 计时，旧 walker 也走同一层计时）。
 
 | | `__cost` 中位数（范围） | walker 每帧中位数（范围） | 载入中位数 |
 |---|---|---|---|
@@ -165,7 +165,7 @@
 
 ## 九、迁移方案与回退（验收 9）
 
-**能两套并存吗？能，本试验就是这么跑的。** `app/src/spike/page.js` 的 `swappable` 包住 walker，`yard.js` 的其他地方照旧调 `walker.blocked(...)`，不知道底下换了哪一套；`?walker=mesh` 换成新的，不带参数还是旧的。迁移期间反过来：默认新，`?walker=old` 回旧。回退就是改一个默认值，或者在出问题的页面地址上加一个参数，不用回滚代码。两套都留着的这段时间，单测两套各跑一遍（`node --import tools/spike/swap.mjs --test …` 已经是现成的跑法）。
+**能两套并存吗？能，本试验就是这么跑的。** `claude/collision-spike-161-page` 上 `app/src/spike/page.js` 的 `swappable` 包住 walker，`yard.js` 的其他地方照旧调 `walker.blocked(...)`，不知道底下换了哪一套；`?walker=mesh` 换成新的，不带参数还是旧的。迁移期间反过来：默认新，`?walker=old` 回旧。回退就是改一个默认值，或者在出问题的页面地址上加一个参数，不用回滚代码。两套都留着的这段时间，单测两套各跑一遍（`node --import tools/spike/swap.mjs --test …` 已经是现成的跑法）。
 
 **删除旧 walker 的条件**（写死，到了就删）：新 walker 默认上线后，① main 上连续 14 天、两次以上发布里，没有一条 bug 要切回 `?walker=old` 才能绕过去；② `edges`、`nearplane`、`sweeps` 和整套 e2e 在新 walker 上全绿；③ 所有者在手机上走过首院、茶寮、大殿一圈。三条都满足，下一个 PR 就删掉旧 walker、`walk.solids/decks/ramps/posts/rails` 和 `?walker=old`。
 
@@ -220,13 +220,21 @@
 
 **4. 装饰改动会悄悄改走路**（加一根角梁、一段树根、一只香炉，都可能关掉一条路）。做法：CI 里跑 `tools/bake-walk.mjs`，拿新格子和 main 上的格子比，报告三件事：① 可走面积变了多少 m²，按建筑分；② `site.places`、`site.seats`、每扇门的站位、`site.views` 里有没有哪个从入口走不到了；③ 差异图作为构建产物上传。②出现就算失败，①超过某个阈值（比如 1 m²）在 PR 评论里列出来。耗时：试验区烘一次 6 s（Node，JS），全场约 20 s；改用 Recast 体素化取高度场可以快七八倍。这件事旧做法做不到：旧数据和画面对不齐，改装饰根本不会报。
 
+**4 之二. 这项检查排在第几步**（主创问）：排在**迁移第 2 步**，也就是构建时烘格子那个 PR，和烘格子同一个 PR 落地，在新 walker 默认启用（第 3 步）之前。理由：它只需要「能在 Node 里烘出格子」，不需要页面用上新 walker；早放进 CI，第 3 步以后每个 PR 都有人看着可走面积。它也能反过来看旧 walker：在旧 walker 上做同样的洪水填充，旧数据被改动时一样报。耗时：全场冷烘约 20 s（JS；有缓存时只读文件，十几毫秒），比较和出图约 2 s。放在 `verify` 里每次推送都跑，不放进夜里的全量。第 1 步（合并两个寻路）不依赖它，可以并行。
+
 **5. 对另两条试验的要求**
 - **#162 换树**：树的几何在 Node 烘焙时和浏览器里必须一模一样（同种子、同参数、同一份代码或同一个文件），否则树干和格子对不上。验法：烘焙时把树的三角形指纹写进格子文件，页面载入后比一次，对不上就在控制台报错，单测也比。被风吹动的部分（叶、枝梢）不进碰撞，只取树干和露出地面的根。
-- **#163 换小沙弥**：`app/src/spike/outline.json`（他在每个高度上伸出多远）要从新模型重新量（`node tools/spike/outline.mjs`，就是 `edges.mjs` 的 `outline()`），量完重烘格子；格子文件名带上外廓的指纹，外廓一变就重烘。`BODY` 这个常数只剩下作为外廓最大值的意义。
+- **#163 换小沙弥**：`tools/spike/outline.json`（他在每个高度上伸出多远）要从新模型重新量（`node tools/spike/outline.mjs`，就是 `edges.mjs` 的 `outline()`），量完重烘格子；格子文件名带上外廓的指纹，外廓一变就重烘。`BODY` 这个常数只剩下作为外廓最大值的意义。
+
+**5 之二. 杉树根那 12 个站位怎么补**（主创问：改几何、改标签还是改外廓，哪种不产生第二份描述）。
+
+- **改外廓（推荐）**：膝盖以下改用 `edges.mjs` 已经量出来的 `outline.low`（鞋和袍摆，侧向 0.20–0.32 米），并且把 `CLIMB` 以下、不是一整片能踩的地面的东西也算进障碍：一个格子里有立着的面、高出地面 2 厘米以上、又不在一片连通的可踩面里（树根、柱础边、门槛端头），按 `outline.low` 在那个高度的伸出收边。这只是把「他有多宽」这条曲线从膝盖以上延到膝盖以下，`edges` 量的也正是这条曲线，**不产生第二份描述**。代价是要在烘焙里多分一种「低处的立面」，并证明台阶的踢面不被它误挡（踢面上面是连着的踏面，可以按这个排除）。未实现，未验。
+- **改标签**：给树根挂 `userData.walk = "post"`。只是在画它的网格上加一个标记，不另写坐标，严格说不算第二份描述；但它让「树根不许踩」变成一条要人记得的规矩，以后每换一次树（#162）都得记得挂。不推荐作为长久办法。
+- **改几何**：把根画得贴地（不高出 2 厘米）。这改的是画面，为了碰撞去改画面，违背「画面第一」，不推荐。
 
 **6. 玩家**
 - **已存的位置**（`yunjing.place.v1`）**和分享出去的 `?cam` 地址**，可能落在新挡住的格子里。现在 `yard.js` 对 `?cam` 只往外挪最多 6 厘米；`route.js` 的 `nearestOpen` 能从挡住的点退出来（#154 的修复）。迁移时把这两处统一成：载入时如果落在挡住的格子里，就挪到 0.5 米内最近的、从入口走得到的格子；0.5 米内没有，就回到起点。未验。
-- **跳上台的余量**：旧数据台高 0.45，跳高 v²/2g = 0.459，余 9 毫米。但**画出来的廊面是 0.454**，所以按画的算余量只有 **5 毫米**。格子量化不影响这个余量：`heightAt` 是实时射线，不查格子；格子只决定落点开不开，而台面那一侧不收边，开到台沿为止。`climb.test` 在新 walker 上照过。但 5 毫米太薄，建议 #143 的判断里明确留 2 厘米容差，或者把茶寮、禅堂的台基画矮 1 厘米。
+- **跳上台的余量**：旧数据台高 0.45，跳高 v²/2g = 0.459，余 9 毫米。但**画出来的廊面是 0.454**，所以按画的算余量只有 **5 毫米**。格子量化不影响这个余量：`heightAt` 是实时射线，不查格子；格子只决定落点开不开，而台面那一侧不收边，开到台沿为止。`climb.test` 在新 walker 上照过。但 5 毫米太薄。主创已同意：**迁移清单里记一条，#143 的判断留 2 厘米容差，不在旧数据上改。**
 
 **7. 手机。** 会碰到他的几何其实不是 190 万面：竹、远山、天、雾、叶片按材质排除以后，**整个平面的建筑加树干是 73.4 万面**。在 Node 里对它建 BVH 用 **1.9 s**，约 **78 MB** 内存（位置、索引和 BVH 节点，`weigh.mjs`）。手机未验，按经验时间乘 3–5 倍，也就是 6–9 s，内存一样。三条办法：① 只对玩家所在的那一层台地建 BVH（首院 20.8 万面在 T4 上 0.8 s），换层时再建；② BVH 在构建时序列化随站点发出；③ 用简化的碰撞体。③ 就是第二份描述，又回到两份对不齐的老问题，不推荐。① 加 ② 不需要第二份描述。
 
@@ -280,8 +288,8 @@ pnpm install                                     # 分支上多了三个 devDepe
 node tools/spike/compare.mjs 0.05 tools/out/spike         # 逐点对照、能走到的对照、差异图
 SPIKE_BODY=cylinder node tools/spike/compare.mjs 0.05 tools/out/spike-cyl
 node tools/spike/eye.mjs tools/out/spike                   # eyeShut 对照
-node tools/spike/recast.mjs 0.05 tools/out/spike           # Recast
-node tools/spike/rapier.mjs                                # Rapier
+node tools/spike/recast.mjs 0.05 tools/out/spike           # Recast（量测依赖在 claude/collision-spike-161-page 上）
+node tools/spike/rapier.mjs                                # Rapier（同上）
 node tools/spike/sizes.mjs                                 # 包体积
 node --import ./tools/spike/swap.mjs --test $(cat tools/spike/walker-tests.txt)   # 现有单测跑在新 walker 上
 node --import ./tools/spike/swap.mjs tools/edges.mjs       # edges 跑在新 walker 上

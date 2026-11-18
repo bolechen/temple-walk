@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import fs from "node:fs";
 import { namedMaterials } from "./mats.mjs";
-import { gather, createMeshWalker } from "../../app/src/spike/meshwalker.js";
+import { gather, createMeshWalker } from "./meshwalker.mjs";
 const { LEVELS, SITE } = await import("../../app/src/site.js?real");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createTrees } = await import("../../app/src/trees.js");

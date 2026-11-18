@@ -1,4 +1,3 @@
-// @ts-nocheck   (#161 spike, branch only: not held to the project's types)
 // A walker that knows only what is drawn (#161 spike). It answers what createWalker answers (heightAt, blocked,
 // onGround, floorAt, eyeShut, and the rest of its face) from the meshes themselves, through a bounding volume hierarchy
 // (three-mesh-bvh), inside a trial region; outside it, and wherever the spike does not reach (a balcony, a room other
@@ -19,7 +18,7 @@
 //   floorAt    the material of the face the floor ray stopped on.
 import * as THREE from "three";
 import { MeshBVH, SAH } from "three-mesh-bvh";
-import { BODY } from "../geo.js";
+import { BODY } from "../../app/src/geo.js";
 import OUTLINE from "./outline.json" with { type: "json" };
 // A short fingerprint of the gathered triangles (FNV-1a over their bytes), to name a baked grid by what it was baked from.
 function fingerprint(f32) { const u = new Uint32Array(f32.buffer, f32.byteOffset, f32.length); let h = 0x811c9dc5; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619) >>> 0; } return h.toString(16).padStart(8, "0") + u.length.toString(16); }

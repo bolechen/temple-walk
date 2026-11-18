@@ -7,7 +7,7 @@ import { gzipSync, gunzipSync } from "node:zlib";
 import * as THREE from "three";
 import { namedMaterials } from "./mats.mjs";
 import { drawnWalker } from "./drawn.mjs";
-import { gather } from "../../app/src/spike/meshwalker.js";
+import { gather } from "./meshwalker.mjs";
 const { createWalker, buildSite } = await import("../../app/src/site.js?real");
 const { createTrees } = await import("../../app/src/trees.js");
 const site = buildSite(namedMaterials()), w = drawnWalker(site, createWalker(site)), out = {};
