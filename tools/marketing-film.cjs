@@ -14,7 +14,7 @@ const MOOD = "season=autumn&time=dusk", BASE = "q=high&body=code";
 const SEGMENTS = [
   { id: "1-opening", kind: "opening", url: `${BASE}&view=third&${MOOD}`, sub: [["一段值得慢下来的路", 1.0, 7.0]] },
   { id: "2-title", kind: "title", secs: 7, url: `shot=1&${BASE}&show=cam04&view=third&${MOOD}`, titleAt: 1.0 },
-  { id: "3-bell", kind: "bell", secs: 15, url: `shot=1&${BASE}&show=shot-bell&view=third&${MOOD}`, sub: [["撞钟，一响", 1.5, 6.5]] },
+  { id: "3-bell", kind: "bell", secs: 15, url: `${BASE}&view=third&${MOOD}`, sub: [["撞钟，一响", 1.5, 6.5]] },
   { id: "4-lookback", kind: "lookback", secs: 10, url: `shot=1&${BASE}&show=lookback&view=first&${MOOD}`, sub: [["网页即玩，约十几分钟", 1.0, 5.0], ["山门之外 · 序章", 5.6, 9.4]], push: 0.12 },
 ];
 
@@ -39,7 +39,15 @@ async function run({ open, out, fps = 30, size, only, log = console.log }) {
       await page.evaluate(() => window.__openingAt(0)); await draw(page, 3);
       secs = await page.evaluate(() => window.__opening().secs); info.opening = secs;
     }
-    if (seg.kind === "bell") { await page.evaluate(() => window.__riteClock(0)); await draw(page, 3); }
+    if (seg.kind === "bell") {   // as a visitor does it (not ?shot, where E is not heard): in, past the opening, beside the bell, E; then the rites' clock is held
+      await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
+      await page.evaluate(() => document.getElementById("enterBtn").click());
+      if (await page.evaluate(() => window.__opening().active)) { await page.keyboard.press("Escape"); await page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
+      await page.addStyleTag({ content: "#act,#hint,#goal,#way,#say,.slip,#slips,#book,#bookBtn{display:none!important}" });   // what lies over the picture is taken away, nothing is added
+      await page.evaluate(() => { const q = window.__places.bell; window.__pose(q.at[0] + 0.3, q.at[1] - 0.3, Math.PI, 0.05); });
+      await page.waitForFunction(() => document.getElementById("act") && document.getElementById("act").dataset.word === "撞钟", null, { timeout: 120000 });
+      await page.keyboard.press("e"); await page.evaluate(() => window.__riteClock(0)); await draw(page, 3);
+    }
     let start = null;
     if (seg.kind === "lookback") start = await page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, yaw: y.yaw, pitch: y.pitch }; });
     const n = Math.round(secs * fps);
