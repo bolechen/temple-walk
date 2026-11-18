@@ -53,8 +53,8 @@ jobs:
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: The stairs and the low drop
-        run: node tests/e2e/run.cjs stairs drop
+      - name: The stairs, the low drop, and the pause menu whole in every language
+        run: node tests/e2e/run.cjs stairs drop menufit
       - name: Keep the report and the screenshots
         if: always()
         uses: actions/upload-artifact@v4
