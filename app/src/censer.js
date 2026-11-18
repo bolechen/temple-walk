@@ -234,16 +234,16 @@ export function censerMaterial(procMat, tex, at = new THREE.Vector3()) {
         col=vec3(.42,.4,.37)*(.82+.3*g)*(1.-.55*hole)*(1.-.45*wet); metal_=0.; rough_=mix(.95,.6,wet); bump_=g*.004-hole*.002;
         emit_+=vec3(1.,.38,.12)*uEmber*(.12+.9*smoothstep(.1,.0,length(lp.xz-vec2(.08,.05)))+.7*smoothstep(.08,.0,length(lp.xz-vec2(-.1,-.07))))*(.6+.4*g);   // two or three ends burning down into the ash
       } else if(kind>-3.){
-        float rank=(-kind-2.)/.9, up=vUv2.y; if(rank>uIncense) discard;
+        float rank=(-kind-2.)/.9, up=vUv2.y; if(!(rank<=uIncense)) discard;
         col=mix(vec3(.38,.05,.035),vec3(.26,.15,.08),step(.2,up)); metal_=0.; rough_=.8;
         float tip=smoothstep(.93,.99,up); col=mix(col,vec3(.35,.33,.3),tip*.7);
         emit_+=vec3(1.,.32,.07)*tip*(1.5+6.*uEmber)*(.85+.15*sin(uT*3.+rank*40.));
       } else if(kind>-3.5){
         col=mix(vec3(.4,.05,.04),vec3(.28,.26,.24),smoothstep(.85,1.,vWN.y)*.6); metal_=0.; rough_=.8;
       } else if(kind>-4.5){
-        if(uSeasonK.x<.5) discard; float t=vUv2.y; col=mix(vec3(.3,.07,.03),vec3(.36,.25,.05),step(.55,t))*(.7+.4*t); col*=1.-.4*wet; metal_=0.; rough_=.75;
+        if(!(uSeasonK.x>=.5)) discard; float t=vUv2.y; col=mix(vec3(.3,.07,.03),vec3(.36,.25,.05),step(.55,t))*(.7+.4*t); col*=1.-.4*wet; metal_=0.; rough_=.75;
       } else {
-        if(uSeasonK.y<.5) discard; col=mix(vec3(.7,.6,.6),vec3(.74,.7,.68),vUv2.y); metal_=0.; rough_=.6;
+        if(!(uSeasonK.y>=.5)) discard; col=mix(vec3(.7,.6,.6),vec3(.74,.7,.68),vUv2.y); metal_=0.; rough_=.6;
       }
       if(uSnow>.001){ float sn_=uSnow*smoothstep(1.875,1.885,lp.y)*smoothstep(.35,.75,vWN.y)*smoothstep(.2,.5,fbm3(vWP*3.)+.3);
         col=mix(col,vec3(.82,.86,.92),sn_); rough_=mix(rough_,.85,sn_); metal_*=1.-sn_; emit_+=vec3(.82,.86,.92)*uAmb*.2*sn_; }`, { snow: false });

@@ -44,7 +44,7 @@ export function createTrail(renderer, { size = 2048, span = 32 } = {}) {
         float ball=el(vQ,vec2(0.,.035),vec2(.043,.058)), heel=el(vQ,vec2(0.,-.052),vec2(.034,.04)), arch=el(vQ,vec2(.006,-.01),vec2(.03,.05));
         float k=.012, a=min(ball,heel), h=clamp(.5+.5*(arch-a)/k,0.,1.); float sdf=mix(arch,a,h)-k*h*(1.-h);
         float cover=smoothstep(.006,-.004,sdf), deep=.72+.28*max(smoothstep(.0,-.02,ball),smoothstep(.0,-.018,heel));
-        float a2=cover*deep*uK; if(a2<.002) discard;
+        float a2=cover*deep*uK; if(!(a2>=.002)) discard;
         gl_FragColor=vec4(1.,uH,0.,a2);
       }`,
   });

@@ -7,6 +7,27 @@ for (const f of files) { try { execFileSync(process.execPath, ["--check", f], { 
 // Shader fragments handed to procMat are wrapped in one line of braces: a trailing // comment would swallow the closing brace.
 const mats = fs.readFileSync(path.join(root, "src", "materials.js"), "utf8");
 for (const m of mats.matchAll(/`([^`]*)`/g)) { const last = m[1].trimEnd().split("\n").pop(); if (/\/\/[^\n]*$/.test(last) && /col|rough_|bump_|ao_/.test(m[1])) { bad++; console.error("materials.js: a shader fragment ends in a // comment:\n  " + last.trim().slice(0, 120)); } }
+// Numbers that are not numbers, in a shader. GLSL leaves a power or a root of a number below zero, a logarithm of one at
+// or below zero and the direction of a zero-length vector undefined: a graphics card returns something that is not a
+// number, SwiftShader (which the tests draw with) returns 0, and one such pixel spread by the bloom blacked out half the
+// picture before the great hall (#217, #236). A comparison with such a number is false, so `if(a<.004) discard` lets
+// it through. So, in every shader fragment in app/ (Math.* in JavaScript and three's .normalize() are not looked at):
+//   pow(x, …), sqrt(x), inversesqrt(x), log(x), log2(x): x is a plain non-negative number, or max(…), abs(…), clamp(…),
+//     or dot(v,v);
+//   normalize(x): x is not a bare difference or cross product (either may be of zero length): divide by max(length(x),ε)
+//     or add a small vector;
+//   if(… < …) discard / if(… > …) discard: written as if(!(… >= …)) discard, which a number that is not one also takes.
+// A line that is safe for a reason the scan cannot see says so in a /* nan-ok: … */ comment.
+{ const rel = (f) => path.relative(path.join(root, ".."), f), held = (a) => /^\s*(max|abs|clamp)\s*\(/.test(a) || /^\s*\d*\.?\d+\.?\s*$/.test(a) || /^\s*dot\s*\(\s*([\w.]+)\s*,\s*\1\s*\)\s*$/.test(a);
+  // the first argument of a call whose name ends at `i`: up to its first top-level comma or its closing bracket
+  const arg = (src, i) => { let j = i, d = 0; for (; j < src.length; j++) { const c = src[j]; if (c === "(" || c === "[") d++; else if (c === ")" || c === "]") { if (!d) break; d--; } else if (c === "," && !d) break; } return src.slice(i, j); };
+  const topMinus = (a) => { let d = 0; for (let k = 1; k < a.length; k++) { const c = a[k]; if (c === "(" || c === "[") d++; else if (c === ")" || c === "]") d--; else if (c === "-" && !d && !/[eE(,*/+\-]/.test(a[k - 1].trim() ? a[k - 1] : a.slice(0, k).trim().slice(-1))) return true; } return false; };
+  for (const f of files) {
+    const src = fs.readFileSync(f, "utf8"), lines = src.split("\n"), say = (at, msg) => { const n = src.slice(0, at).split("\n").length; if (/\/\*\s*nan-ok:/.test(lines[n - 1])) return; bad++; console.error(`${rel(f)}:${n}: ${msg}`); };
+    for (const m of src.matchAll(/(?<![\w.$])(pow|sqrt|inversesqrt|log2|log)\s*\(/g)) { const a = arg(src, m.index + m[0].length); if (!held(a)) say(m.index, `${m[1]}(${a.trim()}) may be of a number below zero; hold it with max(…,0.) or abs(…)`); }
+    for (const m of src.matchAll(/(?<![\w.$])normalize\s*\(/g)) { const a = arg(src, m.index + m[0].length).trim(); if (/^cross\s*\(/.test(a) || topMinus(a)) say(m.index, `normalize(${a}) may be of a vector of no length; divide by max(length(…),1e-6)`); }
+    for (const m of src.matchAll(/if\s*\(([^;{}]*?)\)\s*discard/g)) if (/[<>]/.test(m[1]) && !/^\s*!\s*\(/.test(m[1])) say(m.index, `if(${m[1].trim()}) discard lets a number that is not one through; write if(!(…)) discard`);
+  } }
 // Every character the page writes must be in the typefaces cut for it (tools/fonts.py). The debug panel (src/debug.js)
 // is left out: it exists only on the dev server and is drawn by lil-gui in the system's own font, not in the cut faces.
 const DEV_ONLY = [path.join(root, "src", "debug.js")];

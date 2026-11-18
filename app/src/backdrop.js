@@ -25,7 +25,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
       float a=smoothstep(.5,.56,leaf*.75+crown*.42)*step(y,top+fbm2(vec2(x*2.3,1.))*1.6-.8);
       a=max(a,step(y,4.6+n2(vec2(x*.8,7.))*1.2));
       a*=step(.3,thin); culm*=step(.3,thin);
-      if(max(a,culm)<.5) discard;
+      if(!(max(a,culm)>=.5)) discard;
       vec3 c=mix(vec3(.016,.034,.02),vec3(.06,.105,.05),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.09,.12,.065)*uTone,culm*(1.-a));
       c*=.55+.6*smoothstep(0.,12.,y);                                  // darker inside the grove near the ground
       c*=uLeaf*uLight; float d=length(vWP-cameraPosition);
@@ -89,7 +89,7 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
         float ang(float a,float y,float f){ return fbm3(vec3(cos(a),sin(a),0.)*f+vec3(0.,0.,y)); }
         void main(){ float a=atan(vP.z,vP.x), up=clamp(vP.y/uH,0.,1.);
           float wood=ang(a,vP.y*.22,60.)*.5+ang(a,vP.y*.7,190.)*.5;
-          float fg=1.-exp(-pow(uFogD*length(vW-cameraPosition),2.));
+          float fg=1.-exp(-pow(abs(uFogD*length(vW-cameraPosition)),2.));
           float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35);            // mist lying in the folds, thickest low down
           vec3 c=mix(uTop*(.7+.6*wood),uMist,clamp(veil*.85,0.,1.));
           // Below the land the hill goes on down into the mist: wooded slope, hazed by the distance it is really at (the scene's own fog), not a white curtain.
