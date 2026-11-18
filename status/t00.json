@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-18T09:54:59.059Z",
+  "generated_at": "2026-11-18T10:10:33.958Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "7523b1b0002808aeae6f7e002faf9f811a86a11e",
-    "url": "https://github.com/bolechen/temple-walk/commit/7523b1b0002808aeae6f7e002faf9f811a86a11e"
+    "sha": "326106367731ae5b73400b5c1f35c1dddf731a9f",
+    "url": "https://github.com/bolechen/temple-walk/commit/326106367731ae5b73400b5c1f35c1dddf731a9f"
   },
   "delivery": {
     "analytics": {
@@ -185,6 +185,7 @@
       "link.js/yard.js：正式站控制台 __debugURL() 返回当前位姿、视角、季节时辰、所在殿室/阁楼的地址（?cam=…&view=…&season=…&time=…&in=…&up=…&devpose），不改地址栏、不上报；poseQuery 从 devpose.js 抽到 link.js 由开发分支与线上共用；调试面板的复制链接带上阁楼 up（#165，先失败）",
       "yard.js：拖动视角时（canvas 上指针按下且已移动）拦 contextmenu，空闲右键与松手后仍是浏览器自己的菜单；e2e views 三条断言（#168，先失败）",
       "awake.js（新）/game.js：收尾播放期间申请屏幕唤醒锁，结束或跳过时释放，不支持或低电量静默放弃；rites.js：页面隐藏时仪式时钟冻结、可见后接着走，与拍照定格重叠只算一次；game.js：回到可见后 900 ms 内不把点击/键当作跳过（#169，先写测试）",
+      "#147：序章结尾后停在凌霄阁远景（director.holdShot，漂移≤1°/秒），不再自动弹出朱印帐；底部一行「翻开朱印帐」，B 或点这一行翻开；「七印圆满」印在翻开朱印帐时盖一次（journey.owed/stamp）；走一步、点地面或 Esc 以移动镜头回到他身边",
       "#156（PR #201）：静坐的呼吸圈从屏幕中央的固定圆改为地上的圆相（rites.js breathRing；与打卡点地面标记同一贴图），「吸」「呼」改为底部小字；结尾不画圈；tools/breath-views.cjs、mobile-audit 的 sit/sitsay 面"
     ],
     "known_issues": [
@@ -476,6 +477,7 @@
       "round_issue_168": "pnpm run check、typecheck、单测、node tests/e2e/run.cjs views 通过；CI verify 由 PR 运行",
       "round_issue_169": "pnpm run check 73 files 0 问题；typecheck 通过；单测 373/373；e2e screen、pilgrimage、oldbook、replay、director 通过（见 PR）。CI verify 由 PR 运行",
       "structure_phase4": "变基到 main 后：pnpm test 297/297，check、typecheck 通过；变基前：edges 通过、nearplane 13/13、e2e:smoke 31/31",
+      "ending_far_147": "单测 holdShot、journey owed/stamp（先失败后通过）；e2e farview、pilgrimage、replay、screen 通过；pnpm run check、typecheck、单测通过",
       "breath_ring_156": "单测 breathRing（先失败后通过）；e2e breathring、rites、director、finish 在并入 main 后的提交上逐个通过；mobile-audit 中文 sit、sitsay 两面（四种画幅）无报错；pnpm run check、typecheck、393 项单测通过"
     },
     "unverified": [
@@ -531,6 +533,7 @@
       "#165：没有在正式域名上手动打开控制台试；链接只复现位姿与光线，不带仪轨进度、香、快门、推拉、转场；没有在真机上用过控制台",
       "#168：没有在真浏览器/真机上看原生右键菜单本身（Playwright 只看 defaultPrevented）；触屏长按未变",
       "#169：真机（iOS Safari、Android Chrome）上的息屏/唤醒与低电量模式未试；screen 场景只是覆盖 document.hidden，没有真正隐藏页面；唤醒锁未在省电模式下量",
+      "#147：四种语言手机图、远景实拍一张（photo 场景只验了举起相机不离开远景）、T4 未验；证据图是软件渲染、夏昼、中文",
       "#156：英文/日文/韩文手机图未拍；mobile-audit 只跑了中文的 sit/sitsay 面；reduced-motion 只有单测；pilgrimage 场景与 T4 帧耗未跑；证据图是软件渲染"
     ],
     "hosting": {
@@ -555,25 +558,25 @@
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
       "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
     ],
-    "record_commit": "8c96ef2235dc67300c74f4314486cba93a52ef97",
+    "record_commit": "326106367731ae5b73400b5c1f35c1dddf731a9f",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 44279474563,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44279474563",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 44282825738,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44282825738",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "success"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "7523b1b0002808aeae6f7e002faf9f811a86a11e",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44279474563"
