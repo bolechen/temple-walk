@@ -147,16 +147,25 @@ function limb(pts, r0, r1, radial = 7, flare = 0) {
 
 // Where a trunk meets the ground. A tube ending at the paving looks sawn off, so each tree stands on a foot of its
 // own: the bole swelling as it comes down and dividing into five or six root-spurs that run out and under, drawn in
-// level rings (so nothing is lifted clear of the ground) and carried well below it. `r` is the trunk's radius where
-// the foot takes over, `top` how high the swelling begins. The bark's grain runs on down it.
-function foot(x, y, z, r, top, seed) {
-  const R = 28, rings = 12, pos = [], nor = [], uv = [], idx = [], spurs = 5 + (seed % 2), turn = seed * 1.3;
+// level rings (so nothing is lifted clear of the ground) and carried well below it. `trunk(h)` says where the trunk is,
+// and how thick, at `h` above the ground: every ring is centred on it and never thinner than it, so that at `top`,
+// where the swelling begins, the foot's ring is the trunk's own and the tree is one piece. `R` is the trunk's number of
+// sides, so that the two rings meet corner to corner. The bark's grain runs on down it.
+function foot(y, trunk, top, seed, R = 24) {
+  const rings = 12, pos = [], nor = [], uv = [], idx = [], spurs = 5 + (seed % 2), turn = seed * 1.3;
   const at = (i, k) => { const t = i / rings, h = top * (1 - t) - 0.35 * t * t * 3, a = (k / R) * 6.283, swell = Math.max(0, Math.exp(-Math.max(0, h) / (top * 0.3)) - Math.exp(-1 / 0.3)) * (1 - t < 0.08 ? (1 - t) / 0.08 : 1);   // nothing at its top: it leaves the trunk without a collar
-    const spur = Math.pow(0.5 + 0.5 * Math.cos(a * spurs + turn + Math.sin(a * 2 + seed) * 0.5), 2.2), rr = r * (1 + 0.55 * swell + 1.25 * swell * swell * spur) + (h < 0 ? -h * 0.5 : 0);
-    return [x + Math.cos(a) * rr, y + h, z + Math.sin(a) * rr]; };
+    const spur = Math.pow(0.5 + 0.5 * Math.cos(a * spurs + turn + Math.sin(a * 2 + seed) * 0.5), 2.2), c = trunk(h), rr = c.r * (1 + 0.55 * swell + 1.25 * swell * swell * spur) + (h < 0 ? -h * 0.5 : 0);
+    return [c.x + Math.cos(a) * rr, y + h, c.z + Math.sin(a) * rr]; };
   for (let i = 0; i <= rings; i++) for (let k = 0; k <= R; k++) { const p = at(i, k), q = at(i, k + 0.25), e = i < rings ? 0.25 : -0.25, d0 = at(i + e, k), d = i < rings ? d0 : [2 * p[0] - d0[0], 2 * p[1] - d0[1], 2 * p[2] - d0[2]];   // the lowest ring looks back up the foot for its slope: a normal of no length would shade as not-a-number
     const ax = q[0] - p[0], ay = q[1] - p[1], az = q[2] - p[2], bx = d[0] - p[0], by = d[1] - p[1], bz = d[2] - p[2], nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, l = Math.hypot(nx, ny, nz) || 1;
-    pos.push(...p); nor.push(-nx / l, -ny / l, -nz / l); uv.push(k / R, -i / rings * 0.5); }
+    // facing out of the wood; at its top, where it is the trunk, the trunk's own normal, so the light runs on unbroken
+    let ox = nx / l, oy = ny / l, oz = nz / l; const blend = i === 0 ? 1 : i === 1 ? 0.5 : 0;
+    if (blend) { const hh = top * (1 - i / rings), c = trunk(hh), up = trunk(hh + 0.05), dn = trunk(hh - 0.05), tx = up.x - dn.x, tz = up.z - dn.z, tl = Math.hypot(tx, 0.1, tz), Tx = tx / tl, Ty = 0.1 / tl, Tz = tz / tl;
+      let rx = p[0] - c.x, rz = p[2] - c.z; const rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl; const d = rx * Tx + rz * Tz, wx = rx - Tx * d, wy = -Ty * d, wz = rz - Tz * d, wl = Math.hypot(wx, wy, wz) || 1;
+      ox = ox * (1 - blend) + (wx / wl) * blend; oy = oy * (1 - blend) + (wy / wl) * blend; oz = oz * (1 - blend) + (wz / wl) * blend; const ol = Math.hypot(ox, oy, oz) || 1; ox /= ol; oy /= ol; oz /= ol; }
+    else {   // lower down, leaned a little out from the trunk, so the flanks of a root-spur shade softly rather than turning edge-on
+      const c = trunk(top * (1 - i / rings)); let rx = p[0] - c.x, rz = p[2] - c.z; const rl = Math.hypot(rx, rz) || 1; ox += (0.45 * rx) / rl; oz += (0.45 * rz) / rl; const ol = Math.hypot(ox, oy, oz) || 1; ox /= ol; oy /= ol; oz /= ol; }
+    pos.push(...p); nor.push(ox, oy, oz); uv.push(k / R, -i / rings * 0.5); }
   for (let i = 0; i < rings; i++) for (let k = 0; k < R; k++) { const a = i * (R + 1) + k, b = a + R + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return g;
@@ -196,8 +205,11 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
   };
   const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
-  const beds = []; let nth = 0;
-  const root = (x, y, z, r, far) => { if (far) return; nth++; wood.push(foot(x, y, z, r * 1.005, Math.min(1.1, 0.5 + r * 1.6), nth)); beds.push(bed(x, y, z, r * 3.4 + 0.25, nth)); };
+  const beds = [], joints = [], branches = []; let nth = 0;   // (where each foot meets its trunk, and where each cedar branch ends: for the tests)
+  // Where the trunk is at `h` above the ground: found on its own curve, its radius tapering as `limb` tapers it.
+  const along = (curve, r0, r1, y) => { const P = new THREE.Vector3(), lo0 = curve.getPoint(0).y; return (h) => { const want = Math.max(lo0, y + h); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } curve.getPoint(lo, P); return { x: P.x, z: P.z, r: r0 + (r1 - r0) * lo }; }; };
+  const root = (x, y, z, r, far, trunk) => { if (far) return; nth++; const top = Math.min(1.1, 0.5 + r * 1.6), g = foot(y, along(trunk.curve, trunk.r0, trunk.r1, y), top, nth, trunk.sides); wood.push(g); beds.push(bed(x, y, z, r * 3.4 + 0.25, nth));
+    joints.push({ ...trunk, foot: g, ring: trunk.sides, y, top, at: [x, z] }); };
   // The fine wood at the end of a branch: a few twigs fanning out, which is what a bare tree is made of.
   const twigs = (p, dir, n = 3, reach = 0.6) => { for (let i = 0; i < n; i++) { const tip = p.clone().add(V(dir.x * reach + jit(reach), reach * (0.2 + rnd() * 0.6), dir.z * reach + jit(reach))); grow([p, p.clone().lerp(tip, 0.5).add(V(jit(0.12), 0.05, jit(0.12))), tip], 0.011, 0.004, 4); } };
   const jit = (k) => (rnd() - 0.5) * k;
@@ -207,17 +219,20 @@ export function createTrees(scene, M, spots, opts = {}) {
       // A straight shaft, bare for its lower third; above that, whorl on whorl of boughs that sweep out and hang.
       // A young one is the same tree drawn smaller, its boughs only as long as its height allows, and it is not yet
       // bare below: see the end of this block.
-      const lean = V(jit(0.5), 0, jit(0.5)), r0 = 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t), size = Math.min(1, h / 18);
-      grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, 0.05, 12, far0 ? 0.4 : 0); root(x, y, z, r0, far0);
+      const lean = V(jit(0.5), 0, jit(0.5)), r0 = h < 8 ? 0.035 + h * 0.009 : 0.2 + h * 0.012, axis = (t) => V(x + lean.x * t * t, y + h * t, z + lean.z * t * t), size = Math.min(1, h / 18);
+      const sides = far0 ? 12 : 24, shaft = grow([axis(0).setY(y - 0.2), axis(0.3), axis(0.62), axis(1)], r0, h < 8 ? 0.02 : 0.05, sides, far0 ? 0.4 : 0); root(x, y, z, r0, far0, { curve: shaft, r0, r1: h < 8 ? 0.02 : 0.05, sides, kind, h });
       const whorl = (by) => {   // one tier of boughs round the shaft at `by` above the ground
         const t = by / h, c = axis(t), len = (1 - t) * (3.6 + h * 0.1) * (0.78 + 0.44 * Math.sin(by * 1.3 + x)) + 0.9, n = 5 + ((rnd() * 3) | 0), a0 = rnd() * 6.283;
         for (let k = 0; k < n; k++) {
           if (rnd() < 0.14) continue;   // a gap where a bough was lost
           // and however it hangs, it stops short of the ground under it
           const a = a0 + (k / n) * 6.283 + jit(0.5), droop = 0.72 + jit(0.3), l = Math.min(len * size * (0.65 + rnd() * 0.6) * (far0 ? 1.25 : 1), (by - 0.2) / Math.cos(droop)), w = l * (0.95 + rnd() * 0.3), far = V(Math.sin(a), 0, Math.cos(a));
-          if (k % 2 === 0 && !far0) grow([c.clone(), c.clone().addScaledVector(far, l * 0.45).add(V(0, -l * 0.12, 0)), c.clone().addScaledVector(far, l * 0.85).add(V(0, -l * 0.45, 0))], 0.03 + (1 - t) * 0.05, 0.012, 5);   // the branch the foliage hangs from
+          // the branch the foliage hangs from, laid down the middle of the spray it carries and ending inside it
+          const onSpray = (u) => c.clone().addScaledVector(far, u * l * Math.sin(droop)).add(V(0, 0.2 - u * l * Math.cos(droop), 0));
+          let tip = null; if (k % 2 === 0 && !far0) { tip = onSpray(0.85); grow([c.clone(), onSpray(0.45), tip], Math.min(0.03 + (1 - t) * 0.05, r0 * 0.5), 0.012, 5); }
           // a bough: hinged at the trunk, reaching out and down
           q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
+          if (tip) { const loc = tip.clone().sub(c).sub(V(0, 0.2, 0)).applyQuaternion(q.clone().invert()); branches.push({ h, inside: Math.max(0, Math.abs(loc.x) - w / 2, loc.y, -l - loc.y, Math.abs(loc.z) - 0.15) }); }
           card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), c.clone().add(V(0, 0.2, 0)), c.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
           // and a curtain hanging from it, so the tree has depth from every side
           if (k % 2 === 0 && !far0) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const cw = Math.min(l * 0.75, (by - 0.4) / 0.9); card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), c.clone().addScaledVector(far, l * 0.36), c.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
@@ -237,7 +252,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     const tall = kind === "ginkgo", top = y + h, centre = V(x, y + h * (tall ? 0.62 : 0.7), z), r0 = 0.09 + h * 0.019;
     if (tall) {
       // Ginkgo: one leader, and boughs that climb away from it.
-      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 12, 0); root(x, y, z, r0);
+      const lead = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], r0, 0.03, 24, 0); root(x, y, z, r0, false, { curve: lead, r0, r1: 0.03, sides: 24, kind, h });
       let a = rnd() * 6.283;
       for (let t = 0.26; t < 0.97; t += 0.058) {
         a += 2.4 + jit(0.5); const from = lead.getPoint(t), reach = h * (0.36 - t * 0.24) * (0.8 + rnd() * 0.4), rise = reach * (0.75 + rnd() * 0.5);
@@ -251,7 +266,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     } else {
       // The spreading tree: a short crooked trunk that forks low, long boughs that reach out before they rise.
       const forkAt = V(x + jit(0.6), y + h * (0.3 + rnd() * 0.07), z + jit(0.6));
-      grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 12, 0); root(x, y, z, r0);
+      const bole = grow([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.14, z + jit(0.3)), forkAt], r0, r0 * 0.74, 24, 0); root(x, y, z, r0, false, { curve: bole, r0, r1: r0 * 0.74, sides: 24, kind, h });
       const n = 5, a0 = rnd() * 6.283;
       for (let i = 0; i < n; i++) {
         const a = a0 + (i / n) * 6.283 + jit(0.5), reach = h * (0.36 + rnd() * 0.16), rise = h * (0.34 + rnd() * 0.2);
@@ -280,6 +295,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
+    joints, branches,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;

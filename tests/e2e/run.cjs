@@ -772,6 +772,35 @@ const scenarios = {
     d = await r.page.evaluate(() => window.__director()); expect(d.cuts === 2 && d.blends === 0, "and come home behind it: " + JSON.stringify(d)); saw++;
     expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
   } },
+  // A phone's screen going dark in the middle of the close (#169): the passage asks the screen to stay awake (Screen
+  // Wake Lock, recorded by a stub), keeps no time while the page is hidden, does not take the tap that brings the page
+  // back for a skip, and lets the screen go when it is over. `document.hidden` is stood in for here; the page is not
+  // really hidden, but every reader of it is.
+  screen: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
+      window.__wake = [];
+      Object.defineProperty(navigator, "wakeLock", { configurable: true, value: { request: async (type) => { window.__wake.push("request:" + type); return { release: async () => { window.__wake.push("release"); }, addEventListener() {} }; } } });
+      let hidden = false;
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (hidden ? "hidden" : "visible") });
+      window.__setHidden = (v) => { hidden = v; document.dispatchEvent(new Event("visibilitychange")); };
+    } });
+    const R = () => t.page.evaluate(() => window.__rites()), wake = () => t.page.evaluate(() => window.__wake.slice());
+    await t.page.evaluate(() => { void window.__ending(); });   // it is a promise; do not wait for the whole close here
+    await t.until(async () => (await R()).closing === true, 60000, "the close never began");
+    await t.until(async () => (await wake()).includes("request:screen"), 30000, "the close did not ask the screen to stay awake");
+    const u0 = (await R()).close.u;
+    await t.page.evaluate(() => window.__setHidden(true)); await t.page.waitForTimeout(700);
+    const u1 = (await R()).close.u;
+    expect(u1 - u0 < 0.03, "the close kept time behind a dark screen: " + JSON.stringify([u0, u1]));
+    await t.page.evaluate(() => { window.__setHidden(false); document.getElementById("ending").click(); });   // the wake tap, at once
+    expect((await R()).closing === true, "the tap that brought the page back skipped the close");
+    await t.page.waitForTimeout(1000);
+    await t.page.evaluate(() => document.getElementById("ending").click());
+    await t.until(async () => (await R()).ended >= 1, 30000, "a later tap did not pass over the close");
+    await t.until(async () => (await wake()).includes("release"), 15000, "the wake lock was not let go after the close");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain
   // to him before the walk is theirs; nothing lies over the picture meanwhile; the bell sounds at the click and the music
   // waits; the first line about walking comes only after; at the gate the prologue's title rises and leaves, once. A
@@ -1029,6 +1058,26 @@ const scenarios = {
     // Under the gate, where there is room behind him, it stays back.
     await t.page.evaluate(() => window.__pose(0, 33, 0, -0.05)); await t.frames(14);
     p = await t.probe(); expect(p.camDist > 3.5, "the eye should fall back again in the open: " + p.camDist);
+    // The console's link to this view (`__debugURL`, src/link.js): the published page hands out an address that opens on
+    // the same place, look and mood. It carries `devpose`, inert here and followed by a dev server.
+    const link = await t.page.evaluate(() => window.__debugURL());
+    expect(typeof link === "string" && /[?&]cam=0,33,0,-0\.05(&|$)/.test(link) && !/[?&]shot=/.test(link) && /[?&]devpose(&|$)/.test(link), "the console's link is not the address of this view: " + link);
+    const search = new URL(link).search.slice(1), before = await t.state();
+    const u = await open(b, base, search, { enter: false });
+    const after = await u.state();
+    expect(after.x === before.x && after.z === before.z && Math.abs(after.yaw - before.yaw) < 1e-3 && Math.abs(after.pitch - before.pitch) < 1e-3
+      && after.view === before.view && after.season === before.season && after.time === before.time,
+      "the console's link does not open where he stood: " + JSON.stringify({ before, after }));
+    expect(await u.page.evaluate(() => location.search) === "?" + search, "the published page should not write the console's devpose into the address");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A right-click is the browser's own menu, except in the middle of a look-drag, where it can only interrupt: the
+    // canvas takes it just then, and gives it back when the drag is let go.
+    const menu = () => t.page.evaluate(() => { const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true }); document.getElementById("yardGl").dispatchEvent(e); return e.defaultPrevented; });
+    expect((await menu()) === false, "a right-click with no drag should be the browser's own menu");
+    await t.page.mouse.move(210, 400); await t.page.mouse.down(); await t.page.mouse.move(280, 400, { steps: 6 });
+    expect((await menu()) === true, "a right-click in the middle of a look-drag should not open the browser's menu");
+    await t.page.mouse.up();
+    expect((await menu()) === false, "after the drag is let go, the browser's menu should be back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
@@ -1159,6 +1208,27 @@ const scenarios = {
       for (const [h, name] of [[notice, "three.js"], [notice, "Basis Universal"], [ofl, "SIL OPEN FONT LICENSE"]]) { const body = await t.page.evaluate(async (u) => { const r = await fetch(u); return r.ok ? (await r.text()) : "HTTP " + r.status; }, h); expect(body.toUpperCase().includes(name.toUpperCase()), `${h} should open and name ${name}: ${body.slice(0, 60)}`); } }
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#credits")) && (await t.page.isVisible("#menu")), "Esc should put away the page of thanks and leave the menu");
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#menu")), "Esc should close the menu again");
+    // Laid out for the screen (#134): across on a computer's wide screen with nothing to scroll, one column on a tall one, two on a phone held sideways.
+    await t.page.evaluate(() => document.body.classList.add("seasons"));   // the seasons' rows are the tallest case
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu for the layout check");
+    const lay = async (w, h) => { await t.page.setViewportSize({ width: w, height: h }); await t.frames(2);
+      return t.page.evaluate(() => { const c = document.querySelector("#menu .card"), r = c.getBoundingClientRect(), cs = getComputedStyle(c), a = document.querySelector("#menu .grp-view").getBoundingClientRect(), b = document.querySelector("#menu .grp-ctl").getBoundingClientRect();
+        return { w: r.width, h: r.height, fits: c.scrollHeight <= c.clientHeight, cols: cs.gridTemplateColumns.split(" ").length, side: b.left >= a.right - 1, centred: Math.abs(r.left + r.width / 2 - innerWidth / 2) < 2, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; }); };
+    for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) { const m = await lay(w, h); expect(m.cols === 2 && m.side && m.w > m.h && m.fits && !m.clipped && m.centred && m.inside && m.w <= 960, `the menu should lie across at ${w}x${h}, whole and centred: ` + JSON.stringify(m)); }
+    for (const [w, h] of [[390, 844], [768, 1024]]) { const m = await lay(w, h); expect(m.cols === 1 && m.inside && m.h > m.w, `the menu should stay one column at ${w}x${h}: ` + JSON.stringify(m)); }
+    { const m = await lay(844, 390); expect(m.cols === 2 && m.inside, "a phone held sideways keeps its two columns: " + JSON.stringify(m)); }
+    // Tab goes down the left column, then the right, then the foot: the order the eye reads it in.
+    { await t.page.setViewportSize({ width: 1366, height: 768 }); await t.frames(2); const seq = [];
+      const n = await t.page.evaluate(() => [...document.querySelectorAll("#menu button, #menu input")].filter((e) => e.offsetParent && !e.disabled).length);
+      await t.page.evaluate(() => document.querySelector("#menu .grp-view button, #menu .grp-view input").focus());
+      for (let i = 0; i < n; i++) { seq.push(await t.page.evaluate(() => { const a = document.activeElement; return a.closest(".grp-view") ? "L" : a.closest(".grp-ctl") ? "R" : a.closest("#menu") ? "F" : "?"; })); await t.page.keyboard.press("Tab"); }
+      expect(/^L+R+F+$/.test(seq.join("")), "Tab should go through the left column, then the right, then the foot: " + seq.join("")); }
+    await t.page.setViewportSize({ width: 800, height: 500 }); await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#menu")), 10000, "Esc did not close the menu");
+    // The shortest wide screen, in each language: nothing to scroll (the group's invitation is Chinese only, so Chinese is the tallest).
+    for (const lg of ["ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+      await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
+      const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
+      expect(m.fits && !m.clipped, `the menu should lie whole at 1280x720 in ${lg}: ` + JSON.stringify(m)); await u.close(); }
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3, "the settings were not kept: " + JSON.stringify(st));
@@ -1395,15 +1465,16 @@ const scenarios = {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)
       const t = await open(b, base, "q=low&cam=13.65,11,-1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
-      await t.until(() => t.page.isVisible("#dropBtn"), 30000, "the low unrailed porch offers no way down");
+      await t.until(() => t.page.isVisible(touch ? "#jumpBtn" : "#dropBtn"), 30000, "the low unrailed porch offers no way down");
+      if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
       if (!touch) {
         await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
         const edge = await t.state(); expect(edge.h === 0.45 && edge.x > 13.2, "ordinary walking should still stop at the porch edge");
       } else {
-        const r = await t.page.locator("#dropBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
+        const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
       }
       await t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
-      if (touch) await t.page.tap("#dropBtn"); else await t.page.keyboard.press("Space");
+      if (touch) await t.page.tap("#jumpBtn"); else await t.page.keyboard.press("Space");
       await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < 12.7; }, 120000, "the low porch hop never reached its clear landing");
       const samples = await t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
       expect(samples.filter(s => s.dropping).length >= 3 && samples.some(s => s.y > 0.5) && samples.some(s => s.y > 0 && s.y < 0.4), "the hop must rise and descend continuously, not teleport");
@@ -1479,7 +1550,18 @@ const scenarios = {
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first" + BARE, { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
-    expect(!(await t.page.$("#jumpBtn")), "a phone is not given a jump button: the porch's 下台阶 shows where it is needed");
+    // #142: a phone has one faint ring lower right, across from the stick, that jumps and, before a porch's edge, hops down or up.
+    expect(await t.page.isVisible("#jumpBtn"), "a phone should be given a jump ring lower right");
+    { const r = await t.page.evaluate(() => { const b = document.getElementById("jumpBtn").getBoundingClientRect(), k = document.getElementById("stick").getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight, k.right]; });
+      expect(r[2] <= r[4] && r[3] <= r[5] && r[2] - r[0] >= 56 && r[3] - r[1] >= 56 && r[0] > r[4] / 2 && r[0] > r[6], `the jump ring is misplaced or too small: ${r}`); }
+    expect((await t.page.textContent("#jumpBtn")).trim() === "跳", "away from any porch the ring says 跳");
+    { const y0 = (await t.state()).footY; await t.page.evaluate(() => { window.__j = []; window.__jOn = true; const read = () => { window.__j.push(window.__yard().footY); if (window.__jOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      await t.page.touchscreen.tap(...(await t.page.evaluate(() => { const b = document.getElementById("jumpBtn").getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; })));
+      await t.until(async () => (await t.page.evaluate(() => window.__j)).some((h) => h > y0 + 0.2), 60000, "pressing the ring did not take him off the ground");
+      await t.until(async () => !(await t.state()).jumping, 60000, "he never came down"); await t.page.evaluate(() => { window.__jOn = false; });
+      expect(Math.abs((await t.state()).footY - y0) < 0.01, "he should land where he took off"); }
+    // with a sheet open it cannot be pressed
+    await t.page.evaluate(() => window.__menu(true)); await t.frames(2); expect(!(await t.page.isVisible("#jumpBtn")), "the ring should be put away under a sheet"); await t.page.evaluate(() => window.__menu(false)); await t.frames(2);
     for (const id of ["photoBtn", "menuBtn", "bookBtn"]) {
       const r = await t.page.evaluate((i) => { const b = document.getElementById(i).getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom, innerWidth, innerHeight]; }, id);
       expect(r[0] >= 0 && r[1] >= 0 && r[2] <= r[4] && r[3] <= r[5], `#${id} hangs off the screen`); expect(r[2] - r[0] >= 40 && r[3] - r[1] >= 38, `#${id} is too small to tap`);

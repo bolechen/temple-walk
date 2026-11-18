@@ -1,23 +1,10 @@
 // Where the eye stands, kept in the page's address while a place is being worked on (`?devpose`, on the dev server
 // only). Every change to the code makes the dev server load the page again, and without this the walk would begin
 // again at the foot of the path. With it the address always says `?cam=x,z,yaw,pitch` (and the view, the season, the
-// hour and the hall he is in), so a reload puts him back where he stood. The address is replaced, not pushed: the
-// browser's history does not fill with steps. C copies the address, to keep a view or hand it to someone.
-
-// The address for `pose` = { x, z, yaw, pitch, view?, season?, time?, room?, ok? }, keeping every other parameter of `search`.
-// A named view (`show`) gives way to the exact place; `in` is the hall he is inside, or nothing when he is out.
-// `ok(x, z)` says whether a point stands where he stands (free, at his height): his place is written to two decimals,
-// or to as many more as it takes for that to stay true, since a centimetre's rounding at the edge of a stair can put
-// him inside the stop beside it, where the ground reads as the level below and he comes back sunk into the steps.
-export function poseQuery(search, pose) {
-  const q = new URLSearchParams(search), yaw = Math.atan2(Math.sin(pose.yaw), Math.cos(pose.yaw));   // a turn of the head is kept within one round
-  q.delete("show");
-  let n = 2; while (n < 6 && pose.ok && !pose.ok(+pose.x.toFixed(n), +pose.z.toFixed(n))) n++;
-  q.set("cam", [pose.x, pose.z, yaw, pose.pitch].map((v, i) => +v.toFixed(i < 2 ? n : 3)).join(","));
-  for (const k of ["view", "season", "time"]) if (pose[k]) q.set(k, pose[k]);
-  if (pose.room) q.set("in", pose.room); else q.delete("in");
-  return "?" + q.toString().replace(/%2C/g, ",").replace(/=(&|$)/g, "$1");   // commas as written; a bare flag stays bare
-}
+// hour, the hall he is in or the balcony he is up on), so a reload puts him back where he stood. The address is
+// replaced, not pushed: the browser's history does not fill with steps. C copies the address, to keep a view or hand it
+// to someone.
+import { poseQuery } from "./link.js";
 
 // `read()` gives the pose now (or null while it should not be kept, as when he is passing through a door);
 // `where` is the page's location and `history` its history; both are handed in so that the tests can stand in for them.
