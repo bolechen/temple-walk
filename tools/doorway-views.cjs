@@ -1,6 +1,6 @@
 // The room seen through a hall's open door from outside (#218): from 12 m, 6 m and 2 m before the door, square on and
 // 30° to either side, drawn with the room painted in the doorway and (`--before`) without, into tools/out/doorway/.
-// usage: node tools/doorway-views.cjs [hall=main] [--before] [--halls] [--moods] [--dists=12,6,2] [--angles=-30,0,30] [--mood=summer-day] [--size=640x400] [--q=high] [--view=first] [--tag=]
+// usage: node tools/doorway-views.cjs [hall=main] [--before] [--halls] [--moods [--seasons=spring,…]] [--dists=12,6,2] [--angles=-30,0,30] [--mood=summer-day] [--size=640x400] [--q=high] [--view=first] [--tag=]
 // Each picture's door and the lattice beside it, in pixels, go to rects.json (doorway-light.py measures them).
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
@@ -26,7 +26,7 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
   // `--halls`: every hall that can be entered, one view each; `--moods`: the one hall in all sixteen seasons and hours.
   const SEASONS = ["spring", "summer", "autumn", "winter"], TIMES = ["dawn", "day", "dusk", "night"];
   const hallIds = process.argv.includes("--halls") ? await p.evaluate(() => window.__halls.map((h) => h.id)) : [hallId];
-  const moods = process.argv.includes("--moods") ? SEASONS.flatMap((se) => TIMES.map((ti) => [se, ti])) : [[season, time]];
+  const moods = process.argv.includes("--moods") ? arg("seasons", SEASONS.join(",")).split(",").flatMap((se) => TIMES.map((ti) => [se, ti])) : [[season, time]];
   const shots = [], rects = {};
   for (const [se, ti] of moods) {
     if (moods.length > 1) { await p.evaluate(([a, c]) => window.__mood(a, c), [se, ti]); if (!before) await p.evaluate((id) => window.__doorways(true, id), hallIds.length === 1 ? hallIds[0] : null); }
@@ -45,7 +45,8 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
       }
     }
   }
-  fs.writeFileSync(path.join(out, `rects${before ? "-before" : ""}${arg("tag", "")}.json`), JSON.stringify(rects, null, 1));
+  const rf = path.join(out, `rects${before ? "-before" : ""}${arg("tag", "")}.json`), had = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, "utf8")) : {};
+  fs.writeFileSync(rf, JSON.stringify({ ...had, ...rects }, null, 1));   // added to what an earlier run of the same kind measured
   console.log(JSON.stringify({ shots, doorways: await p.evaluate(() => window.__doorways?.()), errors: [...new Set(errs)].slice(0, 6) }));
   await b.close(); srv.close();
 })();

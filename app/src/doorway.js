@@ -93,7 +93,7 @@ function distMaterial() {
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
 export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12, keep = 4, sync = false }) {
   const halls = {}, dm = distMaterial(), queue = [], frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
-  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0; const faces = [];
+  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false; const faces = [];   // pinned: a tool took them all, and none is given back
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
@@ -196,7 +196,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
       }
     }
     const held = Object.values(halls).filter((x) => x.col);
-    if (held.length > keep) {
+    if (held.length > keep && !pinned) {
       const out = held.filter((x) => busy?.o !== x && eye.distanceTo(x.door) > NEAR).sort((a, b) => eye.distanceTo(b.door) - eye.distanceTo(a.door))[0];
       if (out) drop(out);
     }
@@ -226,7 +226,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
     const some = Object.values(halls).filter((o) => !only || o.hall.id === only);
     await rooms.ready; await Promise.all(some.map((o) => o.r.stand().catch(() => {})));
     for (const o of some) { o.want = true; cubes(o); for (let i = 0; i < 12; i++) face(o, i); o.taken++; o.fade = 1; o.mat.uniforms.uHas.value = 1; for (const f of o.d.flames) f.visible = false; }
-    queue.length = 0; busy = null;
+    queue.length = 0; busy = null; pinned = true;
   };
   const bytes = () => Object.values(halls).reduce((n, o) => n + (o.col ? (o.col.width ** 2 * 6 * 8 * 4) / 3 + o.dist.width ** 2 * 6 * 2 : 0), 0);   // half floats: four to a colour texel, its mipmaps a third more; one to a distance
   // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
