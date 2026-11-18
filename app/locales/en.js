@@ -288,6 +288,8 @@ export default {
   "走到画框前，可以细看；也可以举头看看殿顶": "Stand before a frame to look closely, or look up at the ceiling",
   "点左上角的小印，翻看朱印帐": "Tap the small seal at top left to open the seal book",
   "{b}或左上角的小印，翻看朱印帐": "{b} or the small seal at top left opens the seal book",
+  "点这一行，翻开朱印帐": "Tap this line to open the seal book",
+  "{b}翻开朱印帐": "{b} open the seal book",
   "时节已开：留影与歇脚里可选": "The seasons are open: choose them in Photo and Rest",
   "时节已开：留影与歇脚里可选　·　{t}时节": "The seasons are open: choose them in Photo and Rest · {t} seasons",
   "{shift}快步　·　{space}跳": "{shift} hurry · {space} jump",
