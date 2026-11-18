@@ -536,10 +536,6 @@ export function buildSite(M) {
     loft: [0, topZ + 3.4 + (0.51 + LOFT.out - 0.64) / 2, Math.PI, -0.22],
   };
   const viewUp = { loft: "lingxiao" };
-  // DEMO for #194, reverted in the next commit: a drawn wall across the summit stair (the drawn floor only), and a written
-  // post across the gate's passage (the old walker only). The walk check in CI must go red on both.
-  { const w = new THREE.Mesh(new THREE.BoxGeometry(8, 2.5, 0.6), M.stone); w.position.set(0, 12, -104); root.add(w); }
-  walk.posts.push({ x0: -4, x1: 4, z0: 39.8, z1: 40.2 });
 
   return { root, walk, shade, paving, hall, halls, buildings, lofts, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
