@@ -51,7 +51,9 @@ const trunkAt = (j, y) => { let lo = 0, hi = 1; const P = new THREE.Vector3(); f
 const footTop = (j) => { const P = j.foot.attributes.position, R = j.ring, pts = []; for (let k = 0; k < R; k++) pts.push([P.getX(k), P.getY(k), P.getZ(k)]);
   const cx = pts.reduce((s, p) => s + p[0], 0) / R, cz = pts.reduce((s, p) => s + p[2], 0) / R, r = pts.reduce((s, p) => s + Math.hypot(p[0] - cx, p[2] - cz), 0) / R; return { y: pts[0][1], r, x: cx, z: cz }; };
 test("at the top of every tree's foot, the foot is the trunk: radius within 1%, centre within 1 cm", () => {
-  assert.ok(everyTree.joints && everyTree.joints.length >= 15, `only ${everyTree.joints ? everyTree.joints.length : 0} feet reported`);
+  // every ginkgo and maple stands on a foot; a cedar's trunk is grown flaring into its roots in one piece and has none
+  assert.ok(everyTree.joints && everyTree.joints.length >= 9, `only ${everyTree.joints ? everyTree.joints.length : 0} feet reported`);
+  assert.equal(everyTree.joints.filter((j) => j.kind === "cedar").length, 0, "a cedar should have no separate foot");
   const wrong = [];
   for (const j of everyTree.joints) { const f = footTop(j), t = trunkAt(j, f.y), dr = Math.abs(f.r / t.r - 1), dc = Math.hypot(f.x - t.x, f.z - t.z);
     if (dr > 0.01 || dc > 0.01) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: radius ${(dr * 100).toFixed(1)}% off, centre ${(dc * 100).toFixed(1)} cm off`); }
@@ -60,8 +62,24 @@ test("at the top of every tree's foot, the foot is the trunk: radius within 1%, 
 test("the trunk is drawn with as many sides as its foot where they meet", () => {
   for (const j of everyTree.joints) assert.equal(j.sides, j.ring, `${j.kind} ${j.h} m: a ${j.sides}-sided trunk on a ${j.ring}-sided foot`);
 });
+// The cedars' wood is grown by three's TreeGenerator (#162): read its skeleton.
+const shaftAt = (c, yy) => { const rings = c.tubes.find((t) => t.level === 0).rings; for (let i = 1; i < rings.length; i++) if (rings[i].pos.y >= yy) { const a = rings[i - 1], b = rings[i], f = (yy - a.pos.y) / (b.pos.y - a.pos.y); return a.radius + (b.radius - a.radius) * f; } return rings[rings.length - 1].radius; };
+const groundOf = (c) => site.cedars.find((t) => t[0] === c.at[0] && t[2] === c.at[1])[1];
 test("a young cedar's trunk is slender: 0.12 to 0.2 m across", () => {
-  for (const j of everyTree.joints.filter((k) => k.kind === "cedar" && k.h < 8)) { const d = 2 * trunkAt(j, j.y + 1.3).r; assert.ok(d >= 0.12 && d <= 0.2, `the ${j.h} m cedar is ${d.toFixed(3)} m across at breast height`); }
+  const young = everyTree.cedars.filter((c) => c.young); assert.ok(young.length >= 2, `only ${young.length} young cedars grown`);
+  for (const c of young) { const d = 2 * shaftAt(c, groundOf(c) + 1.3); assert.ok(d >= 0.12 && d <= 0.2, `the ${c.h} m cedar is ${d.toFixed(3)} m across at breast height`); }
+});
+test("a cedar's trunk swells into its roots in one piece: wider at the ground than at breast height, with no foot drawn to meet it", () => {
+  for (const c of everyTree.cedars) { const y0 = groundOf(c), foot = shaftAt(c, y0 + 0.05), breast = shaftAt(c, y0 + 1.3); assert.ok(foot > breast * 1.15, `the ${c.h} m cedar at ${c.at}: ${foot.toFixed(3)} m at the ground, ${breast.toFixed(3)} m at breast height`); }
+});
+test("at every fork of every cedar the boughs carry 0.8-1.2 of the wood that comes in", () => {
+  let n = 0; const off = [];
+  for (const c of everyTree.cedars) for (const t of c.tubes) if (t.kids && t.kids.length) { n++; const r = t.kids.reduce((a, k) => a + k * k, 0) / (t.base * t.base); if (r < 0.8 || r > 1.2) off.push(`${c.h} m cedar at ${c.at}: ${r.toFixed(2)}`); }
+  assert.ok(n >= 50, `only ${n} forks`); assert.deepEqual(off.slice(0, 6), []);
+});
+test("a cedar grown twice is the same cedar, point for point", () => {
+  const again = createTrees(new THREE.Group(), M, site.trees.filter((t) => !t[5]));
+  for (let i = 0; i < everyTree.cedars.length; i++) { const a = everyTree.cedars[i].geometry.attributes.position.array, b = again.cedars[i].geometry.attributes.position.array; assert.equal(a.length, b.length); assert.ok(a.every((v, k) => v === b[k]), `cedar ${i} differs`); }
 });
 test("a cedar's branches end inside the foliage they carry", () => {
   assert.ok(everyTree.branches && everyTree.branches.length > 50, "no branches reported");

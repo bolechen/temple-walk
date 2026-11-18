@@ -1,0 +1,247 @@
+{
+  "started": "2026-11-18T05:27:18.292Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "forecourt",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "trees": "old",
+      "fps": 40.6,
+      "ms": 24.63,
+      "cost": 12.1,
+      "loadMs": 15824,
+      "tris": 1959432,
+      "calls": 442,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        10.5,
+        60
+      ]
+    },
+    {
+      "view": "forecourt",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 39.2,
+      "ms": 25.51,
+      "cost": 13.77,
+      "loadMs": 9745,
+      "tris": 1983414,
+      "calls": 442,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        10.5,
+        60
+      ]
+    },
+    {
+      "view": "forecourt",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "trees": "old",
+      "fps": 38.6,
+      "ms": 25.91,
+      "cost": 14.99,
+      "loadMs": 10086,
+      "tris": 1959432,
+      "calls": 442,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        10.5,
+        60
+      ]
+    },
+    {
+      "view": "forecourt",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 37.6,
+      "ms": 26.6,
+      "cost": 13.28,
+      "loadMs": 9774,
+      "tris": 1983414,
+      "calls": 442,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        10.5,
+        60
+      ]
+    },
+    {
+      "view": "forecourt",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "trees": "old",
+      "fps": 39.3,
+      "ms": 25.45,
+      "cost": 16.24,
+      "loadMs": 9964,
+      "tris": 1959432,
+      "calls": 442,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        10.5,
+        60
+      ]
+    },
+    {
+      "view": "forecourt",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 37.2,
+      "ms": 26.88,
+      "cost": 16.74,
+      "loadMs": 9702,
+      "tris": 1983414,
+      "calls": 442,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        10.5,
+        60
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "young-summer-old",
+      "file": "young-summer-old.png",
+      "tris": 1600822,
+      "calls": 291
+    },
+    {
+      "name": "young-summer-new",
+      "file": "young-summer-new.png",
+      "tris": 1624804,
+      "calls": 291
+    },
+    {
+      "name": "cedarwide-autumn-old",
+      "file": "cedarwide-autumn-old.png",
+      "tris": 1334564,
+      "calls": 168
+    },
+    {
+      "name": "cedarwide-autumn-new",
+      "file": "cedarwide-autumn-new.png",
+      "tris": 1358546,
+      "calls": 168
+    },
+    {
+      "name": "cedarwide-winter-old",
+      "file": "cedarwide-winter-old.png",
+      "tris": 1322712,
+      "calls": 166
+    },
+    {
+      "name": "cedarwide-winter-new",
+      "file": "cedarwide-winter-new.png",
+      "tris": 1346694,
+      "calls": 166
+    },
+    {
+      "name": "forecourt-winter-old",
+      "file": "forecourt-winter-old.png",
+      "tris": 1947580,
+      "calls": 442
+    },
+    {
+      "name": "forecourt-winter-new",
+      "file": "forecourt-winter-new.png",
+      "tris": 1971562,
+      "calls": 442
+    },
+    {
+      "name": "lookback-autumn-old",
+      "file": "lookback-autumn-old.png",
+      "tris": 971734,
+      "calls": 271
+    },
+    {
+      "name": "lookback-autumn-new",
+      "file": "lookback-autumn-new.png",
+      "tris": 983725,
+      "calls": 271
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "47680b287eb5ba57a04114d9b427e55260c91d4b+dirty",
+    "entry": "assets/index-dFkAW5A6.js",
+    "files": 111,
+    "sha256": "c63867f603035d06090929647ca915eee88620d66ac8a4bea0d5225c41df9a22"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-18T05:31:21.973Z"
+}
