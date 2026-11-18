@@ -41,6 +41,7 @@ import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
+import { poseQuery } from "./src/link.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
 import { planSteps, clearLine } from "./src/route.js";
 import { createDirector, shotPose, placePoint as placePointOf } from "./src/director.js";
@@ -322,6 +323,9 @@ canvas.addEventListener("pointermove", (e) => {
 canvas.addEventListener("wheel", (e) => { zoom(e.deltaY > 0 ? 1.1 : 0.91); e.preventDefault(); }, { passive: false });
 const lift = (e) => { touches.delete(e.pointerId); pinch = 0; };
 canvas.addEventListener("pointercancel", (e) => { lift(e); down = null; });
+// A right-click is the browser's own menu, except in the middle of a look-drag: there is nothing on the canvas it could
+// be for, and it would only interrupt the hand that is turning the view. Let go and it is the browser's again.
+canvas.addEventListener("contextmenu", (e) => { if (down?.moved) e.preventDefault(); });
 const ray = new THREE.Raycaster();
 // Where a tap lands on the ground. The ground is not flat: follow the line of sight outward until it first
 // dips below whatever can be stood on there (a court, a terrace, a flight of steps), then close in on that spot.
@@ -383,17 +387,35 @@ function startDrop() {
   const plan = availableDrop(); if (!plan) return false;
   interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true;
 }
+// Facing the unrailed edge of a platform his jump reaches, from below it (drop.js `findClimb`): the way up.
+function availableClimb() {
+  if (hop || leap || inside || stage || passing || photo.on || !document.body.classList.contains("entered") || ui.covered()) return null;
+  const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
+  return findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+}
 // Space: a child's jump (stride.js). He can be steered in the air and lands on whatever is under him.
 function startJump() {
   if (hop || leap || stage || passing || photo.on || !document.body.classList.contains("entered")) return false;
   if (ui.covered()) return false;
-  // Facing the unrailed edge of a platform his jump reaches, from below it, the jump goes up onto it (drop.js `findClimb`).
-  if (!inside && !leap) {
-    const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
-    const plan = findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
-    if (plan) { interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true; }
-  }
+  const plan = availableClimb();   // from below a low porch's edge, the jump goes up onto it
+  if (plan) { interrupt(); target = null; route = []; hop = { plan, elapsed: 0 }; return true; }
   leap = { y: footY, v: JUMP.speed }; return true;
+}
+// On a touch screen, one faint ring lower right, across from the stick: it jumps, and where a porch's edge is before him it
+// is the way down (下台阶) or up (上台), as Space is on a keyboard. It is made only for a coarse pointer, and the porch's own
+// hop-down chip (#dropBtn) is hidden there: this is that button.
+const jumpButton = hints.coarse ? Object.assign(document.createElement("button"), { id: "jumpBtn", type: "button", hidden: true }) : null;
+if (jumpButton) {
+  document.body.appendChild(jumpButton);
+  // pointerdown, not click: a thumb on the stick and another on this are two touches, and the jump should leave as it lands
+  jumpButton.addEventListener("pointerdown", (e) => { e.preventDefault(); if (!startDrop()) startJump(); });
+  jumpButton.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+function labelJump() {
+  if (!jumpButton) return;
+  const kind = availableDrop() ? "drop" : availableClimb() ? "climb" : "jump";
+  if (jumpButton.dataset.k !== kind) { jumpButton.dataset.k = kind; jumpButton.textContent = kind === "drop" ? tr("下台阶") : kind === "climb" ? tr("上台") : tr("跳"); }
+  jumpButton.hidden = !document.body.classList.contains("entered") || photo.on;
 }
 if (dropButton) { dropButton.innerHTML = hints.coarse ? tr("下台阶") : tr("<kbd>Space</kbd>下台阶"); dropButton.addEventListener("click", startDrop); }
 
@@ -525,6 +547,7 @@ function frame(now) {
   // following camera is what is felt most (《小王子》 smooths it over 0.14 s, its sideways following over 0.06 s).
   eyeY += ((aloft ? footY : walker.eyeAt(pos.x, pos.z)) - eyeY) * (1 - Math.exp(-dt / (view === "third" ? 0.14 : 0.08)));
   if (dropButton) dropButton.hidden = !availableDrop();
+  labelJump();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); }   // how to walk is said once the walk is his
@@ -814,7 +837,19 @@ if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
 window.__lofts = site.lofts;
 window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+// For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
+window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
+// The address of the view he has now, for the console: where he stands and looks, the mood, the hall or balcony he is
+// in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and
+// sends nothing anywhere; everything else in the address (the language, the tier, the parts switched off) is kept, and
+// a tool's `shot` is dropped.
+window.__debugURL = () => {
+  const q = new URLSearchParams(location.search); q.delete("shot");
+  return location.origin + location.pathname + poseQuery("?" + q.toString(), { x: pos.x, z: pos.z, yaw, pitch, view,
+    season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, devpose: true,
+    ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) + location.hash;
+};
 // A named view, without loading the place again: out of any room, then stood where the view stands.
 window.__show = (name) => { const v = site.views[name]; if (!v) return false; if (inside) indoors(null); comeDown(); if (site.viewUp[name]) { upstairs(site.lofts[site.viewUp[name]], [v[0], v[1]], v[2]); pitch = v[3]; return true; } window.__pose(v[0], v[1], v[2], v[3]); return true; };
 window.__up = (id) => (id === undefined ? (upIn ? upIn.id : null) : id ? climbTo(site.lofts[id === true ? "lingxiao" : id]) : climbTo(null));   // go up (from the stair's foot), come down (false), or say where he is
@@ -1048,7 +1083,7 @@ if (Q.has("tour")) tour = createTour(Q.get("tour"), {
 if (DEVPOSE) {
   const { createDevPose } = await import("./src/devpose.js");
   devpose = createDevPose({ where: location, history,
-    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null,
+    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null,
       ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) });   // the written point stands where he stands
   addEventListener("keydown", (e) => {   // C: the address of this view, to the clipboard and the console
     if (e.key.toLowerCase() !== "c" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || ui.modal() || /** @type {Element} */ (e.target)?.tagName === "INPUT") return;
