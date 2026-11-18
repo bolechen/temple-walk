@@ -339,7 +339,7 @@ const scenarios = {
     // with words about this walk only, then the book with what is still to be found.
     await t.page.evaluate(() => window.__music(true));   // the place heard, so that the close's music can be checked
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(() => t.page.isVisible("#breathWord"), 60000, "no breath to follow"); await seal("sit", "sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
     { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
       expect(cu.farBell === 1, "the close should end on the far bell answering");
@@ -389,6 +389,49 @@ const scenarios = {
   // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
   // The close comes once in each season: sat again in the same season the summit is only a seat; after the season is
   // changed, sitting there plays it again, and a book already full is not given its seal a second time.
+  // The breath of sitting on the summit (#156): a ring on the ground and a small word at the foot of the picture, and nothing
+  // laid over his head or chest, from the sitting's own shot, from behind him and from his own eyes, on four screens.
+  breathring: { tier: 2, async run(b, base) {
+    const SIZES = [[960, 540], [800, 600], [390, 844], [844, 390]];
+    const cases = [["third", true], ["third", false], ["first", true]];
+    for (const [view, autocam] of cases) {
+      const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day&seed=4` + BARE, { viewport: { width: 960, height: 540 }, init: `try{localStorage.setItem("yunjing.settings.v1",JSON.stringify({autocam:${autocam}}))}catch{}` });
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 40000, "静坐 was not offered");
+      await t.page.click("#act");
+      await t.until(() => t.page.isVisible("#breathWord"), 90000, "no word for the breath");
+      await t.page.evaluate(() => window.__riteClock(0));   // the observances' clock held: a moment to look at
+      // The breath goes in; the word is at the foot of the picture, the ring is on the ground, and it grows.
+      let prev = -1;
+      for (const [w, h] of SIZES) {
+        await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+        for (const step of [1500, 2500]) {
+          await t.page.evaluate((ms) => window.__riteClock(ms), step); await t.frames(2);
+          // A passage begun on this very step has drawn nothing yet: let it run a little (the clock is the page's, not frames).
+          for (let i = 0; i < 6 && (await t.page.evaluate(() => window.__rites().sit.fill)) === 0; i++) { await t.page.evaluate(() => window.__riteClock(600)); await t.frames(2); }
+          const r = await t.page.evaluate(() => {
+            const P = window.__probe(), box = P.monkBox, out = [];
+            for (const el of document.querySelectorAll("body *")) {
+              if (el.closest("dialog") || el.tagName === "CANVAS" || el.tagName === "SCRIPT" || el.tagName === "STYLE") continue;
+              const cs = getComputedStyle(el), rc = el.getBoundingClientRect();
+              if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity < 0.05 || rc.width < 2 || rc.height < 2) continue;
+              if (!(el.textContent || "").trim() && !el.matches("button,img,svg")) continue;
+              if (el.children.length && !(el.childNodes.length && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()))) continue;
+              out.push({ id: el.id || el.className || el.tagName, x: rc.left, y: rc.top, w: rc.width, h: rc.height });
+            }
+            return { box, out, word: document.getElementById("breathWord").getBoundingClientRect().toJSON(), ring: window.__rites().sit, breathEl: !!document.getElementById("breath"), vh: innerHeight, vw: innerWidth };
+          });
+          expect(!r.breathEl, "a ring is still fixed to the screen");
+          expect(r.ring.ring === true && r.ring.fill > 0, "the ring on the ground is not drawn while he breathes in: " + JSON.stringify(r.ring));
+          expect(r.word.top > r.vh * 0.5 && r.word.left >= 0 && r.word.right <= r.vw, `the word is not at the foot of the picture: ${JSON.stringify(r.word)}`);
+          if (r.box) { const [bx, by, bw, bh] = r.box, top = [bx, by, bw, bh / 2];
+            for (const e of r.out) expect(!(e.x < top[0] + top[2] && e.x + e.w > top[0] && e.y < top[1] + top[3] && e.y + e.h > top[1]), `${view}${autocam ? "" : " (no autocam)"} ${w}x${h}: ${e.id} lies over his head and chest: ${JSON.stringify({ e, box: r.box })}`); }
+          prev = r.ring.fill;
+        }
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   replay: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE);
     const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];

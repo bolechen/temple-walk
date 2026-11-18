@@ -295,7 +295,7 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 #print .row, #book .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
 
 /* ---- The opening (src/opening.js): nothing over the picture while the eye comes down the mountain ---- */
-body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #goal, body.opening #way, body.opening #act, body.opening #hint, body.opening #say, body.opening #moodTag, body.opening #breath, body.opening #stick, body.opening #cross, body.opening #dropBtn, body.opening #prologue { opacity: 0 !important; pointer-events: none; }
+body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #goal, body.opening #way, body.opening #act, body.opening #hint, body.opening #say, body.opening #moodTag, body.opening #breathWord, body.opening #stick, body.opening #cross, body.opening #dropBtn, body.opening #prologue { opacity: 0 !important; pointer-events: none; }
 /* The prologue's title at the gate: written down the page in the brush, to the right of the picture, clear of the
    gate's name board (the middle) and of him (lower left, behind whom the eye stands); it rises and fades by itself. */
 #prologue { position: absolute; z-index: 5; top: max(14vh, calc(env(safe-area-inset-top, 0px) + 64px)); right: max(7vw, calc(env(safe-area-inset-right, 0px) + 20px)); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 1.2vmin;
@@ -419,10 +419,8 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 /* Sideways on a phone the picture and its entry stand side by side again, the entry scrolling in its half. */
 @media (orientation: landscape) and (max-height: 560px) { #piece { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); align-items: stretch; } #piece img { max-height: calc(100dvh - 40px); } }
 
-/* ---- Sitting: breathe with the ring ---- */
-#breath { position: absolute; left: 50%; top: 46%; width: 30vmin; aspect-ratio: 1; margin: -15vmin 0 0 -15vmin; display: grid; place-items: center; pointer-events: none; background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.6) 97%, transparent 99%)) center / 100% 100% no-repeat; opacity: .8; transition: transform 4s ease-in-out, opacity 1s; transform: scale(.55); z-index: 6; }
-#breath[data-phase="in"] { transform: scale(1) rotate(-12deg); } #breath[data-phase="out"] { transform: scale(.55); transition-duration: 5s, 1s; }
-#breathWord { font: 400 5vmin/1 var(--kai); color: var(--on); text-shadow: var(--lift); }
+/* ---- Sitting: the ring is on the ground (rites.js); the word for the breath is a small line at the foot of the picture, above the hint, never over him ---- */
+#breathWord { position: absolute; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); text-align: center; font: 400 var(--t-m)/1.6 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); pointer-events: none; z-index: 6; }
 body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #say, body:not(.entered) .rail, body:not(.entered) #goal, body:not(.entered) #hint, body:not(.entered) #moodTag { display: none; }
 
 /* ---- The card of keys ---- */
@@ -540,7 +538,7 @@ body.photo #keys, body.photo #stick, body.photo #jumpBtn, body.bare #jumpBtn, bo
 #wait.on { opacity: .7; }
 
 /* The close of the chapter (game.js `finale`): nothing on the picture but the words. */
-body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal, body.ending #way, body.ending #act, body.ending #hint, body.ending #say, body.ending #moodTag, body.ending #breath, body.ending #stick, body.ending #cross { opacity: 0 !important; pointer-events: none; }
+body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal, body.ending #way, body.ending #act, body.ending #hint, body.ending #say, body.ending #moodTag, body.ending #breathWord, body.ending #stick, body.ending #cross { opacity: 0 !important; pointer-events: none; }
 #ending { position: absolute; inset: 0; z-index: 6; display: grid; place-items: end center; cursor: pointer; background: linear-gradient(to top, rgba(0,0,0,.42), rgba(0,0,0,0) 46%); }
 #ending[hidden] { display: none !important; }
 #endingLine { margin: 0 24px calc(15vh + env(safe-area-inset-bottom, 0px)); max-width: 30em; text-align: center; font: 400 clamp(21px, 3.6vmin, 32px)/1.7 var(--kai, serif); letter-spacing: .12em; color: var(--paper, #f3ecdc); text-shadow: 0 2px 14px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.6); opacity: 0; transform: translateY(8px); transition: opacity 1.1s ease, transform 1.1s ease; }

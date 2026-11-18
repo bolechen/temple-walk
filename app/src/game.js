@@ -124,8 +124,8 @@ export function createGame(y) {
   // The incense burns for five minutes by the wall clock (`?burn=` seconds for a test), and when it was set in the ash is
   // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
   const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
-  const rites = createRites(y, fast, { burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
-  const end = () => { rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breath")?.setAttribute("hidden", ""); };
+  const rites = createRites(y, fast, { enso: tex, burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
+  const end = () => { rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breathWord")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
@@ -158,8 +158,10 @@ export function createGame(y) {
     else if (id === "well") { say(t(d.line), 6); if (!(await rites.watchWell(on, () => drop()))) return; }
     else if (id === "lamp") { if (!(await rites.lightLamp(on, () => { mine.visible = true; say(t(d.line), 5); }))) return; }
     else if (id === "sit") {
-      const b = $("breath"); b?.removeAttribute("hidden");
-      for (let i = 0; i < 3; i++) { if (b) { b.dataset.phase = "in"; $("breathWord").textContent = t("吸"); } if (!(await rites.breathe(1, 4, on))) return; if (b) { b.dataset.phase = "out"; $("breathWord").textContent = t("呼"); } if (!(await rites.breathe(-1, 5, on, i === 2 && closedHere()))) return; }
+      // The ring on the ground (rites.js) breathes with him; the word for it is a small line at the foot of the picture.
+      const b = $("breathWord"); b?.removeAttribute("hidden");
+      const word = (w) => { if (b) b.textContent = w; };
+      for (let i = 0; i < 3; i++) { word(t("吸")); if (!(await rites.breathe(1, 4, on))) return; word(t("呼")); if (!(await rites.breathe(-1, 5, on, i === 2 && closedHere()))) return; }
       b?.setAttribute("hidden", ""); say(t(d.line), 6);
     } else if (id === "sutra") {
       await wait(1.6); if (!on()) return;
