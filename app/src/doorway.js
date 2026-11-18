@@ -154,10 +154,13 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
       renderer.setRenderTarget(o.col, 0); jobs.push(renderer.compileAsync(o.r.group, o.cam.children[0], scene));
       if (!deepReady) {
         const probe = new THREE.Scene(), g = new THREE.BoxGeometry(); probe.add(new THREE.Mesh(g, dm), new THREE.InstancedMesh(g, dm, 1));
-        renderer.setRenderTarget(o.dist, 0); deepReady = renderer.compileAsync(probe, o.dcam.children[0]);
+        renderer.setRenderTarget(o.dist, 0); deepReady = renderer.compileAsync(probe, o.dcam.children[0], scene);   // with the room's lights, which are part of every program's key
       }
       jobs.push(deepReady);
     } catch { /* compiled on first drawing instead */ } finally { renderer.setRenderTarget(target); undress(); }
+    // And the pictures its materials wear (the figures' packed textures above all) are sent to the card one a frame.
+    const seen = new Set(); o.r.group.traverse((m) => { for (const mat of [].concat(m.material || [])) for (const v of Object.values(mat)) if (v && v.isTexture && !v.isRenderTargetTexture) seen.add(v); });
+    o.uploads = [...seen];
     return Promise.all(jobs).catch(() => {});
   };
   const face = (o, i) => {
@@ -202,7 +205,8 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
       queue.sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door)); busy = { o: queue.shift(), i: 0, wait: true }; cubes(busy.o);
       const b = busy; (b.o.compiled ? Promise.resolve() : prepare(b.o)).then(() => { b.o.compiled = true; b.wait = false; });
     }
-    if (busy && !busy.wait) {
+    if (busy && !busy.wait && busy.o.uploads?.length) { const tex = busy.o.uploads.shift(); try { renderer.initTexture(tex); } catch { /* sent when first drawn */ } }
+    else if (busy && !busy.wait) {
       const t0 = performance.now(); face(busy.o, busy.i++); if (sync) renderer.getContext().finish(); const ms = performance.now() - t0; worst = Math.max(worst, ms); faces.push(+ms.toFixed(1)); if (faces.length > 24) faces.shift();   // `sync`: with the card made to finish it (?doorsync)
       if (busy.i === 12) { busy.o.taken++; busy = null; }
     }
