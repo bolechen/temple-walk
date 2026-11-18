@@ -9,6 +9,8 @@ import { makePlaque } from "./plaque.js";
 export const DOOR = Object.freeze({ reach: BODY + 0.02, half: 1.0 - BODY - 0.01 });
 // How far out from the column line the eave purlin lies, on the last arm of the bracket sets.
 export const PURLIN = 0.88;
+// How far out from the column line the slanting arm of a bracket set shows its beak (for a cai of 0.21): the end of a box 1.5 long, leaning 0.4, centred 0.6 out.
+export const BEAK = 0.6 + 0.75 * Math.cos(0.4) + 0.065 * Math.sin(0.4);
 // A balcony under an upper storey: how tall its bracket sets stand, how far they step out, how tall the board hung
 // round its edge is (two timbers), and what the plate under the sets and the floor over them add to the height.
 export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, floor: 0.58, lift: 1.2 });   // (lift: sets and floor at the 0.21 grade, which a balcony walked round on the ring below keeps)
@@ -502,12 +504,15 @@ export function buildHall(M, opts) {
   }
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
-    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq), zz = Z + (p.brackets ? 1.3 : 0.45);
+    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq);
+    // Outside the slanting arm's beak, the farthest any timber of a set reaches (BEAK, drawn for a cai of 0.21 and scaled with the
+    // frame), with the board's foot swung back by its lean and a finger of air: not through the beak, which lay over the writing (#213).
+    const lean = pq.vertical ? 0.3 : 0.2, zz = Z + (p.brackets ? Math.max(1.3, BEAK * K + (m.userData.height / 2) * Math.sin(lean) + 0.04 + 0.06) : 0.45);
     let top = Math.min(PLATE_TOP + 0.52, underside(p.overhang - (zz - Z)) - m.userData.height / 2 - 0.08) + m.userData.height / 2;
     // Over a balcony that is walked round the board hangs over the walk: it is cut smaller, so that its foot is a
     // grown man's height over the floor and a child at the door looks out under it, not into it.
     if (p.loft && top - m.userData.height < p.platH + 2.0) { const k = Math.max(0.5, (top - p.platH - 2.0) / m.userData.height); m.scale.setScalar(k); m.userData.height *= k; }
-    m.position.set(0, top - m.userData.height / 2, zz); m.rotation.x = pq.vertical ? 0.3 : 0.2;   // its foot on the beam, its head leaning out to be read from below
+    m.position.set(0, top - m.userData.height / 2, zz); m.rotation.x = lean;   // its foot on the beam, its head leaning out to be read from below
     g.add(m);
   }
 
