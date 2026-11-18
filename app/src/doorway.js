@@ -184,7 +184,9 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
     o.r.stand().catch(() => {}).then(() => { if (!queue.includes(o)) queue.push(o); });
   };
   // Every frame from outside: who is near or seen, the next face of the hall being taken, and the fading in.
-  const tick = (camera, dt, eye) => {
+  // `still`: false while the eye is being swung (an observance's shot, the opening, the close): no face is drawn then,
+  // so that no frame of a swing is held up.
+  const tick = (camera, dt, eye, still = true) => {
     if (camera) { camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)); }
     for (const o of Object.values(halls)) {
       if (!o.want) {
@@ -201,7 +203,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
       const out = held.filter((x) => busy?.o !== x && eye.distanceTo(x.door) > NEAR).sort((a, b) => eye.distanceTo(b.door) - eye.distanceTo(a.door))[0];
       if (out) drop(out);
     }
-    if (!ready) return;
+    if (!ready || !still) return;
     if (!busy && queue.length) {
       queue.sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door)); busy = { o: queue.shift(), i: 0, wait: true }; cubes(busy.o);
       const b = busy; (b.o.compiled ? Promise.resolve() : prepare(b.o)).then(() => { b.o.compiled = true; b.wait = false; });

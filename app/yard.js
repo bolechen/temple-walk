@@ -650,7 +650,7 @@ function frame(now) {
   // approach where the eye is under it. A jump does not change which of these he is in.
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
-  if (doors && !inside && document.body.dataset.ready) doors.tick(camera, dt, camera.position);   // not before the page is up: a phone's first load is long already   // the rooms seen through the doors (doorway.js), before the mirror that shows them
+  if (doors && !inside && document.body.dataset.ready) doors.tick(camera, dt, camera.position, !cine && !opening.active() && !/^(in|out)$/.test(director.state().phase));   // not before the page is up: a phone's first load is long already   // the rooms seen through the doors (doorway.js), before the mirror that shows them
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);
