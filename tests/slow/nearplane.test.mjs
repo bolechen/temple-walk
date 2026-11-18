@@ -15,10 +15,13 @@ import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
 import { followEye, createFollow } from "../../app/src/eye.js";
 import { FOV_RANGE } from "../../app/src/settings.js";
 import { ROUTE } from "../../app/src/tour.js";
+import { censerGeometry } from "../../app/src/censer.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });   // both faces: from inside a wall its back faces are what would show
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
 const site = buildSite(M), walker = createWalker(site);
+// The censer on the axis of the first court is drawn by props.js (censer.js), not by the plan: stood in with the rest.
+site.root.add(new THREE.Mesh(censerGeometry().translate(site.censer.x, site.censer.y, site.censer.z), named("censer")));
 site.root.updateMatrixWorld(true);
 const meshes = []; site.root.traverse((o) => { if (o.isMesh && o.visible && !o.userData.soft && !o.material.transparent) { o.geometry.computeBoundingBox(); meshes.push({ o, box: o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld) }); } });
 const NEAR = 0.1, EYE = 1.3, dt = 1 / 60;   // yard.js: PerspectiveCamera(…, 0.1, 800); a child's eye at 1.3 m
@@ -56,7 +59,12 @@ const T = LEVELS;
 const routes = {
   "the measured route, bamboo to the first court": ROUTE,
   "round the first court, close past the bell and drum towers": [[-10.8, 19], [10.8, 19], [10.8, 6], [-10.8, 6], [-10.8, 19]],
-  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 12], [0, -4.5]],
+  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
+  // close round the censer, a step off its belly, all the way round
+  "round the censer": [...Array(17)].map((_, i) => [site.censer.x + Math.sin(i * Math.PI / 4) * 1.05, site.censer.z + Math.cos(i * Math.PI / 4) * 1.05]),
+  "round the censer the other way, it on his right": [...Array(17)].map((_, i) => [site.censer.x - Math.sin(i * Math.PI / 4) * 1.05, site.censer.z + Math.cos(i * Math.PI / 4) * 1.05]),
+  // and walking away from it, the eye that follows him backing toward it
+  "away from the censer, north and then south": [[site.censer.x, site.censer.z - 1.0], [site.censer.x, site.censer.z - 5], [site.censer.x + 1.2, site.censer.z], [site.censer.x, site.censer.z + 1.0], [site.censer.x, site.censer.z + 6]],
   "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]],
 };
 // Along each hall's porch from end to end, at the depth nearest its columns that still lets him by (edges.test.mjs finds the same run).

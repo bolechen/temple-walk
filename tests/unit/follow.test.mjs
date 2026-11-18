@@ -48,7 +48,8 @@ const T = LEVELS;
 const routes = {
   "the measured route, bamboo to the first court": ROUTE,
   "round the first court, close past the bell and drum towers": [[-10.8, 19], [10.8, 19], [10.8, 6], [-10.8, 6], [-10.8, 19]],
-  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 12], [0, -4.5]],
+  // (round the censer, which stands on the axis, close by its east side: the eye behind him must not pass into it)
+  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
   "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]],
 };
 // A walking pace is 0.035 m a frame. The eye may add to that, turning and settling, but not leap: 0.15 m a frame is

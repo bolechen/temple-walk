@@ -24,6 +24,7 @@ const { CHEEK, stairProfile } = await import("../app/src/geo.js");
 const { createMonk } = await import("../app/src/monk.js");
 const { dressed } = await import("../tests/unit/novice-glb.mjs");   // the sculpted body he wears in the page, read from the file
 const { createTrees } = await import("../app/src/trees.js");
+const { censerGeometry } = await import("../app/src/censer.js");
 
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
 const TOL = +arg("tol", 0.01), TOP = +arg("top", 12), OUT = arg("json", "tools/out/edge-audit/sweep.json");
@@ -200,6 +201,8 @@ export function sweep({ tol = TOL } = {}) {
   // leaves are not: he may brush through a spray of maple).
   const grove = new THREE.Scene(); createTrees(grove, M, site.trees.filter((t) => !t[5]), {}); grove.updateMatrixWorld(true);
   const built = new THREE.Group(); built.add(site.root); grove.traverse((o) => { if (o.isMesh && o.material?.name !== "bark") o.visible = false; }); built.add(grove);
+  // And the censer on the axis of the first court, which props.js draws (censer.js), not the plan.
+  { const c = new THREE.Mesh(censerGeometry().translate(site.censer.x, site.censer.y, site.censer.z), new THREE.MeshBasicMaterial({ name: "censer" })); built.add(c); }
   built.traverse((o) => {
     if (!o.isMesh || !o.visible || o.userData.soft) return;
     const mat = Array.isArray(o.material) ? o.material[0] : o.material, name = mat?.name || o.name || "?";
