@@ -26,7 +26,7 @@ export function createDrift(scene, count, trees = []) {
   g.setAttribute("seed", new THREE.BufferAttribute(seed, 4));
   const u = { uT: { value: 0 }, uCam: { value: new THREE.Vector3() }, uCol: { value: new THREE.Color() }, uSize: { value: 0 }, uFall: { value: 0 }, uSway: { value: 0 }, uOp: { value: 0 }, uGlow: { value: 0 }, uPx: { value: 800 }, uLight: { value: new THREE.Color(1, 1, 1) },
     uCol2: { value: new THREE.Color() }, uCol3: { value: new THREE.Color() }, uPart: { value: 1 }, uNear: { value: 1 }, uPoint: { value: 0 },
-    tFall: { value: null }, uSrc: { value: new THREE.Vector4() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, tShelter: U.tShelter, uShelter: U.uShelter };
+    tFall: { value: null }, uSrc: { value: new THREE.Vector4() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, tShelter: U.tShelter, uShelter: U.uShelter, uWindPath: U.uWindPath };
   const maps = {};   // one source map for each kind that has trees to fall from, baked when first wanted
   const one = new THREE.DataTexture(new Uint8Array([255]), 1, 1, THREE.RedFormat); one.needsUpdate = true;
   const mat = new THREE.ShaderMaterial({
@@ -34,10 +34,11 @@ export function createDrift(scene, count, trees = []) {
     vertexShader: /* glsl */`
       ${SHELTER}
       uniform sampler2D tFall; uniform vec4 uSrc; uniform float uFromTrees, uBoost;
-      attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; varying float vA; varying float vS; varying float vH;
+      attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; uniform vec2 uWindPath; varying float vA; varying float vS; varying float vH;
       void main(){
         vec3 B=vec3(34.,13.,34.), p=seed.xyz*B;
         p.y-=uT*uFall*(.6+.8*seed.w); p.x+=sin(uT*.7+seed.w*40.)*uSway; p.z+=cos(uT*.53+seed.w*31.)*uSway*.7;
+        p.xz+=uWindPath*(.45+.3*seed.w)*step(0.,uFall);   // carried off by the breeze (wind.js), as the censer's smoke leans; not the fireflies
         p=mod(p-uCam+B*.5,B)-B*.5+uCam; p.y+=3.5;
         // Where it may be seen: near the trees it comes from (none a dozen metres off) and never under a roof.
         vec2 fuv=(p.xz-uSrc.xy)*uSrc.zw; float d=mix(1.,texture2D(tFall,fuv).r*uBoost*step(0.,min(fuv.x,fuv.y))*step(max(fuv.x,fuv.y),1.),uFromTrees)*(1.-shelter(p));

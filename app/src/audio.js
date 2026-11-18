@@ -5,6 +5,7 @@
 import { createPlayer, createVoices, reverb, bell, hillEcho } from "./instruments.js";
 import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePhrase, rng } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
+import { gust as windGust } from "./wind.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
 const STEP_WET = { out: 0.07, in: 0.4 };   // how much of a step goes to the court's reverb outdoors, the hall's indoors
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
@@ -370,7 +371,7 @@ export function startAmbience(place) {
     const p = place(), now = ctx.currentTime, g = p.grove, a = ambient; a.t += 0.25;
     room(p.zone === "hall");
     // Gusts: two slow waves that sometimes meet.
-    const gust = 0.5 + 0.3 * Math.sin(a.t * 0.11) + 0.2 * Math.sin(a.t * 0.043 + 1.7);
+    const gust = windGust(a.t);   // the same gusts the smoke leans with (wind.js)
     // Deep in the bamboo the wind is the floor of the sound, not its loudest part: about 5 dB under what it was, so
     // that the music and his steps are heard over it there (2026-11-16); in the first court (g 0.12) it is unchanged.
     low.gain.setTargetAtTime(0.5 * gust * (0.41 + 0.15 * g), now, 0.8);

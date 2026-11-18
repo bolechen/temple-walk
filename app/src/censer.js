@@ -18,9 +18,10 @@ import { merge } from "./geo.js";
 export const CAST = Object.freeze({ date: "萬曆歲次戊午季春吉旦", right: "帶月吐青霓", left: "和雲飛彩鳳" });
 
 // The turned body, as (radius, height) from the foot up: belly, neck, lip and the flange the pavilion stands on, and
-// inside the lip the bed of ash, a little under the flange.
+// inside the lip the bed of ash, a centimetre under the flange, so that it is seen through the windows from a little way off.
 const BODY = [[0, 0.47], [0.2, 0.475], [0.36, 0.54], [0.48, 0.67], [0.545, 0.84], [0.56, 0.99], [0.545, 1.12], [0.49, 1.23], [0.4, 1.3], [0.36, 1.33],
-  [0.355, 1.4], [0.4, 1.405], [0.405, 1.47], [0.4, 1.53], [0.44, 1.535], [0.445, 1.575], [0.42, 1.585], [0.32, 1.585], [0.31, 1.5], [0, 1.5]];
+  [0.355, 1.4], [0.4, 1.405], [0.405, 1.47], [0.4, 1.53], [0.44, 1.535], [0.445, 1.575], [0.42, 1.585], [0.32, 1.585], [0.315, 1.572]];
+const ASH = [[0.315, 1.572], [0.2, 1.578], [0.08, 1.582], [0, 1.583]];
 const LEG = [[0, 0], [0.12, 0], [0.125, 0.035], [0.095, 0.075], [0.07, 0.13], [0.085, 0.2], [0.11, 0.27], [0.105, 0.34], [0.075, 0.41], [0.08, 0.46], [0.11, 0.52], [0, 0.56]];
 // The two storeys of the pavilion: the circle the posts stand on, the floor and the head of the posts.
 const STOREYS = [{ r: 0.375, y0: 1.585, y1: 1.85, windows: 4 }, { r: 0.29, y0: 2.13, y1: 2.375, windows: 4 }];
@@ -35,13 +36,20 @@ export const CENSER = Object.freeze({
   belly: 0.56,                  // its widest, below the ears
   reach: 0.57,                  // how far anything of it reaches from its axis below 1.3 m: what he must keep off
   ears: 0.69,                   // and the ears' reach, higher up
-  windowY: [STOREYS[0].y0, STOREYS[0].y1], ash: 1.5,
+  windowY: [STOREYS[0].y0, STOREYS[0].y1], ash: 1.58, ashR: 0.315,
   legs: [0, 1, 2].map((i) => { const a = (i / 3) * Math.PI * 2; return [Math.sin(a) * 0.36, Math.cos(a) * 0.36]; }),
 });
 
 const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
-// Everything but the cast lettering reads -1 in its texture coordinates, which the material takes as plain iron.
-const plainUV = (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, -1, -1); return g; };
+// What each part is made of is written in the first texture coordinate, which the material reads (`censerMaterial`):
+// the cast lettering is 0..1 into its picture; the iron -1; the ash -1.25; a stick of incense -2 less 0.9 of its place
+// among the sticks (the first to be lit are the last to go out), the second coordinate how far up the stick; the red
+// stubs of burnt sticks -3.25; a fallen leaf -4.25 and a petal -5.25, the second coordinate its tone.
+const KIND = { iron: -1, ash: -1.25, stub: -3.25, leaf: -4.25, petal: -5.25 };
+const markUV = (g, u, v = null) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, u, v ?? uv.getY(i)); return g; };
+const plainUV = (g) => markUV(g, KIND.iron, -1);
+// A seeded draw, so that the incense and the leaves lie the same on every load.
+const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 // The letters are laid out on one picture: the date down the first third, the two lines of the couplet down the top
 // half of the second and third.
 const CELLS = { date: [0, 10], right: [1, 5], left: [2, 5] };
@@ -84,7 +92,7 @@ function storey({ r, y0, y1, windows }, first) {
     list.push(...plate(r, a + da, y0 + 0.03, y1 - 0.035, 0.06, left ? "left" : null));
     // across the window: a low sill and a lintel with a fret hanging from it
     const w0 = a + da + 0.03 / r, w1 = a + step - da - 0.03 / r, mid = (w0 + w1) / 2;
-    list.push(...arcBand(r, 0.02, y0 + 0.03, y0 + 0.075, w0, w1), ...arcBand(r, 0.02, y1 - 0.09, y1 - 0.035, w0, w1));
+    list.push(...arcBand(r, 0.02, y0 + 0.03, y0 + 0.05, w0, w1), ...arcBand(r, 0.02, y1 - 0.09, y1 - 0.035, w0, w1));   // a low sill: the ash is seen over it
     for (const s of [-1, 1]) list.push(plainUV(new THREE.BoxGeometry(0.018, 0.05, 0.02).rotateY(mid + s * 0.18).translate(Math.sin(mid + s * 0.18) * r, y1 - 0.115, Math.cos(mid + s * 0.18) * r)));
     list.push(plainUV(new THREE.BoxGeometry(0.11, 0.016, 0.02).rotateY(mid).translate(Math.sin(mid) * r, y1 - 0.14, Math.cos(mid) * r)));
   }
@@ -122,12 +130,41 @@ function dateStrip() {
   return g;
 }
 
+// The incense in the ash: sticks put in through the windows and burnt down to different lengths, each with its glowing
+// end, and among them the red stubs of the ones burnt out.
+export const STICKS = 26;
+function incense() {
+  const list = [], r = rng(217), y = CENSER.ash;
+  const ranks = [...Array(STICKS).keys()].map(() => r()).sort((a, b) => a - b);   // which are still burning, as fewer are
+  for (let i = 0; i < STICKS; i++) {
+    const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 0.26, h = 0.1 + r() * 0.24, tx = (r() - 0.5) * 0.12, tz = (r() - 0.5) * 0.12;
+    const g = new THREE.BoxGeometry(0.0045, h, 0.0045, 1, 4, 1).translate(0, h / 2, 0), uv = g.attributes.uv, p = g.attributes.position;
+    for (let k = 0; k < uv.count; k++) uv.setXY(k, -2 - ranks[i] * 0.9, p.getY(k) / h);
+    list.push(g.rotateX(tz).rotateZ(tx).translate(Math.sin(a) * d, y - 0.02, Math.cos(a) * d));
+  }
+  for (let i = 0; i < 46; i++) {
+    const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 0.28, h = 0.02 + r() * 0.05;
+    list.push(markUV(new THREE.BoxGeometry(0.004, h, 0.004).translate(0, h / 2, 0).rotateX((r() - 0.5) * 0.3).rotateZ((r() - 0.5) * 0.3).translate(Math.sin(a) * d, y - 0.015, Math.cos(a) * d), KIND.stub, r()));
+  }
+  return list;
+}
+// Leaves in autumn and petals in spring, a few on the flange and the ash and at its feet (the material shows only
+// those of the season): blown in from the court's maples and the plum by the wall.
+function fallen() {
+  const list = [], r = rng(1618);
+  const lie = (kind, w, l, x, y, z) => list.push(markUV(new THREE.CircleGeometry(0.5, kind === KIND.leaf ? 5 : 7).scale(w, l, 1).rotateX(-Math.PI / 2 + (r() - 0.5) * 0.25).rotateY(r() * Math.PI * 2).translate(x, y, z), kind, r()));
+  for (let i = 0; i < 7; i++) { const a = r() * Math.PI * 2, rim = i < 3, d = rim ? 0.43 : 0.42 + r() * 0.08; /* at its feet: under the belly, where he does not tread */ lie(KIND.leaf, 0.05, 0.075, Math.sin(a) * d, rim ? 1.587 : 0.004, Math.cos(a) * d); }
+  for (let i = 0; i < 2; i++) { const a = r() * Math.PI * 2, d = r() * 0.22; lie(KIND.leaf, 0.05, 0.075, Math.sin(a) * d, CENSER.ash + 0.004, Math.cos(a) * d); }
+  for (let i = 0; i < 9; i++) { const a = r() * Math.PI * 2, d = i < 4 ? r() * 0.25 : 0.43; lie(KIND.petal, 0.022, 0.026, Math.sin(a) * d, (i < 4 ? CENSER.ash : 1.586) + 0.003, Math.cos(a) * d); }
+  return list;
+}
+
 // The whole censer as one geometry, at its own origin.
 export function censerGeometry() {
   const list = [lathe(BODY, 40), lathe(EAVE, 40), lathe(CAP, 40)].map(plainUV);
   for (const [x, z] of CENSER.legs) list.push(plainUV(lathe(LEG, 12).translate(x, 0, z)));
   STOREYS.forEach((s, i) => list.push(...storey(s, i === 0)));
-  list.push(ear(1), ear(-1), dateStrip());
+  list.push(ear(1), ear(-1), dateStrip(), markUV(lathe(ASH, 32), KIND.ash, 0), ...incense(), ...fallen());
   return merge(list);
 }
 
@@ -150,16 +187,121 @@ export function castTexture() {
 }
 
 // Iron four hundred years out of doors: rust over black, the rust thickest on what faces the weather, the black kept
-// in the hollows; the letters stand up from their plates and are rubbed a little brighter at their edges.
-export function censerMaterial(procMat, tex) {
+// in the hollows; the letters stand up from their plates and are rubbed a little brighter at their edges. After rain
+// it is dark and glistening. The ash is pale grey, pitted where sticks have stood, darker wet; the sticks are brown
+// with red stems and a glowing end, which at night lights the ash and the inside of the lip round it. Snow lies on
+// the eaves and the cap only: the body and the mouth are warm from what burns in it.
+export function censerMaterial(procMat, tex, at = new THREE.Vector3()) {
+  const u = { tCast: { value: tex || BLANK }, uAt: { value: at }, uIncense: { value: 0.6 }, uEmber: { value: 0 }, uSeasonK: { value: new THREE.Vector2() }, uWet: { value: 0 } };
   const m = procMat("censer", { roughness: 0.8, metalness: 0.4, envMapIntensity: 0.45 }, `
-      float r=smoothstep(.25,.7,fbm3(vWP*5.)+.25*vWN.y), pit=n3(vWP*48.);
-      col=mix(vec3(.05,.04,.035),vec3(.2,.085,.04),r); col=mix(col,vec3(.11,.05,.03),smoothstep(.6,.9,fbm3(vWP*1.7+3.))*.5);
-      col*=.75+.45*pit; rough_=mix(.6,.95,r); bump_=fbm3(vWP*30.)*.003+pit*.0015;
-      if(vUv2.x>=0.){ float g=texture2D(tCast,vUv2).r, e=fwidth(g); col=mix(col*.8,col*1.35+vec3(.04,.02,.01),g); bump_+=g*.004; rough_=mix(rough_,.55,g*(1.-e)); }`);
+      vec3 lp=vWP-uAt; float lr=length(lp.xz), kind=vUv2.x, wet=smoothstep(.55,1.,uWet);
+      if(kind>=0.||kind>-1.1){
+        float r=smoothstep(.25,.7,fbm3(vWP*5.)+.25*vWN.y), pit=n3(vWP*48.);
+        col=mix(vec3(.05,.04,.035),vec3(.2,.085,.04),r); col=mix(col,vec3(.11,.05,.03),smoothstep(.6,.9,fbm3(vWP*1.7+3.))*.5);
+        col*=.75+.45*pit; rough_=mix(.6,.95,r); bump_=fbm3(vWP*30.)*.003+pit*.0015;
+        if(kind>=0.){ float g=texture2D(tCast,vUv2).r, e=fwidth(g); col=mix(col*.8,col*1.35+vec3(.04,.02,.01),g); bump_+=g*.004; rough_=mix(rough_,.55,g*(1.-e)); }
+        float wf=wet*(.55+.45*smoothstep(-.4,.6,vWN.y)); col*=1.-.42*wf; rough_=mix(rough_,.22,wf*.85);
+        // the inside of the lip and the posts round the ash, lit from below by what burns
+        float near=smoothstep(.5,.3,lr)*smoothstep(1.95,1.62,lp.y)*smoothstep(1.5,1.6,lp.y);
+        emit_+=vec3(1.,.36,.1)*uEmber*near*.5*smoothstep(.1,-.6,dot(normalize(vec3(lp.x,0.,lp.z)+1e-4),vWN))*smoothstep(.4,-.2,vWN.y);   // what faces in toward the fire
+      } else if(kind>-1.5){
+        float g=fbm3(vWP*14.), hole=smoothstep(.7,.82,n3(vWP*90.));
+        col=vec3(.42,.4,.37)*(.82+.3*g)*(1.-.55*hole)*(1.-.45*wet); metal_=0.; rough_=mix(.95,.6,wet); bump_=g*.004-hole*.002;
+        emit_+=vec3(1.,.38,.12)*uEmber*(.12+.9*smoothstep(.1,.0,length(lp.xz-vec2(.08,.05)))+.7*smoothstep(.08,.0,length(lp.xz-vec2(-.1,-.07))))*(.6+.4*g);   // two or three ends burning down into the ash
+      } else if(kind>-3.){
+        float rank=(-kind-2.)/.9, up=vUv2.y; if(rank>uIncense) discard;
+        col=mix(vec3(.38,.05,.035),vec3(.26,.15,.08),step(.2,up)); metal_=0.; rough_=.8;
+        float tip=smoothstep(.93,.99,up); col=mix(col,vec3(.35,.33,.3),tip*.7);
+        emit_+=vec3(1.,.32,.07)*tip*(1.5+6.*uEmber)*(.85+.15*sin(uT*3.+rank*40.));
+      } else if(kind>-3.5){
+        col=mix(vec3(.4,.05,.04),vec3(.28,.26,.24),smoothstep(.85,1.,vWN.y)*.6); metal_=0.; rough_=.8;
+      } else if(kind>-4.5){
+        if(uSeasonK.x<.5) discard; float t=vUv2.y; col=mix(vec3(.3,.07,.03),vec3(.36,.25,.05),step(.55,t))*(.7+.4*t); col*=1.-.4*wet; metal_=0.; rough_=.75;
+      } else {
+        if(uSeasonK.y<.5) discard; col=mix(vec3(.7,.6,.6),vec3(.74,.7,.68),vUv2.y); metal_=0.; rough_=.6;
+      }
+      if(uSnow>.001){ float sn_=uSnow*smoothstep(1.88,1.93,lp.y)*smoothstep(.35,.75,vWN.y)*smoothstep(.2,.5,fbm3(vWP*3.)+.3);
+        col=mix(col,vec3(.82,.86,.92),sn_); rough_=mix(rough_,.85,sn_); metal_*=1.-sn_; emit_+=vec3(.82,.86,.92)*uAmb*.2*sn_; }`, { snow: false });
   const own = m.onBeforeCompile;
-  m.onBeforeCompile = (sh, r) => { own(sh, r); sh.uniforms.tCast = { value: tex || BLANK }; sh.fragmentShader = sh.fragmentShader.replace("uniform float uSnow, uLamp, uT;", "uniform sampler2D tCast; uniform float uSnow, uLamp, uT;"); };
+  m.onBeforeCompile = (sh, r) => {
+    own(sh, r); Object.assign(sh.uniforms, u);
+    sh.fragmentShader = sh.fragmentShader
+      .replace("uniform float uSnow, uLamp, uT;", "uniform sampler2D tCast; uniform vec3 uAt; uniform vec2 uSeasonK; uniform float uIncense, uEmber, uWet, uSnow, uLamp, uT;")
+      .replace("float rough_=roughness,", "float metal_=metalness; float rough_=roughness,")
+      .replace("#include <metalnessmap_fragment>", "float metalnessFactor=metal_;");
+  };
+  // What the season and the hour do to it (mood.js): how much incense is burning, whether its ends glow in the dark,
+  // the leaves or petals of the season, and the wet after rain.
+  m.userData.setMood = (md) => {
+    u.uIncense.value = md.incense ?? 0.6; u.uEmber.value = md.time === "night" ? 1 : md.time === "dusk" ? 0.35 : 0;
+    u.uSeasonK.value.set(md.season === "autumn" ? 1 : 0, md.season === "spring" ? 1 : 0); u.uWet.value = md.wet ?? 0;
+  };
+  m.userData.state = () => ({ incense: u.uIncense.value, ember: u.uEmber.value, leaves: u.uSeasonK.value.x, petals: u.uSeasonK.value.y, wet: u.uWet.value });
+  m.customProgramCacheKey = () => "censer2";
   return m;
 }
 const BLANK = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
 BLANK.needsUpdate = true;
+
+// The smoke: a few thin threads out of the windows, one from each, that lean out past the eaves, rise, waver, and
+// above a man's height thicken, run together and drift off with the breeze (wind.js), thinning as they go. Each is a
+// ribbon turned to the eye in the vertex shader, its edge and its streaks worked out in the fragment shader as the air
+// carries them up, so that nothing in it can be counted. One draw for all of them.
+export const SMOKE = Object.freeze({ threads: 6, segs: 28, rise: 2.6, lean: 0.55 });
+// Where a thread is, `a` of the way up (0..1), for a breeze `wind` [x, z] in m/s: the same sums as the vertex shader.
+export function smokeAt(i, a, wind, t = 0) {
+  const top = i >= 4, w = (i % 4) * Math.PI / 2 + (top ? Math.PI / 4 : 0), st = STOREYS[top ? 1 : 0], r0 = st.r - 0.05, y0 = st.y0 + 0.12;
+  const out = r0 + 0.3 * Math.min(1, a * 6), h = a * SMOKE.rise * (top ? 0.8 : 1);
+  const lean = SMOKE.lean * Math.pow(h, 1.4);
+  return [Math.sin(w) * out + wind[0] * lean + Math.sin(t * 0.7 - h * 2.6 + i) * 0.06 * a, y0 + h, Math.cos(w) * out + wind[1] * lean + Math.cos(t * 0.53 - h * 2.2 + i * 1.7) * 0.06 * a];
+}
+export function createSmoke(at, U) {
+  const { threads, segs } = SMOKE, pos = [], idx = [];
+  for (let i = 0; i < threads; i++) for (let k = 0; k <= segs; k++) for (const s of [-1, 1]) pos.push(i, k / segs, s);
+  for (let i = 0; i < threads; i++) for (let k = 0; k < segs; k++) { const b = (i * (segs + 1) + k) * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  const u = { uAt: { value: at }, uT: U.uT, uWind: U.uWind, uOp: { value: 0.5 }, uCol: { value: new THREE.Color(0.85, 0.86, 0.86) }, uRise: { value: 1 }, uIncense: { value: 0.6 },
+    fogColor: { value: new THREE.Color() }, fogDensity: { value: 0 } };
+  const mat = new THREE.ShaderMaterial({ uniforms: u, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    vertexShader: /* glsl */`
+      uniform vec3 uAt; uniform float uT, uRise; uniform vec2 uWind; varying vec2 vQ; varying float vA, vH, vI;
+      vec3 at(float i, float a){
+        float top=step(3.5,i), w=mod(i,4.)*1.5707963+top*.7853982, r0=mix(${(STOREYS[0].r - 0.05).toFixed(3)},${(STOREYS[1].r - 0.05).toFixed(3)},top), y0=mix(${(STOREYS[0].y0 + 0.12).toFixed(3)},${(STOREYS[1].y0 + 0.12).toFixed(3)},top);
+        float out_=r0+.3*min(1.,a*6.), h=a*${SMOKE.rise.toFixed(2)}*mix(1.,.8,top)*uRise, lean=${SMOKE.lean.toFixed(2)}*pow(h,1.4);
+        return uAt+vec3(sin(w)*out_+uWind.x*lean+sin(uT*.7-h*2.6+i)*.06*a, y0+h, cos(w)*out_+uWind.y*lean+cos(uT*.53-h*2.2+i*1.7)*.06*a);
+      }
+      void main(){
+        float i=position.x, a=position.y, s=position.z;
+        vec3 c=at(i,a), d=normalize(at(i,min(a+.02,1.))-at(i,max(a-.02,0.))), v=normalize(cameraPosition-c), side=normalize(cross(d,v));
+        float wid=.02+.5*pow(a,1.3);
+        vec4 mv=viewMatrix*vec4(c+side*s*wid,1.); gl_Position=projectionMatrix*mv;
+        vQ=vec2(s,a); vA=a; vH=a*${SMOKE.rise.toFixed(2)}; vI=i;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform vec3 uCol; uniform float uOp, uT, uIncense; varying vec2 vQ; varying float vA, vH, vI;
+      float h1(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+      float n1(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h1(i),h1(i+vec2(1,0)),f.x),mix(h1(i+vec2(0,1)),h1(i+vec2(1,1)),f.x),f.y); }
+      void main(){
+        // streaks carried up the thread, and the thread's own edge, soft and wandering
+        vec2 q=vec2(vQ.x*(1.+vA*3.)+vI*7.3, vH*3.-uT*.55);
+        float n=n1(q*vec2(2.2,1.6))*.55+n1(q*vec2(5.,3.5)+3.)*.3+n1(q*vec2(11.,7.)+7.)*.15, edge=1.-smoothstep(.1+.3*n,1.,abs(vQ.x+(n-.5)*.7*vA));
+        float alive=step(vI/6.,uIncense+.05)+step(3.5,vI)*step(.25,uIncense);
+        float a=edge*smoothstep(.0,.18,vA)*pow(1.-vA,1.5)*(.3+.7*n*n)*uOp*min(alive,1.)*(1.-.5*smoothstep(.6,1.,abs(vQ.x)));
+        if(a<.004) discard;
+        gl_FragColor=vec4(uCol,a);
+      }` });
+  const smoke = new THREE.Mesh(g, mat); smoke.frustumCulled = false; smoke.renderOrder = 2;
+  return {
+    mesh: smoke,
+    state: () => ({ opacity: u.uOp.value, rise: u.uRise.value, threads: SMOKE.threads }),
+    // After rain it hangs low and faint over the mouth; in the cold it is whiter and stands straighter (the breeze is
+    // the mood's too); at night hardly to be seen; at dawn, after the service, the most of it.
+    setMood(m) {
+      const wetK = m.wet >= 1 ? 1 : 0;
+      u.uRise.value = wetK ? 0.55 : 1; u.uIncense.value = m.incense ?? 0.6;
+      u.uOp.value = (m.time === "night" ? 0.06 : 0.14 + 0.1 * (m.incense ?? 0.6)) * (wetK ? 0.6 : 1) * (m.snow ? 1.3 : 1);
+      const [cr, cg, cb] = m.snow ? [0.93, 0.94, 0.96] : [0.8, 0.82, 0.82];
+      u.uCol.value.setRGB(cr, cg, cb).multiply(new THREE.Color().fromArray(m.fog).lerp(new THREE.Color(1, 1, 1), 0.35));   // smoke takes the colour of the air it is in
+    },
+  };
+}

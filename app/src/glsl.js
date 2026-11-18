@@ -4,6 +4,8 @@ import * as THREE from "three";
 // What every shader needs to know about the hour and the season. One object each, shared by reference.
 export const U = {
   uFogD: { value: 0.009 }, uSnow: { value: 0 }, uLamp: { value: 0 }, uWet: { value: 1 },
+  // the breeze (wind.js): how it blows now, in m/s along x and z, and how far it has carried the air since the page opened
+  uWind: { value: new THREE.Vector2(0, 0) }, uWindPath: { value: new THREE.Vector2(0, 0) },
   uAmb: { value: new THREE.Color(0.78, 0.83, 0.84) }, uSunC: { value: new THREE.Color(0.42, 0.39, 0.34) },
   uLeaf: { value: new THREE.Color(1, 1, 1) }, uLight: { value: new THREE.Color(1, 1, 1) }, uT: { value: 0 },
   // Where he has walked in the snow (trail.js): the picture of his prints, and where it lies.
