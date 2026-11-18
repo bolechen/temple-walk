@@ -219,8 +219,8 @@ export function createTrees(scene, M, spots, opts = {}) {
   for (const [x, y, z, kind, h, far0] of spots) {
     // The #162 trial: the court's west maple and its cedar grown by three's TreeGenerator or by ez-tree, in this
     // project's bark and leaves, so the three may be set side by side. Every other tree is grown here as before.
-    if (opts.gen && ((kind === "maple" && x === -9.5 && z === 28) || (kind === "cedar" && x === -19 && z === 29))) {
-      const t0 = performance.now(), t = growBy(opts.gen, kind, x, y, z, h, 7, kind === "cedar" ? 0.2 + h * 0.012 : 0.22), centre = V(x, y + h * 0.62, z);
+    if (opts.gen && (kind === "maple" || (kind === "cedar" && x === -19 && z === 29))) {   // every maple, so the court view compares like with like; one cedar
+      const t0 = performance.now(), t = growBy(opts.gen, kind, x, y, z, h, x === -9.5 && z === 28 ? 7 : Math.abs(Math.round(x * 13 + z * 7)) + 11, kind === "cedar" ? 0.2 + h * 0.012 : 0.22), centre = V(x, y + h * 0.62, z);
       wood.push(...t.wood); beds.push(bed(x, y, z, (kind === "cedar" ? 0.44 : 0.2) * 3.4 + 0.25, 99));
       if (t.sprays.length) for (const sp of t.sprays) {   // a cedar's foliage hung as the hand-grown cedar hangs it: one spray down each bough
         const d = sp.to.clone().sub(sp.from), l = Math.min(d.length() * 1.1, sp.from.y - y - 0.3), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
