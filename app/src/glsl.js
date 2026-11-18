@@ -67,5 +67,5 @@ float fogLayer(float yc, float yp, vec4 L){
 // the mist's layers too (needs FOGLAYER and `uniform vec4 uFogLayer`).
 export const FOG_DENSITY = 0.009;
 export const fogMix = (c, d, y) => y
-  ? `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)*fogLayer(cameraPosition.y,${y},uFogLayer)));`
-  : `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)));`;   // needs `uniform float uFogD`
+  ? `${c}=mix(${c},uFog,1.-exp(-pow(abs(${d}*uFogD),2.)*fogLayer(cameraPosition.y,${y},uFogLayer)));`
+  : `${c}=mix(${c},uFog,1.-exp(-pow(abs(${d}*uFogD),2.)));`;   // needs `uniform float uFogD`

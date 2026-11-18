@@ -7,6 +7,16 @@ for (const f of files) { try { execFileSync(process.execPath, ["--check", f], { 
 // Shader fragments handed to procMat are wrapped in one line of braces: a trailing // comment would swallow the closing brace.
 const mats = fs.readFileSync(path.join(root, "src", "materials.js"), "utf8");
 for (const m of mats.matchAll(/`([^`]*)`/g)) { const last = m[1].trimEnd().split("\n").pop(); if (/\/\/[^\n]*$/.test(last) && /col|rough_|bump_|ao_/.test(m[1])) { bad++; console.error("materials.js: a shader fragment ends in a // comment:\n  " + last.trim().slice(0, 120)); } }
+// A power in a shader must not be taken of a number that may be below zero: GLSL leaves it undefined, a graphics card
+// returns something that is not a number, SwiftShader (which the tests draw with) returns 0, and one such pixel spread
+// by the bloom blacked out half the picture before the great hall (#217). So the first argument of every GLSL pow(…)
+// in app/ must be a plain non-negative number or be held at zero or above by max(…), abs(…) or clamp(…) (an even power
+// of a number that may be negative takes abs(…)). Math.pow in JavaScript is not looked at.
+{ const safe = (a) => /^\s*(max|abs|clamp)\s*\(/.test(a) || /^\s*\d*\.?\d+\.?\s*$/.test(a);
+  for (const f of files) { const src = fs.readFileSync(f, "utf8"), re = /(?<![\w.$])pow\s*\(/g; let m;
+    while ((m = re.exec(src))) { let j = m.index + m[0].length, d = 0; const i = j;
+      for (; j < src.length; j++) { const c = src[j]; if (c === "(" || c === "[") d++; else if (c === ")" || c === "]") { if (!d) break; d--; } else if (c === "," && !d) break; }
+      const arg = src.slice(i, j); if (!safe(arg)) { bad++; console.error(`${path.relative(path.join(root, ".."), f)}:${src.slice(0, m.index).split("\n").length}: pow(${arg.trim()}, …) may take a power of a number below zero; hold it with max(…,0.) or abs(…)`); } } } }
 // Every character the page writes must be in the typefaces cut for it (tools/fonts.py). The debug panel (src/debug.js)
 // is left out: it exists only on the dev server and is drawn by lil-gui in the system's own font, not in the cut faces.
 const DEV_ONLY = [path.join(root, "src", "debug.js")];

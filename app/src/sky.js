@@ -23,8 +23,8 @@ export function createSky(renderer, scene, quality, focus) {
       varying vec3 vD; uniform vec3 uSun, uFog, uZen, uHor, uSunCol; uniform float uT, uCloud, uStars, uGlow, uDisk;
       void main(){
         vec3 d=normalize(vD); float up=max(d.y,0.), s=max(dot(d,uSun),0.);
-        vec3 c=mix(uHor,uZen,pow(smoothstep(0.,.85,up),.55));
-        c+=uSunCol*(pow(s,5.)*.22+pow(s,40.)*.5)*uGlow;                      // the glow round the sun, or the moon
+        vec3 c=mix(uHor,uZen,pow(max(smoothstep(0.,.85,up),0.),.55));
+        c+=uSunCol*(pow(max(s,0.),5.)*.22+pow(max(s,0.),40.)*.5)*uGlow;                      // the glow round the sun, or the moon
         // Stars: one to a cell of the sphere, each with its own slow shimmer.
         vec3 q=d*190.; float h=h31(floor(q));
         c+=step(.9968,h)*smoothstep(.5,.05,length(fract(q)-.5))*uStars*(.55+.45*sin(uT*1.7+h*90.))*smoothstep(.03,.3,d.y)*vec3(.9,.95,1.)*1.6;
@@ -33,7 +33,7 @@ export function createSky(renderer, scene, quality, focus) {
         vec2 cp=d.xz/(up+.18)*1.1+vec2(uT*.004,0.);
         float deck=fbm2(cp)*.65+fbm2(cp*2.7+3.)*.35;
         float cov=smoothstep(.95-uCloud*.75,1.2-uCloud*.75,deck+.22)*smoothstep(0.,.16,d.y);
-        vec3 cloud=mix(uHor*.82+uZen*.12,uSunCol*1.05,pow(s,2.5)*.65+.12)*mix(.74,1.06,smoothstep(.25,.85,deck));
+        vec3 cloud=mix(uHor*.82+uZen*.12,uSunCol*1.05,pow(max(s,0.),2.5)*.65+.12)*mix(.74,1.06,smoothstep(.25,.85,deck));
         c=mix(c+uSunCol*disk*3.*(1.-cov),cloud,cov*.92);
         c=mix(uFog,c,smoothstep(-.02,.14,d.y));
         gl_FragColor=vec4(min(c,vec3(6.)),1.);

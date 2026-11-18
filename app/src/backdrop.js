@@ -89,7 +89,7 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
         float ang(float a,float y,float f){ return fbm3(vec3(cos(a),sin(a),0.)*f+vec3(0.,0.,y)); }
         void main(){ float a=atan(vP.z,vP.x), up=clamp(vP.y/uH,0.,1.);
           float wood=ang(a,vP.y*.22,60.)*.5+ang(a,vP.y*.7,190.)*.5;
-          float fg=1.-exp(-pow(uFogD*length(vW-cameraPosition),2.));
+          float fg=1.-exp(-pow(abs(uFogD*length(vW-cameraPosition)),2.));
           float veil=smoothstep(.55,.05,up+(ang(a,up*3.,9.)-.5)*.35);            // mist lying in the folds, thickest low down
           vec3 c=mix(uTop*(.7+.6*wood),uMist,clamp(veil*.85,0.,1.));
           // Below the land the hill goes on down into the mist: wooded slope, hazed by the distance it is really at (the scene's own fog), not a white curtain.

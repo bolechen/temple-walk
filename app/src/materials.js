@@ -114,7 +114,7 @@ export function createMaterials() {
     // vUv2 = (metres along the eave, metres up the slope). Rows of half-round cover tiles over pan tiles.
     tile: procMat("tile", { roughness: 0.6, envMapIntensity: 0.3, side: THREE.DoubleSide }, `
       float u=vUv2.x/.25, r=fract(u)-.5, row=floor(u), seg=floor(vUv2.y/.33), fw=fwidth(u);
-      float cover=sqrt(max(0.,1.-pow(r/.3,2.)))*step(abs(r),.3);
+      float cover=sqrt(max(0.,1.-pow(abs(r/.3),2.)))*step(abs(r),.3);
       float pan=(1.-cos(clamp((abs(r)-.3)/.2,0.,1.)*3.14159))*.5;
       float lap=smoothstep(.0,.06,fract(vUv2.y/.33));               // each course laps the one below
       float detail=1.-smoothstep(.1,.45,fw);                        // relief folds into roughness with distance
@@ -172,7 +172,7 @@ export function createMaterials() {
       // Lamplight behind the lattice after dusk: brightest low down where the lamp stands, fading up the paper;
       // each room its own strength, and one leaf in eight dark.
       float leaf=floor(vUv2.x), room=n2(vec2(leaf*.31,2.)), on=step(.125,h21(vec2(leaf,7.)));
-      float up=tr?.25:exp(-pow((q.y-.85)/1.25,2.));
+      float up=tr?.25:exp(-pow(abs((q.y-.85)/1.25),2.));
       emit_=mix(uWin*vec3(.24,.145,.11),uWin,up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
@@ -216,7 +216,7 @@ export function createMaterials() {
       vec2 p=vWP.xz; float t=uT*.35;
       float w1=n2(p*2.3+vec2(t,t*.7)), w2=n2(p*4.1-vec2(t*.8,-t*.5)), w=w1*.6+w2*.4;
       nd_=vec3(n2(p*3.+vec2(.5+t,0.))-.5,0.,n2(p*3.+vec2(0.,.5-t))-.5)*.16;
-      vec3 V=normalize(cameraPosition-vWP); float fres=pow(1.-clamp(V.y+nd_.x*.6,0.,1.),5.)*.6+.03;
+      vec3 V=normalize(cameraPosition-vWP); float fres=pow(max(1.-clamp(V.y+nd_.x*.6,0.,1.),0.),5.)*.6+.03;
       float wisp=smoothstep(.55,.85,fbm2(p*.9+vec2(t*.15,-t*.1)+w*.6));
       col=vec3(.018,.026,.025)*(1.-.45*wisp); rough_=.1+.1*w;
       emit_=uAmb*.32*(fres*(.6+.4*w))*(1.-.5*wisp);`, { snow: false }),
