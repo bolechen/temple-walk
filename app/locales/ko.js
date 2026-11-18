@@ -332,7 +332,7 @@ export default {
   "部分材质纹理来自 Poly Haven（CC0）：Rob Tuytel、Dario Barresi、Dimitrios Savva、Amal Kumar、Charlotte Baglioni、colormass、Rico Cilliers。": "일부 재질 텍스처는 Poly Haven(CC0)에서 가져왔다: Rob Tuytel, Dario Barresi, Dimitrios Savva, Amal Kumar, Charlotte Baglioni, colormass, Rico Cilliers.",
   "字体": "서체",
   "字体均以 SIL Open Font License 1.1 授权，本项目切取子集，许可全文见": "서체는 모두 SIL Open Font License 1.1에 따라 제공되며, 이 프로젝트에서는 필요한 글자만 잘라 사용합니다. 라이선스 전문:",
-  "LXGW WenKai（霞鹜文楷）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Hand KO 为名。": "LXGW WenKai와 Nanum Brush Script는 이름이 보류되어 있으므로, 이 프로젝트의 수정본은 파일 안에서 Yunjing Kai, Yunjing Hand KO라는 이름을 씁니다.",
+  "LXGW WenKai（霞鹜文楷，含 TC）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Bang、Yunjing Hand KO 为名。": "LXGW WenKai(TC 포함)와 Nanum Brush Script는 이름이 보류되어 있으므로, 이 프로젝트의 수정본은 파일 안에서 Yunjing Kai, Yunjing Bang, Yunjing Hand KO라는 이름을 씁니다.",
   "程序库": "라이브러리",
   "three.js、meshoptimizer、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见": "three.js, meshoptimizer, lil-gui, stats.js(MIT)와 Basis Universal(Apache-2.0). 라이선스 전문:",
   "第三方许可声明": "서드파티 라이선스 고지",

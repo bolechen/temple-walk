@@ -36,10 +36,10 @@ test("the page of thanks names every source the audit asks for, and links the li
   for (const [slug, w] of colbase) assert.ok(listed.some((e) => e.href === w.url && e.note === w.url.replace(/^.*collection_items\//, "")), slug);
 });
 
-test("every typeface cut for the page is credited with its copyright line, and the two renamed ones say what they are called", () => {
+test("every typeface cut for the page is credited with its copyright line, and the three renamed ones say what they are called", () => {
   const files = fs.readFileSync(new URL("../../app/shared/fonts/OFL.txt", import.meta.url), "utf8");
   for (const [name, copyright, as] of FONTS) { assert.ok(/^© \d{4}/.test(copyright), name); for (const n of name.split(", ")) assert.ok(files.includes(`---- ${n} ----`) || n.startsWith("Noto Serif") || n.startsWith("Yuji") && files.includes("---- Yuji"), `${n} has no licence in OFL.txt`); if (as) assert.match(as, /^Yunjing /); }
-  assert.deepEqual(FONTS.filter((f) => f[2]).map((f) => f[0]), ["LXGW WenKai", "Nanum Brush Script"]);
+  assert.deepEqual(FONTS.filter((f) => f[2]).map((f) => f[0]), ["LXGW WenKai", "LXGW WenKai TC", "Nanum Brush Script"]);
 });
 
 test("the licence summary on disk is what tools/notices.mjs writes", () => {

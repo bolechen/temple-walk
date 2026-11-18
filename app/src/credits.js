@@ -26,6 +26,7 @@ export function processedLine(w) {
 export const FONTS = [
   ["Ma Shan Zheng", "© 2018 The Ma Shan Zheng Project Authors"],
   ["LXGW WenKai", "© 2021–2026 LXGW", "Yunjing Kai"],
+  ["LXGW WenKai TC", "© 2024 The LXGW WenKai Project Authors", "Yunjing Bang"],
   ["Zhi Mang Xing", "© 2018 The Zhi Mang Xing Project Authors"],
   ["Noto Serif SC, Noto Serif JP", "© 2017–2024 Adobe"],
   ["Klee One", "© 2020 The Klee Project Authors"],
@@ -62,7 +63,7 @@ export function creditSections() {
     ] },
     { head: t("字体"), paras: [
       { text: t("字体均以 SIL Open Font License 1.1 授权，本项目切取子集，许可全文见"), href: asset(FONT_LICENCE), link: "OFL.txt" },
-      t("LXGW WenKai（霞鹜文楷）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Hand KO 为名。"),
+      t("LXGW WenKai（霞鹜文楷，含 TC）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Bang、Yunjing Hand KO 为名。"),
     ], list: FONTS.map(([name, copyright, as]) => ({ text: name, note: as ? `${copyright} · ${as}` : copyright })) },
     { head: t("程序库"), paras: [
       { text: t("three.js、meshoptimizer、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见"), href: asset(NOTICES), link: t("第三方许可声明") },
