@@ -1282,6 +1282,10 @@ const scenarios = {
       for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
         const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
         expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
+      // and on a phone held upright, the three parts named at first sight: the sound's heading above the foot, unscrolled (#185)
+      await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
+      const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name")]; return { names: hs.length, last: hs.length ? Math.round(hs[hs.length - 1].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
+      expect(ph.names === 3 && ph.last <= ph.foot, `on a 390x844 phone in ${lg} the sound's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
       await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
