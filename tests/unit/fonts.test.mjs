@@ -11,7 +11,6 @@ const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../app/s
 const RESERVED = {
   "kai.woff2": ["霞鹜", "霞鶩", "落霞孤鹜", "落霞孤鶩", "LXGW"],
   "hand-ko.woff2": ["Nanum", "Naver"],
-  "bang.woff2": ["霞鹜", "霞鶩", "落霞孤鹜", "落霞孤鶩", "LXGW"],   // LXGW WenKai TC, bold (#192): its family reserves these; cut as Yunjing Bang
 };
 // The records that name the font. The copyright (0), the licence (13, 14) and the maker's and designer's own names and
 // addresses (8, 9, 11, 12) are notices that must travel with it unchanged, and may mention a reserved name as the
@@ -46,20 +45,4 @@ test("the files that were renamed still carry their original's copyright notice 
   assert.ok(kai.some((r) => r.id === 0 && /LXGW/.test(r.text) && /Copyright/.test(r.text)), "kai: the copyright line is gone");
   assert.ok(kai.some((r) => r.id === 13 && /Open Font License/.test(r.text)), "kai: the licence line is gone");
   assert.ok(ko.some((r) => r.id === 0 && /NHN Corporation/.test(r.text)), "hand-ko: the copyright line is gone");
-});
-
-// The board face is evened character by character (app/src/board-weights.js, tools/board-ink.py --write, #192): every
-// character a board is written with in that face has its evening, within the tool's limit, so a board added later
-// cannot go up without the tool having been run for it.
-test("every character the board face writes on a name board has its evening", async () => {
-  const { WEIGHT } = await import("../../app/src/board-weights.js");
-  const src = fs.readdirSync(path.join(DIR, "../../src")).filter((f) => f.endsWith(".js")).map((f) => fs.readFileSync(path.join(DIR, "../../src", f), "utf8")).join("");
-  const OLD = Object.fromEntries([...src.match(/const OLD = \{([^}]*)\}/)[1].matchAll(/(\S): "(\S)"/g)].map((m) => [m[1], m[2]]));
-  const texts = [...src.matchAll(/plaque: \{ text: (?:sx > 0 \? "(\S+)" : )?"(\S+)"([^}]*)\}/g)].filter((m) => !/hand:/.test(m[3])).flatMap((m) => [m[1], m[2]].filter(Boolean))
-    .concat([...src.matchAll(/plaque: "(\S+)"/g)].map((m) => m[1]), [...src.matchAll(/makePlaque\("(\S+)"([^)]*)\)/g)].filter((m) => !/hand:/.test(m[2])).map((m) => m[1]),
-      [...src.matchAll(/makeWallPanel\("(\S+)"([^)]*)\)/g)].filter((m) => !/hand:/.test(m[2])).map((m) => m[1]));
-  const chars = new Set(texts.join("").split("").map((c) => OLD[c] || c));
-  assert.ok(chars.size > 20, `only ${chars.size} characters found on the boards`);
-  assert.deepEqual([...chars].filter((c) => !(c in WEIGHT)), [], "characters with no evening: run python3 tools/board-ink.py --write");
-  assert.deepEqual(Object.entries(WEIGHT).filter(([, w]) => Math.abs(w) > 0.025), [], "an evening beyond the tool's limit");
 });

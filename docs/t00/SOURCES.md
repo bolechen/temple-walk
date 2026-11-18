@@ -65,9 +65,7 @@
 | 大殿上檐「釋迦寶殿」四字 | `levels/t00/boards/shijia.webp` | 无准师范原迹，东京国立博物馆 TB-1446（ColBase） | 已核原迹图 |
 | 山门竖匾「雲徑禪寺」 | `site.js` | 虚构寺名，所有者 2026-11-15 决定保留 | 所有者指定 |
 | 其余匾用字体 | `plaque.js` | 现代人题字仍在著作权期内，不能照描，改用开源字体（`JINGSHAN.md`） | 自拟取舍 |
-| 匾的字体由 Yuji Boku 改为霞鹜文楷 TC 粗体（文件内名 Yunjing Bang）：Yuji Boku 笔画对比强、带飞白，一块匾上各字轻重不一，所有者指出茶寮「喫茶去」的「茶」发虚（#192）；霞鹜文楷 TC 是开源的毛笔楷书，本身就是旧字形，笔画匀 | `shared/fonts/bang.woff2`、`tools/fonts.py --bang` | npm `@fontsource/lxgw-wenkai-tc` 5.3.1 的 woff2 分片拼回（GitHub 下载被网络规则挡住），SIL OFL 1.1；它的家族声明保留名，按 `RENAMED` 改名 | 已核许可（随包 LICENSE）；选字体是对照图后自拟 |
-| 每块匾上各字轻重一致：每个字按表加粗或减细一点（最多 ±0.025 字高），使笔画中轴宽度都接近全部匾字的中位数；量法与阈值（同一块匾最重的字不超过最轻的 10%）见 `tools/board-ink.py` 开头；集字的匾改量墨占字框的比例（无准「釋迦寶殿」7.5%） | `plaque.js`、`app/src/board-weights.js`、`tools/board-ink.py`、`fonts.test.mjs` | #192 验收要求「同一块匾各字墨量相差不超过 15%」，主创注明阈值待量过现状再定；量过后改为分两类量、阈值 10%，理由写在工具开头 | 自拟（量法与阈值），依据实测 |
-| 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、霞鹜文楷 TC 粗体（匾，#192 之前是 Yuji Boku）、思源宋体两种，均 SIL OFL；霞鹜文楷（含 TC）与 Nanum Brush Script（韩文手写体）的原件声明了保留名，子集文件内部改用项目自己的名字 Yunjing Kai、Yunjing Bang、Yunjing Hand KO（`tools/fonts.py` 的 `RENAMED`，`fonts.test.mjs` 检查），版权与许可记录照原样保留 | 已核许可；改名依据 OFL 第 3 条（修改版不得用保留名），#113 |
+| 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、Yuji Boku、思源宋体两种，均 SIL OFL；霞鹜文楷与 Nanum Brush Script（韩文手写体）的原件声明了保留名，子集文件内部改用项目自己的名字 Yunjing Kai、Yunjing Hand KO（`tools/fonts.py` 的 `RENAMED`，`fonts.test.mjs` 检查），版权与许可记录照原样保留 | 已核许可；改名依据 OFL 第 3 条（修改版不得用保留名），#113 |
 
 ## 殿内
 

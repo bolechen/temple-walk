@@ -420,7 +420,7 @@ choosing another language, which one it came from (`lang_from`, remembered in `s
 app uses and served with it: "Yunjing Brush" (Ma Shan Zheng: the title, the page of seals), "Yunjing Kai" (LXGW WenKai:
 every label and spoken line, and the name boards, which are written in traditional forms), "Yunjing Xing" (Zhi Mang Xing, a running hand: what is written by hand on paper, which is
 the verse under a photograph, the slip drawn in the library and the title on a leaf in a hall; it has no traditional
-forms, so it is not for name boards), "Yunjing Bang" (LXGW WenKai TC bold, cut to the name boards' characters only and evened character by character, `board-weights.js` written by `tools/board-ink.py`, #192), "Yunjing Serif" and
+forms, so it is not for name boards), "Yunjing Bang" (Yuji Boku, a heavy brush regular hand cut to the name boards' characters only), "Yunjing Serif" and
 "Yunjing Seal" (Noto Serif SC regular and black). The kai (LXGW WenKai) and the Korean running hand (Nanum Brush Script) declare Reserved Font Names, so `cut()` writes them with the project's own names inside the file (`RENAMED`: "Yunjing Kai", "Yunjing Hand KO"; copyright and licence records are left as they were; `python3 tools/fonts.py --rename` does it to files already cut), and `tests/unit/fonts.test.mjs` reads every file's name table (in Node, no font library) and fails on a reserved name. Nothing is fetched from a font service. After adding words, run `python3 tools/fonts.py <dir with the TTFs>`;
 `pnpm run check` fails if a character is used that the cut does not hold.
 

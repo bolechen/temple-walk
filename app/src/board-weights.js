@@ -1,3 +1,5 @@
+// NOT USED BY THE PAGE since the owner's 2026-11-19 correction (#192): the boards are written in Yuji Boku again, and plaque.js
+// no longer reads this table. It is what tools/board-ink.py --write worked out for LXGW WenKai TC bold, kept as a tool's output.
 // How much broader or narrower each character on a name board is drawn than the board face draws it, in type sizes:
 // the width of a stroke drawn round its outline, or, less than nothing, taken off its edge. It brings the breadth of
 // every character's strokes to the median of all of them, 58.1 thousandths of the cell, so that no character of a
