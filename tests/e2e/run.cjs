@@ -1587,6 +1587,8 @@ const scenarios = {
   for (const n of names) {
     const t0 = Date.now(); let error = null;
     try { await scenarios[n].run(browser, srv.base); } catch (e) { error = String(e.message || e).slice(0, 1500); }
+    // A scenario that threw left the pages it had opened drawing on, and every later scenario of the shard shared the machine with them (#177).
+    for (const c of browser.contexts()) await c.close().catch(() => {});
     const secs = Math.round((Date.now() - t0) / 1000); report.push({ name: n, ok: !error, secs, error });
     console.log(`${error ? "FAIL" : "ok  "} ${n.padEnd(8)} ${String(secs).padStart(4)}s${error ? "\n     " + error.split("\n").join("\n     ") : ""}`);
   }
