@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "bell-tower-after.jpg",
+   "bytes": 94311,
+   "sha256": "112936c62bd6b3c9cce7fdffeb3f91377ae78af588ca5bbd5fb34b7db2a1bde5",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  },
+  {
+   "path": "court-after.jpg",
+   "bytes": 104840,
+   "sha256": "6d57bdf1af1ed11467a771fe0f3488d9be0ee80ee6766e4002ed4ac8968d24e4",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  },
+  {
+   "path": "court-before.jpg",
+   "bytes": 81052,
+   "sha256": "1aa8041b0ebe09d8c816eda77237bb35300eeb2a85de1dcbf6ed1b7a8fb3efe6",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  },
+  {
+   "path": "court-view-after.jpg",
+   "bytes": 122494,
+   "sha256": "fba27af3f0a09c6b7a7c3d80f3b029fdc6b49877a01931aeb6c9056e1f9257bf",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  },
+  {
+   "path": "gate-front-after.jpg",
+   "bytes": 124803,
+   "sha256": "4f593ca25468c5add5cc90ebd4726461039bf64a0c591844f5a44d2f272ed28c",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  },
+  {
+   "path": "gate-passage-after.jpg",
+   "bytes": 110049,
+   "sha256": "2ae17da3da658deb561ff7022b62c8a1c55e58b2d6c983fd0269378bda9a5a5b",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  },
+  {
+   "path": "terrace-after.jpg",
+   "bytes": 127670,
+   "sha256": "03fff95f613012b98110b0bfcec826b63cb986d20beb537eafa4bfa80a559586",
+   "rev": "98ae29cc490fb76a1d0acb49d596a390fb53125a"
+  }
+ ]
+}

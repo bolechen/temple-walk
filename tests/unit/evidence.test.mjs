@@ -36,7 +36,7 @@ test("text stays in git; pictures and films are evidence", () => {
   for (const f of ["a.jpg", "a.PNG", "a.webm", "a.mp4"]) assert.equal(isText(f), false, f);
 });
 
-test("CI's check: nothing over 1 MB under an evidence folder, waived names aside; bad manifests fail", () => {
+test("CI's check: nothing over 1 MB under an evidence folder; bad manifests fail", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ev-"));
   try {
     const dir = path.join(root, "docs/t00/evidence/x");
@@ -47,10 +47,8 @@ test("CI's check: nothing over 1 MB under an evidence folder, waived names aside
     assert.deepEqual(checkTree(root), []);
     fs.writeFileSync(path.join(dir, "big.jpg"), Buffer.alloc(2 << 20));
     assert.match(checkTree(root).join("\n"), /big\.jpg.*over 1 MB/);
-    fs.writeFileSync(path.join(root, "tools/evidence-waiver.txt"), "docs/t00/evidence/x/big.jpg\n");
-    assert.deepEqual(checkTree(root), []);
     fs.rmSync(path.join(dir, "big.jpg"));
-    assert.match(checkTree(root).join("\n"), /which is gone/, "a waiver for a file that is gone must be removed");
+    assert.deepEqual(checkTree(root), []);
     fs.writeFileSync(path.join(dir, "MANIFEST.json"), "{not json");
     assert.ok(checkTree(root).some((p) => /MANIFEST\.json/.test(p)));
     // outside an evidence folder the rule is not this tool's

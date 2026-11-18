@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "pr1-before-after.jpg",
+   "bytes": 367232,
+   "sha256": "61b38fc6c19460ddf5f3d00a19650fffaa7b9e9a660da55e7f2e096a4457c0d1",
+   "rev": "e0004ec69a8dec49624fbb411566aab70f7bc3d3"
+  }
+ ]
+}

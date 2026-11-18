@@ -14,3 +14,7 @@
 
 重出 T4 的图：`node tools/offering-frames.cjs --spec > spec.json; tools/gpu-render.sh t4-small "$(cat spec.json)"`。
 T4 用量：本 PR 第一轮（旧位置）约 5.9 分钟，这一轮约 2 分钟（`report.json`：2026-11-18T14:36:48.373Z → 2026-11-18T14:38:44.193Z）；旧位置的 T4 图已删掉，不留。
+
+## 原图在哪里（#223）
+
+本目录的图和录像（5 个文件：5 jpg，共 0.8 MB）不在仓库里：在 Hugging Face 公开数据集 `bolechen/temple-walk-evidence` 的 `t00/offering-coin-202/` 下，按提交号钉死。清单 [`MANIFEST.json`](MANIFEST.json) 给出每个文件的路径、字节数、SHA-256 和提交号；一个文件的地址是 `tools/evidence.config.json` 的 `base` + 清单里的 `rev` + `/t00/offering-coin-202/<path>`。上文提到的文件名都按这份清单找。整目录取回（核哈希，放进 git 忽略的 `tools/out/evidence/`）：`node tools/evidence.mjs pull docs/t00/evidence/offering-coin-202`。

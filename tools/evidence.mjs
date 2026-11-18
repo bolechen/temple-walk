@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const CONFIG = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/evidence.config.json"), "utf8"));
 /** Text beside the pictures stays in git; anything else in an evidence folder is evidence and goes to the store. */
-export const TEXT = new Set(["json", "log", "md", "txt", "cjs", "mjs", "js", "csv", "patch", "html", "yml", "yaml", "sh", "py", "svg"]);
+export const TEXT = new Set(["json", "log", "md", "txt", "cjs", "mjs", "js", "csv", "tsv", "patch", "html", "yml", "yaml", "sh", "py", "svg"]);
 export const LIMIT = 1 << 20;
 export const MANIFEST = "MANIFEST.json";
 
@@ -74,44 +74,38 @@ export function manifestProblems(m) {
   return bad;
 }
 
-/** Offline checks over a repository root: waiver names files that stay over 1 MB for now (removed once migrated). */
+/** Offline checks over a repository root: well-formed manifests and no file over 1 MB under an evidence folder. */
 export function checkTree(root = ROOT, files = null) {
   const bad = [];
-  const waiver = new Set(fs.existsSync(path.join(root, "tools/evidence-waiver.txt")) ? fs.readFileSync(path.join(root, "tools/evidence-waiver.txt"), "utf8").split("\n").filter(Boolean) : []);
   const all = files ?? walk(path.join(root, "docs")).map((f) => path.relative(root, f).split(path.sep).join("/"));
-  const inEvidence = all.filter((f) => /^docs\/[^/]+\/evidence\//.test(f) || /\/evidence\//.test(f));
-  const listed = new Set();
+  const inEvidence = all.filter((f) => /\/evidence\//.test(f));
   for (const mf of manifestsUnder(root)) {
     const rel = path.relative(root, mf).split(path.sep).join("/");
     let m;
     try { m = JSON.parse(fs.readFileSync(mf, "utf8")); } catch (e) { bad.push(`${rel}: ${e.message}`); continue; }
     for (const p of manifestProblems(m)) bad.push(`${rel}: ${p}`);
-    for (const f of m.files || []) listed.add(path.posix.join(path.posix.dirname(rel), f.path));
   }
   for (const f of inEvidence) {
-    if (waiver.has(f)) continue;
     const size = fs.statSync(path.join(root, f)).size;
     if (size > LIMIT) bad.push(`${f}: ${size} bytes, over 1 MB — push it with tools/evidence.mjs and keep the manifest`);
   }
-  // A binary left in an evidence folder is allowed (the one collage of up to 1 MB) only if it is small; manifests list the rest.
-  for (const w of waiver) if (!fs.existsSync(path.join(root, w))) bad.push(`tools/evidence-waiver.txt names ${w}, which is gone — remove the line`);
   return bad;
 }
 
 // ---------------------------------------------------------------- network
 
-async function get(url, tries = 4) {
+async function get(url, tries = 3) {
   let last;
   for (let i = 0; i < tries; i++) {
     try {
-      const r = await fetch(url, { redirect: "follow" });
+      const r = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(CONFIG.timeoutMs || 60000) });
       if (r.status === 404) throw Object.assign(new Error(`404 ${url}`), { fatal: true });
       if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
       return r;
     } catch (e) {
       last = e;
       if (e.fatal) break;
-      await new Promise((r) => setTimeout(r, 400 * 2 ** i));
+      await new Promise((r) => setTimeout(r, 300 * 2 ** i));
     }
   }
   throw last;
@@ -210,32 +204,32 @@ export async function push(dirArg, { log = console.log } = {}) {
 export async function verify({ all = false, root = ROOT, log = console.log } = {}) {
   const fails = [];
   const mans = manifestsUnder(root);
-  let n = 0, hashed = 0;
+  const jobs = [];
   for (const mf of mans) {
     const m = JSON.parse(fs.readFileSync(mf, "utf8"));
     const rel = path.relative(root, path.dirname(mf)).split(path.sep).join("/");
     const prefix = remoteOf(rel + "/x").replace(/\/x$/, "");
     const bad = manifestProblems(m);
     if (bad.length) { fails.push(`${rel}: ${bad.join("; ")}`); continue; }
-    await pool(m.files, 8, async (f, i) => {
-      const url = urlOf(`${prefix}/${f.path}`, f.rev);
-      n++;
-      try {
-        const r = await get(url);
-        const len = Number(r.headers.get("content-length"));
-        if (!all && !(i % 10 === 0)) {
-          await r.body?.cancel();
-          if (len && len !== f.bytes) fails.push(`${url}: ${len} bytes, manifest ${f.bytes}`);
-          return;
-        }
-        const buf = Buffer.from(await r.arrayBuffer());
-        hashed++;
-        if (buf.length !== f.bytes) fails.push(`${url}: ${buf.length} bytes, manifest ${f.bytes}`);
-        else if (sha256(buf) !== f.sha256) fails.push(`${url}: SHA-256 differs from the manifest`);
-      } catch (e) { fails.push(`${url}: ${e.message.replace(url, "").trim() || e.message}`); }
-    });
+    m.files.forEach((f, i) => jobs.push({ f, url: urlOf(`${prefix}/${f.path}`, f.rev), hash: all || i % 10 === 0 }));
   }
-  log(`${mans.length} manifests, ${n} files checked, ${hashed} hashed${all ? " (all)" : " (sample)"}, ${fails.length} failed`);
+  let hashed = 0;
+  await pool(jobs, 16, async ({ f, url, hash }) => {
+    try {
+      const r = await get(url);
+      const len = Number(r.headers.get("content-length"));
+      if (!hash) {
+        await r.body?.cancel();
+        if (len && len !== f.bytes) fails.push(`${url}: ${len} bytes, manifest ${f.bytes}`);
+        return;
+      }
+      const buf = Buffer.from(await r.arrayBuffer());
+      hashed++;
+      if (buf.length !== f.bytes) fails.push(`${url}: ${buf.length} bytes, manifest ${f.bytes}`);
+      else if (sha256(buf) !== f.sha256) fails.push(`${url}: SHA-256 differs from the manifest`);
+    } catch (e) { fails.push(`${url}: ${e.message.replace(url, "").trim() || e.message}`); }
+  });
+  log(`${mans.length} manifests, ${jobs.length} files checked, ${hashed} hashed${all ? " (all)" : " (sample)"}, ${fails.length} failed`);
   return fails;
 }
 
