@@ -98,7 +98,7 @@ async function get(url, tries = 4) {
   let last;
   for (let i = 0; i < tries; i++) {
     try {
-      const r = await fetch(url, { redirect: "follow" });
+      const r = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(CONFIG.timeoutMs || 60000) });
       if (r.status === 404) throw Object.assign(new Error(`404 ${url}`), { fatal: true });
       if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
       return r;
