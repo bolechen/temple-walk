@@ -267,7 +267,11 @@ export function createMaterials() {
     bark: procMat("bark", { roughness: 0.95, envMapIntensity: 0.15 }, `
       vec3 q=vWP*vec3(1.4,.85,1.4), w=triW(vWN); vec3 A=triA(tBarkA,q,w)/mBark; vec4 Nr=triN(tBarkN,q,w);
       col=vec3(.13,.082,.055)*A; col=mix(col,vec3(.12,.15,.08)*A,smoothstep(.5,.75,fbm3(vWP*1.5))*.5);   // moss on the weather side
-      rough_=Nr.w; nd_=Nr.xyz*1.8;`, { tex: ["bark"] }),
+      rough_=Nr.w; nd_=Nr.xyz*1.8;
+      // a tree's foot (trees.js gives it a v below -1: how far above the paving it is) is drifted over with snow for its
+      // lowest thirty centimetres, so that it goes down into the blanket round it and does not stand on it (#92)
+      // and lit a little by the sky, as the paving's snow is (that is lit by hand): in the shade it would be greyer than the snow it lies in
+      if(vUv2.y<-.5&&uSnow>.001){ float d_=uSnow*smoothstep(.32,.04,-vUv2.y-1.)*(.85+.15*fbm3(vWP*3.)); col=mix(col,vec3(.82,.86,.92),d_); rough_=mix(rough_,.95,d_); nd_*=1.-d_; ao_=mix(ao_,max(ao_,.85),d_); emit_+=vec3(.82,.86,.92)*uAmb*.25*d_; }`, { tex: ["bark"] }),
     // Cast iron left to weather for four hundred years.
     iron: procMat("iron", { roughness: 0.75, metalness: 0.55, envMapIntensity: 0.5 }, `
       float r=smoothstep(.4,.75,fbm3(vWP*6.)); col=mix(vec3(.045,.045,.05),vec3(.2,.1,.05),r*.75);

@@ -222,3 +222,29 @@ test("every near tree stands in a bed of earth as wide as its wood at the ground
   }
   assert.deepEqual(wrong, []);
 });
+
+// #92, the trees in winter: a foot's root-spurs are broad lobes where they meet the paving, not the points of a star, and
+// the beds are put away while snow lies, so that the paving's one blanket of snow runs up to every trunk. The points of
+// the old star turned 104° to 124° from one side of the outline to the next; a ring of 24 sides (the trunk's, which the
+// foot shares) cannot draw five or six lobes turning much under 65°, so a turn of 85° is the line between a lobe and a point.
+test("every foot is rounded where it meets the paving: its outline turns at most 85° from one side to the next", () => {
+  const sharp = [];
+  for (const j of everyTree.joints) {
+    const P = j.foot.attributes.position, R = j.ring + 1, rings = P.count / R - 1;
+    let ring = 0, near = Infinity; for (let i = 0; i <= rings; i++) { const d = Math.abs(P.getY(i * R) - j.y); if (d < near) { near = d; ring = i; } }
+    const at = (k) => [P.getX(ring * R + ((k + j.ring) % j.ring)), P.getZ(ring * R + ((k + j.ring) % j.ring))];
+    let most = 0;
+    for (let k = 0; k < j.ring; k++) {
+      const a = at(k - 1), b = at(k), c = at(k + 1), u = [b[0] - a[0], b[1] - a[1]], v = [c[0] - b[0], c[1] - b[1]];
+      most = Math.max(most, (Math.acos(Math.max(-1, Math.min(1, (u[0] * v[0] + u[1] * v[1]) / Math.hypot(...u) / Math.hypot(...v)))) * 180) / Math.PI);
+    }
+    if (most > 85) sharp.push(`the ${j.kind} at ${j.at}: ${most.toFixed(0)}°`);
+  }
+  assert.deepEqual(sharp, []);
+});
+test("in winter the beds are put away, and come back with the thaw", () => {
+  const scene = new THREE.Group(), T = createTrees(scene, M, site.trees.filter((t) => !t[5]));
+  assert.ok(T.beds && T.beds.userData.keep, "the beds are one mesh of their own, not merged away");
+  T.setMood({ season: "winter", snow: 1 }); assert.equal(T.beds.visible, false);
+  T.setMood({ season: "spring", snow: 0 }); assert.equal(T.beds.visible, true);
+});
