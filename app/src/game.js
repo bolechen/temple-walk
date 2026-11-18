@@ -106,12 +106,12 @@ export function createGame(y) {
     // The seventh seal: the book is full. On the summit, when the prologue is about to close, that comes first and
     // the full book after it (finale); anywhere else, it is marked at once.
     const full = journey.done(), closing = id === "sit" && !closedHere();
-    if (full && closing) fullAfterClose = true;
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; if (full && !closing) complete(); }, 900); if (!full) y.hints?.say.seal(); }, 4200 * Math.max(fast, 0.3));
   }
   // ---- A full book: its own seal, while the music plays the whole theme once (score.js), then the page of seals ----
-  let completing = false, completed = false, fullAfterClose = false;   // fullAfterClose: the book was filled on the summit, and its seal follows the close
+  let completing = false, completed = false;   // (the book filled on the summit owes its seal until the book is opened after the close: journey.owed)
   function complete() {
+    journey.stamp();   // the full book's own seal is shown once (journey.owed)
     if (!completed) { completed = true; track("demo.complete", { count: journey.count(), seconds: Math.round(visit.seconds) }); }
     const el = $("toast"); if (completing || !el) { openBook(); return; }
     completing = true;
@@ -237,13 +237,26 @@ export function createGame(y) {
       });
     } finally { awake.free(); }
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true); document.removeEventListener("visibilitychange", seen);
-    if (skip || !on()) passClose();
+    if (skip || !on()) { passClose(); y.direct(null); }   // passed over, or walked away: the eye comes home by the usual swing (rites.close left it where it was)
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
     // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
     if (journey.close(season())) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
-    refresh(); if (fullAfterClose) { fullAfterClose = false; complete(); } else openBook();
+    refresh();
+    // Nothing opens by itself: the eye stays on the far view of the pavilion (rites.close, y.holdEye) and the music plays out;
+    // the book is the visitor's to open (a line at the foot, B), and any step, tap on the ground or Esc brings the eye home.
+    if (!skip && on()) farBegin();
   }
+  // ---- The far view: the chapter's last picture, held until the visitor moves ----
+  let far = 0;
+  const farHint = () => (y.hints?.coarse ? t("点这一行，翻开朱印帐") : t("{b}翻开朱印帐", { b: "<kbd>B</kbd>" }));
+  async function farBegin() {
+    const mine = ++far; document.body.classList.add("far");
+    await wait(8);   // the title has gone and the music is coming to its end: not the moment it stops
+    if (far === mine && !ui.modal?.()) y.hints?.hold(farHint());
+  }
+  const farEnd = () => { if (!far) return; far = 0; document.body.classList.remove("far"); y.hints?.release(); };
+  $("hint")?.addEventListener("click", () => { if (far) openBookOwed(); });
   window.addEventListener("struck", (e) => {
     if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
     const r = journey.strike(); say(["", t("一下"), t("两下"), t("三下")][r.strikes] || "", 3);
@@ -255,6 +268,7 @@ export function createGame(y) {
   // ---- The button that offers what can be done here ----
   let acc = 0, look = null, seatHere = null, climb = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
   y.onTick((dt) => {
+    if (far && !y.directArrived()) farEnd();   // the eye has gone home (a step, a tap on the ground, Esc, or a door): the far view is over
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
     { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
       if (el) { const show = !!(p && g && g.classList.contains("on") && entered && (p.room || null) === y.room() && !rite);
@@ -374,7 +388,9 @@ export function createGame(y) {
     ui.close("book"); if (await y.travel(p.at[0], p.at[1], Math.PI - p.face, p.room || null)) { went++; say(t("回到{place}。", { place: t(d.place) }), 4); }
   }
   window.__goBack = (id) => goBack(id);
-  $("bookBtn")?.addEventListener("click", openBook);
+  // The book, opened by the visitor: a full book that has not been shown its own seal is shown it now (once), then the page.
+  function openBookOwed() { if (journey.owed() && !closing && !completing && !rite) complete(); else openBook(); }
+  $("bookBtn")?.addEventListener("click", openBookOwed);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
   $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 

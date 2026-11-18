@@ -82,6 +82,18 @@ export function shotPose(place, shot, foot, t = 0, aspect = DIRECT.wide, out = p
   return out;
 }
 
+// A shot made of the eye's own pose, for the far view at the close of the chapter: the place is the world itself (no turn,
+// the origin, a floor at 0), so the shot's points are world points, and the shot stands exactly where the eye stands, looking
+// as it looks, with the angle of view it has on this screen (written for the wide picture, as every shot is, so that
+// shotPose gives it back on a narrow one). It drifts only a very little, within the limits above, for the first
+// forty-five seconds, then stands still. Handing the eye to it moves nothing; it comes home by the usual swing.
+/** @param {{ p: THREE.Vector3, q: THREE.Quaternion, fov: number }} eye @param {number} [aspect] */
+export function holdShot(eye, aspect = DIRECT.wide) {
+  const look = new THREE.Vector3(0, 0, -1).applyQuaternion(eye.q).multiplyScalar(10).add(eye.p);
+  const wide = THREE.MathUtils.degToRad(eye.fov), fov = aspect >= DIRECT.wide ? eye.fov : THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(wide / 2) * aspect / DIRECT.wide));
+  return { place: { at: [0, 0], face: 0 }, shot: { at: eye.p.toArray(), look: look.toArray(), fov, drift: { turn: 0.12, for: 45 }, in: 2, out: 1 } };
+}
+
 // The eye `w` of the way from `a` to `b`, along `route` ({ long, lift, pinch }): round `centre` (his chest), its
 // distance from him and its height each going from one to the other and its bearing turning the short way round him,
 // or the long way (`long`); lifted over what stands between by `lift` metres at the middle of the swing, or drawn in
@@ -261,9 +273,9 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
   // The way back worked out on the way there still serves if neither end has moved since (he stood still, the shot did not drift far).
   const homeFits = () => home && homeA.p.distanceTo(A.p) < 0.05 && turnBetween(homeA.q, A.q) < 0.02 && homeB.p.distanceTo(B.p) < 0.1 && turnBetween(homeB.q, B.q) < 0.03;
   return {
-    /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool). */
-    go(name, where, floorY, { now = false } = {}) {
-      if (!where || !where.shot || where.shot.off || !enabled()) return false;   // `off`: a shot kept in the data but not gone to (it says why)
+    /** Go to the shot of `where` (named `name`), whose floor is at `floorY`; `now`: be there already (a picture tool); `force`: even with 自动镜头 off (the far view of the close is not an observance's shot). */
+    go(name, where, floorY, { now = false, force = false } = {}) {
+      if (!where || !where.shot || where.shot.off || (!enabled() && !force)) return false;   // `off`: a shot kept in the data but not gone to (it says why)
       if (phase === "idle") { t = 0; hadLast = false; }
       beat = 0; softBack = false;
       id = name; place = where; shot = where.shot; foot = floorY; dur = durations(shot); pending = null;

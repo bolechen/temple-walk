@@ -345,11 +345,13 @@ const scenarios = {
       expect(cu.farBell === 1, "the close should end on the far bell answering");
       expect(cu.ending === 1 && mu.started, "the close should have its own music: " + JSON.stringify({ cu, section: mu.section })); }
     const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
+    await t.page.keyboard.press("b");   // nothing opens by itself after the close (#147): the book is the visitor's to open
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
     await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
     // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
-    await offered("起身", "while he sits on the summit"); await t.page.click("#act"); await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
+    await offered("起身", "while he sits on the summit"); await t.page.keyboard.press("e");   // (the button is not drawn on the far view, #147: E stands him up all the same)
+    await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
     await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ expect((await word()) !== "静坐", "the summit offered the close a second time");
     // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
     await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
@@ -381,7 +383,7 @@ const scenarios = {
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
     expect((await t.page.evaluate(() => window.__rites().ended)) === 0, "the close played again for the seventh seal");
-    expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
+    await t.until(async () => ((await t.page.getAttribute("#bookSave", "href")) || "").startsWith("blob:"), 60000, "nothing to save"); await t.shot("e2e-book");   // (the page opens as bare paper and is written on when drawn)
     await t.page.click("#bookClose"); expect((await word()) !== "上香" || !(await t.page.isVisible("#act")), "the incense should not be offered again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -389,6 +391,115 @@ const scenarios = {
   // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
   // The close comes once in each season: sat again in the same season the summit is only a seat; after the season is
   // changed, sitting there plays it again, and a book already full is not given its seal a second time.
+  // The far view at the close of the chapter (#147): nothing opens by itself, the eye stays on the pavilion with one line at
+  // the foot, the book is the visitor's to open (B, or that line), shutting it leaves the far view, and a step brings the eye
+  // home by a swing, never a cut.
+  farview: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+    await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered");
+    await t.page.click("#act");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended");
+    const D = () => t.page.evaluate(() => window.__director()), U = () => t.page.evaluate(() => window.__ui());
+    let d = await D(), u = await U();
+    expect(!u.stack.some((l) => /book/.test(JSON.stringify(l))) && !(await t.page.evaluate(() => document.getElementById("book").open)), "the book opened by itself at the end: " + JSON.stringify(u));
+    expect(d.phase === "hold" && d.id === "ending", "the eye is not held on the far view: " + JSON.stringify(d));
+    await t.until(() => t.page.evaluate(() => document.getElementById("hint").classList.contains("on")), 60000, "no line at the foot of the far view");
+    const line = await t.page.textContent("#hint"); expect(/朱印帐/.test(line), "the line does not offer the book: " + line);
+    // (a line said as he sat is gone after its few seconds, which a fast run has not waited out)
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
+    // Nothing but that line lies over the picture, on three screens; the slips at the edge (留影, 歇脚, the book's seal) stay, at the edge.
+    for (const [w, h] of [[960, 540], [800, 600], [390, 844]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      const over = await t.page.evaluate(() => [...document.querySelectorAll("body *")].filter((el) => {
+        if (el.closest("dialog") || ["CANVAS", "SCRIPT", "STYLE", "HEAD"].includes(el.tagName) || el.closest("#hint, #photoBtn, #menuBtn, #bookBtn")) return false;
+        const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+        if (cs.display === "none" || cs.visibility === "hidden" || r.width < 2 || r.height < 2) return false;
+        for (let a = el; a && a !== document.body; a = a.parentElement) if (+getComputedStyle(a).opacity < 0.05) return false;   // faded with its parent
+        if (el.children.length && ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return false;
+        return !!(el.textContent || "").trim() || el.matches("button,img,svg");
+      }).map((el) => `${el.id || el.className || el.tagName}<${(el.textContent || '').trim().slice(0, 12)}>`));
+      expect(over.length === 0, `${w}x${h}: over the far view lie ${over.join(", ")}`);
+    }
+    // B opens the book; shutting it leaves the far view as it was.
+    await t.page.keyboard.press("b"); await t.until(async () => (await U()).modal, 30000, "B did not open the book");
+    await t.page.click("#bookClose"); await t.until(async () => !(await U()).modal, 20000, "the book would not close");
+    d = await D(); expect(d.phase === "hold" && d.id === "ending", "shutting the book left the far view: " + JSON.stringify(d));
+    // The camera raised on the far view keeps it.
+    await t.page.evaluate(() => window.__photo(true)); await t.frames(3); d = await D(); expect(d.phase === "hold" && d.id === "ending", "the photograph left the far view: " + JSON.stringify(d)); await t.page.evaluate(() => window.__photo(false)); await t.frames(2);
+    // A step brings the eye home by a swing: no cut, and no frame turns the picture further than the swing's own limit.
+    await t.page.keyboard.down("w"); await t.until(async () => (await D()).phase === "out" || (await D()).phase === "idle", 60000, "a step did not send the eye home"); await t.page.keyboard.up("w");
+    await t.until(async () => (await D()).phase === "idle", 60000, "the eye never got home");
+    d = await D(); expect(d.cuts === 0 && d.turnMax <= 3.3, "coming home was not a smooth swing: " + JSON.stringify({ cuts: d.cuts, turnMax: d.turnMax }));
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("hint").classList.contains("on")) && /朱印帐/.test(await t.page.textContent("#hint"))), 30000, "the line about the book stayed after the eye went home");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+
+    // On a phone there is no B: the line at the foot is the way to the book, pressed with a thumb; the stick brings the eye home.
+    {
+      const m = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await m.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await m.until(async () => (await m.page.isVisible("#act")) && (await m.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered on the phone");
+      await m.page.tap("#act");
+      await m.until(async () => (await m.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended on the phone");
+      await m.until(async () => (await m.page.evaluate(() => document.getElementById("hint").classList.contains("on"))), 60000, "no line at the foot of the far view on the phone");
+      const said = await m.page.textContent("#hint"); expect(said.trim() === "点这一行，翻开朱印帐" && !/B/.test(said), "on a touch screen the line should say to press it, not name a key: " + said);
+      await m.until(async () => !(await m.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
+      await m.page.tap("#hint"); await m.until(async () => (await m.page.evaluate(() => window.__ui())).modal, 30000, "touching the line did not open the book");
+      await m.page.tap("#bookClose"); await m.until(async () => !(await m.page.evaluate(() => window.__ui())).modal, 20000, "the book would not close");
+      let d2 = await m.page.evaluate(() => window.__director()); expect(d2.phase === "hold" && d2.id === "ending", "shutting the book left the far view on the phone: " + JSON.stringify(d2));
+      // The stick, pushed with a real touch, brings the eye home.
+      const box = await m.page.evaluate(() => { const r = document.getElementById("stick").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+      const cdp = await m.page.context().newCDPSession(m.page);
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: box[0], y: box[1] }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: box[0], y: box[1] - 40 }] });
+      await m.until(async () => ["out", "idle"].includes((await m.page.evaluate(() => window.__director())).phase), 60000, "the stick did not bring the eye home");
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await m.until(async () => (await m.page.evaluate(() => window.__director())).phase === "idle", 60000, "the eye never got home on the phone");
+      d2 = await m.page.evaluate(() => window.__director()); expect(d2.cuts === 0 && d2.turnMax <= 3.3, "coming home by the stick was not a smooth swing: " + JSON.stringify({ cuts: d2.cuts, turnMax: d2.turnMax }));
+      expect(m.errors.length === 0, m.errors.join("\n")); await m.close();
+    }
+
+    // The music is not cut: nothing in the far view passes the close over, so its phrase ends where it was written to, and the picture is still the far view then.
+    {
+      const k = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+      await k.page.evaluate(() => window.__music(true));
+      await k.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await k.until(async () => (await k.page.isVisible("#act")) && (await k.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered for the music");
+      await k.page.click("#act");
+      await k.until(async () => (await k.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended for the music");
+      const m0 = await k.page.evaluate(() => window.__music()), c0 = await k.page.evaluate(() => window.__cues());
+      expect(m0.started && c0.ending === 1 && c0.passed === 0, "the close's music did not begin, or was passed over: " + JSON.stringify({ cues: c0, section: m0.section }));
+      // (the audio clock runs on real time, not the observances' clock: its phrase is some forty seconds long)
+      await k.until(async () => { const m = await k.page.evaluate(() => window.__music()); return m.section === "ending" && !m.playing; }, 120000, "the close's music never played out");
+      const m1 = await k.page.evaluate(() => window.__music()), c1 = await k.page.evaluate(() => window.__cues()), d3 = await k.page.evaluate(() => window.__director());
+      expect(m1.cuts === m0.cuts && c1.passed === 0, "the music was cut before it played out: " + JSON.stringify({ cuts: [m0.cuts, m1.cuts], passed: c1.passed }));
+      expect(d3.phase === "hold" && d3.id === "ending", "the picture left the far view while the music played out: " + JSON.stringify(d3));
+      expect(k.errors.length === 0, k.errors.join("\n")); await k.close();
+    }
+
+    // The full book's own seal is shown when the book is opened after the close, once; a page left before that owes it the next time.
+    {
+      const q = "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE;
+      const z = await open(b, base, q);
+      const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"], stamped = () => z.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.journey.v1") || "{}").stamped || null);
+      await z.page.evaluate((ids) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20, opened: 20, told: true, closed: 30, closedSeason: "summer", stamped: null })); }, all);
+      await z.page.reload({ waitUntil: "commit" }); await z.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await z.page.evaluate(() => { void window.__ending(); });
+      await z.until(async () => (await z.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended with a full book");
+      expect(!(await stamped()) && !(await z.page.isVisible("#toast")) && !(await z.page.evaluate(() => document.getElementById("book").open)), "the full book's seal was shown, or the book opened, by itself after the close");
+      // The page is left before the book was opened: the seal is still owed when it is back.
+      await z.page.reload({ waitUntil: "commit" }); await z.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      expect(!(await stamped()), "the seal was lost by leaving the page");
+      await z.page.keyboard.press("b");
+      await z.until(async () => (await z.page.isVisible("#toast")) && (await z.page.textContent("#toastName")).includes("七印圆满"), 60000, "the full book's seal was not shown when the book was first opened");
+      await z.until(() => z.page.isVisible("#book"), 60000, "the book did not open after its seal");
+      expect(!!(await stamped()), "the seal was shown but not kept");
+      await z.page.click("#bookClose"); await z.page.waitForTimeout(1500);
+      await z.page.keyboard.press("b"); await z.until(() => z.page.isVisible("#book"), 30000, "the book did not open the second time");
+      expect(!((await z.page.isVisible("#toast")) && (await z.page.textContent("#toastName")).includes("七印圆满")), "the full book's seal was shown a second time");
+      expect(z.errors.length === 0, z.errors.join("\n")); await z.close();
+    }
+  } },
   // The breath of sitting on the summit (#156): a ring on the ground and a small word at the foot of the picture, and nothing
   // laid over his head or chest, from the sitting's own shot, from behind him and from his own eyes, on four screens.
   breathring: { tier: 2, async run(b, base) {
@@ -442,6 +553,7 @@ const scenarios = {
     await t.page.evaluate(() => window.__mood("winter", "day"));
     await t.until(async () => (await summit()) === "静坐", 30000, "a change of season did not offer the close again");
     await t.page.click("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the close did not play again in winter");
+    await t.page.keyboard.press("b");   // (opened by the visitor, #147)
     await t.until(() => t.page.isVisible("#book"), 60000, "the book did not open after the close");
     const j = await t.journey(); expect(j.closedSeason === "winter", "the season of the close was not kept: " + j.closedSeason);
     expect(!(await t.page.textContent("#toastName")).includes("七印圆满") || !(await t.page.isVisible("#toast")), "the full book's seal was shown again on a replay");
@@ -1021,7 +1133,10 @@ const scenarios = {
     s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
     await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
     // Its own level, apart from everything else.
-    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
+    // The three levels under the whole volume are folded until asked for (分开调).
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setVolume"), 10000, "the menu has no volume");
+    expect(!(await t.page.isVisible("#setMusic")), "the music's own level should be folded until asked for");
+    await t.page.click("#menuMix"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "分开调 did not open the music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
     // Struck and listened to within one call: a busy page can let the drum die between two calls.
@@ -1304,6 +1419,11 @@ const scenarios = {
         return { w: r.width, h: r.height, fits: c.scrollHeight <= c.clientHeight, cols: cs.gridTemplateColumns.split(" ").length, side: b.left >= a.right - 1, centred: Math.abs(r.left + r.width / 2 - innerWidth / 2) < 2, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; }); };
     for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) { const m = await lay(w, h); expect(m.cols === 2 && m.side && m.w > m.h && m.fits && !m.clipped && m.centred && m.inside && m.w <= 960, `the menu should lie across at ${w}x${h}, whole and centred: ` + JSON.stringify(m)); }
     for (const [w, h] of [[390, 844], [768, 1024]]) { const m = await lay(w, h); expect(m.cols === 1 && m.inside && m.h > m.w, `the menu should stay one column at ${w}x${h}: ` + JSON.stringify(m)); }
+    // On a phone held upright the parts can be told at a glance: the ear's heading is in sight without scrolling (#185).
+    { await lay(390, 844); const r = await t.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")], cr = c.getBoundingClientRect(), ear = hs[2].getBoundingClientRect(), foot = document.querySelector("#menu .row").getBoundingClientRect(); return { names: hs.map((e) => e.textContent), said: hs.map((e) => e.getAttribute("aria-label")), bottom: Math.round(ear.bottom), foot: Math.round(foot.top), card: Math.round(cr.bottom) }; });
+      // named as the Heart Sutra names the senses, and read aloud in plain words
+      expect(r.names.join("") === "眼身耳意" && r.said.join("") === "画面操作声音文字", "the menu's parts should be 眼 身 耳 意, read aloud as 画面 操作 声音 文字: " + JSON.stringify(r));
+      expect(r.bottom <= Math.min(r.card, r.foot), "on a 390x844 phone the ear's heading should be in sight without scrolling, above the menu's foot: " + JSON.stringify(r)); }
     { const m = await lay(844, 390); expect(m.cols === 2 && m.inside, "a phone held sideways keeps its two columns: " + JSON.stringify(m)); }
     // Tab goes down the left column, then the right, then the foot: the order the eye reads it in.
     { await t.page.setViewportSize({ width: 1366, height: 768 }); await t.frames(2); const seq = [];
@@ -1332,6 +1452,22 @@ const scenarios = {
       for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
         const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
         expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
+      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185)
+      await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
+      const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")]; return { names: hs.length, ear: hs[2] ? Math.round(hs[2].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
+      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
+      // and the four ways to another language are all there at first sight: each the thing a thumb lands on at its middle,
+      // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
+      const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
+      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
+      // and nothing written on the sheet lies half under the foot at first sight: any block of words that shows within the
+      // sheet keeps clear of the foot's box, whatever is added to the menu later (#195: the group's invitation, half hidden)
+      const under = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const cr = c.getBoundingClientRect(), foot = document.querySelector("#menu .row"), f = foot.getBoundingClientRect(), out = [];
+        for (const el of c.querySelectorAll("*")) { if (foot.contains(el) || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+          const st = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width || !r.height || st.visibility === "hidden" || el.closest("[hidden]")) continue;
+          const shows = r.bottom > cr.top && r.top < cr.bottom; if (shows && r.bottom > f.top + 0.5 && r.top < f.bottom - 0.5) out.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 8)}" ${Math.round(r.top)}-${Math.round(r.bottom)}`); }
+        return { foot: Math.round(f.top), out }; });
+      expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and

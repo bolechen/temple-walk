@@ -53,7 +53,7 @@ export function filledBefore(text) {
 // `closed`: when the prologue's close was shown (or passed over) after sitting on the summit. It comes once a walk,
 // whatever else is in the book; 重新朝山 begins a new walk and lets the summit close that one too. `closedSeason`: the
 // season it was last shown in. A change of season lets the summit close the prologue again, once in that season.
-const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null, closedSeason: null });
+const fresh = (now, keep = {}) => ({ v: 1, born: now, seals: {}, strikes: 0, verse: null, done: null, opened: keep.opened || null, told: !!keep.told, closed: null, closedSeason: null, stamped: null });
 
 // `store` is anything with get() → string|null and set(string); the page passes one backed by localStorage.
 // `closedBefore`: the page kept a separate flag that the close had been seen before this book remembered it itself.
@@ -72,6 +72,8 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
         out.told = raw.told === true;
         // Under the rule before this one the close came with the seventh seal, so a filled book has seen it.
         out.closed = Number(raw.closed) > 0 ? Number(raw.closed) : out.done;
+        // The full book's own seal: a book filled before it was kept separately was shown it at once.
+        out.stamped = "stamped" in raw ? (Number(raw.stamped) > 0 ? Number(raw.stamped) : null) : out.done;
         out.closedSeason = typeof raw.closedSeason === "string" ? raw.closedSeason : null;
         return out;
       }
@@ -94,6 +96,9 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
     get closed() { return s.closed; },
     // The prologue closed on the summit. Returns true only the first time in a walk.
     close(season = null) { if (s.closed && (season === null || s.closedSeason === season)) return false; s.closed = now(); s.closedSeason = season; save(); return true; },
+    // The full book's own seal (七印圆满) is owed once the book is full and has not been shown it; `stamp()` says it has been, once.
+    owed: () => count() === SEALS.length && !s.stamped,
+    stamp() { if (!s.done || s.stamped) return false; s.stamped = now(); save(); return true; },
     get closedSeason() { return s.closedSeason; },
     // Has the close been shown in this season? A close kept before seasons were (no season) counts for any, until adopt().
     closedIn: (season) => !!s.closed && (s.closedSeason === null || s.closedSeason === season),
