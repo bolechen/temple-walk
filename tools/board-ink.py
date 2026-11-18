@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Whether the characters of each name board are of one weight (#192).
+"""(A measuring tool only: since 2026-11-19 plaque.js writes the boards in Yuji Boku again and applies no evening; the owner had
+seen black blocks over the characters, not uneven weight, and #207's change of face was not needed. FACE below is now Yuji Boku.)
+
+Whether the characters of each name board are of one weight (#192).
 
     python3 tools/board-ink.py              the table, board by board; exits 1 if any board's characters disagree
     python3 tools/board-ink.py --json       the same as JSON (for the evidence of a pull request)
