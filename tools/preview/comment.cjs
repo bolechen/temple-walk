@@ -37,25 +37,37 @@ function goalsNote(files) {
   return hit.length ? `目标同步：这个 PR 改了 ${hit.map((f) => `\`${f}\``).join("、")}，没有改 \`${GOALS}\`。若用户需求或所有者的决定变了，请主创同步那份文件（AGENTS.md「目标记录」）；只是措辞的改动可以不管。` : "";
 }
 
+// The comment carries what the next run must know in markers: the commit whose build the preview shows (`deployed`),
+// that build's own address (`fixed`) and the address that follows the pull request (`latest`). A push that changes
+// nothing of the site is compared with `deployed` (tools/ci/changes.cjs) and, when it builds nothing, the comment says
+// the preview is still that commit's.
+const markers = (text) => ({ deployed: (text.match(/<!-- deployed:([0-9a-f]{40}) -->/) || [])[1], fixed: (text.match(/<!-- fixed:(\S+) -->/) || [])[1], latest: (text.match(/<!-- latest:(\S+) -->/) || [])[1] });
+const stamp = (m) => [m.deployed && `<!-- deployed:${m.deployed} -->`, m.fixed && `<!-- fixed:${m.fixed} -->`, m.latest && `<!-- latest:${m.latest} -->`].filter(Boolean);
+
+// The links to the six views and the moments for review, folded: the comment's own lines stay few, and they are one tap
+// away on a phone. `fixed` is the address of the commit the preview shows.
+function links(fixed, manifest) {
+  return ["<details><summary>六个验收机位与评审直达（点开）</summary>", "", `验收机位（J01 夏·昼）：${cameraLinks(fixed, manifest)}`, "", `评审直达（不读不写本机朱印帐，属诊断证据）：${benchLinks(fixed)}`, "", "</details>"];
+}
+const FOOT = (run) => `[运行记录](${run})：预览只用来看效果，不是验收结论；反馈问题请附固定地址或提交号。`;
+
 function body({ state, sha, run, record, previous, manifest, files }) {
-  const note = goalsNote(files);
-  const short = sha.slice(0, 7);
+  const note = goalsNote(files), short = sha.slice(0, 7);
+  const tail = note ? ["", note] : [];
   if (state === "success") {
-    const latest = record.preview_urls[0], fixed = record.deployment_urls[0];
-    return [MARK, `<!-- deployed:${sha} -->`, "### PR 预览", "",
-      "| | |", "|---|---|",
-      `| 提交 | \`${sha}\` |`,
-      `| 最新地址（随推送更新） | ${latest} |`,
-      `| 本提交固定地址 | ${fixed} |`, "",
-      `六个验收机位（本提交，J01 夏·昼）：${cameraLinks(fixed, manifest)}`, "",
-      `评审直达（本提交，不读不写本机朱印帐，属诊断证据）：${benchLinks(fixed)}`, "",
-      `由[这次运行](${run})部署：与检查、单测、构建和 \`boot\` 场景同一次运行，部署的是同一份 \`dist/\`。预览只用来看效果，不是验收结论；反馈问题时请附上固定地址或提交号。`,
-      ...(note ? ["", note] : [])].join("\n");
+    const m = { deployed: sha, fixed: record.deployment_urls[0], latest: record.preview_urls[0] };
+    return [MARK, ...stamp(m), "### PR 预览", "", `- 提交 \`${sha}\``, `- 最新地址（随推送更新）：${m.latest}`, `- 本提交固定地址：${m.fixed}`, "",
+      ...links(m.fixed, manifest), "", FOOT(run), ...tail].join("\n");
+  }
+  if (state === "same") {
+    // Nothing of the site changed since `previous.deployed`: the preview was not built again and is still that commit's.
+    return [MARK, ...stamp(previous), "### PR 预览", "", `- 提交 \`${sha}\`：本提交不改站点，预览仍是 \`${previous.deployed.slice(0, 7)}\` 的版本`, `- 最新地址（随推送更新）：${previous.latest}`,
+      `- 那个提交的固定地址：${previous.fixed}`, "", ...links(previous.fixed, manifest), "", FOOT(run), ...tail].join("\n");
   }
   if (state === "failure") {
-    const old = previous ? `「最新地址」仍是上一次成功部署的提交 \`${previous.slice(0, 7)}\`，不是 \`${short}\`。` : "这个 PR 还没有成功部署过预览。";
-    return [MARK, previous ? `<!-- deployed:${previous} -->` : "", `### PR 预览：提交 \`${short}\` 没有部署`, "",
-      `检查或部署没有通过，见[运行记录](${run})。${old}`, ...(note ? ["", note] : [])].join("\n");
+    const old = previous && previous.deployed ? `「最新地址」仍是上一次成功部署的提交 \`${previous.deployed.slice(0, 7)}\`，不是 \`${short}\`。` : "这个 PR 还没有成功部署过预览。";
+    return [MARK, ...(previous ? stamp(previous) : []), `### PR 预览：提交 \`${short}\` 没有部署`, "",
+      `检查或部署没有通过，见[运行记录](${run})。${old}`, ...tail].join("\n");
   }
   return [MARK, "### PR 预览已删除", "", "PR 已关闭，它的预览和各提交的固定地址都已从 Cloudflare 删除。"].join("\n");
 }
@@ -67,7 +79,8 @@ module.exports = async ({ github, context, core }) => {
   const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 });
   const mine = comments.find((c) => c.user.type === "Bot" && c.body.includes(MARK));
   if (state === "removed" && !mine) return;
-  const previous = mine && (mine.body.match(/<!-- deployed:([0-9a-f]{40}) -->/) || [])[1];
+  const previous = mine ? markers(mine.body) : null;
+  if (state === "same" && !(previous && previous.deployed && previous.fixed && previous.latest)) return core.setFailed("the site was not built and the comment names no earlier preview to point to");
   const record = state === "success" ? previewRecord(OUTPUT_FILE) : null;
   if (state === "success" && !record) return core.setFailed("wrangler preview wrote no preview record");
   const files = state === "removed" ? null : (await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: issue_number, per_page: 100 })).map((f) => f.filename);
@@ -77,4 +90,5 @@ module.exports = async ({ github, context, core }) => {
   if (record) await core.summary.addHeading("PR 预览", 3).addRaw(`最新：${record.preview_urls[0]}\n\n本提交（${sha}）：${record.deployment_urls[0]}\n`).write();
 };
 module.exports.body = body;
+module.exports.markers = markers;
 module.exports.goalsNote = goalsNote;

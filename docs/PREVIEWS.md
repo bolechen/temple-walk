@@ -4,11 +4,13 @@
 
 ## 地址
 
-PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR 的最新提交。2026-11-16 之前 `pages.yml` 对 PR 设了 `paths` 过滤，只改文档或交付材料的推送不触发运行，评论和「最新地址」就停在更早的提交上；现在去掉了过滤，代价是只改文档的推送也要跑一遍检查、构建和 `boot`（几分钟）。被更新推送取消的运行不部署也不评论。
+PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR 的最新提交。2026-11-16 之前 `pages.yml` 对 PR 设了 `paths` 过滤，只改文档或交付材料的推送不触发运行，评论和「最新地址」就停在更早的提交上；现在没有过滤，每次推送都有一次运行，但**只改文档的推送不再构建、不装浏览器、不跑 `boot`、不上传**（#187）：评论仍更新到最新提交，写明「本提交不改站点，预览仍是 `<提交>` 的版本」，最新地址和那个提交的固定地址照旧可点。被更新推送取消的运行不部署也不评论。
+
+**什么算「改了站点」**：`tools/ci/changes.cjs` 一处写着清单（`app/`、`tests/e2e/`、`package.json`、锁文件、`vite.config.mjs`、`wrangler.production.jsonc`、`tools/setup.mjs`、`tools/site.cjs`、`pages.yml`、`tools/ci/`）；`tests/unit/ci-changes.test.mjs` 守它，并核对 `e2e.yml` 的 `paths:` 都在清单里。比较的对象是**预览现在显示的那个提交**（评论里 `deployed` 记号写的），不是上一次推送也不是 main：先改代码、后只改文档的 PR，预览仍是改过代码的版本；上一次构建失败或被取消，下一次推送与那个更早的提交比，仍会构建；PR 第一次推送没有预览可比，一定构建；比较失败、文件清单为空或满 300 个，当作要建。只改文档时，可达性检查（烘格子）也跳过，除非动了 `tools/walk/`、`tools/bake-walk.mjs`、`tools/walk-diff.mjs`；单测照跑，格子从最新缓存取。
 
 - 最新地址 `https://pr-<编号>-temple-walk-preview.bole-chen.workers.dev`：始终是这个 PR 最近一次成功部署的版本。
 - 本提交固定地址 `https://<部署号>-temple-walk-preview.bole-chen.workers.dev`：只对应一个提交，之后推送也不会变。截图、反馈问题和评审请用这个地址，并写上完整提交号。
-- 六个验收机位：按 `docs/t00/camera-manifest.json` 生成的固定机位链接（J01 夏·昼），带 `debug=0`，看画面时不出调试面板。
+- 六个验收机位与评审直达：折在评论里的一个 `<details>` 里（手机上点开一次就能点到每个链接）。验收机位是按 `docs/t00/camera-manifest.json` 生成的固定机位链接（J01 夏·昼），带 `debug=0`，看画面时不出调试面板。
 
 - 评审直达：缺印结尾、七印圆满结尾、冬天结尾，以及撞钟、上香、吃茶、得句、观水、燃灯、静坐，点开就是那一刻（`?seals=`、`?at=`、`?play=`，见下）。
 
@@ -20,7 +22,7 @@ PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR �
 
 ## 流程
 
-1. `pages.yml` 的 `verify` 照常执行检查、单测、构建和 `boot` 场景；PR 来自本仓库时，把同一份 `dist/` 交给 `preview` 作业。
+1. `pages.yml` 的 `verify` 先问 `tools/ci/changes.cjs` 站点改了没有；改了，照常执行检查、单测、构建和 `boot` 场景，PR 来自本仓库时把同一份 `dist/` 交给 `preview` 作业；没改，只执行检查、类型、单测，`preview` 作业只更新评论。
 2. `preview` 用 `wrangler preview --name pr-<编号>` 上传到 Cloudflare Worker `temple-walk-preview`，再更新 PR 评论和运行摘要。
 3. PR 关闭（合并或放弃）时，`preview-cleanup.yml` 删除这个预览及其全部固定地址，并在评论里说明。
 
@@ -36,3 +38,7 @@ PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR �
 - Worker 必须先有一个生产版本，预览地址才会路由（否则返回 Cloudflare 错误 1042）。目前的生产版本是一页说明文字，`workers_dev` 已关闭，外部访问不到。不要在 CI 里对这个 Worker 运行 `wrangler deploy`。
 - 仓库 Secret `CLOUDFLARE_PREVIEW_TOKEN`：账户级令牌，权限只有 Workers Scripts Write；Variable `CLOUDFLARE_ACCOUNT_ID`：账户 ID。可以在 Cloudflare 后台换成只作用于 `temple-walk-preview` 的 “Individual Workers Admin” 令牌，用同名 Secret 覆盖即可（OAuth 登录不能通过 API 创建这种单 Worker 令牌）。
 - 手动删除某个预览：`npx wrangler@4.162.0 preview delete --worker-name temple-walk-preview --name pr-<编号> -y`。
+
+## 评论的长度（#187 的取舍）
+
+评论折叠后，**可见的几行**不到 600 字符，但机器人评论的原文仍约 2,400 字符：六个机位和十个直达链接各带一遍完整的固定地址，Markdown 里没有「相对于某地址」的写法，折叠不减原文。订阅了 PR 的对话每次被唤醒读到的是原文，所以折叠省的是人的眼睛，不是对话的 token。真要省 token，只有把链接挪到预览站自己的一页里（评论里只放三个地址和一个入口），但这样手机上要多点一层，#187 不允许，没有做。

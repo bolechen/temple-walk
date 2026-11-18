@@ -121,7 +121,7 @@ visitor's own season and hour (by day until the book has been filled once: the p
 
 Deploy: pushing to `main` runs `.github/workflows/pages.yml`: `verify` (install, check, type check, unit tests, build, and the `boot`
 scenario in a real browser) and then, only if that passes, publishes `dist/` to GitHub
-Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing.
+Pages. A push that touches nothing the site is made of (documents, delivery papers) is checked and publishes nothing. The same holds on a pull request (#187): `tools/ci/changes.cjs` (the one list of what the site is made of, held by `tests/unit/ci-changes.test.mjs`) compares the head with the commit whose build the preview comment says it is showing (its `deployed` marker), and a push of papers only builds nothing, uploads nothing, skips the baked-floor check (unless `tools/walk/` or the bake changed) and only moves the comment on to the new commit, saying the preview is still that commit's; the comment keeps its six views and ten moments inside one `<details>`.
 The slower scenarios (`stairs drop`, with `pnpm run edges`) run beside each publication in `.github/workflows/e2e.yml`, not in its
 way, and do not repeat the parse, type and unit checks `verify` has just made; the same workflow runs every scenario once a night (19:17 UTC) and on demand, shared among four machines (`--shard=i/4`). A red `verify` means the site was not published: read the uploaded
 `e2e-quick-*` artifact (report + screenshots) before guessing.
