@@ -167,19 +167,24 @@ function buildRoom(M, hall, ox, figures) {
     // docs/t00/SOURCES.md). He stands before it and presses E to put in a coin (game.js `offerCoin`); it is a piece of furniture
     // in every build, and only the web build says anything more (src/donate.js).
     if (big) {
-      const bx = 4.7, bz = tz + 0.45, bw = 0.5, bd = 0.38, bh = 0.84;   // centre, width, depth, height to the lid's top
-      add(merge([box(bw + 0.08, 0.08, bd + 0.08, bx, Y + 0.04, bz), box(bw + 0.07, 0.05, bd + 0.07, bx, Y + bh - 0.025, bz), box(bw - 0.04, 0.02, 0.04, bx, Y + bh - 0.05, bz + bd / 2 - 0.02)]), M.woodX);
-      add(merge([box(bw - 0.04, bh - 0.13, bd - 0.04, bx, Y + 0.08 + (bh - 0.13) / 2, bz), ...[-1, 1].map((sx) => box(0.025, bh - 0.13, bd - 0.05, bx + sx * (bw / 2 - 0.02), Y + 0.08 + (bh - 0.13) / 2, bz))]), M.lacquer, () => 0.5);   // up to the lid's underside: no gap for the lamp to light
-      add(merge([box(0.16, 0.006, 0.026, bx, Y + bh + 0.003, bz - 0.02), box(0.05, 0.1, 0.014, bx, Y + 0.5, bz + bd / 2 + 0.004), box(0.02, 0.04, 0.012, bx, Y + 0.5, bz + bd / 2 + 0.014)]), M.bronze, () => 0.8);   // the slot's brass rim, the lock and its hasp
+      // Small enough for a child to reach over: the lid's top is 0.74 m, a little under his shoulder (0.78 m), and the slot
+      // lies near the lid's front edge, so that standing a body's width off the lid (BODY) his arm, a bow leaning him in, reaches it.
+      const bx = 4.7, bz = tz + 0.45, lw = 0.46, ld = 0.34, bh = 0.74, bw = 0.38, bd = 0.28, slotZ = bz + 0.12;   // centre; lid width and depth; height to the lid's top; body width and depth; the slot's depth
+      add(merge([box(bw + 0.04, 0.07, bd + 0.02, bx, Y + 0.035, bz), box(lw, 0.05, ld, bx, Y + bh - 0.025, bz)]), M.woodX);
+      add(merge([box(bw, bh - 0.12, bd, bx, Y + 0.07 + (bh - 0.12) / 2, bz)]), M.lacquer, () => 0.5);   // up to the lid's underside: no gap for the lamp to light
+      add(merge([box(0.16, 0.006, 0.026, bx, Y + bh + 0.003, slotZ), box(0.045, 0.09, 0.014, bx, Y + 0.38, bz + bd / 2 + 0.004), box(0.018, 0.035, 0.012, bx, Y + 0.38, bz + bd / 2 + 0.014)]), M.bronze, () => 0.8);   // the slot's brass rim, the lock and its hasp
       const cv = document.createElement("canvas"); cv.width = 128; cv.height = 192; const cx = cv.getContext("2d");
       cx.fillStyle = "#1c1612"; cx.fillRect(0, 0, 128, 192); cx.strokeStyle = "#b99a55"; cx.lineWidth = 5; cx.strokeRect(6, 6, 116, 180);
       cx.fillStyle = "#c9a65a"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.font = `64px ${KAI}`; cx.fillText("功", 64, 62); cx.fillText("德", 64, 134);
       const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.3).translate(ox + bx, Y + 0.28 + 0.15 + 0.08, bz + bd / 2 + 0.003), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: 0.2, envMapIntensity: 0.3 }));
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.24).translate(ox + bx, Y + 0.45, bz + bd / 2 + 0.003), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: 0.2, envMapIntensity: 0.3 }));
       g.add(board);
-      block(bx - bw / 2 - 0.06 - BODY, bx + bw / 2 + 0.06 + BODY, bz - bd / 2 - 0.06 - BODY, bz + bd / 2 + 0.06 + BODY);
-      // Where he stands before it, facing north, and where the coin goes in (world coordinates, for rites.js).
-      coinBox = { at: [ox + bx, bz + bd / 2 + 0.06 + BODY + 0.3], face: Math.PI, r: 1.1, offering: true, slot: [ox + bx, Y + bh + 0.02, bz - 0.02], room: hall.id };
+      block(bx - lw / 2 - BODY, bx + lw / 2 + BODY, bz - ld / 2 - BODY, bz + ld / 2 + BODY);
+      // Where he stands before it, facing north (just off the solid), and where the coin goes in: the middle of the slot on
+      // the lid's top (world coordinates, for rites.js). The eye's own shot is data in his frame, as the other places' are
+      // (src/director.js): from his right and a little above, over the lid, the slot, his hand and the coin in one picture.
+      coinBox = { at: [ox + bx, bz + ld / 2 + BODY + 0.01], face: Math.PI, r: 1.1, offering: true, slot: [ox + bx, Y + bh, slotZ], room: hall.id,
+        shot: { at: [-1.05, 1.1, 0.6], look: [-0.06, 0.74, 0.3], fov: 42, in: 2.0, out: 1.0, drift: { side: 0.01, for: 8 }, keep: [[0, 0.77, 0.44], [0, 0.6, 0.42], [-0.04, 0.82, 0.3]] } };
     }
     lightAt.push([-(big ? 3.3 : 2.2), 1.9, tz + 0.2, 0xffa050, 9, 14], [big ? 3.3 : 2.2, 1.9, tz + 0.2, 0xffa050, 9, 14], [0, big ? K.h - 2.4 : K.h - 2.0, big ? tz + 0.8 : tz + 1.8, 0xffe6c4, big ? 11 : 7, 16, true]);
   } else if (hall.kind === "chan") {

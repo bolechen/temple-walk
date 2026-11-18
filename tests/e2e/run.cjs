@@ -905,6 +905,17 @@ const scenarios = {
     expect(!(await quiet()), "what steps aside should come back with the eye");
     await t.frames(2); expect((await t.journey()).rings > 0, "the rings still owed should be drawn again once the eye is home");
     await t.until(async () => (await t.journey()).seals.lamp > 0, 60000, "no seal for the lamp");
+    // The 功德箱 (#202): the eye goes to the box's own shot in the hall and is home again before the sheet comes; the hand reaches the slot.
+    await t.page.evaluate(() => window.__inside("main")); await t.frames(3);
+    await t.page.evaluate(() => { const p = window.__gallery["main-box"]; window.__pose(p.at[0], p.at[1] + 0.2, Math.PI - p.face, 0.05); });
+    await offered("合掌"); await t.page.click("#act");
+    await reach("the box's shot was never gone to", () => window.__director().id === "main-box" && window.__director().phase !== "idle");
+    await reach("the box's shot was never reached", () => window.__director().id === "main-box" && window.__director().phase === "hold");
+    expect(await quiet(), "the way and the slips should step aside while the eye is on the box's shot");
+    await reach("the eye never came back from the box by itself", () => window.__director().phase === "idle" && window.__director().backs >= 1, 90000);
+    await t.until(async () => (await t.page.evaluate(() => window.__ui().stack.includes("offering"))) || (await t.journey()).rite === null, 60000, "the coin went in and nothing followed");
+    if (await t.page.evaluate(() => window.__ui().stack.includes("offering"))) { await t.page.keyboard.press("Escape"); await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box"); }
+    await t.page.evaluate(() => window.__inside(null)); await t.frames(3);
     // The well: watched from where the eye follows him (its shot is kept but not gone to until #99: the niche is unlit).
     // The eye must not leave him at any moment of the observance.
     const g0 = await D(); await at("well"); await offered("观水"); await t.page.click("#act");
@@ -1736,7 +1747,25 @@ const scenarios = {
     await t.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), box);
     await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "合掌", 30000, "standing before the box offered no 合掌");
     await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#offering"), 120000, "the coin was dropped and no sheet followed");
+    // Frame by frame, while the coin goes in: the eye goes to the box's own shot and is back before the sheet; the coin is in his
+    // fingers until it is let go and gone on the frame it passes the lid; its sound is asked for within 80 ms of that.
+    const seen = await t.page.evaluate(() => new Promise((done) => {
+      const s = { phases: [], frames: [], sheet: null }; const t0 = performance.now();
+      const tick = () => {
+        const d = window.__director(), c = window.__coin(), open = !!document.getElementById("offering")?.open;
+        s.phases.push(d.phase); s.frames.push({ vis: c.visible, passed: c.passedAt, released: c.released, y: c.y });
+        if (open) { s.sheet = { directed: c.directed, phase: d.phase }; s.coin = c; return done(s); }
+        if (performance.now() - t0 > 150000) return done(s);
+        requestAnimationFrame(tick);
+      }; tick();
+    }));
+    expect(seen.sheet, "the coin was dropped and no sheet followed");
+    expect(seen.phases.includes("hold"), "the eye never came to rest on the box's shot: " + [...new Set(seen.phases)]);
+    expect(seen.sheet.phase === "idle" && !seen.sheet.directed, "the sheet opened while the eye was still away: " + JSON.stringify(seen.sheet));
+    const pass = seen.frames.findIndex((f) => f.passed !== null);
+    expect(pass > 0 && seen.frames[pass - 1].vis && !seen.frames[pass].vis && seen.frames.slice(0, pass).some((f) => f.released), "the coin should be seen, let go, and gone on the frame it passes the lid: " + JSON.stringify(seen.frames.slice(Math.max(0, pass - 2), pass + 2)));
+    const lag = seen.coin.at - seen.coin.passedAt;
+    expect(lag >= 0 && lag <= 80, `the sound was asked for ${lag.toFixed(0)} ms after the coin went in`);
     const links = await t.page.$$eval("#offering a", (as) => as.map((a) => ({ href: a.href, target: a.target, rel: a.rel, text: a.textContent })));
     expect(links.length === 1 && links[0].target === "_blank" && /noopener/.test(links[0].rel), "the sheet should hold exactly one link, to a new tab: " + JSON.stringify(links));
     expect(links[0].href === "https://rushiwowen.co/donate?utm_source=temple-walk&utm_medium=game&utm_campaign=offering-box&utm_content=zh", "the link is not the sponsor page in Chinese: " + links[0].href);
