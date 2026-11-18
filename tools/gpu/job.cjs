@@ -89,6 +89,7 @@ function fingerprint(dir) {
       if (z.walker) z.walker.msPerFrame = +(z.walker.ms / Math.max(1, z.f - a.f)).toFixed(4);
       const cost = await page.evaluate(() => (window.__cost ? window.__cost(40) : null));   // drawing alone, without the browser's presenting
       const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, doors: z.doors, at: [z.y.x, z.y.z] };   // doors: the rooms seen through the doors (#218)
+      if (b.after) row.after = await page.evaluate(`(async () => { ${b.after} })()`).catch((e) => ({ error: String(e.message).slice(0, 200) }));   // `after`: a script run once the frames are counted, its answer kept (the doorways' retake on a change of hour, #218)
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }
     save();

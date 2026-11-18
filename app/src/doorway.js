@@ -145,9 +145,20 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   };
   // Before a room is first drawn, what it is drawn with is compiled off the main thread where the browser can
   // (KHR_parallel_shader_compile): the first face would otherwise wait on every one of its shaders.
+  // Compiled as they will be drawn: into the cube (a render target has its own colour handling), and the distances'
+  // material too, on a plain and on an instanced mesh.
+  let deepReady = null;
   const prepare = (o) => {
-    const undress = dress(o);
-    try { return renderer.compileAsync(o.r.group, o.cam.children[0], scene); } catch { return Promise.resolve(); } finally { undress(); }
+    const undress = dress(o), target = renderer.getRenderTarget(), jobs = [];
+    try {
+      renderer.setRenderTarget(o.col, 0); jobs.push(renderer.compileAsync(o.r.group, o.cam.children[0], scene));
+      if (!deepReady) {
+        const probe = new THREE.Scene(), g = new THREE.BoxGeometry(); probe.add(new THREE.Mesh(g, dm), new THREE.InstancedMesh(g, dm, 1));
+        renderer.setRenderTarget(o.dist, 0); deepReady = renderer.compileAsync(probe, o.dcam.children[0]);
+      }
+      jobs.push(deepReady);
+    } catch { /* compiled on first drawing instead */ } finally { renderer.setRenderTarget(target); undress(); }
+    return Promise.all(jobs).catch(() => {});
   };
   const face = (o, i) => {
     const undress = dress(o), fog = scene.fog;
