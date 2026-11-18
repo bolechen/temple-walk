@@ -75,12 +75,27 @@ test("at every fork of every tree, the wood that goes on is 0.8 to 1.2 of the wo
   const wrong = everyTree.forks.filter((f) => f.ratio < 0.8 || f.ratio > 1.2).map((f) => `${f.kind} ${f.h} m: ${f.ratio.toFixed(2)}`);
   assert.deepEqual(wrong.slice(0, 8), [], `${wrong.length} forks out of balance`);
 });
-test("no branch is wider than 0.7 of its parent where it leaves, and each is set into it, not laid against it", () => {
+test("no branch is wider than 0.7 of its parent where it leaves, and each starts inside it: every point of its first ring within the parent's radius (#200)", () => {
   const wide = everyTree.forks.filter((f) => f.width > 0.7 + 1e-9).map((f) => `${f.kind} ${f.h} m: ${f.width.toFixed(2)}`);
   assert.deepEqual(wide.slice(0, 8), []);
-  const set = everyTree.limbs.filter((l) => l.sunk !== null); assert.ok(set.length > 300);
-  const off = set.filter((l) => l.sunk < 0.5 || l.sunk > 0.7).map((l) => `${l.kind} ${l.h} m: sunk ${l.sunk.toFixed(2)} of its radius`);
-  assert.deepEqual(off.slice(0, 8), []);
+  const set = everyTree.limbs.filter((l) => l.first); assert.ok(set.length > 300, `only ${set.length} branches report their first ring`);
+  // 2 cm inside the parent's surface, or a third of its radius on a twig too thin for that
+  const out = set.filter((l) => l.first.radial > l.first.R - Math.min(0.02, 0.3 * l.first.R) || (l.first.end && l.first.along > 0)).map((l) => `${l.kind} ${l.h} m, depth ${l.depth}${l.first.end ? " (out of a fork)" : ""}: first ring reaches ${l.first.radial.toFixed(3)} of a parent ${l.first.R.toFixed(3)}, ${l.first.along.toFixed(3)} along`);
+  assert.deepEqual(out.slice(0, 8), [], `${out.length} branches begin outside their parent`);
+  // and the collar swells where the branch comes out of the parent's surface, not where it starts inside it
+  const lost = set.filter((l) => !(l.first.exit > 0)).map((l) => `${l.kind} ${l.h} m, depth ${l.depth}: comes out at ${l.first.exit}`);
+  assert.deepEqual(lost.slice(0, 8), []);
+});
+test("below 2 m no two stems of a maple grow against each other: their centres at least 1.2 times their radii together apart (#200)", () => {
+  const close = [];
+  for (const c of everyTree.census.filter((t) => t.kind === "maple")) {
+    const stems = everyTree.limbs.filter((l) => l.kind === "maple" && l.at[0] === c.at[0] && l.at[1] === c.at[1] && l.depth === 0);
+    for (let i = 0; i < stems.length; i++) for (let j = i + 1; j < stems.length; j++) for (let k = 0; k < stems[i].axis.length; k++) {
+      const [y, x1, z1, r1] = stems[i].axis[k], [, x2, z2, r2] = stems[j].axis[k];
+      if (Math.hypot(x1 - x2, z1 - z2) < 1.2 * (r1 + r2)) close.push(`the maple at ${c.at}: stems ${i} and ${j} at ${y.toFixed(1)} m, ${Math.hypot(x1 - x2, z1 - z2).toFixed(3)} apart, radii ${r1.toFixed(3)} + ${r2.toFixed(3)}`);
+    }
+  }
+  assert.deepEqual(close.slice(0, 8), [], `${close.length} places where two stems touch`);
 });
 test("the great boughs of the ginkgo and the maple bend through at least five points", () => {
   const great = everyTree.limbs.filter((l) => (l.kind === "ginkgo" && l.depth === 1) || (l.kind === "maple" && l.depth <= 1));
