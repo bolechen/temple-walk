@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
-import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
+import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
@@ -49,7 +49,22 @@ export function createGame(y) {
   const ui = y.ui;
   ui.layer("slip", { confirm: "slipTake" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
   $("slipTake")?.addEventListener("click", () => ui.close("slip"));
-  const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); };
+  // A slip is written down the page, and a long line in a short window (a phone on its side) would run to more columns than the
+  // screen is wide. It is fitted when it opens (#203): the same layout with smaller writing, down to 14 px, and only if that
+  // will not do, laid flat as English is, with smaller writing again; the first that lies whole on the screen is taken.
+  function fitSlip() {
+    const sheet = $("slip"), paper = sheet.querySelector(".paper"), take = $("slipTake");
+    const fits = () => { const W = innerWidth, H = innerHeight, p = paper.getBoundingClientRect(), b = take.getBoundingClientRect();
+      return p.left >= 0 && p.right <= W && p.top >= 0 && p.bottom <= H && b.bottom <= H && document.documentElement.scrollWidth <= W; };
+    for (const flat of [false, true]) {
+      sheet.classList.toggle("flat", flat);
+      for (const px of [null, 24, 21, 18, 16, 14]) {
+        if (px) { sheet.style.setProperty("--slip-fs", px + "px"); sheet.style.setProperty("--slip-from", Math.min(19, px) + "px"); } else { sheet.style.removeProperty("--slip-fs"); sheet.style.removeProperty("--slip-from"); }
+        if (fits()) return;
+      }
+    }
+  }
+  const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); fitSlip(); };
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let sat = 0, ended = 0, went = 0;
   let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter");
@@ -492,6 +507,8 @@ export function createGame(y) {
   window.__seats = y.site.seats; window.__sit = (i) => sitDown(y.site.seats[i]); window.__ending = () => finale();
   window.__left = () => ({ place: readPlace(localStorage), offer: titleOffer(journey.count(), SEALS.length, left, y.start), again: !!$("againBtn") && !$("againBtn").hidden });
   window.__visit = () => ({ metres: visit.metres, seconds: visit.seconds });
+  // For the tests: the slip of paper with the i-th of the library's lines on it (`__slip(null)` puts it away).
+  window.__verses = VERSES.length; window.__slip = (i) => { if (i == null) { ui.close("slip"); return null; } const v = pickVerse(i); holdOut(t(v.text), t(v.from), t("收下"), () => {}); return v.text; };
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
   window.__take = () => rite && rite.take && rite.take();
   return { near: () => near, rite: () => rite && rite.id };
