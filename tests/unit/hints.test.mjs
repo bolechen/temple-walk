@@ -34,3 +34,16 @@ test("a visitor who has dragged is not told again on the path", () => {
   h.say.entered(); h.say.dragged();   // dragged while the first line still showed: two fingers wait
   rest(h); h.step(0.1, 80, false, true); assert.ok(!h.state().said.includes("pinch"), "a drag means the fallback is not needed");
 });
+
+// The far view's line stays until it is released (#147): no other tip takes the line while it is held, and none is lost —
+// a tip refused is not marked said, so it is told when its moment comes again.
+test("the line held at the foot of the far view is not taken by another tip, and the tip is not lost", () => {
+  const h = createHints();
+  h.say.entered(); rest(h);
+  h.hold("far line"); assert.equal(h.state().tip, "hold");
+  h.say.seal(); h.say.held(); h.say.upView(); h.say.nearest(); h.say.dragged(); h.step(0.1, 50, false, true);
+  assert.equal(h.state().tip, "hold", "a tip took the held line");
+  assert.ok(page.hint.innerHTML.includes("far line") && !page.hint.innerHTML.includes("小印"), "the held words were replaced: " + page.hint.innerHTML);
+  assert.ok(["book", "held", "upView", "eyes", "pinch", "jump"].every((id) => !h.state().said.includes(id)), "a tip refused was counted as said: " + h.state().said);
+  h.release(); h.say.seal(); assert.equal(h.state().tip, "book", "after the line is released the tip is told");
+});
