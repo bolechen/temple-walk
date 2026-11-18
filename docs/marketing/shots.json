@@ -8,7 +8,7 @@
     2160
    ],
    "batch": 1,
-   "query": "show=cam01&season=summer&time=day&view=third",
+   "query": "show=cam01&season=autumn&time=dawn&view=third",
    "place": "竹林起点",
    "alt": false
   },
@@ -20,7 +20,7 @@
     2080
    ],
    "batch": 1,
-   "query": "show=cam01&season=summer&time=day&view=third",
+   "query": "show=cam01&season=autumn&time=dawn&view=third",
    "place": "竹林起点",
    "alt": false
   },
@@ -80,7 +80,7 @@
     2160
    ],
    "batch": 1,
-   "query": "show=cam04&season=autumn&time=dusk&view=third",
+   "query": "show=cam04&season=summer&time=day&view=third",
    "place": "绕壁后的山门",
    "alt": false
   },
@@ -92,7 +92,7 @@
     2080
    ],
    "batch": 1,
-   "query": "show=cam04&season=autumn&time=dusk&view=third",
+   "query": "show=cam04&season=summer&time=day&view=third",
    "place": "绕壁后的山门",
    "alt": false
   },
@@ -239,78 +239,6 @@
    "query": "show=front&season=winter&time=day&view=third",
    "place": "雪·山门前",
    "alt": false
-  },
-  {
-   "id": "alt-snownight-land",
-   "orient": "land",
-   "size": [
-    3840,
-    2160
-   ],
-   "batch": 1,
-   "query": "show=court&season=winter&time=night&view=third",
-   "place": "备选 雪夜首院",
-   "alt": true
-  },
-  {
-   "id": "alt-snownight-port",
-   "orient": "port",
-   "size": [
-    1560,
-    2080
-   ],
-   "batch": 1,
-   "query": "show=court&season=winter&time=night&view=third",
-   "place": "备选 雪夜首院",
-   "alt": true
-  },
-  {
-   "id": "alt-startdawn-land",
-   "orient": "land",
-   "size": [
-    3840,
-    2160
-   ],
-   "batch": 1,
-   "query": "show=cam01&season=autumn&time=dawn&view=third",
-   "place": "备选 秋晨竹径",
-   "alt": true
-  },
-  {
-   "id": "alt-startdawn-port",
-   "orient": "port",
-   "size": [
-    1560,
-    2080
-   ],
-   "batch": 1,
-   "query": "show=cam01&season=autumn&time=dawn&view=third",
-   "place": "备选 秋晨竹径",
-   "alt": true
-  },
-  {
-   "id": "alt-gatenoon-land",
-   "orient": "land",
-   "size": [
-    3840,
-    2160
-   ],
-   "batch": 1,
-   "query": "show=cam04&season=summer&time=day&view=third",
-   "place": "备选 山门夏昼",
-   "alt": true
-  },
-  {
-   "id": "alt-gatenoon-port",
-   "orient": "port",
-   "size": [
-    1560,
-    2080
-   ],
-   "batch": 1,
-   "query": "show=cam04&season=summer&time=day&view=third",
-   "place": "备选 山门夏昼",
-   "alt": true
   }
  ]
 }
