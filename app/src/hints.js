@@ -16,7 +16,7 @@ export function createHints({ off = false, ui = null } = {}) {
   // them and not in the middle of one (a dot with no space round it, as in a Korean pair of words, belongs to its phrase).
   const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part : `<span class="phrase">${part}</span>`)).join("");
   function tip(id, html, secs = 7) {
-    if (off || !line || said.has(id)) return false;
+    if (off || !line || said.has(id) || now === "hold") return false;   // (the far view's line is held until it is released: a tip refused is not counted as said)
     said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on");
     clearTimeout(lineT); lineT = setTimeout(() => drop(id), secs * 1000); return true;
   }

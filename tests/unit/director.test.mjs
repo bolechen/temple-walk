@@ -97,6 +97,29 @@ function run(director, cam, centre, frames, onFrame = () => {}) {
 const TURN = THREE.MathUtils.radToDeg(DIRECT.rate.in) * DT + 0.05, TURN_BACK = THREE.MathUtils.radToDeg(DIRECT.rate.out) * DT + 0.05;
 const MOVE = DIRECT.speed * DT + 0.01;
 
+// What a slow frame does to a swing (#233): the picture turns at the swing's own rate, so a frame that took longer turns it
+// further, not faster. The night run saw 3.75° in one frame on a loaded machine; the same swing turns about 28° a second.
+// A test that bounds the turn of one frame therefore measures the machine; `rateMax` is the picture's own speed.
+test("a slow frame turns the picture further but not faster: the way home is held to a rate, not to a turn a frame", () => {
+  const id = "bell", p = site.places[id], foot = at(p), centre = centreOf(p, foot), got = {};
+  for (const dt of [DT, 0.135]) {
+    const cam = follower(p, foot, 0), d = createDirector({ walker, veil: () => {} });
+    const go = (secs) => { const base = { p: cam.position.clone(), q: cam.quaternion.clone() }; for (let i = 0; i < Math.ceil(secs / dt); i++) { cam.position.copy(base.p); cam.quaternion.copy(base.q); d.apply(cam, dt, centre, 50); } };
+    assert.ok(d.go(id, p, foot));
+    let n = 0; do { go(dt); n++; } while (d.state().planning && n < 600);
+    go(d.state().in + 0.5); assert.equal(d.state().phase, "hold");
+    const before = d.state().turnMax;   // (what the way there turned is not the question: reset the way home's own record)
+    d.back(); n = 0; do { go(dt); n++; } while (d.state().planning && n < 600);
+    go(d.state().out + 0.5); assert.equal(d.state().phase, "idle");
+    got[dt] = { ...d.state(), before };
+  }
+  const fast = got[DT], slow = got[0.135];
+  assert.equal(fast.cuts, 0); assert.equal(slow.cuts, 0);
+  const limit = THREE.MathUtils.radToDeg(DIRECT.rate.out) + 0.5;
+  assert.ok(fast.rateMax > 5 && fast.rateMax <= limit && slow.rateMax <= limit, `the way home turned at ${fast.rateMax} and ${slow.rateMax} °/s, over ${limit}`);
+  assert.ok(slow.turnMax > 2 * fast.turnMax, `a frame of 135 ms should turn the picture further (${slow.turnMax}° against ${fast.turnMax}°), or this test says nothing about the machine`);
+});
+
 // Inside something by more than a graze: in it at the point and 3 cm to every side. (A swing sampled every 4 cm may
 // brush the edge of the padding drawn round a low thing, 38 cm out from a lamp table and 5.5 m up, by less than that.)
 const deep = (v, foot) => [[0, 0], [0.03, 0], [-0.03, 0], [0, 0.03], [0, -0.03]].every(([dx, dz]) => walker.eyeShut(v.x + dx, v.y, v.z + dz, foot) === true);

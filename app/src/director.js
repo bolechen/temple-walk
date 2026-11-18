@@ -267,7 +267,7 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
   /** @type {null | Generator<void, any>} */ let pending = null, homeIt = null;
   /** @type {null | { route: Route, secs: number }} */ let home = null;
   const homeA = pose(), homeB = pose();
-  const A = pose(), B = pose(), O = pose(), last = new THREE.Quaternion(), stats = { cuts: 0, blends: 0, backs: 0, turnMax: 0, frames: 0, why: null, route: {}, blocked: false };
+  const A = pose(), B = pose(), O = pose(), last = new THREE.Quaternion(), stats = { cuts: 0, blends: 0, backs: 0, turnMax: 0, frames: 0, why: null, route: {}, blocked: false, turnDt: 0, rateMax: 0 };
   const reset = () => { phase = "idle"; u = 0; t = 0; ink = null; plan = { route: {}, secs: 0 }; softBack = false; beat = 0; decided = false; hadLast = false; pending = homeIt = home = null; veil(0); quiet(false); };
   const showRoute = () => { stats.route = { ...plan.route, curve: undefined, via: plan.route.via && plan.route.via.map((v) => v.map((c) => +c.toFixed(2))) }; stats.blocked = !!plan.blocked; };
   // The way back worked out on the way there still serves if neither end has moved since (he stood still, the shot did not drift far).
@@ -349,10 +349,10 @@ export function createDirector({ walker, enabled = () => true, reduced = () => f
       camera.position.copy(O.p); camera.quaternion.copy(O.q);
       // The most the picture turned from one frame to the next where the ink did not hide it (the following eye's own
       // turning included), for the tests.
-      if (hadLast && !jumped) stats.turnMax = Math.max(stats.turnMax, turnBetween(last, O.q));
+      if (hadLast && !jumped) { const turn = turnBetween(last, O.q); if (turn > stats.turnMax) { stats.turnMax = turn; stats.turnDt = dt; } if (dt > 0.002) stats.rateMax = Math.max(stats.rateMax, turn / dt); }
       last.copy(O.q); hadLast = true; stats.frames++;
       return O.fov;
     },
-    state: () => ({ phase, id, planning: !!pending, w: +smoother(u).toFixed(3), cut: !!ink, veil: ink ? +veilAt(ink.s).toFixed(3) : 0, t: +t.toFixed(2), in: dur.inNow || dur.in, out: dur.back || dur.out, ...stats, turnMax: +THREE.MathUtils.radToDeg(stats.turnMax).toFixed(2) }),
+    state: () => ({ phase, id, planning: !!pending, w: +smoother(u).toFixed(3), cut: !!ink, veil: ink ? +veilAt(ink.s).toFixed(3) : 0, t: +t.toFixed(2), in: dur.inNow || dur.in, out: dur.back || dur.out, ...stats, turnMax: +THREE.MathUtils.radToDeg(stats.turnMax).toFixed(2), turnDt: +(stats.turnDt * 1000).toFixed(1), rateMax: +THREE.MathUtils.radToDeg(stats.rateMax).toFixed(1) }),
   };
 }
