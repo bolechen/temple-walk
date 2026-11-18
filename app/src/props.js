@@ -6,7 +6,7 @@ import { castTexture, censerGeometry, censerMaterial } from "./censer.js";
 
 export function createProps(scene, M, at, centre) {
   // The Wanli censer of Jingshan, in its three parts (censer.js).
-  scene.add(mesh(censerGeometry().translate(at.x, 0, at.z), censerMaterial(procMat, castTexture())));
+  scene.add(mesh(censerGeometry().translate(at.x, 0, at.z), censerMaterial(procMat, castTexture(), at)));
 
   const c = document.createElement("canvas"); c.width = c.height = 128;
   const x = c.getContext("2d"), r = x.createRadialGradient(64, 64, 2, 64, 64, 64);

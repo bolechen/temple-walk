@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { buildSite, createWalker } from "../../app/src/site.js";
 import { followEye, createFollow } from "../../app/src/eye.js";
 import { BODY } from "../../app/src/geo.js";
-import { CENSER, CAST, censerGeometry } from "../../app/src/censer.js";
+import { CENSER, CAST, censerGeometry, clearOfCenser } from "../../app/src/censer.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -18,16 +18,17 @@ const BAND = 0.05, reach = new Float32Array(Math.ceil(3.2 / BAND));
 for (let i = 0; i < pos.count; i++) { const b = Math.floor(pos.getY(i) / BAND); reach[b] = Math.max(reach[b], Math.hypot(pos.getX(i), pos.getZ(i))); }
 const reachAt = (y) => (y < 0 || y >= reach.length * BAND ? 0 : reach[Math.floor(y / BAND)]);
 
-test("it is the real one's shape and size: 2.7 m to the cap, the gourd over it, 1.12 m across the belly, three feet and two ears", () => {
+test("it is the real one's shape and size: 2.7 m to the cap, a small gourd over it, 1.12 m across the belly, three feet and two ears", () => {
   geo.computeBoundingBox(); const b = geo.boundingBox;
   assert.ok(b.max.y >= 2.7 && b.max.y <= 3.0, `stands ${b.max.y.toFixed(2)} m with its gourd`);
+  assert.ok(reachAt(2.66) > 0.08 && reachAt(2.71) < 0.08, "the cap ends at 2.7 m, as the real one stands");
   assert.ok(reachAt(2.69) > 0.06 && reachAt(2.75) < 0.12, "the gourd sits on the cap");
   const belly = Math.max(...[0.8, 0.9, 1.0, 1.1].map(reachAt)) * 2;
   assert.ok(Math.abs(belly - 3.53 / Math.PI) < 0.04, `the belly is ${belly.toFixed(3)} m across (3.53 m round)`);
   assert.equal(CENSER.legs.length, 3);
   assert.ok(CENSER.legs.some(([x, z]) => Math.abs(x) < 1e-6 && z > 0), "one foot toward the visitor");
-  assert.ok(b.max.x > CENSER.belly + 0.08 && b.min.x < -CENSER.belly - 0.08 && b.max.z < CENSER.belly + 0.02, "the ears stand out on either side, not before and behind");
-  assert.ok(reachAt(1.7) < CENSER.belly && reachAt(1.95) > CENSER.belly - 0.02, "a pavilion over the lip, under a broad eave");
+  assert.ok(b.max.x > b.max.z + 0.05 && -b.min.x > -b.min.z + 0.05, "the ears stand out on either side, not before and behind");
+  assert.ok(reachAt(1.88) >= CENSER.belly, "a pavilion over the lip, under an eave as broad as the belly");
 });
 
 test("what is cast on it: the date in one line, the couplet five and five", () => {
@@ -58,7 +59,7 @@ function eyes(path, reachK = 6.2) {
     const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
     const foot = walker.heightAt(x, z); eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
     const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
-    out.push({ x, z, eye: follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: 0.04, side, reach: reachK })) });
+    out.push({ x, z, eye: clearOfCenser(follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: 0.04, side, reach: reachK })), [x, foot + 1.15, z], site.censer) });   // as yard.js steps it
   }
   return out;
 }

@@ -17,34 +17,38 @@ import { merge } from "./geo.js";
 // either side of the front smoke window, the first line on the right as one faces it.
 export const CAST = Object.freeze({ date: "萬曆歲次戊午季春吉旦", right: "帶月吐青霓", left: "和雲飛彩鳳" });
 
-// The turned body, as (radius, height) from the foot up: belly, neck, lip and the flange the pavilion stands on, and
-// inside the lip the bed of ash, a little under the flange.
-const BODY = [[0, 0.47], [0.2, 0.475], [0.36, 0.54], [0.48, 0.67], [0.545, 0.84], [0.56, 0.99], [0.545, 1.12], [0.49, 1.23], [0.4, 1.3], [0.36, 1.33],
-  [0.355, 1.4], [0.4, 1.405], [0.405, 1.47], [0.4, 1.53], [0.44, 1.535], [0.445, 1.575], [0.42, 1.585], [0.32, 1.585], [0.31, 1.5], [0, 1.5]];
-const LEG = [[0, 0], [0.12, 0], [0.125, 0.035], [0.095, 0.075], [0.07, 0.13], [0.085, 0.2], [0.11, 0.27], [0.105, 0.34], [0.075, 0.41], [0.08, 0.46], [0.11, 0.52], [0, 0.56]];
-// The two storeys of the pavilion: the circle the posts stand on, the floor and the head of the posts.
-const STOREYS = [{ r: 0.375, y0: 1.585, y1: 1.85, windows: 4 }, { r: 0.29, y0: 2.13, y1: 2.375, windows: 4 }];
-// The eaves over each storey and the cap.
-const EAVE = [[0.41, 1.85], [0.43, 1.92], [0.555, 1.925], [0.57, 1.965], [0.555, 1.99], [0.45, 2.04], [0.34, 2.1], [0.33, 2.13], [0, 2.13]];
-const CAP = [[0.32, 2.375], [0.33, 2.42], [0.47, 2.425], [0.485, 2.46], [0.47, 2.48], [0.36, 2.55], [0.22, 2.625], [0.1, 2.68], [0.07, 2.7],
+// The turned body, as (radius, height) from the foot up: a squat belly widest a little above its middle; a straight neck
+// a quarter of the belly's height with two raised bands round it; a thick lip; the flange the pavilion stands on; and
+// inside the lip the bed of ash, a centimetre under the flange.
+const BODY = [[0, 0.42], [0.2, 0.425], [0.38, 0.5], [0.5, 0.62], [0.553, 0.76], [0.56, 0.86], [0.54, 0.97], [0.48, 1.06], [0.4, 1.11], [0.37, 1.13],
+  [0.37, 1.17], [0.39, 1.175], [0.39, 1.2], [0.37, 1.205], [0.37, 1.255], [0.39, 1.26], [0.39, 1.285], [0.37, 1.29], [0.37, 1.32],
+  [0.41, 1.325], [0.415, 1.38], [0.41, 1.44], [0.45, 1.445], [0.455, 1.475], [0.43, 1.483], [0.32, 1.483], [0.315, 1.472], [0.2, 1.476], [0, 1.478]];
+const LEG = [[0, 0], [0.11, 0], [0.115, 0.03], [0.085, 0.065], [0.065, 0.11], [0.08, 0.17], [0.1, 0.22], [0.095, 0.28], [0.07, 0.33], [0.075, 0.37], [0.1, 0.41], [0, 0.44]];
+// The two storeys of the pavilion: the circle the posts stand on, the floor and the head of the posts, and how many
+// pairs of post and plate part its windows (six on each, as the photograph's front shows two pairs and one at either edge).
+const STOREYS = [{ r: 0.385, y0: 1.483, y1: 1.84, windows: 6 }, { r: 0.3, y0: 2.0, y1: 2.3, windows: 6 }];
+// The eaves: broad thin discs, the lower as wide as the belly and a little more, the upper a little less, their edges
+// thin and drooping; then the cap and the small gourd (restored: the real one's is lost).
+const EAVE = [[0.42, 1.84], [0.43, 1.88], [0.585, 1.885], [0.605, 1.872], [0.61, 1.89], [0.5, 1.93], [0.37, 1.98], [0.34, 2.0], [0, 2.0]];
+const CAP = [[0.32, 2.3], [0.33, 2.34], [0.51, 2.345], [0.53, 2.335], [0.535, 2.355], [0.45, 2.4], [0.3, 2.5], [0.15, 2.62], [0.08, 2.68], [0.06, 2.7],
   // the gourd
-  [0.06, 2.715], [0.08, 2.75], [0.09, 2.8], [0.075, 2.845], [0.038, 2.875], [0.05, 2.9], [0.064, 2.93], [0.055, 2.965], [0.02, 2.99], [0.012, 3.0], [0, 3.0]];
+  [0.05, 2.71], [0.06, 2.74], [0.065, 2.77], [0.05, 2.8], [0.028, 2.815], [0.04, 2.835], [0.042, 2.855], [0.03, 2.875], [0.01, 2.89], [0, 2.89]];
 
 export const CENSER = Object.freeze({
-  height: 3.0, standing: 2.7,   // with the gourd; and as the real one stands without it
+  height: 2.89, standing: 2.7,  // with the gourd; and to the top of the cap, as the real one stands without it
   belly: 0.56,                  // its widest, below the ears
   reach: 0.57,                  // how far anything of it reaches from its axis below 1.3 m: what he must keep off
-  ears: 0.69,                   // and the ears' reach, higher up
-  windowY: [STOREYS[0].y0, STOREYS[0].y1], ash: 1.5,
+  ears: 0.67,                   // and the ears' reach, higher up
+  windowY: [STOREYS[0].y0, STOREYS[0].y1], ash: 1.478,
   legs: [0, 1, 2].map((i) => { const a = (i / 3) * Math.PI * 2; return [Math.sin(a) * 0.36, Math.cos(a) * 0.36]; }),
 });
 
 const lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg);
 // Everything but the cast lettering reads -1 in its texture coordinates, which the material takes as plain iron.
 const plainUV = (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, -1, -1); return g; };
-// The letters are laid out on one picture: the date down the first third, the two lines of the couplet down the top
-// half of the second and third.
-const CELLS = { date: [0, 10], right: [1, 5], left: [2, 5] };
+// The letters are laid out on one picture: the date down the first quarter, the two lines of the couplet down the top
+// half of the second and third, and down the fourth the key fret that is cast on the ears.
+const CELLS = { date: [0, 10], right: [1, 5], left: [2, 5] }, COLS = 4;
 const ROWS = 10;
 
 // A round band (a sill, a lintel) between two angles, at radius r, height y0..y1, thickness t.
@@ -63,50 +67,58 @@ function plate(r, a, y0, y1, w, cast) {
   list.push(turn(body));
   if (cast) {
     const face = new THREE.PlaneGeometry(w * 0.86, h * 0.92).translate(0, 0, 0.0115), uv = face.attributes.uv, [col, n] = CELLS[cast];
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, (col + 0.08 + uv.getX(i) * 0.84) / 3, 1 - (n - uv.getY(i) * n) / ROWS);
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, (col + 0.08 + uv.getX(i) * 0.84) / COLS, 1 - (n - uv.getY(i) * n) / ROWS);
     list.push(turn(face));
   }
   return list;
 }
 
-// One storey of the pavilion: a banded post at each parting of the windows, a plate either side of it, a sill and a
-// lintel of fretwork across each window, and a ring under and over them all.
+// One storey of the pavilion: at each parting of its windows a banded post with a narrow plate beside it, the windows
+// between open (the smoke comes out of them, the incense goes in), each with a low sill and a fret hanging from its
+// lintel; a ring under and over them all. On the first storey the plates either side of the front window carry the couplet.
 function storey({ r, y0, y1, windows }, first) {
-  const list = [], step = (Math.PI * 2) / windows, h = y1 - y0;
+  const list = [], step = (Math.PI * 2) / windows;
   list.push(plainUV(lathe([[r - 0.03, y0 - 0.005], [r + 0.04, y0 - 0.005], [r + 0.045, y0 + 0.03], [r - 0.03, y0 + 0.03], [r - 0.03, y0 - 0.005]], 36)));
   list.push(plainUV(lathe([[r - 0.02, y1 - 0.03], [r + 0.035, y1 - 0.03], [r + 0.035, y1], [r - 0.02, y1], [r - 0.02, y1 - 0.03]], 36)));
   for (let k = 0; k < windows; k++) {
-    const a = step * (k + 0.5), da = 0.06 / r;   // the partings stand between the windows; the front window is at a = 0
+    const a = step * (k + 0.5), da = 0.042 / r, side = k < windows / 2 ? -1 : 1;   // the partings stand between the windows; the front window is at a = 0
     list.push(...bandedPost(Math.sin(a) * r, Math.cos(a) * r, y0 + 0.03, y1 - 0.03));
-    // the plates either side of the parting; on the first storey the two nearest the front window carry the couplet
-    const right = first && k === 0, left = first && k === windows - 1;   // as one faces it, +x is on the right
-    list.push(...plate(r, a - da, y0 + 0.03, y1 - 0.035, 0.06, right ? "right" : null));
-    list.push(...plate(r, a + da, y0 + 0.03, y1 - 0.035, 0.06, left ? "left" : null));
-    // across the window: a low sill and a lintel with a fret hanging from it
-    const w0 = a + da + 0.03 / r, w1 = a + step - da - 0.03 / r, mid = (w0 + w1) / 2;
-    list.push(...arcBand(r, 0.02, y0 + 0.03, y0 + 0.075, w0, w1), ...arcBand(r, 0.02, y1 - 0.09, y1 - 0.035, w0, w1));
-    for (const s of [-1, 1]) list.push(plainUV(new THREE.BoxGeometry(0.018, 0.05, 0.02).rotateY(mid + s * 0.18).translate(Math.sin(mid + s * 0.18) * r, y1 - 0.115, Math.cos(mid + s * 0.18) * r)));
-    list.push(plainUV(new THREE.BoxGeometry(0.11, 0.016, 0.02).rotateY(mid).translate(Math.sin(mid) * r, y1 - 0.14, Math.cos(mid) * r)));
+    // the plate on the front window's side of the posts either side of it; as one faces it, +x is on the right
+    const cast = first && k === 0 ? "right" : first && k === windows - 1 ? "left" : null;
+    list.push(...plate(r, a + side * da, y0 + 0.03, y1 - 0.035, 0.045, cast));
+    // across the window: a low sill and a thin lintel with a fret hanging from it
+    const w0 = a + 0.035 / r + (side > 0 ? da : 0), w1 = a + step - 0.035 / r - (k + 1 < windows / 2 || k === windows - 1 ? da : 0), mid = (w0 + w1) / 2;
+    list.push(...arcBand(r, 0.018, y0 + 0.03, y0 + 0.05, w0, w1), ...arcBand(r, 0.018, y1 - 0.06, y1 - 0.035, w0, w1));
+    for (const s of [-1, 1]) list.push(plainUV(new THREE.BoxGeometry(0.014, 0.045, 0.016).rotateY(mid + s * 0.16).translate(Math.sin(mid + s * 0.16) * r, y1 - 0.08, Math.cos(mid + s * 0.16) * r)));
+    list.push(plainUV(new THREE.BoxGeometry(0.1, 0.014, 0.016).rotateY(mid).translate(Math.sin(mid) * r, y1 - 0.105, Math.cos(mid) * r)));
   }
   return list;
 }
 
-// An ear: a flat plate leaning out from the shoulder and turning up, its top bent outward.
+// An ear: a broad flat plate rising out of the neck, leaning out and then standing up, its top level with the lower
+// eave's underside and turned out a little; the key fret is cast on its faces.
 function ear(side) {
-  const line = [[0.3, 1.27], [0.46, 1.33], [0.55, 1.43], [0.585, 1.56], [0.6, 1.68], [0.64, 1.75], [0.7, 1.76]], half = 0.065;
+  const line = [[0.33, 1.16], [0.46, 1.24], [0.54, 1.34], [0.575, 1.46], [0.585, 1.6], [0.59, 1.72], [0.62, 1.8]], half = 0.06;
   const left = [], right = [];
   line.forEach(([x, y], i) => {
     const [px, py] = line[Math.max(0, i - 1)], [nx, ny] = line[Math.min(line.length - 1, i + 1)], tx = nx - px, ty = ny - py, l = Math.hypot(tx, ty);
     left.push(new THREE.Vector2(x - (ty / l) * half, y + (tx / l) * half)); right.push(new THREE.Vector2(x + (ty / l) * half, y - (tx / l) * half));
   });
   const shape = new THREE.Shape([...left, ...right.reverse()]);
-  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 1, curveSegments: 4 }).translate(0, 0, -0.03);
+  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 1, curveSegments: 4 }).translate(0, 0, -0.025);
   if (side < 0) {   // mirrored, so every face is turned back the right way round
     g.scale(-1, 1, 1);
     for (const a of Object.values(g.attributes)) for (let i = 0; i < a.count; i += 3) for (let c = 0; c < a.itemSize; c++) { const j = (i + 1) * a.itemSize + c, k = (i + 2) * a.itemSize + c, t = a.array[j]; a.array[j] = a.array[k]; a.array[k] = t; }
     g.computeVertexNormals();
   }
-  return plainUV(g);
+  // its two faces carry the fret, laid along its length; its edges are plain iron
+  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getZ(i)) < 0.9) { uv.setXY(i, -1, -1); continue; }
+    const x = Math.abs(p.getX(i)), y = p.getY(i);
+    uv.setXY(i, (3 + Math.min(1, Math.max(0, (x - 0.26) / 0.42))) / COLS, Math.min(1, Math.max(0, (y - 1.08) / 0.8)));
+  }
+  return g;
 }
 
 // The date: a strip lying on the belly down its front, raised a few millimetres.
@@ -115,7 +127,7 @@ function dateStrip() {
   const rAt = (y) => { for (let i = 1; i < BODY.length; i++) { const [r0, a] = BODY[i - 1], [r1, b] = BODY[i]; if (y >= a && y <= b) return r0 + (r1 - r0) * (y - a) / (b - a); } return 0.5; };
   for (let j = 0; j <= rows; j++) {
     const y = y0 + (y1 - y0) * (j / rows), r = rAt(y) + 0.004, da = w / 2 / r, [col] = CELLS.date;
-    for (const s of [-1, 1]) { pos.push(Math.sin(s * da) * r, y, Math.cos(s * da) * r); uv.push((col + 0.5 + s * 0.42) / 3, j / rows); }
+    for (const s of [-1, 1]) { pos.push(Math.sin(s * da) * r, y, Math.cos(s * da) * r); uv.push((col + 0.5 + s * 0.42) / COLS, j / rows); }
   }
   for (let j = 0; j < rows; j++) { const a = j * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
@@ -135,13 +147,20 @@ export function censerGeometry() {
 // the board hand has come; until then the plates are plain.
 export function castTexture() {
   if (typeof document === "undefined") return null;
-  const cell = 96, c = document.createElement("canvas"); c.width = cell * 3; c.height = cell * ROWS;
+  const cell = 96, c = document.createElement("canvas"); c.width = cell * COLS; c.height = cell * ROWS;
   const x = c.getContext && c.getContext("2d"); if (!x) return null;
   const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4;
   const draw = () => {
     x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height);
     x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; x.font = `${Math.round(cell * 0.8)}px "Yunjing Bang"`;
     for (const [key, [col, n]] of Object.entries(CELLS)) [...CAST[key]].slice(0, n).forEach((ch, i) => x.fillText(ch, cell * (col + 0.5), cell * (i + 0.53)));
+    // the key fret: a square spiral in each square, joined to the next (回纹), with a raised border round it
+    x.strokeStyle = "#fff"; x.lineWidth = 5; x.lineCap = "square"; const q = cell / 4, x0 = cell * 3;
+    x.strokeRect(x0 + 5, 5, cell - 10, cell * ROWS - 10);
+    for (let yy = 0; yy < ROWS * 4; yy++) for (let xx = 0; xx < 4; xx++) {
+      const ox = x0 + xx * q, oy = yy * q * 0.5 + 12, s = q * 0.5; if (xx === 0 || xx === 3 || oy > cell * ROWS - 20) continue;
+      x.beginPath(); x.moveTo(ox + 2, oy + s); x.lineTo(ox + 2, oy + 2); x.lineTo(ox + s * 1.6, oy + 2); x.lineTo(ox + s * 1.6, oy + s * 0.9); x.lineTo(ox + s * 0.7, oy + s * 0.9); x.lineTo(ox + s * 0.7, oy + s * 0.5); x.stroke();
+    }
     tex.needsUpdate = true;
   };
   draw();
@@ -151,15 +170,40 @@ export function castTexture() {
 
 // Iron four hundred years out of doors: rust over black, the rust thickest on what faces the weather, the black kept
 // in the hollows; the letters stand up from their plates and are rubbed a little brighter at their edges.
-export function censerMaterial(procMat, tex) {
+export function censerMaterial(procMat, tex, at = new THREE.Vector3()) {
   const m = procMat("censer", { roughness: 0.8, metalness: 0.4, envMapIntensity: 0.45 }, `
+      vec3 lp=vWP-uAt; float lr=length(lp.xz);
       float r=smoothstep(.25,.7,fbm3(vWP*5.)+.25*vWN.y), pit=n3(vWP*48.);
       col=mix(vec3(.05,.04,.035),vec3(.2,.085,.04),r); col=mix(col,vec3(.11,.05,.03),smoothstep(.6,.9,fbm3(vWP*1.7+3.))*.5);
       col*=.75+.45*pit; rough_=mix(.6,.95,r); bump_=fbm3(vWP*30.)*.003+pit*.0015;
+      // dark under the eaves, among the posts and under the belly, where the rain does not reach; the rims of the eaves and
+      // the bands that stand out are rubbed and washed paler
+      float under=smoothstep(.1,-.6,vWN.y), among=smoothstep(.36,.3,lr)*smoothstep(1.47,1.5,lp.y)*(1.-smoothstep(2.3,2.32,lp.y));
+      col*=(1.-.4*under)*(1.-.35*among)*mix(.72,1.,smoothstep(.45,.8,lp.y));
+      float rim=smoothstep(.57,.6,lr)*smoothstep(1.86,1.88,lp.y)*(1.-step(1.95,lp.y))+smoothstep(.5,.53,lr)*smoothstep(2.33,2.35,lp.y)*(1.-step(2.4,lp.y));
+      col=mix(col,col*1.5+vec3(.03,.012,0.),rim*.7);
       if(vUv2.x>=0.){ float g=texture2D(tCast,vUv2).r, e=fwidth(g); col=mix(col*.8,col*1.35+vec3(.04,.02,.01),g); bump_+=g*.004; rough_=mix(rough_,.55,g*(1.-e)); }`);
   const own = m.onBeforeCompile;
-  m.onBeforeCompile = (sh, r) => { own(sh, r); sh.uniforms.tCast = { value: tex || BLANK }; sh.fragmentShader = sh.fragmentShader.replace("uniform float uSnow, uLamp, uT;", "uniform sampler2D tCast; uniform float uSnow, uLamp, uT;"); };
+  m.onBeforeCompile = (sh, r) => { own(sh, r); sh.uniforms.tCast = { value: tex || BLANK }; sh.uniforms.uAt = { value: at }; sh.fragmentShader = sh.fragmentShader.replace("uniform float uSnow, uLamp, uT;", "uniform sampler2D tCast; uniform vec3 uAt; uniform float uSnow, uLamp, uT;"); };
   return m;
 }
 const BLANK = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
 BLANK.needsUpdate = true;
+
+// How far the censer reaches from its axis at each height (5 cm bands), measured off its own geometry once.
+let REACH = null;
+export function censerReach(y) {
+  if (!REACH) { const p = censerGeometry().attributes.position; REACH = new Float32Array(Math.ceil(3.2 / 0.05)); for (let i = 0; i < p.count; i++) { const b = Math.floor(p.getY(i) / 0.05); REACH[b] = Math.max(REACH[b], Math.hypot(p.getX(i), p.getZ(i))); } }
+  return y < 0 || y >= REACH.length * 0.05 ? 0 : REACH[Math.floor(y / 0.05)];
+}
+// The eye that follows him, kept out of the censer: if this frame's eye would stand inside it (coming in toward him
+// through it, the censer having come between them), it is brought in along the line to his head until it is clear.
+// (For this censer alone, until the following eye itself puts itself out of whatever it has come into the same frame.)
+/** @param {number[]} eye @param {number[]} head @param {{x:number,y:number,z:number}} at */
+export function clearOfCenser(eye, head, at, margin = 0.1) {
+  const inside = (/** @type {number[]} */ [x, y, z]) => Math.hypot(x - at.x, z - at.z) < censerReach(y - at.y) + margin;
+  if (!inside(eye)) return eye;
+  const d = [head[0] - eye[0], head[1] - eye[1], head[2] - eye[2]], l = Math.hypot(d[0], d[1], d[2]);
+  for (let s = 0.02; s < l; s += 0.02) { const q = [eye[0] + d[0] * s / l, eye[1] + d[1] * s / l, eye[2] + d[2] * s / l]; if (!inside(q)) return q; }
+  return head;
+}
