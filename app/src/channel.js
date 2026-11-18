@@ -18,3 +18,4 @@ export const CHANNEL = typeof __CHANNEL__ === "undefined" ? "web" : __CHANNEL__;
 /** Whether this is the public web page: the only build with a way to the sponsor page. Written out in full, so that the bundler can fold it. */
 export const WEB = typeof __CHANNEL__ === "undefined" || __CHANNEL__ === "web";
 // trial 187: app push 1
+// trial 187: app push 2
