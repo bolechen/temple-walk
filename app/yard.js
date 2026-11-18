@@ -124,7 +124,7 @@ await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800, site.trees));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low" }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -786,7 +786,7 @@ function lookOut(hall) {
   const u = r.outlook.material.uniforms; u.tOut.value = outCube.texture; u.uHas.value = 1; u.uTurn.value.set(f[0], f[1]);
 }
 // Whatever falls through the air (snow, petals, leaves, fireflies) falls outdoors only.
-const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none" && !OFF.has("drift"); });
+const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && !OFF.has("drift"); });
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
 const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
@@ -869,7 +869,7 @@ window.__up = (id) => (id === undefined ? (upIn ? upIn.id : null) : id ? climbTo
 // load). `__part()` lists them, each true when drawn. What a room or the hour hides stays hidden: a court switched
 // back on while he is indoors is not drawn until he comes out. The novice and the rooms are shown or hidden by the
 // walk itself every frame, so they are not offered.
-const shownNow = (name) => !OFF.has(name) && !(inside && (COURTS.includes(name) || name === "drift")) && !(name === "drift" && mood.drift === "none");
+const shownNow = (name) => !OFF.has(name) && !(inside && (COURTS.includes(name) || name === "drift")) ;
 window.__part = (name, on) => {
   const names = [...new Set(scene.children.map((o) => o.userData.part).filter((n) => n && n !== "monk" && n !== "interior"))];
   if (name === undefined) return Object.fromEntries([...names, ...PASSES].map((n) => [n, !OFF.has(n)]));
@@ -934,6 +934,8 @@ window.__ripples = (go) => {
   else if (go) ground.ripple?.(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   return ground.ripples?.() || null;
 };
+// What the falling leaves are doing, as fall.js's sums have it: kind, how many lie on the ground, and where each is (a diagnostic for tests).
+window.__drift = (n) => drift.report(n);
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;

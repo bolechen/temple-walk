@@ -44,7 +44,7 @@ export function createGround(scene, shade, censer, paving) {
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -69,6 +69,17 @@ export function createGround(scene, shade, censer, paving) {
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
       uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
+      // Leaves and petals lie where the trees let them fall (fall.js's map, the same one the falling ones read): two layers of
+      // small leaves, each one to a cell of a rotated grid, each laid its own way, more of them at the foot of a wall or a
+      // platform (where the wind and the broom leave them) and few on the swept lane down the middle of a court.
+      uniform sampler2D tFallMap; uniform vec4 uFallBox; uniform float uLitter; uniform vec3 uLitterCh, uLitterCol[3];
+      vec4 litterLayer(vec2 p, float amt, float a0){
+        float c0=cos(a0), s0=sin(a0); vec2 r=mat2(c0,-s0,s0,c0)*p/.2+a0*9.; vec2 id=floor(r), f=fract(r)-.5;
+        float h=h21(id+a0), on=step(h,amt); vec2 jit=(vec2(h21(id+7.1),h21(id+13.3))-.5)*.3;
+        float ang=h21(id+3.7)*6.2832, ca=cos(ang), sa=sin(ang); vec2 l=mat2(ca,-sa,sa,ca)*(f-jit)*.2;
+        float d=length(l*vec2(1./.056,1./.024)), m=on*smoothstep(1.,.75,d);
+        float pick=h21(id+21.9); return vec4(pick,h21(id+5.5),m,on*smoothstep(1.,.2,d));
+      }
       // The slope of the water where his steps have set it moving: each ring a short train of waves at its front,
       // weaker as it widens and dying away over its life.
       vec2 ripples(vec2 p, float y){
@@ -109,6 +120,18 @@ export function createGround(scene, shade, censer, paving) {
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; float dB=(lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.)?texture2D(tShade,lmUv).r*${SPAN}.-.5:2.5;
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
+        // Leaves and petals on the stone (autumn and spring; none under a roof or on the swept lane).
+        if(uLitter>.001){
+          vec2 fuv=(p-uFallBox.xy)*uFallBox.zw;
+          if(fuv.x>0.&&fuv.x<1.&&fuv.y>0.&&fuv.y<1.){
+            float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
+            float amt=dot(texture2D(tFallMap,fuv).rgb,uLitterCh)*uLitter*sweep*smoothstep(-.3,.1,dB)*(.45+1.1*smoothstep(1.4,.15,dB))*(.6+.8*fbm2(p*.3+17.));
+            if(amt>.02) for(int L=0;L<2;L++){
+              vec4 ll=litterLayer(p,amt*.55,float(L)*.9+.4);
+              if(ll.z>.01){ vec3 lc=ll.x<.34?uLitterCol[0]:ll.x<.67?uLitterCol[1]:uLitterCol[2]; lc*=(.55+.35*ll.y)*mix(1.,.7,smoothstep(.3,.58,low)); alb=mix(alb,lc,ll.z*.92); }
+            }
+          }
+        }
         // Snow (snowfall.js does the same sums for his steps and the tests). Down the middle of every court a lane is swept
         // each morning: a dusting on its stone, grainy and clean-edged, snow packed in the joints, the swept snow banked
         // along both sides over the kerbs. Off the lane it lies deeper against walls and platforms and in long low waves
