@@ -1183,7 +1183,13 @@ const scenarios = {
     await t.page.keyboard.press("v"); expect((await t.probe()).view === "first", "V should change the view"); await t.page.keyboard.press("v");
     const d0 = (await t.probe()).camDist; await t.page.mouse.move(450, 300); for (let i = 0; i < 4; i++) await t.page.mouse.wheel(0, 300); await t.frames(16);
     const d1 = (await t.probe()).camDist; expect(d1 > d0 + 1, `the wheel should draw the eye back: ${d0} to ${d1}`);
-    await t.page.keyboard.press("b"); await t.until(() => t.page.isVisible("#book"), 60000, "B should open the book"); await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#book")), "Esc should close it");
+    // The page is there at once, as paper, before its seals are drawn onto it: within the frame the key was pressed in.
+    const opened = await t.page.evaluate(() => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "b", bubbles: true })); return !!document.getElementById("book").open; });
+    expect(opened, "B should open the book's page at once, not after it is drawn");
+    await t.until(() => t.page.evaluate(() => !document.getElementById("bookPage").classList.contains("drawing")), 60000, "the book's page was never written on");
+    // One seal to a sheet: the book closes with one, and saving or sharing are written in ink.
+    expect(await t.page.evaluate(() => [...document.querySelectorAll("#book .stamp")].filter((e) => e.offsetParent).map((e) => e.id).join()) === "bookClose", "the book should carry exactly one seal, 合上");
+    await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#book")), "Esc should close it");
     await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();

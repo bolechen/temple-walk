@@ -274,6 +274,7 @@ const zoom = (k) => {
   if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); return; }
   if (view === "first") { if (k > 1 && (nudge += Math.log(k)) > 0.3) { nudge = 0; reachWant = 2.6; setView("third"); } else if (k < 1) nudge = 0; return; }
   const near = reachWant <= 2.6 + 1e-6; reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11);
+  if (k < 1 && reachWant <= 2.6 + 1e-6) hints.say.nearest();
   if (k < 1 && near) { if ((nudge -= Math.log(k)) > 0.3) { nudge = 0; setView("first"); } } else nudge = 0;
 };
 // With a mouse the view turns while a button is held and dragged, as on most pages that show a place in three
@@ -318,6 +319,7 @@ canvas.addEventListener("pointermove", (e) => {
   const S = settings.get();
   const k = dragRate(e.pointerType);
   director.back();   // a drag of the view: the visitor wants to look for themselves
+  if (!down.moved) hints.say.dragged();
   down.moved = true; yaw += dx * k * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * k * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });

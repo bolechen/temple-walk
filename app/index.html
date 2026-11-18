@@ -55,8 +55,8 @@
   <p class="caption" id="hint"></p>
   <div id="prologue" aria-live="polite" hidden></div>
   <div class="rail">
-    <button class="chip" id="photoBtn" type="button" aria-label="拍照">留影</button>
-    <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置">歇脚</button>
+    <button class="chip" id="photoBtn" type="button" aria-label="拍照" title="留影：拍照">留影</button>
+    <button class="chip" id="menuBtn" type="button" aria-label="歇脚：设置" title="歇脚：设置与暂停">歇脚</button>
   </div>
   <dialog class="layer" id="menu" aria-label="歇脚" hidden><div class="card paper scrolls">
     <h2>歇脚<span class="seal-mark" aria-hidden="true">云径</span></h2>
@@ -136,7 +136,7 @@
   <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
-  <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+  <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
 </dialog>
 <dialog class="layer" id="piece" aria-labelledby="pieceTitle" hidden>
   <figure><img id="pieceImg" alt=""></figure>
