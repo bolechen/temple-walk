@@ -492,6 +492,9 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
   /* in English the hours stand on one line under Follow the hour */
   :root:lang(en) #menu .opts:has([data-follow]) { display: flex; flex-wrap: wrap; gap: 0 4px; }
   :root:lang(en) #menu .opts [data-follow] { flex-basis: 100%; place-items: center start; }
+  /* the testers' group is not offered on the narrow sheet, where it could only be half seen under the foot: a phone
+     reaches it from the title (内测反馈群), and a wide sheet still carries it */
+  #menu .community-invite { display: none !important; }
 }
 /* English needs its choices two and two, which makes the sheet taller: there the title is set smaller and the foot's lesser
    ways closer, so the foot stays one line. */

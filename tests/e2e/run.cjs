@@ -1292,6 +1292,14 @@ const scenarios = {
       // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
       const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
       expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
+      // and nothing written on the sheet lies half under the foot at first sight: any block of words that shows within the
+      // sheet keeps clear of the foot's box, whatever is added to the menu later (#195: the group's invitation, half hidden)
+      const under = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const cr = c.getBoundingClientRect(), foot = document.querySelector("#menu .row"), f = foot.getBoundingClientRect(), out = [];
+        for (const el of c.querySelectorAll("*")) { if (foot.contains(el) || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+          const st = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width || !r.height || st.visibility === "hidden" || el.closest("[hidden]")) continue;
+          const shows = r.bottom > cr.top && r.top < cr.bottom; if (shows && r.bottom > f.top + 0.5 && r.top < f.bottom - 0.5) out.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 8)}" ${Math.round(r.top)}-${Math.round(r.bottom)}`); }
+        return { foot: Math.round(f.top), out }; });
+      expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
