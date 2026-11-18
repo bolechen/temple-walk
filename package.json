@@ -14,7 +14,7 @@
     "portrait": "node tools/portrait.js",
     "music": "node tools/music.mjs",
     "dev": "vite",
-    "build": "node tools/bake-walk.mjs --build && vite build",
+    "build": "node tools/bake-walk.mjs && vite build",
     "preview": "vite preview",
     "serve": "vite",
     "typecheck": "tsc -p tsconfig.json",

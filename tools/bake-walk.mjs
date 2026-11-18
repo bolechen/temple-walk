@@ -1,19 +1,19 @@
 // Bake the floor he may stand on into app/shared/walk/<level>.bin (#194; the method is in tools/walk/bake.mjs, the
 // file in app/src/walkgrid.js). The page does not read it yet.
 //
-//   node tools/bake-walk.mjs            bake what is stale (a grid whose triangles, his outline or the bake's settings
-//                                        changed), keep the rest, write the file; say so and stop if nothing is stale
-//   node tools/bake-walk.mjs --check    only say whether the file is stale: exit 1 if it is (CI, the build)
-//   node tools/bake-walk.mjs --build    what `pnpm build` runs: bake what is stale, but on CI fail instead (the file must be committed fresh)
-//   node tools/bake-walk.mjs --force    bake every grid again
-//   node tools/bake-walk.mjs --out=<file>   write elsewhere (a second bake to compare byte for byte)
+// The grid is a build product, not kept in git: it is named by one fingerprint of everything it is baked from (the
+// triangles each grid gathers, his outline, the bake's settings, the written plan's walk data, the places checked) and
+// kept under that name in node_modules/.cache/walk/ (CI keeps that folder in its cache). Building the place and taking
+// the fingerprint costs about three seconds; a bake only when that name has not been baked before.
 //
-// The file is stale when the triangles a grid is gathered from, his outline (tools/walk/outline.json), the bake's
-// settings (BAKE) or the written plan's walk data differ from what its header records; the test
-// tests/unit/walk-bake.test.mjs fails then too, and `pnpm build` bakes it again (on CI it fails instead).
+//   node tools/bake-walk.mjs            the grid for the place as it is now → app/shared/walk/t00.bin (from the cache, or baked)
+//   node tools/bake-walk.mjs --key      only print the fingerprint (CI names its cache by it)
+//   node tools/bake-walk.mjs --force    bake every grid again
+//   node tools/bake-walk.mjs --out=<file>   bake afresh into another file (to compare two bakes byte for byte)
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
+import { join, dirname } from "node:path";
 import { buildDrawn, gridsOf, targetsOf, partsOf, planText } from "./walk/scene.mjs";
 import { gather, bakeGrid, oldReach, cellsOf, bodyPrint, textHash, BAKE } from "./walk/bake.mjs";
 import { encode, decode, readHeader, VERSION } from "../app/src/walkgrid.js";
@@ -78,23 +78,36 @@ export function bake(prep, { force = false, file = FILE } = {}) {
   return { bytes: encode(header, cells, (b) => deflateRawSync(b, { level: 9 })), header, ms, stale };
 }
 
+/** One name for everything a bake depends on: the grids' triangles and extents, his outline, the settings, the plan, the places checked. */
+export const keyOf = (prep) => textHash(JSON.stringify({ format: VERSION, body: prep.body, plan: prep.plan, defs: prep.defs, grids: prep.grids.map((g) => [g.id, g.S.print, g.box]) }));
+export const CACHE = process.env.WALK_CACHE || fileURLToPath(new URL("../node_modules/.cache/walk/", import.meta.url));
+
+/**
+ * The grid for the place as it is now in FILE: taken from the cache when this key was baked before (here, or by CI's
+ * cache), else baked (keeping whatever grids of the file already there are still fresh) and put in the cache.
+ */
+export function ensure(prep, { force = false, file = FILE } = {}) {
+  const key = keyOf(prep), cached = join(CACHE, `${LEVEL}-${key}.bin`);
+  mkdirSync(dirname(file), { recursive: true });
+  if (!force && existsSync(cached)) { const bytes = readFileSync(cached); if (!existsSync(file) || Buffer.compare(readFileSync(file), bytes)) writeFileSync(file, bytes); return { key, hit: true, bytes, header: readHeader(bytes).header }; }
+  const r = bake(prep, { force, file });
+  writeFileSync(file, r.bytes); mkdirSync(CACHE, { recursive: true }); writeFileSync(cached, r.bytes);
+  return { key, hit: false, ...r };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const arg = (k) => process.argv.find((a) => a === `--${k}` || a.startsWith(`--${k}=`));
   const out = arg("out")?.split("=")[1] || FILE, t0 = performance.now();
   const prep = prepare();
+  if (arg("key")) { console.log(keyOf(prep)); process.exit(0); }
   console.log(`built in ${prep.ms.build} ms, gathered ${prep.grids.reduce((s, g) => s + g.S.tris, 0)} triangles into ${prep.grids.length} grids in ${prep.ms.gather} ms`);
-  const st = staleness(prep, out);
-  if (arg("build") && process.env.CI && (st.stale.length || st.planStale || st.gone)) { console.error(`${out} is stale: ${st.why}. Bake it (node tools/bake-walk.mjs) and commit it.`); process.exit(1); }
-  if (arg("check")) {
-    if (!st.stale.length && !st.planStale && !st.gone) { console.log(`${out}: fresh`); process.exit(0); }
-    console.error(`${out} is stale: ${st.why}. Run: node tools/bake-walk.mjs`); process.exit(1);
+  const r = ensure(prep, { force: !!arg("force") || out !== FILE, file: out });
+  if (r.hit) console.log(`${out}: from the cache (${r.key}), ${Math.round(performance.now() - t0)} ms`);
+  else {
+    for (const [id, m] of Object.entries(r.ms)) console.log(`  ${id.padEnd(16)} ${JSON.stringify(m)}`);
+    console.log(`baked ${out} (${r.key}): ${(r.bytes.length / 1024).toFixed(1)} KB in ${Math.round(performance.now() - t0)} ms`);
   }
-  if (!arg("force") && !st.stale.length && !st.planStale && !st.gone && out === FILE) { console.log(`${out}: fresh, nothing to bake (${Math.round(performance.now() - t0)} ms)`); process.exit(0); }
-  const r = bake(prep, { force: !!arg("force"), file: out === FILE ? FILE : "/nonexistent" });
-  mkdirSync(new URL("../app/shared/walk/", import.meta.url), { recursive: true });
-  writeFileSync(out, r.bytes);
-  for (const [id, m] of Object.entries(r.ms)) console.log(`  ${id.padEnd(16)} ${JSON.stringify(m)}`);
   const lost = r.header.targets.filter((t) => !t.new || !t.old);
-  console.log(`wrote ${out}: ${(r.bytes.length / 1024).toFixed(1)} KB in ${Math.round(performance.now() - t0)} ms; ${r.header.targets.length} places checked, ${lost.length} not reached`);
+  console.log(`${r.header.targets.length} places checked, ${lost.length} not reached`);
   for (const t of lost) console.log(`  not reached: ${t.kind} ${t.id} (${t.grid}) drawn ${t.new} plan ${t.old}`);
 }

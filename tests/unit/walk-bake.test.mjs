@@ -1,24 +1,24 @@
-// The floor baked from the drawn meshes (#194, tools/bake-walk.mjs): the committed file is fresh for the meshes and
-// the plan as they are now, every named place can be walked to on both walkers, a bake is the same byte for byte
+// The floor baked from the drawn meshes (#194, tools/bake-walk.mjs): the grid is had (from the cache or baked) for the
+// meshes and the plan as they are now, every named place can be walked to on both walkers, a bake is the same byte for byte
 // each time, the trees grow the same each time (their trunks are in what is baked), and a wall across the way is seen.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 import { readFileSync } from "node:fs";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
-const { prepare, staleness, bake, FILE } = await import("../../tools/bake-walk.mjs");
+const { prepare, staleness, bake, ensure, keyOf, CACHE, FILE } = await import("../../tools/bake-walk.mjs");
 const { gather, bakeGrid, cellsOf, oldReach } = await import("../../tools/walk/bake.mjs");
 const { buildDrawn, namedMaterials } = await import("../../tools/walk/scene.mjs");
 const { compare } = await import("../../tools/walk-diff.mjs");
 const { encode, decode, readHeader, cellOf } = await import("../../app/src/walkgrid.js");
 const { createTrees } = await import("../../app/src/trees.js");
 
-const prep = prepare();
+const prep = prepare(), had = ensure(prep);   // from the cache, or baked here the first time (about a minute)
 
-test("the committed grid was baked from the meshes, his outline and the plan as they are now", () => {
+test("the grid for the place as it is now is had by its fingerprint, and records what it was baked from", () => {
+  assert.equal(had.key, keyOf(prep));
+  assert.ok(readFileSync(`${CACHE}/t00-${had.key}.bin`).equals(readFileSync(FILE)), "the file built from is the one kept under its fingerprint");
   const st = staleness(prep);
-  assert.deepEqual(st.stale, [], `stale grids (${st.why}): run node tools/bake-walk.mjs and commit app/shared/walk/t00.bin`);
-  assert.ok(!st.planStale, `${st.why}: run node tools/bake-walk.mjs`);
-  assert.ok(!st.gone, st.why);
+  assert.deepEqual(st.stale, [], st.why); assert.ok(!st.planStale, st.why); assert.ok(!st.gone, st.why);
   const { header } = readHeader(readFileSync(FILE));
   assert.deepEqual(header.grids.map((g) => g.id).sort(), prep.grids.map((g) => g.id).sort(), "the courts and the path, the pavilion's top storey and every room");
   assert.ok(header.grids.some((g) => g.kind === "loft") && header.grids.filter((g) => g.kind === "room").length === prep.drawn.site.halls.length, "a grid for the top storey and one for each hall's room");
