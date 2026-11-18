@@ -298,7 +298,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
     // a branch out of a fork at its parent's end swells less where it comes out (more would read as a knot), one out of
     // its parent's side into a full collar; a trunk on a foot starts at the foot's top ring
-    const l = limb(pts, rad, 0, L.radial, parent ? (parent.end ? 0.15 : 0.3) : info.flare || 0, parent ? 0.1 : 0.4, L.seg, parent ? null : info.startY ?? null, flareAt, cap); wood.push(l.geo); info.tris += l.geo.index.count / 3; /** @type {any} */ (l.curve).geo = l.geo;   // (the tests read a trunk's own rings from it)
+    const l = limb(pts, rad, 0, L.radial, parent ? (parent.end ? 0.35 : 0.3) : info.flare || 0, parent ? 0.1 : 0.4, L.seg, parent ? null : info.startY ?? null, flareAt, cap); wood.push(l.geo); info.tris += l.geo.index.count / 3; /** @type {any} */ (l.curve).geo = l.geo;   // (the tests read a trunk's own rings from it)
     let first = null;
     if (parent) {   // its first ring, measured against the parent, for the tests
       const P = l.geo.attributes.position, O = new THREE.Vector3(); first = { R: parent.R, radial: 0, along: -Infinity, end: parent.end, exit: +flareAt.toFixed(3) };
@@ -383,11 +383,13 @@ export function createTrees(scene, M, spots, opts = {}) {
       const back = own(x, z, 5), centre = V(x, y + h * 0.66, z), stems = 2 + ((rnd() * 3) | 0), a0 = rnd() * 6.283, thick = 0.08 + h * 0.005;
       const grown = [];
       // Each stem stands out from the middle far enough that no two grow against each other below head height (#200):
-      // between neighbours at least 1.3 times their radii together, so that what shows between them is bark round
+      // between neighbours at least 1.3 times their radii together, so that what shows between them is air round
       // each, not a crack. (Their radii are not known until the wood is planned; a stem is never thicker than `thick`.)
       const angs = []; for (let i = 0; i < stems; i++) angs.push(a0 + (i / stems) * 6.283 + jit(0.3));
       let gap = 6.283; for (let i = 0; i < stems; i++) { const d = (angs[(i + 1) % stems] - angs[i] + 6.283 * 2) % 6.283; gap = Math.min(gap, d); }
-      const out = Math.max(0.1, (1.3 * 2 * thick) / (2 * Math.sin(Math.min(gap, 3.1) / 2)) + 0.01);
+      // as far apart as 1.8 times their radii where the post leaves room (`girth` in site.js, its formula repeated here), never under 1.3
+      const post = (0.09 + h * 0.019) * 1.8 + 0.1, apart = (k) => (k * 2 * thick) / (2 * Math.sin(Math.min(gap, 3.1) / 2)) + 0.01;
+      const out = Math.max(0.1, apart(1.3), Math.min(apart(1.8), post - 0.06 - thick - 0.05));
       for (let i = 0; i < stems; i++) {
         const a = angs[i], dir = V(Math.cos(a), 0, Math.sin(a)), at = V(x, y, z).addScaledVector(dir, out);
         // close together to head height, so that the stems rise from one foot; then away
