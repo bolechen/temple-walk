@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-18T14:07:30.674Z",
+  "generated_at": "2026-11-18T14:37:00.527Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "65fd5d6eb4a31c7333cd74b6b4d493a1dcbea2f1",
-    "url": "https://github.com/bolechen/temple-walk/commit/65fd5d6eb4a31c7333cd74b6b4d493a1dcbea2f1"
+    "sha": "52dc953db273e73d2c64fb8ab89c612488780ed2",
+    "url": "https://github.com/bolechen/temple-walk/commit/52dc953db273e73d2c64fb8ab89c612488780ed2"
   },
   "delivery": {
     "analytics": {
@@ -187,7 +187,8 @@
       "awake.js（新）/game.js：收尾播放期间申请屏幕唤醒锁，结束或跳过时释放，不支持或低电量静默放弃；rites.js：页面隐藏时仪式时钟冻结、可见后接着走，与拍照定格重叠只算一次；game.js：回到可见后 900 ms 内不把点击/键当作跳过（#169，先写测试）",
       "#147：序章结尾后停在凌霄阁远景（director.holdShot，漂移≤1°/秒），不再自动弹出朱印帐；底部一行「翻开朱印帐」，B 或点这一行翻开；「七印圆满」印在翻开朱印帐时盖一次（journey.owed/stamp）；走一步、点地面或 Esc 以移动镜头回到他身边",
       "#156（PR #201）：静坐的呼吸圈从屏幕中央的固定圆改为地上的圆相（rites.js breathRing；与打卡点地面标记同一贴图），「吸」「呼」改为底部小字；结尾不画圈；tools/breath-views.cjs、mobile-audit 的 sit/sitsay 面",
-      "#203：藏经楼纸条放进屏内（game.js fitSlip：缩字，再横排）；e2e slipfit（14 首×四语言×竖横屏）；mobile-audit 的 slip 面固定第 8 首"
+      "#203：藏经楼纸条放进屏内（game.js fitSlip：缩字，再横排）；e2e slipfit（14 首×四语言×竖横屏）；mobile-audit 的 slip 面固定第 8 首",
+      "#213：名匾挂在斗拱昂嘴之外（building.js BEAK）；tests/unit/plaques.test.mjs：18 块匾的每个字 3×3 点，从院落里走得到的点（站立眼与跟随眼）看，字面前 0.6 米内不得有别的构件；改前 12 个字（6 块匾）红"
     ],
     "known_issues": [
       "凌霄阁各层不同材（一层 0.205、二三层 0.186），评审方建议三层同材 0.205，交所有者取舍（decisions.md）；子角梁截面略小于卷五；攒尖顶没有按簇角梁分段折",
@@ -480,7 +481,8 @@
       "structure_phase4": "变基到 main 后：pnpm test 297/297，check、typecheck 通过；变基前：edges 通过、nearplane 13/13、e2e:smoke 31/31",
       "ending_far_147": "单测 holdShot、journey owed/stamp（先失败后通过）；e2e farview、pilgrimage、replay、screen 通过；pnpm run check、typecheck、单测通过",
       "breath_ring_156": "单测 breathRing（先失败后通过）；e2e breathring、rites、director、finish 在并入 main 后的提交上逐个通过；mobile-audit 中文 sit、sitsay 两面（四种画幅）无报错；pnpm run check、typecheck、393 项单测通过",
-      "slip_fit_203": "e2e slipfit 112 组改前 1 组红（ko 844×390 第 8 首）、改后全过；pnpm run check、typecheck 通过"
+      "slip_fit_203": "e2e slipfit 112 组改前 1 组红（ko 844×390 第 8 首）、改后全过；pnpm run check、typecheck 通过",
+      "plaques_213": "tests/unit/plaques.test.mjs：改前 6 块匾 12 个字被挡（正法眼藏的正、藏等），改后全过；pnpm test 432 项通过"
     },
     "unverified": [
       "第四阶段的 edges、nearplane、冒烟、GPU 和截图都是在变基到最新 main 之前跑的；变基后只重跑了解析、类型和单元测试",
@@ -537,7 +539,8 @@
       "#169：真机（iOS Safari、Android Chrome）上的息屏/唤醒与低电量模式未试；screen 场景只是覆盖 document.hidden，没有真正隐藏页面；唤醒锁未在省电模式下量",
       "#147：四种语言手机图、远景实拍一张（photo 场景只验了举起相机不离开远景）、T4 未验；证据图是软件渲染、夏昼、中文",
       "#156：英文/日文/韩文手机图未拍；mobile-audit 只跑了中文的 sit/sitsay 面；reduced-motion 只有单测；pilgrimage 场景与 T4 帧耗未跑；证据图是软件渲染",
-      "#203：T4 未拍；殿内画框题字没有逐条测；证据是软件渲染"
+      "#203：T4 未拍；殿内画框题字没有逐条测；证据是软件渲染",
+      "#213：nearplane、edges、T4 并排图、六个锁定机位并排未做（见 PR）；匾的实物挂法没有查到出处"
     ],
     "hosting": {
       "provider": "Cloudflare Workers",
@@ -561,25 +564,25 @@
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
       "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
     ],
-    "record_commit": "ea6f2c20f809c66dfa4d43041a00d6c1ac594db7",
+    "record_commit": "52dc953db273e73d2c64fb8ab89c612488780ed2",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 44320462066,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44320462066",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 44326161931,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44326161931",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "skipped"
+      "unit": "pending",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "65fd5d6eb4a31c7333cd74b6b4d493a1dcbea2f1",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44320462066"
