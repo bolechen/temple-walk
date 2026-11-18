@@ -84,10 +84,13 @@ function distMaterial() {
 // first comes within `NEAR` of its door, or sees it within `SEEN`: its figures are fetched (not the works on its walls),
 // then its room is drawn one face of one cube a frame, twelve frames in all, and the room fades in over the dark box
 // that stood there before. A change of season or hour takes again, the same way, only the halls already taken.
+//
+// At most `keep` rooms are held at a time: past that, the one farthest away (and not near) gives its cubes back and its
+// door goes dark again, to be taken anew if he comes near it.
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
-export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12 }) {
+export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12, keep = 4, sync = false }) {
   const halls = {}, dm = distMaterial(), queue = [], frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
-  let sun = null, hemi = null, ready = false, busy = null, worst = 0;
+  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0;
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
@@ -112,7 +115,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   const cubes = (o) => {
     if (o.col) return;
     o.col = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
-    o.dist = new THREE.WebGLCubeRenderTarget(Math.max(64, size / 2), { type: THREE.HalfFloatType });
+    o.dist = new THREE.WebGLCubeRenderTarget(Math.max(64, size / 2), { type: THREE.HalfFloatType, format: THREE.RedFormat });   // one number a texel
     o.cam = new THREE.CubeCamera(0.05, 80, o.col); o.dcam = new THREE.CubeCamera(0.05, 80, o.dist);
     o.cam.position.copy(o.C); o.dcam.position.copy(o.C); o.cam.updateMatrixWorld(); o.dcam.updateMatrixWorld();
     if (o.cam.coordinateSystem !== renderer.coordinateSystem) { o.cam.coordinateSystem = o.dcam.coordinateSystem = renderer.coordinateSystem; o.cam.updateCoordinateSystem(); o.dcam.updateCoordinateSystem(); }
@@ -150,21 +153,34 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
     if (camera) { camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)); }
     for (const o of Object.values(halls)) {
       if (!o.want) {
-        const far = eye.distanceTo(o.door);
-        if (far < NEAR || (camera && far < SEEN && frustum.intersectsSphere(sphere.copy(o.d.mesh.geometry.boundingSphere).applyMatrix4(o.d.mesh.matrixWorld)))) want(o);
+        const far = eye.distanceTo(o.door), held = Object.values(halls).filter((x) => x.want).length;
+        if (far < NEAR || (camera && held < keep && far < SEEN && frustum.intersectsSphere(sphere.copy(o.d.mesh.geometry.boundingSphere).applyMatrix4(o.d.mesh.matrixWorld)))) want(o);
       }
       if (o.taken && o.fade < 1) {
         o.fade = Math.min(1, o.fade + dt / FADE); o.mat.uniforms.uHas.value = o.fade * o.fade * (3 - 2 * o.fade);
         for (const f of o.d.flames) f.visible = o.fade < 0.5;   // the two points of lamp the dark box had give way to the room's own lamps
       }
     }
+    const held = Object.values(halls).filter((x) => x.col);
+    if (held.length > keep) {
+      const out = held.filter((x) => busy?.o !== x && eye.distanceTo(x.door) > NEAR).sort((a, b) => eye.distanceTo(b.door) - eye.distanceTo(a.door))[0];
+      if (out) drop(out);
+    }
     if (!ready) return;
     if (!busy && queue.length) { queue.sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door)); busy = { o: queue.shift(), i: 0 }; cubes(busy.o); }
     if (busy) {
-      const t0 = performance.now(); face(busy.o, busy.i++); worst = Math.max(worst, performance.now() - t0);
+      const t0 = performance.now(); face(busy.o, busy.i++); if (sync) renderer.getContext().finish(); worst = Math.max(worst, performance.now() - t0);   // `sync`: with the card made to finish it (?doorsync)
       if (busy.i === 12) { busy.o.taken++; busy = null; }
     }
   };
+  // Give a room's cubes back: its door is the dark box again until it is taken anew.
+  function drop(o) {
+    const q = queue.indexOf(o); if (q >= 0) queue.splice(q, 1);
+    o.col.dispose(); o.dist.dispose(); o.col = o.dist = o.cam = o.dcam = null;
+    o.want = false; o.taken = 0; o.fade = 0; o.mat.uniforms.uHas.value = 0; o.mat.uniforms.tCol.value = o.mat.uniforms.tDist.value = null;
+    for (const f of o.d.flames) f.visible = true;
+    dropped++;
+  }
   // The hour or the season changed: the halls already taken are taken again, the room staying as it was meanwhile.
   const retake = () => { for (const o of Object.values(halls)) if (o.taken && !queue.includes(o) && busy?.o !== o) queue.push(o); };
   // Everything at once, for a tool that wants every doorway now (and the room shown without fading).
@@ -173,9 +189,9 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
     for (const o of Object.values(halls)) { o.want = true; cubes(o); for (let i = 0; i < 12; i++) face(o, i); o.taken++; o.fade = 1; o.mat.uniforms.uHas.value = 1; for (const f of o.d.flames) f.visible = false; }
     queue.length = 0; busy = null;
   };
-  const bytes = () => Object.values(halls).reduce((n, o) => n + (o.col ? (o.col.width ** 2 * 6 * 8 * 4) / 3 + o.dist.width ** 2 * 6 * 8 : 0), 0);   // half floats, four to a texel; the colour's mipmaps a third more
+  const bytes = () => Object.values(halls).reduce((n, o) => n + (o.col ? (o.col.width ** 2 * 6 * 8 * 4) / 3 + o.dist.width ** 2 * 6 * 2 : 0), 0);   // half floats: four to a colour texel, its mipmaps a third more; one to a distance
   // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
   const seenAt = (id, p) => { const o = halls[id]; if (!o) return null; const R = o.r.room; return p.clone().sub(new THREE.Vector3(R.cx, R.y, 0)).applyMatrix4(m4.copy(o.mat.uniforms.uW2R.value).invert()); };
   return { halls, tick, retake, takeAll, seenAt,
-    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1) }) };
+    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1) }) };
 }

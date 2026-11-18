@@ -80,15 +80,15 @@ function fingerprint(dir) {
   for (const b of spec.bench || []) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
-      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter }), size, b.scale || 1);
+      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync }), size, b.scale || 1);
       await page.waitForTimeout(1500);
       // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
       if (b.walk) await page.evaluate((pts) => { window.__walkerReset?.(); window.__walk(pts); }, b.walk);
       const a = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now() })); await page.waitForTimeout(secs * 1000);
-      const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height], walker: window.__walker ? window.__walker() : null }));
+      const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height], walker: window.__walker ? window.__walker() : null, doors: window.__doorways ? window.__doorways() : null }));
       if (z.walker) z.walker.msPerFrame = +(z.walker.ms / Math.max(1, z.f - a.f)).toFixed(4);
       const cost = await page.evaluate(() => (window.__cost ? window.__cost(40) : null));   // drawing alone, without the browser's presenting
-      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, at: [z.y.x, z.y.z] };
+      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, doors: z.doors, at: [z.y.x, z.y.z] };   // doors: the rooms seen through the doors (#218)
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }
     save();

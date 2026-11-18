@@ -649,7 +649,7 @@ function frame(now) {
   // approach where the eye is under it. A jump does not change which of these he is in.
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
-  if (doors && !inside) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js), before the mirror that shows them
+  if (doors && !inside && document.body.dataset.ready) doors.tick(camera, dt, camera.position);   // not before the page is up: a phone's first load is long already   // the rooms seen through the doors (doorway.js), before the mirror that shows them
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);
@@ -794,10 +794,20 @@ const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x 
 // What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
 // near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true)` takes them
 // all at once, for a picture.
-const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, size: quality.name === "low" ? 128 : 256, steps: quality.name === "low" ? 4 : 12 }) : null;
+const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, size: quality.name === "low" ? 128 : 256, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, sync: Q.has("doorsync") }) : null;
 // Where the altar of a hall stands in the picture (x and y from -1 to 1): from inside, the altar itself; from outside,
 // where its doorway shows it. Going in should not move it (the doorway scenario).
 window.__doorAltar = (id) => { const r = rooms?.rooms[id]; if (!r || !doors) return null; const a = r.altar.getWorldPosition(new THREE.Vector3()), p = inside ? a : doors.seenAt(id, a); camera.updateMatrixWorld(); const n = p.clone().project(camera); return { x: n.x, y: n.y, world: p.toArray() }; };
+// Where a hall's open door and the lattice of the bay beside it lie in the picture, in pixels: the brightness of the one
+// against the other (tools/doorway-views.cjs --moods).
+window.__doorRect = (id) => {
+  const h = site.halls.find((x) => x.id === id), d = site.doorways[id]; if (!h || !d) return null;
+  const xs = [...h.xs].sort((a, b) => a - b), mid = Math.floor((xs.length - 1) / 2), y0 = d.platH + 0.4, y1 = d.platH + 2.6, W = canvas.clientWidth, H = canvas.clientHeight;
+  camera.updateMatrixWorld(); d.group.updateMatrixWorld();
+  const box = (x0, x1) => { const ps = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => new THREE.Vector3(x, y, d.Z).applyMatrix4(d.group.matrixWorld).project(camera)).map((v) => [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]);
+    return [Math.min(...ps.map((q) => q[0])), Math.min(...ps.map((q) => q[1])), Math.max(...ps.map((q) => q[0])), Math.max(...ps.map((q) => q[1]))].map(Math.round); };
+  return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4) };
+};
 window.__doorways = (all) => (!doors ? null : all ? doors.takeAll().then(() => doors.report()) : doors.report());
 afterMood = () => { doors?.retake(); if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
