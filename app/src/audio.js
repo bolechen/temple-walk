@@ -142,6 +142,25 @@ export function drop() {
   o.connect(g); g.connect(bus.effects.in); o.start(now); o.stop(now + 0.35);
 }
 
+// A coin let fall into the 功德箱: a bright bronze ring that dies quickly (a copper cash is small and dull, so its
+// partials are low and inharmonic), the wooden chest answering underneath it, and one small bounce a moment later. Made
+// from oscillators like every sound here; it goes to the effects bus, so it takes the hall's reverb indoors.
+let coined = 0;
+export const coinsHeard = () => coined;
+export function coin() {
+  if (!start()) return; wake(); coined++;
+  const t0 = ctx.currentTime + 0.01;
+  const ring = (at, level) => { for (const [f, k, d] of [[2310, 1, 0.34], [3480, 0.55, 0.22], [5130, 0.3, 0.14]]) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f * (1 + (Math.random() - 0.5) * 0.01);
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.07 * k * level, at + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, at + d);
+    o.connect(g); g.connect(bus.effects.in); o.start(at); o.stop(at + d + 0.05); } };
+  ring(t0, 1); ring(t0 + 0.13, 0.35);
+  const o = ctx.createOscillator(), g = ctx.createGain();   // the hollow of the chest
+  o.frequency.setValueAtTime(190, t0 + 0.02); o.frequency.exponentialRampToValueAtTime(120, t0 + 0.2);
+  g.gain.setValueAtTime(0.0001, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.1, t0 + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28);
+  o.connect(g); g.connect(bus.effects.in); o.start(t0 + 0.02); o.stop(t0 + 0.32);
+}
+
 // One drop falling into the dragon well, heard from near by (`level` 0..1, well.js): a short rising plink, darker
 // than the eaves' drips, and the stone niche giving it back twice, fainter and duller each time.
 let niche = null;

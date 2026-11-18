@@ -345,16 +345,34 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     return ok;
   }
 
+  // ---- A coin for the 功德箱 ----
+  // He bows, palms together; a coin shows between them, is lifted and let go over the slot, falls in (`cue("in")`, where the
+  // sound is made), and he bows again with his hands together. `slot` is where it goes in, in the world (interior.js).
+  const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.0016, 16).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xb08a4a, metalness: 0.8, roughness: 0.35 }));
+  coin.visible = false; coin.userData.keep = true; coin.userData.part = "coin"; scene.add(coin);
+  const palms = (k) => HANDS.forEach(([n, s]) => { const h = act.hands[n]; at(s * 0.0125, 1.0, 0.2, h.at); dir(0, 1, 0.3, h.fingers); dir(-s, 0, 0, h.palm); h.w = k; });
+  /** @param {() => boolean} on @param {number[]} slot @param {(what: string) => void} [cue] */
+  async function dropCoin(on, slot, cue = () => {}) {
+    const S = V().fromArray(slot);
+    if (!(await play(0.8, (u) => { act.bow = 0.3 * ease(u); }, on))) return false;
+    if (!(await play(0.7, (u) => { const k = ease(u); coin.visible = true; between(coin.position); coin.position.y += 0.03 * k; coin.rotation.set(0, G.rotation.y, 0); }, on))) { coin.visible = false; return false; }
+    const from = V().copy(coin.position);
+    if (!(await play(0.55, (u) => { const k = ease(u); coin.position.lerpVectors(from, tA.copy(S).setY(S.y + 0.12), k); coin.rotation.x = 1.4 * k; act.bow = mix(0.3, 0.42, k); }, on))) { coin.visible = false; return false; }
+    if (!(await play(0.22, (u) => { coin.position.copy(S).setY(S.y + 0.12 * (1 - u * u) - 0.0); coin.rotation.x = Math.PI / 2; if (u >= 1) coin.visible = false; }, on))) { coin.visible = false; return false; }
+    coin.visible = false; cue("in");
+    return play(1.2, (u) => { act.bow = 0.42 * (1 - ease(u)) + 0.35 * Math.sin(Math.PI * ease(u)); palms(1); }, on);
+  }
+
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----
   function rest() {
     act.bow = act.twist = act.nod = act.look = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
-    bell.held = false; bell.grip = 0; peal.busy = false;
+    bell.held = false; bell.grip = 0; peal.busy = false; coin.visible = false;
     if (home) { tea.held = 0; cup.position.copy(home); cup.rotation.set(0, T.face, 0); steam.show(true); }
     if (inc.planted) { stand(); smoke.show(true); } else if (inc.burnt) burntOut(); else { sticks.visible = inc.shown = false; }
     ring.visible = false;
   }
   return {
-    act, rest, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
+    act, rest, dropCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
     // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     restore(has) { if (!has.incenseAt) return; if (Date.now() - has.incenseAt < burn * 1000) plant(has.incenseAt); else burntOut(); },
