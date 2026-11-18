@@ -125,9 +125,10 @@ const scenarios = {
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
     expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("竹林里的泥"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
-    // A column of the row before the dais stands at 9.56 m west of the middle, z = 4.35 (framing.js puts them on the hall's own bays).
-    expect(await t.page.evaluate((c) => window.__blocked(c - 9.56, 4.35), cx), "the column this walks into is no longer where the scenario expects it");
-    await go([[-9.56, 4.35]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9.56, s.z - 4.35) > 0.45, "he walked through a column");
+    // The westernmost column of the row before the dais: asked of the page, because the bays have moved it once already (9.56 m, then 10.13 after daa9d27, and this scenario kept the old number for a week).
+    const col = await t.page.evaluate((c) => { const cs = window.__columns("main").filter((k) => Math.abs(k.z - 4.35) < 0.05); return cs.sort((a, b) => a.x - b.x)[0]; }, cx);
+    expect(col && await t.page.evaluate(([x, z]) => window.__blocked(x, z), [col.x, col.z]), "the hall has no column before the dais, or it does not stop him: " + JSON.stringify(col));
+    await t.page.evaluate(([x, z]) => window.__walk([[x, z]]), [col.x, col.z]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - col.x, s.z - col.z) > 0.45, "he walked through a column: he stands " + Math.hypot(s.x - col.x, s.z - col.z).toFixed(2) + " m from the centre of the one at " + col.x + ", " + col.z);
     // Incense before the altar, then out by the door into the daylight.
     await go([[0, 4], [0, -1.2]]); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 240000, "no way to offer incense");
     await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
