@@ -26,7 +26,7 @@ export function donateURL(lang) {
 export function mountOffering({ ui, lang, onOpen }) {
   const d = document.createElement("dialog");
   d.className = "layer"; d.id = "offering"; d.hidden = true; d.setAttribute("aria-labelledby", "offeringTitle");
-  d.innerHTML = `<div class="offering-card paper"><h2 id="offeringTitle"></h2><p id="offeringCoin"></p><p id="offeringAsk"></p>
+  d.innerHTML = `<div class="offering-card paper scrolls"><h2 id="offeringTitle"></h2><p id="offeringCoin"></p><p id="offeringAsk"></p>
     <footer><a class="stamp" id="offeringGo" target="_blank" rel="noopener"></a><button class="chip" id="offeringClose" type="button"></button></footer></div>`;
   document.body.appendChild(d);
   const $ = (/** @type {string} */ id) => /** @type {any} */ (d.querySelector("#" + id));
