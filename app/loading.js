@@ -29,11 +29,14 @@
       done = true; bar.value = 100; percent.textContent = "100%";
       panel.hidden = true;
     },
-    fail() {
+    fail(opts = {}) {
       if (done || failed) return;
       failed = true; bar.hidden = true; percent.hidden = true;
-      label.textContent = t("山路 · 请再来一次"); retry.hidden = false; button.disabled = true;
-      try { if (location.hostname === "temple.rushiwowen.co") window.umami?.track?.("demo.load_error"); } catch {}
+      // A load that broke may be tried again; a browser that cannot draw at all (`reason: "webgl"`) is told why instead,
+      // with no retry, since it would fail the same way. The count keeps the two apart.
+      const reason = (opts && opts.reason) === "webgl" ? "webgl" : "error", webgl = reason === "webgl";
+      label.textContent = webgl ? t("浏览器不支持 WebGL 或未开启硬件加速") : t("山路 · 请再来一次"); retry.hidden = webgl; button.disabled = true;
+      try { if (location.hostname === "temple.rushiwowen.co") window.umami?.track?.("demo.load_error", { reason }); } catch {}
     },
   };
   retry.addEventListener("click", () => location.reload());

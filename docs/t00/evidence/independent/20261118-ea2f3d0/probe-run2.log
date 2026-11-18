@@ -1,0 +1,10 @@
+2026-11-18T03:37:43.057Z enter-button true
+2026-11-18T03:38:26.215Z opening-after-enter {"phase":"done","mode":"fly","skipped":false,"cuts":0,"waited":4068,"secs":13.54,"length":147.2,"s":147.2,"active":false,"hint":null,"cues":{"flutter":0,"farBell":0,"mountainBell":1,"prologue":0,"titled":0,"ending":0,"passed":0,"musicHeld":false}}
+2026-11-18T03:38:51.934Z start {"x":21.3,"z":91.5,"h":-14.5,"frames":59}
+2026-11-18T03:40:57.214Z after-W-60frames {"x":21.3,"z":86.05,"h":-13.77,"moved":5.450000000000003}
+2026-11-18T03:42:11.324Z drag-yaw {"before":0,"after":0.31}
+2026-11-18T03:42:11.324Z errors2 []
+2026-11-18T03:44:24.881Z photo-desktop {"cap":{"w":2294,"h":1525,"keys":["w","h","url"]},"thirds":false,"post":{"depth":false,"gtao":false,"halation":false,"lut":false,"dof":false,"focus":6.1774702917090645,"bakes":0}}
+2026-11-18T03:44:54.522Z errors-desktop []
+2026-11-18T03:46:11.458Z photo-phone {"cap":{"w":1108,"h":2415,"keys":["w","h","url"]},"thirds":false,"post":{"depth":false,"gtao":false,"halation":false,"lut":false,"dof":false,"focus":6.1774702917090645,"bakes":0}}
+2026-11-18T03:46:25.269Z errors-phone []
