@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "pr1-ears.jpg",
+   "bytes": 125564,
+   "sha256": "7847e6193759478301615a12a3d02b140da949f2f800ca2694f10ec375de63e0",
+   "rev": "6fa8293194cc8a8f753819b99763819ecd47d89c"
+  },
+  {
+   "path": "pr1-form-v2.jpg",
+   "bytes": 283312,
+   "sha256": "933fcb62aaefc188ca4d33c90a0574ac91b2a6744d157a79ad2fe4923ca84fe4",
+   "rev": "cb07d9cd540f83ce222d706eea556bd0e015d347"
+  }
+ ]
+}

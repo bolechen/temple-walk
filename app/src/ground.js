@@ -124,7 +124,7 @@ export function createGround(scene, shade, censer, paving) {
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; float dB=(lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.)?texture2D(tShade,lmUv).r*${SPAN}.-.5:2.5;
-        float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.4,1.,smoothstep(0.,.9,length(p-uCenser)-.45));
+        float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.42,1.,smoothstep(0.,1.1,length(p-uCenser)-.3));   // under the censer's belly (feet 0.48 m out, belly 0.56: censer.js), and a little sky kept off by its height round it
         // Leaves and petals on the stone (autumn and spring; none under a roof or on the swept lane). They lie in drifts: where the
         // trees drop them (the map, steeply: a few metres past the crown there are few), more at the foot of a wall or a platform
         // and out of the wind, a little in the open; and they take the stone's own light and shadow like anything on it.

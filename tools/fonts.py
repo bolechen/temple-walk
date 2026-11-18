@@ -100,10 +100,12 @@ def main_lang(lang, src):
     print(len(text), "characters")
 
 def boards():
-    """The characters that are written on name boards: every string given to the board painter, old forms included."""
+    """The characters that are written on name boards: every string given to the board painter, old forms included,
+    and the lettering cast on the censer."""
     import re
     src = "".join(open(p, encoding="utf-8").read() for p in glob.glob(f"{ROOT}/app/src/*.js"))
     text = "".join(re.findall(r'makePlaque\([^)]*\)', src) + re.findall(r'plaque: "[^"]+"', src) + re.findall(r'plaque: \{[^}]*\}', src))
+    text += "".join(re.findall(r'export const CAST = Object\.freeze\(\{[^}]*\}', src))   # what is cast on the censer (censer.js), in the same hand
     old = dict(re.findall(r'(\S): "(\S)"', re.search(r'const OLD = \{([^}]*)\}', src).group(1)))
     text += "".join(old.values()) + "佛鑑正法雲徑禪寺"
     return "".join(sorted({c for c in text if ord(c) > 0x2E80}))

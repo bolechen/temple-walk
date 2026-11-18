@@ -26,6 +26,7 @@ import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
+import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
@@ -540,9 +541,6 @@ function frame(now) {
     // (Put down in something that blocks, by a link or a tap's way out, he steps out of it by the first leg of the way.)
     const moved = target && target.escape && walker.blocked(pos.x, pos.z) ? (pos.x += vx, pos.z += vz, true) : stride(walker, pos, vx, vz);
     if (!moved) { target = null; route = []; settle(false); pace.v = 0; }
-    // The censer does not stop you: you are eased around it.
-    const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
-    if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
   if (flight) {
     flight.elapsed += dt; const p = (flight.plan.speed ? climbPose : dropPose)(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
@@ -605,7 +603,7 @@ function frame(now) {
     const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
-    camera.position.fromArray(follow.step(dt, followEye(walker, at), ahead));
+    camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
     monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
