@@ -46,5 +46,17 @@
    "calls": 35
   }
  ],
- "note": "T4 job, site built from commit 5510e19 + uncommitted donate.js/interior.js fixes (dirty); the first run (93926, before the side-panel fix) is in the PR text"
+ "note": "T4 job, site built from commit 5510e19 + uncommitted donate.js/interior.js fixes (dirty); the first run (93926, before the side-panel fix) is in the PR text",
+ "rerun_front_side": {
+  "run": "20261118-102519",
+  "site": {
+   "commit": "d5c8effc92a5d8c13d4bb9119b6faf55ff231aa1+dirty",
+   "entry": "assets/index-NOJ6XDDK.js",
+   "files": 114,
+   "sha256": "cd76d1755ddeb7a82ab65fcccf1d23806a24158783ea1bf1f60d522c8673cb0d"
+  },
+  "started": "2026-11-18T10:25:39.156Z",
+  "finished": "2026-11-18T10:26:26.627Z",
+  "note": "box-front.jpg and box-side.jpg redrawn after the lid gap was closed (a lit sliver of lacquer top showed under the lid)"
+ }
 }

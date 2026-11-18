@@ -169,7 +169,7 @@ function buildRoom(M, hall, ox, figures) {
     if (big) {
       const bx = 4.7, bz = tz + 0.45, bw = 0.5, bd = 0.38, bh = 0.84;   // centre, width, depth, height to the lid's top
       add(merge([box(bw + 0.08, 0.08, bd + 0.08, bx, Y + 0.04, bz), box(bw + 0.07, 0.05, bd + 0.07, bx, Y + bh - 0.025, bz), box(bw - 0.04, 0.02, 0.04, bx, Y + bh - 0.05, bz + bd / 2 - 0.02)]), M.woodX);
-      add(merge([box(bw - 0.04, bh - 0.16, bd - 0.04, bx, Y + 0.08 + (bh - 0.16) / 2, bz), ...[-1, 1].map((sx) => box(0.025, bh - 0.16, bd - 0.05, bx + sx * (bw / 2 - 0.02), Y + 0.08 + (bh - 0.16) / 2, bz))]), M.lacquer, () => 0.7);
+      add(merge([box(bw - 0.04, bh - 0.13, bd - 0.04, bx, Y + 0.08 + (bh - 0.13) / 2, bz), ...[-1, 1].map((sx) => box(0.025, bh - 0.13, bd - 0.05, bx + sx * (bw / 2 - 0.02), Y + 0.08 + (bh - 0.13) / 2, bz))]), M.lacquer, () => 0.5);   // up to the lid's underside: no gap for the lamp to light
       add(merge([box(0.16, 0.006, 0.026, bx, Y + bh + 0.003, bz - 0.02), box(0.05, 0.1, 0.014, bx, Y + 0.5, bz + bd / 2 + 0.004), box(0.02, 0.04, 0.012, bx, Y + 0.5, bz + bd / 2 + 0.014)]), M.bronze, () => 0.8);   // the slot's brass rim, the lock and its hasp
       const cv = document.createElement("canvas"); cv.width = 128; cv.height = 192; const cx = cv.getContext("2d");
       cx.fillStyle = "#1c1612"; cx.fillRect(0, 0, 128, 192); cx.strokeStyle = "#b99a55"; cx.lineWidth = 5; cx.strokeRect(6, 6, 116, 180);
