@@ -1,0 +1,2 @@
+2026-11-18T03:36:01.912Z dof-photo-high {"post":{"depth":true,"gtao":true,"halation":false,"lut":false,"dof":true,"focus":6.1774702917090645,"bakes":0},"photo":true,"tier":"high"}
+2026-11-18T03:36:31.914Z EXCEPTION "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\n    at /tmp/claude-0/rev/tools/out/review/check.cjs:14:18"
