@@ -53,12 +53,11 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Every script parses, and the typed modules agree with themselves
         run: pnpm run check && pnpm run typecheck
-      - name: Unit tests (the plan, the walker, the building generator, the seasons)
-        run: pnpm test
       # The floor he may stand on (#194): the grid baked from the drawn meshes must be fresh for this commit, no named
       # place may have become unreachable from where he comes in (on the drawn floor or on the written plan), and every
       # part whose reachable floor changed by more than a square metre is listed in the run's summary, against main on a
       # pull request and against the commit before on a push to main. A few seconds: the place is built and gathered, not baked.
+      # (Before the unit tests, which check the same, so that the report is in the summary even when they fail.)
       - name: The floor he may stand on is baked fresh, and what this change did to it
         env:
           BASE_REF: ${{ github.event_name == 'pull_request' && github.base_ref || '' }}
@@ -70,6 +69,8 @@ jobs:
           elif [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then git fetch --no-tags --depth=1 origin "$BEFORE" && base="$BEFORE" && name="上一个提交"; fi
           if [ -n "$base" ] && git cat-file -e "$base:app/shared/walk/t00.bin" 2>/dev/null; then git show "$base:app/shared/walk/t00.bin" > "$RUNNER_TEMP/walk-base.bin"; fi
           WALK_BASE_NAME="$name" node tools/walk-diff.mjs "$RUNNER_TEMP/walk-base.bin" --png=tools/out/walk-diff
+      - name: Unit tests (the plan, the walker, the building generator, the seasons)
+        run: pnpm test
       - name: Build the site
         if: steps.changes.outputs.site == 'true'
         run: pnpm run build
