@@ -43,7 +43,7 @@ function doorMaterial(U, steps) {
       varying vec3 vWP;
       float gap(vec3 ro, vec3 rd, float t){ vec3 q=ro+rd*t-uC; return length(q)-texture(tDist,q).r*${DIST.toFixed(1)}; }
       void main(){
-        vec3 ro=(uW2R*vec4(cameraPosition,1.)).xyz, wp=(uW2R*vec4(vWP,1.)).xyz, rd=normalize(wp-ro), inv=1./rd;
+        vec3 ro=(uW2R*vec4(cameraPosition,1.)).xyz, wp=(uW2R*vec4(vWP,1.)).xyz, rd=(wp-ro)/max(length(wp-ro),1e-6), inv=1./rd;
         // Until the room is taken, the dark box as it always was: warmest low down round its lamps (materials.js's interior).
         float d0=length(vec2(wp.x,(wp.y-1.05)*1.3));
         vec3 c=mix(vec3(.052,.022,.0095),vec3(.0065,.0045,.003),smoothstep(.15,3.6,d0))*(.75+1.7*uLamp);
