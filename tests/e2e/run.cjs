@@ -215,15 +215,18 @@ const scenarios = {
   // great hall is taken when he comes near it, and fades in; the altar stands where it stood seen through the door when
   // he goes in; and every hall can be taken.
   doorway: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=high&view=third&season=summer&time=day&cam=0,60,3.14,0");
+    const t = await open(b, base, "q=medium&view=third&season=summer&time=day&cam=0,60,3.14,0&off=bamboo,trees,backdrop,drift,props");   // the halls, the paving and its mirror drawn; the rest left out, so that software rendering gets through the warming
     await t.frames(4);
     let r = await t.page.evaluate(() => window.__doorways());
     expect(r && Object.keys(r.halls).length === 8, "every hall that can be entered should have a doorway: " + JSON.stringify(r));
     expect(Object.values(r.halls).every((h) => !h.taken), "rooms were taken while the page opened, far from any door: " + JSON.stringify(r.halls));
     const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
     await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
-    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 240000, "the great hall's room never came into its doorway");
+    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 600000, "the great hall's room never came into its doorway");   // its shaders are made ready one a frame first, and software rendering draws a frame in seconds
     r = await t.page.evaluate(() => window.__doorways()); expect(r.halls.main.taken === 1, "the great hall was taken more than once: " + JSON.stringify(r.halls.main));
+    // Its shaders were compiled before its first face, by one of the two ways (doorway.js), and the report says which.
+    expect(["parallel", "frames"].includes(r.warm.path) && r.warm.programs >= 0, "the doorway does not say how it made its shaders ready: " + JSON.stringify(r.warm));
+    console.log("     warming:", JSON.stringify(r.warm), "longest frame while taking", r.worstFrameMs, "ms");
     await t.shot("e2e-doorway");
     // At the door, then the first frame inside: the altar keeps its place across the picture, seen with his own eyes. From
     // behind him the eye also comes 2.5 m nearer on going in (he is set down inside the room, interior.js's `door`), so

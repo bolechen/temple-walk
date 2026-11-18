@@ -91,9 +91,9 @@ function distMaterial() {
 // At most `keep` rooms are held at a time: past that, the one farthest away (and not near) gives its cubes back and its
 // door goes dark again, to be taken anew if he comes near it.
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
-export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12, keep = 4, sync = false }) {
+export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12, keep = 4, sync = false, warmTarget = () => null }) {
   const halls = {}, dm = distMaterial(), queue = [], frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
-  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false, lastTick = 0, worstFrame = 0, quietFor = 1; const faces = [];   // pinned: a tool took them all, and none is given back
+  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false, lastTick = 0, worstFrame = 0, quietFor = 1; const faces = []; let yielded = false;   // pinned: a tool took them all, and none is given back
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
@@ -143,26 +143,46 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
       scene.children.forEach((c, j) => { c.visible = seen[j]; });
     };
   };
-  // Before a room is first drawn, what it is drawn with is compiled off the main thread where the browser can
-  // (KHR_parallel_shader_compile): the first face would otherwise wait on every one of its shaders.
-  // Compiled as they will be drawn: into the cube (a render target has its own colour handling), and the distances'
-  // material too, on a plain and on an instanced mesh.
-  let deepReady = null;
-  const prepare = (o) => {
-    if (!renderer.extensions.has("KHR_parallel_shader_compile")) return Promise.resolve();   // compiling would hold the page just as drawing does
-    const undress = dress(o), target = renderer.getRenderTarget(), jobs = [];
+  // Before a room is first drawn, everything it is drawn with is compiled, so that no face waits on a shader: in the
+  // room's own light (dress), as drawn into a render target (which has its own colour handling), and the distances'
+  // material without fog, on a plain and on an instanced mesh. Where the browser compiles off the main thread
+  // (KHR_parallel_shader_compile) the whole room is handed over at once (`parallel`); elsewhere one thing a frame is
+  // compiled into the small unseen target the director warms its shots with (`frames`), and a frame that came after a
+  // slow one (over `SLOW` ms) is left alone. Until it is all done the door keeps its dark box.
+  const parallel = !!renderer?.extensions?.has("KHR_parallel_shader_compile"), SLOW = 40;
+  const warmStats = { path: parallel ? "parallel" : "frames", programs: 0, longestMs: 0, skipped: 0 };
+  const probe = (() => { const g = new THREE.BoxGeometry(); return [new THREE.Mesh(g, dm), new THREE.InstancedMesh(g, dm, 1)]; })();
+  const warmList = (o) => {
+    const seen = new Set(), list = [];
+    o.r.group.traverse((m) => {
+      if (!m.material) return;
+      for (const mat of [].concat(m.material)) { const k = `${mat.uuid}|${!!m.isInstancedMesh}|${!!m.isSkinnedMesh}|${m.receiveShadow}`; if (!seen.has(k)) { seen.add(k); list.push({ obj: m }); } }
+    });
+    for (const obj of probe) list.push({ obj, deep: true });
+    // And the pictures its materials wear (the figures' packed textures above all), sent to the card one a frame.
+    const tex = new Set(); o.r.group.traverse((m) => { for (const mat of [].concat(m.material || [])) for (const v of Object.values(mat)) if (v && v.isTexture && !v.isRenderTargetTexture) tex.add(v); });
+    for (const t of tex) list.push({ tex: t });
+    return list;
+  };
+  const warmCam = new THREE.PerspectiveCamera(90, 1, 0.05, 80);
+  const compileOne = (o, item) => {
+    if (item.tex) { if (renderer.properties.get(item.tex).__webglTexture) return false; try { renderer.initTexture(item.tex); } catch { /* sent when first drawn */ } return true; }
+    const undress = dress(o), target = renderer.getRenderTarget(), fog = scene.fog, before = renderer.info.programs?.length || 0, t0 = performance.now();
     try {
-      renderer.setRenderTarget(o.col, 0); jobs.push(renderer.compileAsync(o.r.group, o.cam.children[0], scene));
-      if (!deepReady) {
-        const probe = new THREE.Scene(), g = new THREE.BoxGeometry(); probe.add(new THREE.Mesh(g, dm), new THREE.InstancedMesh(g, dm, 1));
-        renderer.setRenderTarget(o.dist, 0); deepReady = renderer.compileAsync(probe, o.dcam.children[0], scene);   // with the room's lights, which are part of every program's key
-      }
-      jobs.push(deepReady);
-    } catch { /* compiled on first drawing instead */ } finally { renderer.setRenderTarget(target); undress(); }
-    // And the pictures its materials wear (the figures' packed textures above all) are sent to the card one a frame.
-    const seen = new Set(); o.r.group.traverse((m) => { for (const mat of [].concat(m.material || [])) for (const v of Object.values(mat)) if (v && v.isTexture && !v.isRenderTargetTexture) seen.add(v); });
-    o.uploads = [...seen];
-    return Promise.all(jobs).catch(() => {});
+      renderer.setRenderTarget(warmTarget());
+      if (item.deep) scene.fog = null;
+      warmCam.position.copy(o.C); warmCam.updateMatrixWorld(); renderer.compile(item.obj, warmCam, scene);
+    } catch { /* compiled when first drawn */ } finally { scene.fog = fog; renderer.setRenderTarget(target); undress(); }
+    const made = (renderer.info.programs?.length || 0) - before; warmStats.programs += made; if (made) warmStats.longestMs = Math.max(warmStats.longestMs, performance.now() - t0);
+    return made > 0;
+  };
+  const prepareAll = (o) => {
+    const undress = dress(o), target = renderer.getRenderTarget(), fog = scene.fog, jobs = [], before = renderer.info.programs?.length || 0;
+    try {
+      warmCam.position.copy(o.C); warmCam.updateMatrixWorld(); renderer.setRenderTarget(warmTarget()); jobs.push(renderer.compileAsync(o.r.group, warmCam, scene));
+      scene.fog = null; const p2 = new THREE.Scene(); p2.add(...probe.map((m) => m.clone())); jobs.push(renderer.compileAsync(p2, warmCam, scene));
+    } catch { /* compiled on first drawing instead */ } finally { scene.fog = fog; renderer.setRenderTarget(target); undress(); }
+    return Promise.all(jobs).catch(() => {}).then(() => { warmStats.programs += (renderer.info.programs?.length || 0) - before; });
   };
   const face = (o, i) => {
     const undress = dress(o), fog = scene.fog;
@@ -186,9 +206,11 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   // Every frame from outside: who is near or seen, the next face of the hall being taken, and the fading in.
   // `still`: false while the eye is being swung (an observance's shot, the opening, the close): no face is drawn then,
   // so that no frame of a swing is held up.
-  const tick = (camera, dt, eye, still = true) => {
+  // `idle`: the title is up, or he is standing still: then the shaders of the hall nearest are made ready before it is
+  // wanted, so that coming near it later has nothing left to compile.
+  const tick = (camera, dt, eye, still = true, idle = false) => {
     // The longest frame while a room is being taken (and for a second after), from one tick to the next.
-    const now = performance.now(); if (lastTick && quietFor < 1) worstFrame = Math.max(worstFrame, now - lastTick); lastTick = now;
+    const now = performance.now(), interval = lastTick ? now - lastTick : 0; if (lastTick && quietFor < 1) worstFrame = Math.max(worstFrame, interval); lastTick = now;
     quietFor = busy || queue.length ? 0 : quietFor + dt;
     if (camera) { camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)); }
     for (const o of Object.values(halls)) {
@@ -207,15 +229,41 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
       if (out) drop(out);
     }
     if (!ready || !still) return;
+    // A nearer hall that has come into the queue takes the place of one still being made ready (not of one being drawn).
+    if (busy && !busy.wait && busy.i === 0 && queue.length) {
+      const near = queue.reduce((a, c) => (eye.distanceTo(c.door) < eye.distanceTo(a.door) ? c : a));
+      if (eye.distanceTo(near.door) < eye.distanceTo(busy.o.door) - 1) { queue.push(busy.o); busy = null; }
+    }
     if (!busy && queue.length) {
-      queue.sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door)); busy = { o: queue.shift(), i: 0, wait: true }; cubes(busy.o);
-      const b = busy; (b.o.compiled ? Promise.resolve() : prepare(b.o)).then(() => { b.o.compiled = true; b.wait = false; });
+      queue.sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door)); busy = { o: queue.shift(), i: 0, wait: false }; cubes(busy.o);
+      const o = busy.o;
+      if (!o.todo?.length) {   // made again each time: what is compiled already is passed over at no cost, and the figures fetched since are added
+        o.todo = warmList(o);
+        if (parallel) { const b = busy; b.wait = true; o.todo = o.todo.filter((x) => x.tex); prepareAll(o).then(() => { b.wait = false; }); }
+      }
     }
-    if (busy && !busy.wait && busy.o.uploads?.length) { const tex = busy.o.uploads.shift(); try { renderer.initTexture(tex); } catch { /* sent when first drawn */ } }
-    else if (busy && !busy.wait) {
-      const t0 = performance.now(); face(busy.o, busy.i++); if (sync) renderer.getContext().finish(); const ms = performance.now() - t0; worst = Math.max(worst, ms); faces.push(+ms.toFixed(1)); if (faces.length > 24) faces.shift();   // `sync`: with the card made to finish it (?doorsync)
-      if (busy.i === 12) { busy.o.taken++; busy = null; }
+    if (!busy && idle && !parallel) {   // nothing wanted: get the nearest hall's shaders ready meanwhile
+      const next = Object.values(halls).filter((o) => !o.warmed).sort((a, b) => eye.distanceTo(a.door) - eye.distanceTo(b.door))[0];
+      if (next) {
+        if (!next.todo) next.todo = warmList(next).filter((x) => !x.tex);
+        if (interval > SLOW && !yielded) { yielded = true; warmStats.skipped++; return; }
+        yielded = false;
+        const t0 = performance.now(); while (next.todo.length && !compileOne(next, next.todo.shift()) && performance.now() - t0 < 4);
+        if (!next.todo.length) { next.warmed = true; next.todo = null; }
+      }
+      return;
     }
+    if (!busy || busy.wait) return;
+    if (interval > SLOW && !yielded) { yielded = true; warmStats.skipped++; return; }   // the last frame was slow: this one is left alone (one only, or a slow page would never be done)
+    yielded = false;
+    const todo = busy.o.todo;
+    if (todo?.length) {   // what is already compiled or sent costs nothing: go on until one thing was really done, or 4 ms
+      const t0 = performance.now(); while (todo.length && !compileOne(busy.o, todo.shift()) && performance.now() - t0 < 4);
+      if (todo.length) return;
+    }
+    busy.o.compiled = true;
+    const t0 = performance.now(); face(busy.o, busy.i++); if (sync) renderer.getContext().finish(); const ms = performance.now() - t0; worst = Math.max(worst, ms); faces.push(+ms.toFixed(1)); if (faces.length > 24) faces.shift();   // `sync`: with the card made to finish it (?doorsync)
+    if (busy.i === 12) { busy.o.taken++; busy = null; }
   };
   // Give a room's cubes back: its door is the dark box again until it is taken anew.
   function drop(o) {
@@ -238,5 +286,5 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
   const seenAt = (id, p) => { const o = halls[id]; if (!o) return null; const R = o.r.room; return p.clone().sub(new THREE.Vector3(R.cx, R.y, 0)).applyMatrix4(m4.copy(o.mat.uniforms.uW2R.value).invert()); };
   return { halls, tick, retake, takeAll, seenAt,
-    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1), worstFrameMs: +worstFrame.toFixed(1), lastFacesMs: faces.slice() }) };
+    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1), worstFrameMs: +worstFrame.toFixed(1), lastFacesMs: faces.slice(), warm: { ...warmStats, longestMs: +warmStats.longestMs.toFixed(1) } }) };
 }
