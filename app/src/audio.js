@@ -5,6 +5,7 @@
 import { createPlayer, createVoices, reverb, bell, hillEcho } from "./instruments.js";
 import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePhrase, rng } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
+import { gust as windGust } from "./wind.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
 const STEP_WET = { out: 0.07, in: 0.4 };   // how much of a step goes to the court's reverb outdoors, the hall's indoors
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
@@ -145,9 +146,10 @@ export function drop() {
 // A coin let fall into the 功德箱: a bright bronze ring that dies quickly (a copper cash is small and dull, so its
 // partials are low and inharmonic), the wooden chest answering underneath it, and one small bounce a moment later. Made
 // from oscillators like every sound here; it goes to the effects bus, so it takes the hall's reverb indoors.
-let coined = 0;
-export const coinsHeard = () => coined;
+let coined = 0, coinAt = null;
+export const coinsHeard = () => ({ n: coined, at: coinAt });   // `at`: when it was asked for, on performance.now()'s clock (a test asks it against when the coin went in)
 export function coin() {
+  coinAt = performance.now();
   if (!start()) return; wake(); coined++;
   const t0 = ctx.currentTime + 0.01;
   const ring = (at, level) => { for (const [f, k, d] of [[2310, 1, 0.34], [3480, 0.55, 0.22], [5130, 0.3, 0.14]]) {
@@ -369,7 +371,7 @@ export function startAmbience(place) {
     const p = place(), now = ctx.currentTime, g = p.grove, a = ambient; a.t += 0.25;
     room(p.zone === "hall");
     // Gusts: two slow waves that sometimes meet.
-    const gust = 0.5 + 0.3 * Math.sin(a.t * 0.11) + 0.2 * Math.sin(a.t * 0.043 + 1.7);
+    const gust = windGust(a.t);   // the same gusts the smoke leans with (wind.js)
     // Deep in the bamboo the wind is the floor of the sound, not its loudest part: about 5 dB under what it was, so
     // that the music and his steps are heard over it there (2026-11-16); in the first court (g 0.12) it is unchanged.
     low.gain.setTargetAtTime(0.5 * gust * (0.41 + 0.15 * g), now, 0.8);

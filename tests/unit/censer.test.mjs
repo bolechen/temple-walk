@@ -1,0 +1,140 @@
+// The iron censer before the great hall (issue #217): the Wanli censer of Jingshan in its three parts, to its measure;
+// in his way as the thing itself is, no more and no less; and never with the eye that follows him inside it.
+import test from "node:test";
+import assert from "node:assert/strict";
+import "./dom-stub.mjs";
+import * as THREE from "three";
+import { buildSite, createWalker } from "../../app/src/site.js";
+import { followEye, createFollow } from "../../app/src/eye.js";
+import { BODY } from "../../app/src/geo.js";
+import { CENSER, CAST, censerGeometry, clearOfCenser, reachBands } from "../../app/src/censer.js";
+import fs from "node:fs";
+
+const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+const site = buildSite(M), walker = createWalker(site), geo = censerGeometry(), pos = geo.attributes.position;
+
+// How far the censer reaches from its axis, in bands 5 cm high.
+const BAND = 0.05, reach = reachBands(geo, BAND);   // every face in every band it spans, at its farthest corner
+const reachAt = (y) => (y < 0 || y >= reach.length * BAND ? 0 : reach[Math.floor(y / BAND)]);
+
+test("it is the real one's shape and size: 2.7 m to the cap, a small gourd over it, 1.12 m across the belly, three feet and two ears", () => {
+  geo.computeBoundingBox(); const b = geo.boundingBox;
+  assert.ok(b.max.y >= 2.7 && b.max.y <= 3.0, `stands ${b.max.y.toFixed(2)} m with its gourd`);
+  assert.ok(reachAt(2.66) > 0.08 && reachAt(2.71) < 0.08, "the cap ends at 2.7 m, as the real one stands");
+  assert.ok(reachAt(2.69) > 0.06 && reachAt(2.75) < 0.12, "the gourd sits on the cap");
+  const belly = Math.max(...[0.8, 0.9, 1.0, 1.1].map(reachAt)) * 2;
+  assert.ok(Math.abs(belly - 3.53 / Math.PI) < 0.04, `the belly is ${belly.toFixed(3)} m across (3.53 m round)`);
+  assert.equal(CENSER.legs.length, 3);
+  assert.ok(CENSER.legs.some(([x, z]) => Math.abs(x) < 1e-6 && z > 0), "one foot toward the visitor");
+  assert.ok(b.max.x > b.max.z + 0.05 && -b.min.x > -b.min.z + 0.05, "the ears stand out on either side, not before and behind");
+  assert.ok(reachAt(1.88) >= CENSER.belly, "a pavilion over the lip, under an eave as broad as the belly");
+  // the ears, the thing most seen of it from the front: their outer edge a hand's breadth past the belly, from the root
+  // of the neck to under the lower eave
+  for (const y of [1.45, 1.6, 1.75]) assert.ok(reachAt(y) >= CENSER.belly + 0.09, `the ears at ${y} m reach only ${reachAt(y).toFixed(2)} m`);
+  let lo = 9, hi = 0; for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getZ(i)) < 0.04 && Math.abs(pos.getX(i)) > 0.62 /* past the lower eave's rim, 0.61 */) { lo = Math.min(lo, pos.getY(i)); hi = Math.max(hi, pos.getY(i)); }
+  assert.ok(lo < 1.4 && hi > 1.8 && hi < 1.885, `the ears stand from ${lo.toFixed(2)} to ${hi.toFixed(2)} m`);
+});
+
+test("what is cast on it: the date in one line, the couplet five and five", () => {
+  assert.equal([...CAST.date].length, 10); assert.equal([...CAST.right].length, 5); assert.equal([...CAST.left].length, 5);
+  const uv = geo.attributes.uv; let lettered = 0; for (let i = 0; i < uv.count; i++) if (uv.getX(i) >= 0) lettered++;
+  assert.ok(lettered > 0 && lettered < uv.count / 10, "only the plates carry letters");
+});
+
+test("he is kept off it as far as it reaches up to the top of his head, and no farther than a hand's breadth more", () => {
+  const post = site.walk.posts.find((p) => p.r !== undefined && Math.hypot(p.x - site.censer.x, p.z - site.censer.z) < 1e-6);
+  assert.ok(post, "the censer stands in the walk as a round post");
+  // how tall he is: the top of his measured outline (tools/walk/outline.json), hat and all
+  const outline = JSON.parse(fs.readFileSync(new URL("../../tools/walk/outline.json", import.meta.url), "utf8")), tall = outline.reach.findLastIndex((r) => r > 0) * outline.bin + outline.bin;
+  let low = 0; for (let y = 0; y < tall; y += BAND) low = Math.max(low, reachAt(y));
+  assert.ok(post.r >= low - 1e-6, `the post (${post.r}) is narrower than the censer (${low.toFixed(3)})`);
+  assert.ok(post.r - low < 0.05, "and not much wider");
+  assert.equal(CENSER.reach, post.r);
+  assert.ok(walker.blocked(site.censer.x, site.censer.z + low + BODY - 0.02), "his centre cannot come within his width of it");
+  assert.ok(!walker.blocked(site.censer.x, site.censer.z + low + BODY + 0.05), "but can just beyond");
+  assert.ok(post.top >= CENSER.height, "the eye may pass over it only above its gourd");
+});
+
+// Walk a way as the follow test walks it and look at where the following eye is each frame.
+function eyes(path, reachK = 6.2) {
+  const follow = createFollow(), out = [], dt = 1 / 60;
+  let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), side = 1.2;
+  for (const [tx, tz] of path.slice(1)) for (let k = 0; k < 20000; k++) {
+    const vx = tx - x, vz = tz - z, l = Math.hypot(vx, vz); if (l < 0.02) break;
+    const step = Math.min(l, 2.1 * dt); x += (vx / l) * step; z += (vz / l) * step;
+    const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
+    const foot = walker.heightAt(x, z); eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
+    const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
+    out.push({ x, z, eye: clearOfCenser(follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: 0.04, side, reach: reachK })), [x, foot + 1.15, z], site.censer) });   // as yard.js steps it
+  }
+  return out;
+}
+const C = site.censer, ring = (s) => [...Array(17)].map((_, i) => [C.x + s * Math.sin(i * Math.PI / 4) * 1.05, C.z + Math.cos(i * Math.PI / 4) * 1.05]);
+const ways = {
+  "round it, it on his left": ring(1),
+  "round it, it on his right": ring(-1),
+  "away from it, north and then south": [[C.x, C.z - 1.0], [C.x, C.z - 5], [C.x + 1.2, C.z], [C.x, C.z + 1.0], [C.x, C.z + 6]],
+  "up the axis past it": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
+};
+for (const [name, path] of Object.entries(ways)) test(`the eye that follows him is never inside it: ${name}`, () => {
+  const inside = eyes(path).filter(({ eye: [ex, ey, ez] }) => Math.hypot(ex - C.x, ez - C.z) < reachAt(ey - C.y) + 0.1);
+  assert.equal(inside.length, 0, `${inside.length} frames with the eye inside the censer, e.g. him at (${inside[0]?.x.toFixed(2)}, ${inside[0]?.z.toFixed(2)}), eye at ${inside[0]?.eye.map((q) => q.toFixed(2))}`);
+});
+
+test("the eye may not stand anywhere inside it, from its feet to its gourd, and may stand just off it and over it", () => {
+  for (let y = 0.1; y < CENSER.height; y += 0.1) for (let a = 0; a < 8; a++) {
+    const r = Math.max(0.02, reachAt(y) - 0.03), x = C.x + Math.sin(a * Math.PI / 4) * r, z = C.z + Math.cos(a * Math.PI / 4) * r;
+    assert.equal(walker.eyeShut(x, C.y + y, z, C.y), true, `the eye could stand in the censer at height ${y.toFixed(1)}`);
+  }
+  assert.ok(!walker.eyeShut(C.x, C.y + CENSER.height + 0.2, C.z, C.y), "over the gourd it is open air");
+  assert.ok(!walker.eyeShut(C.x + CENSER.reach + BODY + 0.2, C.y + 1.3, C.z, C.y), "a step off it is open air");
+});
+
+// ---- The incense, the smoke and the seasons (#217, second part) ----
+import { moodOf, SEASONS, TIMES } from "../../app/src/mood.js";
+import { STICKS, smokeAt, createSmoke, censerMaterial } from "../../app/src/censer.js";
+import { WIND_DIR, windAt } from "../../app/src/wind.js";
+import { U } from "../../app/src/glsl.js";
+
+test("every season and hour says how hard the breeze blows and how much incense burns: most at dawn, two or three ends at night", () => {
+  for (const s of SEASONS) {
+    const m = Object.fromEntries(TIMES.map((h) => [h, moodOf(s, h)]));
+    for (const h of TIMES) assert.ok(m[h].wind > 0 && m[h].incense > 0 && m[h].incense <= 1, `${s} ${h}`);
+    assert.ok(m.dawn.incense > m.day.incense && m.day.incense > m.dusk.incense && m.dusk.incense > m.night.incense, s);
+    const lit = Math.round(m.night.incense * STICKS); assert.ok(lit >= 2 && lit <= 4, `${s} night: ${lit} sticks burning`);
+  }
+  assert.ok(moodOf("winter", "day").wind < moodOf("autumn", "day").wind, "the cold is stiller, and the smoke stands straighter");
+});
+
+test("the smoke leans the way the breeze carries the falling things, and only as it rises", () => {
+  const w = windAt(moodOf("autumn", "day").wind, 12), wind = [WIND_DIR[0] * w, WIND_DIR[1] * w];
+  for (let i = 0; i < 6; i++) {
+    const still = smokeAt(i, 1, [0, 0]), blown = smokeAt(i, 1, wind), low = smokeAt(i, 0, wind), low0 = smokeAt(i, 0, [0, 0]);
+    const lean = [blown[0] - still[0], blown[2] - still[2]];
+    assert.ok(lean[0] * WIND_DIR[0] + lean[1] * WIND_DIR[1] > 0.3, `thread ${i} leans ${lean}`);
+    assert.ok(Math.hypot(low[0] - low0[0], low[2] - low0[2]) < 1e-9, `thread ${i} starts at its window whatever the breeze`);
+  }
+  // The page does the same sums: the threads lean by uWind, the drifting things are carried by its sum over time.
+  const smoke = createSmoke(new THREE.Vector3(), U).mesh.material;
+  assert.match(smoke.vertexShader, /uWind\.x\*lean/); assert.match(smoke.vertexShader, /uWind\.y\*lean/);
+  assert.match(fs.readFileSync(new URL("../../app/src/drift.js", import.meta.url), "utf8"), /p\.xz\+=uWindPath\*/);
+  assert.match(fs.readFileSync(new URL("../../app/yard.js", import.meta.url), "utf8"), /U\.uWindPath\.value\.addScaledVector\(U\.uWind\.value, dt\)/);
+});
+
+test("snow lies on the eaves and the cap and not on the warm body, mouth or ears", () => {
+  let ears = 0, eave = 0;
+  for (let i = 0; i < pos.count; i++) { const x = Math.abs(pos.getX(i)), y = pos.getY(i); if (x > CENSER.belly + 0.03 && Math.abs(pos.getZ(i)) < 0.06 && y < 1.9 && Math.hypot(x, pos.getZ(i)) > 0.615) ears = Math.max(ears, y); if (y > 1.9 && y < 2.2) eave = Math.max(eave, y); }
+  const m = censerMaterial((key, params, body) => ({ body, userData: {} }), null);   // the sums handed to procMat
+  const line = m.body.split("\n").find((l) => l.includes("uSnow>"));
+  const from = +line.match(/smoothstep\(([\d.]+),([\d.]+),lp\.y\)/)[1];
+  assert.ok(ears < from, `the ears reach ${ears.toFixed(2)} m, and snow starts at ${from}`);
+  assert.ok(eave > from + 0.05, "the eave is above where snow starts");
+  assert.ok(CENSER.ash + 0.25 < from, "and the mouth well below it");
+});
+
+test("the incense, the ash and the season's leaves and petals are in the censer, and add no draw", () => {
+  const uv = geo.attributes.uv, kinds = new Set();
+  for (let i = 0; i < uv.count; i++) { const k = uv.getX(i); kinds.add(k >= 0 ? "cast" : k > -1.1 ? "iron" : k > -1.5 ? "ash" : k > -3 ? "stick" : k > -3.5 ? "stub" : k > -4.5 ? "leaf" : "petal"); }
+  assert.deepEqual([...kinds].sort(), ["ash", "cast", "iron", "leaf", "petal", "stick", "stub"]);
+});

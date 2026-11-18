@@ -65,6 +65,11 @@ export function moodOf(season, time) {
   if (season === "summer" && time === "dusk") Object.assign(m, { zen: [0.13, 0.15, 0.4], hor: [0.78, 0.47, 0.56], sunCol: [1, 0.55, 0.45], sunI: m.sunI * 0.6, win: [0.95, 0.42, 0.14] });
   if (s.snow && time !== "night") m.fog = t.fog.map((v, i) => v * 0.6 + [0.86, 0.88, 0.92][i] * 0.4);
   m.drift = s.drift === "none" && time === "night" ? "firefly" : s.drift;
+  // The breeze (wind.js), m/s at its steadiest: a spring and autumn day the liveliest, still winter cold and the night
+  // the calmest, so that the smoke stands straightest then. And how much of the censer's incense is burning: most after
+  // the morning service, a few sticks by evening, two or three glowing ends at night (#217; by common sense, our own choice).
+  m.wind = { spring: 0.9, summer: 0.6, autumn: 1.05, winter: 0.4 }[season] * { dawn: 0.6, day: 1, dusk: 0.75, night: 0.45 }[time];
+  m.incense = { dawn: 1, day: 0.6, dusk: 0.3, night: 0.12 }[time];
   m.line = LINES[season][dark ? 1 : 0];
   m.label = `${NAMES[season]} · ${NAMES[time]}`;
   return m;

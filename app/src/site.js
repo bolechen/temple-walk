@@ -9,6 +9,7 @@ import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK, 
 import { PURLIN, PING, buildHall, DOOR } from "./building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
+import { CENSER } from "./censer.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0 };
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
@@ -538,8 +539,11 @@ export function buildSite(M) {
     loft: [0, topZ + 3.4 + (0.51 + LOFT.out - 0.64) / 2, Math.PI, -0.22],
   };
   const viewUp = { loft: "lingxiao" };
+  // The iron censer on the axis of the first court (censer.js, drawn by props.js): round, and in his way as a column is.
+  const censer = new THREE.Vector3(0, 0, 13);
+  walk.posts.push({ x: censer.x, z: censer.z, r: CENSER.reach, eyeR: CENSER.ears + 0.1, top: censer.y + CENSER.height + 0.05 });   // the eye kept off its ears too
 
-  return { root, walk, shade, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
@@ -616,11 +620,12 @@ export function createWalker(site) {
   // asking about one spot looks at a handful and not at every column in the temple.
   const CELL = 2, bins = new Map(), key = (i, j) => i * 4096 + j;
   for (const s of posts) {
-    const x0 = s.r !== undefined ? s.x - s.r - BODY : s.x0, x1 = s.r !== undefined ? s.x + s.r + BODY : s.x1, z0 = s.r !== undefined ? s.z - s.r - BODY : s.z0, z1 = s.r !== undefined ? s.z + s.r + BODY : s.z1;
+    const e = s.r !== undefined ? Math.max(s.r + BODY, s.eyeR || 0) : 0, x0 = s.r !== undefined ? s.x - e : s.x0, x1 = s.r !== undefined ? s.x + e : s.x1, z0 = s.r !== undefined ? s.z - e : s.z0, z1 = s.r !== undefined ? s.z + e : s.z1;
     for (let i = Math.floor(x0 / CELL); i <= Math.floor(x1 / CELL); i++) for (let j = Math.floor(z0 / CELL); j <= Math.floor(z1 / CELL); j++) { const k = key(i, j); (bins.get(k) || bins.set(k, []).get(k)).push(s); }
   }
-  const post = (x, z, pad) => { const list = bins.get(key(Math.floor(x / CELL), Math.floor(z / CELL))); if (!list) return false;
-    for (const s of list) { if (s.r !== undefined) { const dx = x - s.x, dz = z - s.z, r = s.r + pad; if (dx * dx + dz * dz < r * r) return s; } else if (inRect(s, x, z)) return s; }
+  // (`eye`: asked for the eye, a round thing wider up high than at his height, the censer's ears, keeps it off by `eyeR`.)
+  const post = (x, z, pad, eye = false) => { const list = bins.get(key(Math.floor(x / CELL), Math.floor(z / CELL))); if (!list) return false;
+    for (const s of list) { if (s.r !== undefined) { const dx = x - s.x, dz = z - s.z, r = eye && s.eyeR ? Math.max(s.eyeR, s.r + pad) : s.r + pad; if (dx * dx + dz * dz < r * r) return s; } else if (inRect(s, x, z)) return s; }
     return null; };
   let floor = null;   // what the highest floor found by the last carved() is made of (building floors say; the rest is the path's stone)
   // The balcony of a storey that is walked round is floor only while he is up there: from below, a tap or a look aimed
@@ -676,8 +681,9 @@ export function createWalker(site) {
       for (const r of roofs) if (y < r.top && inRect(r, x, z) && y > (inRect(r.core, x, z) ? r.inner : r.bottom)) return true;
       // A square post is a low thing drawn wide by his body (a table, the cheek of a stair): in the way only of an eye
       // that has come down near the floor it stands on, as it does looking up.
-      const p = post(x, z, 0.15);
-      if (p) { if (p.r !== undefined) return p.r < 0.45 ? "post" : true; const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; }
+      const p = post(x, z, 0.15, true);
+      // (A round thing that stops short of the roofs, the censer, keeps the eye out only up to its own top.)
+      if (p) { if (p.r !== undefined) { if (p.top === undefined || y < p.top) return p.r < 0.45 ? "post" : true; } else { const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; } }
       if (carved(x, z) !== null) return false;
       // He stands on a terrace: the eye stays over it too, and does not step out past its edge to look back at him along
       // the wall's outer face. Past the front edge it may be only where the wall is open to the stair (the view back down

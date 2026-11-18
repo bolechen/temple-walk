@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "at-the-box-and-before-sw.jpg",
+   "bytes": 86047,
+   "sha256": "7eae1d713bd212309583c08537c7fce9fe2df016844517cffe063c155d9b4946",
+   "rev": "e76a223dacc15c3f13e14f5703f76b3e85a7afe6"
+  },
+  {
+   "path": "door-day-t4-and-night-sw.jpg",
+   "bytes": 157704,
+   "sha256": "a079d8905f0aa800e672426617c794e5e692124ae91fef089c216a5611ba8b02",
+   "rev": "e76a223dacc15c3f13e14f5703f76b3e85a7afe6"
+  },
+  {
+   "path": "sw-4x3-four-moments.jpg",
+   "bytes": 224236,
+   "sha256": "c62411c1c3e1b5694a0787161d902ae74794ba1edd0c17e20b8911eb1d064387",
+   "rev": "e76a223dacc15c3f13e14f5703f76b3e85a7afe6"
+  },
+  {
+   "path": "sw-phone-four-moments.jpg",
+   "bytes": 127952,
+   "sha256": "a0b93bcd13933b931b9bd3017580a71d7796dd503831817a5203fec3f5688d73",
+   "rev": "e76a223dacc15c3f13e14f5703f76b3e85a7afe6"
+  },
+  {
+   "path": "t4-16x9-four-moments.jpg",
+   "bytes": 193062,
+   "sha256": "3808b7549f081bdf66f6718338524796dbe0e59b6356f71e13624a6e430cff47",
+   "rev": "e76a223dacc15c3f13e14f5703f76b3e85a7afe6"
+  }
+ ]
+}

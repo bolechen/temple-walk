@@ -1,0 +1,282 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "board/door-looking-north-up-A_B.jpg",
+   "bytes": 42054,
+   "sha256": "122fc0da3fbfa31b6c785a3681263a499dd4a72c2e3fdbc027dd53bfd5259e67",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "board/ending-top-storey-A-smaller_B-fullsize-on-wall.jpg",
+   "bytes": 118819,
+   "sha256": "b3371eae9f98c0f728dacadfc223813aeca1641d9ab65bb181088612648f6d17",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/ending-last-tall-out1.6-eave2.2.jpg",
+   "bytes": 65958,
+   "sha256": "c45d0b335d9da714a4eaa7046ca55798301fb2f26f55e25df7f39a4c5b531b0c",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/ending-last-tall-out2.0-eave2.8.jpg",
+   "bytes": 65448,
+   "sha256": "014913156d8925c620df3c095911390f961ccd02936b96ad8c0fa5e8f8560407",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/ending-last-wide-out1.6-eave2.2.jpg",
+   "bytes": 149867,
+   "sha256": "cb6e7553ee31e7f145267d307b0d8666ede66b2ce146d8322704144ae410004c",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/ending-last-wide-out2.0-eave2.8.jpg",
+   "bytes": 149317,
+   "sha256": "85be213d3498d792eee49c04d368c94a2e1e288844f835ea66f763aa0e05133d",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/loft-summer-day-first-out1.6-eave2.2.jpg",
+   "bytes": 115051,
+   "sha256": "02f150c6d32cf568b784e2f323bc26215514135ad3dc36df28e463d46462011a",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/loft-summer-day-first-out2.0-eave2.8.jpg",
+   "bytes": 115138,
+   "sha256": "80f25127f56af1f08c2920f8b4e88d46db709f8a928b1225c244f0128a98928a",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/summit-out1.6-eave2.2.jpg",
+   "bytes": 163512,
+   "sha256": "c0053763a53a69b5e0263d16944406296cde6cb5808aedcc223baa0b1570f66c",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "compare/summit-out2.0-eave2.8.jpg",
+   "bytes": 163095,
+   "sha256": "d2bae65275ea953bf1192733ba63dc6e3688f6e9335f1cd77fe6c6b2664fc84f",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/below-summer-day.jpg",
+   "bytes": 138342,
+   "sha256": "12d91d46c3265cb62c2867f53c4034d8d9761a9ce754fbd3cdd3f9447b999b4e",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/ending-last-tall.jpg",
+   "bytes": 61685,
+   "sha256": "b23daedf4c2ecf4c477990b74249f47c3e920be116b47b2b1068e402678b83f3",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/ending-last-wide-before-crest-fix.jpg",
+   "bytes": 141397,
+   "sha256": "25af7f6caeb688dd85e71ef4bae6b2e23243585ff7127d5eca900fcec2c66ee9",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/ending-last-wide.jpg",
+   "bytes": 140067,
+   "sha256": "7ea9706227c86a991376d973531ddca1945a9615750a212c16353fc4cf4a5a8e",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/ending-top-storey-zoom.jpg",
+   "bytes": 58638,
+   "sha256": "ed3e55cb4610edb15d6d5aaad5925ceeaa5365af6b666cbd2d2cefc800a933c2",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/loft-autumn-dusk.jpg",
+   "bytes": 89516,
+   "sha256": "36db0ff31b972535faa49a879fd3c861e37addac50c17e09bbf9966b35e7d1d2",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/loft-summer-day.jpg",
+   "bytes": 106825,
+   "sha256": "f229f8be15ecfe00d33f6e9d7ead35e07422a1f855bd0a504af8853451915ef5",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "final/loft-winter-day.jpg",
+   "bytes": 94176,
+   "sha256": "cbb03b564a7e96c083f62359695fd38c4e3e7b9012a9dcbd8375b72441703284",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/art6-out1.0.jpg",
+   "bytes": 100523,
+   "sha256": "b865673ea019f472d59ca2a64c0eb095a8a132ef6df1dce0741d571a8da92ccc",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/art6-out1.6.jpg",
+   "bytes": 100573,
+   "sha256": "096971c5ed8bc033a5eced7d38980d5819e5704567a54705308df3454a0677b2",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/ending-last-tall-out1.0.jpg",
+   "bytes": 66257,
+   "sha256": "7ac80bd8b2eb3e2ab9b4404108a7d879c0913d9d77624d0dc2daefbb4dddc911",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/ending-last-tall-out1.6.jpg",
+   "bytes": 66012,
+   "sha256": "7c44eee9a7f7003c95ae9b9519fdc593400cf6f14b840d1cd119d656ce093347",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/ending-last-wide-out1.0.jpg",
+   "bytes": 149714,
+   "sha256": "d840a8736f6d2826d1393cc9c4c694cfd5d545871f624ca97fe5fc053b6a4b5a",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/ending-last-wide-out1.6.jpg",
+   "bytes": 149785,
+   "sha256": "2f034924d3768d3dbd0b6b55ef404a7e47799bd95f36a03e80e738ed76b00060",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-centre-autumn-dusk-first.jpg",
+   "bytes": 86939,
+   "sha256": "eb37500ab6cec0abce748eaced672192d1e03b673da16100c347432fb225658a",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-centre-summer-day-first.jpg",
+   "bytes": 92503,
+   "sha256": "56cd59f14d0531cddac6edb905a2b8066b7f70f5cae899e083f7b18e49760f9f",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-centre-summer-day-third.jpg",
+   "bytes": 101291,
+   "sha256": "43df106eb984b1fb887173a86d7378a49c53f030b774a6ebe7ee39d3b5d2b596",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-centre-winter-day-first.jpg",
+   "bytes": 76189,
+   "sha256": "107cf01123d1919c5bd66e4d0cbd81c218fa56511d9557e23e5a3e760673945b",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-south-summer-day-first.jpg",
+   "bytes": 93074,
+   "sha256": "fabe51974668651a58a5b0e7bc50410823e2cec9356e4a46071e5434a238731d",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-south-summer-day-third.jpg",
+   "bytes": 110841,
+   "sha256": "1b42db58a43fdb7ac4fc2ce8c42e52fa2c503544e449d2dcc3f66d79074552a9",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/loft-south-winter-day-first.jpg",
+   "bytes": 73158,
+   "sha256": "8a7a159fed4e72d75d8760f3b517b579ee5c8571ce4d927fc78b5effaea3c983",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/summit-out1.0.jpg",
+   "bytes": 163429,
+   "sha256": "e32dfc8ac21f0b02596b48d02a1301cdc539ce9a3a505fbdd40d787a7656b071",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "plan/summit-out1.6.jpg",
+   "bytes": 163437,
+   "sha256": "4e8b523f08db30f31bd43e3be027f2010e4c5868d6bf54db8452b6a048887ff2",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "t4-6bb9ad2/loft_autumn-dusk.jpg",
+   "bytes": 205169,
+   "sha256": "531b7d9211f1d17f4f33da05bc6db379739621d830b612cb6d2eba2e80225bc8",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "t4-6bb9ad2/loft_summer-day.jpg",
+   "bytes": 235762,
+   "sha256": "7475684d47d7cb3381d3788bd9ac32d3fcc25d196fcb8b2c99c6a16c5d5bb67f",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "t4-6bb9ad2/loft_winter-day.jpg",
+   "bytes": 190984,
+   "sha256": "b22cacafc447c8c8b127d8604ec164d2ee23de4d144f4683b5465a279f5bf89a",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c1-below.jpg",
+   "bytes": 39003,
+   "sha256": "9a9a711ec530e9f619e86f6b26733075d6e020a71b7042eac95343abce494742",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c1-ending.jpg",
+   "bytes": 40013,
+   "sha256": "8bb6956827f27c36f34707817f978665e84ace276f3642e8f57bbd6fee4c3ffe",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c1-loft.jpg",
+   "bytes": 31094,
+   "sha256": "2f4aa0cad16ad1b7a0d37213da8a1f5a8ea6f7f7f2da9001d092ddf7c1dd5861",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c2a-below.jpg",
+   "bytes": 39338,
+   "sha256": "6eea4c78d496e249655f4bf9802a1503af14acd93691c22ac547ea88a5e57d83",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c2a-ending.jpg",
+   "bytes": 40259,
+   "sha256": "1fcee7822b06c6c947fdcdfe55adc1401c371d25dd58f07a0df72b92e42102a8",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c2a-loft.jpg",
+   "bytes": 32553,
+   "sha256": "a6e2652fc491e62f933e3873f02772fd6eed1ac30a4f108237ac98b108b92d9c",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c2b-below.jpg",
+   "bytes": 39373,
+   "sha256": "779661d0a7a4cb947992c2770481641b439a707f6302e3ac17402ad19394f416",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c2b-ending.jpg",
+   "bytes": 40142,
+   "sha256": "8c12bf8eb5360627f9e96664dedf78b36fb815109ff5fa6ca26c73ffdb507185",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/c2b-loft.jpg",
+   "bytes": 32555,
+   "sha256": "639b602e43d83016ea2cfb3b5fbafe815770aea168a9ecbbc1ebeefb1c8d8088",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  },
+  {
+   "path": "width/sheet-3x3.jpg",
+   "bytes": 366517,
+   "sha256": "b6eafd20fb886ff7fc641e2a064b0b916581c554357770634ee9c45dc761af2f",
+   "rev": "a27aba0cc1749564e47d7ec9b62463aeaeed9586"
+  }
+ ]
+}

@@ -1,0 +1,102 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "fix/card-en.png",
+   "bytes": 664487,
+   "sha256": "f3ac2be65453c19eae6cec33c84cb508de9bb05103d32f3a98c78f03de8d7d3c",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/card-ja.png",
+   "bytes": 665080,
+   "sha256": "2812ad414bdf9769a16a9806768c57b07fa4c0213e4daf2257a91a3c5a401fee",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/card-ko.png",
+   "bytes": 658533,
+   "sha256": "acd68a94d429acdc8af8aaa89aebbe07e7e119d1f9fa2518bc38ce7efc96b975",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/card-zh.png",
+   "bytes": 664153,
+   "sha256": "8f4d064fed90f3e3b8ff7f4c52cbcad8e7da7f8fc58bd576dd34587272ca71a8",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/credits-en.png",
+   "bytes": 731286,
+   "sha256": "a9f5d3be6d9c0ebfb943d171dc68821535da211793199028d11f197cbc27e950",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/credits-ja.png",
+   "bytes": 715751,
+   "sha256": "5bd54364452baa42944c0fec81a94f63fb09efaa6a573e3ee28506cba96ff694",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/credits-ko.png",
+   "bytes": 713659,
+   "sha256": "ca22c1ef8d22ee4768c92925aca8861c590127e27da04c1dd4e571a1c3950f84",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/credits-zh.png",
+   "bytes": 719231,
+   "sha256": "d3b4220ee43991cb9cc141f38cddce1345a707bc36d3eb8dc1b23b7af0ac52de",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/card-en.png",
+   "bytes": 664617,
+   "sha256": "85fd313db10a99b2b86c1b54ebc9bda252bcaf7d1fab8915423ae9ac5f4415d9",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/card-ja.png",
+   "bytes": 665101,
+   "sha256": "b346f182b01c419f06e6108a1d733a2ff9bb03bd077ce3dd93c9313ee3cace11",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/card-ko.png",
+   "bytes": 658559,
+   "sha256": "01b57e91574117a135d8f6499b848e273440c0b261746156018c1b719ae50c40",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/card-zh.png",
+   "bytes": 664225,
+   "sha256": "79f293e01360fe73cdf24d521e1d17612e9277c6eec4fc688f1e063190ba2223",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/credits-en.png",
+   "bytes": 716890,
+   "sha256": "7a0b0037ecbfb853b72705cb005114adf5029eb9e28790040b0005e36c0a04a2",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/credits-ja.png",
+   "bytes": 704969,
+   "sha256": "8bfc035533a61a2cf72c336c7fc7bcb100b6dd93344e787725165fdf0a06b08e",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/credits-ko.png",
+   "bytes": 702337,
+   "sha256": "5aa2251bc712d29858a583f6eabbf993f6d3a126a77b4f2b662492a8a1bc84c4",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  },
+  {
+   "path": "fix/fonts-trim/credits-zh.png",
+   "bytes": 706935,
+   "sha256": "a83c8d4b1840e8f3d331560e445cb64195e4f78a9c0fd0f75b9ce97308966fae",
+   "rev": "b7735749062054315fb13ef16065afe898c5f2a2"
+  }
+ ]
+}

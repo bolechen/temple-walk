@@ -940,6 +940,17 @@ const scenarios = {
     expect(!(await quiet()), "what steps aside should come back with the eye");
     await t.frames(2); expect((await t.journey()).rings > 0, "the rings still owed should be drawn again once the eye is home");
     await t.until(async () => (await t.journey()).seals.lamp > 0, 60000, "no seal for the lamp");
+    // The 功德箱 (#202): the eye goes to the box's own shot in the hall and is home again before the sheet comes; the hand reaches the slot.
+    await t.page.evaluate(() => window.__inside("main")); await t.frames(3);
+    await t.page.evaluate(() => { const p = window.__gallery["main-box"]; window.__pose(p.at[0], p.at[1] + 0.2, Math.PI - p.face, 0.05); });
+    await offered("合掌"); await t.page.click("#act");
+    await reach("the box's shot was never gone to", () => window.__director().id === "main-box" && window.__director().phase !== "idle");
+    await reach("the box's shot was never reached", () => window.__director().id === "main-box" && window.__director().phase === "hold");
+    expect(await quiet(), "the way and the slips should step aside while the eye is on the box's shot");
+    await reach("the eye never came back from the box by itself", () => window.__director().phase === "idle" && window.__director().backs >= 1, 90000);
+    await t.until(async () => (await t.page.evaluate(() => window.__ui().stack.includes("offering"))) || (await t.journey()).rite === null, 60000, "the coin went in and nothing followed");
+    if (await t.page.evaluate(() => window.__ui().stack.includes("offering"))) { await t.page.keyboard.press("Escape"); await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box"); }
+    await t.page.evaluate(() => window.__inside(null)); await t.frames(3);
     // The well: watched from where the eye follows him (its shot is kept but not gone to until #99: the niche is unlit).
     // The eye must not leave him at any moment of the observance.
     const g0 = await D(); await at("well"); await offered("观水"); await t.page.click("#act");
@@ -1234,6 +1245,33 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every season at every hour draws, and they look as different as they should.
+  // Under the eaves of the main hall, the gate, the library and the Guanyin hall, looking up at the bracket sets over
+  // the front columns on a summer day (issue #212): the sets must read as timber against the limed band between them,
+  // not as black cut-outs. What is timber and what is the band is asked of the picture itself (`__pick` on a grid);
+  // the brightness compared is luminance in linear light, as the eye adds it up, and the sets must have at least
+  // 18% of the band's.
+  eaves: { tier: 2, async run(b, base) {
+    const W = 960, H = 540, t = await open(b, base, "q=low&shot=1&view=third&season=summer&time=day&cam=0,-1,0,0.1", { viewport: { width: W, height: H } });
+    // [x, where the eye stands, where the front columns' heads are, how high it looks over the ground it stands on]
+    const views = { main: [0, -1.0, -6.3, 5.6], gate: [0, 47.5, 43.0, 4.6], library: [0, -40.6, -44.8, 5.9], guanyin: [0, -70.9, -75.1, 5.0] };
+    const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }, Y = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const seen = {};
+    for (const [name, v] of Object.entries(views)) {
+      await t.page.evaluate((v) => { window.__pose(v[0], v[1], 0, 0.1); const g = window.__yard().h; window.__look([v[0], g + 2.2, v[1]], [v[0], g + v[3], v[2]]); }, v); await t.frames(3);
+      const grid = await t.page.evaluate(([W, H]) => { const r = []; for (let y = 10; y < H * 0.62; y += 20) for (let x = 10; x < W; x += 20) { const h = window.__pick(x, y, 1)[0]; if (h) r.push([x, y, h.material, h.at[1]]); } return r; }, [W, H]);
+      const band = grid.filter((g) => g[2] === "plaster"), ys = band.map((g) => g[3]).sort((a, b) => a - b);
+      expect(band.length > 20, `${name}: the limed band under the eave is not in view (${band.length} samples)`);
+      const lo = ys[Math.floor(ys.length * 0.05)], hi = ys[Math.floor(ys.length * 0.95)], r0 = Math.min(...band.map((g) => g[1])), r1 = Math.max(...band.map((g) => g[1]));
+      const inBand = band.filter((g) => g[3] >= lo && g[3] <= hi), wood = grid.filter((g) => /^wood[XYZV]$/.test(g[2]) && g[1] >= r0 && g[1] <= r1 && g[3] >= lo && g[3] <= hi + 0.25);
+      expect(wood.length > 20, `${name}: no bracket sets in view (${wood.length} samples)`);
+      const p = await t.page.evaluate((pts) => window.__probe(pts), [...wood, ...inBand].map((g) => [g[0], g[1]]));
+      const mean = (a) => a.reduce((s, c) => s + Y(c), 0) / a.length, w = mean(p.at.slice(0, wood.length)), bd = mean(p.at.slice(wood.length));
+      seen[name] = { wood: +w.toFixed(4), band: +bd.toFixed(4), ratio: +(w / bd).toFixed(3) };
+    }
+    console.log("    eaves:", JSON.stringify(seen));
+    for (const [name, s] of Object.entries(seen)) expect(s.ratio >= 0.18, `${name}: under the eave the bracket sets are a black cut-out: ${(s.ratio * 100).toFixed(1)}% of the band's light (want 18%)`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   moods: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&shot=1&view=first&show=court"), seen = {};
     for (const s of ["spring", "summer", "autumn", "winter"]) for (const h of ["dawn", "day", "dusk", "night"]) {
@@ -1265,6 +1303,29 @@ const scenarios = {
   // (<deployment>-temple-walk-preview.<account>.workers.dev) is pointed at the test server for the browser alone.
   // The workbench on a preview: ?seals= is a book for this visit only, ?at= stands him at a place, ?play=ending plays the
   // close there. The published page (here, the plain test host) ignores them all and keeps the visitor's own book.
+  // The censer before the great hall (#217): at night the ends of the incense glow in the mouth and light it, and the
+  // body round it stays dark; by day the smoke rises and leans with the breeze that carries the falling things; in snow the
+  // cap is white and the warm lip is not; more incense burns at dawn than at dusk.
+  censer: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&shot=1&view=first&cam=0,20,0,0&season=summer&time=night");
+    const look = () => t.page.evaluate(() => { window.__look([0.05, 1.95, 14.6], [0, 1.35, 13]); });
+    await look(); await t.frames(3);
+    const night = await t.page.evaluate(() => window.__censer([[0, 1.49, 0.05], [0, 0.86, 0.565], [0.3, 0.8, 0.48]]));
+    expect(night.ember === 1 && night.incense < 0.2, `night: the incense should be a few glowing ends (${JSON.stringify(night)})`);
+    expect(night.lum[0] > Math.max(night.lum[1], night.lum[2]) * 1.5, `night: the mouth should be brighter than the body round it (${night.lum.map((v) => v?.toFixed(1))})`);
+    await t.page.evaluate(() => window.__mood("autumn", "dawn")); await t.frames(2);
+    const dawn = await t.page.evaluate(() => window.__censer());
+    await t.page.evaluate(() => window.__mood("autumn", "dusk")); await t.frames(2);
+    const dusk = await t.page.evaluate(() => window.__censer());
+    expect(dawn.incense > dusk.incense && dawn.smoke.opacity > dusk.smoke.opacity, "more incense and smoke at dawn than at dusk");
+    expect(dusk.leaves === 1 && dusk.petals === 0, "autumn lays its leaves on the censer");
+    const [wx, wz] = dusk.wind; expect(Math.hypot(wx, wz) > 0.05, `the breeze should blow (${dusk.wind})`);
+    await t.page.evaluate(() => window.__mood("winter", "day")); await look(); await t.frames(3);
+    const snow = await t.page.evaluate(() => window.__censer([[0, 1.935, 0.49], [0, 1.465, 0.452], [0, 1.4, 0.416]]));
+    expect(snow.lum[0] > snow.lum[1] * 1.4 && snow.lum[0] > snow.lum[2] * 1.4, `winter: snow on the eave, none on the warm lip (${snow.lum.map((v) => v?.toFixed(1))})`);
+    await t.shot("e2e-censer-winter");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   bench: { tier: 2, async run(b, base) {
     const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
     const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
@@ -1392,7 +1453,9 @@ const scenarios = {
         // and the seal were heard. (Seconds: nothing is drawn, so there are no frames to wait on.)
         const sounds = await t.page.evaluate(() => window.__shots());
         expect(sounds.shutter >= 1 && sounds.stamp >= 1, "the shutter and the seal should sound: " + JSON.stringify(sounds));
-        const f0 = (await t.state()).frames; await t.page.waitForTimeout(1500);
+        const f0 = (await t.state()).frames, drift0 = JSON.stringify(await t.page.evaluate(() => window.__drift(200))); await t.page.waitForTimeout(1500);
+        // The leaves, those in the air and those lying on the ground, stand with it (#219).
+        expect(drift0 === JSON.stringify(await t.page.evaluate(() => window.__drift(200))), "the falling leaves moved while the print was out");
         const held = await t.page.evaluate(() => ({ frames: window.__yard().frames, frozen: document.body.classList.contains("frozen"), still: getComputedStyle(document.getElementById("still")).display }));
         expect(held.frozen && held.still !== "none" && held.frames === f0, "the picture should stand still while the print is out: " + JSON.stringify(held) + " from " + f0);
         await t.page.click("#printBack"); await t.frames(2);
@@ -1771,15 +1834,56 @@ const scenarios = {
     await t.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), box);
     await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "合掌", 30000, "standing before the box offered no 合掌");
     await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#offering"), 120000, "the coin was dropped and no sheet followed");
+    // Frame by frame, while the coin goes in: the eye goes to the box's own shot and is back before the sheet; the coin is in his
+    // fingers until it is let go and gone on the frame it passes the lid; its sound is asked for within 80 ms of that.
+    const seen = await t.page.evaluate(() => new Promise((done) => {
+      const s = { phases: [], frames: [], sheet: null }; const t0 = performance.now();
+      const tick = () => {
+        const d = window.__director(), c = window.__coin(), open = !!document.getElementById("offering")?.open;
+        s.phases.push(d.phase); s.frames.push({ vis: c.visible, passed: c.passedAt, released: c.released, y: c.y });
+        if (open) { s.sheet = { directed: c.directed, phase: d.phase }; s.coin = c; return done(s); }
+        if (performance.now() - t0 > 150000) return done(s);
+        requestAnimationFrame(tick);
+      }; tick();
+    }));
+    expect(seen.sheet, "the coin was dropped and no sheet followed");
+    expect(seen.phases.includes("hold"), "the eye never came to rest on the box's shot: " + [...new Set(seen.phases)]);
+    expect(seen.sheet.phase === "idle" && !seen.sheet.directed, "the sheet opened while the eye was still away: " + JSON.stringify(seen.sheet));
+    const pass = seen.frames.findIndex((f) => f.passed !== null);
+    expect(pass > 0 && seen.frames[pass - 1].vis && !seen.frames[pass].vis && seen.frames.slice(0, pass).some((f) => f.released), "the coin should be seen, let go, and gone on the frame it passes the lid: " + JSON.stringify(seen.frames.slice(Math.max(0, pass - 2), pass + 2)));
+    const lag = seen.coin.at - seen.coin.passedAt;
+    expect(lag >= 0 && lag <= 80, `the sound was asked for ${lag.toFixed(0)} ms after the coin went in`);
     const links = await t.page.$$eval("#offering a", (as) => as.map((a) => ({ href: a.href, target: a.target, rel: a.rel, text: a.textContent })));
-    expect(links.length === 1 && links[0].target === "_blank" && /noopener/.test(links[0].rel), "the sheet should hold exactly one link, to a new tab: " + JSON.stringify(links));
-    expect(links[0].href === "https://rushiwowen.co/donate?utm_source=temple-walk&utm_medium=game&utm_campaign=offering-box&utm_content=zh", "the link is not the sponsor page in Chinese: " + links[0].href);
-    expect(links[0].text === "支持如是我闻与本游戏的制作" && !/功德无量|供养|募捐/.test(await t.page.textContent("#offering")), "the sheet's words are not the agreed ones");
+    const UTM = "https://rushiwowen.co/donate?utm_source=temple-walk&utm_medium=game&utm_campaign=offering-box&utm_content=";
+    expect(links.length === 2 && links.every((l) => l.target === "_blank" && /noopener/.test(l.rel)), "the Chinese sheet should hold two links, each to a new tab: " + JSON.stringify(links));
+    expect(links[0].href === UTM + "zh", "the button is not the sponsor page in Chinese: " + links[0].href);
+    expect(links[0].text === "支持如是我闻与本游戏的制作", "the button's words are not the agreed ones");
+    expect(links[1].href === UTM + "zh-qr" && links[1].text === "付款后可在护持页登记", "the registration link is wrong: " + JSON.stringify(links[1]));
+    const qr = await t.page.evaluate(() => { const i = document.getElementById("offeringQrImg"), r = i && i.getBoundingClientRect(); return i && { ok: i.complete && i.naturalWidth === 1152, w: r.width, h: r.height, src: i.getAttribute("src"), shown: !!i.offsetParent }; });
+    expect(qr && qr.ok && qr.shown && qr.w >= 220 && qr.h >= 220 && /wechat-support-2026-08-28/.test(qr.src), "the code is not shown whole and large enough: " + JSON.stringify(qr));
+    const words = await t.page.textContent("#offering");
+    expect(!/功德无量|供养|募捐/.test(words), "the sheet used a word it must not");
+    const zone = await t.page.textContent(".offering-qr"); expect(!/功德|供养|布施|回向/.test(zone) && zone.includes("微信扫码，支持如是我闻与本游戏的制作"), "the code's zone says the wrong thing: " + zone);
+    const ev = await t.page.evaluate(() => (globalThis.__events || []).map((e) => e.name + ":" + e.data.lang));
+    expect(ev.filter((e) => e.startsWith("offering.qr")).join() === "offering.qr:zh", "offering.qr should be sent once, with lang only: " + ev);
     expect(JSON.stringify(await t.page.evaluate(() => window.__hud())).match(/功德|护持|如是我闻/) === null, "the hint line spoke of the box");
     await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#offering")), 20000, "Esc did not put the sheet away");
     expect((await kept()) === book, "a coin changed the book: " + book + " -> " + (await kept()));
     await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // In any other language the sheet keeps only the original link: no code, no registration line.
+    const e = await open(b, base, "q=low&lang=en" + BARE);
+    await e.page.evaluate(() => window.__inside("main")); await e.frames(3);
+    const eb = await e.page.evaluate(() => window.__gallery["main-box"]);
+    await e.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), eb);
+    await e.until(() => e.page.isVisible("#act"), 30000, "no button before the box (en)"); await e.page.click("#act");
+    await e.until(() => e.page.evaluate(() => !!document.getElementById("offering")?.open), 150000, "no sheet in English");
+    const el = await e.page.$$eval("#offering a", (as) => as.map((a) => a.href));
+    expect(el.length === 1 && el[0] === UTM.replace("co/donate", "co/en/donate") + "en", "the English sheet should keep only the original link: " + el);
+    expect(!(await e.page.$("#offeringQrImg")) && !(await e.page.$(".offering-qr")), "the English sheet holds the code");
+    expect((await e.page.evaluate(() => (globalThis.__events || []).filter((x) => x.name === "offering.qr").length)) === 0, "offering.qr was sent in English");
+    expect(e.errors.length === 0, e.errors.join("\n")); await e.close();
+    return;
   } },
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {

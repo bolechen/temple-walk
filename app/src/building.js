@@ -7,6 +7,9 @@ import { makePlaque } from "./plaque.js";
 
 // At a hall's open door he comes this near the line of its leaves before he is inside: his own width and a finger more.
 export const DOOR = Object.freeze({ reach: BODY + 0.02, half: 1.0 - BODY - 0.01 });
+// How much light a bracket set's face turned to the court takes back from the paving and the platform, against the
+// light of the open sky (1): a little more, for pale stone in front of it and no sky to be seen past the eave (#212).
+export const EAVE_BOUNCE = 1.7;
 // How far out from the column line the eave purlin lies, on the last arm of the bracket sets.
 export const PURLIN = 0.88;
 // How far out from the column line the slanting arm of a bracket set shows its beak (for a cai of 0.21): the end of a box 1.5 long, leaning 0.4, centred 0.6 out.
@@ -80,9 +83,21 @@ export function buildHall(M, opts) {
   }
   // Darker the higher a surface sits beneath the roof.
   const ao = (x, y, z) => 1 - smooth(-0.4, 1.6, Math.min(EX - Math.abs(x), EZ - Math.abs(z))) * smooth(EAVE_Y - 2.7, EAVE_Y + 0.3, y) * 0.58;
+  // The bracket sets are shut off from the sky by the eave, but not from the court: an arm's underside and the faces
+  // turned out toward the paving see the stone and the pale platform in front of them, and take light back from them
+  // (issue #212; before, every face up there was darkened alike and the sets showed as black cut-outs against the
+  // limed band). Only the faces turned up to the eave boards, or in to the wall, keep the dark the roof gives them.
+  // It scales the hour's own light from the ground, so at night and at dusk the sets stay as dark as the ground is.
+  const bracketAO = (x, y, z, nx, ny, nz) => {
+    const base = ao(x, y, z), side = EX - Math.abs(x) < EZ - Math.abs(z), out = side ? nx * Math.sign(x) : nz * Math.sign(z);
+    const sees = Math.min(1, Math.max(0, 0.45 - 0.6 * ny + 0.5 * Math.max(0, out))), under = (1 - base) / 0.58;   // how deep under the eave: nothing changes where the roof does not reach
+    return base + (EAVE_BOUNCE - base) * sees * under;
+  };
 
   const g = new THREE.Group();
-  const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); g.add(m); return m; };
+  // Each mesh says how its occlusion was baked (for the tests): `eave` lit back from the court by `bracketAO`, `position`
+  // by `ao` alone, `own` by something the caller gave.
+  const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); m.userData.ao = o.ao === bracketAO ? "eave" : "ao" in o ? "own" : "position"; g.add(m); return m; };
 
   // ---- Platform and stairs ----
   const run = stairGeo(1, p.platH).run, stairs = (w) => stairGeo(w, p.platH).geo;
@@ -155,15 +170,16 @@ export function buildHall(M, opts) {
 
   // ---- Beams ----
   const bh = 0.36 * K, by = COL_TOP - bh / 2, topY = COL_TOP - bh;
-  const bx = [], bz = [];
+  const bx = [], bz = [], ex = [], ez = [];   // the beams on the column heads and the plate over them stand under the eave with the sets, and are lit as they are
   for (const z of [Z, ZB]) {
-    for (let i = 0; i < nx; i++) bx.push(box(xs[i + 1] - xs[i], bh, 0.2, (xs[i] + xs[i + 1]) / 2, by, z));
-    bx.push(box(X * 2 + 0.7, 0.12, 0.5, 0, COL_TOP + 0.06, z));
+    for (let i = 0; i < nx; i++) ex.push(box(xs[i + 1] - xs[i], bh, 0.2, (xs[i] + xs[i + 1]) / 2, by, z));
+    ex.push(box(X * 2 + 0.7, 0.12, 0.5, 0, COL_TOP + 0.06, z));
   }
   for (const x of [xs[0], X]) {
-    for (let i = 0; i < zs.length - 1; i++) bz.push(box(0.2, bh, zs[i] - zs[i + 1], x, by, (zs[i] + zs[i + 1]) / 2));
-    bz.push(box(0.5, 0.12, Z - ZB + 0.7, x, COL_TOP + 0.06, (Z + ZB) / 2));
+    for (let i = 0; i < zs.length - 1; i++) ez.push(box(0.2, bh, zs[i] - zs[i + 1], x, by, (zs[i] + zs[i + 1]) / 2));
+    ez.push(box(0.5, 0.12, Z - ZB + 0.7, x, COL_TOP + 0.06, (Z + ZB) / 2));
   }
+  add(merge(ex), M.woodX, { ao: bracketAO }); add(merge(ez), M.woodZ, { ao: bracketAO });
 
   // ---- Infill ----
   const walls = [], lat = [], boards = [], studs = [];
@@ -235,7 +251,7 @@ export function buildHall(M, opts) {
     const bandH = underside(p.overhang) - PLATE_TOP + 0.12, y = PLATE_TOP + bandH / 2;
     walls.push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
   }
-  add(merge(bx), M.woodX); add(merge(bz), M.woodZ);
+  if (bx.length) add(merge(bx), M.woodX); if (bz.length) add(merge(bz), M.woodZ);
   if (boards.length) add(merge(boards), M.woodV);
   if (studs.length) add(merge(studs), M.iron, { cast: false });
   if (walls.length) add(footAt(merge(walls), p.platH + p.ground), M.plaster());
@@ -282,7 +298,7 @@ export function buildHall(M, opts) {
     for (const [x, a] of [[xs[0], -Math.PI / 2], [X, Math.PI / 2]]) for (let i = 0; i < zs.length - 1; i++) for (const z of between(zs, i)) spots.push({ x, z, a, bay: i });
     sets.push(...spots);
     set.scale(K, K, K);
-    add(merge(spots.map((s) => set.clone().rotateY(s.a).translate(s.x, PLATE_TOP, s.z))), M.woodX);
+    add(merge(spots.map((s) => set.clone().rotateY(s.a).translate(s.x, PLATE_TOP, s.z))), M.woodX, { ao: bracketAO });
     // A storey that is walked round stands on a balcony (Yingzao Fashi, juan 4, on the pingzuo): under its floor a ring
     // of bracket sets a step shorter than its own, one under every set above, on a plate of their own; round the
     // floor's edge a board twice a timber's depth (the wild-goose-wing board), and the railing inside that. The skirt
@@ -295,7 +311,7 @@ export function buildHall(M, opts) {
         arm(1.02, 0.28, 0.16, "z"), dou(0, 0.49, PING.reach),
         arm(0.9, 0.41, PING.reach),
       ]).scale(K, K, K);
-      add(merge(spots.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX);
+      add(merge(spots.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX, { ao: bracketAO });
       add(merge([box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, Z), box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, ZB),
         box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
       add(merge([box(0.34, 0.12, Z - ZB + 0.4, xs[0], y0 - 0.06, (Z + ZB) / 2), box(0.34, 0.12, Z - ZB + 0.4, X, y0 - 0.06, (Z + ZB) / 2),
@@ -315,7 +331,7 @@ export function buildHall(M, opts) {
       if (R > 0.15) parts.push(arm(R + 0.42, 0.28, (R - 0.28) / 2, "z"), dou(0, 0.49, R), arm(0.9, 0.62, R), dou(-0.35, 0.83, R), dou(0.35, 0.83, R));
       const low = merge(parts), at = [];
       for (const x of ring) for (const z of ring) { const ox = x === ring[0] ? -1 : x === RX ? 1 : 0, oz = z === RX ? 1 : z === ring[0] ? -1 : 0; if (ox || oz) at.push({ x, z, a: Math.atan2(ox, oz) }); }
-      add(merge(at.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX);
+      add(merge(at.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX, { ao: bracketAO });
       add(merge([box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, RX), box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, -RX),
         box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
       add(merge([box(0.34, plate, RX * 2 + 0.4, -RX, y0 - plate / 2, 0), box(0.34, plate, RX * 2 + 0.4, RX, y0 - plate / 2, 0),
@@ -325,9 +341,9 @@ export function buildHall(M, opts) {
       add(merge([box(RX * 2, wh, 0.1, 0, wy, RX - 0.04), box(RX * 2, wh, 0.1, 0, wy, -RX + 0.04), box(0.1, wh, RX * 2, -RX + 0.04, wy, 0), box(0.1, wh, RX * 2, RX - 0.04, wy, 0)]), M.plaster());
       ping = { sets: at.length, reach: R, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - plate, ring: RX, double: true, plate, spots: at };
     }
-    const o = PUR, py = PLATE_TOP + 1.0 * K;   // the eave purlin the outer arms carry
-    add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX);
-    add(merge([box(0.17, 0.2, Z - ZB + o * 2 + 0.6, xs[0] - o, py, (Z + ZB) / 2), box(0.17, 0.2, Z - ZB + o * 2 + 0.6, X + o, py, (Z + ZB) / 2)]), M.woodZ);
+    const o = PUR, py = PLATE_TOP + 1.0 * K;   // the eave purlin the outer arms carry: the outermost timber of the sets, lit as they are
+    add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX, { ao: bracketAO });
+    add(merge([box(0.17, 0.2, Z - ZB + o * 2 + 0.6, xs[0] - o, py, (Z + ZB) / 2), box(0.17, 0.2, Z - ZB + o * 2 + 0.6, X + o, py, (Z + ZB) / 2)]), M.woodZ, { ao: bracketAO });
   }
 
   // ---- Roof ----
@@ -580,5 +596,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, crest: g.userData.crest || null, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
+  return { group: g, aoAt: ao, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
 }

@@ -31,3 +31,13 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 验收：修改并合并 delivery 记录 → 状态工作流成功 → JSON 的 source.sha 与 main 一致 → Pages 完成后 verification/deployment 正确 → Site 展示同一 SHA；旧评审仍为待复验。网络失败应显示错误，不能出现假成功。运行 `node --test tests/unit/site-status.test.mjs` 验证失败部署、旧评审和证据串版场景。
 
 现有每六小时独立评审计划保留；评审任务应将结论提交本仓库 independent-review.json，而非反复修改 Site 的进度快照。例行状态更新不重新发布 Site。
+
+## 证据图的位置（#223）
+
+证据的二进制（截图、录像）不再在仓库里，Site 和独立评审不要再按 `docs/t00/evidence/<目录>/<图>` 读图。读法：
+
+1. 目录里的 `MANIFEST.json`（`https://raw.githubusercontent.com/bolechen/temple-walk/<提交>/docs/t00/evidence/<目录>/MANIFEST.json`）列出该目录每个二进制的 `path`、`bytes`、`sha256`、`rev`。
+2. 图的地址是基础地址 + `rev` + `/t00/<目录>/<path>`，基础地址在 `tools/evidence.config.json` 的 `base`（现在是 `https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/`；以后换到 R2 只改这里并重传）。地址钉在数据集的提交号上，内容不会变；取回后可用 `sha256` 核对。
+3. README、`delivery.json` 里写的图地址已是完整地址，可直接打开；整目录取回：`node tools/evidence.mjs pull docs/t00/evidence/<目录>`。
+
+已移出仓库的目录以 `MANIFEST.json` 存在为准（逐步迁移时，没有清单的目录仍按旧路径）。

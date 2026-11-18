@@ -6,6 +6,7 @@
 // the novice with his pose (monk.js: where each hand should be, how far he bows, how he breathes), and moves the
 // thing he holds. Time is the clock's, not the frames': software rendering may draw one frame a second.
 import * as THREE from "three";
+import { carry, over, fallen, FINGERS, PALM } from "./coin.js";
 import { mesh, merge } from "./geo.js";
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z), UP = V(0, 1, 0);
@@ -346,21 +347,61 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   }
 
   // ---- A coin for the 功德箱 ----
-  // He bows, palms together; a coin shows between them, is lifted and let go over the slot, falls in (`cue("in")`, where the
-  // sound is made), and he bows again with his hands together. `slot` is where it goes in, in the world (interior.js).
-  const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.0016, 16).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xb08a4a, metalness: 0.8, roughness: 0.35 }));
+  // He bows with his palms together; a coin shows between the fingertips of his right hand, which takes it from the
+  // prayer to just over the slot (src/coin.js: his arm reaches it from where he stands, a bow leaning him in) while the
+  // left hand goes to rest at his sash; the fingers open, and the coin falls the few centimetres into the slot, where it
+  // is gone and where the sound is made (`cue("in")`, in the same frame); the hand comes back to the prayer, and he bows
+  // once more. The coin is never anywhere but between his fingers until it is let go.
+  const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.0024, 16).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xb08a4a, metalness: 0.8, roughness: 0.35 }));
   coin.visible = false; coin.userData.keep = true; coin.userData.part = "coin"; scene.add(coin);
-  const palms = (k) => HANDS.forEach(([n, s]) => { const h = act.hands[n]; at(s * 0.0125, 1.0, 0.2, h.at); dir(0, 1, 0.3, h.fingers); dir(-s, 0, 0, h.palm); h.w = k; });
-  /** @param {() => boolean} on @param {number[]} slot @param {(what: string) => void} [cue] */
+  const coinState = { passedAt: null, y: null, released: false, began: null };
+  const local = (w) => G.worldToLocal(V().copy(w)), world = (l) => at(l.x, l.y, l.z), along = (l) => dir(l.x, l.y, l.z);
+  /** @param {() => boolean} on @param {number[]} slot the middle of the slot on the lid's top, in the world @param {(what: string) => void} [cue] */
   async function dropCoin(on, slot, cue = () => {}) {
-    const S = V().fromArray(slot);
-    if (!(await play(0.8, (u) => { act.bow = 0.3 * ease(u); }, on))) return false;
-    if (!(await play(0.7, (u) => { const k = ease(u); coin.visible = true; between(coin.position); coin.position.y += 0.03 * k; coin.rotation.set(0, G.rotation.y, 0); }, on))) { coin.visible = false; return false; }
-    const from = V().copy(coin.position);
-    if (!(await play(0.55, (u) => { const k = ease(u); coin.position.lerpVectors(from, tA.copy(S).setY(S.y + 0.12), k); coin.rotation.x = 1.4 * k; act.bow = mix(0.3, 0.42, k); }, on))) { coin.visible = false; return false; }
-    if (!(await play(0.22, (u) => { coin.position.copy(S).setY(S.y + 0.12 * (1 - u * u) - 0.0); coin.rotation.x = Math.PI / 2; if (u >= 1) coin.visible = false; }, on))) { coin.visible = false; return false; }
-    coin.visible = false; cue("in");
-    return play(1.2, (u) => { act.bow = 0.42 * (1 - ease(u)) + 0.35 * Math.sin(Math.PI * ease(u)); palms(1); }, on);
+    const R = act.hands.right, Lh = act.hands.left, S = V().fromArray(slot);
+    const gone = () => { coin.visible = false; return false; };
+    coinState.passedAt = null; coinState.released = false; coinState.y = null; coinState.began = riteNow();
+    // First the bow, palms together.
+    if (!(await play(0.9, (u) => { act.bow = 0.28 * Math.sin(Math.PI * ease(u)); }, on))) return false;
+    // The coin shows between the fingertips of the right hand, where the palms meet.
+    const H0 = local(B.rightHand.getWorldPosition(V())), SL = local(S), tip = V();
+    const hold = (c) => { R.at.copy(world(c.at)); R.fingers.copy(along(c.fingers)); R.palm.copy(along(PALM)); coin.position.copy(world(c.coin)); coin.quaternion.copy(G.quaternion); coinState.y = coin.position.y; };
+    if (!(await play(0.45, (u) => { hold(carry(0, H0, SL)); R.w = 1; coin.visible = true; coin.scale.setScalar(Math.max(0.01, ease(u))); }, on))) return gone();
+    // The right hand takes it over the slot; the left goes to rest; he leans in.
+    if (!(await play(1.3, (u) => {
+      const k = ease(u); hold(carry(u, H0, SL)); R.w = 1;
+      Lh.at.copy(world(tip.set(0.07, 0.5, 0.11))); Lh.fingers.copy(along(tip.set(0, -0.3, 1))); Lh.palm.copy(along(tip.set(0, 1, 0))); Lh.w = Math.min(1, k * 1.6);
+      act.bow = mix(0.28, 0.55, k);
+    }, on))) return gone();
+    // It is held there a moment.
+    if (!(await play(0.4, () => { hold(carry(1, H0, SL)); act.bow = 0.55; }, on))) return gone();
+    // The fingers open. The hand eases back a little; the coin falls straight down, gone as it passes the lid's top.
+    const rise = over(SL).wrist, T = 0.45;
+    coinState.released = true;
+    if (!(await play(T, (u) => {
+      const k = ease(Math.min(1, u * 2)); hold(carry(1, H0, SL)); R.at.copy(world(tip.copy(rise).add(V(0, 0.03 * k, -0.025 * k)))); R.fingers.copy(along(FINGERS.over));
+      if (!coin.visible) return;
+      const h = fallen(u * T);
+      if (h > 0) { coin.position.copy(S); coin.position.y = S.y + h; coinState.y = coin.position.y; }
+      else { coin.visible = false; coinState.passedAt = performance.now(); coinState.y = S.y; cue("in"); }
+    }, on))) return gone();
+    if (coin.visible) { coin.visible = false; coinState.passedAt = performance.now(); cue("in"); }
+    // The hand comes back to the prayer (the first third), and the second bow (the middle), while the eye is still on its
+    // shot; the eye starts home a second before the end (`homeward`), as at the other observances.
+    return play(2.6, (u) => {
+      const kh = ease(Math.min(1, u / 0.35)), kb = Math.min(1, Math.max(0, (u - 0.3) / 0.4));
+      R.w = Lh.w = 1 - kh; act.bow = 0.55 * (1 - kh) + 0.32 * Math.sin(Math.PI * kb);
+      homeward(u, 2.6);
+    }, on);
+  }
+
+  // The moment the coin is held over the slot, at once (`?show=shot-main-box`: a picture of the eye's own shot).
+  function poseCoin(slot, from, face, floor) {   // `from`: [x, z] where he stands, `face`: his heading, `floor`: its height (he is not yet there)
+    const dx = slot[0] - from[0], dz = slot[2] - from[1], R = act.hands.right, Lh = act.hands.left, tip = V();
+    const SL = V(dx * Math.cos(face) - dz * Math.sin(face), slot[1] - floor, dx * Math.sin(face) + dz * Math.cos(face)), c = carry(1, V(), SL);   // in his frame, as coin.js has it
+    const yaw = new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), face), to = (l) => V(l.x, l.y, l.z).applyQuaternion(yaw).add(V(from[0], floor, from[1])), way = (l) => V(l.x, l.y, l.z).applyQuaternion(yaw);
+    R.at.copy(to(c.at)); R.fingers.copy(way(c.fingers)); R.palm.copy(way(PALM)); R.w = 1; coin.position.copy(to(c.coin)); coin.quaternion.copy(yaw); coin.scale.setScalar(1); coin.visible = true;
+    Lh.at.copy(to(tip.set(0.07, 0.5, 0.11))); Lh.fingers.copy(way(tip.set(0, -0.3, 1))); Lh.palm.copy(way(tip.set(0, 1, 0))); Lh.w = 1; act.bow = 0.55;
   }
 
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----
@@ -372,7 +413,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     ring.visible = false;
   }
   return {
-    act, rest, dropCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
+    act, rest, dropCoin, poseCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
     // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     restore(has) { if (!has.incenseAt) return; if (Date.now() - has.incenseAt < burn * 1000) plant(has.incenseAt); else burntOut(); },
@@ -384,6 +425,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
       incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
       sit: { breaths: sit.breaths, ring: ring.visible, fill: +sit.fill.toFixed(3), radius: +ring.scale.x / RING_PLANE },
+      coin: { visible: coin.visible, y: coinState.y === null ? null : +coinState.y.toFixed(3), released: coinState.released, passedAt: coinState.passedAt, began: coinState.began },
       close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
     }),
   };

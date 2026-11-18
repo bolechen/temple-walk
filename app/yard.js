@@ -26,7 +26,9 @@ import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
+import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
@@ -109,7 +111,7 @@ await loading.step(tr("山门"));
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
 site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
-{ const p = site.places.incense; if (p) site.views["shot-incense"] = [p.at[0], p.at[1], Math.PI - p.face, 0.05]; }   // its shot is indoors (src/director.js)
+for (const [id, p] of [["incense", site.places.incense], ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
@@ -126,7 +128,7 @@ await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 420 : 800));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low" }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -542,9 +544,6 @@ function frame(now) {
     // (Put down in something that blocks, by a link or a tap's way out, he steps out of it by the first leg of the way.)
     const moved = target && target.escape && walker.blocked(pos.x, pos.z) ? (pos.x += vx, pos.z += vz, true) : stride(walker, pos, vx, vz);
     if (!moved) { target = null; route = []; settle(false); pace.v = 0; }
-    // The censer does not stop you: you are eased around it.
-    const cx = pos.x - site.censer.x, cz = pos.z - site.censer.z, cd = Math.hypot(cx, cz);
-    if (cd < 1.25) { const k = 1.25 / Math.max(cd, 1e-3); pos.x = site.censer.x + (cx || 0.01) * k; pos.z = site.censer.z + cz * k; }
   }
   if (flight) {
     flight.elapsed += dt; const p = (flight.plan.speed ? climbPose : dropPose)(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
@@ -607,7 +606,7 @@ function frame(now) {
     const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
-    camera.position.fromArray(follow.step(dt, followEye(walker, at), ahead));
+    camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
     monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
@@ -642,6 +641,7 @@ function frame(now) {
 
   for (const fn of ticks) fn(dt, t);
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
+  { const w = windAt(mood?.wind ?? 0, t); U.uWind.value.set(WIND_DIR[0] * w, WIND_DIR[1] * w); if (!still) U.uWindPath.value.addScaledVector(U.uWind.value, dt); }   // the breeze (wind.js); a frozen picture keeps its lean
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); ground.update?.(still ? 0 : dt); flock.update(still ? 0 : dt, t); drift.update(t, camera.position, pxH);
   for (const s of site.strikers) if (s.swing && s.t0) s.swing.position.z = logSwing(s, riteNow());   // drawn back and let go, or only tapped: it touches the bell and swings itself out
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
@@ -789,7 +789,7 @@ function lookOut(hall) {
   const u = r.outlook.material.uniforms; u.tOut.value = outCube.texture; u.uHas.value = 1; u.uTurn.value.set(f[0], f[1]);
 }
 // Whatever falls through the air (snow, petals, leaves, fireflies) falls outdoors only.
-const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && mood.drift !== "none" && !OFF.has("drift"); });
+const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && !OFF.has("drift"); });
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
 const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
 // What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
@@ -867,7 +867,7 @@ if (Q.has("up") && site.lofts[Q.get("up")]) upstairs(site.lofts[Q.get("up")], Q.
 else if (Q.has("show") && site.viewUp[Q.get("show")]) upstairs(site.lofts[site.viewUp[Q.get("show")]], [pose[0], pose[1]], pose[2]);
 if (upIn && (Q.has("cam") || Q.has("show"))) pitch = pose[3];
 // ?show=shot-<id> of an observance made in a hall begins inside that hall.
-{ const sp = site.places[(Q.get("show") || "").replace(/^shot-/, "")]; if (Q.get("show")?.startsWith("shot-") && sp?.room && !Q.has("in")) { indoors(site.halls.find((h) => h.id === sp.room)); pos.x = sp.at[0]; pos.z = sp.at[1]; yaw = Math.PI - sp.face; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }
+{ const sp = site.places[(Q.get("show") || "").replace(/^shot-/, "")] || rooms.spots[(Q.get("show") || "").replace(/^shot-/, "")]; if (Q.get("show")?.startsWith("shot-") && sp?.room && !Q.has("in")) { indoors(site.halls.find((h) => h.id === sp.room)); pos.x = sp.at[0]; pos.z = sp.at[1]; yaw = Math.PI - sp.face; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__columns = (id) => (rooms?.rooms?.[id]?.room.frame.cols || []).map((c) => ({ x: c.x, z: c.z }));   // where a hall's free columns stand, for the scenarios that walk into one
@@ -894,7 +894,7 @@ window.__up = (id) => (id === undefined ? (upIn ? upIn.id : null) : id ? climbTo
 // load). `__part()` lists them, each true when drawn. What a room or the hour hides stays hidden: a court switched
 // back on while he is indoors is not drawn until he comes out. The novice and the rooms are shown or hidden by the
 // walk itself every frame, so they are not offered.
-const shownNow = (name) => !OFF.has(name) && !(inside && (COURTS.includes(name) || name === "drift")) && !(name === "drift" && mood.drift === "none");
+const shownNow = (name) => !OFF.has(name) && !(inside && (COURTS.includes(name) || name === "drift")) ;
 window.__part = (name, on) => {
   const names = [...new Set(scene.children.map((o) => o.userData.part).filter((n) => n && n !== "monk" && n !== "interior"))];
   if (name === undefined) return Object.fromEntries([...names, ...PASSES].map((n) => [n, !OFF.has(n)]));
@@ -943,14 +943,32 @@ const monkBox = () => {
   }
   return [x0, y0, x1 - x0, y1 - y0].map((n) => +n.toFixed(1));
 };
-window.__probe = () => {
+// `points` ([[x, y], …] in the page's pixels) also asks for the colour at each of them, read from the same frame at full size.
+window.__probe = (points) => {
   const t = still ? 0 : performance.now() / 1000;
   if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
+  let at = null;
+  if (Array.isArray(points)) {
+    const r = canvas.getBoundingClientRect(), f = document.createElement("canvas"); f.width = canvas.width; f.height = canvas.height;
+    const fx = f.getContext("2d", { willReadFrequently: true }); fx.drawImage(canvas, 0, 0); const sx = canvas.width / r.width, sy = canvas.height / r.height;
+    at = points.map(([px, py]) => Array.from(fx.getImageData(Math.min(f.width - 1, Math.round((px - r.left) * sx)), Math.min(f.height - 1, Math.round((py - r.top) * sy)), 1, 1).data.slice(0, 3)));
+  }
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0, 32, 32);
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
   return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
-    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level };
+    photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level, at };
+};
+// The censer before the great hall (#217): how much incense burns, whether it glows, the smoke and the breeze; and, for
+// each point given (metres from the censer's foot), how bright the picture is where that point is drawn, 0..255.
+window.__censer = (points = []) => {
+  const t = still ? 0 : performance.now() / 1000;
+  if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
+  const c = document.createElement("canvas"), w = canvas.width, h = canvas.height; c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0);
+  const lum = points.map(([px, py, pz]) => { const v = new THREE.Vector3(site.censer.x + px, site.censer.y + py, site.censer.z + pz).project(camera);
+    const sx = Math.round((v.x + 1) / 2 * w), sy = Math.round((1 - v.y) / 2 * h); if (v.z > 1 || sx < 2 || sy < 2 || sx > w - 3 || sy > h - 3) return null;
+    const d = x.getImageData(sx - 2, sy - 2, 5, 5).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += (d[i] + d[i + 1] + d[i + 2]) / 3; return s / 25; });
+  return { ...props.censer(), wind: U.uWind.value.toArray().map((q) => +q.toFixed(3)), carried: U.uWindPath.value.toArray().map((q) => +q.toFixed(2)), lum };
 };
 // Rings on the water: how many made, how many spreading. `__ripples(true)` sets a step's worth going at his feet;
 // `__ripples([x, z, age])` one at that spot as if made `age` seconds ago, so a still picture can hold them.
@@ -959,6 +977,8 @@ window.__ripples = (go) => {
   else if (go) ground.ripple?.(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   return ground.ripples?.() || null;
 };
+// What the falling leaves are doing, as fall.js's sums have it: kind, how many lie on the ground, and where each is (a diagnostic for tests).
+window.__drift = (n) => drift.report(n);
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
@@ -1028,7 +1048,7 @@ window.__pick = (px, py, n = 6) => {
 function directShot(id, opts) {
   if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
   if (upIn) return false;   // up on a balcony he sees with his own eyes only: no place's shot is taken there
-  const p = site.places[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;
+  const p = site.places[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
   const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
   if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
   return going;

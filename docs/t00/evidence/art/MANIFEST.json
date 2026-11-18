@@ -1,0 +1,426 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "baseline/01-bamboo.jpg",
+   "bytes": 184754,
+   "sha256": "451fbcfec6207527a2326bdc26e79eac5262157068eaa3148c2a10dc032474df",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "baseline/02-gate.jpg",
+   "bytes": 113819,
+   "sha256": "8b4b007aaed987fb13cb120e955a880ad1964fff6366cee987a2218fb00aa979",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "baseline/03-court.jpg",
+   "bytes": 127495,
+   "sha256": "8fc6989736b85e420f23e7531c175b10c920a3bf23fd019546434d4a624b4614",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "baseline/04-tea.jpg",
+   "bytes": 105193,
+   "sha256": "d5558c1a9e610defac0bcde7b54417bb5471203aedbd9bccce0f69ce27c2e96a",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "baseline/05-terrace.jpg",
+   "bytes": 117171,
+   "sha256": "2b4df5a91da2d9af4b4f9bfdc95d8bc35808d873ff8e777b063ac126d50ef121",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "baseline/06-summit.jpg",
+   "bytes": 74184,
+   "sha256": "afcdb7b0db0b03a77c6a4ef3da55322175c5fed01b7818a591dd2bb4e9a85b78",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "baseline/side-by-side.jpg",
+   "bytes": 376162,
+   "sha256": "883a55e7907a62ecf15163fbf6379bbc52f6d2801e9c4d6097070f9771161142",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/a2-autumn-day/art2_autumn-day_swiftshader.jpg",
+   "bytes": 118779,
+   "sha256": "4d2f758a7aab140a6d9f0c09e34f2a1b5fab952cb2a38f8c3208862d5962ac87",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/a2-autumn-day/art2_autumn-dusk_swiftshader.jpg",
+   "bytes": 108190,
+   "sha256": "ea61d1aaa3af3e25a2ece21c5b3f14a17e22046bf86c1d4d75cb9c52f38be3fa",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/a2-autumn-day/side-by-side-swiftshader.jpg",
+   "bytes": 114170,
+   "sha256": "99efdeb9d38e0429a8f9bc3a2486d315382501589d32581542d9ff72ae29a266",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art1_summer-dawn.jpg",
+   "bytes": 298516,
+   "sha256": "2362d4224bc15b91c883c6587acee6ed78936e7339d0292c4eefb46e28558281",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art1_summer-dawn_low.jpg",
+   "bytes": 160217,
+   "sha256": "c940df969ddaaad6ac3761eaff837d43a2cc25bd69d3edad46d56daed4e8a605",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art2_autumn-dusk.jpg",
+   "bytes": 221197,
+   "sha256": "1fa01302578f27d06f23be59f142e8270c469e66634c00062c6a6ab0f443e29f",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art2_autumn-dusk_low.jpg",
+   "bytes": 114842,
+   "sha256": "9012c2e020f6e30af116a4893d8c7b7d5fa4281c92a6be5777b1dcbe26372edb",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art3_autumn-dusk_third.jpg",
+   "bytes": 260383,
+   "sha256": "ff3b53d9a1629ba9690fd44c3e5f840a169fe4256a3c608e47cdbf3774c7bb28",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art3_autumn-dusk_third_low.jpg",
+   "bytes": 126506,
+   "sha256": "545fee608e744faef3174e530501fcf205327fb49f1e613bfc907c9b7f5ebf86",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art4_autumn-dusk.jpg",
+   "bytes": 211406,
+   "sha256": "a8554e5019957e8724f3d8ef4209e6cf3c5cac7a8fb1630d8b1e6a15be3f17a9",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art4_autumn-dusk_low.jpg",
+   "bytes": 106009,
+   "sha256": "414764837833721c0346d960cbf0db806e9e1e31aa0c81cefdb2cb026f2e3b76",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art5_summer-dusk.jpg",
+   "bytes": 209753,
+   "sha256": "4201c78e4190fe386b4ab3cbb615041ee8904db507693cf1f52749be87d4d860",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art5_summer-dusk_low.jpg",
+   "bytes": 111635,
+   "sha256": "1692d9fef2f8cb81941893896601792a9df24fd087cfb2540e603e2695952823",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art6_autumn-dawn.jpg",
+   "bytes": 171430,
+   "sha256": "15226d54c753981b3701b4d04d52d18aa5326c678349dd5170fcfc7723d85e0b",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/art6_autumn-dawn_low.jpg",
+   "bytes": 95451,
+   "sha256": "251a92c9911dedabb740cc48fc598c94cf0e36eae04412bf9c0fe52d564e4abd",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/cam01_summer-day.jpg",
+   "bytes": 277895,
+   "sha256": "6ecc6c0c7505b09824ddbc3eb0fc874498a02a4ef0eefe0d2fb2f6b0376dc031",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/cam02_summer-day.jpg",
+   "bytes": 224080,
+   "sha256": "f7495acc55e0952cff0c3b916ec92417e483289d3b18315cacf798aeef2d0b1e",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/cam03_summer-day.jpg",
+   "bytes": 200479,
+   "sha256": "32ff28772e2f135b4e4c9ad7b771aa6d3ef62311f621d47d422ec386d20f9d1b",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/cam04_summer-day.jpg",
+   "bytes": 176678,
+   "sha256": "cde8b9f9dc88aa0ce7402f24389a5e46fcddb3bd1dab44d865c2e2b0479f69f9",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/cam05_summer-day.jpg",
+   "bytes": 165613,
+   "sha256": "f5778ad9c1922346ce0128475d89f826c37be81f977535cfe86e8d1fd4019597",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after-r1/cam06_summer-day.jpg",
+   "bytes": 216223,
+   "sha256": "a5a948dd37aae021f5dca5b109a127ad2c1c055f12179379c5713b7eeaa08ccb",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art1_summer-dawn.jpg",
+   "bytes": 356806,
+   "sha256": "1822023399f7b9fe953898a456bcac2451c98ec70ee31fab1b067811ba1054cf",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art1_summer-dawn_low.jpg",
+   "bytes": 200590,
+   "sha256": "f09fa3ac840d07d209747f263bf5e1961622e061387e802402bf0d2f854424c3",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art2_autumn-dusk.jpg",
+   "bytes": 210589,
+   "sha256": "480e601ee694c2b9dcfd99f029b72ee1f97fd035977876fd2c8b8f852c623732",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art2_autumn-dusk_low.jpg",
+   "bytes": 110201,
+   "sha256": "8323435314d5c8938ca6b073fc8034e3528eab3aefe3a12aac535cc4901d33a3",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art3_autumn-dusk_third.jpg",
+   "bytes": 252924,
+   "sha256": "1ab71ebd35953312ce41fb3cd6e69e092bcaaecc42eb129668c4f101fcd30493",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art3_autumn-dusk_third_low.jpg",
+   "bytes": 123207,
+   "sha256": "812feb446bddce39502065c16eb65cd711ddbdf74a4fab1d1e0ae5e181ad1d1d",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art4_autumn-dusk.jpg",
+   "bytes": 199093,
+   "sha256": "1a8010b9e48071ce51bf6322e16a076b30892c36b73262d1c752d0067223b7e2",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art4_autumn-dusk_low.jpg",
+   "bytes": 100707,
+   "sha256": "f14121daeb5f78899de39a1907b866c8306a9661962d5228627ecfb5eb5850ea",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art5_summer-dusk.jpg",
+   "bytes": 215788,
+   "sha256": "e54086fe1900dee0ae7ec260665042f0c3a3141718615c4a8ab46002817b2ce7",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art5_summer-dusk_low.jpg",
+   "bytes": 113635,
+   "sha256": "5c10f09ae99e540f4df37b363dc118f430572ba63e349899bec2145e766945db",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art6_autumn-dawn.jpg",
+   "bytes": 169122,
+   "sha256": "e86b50f77c2c06fcaa5b1b93a30f3d26212e55356590f5b0fa49a67f590bcdc4",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/art6_autumn-dawn_low.jpg",
+   "bytes": 92550,
+   "sha256": "bd7f1cd676662dbe9dbc08932687fb3d75a0024b9fb501dc01cd7471725e82e7",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/cam01_summer-day.jpg",
+   "bytes": 283578,
+   "sha256": "5d74d9eb4f12dd7903dfb66afb5cbc481047ce23d2a80b032b105e3fb7413c90",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/cam02_summer-day.jpg",
+   "bytes": 225601,
+   "sha256": "696c1d39875a23316347da951434246f91957f77c1af1f933c91a22f4d1c268d",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/cam03_summer-day.jpg",
+   "bytes": 200651,
+   "sha256": "3657199182fd56f3cdd74244bbc4f9a4328ff6777bb51098e5f606dd5e4637f9",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/cam04_summer-day.jpg",
+   "bytes": 176557,
+   "sha256": "64d45b604f4c46b16c4f6bbecee79434cf269146b79b5e150cd1aebdb6753dbf",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/cam05_summer-day.jpg",
+   "bytes": 165385,
+   "sha256": "3b0b5f160eac6c72556474ffdd1bb63e98aee51de614c4ff506d5b2532f65f6b",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/after/cam06_summer-day.jpg",
+   "bytes": 217868,
+   "sha256": "3444940d7c40119a6d0c9f99526e48a4c9e711da49937972ad9ed008f61b5fb1",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/art-high-vs-low.jpg",
+   "bytes": 396678,
+   "sha256": "046cf87a6bfd46412959c498601518d99879cefc488f6cc05b6a2316963c14b1",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/art-side-by-side.jpg",
+   "bytes": 642738,
+   "sha256": "9f414fa202ffc9104cc42f6c97e9d12569bc821f4eb6700f42e4c7843f40f164",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art1_summer-dawn.jpg",
+   "bytes": 469777,
+   "sha256": "1f86e19ffe215b3178ce91a293ae6fa5960fe90ab17a4355c46dccb4cc15fa6b",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art1_summer-dawn_low.jpg",
+   "bytes": 160030,
+   "sha256": "4daad3d6b341d530bb31c637a77f9f95f8cb85d801266ec721634aac9ed048f5",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art2_autumn-dusk.jpg",
+   "bytes": 266979,
+   "sha256": "f13ab2ebb568ce839bd4b375ed71c3f8638bc8f64cbd40bad68d7b2ad7a2c3ac",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art2_autumn-dusk_low.jpg",
+   "bytes": 106152,
+   "sha256": "d5b27f194c08c6a48829d1ccee7c362a6675bc22eb3271b8b67999f734edff3a",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art3_autumn-dusk_third.jpg",
+   "bytes": 315249,
+   "sha256": "d441535458a8eccb946e56f295d75f4f02b104a5dd1e2bf57e07ec3c8088c37c",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art3_autumn-dusk_third_low.jpg",
+   "bytes": 117480,
+   "sha256": "d566f5b1aaef3f3e88dddaaf6f2c7f885222ea37fa0b284c2463701f241f735f",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art4_autumn-dusk.jpg",
+   "bytes": 256439,
+   "sha256": "2d53e46ab7e35009004295b89b326201ede0a05a34e28e2232495a8dce333a0c",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art4_autumn-dusk_low.jpg",
+   "bytes": 99392,
+   "sha256": "3fc69ad86a409184cdd3e696a59ee4b18bad859eea905f1e5583d56fb2068130",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art5_summer-dusk.jpg",
+   "bytes": 278954,
+   "sha256": "b2806f3a2f4190a2b627356b0e423e9fe3cef42437da44bd6ee89b1b7aabf5bd",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art5_summer-dusk_low.jpg",
+   "bytes": 109655,
+   "sha256": "3cd7aa16cef0005ad366768fd3a600ddda593df0ab4e2f573ec7ab69f8285b0c",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art6_autumn-dawn.jpg",
+   "bytes": 191390,
+   "sha256": "78170f083a6a00fa846fdc24e4a1a389d849927a293face7b6f4dd83b5bf9172",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/art6_autumn-dawn_low.jpg",
+   "bytes": 78697,
+   "sha256": "9f0e9332da6283ba0932cad1cdf02f1886114c5cc5fb0806282c58d3129a5020",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/cam01_summer-day.jpg",
+   "bytes": 371794,
+   "sha256": "0fd705fd2ed0796d61f17bbb2e73aafde8821a2815b23994b160dbb74662a316",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/cam02_summer-day.jpg",
+   "bytes": 329022,
+   "sha256": "9bd4c300108cee99ab546fcbab036528749b5d71eb9939359485730ccf2a7344",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/cam03_summer-day.jpg",
+   "bytes": 262801,
+   "sha256": "aa176e3d0deb1ab35e20a4e78c82af793917e1f174bf0d7d1c0a9a3ded03bb82",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/cam04_summer-day.jpg",
+   "bytes": 212104,
+   "sha256": "6a7bf7f70b5c1ebffee9c6742b5a57f93040d645c2cf05d23de58af5e341803f",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/cam05_summer-day.jpg",
+   "bytes": 216730,
+   "sha256": "8b6aba1973210e9ca58cfb8e4ed7e961b492219a49a654737323b344d0680ef3",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/before/cam06_summer-day.jpg",
+   "bytes": 272219,
+   "sha256": "85b41a68d3879b25431a0b0a09a23a96b82259bb6051b98fe99c02295b0eed1a",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/cam-side-by-side.jpg",
+   "bytes": 771809,
+   "sha256": "6ab931527b3297d692673ff9812f4bdd167abe7f228fbab798eac75d366cf4ed",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/r1-art-high-vs-low.jpg",
+   "bytes": 386313,
+   "sha256": "9bbc17faae831e0df6fc214c6dd55042f6203f6771f0c2161eaff70b093c6f2a",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/r1-art-side-by-side.jpg",
+   "bytes": 638426,
+   "sha256": "6e55686898310b094af3f20bae32727752b8bc452ada0ff5416022881c58d8d6",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  },
+  {
+   "path": "phase1/r1-cam-side-by-side.jpg",
+   "bytes": 769238,
+   "sha256": "9b8b1a2cd55b37ea34bb09445ce614a38b8c52d682a99a96ddf8a56d2a329bf6",
+   "rev": "f13a3f202ecd765f97dbfcefb29badca32d35b68"
+  }
+ ]
+}
