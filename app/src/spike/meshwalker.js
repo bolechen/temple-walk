@@ -1,3 +1,4 @@
+// @ts-nocheck   (#161 spike, branch only: not held to the project's types)
 // A walker that knows only what is drawn (#161 spike). It answers what createWalker answers (heightAt, blocked,
 // onGround, floorAt, eyeShut, and the rest of its face) from the meshes themselves, through a bounding volume hierarchy
 // (three-mesh-bvh), inside a trial region; outside it, and wherever the spike does not reach (a balcony, a room other

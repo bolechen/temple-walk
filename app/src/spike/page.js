@@ -1,3 +1,4 @@
+// @ts-nocheck   (#161 spike, branch only: not held to the project's types)
 // The drawn walker in the page, for measuring it (#161 spike; this branch only). `?walker=mesh` builds it from the
 // meshes as they stand before mergeStatic batches them, bakes its floor grid there and then (the worst case: a
 // published build would fetch the grid baked when the site was built), and swaps it in under the walker yard.js already
@@ -7,6 +8,7 @@ import * as THREE from "three";
 import { gather, createMeshWalker } from "./meshwalker.js";
 
 const METHODS = ["heightAt", "blocked", "onGround", "floorAt", "eyeShut", "eyeAt", "landAt", "onStairs", "wall", "railNear", "setRoom", "setLoft"];
+/** @returns {any} */
 export function swappable(first) {
   let impl = first, ms = 0, calls = 0;
   const o = { swap(next) { if (impl.room) next.setRoom(impl.room); impl = next; }, get impl() { return impl; }, stats: () => ({ ms, calls }), reset() { ms = 0; calls = 0; } };
