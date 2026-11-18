@@ -18,7 +18,7 @@ const SEGMENTS = [
   { id: "4-lookback", kind: "lookback", secs: 10, url: `shot=1&${BASE}&show=lookback&view=first&${MOOD}`, sub: [["网页即玩，约十几分钟", 1.0, 5.0], ["山门之外 · 序章", 5.6, 9.4]], push: 0.12 },
 ];
 
-async function run({ open, out, fps = 30, size, only, log = console.log }) {
+async function run({ open, out, fps = 30, size, only, maxSecs = 1e9, log = console.log }) {
   fs.mkdirSync(out, { recursive: true });
   const timeline = [], draw = async (page, n = 2) => { const f0 = await page.evaluate(() => window.__yard().frames); await page.waitForFunction((f) => window.__yard().frames >= f, f0 + n, { timeout: 300000 }); };
   const fade = (t, a, b, k = 0.7) => Math.max(0, Math.min(1, (t - a) / k, (b - t) / k));
@@ -50,7 +50,7 @@ async function run({ open, out, fps = 30, size, only, log = console.log }) {
     }
     let start = null;
     if (seg.kind === "lookback") start = await page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, yaw: y.yaw, pitch: y.pitch }; });
-    const n = Math.round(secs * fps);
+    const n = Math.round(Math.min(secs, maxSecs) * fps);
     for (let i = 0; i < n; i++) {
       const t = i / fps;
       const sub = (seg.sub || []).find(([, a, b]) => t >= a - 0.01 && t <= b), alpha = sub ? fade(t, sub[1], sub[2]) : 0;
@@ -73,7 +73,7 @@ async function run({ open, out, fps = 30, size, only, log = console.log }) {
     const mp4 = path.join(out, seg.id + ".mp4");
     execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", path.join(dir, "f%05d.jpg"), "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", "-r", String(fps), mp4]);
     fs.rmSync(dir, { recursive: true, force: true });
-    timeline.push({ id: seg.id, kind: seg.kind, url: "?" + seg.url, secs, frames: n, fps, size, file: path.basename(mp4), ...info, end: { x: meta.yard.x, z: meta.yard.z } });
+    timeline.push({ id: seg.id, kind: seg.kind, url: "?" + seg.url, secs, frames: n, fps, size, file: path.basename(mp4), ...info, end: { x: meta.yard.x, z: meta.yard.z }, bell: meta.rites });
     fs.writeFileSync(path.join(out, "timeline.json"), JSON.stringify(timeline, null, 1));
   }
   return timeline;
@@ -91,7 +91,7 @@ if (require.main === module) (async () => {
     return { ctx, page };
   };
   const size = arg("size", "270x480").split("x").map(Number), only = arg("only", null);
-  const tl = await run({ open, out: path.resolve(arg("out", "tools/out/film")), fps: Number(arg("fps", 6)), size, only: only && only.split(",") });
+  const tl = await run({ open, out: path.resolve(arg("out", "tools/out/film")), fps: Number(arg("fps", 6)), size, only: only && only.split(","), maxSecs: Number(arg("max-secs", 1e9)) });
   console.log(JSON.stringify(tl.map((s) => [s.id, s.secs, s.frames])), "errors:", [...new Set(errors)].slice(0, 6));
   await browser.close(); srv.close();
 })();

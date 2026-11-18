@@ -219,6 +219,14 @@ function fingerprint(dir) {
     } catch (e) { log.error = String(e.message).slice(0, 300); console.log("rites failed", log.error); }
     save();
   }
+  // A script the launcher staged beside this file (spec.script, spec.args): it gets `open` and the output folder, and draws
+  // its own frames (tools/marketing-film.cjs, run by tools/marketing-gpu.sh).
+  if (spec.script) {
+    const a = spec.args || {};
+    try { report.script = { name: spec.script, timeline: await require(path.resolve(__dirname, spec.script)).run({ ...a, open, out: path.join(out, a.out || "film"), log: (...m) => console.log(...m) }) }; }
+    catch (e) { report.script = { name: spec.script, error: String(e.stack || e.message).slice(0, 600) }; console.log("script failed", report.script.error); }
+    save();
+  }
   // The pictures: a named view, optionally a season and hour and a point of view, drawn large.
   // A picture is a named view ("court@autumn-dusk@third"); or { name, size, q }, a named view drawn at its own size or tier
   // (the 2.39:1 art views beside 16:9 ones; a tier other than the spec's is added to the file's name); or an object for
