@@ -1,0 +1,521 @@
+[
+ {
+  "board": "萬年正續",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "萬",
+    "breadth": 0.05259,
+    "density": 0.4461,
+    "even": 0
+   },
+   {
+    "char": "年",
+    "breadth": 0.06068,
+    "density": 0.2583,
+    "even": 0
+   },
+   {
+    "char": "正",
+    "breadth": 0.0675,
+    "density": 0.31,
+    "even": 0
+   },
+   {
+    "char": "續",
+    "breadth": 0.04898,
+    "density": 0.4927,
+    "even": 0
+   }
+  ],
+  "spread": 0.3781,
+  "ok": false
+ },
+ {
+  "board": "雲徑禪寺",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "雲",
+    "breadth": 0.05595,
+    "density": 0.4273,
+    "even": 0
+   },
+   {
+    "char": "徑",
+    "breadth": 0.05912,
+    "density": 0.3532,
+    "even": 0
+   },
+   {
+    "char": "禪",
+    "breadth": 0.05626,
+    "density": 0.4514,
+    "even": 0
+   },
+   {
+    "char": "寺",
+    "breadth": 0.0604,
+    "density": 0.2666,
+    "even": 0
+   }
+  ],
+  "spread": 0.0795,
+  "ok": true
+ },
+ {
+  "board": "鐘樓",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "鐘",
+    "breadth": 0.05602,
+    "density": 0.4676,
+    "even": 0
+   },
+   {
+    "char": "樓",
+    "breadth": 0.05519,
+    "density": 0.4337,
+    "even": 0
+   }
+  ],
+  "spread": 0.015,
+  "ok": true
+ },
+ {
+  "board": "鼓樓",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "鼓",
+    "breadth": 0.05764,
+    "density": 0.383,
+    "even": 0
+   },
+   {
+    "char": "樓",
+    "breadth": 0.05519,
+    "density": 0.4337,
+    "even": 0
+   }
+  ],
+  "spread": 0.0444,
+  "ok": true
+ },
+ {
+  "board": "禪堂",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "禪",
+    "breadth": 0.05626,
+    "density": 0.4514,
+    "even": 0
+   },
+   {
+    "char": "堂",
+    "breadth": 0.05806,
+    "density": 0.373,
+    "even": 0
+   }
+  ],
+  "spread": 0.032,
+  "ok": true
+ },
+ {
+  "board": "喫茶去",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "喫",
+    "breadth": 0.05846,
+    "density": 0.3792,
+    "even": 0
+   },
+   {
+    "char": "茶",
+    "breadth": 0.05913,
+    "density": 0.3083,
+    "even": 0
+   },
+   {
+    "char": "去",
+    "breadth": 0.06352,
+    "density": 0.2765,
+    "even": 0
+   }
+  ],
+  "spread": 0.0866,
+  "ok": true
+ },
+ {
+  "board": "正法眼藏",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "正",
+    "breadth": 0.0675,
+    "density": 0.31,
+    "even": 0
+   },
+   {
+    "char": "法",
+    "breadth": 0.06271,
+    "density": 0.3131,
+    "even": 0
+   },
+   {
+    "char": "眼",
+    "breadth": 0.06123,
+    "density": 0.4317,
+    "even": 0
+   },
+   {
+    "char": "藏",
+    "breadth": 0.05299,
+    "density": 0.4363,
+    "even": 0
+   }
+  ],
+  "spread": 0.2738,
+  "ok": false
+ },
+ {
+  "board": "釋迦寶殿",
+  "hand": "levels/t00/boards/shijia.webp",
+  "measure": "density",
+  "chars": [
+   {
+    "char": "釋",
+    "breadth": 0.06125,
+    "density": 0.4327,
+    "even": null
+   },
+   {
+    "char": "迦",
+    "breadth": 0.09663,
+    "density": 0.4405,
+    "even": null
+   },
+   {
+    "char": "寶",
+    "breadth": 0.07235,
+    "density": 0.465,
+    "even": null
+   },
+   {
+    "char": "殿",
+    "breadth": 0.08592,
+    "density": 0.4419,
+    "even": null
+   }
+  ],
+  "spread": 0.0746,
+  "ok": true
+ },
+ {
+  "board": "藥師殿",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "藥",
+    "breadth": 0.05286,
+    "density": 0.4326,
+    "even": 0
+   },
+   {
+    "char": "師",
+    "breadth": 0.06267,
+    "density": 0.4133,
+    "even": 0
+   },
+   {
+    "char": "殿",
+    "breadth": 0.05736,
+    "density": 0.4342,
+    "even": 0
+   }
+  ],
+  "spread": 0.1856,
+  "ok": false
+ },
+ {
+  "board": "大慧院",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "大",
+    "breadth": 0.06504,
+    "density": 0.2198,
+    "even": 0
+   },
+   {
+    "char": "慧",
+    "breadth": 0.05315,
+    "density": 0.4358,
+    "even": 0
+   },
+   {
+    "char": "院",
+    "breadth": 0.06141,
+    "density": 0.3975,
+    "even": 0
+   }
+  ],
+  "spread": 0.2237,
+  "ok": false
+ },
+ {
+  "board": "觀音殿",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "觀",
+    "breadth": 0.05383,
+    "density": 0.464,
+    "even": 0
+   },
+   {
+    "char": "音",
+    "breadth": 0.05937,
+    "density": 0.3306,
+    "even": 0
+   },
+   {
+    "char": "殿",
+    "breadth": 0.05736,
+    "density": 0.4342,
+    "even": 0
+   }
+  ],
+  "spread": 0.1029,
+  "ok": false
+ },
+ {
+  "board": "凌霄閣",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "凌",
+    "breadth": 0.05741,
+    "density": 0.3239,
+    "even": 0
+   },
+   {
+    "char": "霄",
+    "breadth": 0.05287,
+    "density": 0.4558,
+    "even": 0
+   },
+   {
+    "char": "閣",
+    "breadth": 0.05876,
+    "density": 0.5392,
+    "even": 0
+   }
+  ],
+  "spread": 0.1114,
+  "ok": false
+ },
+ {
+  "board": "御碑亭",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "御",
+    "breadth": 0.05959,
+    "density": 0.3816,
+    "even": 0
+   },
+   {
+    "char": "碑",
+    "breadth": 0.05797,
+    "density": 0.3499,
+    "even": 0
+   },
+   {
+    "char": "亭",
+    "breadth": 0.05723,
+    "density": 0.3267,
+    "even": 0
+   }
+  ],
+  "spread": 0.0412,
+  "ok": true
+ },
+ {
+  "board": "半山亭",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "半",
+    "breadth": 0.06233,
+    "density": 0.2378,
+    "even": 0
+   },
+   {
+    "char": "山",
+    "breadth": 0.06873,
+    "density": 0.2995,
+    "even": 0
+   },
+   {
+    "char": "亭",
+    "breadth": 0.05723,
+    "density": 0.3267,
+    "even": 0
+   }
+  ],
+  "spread": 0.2009,
+  "ok": false
+ },
+ {
+  "board": "望江亭",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "望",
+    "breadth": 0.05816,
+    "density": 0.39,
+    "even": 0
+   },
+   {
+    "char": "江",
+    "breadth": 0.06424,
+    "density": 0.2399,
+    "even": 0
+   },
+   {
+    "char": "亭",
+    "breadth": 0.05723,
+    "density": 0.3267,
+    "even": 0
+   }
+  ],
+  "spread": 0.1225,
+  "ok": false
+ },
+ {
+  "board": "藏經樓",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "藏",
+    "breadth": 0.05299,
+    "density": 0.4363,
+    "even": 0
+   },
+   {
+    "char": "經",
+    "breadth": 0.0582,
+    "density": 0.393,
+    "even": 0
+   },
+   {
+    "char": "樓",
+    "breadth": 0.05519,
+    "density": 0.4337,
+    "even": 0
+   }
+  ],
+  "spread": 0.0983,
+  "ok": true
+ },
+ {
+  "board": "龍井",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "龍",
+    "breadth": 0.05476,
+    "density": 0.4484,
+    "even": 0
+   },
+   {
+    "char": "井",
+    "breadth": 0.06365,
+    "density": 0.2715,
+    "even": 0
+   }
+  ],
+  "spread": 0.1623,
+  "ok": false
+ },
+ {
+  "board": "洗硯池",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "洗",
+    "breadth": 0.06153,
+    "density": 0.3185,
+    "even": 0
+   },
+   {
+    "char": "硯",
+    "breadth": 0.05824,
+    "density": 0.4019,
+    "even": 0
+   },
+   {
+    "char": "池",
+    "breadth": 0.06262,
+    "density": 0.3453,
+    "even": 0
+   }
+  ],
+  "spread": 0.0752,
+  "ok": true
+ },
+ {
+  "board": "雙徑歸堂",
+  "hand": null,
+  "measure": "breadth",
+  "chars": [
+   {
+    "char": "雙",
+    "breadth": 0.0548,
+    "density": 0.4324,
+    "even": 0
+   },
+   {
+    "char": "徑",
+    "breadth": 0.05912,
+    "density": 0.3532,
+    "even": 0
+   },
+   {
+    "char": "歸",
+    "breadth": 0.05468,
+    "density": 0.4355,
+    "even": 0
+   },
+   {
+    "char": "堂",
+    "breadth": 0.05806,
+    "density": 0.373,
+    "even": 0
+   }
+  ],
+  "spread": 0.0812,
+  "ok": true
+ }
+]
