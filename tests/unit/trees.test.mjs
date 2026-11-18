@@ -47,7 +47,7 @@ test("a young cedar is clothed nearly to the ground, not bare below like an old 
 // the same radius within a hundredth and the same centre within a centimetre, so that the tree is one piece from the
 // ground up. The trunk is measured on its own curve, the foot on its own geometry.
 const everyTree = (() => { const scene = new THREE.Group(); return createTrees(scene, M, site.trees.filter((t) => !t[5])); })();
-const trunkAt = (j, y) => { let lo = 0, hi = 1; const P = new THREE.Vector3(); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; j.curve.getPoint(mid, P); if (P.y < y) lo = mid; else hi = mid; } j.curve.getPoint(lo, P); return { r: j.r0 + (j.r1 - j.r0) * lo, x: P.x, z: P.z }; };
+const trunkAt = (j, y) => { let lo = 0, hi = 1; const P = new THREE.Vector3(); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; j.curve.getPoint(mid, P); if (P.y < y) lo = mid; else hi = mid; } j.curve.getPoint(lo, P); return { r: j.rad(lo), x: P.x, z: P.z }; };   // as thick as the trunk is drawn there
 const footTop = (j) => { const P = j.foot.attributes.position, R = j.ring, pts = []; for (let k = 0; k < R; k++) pts.push([P.getX(k), P.getY(k), P.getZ(k)]);
   const cx = pts.reduce((s, p) => s + p[0], 0) / R, cz = pts.reduce((s, p) => s + p[2], 0) / R, r = pts.reduce((s, p) => s + Math.hypot(p[0] - cx, p[2] - cz), 0) / R; return { y: pts[0][1], r, x: cx, z: cz }; };
 test("at the top of every tree's foot, the foot is the trunk: radius within 1%, centre within 1 cm", () => {
@@ -86,6 +86,79 @@ test("a cedar's branches end inside the foliage they carry", () => {
   const out = everyTree.branches.filter((b) => b.inside > 1e-3);
   assert.deepEqual(out.map((b) => `${b.h} m cedar: ${(b.inside * 100).toFixed(0)} cm beyond its spray`).slice(0, 8), []);
 });
+
+// #92, #93: the wood is one system from the foot to the twigs, and a maple is a Japanese maple.
+test("at every fork of every tree, the wood that goes on is 0.8 to 1.2 of the wood that comes in", () => {
+  assert.ok(everyTree.forks && everyTree.forks.length > 300, `only ${everyTree.forks ? everyTree.forks.length : 0} forks reported`);
+  const wrong = everyTree.forks.filter((f) => f.ratio < 0.8 || f.ratio > 1.2).map((f) => `${f.kind} ${f.h} m: ${f.ratio.toFixed(2)}`);
+  assert.deepEqual(wrong.slice(0, 8), [], `${wrong.length} forks out of balance`);
+});
+test("no branch is wider than 0.7 of its parent where it leaves, and each starts inside it: every point of its first ring within the parent's radius (#200)", () => {
+  const wide = everyTree.forks.filter((f) => f.width > 0.7 + 1e-9).map((f) => `${f.kind} ${f.h} m: ${f.width.toFixed(2)}`);
+  assert.deepEqual(wide.slice(0, 8), []);
+  const set = everyTree.limbs.filter((l) => l.first); assert.ok(set.length > 300, `only ${set.length} branches report their first ring`);
+  // 2 cm inside the parent's surface, or a third of its radius on a twig too thin for that
+  const out = set.filter((l) => l.first.radial > l.first.R - Math.min(0.02, 0.3 * l.first.R) || (l.first.end && l.first.along > 0)).map((l) => `${l.kind} ${l.h} m, depth ${l.depth}${l.first.end ? " (out of a fork)" : ""}: first ring reaches ${l.first.radial.toFixed(3)} of a parent ${l.first.R.toFixed(3)}, ${l.first.along.toFixed(3)} along`);
+  assert.deepEqual(out.slice(0, 8), [], `${out.length} branches begin outside their parent`);
+  // and the collar swells where the branch comes out of the parent's surface, not where it starts inside it
+  const lost = set.filter((l) => !(l.first.exit > 0)).map((l) => `${l.kind} ${l.h} m, depth ${l.depth}: comes out at ${l.first.exit}`);
+  assert.deepEqual(lost.slice(0, 8), []);
+});
+test("below 2 m no two stems of a maple grow against each other: their centres at least 1.2 times their radii together apart (#200)", () => {
+  const close = [];
+  for (const c of everyTree.census.filter((t) => t.kind === "maple")) {
+    const stems = everyTree.limbs.filter((l) => l.kind === "maple" && l.at[0] === c.at[0] && l.at[1] === c.at[1] && l.depth === 0);
+    for (let i = 0; i < stems.length; i++) for (let j = i + 1; j < stems.length; j++) for (let k = 0; k < stems[i].axis.length; k++) {
+      const [y, x1, z1, r1] = stems[i].axis[k], [, x2, z2, r2] = stems[j].axis[k];
+      if (Math.hypot(x1 - x2, z1 - z2) < 1.2 * (r1 + r2)) close.push(`the maple at ${c.at}: stems ${i} and ${j} at ${y.toFixed(1)} m, ${Math.hypot(x1 - x2, z1 - z2).toFixed(3)} apart, radii ${r1.toFixed(3)} + ${r2.toFixed(3)}`);
+    }
+  }
+  assert.deepEqual(close.slice(0, 8), [], `${close.length} places where two stems touch`);
+});
+test("the great boughs of the ginkgo and the maple bend through at least five points", () => {
+  const great = everyTree.limbs.filter((l) => (l.kind === "ginkgo" && l.depth === 1) || (l.kind === "maple" && l.depth <= 1));
+  assert.ok(great.length > 60, `only ${great.length} great boughs`);
+  assert.deepEqual(great.filter((l) => l.points < 5).map((l) => `${l.kind} ${l.h} m, depth ${l.depth}: ${l.points} points`).slice(0, 8), []);
+});
+const maples = everyTree.census.filter((c) => c.kind === "maple");
+test("every maple grows as a Japanese maple: two to four stems from the ground, each 15 to 25 cm across, forking three deep", () => {
+  assert.ok(maples.length >= 5);
+  for (const c of maples) {
+    const mine = everyTree.limbs.filter((l) => l.kind === "maple" && l.at[0] === c.at[0] && l.at[1] === c.at[1]), stems = mine.filter((l) => l.depth === 0);
+    assert.ok(stems.length >= 2 && stems.length <= 4, `the maple at ${c.at} has ${stems.length} stems`);
+    for (const s of stems) assert.ok(2 * s.r >= 0.15 && 2 * s.r <= 0.25, `a stem of the maple at ${c.at} is ${(2 * s.r).toFixed(3)} m across`);
+    assert.ok(Math.max(...mine.map((l) => l.depth)) >= 2, `the maple at ${c.at} forks only ${Math.max(...mine.map((l) => l.depth))} deep`);
+    assert.equal(everyTree.joints.filter((j) => j.kind === "maple" && j.at[0] === c.at[0] && j.at[1] === c.at[1]).length, stems.length, `not every stem of the maple at ${c.at} has a foot`);
+  }
+});
+test("no two maples are alike, and each grows the same every time", () => {
+  const shape = (T, c) => { const mine = T.limbs.filter((l) => l.kind === "maple" && l.at[0] === c.at[0] && l.at[1] === c.at[1]), y0 = Math.min(...mine.map((l) => l.ends[1])); return mine.map((l) => [l.ends[0] - c.at[0], l.ends[1] - y0, l.ends[2] - c.at[1]].map((v) => v.toFixed(2)).join(" ")).join(); };   // where each limb ends, from where the tree stands
+  const again = createTrees(new THREE.Group(), M, site.trees.filter((t) => !t[5]));
+  const shapes = maples.map((c) => shape(everyTree, c));
+  assert.deepEqual(maples.map((c) => shape(again, c)), shapes);
+  assert.equal(new Set(shapes).size, shapes.length);
+});
+test("a maple's wood is under 8,000 triangles, and the woodland's under 116,000 (it was 101,004)", () => {
+  for (const c of maples) assert.ok(c.tris <= 8000, `the maple at ${c.at} is ${c.tris} triangles of wood`);
+  const all = everyTree.census.reduce((t, c) => t + c.tris, 0); assert.ok(all <= 116004, `the woodland is ${all} triangles of wood`);
+});
+test("a maple in autumn carries as many leaves as it did, over a crown as broad", () => {
+  for (const c of maples) {
+    const t = site.trees.find((s) => s[0] === c.at[0] && s[2] === c.at[1]), scene = new THREE.Group(); createTrees(scene, M, [t]);
+    const leaves = scene.children.filter((o) => o.isMesh && o.material.map), cards = leaves.reduce((n, m) => n + m.geometry.attributes.position.count, 0) / 4, box = new THREE.Box3(); leaves.forEach((m) => box.expandByObject(m));
+    const size = box.getSize(new THREE.Vector3());
+    assert.ok(cards >= 340, `the maple at ${c.at} hangs ${cards} cards (it hung 354)`);
+    assert.ok(Math.min(size.x, size.z) >= 0.95 * c.h, `the maple at ${c.at} is ${size.x.toFixed(1)} by ${size.z.toFixed(1)} m across`);
+  }
+});
+test("below head height every maple's wood keeps inside the post that stops a visitor", () => {
+  for (const t of site.trees.filter((s) => s[3] === "maple")) {
+    const scene = new THREE.Group(); createTrees(scene, M, [t]); const P = scene.children.find((o) => o.material === M.bark).geometry.attributes.position, post = site.walk.posts.find((p) => p.x === t[0] && p.z === t[2]);
+    let far = 0; for (let i = 0; i < P.count; i++) { const y = P.getY(i) - t[1]; if (y > 0.3 && y < 1.9) far = Math.max(far, Math.hypot(P.getX(i) - t[0], P.getZ(i) - t[2])); }
+    assert.ok(post && far <= post.r, `the maple at ${t[0]}, ${t[2]} reaches ${far.toFixed(2)} m, its post ${post ? post.r : "none"}`);
+  }
+});
+
 test("every tree's foot is lit from outside: its normals face away from the trunk, and its top ring's are the trunk's own", () => {
   const wrong = [];
   for (const j of everyTree.joints) {
@@ -100,6 +173,7 @@ test("every tree's foot is lit from outside: its normals face away from the trun
   }
   assert.deepEqual(wrong.slice(0, 8), []);
 });
+
 test("a trunk begins at the top of its foot and shares that ring's corners: nothing of it shows through the foot", () => {
   const wrong = [];
   for (const j of everyTree.joints) {
@@ -116,6 +190,7 @@ test("a trunk begins at the top of its foot and shares that ring's corners: noth
   }
   assert.deepEqual(wrong.slice(0, 8), []);
 });
+
 test("a trunk is drawn facing outward: from outside, a ray meets its near side, not the inside of its far side", () => {
   const rc = new THREE.Raycaster(), wrong = [];
   for (const j of everyTree.joints) {
