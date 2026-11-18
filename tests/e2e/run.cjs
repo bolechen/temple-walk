@@ -543,6 +543,40 @@ const scenarios = {
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
+  // The slip of paper from the library (#203): each of its lines, in each language, on a phone upright and on its side, lies whole on the
+  // screen: the paper and the button under it inside the picture, the page not wider than the screen, the words not under 12 px.
+  slipfit: { tier: 2, async run(b, base) {
+    const SIZES = [[390, 844], [844, 390]], bad = [];
+    for (const lang of ["zh", "ja", "en", "ko"]) {
+      const t = await open(b, base, `q=low&cam=0,30,0,0&season=summer&time=day&lang=${lang}` + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, locale: { zh: "zh-CN", ja: "ja-JP", en: "en-US", ko: "ko-KR" }[lang] });
+      const n = await t.page.evaluate(() => window.__verses);
+      for (const [w, h] of SIZES) {
+        await t.page.setViewportSize({ width: w, height: h });
+        for (let i = 0; i < (n || 14); i++) {
+          await t.page.evaluate((k) => window.__slip(k), i); await t.frames(2);
+          const r = await t.page.evaluate(() => {
+            const W = innerWidth, H = innerHeight, rc = (id) => document.querySelector(id).getBoundingClientRect(), p = rc("#slip .paper"), b = rc("#slipTake"), x = rc("#slipText"), f = rc("#slipFrom");
+            const px = (id) => parseFloat(getComputedStyle(document.querySelector(id)).fontSize);
+            const within = (q) => q.left >= -0.5 && q.right <= W + 0.5 && q.top >= -0.5 && q.bottom <= H + 0.5;
+            return { W, H, scrollW: document.documentElement.scrollWidth, paper: within(p), button: within(b), text: within(x) && x.left >= p.left - 0.5 && x.right <= p.right + 0.5 && x.top >= p.top - 0.5 && x.bottom <= p.bottom + 0.5, from: within(f), fs: Math.min(px("#slipText"), px("#slipFrom")), box: [p.left, p.top, p.right, p.bottom].map(Math.round) };
+          });
+          if (!(r.paper && r.button && r.text && r.from && r.scrollW <= r.W && r.fs >= 12)) bad.push(`${lang} ${w}x${h} #${i}: ${JSON.stringify(r)}`);
+          await t.page.evaluate(() => window.__slip(null)); await t.frames(1);
+        }
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    expect(bad.length === 0, `${bad.length} slips do not lie whole on the screen:\n  ` + bad.join("\n  "));
+    // A phone turned over while the paper is open: the longest line, in Korean, opened upright and then laid on its side, is fitted again.
+    {
+      const t = await open(b, base, "q=low&cam=0,30,0,0&season=summer&time=day&lang=ko" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, locale: "ko-KR" });
+      await t.page.evaluate(() => window.__slip(8)); await t.frames(2);
+      await t.page.setViewportSize({ width: 844, height: 390 }); await t.frames(3);
+      const r = await t.page.evaluate(() => { const W = innerWidth, H = innerHeight, p = document.querySelector("#slip .paper").getBoundingClientRect(), b = document.getElementById("slipTake").getBoundingClientRect(); return { W, H, scrollW: document.documentElement.scrollWidth, paper: [p.left, p.top, p.right, p.bottom].map(Math.round), button: [b.top, b.bottom].map(Math.round) }; });
+      expect(r.scrollW <= r.W && r.paper[0] >= 0 && r.paper[2] <= r.W && r.paper[1] >= 0 && r.paper[3] <= r.H && r.button[1] <= r.H, "the paper opened upright did not lie whole once the phone was turned over: " + JSON.stringify(r));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   replay: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE);
     const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];

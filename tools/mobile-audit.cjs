@@ -28,7 +28,8 @@ const SURFACES = [
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],
-  ["slip", "(() => { window.__pose(window.__places.sutra.at[0], window.__places.sutra.at[1], 0, 0); window.__rite('sutra'); })()", "window.__take && window.__take()"],
+  // (the longest of the library's lines, fixed: which one a visitor is given depends on the day, and the audit must not depend on luck; tests/e2e `slipfit` lays every line, in every language, on both screens)
+  ["slip", "window.__slip(8)", "window.__slip(null)"],
   // The 功德箱's sheet (#202, web build only): a coin dropped in the great hall, then the paper with its one link.
   ["offering", "(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); window.__inside('main'); await w(500); const b = window.__gallery['main-box']; window.__pose(b.at[0], b.at[1] + 0.2, 0, 0); for (let i = 0; i < 100 && document.getElementById('act').hidden; i++) await w(100); document.getElementById('act').click(); for (let i = 0; i < 300 && !document.getElementById('offering')?.open; i++) await w(100); })()", "document.getElementById('offeringClose')?.click(); window.__inside(null)"],
   // Sitting on the summit (#156): the small word for the breath at the foot, then the line said after the three breaths; both whole on the screen.

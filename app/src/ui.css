@@ -395,8 +395,8 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
   box-sizing: border-box; height: min(70vh, 600px); min-width: calc(var(--col) * 3 + 64px); padding: 64px 32px; color: var(--ink-1);
 }
 #slip .paper::after { content: ""; position: absolute; inset: 52px 32px; z-index: -1; pointer-events: none; border-block: 1px solid rgba(168,50,31,.32); background: repeating-linear-gradient(to left, rgba(168,50,31,0) 0 calc(var(--col) - 1px), rgba(168,50,31,.2) calc(var(--col) - 1px) var(--col)); }
-#slipText { margin: 0; font: 400 clamp(26px, 4.2vmin, 32px)/var(--col) var(--xing); letter-spacing: .1em; color: var(--ink-1); }
-#slipFrom { margin: 0; font: 400 19px/var(--col) var(--xing); letter-spacing: .08em; color: var(--ink-2); align-self: flex-start; }
+#slipText { margin: 0; font: 400 var(--slip-fs, clamp(26px, 4.2vmin, 32px))/var(--col) var(--xing); letter-spacing: .1em; color: var(--ink-1); }
+#slipFrom { margin: 0; font: 400 var(--slip-from, 19px)/var(--col) var(--xing); letter-spacing: .08em; color: var(--ink-2); align-self: flex-start; }
 #slip .seal-mark { position: absolute; left: 30px; bottom: 18px; width: 30px; height: 30px; font-size: 12px; writing-mode: vertical-rl; transform: rotate(3deg); }
 /* A work read closely: the picture large on the left, its encyclopedia entry on a sheet of paper to the right. */
 #piece { position: absolute; inset: 0; z-index: 36; background: rgba(8,7,6,.94); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); gap: clamp(14px, 3vw, 44px); align-items: center; padding: calc(20px + env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 56px) calc(20px + env(safe-area-inset-bottom, 0px)); }
@@ -603,11 +603,11 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 :root:lang(en) .rail .chip { writing-mode: horizontal-tb; width: auto; min-width: 64px; min-height: 44px; padding: 8px 12px; font-size: 15px; }
 :root:lang(en) .rail .chip::after { left: 14%; right: 14%; top: auto; bottom: 3px; width: auto; height: 3px; }
 :root:lang(en) .rail .chip:hover { transform: translateY(-2px); }
-:root:lang(en) #slip .paper { writing-mode: horizontal-tb; height: auto; width: min(86vw, 520px); min-width: 0; gap: 22px; padding: 56px 44px 64px; }
-:root:lang(en) #slip .paper::after { inset: 40px 30px; border-block: 0; border-inline: 1px solid rgba(168,50,31,.32); background: repeating-linear-gradient(to bottom, rgba(168,50,31,0) 0 calc(var(--col) - 1px), rgba(168,50,31,.14) calc(var(--col) - 1px) var(--col)); }
-:root:lang(en) #slipText { font-size: clamp(22px, 3.6vmin, 28px); font-style: normal; line-height: 1.5; }
-:root:lang(en) #slipFrom { align-self: flex-end; line-height: 1.4; }
-:root:lang(en) #slip .seal-mark { left: auto; right: 22px; bottom: 16px; }
+:root:lang(en) #slip .paper, #slip.flat .paper { writing-mode: horizontal-tb; height: auto; width: min(86vw, 520px); min-width: 0; gap: 22px; padding: 56px 44px 64px; }
+:root:lang(en) #slip .paper::after, #slip.flat .paper::after { inset: 40px 30px; border-block: 0; border-inline: 1px solid rgba(168,50,31,.32); background: repeating-linear-gradient(to bottom, rgba(168,50,31,0) 0 calc(var(--col) - 1px), rgba(168,50,31,.14) calc(var(--col) - 1px) var(--col)); }
+:root:lang(en) #slipText, #slip.flat #slipText { font-size: var(--slip-fs, clamp(22px, 3.6vmin, 28px)); font-style: normal; line-height: 1.5; }
+:root:lang(en) #slipFrom, #slip.flat #slipFrom { align-self: flex-end; line-height: 1.4; }
+:root:lang(en) #slip .seal-mark, #slip.flat .seal-mark { left: auto; right: 22px; bottom: 16px; }
 :root:lang(en) #enterBtn, :root:lang(en) #title .sub, :root:lang(en) #title .how, :root:lang(en) #toastName { font-variant: small-caps; }
 /* The languages on the title, each written in its own. */
 .title-links .langs { display: contents; }
