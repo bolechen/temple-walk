@@ -29,10 +29,11 @@
       done = true; bar.value = 100; percent.textContent = "100%";
       panel.hidden = true;
     },
-    fail() {
+    fail(opts = {}) {
       if (done || failed) return;
       failed = true; bar.hidden = true; percent.hidden = true;
-      label.textContent = t("山路 · 请再来一次"); retry.hidden = false; button.disabled = true;
+      const { message = "山路 · 请再来一次", retry: showRetry = true } = opts || {};
+      label.textContent = t(message); retry.hidden = !showRetry; button.disabled = true;
       try { if (location.hostname === "temple.rushiwowen.co") window.umami?.track?.("demo.load_error"); } catch {}
     },
   };
