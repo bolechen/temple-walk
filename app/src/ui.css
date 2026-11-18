@@ -1,5 +1,5 @@
 /* The interface is ink on paper laid over the picture. Over the place itself nothing has a box: words stand on the
-   picture with a little shade under them, and the five things at the edge are slips of paper. What opens over the
+   picture with a little shade under them, and the two things at the edge are slips of paper. What opens over the
    walk is a sheet of paper with a torn edge; what is chosen on it is circled in vermilion; the one thing that
    matters on a sheet is a seal. The paper's grain, the strokes, the rings and the seals are drawn by src/paper.js
    when the page opens and reach this sheet as custom properties (--paper-tile, --brush-ink, --brush-light,
@@ -211,7 +211,7 @@ body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
 /* Under an open sheet the picture's own words step back, so nothing shows through the veil. */
 body:has(dialog.layer[open]) #act, body:has(dialog.layer[open]) #jumpBtn, body:has(dialog.layer[open]) #say, body:has(dialog.layer[open]) #hint { visibility: hidden; }
 
-/* ---- The five things at the edge: slips of paper written down the page ---- */
+/* ---- The two slips at the edge (留影, 歇脚): paper written down the page ---- */
 .rail { position: absolute; z-index: 4; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 9px; justify-items: end; transition: opacity 1.2s ease; }
 @media (pointer: fine) { body.calm .rail { opacity: 0; } body.held .rail { opacity: 0; pointer-events: none; } .rail:hover, .rail:focus-within { opacity: 1 !important; } }
 @media (pointer: coarse) { body.calm .rail { opacity: .45; } }
@@ -335,7 +335,7 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 #loadProgress::-webkit-progress-value { background: var(--ember); border-radius: 2px; transition: width .2s ease; }
 #loadProgress::-moz-progress-bar { background: var(--ember); border-radius: 2px; }
 #loadRetry { margin-top: 12px; color: var(--paper); background: transparent; border: 1px solid rgba(237,232,220,.4); padding: 8px 14px; cursor: pointer; font: 14px var(--kai); }
-#title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .3em; color: var(--on-2); }
+#title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 .title-links .chip { white-space: nowrap; }
@@ -371,6 +371,10 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 /* The page of seals, as large as the sheet allows and always three by four, so that what lies over it lies true. */
 #bookPage { position: relative; align-self: center; min-height: 0; height: min(100%, (100vw - 32px) * 4 / 3); aspect-ratio: 3 / 4; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #book img { display: block; width: 100%; height: 100%; }
+/* Pressed open, the page is there at once: the page last drawn, or bare paper the first time, and the new page takes
+   its place once drawn and decoded (game.js), so nothing blinks. */
+#bookPage { background: var(--paper-ground); }
+
 /* Over each seal that has been earned: the way back to where it was earned. Nothing is drawn until it is pointed at. */
 .seal-go { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
 .seal-go::after { content: ""; position: absolute; inset: 4% 8% 26%; border-radius: 50%; background: var(--enso-red, none) center / 100% 100% no-repeat; opacity: 0; transform: scale(.9); transition: opacity .25s ease, transform .25s ease; }
