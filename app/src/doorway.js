@@ -93,7 +93,7 @@ function distMaterial() {
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
 export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12, keep = 4, sync = false }) {
   const halls = {}, dm = distMaterial(), queue = [], frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
-  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false; const faces = [];   // pinned: a tool took them all, and none is given back
+  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false, lastTick = 0, worstFrame = 0, quietFor = 1; const faces = [];   // pinned: a tool took them all, and none is given back
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
@@ -187,6 +187,9 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   // `still`: false while the eye is being swung (an observance's shot, the opening, the close): no face is drawn then,
   // so that no frame of a swing is held up.
   const tick = (camera, dt, eye, still = true) => {
+    // The longest frame while a room is being taken (and for a second after), from one tick to the next.
+    const now = performance.now(); if (lastTick && quietFor < 1) worstFrame = Math.max(worstFrame, now - lastTick); lastTick = now;
+    quietFor = busy || queue.length ? 0 : quietFor + dt;
     if (camera) { camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)); }
     for (const o of Object.values(halls)) {
       if (!o.want) {
@@ -235,5 +238,5 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
   const seenAt = (id, p) => { const o = halls[id]; if (!o) return null; const R = o.r.room; return p.clone().sub(new THREE.Vector3(R.cx, R.y, 0)).applyMatrix4(m4.copy(o.mat.uniforms.uW2R.value).invert()); };
   return { halls, tick, retake, takeAll, seenAt,
-    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1), lastFacesMs: faces.slice() }) };
+    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1), worstFrameMs: +worstFrame.toFixed(1), lastFacesMs: faces.slice() }) };
 }
