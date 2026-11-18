@@ -41,6 +41,19 @@ const scenarios = {
     }
     expect(errors.length === 0, errors.join("\n")); await ctx.close();
   } },
+  // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
+  // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  treeseed: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE);
+    const page = await t.page.evaluate(() => window.__trees());
+    await import(require("url").pathToFileURL(require("path").join(__dirname, "../unit/dom-stub.mjs")).href);
+    const THREE = await import("three"), { buildSite } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/site.js")).href), { createTrees, geometryHash } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/trees.js")).href);
+    const M = new Proxy({}, { get: (o, k) => (k === "plaster" || k === "interior" ? () => (o["__" + k] ||= new THREE.MeshBasicMaterial()) : (o[k] ||= new THREE.MeshBasicMaterial())) });
+    const node = createTrees(new THREE.Group(), M, buildSite(M).trees, {});
+    expect(page.cedars > 10 && page.cedars === node.cedars.length, `the page grew ${page.cedars} cedars, Node ${node.cedars.length}`);
+    expect(page.hash === geometryHash(node.cedars.map((c) => c.geometry)), `the page's cedars (${page.hash}) are not Node's (${geometryHash(node.cedars.map((c) => c.geometry))})`);
+    await t.close();
+  } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // First the title: the temple's name, a way in, and nothing else in the way.
@@ -326,7 +339,7 @@ const scenarios = {
     // with words about this walk only, then the book with what is still to be found.
     await t.page.evaluate(() => window.__music(true));   // the place heard, so that the close's music can be checked
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breath"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(() => t.page.isVisible("#breathWord"), 60000, "no breath to follow"); await seal("sit", "sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
     { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
       expect(cu.farBell === 1, "the close should end on the far bell answering");
@@ -420,6 +433,49 @@ const scenarios = {
     d = await D(); expect(d.cuts === 0 && d.turnMax <= 3.3, "coming home was not a smooth swing: " + JSON.stringify({ cuts: d.cuts, turnMax: d.turnMax }));
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("hint").classList.contains("on")) && /朱印帐/.test(await t.page.textContent("#hint"))), 30000, "the line about the book stayed after the eye went home");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The breath of sitting on the summit (#156): a ring on the ground and a small word at the foot of the picture, and nothing
+  // laid over his head or chest, from the sitting's own shot, from behind him and from his own eyes, on four screens.
+  breathring: { tier: 2, async run(b, base) {
+    const SIZES = [[960, 540], [800, 600], [390, 844], [844, 390]];
+    const cases = [["third", true], ["third", false], ["first", true]];
+    for (const [view, autocam] of cases) {
+      const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day&seed=4` + BARE, { viewport: { width: 960, height: 540 }, init: `try{localStorage.setItem("yunjing.settings.v1",JSON.stringify({autocam:${autocam}}))}catch{}` });
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 40000, "静坐 was not offered");
+      await t.page.click("#act");
+      await t.until(() => t.page.isVisible("#breathWord"), 90000, "no word for the breath");
+      await t.page.evaluate(() => window.__riteClock(0));   // the observances' clock held: a moment to look at
+      // The breath goes in; the word is at the foot of the picture, the ring is on the ground, and it grows.
+      let prev = -1;
+      for (const [w, h] of SIZES) {
+        await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+        for (const step of [1500, 2500]) {
+          await t.page.evaluate((ms) => window.__riteClock(ms), step); await t.frames(2);
+          // A passage begun on this very step has drawn nothing yet: let it run a little (the clock is the page's, not frames).
+          for (let i = 0; i < 6 && (await t.page.evaluate(() => window.__rites().sit.fill)) === 0; i++) { await t.page.evaluate(() => window.__riteClock(600)); await t.frames(2); }
+          const r = await t.page.evaluate(() => {
+            const P = window.__probe(), box = P.monkBox, out = [];
+            for (const el of document.querySelectorAll("body *")) {
+              if (el.closest("dialog") || el.tagName === "CANVAS" || el.tagName === "SCRIPT" || el.tagName === "STYLE") continue;
+              const cs = getComputedStyle(el), rc = el.getBoundingClientRect();
+              if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity < 0.05 || rc.width < 2 || rc.height < 2) continue;
+              if (!(el.textContent || "").trim() && !el.matches("button,img,svg")) continue;
+              if (el.children.length && !(el.childNodes.length && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()))) continue;
+              out.push({ id: el.id || el.className || el.tagName, x: rc.left, y: rc.top, w: rc.width, h: rc.height });
+            }
+            return { box, out, word: document.getElementById("breathWord").getBoundingClientRect().toJSON(), ring: window.__rites().sit, breathEl: !!document.getElementById("breath"), vh: innerHeight, vw: innerWidth };
+          });
+          expect(!r.breathEl, "a ring is still fixed to the screen");
+          expect(r.ring.ring === true && r.ring.fill > 0, "the ring on the ground is not drawn while he breathes in: " + JSON.stringify(r.ring));
+          expect(r.word.top > r.vh * 0.5 && r.word.left >= 0 && r.word.right <= r.vw, `the word is not at the foot of the picture: ${JSON.stringify(r.word)}`);
+          if (r.box) { const [bx, by, bw, bh] = r.box, top = [bx, by, bw, bh / 2];
+            for (const e of r.out) expect(!(e.x < top[0] + top[2] && e.x + e.w > top[0] && e.y < top[1] + top[3] && e.y + e.h > top[1]), `${view}${autocam ? "" : " (no autocam)"} ${w}x${h}: ${e.id} lies over his head and chest: ${JSON.stringify({ e, box: r.box })}`); }
+          prev = r.ring.fill;
+        }
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
   } },
   replay: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE);
@@ -1011,7 +1067,10 @@ const scenarios = {
     s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
     await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
     // Its own level, apart from everything else.
-    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "the menu has no music level");
+    // The three levels under the whole volume are folded until asked for (分开调).
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#setVolume"), 10000, "the menu has no volume");
+    expect(!(await t.page.isVisible("#setMusic")), "the music's own level should be folded until asked for");
+    await t.page.click("#menuMix"); await t.until(() => t.page.isVisible("#setMusic"), 10000, "分开调 did not open the music level");
     await t.page.evaluate(() => { const el = document.getElementById("setMusic"); el.value = "0"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await t.page.waitForTimeout(600); s = await m(); expect(s.levels.music === 0 && s.level < 0.05, "the music slider should silence the music: " + JSON.stringify(s));
     // Struck and listened to within one call: a busy page can let the drum die between two calls.
@@ -1294,6 +1353,11 @@ const scenarios = {
         return { w: r.width, h: r.height, fits: c.scrollHeight <= c.clientHeight, cols: cs.gridTemplateColumns.split(" ").length, side: b.left >= a.right - 1, centred: Math.abs(r.left + r.width / 2 - innerWidth / 2) < 2, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; }); };
     for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]]) { const m = await lay(w, h); expect(m.cols === 2 && m.side && m.w > m.h && m.fits && !m.clipped && m.centred && m.inside && m.w <= 960, `the menu should lie across at ${w}x${h}, whole and centred: ` + JSON.stringify(m)); }
     for (const [w, h] of [[390, 844], [768, 1024]]) { const m = await lay(w, h); expect(m.cols === 1 && m.inside && m.h > m.w, `the menu should stay one column at ${w}x${h}: ` + JSON.stringify(m)); }
+    // On a phone held upright the parts can be told at a glance: the ear's heading is in sight without scrolling (#185).
+    { await lay(390, 844); const r = await t.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")], cr = c.getBoundingClientRect(), ear = hs[2].getBoundingClientRect(), foot = document.querySelector("#menu .row").getBoundingClientRect(); return { names: hs.map((e) => e.textContent), said: hs.map((e) => e.getAttribute("aria-label")), bottom: Math.round(ear.bottom), foot: Math.round(foot.top), card: Math.round(cr.bottom) }; });
+      // named as the Heart Sutra names the senses, and read aloud in plain words
+      expect(r.names.join("") === "眼身耳意" && r.said.join("") === "画面操作声音文字", "the menu's parts should be 眼 身 耳 意, read aloud as 画面 操作 声音 文字: " + JSON.stringify(r));
+      expect(r.bottom <= Math.min(r.card, r.foot), "on a 390x844 phone the ear's heading should be in sight without scrolling, above the menu's foot: " + JSON.stringify(r)); }
     { const m = await lay(844, 390); expect(m.cols === 2 && m.inside, "a phone held sideways keeps its two columns: " + JSON.stringify(m)); }
     // Tab goes down the left column, then the right, then the foot: the order the eye reads it in.
     { await t.page.setViewportSize({ width: 1366, height: 768 }); await t.frames(2); const seq = [];
@@ -1322,6 +1386,22 @@ const scenarios = {
       for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
         const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
         expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
+      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185)
+      await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
+      const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")]; return { names: hs.length, ear: hs[2] ? Math.round(hs[2].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
+      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
+      // and the four ways to another language are all there at first sight: each the thing a thumb lands on at its middle,
+      // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
+      const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
+      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
+      // and nothing written on the sheet lies half under the foot at first sight: any block of words that shows within the
+      // sheet keeps clear of the foot's box, whatever is added to the menu later (#195: the group's invitation, half hidden)
+      const under = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const cr = c.getBoundingClientRect(), foot = document.querySelector("#menu .row"), f = foot.getBoundingClientRect(), out = [];
+        for (const el of c.querySelectorAll("*")) { if (foot.contains(el) || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+          const st = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width || !r.height || st.visibility === "hidden" || el.closest("[hidden]")) continue;
+          const shows = r.bottom > cr.top && r.top < cr.bottom; if (shows && r.bottom > f.top + 0.5 && r.top < f.bottom - 0.5) out.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 8)}" ${Math.round(r.top)}-${Math.round(r.bottom)}`); }
+        return { foot: Math.round(f.top), out }; });
+      expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and

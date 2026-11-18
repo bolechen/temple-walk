@@ -14,14 +14,15 @@
     "portrait": "node tools/portrait.js",
     "music": "node tools/music.mjs",
     "dev": "vite",
-    "build": "vite build",
+    "build": "node tools/bake-walk.mjs && vite build",
     "preview": "vite preview",
     "serve": "vite",
     "typecheck": "tsc -p tsconfig.json",
     "setup": "node tools/setup.mjs",
     "postinstall": "node tools/setup.mjs",
     "edges": "node tools/edges.mjs",
-    "nearplane": "node --test tests/slow/*.test.mjs"
+    "nearplane": "node --test tests/slow/*.test.mjs",
+    "bake-walk": "node tools/bake-walk.mjs"
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {

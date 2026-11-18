@@ -17,9 +17,9 @@ import { strike, flutter, cueState, shutterSound, stampSound, photoSounds, bells
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
-import { createSettings, browserSettingsStore } from "./src/settings.js";
+import { createSettings, browserSettingsStore, DEFAULTS as SETTING_DEFAULTS } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
-import { createTrees } from "./src/trees.js";
+import { createTrees, geometryHash } from "./src/trees.js";
 import { createDrift } from "./src/drift.js";
 import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
@@ -893,6 +893,7 @@ window.__cost = (n = 40) => {
   return +((performance.now() - t0) / n).toFixed(2);
 };
 // What each part of the scene weighs: meshes, and triangles as drawn (instances counted).
+window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null });   // the cedars' grown wood, for the Node/browser check
 window.__census = () => {
   const out = {};
   for (const top of scene.children) {
@@ -979,6 +980,11 @@ function openMenu(open) {
   on("setAutocam", () => { set("autocam", !settings.get().autocam); if (!settings.get().autocam) director.drop(); });
   on("setLock", () => { set("lock", !settings.get().lock); if (!settings.get().lock) document.exitPointerLock?.(); });
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
+  // The three levels under the whole volume are folded away until asked for, and open by themselves when one of them
+  // has been moved from where it began.
+  const mix = (open) => { menuEl.classList.toggle("mix", open); $("menuMix").setAttribute("aria-expanded", String(open)); $("menuMix").textContent = open ? tr("收起") : tr("分开调"); };
+  on("menuMix", () => mix(!menuEl.classList.contains("mix")));
+  { const S = settings.get(); mix(SOUND.slice(1).some(([, k]) => S[k] !== SETTING_DEFAULTS[k])); }
   on("reloadBtn", () => location.reload());
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));

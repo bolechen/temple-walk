@@ -53,6 +53,44 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Every script parses, and the typed modules agree with themselves
         run: pnpm run check && pnpm run typecheck
+      # The floor he may stand on (#194): baked from the drawn meshes as a build product (not kept in git), named by the
+      # fingerprint of what it is baked from and kept in the cache under it, this commit's and the base's alike (the base is
+      # main on a pull request, the commit before on a push to main, built from its own code in .main/). No named place may
+      # have become unreachable from where he comes in, on the drawn floor or on the written plan; every part whose
+      # reachable floor changed by more than a square metre is listed in the run's summary. A few seconds when both are in
+      # the cache; a bake (about a minute each) only for a fingerprint not baked before, that is after a change to what is
+      # drawn or to the plan. Before the unit tests, which read the grid, so that the report is in the summary even when they fail.
+      - name: Which floor is to be baked, here and on the base
+        id: walk
+        env:
+          BASE_REF: ${{ github.event_name == 'pull_request' && github.base_ref || '' }}
+          BEFORE: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: |
+          echo "key=$(node tools/bake-walk.mjs --key)" >> "$GITHUB_OUTPUT"
+          base=""; name=""
+          if [ -n "$BASE_REF" ]; then git fetch --no-tags --depth=1 origin "$BASE_REF" && base=$(git rev-parse FETCH_HEAD) && name=" main"
+          elif [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -q '^0*$'; then git fetch --no-tags --depth=1 origin "$BEFORE" && base="$BEFORE" && name="上一个提交"; fi
+          basekey=none
+          if [ -n "$base" ]; then git worktree add --detach .main "$base" >/dev/null && if [ -f .main/tools/bake-walk.mjs ]; then basekey=$(cd .main && node tools/bake-walk.mjs --key); fi; fi
+          echo "base=$basekey" >> "$GITHUB_OUTPUT"; echo "name=$name" >> "$GITHUB_OUTPUT"
+      - name: Remember baked floors between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/walk
+          key: walk-t00-${{ steps.walk.outputs.key }}-${{ steps.walk.outputs.base }}
+          restore-keys: |
+            walk-t00-${{ steps.walk.outputs.key }}-
+            walk-t00-
+      - name: The floor he may stand on, and what this change did to it
+        env:
+          WALK_BASE_NAME: ${{ steps.walk.outputs.name }}
+          KEY: ${{ steps.walk.outputs.key }}
+          BASEKEY: ${{ steps.walk.outputs.base }}
+        run: |
+          node tools/bake-walk.mjs
+          if [ "$BASEKEY" != none ]; then (cd .main && WALK_CACHE="$GITHUB_WORKSPACE/node_modules/.cache/walk" node tools/bake-walk.mjs | tail -2); fi
+          find node_modules/.cache/walk -name '*.bin' ! -name "t00-$KEY.bin" ! -name "t00-$BASEKEY.bin" -delete
+          node tools/walk-diff.mjs .main/app/shared/walk/t00.bin --png=tools/out/walk-diff
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
         run: pnpm test
       - name: Build the site
