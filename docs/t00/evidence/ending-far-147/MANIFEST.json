@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "far-16x9.jpg",
+   "bytes": 122704,
+   "sha256": "dd08f5ddd67abea611146c2a14c8b8bbb33330e51e188d8e36b5e57b5c8ec019",
+   "rev": "fef4e7c4bd03742a73b316e796826cacf261ed69"
+  },
+  {
+   "path": "far-4x3.jpg",
+   "bytes": 102402,
+   "sha256": "bdbd71fac9c791941afb7a4d4f24b7fc25fc5e653d5af5133cc5b5ee49b4a388",
+   "rev": "fef4e7c4bd03742a73b316e796826cacf261ed69"
+  },
+  {
+   "path": "far-phone-book.jpg",
+   "bytes": 39164,
+   "sha256": "15b89471c448c938fb3f62b7ad5835959ee0f774dda87914669113762796dd0a",
+   "rev": "fef4e7c4bd03742a73b316e796826cacf261ed69"
+  },
+  {
+   "path": "far-phone.jpg",
+   "bytes": 44860,
+   "sha256": "100ceea82521240d2d13efaffb231258dae241fb9b1086a5a821252ff72f4eda",
+   "rev": "fef4e7c4bd03742a73b316e796826cacf261ed69"
+  }
+ ]
+}
