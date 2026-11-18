@@ -325,15 +325,19 @@ export function createSmoke(at, U) {
       uniform vec3 uAt; uniform float uT, uRise; uniform vec2 uWind; varying vec2 vQ; varying float vA, vH, vI;
       vec3 at(float i, float a){
         float top=step(3.5,i), w=mod(i,4.)*1.5707963+top*.7853982, r0=mix(${(STOREYS[0].r - 0.05).toFixed(3)},${(STOREYS[1].r - 0.05).toFixed(3)},top), y0=mix(${(STOREYS[0].y0 + 0.12).toFixed(3)},${(STOREYS[1].y0 + 0.12).toFixed(3)},top);
-        float out_=r0+.3*min(1.,a*6.), h=a*${SMOKE.rise.toFixed(2)}*mix(1.,.8,top)*uRise, lean=${SMOKE.lean.toFixed(2)}*pow(h,1.4);
+        float out_=r0+.3*min(1.,a*6.), h=a*${SMOKE.rise.toFixed(2)}*mix(1.,.8,top)*uRise, lean=${SMOKE.lean.toFixed(2)}*pow(max(h,0.),1.4);
         return uAt+vec3(sin(w)*out_+uWind.x*lean+sin(uT*.7-h*2.6+i)*.06*a, y0+h, cos(w)*out_+uWind.y*lean+cos(uT*.53-h*2.2+i*1.7)*.06*a);
       }
       void main(){
         float i=position.x, a=position.y, s=position.z;
-        vec3 c=at(i,a), d=normalize(at(i,min(a+.02,1.))-at(i,max(a-.02,0.))), v=normalize(cameraPosition-c), side=normalize(cross(d,v));
-        float wid=.02+.5*pow(a,1.3);
+        // (every length divided by is kept off zero: a thread seen straight along its way has no side, and is drawn
+        // with none rather than with a number that is not one)
+        vec3 c=at(i,a), d=at(i,min(a+.02,1.))-at(i,max(a-.02,0.)), v=cameraPosition-c;
+        d/=max(length(d),1e-6); v/=max(length(v),1e-6);
+        vec3 side=cross(d,v); side/=max(length(side),1e-6);
+        float wid=.02+.5*pow(clamp(a,0.,1.),1.3);
         vec4 mv=viewMatrix*vec4(c+side*s*wid,1.); gl_Position=projectionMatrix*mv;
-        vQ=vec2(s,a); vA=a; vH=a*${SMOKE.rise.toFixed(2)}; vI=i;
+        vQ=vec2(s,a); vA=clamp(a,0.,1.); vH=a*${SMOKE.rise.toFixed(2)}; vI=i;
       }`,
     fragmentShader: /* glsl */`
       uniform vec3 uCol; uniform float uOp, uT, uIncense; varying vec2 vQ; varying float vA, vH, vI;
@@ -344,9 +348,12 @@ export function createSmoke(at, U) {
         vec2 q=vec2(vQ.x*(1.+vA*3.)+vI*7.3, vH*3.-uT*.55);
         float n=n1(q*vec2(2.2,1.6))*.55+n1(q*vec2(5.,3.5)+3.)*.3+n1(q*vec2(11.,7.)+7.)*.15, edge=1.-smoothstep(.1+.3*n,1.,abs(vQ.x+(n-.5)*.7*vA));
         float alive=step(vI/6.,uIncense+.05)+step(3.5,vI)*step(.25,uIncense);
-        float a=edge*smoothstep(.0,.18,vA)*pow(1.-vA,1.5)*(.3+.7*n*n)*uOp*min(alive,1.)*(1.-.5*smoothstep(.6,1.,abs(vQ.x)));
-        if(a<.004) discard;
-        gl_FragColor=vec4(uCol,a);
+        // the up-the-thread share comes from a value interpolated across the ribbon, which on a graphics card can land a
+        // hair past 1 at its tip: a power of a number below zero is not a number there, and one such pixel, spread by the
+        // bloom, blacked out half the picture (#217). Kept in range, and anything that is not a number is not drawn.
+        float k=clamp(vA,0.,1.), a=edge*smoothstep(.0,.18,k)*pow(max(1.-k,0.),1.5)*(.3+.7*n*n)*uOp*min(alive,1.)*(1.-.5*smoothstep(.6,1.,abs(vQ.x)));
+        if(!(a>=.004)) discard;
+        gl_FragColor=vec4(uCol,clamp(a,0.,1.));
       }` });
   const smoke = new THREE.Mesh(g, mat); smoke.frustumCulled = false; smoke.renderOrder = 2;
   return {
