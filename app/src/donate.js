@@ -42,7 +42,7 @@ export function mountOffering({ ui, lang, onOpen, onQr = () => {} }) {
     <p id="offeringScan"></p><p id="offeringHow" class="offering-how"></p><p><a class="tap" id="offeringReg" target="_blank" rel="noopener"></a></p></section>` : "";
   d.innerHTML = `<div class="offering-card paper scrolls"><h2 id="offeringTitle"></h2><p id="offeringCoin"></p><p id="offeringAsk"></p>
     <div class="offering-go"><a class="stamp" id="offeringGo" target="_blank" rel="noopener"></a></div>${QR_OPEN || !qr ? code : `<details id="offeringFold"><summary id="offeringFoldWord"></summary>${code}</details>`}
-    <footer><button class="chip" id="offeringClose" type="button"></button></footer></div>`;
+    <footer><button class="stamp" id="offeringClose" type="button"></button></footer></div>`;
   document.body.appendChild(d);
   const $ = (/** @type {string} */ id) => /** @type {any} */ (d.querySelector("#" + id));
   $("offeringTitle").textContent = t("功德箱");

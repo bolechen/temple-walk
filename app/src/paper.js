@@ -135,6 +135,10 @@ export function createPaper(root = document.documentElement) {
     }
   }) : null;
   const observe = (el) => { if (ro && el && !el.dataset.paper) { el.dataset.paper = "1"; ro.observe(el); } };
-  document.querySelectorAll(".paper, .rail .chip").forEach(observe);
+  const all = (n) => { if (n.nodeType !== 1) return; const el = /** @type {Element} */ (n); if (el.matches(".paper, .rail .chip")) observe(el); el.querySelectorAll(".paper, .rail .chip").forEach(observe); };
+  all(document.documentElement);
+  // A sheet built after the page opened (the offering box's, made when the web build's module arrives) is torn like the rest:
+  // only what is added to the body's tree is looked at, never attributes or text.
+  if (typeof MutationObserver === "function" && document.body) new MutationObserver((ms) => { for (const m of ms) m.addedNodes.forEach(all); }).observe(document.body, { childList: true, subtree: true });
   return { observe };
 }
