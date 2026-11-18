@@ -25,7 +25,7 @@ const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
       float a=smoothstep(.5,.56,leaf*.75+crown*.42)*step(y,top+fbm2(vec2(x*2.3,1.))*1.6-.8);
       a=max(a,step(y,4.6+n2(vec2(x*.8,7.))*1.2));
       a*=step(.3,thin); culm*=step(.3,thin);
-      if(max(a,culm)<.5) discard;
+      if(!(max(a,culm)>=.5)) discard;
       vec3 c=mix(vec3(.016,.034,.02),vec3(.06,.105,.05),smoothstep(.35,.8,leaf))*uTone; c=mix(c,vec3(.09,.12,.065)*uTone,culm*(1.-a));
       c*=.55+.6*smoothstep(0.,12.,y);                                  // darker inside the grove near the ground
       c*=uLeaf*uLight; float d=length(vWP-cameraPosition);

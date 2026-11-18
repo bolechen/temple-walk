@@ -72,7 +72,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
           if(uDof.z>.5){
             float coc=min(abs(1.-uDof.x/z),1.5)*uDof.y;
             if(coc>.35){ vec3 s=c; float n=1.; float ph=h21(vUv*uRes)*6.283;
-              for(int i=0;i<12;i++){ float r=sqrt((float(i)+.5)/12.), a=float(i)*2.39996+ph; vec2 o=vec2(cos(a),sin(a))*r*coc/uRes;
+              for(int i=0;i<12;i++){ float r=sqrt((float(i)+.5)/12.), a=float(i)*2.39996+ph; /* nan-ok: of a loop count, always above zero */ vec2 o=vec2(cos(a),sin(a))*r*coc/uRes;
                 float zs=viewDist(vUv+o); float w=zs<z-.5?min(1.,abs(1.-uDof.x/zs)*uDof.y/max(coc,.01)):1.;   // a sharp thing in front is not smeared over what lies behind it
                 s+=max(texture2D(tDiffuse,vUv+o).rgb,0.)*w; n+=w; }
               c=s/n; }
