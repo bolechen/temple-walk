@@ -344,7 +344,7 @@ export function createGame(y) {
   // seal, no reward). Only the public web page then opens a sheet of paper with the link to 如是我闻's sponsor page
   // (src/donate.js, imported here only when `WEB`, so the other builds hold neither the code nor the address).
   let sheet = null;
-  if (WEB) import("./donate.js").then((d) => { d.mountOffering({ ui, lang, onOpen: () => { track("offering.open"); keepPlace(); } }); sheet = true; });
+  if (WEB) import("./donate.js").then((d) => { sheet = d.mountOffering({ ui, lang, onOpen: () => { track("offering.open"); keepPlace(); }, onQr: () => track("offering.qr") }); });
   async function offerCoin(spot) {
     if (rite) return; $("act")?.setAttribute("hidden", "");
     const mineRite = (rite = /** @type {any} */ ({ id: "offering" })), on = () => rite === mineRite;
@@ -359,7 +359,7 @@ export function createGame(y) {
     // last bow is over, and never before the coin is in. In the other builds the coin is all there is.
     for (let i = 0; i < 40 && y.directed() && on(); i++) await wait(0.1);
     if (!on()) return;
-    if (WEB && sheet) { await wait(0.4); if (!on()) return; track("offering.sheet"); ui.open("offering", { onClose: () => { if (on()) end(); } }); return; }
+    if (WEB && sheet) { await wait(0.4); if (!on()) return; track("offering.sheet"); ui.open("offering", { onClose: () => { if (on()) end(); } }); sheet.opened(); return; }
     await wait(0.3); if (on()) end();
   }
 
@@ -540,6 +540,8 @@ export function createGame(y) {
   // For the tests: the slip of paper with the i-th of the library's lines on it (`__slip(null)` puts it away).
   window.__verses = VERSES.length; window.__slip = (i) => { if (i == null) { ui.close("slip"); return null; } const v = pickVerse(i); holdOut(t(v.text), t(v.from), t("收下"), () => {}); return v.text; };
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
+  // For the phone audit and pictures: the offering sheet as it opens after a coin, without the coin (web build only; null when there is none).
+  window.__offeringSheet = () => { if (!(WEB && sheet)) return false; ui.open("offering"); sheet.opened(); return true; };
   window.__take = () => rite && rite.take && rite.take();
   return { near: () => near, rite: () => rite && rite.id };
 }
