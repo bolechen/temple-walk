@@ -19,10 +19,12 @@ export const merge = (list) => mergeGeometries(list.map(plain));
 // serves every wall by reading the height from here (kept in the first texture coordinate, which walls do not use).
 export function footAt(geo, base) { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, base); return geo; }
 
-// Bake an occlusion value into every vertex. `fn(x, y, z)` returns 0..1; omit it for "fully lit".
+// Bake an occlusion value into every vertex. `fn(x, y, z, nx, ny, nz)` returns 0..1 (a little over 1 where a surface
+// takes more light back from what it faces than the open sky would give it); omit it for "fully lit". The normal is
+// there for a surface that is shut off from the sky but not from the ground in front of it.
 export function bakeAO(geo, fn) {
-  const p = geo.attributes.position, a = new Float32Array(p.count);
-  for (let i = 0; i < p.count; i++) a[i] = fn ? fn(p.getX(i), p.getY(i), p.getZ(i)) : 1;
+  const p = geo.attributes.position, n = geo.attributes.normal, a = new Float32Array(p.count);
+  for (let i = 0; i < p.count; i++) a[i] = fn ? fn(p.getX(i), p.getY(i), p.getZ(i), n ? n.getX(i) : 0, n ? n.getY(i) : 1, n ? n.getZ(i) : 0) : 1;
   geo.setAttribute("ao", new THREE.BufferAttribute(a, 1));
   return geo;
 }

@@ -1210,6 +1210,33 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every season at every hour draws, and they look as different as they should.
+  // Under the eaves of the main hall, the gate, the library and the Guanyin hall, looking up at the bracket sets over
+  // the front columns on a summer day (issue #212): the sets must read as timber against the limed band between them,
+  // not as black cut-outs. What is timber and what is the band is asked of the picture itself (`__pick` on a grid);
+  // the brightness compared is luminance in linear light, as the eye adds it up, and the sets must have at least
+  // 18% of the band's.
+  eaves: { tier: 2, async run(b, base) {
+    const W = 960, H = 540, t = await open(b, base, "q=low&shot=1&view=third&season=summer&time=day&cam=0,-1,0,0.1", { viewport: { width: W, height: H } });
+    // [x, where the eye stands, where the front columns' heads are, how high it looks over the ground it stands on]
+    const views = { main: [0, -1.0, -6.3, 5.6], gate: [0, 47.5, 43.0, 4.6], library: [0, -40.6, -44.8, 5.9], guanyin: [0, -70.9, -75.1, 5.0] };
+    const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }, Y = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const seen = {};
+    for (const [name, v] of Object.entries(views)) {
+      await t.page.evaluate((v) => { window.__pose(v[0], v[1], 0, 0.1); const g = window.__yard().h; window.__look([v[0], g + 2.2, v[1]], [v[0], g + v[3], v[2]]); }, v); await t.frames(3);
+      const grid = await t.page.evaluate(([W, H]) => { const r = []; for (let y = 10; y < H * 0.62; y += 20) for (let x = 10; x < W; x += 20) { const h = window.__pick(x, y, 1)[0]; if (h) r.push([x, y, h.material, h.at[1]]); } return r; }, [W, H]);
+      const band = grid.filter((g) => g[2] === "plaster"), ys = band.map((g) => g[3]).sort((a, b) => a - b);
+      expect(band.length > 20, `${name}: the limed band under the eave is not in view (${band.length} samples)`);
+      const lo = ys[Math.floor(ys.length * 0.05)], hi = ys[Math.floor(ys.length * 0.95)], r0 = Math.min(...band.map((g) => g[1])), r1 = Math.max(...band.map((g) => g[1]));
+      const inBand = band.filter((g) => g[3] >= lo && g[3] <= hi), wood = grid.filter((g) => /^wood[XYZV]$/.test(g[2]) && g[1] >= r0 && g[1] <= r1 && g[3] >= lo && g[3] <= hi + 0.25);
+      expect(wood.length > 20, `${name}: no bracket sets in view (${wood.length} samples)`);
+      const p = await t.page.evaluate((pts) => window.__probe(pts), [...wood, ...inBand].map((g) => [g[0], g[1]]));
+      const mean = (a) => a.reduce((s, c) => s + Y(c), 0) / a.length, w = mean(p.at.slice(0, wood.length)), bd = mean(p.at.slice(wood.length));
+      seen[name] = { wood: +w.toFixed(4), band: +bd.toFixed(4), ratio: +(w / bd).toFixed(3) };
+    }
+    console.log("    eaves:", JSON.stringify(seen));
+    for (const [name, s] of Object.entries(seen)) expect(s.ratio >= 0.18, `${name}: under the eave the bracket sets are a black cut-out: ${(s.ratio * 100).toFixed(1)}% of the band's light (want 18%)`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   moods: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&shot=1&view=first&show=court"), seen = {};
     for (const s of ["spring", "summer", "autumn", "winter"]) for (const h of ["dawn", "day", "dusk", "night"]) {
