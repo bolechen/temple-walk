@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "chan-open-roof.jpg",
+   "bytes": 92317,
+   "sha256": "64f7acdeeca5bdd3ec4932d58d49ab3073c4ac222a2e0d53eca97a41aba8b671",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  },
+  {
+   "path": "library-after.jpg",
+   "bytes": 91395,
+   "sha256": "d7635c1df37c6a6ad1c410a32add7d5f30c168df9aa72c33651dc817f0153584",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  },
+  {
+   "path": "library-before.jpg",
+   "bytes": 85753,
+   "sha256": "73d29ab6392083b31305deafe8050c90896ef818aac8d9af4a31dc98685f3f09",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  },
+  {
+   "path": "main-after.jpg",
+   "bytes": 108893,
+   "sha256": "077487afdd354ff65c7388b313bd5d155d36b998e6c9a9778606bd1d0d1e0d20",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  },
+  {
+   "path": "main-before.jpg",
+   "bytes": 82451,
+   "sha256": "c3795ea1e40c80718055f29a113a39de5c6cf771e0297f9c98ca07686b0e7684",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  },
+  {
+   "path": "main-caisson.jpg",
+   "bytes": 82343,
+   "sha256": "7172bd4bf68b56915a6daa2edbb82018b58db07099fb6c80e3e85dc4db849adb",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  },
+  {
+   "path": "yaoshi-caisson.jpg",
+   "bytes": 96743,
+   "sha256": "a20402ca2e32632258e0ca26b8f7f3be3d8d13ba5f5bec118401cf3439cc4f88",
+   "rev": "a275de7eb94b3539e4357af376b165f691ded4b5"
+  }
+ ]
+}

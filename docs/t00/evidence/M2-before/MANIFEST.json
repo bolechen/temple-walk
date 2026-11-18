@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "arrive.jpg",
+   "bytes": 668947,
+   "sha256": "e3b64583ba714b93e9b6acd882bc97d0bddccfd3f96406b41519e37a0662520a",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "court.jpg",
+   "bytes": 293479,
+   "sha256": "2825bd89943216027495b05f5dfbe400368c7c4a181f304f27dbb0f09d0930e3",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "forecourt.jpg",
+   "bytes": 382996,
+   "sha256": "a5683d91ee6d6aad761ed1888ef1a4d18c97ab3033632922c6e9d465318c0451",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "front.jpg",
+   "bytes": 399781,
+   "sha256": "408637aefc1842d250178bfd6687eb8b879951ee1f0e9c6d0bc68a346a0d069c",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "gate.jpg",
+   "bytes": 324856,
+   "sha256": "e8320a87b537bfa7a787c9f9b0ba84bf95977281223343fe5a35a323fc70b0c6",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "halfway.jpg",
+   "bytes": 526513,
+   "sha256": "9cbe0a9706473ce4e0271e074a4095d6006b6ef3ead06d2b7ddc5ae143c2251c",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "screen.jpg",
+   "bytes": 452083,
+   "sha256": "53ca4b08b4a45074985164414f524cb283c2f98ae267303cad3c351061b808d4",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  },
+  {
+   "path": "second.jpg",
+   "bytes": 669391,
+   "sha256": "0be3427736435837a323e7f41d2888b1e76b0438514c117777fc9f34e82dc35d",
+   "rev": "a1b914bde8de80bb03ba00b9ab44af71042cbe36"
+  }
+ ]
+}

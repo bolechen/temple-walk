@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "foot-normals-before-after.jpg",
+   "bytes": 315855,
+   "sha256": "99721bf0c6721e432511c8de1cdb12311c93ddfef5fe5f8debd5fc84cf886f05",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  },
+  {
+   "path": "foot-normals-crop.jpg",
+   "bytes": 152648,
+   "sha256": "d885c6c716e934cdcc8ff49de26c0eaf2633f757cb68e7e0cd6c72d3ceb8ce2d",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  },
+  {
+   "path": "issue-cameras-before-after.jpg",
+   "bytes": 384110,
+   "sha256": "c54b715504ba4f764046525b234fc4da13d4089edafeef354a01abe110b21354",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  },
+  {
+   "path": "seam-t4-before-after.jpg",
+   "bytes": 764563,
+   "sha256": "cbe993d8ad53d060756a7236c10d3c815d7b56cc24ff4e810b363a9513b6404a",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  },
+  {
+   "path": "seam-t4-crop.jpg",
+   "bytes": 110338,
+   "sha256": "1ac4febccdf315fe62da9127c4342844ef18c10826edda9ecd75946497471562",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  },
+  {
+   "path": "seasons-and-young-cedar-before-after.jpg",
+   "bytes": 340874,
+   "sha256": "d66cf5b3388f4ef3af5208e68182acbeec78848628437614fa6889b50171445b",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  },
+  {
+   "path": "trunk-bases-before-after.jpg",
+   "bytes": 305969,
+   "sha256": "c78048c1f8e3b894de13f20110303b98e022e88fcf0921004ed40ea95e096421",
+   "rev": "12d556b1298a890a0fe2ce7eb5f30881c37f0754"
+  }
+ ]
+}

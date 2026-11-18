@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "court-summer-day-standing.png",
+   "bytes": 608441,
+   "sha256": "f50d1805516e5df7db25f8869c4e8e455e05b912901db8d89d89bfa001b4bf95",
+   "rev": "6b786bf8c43713ad9a483bea4c6c6f878f8b05dd"
+  },
+  {
+   "path": "court-summer-day-top.png",
+   "bytes": 626090,
+   "sha256": "fd9be28d61996ac1f45123efa9ef56e364b97791859a2bb97a8f7e4b9b3bc97b",
+   "rev": "6b786bf8c43713ad9a483bea4c6c6f878f8b05dd"
+  }
+ ]
+}

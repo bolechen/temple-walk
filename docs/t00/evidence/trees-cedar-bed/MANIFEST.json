@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "owner-bed-t4-before-after.jpg",
+   "bytes": 502987,
+   "sha256": "7ae996e61176c93771bf4600060696e8b086cf5ed8f7ce1af2890fda8eef3167",
+   "rev": "afe617fddf64ee52252abf695dd57cb4f19cde9b"
+  }
+ ]
+}

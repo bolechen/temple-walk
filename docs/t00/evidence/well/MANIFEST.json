@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "well-near.jpg",
+   "bytes": 82353,
+   "sha256": "7e32c60d929bab7e739a273b5f4ce2b48ae80c672118fa334a0b9ff572c3cffe",
+   "rev": "8d71ab1a4cfda656c6f20ec2f3a1bc81c80845a1"
+  },
+  {
+   "path": "well-ripple.jpg",
+   "bytes": 82503,
+   "sha256": "8e8a106076a3a7fbd3202c8eee0ea97f0e699a4d73f99b84bc27463dcf50baaf",
+   "rev": "8d71ab1a4cfda656c6f20ec2f3a1bc81c80845a1"
+  }
+ ]
+}

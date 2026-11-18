@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "20261116-0a88f96/CAM-01.jpg",
+   "bytes": 683121,
+   "sha256": "1274ad0ca3ffad2030248f57b837a9b88a8dd775ef05b70148273edd6bcc38fe",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/CAM-02.jpg",
+   "bytes": 594316,
+   "sha256": "6ec33acffea64b2406515322261d1d749c715ef314d9fee7dac4e91bf0099eb1",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/CAM-03.jpg",
+   "bytes": 459765,
+   "sha256": "5c7c97460e3b6364fccfe7fce6811f6623b13b92fb9e36fbd09060009a6f65de",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/CAM-04.jpg",
+   "bytes": 386589,
+   "sha256": "3ba17b705d52ed2582a0445056f4becfa8513c1879591744d4196a4b2404af44",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/CAM-05.jpg",
+   "bytes": 398048,
+   "sha256": "1441afedc068457dbc9af2df81238c07a0ae963213d868760f22986501e55ba0",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/CAM-06.jpg",
+   "bytes": 489279,
+   "sha256": "304463ad4c332a250a3353749828e9b0857e9b408ed731888cdf6250ea36d9f4",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/compare-CAM-01.jpg",
+   "bytes": 261611,
+   "sha256": "7423463d3ac4e6baf39ca85dfeb7fdc6281ecd9b68013352022a4284d0d5194b",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/compare-CAM-02.jpg",
+   "bytes": 240692,
+   "sha256": "50db0c2662ebc9a16909be0854d75ba093186d19559a6433a9b47a9851e3c4f2",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/compare-CAM-03.jpg",
+   "bytes": 213222,
+   "sha256": "9bd99d72e4fa7175007d4ebf99038bb52ff9bc09525328ce2555dc14be3a0356",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/compare-CAM-04.jpg",
+   "bytes": 167511,
+   "sha256": "d6ddb76582a7cd77378c6e85abf3386e88aee0b82a839c6a3b4d9b292b212126",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/compare-CAM-05.jpg",
+   "bytes": 161138,
+   "sha256": "80907ea7932377e8916c1561c5de7ab93cf49c670550daca3df0d31623182bff",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  },
+  {
+   "path": "20261116-0a88f96/compare-CAM-06.jpg",
+   "bytes": 208080,
+   "sha256": "2d9cf9e0bfe600568cef69bc7828daf06dd39735f0bfd0bcd7fa7791ba5fa417",
+   "rev": "44009e81ae43c543d514695c6aa670bf2cde00fa"
+  }
+ ]
+}
