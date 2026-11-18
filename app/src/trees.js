@@ -221,7 +221,13 @@ export function createTrees(scene, M, spots, opts = {}) {
     // project's bark and leaves, so the three may be set side by side. Every other tree is grown here as before.
     if (opts.gen && ((kind === "maple" && x === -9.5 && z === 28) || (kind === "cedar" && x === -19 && z === 29))) {
       const t0 = performance.now(), t = growBy(opts.gen, kind, x, y, z, h, 7, kind === "cedar" ? 0.2 + h * 0.012 : 0.22), centre = V(x, y + h * 0.62, z);
-      wood.push(...t.wood); for (const l of t.leaves) clump(kind, l.p, kind === "cedar" ? l.p.clone().add(V(0, 1.5, 0)) : centre, l.w, kind === "cedar" ? 2 : 5);   // (a cedar's spray shaded from just above it, not from the shaft)
+      wood.push(...t.wood); beds.push(bed(x, y, z, (kind === "cedar" ? 0.44 : 0.2) * 3.4 + 0.25, 99));
+      if (t.sprays.length) for (const sp of t.sprays) {   // a cedar's foliage hung as the hand-grown cedar hangs it: one spray down each bough
+        const d = sp.to.clone().sub(sp.from), l = Math.min(d.length() * 1.1, sp.from.y - y - 0.3), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
+        if (l < 0.6) continue; q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
+        card(cards.cedar, new THREE.PlaneGeometry(l * 1.05, l).translate(0, -l / 2, 0), sp.from.clone().add(V(0, 0.2, 0)), sp.from.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);
+      }
+      else for (const l of t.leaves) clump(kind, l.p, centre, l.w, 5);
       spike.push({ gen: opts.gen, kind, at: [x, z], skeleton: t.skeleton, stems: t.stems, trunks: t.trunks, ms: performance.now() - t0, wood: t.wood.reduce((n, g) => n + (g.index ? g.index.count : g.attributes.position.count) / 3, 0), leaves: t.leaves.length });
       continue;
     }

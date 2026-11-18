@@ -55,6 +55,7 @@ function threeTree(kind, h, seed, r0) {
     one({ seed, levels: 3, children: [46, 4], branchAngle: [96, 38], angleVariance: 10, lengthRatio: 0.24, trunkLength: h, trunkRadius: r0, taper: 0.88, taperCurve: 0.8, rootFlare: 0.5, flareFrac: 0.06,
       radiusExponent: 2.6, minRadius: 0.012, minLength: 0.4, droop: 0.22, upPull: 0.0, gnarl: [0.01, 0.06, 0.1], radialSegments: 6, sectionLength: 1.0, childStart: 0.2, trunkClear: 0.34, collar: 0.25 }, V(0, 0, 0), [0, 1, 0]);
     out.leafLevel = 1;
+    out.sprays = out.tubes.filter((t) => t.level >= 1).map((t) => ({ from: t.rings[0].pos.clone(), to: t.rings[t.rings.length - 1].pos.clone() }));
   } else {
     // A court maple, the two lowest orders of its wood drawn here and the rest grown by the generator from them
     // (the structure review's table on #186): one short trunk swelling into its roots, dividing at 1.0-1.4 m into three
@@ -62,11 +63,11 @@ function threeTree(kind, h, seed, r0) {
     // flattening as they go, in two or three tiers; from each limb's end, and from two points along it, the generator
     // grows the finer wood, bending and closing at every tip.
     for (let i = 0; i < 4; i++) rnd();   // (a small seed's first draws are all near nothing)
-    const F = 1.0 + rnd() * 0.4, r0b = 0.115, top = F + 0.3, lean = V((rnd() - 0.5) * 0.08, 0, (rnd() - 0.5) * 0.08);
+    const F = 1.0 + rnd() * 0.4, r0b = 0.115, n = 3 + Math.floor(rnd() * 3), tierN = n >= 5 ? 3 : 2, top = F + (tierN - 1) * 0.15 + 0.06, lean = V((rnd() - 0.5) * 0.08, 0, (rnd() - 0.5) * 0.08);
     const trunkR = (y) => r0b * (1 - 0.08 * Math.min(1, Math.max(0, y) / top)) * (1 + 0.6 * Math.exp(-Math.max(0, y) / 0.22));
     const tpts = [V(0, -0.15, 0), V(lean.x * 0.3, 0.5, lean.z * 0.3), V(lean.x * 0.8, F, lean.z * 0.8), V(lean.x, top, lean.z)];
     out.wood.push(tube(tpts, (t, P) => trunkR(P.y), 10)); out.trunks.push({ x: 0, z: 0, r: trunkR(0) });
-    const n = 3 + Math.floor(rnd() * 3), ratio = Math.min(0.58, Math.max(0.46, 1 / Math.sqrt(n))), a0 = rnd() * 6.283, limbs = [], tierN = n >= 5 ? 3 : 2;
+    const ratio = Math.min(0.58, Math.max(0.46, 1 / Math.sqrt(n))), a0 = rnd() * 6.283, limbs = [];   // (the trunk ends just above its highest limb: no stump stands over the fork)
     for (let i = 0; i < n; i++) {
       const tier = i % tierN, y0 = F + tier * 0.15, a = a0 + (i / n) * 6.283 + (rnd() - 0.5) * 0.4, dir = V(Math.cos(a), 0, Math.sin(a)), side = V(-dir.z, 0, dir.x);
       const th = ((50 + rnd() * 12) * Math.PI) / 180, reach = h * 0.22 * (0.85 + rnd() * 0.3) * (1 - tier * 0.12), from = V(lean.x * (y0 / top), y0, lean.z * (y0 / top)).addScaledVector(dir, r0b * 0.3);
@@ -131,5 +132,5 @@ export function grow(gen, kind, x, y, z, h, seed, r0) {
   // as many leaf clumps as the hand-made tree of that kind carries, spread over every place the generator offers
   const want = kind === "cedar" ? 120 : 80, step = Math.max(1, t.tips.length / want), leaves = [];
   for (let i = 0; i < t.tips.length && leaves.length < want; i += step) leaves.push({ p: t.tips[Math.floor(i)].clone().add(at), w: kind === "cedar" ? 1.6 : 1.1 });
-  return { skeleton: t.skeleton || null, wood: t.wood, leaves, stems: t.trunks.length, trunks: t.trunks.map((k) => ({ x: k.x + x, z: k.z + z, r: k.r })) };
+  return { sprays: (t.sprays || []).map((k) => ({ from: k.from.clone().add(at), to: k.to.clone().add(at) })), skeleton: t.skeleton || null, wood: t.wood, leaves, stems: t.trunks.length, trunks: t.trunks.map((k) => ({ x: k.x + x, z: k.z + z, r: k.r })) };
 }
