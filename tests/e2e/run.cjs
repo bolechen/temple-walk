@@ -790,8 +790,8 @@ const scenarios = {
     await t.page.evaluate(() => { void window.__ending(); });   // it is a promise; do not wait for the whole close here
     await t.until(async () => (await R()).closing === true, 60000, "the close never began");
     await t.until(async () => (await wake()).includes("request:screen"), 30000, "the close did not ask the screen to stay awake");
-    const u0 = (await R()).close.u;
-    await t.page.evaluate(() => window.__setHidden(true)); await t.page.waitForTimeout(700);
+    // The page is hidden and the close's place read in one breath: a round trip between the two (tens of milliseconds, more on a slow machine) is time the close rightly kept.
+    const u0 = await t.page.evaluate(() => { window.__setHidden(true); return window.__rites().close.u; }); await t.page.waitForTimeout(700);
     const u1 = (await R()).close.u;
     expect(u1 - u0 < 0.03, "the close kept time behind a dark screen: " + JSON.stringify([u0, u1]));
     await t.page.evaluate(() => { window.__setHidden(false); document.getElementById("ending").click(); });   // the wake tap, at once
