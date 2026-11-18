@@ -43,7 +43,7 @@ async function run({ open, out, fps = 30, size, only, maxSecs = 1e9, log = conso
       await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
       await page.evaluate(() => document.getElementById("enterBtn").click());
       if (await page.evaluate(() => window.__opening().active)) { await page.keyboard.press("Escape"); await page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
-      await page.addStyleTag({ content: "#act,#hint,#goal,#way,#say,.slip,#slips,#book,#bookBtn{display:none!important}" });   // what lies over the picture is taken away, nothing is added
+      await page.addStyleTag({ content: "#act,#hint,#goal,#way,#say,.slip,#slips,#book,#bookBtn{opacity:0!important}" });   // what lies over the picture is made clear, nothing is added (display:none would stop E: the page presses only a button it can see)
       await page.evaluate(() => { const q = window.__places.bell; window.__pose(q.at[0] + 0.3, q.at[1] - 0.3, Math.PI, 0.05); });
       await page.waitForFunction(() => document.getElementById("act") && document.getElementById("act").dataset.word === "撞钟", null, { timeout: 120000 });
       await page.keyboard.press("e"); await page.evaluate(() => window.__riteClock(0)); await draw(page, 3);
