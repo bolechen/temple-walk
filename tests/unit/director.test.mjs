@@ -260,3 +260,23 @@ test("a swing's way is worked out a little at a time: the planner pauses after a
   assert.ok(most <= DIRECT.step + 700, `the planner asked about ${most} points without pausing`);
   assert.ok(total > GONE.length * 24, "the planner never paused");
 });
+
+// The far view at the close of the chapter (#147): the eye stays where the close left it, on a shot made from that very pose,
+// so that handing it to the director moves nothing, it drifts no faster than any shot may, and coming home is the usual swing.
+test("a shot made from the eye's own pose is that pose on any screen, and drifts within the limits", async () => {
+  const { holdShot, shotPose, turnBetween, DIRECT } = await import("../../app/src/director.js");
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.2, 0.7, 0, "YXZ")), p = new THREE.Vector3(12, 40, 55);
+  for (const [fov, aspect] of [[50, 16 / 9], [50, 4 / 3], [50, 9 / 19.5], [65, 9 / 16]]) {
+    const { place, shot } = holdShot({ p, q, fov }, aspect), out = shotPose(place, shot, 0, 0, aspect);
+    assert.ok(out.p.distanceTo(p) < 1e-3, `aspect ${aspect.toFixed(2)}: the eye moved ${out.p.distanceTo(p)} m`);
+    assert.ok(turnBetween(out.q, q) < 0.002, `aspect ${aspect.toFixed(2)}: it turned ${turnBetween(out.q, q)} rad`);
+    assert.ok(Math.abs(out.fov - fov) < 0.01, `aspect ${aspect.toFixed(2)}: the angle of view went from ${fov} to ${out.fov}`);
+    let prev = out;
+    for (let t = 1; t <= 120; t++) {
+      const now = shotPose(place, shot, 0, t, aspect, { p: new THREE.Vector3(), q: new THREE.Quaternion(), fov: 50 });
+      assert.ok(turnBetween(prev.q, now.q) <= DIRECT.drift + 1e-6, `second ${t}: it turned ${(turnBetween(prev.q, now.q) * 57.3).toFixed(2)}°`);
+      assert.ok(prev.p.distanceTo(now.p) <= DIRECT.glide + 1e-6, `second ${t}: it moved ${prev.p.distanceTo(now.p)} m`);
+      prev = now;
+    }
+  }
+});

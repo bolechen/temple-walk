@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
+import { chime, coin, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
 import { createAwake } from "./awake.js";
@@ -15,6 +15,7 @@ import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
+import { WEB } from "./channel.js";
 import { processedLine } from "./credits.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
@@ -105,12 +106,12 @@ export function createGame(y) {
     // The seventh seal: the book is full. On the summit, when the prologue is about to close, that comes first and
     // the full book after it (finale); anywhere else, it is marked at once.
     const full = journey.done(), closing = id === "sit" && !closedHere();
-    if (full && closing) fullAfterClose = true;
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; if (full && !closing) complete(); }, 900); if (!full) y.hints?.say.seal(); }, 4200 * Math.max(fast, 0.3));
   }
   // ---- A full book: its own seal, while the music plays the whole theme once (score.js), then the page of seals ----
-  let completing = false, completed = false, fullAfterClose = false;   // fullAfterClose: the book was filled on the summit, and its seal follows the close
+  let completing = false, completed = false;   // (the book filled on the summit owes its seal until the book is opened after the close: journey.owed)
   function complete() {
+    journey.stamp();   // the full book's own seal is shown once (journey.owed)
     if (!completed) { completed = true; track("demo.complete", { count: journey.count(), seconds: Math.round(visit.seconds) }); }
     const el = $("toast"); if (completing || !el) { openBook(); return; }
     completing = true;
@@ -236,13 +237,26 @@ export function createGame(y) {
       });
     } finally { awake.free(); }
     el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true); document.removeEventListener("visibilitychange", seen);
-    if (skip || !on()) passClose();
+    if (skip || !on()) { passClose(); y.direct(null); }   // passed over, or walked away: the eye comes home by the usual swing (rites.close left it where it was)
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
     // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
     if (journey.close(season())) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
-    refresh(); if (fullAfterClose) { fullAfterClose = false; complete(); } else openBook();
+    refresh();
+    // Nothing opens by itself: the eye stays on the far view of the pavilion (rites.close, y.holdEye) and the music plays out;
+    // the book is the visitor's to open (a line at the foot, B), and any step, tap on the ground or Esc brings the eye home.
+    if (!skip && on()) farBegin();
   }
+  // ---- The far view: the chapter's last picture, held until the visitor moves ----
+  let far = 0;
+  const farHint = () => (y.hints?.coarse ? t("点这一行，翻开朱印帐") : t("{b}翻开朱印帐", { b: "<kbd>B</kbd>" }));
+  async function farBegin() {
+    const mine = ++far; document.body.classList.add("far");
+    await wait(8);   // the title has gone and the music is coming to its end: not the moment it stops
+    if (far === mine && !ui.modal?.()) y.hints?.hold(farHint());
+  }
+  const farEnd = () => { if (!far) return; far = 0; document.body.classList.remove("far"); y.hints?.release(); };
+  $("hint")?.addEventListener("click", () => { if (far) openBookOwed(); });
   window.addEventListener("struck", (e) => {
     if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
     const r = journey.strike(); say(["", t("一下"), t("两下"), t("三下")][r.strikes] || "", 3);
@@ -254,6 +268,7 @@ export function createGame(y) {
   // ---- The button that offers what can be done here ----
   let acc = 0, look = null, seatHere = null, climb = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
   y.onTick((dt) => {
+    if (far && !y.directArrived()) farEnd();   // the eye has gone home (a step, a tap on the ground, Esc, or a door): the far view is over
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
     { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
       if (el) { const show = !!(p && g && g.classList.contains("on") && entered && (p.room || null) === y.room() && !rite);
@@ -289,7 +304,7 @@ export function createGame(y) {
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
     const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
     if (held || near || look || seatHere || climb || rise) {
-      const w = held || (near ? SEAL[near].act : look ? "观看" : climb || (seatHere ? "坐下" : "起身"));
+      const w = held || (near ? SEAL[near].act : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
@@ -301,10 +316,27 @@ export function createGame(y) {
     if (near) return begin(near);
     if (climb) { const c = climb; climb = null; b0().hidden = true; return c === "登楼" ? y.climb(y.stair().up) : y.descend(); }
     if (!look) { if (seatHere) sitDown(seatHere); else if (y.seated()) y.leave(); return; }
+    if (y.gallery[look].item.offering) return offerCoin(y.gallery[look]);
     const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
     if (it.work) return showWork(it.work, look);
     const spot = look; holdOut(t(it.title), t(it.text), t("看过了"), () => { y.stage(null); seen.add(spot); });
   });
+
+  // ---- The 功德箱: a coin, in every build; and in the web build only, the sheet that follows it ----
+  // He puts his palms together and lets one coin fall (a made sound; nothing is paid, nothing is written in the book, no
+  // seal, no reward). Only the public web page then opens a sheet of paper with the link to 如是我闻's sponsor page
+  // (src/donate.js, imported here only when `WEB`, so the other builds hold neither the code nor the address).
+  let sheet = null;
+  if (WEB) import("./donate.js").then((d) => { d.mountOffering({ ui, lang, onOpen: () => { track("offering.open"); keepPlace(); } }); sheet = true; });
+  async function offerCoin(spot) {
+    if (rite) return; $("act")?.setAttribute("hidden", "");
+    const mineRite = (rite = /** @type {any} */ ({ id: "offering" })), on = () => rite === mineRite;
+    if (!(await new Promise((r) => y.walkTo([spot.at], r))) || !on()) { if (on()) rite = null; return; }
+    y.stage({ face: spot.face, pose: "pray", lift: 0, act: rites.act, leave: () => { if (on()) end(); } });
+    if (!(await rites.dropCoin(on, spot.slot, () => { coin(); track("offering.coin"); })) || !on()) return;
+    if (WEB && sheet) { await wait(0.5); if (!on()) return; track("offering.sheet"); ui.open("offering", { onClose: () => { if (on()) end(); } }); return; }
+    await wait(0.6); if (on()) end();
+  }
 
   // ---- A work on the wall, read closely: the picture, and beside it what an encyclopedia would say ----
   function showWork(slug, spot) {
@@ -356,7 +388,9 @@ export function createGame(y) {
     ui.close("book"); if (await y.travel(p.at[0], p.at[1], Math.PI - p.face, p.room || null)) { went++; say(t("回到{place}。", { place: t(d.place) }), 4); }
   }
   window.__goBack = (id) => goBack(id);
-  $("bookBtn")?.addEventListener("click", openBook);
+  // The book, opened by the visitor: a full book that has not been shown its own seal is shown it now (once), then the page.
+  function openBookOwed() { if (journey.owed() && !closing && !completing && !rite) complete(); else openBook(); }
+  $("bookBtn")?.addEventListener("click", openBookOwed);
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
   $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 

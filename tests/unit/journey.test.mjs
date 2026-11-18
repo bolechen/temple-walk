@@ -185,3 +185,22 @@ test("the book speaks of the walk only once there is one, and of under a minute 
   assert.deepEqual(visitLine(120, 60), { m: 120, min: 1, under: false });
   assert.deepEqual(visitLine(500, 610), { m: 500, min: 10, under: false });
 });
+
+// The full book's own seal (七印圆满) is stamped once, when the book is opened after the chapter's close (#147): a page
+// left before it was opened has it owed the next time, and it is not lost or shown twice.
+test("the full book's seal is owed until it has been shown once, and the debt is kept across a reload", () => {
+  const store = memory(); let t = 100;
+  let j = createJourney(store, () => t++);
+  for (const id of ["bell", "incense", "tea", "sutra", "well", "lamp"]) { if (id === "bell") for (let i = 0; i < 3; i++) j.strike(); else j.earn(id, id === "sutra" ? { verse: { text: "a", from: "b" } } : undefined); }
+  assert.equal(j.owed(), false, "a book that is not full owes nothing");
+  j.earn("sit"); assert.equal(j.done(), true);
+  assert.equal(j.owed(), true, "a full book owes its seal");
+  j = createJourney(store, () => t++); assert.equal(j.owed(), true, "page left before the book was opened: it is still owed after a reload");
+  assert.equal(j.stamp(), true, "stamped the first time"); assert.equal(j.owed(), false); assert.equal(j.stamp(), false, "and only once");
+  j = createJourney(store, () => t++); assert.equal(j.owed(), false, "stamped stays stamped across a reload");
+  j.reset(); assert.equal(j.owed(), false, "an emptied book owes nothing"); 
+});
+test("a book filled before the seal was kept separately has had it", () => {
+  const raw = JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(["bell", "incense", "tea", "sutra", "well", "lamp", "sit"].map((k) => [k, 5])), strikes: 3, verse: null, done: 9, opened: 9, told: true, closed: 9, closedSeason: "summer" });
+  const j = createJourney(memory(raw)); assert.equal(j.done(), true); assert.equal(j.owed(), false, "the old rule showed it at once");
+});

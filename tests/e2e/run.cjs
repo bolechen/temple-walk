@@ -345,11 +345,13 @@ const scenarios = {
       expect(cu.farBell === 1, "the close should end on the far bell answering");
       expect(cu.ending === 1 && mu.started, "the close should have its own music: " + JSON.stringify({ cu, section: mu.section })); }
     const said = (await t.page.evaluate(() => window.__rites().words)).join("|"); expect(said.includes("山门之外") && !/钟敲过|茶吃过|香也上过|还有没做完/.test(said), "the closing words should answer only what was done: " + said);
+    await t.page.keyboard.press("b");   // nothing opens by itself after the close (#147): the book is the visitor's to open
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
     await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
     // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
-    await offered("起身", "while he sits on the summit"); await t.page.click("#act"); await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
+    await offered("起身", "while he sits on the summit"); await t.page.keyboard.press("e");   // (the button is not drawn on the far view, #147: E stands him up all the same)
+    await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
     await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ expect((await word()) !== "静坐", "the summit offered the close a second time");
     // The bell: each press is one stroke, and a press while the log still swings back from the bronze is not one.
     await at("bell"); await offered("撞钟", "before the bell"); await t.page.click("#act");
@@ -381,7 +383,7 @@ const scenarios = {
     await t.until(() => t.page.isVisible("#book"), 60000, "the full book never opened");
     j = await t.journey(); expect(j.done && j.count === 7 && j.book && j.book[0] === 1200, "the book is not complete: " + JSON.stringify(j));
     expect((await t.page.evaluate(() => window.__rites().ended)) === 0, "the close played again for the seventh seal");
-    expect((await t.page.getAttribute("#bookSave", "href")).startsWith("blob:"), "nothing to save"); await t.shot("e2e-book");
+    await t.until(async () => ((await t.page.getAttribute("#bookSave", "href")) || "").startsWith("blob:"), 60000, "nothing to save"); await t.shot("e2e-book");   // (the page opens as bare paper and is written on when drawn)
     await t.page.click("#bookClose"); expect((await word()) !== "上香" || !(await t.page.isVisible("#act")), "the incense should not be offered again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -389,6 +391,115 @@ const scenarios = {
   // whose close the page had noted separately keeps that; one with neither, whatever seals it holds, closes there.
   // The close comes once in each season: sat again in the same season the summit is only a seat; after the season is
   // changed, sitting there plays it again, and a book already full is not given its seal a second time.
+  // The far view at the close of the chapter (#147): nothing opens by itself, the eye stays on the pavilion with one line at
+  // the foot, the book is the visitor's to open (B, or that line), shutting it leaves the far view, and a step brings the eye
+  // home by a swing, never a cut.
+  farview: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+    await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered");
+    await t.page.click("#act");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended");
+    const D = () => t.page.evaluate(() => window.__director()), U = () => t.page.evaluate(() => window.__ui());
+    let d = await D(), u = await U();
+    expect(!u.stack.some((l) => /book/.test(JSON.stringify(l))) && !(await t.page.evaluate(() => document.getElementById("book").open)), "the book opened by itself at the end: " + JSON.stringify(u));
+    expect(d.phase === "hold" && d.id === "ending", "the eye is not held on the far view: " + JSON.stringify(d));
+    await t.until(() => t.page.evaluate(() => document.getElementById("hint").classList.contains("on")), 60000, "no line at the foot of the far view");
+    const line = await t.page.textContent("#hint"); expect(/朱印帐/.test(line), "the line does not offer the book: " + line);
+    // (a line said as he sat is gone after its few seconds, which a fast run has not waited out)
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
+    // Nothing but that line lies over the picture, on three screens; the slips at the edge (留影, 歇脚, the book's seal) stay, at the edge.
+    for (const [w, h] of [[960, 540], [800, 600], [390, 844]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      const over = await t.page.evaluate(() => [...document.querySelectorAll("body *")].filter((el) => {
+        if (el.closest("dialog") || ["CANVAS", "SCRIPT", "STYLE", "HEAD"].includes(el.tagName) || el.closest("#hint, #photoBtn, #menuBtn, #bookBtn")) return false;
+        const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+        if (cs.display === "none" || cs.visibility === "hidden" || r.width < 2 || r.height < 2) return false;
+        for (let a = el; a && a !== document.body; a = a.parentElement) if (+getComputedStyle(a).opacity < 0.05) return false;   // faded with its parent
+        if (el.children.length && ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return false;
+        return !!(el.textContent || "").trim() || el.matches("button,img,svg");
+      }).map((el) => `${el.id || el.className || el.tagName}<${(el.textContent || '').trim().slice(0, 12)}>`));
+      expect(over.length === 0, `${w}x${h}: over the far view lie ${over.join(", ")}`);
+    }
+    // B opens the book; shutting it leaves the far view as it was.
+    await t.page.keyboard.press("b"); await t.until(async () => (await U()).modal, 30000, "B did not open the book");
+    await t.page.click("#bookClose"); await t.until(async () => !(await U()).modal, 20000, "the book would not close");
+    d = await D(); expect(d.phase === "hold" && d.id === "ending", "shutting the book left the far view: " + JSON.stringify(d));
+    // The camera raised on the far view keeps it.
+    await t.page.evaluate(() => window.__photo(true)); await t.frames(3); d = await D(); expect(d.phase === "hold" && d.id === "ending", "the photograph left the far view: " + JSON.stringify(d)); await t.page.evaluate(() => window.__photo(false)); await t.frames(2);
+    // A step brings the eye home by a swing: no cut, and no frame turns the picture further than the swing's own limit.
+    await t.page.keyboard.down("w"); await t.until(async () => (await D()).phase === "out" || (await D()).phase === "idle", 60000, "a step did not send the eye home"); await t.page.keyboard.up("w");
+    await t.until(async () => (await D()).phase === "idle", 60000, "the eye never got home");
+    d = await D(); expect(d.cuts === 0 && d.turnMax <= 3.3, "coming home was not a smooth swing: " + JSON.stringify({ cuts: d.cuts, turnMax: d.turnMax }));
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("hint").classList.contains("on")) && /朱印帐/.test(await t.page.textContent("#hint"))), 30000, "the line about the book stayed after the eye went home");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+
+    // On a phone there is no B: the line at the foot is the way to the book, pressed with a thumb; the stick brings the eye home.
+    {
+      const m = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await m.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await m.until(async () => (await m.page.isVisible("#act")) && (await m.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered on the phone");
+      await m.page.tap("#act");
+      await m.until(async () => (await m.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended on the phone");
+      await m.until(async () => (await m.page.evaluate(() => document.getElementById("hint").classList.contains("on"))), 60000, "no line at the foot of the far view on the phone");
+      const said = await m.page.textContent("#hint"); expect(said.trim() === "点这一行，翻开朱印帐" && !/B/.test(said), "on a touch screen the line should say to press it, not name a key: " + said);
+      await m.until(async () => !(await m.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
+      await m.page.tap("#hint"); await m.until(async () => (await m.page.evaluate(() => window.__ui())).modal, 30000, "touching the line did not open the book");
+      await m.page.tap("#bookClose"); await m.until(async () => !(await m.page.evaluate(() => window.__ui())).modal, 20000, "the book would not close");
+      let d2 = await m.page.evaluate(() => window.__director()); expect(d2.phase === "hold" && d2.id === "ending", "shutting the book left the far view on the phone: " + JSON.stringify(d2));
+      // The stick, pushed with a real touch, brings the eye home.
+      const box = await m.page.evaluate(() => { const r = document.getElementById("stick").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+      const cdp = await m.page.context().newCDPSession(m.page);
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: box[0], y: box[1] }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: box[0], y: box[1] - 40 }] });
+      await m.until(async () => ["out", "idle"].includes((await m.page.evaluate(() => window.__director())).phase), 60000, "the stick did not bring the eye home");
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await m.until(async () => (await m.page.evaluate(() => window.__director())).phase === "idle", 60000, "the eye never got home on the phone");
+      d2 = await m.page.evaluate(() => window.__director()); expect(d2.cuts === 0 && d2.turnMax <= 3.3, "coming home by the stick was not a smooth swing: " + JSON.stringify({ cuts: d2.cuts, turnMax: d2.turnMax }));
+      expect(m.errors.length === 0, m.errors.join("\n")); await m.close();
+    }
+
+    // The music is not cut: nothing in the far view passes the close over, so its phrase ends where it was written to, and the picture is still the far view then.
+    {
+      const k = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
+      await k.page.evaluate(() => window.__music(true));
+      await k.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await k.until(async () => (await k.page.isVisible("#act")) && (await k.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered for the music");
+      await k.page.click("#act");
+      await k.until(async () => (await k.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended for the music");
+      const m0 = await k.page.evaluate(() => window.__music()), c0 = await k.page.evaluate(() => window.__cues());
+      expect(m0.started && c0.ending === 1 && c0.passed === 0, "the close's music did not begin, or was passed over: " + JSON.stringify({ cues: c0, section: m0.section }));
+      // (the audio clock runs on real time, not the observances' clock: its phrase is some forty seconds long)
+      await k.until(async () => { const m = await k.page.evaluate(() => window.__music()); return m.section === "ending" && !m.playing; }, 120000, "the close's music never played out");
+      const m1 = await k.page.evaluate(() => window.__music()), c1 = await k.page.evaluate(() => window.__cues()), d3 = await k.page.evaluate(() => window.__director());
+      expect(m1.cuts === m0.cuts && c1.passed === 0, "the music was cut before it played out: " + JSON.stringify({ cuts: [m0.cuts, m1.cuts], passed: c1.passed }));
+      expect(d3.phase === "hold" && d3.id === "ending", "the picture left the far view while the music played out: " + JSON.stringify(d3));
+      expect(k.errors.length === 0, k.errors.join("\n")); await k.close();
+    }
+
+    // The full book's own seal is shown when the book is opened after the close, once; a page left before that owes it the next time.
+    {
+      const q = "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE;
+      const z = await open(b, base, q);
+      const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"], stamped = () => z.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.journey.v1") || "{}").stamped || null);
+      await z.page.evaluate((ids) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20, opened: 20, told: true, closed: 30, closedSeason: "summer", stamped: null })); }, all);
+      await z.page.reload({ waitUntil: "commit" }); await z.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await z.page.evaluate(() => { void window.__ending(); });
+      await z.until(async () => (await z.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended with a full book");
+      expect(!(await stamped()) && !(await z.page.isVisible("#toast")) && !(await z.page.evaluate(() => document.getElementById("book").open)), "the full book's seal was shown, or the book opened, by itself after the close");
+      // The page is left before the book was opened: the seal is still owed when it is back.
+      await z.page.reload({ waitUntil: "commit" }); await z.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      expect(!(await stamped()), "the seal was lost by leaving the page");
+      await z.page.keyboard.press("b");
+      await z.until(async () => (await z.page.isVisible("#toast")) && (await z.page.textContent("#toastName")).includes("七印圆满"), 60000, "the full book's seal was not shown when the book was first opened");
+      await z.until(() => z.page.isVisible("#book"), 60000, "the book did not open after its seal");
+      expect(!!(await stamped()), "the seal was shown but not kept");
+      await z.page.click("#bookClose"); await z.page.waitForTimeout(1500);
+      await z.page.keyboard.press("b"); await z.until(() => z.page.isVisible("#book"), 30000, "the book did not open the second time");
+      expect(!((await z.page.isVisible("#toast")) && (await z.page.textContent("#toastName")).includes("七印圆满")), "the full book's seal was shown a second time");
+      expect(z.errors.length === 0, z.errors.join("\n")); await z.close();
+    }
+  } },
   // The breath of sitting on the summit (#156): a ring on the ground and a small word at the foot of the picture, and nothing
   // laid over his head or chest, from the sitting's own shot, from behind him and from his own eyes, on four screens.
   breathring: { tier: 2, async run(b, base) {
@@ -442,6 +553,7 @@ const scenarios = {
     await t.page.evaluate(() => window.__mood("winter", "day"));
     await t.until(async () => (await summit()) === "静坐", 30000, "a change of season did not offer the close again");
     await t.page.click("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the close did not play again in winter");
+    await t.page.keyboard.press("b");   // (opened by the visitor, #147)
     await t.until(() => t.page.isVisible("#book"), 60000, "the book did not open after the close");
     const j = await t.journey(); expect(j.closedSeason === "winter", "the season of the close was not kept: " + j.closedSeason);
     expect(!(await t.page.textContent("#toastName")).includes("七印圆满") || !(await t.page.isVisible("#toast")), "the full book's seal was shown again on a replay");
@@ -1581,6 +1693,25 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A deliberate low ledge hop: normal walking stays blocked; Space or the touch button clears it.
+  // The 功德箱 (#202): a free coin in the great hall, and in the web build a sheet with one link to the sponsor page.
+  offering: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE);
+    await t.page.evaluate(() => window.__inside("main")); await t.frames(3);
+    const box = await t.page.evaluate(() => window.__gallery["main-box"]); expect(box && box.item.offering, "the great hall has no offering box");
+    const kept = async () => { const j = await t.journey(); return JSON.stringify({ seals: j.seals, count: j.count, strikes: j.strikes, earned: j.earned }); }, book = await kept();
+    await t.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), box);
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "合掌", 30000, "standing before the box offered no 合掌");
+    await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#offering"), 120000, "the coin was dropped and no sheet followed");
+    const links = await t.page.$$eval("#offering a", (as) => as.map((a) => ({ href: a.href, target: a.target, rel: a.rel, text: a.textContent })));
+    expect(links.length === 1 && links[0].target === "_blank" && /noopener/.test(links[0].rel), "the sheet should hold exactly one link, to a new tab: " + JSON.stringify(links));
+    expect(links[0].href === "https://rushiwowen.co/donate?utm_source=temple-walk&utm_medium=game&utm_campaign=offering-box&utm_content=zh", "the link is not the sponsor page in Chinese: " + links[0].href);
+    expect(links[0].text === "支持如是我闻与本游戏的制作" && !/功德无量|供养|募捐/.test(await t.page.textContent("#offering")), "the sheet's words are not the agreed ones");
+    expect(JSON.stringify(await t.page.evaluate(() => window.__hud())).match(/功德|护持|如是我闻/) === null, "the hint line spoke of the box");
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#offering")), 20000, "Esc did not put the sheet away");
+    expect((await kept()) === book, "a coin changed the book: " + book + " -> " + (await kept()));
+    await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box");
+  } },
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)

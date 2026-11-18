@@ -29,6 +29,8 @@ const SURFACES = [
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],
   ["slip", "(() => { window.__pose(window.__places.sutra.at[0], window.__places.sutra.at[1], 0, 0); window.__rite('sutra'); })()", "window.__take && window.__take()"],
+  // The 功德箱's sheet (#202, web build only): a coin dropped in the great hall, then the paper with its one link.
+  ["offering", "(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); window.__inside('main'); await w(500); const b = window.__gallery['main-box']; window.__pose(b.at[0], b.at[1] + 0.2, 0, 0); for (let i = 0; i < 100 && document.getElementById('act').hidden; i++) await w(100); document.getElementById('act').click(); for (let i = 0; i < 300 && !document.getElementById('offering')?.open; i++) await w(100); })()", "document.getElementById('offeringClose')?.click(); window.__inside(null)"],
   // Sitting on the summit (#156): the small word for the breath at the foot, then the line said after the three breaths; both whole on the screen.
   ["sit", "(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite('sit'); })()", null],
   ["sitsay", "(async () => { window.__riteClock(0); for (let i = 0; i < 80 && !document.getElementById('say').classList.contains('on'); i++) { window.__riteClock(500); await new Promise((r) => setTimeout(r, 120)); } })()", null],

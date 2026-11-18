@@ -288,6 +288,8 @@ export default {
   "走到画框前，可以细看；也可以举头看看殿顶": "Stand before a frame to look closely, or look up at the ceiling",
   "点左上角的小印，翻看朱印帐": "Tap the small seal at top left to open the seal book",
   "{b}或左上角的小印，翻看朱印帐": "{b} or the small seal at top left opens the seal book",
+  "点这一行，翻开朱印帐": "Tap this line to open the seal book",
+  "{b}翻开朱印帐": "{b} open the seal book",
   "时节已开：留影与歇脚里可选": "The seasons are open: choose them in Photo and Rest",
   "时节已开：留影与歇脚里可选　·　{t}时节": "The seasons are open: choose them in Photo and Rest · {t} seasons",
   "{shift}快步　·　{space}跳": "{shift} hurry · {space} jump",
@@ -335,4 +337,9 @@ export default {
   "程序库": "Libraries",
   "three.js、meshoptimizer、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见": "three.js, meshoptimizer, lil-gui and stats.js (MIT) and Basis Universal (Apache-2.0). The full licences:",
   "第三方许可声明": "Third-party notices",
+  // ---- The 功德箱 ----
+  "功德箱": "Offering box",
+  "一枚钱落进箱里，到这里就够了。游戏里的这一枚不是真钱，不记在朱印帐上，也没有任何回报。": "A coin has dropped into the box, and that is enough. The coin in the game is not real money, it is not written in the seal book, and it brings nothing back.",
+  "若你愿意，也可以去如是我闻的护持页，那里说明了款项的用处。": "If you wish, you may visit the support page of Rushi Wowen, where it says what the money is for.",
+  "支持如是我闻与本游戏的制作": "Support Rushi Wowen and the making of this game",
 };
