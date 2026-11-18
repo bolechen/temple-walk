@@ -38,3 +38,7 @@ PR 里有一条机器人评论，每次推送后原地更新，写的总是 PR �
 - Worker 必须先有一个生产版本，预览地址才会路由（否则返回 Cloudflare 错误 1042）。目前的生产版本是一页说明文字，`workers_dev` 已关闭，外部访问不到。不要在 CI 里对这个 Worker 运行 `wrangler deploy`。
 - 仓库 Secret `CLOUDFLARE_PREVIEW_TOKEN`：账户级令牌，权限只有 Workers Scripts Write；Variable `CLOUDFLARE_ACCOUNT_ID`：账户 ID。可以在 Cloudflare 后台换成只作用于 `temple-walk-preview` 的 “Individual Workers Admin” 令牌，用同名 Secret 覆盖即可（OAuth 登录不能通过 API 创建这种单 Worker 令牌）。
 - 手动删除某个预览：`npx wrangler@4.162.0 preview delete --worker-name temple-walk-preview --name pr-<编号> -y`。
+
+## 评论的长度（#187 的取舍）
+
+评论折叠后，**可见的几行**不到 600 字符，但机器人评论的原文仍约 2,400 字符：六个机位和十个直达链接各带一遍完整的固定地址，Markdown 里没有「相对于某地址」的写法，折叠不减原文。订阅了 PR 的对话每次被唤醒读到的是原文，所以折叠省的是人的眼睛，不是对话的 token。真要省 token，只有把链接挪到预览站自己的一页里（评论里只放三个地址和一个入口），但这样手机上要多点一层，#187 不允许，没有做。
