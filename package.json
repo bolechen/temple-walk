@@ -21,7 +21,8 @@
     "setup": "node tools/setup.mjs",
     "postinstall": "node tools/setup.mjs",
     "edges": "node tools/edges.mjs",
-    "nearplane": "node --test tests/slow/*.test.mjs"
+    "nearplane": "node --test tests/slow/*.test.mjs",
+    "app": "node tools/app.mjs"
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {

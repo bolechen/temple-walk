@@ -34,6 +34,7 @@ pnpm install                        # dependencies, then tools/setup.mjs: the Ba
 pnpm dev                            # Vite's dev server on 127.0.0.1:8000 (this machine only)
 pnpm build                          # the site as published → dist/ (git-ignored); `pnpm preview` serves it
 pnpm typecheck                      # tsc with checkJs over all of app/ (yard.js and every module in src/), against three's own types (@types/three)
+pnpm run app                        # the site as a macOS .dmg (Pake, needs `npm i -g pake-cli@3.19.4` and Rust) → tools/out/app/; `node tools/app.mjs --app` for the .app only; macOS only
 ```
 
 **Where things live.** `app/src/` is the code. What belongs to a level sits under `app/levels/<level>/`: for the
