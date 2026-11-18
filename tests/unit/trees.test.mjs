@@ -100,3 +100,31 @@ test("every tree's foot is lit from outside: its normals face away from the trun
   }
   assert.deepEqual(wrong.slice(0, 8), []);
 });
+test("a trunk begins at the top of its foot and shares that ring's corners: nothing of it shows through the foot", () => {
+  const wrong = [];
+  for (const j of everyTree.joints) {
+    const T = j.curve.geo.attributes.position, F = j.foot.attributes.position, top = F.getY(0); let low = Infinity, far = 0;
+    for (let i = 0; i < T.count; i++) low = Math.min(low, T.getY(i));
+    for (let k = 0; k < j.ring; k++) { let near = Infinity; for (let i = 0; i <= j.ring; i++) near = Math.min(near, Math.hypot(T.getX(i) - F.getX(k), T.getY(i) - F.getY(k), T.getZ(i) - F.getZ(k))); far = Math.max(far, near); }
+    // and the trunk's first ring turns the way its second does: corner k of each above the other, not a quarter turn round,
+    // which would twist the tube's first band inside out
+    const centre = (r) => { let cx = 0, cz = 0; for (let k = 0; k < j.ring; k++) { cx += T.getX(r + k); cz += T.getZ(r + k); } return [cx / j.ring, cz / j.ring]; };
+    const c0 = centre(0), c1 = centre(j.ring + 1), ang = (i, c) => Math.atan2(T.getZ(i) - c[1], T.getX(i) - c[0]);
+    let twist = 0; for (let k = 0; k < j.ring; k++) { let d = Math.abs(ang(k, c0) - ang(j.ring + 1 + k, c1)); d = Math.min(d, 2 * Math.PI - d); twist = Math.max(twist, d); }
+    if (twist > Math.PI / j.ring) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: the trunk's first band twists ${(twist * 180 / Math.PI).toFixed(0)} degrees`);
+    if (low < top - 0.001 || far > 0.001) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: trunk reaches ${((top - low) * 100).toFixed(1)} cm into its foot, corners ${(far * 1000).toFixed(1)} mm apart`);
+  }
+  assert.deepEqual(wrong.slice(0, 8), []);
+});
+test("a trunk is drawn facing outward: from outside, a ray meets its near side, not the inside of its far side", () => {
+  const rc = new THREE.Raycaster(), wrong = [];
+  for (const j of everyTree.joints) {
+    const mesh = new THREE.Mesh(j.curve.geo, new THREE.MeshBasicMaterial({ side: THREE.FrontSide }));
+    for (const dy of [1.3, 2.0]) {
+      const P = new THREE.Vector3(); let lo = 0, hi = 1; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; j.curve.getPoint(mid, P); if (P.y < j.y + dy) lo = mid; else hi = mid; } j.curve.getPoint(lo, P);
+      rc.set(P.clone().add(new THREE.Vector3(0, 0, 3)), new THREE.Vector3(0, 0, -1)); const h = rc.intersectObject(mesh)[0];
+      if (!h || h.point.z < P.z) wrong.push(`${j.kind} ${j.h} m at ${j.at.join(", ")}: at ${dy} m the first face met is ${h ? "the inside of the far side" : "none"}`);
+    }
+  }
+  assert.deepEqual(wrong.slice(0, 6), []);
+});
