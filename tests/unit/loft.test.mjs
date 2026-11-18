@@ -24,7 +24,8 @@ function standable() {
 
 test("the pavilion's top storey is registered as a gallery to walk round", () => {
   assert.ok(L, "site.lofts.lingxiao is missing");
-  assert.ok(Math.abs(L.floor - 35.31) < 0.05, `its floor stands at ${L.floor}`);
+  // 35.31 m when every storey was cut at the 0.21 m grade; the second storey at 0.186 (#133) brings it down 0.28 m
+  assert.ok(Math.abs(L.floor - 35.03) < 0.05, `its floor stands at ${L.floor}`);
   assert.equal(L.half.wall, 3.4); assert.ok(LOFT.out >= 1.6 && Math.abs(L.half.edge - (3.4 + LOFT.out)) < 1e-6, `the balcony reaches ${L.half.edge} from the middle, not 3.4 + ${LOFT.out}`);
   assert.ok(Math.abs(L.face - Math.PI) < 1e-6, "he comes out facing south, the way he came");
 });
