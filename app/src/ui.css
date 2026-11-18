@@ -506,7 +506,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
   /* laid across, every row's choices stand on one line again, as the narrow sheet's deliberate second lines are not needed */
   #menu .opts:has([data-follow]), #menu .opts:has([data-lang]), :root:lang(en) #menu .opts, :root:lang(ko) #menu .opts { display: flex; }
   #menu .opts [data-follow] { grid-column: auto; }
-  #menu .opts .chip { padding-left: 8px; padding-right: 8px; }
+  #menu .opts .chip { padding-left: 6px; padding-right: 6px; }
   #menu .set:has([data-lang]), #menu .community-invite, #menu .row, #menu .note { grid-column: 1 / -1; }
   #menu .grp .note { grid-column: auto; }
   #menu .set:has([data-lang]) { border-top: 1px solid var(--ink-4, rgba(60,50,40,.18)); margin-top: 6px; padding-top: 4px; }

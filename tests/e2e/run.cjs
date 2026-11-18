@@ -150,9 +150,10 @@ const scenarios = {
     expect((await t.page.getAttribute("#act", "data-word")) === "观看", "the frame should offer a look"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#slip"), 20000, "the frame showed nothing");
     expect((await t.page.textContent("#slipText")) === "入山帖" && (await t.page.textContent("#slipFrom")).includes("竹林里的泥"), "the first frame in the great hall should hold its leaf of the story"); await t.page.click("#slipTake");
-    // A column of the row before the dais stands at 9.56 m west of the middle, z = 4.35 (framing.js puts them on the hall's own bays).
-    expect(await t.page.evaluate((c) => window.__blocked(c - 9.56, 4.35), cx), "the column this walks into is no longer where the scenario expects it");
-    await go([[-9.56, 4.35]]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - cx + 9.56, s.z - 4.35) > 0.45, "he walked through a column");
+    // The westernmost column of the row before the dais: asked of the page, because the bays have moved it once already (9.56 m, then 10.13 after daa9d27, and this scenario kept the old number for a week).
+    const col = await t.page.evaluate((c) => { const cs = window.__columns("main").filter((k) => Math.abs(k.z - 4.35) < 0.05); return cs.sort((a, b) => a.x - b.x)[0]; }, cx);
+    expect(col && await t.page.evaluate(([x, z]) => window.__blocked(x, z), [col.x, col.z]), "the hall has no column before the dais, or it does not stop him: " + JSON.stringify(col));
+    await t.page.evaluate(([x, z]) => window.__walk([[x, z]]), [col.x, col.z]); await t.frames(20); s = await t.state(); expect(Math.hypot(s.x - col.x, s.z - col.z) > 0.45, "he walked through a column: he stands " + Math.hypot(s.x - col.x, s.z - col.z).toFixed(2) + " m from the centre of the one at " + col.x + ", " + col.z);
     // Incense before the altar, then out by the door into the daylight.
     await go([[0, 4], [0, -1.2]]); await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "上香", 240000, "no way to offer incense");
     await t.page.click("#act"); await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
@@ -814,8 +815,8 @@ const scenarios = {
     await t.page.evaluate(() => { void window.__ending(); });   // it is a promise; do not wait for the whole close here
     await t.until(async () => (await R()).closing === true, 60000, "the close never began");
     await t.until(async () => (await wake()).includes("request:screen"), 30000, "the close did not ask the screen to stay awake");
-    const u0 = (await R()).close.u;
-    await t.page.evaluate(() => window.__setHidden(true)); await t.page.waitForTimeout(700);
+    // The page is hidden and the close's place read in one breath: a round trip between the two (tens of milliseconds, more on a slow machine) is time the close rightly kept.
+    const u0 = await t.page.evaluate(() => { window.__setHidden(true); return window.__rites().close.u; }); await t.page.waitForTimeout(700);
     const u1 = (await R()).close.u;
     expect(u1 - u0 < 0.03, "the close kept time behind a dark screen: " + JSON.stringify([u0, u1]));
     await t.page.evaluate(() => { window.__setHidden(false); document.getElementById("ending").click(); });   // the wake tap, at once
@@ -1255,11 +1256,6 @@ const scenarios = {
       for (let i = 0; i < n; i++) { seq.push(await t.page.evaluate(() => { const a = document.activeElement; return a.closest(".grp-view") ? "L" : a.closest(".grp-ctl") ? "R" : a.closest("#menu") ? "F" : "?"; })); await t.page.keyboard.press("Tab"); }
       expect(/^L+R+F+$/.test(seq.join("")), "Tab should go through the left column, then the right, then the foot: " + seq.join("")); }
     await t.page.setViewportSize({ width: 800, height: 500 }); await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#menu")), 10000, "Esc did not close the menu");
-    // The shortest wide screen, in each language: nothing to scroll (the group's invitation is Chinese only, so Chinese is the tallest).
-    for (const lg of ["ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
-      await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
-      const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
-      expect(m.fits && !m.clipped, `the menu should lie whole at 1280x720 in ${lg}: ` + JSON.stringify(m)); await u.close(); }
     // Kept for next time: a new page finds them, and the look really is the other way up.
     await t.page.goto(base + "?cam=0,30,0,0&view=first&q=low", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3, "the settings were not kept: " + JSON.stringify(st));
@@ -1270,6 +1266,17 @@ const scenarios = {
     const s = await t.state(); expect(s.z > 85 && s.h < -10 && !(await t.page.isVisible("#menu")), "回到起点 should put him back at the foot of the path: " + JSON.stringify([s.x, s.z, s.h]));
     await t.page.evaluate(() => localStorage.removeItem("yunjing.settings.v1"));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The pause menu laid across a wide screen, in every language at three sizes: nothing to scroll and no row wider than its box.
+  // Apart from `menu` so that it can run beside every push: the place is built and not drawn, a minute or two (#177).
+  menufit: { tier: 2, async run(b, base) {
+    // (English's Follow the hour is the longest hour row.)
+    for (const lg of ["zh", "ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+      await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
+      for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
+        const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
+        expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
+      await u.close(); }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
   // the focus goes into the sheet and comes back to what opened it.
@@ -1655,7 +1662,11 @@ const scenarios = {
   for (const n of names) {
     const t0 = Date.now(); let error = null;
     try { await scenarios[n].run(browser, srv.base); } catch (e) { error = String(e.message || e).slice(0, 1500); }
+    // A scenario that threw left the pages it had opened drawing on, and every later scenario of the shard shared the machine with them (#177).
+    for (const c of browser.contexts()) await c.close().catch(() => {});
     const secs = Math.round((Date.now() - t0) / 1000); report.push({ name: n, ok: !error, secs, error });
+    // Written after every scenario: a shard cut off by the job's time limit still leaves what it had finished (#177).
+    fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "e2e-report.json"), JSON.stringify(report, null, 2));
     console.log(`${error ? "FAIL" : "ok  "} ${n.padEnd(8)} ${String(secs).padStart(4)}s${error ? "\n     " + error.split("\n").join("\n     ") : ""}`);
   }
   await browser.close(); srv.close();
