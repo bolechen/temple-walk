@@ -514,6 +514,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 @media (min-width: 1024px) and (min-aspect-ratio: 4/3) {
   #menu .card { width: min(94vw, 960px); grid-template-columns: 1fr 1fr; column-gap: 44px; row-gap: 0; align-content: start; padding: 26px 48px 20px; overflow-y: auto; }
   #menu .grp { display: grid; gap: 4px; align-content: start; }
+  #menu .grp > .grp-name:first-child { margin-top: 0; }   /* the two columns begin level */
   #menu h2 { grid-column: 1 / -1; font-size: 34px; margin: 0 0 8px; }
   #menu .set { min-height: 44px; grid-template-columns: 7.6em 1fr; gap: 8px; }   /* one label width in both columns, so every slider is the same length */
   #menu .opts { gap: 2px 6px; flex-wrap: nowrap; }
