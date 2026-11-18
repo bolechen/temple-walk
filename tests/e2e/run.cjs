@@ -1590,6 +1590,8 @@ const scenarios = {
     // A scenario that threw left the pages it had opened drawing on, and every later scenario of the shard shared the machine with them (#177).
     for (const c of browser.contexts()) await c.close().catch(() => {});
     const secs = Math.round((Date.now() - t0) / 1000); report.push({ name: n, ok: !error, secs, error });
+    // Written after every scenario: a shard cut off by the job's time limit still leaves what it had finished (#177).
+    fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "e2e-report.json"), JSON.stringify(report, null, 2));
     console.log(`${error ? "FAIL" : "ok  "} ${n.padEnd(8)} ${String(secs).padStart(4)}s${error ? "\n     " + error.split("\n").join("\n     ") : ""}`);
   }
   await browser.close(); srv.close();
