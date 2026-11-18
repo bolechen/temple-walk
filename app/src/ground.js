@@ -125,9 +125,9 @@ export function createGround(scene, shade, censer, paving) {
           vec2 fuv=(p-uFallBox.xy)*uFallBox.zw;
           if(fuv.x>0.&&fuv.x<1.&&fuv.y>0.&&fuv.y<1.){
             float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
-            float amt=dot(texture2D(tFallMap,fuv).rgb,uLitterCh)*uLitter*sweep*smoothstep(-.3,.1,dB)*(.45+1.1*smoothstep(1.4,.15,dB))*(.6+.8*fbm2(p*.3+17.));
+            float amt=dot(texture2D(tFallMap,fuv).rgb,uLitterCh)*uLitter*1.5*sweep*smoothstep(-.3,.1,dB)*(.45+1.1*smoothstep(1.4,.15,dB))*(.6+.8*fbm2(p*.3+17.));
             if(amt>.02) for(int L=0;L<2;L++){
-              vec4 ll=litterLayer(p,amt*.55,float(L)*.9+.4);
+              vec4 ll=litterLayer(p,amt*.95,float(L)*.9+.4);
               if(ll.z>.01){ vec3 lc=ll.x<.34?uLitterCol[0]:ll.x<.67?uLitterCol[1]:uLitterCol[2]; lc*=(.55+.35*ll.y)*mix(1.,.7,smoothstep(.3,.58,low)); alb=mix(alb,lc,ll.z*.92); }
             }
           }

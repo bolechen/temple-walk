@@ -1357,7 +1357,9 @@ const scenarios = {
         // and the seal were heard. (Seconds: nothing is drawn, so there are no frames to wait on.)
         const sounds = await t.page.evaluate(() => window.__shots());
         expect(sounds.shutter >= 1 && sounds.stamp >= 1, "the shutter and the seal should sound: " + JSON.stringify(sounds));
-        const f0 = (await t.state()).frames; await t.page.waitForTimeout(1500);
+        const f0 = (await t.state()).frames, drift0 = JSON.stringify(await t.page.evaluate(() => window.__drift(200))); await t.page.waitForTimeout(1500);
+        // The leaves, those in the air and those lying on the ground, stand with it (#219).
+        expect(drift0 === JSON.stringify(await t.page.evaluate(() => window.__drift(200))), "the falling leaves moved while the print was out");
         const held = await t.page.evaluate(() => ({ frames: window.__yard().frames, frozen: document.body.classList.contains("frozen"), still: getComputedStyle(document.getElementById("still")).display }));
         expect(held.frozen && held.still !== "none" && held.frames === f0, "the picture should stand still while the print is out: " + JSON.stringify(held) + " from " + f0);
         await t.page.click("#printBack"); await t.frames(2);
