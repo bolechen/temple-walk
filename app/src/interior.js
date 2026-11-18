@@ -322,7 +322,7 @@ function buildRoom(M, hall, ox, figures) {
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
   // `hang()`: fetch and mount this hall's works, the first time someone comes in.
   const m = timber.members, frame = { ...m, cols: m.cols.map((c) => ({ ...c, x: c.x + ox })), beams: m.beams.map((q) => ({ ...q, x: q.x + ox })), ties: m.ties.map((q) => ({ ...q, x0: q.x0 + ox, x1: q.x1 + ox })), wx: m.wx, ox };
-  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
+  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); return Promise.all(later.splice(0).map((f) => f(get))); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.
@@ -357,5 +357,5 @@ export function buildInteriors(M, halls, renderer) {
     const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places); seats.push(...r.seats);
     const hang = r.hang; r.hang = () => hang(get);
   });
-  return { group, rooms, spots, places, seats, state };
+  return { group, rooms, spots, places, seats, state, ready: figures };
 }

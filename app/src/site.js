@@ -84,7 +84,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {};
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {};
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. A pointed (tent) roof rises half its span.
@@ -111,6 +111,8 @@ export function buildSite(M) {
       frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cai: b.cai, parts: b.parts, corners: b.corners, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
+      // What is seen through its open door from outside: the dark box behind the leaves, and how the building stands (doorway.js).
+      const box = b.group.children.find((o) => o.userData.doorway); if (box) doorways[opts.hall.id] = { mesh: box, group: b.group, Z: b.frontZ, platH: b.platH };
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
       // He is inside as soon as he has stepped between the leaves up to the sill: his robe at the door, not through it.
       halls.push({ ...opts.hall, xs: [...opts.xs], zs: [...opts.zs], door: out(0, Z + DOOR.reach + 0.01), out: out(0, Math.min(Z + 0.66, b.zF - 0.4)), outYaw: Math.atan2(f[0], -f[1]),
@@ -537,7 +539,7 @@ export function buildSite(M) {
   };
   const viewUp = { loft: "lingxiao" };
 
-  return { root, walk, shade, paving, hall, halls, buildings, lofts, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer: new THREE.Vector3(0, 0, 13), sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----

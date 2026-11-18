@@ -243,7 +243,7 @@ export function buildHall(M, opts) {
   if (p.dark) {
     const d = Math.min(2.4, Z - ZB - 0.4);
     const m = new THREE.Mesh(box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), M.interior(p.platH));
-    g.add(m);
+    m.userData.doorway = true; g.add(m);   // a hall that can be entered paints its own room here instead (doorway.js)
     if (p.lamps) for (const sx of [-1, 1]) {
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), M.flame);
       f.position.set(sx * 1.1, p.platH + 1.2, Z - d + 0.1); g.add(f);
