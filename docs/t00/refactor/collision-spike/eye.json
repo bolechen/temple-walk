@@ -1,0 +1,78 @@
+{
+ "step": 0.25,
+ "queries": 300608,
+ "usPerQuery": {
+  "old": 2.26,
+  "new": 4.03
+ },
+ "byHeight": {
+  "1": {
+   "both": 15412,
+   "open": 24430,
+   "oldShut": 2017,
+   "newShut": 1085
+  },
+  "5": {
+   "both": 13346,
+   "open": 25376,
+   "oldShut": 3605,
+   "newShut": 617
+  },
+  "7": {
+   "both": 11313,
+   "open": 24365,
+   "oldShut": 7038,
+   "newShut": 228
+  },
+  "0.4": {
+   "both": 17407,
+   "open": 22952,
+   "oldShut": 1684,
+   "newShut": 901
+  },
+  "1.8": {
+   "both": 12537,
+   "open": 24642,
+   "oldShut": 4732,
+   "newShut": 1033
+  },
+  "2.6": {
+   "both": 12192,
+   "open": 24570,
+   "oldShut": 5077,
+   "newShut": 1105
+  },
+  "3.6": {
+   "both": 11098,
+   "open": 26084,
+   "oldShut": 5133,
+   "newShut": 629
+  }
+ },
+ "oldShutBecause": {
+  "2.6 m: a building's platform or body": 4085,
+  "1.8 m: a building's platform or body": 3686,
+  "7 m: within a building's walls, up to its ridge": 3514,
+  "7 m: among an eave's beams and tiles": 3197,
+  "3.6 m: among an eave's beams and tiles": 2415,
+  "5 m: a wall, 5.5 m over his feet": 1584,
+  "3.6 m: a wall, 5.5 m over his feet": 1070,
+  "5 m: within a building's walls, up to its ridge": 953,
+  "1 m: a building's platform or body": 888,
+  "0.4 m: a building's platform or body": 792,
+  "3.6 m: a building's platform or body": 745,
+  "5 m: among an eave's beams and tiles": 647,
+  "1 m: a wall, 5.5 m over his feet": 603,
+  "1.8 m: a wall, 5.5 m over his feet": 603,
+  "2.6 m: a wall, 5.5 m over his feet": 572,
+  "0.4 m: a wall, 5.5 m over his feet": 551,
+  "1 m: a post": 526,
+  "3.6 m: within a building's walls, up to its ridge": 500,
+  "1.8 m: a post": 443,
+  "5 m: a post": 421,
+  "2.6 m: a post": 420,
+  "3.6 m: a post": 403,
+  "0.4 m: a post": 341,
+  "7 m: a post": 327
+ }
+}
