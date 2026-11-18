@@ -19,6 +19,13 @@ export const KINDS = {
 // The bamboo's own: a few narrow leaves, green going to yellow, that glide down slowly from the grove in every season
 // the sky is not snowing or lit by fireflies. `share` of the cloud are theirs, `part` of those shown where the grove is.
 export const BAMBOO = { col: [[0.42, 0.5, 0.15], [0.62, 0.56, 0.17]], size: 0.11, fall: 0.4, sway: 1.3, op: 0.9, part: 0.35, share: 0.06, near: 1.6 };
+// What lies on the paving, as albedo (the stone is 0.17 to 0.34): fresh and aged for the maple's, fresh and aged for the ginkgo's.
+// Darker and warmer than the falling ones, which are seen against the sky; leaves lying a while go brown. Petals fade to the
+// colour of old paper (the ginkgo is only green in spring, so it shares the petal's).
+export const LITTER = {
+  leaf: [[0.25, 0.085, 0.04], [0.15, 0.09, 0.055], [0.36, 0.27, 0.07], [0.19, 0.14, 0.065]],
+  petal: [[0.5, 0.43, 0.42], [0.27, 0.21, 0.18], [0.5, 0.43, 0.42], [0.27, 0.21, 0.18]],
+};
 // Under a crown the cloud is this much denser than its even share, scaled by the source map. Snow and fireflies take no map.
 export const BOOST = 2.4;
 export const shown = (kind, d) => Math.min(1, KINDS[kind].part * (SOURCES[kind] ? BOOST * d : 1));
@@ -85,7 +92,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
         d=mix(d,length(q*vec2(.85,3.6)),vB);
         float m=mix(smoothstep(.5,.44,d),smoothstep(.5,0.,d),uGlow);
         vec3 hue=vB>.5?(vH<.5?uBCol:uBCol2):vH<.34?uCol:vH<.67?uCol2:uCol3;
-        vec3 col=mix(hue*uLight*(.8+.4*vS)*(1.-.3*smoothstep(.05,0.,abs(q.x))*step(.001,uPoint)),hue*3.,uGlow);
+        vec3 col=mix(hue*uLight*(.8+.4*vS)*(1.-.3*smoothstep(.05,0.,abs(q.x))*step(.001,uPoint))*mix(1.,.5,vRest),hue*3.,uGlow);
         gl_FragColor=vec4(col,m*mix(uOp,${BAMBOO.op.toFixed(2)},vB)*vA);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -102,7 +109,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       u.uFromTrees.value = key ? 1 : 0; u.uCh.value.set(key === "leaf" ? 1 : 0, key === "petal" ? 1 : 0, 0); u.uBam.value = bam;
       u.uLand.value = bambooOn(m.drift) ? 1 : 0;   // snow and fireflies keep the old cloud
       // The paving's leaves: autumn's and spring's, not on the low tier, and in place only where trees stand to drop them.
-      U.uLitter.value = opts.litter && key ? (key === "leaf" ? 1 : 0.7) : 0; U.uLitterCh.value.copy(u.uCh.value); k.col.forEach((c, i) => U.uLitterCol.value[i].fromArray(c));
+      U.uLitter.value = opts.litter && key ? (key === "leaf" ? 1 : 0.7) : 0; U.uLitterCh.value.copy(u.uCh.value); (LITTER[key] || LITTER.leaf).forEach((c, i) => U.uLitterCol.value[i].fromArray(c));
       u.uLight.value.copy(light); pts.visible = k.op > 0 || bam > 0; mat.blending = k.glow ? THREE.AdditiveBlending : THREE.NormalBlending;
     },
     update(t, cam, px) { u.uT.value = t; u.uCam.value.copy(cam); u.uPx.value = px; },

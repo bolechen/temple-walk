@@ -49,7 +49,9 @@ export function bakeFall(trees, areas = [], land = null) {
   const data = new Uint8Array(W * H * 4), ground = land ? new Float32Array(W * H) : null;
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     const x = x0 + (i + 0.5) / PER_M, z = z0 + (j + 0.5) / PER_M, o = (j * W + i) * 4;
-    data[o] = Math.round(255 * fallFrom(trees, "leaf", x, z)); data[o + 1] = Math.round(255 * fallFrom(trees, "petal", x, z)); data[o + 2] = Math.round(255 * bambooFrom(areas, x, z)); data[o + 3] = 255;
+    data[o] = Math.round(255 * fallFrom(trees, "leaf", x, z)); data[o + 1] = Math.round(255 * fallFrom(trees, "petal", x, z)); data[o + 2] = Math.round(255 * bambooFrom(areas, x, z));
+    // The fourth channel says whose leaves they are: 0 maple's, 255 the ginkgo's (what lies on the ground takes the colour of the tree above it).
+    const gk = fallFrom(trees.filter((t) => t[3] === "ginkgo"), "leaf", x, z), mp = fallFrom(trees.filter((t) => t[3] === "maple"), "leaf", x, z); data[o + 3] = Math.round(255 * (gk > 0 || mp > 0 ? gk / (gk + mp) : 0.5));
     if (ground) ground[j * W + i] = land(x, z);
   }
   return { data, ground, W, H, box: [x0, z0, 1 / (W / PER_M), 1 / (H / PER_M)] };
