@@ -107,6 +107,7 @@ const walker = createWalker(site);
 await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
+if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
 site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
 { const p = site.places.incense; if (p) site.views["shot-incense"] = [p.at[0], p.at[1], Math.PI - p.face, 0.05]; }   // its shot is indoors (src/director.js)
 await loading.step(tr("殿堂"));
@@ -804,16 +805,20 @@ window.__doorRect = (id) => {
   const h = site.halls.find((x) => x.id === id), d = site.doorways[id]; if (!h || !d) return null;
   const xs = [...h.xs].sort((a, b) => a - b), mid = Math.floor((xs.length - 1) / 2), y0 = d.platH + 0.4, y1 = d.platH + 2.6, W = canvas.clientWidth, H = canvas.clientHeight;
   camera.updateMatrixWorld(); d.group.updateMatrixWorld();
-  const box = (x0, x1) => { const ps = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => new THREE.Vector3(x, y, d.Z).applyMatrix4(d.group.matrixWorld).project(camera)).map((v) => [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]);
+  const rect = (pts) => { const ps = pts.map(([x, y, z]) => new THREE.Vector3(x, y, z).applyMatrix4(d.group.matrixWorld).project(camera)).map((v) => [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]);
     return [Math.min(...ps.map((q) => q[0])), Math.min(...ps.map((q) => q[1])), Math.max(...ps.map((q) => q[0])), Math.max(...ps.map((q) => q[1]))].map(Math.round); };
-  return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4) };
+  const box = (x0, x1) => rect([[x0, y0, d.Z], [x1, y0, d.Z], [x0, y1, d.Z], [x1, y1, d.Z]]);
+  // `floor`: the platform's paving before the door, out under the sky (the measure of the doorway's brightness by day).
+  const floor = rect([[xs[mid] + 0.4, d.platH, d.Z + 1.6], [xs[mid + 1] - 0.4, d.platH, d.Z + 1.6], [xs[mid] + 0.4, d.platH, d.Z + 2.4], [xs[mid + 1] - 0.4, d.platH, d.Z + 2.4]]);
+  return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4), floor };
 };
 window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => doors.report()) : doors.report());
 afterMood = () => { doors?.retake(); if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }
-  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
+  inside = on; if (rooms) rooms.group.visible = on;   // the rooms under the courts are drawn only from inside one (and into a doorway's cube, doorway.js)
+  walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (COURTS.includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   hideDrift(on);

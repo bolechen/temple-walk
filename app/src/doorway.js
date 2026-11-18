@@ -149,6 +149,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   // material too, on a plain and on an instanced mesh.
   let deepReady = null;
   const prepare = (o) => {
+    if (!renderer.extensions.has("KHR_parallel_shader_compile")) return Promise.resolve();   // compiling would hold the page just as drawing does
     const undress = dress(o), target = renderer.getRenderTarget(), jobs = [];
     try {
       renderer.setRenderTarget(o.col, 0); jobs.push(renderer.compileAsync(o.r.group, o.cam.children[0], scene));
