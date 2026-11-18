@@ -74,27 +74,21 @@ export function manifestProblems(m) {
   return bad;
 }
 
-/** Offline checks over a repository root: waiver names files that stay over 1 MB for now (removed once migrated). */
+/** Offline checks over a repository root: well-formed manifests and no file over 1 MB under an evidence folder. */
 export function checkTree(root = ROOT, files = null) {
   const bad = [];
-  const waiver = new Set(fs.existsSync(path.join(root, "tools/evidence-waiver.txt")) ? fs.readFileSync(path.join(root, "tools/evidence-waiver.txt"), "utf8").split("\n").filter(Boolean) : []);
   const all = files ?? walk(path.join(root, "docs")).map((f) => path.relative(root, f).split(path.sep).join("/"));
-  const inEvidence = all.filter((f) => /^docs\/[^/]+\/evidence\//.test(f) || /\/evidence\//.test(f));
-  const listed = new Set();
+  const inEvidence = all.filter((f) => /\/evidence\//.test(f));
   for (const mf of manifestsUnder(root)) {
     const rel = path.relative(root, mf).split(path.sep).join("/");
     let m;
     try { m = JSON.parse(fs.readFileSync(mf, "utf8")); } catch (e) { bad.push(`${rel}: ${e.message}`); continue; }
     for (const p of manifestProblems(m)) bad.push(`${rel}: ${p}`);
-    for (const f of m.files || []) listed.add(path.posix.join(path.posix.dirname(rel), f.path));
   }
   for (const f of inEvidence) {
-    if (waiver.has(f)) continue;
     const size = fs.statSync(path.join(root, f)).size;
     if (size > LIMIT) bad.push(`${f}: ${size} bytes, over 1 MB — push it with tools/evidence.mjs and keep the manifest`);
   }
-  // A binary left in an evidence folder is allowed (the one collage of up to 1 MB) only if it is small; manifests list the rest.
-  for (const w of waiver) if (!fs.existsSync(path.join(root, w))) bad.push(`tools/evidence-waiver.txt names ${w}, which is gone — remove the line`);
   return bad;
 }
 

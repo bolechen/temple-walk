@@ -24,11 +24,13 @@ const there = (p) => have.has(p) || listed.has(p);
 const readers = tracked.filter((f) => /\.(md|json)$/.test(f) && !f.endsWith("MANIFEST.json") && !/^(tools\/out|node_modules)\//.test(f) || f === "llms.txt");
 
 test("a path written as a name that points under an evidence folder is in the repository or in a manifest", () => {
-  const re = new RegExp(`docs/[A-Za-z0-9_-]+/evidence/[^\\s"'\`)\\]<>,;|*{}]+?\\.(?:${EXT})(?![A-Za-z0-9])`, "g");
+  // A name is made of ASCII path characters; a shorthand such as `CAM-0N.jpg` or `CAM-01..06.jpg` stands for several files and names none.
+  const re = new RegExp(`docs/[A-Za-z0-9_-]+/evidence/(?:[A-Za-z0-9._+-]+/)*[A-Za-z0-9._+-]+?\\.(?:${EXT})(?![A-Za-z0-9])`, "g");
+  const shorthand = /\.\.|-0N\./;
   const missing = [];
   for (const f of readers) {
     const text = fs.readFileSync(path.join(ROOT, f), "utf8");
-    for (const m of text.matchAll(re)) if (!there(m[0])) missing.push(`${f}: ${m[0]}`);
+    for (const m of text.matchAll(re)) if (!shorthand.test(m[0]) && !there(m[0])) missing.push(`${f}: ${m[0]}`);
   }
   assert.deepEqual([...new Set(missing)].slice(0, 30), []);
 });
