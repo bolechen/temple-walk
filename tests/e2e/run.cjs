@@ -567,6 +567,15 @@ const scenarios = {
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
     expect(bad.length === 0, `${bad.length} slips do not lie whole on the screen:\n  ` + bad.join("\n  "));
+    // A phone turned over while the paper is open: the longest line, in Korean, opened upright and then laid on its side, is fitted again.
+    {
+      const t = await open(b, base, "q=low&cam=0,30,0,0&season=summer&time=day&lang=ko" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, locale: "ko-KR" });
+      await t.page.evaluate(() => window.__slip(8)); await t.frames(2);
+      await t.page.setViewportSize({ width: 844, height: 390 }); await t.frames(3);
+      const r = await t.page.evaluate(() => { const W = innerWidth, H = innerHeight, p = document.querySelector("#slip .paper").getBoundingClientRect(), b = document.getElementById("slipTake").getBoundingClientRect(); return { W, H, scrollW: document.documentElement.scrollWidth, paper: [p.left, p.top, p.right, p.bottom].map(Math.round), button: [b.top, b.bottom].map(Math.round) }; });
+      expect(r.scrollW <= r.W && r.paper[0] >= 0 && r.paper[2] <= r.W && r.paper[1] >= 0 && r.paper[3] <= r.H && r.button[1] <= r.H, "the paper opened upright did not lie whole once the phone was turned over: " + JSON.stringify(r));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
   } },
   replay: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&season=summer&time=day" + BARE);
@@ -1718,6 +1727,25 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A deliberate low ledge hop: normal walking stays blocked; Space or the touch button clears it.
+  // The 功德箱 (#202): a free coin in the great hall, and in the web build a sheet with one link to the sponsor page.
+  offering: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE);
+    await t.page.evaluate(() => window.__inside("main")); await t.frames(3);
+    const box = await t.page.evaluate(() => window.__gallery["main-box"]); expect(box && box.item.offering, "the great hall has no offering box");
+    const kept = async () => { const j = await t.journey(); return JSON.stringify({ seals: j.seals, count: j.count, strikes: j.strikes, earned: j.earned }); }, book = await kept();
+    await t.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), box);
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "合掌", 30000, "standing before the box offered no 合掌");
+    await t.page.click("#act");
+    await t.until(() => t.page.isVisible("#offering"), 120000, "the coin was dropped and no sheet followed");
+    const links = await t.page.$$eval("#offering a", (as) => as.map((a) => ({ href: a.href, target: a.target, rel: a.rel, text: a.textContent })));
+    expect(links.length === 1 && links[0].target === "_blank" && /noopener/.test(links[0].rel), "the sheet should hold exactly one link, to a new tab: " + JSON.stringify(links));
+    expect(links[0].href === "https://rushiwowen.co/donate?utm_source=temple-walk&utm_medium=game&utm_campaign=offering-box&utm_content=zh", "the link is not the sponsor page in Chinese: " + links[0].href);
+    expect(links[0].text === "支持如是我闻与本游戏的制作" && !/功德无量|供养|募捐/.test(await t.page.textContent("#offering")), "the sheet's words are not the agreed ones");
+    expect(JSON.stringify(await t.page.evaluate(() => window.__hud())).match(/功德|护持|如是我闻/) === null, "the hint line spoke of the box");
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#offering")), 20000, "Esc did not put the sheet away");
+    expect((await kept()) === book, "a coin changed the book: " + book + " -> " + (await kept()));
+    await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box");
+  } },
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)

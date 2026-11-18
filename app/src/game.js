@@ -7,7 +7,7 @@ import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
 import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
-import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
+import { chime, coin, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
 import { createAwake } from "./awake.js";
@@ -15,6 +15,7 @@ import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
+import { WEB } from "./channel.js";
 import { processedLine } from "./credits.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
@@ -64,6 +65,8 @@ export function createGame(y) {
       }
     }
   }
+  // The paper is fitted again if the screen changes while it is open (a phone turned over); put away, it is not minded.
+  addEventListener("resize", () => { if (ui.isOpen("slip")) fitSlip(); });
   const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); fitSlip(); };
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let sat = 0, ended = 0, went = 0;
@@ -318,7 +321,7 @@ export function createGame(y) {
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
     const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
     if (held || near || look || seatHere || climb || rise) {
-      const w = held || (near ? SEAL[near].act : look ? "观看" : climb || (seatHere ? "坐下" : "起身"));
+      const w = held || (near ? SEAL[near].act : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
@@ -330,10 +333,27 @@ export function createGame(y) {
     if (near) return begin(near);
     if (climb) { const c = climb; climb = null; b0().hidden = true; return c === "登楼" ? y.climb(y.stair().up) : y.descend(); }
     if (!look) { if (seatHere) sitDown(seatHere); else if (y.seated()) y.leave(); return; }
+    if (y.gallery[look].item.offering) return offerCoin(y.gallery[look]);
     const it = y.gallery[look].item; y.stage({ face: y.gallery[look].face, pose: false, lift: 0, leave() {} });
     if (it.work) return showWork(it.work, look);
     const spot = look; holdOut(t(it.title), t(it.text), t("看过了"), () => { y.stage(null); seen.add(spot); });
   });
+
+  // ---- The 功德箱: a coin, in every build; and in the web build only, the sheet that follows it ----
+  // He puts his palms together and lets one coin fall (a made sound; nothing is paid, nothing is written in the book, no
+  // seal, no reward). Only the public web page then opens a sheet of paper with the link to 如是我闻's sponsor page
+  // (src/donate.js, imported here only when `WEB`, so the other builds hold neither the code nor the address).
+  let sheet = null;
+  if (WEB) import("./donate.js").then((d) => { d.mountOffering({ ui, lang, onOpen: () => { track("offering.open"); keepPlace(); } }); sheet = true; });
+  async function offerCoin(spot) {
+    if (rite) return; $("act")?.setAttribute("hidden", "");
+    const mineRite = (rite = /** @type {any} */ ({ id: "offering" })), on = () => rite === mineRite;
+    if (!(await new Promise((r) => y.walkTo([spot.at], r))) || !on()) { if (on()) rite = null; return; }
+    y.stage({ face: spot.face, pose: "pray", lift: 0, act: rites.act, leave: () => { if (on()) end(); } });
+    if (!(await rites.dropCoin(on, spot.slot, () => { coin(); track("offering.coin"); })) || !on()) return;
+    if (WEB && sheet) { await wait(0.5); if (!on()) return; track("offering.sheet"); ui.open("offering", { onClose: () => { if (on()) end(); } }); return; }
+    await wait(0.6); if (on()) end();
+  }
 
   // ---- A work on the wall, read closely: the picture, and beside it what an encyclopedia would say ----
   function showWork(slug, spot) {
