@@ -128,3 +128,22 @@ test("a trunk is drawn facing outward: from outside, a ray meets its near side, 
   }
   assert.deepEqual(wrong.slice(0, 6), []);
 });
+
+// Every tree near enough to walk up to stands in a bed of earth (#199 lost the cedars' when their wood came to be grown
+// by the generator, which never called `root()`): the bed round the trunk, and wide enough that the wood's spread at the
+// paving, roots and flare, comes down into earth and not onto the stone.
+test("every near tree stands in a bed of earth as wide as its wood at the ground", () => {
+  const wrong = [];
+  for (const t of site.trees.filter((s) => !s[5])) {
+    const scene = new THREE.Group(); createTrees(scene, M, [t]);
+    const soil = scene.children.find((o) => o.material === M.earth), bark = scene.children.find((o) => o.material === M.bark);
+    if (!soil) { wrong.push(`the ${t[3]} at ${t[0]}, ${t[2]} has no bed`); continue; }
+    const S = soil.geometry.attributes.position, B = bark.geometry.attributes.position;
+    let cx = 0, cz = 0; for (let i = 0; i < S.count; i++) { cx += S.getX(i); cz += S.getZ(i); } cx /= S.count; cz /= S.count;
+    let inner = Infinity; for (let i = 0; i < S.count; i++) if (Math.abs(S.getY(i) - t[1] - 0.012) < 1e-4) inner = Math.min(inner, Math.hypot(S.getX(i) - t[0], S.getZ(i) - t[2]));
+    let spread = 0; for (let i = 0; i < B.count; i++) { const y = B.getY(i) - t[1]; if (y >= 0 && y < 0.05) spread = Math.max(spread, Math.hypot(B.getX(i) - t[0], B.getZ(i) - t[2])); }
+    if (Math.hypot(cx - t[0], cz - t[2]) > 0.15) wrong.push(`the ${t[3]} at ${t[0]}, ${t[2]}: its bed is centred ${Math.hypot(cx - t[0], cz - t[2]).toFixed(2)} m off`);
+    if (inner < spread) wrong.push(`the ${t[3]} at ${t[0]}, ${t[2]}: its bed reaches ${inner.toFixed(2)} m, its wood ${spread.toFixed(2)} m at the ground`);
+  }
+  assert.deepEqual(wrong, []);
+});

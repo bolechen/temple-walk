@@ -244,6 +244,10 @@ export function createTrees(scene, M, spots, opts = {}) {
       for (const [k, v] of Object.entries({ seed, trunkLength: h, radiusExponent: 2.6, minRadius: 0.012, minLength: 0.4, upPull: 0, gnarl: [0.01, 0.06, 0.1], sectionLength: 1.0, childStart: 0.2, collar: 0.25, ...P })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
       const m = gen.build(), tubes = m.userData.tubes; m.geometry.translate(x, y - 0.2, z); for (const t of tubes) for (const r of t.rings) r.pos.add(V(x, y - 0.2, z));
       wood.push(m.geometry); cedarSkeletons.push({ at: [x, z], h, young, far: !!far0, tubes, geometry: m.geometry });
+      // its bed: as wide against its flare where that meets the paving as the old foot's bed was against its trunk, so the
+      // swelling comes down into earth and not onto the stone (lost with the foot in #199, put back)
+      if (!far0) { const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
+        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth)); }
       for (const t of tubes) {
         if (t.level < 1) continue;
         const from = t.rings[0].pos, to = t.rings[t.rings.length - 1].pos, d = to.clone().sub(from), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
