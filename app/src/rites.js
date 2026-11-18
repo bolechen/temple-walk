@@ -354,13 +354,13 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // once more. The coin is never anywhere but between his fingers until it is let go.
   const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.0024, 16).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xb08a4a, metalness: 0.8, roughness: 0.35 }));
   coin.visible = false; coin.userData.keep = true; coin.userData.part = "coin"; scene.add(coin);
-  const coinState = { passedAt: null, y: null, released: false };
+  const coinState = { passedAt: null, y: null, released: false, began: null };
   const local = (w) => G.worldToLocal(V().copy(w)), world = (l) => at(l.x, l.y, l.z), along = (l) => dir(l.x, l.y, l.z);
   /** @param {() => boolean} on @param {number[]} slot the middle of the slot on the lid's top, in the world @param {(what: string) => void} [cue] */
   async function dropCoin(on, slot, cue = () => {}) {
     const R = act.hands.right, Lh = act.hands.left, S = V().fromArray(slot);
     const gone = () => { coin.visible = false; return false; };
-    coinState.passedAt = null; coinState.released = false; coinState.y = null;
+    coinState.passedAt = null; coinState.released = false; coinState.y = null; coinState.began = riteNow();
     // First the bow, palms together.
     if (!(await play(0.9, (u) => { act.bow = 0.28 * Math.sin(Math.PI * ease(u)); }, on))) return false;
     // The coin shows between the fingertips of the right hand, where the palms meet.
@@ -423,7 +423,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       tea: { held: tea.held, sips: tea.sips, lift: home ? +(cup.position.y - home.y).toFixed(3) : null, tilt: +tea.tilt.toFixed(3) },
       incense: { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) },
       sit: { breaths: sit.breaths, ring: ring.visible, fill: +sit.fill.toFixed(3), radius: +ring.scale.x / RING_PLANE },
-      coin: { visible: coin.visible, y: coinState.y === null ? null : +coinState.y.toFixed(3), released: coinState.released, passedAt: coinState.passedAt },
+      coin: { visible: coin.visible, y: coinState.y === null ? null : +coinState.y.toFixed(3), released: coinState.released, passedAt: coinState.passedAt, began: coinState.began },
       close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
     }),
   };
