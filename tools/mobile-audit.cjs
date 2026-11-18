@@ -9,7 +9,7 @@
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
 const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
-const ONLY = ((ARGS.find((a) => a.startsWith("--only=")) || "").slice(7)).split(",").filter(Boolean);
+const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
 const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
 const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm" };
 const srv = http.createServer((req, res) => {
@@ -31,7 +31,7 @@ const SURFACES = [
   ["slip", "(() => { window.__pose(window.__places.sutra.at[0], window.__places.sutra.at[1], 0, 0); window.__rite('sutra'); })()", "window.__take && window.__take()"],
 ];
 const measure = () => {
-  const W = innerWidth, H = innerHeight, small = [], tiny = [], off = [], seen = new Set();
+  const W = innerWidth, H = innerHeight, small = [], tiny = [], off = [], broken = [], tight = [], seen = new Set();
   const shown = (el) => { const s = getComputedStyle(el), r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && +s.opacity > 0.05 && !el.closest("[hidden]") && (!el.closest("dialog") || el.closest("dialog").open); };
   const top = [...document.querySelectorAll("dialog[open]")].pop();
   for (const el of document.querySelectorAll("button, a[href], input, select, [role=button], summary")) {
@@ -44,6 +44,19 @@ const measure = () => {
     const sr = sheet && sheet.getBoundingClientRect(), onSheet = sheet && sr.top >= -1 && sr.bottom <= H + 1;
     if (r.left < -1 || r.right > W + 1 || (!onSheet && (r.top < -1 || r.bottom > H + 1))) off.push(`${name} "${label}" [${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.right)},${Math.round(r.bottom)}]`);
   }
+  // A label written across two lines (「日本」「語」) is not read as one word: a chip, or anything in the title bar, must set its text on one line,
+  // and what the title says must keep 16 px from either edge.
+  const rowsOf = (el) => { const r = document.createRange(); r.selectNodeContents(el); return new Set([...r.getClientRects()].filter((q) => q.width > 0).map((q) => Math.round(q.top / 4))).size; };
+  for (const el of document.querySelectorAll(".chip, .title-links *, #title .sub, #title .how, #enterBtn, #againBtn")) {
+    if (!shown(el) || (top && !top.contains(el)) || el.children.length || !el.textContent.trim()) continue;
+    if (el.closest("#title") ? rowsOf(el) > 1 && !el.matches("#title .sub, #title .how") : rowsOf(el) > 1) broken.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 14)}" in ${rowsOf(el)} lines`);
+  }
+  if (document.getElementById("title") && shown(document.getElementById("title"))) for (const el of document.querySelectorAll("#title h1, #title .sub, #title .how, #titleSeals, #enterBtn, #againBtn, .title-links .chip")) {
+    if (!shown(el) || !el.textContent.trim()) continue;
+    const r = document.createRange(); r.selectNodeContents(el); const q = r.getBoundingClientRect(); if (q.left < 15.5 || q.right > W - 15.5) tight.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 14)}" [${Math.round(q.left)},${Math.round(q.right)}] of ${W}`);
+  }
+  const chips = [...document.querySelectorAll(".title-links .chip")].filter(shown).map((e) => [e.id || e.dataset.lang, e.getBoundingClientRect()]);
+  for (let i = 0; i < chips.length; i++) for (let j = i + 1; j < chips.length; j++) { const a = chips[i][1], b = chips[j][1]; if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) tight.push(`${chips[i][0]} overlaps ${chips[j][0]}`); }
   // A label read as one thing must not be broken inside itself. The lines it is set on are found from its characters:
   // a character that goes back along the line and down from the one before it begins a new line (in a slip written
   // down the page, back up and across to the next column). A button's word broken anywhere is listed, and so is a short
@@ -71,7 +84,7 @@ const measure = () => {
     while ((m = sep.exec(text))) { check(from, m.index); from = m.index + m[0].length; } check(from, text.length);
   }
   // Two controls on the picture lying on each other: a thumb cannot tell which it presses.
-  const overlap = [], over = [...document.querySelectorAll("#yardView button, #yardView [role=button]")].filter((el) => !top && shown(el) && getComputedStyle(el).pointerEvents !== "none");
+  const overlap = [], over = [...document.querySelectorAll("#yardView button, #yardView [role=button], body > #jumpBtn")].filter((el) => !top && shown(el) && getComputedStyle(el).pointerEvents !== "none");
   for (let i = 0; i < over.length; i++) for (let j = i + 1; j < over.length; j++) {
     const a = over[i], c = over[j]; if (a.contains(c) || c.contains(a)) continue;
     const r = a.getBoundingClientRect(), q = c.getBoundingClientRect(), w = Math.min(r.right, q.right) - Math.max(r.left, q.left), h = Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top);
@@ -82,28 +95,24 @@ const measure = () => {
   // A sheet that scrolls must carry its paper itself (class `scrolls`): paper drawn behind the words is only as tall as
   // the part in sight and is drawn away with them, leaving the rest of the sheet bare.
   const bare = [...document.querySelectorAll(".paper:not(.scrolls)")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY)).map((el) => el.id || el.parentElement.id + " ." + el.className);
-  return { small, tiny, off, bare, wrapped, overlap, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
+  return { small, tiny, off, bare, broken, tight, wrapped, overlap, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
 };
 (async () => {
   await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] }), report = {}; let bad = 0;
-  for (const [shape, vw, vh] of [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640]]) {
+  for (const [shape, vw, vh] of [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]]) {
     const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
     const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
     await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}`, { waitUntil: "commit", timeout: 180000 });
     await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
-    for (const [name, open, close] of SURFACES) {
+    for (const [name, open, close] of SURFACES.filter(([n]) => !ONLY || ONLY.includes(n))) {
       if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
       await p.waitForTimeout(name === "slip" ? 9000 : name === "book" ? 7000 : name === "walk" ? 4000 : 2500);
       // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
       if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => p.waitForTimeout(1200)).catch(() => {});
-      if (ONLY.length && !ONLY.includes(name)) { if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); } continue; }
-      // On the way in the button that hops down from a porch is shown as well, wherever he stands, to see that it keeps off the slips.
-      const drop = name === "walk" && await p.addStyleTag({ content: "#dropBtn[hidden] { display: inline-grid !important; }" });
       const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
-      if (drop) await drop.evaluate((el) => el.remove());
-      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.wrapped.length + m.overlap.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
-      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
+      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
+      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
       if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); }
     }
     if (errs.length) { console.log("page errors:", errs); bad += errs.length; }

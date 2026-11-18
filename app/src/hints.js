@@ -61,6 +61,7 @@ export function createHints({ off = false, ui = null } = {}) {
     if (off) return;
     walked += moved; if (running && moved > 0) ran = true;
     if (now === "walk" && walked > 4) drop("walk");
+    if (coarse && walked > 40) tip("jump", t("右下角的圈是跳　·　台沿前是上台、下台阶"), 6);
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }

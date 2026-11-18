@@ -10,6 +10,7 @@ import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
+import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
 import { track } from "./analytics.js";
@@ -32,6 +33,7 @@ function ensoTexture() {
 
 export function createGame(y) {
   const Q = new URLSearchParams(location.search), places = y.site.places, fast = Q.has("fast") ? 0.12 : 1;
+  const awake = createAwake();   // the screen is asked to stay on while the close is played (src/awake.js)
   // `yunjing.ending.v1` was the page's own note that the close had been seen, before the book kept it (journey.closed).
   const ENDED = "yunjing.ending.v1", seenBefore = (() => { try { return localStorage.getItem(ENDED) === "1"; } catch { return false; } })();
   // The workbench (the dev server and a pull request's preview, as for the debug panel) may open straight onto a moment:
@@ -216,17 +218,22 @@ export function createGame(y) {
     const line = $("endingLine"), CLOSING = closingWords(); let shown = -1; words = CLOSING.map((c) => c[1]);
     // The close has its own music, written to these words: the far bell's line and the title (audio.js, score.js).
     closeMusic({ bell: CLOSING[bellLine][0], title: TITLE_AT });
-    const pass = () => { skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
-    await rites.close(() => on() && !skip, (t) => {
-      let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
-      if (t > TITLE_AT) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
-      else if (k !== shown) {
-        shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
-        // When it is said that a bell answers in the far hills, it is heard (audio.js).
-        if (k >= 0 && k === bellLine) farBell();
-      }
-    });
-    el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true);
+    // A tap wakes a sleeping phone and then reaches the page: that one is not taken for a skip, only a later one is.
+    let back = -Infinity; const seen = () => { if (!document.hidden) back = performance.now(); }; document.addEventListener("visibilitychange", seen);
+    const pass = () => { if (performance.now() - back > 900) skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
+    awake.hold();   // the screen stays on while it is played, where the browser allows (src/awake.js)
+    try {
+      await rites.close(() => on() && !skip, (t) => {
+        let k = -1; for (let i = 0; i < CLOSING.length; i++) if (t >= CLOSING[i][0]) k = i;
+        if (t > TITLE_AT) { line.classList.remove("on"); $("endingTitle").classList.add("on"); }
+        else if (k !== shown) {
+          shown = k; line.classList.remove("on"); setTimeout(() => { line.textContent = CLOSING[k][1]; line.classList.add("on"); }, 500 * fast);
+          // When it is said that a bell answers in the far hills, it is heard (audio.js).
+          if (k >= 0 && k === bellLine) farBell();
+        }
+      });
+    } finally { awake.free(); }
+    el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true); document.removeEventListener("visibilitychange", seen);
     if (skip || !on()) passClose();
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
