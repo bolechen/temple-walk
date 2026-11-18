@@ -1,0 +1,14 @@
+{
+ "three-mesh-bvh": {
+  "rawKB": 66,
+  "gzipKB": 17
+ },
+ "@dimforge/rapier3d-compat": {
+  "rawKB": 4272,
+  "gzipKB": 1607
+ },
+ "recast-navigation": {
+  "rawKB": 795,
+  "gzipKB": 224
+ }
+}

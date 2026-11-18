@@ -36,6 +36,11 @@ export const VERSES = [
 export function pickVerse(seed) { const n = VERSES.length, i = ((Math.floor(seed) % n) + n) % n; return { text: VERSES[i][0], from: VERSES[i][1] }; }
 
 export const KEY = "yunjing.journey.v1";
+// Whether a kept book (its stored text) has ever been filled, read before the walk is built: until then the
+// prologue is walked by day (yard.js), and only after it does the hour follow the visitor's clock.
+export function filledBefore(text) {
+  try { const raw = JSON.parse(text || "null"); return !!raw && raw.v === 1 && (Number(raw.opened) > 0 || Number(raw.done) > 0); } catch { return false; }
+}
 // `opened`: when the four seasons were first opened to the visitor, which is the first time the book was filled. It
 // outlives 重新朝山: a second walk up the mountain may be made in any season. `told`: whether that has been said once.
 // `closed`: when the prologue's close was shown (or passed over) after sitting on the summit. It comes once a walk,

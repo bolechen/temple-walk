@@ -27,6 +27,7 @@ import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
@@ -160,11 +161,16 @@ if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
 await loading.step(tr("行走"));
 // ---- The hour and the season ----------------------------------------------------
 const nowMood = moodNow();
+// The prologue is where a visitor first meets the place, and it is walked by day, whatever the hour at home (the owner,
+// 2026-11-17): until the book has been filled once, the hour is 昼 and does not follow the clock. The season stays the
+// visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
+const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
+const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
 const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
-                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "day" : nowMood.time };
-// The hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's choice lasts this page only
-// and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
-state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam"));
+                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
+// After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
+// choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
+state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -663,6 +669,9 @@ setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if 
 // Esc folds the settings, then puts the print away, then lowers the camera.
 const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
 ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
+// On a touch screen the picture is taken with the round button and drawn nearer with two fingers: the line under the
+// camera's settings says so, rather than speaking of a click and a wheel the hand does not have.
+if (hints.coarse) { const how = document.querySelector("#photoSettings > p"); if (how) how.textContent = tr("画面就是你眼前所见 · 点快门即拍 · 双指远近"); }
 ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () => raise(false) });
 function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
 function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }
@@ -832,6 +841,8 @@ if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
 window.__lofts = site.lofts;
 window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+// For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
+window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // The address of the view he has now, for the console: where he stands and looks, the mood, the hall or balcony he is
 // in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and

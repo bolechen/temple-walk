@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, trees }], seconds: 6 }
+// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, walker, enter, trees }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -80,12 +80,15 @@ function fingerprint(dir) {
   for (const b of spec.bench || []) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
-      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, trees: b.trees }), size, b.scale || 1);
+      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, trees: b.trees }), size, b.scale || 1);
       await page.waitForTimeout(1500);
+      // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
+      if (b.walk) await page.evaluate((pts) => { window.__walkerReset?.(); window.__walk(pts); }, b.walk);
       const a = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now() })); await page.waitForTimeout(secs * 1000);
-      const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height] }));
+      const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height], walker: window.__walker ? window.__walker() : null }));
+      if (z.walker) z.walker.msPerFrame = +(z.walker.ms / Math.max(1, z.f - a.f)).toFixed(4);
       const cost = await page.evaluate(() => (window.__cost ? window.__cost(40) : null));   // drawing alone, without the browser's presenting
-      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier };
+      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, at: [z.y.x, z.y.z] };
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }
     save();
@@ -217,6 +220,14 @@ function fingerprint(dir) {
       t = Date.now(); await page.keyboard.press("e"); await until(async () => !(await ev(() => window.__yard().staged)), 10000, "did not stand"); note("key E (起身): standing", { afterPress: Date.now() - t });
       const v = page.video(); await ctx.close(); if (v) fs.renameSync(await v.path(), path.join(out, "rites.webm"));
     } catch (e) { log.error = String(e.message).slice(0, 300); console.log("rites failed", log.error); }
+    save();
+  }
+  // A script the launcher staged beside this file (spec.script, spec.args): it gets `open` and the output folder, and draws
+  // its own frames (tools/marketing-film.cjs, run by tools/marketing-gpu.sh).
+  if (spec.script) {
+    const a = spec.args || {};
+    try { report.script = { name: spec.script, timeline: await require(path.resolve(__dirname, spec.script)).run({ ...a, open, out: path.join(out, a.out || "film"), log: (...m) => console.log(...m) }) }; }
+    catch (e) { report.script = { name: spec.script, error: String(e.stack || e.message).slice(0, 600) }; console.log("script failed", report.script.error); }
     save();
   }
   // The pictures: a named view, optionally a season and hour and a point of view, drawn large.
