@@ -1,0 +1,4 @@
+
+> temple-walk@0.3.0 typecheck /tmp/claude-0/rev
+> tsc -p tsconfig.json
+
