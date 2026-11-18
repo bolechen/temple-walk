@@ -104,7 +104,7 @@ stands on walkable ground, every mood has every field. The end-to-end scenarios 
 page and fail on any page error, console error, failed request or HTTP error; `tests/e2e/lib.cjs` holds what they share.
 A scenario that asks what the page does and never looks at the picture is opened with `+ BARE` (the place built but not
 drawn: `?off=` hides parts and unbuilds nothing), which runs it about three times faster under software rendering; one
-that looks at the picture (`boot`, `halls`, `snow`, `moods`, `views`, `photo`, `photo-ui`, `menu`, `parts`, `finish`, `rites`, `stairs`, `drop`) draws all of it.
+that looks at the picture (`boot`, `halls`, `snow`, `moods`, `eaves`, `views`, `photo`, `photo-ui`, `menu`, `parts`, `finish`, `rites`, `stairs`, `drop`) draws all of it.
 When you add something a visitor can do, add a scenario (or extend one) that does it; when you add a place, add it to
 `places` in `plan.test.mjs`; when you fix a bug, first make a test fail for it. Wait on frames (`t.frames(n)`), never on
 seconds: software rendering may draw one frame a second or ten.
@@ -467,8 +467,8 @@ The season's name and the next place show when they change and when the visitor 
 at the edge fade while the mouse rests. Add a hint there, not as permanent text in `index.html`. `__hud()` reports it.
 
 **Test hooks.** `yard.js` sets `document.body.dataset.ready = "1"` after three frames and exposes
-`window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe()` (draws a frame and
-returns its mean colour plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
+`window.__yard()` (position, yaw, pitch, height, tier, target, frames, tris, calls), `__probe(points?)` (draws a frame and
+returns its mean colour (and, given `[[x, y], …]`, the colour at each of those points of the page as `at`) plus season, hour, view, photo state (and `frozen`), camera distance, snow, lamp, fov, and `monkBox`: where the novice stands in the picture, or null), `__views`, `__merged`,
 `__walk(points)`, `__pose(x, z, yaw, pitch)`, `__mood(season, time)`, `__view(v)`, `__photo(open, opts)`,
 `__capture()`, `__shots()` (shutters and seals sounded), `__trail()`, `__steps(kind?)`, `__strike(kind)`, `__trees()` (how many cedars were grown and a fingerprint of their wood, which the `treeseed` scenario compares with the same plan grown in Node), `__look(at, to)` (the eye stood anywhere, looking at a point, for picture tools; `__look()` lets it go), `__director()` (the eye during an observance: phase, weight, cuts and swings), `__opening()` (the opening after 入山: phase, how long it waited, skipped, cuts, cues), `__openingAt(secs)`, `__prologue(show?)`, `__poseRite(id)` (him posed for an observance with the eye on its shot), `__listen(bus?)` (one of music, ambience, effects, or all together), `__music(start?)` (zone, section, phrases, duck, levels, players), `__hud()`, `__ui()` (the stack of open layers, whether one is modal, where the focus is), `__tour()`, `__debugURL()`
 (the address of the view he has now, for the console: `?cam=…&view=…&season=…&time=…`, with `in`/`up` and an inert
