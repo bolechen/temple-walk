@@ -64,8 +64,9 @@ test("every asset file under app/ that goes into the site has a row in the regis
 });
 
 test("every file under app/ that the register names is there", () => {
-  // app/vendor/ is copied out of node_modules at install (tools/setup.mjs) and is not in git.
-  const gone = named.filter(({ f }) => f.startsWith("app/") && !f.startsWith("app/vendor/") && !fs.existsSync(path.join(ROOT, f)));
+  // app/vendor/ is copied out of node_modules at install (tools/setup.mjs), and app/shared/walk/ baked at build
+  // (tools/bake-walk.mjs); neither is in git.
+  const gone = named.filter(({ f }) => f.startsWith("app/") && !f.startsWith("app/vendor/") && !f.startsWith("app/shared/walk/") && !fs.existsSync(path.join(ROOT, f)));
   assert.deepEqual(gone, [], `rows naming files that are not under app/:\n  ${gone.map((g) => `${g.id}: ${g.f}`).join("\n  ")}`);
 });
 
