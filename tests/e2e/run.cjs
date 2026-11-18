@@ -432,6 +432,9 @@ const scenarios = {
   // the foot, the book is the visitor's to open (B, or that line), shutting it leaves the far view, and a step brings the eye
   // home by a swing, never a cut.
   farview: { tier: 2, async run(b, base) {
+    // How fast the picture may turn coming home, in degrees a second: the director's own limit (#71, DIRECT.rate.out). A bound
+    // on the turn of one frame would measure the machine: the swing turns at a steady rate, so a frame that took 135 ms turns it 3.75°.
+    const TURN_HOME = 190;
     const t = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
     await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
     await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered");
@@ -467,7 +470,7 @@ const scenarios = {
     // A step brings the eye home by a swing: no cut, and no frame turns the picture further than the swing's own limit.
     await t.page.keyboard.down("w"); await t.until(async () => (await D()).phase === "out" || (await D()).phase === "idle", 60000, "a step did not send the eye home"); await t.page.keyboard.up("w");
     await t.until(async () => (await D()).phase === "idle", 60000, "the eye never got home");
-    d = await D(); expect(d.cuts === 0 && d.turnMax <= 3.3, "coming home was not a smooth swing: " + JSON.stringify({ cuts: d.cuts, turnMax: d.turnMax }));
+    d = await D(); expect(d.cuts === 0 && d.rateMax <= TURN_HOME, "coming home was not a smooth swing: " + JSON.stringify({ cuts: d.cuts, rateMax: d.rateMax, turnMax: d.turnMax, turnDt: d.turnDt }));
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("hint").classList.contains("on")) && /朱印帐/.test(await t.page.textContent("#hint"))), 30000, "the line about the book stayed after the eye went home");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
 
@@ -478,7 +481,8 @@ const scenarios = {
       await m.until(async () => (await m.page.isVisible("#act")) && (await m.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered on the phone");
       await m.page.tap("#act");
       await m.until(async () => (await m.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended on the phone");
-      await m.until(async () => (await m.page.evaluate(() => document.getElementById("hint").classList.contains("on"))), 60000, "no line at the foot of the far view on the phone");
+      // (the first seal's tip, said a few seconds after the toast, may still be on the line: this book holds one seal, so it is not full; the far view's own line takes its place)
+      await m.until(async () => (await m.page.evaluate(() => { const h = document.getElementById("hint"); return h.classList.contains("on") && !/小印/.test(h.textContent); })), 60000, "no line at the foot of the far view on the phone");
       const said = await m.page.textContent("#hint"); expect(said.trim() === "点这一行，翻开朱印帐" && !/B/.test(said), "on a touch screen the line should say to press it, not name a key: " + said);
       await m.until(async () => !(await m.page.evaluate(() => document.getElementById("say").classList.contains("on"))), 30000, "the line said while he sat never went");
       await m.page.tap("#hint"); await m.until(async () => (await m.page.evaluate(() => window.__ui())).modal, 30000, "touching the line did not open the book");
@@ -492,7 +496,7 @@ const scenarios = {
       await m.until(async () => ["out", "idle"].includes((await m.page.evaluate(() => window.__director())).phase), 60000, "the stick did not bring the eye home");
       await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
       await m.until(async () => (await m.page.evaluate(() => window.__director())).phase === "idle", 60000, "the eye never got home on the phone");
-      d2 = await m.page.evaluate(() => window.__director()); expect(d2.cuts === 0 && d2.turnMax <= 3.3, "coming home by the stick was not a smooth swing: " + JSON.stringify({ cuts: d2.cuts, turnMax: d2.turnMax }));
+      d2 = await m.page.evaluate(() => window.__director()); expect(d2.cuts === 0 && d2.rateMax <= TURN_HOME, "coming home by the stick was not a smooth swing: " + JSON.stringify({ cuts: d2.cuts, rateMax: d2.rateMax, turnMax: d2.turnMax, turnDt: d2.turnDt }));
       expect(m.errors.length === 0, m.errors.join("\n")); await m.close();
     }
 
@@ -813,6 +817,10 @@ const scenarios = {
     const act = () => t.page.evaluate(() => { const b = document.getElementById("act"); return b && !b.hidden ? b.dataset.word : null; });
     const at = async (p, d = 0.2) => { const s = await t.state(); return Math.hypot(s.x - p[0], s.z - p[1]) < d; };
     await ready(); await t.page.click("#enterBtn"); await t.page.waitForFunction(() => document.body.classList.contains("entered"));
+    // A first visitor is shown the mountain before the walk is theirs (src/opening.js), and a key pressed meanwhile only passes
+    // over it, so an E at the stair's foot was lost whenever a slow machine was still flying it (#233): hand the walk back first,
+    // as `open()` in lib.cjs does for the scenarios that step in themselves.
+    if (await t.page.evaluate(() => !!window.__opening && window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 }); }
     await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 30000, "could not go into the summit pavilion"); await clear();
     expect((await t.page.evaluate(() => window.__hud())).said.includes("stair"), "going in did not say the stair is there: " + JSON.stringify((await t.page.evaluate(() => window.__hud())).said));
     const foot = (await t.state()).stair; expect(foot, "the summit pavilion's room has no stair");
