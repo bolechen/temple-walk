@@ -361,11 +361,21 @@ export function createTrees(scene, M, spots, opts = {}) {
         const from = t.rings[0].pos, to = t.rings[t.rings.length - 1].pos, d = to.clone().sub(from), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
         // however it hangs, the spray stops short of the ground under it
         const w0 = 0.95 + rnd() * 0.3, l = Math.min(d.length() * 1.12 + 0.3, (from.y - y - 0.45) / Math.max(0.2, Math.cos(droop) + 0.5 * w0 * Math.abs(Math.sin(droop)) * 0)), w = l * w0;
-        if (l < 0.5) continue;
+        if (l < (young ? 0.25 : 0.5)) continue;   // (a young tree's short upper boughs carry their small sprays too: #93)
         q.setFromEuler(e.set(-droop, a, 0, "YXZ"));
         const loc = to.clone().sub(from).applyQuaternion(q.clone().invert()); branches.push({ h, inside: Math.max(0, Math.abs(loc.x) - w / 2, loc.y, -l - loc.y, Math.abs(loc.z) - 0.15) });
         card(cards.cedar, new THREE.PlaneGeometry(w, l).translate(0, -l / 2, 0), from, from.clone().add(V(0, -l * 0.9, 0)), 0.72 + 0.28 * rnd(), 0.4, 0.2);   // (hung from the bough itself, so the bough lies in it)
         if (t.level === 1 && !far0 && rnd() < 0.5) { q.setFromEuler(e.set(0, a + Math.PI / 2, 0)); const hang = from.clone().add(d.clone().multiplyScalar(0.36)), cw = Math.min(l * 0.75, (hang.y - y - 0.45) / 0.9); if (cw > 0.3) card(cards.cedar, new THREE.PlaneGeometry(cw, cw * 0.95).translate(0, -cw * 0.42, 0), hang, from.clone().add(V(0, -1.2, 0)), 0.55 + 0.25 * rnd(), 0.4, 0.2); }
+      }
+      // A young tree is dense from its foot to its point, a narrow cone (#93: its generated boughs thin out up the leader,
+      // where they are short, and the upper half read as bare trunk under a hanging skirt). So up its upper half the leader
+      // is clothed in threes of sprays a sixth of a turn apart (so that two face any eye), every 35 cm, each as wide as the cone is there.
+      if (young && !far0) {
+        const top = y + h - 0.2, foot = y + h * 0.36;
+        for (let yy = y + h * 0.45; yy < top - 0.55; yy += 0.35) {
+          const r = 0.2 * h * Math.min(1, (top - yy) / (top - foot)) * 0.9, l = 0.75, a0 = rnd() * 3.14;
+          for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, a0 + k * 1.047, 0)); const at = V(x, yy + l * 0.45, z); card(cards.cedar, new THREE.PlaneGeometry(2 * r, l).translate(0, -l / 2, 0), at, at.clone().add(V(0, -l, 0)), 0.75 + 0.25 * rnd(), 0.4, 0.2); }
+        }
       }
       const tip = V(x, y + h - 0.2, z); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5 * Math.min(1, h / 18) + 0.4, 2.3 * Math.min(1, h / 18) + 0.5).translate(0, -0.6, 0), tip.clone().add(V(0, 0.9, 0)), tip.clone().add(V(0, -1, 0)), 0.95, 0.4, 0.5); }
     } else if (kind === "ginkgo") {

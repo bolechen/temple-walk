@@ -248,3 +248,37 @@ test("in winter the beds are put away, and come back with the thaw", () => {
   T.setMood({ season: "winter", snow: 1 }); assert.equal(T.beds.visible, false);
   T.setMood({ season: "spring", snow: 0 }); assert.equal(T.beds.visible, true);
 });
+
+// #93, a young cedar clothed to its point (the 3D review of #199). A spray is a card of mostly open leaf, so what makes
+// a crown look full or thin is how many sprays lie behind one another: drawn flat onto two upright planes through the
+// trunk (front and side), the upper half of the crown's outline is covered on average by at least 0.7 as many sprays as
+// the lower half, and nowhere in the upper half is more than 0.5 m of the trunk's own width covered by fewer than two
+// (one open spray does not hide a trunk).
+const CELL = 0.05;
+function layers(c, axis) {   // the cards of one cedar drawn onto the plane across `axis`: how many cover each cell, CELL metres square
+  const scene = new THREE.Group(); createTrees(scene, M, [c]); const cells = new Map();
+  for (const m of scene.children.filter((o) => o.isMesh && o.material.map)) {
+    const P = m.geometry.attributes.position, I = m.geometry.index, n = I ? I.count : P.count;
+    const pt = (i) => { const k = I ? I.getX(i) : i; return [(axis === "x" ? P.getZ(k) - c[2] : P.getX(k) - c[0]) / CELL, (P.getY(k) - c[1]) / CELL]; };
+    for (let t = 0; t < n; t += 3) {
+      const [a, b, d] = [pt(t), pt(t + 1), pt(t + 2)], x0 = Math.floor(Math.min(a[0], b[0], d[0])), x1 = Math.ceil(Math.max(a[0], b[0], d[0])), y0 = Math.floor(Math.min(a[1], b[1], d[1])), y1 = Math.ceil(Math.max(a[1], b[1], d[1]));
+      const side = (p, q, r) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]), area = side(a, b, d); if (Math.abs(area) < 1e-9) continue;
+      for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) { const p = [x + 0.5, y + 0.5], u = side(b, d, p) / area, v = side(d, a, p) / area; if (u >= 0 && v >= 0 && u + v <= 1) cells.set(x + "," + y, (cells.get(x + "," + y) || 0) + 0.5); }   // (two triangles to a card)
+    }
+  }
+  return cells;
+}
+for (const c of inCourt.filter((t) => t[4] < 8)) for (const axis of ["x", "z"]) {
+  test(`the young ${c[4]} m cedar at ${c[0]}, ${c[2]} is clothed to its point, seen along ${axis}`, () => {
+    const cells = layers(c, axis), rows = new Map();
+    for (const [k, n] of cells) { const [x, y] = k.split(",").map(Number); if (!rows.has(y)) rows.set(y, new Map()); rows.get(y).set(x, n); }
+    const ys = [...rows.keys()].sort((a, b) => a - b), low = ys[0], top = ys[ys.length - 1], mid = (low + top) / 2;
+    const depth = (y) => { const r = rows.get(y); if (!r) return 0; const xs = [...r.keys()], w = Math.max(...xs) - Math.min(...xs) + 1; return [...r.values()].reduce((s, v) => s + v, 0) / w; };
+    const mean = (a, b) => { let s = 0, n = 0; for (let y = Math.ceil(a); y <= Math.floor(b); y++) { s += depth(y); n++; } return s / Math.max(1, n); };
+    const upper = mean(mid, top), lower = mean(low, mid);
+    assert.ok(upper >= 0.7 * lower, `the upper half of the crown is covered by ${upper.toFixed(1)} sprays on average, the lower by ${lower.toFixed(1)} (a ratio of ${(upper / lower).toFixed(2)})`);
+    let run = 0, worst = 0; const point = Math.floor((c[4] - 0.2) / CELL);   // (the leader ends at h - 0.2 m: above that the tip's sprays hang over nothing)
+    for (let y = Math.ceil(mid); y <= Math.min(top, point); y++) { const r = rows.get(y) || new Map(); let thin = false; for (let x = -2; x <= 1; x++) if ((r.get(x) || 0) < 2) thin = true; run = thin ? run + 1 : 0; worst = Math.max(worst, run); }
+    assert.ok(worst * CELL <= 0.5, `${(worst * CELL).toFixed(2)} m of trunk shows through fewer than two sprays in the upper half`);
+  });
+}
