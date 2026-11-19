@@ -37,6 +37,8 @@ import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
 import { logSwing, riteNow, pauseRites } from "./src/rites.js";
 import { buildInteriors } from "./src/interior.js";
+import { createDoorways } from "./src/doorway.js";
+import { asset } from "./src/assets.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
 import { createCommunity } from "./src/community.js";
@@ -48,7 +50,6 @@ import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js
 import { planSteps, clearLine } from "./src/route.js";
 import { createGridWalker, gridsByPlace, courtRegion, walkerMode, gridBytes, keepFor, settle as settleAt } from "./src/gridwalker.js";
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
-import { asset } from "./src/assets.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
@@ -133,6 +134,7 @@ const walker = await (async () => {
 await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
+if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
 site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
 for (const [id, p] of [["incense", site.places.incense], ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
@@ -673,6 +675,7 @@ function frame(now) {
   // approach where the eye is under it. A jump does not change which of these he is in.
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
+  if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);
@@ -816,11 +819,36 @@ function lookOut(hall) {
 const hideDrift = (on) => scene.children.forEach((o) => { if (o.userData.part === "drift") o.visible = !on && !OFF.has("drift"); });
 // Lamps lit, the sun put out, no snow on any floor, the picture exposed for a room.
 const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x = 0; hideDrift(true); sky.indoors(); post.setMood({ ...mood, exp: 1.25, sat: 1.04, lift: 0.004, bloom: 0.32, sh: [0.96, 0.98, 1.06], hi: [1.06, 1, 0.92] }); };
+// What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
+// near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true[, id])` takes them
+// all (or the one named) at once, for a picture.
+const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, base: asset("shared/doorways/") }) : null;
+// A tool that draws the doorways in the page (or the bake) sets the hour for each drawing, and the visitor's is put back.
+doors?.moods({ set: (season, time) => setMood(season, time), keep: () => { const { season, time } = state; return () => setMood(season, time); } });   // `keep` remembers the hour before the drawing changes it
+// Where the altar of a hall stands in the picture (x and y from -1 to 1): from inside, the altar itself; from outside,
+// where its doorway shows it. Going in should not move it (the doorway scenario).
+window.__doorAltar = (id) => { const r = rooms?.rooms[id]; if (!r || !doors) return null; const a = r.altar.getWorldPosition(new THREE.Vector3()), p = inside ? a : doors.seenAt(id, a); camera.updateMatrixWorld(); const n = p.clone().project(camera); return { x: n.x, y: n.y, world: p.toArray() }; };
+// Where a hall's open door and the lattice of the bay beside it lie in the picture, in pixels: the brightness of the one
+// against the other (tools/doorway-views.cjs --moods).
+window.__doorRect = (id) => {
+  const h = site.halls.find((x) => x.id === id), d = site.doorways[id]; if (!h || !d) return null;
+  const xs = [...h.xs].sort((a, b) => a - b), mid = Math.floor((xs.length - 1) / 2), y0 = d.platH + 0.4, y1 = d.platH + 2.6, W = canvas.clientWidth, H = canvas.clientHeight;
+  camera.updateMatrixWorld(); d.group.updateMatrixWorld();
+  const rect = (pts) => { const ps = pts.map(([x, y, z]) => new THREE.Vector3(x, y, z).applyMatrix4(d.group.matrixWorld).project(camera)).map((v) => [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]);
+    return [Math.min(...ps.map((q) => q[0])), Math.min(...ps.map((q) => q[1])), Math.max(...ps.map((q) => q[0])), Math.max(...ps.map((q) => q[1]))].map(Math.round); };
+  const box = (x0, x1) => rect([[x0, y0, d.Z], [x1, y0, d.Z], [x0, y1, d.Z], [x1, y1, d.Z]]);
+  // `floor`: the platform's paving before the door, out under the sky (the measure of the doorway's brightness by day).
+  const floor = rect([[xs[mid] + 0.4, d.platH, d.Z + 1.6], [xs[mid + 1] - 0.4, d.platH, d.Z + 1.6], [xs[mid] + 0.4, d.platH, d.Z + 2.4], [xs[mid + 1] - 0.4, d.platH, d.Z + 2.4]]);
+  return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4), floor };
+};
+window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => doors.report()) : doors.report());
+window.__doorBake = (id, q, lossless) => doors?.bakeHall(id, q, lossless);   // tools/bake-doorways.mjs: one hall's three pictures, drawn in this page
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }
-  inside = on; walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
+  inside = on; if (rooms) rooms.group.visible = on;   // the rooms under the courts are drawn only from inside one (and into a doorway's cube, doorway.js)
+  walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (COURTS.includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   hideDrift(on);
@@ -874,7 +902,7 @@ if (upIn && (Q.has("cam") || Q.has("show"))) pitch = pose[3];
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__columns = (id) => (rooms?.rooms?.[id]?.room.frame.cols || []).map((c) => ({ x: c.x, z: c.z }));   // where a hall's free columns stand, for the scenarios that walk into one
-window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out }));
+window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out, outYaw: h.outYaw }));
 window.__lofts = site.lofts;
 window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).

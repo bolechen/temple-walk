@@ -114,9 +114,8 @@ jobs:
         run: pnpm test
       - name: The same unit tests on the walker over the baked floor (#265)
         run: WALKER=court node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
-      - name: Build the site
-        if: steps.changes.outputs.site == 'true'
-        run: pnpm run build
+      # The browser comes before the build: the rooms seen through the doors (#218) are drawn in the built site, in Chromium
+      # with software rendering, for any hall whose fingerprint is not in the cache (tools/bake-doorways.mjs).
       - name: Remember the browser between runs
         if: steps.changes.outputs.site == 'true'
         id: pw
@@ -127,6 +126,20 @@ jobs:
       - name: A browser to drive the page with
         if: steps.changes.outputs.site == 'true'
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        if: steps.changes.outputs.site == 'true'
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        if: steps.changes.outputs.site == 'true'
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-t00-
+      - name: Build the site
+        if: steps.changes.outputs.site == 'true'
+        run: pnpm run build
       - name: End to end, startup and movement
         if: steps.changes.outputs.site == 'true'
         run: node tests/e2e/run.cjs boot

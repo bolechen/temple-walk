@@ -131,7 +131,7 @@ function buildRoom(M, hall, ox, figures) {
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
   let coinBox = null;   // the great hall's 功德箱, registered with the frames below (a spot he stands before and presses E at)
-  const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
+  const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = [], stood = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
   const tz = -K.d / 2 + 5.4, lightAt = [];
 
   if (hall.kind === "buddha" || hall.kind === "figure") {
@@ -330,7 +330,7 @@ function buildRoom(M, hall, ox, figures) {
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
   // `hang()`: fetch and mount this hall's works, the first time someone comes in.
   const m = timber.members, frame = { ...m, cols: m.cols.map((c) => ({ ...c, x: c.x + ox })), beams: m.beams.map((q) => ({ ...q, x: q.x + ox })), ties: m.ties.map((q) => ({ ...q, x0: q.x0 + ox, x1: q.x1 + ox })), wx: m.wx, ox };
-  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
+  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, altar, stand(get) { const now = later.splice(0).map((f) => f(get)); stood.push(...now); return Promise.all(stood); }, hang(get) { hangs.splice(0).forEach((f) => f()); return this.stand(get); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.
@@ -363,7 +363,7 @@ export function buildInteriors(M, halls, renderer) {
   });
   halls.forEach((hall, i) => {
     const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places); seats.push(...r.seats);
-    const hang = r.hang; r.hang = () => hang(get);
+    const hang = r.hang.bind(r), standUp = r.stand.bind(r); r.hang = () => hang(get); r.stand = () => standUp(get);   // `stand`: only the figures, without the works on the walls (doorway.js)
   });
-  return { group, rooms, spots, places, seats, state };
+  return { group, rooms, spots, places, seats, state, ready: figures };
 }

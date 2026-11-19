@@ -8,7 +8,7 @@ on:
   # photograph is changed; it waits for the nightly run or a run asked for by hand.
   push:
     branches: [main]
-    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs"]
+    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs", "tools/bake-doorways.mjs"]
   workflow_dispatch:
     inputs:
       scenarios:
@@ -55,6 +55,16 @@ jobs:
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      # The rooms seen through the doors (#218), drawn when the site is built (tools/site.cjs runs tools/bake-doorways.mjs).
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-t00-
       - name: The stairs, the low drop, and the pause menu whole in every language
         run: node tests/e2e/run.cjs stairs drop menufit
       - name: Keep the report and the screenshots
@@ -125,6 +135,17 @@ jobs:
       - name: A browser to drive the page with
         if: steps.mine.outputs.run == 'true'
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        if: steps.mine.outputs.run == 'true'
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        if: steps.mine.outputs.run == 'true'
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-t00-
       - name: Walk the whole temple
         if: steps.mine.outputs.run == 'true'
         env:

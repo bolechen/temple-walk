@@ -12,9 +12,11 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
+// picture (boot, doorway, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
-const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
+// `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
+// under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
+const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
@@ -235,6 +237,67 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every hall with a door can be gone into, has a room of its own with frames on its walls, and lets him out again where he came in.
+  // Seen from outside, a hall's door shows its own room (doorway.js, #218): nothing is taken when the page opens; the
+  // great hall is taken when he comes near it, and fades in; the altar stands where it stood seen through the door when
+  // he goes in; and every hall can be taken.
+  doorway: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=high&view=third&season=summer&time=day&cam=0,60,3.14,0");
+    await t.frames(4);
+    // Nothing of the doorways is fetched with the page: no picture, and not the code that draws rooms into cubes.
+    const early = await t.page.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name).filter((n) => /shared\/doorways\/|doorway-capture/.test(n)));
+    expect(early.length === 0, "the doorways were fetched with the page: " + early.join(", "));
+    let r = await t.page.evaluate(() => window.__doorways());
+    expect(r && Object.keys(r.halls).length === 8, "every hall that can be entered should have a doorway: " + JSON.stringify(r));
+    expect(Object.values(r.halls).every((h) => !h.taken), "rooms were taken while the page opened, far from any door: " + JSON.stringify(r.halls));
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
+    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 240000, "the great hall's room never came into its doorway");
+    r = await t.page.evaluate(() => window.__doorways()); expect(r.halls.main.taken === 1, "the great hall was taken more than once: " + JSON.stringify(r.halls.main));
+    // Its room came from the baked pictures (tools/bake-doorways.mjs), and nothing was drawn into a cube in the page.
+    expect(r.halls.main.source === "baked", "the great hall's doorway did not come from its baked pictures: " + JSON.stringify(r.halls.main));
+    const drew = await t.page.evaluate(() => performance.getEntriesByType("resource").some((e) => /doorway-capture/.test(e.name)));
+    expect(!drew, "the code that draws rooms into cubes was fetched by a visitor's page");
+    console.log("     the doorways:", JSON.stringify({ main: r.halls.main, mb: r.mb, worstFrameMs: r.worstFrameMs }));
+    await t.shot("e2e-doorway");
+    // At the door, then the first frame inside: the altar keeps its place across the picture, seen with his own eyes. From
+    // behind him the eye also comes 2.5 m nearer on going in (he is set down inside the room, interior.js's `door`), so
+    // there the altar moves somewhat more; that is reported, not held (#218).
+    const across = {};
+    for (const view of ["first", "third"]) {
+      await t.page.evaluate((v) => window.__view(v), view);
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0], h.out[1], inYaw]); await t.frames(3);
+      const out = await t.page.evaluate(() => window.__doorAltar("main"));
+      await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(1);
+      const inn = await t.page.evaluate(() => window.__doorAltar("main"));
+      across[view] = { out: +out.x.toFixed(3), in: +inn.x.toFixed(3), moved: +(Math.abs(out.x - inn.x) / 2).toFixed(3) };
+      await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared");
+    }
+    console.log("     the altar across the door, as a fraction of the picture's width:", JSON.stringify(across));
+    expect(across.first.moved <= 0.05, `the altar jumps across the door: ${JSON.stringify(across.first)} (more than 5% of the width)`);
+    const hour = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
+    r = await t.page.evaluate(() => window.__doorways(true));
+    expect(Object.values(r.halls).every((x) => x.taken >= 1 && x.fade === 1), "not every hall's room could be taken: " + JSON.stringify(r.halls));
+    // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
+    const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
+    expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,
+  // no error, and the great hall still opens.
+  "doorway-none": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third&season=summer&time=day&cam=0,60,3.14,0" + BARE.replace(",doorway", ""), { init: () => {
+      const f = window.fetch; window.fetch = (u, ...a) => (/shared\/doorways\/t00\.json/.test(String(u)) ? Promise.resolve(new Response("{}", { status: 200, headers: { "content-type": "application/json" } })) : f(u, ...a));
+    } });
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
+    await t.until(async () => (await t.page.evaluate(() => window.__doorways())).halls.main.source === "none", 60000, "the doorway never gave up on pictures it does not have");
+    await t.frames(5);
+    const r = await t.page.evaluate(() => window.__doorways());
+    expect(r.halls.main.fade === 0 && !r.halls.main.taken, "a doorway without pictures should keep its dark box: " + JSON.stringify(r.halls.main));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));
