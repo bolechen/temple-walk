@@ -6,7 +6,7 @@ import "./dom-stub.mjs"; import * as THREE from "three";
 import { inflateRawSync } from "node:zlib";
 const { buildSite, createWalker, SITE, LEVELS } = await import("../../app/src/site.js?real");
 const { buildInteriors } = await import("../../app/src/interior.js");
-const { createGridWalker, gridsByPlace, courtRegion, walkerMode, ledgesOf, settle, cropGrid, gridBytes } = await import("../../app/src/gridwalker.js");
+const { createGridWalker, gridsByPlace, courtRegion, walkerMode, ledgesOf, settle, cropGrid, gridBytes, keepFor, keepBox } = await import("../../app/src/gridwalker.js");
 const { decode, cellOf } = await import("../../app/src/walkgrid.js");
 const { stride } = await import("../../app/src/stride.js");
 const { CUSHION, STOOL } = await import("../../app/src/geo.js");
@@ -140,8 +140,13 @@ test("a kept place or a ?cam address that falls in a shut cell moves to the near
   const open = site.halls.find((h) => h.id === "tea").out; assert.deepEqual(settle(walker, open[0], open[1]), { x: open[0], z: open[1] }, "an open spot is kept as it is");
 });
 
-test("the grid kept in the page is the court's: cut from the whole one cell for cell", () => {
+test("the grid kept in the page is the court's: cut from the whole one cell for cell, the same cut while the file is opened", () => {
   const whole = decoded.grids.find((g) => g.kind === "outdoors"), part = cropGrid(whole, region);
+  // The page cuts while it opens the file (walkgrid.js decode's `keep`), never holding the whole outdoor grid.
+  const opened = decode(file.bytes, (b) => inflateRawSync(b), keepFor("court", region)), cut = cropGrid(whole, keepBox(region));
+  assert.equal(opened.grids.length, 1); const o = opened.grids[0];
+  assert.deepEqual([o.x0, o.z0, o.nx, o.nz], [cut.x0, cut.z0, cut.nx, cut.nz]);
+  assert.ok(Buffer.from(o.height.buffer).equals(Buffer.from(cut.height.buffer)) && Buffer.from(o.state).equals(Buffer.from(cut.state)), "cut while opened, cell for cell");
   for (let n = 0; n < 2000; n++) {
     const x = region.x0 + ((n * 7919) % 1000) / 1000 * (region.x1 - region.x0), z = region.z0 + ((n * 104729) % 1000) / 1000 * (region.z1 - region.z0);
     const a = cellOf(whole, x, z), b = cellOf(part, x, z); assert.ok(a >= 0 && b >= 0);

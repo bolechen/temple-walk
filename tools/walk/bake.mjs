@@ -7,7 +7,7 @@
 //     ground (ground.js's paving, a ShaderMaterial, marked). A low thing of its own to walk round, not on, is a "post".
 //     The land (backdrop.js's earth) is never a floor, and nothing under it is: the hillside and the grove outside the
 //     walls are not walked (the written plan has them solid), and the ground plane runs on under them.
-//  2. Floors. A ray straight down each cell's centre meets every face; a face no steeper than 60° (|n.y| ≥ BAKE.SLOPE) with
+//  2. Floors. A ray straight down each cell's centre meets every face; a face no steeper than 15° (|n.y| ≥ BAKE.SLOPE) with
 //     CLEAR of air over it, to the next face above, is a floor that cell offers (a span), unless that next face looks
 //     up and the floor is inside a closed solid (the ground under a terrace's stone: sideways, every way, the first faces
 //     are seen from behind). A cell may offer several: the
@@ -38,15 +38,17 @@ import { NO_FLOOR } from "../../app/src/walkgrid.js";
 
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 14,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 17,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
   LAND: 0.3,       // how far under the land's surface a floor may lie and still be stood on (a tread set into the slope)
-  SLOPE: 0.5,      // the steepest face that is floor: n.y of 60°, as the spike measured (45°, Recast's default, made the rounded
-                   // edge of the summit's mat a ring of no floor; the hillside is the land and is never floor anyway)
+  SLOPE: 0.966,    // the steepest face that is floor: 15° (#265). Stairs are walked as treads, not slopes, as the written plan walks them:
+                   // a stair cheek's sloping top is no floor (he stood on it and his toe went into the slope ahead); the
+                   // spike's 60° had let it be stood on. A thing marked `userData.walk = "floor"` (the summit's mat, rounded rim
+                   // and all) is floor to 60°.
   HEAD: 0.13,      // his reach over the top of his outline (the hat), up to CLEAR
-  LOW: 0.03,       // the least a thing must stand up from his floor, below CLIMB, to be kept his shoe's reach off (a sill is a floor)
+  LOW: 0.015,      // the least a thing must stand up from his floor, below CLIMB, to be kept his shoe's reach off (a cheek stands 2 cm proud of a porch)
   FOOTHOLD: 0.015, // a 15 cm square of floor level within this is somewhere his shoe can stand: the top of a tread, a sill
   SILL: 0.08,      // a step no higher than this (a sill) raises the floor his reach round it to its top, as a sill he stands astride
   OLD_STEP: 0.34,  // the most the written plan's floor may step between two cells he walks across (route.js's ROUTE.step)
@@ -100,7 +102,7 @@ export function gather(roots, box, base = 0) {
     const m = Array.isArray(o.material) ? o.material[0] : o.material;
     if (!o.userData.ground && airy(m)) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-    const name = o.userData.ground ? "paving" : o.userData.land ? "land:" + (m.name || m.type) : (postLike(o, base) ? "post:" : "") + (m.name || m.type);
+    const name = o.userData.ground ? "paving" : o.userData.land ? "land:" + (m.name || m.type) : o.userData.walk === "floor" ? "floor:" + (m.name || m.type) : (postLike(o, base) ? "post:" : "") + (m.name || m.type);
     if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); tb.copy(o.geometry.boundingBox).applyMatrix4(m4); if (tb.intersectsBox(grow)) take(o.geometry, m4.clone(), name); } return; }
     tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if (!tb.intersectsBox(grow)) return;
     take(o.geometry, o.matrixWorld, name);
@@ -177,7 +179,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   const nx = Math.round((box.x1 - box.x0) / step), nz = Math.round((box.z1 - box.z0) / step), N = nx * nz;
   const cx = (i) => box.x0 + (i + 0.5) * step, cz = (j) => box.z0 + (j + 0.5) * step;
   const names = [...S.names, "ledge", "nofloor", "unreached", "door"], LEDGE = S.names.length, NOFLOOR = LEDGE + 1, UNREACHED = LEDGE + 2, DOOR = LEDGE + 3;
-  const isPost = S.names.map((n) => n.startsWith("post:")), isLand = S.names.map((n) => n.startsWith("land:"));
+  const isPost = S.names.map((n) => n.startsWith("post:")), isLand = S.names.map((n) => n.startsWith("land:")), isFloor = S.names.map((n) => n.startsWith("floor:"));
   // 2. The floors each cell offers, highest first.
   const start = new Uint32Array(N + 1), ys = [];
   const ray = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3(0, -1, 0)), far = box.top - box.bottom;
@@ -199,7 +201,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       // (Under a face that looks up, the ray may be inside a closed solid, seeing the inside of its top: the ground under a
       // terrace's stone mass is no floor, however much room the stone leaves over it. Or only under a tile's lip that
       // overhangs a step: asked sideways, below.)
-      if (Math.abs(ny) >= BAKE.SLOPE && above - y >= CLEAR && !(aboveUp && inside(S, h.point.x, y + 0.1, h.point.z))) ys.push(y);
+      if ((Math.abs(ny) >= BAKE.SLOPE || (isFloor[id] && Math.abs(ny) >= 0.5)) && above - y >= CLEAR && !(aboveUp && inside(S, h.point.x, y + 0.1, h.point.z))) ys.push(y);
       aboveUp = Math.abs(above - y) < 0.002 ? aboveUp || ny > 0.2 : ny > 0.2; above = y;   // (faces that meet at one height are one: any of them looking up counts)
     }
   }

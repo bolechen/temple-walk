@@ -55,17 +55,35 @@ export function readHeader(bytes) {
 }
 
 /**
- * The header and each grid with its cells, ready to ask.
+ * The header and each grid with its cells, ready to ask. `keep(g)`, if given, says what of each grid to keep: undefined
+ * for all of it, false for none, or a box { x0, x1, z0, z1 } for only the cells inside it, cut out of the inflated body
+ * row by row, so that the page never holds a second copy of a grid it keeps only a corner of (#265).
  * @param {Uint8Array} bytes @param {(b: Uint8Array) => Uint8Array} inflate
+ * @param {(g: any) => ({ x0: number, x1: number, z0: number, z1: number } | false | undefined)} [keep]
  */
-export function decode(bytes, inflate) {
+export function decode(bytes, inflate, keep) {
   const { header, at } = readHeader(bytes), body = inflate(bytes.subarray(at));
-  let o = 0;
-  const grids = header.grids.map((/** @type {any} */ g) => {
-    const L = layout(g), part = new Uint8Array(L.bytes); part.set(body.subarray(o, o + L.bytes)); o += L.bytes;   // (a copy, so that the heights start on an even byte)
+  let o = 0; const grids = [];
+  for (const g of header.grids) {
+    const L = layout(g), from = o, want = keep ? keep(g) : undefined; o += L.bytes;
+    if (want === false) continue;
+    if (want) {
+      const i0 = Math.max(0, Math.floor((want.x0 - g.x0) / g.step)), j0 = Math.max(0, Math.floor((want.z0 - g.z0) / g.step));
+      const nx = Math.max(0, Math.min(g.nx, Math.ceil((want.x1 - g.x0) / g.step)) - i0), nz = Math.max(0, Math.min(g.nz, Math.ceil((want.z1 - g.z0) / g.step)) - j0);
+      const height = new Int16Array(nx * nz), state = new Uint8Array(nx * nz), hb = new Uint8Array(height.buffer);
+      for (let j = 0; j < nz; j++) {
+        const k = (j + j0) * g.nx + i0;
+        hb.set(body.subarray(from + L.height + k * 2, from + L.height + (k + nx) * 2), j * nx * 2);
+        state.set(body.subarray(from + L.state + k, from + L.state + k + nx), j * nx);
+      }
+      const c = { ...g, x0: g.x0 + i0 * g.step, z0: g.z0 + j0 * g.step, nx, nz, cropped: true };
+      grids.push({ ...c, height, state, old: null, cell: (/** @type {number} */ x, /** @type {number} */ z) => cellOf(c, x, z) });
+      continue;
+    }
+    const part = new Uint8Array(L.bytes); part.set(body.subarray(from, from + L.bytes));   // (a copy, so that the heights start on an even byte)
     const height = new Int16Array(part.buffer, part.byteOffset + L.height, L.n), state = part.subarray(L.state, L.state + L.n), old = part.subarray(L.old, L.bytes);
-    return { ...g, height, state, old, cell: (/** @type {number} */ x, /** @type {number} */ z) => cellOf(g, x, z) };
-  });
+    grids.push({ ...g, height, state, old, cell: (/** @type {number} */ x, /** @type {number} */ z) => cellOf(g, x, z) });
+  }
   return { header, grids };
 }
 

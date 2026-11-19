@@ -170,12 +170,21 @@ export function settle(walker, x, z, max = 0.5, step = 0.025) {
 export function gridsByPlace(decoded, mode, region) {
   const out = { outdoors: null, lofts: /** @type {Record<string, any>} */ ({}), rooms: /** @type {Record<string, any>} */ ({}) };
   for (const g of decoded.grids) {
-    if (g.kind === "outdoors") out.outdoors = mode === "court" && region ? cropGrid(g, { x0: region.x0 - 1, x1: region.x1 + 1, z0: region.z0 - 1, z1: region.z1 + 1 }) : g;
+    if (g.kind === "outdoors") out.outdoors = mode === "court" && region && !g.cropped ? cropGrid(g, keepBox(region)) : g;
     else if (mode === "mesh" && g.kind === "loft") out.lofts[g.id.slice(5)] = g;
     else if (mode === "mesh" && g.kind === "room") out.rooms[g.id.slice(5)] = g;
   }
   return out;
 }
+
+/** The part of the outdoor grid the default page keeps: the court and a metre round it. @param {{ x0: number, x1: number, z0: number, z1: number }} region */
+export const keepBox = (region) => ({ x0: region.x0 - 1, x1: region.x1 + 1, z0: region.z0 - 1, z1: region.z1 + 1 });
+/**
+ * What of each grid in the file the page keeps (walkgrid.js `decode`'s `keep`): in "court" mode the court's corner of the
+ * outdoor grid and nothing else; in "mesh" mode all of it.
+ * @param {"court" | "mesh"} mode @param {any} region
+ */
+export const keepFor = (mode, region) => (/** @type {any} */ g) => (mode === "mesh" ? undefined : g.kind === "outdoors" ? keepBox(region) : false);
 
 /** Bytes the grids hold in memory (heights and states; the old walker's bits are not kept). @param {any} grids */
 export function gridBytes(grids) {

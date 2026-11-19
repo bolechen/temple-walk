@@ -468,7 +468,7 @@ export function buildSite(M) {
   }
   // A straw cushion at the top of the summit pavilion's steps, facing back down the mountain.
   const porchY = TOP.y + 0.9, porchZ = topZ + 7.5 + 0.8;
-  root.add(mesh(cushion().translate(0, porchY, porchZ), M.straw));
+  { const mat = mesh(cushion().translate(0, porchY, porchZ), M.straw); mat.userData.walk = "floor"; root.add(mat); }   // a floor his shoes come down on, rounded rim and all (#265: the baked floor takes a face to 15° unless told)
   // It is where he comes out of the pavilion and where he sits: walked onto, not into. Its top is a floor, its own height.
   walk.decks.push({ x: 0, z: porchZ, r: 0.292, x0: -0.292, x1: 0.292, z0: porchZ - 0.292, z1: porchZ + 0.292, h: porchY + 0.1, floor: "wood" });
   // Whatever can be sat on out of doors: the three stools at the tea table (each turned to the table) and the mat on
