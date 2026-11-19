@@ -18,22 +18,34 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Nothing is published that does not parse, pass its unit tests, build, and come up in a real browser. That is all that
-  # stands between a push and the site: the slower scenarios (the stairs, the low drop) run beside this
-  # in e2e.yml and do not hold the publication up. A push that touches nothing the site is made of (documents,
-  # delivery papers) is checked in half a minute and publishes nothing, because there is nothing new to publish.
-  verify:
+  # Nothing is published that does not parse, pass its unit tests (both walkers), build, and come up in a real browser. Since
+  # #296 those run side by side instead of one after the other (`unit`, `grid`, `site`); `verify` is the one check that says
+  # all of them passed, and `deploy` waits for it. The slower scenarios (the stairs, the low drop) run beside this in
+  # e2e.yml and do not hold the publication up. A push of papers alone is checked in under a minute (DOC_TESTS in
+  # tools/ci/changes.cjs, the offline evidence check) and publishes nothing, because there is nothing new to publish.
+  #
+  # What is the site's, and so what is built and published, is decided here, once, for the jobs below.
+  changes:
     permissions:
       contents: read
       pull-requests: read   # to read the preview comment: what the preview is showing now (tools/ci/changes.cjs)
+      actions: read         # to read which run last deployed (#296)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     outputs:
       site: ${{ steps.changes.outputs.site }}
+      walk: ${{ steps.changes.outputs.walk }}
+      unit: ${{ steps.changes.outputs.unit }}
     steps:
       - uses: actions/checkout@v4
-      # Whether the site must be built, and the floor baked (tools/ci/changes.cjs holds the list of what is the site's). A push
-      # to main is compared with the commit before; a pull request from this repository with the commit whose build its
+        with:
+          sparse-checkout: |
+            tools/ci
+            tools/preview
+          sparse-checkout-cone-mode: false
+      # A push to main is compared with the last commit whose deploy succeeded, not with the commit before: a run that was
+      # cancelled, or replaced in the queue by the next push, leaves nothing deployed, and a papers-only commit after it must not
+      # hide the site change before it (#296). A pull request from this repository is compared with the commit whose build its
       # preview is showing (the comment says which), so a pull request that first changes code and then only papers keeps
       # the code's preview, and one whose build failed or was cancelled is built again by the next push.
       - name: Did this push touch the site
@@ -42,11 +54,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
-          BEFORE: ${{ github.event.before }}
           SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           PR: ${{ github.event.pull_request.number }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: node tools/ci/changes.cjs
+
+  # The plan, the walker, the building generator, the seasons, on the written plan; and the floor he may stand on.
+  unit:
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -55,11 +74,16 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Every script parses, and the typed modules agree with themselves
+        if: needs.changes.outputs.unit == 'true'
         run: pnpm run check && pnpm run typecheck
       # Evidence stays out of git (#223): offline only (the store's reachability must never hold up a merge). The
       # network check is `node tools/evidence.mjs verify --all`, run by hand and in the nightly run.
       - name: Evidence folders hold no file over 1 MB, and their manifests are well-formed
         run: node tools/evidence.mjs check
+      # Papers alone: only the tests that read papers, each under a second. Nothing else of the suite reads them.
+      - name: The tests that read the papers
+        if: needs.changes.outputs.unit != 'true'
+        run: node --test $(node -p 'require("./tools/ci/changes.cjs").DOC_TESTS.join(" ")')
       # The floor he may stand on (#194): baked from the drawn meshes as a build product (not kept in git), named by the
       # fingerprint of what it is baked from and kept in the cache under it, this commit's and the base's alike (the base is
       # main on a pull request, the commit before on a push to main, built from its own code in .main/). No named place may
@@ -68,7 +92,7 @@ jobs:
       # the cache; a bake (about a minute each) only for a fingerprint not baked before, that is after a change to what is
       # drawn or to the plan. Before the unit tests, which read the grid, so that the report is in the summary even when they fail.
       - name: Which floor is to be baked, here and on the base
-        if: steps.changes.outputs.walk == 'true'
+        if: needs.changes.outputs.walk == 'true'
         id: walk
         env:
           BASE_REF: ${{ github.event_name == 'pull_request' && github.base_ref || '' }}
@@ -82,7 +106,7 @@ jobs:
           if [ -n "$base" ]; then git worktree add --detach .main "$base" >/dev/null && if [ -f .main/tools/bake-walk.mjs ]; then basekey=$(cd .main && node tools/bake-walk.mjs --key); fi; fi
           echo "base=$basekey" >> "$GITHUB_OUTPUT"; echo "name=$name" >> "$GITHUB_OUTPUT"
       - name: Remember baked floors between runs
-        if: steps.changes.outputs.walk == 'true'
+        if: needs.changes.outputs.walk == 'true'
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/walk
@@ -93,14 +117,14 @@ jobs:
       # A change that is neither the site's nor the floor's still runs the unit tests, which read the baked floor: take it
       # from the newest cache (the same fingerprint as main's, since nothing it is made of has changed) rather than bake it cold.
       - name: Take the newest baked floor, nothing of it having changed
-        if: steps.changes.outputs.walk != 'true'
+        if: needs.changes.outputs.unit == 'true' && needs.changes.outputs.walk != 'true'
         uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/walk
           key: walk-t00-unchanged-${{ github.run_id }}
           restore-keys: walk-t00-
       - name: The floor he may stand on, and what this change did to it
-        if: steps.changes.outputs.walk == 'true'
+        if: needs.changes.outputs.walk == 'true'
         env:
           WALK_BASE_NAME: ${{ steps.walk.outputs.name }}
           KEY: ${{ steps.walk.outputs.key }}
@@ -111,40 +135,60 @@ jobs:
           find node_modules/.cache/walk -name '*.bin' ! -name "t00-$KEY.bin" ! -name "t00-$BASEKEY.bin" -delete
           node tools/walk-diff.mjs .main/app/shared/walk/t00.bin --png=tools/out/walk-diff
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
+        if: needs.changes.outputs.unit == 'true'
         run: pnpm test
+
+  # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it.
+  grid:
+    needs: changes
+    if: needs.changes.outputs.unit == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
       - name: The same unit tests on the walker over the baked floor (#265)
         run: WALKER=court node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
+
+  # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
+  # preview.
+  site:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
       # The browser comes before the build: the rooms seen through the doors (#218) are drawn in the built site, in Chromium
       # with software rendering, for any hall whose fingerprint is not in the cache (tools/bake-doorways.mjs).
       - name: Remember the browser between runs
-        if: steps.changes.outputs.site == 'true'
         id: pw
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
-        if: steps.changes.outputs.site == 'true'
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
       - name: Which doorways are to be drawn
-        if: steps.changes.outputs.site == 'true'
         id: doorways
         run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
       - name: Remember drawn doorways between runs
-        if: steps.changes.outputs.site == 'true'
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/doorways
           key: doorways-t00-${{ steps.doorways.outputs.key }}
           restore-keys: doorways-t00-
       - name: Build the site
-        if: steps.changes.outputs.site == 'true'
         run: pnpm run build
       - name: End to end, startup and movement
-        if: steps.changes.outputs.site == 'true'
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
-        if: always() && steps.changes.outputs.site == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-quick-${{ github.run_id }}-${{ github.run_attempt }}
@@ -153,7 +197,7 @@ jobs:
           if-no-files-found: ignore
       # The site is what Vite built into dist/, the same files the browser above was just driven through.
       - name: Hand the site over for publication
-        if: github.event_name != 'pull_request' && steps.changes.outputs.site == 'true'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           path: dist
@@ -163,7 +207,7 @@ jobs:
       # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
       # through, handed to the preview job. Pull requests from forks have no access to the Cloudflare token and get none.
       - name: Hand the site over for the pull request's preview
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.changes.outputs.site == 'true'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v4
         with:
           path: dist
@@ -171,10 +215,26 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
+  # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
+  verify:
+    needs: [changes, unit, grid, site]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      site: ${{ needs.changes.outputs.site }}
+    steps:
+      - name: Everything that was asked for passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | node -e 'const n=JSON.parse(require("fs").readFileSync(0,"utf8"));const bad=Object.entries(n).filter(([k,v])=>v.result==="failure"||v.result==="cancelled"||(k==="changes"&&v.result!=="success"));for(const [k,v] of Object.entries(n))console.log(k,v.result);if(bad.length){console.log("not passed:",bad.map(x=>x[0]).join(", "));process.exit(1)}'
+
   preview:
     # Runs after verify whatever it concluded, so a failed check is said on the pull request too; a run cancelled by a
     # newer push says nothing, because the newer run will.
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.verify.result != 'cancelled'
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (needs.verify.result == 'success' || needs.verify.result == 'failure')
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -220,6 +280,8 @@ jobs:
         with:
           script: await require(`${process.env.GITHUB_WORKSPACE}/tools/preview/comment.cjs`)({ github, context, core })
 
+  # Only after `verify`: both sets of unit tests, the build and `boot` have all passed (a skipped or failed job fails the
+  # `success()` every `if` without a status function carries).
   deploy:
     if: github.event_name != 'pull_request' && needs.verify.outputs.site == 'true'
     needs: verify
