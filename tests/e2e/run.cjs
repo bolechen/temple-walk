@@ -1736,6 +1736,37 @@ const scenarios = {
       expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
   } },
+  // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
+  // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
+  // and on a phone all three in the lower half, each a thumb's size. Four languages, five screens.
+  photofit: { tier: 2, async run(b, base) {
+    const screens = [["desk", 1280, 720, false], ["desk", 1920, 1080, false], ["phone", 390, 844, true], ["phone", 844, 390, true], ["phone", 360, 640, true]];
+    for (const lg of ["zh", "ja", "en", "ko"]) for (const [kind, w, h, touch] of screens) {
+      const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: w, height: h }, hasTouch: touch, isMobile: touch });
+      await u.page.evaluate(() => { window.__photo(true); document.body.classList.add("thirds"); }); await u.frames(2);
+      const m = await u.page.evaluate(() => {
+        const box = (el) => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+        const hit = (a, c) => a.l < c.r - 0.5 && c.l < a.r - 0.5 && a.t < c.b - 0.5 && c.t < a.b - 0.5;
+        const f = box(document.getElementById("frame")), L = 22, marks = [];
+        for (const [x, y] of [[f.l, f.t], [f.r - L, f.t], [f.l, f.b - L], [f.r - L, f.b - L]]) marks.push({ l: x, t: y, r: x + L, b: y + L });
+        for (const k of [1, 2]) { const x = f.l + (f.w * k) / 3, y = f.t + (f.h * k) / 3; marks.push({ l: x - 0.5, t: f.t, r: x + 0.5, b: f.b }, { l: f.l, t: y - 0.5, r: f.r, b: y + 0.5 }); }
+        const ids = ["photoSettingsToggle", "shutter", "photoClose"], bs = ids.map((id) => box(document.getElementById(id)));
+        const on = ids.filter((id, i) => marks.some((mk) => hit(bs[i], mk)));
+        const far = Math.max(...[[0, 1], [1, 2], [0, 2]].map(([i, j]) => Math.hypot(bs[i].x - bs[j].x, bs[i].y - bs[j].y)));
+        document.getElementById("photoSettingsToggle").click();
+        const panel = box(document.getElementById("photoSettings")), covers = !document.getElementById("photoSettings").hidden && hit(panel, bs[1]);
+        document.getElementById("photoSettingsToggle").click();
+        return { on, far: Math.round(far), short: Math.min(innerWidth, innerHeight), low: bs.every((c) => c.t >= innerHeight / 2), small: bs.filter((c) => c.w < 43.5 || c.h < 43.5).length, covers, esc: /Esc/.test(document.getElementById("photoClose").textContent) };
+      });
+      const at = `${lg} ${w}x${h}: ` + JSON.stringify(m);
+      expect(!m.on.length, "the camera's controls should lie clear of the finder's corners and thirds, " + at);
+      expect(!m.covers, "the camera's settings, open, should not cover the shutter, " + at);
+      expect(!m.small, "every camera control should be a thumb's size, " + at);
+      if (kind === "desk") { expect(m.far <= m.short / 3, "settings, shutter and close should be a small move apart (a third of the short side), " + at); expect(m.esc, "收起 should say Esc where there is a keyboard, " + at); }
+      else expect(m.low, "on a phone the camera's controls should all be in the lower half, " + at);
+      await u.close();
+    }
+  } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
   // the focus goes into the sheet and comes back to what opened it.
   layers: { tier: 2, async run(b, base) {
