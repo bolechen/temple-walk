@@ -26,7 +26,7 @@ export const MEM = {
   GRIP: [0.5, 0.45], LANE: 0.6, KERB: 2.2, SLIDE: 0.5,
   HEAP: 2, HEAP_GRIP: 0.7, RISE: 0.05, TICK: 0.1,
   KICK: { r: 0.17, push: [0.08, 0.2], heap: 0.2 },
-  LIFT: 0.5, KEEP: 120,
+  LIFT: 0.5, KEEP: 300,
   POOL: 20000,
 };
 // The swept lane down the middle of the courts and its kerbs, as the paving draws them (ground.js: `path`, `kerb`).

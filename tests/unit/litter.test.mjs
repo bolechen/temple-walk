@@ -16,9 +16,9 @@ const site = buildSite(M), walker = createWalker(site), shelter = bakeShelter(si
 // The same cloud every run.
 const seeded = (fn) => { const r = Math.random; let a = 7; Math.random = () => (a = (a * 1664525 + 1013904223) >>> 0) / 4294967296; try { return fn(); } finally { Math.random = r; } };
 const MAPLE = [-9.5, 28];   // the first court's maple
-const cloud = (season = "leaf", count = 1400) => {
+const cloud = (season = "leaf", wind = 0, count = 1400) => {
   const d = seeded(() => createDrift(new THREE.Scene(), count, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter, litter: true, keep: 32 }));
-  d.setMood({ drift: season }, new THREE.Color(1, 1, 1));
+  d.setMood({ drift: season, wind }, new THREE.Color(1, 1, 1));
   return d;
 };
 const eye = new THREE.Vector3(MAPLE[0] + 2, 1.6, MAPLE[1] + 3);
@@ -31,19 +31,25 @@ function run(d, secs, wind = () => [0, 0], t0 = 100, onLand = null) {
   mem.land = land; return t;
 }
 
-test("a leaf that touches the ground is kept there: 200 tracked for a minute, the leaves within 10 cm of where each came down never fewer (no breeze)", () => {
-  const d = cloud(), spots = [];
-  const t1 = run(d, 40, () => [0, 0], 100, (x, z, t) => { if (spots.length < 200 && Math.hypot(x - MAPLE[0], z - MAPLE[1]) < 8) spots.push({ x, z, t, n: null }); });
-  assert.ok(spots.length >= 200, `only ${spots.length} leaves came down under the maple in 40 s`);
-  const mem = d.memory;
-  for (const s of spots) s.n = mem.amountAt(s.x, s.z, 0.1);
-  for (const s of spots) assert.ok(s.n >= 1, "a leaf that came down is not on the ground");
-  // Another minute, checked every second.
-  for (let k = 1; k <= 60; k++) { run(d, 1, () => [0, 0], t1 + k - 1); for (const s of spots) { const n = mem.amountAt(s.x, s.z, 0.1); assert.ok(n >= s.n - 1e-9, `the leaves round ${s.x.toFixed(2)}, ${s.z.toFixed(2)} went from ${s.n} to ${n}`); s.n = n; } }
+test("a leaf that touches the ground is kept there: 200 tracked, the leaves within 10 cm of where each came down never fewer for a minute after (no breeze)", () => {
+  // Still air: only the few that fall without a gust (wind.js, shedAt), so they are gathered over a longer while, each
+  // watched for the minute after it came down.
+  const d = cloud(), mem = d.memory, spots = []; let t = 100;
+  for (let s = 0; s < 210; s++) {
+    t = run(d, 1, () => [0, 0], t, (x, z, at) => { if (spots.length < 200 && Math.hypot(x - MAPLE[0], z - MAPLE[1]) < 8) spots.push({ x, z, t: at, n: null }); });
+    for (const p of spots) {
+      if (t - p.t > 60) continue;
+      const n = mem.amountAt(p.x, p.z, 0.1);
+      if (p.n === null) assert.ok(n >= 1, "a leaf that came down is not on the ground");
+      else assert.ok(n >= p.n - 1e-9, `the leaves round ${p.x.toFixed(2)}, ${p.z.toFixed(2)} went from ${p.n} to ${n}`);
+      p.n = n;
+    }
+  }
+  assert.ok(spots.length >= 200, `only ${spots.length} leaves came down under the maple in 150 s of still air`);
 });
 
 test("standing under the maple the leaves on the ground grow, then hold at what the breeze takes away", () => {
-  const d = cloud(), mem = d.memory, wind = (t) => { const w = windAt(1.05, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; };   // autumn by day (mood.js)
+  const d = cloud("leaf", 1.05), mem = d.memory, wind = (t) => { const w = windAt(1.05, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; };   // autumn by day (mood.js)
   const under = () => { let n = 0; for (let x = -3; x <= 3; x += 0.5) for (let z = -3; z <= 3; z += 0.5) n += mem.amountAt(MAPLE[0] + x, MAPLE[1] + z, 0.25); return n; };
   const at = {}; let t = 100;
   for (const s of [60, 180, 600, 900]) { t = run(d, s - (at.last || 0), wind, t); at[s] = under(); at.last = s; }

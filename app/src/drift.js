@@ -11,6 +11,7 @@ import { SHELTER } from "./shelter.js";
 import { SOURCES, CHANNEL, LAND, NO_GROUND, PER_M, bakeFall, leafAt, leafTimes, spotOf, densityAt, groundAt, fallAt } from "./fall.js";
 import { shelterAt } from "./shelter.js";
 import { createLitter } from "./litter.js";
+import { shedAt, SHED_GLSL } from "./wind.js";
 
 // col: three hues a kind comes in; part: how many of the cloud are shown; near: none closer to the eye than this.
 export const KINDS = {
@@ -50,14 +51,15 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   g.setAttribute("seed", new THREE.BufferAttribute(seed, 4));
   const u = { uT: { value: 0 }, uCam: { value: new THREE.Vector3() }, uCol: { value: new THREE.Color() }, uSize: { value: 0 }, uFall: { value: 0 }, uSway: { value: 0 }, uOp: { value: 0 }, uGlow: { value: 0 }, uPx: { value: 800 }, uLight: { value: new THREE.Color(1, 1, 1) },
     uCol2: { value: new THREE.Color() }, uCol3: { value: new THREE.Color() }, uPart: { value: 1 }, uNear: { value: 1 }, uPoint: { value: 0 },
-    tMap: { value: tMap }, tGround: { value: tGround }, uMapBox: { value: box }, uCh: { value: new THREE.Vector3() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, uLand: { value: 0 },
+    uWS: { value: 0 }, tMap: { value: tMap }, tGround: { value: tGround }, uMapBox: { value: box }, uCh: { value: new THREE.Vector3() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, uLand: { value: 0 },
     uBam: { value: 0 }, uBPart: { value: BAMBOO.part }, uBSize: { value: BAMBOO.size }, uBFall: { value: BAMBOO.fall }, uBSway: { value: BAMBOO.sway }, uBCol: { value: new THREE.Color(...BAMBOO.col[0]) }, uBCol2: { value: new THREE.Color(...BAMBOO.col[1]) },
     tShelter: U.tShelter, uShelter: U.uShelter, uWind: U.uWind, uWindPath: U.uWindPath };
   const mat = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false,
     vertexShader: /* glsl */`
       ${SHELTER}
-      uniform sampler2D tMap, tGround; uniform vec4 uMapBox; uniform vec3 uCh; uniform float uFromTrees, uBoost, uLand, uBam, uBPart, uBSize, uBFall, uBSway;
+      ${SHED_GLSL}
+      uniform sampler2D tMap, tGround; uniform vec4 uMapBox; uniform vec3 uCh; uniform float uWS, uFromTrees, uBoost, uLand, uBam, uBPart, uBSize, uBFall, uBSway;
       attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; uniform vec2 uWind, uWindPath; varying float vA; varying float vS; varying float vH; varying float vB; varying float vTum; varying float vRest;
       void main(){
         vec3 B=vec3(34.,13.,34.), p; float want, life=1., ph=uT, Tf=1e9;
@@ -74,7 +76,8 @@ export function createDrift(scene, count, trees = [], opts = {}) {
           float inb=step(0.,min(muv.x,muv.y))*step(max(muv.x,muv.y),1.)*step(-500.,gr), k=min(ph/Tf,1.);
           p=vec3(b.x+sin(ph*.7+seed.w*40.)*sw*(1.-k), gr+${LAND.LIE.toFixed(2)}+${LAND.HEIGHT.toFixed(1)}*(1.-k), b.y+cos(ph*.53+seed.w*31.)*sw*.7*(1.-k));
           p.xz-=uWind*${LAND.HEIGHT.toFixed(1)}*(1.-k)*.6;   // it comes down on the breeze (wind.js), as the censer's smoke leans, to where it lies
-          want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
+          // A tree lets go of a leaf only as readily as the breeze says when it leaves the branch (wind.js, shedAt): a few in still air, a flurry in a gust.
+          want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees)*mix(1.,shedAt(uWS,cyc*P-off),uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
           life=smoothstep(0.,${LAND.IN.toFixed(1)},ph)*(1.-smoothstep(Tf+Tr,P,ph)); vRest=step(Tf,ph); ph=min(ph,Tf);
         } else {
           p=seed.xyz*B;
@@ -133,7 +136,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       if (ok && L > landed[i]) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]];
         const [x, z] = spotOf(s, L, [34, 13, 34], cam), g = groundAt(map, x, z);
-        const want = shown(curName, densityAt(map, CHANNEL[curName], x, z)) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
+        const want = KINDS[curName].part * BOOST * densityAt(map, CHANNEL[curName], x, z) * shedAt(u.uWS.value, L * sP[i] - sOff[i]) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
         if (g > NO_GROUND / 2 && want > 0.001 && fract(s[0] * 7.31 + s[2] * 3.7) <= want && mem.land(x, z, 1 + Math.floor(fract(s[0] * 91.7 + s[3] * 13.1 + L * 0.618) * 254))) handed++;
       }
       landed[i] = L;
@@ -144,7 +147,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     setMood(m, light) {
       const k = KINDS[m.drift] || KINDS.none, key = SOURCES[m.drift] ? m.drift : null;
       if (m.drift !== curName && mem) { mem.clear(); landed.fill(NaN); lastT = null; }   // a new season's ground starts bare (what it had was another kind)
-      cur = k; curName = m.drift; bam = bambooOn(m.drift) ? BAMBOO.share : 0; U.uLitOn.value = mem && key ? 1 : 0;
+      cur = k; curName = m.drift; bam = bambooOn(m.drift) ? BAMBOO.share : 0; U.uLitOn.value = mem && key ? 1 : 0; u.uWS.value = m.wind ?? 0;
       u.uCol.value.fromArray(k.col[0]); u.uCol2.value.fromArray(k.col[1]); u.uCol3.value.fromArray(k.col[2]); u.uPart.value = k.part; u.uNear.value = k.near; u.uPoint.value = k.point; u.uSize.value = k.size; u.uFall.value = k.fall; u.uSway.value = k.sway; u.uOp.value = k.op; u.uGlow.value = k.glow;
       u.uFromTrees.value = key ? 1 : 0; u.uCh.value.set(key === "leaf" ? 1 : 0, key === "petal" ? 1 : 0, 0); u.uBam.value = bam;
       u.uLand.value = bambooOn(m.drift) ? 1 : 0;   // snow and fireflies keep the old cloud
@@ -189,7 +192,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]], isB = fract13(s) < bam;
         const L = leafAt(map, s, t, isB ? { fall: BAMBOO.fall, sway: BAMBOO.sway, bamboo: true } : cfg(), cam);
         const d = isB ? fallAt(map, "bamboo", opts.shelter, L.bx, L.y, L.bz) : curName in SOURCES ? fallAt(map, curName, opts.shelter, L.bx, L.y, L.bz) : 0;
-        const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d : 1));
+        const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d * shedAt(u.uWS.value, t - L.ph) : 1));
         if (!L.live || !(fract(s[0] * 7.31 + s[2] * 3.7) <= want) || want <= 0.001) continue;
         out.leaves.push({ bamboo: isB, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3), ground: +L.ground.toFixed(3), rest: L.rest, restFor: +L.Tr.toFixed(2), alpha: +L.alpha.toFixed(3), phase: +L.ph.toFixed(3) }); sum += L.x * 3 + L.y * 5 + L.z * 7;
       }
