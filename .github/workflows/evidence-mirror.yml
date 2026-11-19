@@ -45,6 +45,17 @@ jobs:
       - name: Every listed file read back from the public domain (SHA-256)
         run: EVIDENCE_BASE="$PUBLIC" node tools/evidence.mjs verify --all 2>&1 | tail -n 20
         shell: bash {0}
+      - name: Why a public read is refused, if one was (response headers of one .webm and one .jpg, public addresses only)
+        run: |
+          for f in 5d2782b3ae8df484bb855d8475377d20d3fb366a/t00/M4/walkthrough.webm; do
+            for ua in "curl" "Mozilla/5.0"; do
+              echo "== webm, user-agent $ua"; curl -s -o /dev/null -D - -A "$ua" "$PUBLIC$f" | head -15
+            done
+            echo "== webm, range 0-0"; curl -s -o /dev/null -D - -r 0-0 "$PUBLIC$f" | head -15
+          done
+          jpg=$(node -e 'import("./tools/evidence.mjs").then(m=>{const e=m.mirrorEntries().find(x=>x.path.endsWith(".jpg"));console.log(e.key)})')
+          echo "== jpg control"; curl -s -o /dev/null -D - "$PUBLIC$jpg" | head -8
+        shell: bash {0}
       - name: The original still agrees
         run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").origin')" node tools/evidence.mjs verify --all 2>&1 | tail -n 20
         shell: bash {0}
