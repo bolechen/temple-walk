@@ -165,6 +165,8 @@ jobs:
       # Where this build is going (app/src/deploy.js): a pull request's preview, or the canary. Never production: that is
       # built from a version tag by production.yml. Neither carries the visitor counter.
       VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'canary' }}
+      # The pull request's number, for a preview build to say which it is (#310 reads it; empty on the canary).
+      VITE_PR: ${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare

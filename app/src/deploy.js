@@ -19,3 +19,5 @@ export function deployOf(raw) {
 export const DEPLOY = typeof __DEPLOY__ === "undefined" ? "preview" : __DEPLOY__;
 /** The canary Worker's own address (wrangler.canary.jsonc): the debug panel opens there, and only there, never on a test's 127.0.0.1. */
 export const CANARY_HOST = /^temple-walk-canary\./;
+/** Whether this is the public page's build. Written out in full, so that the bundler can fold it. */
+export const PRODUCTION = typeof __DEPLOY__ !== "undefined" && __DEPLOY__ === "production";
