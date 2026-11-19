@@ -138,14 +138,26 @@ export function createGridWalker(old, grids, { mode = "court", region = null, dr
     onGround(/** @type {number} */ x, /** @type {number} */ z) { return cell(x, z) < 0 ? old.onGround(x, z) : !old.room && !old.loft && floorY() - (G.base || 0) < 0.12 && old.onGround(x, z); },
     // What a shoe comes down on, whether this is a stair, and every question the eye asks: still the written plan's.
     floorAt: (/** @type {number} */ x, /** @type {number} */ z) => old.floorAt(x, z),
-    onStairs: (/** @type {number} */ x, /** @type {number} */ z) => old.onStairs(x, z),
+    // On a stair: where the grid answers, where the open floor steps by a tread (0.08 to 0.25 m) within 0.3 m, so that his pace
+    // and gait there (#273) and the eye's slope ask the same floor his feet stand on. (The written stairs' rectangles take
+    // in the landing at their head and stop a cell short of their foot.)
+    onStairs(/** @type {number} */ x, /** @type {number} */ z) {
+      if (cell(x, z) < 0) return old.onStairs(x, z);
+      const g = G, k = K, i = k % g.nx, j = (k - i) / g.nx, h = g.height[k], n = Math.round(0.3 / g.step);
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let d = 1; d <= n; d++) {
+        const ii = i + di * d, jj = j + dj * d; if (ii < 0 || jj < 0 || ii >= g.nx || jj >= g.nz) break;
+        const kk = jj * g.nx + ii, hh = g.height[kk]; if (hh === NO_FLOOR) break; if (g.state[kk]) continue;   // (only a tread he can stand on)
+        const rise = Math.abs(hh - h); if (rise >= 8 && rise <= 25) return true; if (rise > 25) break;
+      }
+      return false;
+    },
     // Where the eye rides: the floor he stands on. Where the grid answers that is the grid's floor, except on a stair, where
     // the written plan's slope (smoother than the treads) is kept while it is within a tread of it. (Asking the written plan
     // alone put the eye under a platform whose sides the grid opens and the plan had solid: the owner, at the great hall's
     // east end, saw from his own eyes the underside of the floor.)
     eyeAt(/** @type {number} */ x, /** @type {number} */ z) {
       if (cell(x, z) < 0) return old.eyeAt(x, z);
-      const h = floorY(), e = old.onStairs(x, z) ? old.eyeAt(x, z) : NaN;
+      const h = floorY(), e = old.eyeAt(x, z);
       return Math.abs(e - h) <= 0.2 ? e : h;
     },
     landAt: (/** @type {number} */ x, /** @type {number} */ z) => old.landAt(x, z),

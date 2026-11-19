@@ -174,3 +174,21 @@ test("wherever he may stand on the grid, the eye rides within a tread of the flo
   assert.ok(n > 10000, `only ${n} open cells looked at`);
   assert.deepEqual(Object.fromEntries(bad), {}, "the eye rides away from the floor");
 });
+
+// Whether he is on a stair (his pace there and his gait, #273, and the eye's slope) is asked of the same floor his feet
+// stand on: nowhere does the grid show a level floor while the walker says stair, nor a tread step while it says level.
+test("on the grid a stair is where the floor steps by a tread: the gait, the pace and the eye ask the floor his feet stand on", () => {
+  const R = walker.region, flat = [], step = [];
+  for (let x = R.x0 + 0.05; x < R.x1; x += 0.1) for (let z = R.z0 + 0.05; z < R.z1; z += 0.1) {
+    if (walker.blocked(x, z) || !walker.answers(x, z)) continue;
+    const h = walker.heightAt(x, z), st = walker.onStairs(x, z); let rise = 0, span = 0;
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      if (!walker.blocked(x + dx * 0.1, z + dz * 0.1)) rise = Math.max(rise, Math.abs(walker.heightAt(x + dx * 0.1, z + dz * 0.1) - h));
+      if (!walker.blocked(x + dx * 0.35, z + dz * 0.35)) span = Math.max(span, Math.abs(walker.heightAt(x + dx * 0.35, z + dz * 0.35) - h));
+    }
+    if (st && span < 0.05) flat.push([+x.toFixed(2), +z.toFixed(2)]);
+    if (!st && rise >= 0.09 && rise <= 0.25) step.push([+x.toFixed(2), +z.toFixed(2)]);
+  }
+  assert.deepEqual(flat.slice(0, 8), [], `${flat.length} places (${JSON.stringify(flat.filter((_, i) => i % 8 === 0).slice(0, 16))}) where the walker says stair and the floor is level`);
+  assert.deepEqual(step.slice(0, 8), [], `${step.length} places where the floor steps by a tread and the walker says level`);
+});
