@@ -111,3 +111,13 @@ test("nothing he wears is black: the faces the completion made under the robe ar
     assert.ok(dark / uv.count < 0.002, `${part}: ${dark} of ${uv.count} vertices sit on near-black texture`);
   }
 });
+
+test("no triangle of the trousers is half on the plain colour and half on the texture (#246: red and cream zigzags)", { skip }, () => {
+  // The faces the completion made all point at one spot of the atlas, the plain colour: the most common coordinate.
+  const g = body.geometries.legs, uv = g.attributes.uv, idx = g.index, count = new Map(), key = (i) => `${uv.getX(i).toFixed(6)},${uv.getY(i).toFixed(6)}`;
+  for (let i = 0; i < uv.count; i++) count.set(key(i), (count.get(key(i)) || 0) + 1);
+  const plain = [...count].sort((a, b) => b[1] - a[1])[0][0]; let mixed = 0;
+  for (let t = 0; t < idx.count; t += 3) { const n = [0, 1, 2].filter((k) => key(idx.getX(t + k)) === plain).length; if (n === 1 || n === 2) mixed++; }
+  assert.ok(count.get(plain) > 100, `${count.get(plain)} corners on the plain colour`);
+  assert.equal(mixed, 0, `${mixed} triangles stretch from the plain colour across the atlas`);
+});
