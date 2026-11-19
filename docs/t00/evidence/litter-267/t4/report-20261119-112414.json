@@ -1,0 +1,331 @@
+{
+  "started": "2026-11-19T11:27:24.533Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "e77ddde403d73a93470786e4d69caadbab6ec325",
+    "entry": "assets/index-D-mqOMZw.js",
+    "files": 142,
+    "sha256": "142cee4d6c90feb0ec7cc8a93b7259c3172306108c2d7026bcdb66d08626b87f"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "script": {
+    "name": "litter-film-job.cjs",
+    "timeline": [
+      {
+        "t": 90,
+        "kept": 1067,
+        "landed": 1067
+      },
+      {
+        "t": 91,
+        "kept": 1071,
+        "landed": 1071
+      },
+      {
+        "t": 92,
+        "kept": 1073,
+        "landed": 1073
+      },
+      {
+        "t": 93,
+        "kept": 1075,
+        "landed": 1075
+      },
+      {
+        "t": 94,
+        "kept": 1075,
+        "landed": 1075
+      },
+      {
+        "t": 95,
+        "kept": 1076,
+        "landed": 1076
+      },
+      {
+        "t": 96,
+        "kept": 1076,
+        "landed": 1076
+      },
+      {
+        "t": 97,
+        "kept": 1077,
+        "landed": 1077
+      },
+      {
+        "t": 98,
+        "kept": 1077,
+        "landed": 1077
+      },
+      {
+        "t": 99,
+        "kept": 1079,
+        "landed": 1079
+      },
+      {
+        "t": 100,
+        "kept": 1079,
+        "landed": 1079
+      },
+      {
+        "t": 101,
+        "kept": 1079,
+        "landed": 1079
+      },
+      {
+        "t": 102,
+        "kept": 1079,
+        "landed": 1079
+      },
+      {
+        "t": 103,
+        "kept": 1081,
+        "landed": 1081
+      },
+      {
+        "t": 104,
+        "kept": 1082,
+        "landed": 1082
+      },
+      {
+        "t": 105,
+        "kept": 1083,
+        "landed": 1083
+      },
+      {
+        "t": 106,
+        "kept": 1085,
+        "landed": 1085
+      },
+      {
+        "t": 107,
+        "kept": 1085,
+        "landed": 1085
+      },
+      {
+        "t": 108,
+        "kept": 1090,
+        "landed": 1090
+      },
+      {
+        "t": 109,
+        "kept": 1091,
+        "landed": 1091
+      },
+      {
+        "t": 110,
+        "kept": 1098,
+        "landed": 1098
+      },
+      {
+        "t": 111,
+        "kept": 1109,
+        "landed": 1109
+      },
+      {
+        "t": 112,
+        "kept": 1114,
+        "landed": 1114
+      },
+      {
+        "t": 113,
+        "kept": 1126,
+        "landed": 1126
+      },
+      {
+        "t": 114,
+        "kept": 1133,
+        "landed": 1133
+      },
+      {
+        "t": 115,
+        "kept": 1151,
+        "landed": 1151
+      },
+      {
+        "t": 116,
+        "kept": 1175,
+        "landed": 1175
+      },
+      {
+        "t": 117,
+        "kept": 1199,
+        "landed": 1199
+      },
+      {
+        "t": 118,
+        "kept": 1232,
+        "landed": 1232
+      },
+      {
+        "t": 119,
+        "kept": 1250,
+        "landed": 1250
+      },
+      {
+        "t": 120,
+        "kept": 1278,
+        "landed": 1278
+      },
+      {
+        "t": 121,
+        "kept": 1308,
+        "landed": 1308
+      },
+      {
+        "t": 122,
+        "kept": 1349,
+        "landed": 1349
+      },
+      {
+        "t": 123,
+        "kept": 1376,
+        "landed": 1376
+      },
+      {
+        "t": 124,
+        "kept": 1400,
+        "landed": 1400
+      },
+      {
+        "t": 125,
+        "kept": 1421,
+        "landed": 1421
+      },
+      {
+        "t": 126,
+        "kept": 1451,
+        "landed": 1451
+      },
+      {
+        "t": 127,
+        "kept": 1482,
+        "landed": 1482
+      },
+      {
+        "t": 128,
+        "kept": 1500,
+        "landed": 1511
+      },
+      {
+        "t": 129,
+        "kept": 1500,
+        "landed": 1542
+      },
+      {
+        "t": 130,
+        "kept": 1500,
+        "landed": 1566
+      },
+      {
+        "t": 131,
+        "kept": 1500,
+        "landed": 1586
+      },
+      {
+        "t": 132,
+        "kept": 1500,
+        "landed": 1612
+      },
+      {
+        "t": 133,
+        "kept": 1500,
+        "landed": 1638
+      },
+      {
+        "t": 134,
+        "kept": 1500,
+        "landed": 1675
+      },
+      {
+        "t": 135,
+        "kept": 1500,
+        "landed": 1704
+      },
+      {
+        "t": 136,
+        "kept": 1500,
+        "landed": 1722
+      },
+      {
+        "t": 137,
+        "kept": 1500,
+        "landed": 1744
+      },
+      {
+        "t": 138,
+        "kept": 1500,
+        "landed": 1765
+      },
+      {
+        "t": 139,
+        "kept": 1500,
+        "landed": 1787
+      },
+      {
+        "t": 140,
+        "kept": 1500,
+        "landed": 1806
+      },
+      {
+        "t": 141,
+        "kept": 1500,
+        "landed": 1816
+      },
+      {
+        "t": 142,
+        "kept": 1500,
+        "landed": 1831
+      },
+      {
+        "t": 143,
+        "kept": 1500,
+        "landed": 1846
+      },
+      {
+        "t": 144,
+        "kept": 1500,
+        "landed": 1858
+      },
+      {
+        "t": 145,
+        "kept": 1500,
+        "landed": 1867
+      },
+      {
+        "t": 146,
+        "kept": 1500,
+        "landed": 1875
+      },
+      {
+        "t": 147,
+        "kept": 1500,
+        "landed": 1882
+      },
+      {
+        "t": 148,
+        "kept": 1500,
+        "landed": 1885
+      },
+      {
+        "t": 149,
+        "kept": 1500,
+        "landed": 1895
+      }
+    ]
+  },
+  "finished": "2026-11-19T11:29:45.717Z"
+}

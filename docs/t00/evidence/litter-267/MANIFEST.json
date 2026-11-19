@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 238537,
+   "sha256": "954763563622afdb7ac46ca94e3fdf5bada433216007c2a7e56b7f55344ceb9e",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "densities-three.jpg",
+   "bytes": 426782,
+   "sha256": "7aaa59129f65e8c4d1f6b598c10c3cd16e39dfcf75595dc93862627588e22af8",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "film-autumn-day-90-150s.mp4",
+   "bytes": 1116140,
+   "sha256": "2b22eed9acc8899ddb7679690ddf9f709aff8a4a4d76e9dbd4656b7ddbb62c54",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "film-calm-gust-after.jpg",
+   "bytes": 124532,
+   "sha256": "c32965cf2c2a519fa034918921b750a3e1b25adb8584207c52ca0573a80b23e5",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/court-autumn-day.jpg",
+   "bytes": 326263,
+   "sha256": "08105667b39c291ee396381b8276c9a7ebd51e08b87bb9463532a963b49c0a13",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/court-autumn-dusk.jpg",
+   "bytes": 295834,
+   "sha256": "2a6e759c4fde8fb0c6a1ee0d8d8dd756a64325158cefb9c0b98003f546ce5000",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/court-autumn-night.jpg",
+   "bytes": 245980,
+   "sha256": "633d77f8d70d8c49986233110af8ae73dc222fc260b753c1eaf778de291a506e",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/court-spring-day.jpg",
+   "bytes": 317014,
+   "sha256": "536c1ac837e8956b077c2d1734d096ed71d8918f55dae703054ad635510d486f",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/maple-autumn-day-low.jpg",
+   "bytes": 336898,
+   "sha256": "9f5a77dd3657fb1f8f50a45225d51c1534d3492ee4a86d5bcd20138fc631bd8e",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/maple-autumn-day.jpg",
+   "bytes": 299174,
+   "sha256": "14eb72d35b17ecbd8dc95f4b7bc27488740a5a876fa3992e7161a923c0712dea",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/maple-autumn-dusk.jpg",
+   "bytes": 253353,
+   "sha256": "c474defb6d65d21c89ec3ebde00ca2dc206a4917c2649e40f62a432acab1949a",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/maple-autumn-night.jpg",
+   "bytes": 208332,
+   "sha256": "384839f9c34cc3db26dea3eaea1cd52d7c001b5f4d5956b331cfff0c58b936b8",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  },
+  {
+   "path": "t4/maple-spring-day.jpg",
+   "bytes": 293535,
+   "sha256": "0bfb867b1a3822580cf47b4a375dff39d9eebf06fc2ee3b4d832aa8ce96385cd",
+   "rev": "559a0b75ffb8c4f3f793deac6e031b32145e95ec"
+  }
+ ]
+}
