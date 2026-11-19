@@ -46,16 +46,20 @@ test("the two walkers meet at every flight between the first court and the next 
     const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1], run = Math.hypot(dx, dz), ux = dx / run, uz = dz / run;
     const a = { x: r.low[0] - ux * 2, z: r.low[1] - uz * 2 }, b = { x: r.high[0] + ux * 1, z: r.high[1] + uz * 1 };
     for (const [from, to] of [[a, b], [b, a]]) {
-      const pos = { ...from }; let last = walker.heightAt(pos.x, pos.z), worst = 0, sides = new Set();
+      const pos = { ...from }; let last = walker.heightAt(pos.x, pos.z), worst = 0, sides = new Set(), eye = walker.eyeAt(pos.x, pos.z), eyeJump = 0;
       assert.ok(!walker.blocked(pos.x, pos.z), `the walk at the flight to ${r.high} starts on open ground`);
       for (let n = 0; n < 2000 && Math.hypot(to.x - pos.x, to.z - pos.z) > 0.03; n++) {
         const d = Math.hypot(to.x - pos.x, to.z - pos.z), s = Math.min(d, 0.04);
         assert.ok(stride(walker, pos, ((to.x - pos.x) / d) * s, ((to.z - pos.z) / d) * s), `stuck at (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)}) on the flight to ${r.high}`);
         const h = walker.heightAt(pos.x, pos.z); worst = Math.max(worst, Math.abs(h - last)); last = h; sides.add(walker.answers(pos.x, pos.z));
+        const e = walker.eyeAt(pos.x, pos.z); eyeJump = Math.max(eyeJump, Math.abs(e - eye)); eye = e;
       }
       assert.ok(Math.hypot(to.x - pos.x, to.z - pos.z) <= 0.03, `did not get along the flight to ${r.high}`);
       assert.ok(worst < 0.2, `the floor jumped ${worst.toFixed(3)} m on the flight to ${r.high}`);
       assert.equal(sides.size, 2, "the walk crossed from one walker to the other");
+      // and the eye, which climbs the flight as a slope, does not jump where one walker hands over to the other
+      if (process.env.EYE_LOG) console.log(JSON.stringify({ flight: r.high, floorJump: +worst.toFixed(3), eyeJump: +eyeJump.toFixed(3) }));
+      assert.ok(eyeJump < 0.05, `the eye jumped ${eyeJump.toFixed(3)} m in a 4 cm step on the flight to ${r.high}`);
     }
   }
 });
