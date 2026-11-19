@@ -3,6 +3,12 @@
  "dataset": "bolechen/temple-walk-evidence",
  "files": [
   {
+   "path": "cam06-capture-off.jpg",
+   "bytes": 978838,
+   "sha256": "8cab44c751b5903cb08a2a44b2a681341a75e6db13da9c79b59e2c699a4479ef",
+   "rev": "6bda0e3f51c1547bdf8f333b38edb7c25daf66a9"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 230781,
    "sha256": "64e8814f89ddd2558951bc8b1d63b02396cc6b15475cdcffa3c9cbe9b9197953",
@@ -19,6 +25,12 @@
    "bytes": 726544,
    "sha256": "7a6eb96c7d84952ba0ec9633d23a69a6fcbc522722aa74039bf8606b9b39ddb6",
    "rev": "490edb090d81c84e268db4252539d774236ae10d"
+  },
+  {
+   "path": "shot-main-vs-branch.jpg",
+   "bytes": 196867,
+   "sha256": "8d812784f38cacdb237d03012357c4ebb2f9bf6a42b6bfce59c2fb506b253850",
+   "rev": "6bda0e3f51c1547bdf8f333b38edb7c25daf66a9"
   }
  ]
 }
