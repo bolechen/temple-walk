@@ -34,7 +34,7 @@ const filesUnder = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: tru
 
 /** Each hall's fingerprint: what its pictures are drawn from. */
 export function fingerprints() {
-  const code = ["interior.js", "framing.js", "materials.js", "glsl.js", "textures.js", "geo.js", "fog.js", "sky.js", "doorway.js", "doorway-capture.js", "lut.js", "post.js"]
+  const code = ["interior.js", "framing.js", "materials.js", "glsl.js", "textures.js", "geo.js", "fog.js", "sky.js", "doorway-shape.js", "doorway-capture.js", "lut.js", "post.js"]
     .map((f) => join(app, "src", f)).filter(existsSync).map((f) => readFileSync(f));
   const shared = [...filesUnder(join(app, "shared", "textures")), ...filesUnder(join(app, "shared", "models")).filter((f) => !/novice/.test(f))].map((f) => readFileSync(f));
   const three = readFileSync(join(top, "node_modules", "three", "package.json"));
@@ -110,10 +110,10 @@ export async function bakeDoorways({ verify = false } = {}) {
   return report;
 }
 
-/** The great hall drawn again, in a whole page (nothing left out), compared byte for byte with its baked files. */
+/** The great hall drawn again, in a whole page (nothing left out), kept losslessly and compared pixel by pixel with its baked files. */
 async function compare(id, entry) {
   return withPage(dist, "shot=1&q=high&enter", async (page) => page.evaluate(async ([i, e, q]) => {
-    const fresh = await window.__doorBake(i, q), out = {};
+    const fresh = await window.__doorBake(i, q, true), out = {};   // drawn again and kept losslessly: the files' WebP is measured against it
     const pixels = async (src) => { const im = new Image(); im.src = src; await im.decode(); const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const g = c.getContext("2d"); g.drawImage(im, 0, 0); return g.getImageData(0, 0, c.width, c.height).data; };
     for (const k of ["day", "night", "dist"]) {
       const a = await pixels(fresh[k]), b = await pixels("shared/doorways/" + e[k]); let max = 0, sum = 0, n = 0;

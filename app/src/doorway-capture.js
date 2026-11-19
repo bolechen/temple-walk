@@ -9,7 +9,7 @@
 // doorway gives it, and once for how far each thing stands from the eye.
 import * as THREE from "three";
 import { DataUtils } from "three";
-import { EYE, INSET, DIST, GAIN, ATLAS } from "./doorway.js";
+import { EYE, INSET, DIST, GAIN, ATLAS } from "./doorway-shape.js";
 
 export function createCapture({ renderer, scene, U, size = 256 }) {
   let sun = null, hemi = null;

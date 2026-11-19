@@ -15,10 +15,8 @@
 // own size captured from inside (docs/t00/SOURCES.md).
 import * as THREE from "three";
 
-export const EYE = 1.6, INSET = 0.25;   // where the cube is taken: a grown eye's height, a little inside the door
-export const DIST = 64;                  // distances are kept as a fraction of this many metres
-export const GAIN = [0.18, 0.8];         // how bright the room is drawn in the doorway, by day and with every lamp lit
-export const ATLAS = [3, 2];             // the six faces of a cube in one picture, three across and two down
+import { EYE, INSET, DIST, ATLAS } from "./doorway-shape.js";
+export { EYE, INSET, DIST, GAIN, ATLAS } from "./doorway-shape.js";
 
 // The material of one hall's dark box. `steps` is how many times the line is tried against the distances. The room's
 // colour comes in two cubes, a day's and a night's, already as bright as the doorway shows them, mixed by the hour's
@@ -81,7 +79,7 @@ function doorMaterial(U, steps) {
 const cube = (faces, exact) => {
   const t = new THREE.CubeTexture(faces); t.needsUpdate = true; t.flipY = false;
   if (exact) { t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace; }
-  else { t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; }
+  else { t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; }   // no mipmaps made on the card: on a cold page their first making held a frame 160 ms (T4, low tier)
   return t;
 };
 const cut = async (bitmap) => {
@@ -195,11 +193,12 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     }
   };
   // For the bake: one hall drawn, its three pictures as files would hold them (WebP for colour, PNG for distances).
-  const bakeHall = async (id, quality = 0.9) => {
+  const bakeHall = async (id, quality = 0.9, lossless = false) => {   // `lossless`: PNG for all three (to measure what WebP loses)
     capture ||= (await import("./doorway-capture.js")).createCapture({ renderer, scene, U });
     await rooms.ready;
     const { c } = await drawn(halls[id], capture);
-    return { day: c.day.toDataURL("image/webp", quality), night: c.night.toDataURL("image/webp", quality), dist: c.dist.toDataURL("image/png") };
+    const col = (cv) => (lossless ? cv.toDataURL("image/png") : cv.toDataURL("image/webp", quality));
+    return { day: col(c.day), night: col(c.night), dist: c.dist.toDataURL("image/png") };
   };
   const bytes = () => Object.values(halls).reduce((n, o) => n + (o.tex ? o.tex.reduce((m, t) => m + (t.images[0]?.width || 0) ** 2 * 6 * 4 * (t.generateMipmaps ? 4 / 3 : 1), 0) : 0), 0);
   // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
