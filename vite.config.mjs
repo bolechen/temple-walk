@@ -2,6 +2,7 @@
 // the site to dist/, which is what the tests open and what is published.
 import { defineConfig } from "vite";
 import { channelOf } from "./app/src/channel.js";
+import { deployOf } from "./app/src/deploy.js";
 import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "app"), dist = path.join(here, "dist");
@@ -35,9 +36,24 @@ const channelStub = () => ({
   load(id) { if (id === "\0temple-walk:no-donate") return "export const donateURL = () => \"\"; export const mountOffering = () => {};"; },
 });
 
+// Where the build is served (app/src/deploy.js): VITE_DEPLOY=production|canary|preview, preview when unset. Only a
+// production page carries the visitor counter; any other says it is not to be indexed, in the page and, for the Worker
+// that serves it, as a header (`_headers`, a file Cloudflare's static assets read).
+const deploy = deployOf(process.env.VITE_DEPLOY);
+const deployPage = () => ({
+  name: "temple-walk:deploy",
+  transformIndexHtml(/** @type {string} */ html) {
+    if (deploy === "production") return html.replace(/<!-- production-only -->|<!-- \/production-only -->/g, "");
+    return html.replace(/<!-- production-only -->[\s\S]*?<!-- \/production-only -->\n?/g, "").replace(/(<html[^>]*>\n?)/, '$1<meta name="robots" content="noindex, nofollow">\n');
+  },
+  writeBundle(/** @type {{ dir?: string }} */ o) {
+    if (deploy !== "production") fs.writeFileSync(path.join(o.dir || dist, "_headers"), "/*\n  X-Robots-Tag: noindex, nofollow\n");
+  },
+});
+
 export default defineConfig({
-  define: { __CHANNEL__: JSON.stringify(channel) },
-  root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), keep()],
+  define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy) },
+  root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), deployPage(), keep()],
   server: { host: "127.0.0.1", port: 8000 }, preview: { host: "127.0.0.1", port: 8000 },
   build: { outDir: dist, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 2000 },
 });

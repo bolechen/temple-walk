@@ -1,14 +1,23 @@
-name: Roll back the live site
+name: Deploy production from a version tag
 
-# Issue #308: one click puts the live site back to a tag or a commit. Actions → this workflow → Run workflow, fill `ref`
-# (a tag such as v0.5.0, or a commit), and the site is built from that ref, driven through once in a browser, and
-# published as `deploy` in pages.yml does it. Nothing else decides what is live: the next push to main that changes the
-# site publishes main again, so a rollback is followed by the fix, not left alone (docs/RELEASING.md).
+# Issue #308: the public site is only ever built from a version tag (`vX.Y.Z`), never from main (main goes to the canary,
+# pages.yml). Two ways in, one path:
+#   - release-please.yml calls this when a version PR is merged and the tag is made (a tag made with the default token starts
+#     no workflow of its own, so the release job calls this one by name);
+#   - by hand, Actions → this workflow → Run workflow, `ref` a tag: the same build and the same deploy, which is how the live
+#     site is put back to an older version (a rollback, docs/RELEASING.md).
+# The tag's own code is built, so an older tag goes out as it was when it was good.
 on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Version tag to put live, e.g. v0.5.0"
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       ref:
-        description: "Tag or commit to put live, e.g. v0.5.0"
+        description: "Version tag to put live, e.g. v0.5.0 (a rollback is this with an older tag)"
         required: true
         type: string
       check:
@@ -20,12 +29,6 @@ on:
 permissions:
   contents: read
 
-# The same group as pages.yml's production runs: a rollback and a deploy of main never publish at the same moment. A run
-# waiting for its turn is replaced by a newer waiting one (GitHub's rule), so a rollback shown as cancelled is run again.
-concurrency:
-  group: pages-production
-  cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,10 +36,16 @@ jobs:
     outputs:
       sha: ${{ steps.at.outputs.sha }}
     steps:
-      # The ref's own tree: its own build and its own `boot`, as it was when it was good.
+      # Only a version tag that exists is put live: not a branch, not a commit.
+      - name: The ref is a version tag
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          echo "$REF" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::ref must be a version tag such as v0.5.0, not '$REF'"; exit 1; }
+          git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/$REF" || { echo "::error::no tag $REF"; exit 1; }
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: refs/tags/${{ inputs.ref }}
       - id: at
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: pnpm/action-setup@v4
@@ -45,37 +54,43 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Caches only read, by prefix: what the ref bakes from is named inside them, so what does not fit is baked again.
+      # Caches only read, by prefix: what the tag bakes from is named inside them, so what does not fit is baked again.
       - uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/walk
-          key: walk-t00-rollback-${{ github.run_id }}
+          key: walk-t00-production-${{ github.run_id }}
           restore-keys: walk-t00-
       - uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-rollback-${{ github.run_id }}
+          key: doorways-t00-production-${{ github.run_id }}
           restore-keys: doorways-t00-
       - name: Remember the browser between runs
-        if: inputs.check
+        if: inputs.check != false
         id: pw
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-rollback-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-production-${{ hashFiles('pnpm-lock.yaml') }}
       - name: A browser to drive the page with
-        if: inputs.check
+        if: inputs.check != false
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      # The only build that carries the visitor counter and may be indexed (app/src/deploy.js). A tag older than this setting
+      # ignores it and goes out as it was.
       - name: Build the site
+        env:
+          VITE_DEPLOY: production
         run: pnpm run build
       - name: End to end, startup and movement
-        if: inputs.check
+        if: inputs.check != false
+        env:
+          VITE_DEPLOY: production
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
-        if: always() && inputs.check
+        if: always() && inputs.check != false
         uses: actions/upload-artifact@v4
         with:
-          name: rollback-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          name: production-e2e-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
@@ -83,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: dist
-          name: rollback-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
           include-hidden-files: true
 
@@ -91,14 +106,19 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # One publication of the public site at a time. A run waiting for its turn is replaced by a newer waiting one (GitHub's
+    # rule): a run shown as cancelled is run again.
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
     steps:
-      # The Worker's settings come from the branch this workflow runs from (main), never from the ref being put live.
+      # The Worker's settings come from the workflow's own branch (main), never from the tag being put live.
       - uses: actions/checkout@v4
         with:
           sparse-checkout: wrangler.production.jsonc
       - uses: actions/download-artifact@v4
         with:
-          name: rollback-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
       - uses: actions/setup-node@v4
         with:
@@ -111,7 +131,6 @@ jobs:
         run: npx --yes wrangler@4.162.0 deploy -c wrangler.production.jsonc
       # What is live is read back: the address's first page must be the very page just built.
       - name: The live page is the one built
-        id: live
         env:
           REF: ${{ inputs.ref }}
           SHA: ${{ needs.build.outputs.sha }}
@@ -119,7 +138,7 @@ jobs:
           want=$(sha256sum dist/index.html | cut -c1-64)
           got=none
           for i in 1 2 3 4 5 6; do
-            got=$(curl -fsS "https://temple.rushiwowen.co/?rollback=$GITHUB_RUN_ID" | sha256sum | cut -c1-64) || got=none
+            got=$(curl -fsS "https://temple.rushiwowen.co/?live=$GITHUB_RUN_ID" | sha256sum | cut -c1-64) || got=none
             [ "$got" = "$want" ] && break
             sleep 10
           done
@@ -128,5 +147,5 @@ jobs:
             echo "- 提交 \`$SHA\`"
             echo "- index.html SHA-256：构建 \`$want\`，线上 \`$got\`"
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "live=$got" ; echo "built=$want"
+          echo "live=$got"; echo "built=$want"
           [ "$got" = "$want" ]

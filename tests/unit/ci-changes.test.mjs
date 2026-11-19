@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 const { siteChanged, walkChanged, codeChanged, lastDeployed, DOC_TESTS, LIMIT } = createRequire(import.meta.url)("../../tools/ci/changes.cjs");
 
 test("a change under app/ builds; so do the files the build or the browser tests are made of", () => {
-  for (const f of ["app/yard.js", "app/src/interior.js", "app/shared/fonts/kai.woff2", "tests/e2e/run.cjs", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "wrangler.production.jsonc", "tools/setup.mjs", "tools/site.cjs", ".github/workflows/pages.yml", "tools/ci/changes.cjs"]) {
+  for (const f of ["app/yard.js", "app/src/interior.js", "app/shared/fonts/kai.woff2", "tests/e2e/run.cjs", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "wrangler.production.jsonc", "wrangler.canary.jsonc", "tools/setup.mjs", "tools/site.cjs", ".github/workflows/pages.yml", "tools/ci/changes.cjs"]) {
     assert.equal(siteChanged([f]), true, f);
     assert.equal(siteChanged(["docs/HANDOFF.md", f]), true, `${f} beside a paper`);
   }
@@ -115,15 +115,20 @@ test("no pull request reads the evidence over the network to compare hashes; the
 });
 
 // #308: what stops a bad walk or camera before it is live, and the way back.
-test("pages.yml: deploy waits for the quick scenarios, which run beside the site job and only when it is built", () => {
+test("pages.yml: main goes to the canary, after the quick scenarios, and never to production", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
+  const deploy = jobOf(y, "deploy");
+  assert.match(deploy, /needs: \[verify, quick\]/, "the canary waits for verify and the quick scenarios, by name");
+  assert.match(deploy, /deploy -c wrangler\.canary\.jsonc/);
+  assert.doesNotMatch(y, /wrangler\.production\.jsonc|CLOUDFLARE_PREVIEW_TOKEN.*deploy/, "pages.yml no longer touches the production Worker");
   const quick = jobOf(y, "quick");
   assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
   assert.match(quick, /scenario: \[stairs, drop\]/);
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenario \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
+  assert.match(jobOf(y, "site"), /VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the build says where it goes");
+  assert.equal(JSON.parse(fs.readFileSync(new URL("../../wrangler.canary.jsonc", import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "")).name, "temple-walk-canary");
 });
 
 test("e2e.yml no longer repeats the scenarios that stop the publication", () => {
@@ -133,16 +138,30 @@ test("e2e.yml no longer repeats the scenarios that stop the publication", () => 
   assert.match(regression, /run\.cjs menufit/, "the menu in every language stays where it was");
 });
 
-test("rollback.yml: a tag or commit is asked for, built, and published to the same place under the same lock", () => {
-  const r = read("rollback.yml");
-  assert.match(r, /workflow_dispatch:\s*\n\s*inputs:\s*\n\s*ref:/, "ref is an input");
-  assert.match(r, /ref: \$\{\{ inputs\.ref \}\}/, "and is what is checked out");
-  assert.match(r, /group: pages-production\n\s*cancel-in-progress: false/, "one publication at a time, like pages.yml");
-  assert.match(jobOf(r, "deploy"), /needs: build/);
-  assert.match(jobOf(r, "deploy"), /wrangler@4\.162\.0 deploy -c wrangler\.production\.jsonc/);
-  assert.match(jobOf(r, "deploy"), /sparse-checkout: wrangler\.production\.jsonc/, "the Worker's settings come from the workflow's branch, not the ref");
-  assert.match(jobOf(r, "build"), /pnpm run build/);
-  assert.match(jobOf(r, "build"), /run\.cjs boot/);
-  const pages = read("pages.yml");
-  assert.equal(pages.match(/wrangler@[\d.]+ deploy/)[0], r.match(/wrangler@[\d.]+ deploy/)[0], "the same wrangler as pages.yml");
+test("production.yml: only a version tag is put live, by release-please and by hand, to the production Worker", () => {
+  const p = read("production.yml");
+  assert.match(p, /workflow_call:\s*\n\s*inputs:\s*\n\s*ref:/, "release-please calls it with a ref");
+  assert.match(p, /workflow_dispatch:\s*\n\s*inputs:\s*\n\s*ref:/, "a rollback is a run by hand with a ref");
+  assert.match(p, /\^v\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$/, "the ref must be a version tag");
+  assert.match(p, /ref: refs\/tags\/\$\{\{ inputs\.ref \}\}/, "and it is the tag that is checked out");
+  assert.match(jobOf(p, "build"), /VITE_DEPLOY: production/);
+  assert.match(jobOf(p, "build"), /run\.cjs boot/);
+  assert.match(jobOf(p, "deploy"), /needs: build/);
+  assert.match(jobOf(p, "deploy"), /deploy -c wrangler\.production\.jsonc/);
+  assert.match(jobOf(p, "deploy"), /sparse-checkout: wrangler\.production\.jsonc/, "the Worker's settings come from the workflow's branch, not the tag");
+  assert.match(jobOf(p, "deploy"), /group: production-deploy\n\s*cancel-in-progress: false/, "one publication at a time");
+  assert.equal(p.match(/wrangler@[\d.]+ deploy/)[0], read("pages.yml").match(/wrangler@[\d.]+ deploy/)[0], "the same wrangler as pages.yml");
+  assert.doesNotMatch(p, /push:|branches:/, "nothing but a tag, asked for by name, starts it");
+});
+
+test("release-please.yml deploys production when, and only when, a version was made", () => {
+  const r = read("release-please.yml");
+  assert.match(r, /release_created: \$\{\{ steps\.rp\.outputs\.release_created \}\}/);
+  assert.match(r, /tag_name: \$\{\{ steps\.rp\.outputs\.tag_name \}\}/);
+  const job = jobOf(r, "production");
+  assert.match(job, /needs: release/);
+  assert.match(job, /needs\.release\.outputs\.release_created == 'true'/);
+  assert.match(job, /uses: \.\/\.github\/workflows\/production\.yml/);
+  assert.match(job, /ref: \$\{\{ needs\.release\.outputs\.tag_name \}\}/);
+  assert.match(job, /secrets: inherit/);
 });

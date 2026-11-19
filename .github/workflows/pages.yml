@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
+  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'canary' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -161,6 +161,10 @@ jobs:
     if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # Where this build is going (app/src/deploy.js): a pull request's preview, or the canary. Never production: that is
+      # built from a version tag by production.yml. Neither carries the visitor counter.
+      VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'canary' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -198,12 +202,12 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
       # The site is what Vite built into dist/, the same files the browser above was just driven through.
-      - name: Hand the site over for publication
+      - name: Hand the site over for the canary
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           path: dist
-          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
           include-hidden-files: true
       # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
@@ -327,8 +331,10 @@ jobs:
         with:
           script: await require(`${process.env.GITHUB_WORKSPACE}/tools/preview/comment.cjs`)({ github, context, core })
 
-  # Only after `verify`: both sets of unit tests, the build and `boot` have all passed (a skipped or failed job fails the
-  # `success()` every `if` without a status function carries).
+  # The canary (#308): what main last deployed, on a Worker of its own with its own address, so that it can be played before
+  # a version is cut. The public site is deployed from a version tag (production.yml). Only after `verify`: both sets of unit
+  # tests, the build and `boot` have all passed, and after `quick` (the stairs and the low drop), by name; a skipped or
+  # failed job fails the `success()` every `if` without a status function carries.
   deploy:
     if: github.event_name != 'pull_request' && needs.verify.outputs.site == 'true'
     needs: [verify, quick]
@@ -337,17 +343,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: wrangler.production.jsonc
+          sparse-checkout: wrangler.canary.jsonc
       - uses: actions/download-artifact@v4
         with:
-          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Publish the demo
+      - name: Publish the canary
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: "false"
-        run: npx --yes wrangler@4.162.0 deploy -c wrangler.production.jsonc
+        run: npx --yes wrangler@4.162.0 deploy -c wrangler.canary.jsonc | tee "$RUNNER_TEMP/deploy.txt"
+      - name: Say where it is
+        run: |
+          url=$(grep -Eo 'https://temple-walk-canary[^ ]*workers\.dev' "$RUNNER_TEMP/deploy.txt" | head -1)
+          { echo "### canary"; echo "- 地址：${url:-（未从 wrangler 输出读到）}"; echo "- 提交 \`$GITHUB_SHA\`"; } >> "$GITHUB_STEP_SUMMARY"
