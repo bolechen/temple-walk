@@ -1,0 +1,82 @@
+name: Evidence mirror
+
+# Issue #247: the evidence's bytes are put on Hugging Face by whoever delivers a PR (tools/evidence.mjs push); this
+# copies what the manifests list into the owner's R2 bucket, which tools/evidence.config.json's `base` reads from.
+# Hugging Face is the original and R2 the copy. Nothing is deleted or replaced. A failed mirror does not hold a merge
+# (the store's reachability never decides that, AGENTS.md); the run summary says what is not in the bucket.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["docs/**/evidence/**/MANIFEST.json"]
+  # A same-repository branch is given the secrets; a fork's pull request is not, and is skipped (its evidence is read from
+  # Hugging Face by setting EVIDENCE_BASE to `origin`, see AGENTS.md).
+  pull_request:
+    paths: ["docs/**/evidence/**/MANIFEST.json", ".github/workflows/evidence-mirror.yml", "tools/evidence.mjs"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    env:
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      PUBLIC: https://evidence.dev.rushiwowen.co/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Mirror what the manifests list and the bucket lacks
+        run: |
+          aws --version
+          node tools/evidence.mjs mirror
+      - name: Every listed file read back from the public domain (SHA-256)
+        run: EVIDENCE_BASE="$PUBLIC" node tools/evidence.mjs verify --all 2>&1 | tail -n 20
+        shell: bash {0}
+      - name: The original still agrees
+        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").origin')" node tools/evidence.mjs verify --all 2>&1 | tail -n 20
+        shell: bash {0}
+
+  # #247: does R2 need the two checksum settings? One put-object and one `s3 cp` with the CLI's own defaults, so that the
+  # settings are kept only if something shows they are needed. Writes t00/_ci-smoke/probe-*; deletes nothing.
+  checksum-probe:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      AWS_DEFAULT_REGION: auto
+      AWS_PAGER: ""
+    steps:
+      - name: With no checksum settings at all
+        run: |
+          aws --version
+          env | grep -c '^AWS_.*CHECKSUM' || true
+          printf 'probe %s\n' "$GITHUB_RUN_ID" > p.txt
+          for how in put-object cp; do
+            key="t00/_ci-smoke/probe-${GITHUB_RUN_ID}-${how}.txt"
+            if [ "$how" = put-object ]; then
+              aws s3api put-object --endpoint-url "$R2_ENDPOINT" --bucket "$R2_BUCKET" --key "$key" --body p.txt > o 2> e
+            else
+              aws s3 cp p.txt "s3://$R2_BUCKET/$key" --endpoint-url "$R2_ENDPOINT" > o 2> e
+            fi
+            rc=$?
+            echo "$how without the settings: exit $rc $(grep -o 'An error occurred ([A-Za-z0-9]*)' e | head -1)"
+            [ "$rc" -eq 0 ] && curl -fsS "https://evidence.dev.rushiwowen.co/$key" | cmp - p.txt && echo "$how: read back identical"
+          done
+        shell: bash {0}
