@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, before, after }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -64,7 +64,7 @@ function fingerprint(dir) {
 
   // `fresh`: a browser of its own, started for this page and closed with it, so that nothing (compiled shaders, the GPU
   // process's first uploads) is left warm by an earlier page: a visitor's first visit.
-  const open = async (query, [w, h], scale = 1, { fresh = false, ...extra } = {}) => {
+  const open = async (query, [w, h], scale = 1, { fresh = false, path: at = "", ...extra } = {}) => {   // `path`: a page beside the site's own (another build staged under it, BASE_SITE)
     const own = fresh ? await chromium.launch(launchWith) : null;
     const ctx = await (own || browser).newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, ...extra }), page = await ctx.newPage();
     if (own) { const close = ctx.close.bind(ctx); ctx.close = async () => { await close().catch(() => {}); await own.close(); }; }
@@ -74,7 +74,7 @@ function fingerprint(dir) {
     await page.addInitScript(() => { const say = console.error; console.error = (...a) => say(...a, "\n  at " + (new Error().stack || "").split("\n").slice(2, 8).map((l) => l.trim().replace(/^at /, "").replace(/https?:\/\/[^/]+\//, "")).join(" < ")); });
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
     page.on("console", (m) => m.type() === "error" && ours(m.text()) && report.errors.push(m.text().slice(0, 900)));
-    const t0 = Date.now(); await page.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });
+    const t0 = Date.now(); await page.goto(base + at + "?" + query, { waitUntil: "commit", timeout: 120000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     return { ctx, page, loadMs: Date.now() - t0 };
   };
@@ -84,8 +84,9 @@ function fingerprint(dir) {
   for (const b of spec.bench || []) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
-      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync }), size, b.scale || 1);
+      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync }), size, b.scale || 1, { path: b.path || "" });
       await page.waitForTimeout(b.warm || 1500);   // `warm`: longer, for what is taken in its first seconds (the doorways, #218)
+      if (b.before) await page.evaluate(`(async () => { ${b.before} })()`);   // `before`: a script run before the frames are counted (the ground filled with what has fallen, #267)
       // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
       if (b.walk) await page.evaluate((pts) => { window.__walkerReset?.(); window.__walk(pts); }, b.walk);
       const a = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now() })); await page.waitForTimeout(secs * 1000);

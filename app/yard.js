@@ -153,7 +153,7 @@ await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low" }));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -611,12 +611,12 @@ function frame(now) {
   // behind him or from his own eyes), a little clearer on a stair.
   for (const f of monk.steps.splice(0)) {
     if (passing) continue;
-    if (!inside && !upIn) trail.stamp(f);
+    if (!inside && !upIn) { trail.stamp(f); drift.kick?.(f); }
     const kind = underfoot({ x: f.x, z: f.z, y: f.y, floor: walker.floorAt(f.x, f.z), snow: inside ? 0 : mood.snow, wet: mood.wet, roofed: !inside && shelterAt(roofMap, f.x, f.y + 0.05, f.z) > 0.5 });
     if (kind === "puddle") ground.ripple?.(f.x, f.y, f.z);
     footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet, late: f.late || 0 });
   }
-  if (!inside) trail.follow(pos.x, pos.z); trail.update(dt);
+  if (!inside) { trail.follow(pos.x, pos.z); drift.keep?.(pos.x, pos.z, still ? 0 : dt, U.uWind.value.x, U.uWind.value.y); } trail.update(dt);
   // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
   // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
   // anything solid, and it never sinks into the ground or the hillside.
@@ -1013,6 +1013,10 @@ window.__ripples = (go) => {
 };
 // What the falling leaves are doing, as fall.js's sums have it: kind, how many lie on the ground, and where each is (a diagnostic for tests).
 window.__drift = (n) => drift.report(n);
+// The ground's record of what has come down (litter.js); `__litter(secs, [x, z, r])` runs the falling and the breeze on that long first and counts what lies within r of x, z (`true`: lists the leaves kept each in its place).
+window.__fall = (k) => drift.fall?.(k);
+window.__litterDraw = (m) => { if (m !== undefined) U.uLitMode.value = m; return U.uLitMode.value; };   // which of the ground's kept things the paving draws (1 heaps, 2 kept leaves, 3 both), to measure each   // how readily the trees let go: 1 as built, 0.5 half, -1 the old steady fall (#267)
+window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
