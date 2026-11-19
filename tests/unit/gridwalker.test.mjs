@@ -78,7 +78,7 @@ test("every named place can be walked to on the baked floor from where he comes 
 // the wall and the edge (or the railing), he can walk: the open floor at the platform's height runs along each of its four
 // sides, and all of it is one piece with the floor before its door. A hall where that does not hold is named here with why.
 const NARROW = {
-  lingxiao: "its gallery is 0.83 m between the faces of its columns and its railing: his outline, with room for his eye, does not pass a column",
+  lingxiao: "#278: its gallery is 0.83 m between the faces of its columns and its railing: his outline, with room for his eye, does not pass a column",
 };
 test("#148: round every hall the platform can be walked, on every side that is drawn wide enough for him", () => {
   const out = {};
@@ -175,6 +175,22 @@ test("a kept place or a ?cam address that falls in a shut cell moves to the near
   const open = site.halls.find((h) => h.id === "tea").out; assert.deepEqual(settle(walker, open[0], open[1]), { x: open[0], z: open[1] }, "an open spot is kept as it is");
   // In a room, inside the altar's dais: nowhere within half a metre; and a point outside the room altogether is shut.
   const R = rooms.rooms.main.room; within({ room: R }, () => { assert.ok(walker.blocked(R.x0 - 2, 0), "outside the room's walls"); assert.equal(settle(walker, R.x0 - 2, 0), null); });
+});
+
+// Going back (#274; the lead): the book's 「回到那一处」 stands him where each seal was earned (`y.travel`), and coming out of a
+// hall stands him at its `out`; a kept place is wherever he last stood. Each must have somewhere to stand on the baked
+// floor: open, or open within half a metre (`settle`), in the grid of the room it is in.
+test("every place a seal is earned and every spot outside a hall's door has open floor within half a metre, in its own grid", () => {
+  const all = { ...site.places, ...rooms.places }, bad = [];
+  for (const [id, p] of Object.entries(all)) {
+    if (!p.at) continue;
+    const R = p.room ? rooms.rooms[p.room]?.room : null;
+    within({ room: R }, () => { const s = settle(walker, p.at[0], p.at[1]); if (!s) bad.push(`place ${id}${p.room ? " in " + p.room : ""} at (${p.at.map((v) => v.toFixed(2))})`); });
+  }
+  for (const h of site.halls) { const s = settle(walker, h.out[0], h.out[1]); if (!s) bad.push(`out of ${h.id} at (${h.out.map((v) => v.toFixed(2))})`); }
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => { const s = settle(walker, r.room.door[0], r.room.door[1]); if (!s || walker.blocked(s.x, s.z)) bad.push(`inside the door of ${id}`); });
+  assert.deepEqual(bad, [], "nowhere to stand");
+  assert.ok(Object.keys(all).length >= 7, `${Object.keys(all).length} places`);
 });
 
 test("the page keeps only the rows and columns a floor was reached in, cell for cell", () => {

@@ -311,12 +311,12 @@ export function buildSite(M) {
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
     const rest = { cai: 0.186, xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, crest: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
-      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 2.2, walkAll: true };   // (two treads up from the landing, #274: the floor stands 0.3 m over it, more than he steps)
+      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true };   // (two treads up from the landing, #274: the floor stands 0.3 m over it, more than he steps; nearly the middle bay wide)
     // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
     // level ground under every column, and the valley to look at.
     put({ ...rest, plaque: { text: "半山亭", style: "wood" } }, [5.2, A.zA1 + 2.75], 2, 0, yA);
     stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
-    put({ ...rest, steps: 0, stepsBack: 2.2, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
+    put({ ...rest, steps: 0, stepsBack: 2.6, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where Su Shi, climbing to the temple, washed his ink-stone (the county gazetteer: outside the gate, its
     // water clear, the ripples glinting on a still moonlit night as though there were ink in them), beside the second
     // landing: clear water in a tank of dressed stone, and behind it, facing the stair, a small stele with its name cut

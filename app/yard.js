@@ -1112,6 +1112,7 @@ createGame({
     comeDown();
     if (inside && (!hall || hallIn.room.id !== hallId)) indoors(null);
     if (hall && !inside) indoors(hall);
+    { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } }   // (where a seal was earned may be shut on the baked floor, #274: the nearest open spot within half a metre)
     pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.06; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); await pause(250);
     if (veil) veil.className = ""; passing = false; return true;
   },
