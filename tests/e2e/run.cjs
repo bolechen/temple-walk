@@ -97,6 +97,32 @@ const scenarios = {
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
+  // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
+  events: { tier: 1, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE, { enter: false });
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
+    await t.page.keyboard.press("Space");
+    await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 30000, "the title never left");
+    if (await t.page.evaluate(() => window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening"); }
+    const names = () => t.page.evaluate(() => window.__eventLog().map((e) => e.name));
+    expect((await names()).includes("demo.ready") && (await names()).includes("demo.enter"), "the page should name its start: " + JSON.stringify(await names()));
+    await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
+    expect((await names()).includes("demo.walk"), "walking should be named: " + JSON.stringify(await names()));
+    await t.page.evaluate(() => window.__inside("main"));
+    await t.until(async () => (await names()).includes("demo.hall"), 30000, "entering a hall should be named");
+    await t.page.keyboard.press("v");
+    expect((await names()).includes("demo.view"), "changing the view should be named");
+    await t.page.keyboard.press("b"); await t.until(() => t.page.isVisible("#book"), 20000, "the book did not open");
+    expect((await names()).includes("demo.book"), "opening the book should be named");
+    await t.page.click("#bookClose");
+    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
+    expect((await names()).includes("demo.menu"), "opening the menu should be named");
+    await t.page.keyboard.press("Escape");
+    const e = await t.page.evaluate(() => window.__eventLog());
+    expect(e.every((x) => "lang" in x.data), "every event should carry the language: " + JSON.stringify(e.filter((x) => !("lang" in x.data))));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.
   lang: { tier: 2, async run(b, base) {

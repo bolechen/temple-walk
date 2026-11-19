@@ -1,0 +1,12 @@
+{
+  "name": "山门之外",
+  "slug": "temple-walk",
+  "identifier": "com.rushiwowen.shangmen",
+  "version": "0.3.1",
+  "frontendDist": "dist",
+  "out": "build",
+  "updates": {
+    "publicKey": "/3C19q8NqboKKu9Xq1QF+zOKDVQBoYNnRQmyw+WtIXY=",
+    "url": "https://127.0.0.1:8443"
+  }
+}

@@ -20,11 +20,13 @@ export const CAST = Object.freeze({ date: "萬曆歲次戊午季春吉旦", righ
 // The turned body, as (radius, height) from the foot up: a squat belly widest a little above its middle; a straight neck
 // a quarter of the belly's height with two raised bands round it; a thick lip; the flange the pavilion stands on; and
 // inside the lip the bed of ash, a centimetre under the flange.
-const BODY = [[0, 0.42], [0.2, 0.425], [0.38, 0.5], [0.5, 0.62], [0.553, 0.76], [0.56, 0.86], [0.54, 0.97], [0.48, 1.06], [0.4, 1.11], [0.37, 1.13],
+export const BELLY = [[0, 0.42], [0.2, 0.425], [0.38, 0.5], [0.5, 0.62], [0.553, 0.76], [0.56, 0.86], [0.54, 0.97], [0.48, 1.06], [0.4, 1.11], [0.37, 1.13],
   [0.37, 1.17], [0.39, 1.175], [0.39, 1.2], [0.37, 1.205], [0.37, 1.255], [0.39, 1.26], [0.39, 1.285], [0.37, 1.29], [0.37, 1.32],
   [0.41, 1.325], [0.415, 1.38], [0.41, 1.44], [0.45, 1.445], [0.455, 1.475], [0.43, 1.483], [0.32, 1.483], [0.315, 1.472]];
 const ASH = [[0.315, 1.472], [0.2, 1.476], [0.08, 1.478], [0, 1.478]];
-const LEG = [[0, 0], [0.11, 0], [0.115, 0.03], [0.085, 0.065], [0.065, 0.11], [0.08, 0.17], [0.1, 0.22], [0.095, 0.28], [0.07, 0.33], [0.075, 0.37], [0.1, 0.41], [0, 0.44]];
+// A foot, from the ground up: a small flat base, a vase's waist, and then a root that swells and goes on up into the belly, as the
+// real feet are cast with the drum and grow out of the lower arc of it (#244). The root's top ring is 7 cm into the belly.
+export const FOOT = [[0, 0], [0.11, 0], [0.115, 0.03], [0.085, 0.065], [0.065, 0.11], [0.08, 0.17], [0.1, 0.22], [0.095, 0.28], [0.075, 0.33], [0.078, 0.38], [0.095, 0.43], [0.115, 0.48], [0.123, 0.54], [0.118, 0.62], [0.105, 0.7], [0, 0.71]];
 // The two storeys of the pavilion: the circle the posts stand on, the floor and the head of the posts, and how many
 // pairs of post and plate part its windows (six on each, as the photograph's front shows two pairs and one at either edge).
 const STOREYS = [{ r: 0.385, y0: 1.483, y1: 1.84, windows: 6 }, { r: 0.3, y0: 2.0, y1: 2.3, windows: 6 }];
@@ -132,7 +134,7 @@ function ear(side) {
 // The date: a strip lying on the belly down its front, raised a few millimetres.
 function dateStrip() {
   const y0 = 0.7, y1 = 1.2, w = 0.085, rows = 24, pos = [], uv = [], idx = [];
-  const rAt = (y) => { for (let i = 1; i < BODY.length; i++) { const [r0, a] = BODY[i - 1], [r1, b] = BODY[i]; if (y >= a && y <= b) return r0 + (r1 - r0) * (y - a) / (b - a); } return 0.5; };
+  const rAt = (y) => { for (let i = 1; i < BELLY.length; i++) { const [r0, a] = BELLY[i - 1], [r1, b] = BELLY[i]; if (y >= a && y <= b) return r0 + (r1 - r0) * (y - a) / (b - a); } return 0.5; };
   for (let j = 0; j <= rows; j++) {
     const y = y0 + (y1 - y0) * (j / rows), r = rAt(y) + 0.004, da = w / 2 / r, [col] = CELLS.date;
     for (const s of [-1, 1]) { pos.push(Math.sin(s * da) * r, y, Math.cos(s * da) * r); uv.push((col + 0.5 + s * 0.42) / COLS, j / rows); }
@@ -173,8 +175,8 @@ function fallen() {
 
 // The whole censer as one geometry, at its own origin.
 export function censerGeometry() {
-  const list = [lathe(BODY, 40), lathe(EAVE, 40), lathe(CAP, 40)].map(plainUV);
-  for (const [x, z] of CENSER.legs) list.push(plainUV(lathe(LEG, 12).translate(x, 0, z)));
+  const list = [lathe(BELLY, 40), lathe(EAVE, 40), lathe(CAP, 40)].map(plainUV);
+  for (const [x, z] of CENSER.legs) list.push(plainUV(lathe(FOOT, 12).translate(x, 0, z)));
   STOREYS.forEach((s, i) => list.push(...storey(s, i === 0)));
   list.push(ear(1), ear(-1), dateStrip(), markUV(lathe(ASH, 32), KIND.ash, 0), ...incense(), ...fallen());
   return merge(list);

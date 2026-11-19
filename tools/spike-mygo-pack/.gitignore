@@ -1,0 +1,5 @@
+# the binaries this folder builds
+spike
+build/
+keys/
+dist/

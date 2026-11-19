@@ -1,0 +1,4 @@
+
+> temple-walk@0.4.0 typecheck /home/user/temple-walk
+> tsc -p tsconfig.json
+

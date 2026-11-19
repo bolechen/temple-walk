@@ -63,7 +63,7 @@ createPaper();   // the paper, strokes and seals the interface is drawn with (sr
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
 createCommunity(ui);
 createCredits(ui);
-const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false;   // what is said about the controls, and when
+const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
@@ -282,10 +282,10 @@ let reachWant = 6.2;   // how far behind him the eye stands; the wheel changes i
 let nudge = 0;
 const zoom = (k) => {
   if (photo.on) { photo.zoom = THREE.MathUtils.clamp(photo.zoom / k, ZOOM.min, ZOOM.max); lens(); return; }
-  if (view === "first") { if (k > 1 && (nudge += Math.log(k)) > 0.3) { nudge = 0; reachWant = 2.6; setView("third"); } else if (k < 1) nudge = 0; return; }
+  if (view === "first") { if (k > 1 && (nudge += Math.log(k)) > 0.3) { nudge = 0; reachWant = 2.6; setView("third"); if (/** @type {string} */ (view) !== "first") track("demo.view", { to: "third" }); } else if (k < 1) nudge = 0; return; }
   const near = reachWant <= 2.6 + 1e-6; reachWant = THREE.MathUtils.clamp(reachWant * k, 2.6, 11);
   if (k < 1 && reachWant <= 2.6 + 1e-6) hints.say.nearest();
-  if (k < 1 && near) { if ((nudge -= Math.log(k)) > 0.3) { nudge = 0; setView("first"); } } else nudge = 0;
+  if (k < 1 && near) { if ((nudge -= Math.log(k)) > 0.3) { nudge = 0; setView("first"); if (view === "first") track("demo.view", { to: "first" }); } } else nudge = 0;
 };
 // With a mouse the view turns while a button is held and dragged, as on most pages that show a place in three
 // dimensions, and a click walks there or strikes the bell, as a tap does. Holding the pointer the way first-person
@@ -443,7 +443,7 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
-  else if (k === "v") setView(view === "third" ? "first" : "third"); else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
+  else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
   else if (k === "h" || k === "?") hints.card();
   else if (k === "escape") { if (stage || director.holding()) { interrupt(); director.back(); } else if (document.body.classList.contains("entered")) openMenu(true); }   // Esc lets go of what he is doing (the rope, a seat); with nothing open or held, it is the pause menu
@@ -506,7 +506,7 @@ function layoutFrame() {
   if (fd) for (const [k, v] of /** @type {[string, number][]} */ ([["--fx", f.x], ["--fy", f.y], ["--fw", f.w], ["--fh", f.h]])) fd.style.setProperty(k, v + "px");
 }
 // When frames run long the governor gives things up (quality.js): the occlusion and the soft shadows go first, here.
-const governor = createGovernor(quality, () => { if (!quality.gtao) post.off("gtao"); if (!quality.softShadow) sky.soft(false); resize(); });
+const governor = createGovernor(quality, () => { if (!quality.gtao) post.off("gtao"); if (!quality.softShadow) sky.soft(false); resize(); track("demo.quality", { tier: quality.name, level: governor.level, gtao: quality.gtao, soft: quality.softShadow, planar: quality.planar, scale: +quality.scale.toFixed(2) }); });
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
@@ -560,6 +560,7 @@ function frame(now) {
   labelJump();
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
+  if (!walked && moved > 0.02 && !stage && !photo.on && !aloft && document.body.classList.contains("entered")) { walked = true; track("demo.walk", { view, tier: quality.name }); }
   if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); }   // how to walk is said once the walk is his
   if (arrived) hints.step(dt, moved, !!keys.shift, !stage && !photo.on && !aloft);
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
@@ -669,9 +670,9 @@ const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return
   view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize(); };
 setView(view);
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
-document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => setMood(b.dataset.season, state.time)));
-document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.follow = false; setMood(state.season, b.dataset.time); }));
-document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.follow = true; setMood(state.season, moodNow().time); }));
+document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => { setMood(b.dataset.season, state.time); track("demo.mood", { season: b.dataset.season, time: state.time, follow: state.follow ? 1 : 0 }); }));
+document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.follow = false; setMood(state.season, b.dataset.time); track("demo.mood", { season: state.season, time: b.dataset.time, follow: 0 }); }));
+document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.follow = true; setMood(state.season, moodNow().time); track("demo.mood", { season: state.season, time: state.time, follow: 1 }); }));
 // Following the clock is live: when the real hour turns, the picture turns with it (setMood has no fade of its own; a change of hour is a cut today).
 setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if (t) setMood(state.season, t); }, 20000);
 
@@ -742,6 +743,7 @@ function freeze(on) {
 ui.layer("print", { kind: "modal" });
 on("shutter", async () => {
   const b = $("shutter"); b.disabled = true;
+  track("demo.photo", { view, aspect: photo.aspect, monk: photo.monk, zoom: +photo.zoom.toFixed(2), mood: state.season + "-" + state.time });
   const at = freeze(true);
   shutterSound(); navigator.vibrate?.(12);
   const c = $("curtain"); c.classList.remove("shut"); void c.offsetWidth; c.classList.add("shut");
@@ -759,7 +761,7 @@ on("shutter", async () => {
 });
 on("printBack", () => ui.close("print"));
 on("shareBtn", async () => {
-  try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: tr("云径禅寺"), text: tr(mood.line) }); } catch {}
+  try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "print" }); } catch {}
 });
 
 // ---- Through the door ----------------------------------------------------------------
@@ -768,6 +770,7 @@ on("shareBtn", async () => {
 let inside = false, passing = false;
 const veil = $("veil"), pause = (ms) => new Promise((r) => setTimeout(r, Q.has("fast") ? ms / 6 : ms));
 let lastHall = null;
+const hallsSeen = new Set();   // the halls first entered this visit, for the one event that says how far he went
 // What is seen through a hall's door from inside. From where he would stand on its porch, at a grown eye's height, the
 // whole surrounding is drawn once onto the six faces of a cube; the room hangs that beyond its doorway (interior.js).
 // It is taken while the courts are still showing, behind the veil, and again if the season or the hour is changed
@@ -830,6 +833,7 @@ function indoors(hall) {
   else { pos.set(lastHall.out[0], EYE, lastHall.out[1]); yaw = lastHall.outYaw; doorArmed = false; setMood(state.season, state.time); }
   pitch = 0.04; footY = eyeY = walker.heightAt(pos.x, pos.z); heading = on ? Math.PI : Math.atan2(Math.sin(yaw), -Math.cos(yaw)); follow.reset(0.6); document.body.classList.toggle("indoors", on);
   window.dispatchEvent(new CustomEvent(on ? "entered-hall" : "left-hall", { detail: hall && hall.id }));
+  if (on && !hallsSeen.has(hall.id)) { hallsSeen.add(hall.id); track("demo.hall", { id: hall.id, count: hallsSeen.size }); }
 }
 // `hall`: one of site.halls to go into, or null to come out of the one he is in.
 async function pass(hall) {
@@ -1001,6 +1005,7 @@ window.__music = (begin) => { if (begin) hear(); return musicState(); };
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+window.__eventLog = () => (globalThis.__events || []).slice();   // what the page has named since it opened (src/analytics.js), the last 100
 window.__ui = () => ({ stack: ui.state(), modal: ui.modal(), focus: document.activeElement?.id || document.activeElement?.tagName || null });
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----
 const SOUND = [["setVolume", "volume"], ["setMusic", "music"], ["setAmbience", "ambience"], ["setEffects", "effects"]];
@@ -1010,6 +1015,7 @@ const inked = (r) => r.style.setProperty("--v", `${(100 * (r.value - r.min)) / (
 menuEl.querySelectorAll("input[type=range]").forEach((r) => r.addEventListener("input", () => inked(r)));
 function openMenu(open) {
   if (!open) { ui.close("menu"); return; }
+  if (!ui.isOpen("menu")) track("demo.menu", { inside: inside ? 1 : 0, up: upIn ? upIn.id : "", tier: quality.name });
   if (ui.open("menu")) { interrupt(); target = null; route = []; }
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));

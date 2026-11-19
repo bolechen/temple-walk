@@ -1,0 +1,32 @@
+[{"k":"before","post":{"depth":true,"gtao":true,"halation":false,"lut":false,"dof":false,"focus":0,"bakes":0},"photo":false},{"k":"after-P","post":{"depth":true,"gtao":true,"halation":false,"lut":false,"dof":true,"focus":6.115721432186803,"bakes":0},"photo":true}]
+{
+ "out": [
+  {
+   "k": "before",
+   "post": {
+    "depth": true,
+    "gtao": true,
+    "halation": false,
+    "lut": false,
+    "dof": false,
+    "focus": 0,
+    "bakes": 0
+   },
+   "photo": false
+  },
+  {
+   "k": "after-P",
+   "post": {
+    "depth": true,
+    "gtao": true,
+    "halation": false,
+    "lut": false,
+    "dof": true,
+    "focus": 6.115721432186803,
+    "bakes": 0
+   },
+   "photo": true
+  }
+ ],
+ "errs": []
+}

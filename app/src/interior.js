@@ -179,7 +179,7 @@ function buildRoom(M, hall, ox, figures) {
       add(merge([box(0.16, 0.006, 0.026, bx, Y + bh + 0.003, slotZ)]), M.bronze, () => 0.8);   // the slot's brass rim
       // On its front, the three characters 功德箱 written down the board in the name boards' own hand (plaque.js: Yunjing Bang, each
       // character evened to its neighbours' weight): gilt on a dark ground, the column two thirds as tall as the front of the box.
-      const board = /** @type {THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>} */ (makePlaque("功德箱", { vertical: true, style: "ink", seals: false }));   // an unshaped board is one mesh
+      const board = /** @type {THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>} */ (makePlaque("功德箱", { vertical: true, style: "ink", seals: false, back: M.woodV }));   // an unshaped board is one mesh
       board.scale.setScalar(0.25); board.position.set(ox + bx, Y + 0.4, bz + bd / 2 + 0.008); board.castShadow = false; g.add(board);
       Object.assign(board.material, { emissive: new THREE.Color(0xffffff), emissiveMap: board.material.map, emissiveIntensity: 0.4 });   // the gilt holds what light there is: read from the door, in a hall of lamps
       block(bx - lw / 2 - BODY, bx + lw / 2 + BODY, bz - ld / 2 - BODY, bz + ld / 2 + BODY);

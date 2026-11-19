@@ -105,9 +105,24 @@ jobs:
         run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
       # network, so only here and by hand, never in the way of a merge.
-      - name: The evidence in the store is what the manifests say
+      # Two stores (#247): the original (Hugging Face, `fallback`) and the copy readers use (`base`, R2). The bucket is read
+      # over its S3 interface with the repository's secrets; the public domain is read too, a read it answers with
+      # Cloudflare's verification page being hashed from the original instead. If they disagree, the original is right
+      # and the copy is mirrored again (`node tools/evidence.mjs mirror`).
+      - name: The bucket holds what the manifests say (S3)
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: node tools/evidence.mjs verify-store
+      - name: The evidence at the public address is what the manifests say
         if: steps.mine.outputs.run == 'true' && matrix.shard == 1
         run: node tools/evidence.mjs verify --all
+      - name: The evidence in the original store is what the manifests say
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all
       - name: Remember the browser between runs
         if: steps.mine.outputs.run == 'true'
         id: pw

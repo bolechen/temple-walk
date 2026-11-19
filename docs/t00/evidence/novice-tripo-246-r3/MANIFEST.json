@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 203196,
+   "sha256": "2707d96c14dc8cbed7462c398196ed500bee360d5a97703e2df49aaa5aaa16be",
+   "rev": "0536b75c1646c11864e5c3c5a904d4af7e9deaba"
+  },
+  {
+   "path": "hand-curl-before-after.png",
+   "bytes": 364821,
+   "sha256": "adcc214c10fb749e675475a219d6d3e25083a63532d6ac2b55e7fa91c1a60527",
+   "rev": "cd1e8b2c5abbe2e160fdf0582f28e7e2539089ea"
+  },
+  {
+   "path": "hands.png",
+   "bytes": 2162348,
+   "sha256": "3d1e6ae2f59c40db3aebabf825c1356c9a429b0ab0c797f5c9c9aa6d5fcca1ba",
+   "rev": "0536b75c1646c11864e5c3c5a904d4af7e9deaba"
+  },
+  {
+   "path": "pure-heat.png",
+   "bytes": 618054,
+   "sha256": "c32c84b0039ac871d647c2dba062e0f91e4e666d80f576e95f30caa7554e34a2",
+   "rev": "0536b75c1646c11864e5c3c5a904d4af7e9deaba"
+  },
+  {
+   "path": "seated-4sides.png",
+   "bytes": 1044489,
+   "sha256": "08c3cf3409ce95208d2161bf025be3272ba53903dd2345a2c13fa9420d3d2ef2",
+   "rev": "0536b75c1646c11864e5c3c5a904d4af7e9deaba"
+  },
+  {
+   "path": "stand-pray-walk.png",
+   "bytes": 1370845,
+   "sha256": "27f57f21b8dc886f7470f0403326902dc879ef92d8c0c87fd6343df4e5be6359",
+   "rev": "0536b75c1646c11864e5c3c5a904d4af7e9deaba"
+  },
+  {
+   "path": "tea-curl-before-after.png",
+   "bytes": 829822,
+   "sha256": "80a17784d2d1b01192bac4757277cf53857c50b253ab649fd239adf717da9f26",
+   "rev": "cd1e8b2c5abbe2e160fdf0582f28e7e2539089ea"
+  },
+  {
+   "path": "trousers-alone.png",
+   "bytes": 668792,
+   "sha256": "732bde191045588b0d7e5ec9b41f1cd3791ddc1b0511057ef4224c71e8007d6d",
+   "rev": "0536b75c1646c11864e5c3c5a904d4af7e9deaba"
+  }
+ ]
+}
