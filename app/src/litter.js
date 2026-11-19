@@ -17,11 +17,12 @@ import * as THREE from "three";
 // square metre: the stone covered). POOL: how many leaves are kept each in its own place at once, by tier (as a game keeps a
 // fixed ring of decals): when a new one comes down and the pool is full, the oldest goes onto its cell's heap. FADE: seconds
 // in which a heap sinks to a third, into the old leaves the paving draws anyway (litterLayer), so that the ground does not
-// go on filling. RISE: a step up this high stops a scuffed leaf. KICK: how far round a shoe leaves are scuffed, how far they
+// go on filling. GONE: where there are no heaps (the low tier), the seconds in which the oldest leaf fades away where it
+// lies when the pool is full. RISE: a step up this high stops a scuffed leaf. KICK: how far round a shoe leaves are scuffed, how far they
 // go, and the share of the heap under it pushed on.
 export const MEM = {
   PER: 4, SLOTS: 7, DMAX: 12,
-  POOL: { high: 1000, medium: 1000, low: 500 }, FADE: 180, RISE: 0.05,
+  POOL: { high: 1000, medium: 1000, low: 500 }, FADE: 180, GONE: 1.5, RISE: 0.05,
   KICK: { r: 0.17, push: [0.08, 0.2], heap: 0.2 },
 };
 const NO = -1000;
@@ -29,17 +30,18 @@ const fract = (x) => x - Math.floor(x);
 const hash = (n) => fract(Math.sin(n * 12.9898) * 43758.5453);
 // `span`: the side of the square in metres; `ground(x, z)`: the height of the ground (fall.js's groundAt, the same cells),
 // NO_GROUND (-1000) where there is none.
-/** @param {{ span?: number, ground?: (x: number, z: number) => number, pool?: number }} [o] */
-export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.high } = {}) {
+/** @param {{ span?: number, ground?: (x: number, z: number) => number, pool?: number, heap?: boolean }} [o] */
+export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.high, heap = true } = {}) {
   const PER = MEM.PER, N = Math.round(span * PER), S = MEM.SLOTS, half = span / 2, step = span / 8;
   const dens = new Float32Array(N * N), gnd = new Float32Array(N * N), ownX = new Int32Array(N * N).fill(-1 << 30), ownZ = new Int32Array(N * N);
   const slots = new Int32Array(N * N * S).fill(-1);
-  const P = pool, lx = new Float64Array(P), lz = new Float64Array(P), lid = new Uint8Array(P), lborn = new Float64Array(P), lcell = new Int32Array(P).fill(-1);
+  const P = heap ? pool : pool + 64, lx = new Float64Array(P), lz = new Float64Array(P), lid = new Uint8Array(P), lborn = new Float64Array(P), lcell = new Int32Array(P).fill(-1), ldie = new Float64Array(P).fill(-1);
+  let nDying = 0;   // (without heaps: leaves giving up their place, fading over MEM.GONE seconds)
   const free = []; for (let i = P - 1; i >= 0; i--) free.push(i);
   // The leaves now lying, packed at the front of one list, so that the breeze and the feet look only at those.
   const live = new Int32Array(P), at = new Int32Array(P).fill(-1); let nLive = 0;
   const take = () => { const i = free.pop(); at[i] = nLive; live[nLive++] = i; return i; };
-  const release = (i) => { lcell[i] = -1; free.push(i); const k = at[i], j = live[--nLive]; live[k] = j; at[j] = k; at[i] = -1; };
+  const release = (i) => { if (ldie[i] >= 0) { ldie[i] = -1; nDying--; } lcell[i] = -1; free.push(i); const k = at[i], j = live[--nLive]; live[k] = j; at[j] = k; at[i] = -1; };
   let cx = 0, cz = 0, placed = false, clock = 0, since = 0, dirty = true;
   // The order they came down in, oldest first, so that the oldest can give up its place when the pool is full.
   const order = new Int32Array(P); let head = 0, tail = 0, queued = 0;
@@ -61,7 +63,7 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
   const placeIn = (c, i) => {
     let k = -1, old = -1;
     for (let q = 0; q < S; q++) { const j = slots[c * S + q]; if (j < 0) { k = q; break; } if (old < 0 || lborn[j] < lborn[slots[c * S + old]]) old = q; }
-    if (k < 0) { const j = slots[c * S + old]; release(j); heapUp(c, 1); count.heaped++; k = old; }
+    if (k < 0) { const j = slots[c * S + old]; release(j); if (heap) { heapUp(c, 1); count.heaped++; } else count.full++; k = old; }
     slots[c * S + k] = i; lcell[i] = c;
   };
   const cellOf = (x, z) => [Math.floor(x * PER), Math.floor(z * PER)];
@@ -95,9 +97,15 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
       const [ix, iz] = cellOf(x, z); if (!inSquare(ix, iz)) return false;
       const c = claim(ix, iz); if (gnd[c] <= NO / 2) return false;
       count.landed++; dirty = true;
-      while (!free.length && queued) { const j = order[head]; head = (head + 1) % P; queued--; if (lcell[j] >= 0) { const cj = lcell[j]; kill(j); heapUp(cj, 1); count.heaped++; } }
-      if (!free.length) { heapUp(c, 1); count.heaped++; return true; }
-      const i = take(); lx[i] = x; lz[i] = z; lid[i] = Math.max(1, Math.min(255, id | 0)); lborn[i] = clock;
+      if (heap) while (!free.length && queued) { const j = order[head]; head = (head + 1) % P; queued--; if (lcell[j] >= 0) { const cj = lcell[j]; kill(j); heapUp(cj, 1); count.heaped++; } }
+      else {
+        // Without heaps (the low tier): when the pool is full the oldest leaf begins to fade where it lies, and is gone
+        // MEM.GONE seconds later; it never vanishes at once.
+        while (nLive - nDying >= pool && queued) { const j = order[head]; head = (head + 1) % P; queued--; if (lcell[j] >= 0 && ldie[j] < 0) { ldie[j] = clock; nDying++; count.faded++; } }
+        if (!free.length) { let o = -1; for (let k = 0; k < nLive; k++) { const j = live[k]; if (ldie[j] >= 0 && (o < 0 || ldie[j] < ldie[o])) o = j; } if (o >= 0) kill(o); }
+      }
+      if (!free.length) { if (heap) { heapUp(c, 1); count.heaped++; } return true; }
+      const i = take(); lx[i] = x; lz[i] = z; lid[i] = 1 + ((id | 0) % 63); lborn[i] = clock;
       if (queued === P) { head = (head + 1) % P; queued--; }
       order[tail] = i; tail = (tail + 1) % P; queued++;
       placeIn(c, i); return true;
@@ -105,6 +113,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
     // Time going by (`dt` seconds): the heaps sink slowly into the old leaves, a tenth of a second at a time.
     tick(dt) {
       clock += dt; since += dt; if (since < 0.1) return; const T = since; since = 0;
+      if (nDying) for (let k = nLive - 1; k >= 0; k--) { const i = live[k]; if (ldie[i] >= 0) { dirty = true; if (clock - ldie[i] >= MEM.GONE) kill(i); } }
+      if (!heap) return;
       const k = Math.exp(-T / MEM.FADE); let any = false;
       for (let c = 0; c < N * N; c++) if (dens[c] > 0) { const d = dens[c] * k; count.faded += dens[c] - d; dens[c] = d < 0.01 ? 0 : d; any = true; }
       if (any) dirty = true;
@@ -151,7 +161,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
     centre: () => [cx, cz],
     // Writes the record as the paving reads it: a picture 2N × N of four 16-bit numbers a point, two points to a cell.
     // The first number is the heap (0 to DMAX as 0 to 65535); each of the other seven is a place: its spot in the cell
-    // (x and z, a sixteenth each) in the high byte and the leaf's own number (1 to 255; 0: empty) in the low. Returns
+    // (x and z, a sixteenth each) in the high byte, and in the low one how far it has faded (two bits, 0 to 3 thirds) over
+    // the leaf's own number (1 to 63; 0: empty). Returns
     // whether anything changed since the last time. `cover` (N × N, two bytes a cell), if given, gets the heap again
     // (0 to DMAX as 0 to 255) and 255 where any place in the cell is taken: one smooth look-up there tells the paving
     // how deep the heap is and whether any kept leaf lies near enough to look for.
@@ -166,7 +177,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
         for (let k = 0; k < S; k++) {
           const i = slots[c * S + k]; if (i < 0) continue;
           const qx = Math.min(15, Math.max(0, Math.floor((lx[i] * PER - ownX[c]) * 16))), qz = Math.min(15, Math.max(0, Math.floor((lz[i] * PER - ownZ[c]) * 16)));
-          out[o + 1 + w++] = (qx * 16 + qz) * 256 + lid[i];
+          const fade = ldie[i] < 0 ? 0 : Math.min(3, 1 + Math.floor((clock - ldie[i]) / (MEM.GONE / 3)));
+          out[o + 1 + w++] = (qx * 16 + qz) * 256 + fade * 64 + lid[i];
         }
       }
       return true;
@@ -175,9 +187,9 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
 }
 
 // The record on the card, and the uniforms the paving reads it by: (centre x, centre z, cells to a metre, cells across).
-/** @param {{ span?: number, ground?: (x: number, z: number) => number, pool?: number }} [o] */
-export function createLitter({ span = 32, ground = undefined, pool = undefined } = {}) {
-  const mem = createMemory({ span, ground, pool }), N = mem.N, data = new Uint16Array(2 * N * N * 4), sent = new Uint16Array(data.length);
+/** @param {{ span?: number, ground?: (x: number, z: number) => number, pool?: number, heap?: boolean }} [o] */
+export function createLitter({ span = 32, ground = undefined, pool = undefined, heap = true } = {}) {
+  const mem = createMemory({ span, ground, pool, heap }), N = mem.N, data = new Uint16Array(2 * N * N * 4), sent = new Uint16Array(data.length);
   const tex = new THREE.DataTexture(data, 2 * N, N, THREE.RGBAIntegerFormat, THREE.UnsignedShortType);
   tex.internalFormat = "RGBA16UI"; tex.minFilter = tex.magFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
   const cdata = new Uint8Array(N * N * 2), cover = new THREE.DataTexture(cdata, N, N, THREE.RGFormat, THREE.UnsignedByteType);
@@ -225,10 +237,10 @@ vec4 freshLeaves(vec2 p, float gk){
     for(int k=0;k<${MEM.SLOTS};k++){
       uint sl=k==0?A.g:k==1?A.b:k==2?A.a:k==3?B.r:k==4?B.g:k==5?B.b:B.a; if(sl==0u) break;
       vec2 q=vec2(float(sl>>12u),float((sl>>8u)&15u)), lp=(c+(q+.5)/16.)/uLitMem.z, d0=p-lp; if(dot(d0,d0)>.0026) continue;   // no leaf reaches past 5 cm from its middle
-      float id=float(sl&255u), ang=h21(vec2(id,3.7))*6.2832, big=h21(vec2(id,31.7)), tree=step(h21(vec2(id,8.8)),gk);
+      float id=float(sl&63u), gone=float((sl>>6u)&3u)/3., ang=h21(vec2(id,3.7))*6.2832, big=h21(vec2(id,31.7)), tree=step(h21(vec2(id,8.8)),gk);
       vec2 l=mat2(cos(ang),-sin(ang),sin(ang),cos(ang))*d0;
       float len=mix(.02,.05,big*big), wid=len*mix(.4,.62,h21(vec2(id,2.2)))*mix(1.,1.5,tree);
-      float m=(h21(vec2(id,44.4))<.25?step(-.1*len,l.y):1.)*smoothstep(1.,.7,length(l/vec2(len,wid)));
+      float m=(1.-gone)*(h21(vec2(id,44.4))<.25?step(-.1*len,l.y):1.)*smoothstep(1.,.7,length(l/vec2(len,wid)));   // a leaf giving up its place fades
       if(m>best.z) best=vec4(h21(vec2(id,21.9)),.15*h21(vec2(id,5.5)),m,tree);
     }
   }

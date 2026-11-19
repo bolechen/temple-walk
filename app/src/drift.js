@@ -116,7 +116,8 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   // just touched the ground, and if it was one the shader shows (its source, no roof over it), the ground keeps it where
   // it touched. Over a jump of the clock (a photograph held, a hidden tab) nothing is handed over: the leaves that fell
   // while nobody looked are not heaped up at once.
-  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z), pool: opts.keep >= 32 ? MEM.POOL.high : MEM.POOL.low }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0, sent = 0, sentAt = -1, kicked = false;
+  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z), pool: opts.keep >= 32 ? MEM.POOL.high : MEM.POOL.low, heap: opts.keep >= 32 }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0, sent = 0, sentAt = -1, kicked = false;
+  // (The low tier, a 24 m square, keeps no heaps: its oldest leaves fade where they lie. The lead, 2026-11-19, for its frame.)
   if (lit) { U.tLitMem.value = lit.tex; U.tLitCover.value = lit.cover; }
   // Each point's timing for this kind of weather, worked out once (fall.js, leafTimes): no sums are redone every frame.
   const sTf = new Float64Array(count), sP = new Float64Array(count), sOff = new Float64Array(count), sTree = new Uint8Array(count); let timed = null;

@@ -98,7 +98,7 @@ test("the paving's texture says where each kept leaf lies, to a sixteenth of its
   const mem = createMemory({ span: 8 }); mem.follow(0, 0); mem.land(1.3, -0.7, 77);
   const out = new Uint16Array(2 * mem.N * mem.N * 4); assert.ok(mem.pack(out));
   const ix = Math.floor(1.3 * 4), iz = Math.floor(-0.7 * 4), ci = ((ix % mem.N) + mem.N) % mem.N, cj = ((iz % mem.N) + mem.N) % mem.N, o = (cj * 2 * mem.N + ci * 2) * 4;
-  assert.equal(out[o + 1] & 255, 77); const q = out[o + 1] >> 8;
+  assert.equal(out[o + 1] & 63, 1 + (77 % 63)); assert.equal((out[o + 1] >> 6) & 3, 0, "a fresh leaf is drawn faded"); const q = out[o + 1] >> 8;
   assert.ok(Math.abs((ix + (Math.floor(q / 16) + 0.5) / 16) / 4 - 1.3) < 1 / 64 && Math.abs((iz + ((q % 16) + 0.5) / 16) / 4 + 0.7) < 1 / 64);
 });
 
@@ -111,4 +111,30 @@ test("the trees let go with the gusts: over ten minutes most leaves come down in
   console.log("landings", times.length, "in the gustiest third", top.toFixed(2), "in the stillest", low.toFixed(2));
   assert.ok(top > 0.5, "the gustiest third of the time brings down only " + top.toFixed(2));
   assert.ok(low < 0.1, "the stillest third of the time still brings down " + low.toFixed(2));
+});
+
+test("the low tier keeps no heaps: when its pool is full the oldest leaf fades where it lies over GONE seconds, never at once", () => {
+  const mem = createMemory({ span: 24, pool: 50, heap: false }); mem.follow(0, 0);
+  for (let i = 0; i < 60; i++) { mem.land(-4 + (i % 20) * 0.4, -2 + Math.floor(i / 20) * 0.6, 1 + i); mem.tick(0.05); }
+  assert.equal(mem.heap(), 0, "a heap was kept");
+  const out = new Uint16Array(2 * mem.N * mem.N * 4); mem.pack(out);
+  let fading = 0; for (let k = 0; k < out.length; k++) if ((k & 7) && out[k] && ((out[k] >> 6) & 3)) fading++;
+  assert.equal(fading, 10, "the ten oldest are not fading");
+  assert.equal(mem.leaves().length, 60, "a leaf vanished at once instead of fading");
+  for (let k = 0; k < 20; k++) mem.tick(0.1);
+  assert.equal(mem.leaves().length, 50, "the faded ones did not go after GONE seconds");
+});
+
+test("on the low tier too, of 100 leaves tracked nine in ten or more still lie where they came down a minute later", () => {
+  const d = seeded(() => createDrift(new THREE.Scene(), 640, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter, litter: false, keep: 24 }));
+  d.setMood({ drift: "leaf", wind: 1.05 }, new THREE.Color(1, 1, 1));
+  const mem = d.memory, spots = []; let t = 100, done = 0, stayed = 0;
+  for (let s = 0; s < 400 && done < 100; s++) {
+    t = run(d, 1, () => [0, 0], t, (x, z, at) => { if (spots.length < 100) spots.push({ x, z, t: at, seen: false }); });
+    const lying = mem.leaves();
+    for (const p of spots) { if (p.seen || t - p.t < 60) continue; p.seen = true; done++; if (lying.some((l) => Math.abs(l[0] - p.x) < 1 / 64 && Math.abs(l[1] - p.z) < 1 / 64)) stayed++; }
+  }
+  assert.equal(done, 100); assert.equal(mem.heap(), 0);
+  assert.ok(stayed >= 90, `only ${stayed} of 100 still lay where they came down`);
+  console.log("low tier: still where they came down after a minute:", stayed, "of 100");
 });
