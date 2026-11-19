@@ -5,7 +5,7 @@ import "../../tests/unit/dom-stub.mjs";
 import * as THREE from "three";
 import { readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
-import { decode, NO_FLOOR } from "../../app/src/walkgrid.js";
+import { decode, oldReached, NO_FLOOR } from "../../app/src/walkgrid.js";
 import { buildDrawn } from "../walk/scene.mjs";
 
 export const FILE = new URL("../../app/shared/walk/t00.bin", import.meta.url);
@@ -13,10 +13,12 @@ export const EYE = 1.3;          // his eye above the floor (the walk bake's CLE
 export const HIGH = 4.0;         // the raised camera's eye above the floor, for the slanting look down
 
 /** The baked floor, ready to ask: which grid a spot belongs to, whether he may stand there, the height of the floor. */
-export function floor(bytes = readFileSync(FILE)) {
+export function floor(bytes = readFileSync(FILE), { shipped = true } = {}) {
   const { header, grids } = decode(new Uint8Array(bytes), (b) => inflateRawSync(b));
   const by = new Map(grids.map((g) => [g.id, g]));
-  const at = (grid, x, z) => { const g = by.get(grid); if (!g) return null; const k = g.cell(x, z); if (k < 0 || g.height[k] === NO_FLOOR || g.state[k] !== 0) return null; return { k, y: g.height[k] / 100 + g.base }; };
+  const at = (grid, x, z) => { const g = by.get(grid); if (!g) return null; const k = g.cell(x, z); if (k < 0 || g.height[k] === NO_FLOOR || g.state[k] !== 0) return null;
+    // `shipped`: also reached by the walker the page runs today (the baked `old` bit). The new floor alone stands in places the visitor cannot get to (1,327 m² outdoors on 2026-11-19: strips outside the walls, the gate's timber).
+    if (shipped && !oldReached(g.old, k)) return null; return { k, y: g.height[k] / 100 + g.base }; };
   /** The nearest open cell to (x, z) within `r` metres, or null. */
   const near = (grid, x, z, r) => {
     const g = by.get(grid); if (!g) return null; let best = null;
@@ -27,7 +29,7 @@ export function floor(bytes = readFileSync(FILE)) {
     }
     return best;
   };
-  return { header, grids, by, at, near, open: (grid) => { const g = by.get(grid), out = []; for (let k = 0; k < g.nx * g.nz; k++) if (g.height[k] !== NO_FLOOR && g.state[k] === 0) out.push([g.x0 + ((k % g.nx) + 0.5) * g.step, g.z0 + (Math.floor(k / g.nx) + 0.5) * g.step, g.height[k] / 100 + g.base]); return out; } };
+  return { header, grids, by, at, near, open: (grid) => { const g = by.get(grid), out = []; for (let k = 0; k < g.nx * g.nz; k++) if (g.height[k] !== NO_FLOOR && g.state[k] === 0 && (!shipped || oldReached(g.old, k))) out.push([g.x0 + ((k % g.nx) + 0.5) * g.step, g.z0 + (Math.floor(k / g.nx) + 0.5) * g.step, g.height[k] / 100 + g.base]); return out; } };
 }
 
 const unit = (a) => { const l = Math.hypot(a[0], a[1]) || 1; return [a[0] / l, a[1] / l]; };

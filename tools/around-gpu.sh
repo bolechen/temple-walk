@@ -7,6 +7,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 node tools/around.mjs tools/out/around
+if [ "${1:-}" = "--follow" ]; then   # the second round: the stations the first round's sheets raised questions about, full size, with __pick and the walker's answer
+  SPEC="$(node tools/around/follow.mjs)"
+  KEEP_MODELS=1 EXTRA_FILES="tools/around-shots.cjs tools/out/around/around-plan.cjs" JOB_TIMEOUT=30m tools/gpu-render.sh t4-small "$SPEC"; exit
+fi
 LIMIT=1000000; [ "${1:-}" = "--try" ] && LIMIT=3
-SPEC="$(node -e 'console.log(JSON.stringify({seconds:0,shots:[],script:"around-shots.cjs",args:{plan:"around-plan.cjs",out:"shots",size:[960,540],vsize:[320,180],limit:+process.argv[1]}}))' "$LIMIT")"
+SPEC="$(node -e 'console.log(JSON.stringify({seconds:0,shots:[],script:"around-shots.cjs",args:{plan:"around-plan.cjs",out:"shots",size:[960,540],vsize:[320,180],limit:+process.argv[1],hideMonk:true,inspect:true}}))' "$LIMIT")"
 KEEP_MODELS=1 EXTRA_FILES="tools/around-shots.cjs tools/out/around/around-plan.cjs" JOB_TIMEOUT="${JOB_TIMEOUT:-45m}" tools/gpu-render.sh t4-small "$SPEC"

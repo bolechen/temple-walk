@@ -6,3 +6,9 @@
 - `collage.jpg`（进仓库，256 KB）：每件东西的背面（或北面）一格，70 件。`sheets/` 是接触表（29 张，只在数据集里；`node tools/evidence.mjs pull docs/t00/evidence/around-252` 取回）：`items-<类的英文名>.jpg`（plaque、building、hall-door、places、seat-*、bell-drum、censer、frame、offering-box、altar、rail、cedar、tree、post） 每行一件、每列一个方向（正、右、背、左、斜俯视；无正面的东西用南东北西）；`visitors-NN.jpg` 每张 20 个游客眼，每行八格（平视四向，仰 20° 四向）。
 - `screen-wall-3views.jpg`：照壁的正面、背面、斜看，软件渲染，640×360，对应报告里的第一条。
 - 重出：`tools/around-gpu.sh`（写明的命令见 `CLAUDE.md`）；接触表 `python3 tools/around-sheet.py <shots dir> <out> --collage collage.jpg`。
+
+## 第二轮（`round2/`，主创复核后）
+
+- 游客眼重拍：运行 `20261119-074704`（站点提交 `86388eb`，指纹 `ba6682fb…`，作业内 8 分 52 秒，1989 张，T4）；只取「新格子开着、旧 walker 走得到」的格子，隐去小沙弥，每张记 `__pick` 前三项和 `__blocked`：`round2/shots.json`（`pick` 是 `[part, material, distance]` 三元组的数组）。
+- 点名站位的补拍：运行 `20261119-074118`（4 分 42 秒，266 张，全尺寸 960×540）：`round2/follow-shots.json`；大雄宝殿佛像背面三张 `extras/`；`?cam=` 核对三张 `camcheck/`；`camcheck-vs-look.jpg`、`flat-green-shipped-reachable.jpg`、`frames-and-well-stations.jpg`、`main-buddha-back.jpg`、`lang-cards-en-vs-zh.jpg` 是拼图；`sheets/` 是重拍后的接触表（29 张）。
+- T4 合计这一轮约 14 分钟（两次作业 8 分 52 秒 + 4 分 42 秒，不含上传取回）。

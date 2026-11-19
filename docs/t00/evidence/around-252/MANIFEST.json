@@ -9,6 +9,246 @@
    "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
   },
   {
+   "path": "round2/camcheck-vs-look.jpg",
+   "bytes": 55971,
+   "sha256": "2c900b055ddeae835455026b4641450243a96559f24ca62abf1049956d1bd874",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/camcheck/level.jpg",
+   "bytes": 12483,
+   "sha256": "37e4b372d0a66e710fadcad9651b8171e5b66bd1cb275dfac095944275bc3e31",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/camcheck/room.jpg",
+   "bytes": 44699,
+   "sha256": "a845f3082dfe17c5d1b48eb522a061795ac80555bdf5ef53050d94e400086739",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/camcheck/up.jpg",
+   "bytes": 46641,
+   "sha256": "67acee56ff649ab333013090d8ab909da511463b7e79970a3dfe04bd4e355eea",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/extras/main-altar-back-a.jpg",
+   "bytes": 45650,
+   "sha256": "6b7d484fc458af80c725d05d05755ad85a4ed7cba39070f54be66df9f2963fcb",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/extras/main-altar-back-b.jpg",
+   "bytes": 45375,
+   "sha256": "168c30af0c23e176d62e77cea95cee3086be56cf623a706f0e09b3ceda0900d2",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/extras/main-altar-back-c.jpg",
+   "bytes": 26767,
+   "sha256": "343d9b0d967d93c9c43a627f33012047ef8fbe9ee269785e82c82de82dfc3041",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/flat-green-shipped-reachable.jpg",
+   "bytes": 124970,
+   "sha256": "829461ef21c00c3dc3308d61e71d13087a261c843acefb3ec411654a8135abbe",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/frames-and-well-stations.jpg",
+   "bytes": 134956,
+   "sha256": "eb3476f9e4e3175211755788d024d32642e2595577c1bb17fd90795586a64e9f",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/lang-cards-en-vs-zh.jpg",
+   "bytes": 43590,
+   "sha256": "97a9a2017bd75fec6f765a93bd82b5dbf85135fff9cd3eed5df0bc3e542dcfe6",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/main-buddha-back.jpg",
+   "bytes": 54654,
+   "sha256": "15e3b2dc1feb020a3703b59a7cf37067b471ffae45193c4de4a3f08341b368db",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-altar.jpg",
+   "bytes": 364259,
+   "sha256": "c4a0f34151bb21d8514c0fc5893c47ab36d22b99e22dadba737a1d23195849f1",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-bell-drum.jpg",
+   "bytes": 80586,
+   "sha256": "6594dd027579285efcb2e243fe897947bf6161df9f033d80702b123bd9ae3e18",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-building-1.jpg",
+   "bytes": 344735,
+   "sha256": "d0ffc4c8f0b5e4ebb37eca030e4c82587eb9a306144bd67fdea67f36879fad6a",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-building-2.jpg",
+   "bytes": 373003,
+   "sha256": "06a6510c8492db88dd68d7389f1d886a0797ff834e8d420cbf21f0e5da1f2869",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-building-3.jpg",
+   "bytes": 69413,
+   "sha256": "a9a436a14ebef7badcee533bd8a6cd39915af867bf2d06cb4ae6a7c3b2eb0233",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-cedar.jpg",
+   "bytes": 95617,
+   "sha256": "2435be5ede647c8be986b62250c56d230d810fdd98f2f29ee275daf1926eb553",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-censer.jpg",
+   "bytes": 54940,
+   "sha256": "ef37b01af862ef1527382f23f9c28c6d5132e12366ef16044890bf64d87562f4",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-frame.jpg",
+   "bytes": 174794,
+   "sha256": "ec2f6d42b1794ada121c8261fd0c055edfc38ea3b77a0950ad9af0e1041bb9ca",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-hall-door.jpg",
+   "bytes": 96727,
+   "sha256": "9f9fd7f724edd2a13cad2885fba2927a421382058c22ce48db5ab8866e6cdad0",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-offering-box.jpg",
+   "bytes": 50918,
+   "sha256": "5bac4a2ec0ca4c86cb36609a5de00d435be0843a25683282262f1919278ead7f",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-places.jpg",
+   "bytes": 301751,
+   "sha256": "d49ac1f9817115d4f080a7f5eab33e3ec0dd884d5476c1510f03630585320ac4",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-plaque-1.jpg",
+   "bytes": 319145,
+   "sha256": "d0eff2a6a811bbdc0dcdeb14ea2f10a299381f1ff9aade705a5c24ea38faacb4",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-plaque-2.jpg",
+   "bytes": 342772,
+   "sha256": "305518f102a52801ee2fdefa273a30c3ae84564e37175cf239d43bf532bb833d",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-plaque-3.jpg",
+   "bytes": 83832,
+   "sha256": "193e69b10f35e27d7dd0a5aee56b61c12e28dab875164ddf15ec946a82dd8977",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-post.jpg",
+   "bytes": 197065,
+   "sha256": "0065daeeb06a91aa421d36ab8bbce55e4e091dd10ecc691fbbda311f21d44c76",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-rail.jpg",
+   "bytes": 133817,
+   "sha256": "06e62e42a8aefd032198a6995d69d02e05c3bf196f00851880ddfc20d987e38d",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-seat-cushion.jpg",
+   "bytes": 164651,
+   "sha256": "7e30da931d6eae37c424661b88dcbe962724f0c1a2ed221aa1fd95e5862baedc",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-seat-stool.jpg",
+   "bytes": 148590,
+   "sha256": "96214a2cdc9e604d1ab1f9c87974667688844f513dd434b845d5c6f1e25b1c86",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/items-tree.jpg",
+   "bytes": 212975,
+   "sha256": "9a22a74f168d9054c5c5dd45252181dc3ffef898c3f4200a15f4616b59c67740",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-01.jpg",
+   "bytes": 475653,
+   "sha256": "be8ed9c902fc73fc064aa0bb13041915419bd981fe9c87e973d2998ff5112181",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-02.jpg",
+   "bytes": 486117,
+   "sha256": "a0ed7d4b2f1d1dce116a8ffaf2f798f90a4129dde56080e63aa9bc5bb2efc203",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-03.jpg",
+   "bytes": 486547,
+   "sha256": "f328a4e34bba60063a56edc1d5753a135e845bb395a8701e16be420f72127cff",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-04.jpg",
+   "bytes": 489867,
+   "sha256": "793db0b4c8b5e33257ef172d0a1bcc891a39f0be66125cb52e25d5a9e8d4ba5d",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-05.jpg",
+   "bytes": 477871,
+   "sha256": "57194c735085c6228c4ee2122667c2c560933b1d863387b7723c39873e19e901",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-06.jpg",
+   "bytes": 490114,
+   "sha256": "2afb0296d9fa9b7c4a23e381d54ecd9ca92d4e1298ce99c41b025c81b3980eed",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-07.jpg",
+   "bytes": 490851,
+   "sha256": "9d9e69f7d350edf86af4346ccd16ed58d23d7f49b64ab5cff4f80cd5de828f00",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-08.jpg",
+   "bytes": 473623,
+   "sha256": "c8f3c9d2f4cc458dbbff6e004841820234fa7799fd43335239077ec9126c5bb9",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-09.jpg",
+   "bytes": 475512,
+   "sha256": "1c502ea9c3ce0eaf16ce471ceeaf885643797adc270c0158957d15128f4b5567",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
+   "path": "round2/sheets/visitors-10.jpg",
+   "bytes": 500827,
+   "sha256": "f875f04b22fa34e549d465a415d61415b4d2bcc99ea9b951354999b4a466995e",
+   "rev": "22073220e9dd304db0162aa3d64d3b1623f7d277"
+  },
+  {
    "path": "screen-wall-3views.jpg",
    "bytes": 89916,
    "sha256": "61b5e4a9c23f2d970430939e2f7bc64ee296fc38adfdf67b9a7e0b0954259730",
