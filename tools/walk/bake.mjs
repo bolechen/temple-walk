@@ -20,9 +20,10 @@
 //     more than CLIMB above its own (the foot of a ledge: the top of a ledge is not a border, so he may stand at a
 //     porch's very edge), or where a neighbour has no floor at all. Every cell nearer a border than his reach at the
 //     heights it takes up (his outline, measured from the real models by tools/edges.mjs, every 5 cm of height) is shut.
-//     Below CLIMB a thing is passed over (the riser of a tread he climbs, a sill he steps over) unless it stands up more
-//     than LOW and has no foothold (a level 15 cm square) at its height within 0.2 m: a root, the foot of the censer. That
-//     keeps his shoes and the hem of his robe off it, by `OUTLINE.low` (#265, the spike's 5 之二).
+//     Below CLIMB a face is passed over when just across it there is a foothold (a level 15 cm square) at its top: the riser
+//     of a tread he climbs, a sill he steps over. Any other face that stands up more than LOW (a root, the foot of the
+//     censer, the side of a stair's cheek) keeps his shoes and the hem of his robe off it, by `OUTLINE.low` (#265, the
+//     spike's 5 之二). A sill no higher than SILL raises the floor within his shoes' reach of it to its top.
 //     A hall's doorway, beyond the line where the door takes him in (`hall.stop`: drawn open, but an intent), is shut.
 //  5. What cannot be walked to from the seeds, around the shut cells (a hall's hollow shell, a porch with no stair), is
 //     shut too.
@@ -37,7 +38,7 @@ import { NO_FLOOR } from "../../app/src/walkgrid.js";
 
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 13,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 14,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -47,6 +48,7 @@ export const BAKE = Object.freeze({
   HEAD: 0.13,      // his reach over the top of his outline (the hat), up to CLEAR
   LOW: 0.03,       // the least a thing must stand up from his floor, below CLIMB, to be kept his shoe's reach off (a sill is a floor)
   FOOTHOLD: 0.015, // a 15 cm square of floor level within this is somewhere his shoe can stand: the top of a tread, a sill
+  SILL: 0.08,      // a step no higher than this (a sill) raises the floor his reach round it to its top, as a sill he stands astride
   OLD_STEP: 0.34,  // the most the written plan's floor may step between two cells he walks across (route.js's ROUTE.step)
 });
 
@@ -236,10 +238,16 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     for (let b = -1; b <= 1 && ok; b++) for (let a = -1; a <= 1; a++) if (!(Math.abs(h[k + b * nx + a] - y) <= BAKE.FOOTHOLD)) { ok = 0; break; }
     foothold[k] = ok;
   }
-  // A low thing in a cell: what stands up from LOW to CLIMB over its floor, unless there is a foothold at that height within
-  // 0.2 m (then it is the riser of a step he takes, or the face of a sill he steps over).
-  const lowBot = new Float32Array(N).fill(NaN), lowTop = new Float32Array(N), lowWhat = new Int16Array(N).fill(-1), FH = Math.round(0.2 / step);
-  const stepNear = (i, j, y0, y1) => { for (let b = -FH; b <= FH; b++) for (let a = -FH; a <= FH; a++) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (foothold[kk] && h[kk] > y0 && h[kk] <= y1 + 0.02) return true; } return false; };
+  // A low thing in a cell: a face that stands up from LOW to CLIMB over its floor, unless just across that face (behind it,
+  // seen from this cell) there is a foothold at its top: then it is the riser of a step he takes, or the face of a sill he
+  // steps over. The side of a stair's cheek has only the cheek's sloping top across it; a root, the censer's foot, nothing.
+  const lowBot = new Float32Array(N).fill(NaN), lowTop = new Float32Array(N), lowWhat = new Int16Array(N).fill(-1), sillTop = new Float32Array(N).fill(NaN);
+  const across = (x, z, t, y0, y1) => {
+    t.getNormal(nrm); let ax = nrm.x, az = nrm.z; const l = Math.hypot(ax, az) || 1; ax /= l; az /= l;
+    const mx = (t.a.x + t.b.x + t.c.x) / 3, mz = (t.a.z + t.b.z + t.c.z) / 3; if ((x - mx) * ax + (z - mz) * az > 0) { ax = -ax; az = -az; }   // pointing away from this cell, into the thing
+    for (const d of [0.05, 0.1, 0.15, 0.2]) { const ii = Math.floor((x + ax * d - box.x0) / step), jj = Math.floor((z + az * d - box.z0) / step); if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (foothold[kk] && h[kk] > y0 && h[kk] <= y1 + 0.02) return h[kk]; }
+    return NaN;
+  };
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const k = j * nx + i; if (Number.isNaN(h[k])) continue;
     let lo = h[k], up = 0, open = true;
@@ -250,7 +258,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     }
     const x = cx(i), z = cz(j), y = h[k];
     qbox.min.set(x - r, lo + 0.02, z - r); qbox.max.set(x + r, y + CLEAR, z + r);
-    let what = -1, wlo = Infinity, whi = -Infinity, wpost = 0, llo = NaN, lhi = -Infinity, lwhat = -1;
+    let what = -1, wlo = Infinity, whi = -Infinity, wpost = 0, llo = NaN, lhi = -Infinity, lwhat = -1, sill = NaN;
     if (S.bvh) S.bvh.shapecast({
       intersectsBounds: (bb) => bb.intersectsBox(qbox),
       intersectsTriangle: (t, ti) => {
@@ -259,12 +267,17 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
         if (slabDistance(t.a, t.b, t.c, lo + 0.02, y + CLEAR, x, z) < r) {
           if (what < 0 || p) what = id; wlo = Math.min(wlo, p ? y : slabY[0]); whi = Math.max(whi, slabY[1]); if (p) wpost = 1;
         }
-        if (!p && slabDistance(t.a, t.b, t.c, y + BAKE.LOW, y + CLIMB, x, z) < r) { if (!(llo <= slabY[0])) llo = slabY[0]; lhi = Math.max(lhi, slabY[1]); lwhat = id; }
+        if (!p && slabDistance(t.a, t.b, t.c, y + BAKE.LOW, y + CLIMB, x, z) < r) {
+          const y0 = slabY[0], y1 = slabY[1], stepTop = across(x, z, t, y + BAKE.LOW - 0.02, y1);
+          if (Number.isNaN(stepTop)) { if (!(llo <= y0)) llo = y0; lhi = Math.max(lhi, y1); lwhat = id; }
+          else if (stepTop - y <= BAKE.SILL && !(sill >= stepTop)) sill = stepTop;
+        }
         return false;
       },
     });
     if (what >= 0) { border[k] = what; bot[k] = wlo; top[k] = whi; post[k] = wpost; }
-    if (lwhat >= 0 && !stepNear(i, j, y + BAKE.LOW - 0.02, lhi)) { lowBot[k] = llo; lowTop[k] = lhi; lowWhat[k] = lwhat; }
+    if (lwhat >= 0) { lowBot[k] = llo; lowTop[k] = lhi; lowWhat[k] = lwhat; }
+    if (!Number.isNaN(sill)) sillTop[k] = sill;
     if (up > CLIMB) { if (border[k] < 0) { border[k] = LEDGE; bot[k] = y; top[k] = y + up; } else { bot[k] = Math.min(bot[k], y); top[k] = Math.max(top[k], y + up); } }
     // Beside a cell with no floor (a wall's body, a hall's shell) whatever stands there is unknown up to CLEAR, even where a
     // low thing in this cell (the stone skirt at a wall's foot) was found too.
@@ -315,6 +328,18 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     }
   }
   for (let k = 0; k < N; k++) if (!state[k] && !seen[k]) state[k] = 1 + UNREACHED;
+  // A sill (a step no higher than SILL) is a floor his shoes come down on: within his shoes' reach of its face he stands at
+  // its top, astride it, and no shoe sinks into it (the written plan widened the sill's deck by his width for the same end).
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const k0 = j * nx + i, top = sillTop[k0]; if (Number.isNaN(top)) continue;
+    const R = lowReach(0, top - h[k0]);
+    for (const [a, b, d] of disk) {
+      if (d > R) break;
+      const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
+      const kk = jj * nx + ii; if (state[kk] || h[kk] >= top || top - h[kk] > BAKE.SILL) continue;
+      h[kk] = top;
+    }
+  }
   T.push(performance.now());
   const ms = Object.fromEntries(["floors", "flood", "borders", "erode", "reach"].map((n, i) => [n, Math.round(T[i + 1] - T[i])]));
   return { x0: box.x0, z0: box.z0, nx, nz, step, h, state, names, ms };

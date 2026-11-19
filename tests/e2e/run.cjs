@@ -752,6 +752,32 @@ const scenarios = {
     expect((await R()).sat >= seats.length, "not every seat was sat on");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Which floor he walks on (#265): the grid baked from the drawn meshes over the first court by default, the written plan
+  // with ?walker=old; and a ?cam address that falls where the grid shuts him out is moved to the nearest open spot within
+  // half a metre, or back to the start of the path.
+  walkgrid: { tier: 2, async run(b, base) {
+    let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
+    const w = await t.page.evaluate(() => window.__walker());
+    console.log("    walker " + JSON.stringify(w));
+    expect(w.mode === "court" && w.bytes > 10000 && w.memory > 1e6 && w.drops > 6 && !w.failed, "the page should walk the first court on the baked floor: " + JSON.stringify(w));
+    // A spot just inside what the censer shuts, and its middle (nowhere open within half a metre), both from the page.
+    const spots = await t.page.evaluate(() => { const [x, z] = [0, 13]; let r = 0; while (window.__blocked(x + r, z) && r < 3) r += 0.02; return { near: [x + r - 0.2, z], deep: [x, z], start: window.__walker().start }; });
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&view=first&cam=${spots.near[0]},${spots.near[1]},0,0` + BARE);
+    let y = await t.state();
+    expect(Math.hypot(y.x - spots.near[0], y.z - spots.near[1]) <= 0.51 && !(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [y.x, y.z])), `a ?cam in a shut cell should settle within half a metre: ${JSON.stringify([spots.near, y.x, y.z])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&view=first&cam=${spots.deep[0]},${spots.deep[1]},0,0` + BARE);
+    y = await t.state();
+    expect(Math.hypot(y.x - spots.start[0], y.z - spots.start[1]) < 0.05, `a ?cam with nowhere open near should go back to the start: ${JSON.stringify([y.x, y.z, spots.start])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, "q=low&view=first&walker=old&cam=0,20,0,0" + BARE);
+    expect((await t.page.evaluate(() => window.__walker())).mode === "old", "?walker=old should walk the written plan");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, "q=low&view=first&walker=mesh&cam=0,20,0,0" + BARE);
+    expect((await t.page.evaluate(() => window.__walker())).mode === "mesh", "?walker=mesh should walk the grid everywhere");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Coming back: a first visit is offered only the way in; where he was is kept, and the next visit may go on from
   // there or begin again.
   resume: { tier: 2, async run(b, base) {

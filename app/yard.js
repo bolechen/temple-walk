@@ -986,7 +986,7 @@ window.__cues = cueState;   // how many times the wings and the far bell have so
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__blocked = (x, z) => walker.blocked(x, z);
 // Which walker answers (#265): its mode, what the baked floor weighed and cost to fetch, open and keep, and the porch edges.
-window.__walker = () => ({ ...walker.stats, drops: walker.drops.length });
+window.__walker = () => ({ ...walker.stats, drops: walker.drops.length, start: site.start.slice(0, 2) });
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
 window.__pose = (x, z, y, p) => { interrupt(); director.drop(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike; window.__bells = bellsRinging; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
