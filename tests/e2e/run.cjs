@@ -1930,7 +1930,9 @@ const scenarios = {
       if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
       if (!touch) {
         await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
-        const edge = await t.state(); expect(edge.h === 0.45 && edge.x > 13.2, "ordinary walking should still stop at the porch edge");
+        // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
+        const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z).map((e) => e.a[0])[0]; });
+        const edge = await t.state(); expect(line !== undefined && edge.h === 0.45 && edge.x >= line - 0.01, `ordinary walking should still stop at the porch edge (${edge.x} by ${line})`);
       } else {
         const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
       }
