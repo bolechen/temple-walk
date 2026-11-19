@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 321814,
+   "sha256": "182cf4826d3c275f8eea5cd8e44659e0c5adb76f74019803bc28d5c911966d66",
+   "rev": "b6ccf5a042ef6f990efae5425da128a5d2bead5f"
+  },
+  {
+   "path": "hands-code-vs-tripo.png",
+   "bytes": 1119525,
+   "sha256": "e954d2ee7383f334459061275d64b6cf16d0d29efe550a903012ba671866333a",
+   "rev": "b6ccf5a042ef6f990efae5425da128a5d2bead5f"
+  },
+  {
+   "path": "hat-beads.png",
+   "bytes": 348391,
+   "sha256": "b66edf986760ab074ccf7819dba75b1805973a0157aa50fb7b3106b8dd5a9c37",
+   "rev": "b6ccf5a042ef6f990efae5425da128a5d2bead5f"
+  },
+  {
+   "path": "views-3col.png",
+   "bytes": 5298342,
+   "sha256": "f03a172abc1149dadff10a747d4766a25a321f01fd07c7f50bd08e2df724efef",
+   "rev": "b6ccf5a042ef6f990efae5425da128a5d2bead5f"
+  }
+ ]
+}
