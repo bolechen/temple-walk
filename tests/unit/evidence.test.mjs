@@ -13,7 +13,9 @@ const good = { version: 1, dataset: "x/y", files: [{ path: "a.jpg", bytes: 3, sh
 
 test("the address is made in one place, from the config's base and the pinned commit", () => {
   assert.equal(urlOf("t00/x/a b.jpg", REV, "https://h/r/"), `https://h/r/${REV}/t00/x/a%20b.jpg`);
-  assert.match(CONFIG.base, /\/resolve\/$/);
+  // The copy readers use is the owner's own domain (#247); Hugging Face's `resolve/` form is the original, kept as the fallback.
+  assert.equal(CONFIG.base, "https://evidence.dev.rushiwowen.co/");
+  assert.match(CONFIG.fallback, /^https:\/\/huggingface\.co\/datasets\/.+\/resolve\/$/);
   assert.equal(urlOf("t00/a.jpg", REV), `${process.env.EVIDENCE_BASE || CONFIG.base}${REV}/t00/a.jpg`);
 });
 

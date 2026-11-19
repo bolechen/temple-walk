@@ -18,11 +18,9 @@ concurrency:
 env:
   PUBLIC_BASE: https://evidence.dev.rushiwowen.co
   OTHER_BUCKET: buddhist-say
-  # R2 has no region; "auto" is what Cloudflare's AWS CLI page gives. The two checksum settings stop AWS CLI v2.23+
-  # from adding x-amz-checksum-* headers to every request (Cloudflare's pages do not mention them; see the PR).
+  # R2 has no region; "auto" is what Cloudflare's AWS CLI page gives. No checksum settings are needed: a run of
+  # AWS CLI 2.40.0 without them wrote with put-object and s3 cp alike (#247).
   AWS_DEFAULT_REGION: auto
-  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
   AWS_PAGER: ""
 
 jobs:
@@ -55,7 +53,6 @@ jobs:
         run: |
           key="t00/_ci-smoke/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.txt"
           printf 'r2 smoke run %s attempt %s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > sent.txt
-          # put-object, not "s3 cp": the CLI's cp has had checksum settings ignored in some 2.23 releases.
           # stdout and stderr are kept out of the log: an error may quote the endpoint.
           if ! aws s3api put-object --endpoint-url "$R2_ENDPOINT" --bucket "$R2_BUCKET" --key "$key" \
                --body sent.txt --content-type text/plain > put.out 2> put.err; then
