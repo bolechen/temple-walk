@@ -19,10 +19,21 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { box, merge, mesh, footAt, BODY, STOOL, CUSHION } from "./geo.js";
 import { frameRoom, CEILING, bays } from "./framing.js";
 import { makePlaque } from "./plaque.js";
+import { incenseId } from "./incense.js";
 
 const FLOOR = -60;
 // What each kind of hall is like inside: width, depth and the height of its walls. Where its columns stand comes from
 // the building's own bays (framing.js), and how it is furnished from its kind (below).
+// The eye's shot for the incense (src/director.js), in the place's frame: x to his left, z the way he faces, y up from the floor there.
+// Low, below his brow, from behind him and well to his right, so that he stands side-on, the stand with its bowl of ash
+// beside him and the Buddha above; it draws a little nearer as he offers (our own draft). The great hall's room is wide enough
+// to hold its whole Buddha from there; a small hall's is not (the figure stands taller against its room), so its shot is
+// farther back and a little higher and wider, and takes the figure to its chest and shoulders: see docs/t00/incense-halls.md.
+const INCENSE_SHOT = {
+  buddha: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, 4.55], [0, 4.9, 4.55]] },
+  // `top`: the figure's head above the floor; `far`: how far before him it stands (the dais's middle, from his cushion).
+  figure: (top, far) => ({ at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, far], [0, top, far]] }),
+};
 export const KINDS = {
   buddha:    { w: 26.4, d: 16.8, h: 7.6 },
   figure:    { w: 15, d: 11, h: 5.6 },
@@ -148,19 +159,16 @@ function buildRoom(M, hall, ox, figures) {
     if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
     else later.push((get) => get(stand.centre[0], stand.centre[1]).then((o) => altar.add(o)));
     for (const [file, x, z, h] of stand.beside || []) later.push((get) => get(file, h).then((o) => { o.position.set(x, 0, z); o.rotation.y = -Math.sign(x) * 0.12; altar.add(o); }));   // turned a little toward the middle
-    // Before the middle cushion of the great hall, a low stand with a bowl of ash: the censer on the table is out of a
-    // child's reach, and this is where a visitor's own incense goes. He bows at the cushion, steps up to `front`, and
-    // sets the sticks in the ash at `bowl` (rites.js).
-    if (big) {
+    // Before the middle cushion of each hall that keeps a Buddha (#146), a low stand with a bowl of ash: the censer on the
+    // table is out of a child's reach, and this is where a visitor's own incense goes. He bows at the cushion, steps up to
+    // `front`, and sets the sticks in the ash at `bowl` (rites.js). The cushions and the table stand the same way from
+    // hall to hall, so the stand does too; only the eye's shot is each hall's own.
+    {
       const sz = tz + 0.95, sh = 0.52;
       add(merge([box(0.34, 0.035, 0.3, 0, Y + sh - 0.018, sz), box(0.3, 0.04, 0.26, 0, Y + sh - 0.06, sz), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.035, sh - 0.03, 0.035, a * 0.14, Y + (sh - 0.03) / 2, sz + c * 0.12)), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz - 0.12), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz + 0.12)]), M.woodX);
       add(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.12, 0.05], [0.13, 0.085], [0.118, 0.085], [0.11, 0.07], [0, 0.07]], 24).translate(0, Y + sh, sz), M.bronze, () => 0.8);
       block(-0.17 - BODY, 0.17 + BODY, sz - 0.15 - BODY, sz + 0.15 + BODY);
-      places.incense = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz],
-        // Its shot (src/director.js), in the place's frame: low, below his brow, from behind him and well to his right, so
-        // that he stands side-on, the stand with its bowl of ash beside him and the whole Buddha above (from his right
-        // and before him the room is too narrow to hold the figure whole); it draws a little nearer as he offers (our own draft).
-        shot: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, tz + 1.75 - sz], [0, 1.7, 4.55], [0, 4.9, 4.55]] } };
+      places[incenseId(hall.id)] = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz], shot: big ? INCENSE_SHOT.buddha : INCENSE_SHOT.figure(ah + (stand.centre ? stand.centre[1] : 0.46 + 2.5) - 0.1, (tz + 1.75) - (az0 + az1) / 2) };
     }
     // The 功德箱 (offering box), a step east of the offering table beside the lamp: a lacquered chest on a low plinth under a
     // lid that overhangs it, a slot in the lid, and on its front a small board with the two characters. Shaped as such boxes

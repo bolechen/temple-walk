@@ -12,7 +12,7 @@ import { createDirector } from "../app/src/director.js";
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
 const site = buildSite(M), rooms = buildInteriors(M, site.halls), walker = createWalker(site);
-site.places.incense = rooms.places.incense;
+for (const h of ["main", "yaoshi", "guanyin"]) site.places[h === "main" ? "incense" : `incense-${h}`] = rooms.places[h === "main" ? "incense" : `incense-${h}`];
 const scene = new THREE.Group(); scene.add(site.root); if (rooms.group) scene.add(rooms.group); else if (rooms.root) scene.add(rooms.root);
 scene.updateMatrixWorld(true);
 const meshes = []; scene.traverse((o) => { if (o.isMesh && o.visible && !o.userData.soft && !o.material.transparent) { o.geometry.computeBoundingBox(); meshes.push({ o, box: o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld) }); } });
@@ -34,7 +34,7 @@ function cut(c, aspect) {
 }
 const stat = (a) => { const s = [...a].sort((x, y) => x - y); return { min: s[0], med: (s[5] + s[6]) / 2, max: s[s.length - 1] }; };
 const out = {};
-for (const id of ["bell", "incense", "tea", "sutra", "lamp", "sit"]) {
+for (const id of ["bell", "incense", "incense-yaoshi", "incense-guanyin", "tea", "sutra", "lamp", "sit"]) {
   const p = site.places[id]; walker.setRoom(p.room ? rooms.rooms[p.room].room : null);
   const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), centre = new THREE.Vector3(p.at[0], foot + 0.85, p.at[1]);
   const rows = [];

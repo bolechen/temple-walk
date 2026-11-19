@@ -37,6 +37,7 @@ import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
 import { logSwing, riteNow, pauseRites } from "./src/rites.js";
 import { buildInteriors } from "./src/interior.js";
+import { INCENSE_HALLS, incenseId } from "./src/incense.js";
 import { createDoorways } from "./src/doorway.js";
 import { asset } from "./src/assets.js";
 import { createHints } from "./src/hints.js";
@@ -137,8 +138,8 @@ await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
-site.places.incense = rooms.places.incense; site.seats.push(...rooms.seats);
-for (const [id, p] of [["incense", site.places.incense], ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
+for (const hall of INCENSE_HALLS) site.places[incenseId(hall)] = rooms.places[incenseId(hall)]; site.seats.push(...rooms.seats);
+for (const [id, p] of [...INCENSE_HALLS.map((h) => [incenseId(h), site.places[incenseId(h)]]), ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
