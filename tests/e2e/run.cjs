@@ -1501,7 +1501,7 @@ const scenarios = {
       const drawn = await t.page.evaluate(() => window.__walkviz());
       expect(on.on && drawn.grid === "outdoors" && drawn.open > 5000 && drawn.shut > 0 && drawn.outline && drawn.eyeR > 0.2 && drawn.objects === 3, "switched on, it should draw the cells round him, his outline and his eye: " + JSON.stringify(drawn));
       const off = await t.page.evaluate(() => window.__walkviz(false)); await t.frames(2);
-      expect(off.on === false && off.objects === 0 && (await t.page.evaluate(() => window.__yard().calls)) <= before.calls, "switched off, nothing of it should be left or drawn");
+      expect(off.on === false && off.objects === 0 && off.inScene === false && before.viz.inScene === false, "switched off, nothing of it should be left in the scene: " + JSON.stringify(off));
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
       t = await open(b, base, "q=low&cam=0,30,0,0" + BARE); await t.frames(2);
       expect(await t.page.evaluate(() => typeof window.__walkviz === "undefined"), "the published site should not carry the collision drawing's switch");

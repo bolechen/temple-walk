@@ -1204,10 +1204,10 @@ if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {
 // the same door as the panel, whose switch calls this; nothing is fetched, built or drawn until it is first switched on.
 if (import.meta.env.DEV || PREVIEW) {
   window.__walkviz = async (on) => {
-    if (on === undefined) return walkViz ? walkViz.state() : { on: false, objects: 0 };
+    if (on === undefined) return walkViz ? walkViz.state() : { on: false, objects: 0, inScene: !!scene.getObjectByName("walkviz") };
     if (on && !walkViz) { const { createWalkViz } = await import("./src/walkviz.js"); walkViz = createWalkViz({ scene, walker, bake: walkBaked.bake, outline: walkBaked.outline }); }
     else if (!on && walkViz) { walkViz.dispose(); walkViz = null; }
-    return walkViz ? walkViz.state() : { on: false, objects: 0 };
+    return walkViz ? walkViz.state() : { on: false, objects: 0, inScene: !!scene.getObjectByName("walkviz") };
   };
 }
 
