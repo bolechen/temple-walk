@@ -1,0 +1,266 @@
+[
+ {
+  "grid": "outdoors",
+  "part": "大雄宝殿",
+  "m2": 82.8,
+  "at": [
+   5.88,
+   -24.27
+  ],
+  "floor": 1.5,
+  "yawOut": 0.546,
+  "yawIn": -2.596
+ },
+ {
+  "grid": "outdoors",
+  "part": "观音殿",
+  "m2": 60.3,
+  "at": [
+   10.13,
+   -83.22
+  ],
+  "floor": 6.1,
+  "yawOut": 1.271,
+  "yawIn": -1.87
+ },
+ {
+  "grid": "outdoors",
+  "part": "藏经楼",
+  "m2": 54.7,
+  "at": [
+   7.18,
+   -54.32
+  ],
+  "floor": 3.66,
+  "yawOut": 0.932,
+  "yawIn": -2.209
+ },
+ {
+  "grid": "outdoors",
+  "part": "茶寮",
+  "m2": 44.5,
+  "at": [
+   -20.07,
+   4.93
+  ],
+  "floor": 0.45,
+  "yawOut": -0.366,
+  "yawIn": 2.776
+ },
+ {
+  "grid": "outdoors",
+  "part": "万年正续",
+  "m2": 39.8,
+  "at": [
+   2.18,
+   39.68
+  ],
+  "floor": 0.5,
+  "yawOut": 1.422,
+  "yawIn": -1.719
+ },
+ {
+  "grid": "outdoors",
+  "part": "首院",
+  "m2": 29.7,
+  "at": [
+   16.43,
+   1.43
+  ],
+  "floor": 0,
+  "yawOut": 1.475,
+  "yawIn": -1.666
+ },
+ {
+  "grid": "outdoors",
+  "part": "大慧院",
+  "m2": 22.2,
+  "at": [
+   19.28,
+   -85.88
+  ],
+  "floor": 5.65,
+  "yawOut": 0.448,
+  "yawIn": -2.693
+ },
+ {
+  "grid": "outdoors",
+  "part": "禅堂",
+  "m2": 22.2,
+  "at": [
+   19.83,
+   14.03
+  ],
+  "floor": 0.45,
+  "yawOut": 1.579,
+  "yawIn": -1.563
+ },
+ {
+  "grid": "outdoors",
+  "part": "药师殿",
+  "m2": 20.3,
+  "at": [
+   -20.32,
+   -51.32
+  ],
+  "floor": 2.85,
+  "yawOut": -0.655,
+  "yawIn": 2.486
+ },
+ {
+  "grid": "outdoors",
+  "part": "藏经楼院",
+  "m2": 15.4,
+  "at": [
+   13.13,
+   -66.33
+  ],
+  "floor": 2.41,
+  "yawOut": 0.707,
+  "yawIn": -2.435
+ },
+ {
+  "grid": "outdoors",
+  "part": "观音殿院",
+  "m2": 6.9,
+  "at": [
+   -2.32,
+   -68.42
+  ],
+  "floor": 5.21,
+  "yawOut": -2.929,
+  "yawIn": 0.213
+ },
+ {
+  "grid": "outdoors",
+  "part": "凌霄阁",
+  "m2": 4.5,
+  "at": [
+   -1.47,
+   -122.92
+  ],
+  "floor": 20.9,
+  "yawOut": -2.967,
+  "yawIn": 0.174
+ },
+ {
+  "grid": "outdoors",
+  "part": "山门前",
+  "m2": 3.8,
+  "at": [
+   12.53,
+   54.53
+  ],
+  "floor": 0.05,
+  "yawOut": 1.77,
+  "yawIn": -1.372
+ },
+ {
+  "grid": "loft:lingxiao",
+  "part": "lingxiao 顶层",
+  "m2": 3.8,
+  "at": [
+   4.98,
+   -128.03
+  ],
+  "floor": 35.03,
+  "yawOut": 2.153,
+  "yawIn": -0.989
+ },
+ {
+  "grid": "room:lingxiao",
+  "part": "lingxiao 殿内",
+  "m2": 2.6,
+  "at": [
+   413.32,
+   -6.67
+  ],
+  "floor": -60,
+  "yawOut": -0.785,
+  "yawIn": 2.356
+ },
+ {
+  "grid": "outdoors",
+  "part": "无名",
+  "m2": 1.6,
+  "at": [
+   -12.27,
+   53.78
+  ],
+  "floor": 0.02,
+  "yawOut": 3.073,
+  "yawIn": -0.069
+ },
+ {
+  "grid": "outdoors",
+  "part": "山顶",
+  "m2": 1.5,
+  "at": [
+   -1.92,
+   -118.97
+  ],
+  "floor": 20.01,
+  "yawOut": -3.142,
+  "yawIn": 0
+ },
+ {
+  "grid": "outdoors",
+  "part": "望江亭",
+  "m2": 1.4,
+  "at": [
+   24.03,
+   88.23
+  ],
+  "floor": -14.5,
+  "yawOut": -0.985,
+  "yawIn": 2.157
+ },
+ {
+  "grid": "outdoors",
+  "part": "半山亭",
+  "m2": 1.3,
+  "at": [
+   6.27,
+   79.63
+  ],
+  "floor": -5.85,
+  "yawOut": 0.35,
+  "yawIn": -2.792
+ },
+ {
+  "grid": "outdoors",
+  "part": "山路",
+  "m2": 1.2,
+  "at": [
+   -1.77,
+   78.73
+  ],
+  "floor": -6,
+  "yawOut": 0,
+  "yawIn": 3.142
+ },
+ {
+  "grid": "outdoors",
+  "part": "鼓楼",
+  "m2": 1.1,
+  "at": [
+   -18.82,
+   42.93
+  ],
+  "floor": 0,
+  "yawOut": -2.292,
+  "yawIn": 0.849
+ },
+ {
+  "grid": "outdoors",
+  "part": "钟楼",
+  "m2": 1.1,
+  "at": [
+   12.18,
+   42.93
+  ],
+  "floor": 0,
+  "yawOut": -2.292,
+  "yawIn": 0.849
+ }
+]
