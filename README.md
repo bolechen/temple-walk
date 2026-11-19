@@ -16,7 +16,7 @@
 
 仓库现已公开，用于协作开发。**公开可见不等于所有代码与素材已获得统一开源或再分发许可**；许可状态见下文。
 
-- [体验原型](https://bolechen.github.io/temple-walk/)
+- [体验原型（正式站）](https://temple.rushiwowen.co/)
 - [T00 研究、进度与独立验收](https://temple-atlas-research.floralpage64.chatgpt.site/#temple/T00)
 - [T01 宝通寺研究与开发准备](docs/T01-BAOTONG.md)：案头补证、白盒与观察玩法提案、资产顺序、现场采集清单；当前尚无 T01 游戏实现。
 - [T01 开工前的引擎评估](docs/T01-ENGINE.md)：对照 T00 提交记录和 three.js、Godot、Unity 的公开文档。结论仍是不换；包体和帧耗未经本项目实测。
