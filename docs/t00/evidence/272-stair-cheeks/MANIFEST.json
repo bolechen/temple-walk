@@ -9,6 +9,78 @@
    "rev": "d7dd7ba8f9a590cbb811da258d3ab6d309ee1767"
   },
   {
+   "path": "extra/east-elev-tele.jpg",
+   "bytes": 69553,
+   "sha256": "1f606e76c96a3cfb4187b2fc4701fa6ae3fb1a3592b570d40336e9353ed01db8",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/east-elev.jpg",
+   "bytes": 101510,
+   "sha256": "6948fc2ee673bd331e9ca185c47bc44003dc74eb60ec5a15c7c3f131bd1f0e65",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/east-foot45.jpg",
+   "bytes": 86054,
+   "sha256": "7ffb9811cae7ce51d25b2eb291edf28738c4bec803e685ff1bff0f7b1adec59e",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/east-top-rail.jpg",
+   "bytes": 98803,
+   "sha256": "b645084d2669bb6dff4876a2b99a3967d74b0d32cc046f79c15224b4f6c2878f",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/east-top-wide.jpg",
+   "bytes": 98493,
+   "sha256": "4e3a030fd1d78794c5a89e551c267968eeeeb0b100d41b0ff4d5b1d1db8cdc0c",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/east-top.jpg",
+   "bytes": 94207,
+   "sha256": "2de8870fd3296366cf064676d0f14c3bb982a76b75774718c3ff5961d9b68c3f",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/west-elev-tele.jpg",
+   "bytes": 67050,
+   "sha256": "8dfa2e3700549f7e7cb3e13d10e2a5498f1a72f77401cdc4bb58149480634c89",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/west-elev.jpg",
+   "bytes": 98278,
+   "sha256": "4619b44f343bfd384af45436c157af48211646a1784a66e19b251c402def5f70",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/west-foot45.jpg",
+   "bytes": 99743,
+   "sha256": "2a037e5f9641ce2c89a3bcd28db667c6150e6437d5d51061686faf35b9f15a47",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/west-top-rail.jpg",
+   "bytes": 105555,
+   "sha256": "9b85f4605c4f08aa3783bc77f832d1ce78702921acb7d1c2824b3b7d3c0558bf",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/west-top-wide.jpg",
+   "bytes": 105760,
+   "sha256": "8e1b20850b2d9ad40a1a4b02a8b8613fa9126e63f33baf7693fed84ea725fa75",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
+   "path": "extra/west-top.jpg",
+   "bytes": 101259,
+   "sha256": "db8e3528b17c6c06005e678c44b0aeb9c75b6aba9d6f0a0e8dfa3421f32a69e3",
+   "rev": "420fe4e6b95ff7ce88b578602aa6f000455d7ea0"
+  },
+  {
    "path": "locked/cam01.jpg",
    "bytes": 380649,
    "sha256": "5a35a8fae3fce2aa9d65ebfd1cb000abc1e59037afc361d7c93cd6e0253cd17f",
