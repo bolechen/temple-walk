@@ -677,7 +677,7 @@ function frame(now) {
   ground.mirror?.(mirrorOn && !inside);
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
-  post.focus(Q.has("shot") || (photo.on && settings.get().blur) ? focusAt() : 0);   // ?shot is focused always; the raised camera only when the visitor has asked for 虚化
+  post.focus(photo.on && settings.get().blur ? focusAt() : 0);   // depth of field only with the camera raised and 虚化 switched on: never walking, never ?shot (the picture a visitor sees is the picture a tool takes)
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);

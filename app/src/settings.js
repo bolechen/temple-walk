@@ -24,7 +24,7 @@ export function sanitize(saved) {
     // default (2026-11-17), every save carried `thirds: false` whether or not it was chosen, so only a save that knows the
     // new default (`rev` 2) may keep them off.
     if (typeof saved.thirds === "boolean" && (saved.rev === 2 || saved.thirds)) s.thirds = saved.thirds;
-    // The photograph's shallow depth of field, off unless the visitor has switched it on (owner, 2026-11-19: 默认不虚); a missing or damaged value is off.
+    // The photograph's shallow depth of field, off unless the visitor has switched it on (owner, 2026-11-19: off by default); a missing or damaged value is off.
     if (typeof saved.blur === "boolean") s.blur = saved.blur;
     if (Number.isFinite(saved.fov)) s.fov = clamp(Math.round(saved.fov), FOV_RANGE[0], FOV_RANGE[1]);
     for (const k of LEVELS) if (Number.isFinite(saved[k])) s[k] = clamp(saved[k], 0, 1);

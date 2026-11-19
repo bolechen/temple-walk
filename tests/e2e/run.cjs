@@ -1877,7 +1877,7 @@ const scenarios = {
       await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
       expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
     p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
-    expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
+    expect(!p.post.dof && p.post.focus === 0, "a fixed view (?shot) is sharp too, as walking is (#275): " + JSON.stringify(p.post));
     // #275 (PHOTO-02): the raised camera changes nothing on any tier; 虚化 is a switch in the photograph's settings, off at first, offered only where the tier can draw it.
     for (const q of ["high", "medium", "low"]) {
       const t = await open(b, base, `q=${q}&cam=0,29,0,0.1&view=first&season=autumn&time=dusk`, { viewport: { width: 480, height: 270 } }); await t.frames(2);
