@@ -1,0 +1,5 @@
+
+> temple-walk@0.4.0 check /home/user/temple-walk
+> node tools/check.cjs
+
+83 files checked, 0 problems
