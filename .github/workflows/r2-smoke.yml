@@ -1,0 +1,90 @@
+name: R2 smoke test
+
+# Issue #247, step one: prove that the four repository secrets reach the evidence bucket and nothing else. Writes one
+# small object under t00/_ci-smoke/, reads it back through the public domain, and checks that the same credentials are
+# refused by a neighbouring bucket. Nothing here prints a secret, and nothing is deleted.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: [".github/workflows/r2-smoke.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r2-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PUBLIC_BASE: https://evidence.dev.rushiwowen.co
+  OTHER_BUCKET: buddhist-say
+  # R2 has no region; "auto" is what Cloudflare's AWS CLI page gives. The two checksum settings stop AWS CLI v2.23+
+  # from adding x-amz-checksum-* headers to every request (Cloudflare's pages do not mention them; see the PR).
+  AWS_DEFAULT_REGION: auto
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+  AWS_PAGER: ""
+
+jobs:
+  smoke:
+    # A fork's pull request is given no secrets; there is nothing to prove there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - name: The four secrets are all present
+        run: |
+          missing=""
+          [ -n "$AWS_ACCESS_KEY_ID" ] || missing="$missing R2_ACCESS_KEY_ID"
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || missing="$missing R2_SECRET_ACCESS_KEY"
+          [ -n "$R2_ENDPOINT" ] || missing="$missing R2_ENDPOINT"
+          [ -n "$R2_BUCKET" ] || missing="$missing R2_BUCKET"
+          if [ -n "$missing" ]; then
+            echo "::error::Repository secret(s) missing or empty:$missing"
+            exit 1
+          fi
+          echo "All four secrets are set."
+          aws --version
+
+      - name: Write one object, read it back from the public domain
+        run: |
+          key="t00/_ci-smoke/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.txt"
+          printf 'r2 smoke run %s attempt %s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > sent.txt
+          # put-object, not "s3 cp": the CLI's cp has had checksum settings ignored in some 2.23 releases.
+          # stdout and stderr are kept out of the log: an error may quote the endpoint.
+          if ! aws s3api put-object --endpoint-url "$R2_ENDPOINT" --bucket "$R2_BUCKET" --key "$key" \
+               --body sent.txt --content-type text/plain > put.out 2> put.err; then
+            echo "::error::put-object failed: $(grep -o 'An error occurred ([A-Za-z]*)[^.]*' put.err | head -1)"
+            exit 1
+          fi
+          echo "Wrote $key"
+          ok=""
+          for i in 1 2 3 4 5; do
+            if curl -fsS --retry 2 -o got.txt "$PUBLIC_BASE/$key"; then ok=1; break; fi
+            sleep 3
+          done
+          [ -n "$ok" ] || { echo "::error::could not fetch $PUBLIC_BASE/$key"; exit 1; }
+          sha256sum sent.txt got.txt
+          cmp sent.txt got.txt && echo "Public read matches the written bytes."
+
+      - name: The same credentials are refused by another bucket
+        run: |
+          # List only; never write. Passing needs AccessDenied itself, so a typo in the bucket name cannot pass.
+          for call in "list-objects-v2 --max-keys 1" "head-bucket"; do
+            set +e
+            aws s3api $call --endpoint-url "$R2_ENDPOINT" --bucket "$OTHER_BUCKET" > other.out 2> other.err
+            rc=$?
+            set -e
+            code=$(grep -o 'An error occurred ([A-Za-z0-9]*)' other.err | head -1 || true)
+            if [ "$rc" -eq 0 ]; then
+              echo "::error::${call%% *} on $OTHER_BUCKET SUCCEEDED: the credentials are not limited to one bucket"
+              exit 1
+            fi
+            echo "${call%% *} on $OTHER_BUCKET refused: ${code:-no error text} (exit $rc)"
+            case "$code" in *AccessDenied*|*Forbidden*|*403*) ;; *) echo "::error::refused, but not with AccessDenied"; exit 1;; esac
+          done
