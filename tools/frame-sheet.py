@@ -1,18 +1,18 @@
 """Lay out tools/frame-views.cjs's pictures (issue #271): one sheet for each walk and screen, a row for each eye
-(now, A, B), six places across, with a thin vermilion cross where his middle is held to and the thirds marked.
+(before, A, B), six places across, with a thin vermilion cross where his middle is held to and the thirds marked.
     python3 tools/frame-sheet.py <dir> [--collage out.jpg]"""
 import json, sys, os
 from PIL import Image, ImageDraw, ImageFont
 
 d = sys.argv[1]
 views = json.load(open(os.path.join(d, "views.json")))
-LABEL = {"now": "now", "a": "A: shoulder,\nfixed", "b": "B: centre,\nlower third"}
+LABEL = {"old": "before\n(main)", "a": "A: shoulder,\nfixed", "b": "B: centre\n(default)"}
 font = ImageFont.load_default(size=20)
 sheets = []
 for size in sorted({v["size"] for v in views}):
-    for walk in ["open", "censer", "columns", "wall"]:
+    for walk in ["open", "censer", "columns", "wall", "stair-up", "stair-down"]:
         rows = []
-        for fr in ["now", "a", "b"]:
+        for fr in ["old", "a", "b"]:
             vs = sorted([v for v in views if v["size"] == size and v["walk"] == walk and v["frame"] == fr], key=lambda v: v["i"])
             if vs: rows.append((fr, vs))
         if not rows: continue
@@ -42,7 +42,7 @@ for size in sorted({v["size"] for v in views}):
 if "--collage" in sys.argv:
     out = sys.argv[sys.argv.index("--collage") + 1]
     # the open court and the wall, every screen: where the two ways differ most and least
-    pick = [s for s in sheets if "-open" in s or "-wall" in s]
+    pick = [s for s in sheets if "-open" in s or "-stair-down" in s]
     ims = [Image.open(p) for p in pick]
     W = max(i.size[0] for i in ims); H = sum(i.size[1] for i in ims)
     c = Image.new("RGB", (W, H), (245, 240, 230)); y = 0

@@ -140,3 +140,18 @@ for (const [key, F] of Object.entries(FRAMES)) for (const [w, h] of [[16, 9], [4
     assert.ok(most < 0.02, `across ${n} frames he strayed ${(most * 50).toFixed(2)}% of the width from where frame ${key} holds him`);
   });
 }
+
+// Issue #271's measure of the default eye (B), on the walks tools/frame-measure.cjs walks in the page (worked out here by
+// tools/frame-routes.mjs, the same plan and eye): on open ground his middle stays within 3% of the picture's width of
+// one place; by the columns and the wall it moves no faster than 2% of the width in a second; and on the stair by the
+// half-way pavilion, up and down, his knees (0.35 m) are always in the picture, his feet too.
+test("the default eye holds him in the middle, and on the stair his whole body is in the picture", async () => {
+  const { measure, WALKS } = await import("../../tools/frame-routes.mjs");
+  for (const size of ["16x9", "4x3", "phone"]) for (const [name, path] of Object.entries(WALKS)) {
+    const r = measure("b", size, path);
+    if (name === "open" || name === "censer") assert.ok(r.across.range <= 3, `${size} ${name}: across ${r.across.min}–${r.across.max}%`);
+    assert.ok(r.across.perSec <= 2, `${size} ${name}: he moved ${r.across.perSec}% of the width in a second`);
+    assert.ok(Math.abs(r.across.mean - 50) <= 1.5, `${size} ${name}: his middle is ${r.across.mean}% across`);
+    if (name.startsWith("stair")) assert.ok(r.kneesIn === 100 && r.feetIn === 100 && r.hidden === 0, `${size} ${name}: feet in ${r.feetIn}%, knees in ${r.kneesIn}%, hidden ${r.hidden}%`);
+  }
+});

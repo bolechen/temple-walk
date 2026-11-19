@@ -95,10 +95,10 @@ export function buildSite(M) {
   const put = (opts, at, q = 0, lvl = 0, base) => {
     const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y });
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
-    for (const r of b.walk.solids) walk.solids.push(place(r, at, q));
+    for (const r of b.walk.solids) walk.solids.push(r.h === undefined ? place(r, at, q) : { ...place(r, at, q), top: r.h + y });
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
-    for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
+    for (const r of b.walk.posts) walk.posts.push(r.h === undefined ? place(r, at, q) : { ...place(r, at, q), eyeTop: r.h + y });   // (a stair's cheek: as high as its platform)
     for (const r of b.walk.rails || []) walk.rails.push({ ...place(r, at, q), bottom: r.bottom + y, top: r.top + y });
     for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q),
       crest: r.crest && r.crest.map(([cx, cy, cz]) => { const [x, z] = turn(cx, cz, q); return [x + at[0], cy + y, z + at[1]]; }) });
@@ -699,7 +699,7 @@ export function createWalker(site) {
       // that has come down near the floor it stands on, as it does looking up.
       const p = post(x, z, 0.15, true);
       // (A round thing that stops short of the roofs, the censer, keeps the eye out only up to its own top.)
-      if (p) { if (p.r !== undefined) { if (p.top === undefined || y < p.top) return p.r < 0.45 ? "post" : true; } else { const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; } }
+      if (p) { if (p.r !== undefined) { if (p.top === undefined || y < p.top) return p.r < 0.45 ? "post" : true; } else { const c = carved(x, z); if (y < (p.eyeTop !== undefined ? p.eyeTop + 0.3 : (c === null ? level(x, z) : c) + 1.1)) return true; } }
       if (carved(x, z) !== null) return false;
       // He stands on a terrace: the eye stays over it too, and does not step out past its edge to look back at him along
       // the wall's outer face. Past the front edge it may be only where the wall is open to the stair (the view back down
@@ -707,8 +707,13 @@ export function createWalker(site) {
       for (const L of LEVELS) if (Math.abs(foot - L.y) < 0.6 && (Math.abs(x) > L.x || z < L.zN || (z > L.zS && Math.abs(x) > L.stair / 2 + 0.5))) return true;
       let top = -Infinity, own = false;
       for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);
-      for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.own) own = true; else top = Math.max(top, foot + 5.5); }
-      if (own && top === -Infinity) top = foot + 5.5;   // the cheeks of a building's stair, beyond its platform
+      let flight = -Infinity;
+      for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.top !== undefined) flight = Math.max(flight, s.top + 0.3); else if (s.own) own = true; else top = Math.max(top, foot + 5.5); }
+      if (own && top === -Infinity) top = foot + 5.5;
+      // The cheeks of a building's stair, and the ground beside them, beyond its platform: only up to a little over the
+      // platform the flight climbs (#271: they used to be shut 5.5 m up, and an eye straight behind him was brought in to
+      // his back each time he walked across the foot of a hall's steps).
+      else if (top === -Infinity) top = flight;
       return y < top;
     },
     onGround: (x, z) => !room && !loft && carved(x, z) === null,

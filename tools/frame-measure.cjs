@@ -2,14 +2,16 @@
 // straight up the open court, once round the censer, north along the meditation hall's columns (they on his right),
 // and north along the east wall (it on his right, then the alley behind the hall). For each walk: the middle of
 // __probe().monkBox across the picture (read each frame through __frame(), the same box without drawing a frame), as
-// a percentage of its width, and down it, as a percentage of its height; mean, range and the fastest change in a second.
-//   node tools/frame-measure.cjs [outdir] [--frame=now,a,b] [--size=16x9,4x3,phone]
+// a percentage of its width, and down it, as a percentage of its height; mean, range and the fastest change in a second;
+// and on the stair, how much of him is in the picture (the box's top and foot; the share of frames with his feet in it).
+// `old` is the eye as it was before #271 (`?frame=old`), `a` and `b` the two put to the owner (b the default).
+//   node tools/frame-measure.cjs [outdir] [--frame=old,a,b] [--size=16x9,4x3,phone] [--walk=open,stair-up,…]
 // `--walk=open,wall` measures only those; report.json keeps what earlier runs measured. The place is built but not drawn (BARE): what is measured is the camera, not the picture.
 const path = require("path"), fs = require("fs");
 const { serve, launch, open } = require("../tests/e2e/lib.cjs");
 const out = path.resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) || path.join(__dirname, "out", "frame"));
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || `--${k}=${d}`).split("=")[1].split(",");
-const FRAMES = arg("frame", "now,a,b"), only = arg("walk", "open,censer,columns,wall"), SIZES = { "16x9": [800, 450], "4x3": [600, 450], phone: [390, 844] }, sizes = arg("size", "16x9");
+const FRAMES = arg("frame", "old,a,b"), only = arg("walk", "open,censer,columns,wall,stair-up,stair-down"), SIZES = { "16x9": [800, 450], "4x3": [600, 450], phone: [390, 844] }, sizes = arg("size", "16x9");
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
 // Each walk: where he is put, facing which way, and how he goes on (`to`: walk straight on until z is past it;
 // `round`: round a point at a radius, the view turned with him by dragging, as a visitor turns it, for a whole turn).
@@ -18,6 +20,10 @@ const WALKS = {
   censer: { at: [0, 15.6], yaw: -Math.PI / 2, round: [0, 13, 2.6] },
   columns: { at: [12.25, 24], yaw: 0, to: 7 },
   wall: { at: [21.3, 33], yaw: 0, to: 9 },
+  // up the flight by the half-way pavilion (west along the landing's line) and back down it (#271: a visitor's picture
+  // there had him cut off at the waist)
+  "stair-up": { at: [19.5, 77.5], yaw: -Math.PI / 2, until: (y) => y.x < 10.5 },
+  "stair-down": { at: [9.5, 77.5], yaw: Math.PI / 2, until: (y) => y.x > 19.5 },
 };
 const stats = (xs, ts) => {
   const n = xs.length, mean = xs.reduce((a, b) => a + b, 0) / n; let rate = 0;
@@ -30,7 +36,7 @@ const stats = (xs, ts) => {
   const srv = await serve(), b = await launch(), report = {};
   for (const size of sizes) for (const fr of FRAMES) {
     const [w, h] = SIZES[size];
-    const t = await open(b, srv.base, `q=low&view=third&season=summer&time=day${fr === "now" ? "" : "&frame=" + fr}${BARE}`, { viewport: { width: w, height: h } });
+    const t = await open(b, srv.base, `q=low&view=third&season=summer&time=day&frame=${fr}${BARE}`, { viewport: { width: w, height: h } });
     const p = t.page;
     for (const [name, W] of Object.entries(WALKS)) {
       if (!only.includes(name)) continue;
@@ -42,7 +48,7 @@ const stats = (xs, ts) => {
       const t0 = Date.now();
       while (Date.now() - t0 < 240000) {
         const y = await p.evaluate(() => window.__yard());
-        if (W.to !== undefined && y.z < W.to) break;
+        if ((W.to !== undefined && y.z < W.to) || (W.until && W.until(y))) break;
         if (W.round) {
           // the way on round the point, leaning in or out toward the radius
           const [cx, cz, r] = W.round, a = Math.atan2(y.x - cx, y.z - cz), d = Math.hypot(y.x - cx, y.z - cz);
@@ -58,7 +64,8 @@ const stats = (xs, ts) => {
       await p.keyboard.up("w"); await p.mouse.up();
       const rec = await p.evaluate(() => { const r = window.__rec; window.__rec = null; return r; });
       const xs = rec.map((r) => ((r.box[0] + r.box[2] / 2) / r.w) * 100), ys = rec.map((r) => ((r.box[1] + r.box[3] / 2) / r.h) * 100), ts = rec.map((r) => r.t);
-      const res = { across: stats(xs, ts), down: stats(ys, ts), dist: stats(rec.map((r) => r.dist), ts), secs: +ts.at(-1).toFixed(1) };
+      const top = rec.map((r) => (r.box[1] / r.h) * 100), bottom = rec.map((r) => ((r.box[1] + r.box[3]) / r.h) * 100);
+      const res = { across: stats(xs, ts), down: stats(ys, ts), head: +Math.min(...top).toFixed(1), feet: +Math.max(...bottom).toFixed(1), feetIn: +((bottom.filter((b) => b <= 100).length / bottom.length) * 100).toFixed(1), dist: stats(rec.map((r) => r.dist), ts), secs: +ts.at(-1).toFixed(1) };
       (report[size] ??= {})[fr] ??= {}; report[size][fr][name] = res;
       fs.writeFileSync(path.join(out, `trace-${size}-${fr}-${name}.json`), JSON.stringify(rec));
       console.log(size, fr, name, JSON.stringify(res));

@@ -220,7 +220,7 @@ weighted along the arm; it no longer tears standing, with palms together or walk
 legs under its robe, which needs a layered model (route B). Whether it becomes the default again is the owner's call.
 `node tools/novice-views.cjs [--glb=<file>|--code]` shows either body from four sides in five poses on a bare stage, in
 seconds, frame for frame. Keep `novice.glb`, `novice.js`, `monk.dress()`, `tools/novice.mjs` and their tests. The hat and the beads are built here either way. In third person
-the eye follows a few steps behind and a little to his right (`followEye` in `app/src/eye.js`), and is pulled in along
+the eye follows a few steps behind on one straight arm whose direction is fixed against the view, so that he stands in the middle of the picture across and a little below its centre (58% down), on every screen and however near the eye comes (#271, the owner's and the lead's choice of 2026-11-19: `FRAMES.b`, `frameArm`, `aimPitch`, which also tilts the view at him on a flight of steps; `?frame=a` holds him over the shoulder at 37.5% instead, `?frame=old` is the eye before, 1.2 m to his right; `docs/t00/frame-271.md`, `tools/frame-routes.mjs`). Something in the way only shortens the arm; it is pulled in along
 its line, down to his shoulder, where `walker.eyeShut(x, y, z, foot)` says it would be inside something. It never gets
 there in one frame: `createFollow` moves it on critically damped springs (times taken from 《小王子》's camera; a friend
 felt sick when it jumped), lets a thin column (`eyeShut` answers `"post"`) cross the line of sight a moment before

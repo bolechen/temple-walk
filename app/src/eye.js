@@ -1,6 +1,7 @@
-// The eye that follows him in the third person: a few steps behind, as low as a child and a little to one side, so
-// that he stands small in the lower left of the picture and the place fills the rest. It comes in close rather than
-// pass through anything solid.
+// The eye that follows him in the third person: a few steps behind and as low as a child, so that he stands small in
+// the middle of the picture, a little below its centre, and the place fills the rest (#271, the owner's and the lead's
+// choice of 2026-11-19; until then it stood a little to his right and he stood in the lower left). It comes in close
+// rather than pass through anything solid.
 //
 // `x, z` is where he stands, `foot` the floor under him, `eyeY` the height the view rides at (over a stair, the slope);
 // `yaw, pitch` the way the view looks, `side` how far to his right the eye would like to be, `reach` how far behind.
@@ -11,16 +12,16 @@
 //
 // `arm` (issue #271, `?frame=a|b`, not the default yet; `frameArm` below): where he stands across the picture is fixed
 // instead, as a fraction of it, and kept there however near the eye has to come. The eye stands on one straight arm out
-// of the same point over him (`h`, 1.18 m over his feet), its direction fixed against the view: `kx` of each metre back
+// of a point over his head (`h`, 1.3 m over his feet: above a porch's railing, 1.29 m, when he stands with his back to it), its direction fixed against the view: `kx` of each metre back
 // goes to his right, `ky` up the picture. Something in the way only shortens the arm; it never swings it in behind him,
 // and the side step below is not taken. Across, he stays put at every length of the arm; up and down he is where the
 // frame says at the eye's usual distance and a little lower in the picture when it has had to come in (an arm out of his
 // middle would hold that too, but it would bring the eye down to his hip by every wall, under a stair's cheek).
-export function frameArm(frame, fov, aspect, at = 6.2) {
+export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
   const tv = Math.tan((fov * Math.PI) / 360);
-  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (1.18 - frame.hold) / at, h: 1.18 };
+  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h };
 }
-export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = null }) {
+export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
   // The picture's own up, square to the way it looks (the arm's `ky` is along it).
   const ux = -Math.sin(yaw) * Math.sin(pitch), uy = cp, uz = Math.cos(yaw) * Math.sin(pitch);
@@ -30,7 +31,9 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // sent up it stands metres over his head and loses him below the frame. Such a point is closed to the eye, as a wall is.
   const MAXRISE = 1.5;
   const rise = (px, y, pz) => { const under = walker.landAt(px, pz); return under + 0.35 + Math.max(0, under - foot) * 1.6 - y; };
-  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null);
+  // (An arm, B's or A's, also keeps the near plane off a porch's railing, as the director's swings do: straight behind
+  // him on a balcony it would otherwise come down to the rail's top.)
+  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null) || (arm && walker.railNear?.(px, py, pz, 0.25) ? true : null);
   // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open below).
   const base = arm
     ? (dist, sd = s0) => [x + (rx * arm.kx * sd + ux * arm.ky - lx) * dist, ty + (uy * arm.ky - ly) * dist, z + (rz * arm.kx * sd + uz * arm.ky - lz) * dist]
@@ -39,9 +42,11 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   let s0 = 0;
   if (!arm) for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
   // Then back, in short steps, and no farther than the last that was open: right against a wall it stays at his shoulder.
+  // (An arm rising at a slant, as B's does looking down, is asked every eighth of a metre: an eave's beam lies thinner
+  // across a slanting line than across a level one.)
   const back = (sd) => {
     const ox = x + rx * sd, oz = z + rz * sd; let d = 0, stop = null;
-    for (let s = 0.25; s <= reach + 1e-3; s += 0.25) { const h = arm ? shut(...base(s, sd)) : shut(ox - lx * s, ty - ly * s, oz - lz * s); if (h) { stop = h; break; } d = s; }
+    for (let s = 0.25; s <= reach + 1e-3; s += 0.25) { const h = arm ? shut(...base(s - 0.125, sd)) || shut(...base(s, sd)) : shut(ox - lx * s, ty - ly * s, oz - lz * s); if (h) { stop = h; break; } d = s; }
     return { d, stop };
   };
   // From his side the line back may pass behind a tower that straight behind him it would clear: then nearer behind
@@ -176,8 +181,23 @@ export function createFollow(T = FOLLOW) {
 // picture from its middle (`nx` to the right, `ny` upward; -1 is the left or bottom edge) and the point in him that
 // is held there (`hold`, metres over his feet: the middle of the box `__probe().monkBox` measures, 0 to 1.22 m).
 // A: over his shoulder as the default eye stands on open ground (measured there: his middle 38% across and 61% down a
-// 16:9 picture), but fixed: on every screen and however near the eye comes. B: in the middle, on the lower third.
+// 16:9 picture), but fixed: on every screen and however near the eye comes. B, the default: in the middle across, his
+// middle a little below the picture's (58% down; the lead asked for 55–62%), so that his whole body and the way ahead show.
 export const FRAMES = {
   a: { nx: -0.25, ny: -0.21, hold: 0.61 },
-  b: { nx: 0, ny: -1 / 3, hold: 0.61 },
+  b: { nx: 0, ny: -0.16, hold: 0.61 },
 };
+// The eye's default since the owner's and the lead's choice of 2026-11-19 (#271): B, him in the middle. Asked without an
+// arm, followEye stands on B's at the walk's 50° on a wide screen (the page passes its own fov and aspect); `arm: null`
+// is the eye as it was before, over his right shoulder by 1.2 m (`?frame=old`).
+export const DEFAULT_ARM = frameArm(FRAMES.b, 50, 16 / 9);
+
+// The tilt of the view from behind him that holds his middle where the frame says (#271), from where the eye stands
+// (`eye`, [x, y, z]) and where he is drawn (`at`, his feet), looking the way the view looks (`yaw`): as a rotation
+// composer does after its follow. On a flight of steps the eye stands above him going down and below him going up, and
+// looking level from there would put him at the foot of the picture or over its top; on open ground the arm already puts
+// him there and this is the view's own pitch. Null when the eye is too near him for it to mean anything.
+export function aimPitch(eye, at, yaw, frame, fov) {
+  const dx = at[0] - eye[0], dz = at[2] - eye[2], dy = at[1] + frame.hold - eye[1], ahead = dx * Math.sin(yaw) - dz * Math.cos(yaw);
+  return ahead > 0.5 ? Math.atan2(dy, ahead) - Math.atan(frame.ny * Math.tan((fov * Math.PI) / 360)) : null;
+}
