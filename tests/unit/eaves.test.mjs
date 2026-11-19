@@ -17,7 +17,7 @@ site.root.updateMatrixWorld(true);
 const GZ = T2.zS - 12.2;   // the Guanyin hall's centre
 const near = (g, x, z) => Math.abs(g.position.x - x) < 0.01 && Math.abs(g.position.z - z) < 0.01 && Math.abs(g.position.y - T2.y) < 0.01;
 const guanyin = site.root.children.find((g) => near(g, 0, GZ)), dahui = site.root.children.find((g) => near(g, 16.4, T2.zS - 12));
-const front = site.walk.drops.filter((e) => e.normal[1] === 1 && Math.abs(e.a[1] - (GZ + 6.6)) < 0.05);
+const front = walker.drops.filter((e) => e.normal[1] === 1 && Math.abs(e.a[1] - (GZ + 6.6)) < 0.1);   // (a grid edge lies within a cell of the written one)
 
 test("the Guanyin hall and its porch edges are where the test thinks they are", () => {
   assert.ok(guanyin && dahui, "found both halls");

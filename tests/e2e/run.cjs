@@ -232,7 +232,7 @@ const scenarios = {
       await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
       await t.page.touchscreen.tap(px, py); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
             await t.until(async () => { const s = await t.state(); return s.target === null && !s.dropping; }, 90000, "he never came out of the tea house porch's south end");
-      const s2 = await t.state(); expect(!(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [s2.x, s2.z])) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
+      const s2 = await t.state(); expect(!(await t.page.evaluate(() => window.__walker().blockedHere)) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
     }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -813,6 +813,55 @@ const scenarios = {
       expect((await t.state()).pose === (s.kind === "stool" ? "chair" : "sit"), `on seat ${i} in ${room || "the open"}, a ${s.kind}, he sits ${(await t.state()).pose}`);
     }
     expect((await R()).sat >= seats.length, "not every seat was sat on");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Which floor he walks on (#265): the grid baked from the drawn meshes over the first court by default, the written plan
+  // with ?walker=old; and a ?cam address that falls where the grid shuts him out is moved to the nearest open spot within
+  // half a metre, or back to the start of the path.
+  walkgrid: { tier: 2, async run(b, base) {
+    let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
+    const w = await t.page.evaluate(() => window.__walker());
+    console.log("    walker " + JSON.stringify(w));
+    expect(w.mode === "court" && w.bytes > 10000 && w.memory > 1e6 && w.drops > 6 && !w.failed, "the page should walk the first court on the baked floor: " + JSON.stringify(w));
+    // A spot just inside what the censer shuts, and its middle (nowhere open within half a metre), both from the page.
+    const spots = await t.page.evaluate(() => { const [x, z] = [0, 13]; let r = 0; while (window.__blocked(x + r, z) && r < 3) r += 0.02; return { near: [x + r - 0.2, z], deep: [x, z], start: window.__walker().start }; });
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&view=first&cam=${spots.near[0]},${spots.near[1]},0,0` + BARE);
+    let y = await t.state();
+    expect(Math.hypot(y.x - spots.near[0], y.z - spots.near[1]) <= 0.51 && !(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [y.x, y.z])), `a ?cam in a shut cell should settle within half a metre: ${JSON.stringify([spots.near, y.x, y.z])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&view=first&cam=${spots.deep[0]},${spots.deep[1]},0,0` + BARE);
+    y = await t.state();
+    expect(Math.hypot(y.x - spots.start[0], y.z - spots.start[1]) < 0.05, `a ?cam with nowhere open near should go back to the start: ${JSON.stringify([y.x, y.z, spots.start])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, "q=low&view=first&walker=old&cam=0,20,0,0" + BARE);
+    expect((await t.page.evaluate(() => window.__walker())).mode === "old", "?walker=old should walk the written plan");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, "q=low&view=first&walker=mesh&cam=0,20,0,0" + BARE);
+    expect((await t.page.evaluate(() => window.__walker())).mode === "mesh", "?walker=mesh should walk the grid everywhere");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great
+  // hall's east end): along every porch edge of the first court, a little in from it, first person and third, his feet
+  // are on the floor under him and his own eye is well over it.
+  platforms: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
+    const edges = await t.page.evaluate(() => window.__drops().filter((e) => e.top < 2 && Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]) > 1));
+    expect(edges.length >= 8, `only ${edges.length} porch edges in the court`);
+    let n = 0;
+    for (const view of ["first", "third"]) {
+      await t.page.evaluate((v) => window.__view(v), view);
+      for (const e of edges) for (const f of [0.2, 0.5, 0.8]) {
+        const x = e.a[0] + (e.b[0] - e.a[0]) * f - e.normal[0] * 0.3, z = e.a[1] + (e.b[1] - e.a[1]) * f - e.normal[1] * 0.3;
+        if (await t.page.evaluate(([x, z]) => window.__blocked(x, z), [x, z])) continue;
+        await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(e.normal[0], -e.normal[1])]); await t.frames(3);
+        const w = await t.page.evaluate(() => window.__walker()), y = await t.state(); n++;
+        expect(Math.abs(w.floor - e.top) < 0.03, `${view}: at (${x.toFixed(2)}, ${z.toFixed(2)}) on a ${e.top} m porch the floor reads ${w.floor}`);
+        expect(y.footY >= w.floor - 0.05, `${view}: his feet are under the floor at (${x.toFixed(2)}, ${z.toFixed(2)}): ${y.footY} under ${w.floor}`);
+        expect(w.eye >= w.floor + 0.6, `${view}: the eye is at ${w.eye.toFixed(2)}, the floor at ${w.floor} (${x.toFixed(2)}, ${z.toFixed(2)})`);
+      }
+    }
+    expect(n >= 40, `only ${n} places round the platforms were stood on`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Coming back: a first visit is offered only the way in; where he was is kept, and the next visit may go on from
@@ -1874,12 +1923,18 @@ const scenarios = {
     for (const [x, z, shift] of [[-13.2, 11.3, false], [-13.25, 6.9, true], [-13.2, 16.7, true]]) {
       const tz = z < 14 ? 9.1 : 18.9; await t.page.evaluate(async () => { if (window.__yard().inside) await window.__inside(null); }); await t.frames(2);
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(-13.83 - x, -(tz - z))]); await t.frames(3);
-      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping || s.dropping, s.dropping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
       if (shift) await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
       for (let k = 0; k < 3; k++) { await t.page.keyboard.press("Space"); await t.until(async () => !(await t.state()).jumping, 120000, "he did not come down at the tea table"); await t.frames(2); }
       await t.page.keyboard.up("w"); if (shift) await t.page.keyboard.up("Shift");
-      const tea = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
-      const inside = tea.filter(([px, pz]) => px > -14.09 - 0.37 && px < -13.57 + 0.37 && pz > tz - 0.75 - 0.37 && pz < tz + 0.75 + 0.37);
+      const all = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
+      // (Going on past the table he may come to an end of the porch the baked floor opens, #265, where Space hops down off its
+      // edge: from there on he is no longer at the table.)
+      const off = all.findIndex((q) => q[4]), tea = off < 0 ? all : all.slice(0, off);
+      // (How near: the written plan keeps him BODY, 0.37 m, off the table's rectangle; the grid baked from the drawn meshes keeps
+      // him his outline's reach at the table's height, 0.343 m, less half a cell (#265, as tests/unit/walkers.mjs keptOff).)
+      const m = (await t.page.evaluate(() => window.__walker().mode)) === "old" ? 0.37 : 0.343 - 0.046;
+      const inside = tea.filter(([px, pz]) => px > -14.09 - m && px < -13.57 + m && pz > tz - 0.75 - m && pz < tz + 0.75 + m);
       expect(tea.some((q) => q[3]) && inside.length === 0, `jumping at the tea table from (${x}, ${z}) he came within his width of it: ${JSON.stringify(inside.slice(0, 3))} (${tea.length} frames outdoors, ${tea.filter((q) => q[3]).length} in the air)`);
       expect(tea.filter((q) => !q[3]).every((q) => Math.abs(q[2] - 0.45) < 0.01), `between jumps at the tea table he should stand on the porch (from ${x}, ${z}): ` + JSON.stringify(tea.slice(0, 2)) + JSON.stringify(tea.filter((q) => !q[3] && Math.abs(q[2] - 0.45) >= 0.01).slice(0, 3)));
     }
@@ -1967,7 +2022,9 @@ const scenarios = {
       if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
       if (!touch) {
         await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
-        const edge = await t.state(); expect(edge.h === 0.45 && edge.x > 13.2, "ordinary walking should still stop at the porch edge");
+        // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
+        const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z).map((e) => e.a[0])[0]; });
+        const edge = await t.state(); expect(line !== undefined && edge.h === 0.45 && edge.x >= line - 0.01, `ordinary walking should still stop at the porch edge (${edge.x} by ${line})`);
       } else {
         const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
       }

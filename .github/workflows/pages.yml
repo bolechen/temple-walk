@@ -112,6 +112,8 @@ jobs:
           node tools/walk-diff.mjs .main/app/shared/walk/t00.bin --png=tools/out/walk-diff
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
         run: pnpm test
+      - name: The same unit tests on the walker over the baked floor (#265)
+        run: WALKER=court node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
       # The browser comes before the build: the rooms seen through the doors (#218) are drawn in the built site, in Chromium
       # with software rendering, for any hall whose fingerprint is not in the cache (tools/bake-doorways.mjs).
       - name: Remember the browser between runs

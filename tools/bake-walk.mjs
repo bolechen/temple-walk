@@ -22,6 +22,9 @@ const { createWalker } = await import("../app/src/site.js");
 export const LEVEL = "t00";
 export const FILE = fileURLToPath(new URL(`../app/shared/walk/${LEVEL}.bin`, import.meta.url));
 
+/** The intents a grid closes (a hall's doorway past where the door takes him in), as a fingerprint: change one and that grid is stale. */
+const closedPrint = (g) => textHash(JSON.stringify(g.closed || []));
+
 /** The place built and every grid gathered, with the fingerprints of what each would be baked from. */
 export function prepare() {
   const t0 = performance.now(), drawn = buildDrawn(), t1 = performance.now();
@@ -37,7 +40,7 @@ export function staleness(prep, file = FILE) {
   let header; try { header = readHeader(readFileSync(file)).header; } catch (e) { return { stale: prep.grids.map((g) => g.id), why: String(e.message), header: null }; }
   if (header.body !== prep.body) return { stale: prep.grids.map((g) => g.id), why: "his outline or the bake's settings changed", header };
   const was = new Map(header.grids.map((g) => [g.id, g]));
-  const stale = prep.grids.filter((g) => { const w = was.get(g.id); return !w || w.geometry !== g.S.print || w.x0 !== g.box.x0 || w.z0 !== g.box.z0; }).map((g) => g.id);
+  const stale = prep.grids.filter((g) => { const w = was.get(g.id); return !w || w.geometry !== g.S.print || w.x0 !== g.box.x0 || w.z0 !== g.box.z0 || (w.closed || "") !== closedPrint(g); }).map((g) => g.id);
   const planStale = header.plan !== prep.plan || header.defs !== prep.defs, gone = header.grids.some((g) => !prep.grids.find((p) => p.id === g.id));
   return { stale, planStale, gone, why: stale.length ? `triangles changed in ${stale.join(", ")}` : planStale ? "the written plan's walk data, or the places checked, changed" : gone ? "a grid is gone" : "", header };
 }
@@ -53,13 +56,13 @@ export function bake(prep, { force = false, file = FILE } = {}) {
     if (keep) {   // fresh: its heights and states as they were
       const N = keep.nx * keep.nz, h = new Float32Array(N); for (let k = 0; k < N; k++) h[k] = keep.height[k] === -32768 ? NaN : keep.height[k] / 100 + g.base;
       baked = { x0: keep.x0, z0: keep.z0, nx: keep.nx, nz: keep.nz, step: keep.step, h, state: Uint8Array.from(keep.state), names: keep.names, ms: { reused: 0 } };
-    } else baked = bakeGrid(g.S, g.box, g.seeds);
+    } else baked = bakeGrid(g.S, g.box, g.seeds, undefined, g.closed);
     const t1 = performance.now();
     g.enter(walker); const bits = oldReach(walker, baked, g.seeds); g.enter(walker); walker.setRoom(null); walker.setLoft?.(null);
     const t2 = performance.now();
     const area = (n) => +(n * baked.step * baked.step).toFixed(2);
     let open = 0, oldOpen = 0; for (let k = 0; k < baked.nx * baked.nz; k++) { if (!baked.state[k]) open++; if ((bits[k >> 3] >> (k & 7)) & 1) oldOpen++; }
-    grids.push({ id: g.id, kind: g.kind, name: g.name, x0: baked.x0, z0: baked.z0, nx: baked.nx, nz: baked.nz, step: baked.step, base: g.base, seeds: g.seeds, geometry: g.S.print, tris: g.S.tris, names: baked.names, open: area(open), oldOpen: area(oldOpen) });
+    grids.push({ id: g.id, kind: g.kind, name: g.name, x0: baked.x0, z0: baked.z0, nx: baked.nx, nz: baked.nz, step: baked.step, base: g.base, seeds: g.seeds, geometry: g.S.print, closed: closedPrint(g), tris: g.S.tris, names: baked.names, open: area(open), oldOpen: area(oldOpen) });
     cells.push(cellsOf(baked, g.base, bits));
     ms[g.id] = { bake: keep ? "kept" : baked.ms, old: Math.round(t2 - t1), total: Math.round(t2 - t0) };
     g.baked = baked; g.bits = bits;
@@ -79,7 +82,7 @@ export function bake(prep, { force = false, file = FILE } = {}) {
 }
 
 /** One name for everything a bake depends on: the grids' triangles and extents, his outline, the settings, the plan, the places checked. */
-export const keyOf = (prep) => textHash(JSON.stringify({ format: VERSION, body: prep.body, plan: prep.plan, defs: prep.defs, grids: prep.grids.map((g) => [g.id, g.S.print, g.box]) }));
+export const keyOf = (prep) => textHash(JSON.stringify({ format: VERSION, body: prep.body, plan: prep.plan, defs: prep.defs, grids: prep.grids.map((g) => [g.id, g.S.print, g.box, g.closed || []]) }));
 export const CACHE = process.env.WALK_CACHE || fileURLToPath(new URL("../node_modules/.cache/walk/", import.meta.url));
 
 /**

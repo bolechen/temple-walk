@@ -9,6 +9,8 @@ function site() {
   if (process.env.TEMPLE_SITE) return path.resolve(process.env.TEMPLE_SITE);
   const want = Math.max(newest(app), ...["vite.config.mjs", "package.json"].map((f) => fs.statSync(path.join(top, f)).mtimeMs));
   if (!fs.existsSync(stamp) || fs.statSync(stamp).mtimeMs < want) {
+    // The floor baked from the drawn meshes first (#265: the page walks on it), as `pnpm build` does: from the cache when nothing it is baked from changed.
+    execFileSync(process.execPath, [path.join(top, "tools", "bake-walk.mjs")], { cwd: top, stdio: ["ignore", "ignore", "inherit"] });
     execFileSync(process.execPath, [path.join(top, "node_modules", "vite", "bin", "vite.js"), "build", "--logLevel", "warn"], { cwd: top, stdio: ["ignore", "inherit", "inherit"] });
     // The rooms seen through the doors (#218): from the cache, or drawn in this site if their fingerprint is new.
     if (!process.env.TEMPLE_NO_DOORWAYS) execFileSync(process.execPath, [path.join(top, "tools", "bake-doorways.mjs")], { cwd: top, stdio: ["ignore", 2, 2] });   // its words to stderr: callers read the path from stdout

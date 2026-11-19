@@ -57,7 +57,7 @@ test("the following eye stays out of every building and never has one between it
 
 test("every porch edge that offers a hop down can be hopped from along its whole open length", () => {
   let edges = 0;
-  for (const e of site.walk.drops) {
+  for (const e of walker.drops) {
     const [nx, nz] = e.normal, span = Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]); let stood = 0;
     // From beside the stair's cheek at one end to beside the corner column at the other.
     for (let along = 0.6; along <= span - 0.6 + 1e-9; along += 0.1) {

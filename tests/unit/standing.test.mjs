@@ -9,7 +9,7 @@ const site = buildSite(M), walker = createWalker(site);
 
 test("every hop down from every porch edge, from anywhere along it, lands in the open and ends there", () => {
   let hops = 0;
-  for (const e of site.walk.drops) {
+  for (const e of walker.drops) {
     const [nx, nz] = e.normal, ax = e.b[0] - e.a[0], az = e.b[1] - e.a[1], span = Math.hypot(ax, az);
     for (let along = 0.3; along <= span - 0.3; along += 0.05) for (let back = 0; back <= 0.6; back += 0.05) {
       const x = e.a[0] + (ax * along) / span - nx * back, z = e.a[1] + (az * along) / span - nz * back;

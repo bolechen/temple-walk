@@ -48,6 +48,8 @@ import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
 import { planSteps, clearLine } from "./src/route.js";
+import { createGridWalker, gridsByPlace, courtRegion, walkerMode, gridBytes, keepFor, settle as settleAt } from "./src/gridwalker.js";
+import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
@@ -58,6 +60,15 @@ const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
 const Q = new URLSearchParams(location.search);
+// The floor baked from the drawn meshes (#265): fetched while the place is built, and walked on over the first court
+// unless `?walker=old` asks for the written plan everywhere (`?walker=mesh`: the grid wherever it has one).
+// Only the bytes are fetched here; they are opened once the plan is built, keeping only what this mode walks on, and let go.
+const WALKER = walkerMode(Q.get("walker"));
+let walkFile = WALKER === "old" ? null : (() => {
+  const t0 = performance.now();
+  return fetch(asset("shared/walk/t00.bin")).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
+    .then((buf) => ({ bytes: new Uint8Array(buf), fetchMs: Math.round(performance.now() - t0) }));
+})();
 const still = Q.has("shot") || matchMedia("(prefers-reduced-motion: reduce)").matches;
 createPaper();   // the paper, strokes and seals the interface is drawn with (src/paper.js, src/ui.css)
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
@@ -106,7 +117,20 @@ const M = createMaterials();
 const site = buildSite(M);
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
-const walker = createWalker(site);
+const walker = await (async () => {
+  const old = createWalker(site);
+  if (!walkFile) return Object.assign(old, { stats: { mode: "old" } });
+  try {
+    const f = await walkFile; walkFile = null;
+    const mode = WALKER === "mesh" ? "mesh" : "court", region = mode === "court" ? courtRegion(site, SITE, LEVELS[0]) : null, t0 = performance.now();
+    let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, keepFor(mode, region)); body = /** @type {any} */ (null);
+    const t1 = performance.now(), grids = gridsByPlace(d, mode, region), w = createGridWalker(old, grids, { mode, region, drops: site.walk.drops });
+    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
+  } catch (e) {
+    console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
+    return Object.assign(old, { stats: { mode: "old", failed: String(e) } });
+  }
+})();
 await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
@@ -220,10 +244,9 @@ const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.g
 // A place copied into an address by an older ?devpose was cut to centimetres, which beside a stair can fall just inside
 // the stop along its cheek, where the ground reads as the level below and he would stand sunk into the steps: such a
 // place steps out to the nearest free point a few centimetres off.
-if (Q.has("cam") && !Q.has("in") && walker.blocked(pose[0], pose[1])) out: for (let r = 0.005; r <= 0.06; r += 0.005) for (let k = 0; k < 16; k++) {
-  const x = pose[0] + r * Math.cos((k * Math.PI) / 8), z = pose[1] + r * Math.sin((k * Math.PI) / 8);
-  if (!walker.blocked(x, z)) { pose[0] = x; pose[1] = z; break out; }
-}
+// So may a place given before the floor was baked from what is drawn (#265): it moves to the nearest open spot within half
+// a metre, or, with none, to the start of the path (`settle` in gridwalker.js).
+if (Q.has("cam") && !Q.has("in")) { const p = settleAt(walker, pose[0], pose[1]) || { x: site.start[0], z: site.start[1] }; pose[0] = p.x; pose[1] = p.z; }
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
@@ -381,7 +404,7 @@ canvas.addEventListener("pointerup", (e) => {
     else if (hit && Math.hypot(hit.x - pos.x, hit.z - pos.z) < 70) {
       // A straight line that is open is walked as it was; one that is shut is searched round (route.js), a few milliseconds a frame, he waiting where he is.
       if (!walker.blocked(pos.x, pos.z) && clearLine(walker, pos, hit)) route = [hit];
-      else { route = []; interrupt(); director.back(); target = null; planGoal = { x: hit.x, z: hit.z }; planning = planSteps(walker, site.walk.drops, { x: pos.x, z: pos.z }, planGoal); }
+      else { route = []; interrupt(); director.back(); target = null; planGoal = { x: hit.x, z: hit.z }; planning = planSteps(walker, walker.drops, { x: pos.x, z: pos.z }, planGoal); }
     } else route = [];
     if (route.length) { planning = null; interrupt(); director.back(); target = route.shift(); }
   }
@@ -394,7 +417,7 @@ function availableDrop() {
   if (ui.covered()) return null;
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y;
   const s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
-  return findDrop(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+  return findDrop(walker, walker.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
 }
 function startDrop() {
   const plan = availableDrop(); if (!plan) return false;
@@ -404,7 +427,7 @@ function startDrop() {
 function availableClimb() {
   if (hop || leap || inside || stage || passing || photo.on || !document.body.classList.contains("entered") || ui.covered()) return null;
   const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
-  return findClimb(walker, site.walk.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
+  return findClimb(walker, walker.drops, pos.x, pos.z, f || s ? Math.sin(yaw) * f + Math.cos(yaw) * s : Math.sin(yaw), f || s ? -Math.cos(yaw) * f + Math.sin(yaw) * s : -Math.cos(yaw));
 }
 // Space: a child's jump (stride.js). He can be steered in the air and lands on whatever is under him.
 function startJump() {
@@ -994,6 +1017,9 @@ window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.sta
 window.__cues = cueState;   // how many times the wings and the far bell have sounded   // how many shutters and seals have sounded
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__blocked = (x, z) => walker.blocked(x, z);
+// Which walker answers (#265): its mode, what the baked floor weighed and cost to fetch, open and keep, and the porch edges.
+window.__walker = () => ({ ...walker.stats, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
+window.__drops = () => walker.drops.map((e) => ({ a: e.a, b: e.b, normal: e.normal, top: e.top }));   // the porch edges as this walker has them
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
 window.__pose = (x, z, y, p) => { interrupt(); director.drop(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
 window.__listen = listen; window.__strike = strike; window.__bells = bellsRinging; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
@@ -1072,7 +1098,7 @@ createGame({
   up: () => (upIn ? upIn.id : null), stair: () => (inside && hallIn.room.stair) || null, lofts: site.lofts,
   climb: (id) => climbTo(site.lofts[id]), descend: () => climbTo(null),
   // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).
-  place(x, z, turn, up = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  place(x, z, turn, up = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
   start: site.start,
   // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
   async travel(x, z, turn, hallId) {

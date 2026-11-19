@@ -40,6 +40,11 @@ export function seatHop(from, to, speed = 3.0, gravity = 9.8) {
 // The way up: from the ground below an unrailed porch edge, facing it, a jump onto a platform no higher than his own jump
 // reaches. How high that is comes from JUMP (the top of the arc, v²/2g), not from a number of its own.
 export const REACH = JUMP.speed * JUMP.speed / (2 * JUMP.gravity);
+// How far over a platform's drawn top the arc keeps him, and so how much higher than REACH a top may be found and still be
+// offered (#265, the migration's list for #143): the floor baked from the drawn meshes is the drawn porch (0.454 m drawn,
+// 0.45 in the grid's centimetres) and his plain jump tops out at 0.459, too thin a margin to hang the way up on. Over
+// REACH - CLEARANCE he jumps that little harder, so that he always clears the edge by CLEARANCE.
+export const CLEARANCE = 0.02;
 const FOOT = 0.3, LAND = 0.4;   // his leading foot reaches this far ahead of him; he comes down this far in from the edge
 export function findClimb(walker, edges, x, z, dx, dz) {
   if (walker.room || Math.hypot(dx, dz) < 0.01) return null;
@@ -47,7 +52,7 @@ export function findClimb(walker, edges, x, z, dx, dz) {
   const ground = walker.heightAt(x, z);
   for (const edge of edges) {
     const [nx, nz] = edge.normal, ax = edge.b[0] - edge.a[0], az = edge.b[1] - edge.a[1], span = Math.hypot(ax, az), rise = edge.top - ground;
-    if (dx * nx + dz * nz > -0.65 || span < 0.6 || rise < 0.1 || rise > REACH * 0.995) continue;   // facing the edge, a platform he can reach
+    if (dx * nx + dz * nz > -0.65 || span < 0.6 || rise < 0.1 || rise > REACH + CLEARANCE) continue;   // facing the edge, a platform he can reach
     const along = ((x - edge.a[0]) * ax + (z - edge.a[1]) * az) / span, out = (x - edge.a[0]) * nx + (z - edge.a[1]) * nz;
     if (along < 0.25 || along > span - 0.25 || out < FOOT || out > 1.2) continue;   // outside the edge, near enough to reach it
     const tx = edge.a[0] + ax * along / span - nx * LAND, tz = edge.a[1] + az * along / span - nz * LAND, y = walker.heightAt(tx, tz);
@@ -58,8 +63,8 @@ export function findClimb(walker, edges, x, z, dx, dz) {
     if (!clear) continue;
     // The arc is his own (JUMP): up, and down again to the platform's height. He gathers himself and goes over late, so that
     // the leading foot reaches the edge after the arc has risen above it (the nearer the top of his jump, the later).
-    const v = JUMP.speed, g = JUMP.gravity, duration = (v + Math.sqrt(v * v - 2 * g * rise)) / g;
-    const need = Math.min(rise + 0.04, rise + 0.5 * (REACH - rise)), tUp = (v - Math.sqrt(v * v - 2 * g * need)) / g, travel = out + LAND, cross = (out - FOOT) / travel;
+    const g = JUMP.gravity, v = Math.max(JUMP.speed, Math.sqrt(2 * g * (rise + CLEARANCE))), top = v * v / (2 * g), duration = (v + Math.sqrt(v * v - 2 * g * rise)) / g;
+    const need = Math.min(rise + 0.04, rise + 0.5 * (top - rise)), tUp = (v - Math.sqrt(v * v - 2 * g * need)) / g, travel = out + LAND, cross = (out - FOOT) / travel;
     const ease = Math.max(1, Math.log(Math.max(cross, 1e-3)) / Math.log(Math.min(0.999, tUp / duration)));
     return { from: [x, ground, z], to: [tx, y, tz], normal: edge.normal, rise, speed: v, gravity: g, duration, ease };
   }
