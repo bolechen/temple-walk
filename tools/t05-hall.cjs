@@ -5,7 +5,7 @@
 // The spec says which statues stand where and what to draw:
 //   { "out": "tools/out/t05", "size": [1600, 900], "ao": true,
 //     "statues": [ { "url": "<path to .glb>", "x": 0, "h": 9.0, "turn": 0, "halo": { "rings": 3, "tips": 0 } }, … ],
-//     "shots": [ { "name": "door-summer", "view": "door", "mood": "summer" }, … ],
+//     "shots": [ { "name": "door-summer", "view": "door", "mood": "summer", "paint": true }, { "name": "a", "ortho": { "i": 0, "side": "front" } }, … ],
 //     "film": { "name": "walk-winter", "mood": "winter", "fps": 24, "size": [1280, 720] },
 //     "cost": 60 }
 // Statue paths are files on this machine; the page fetches them as /s/<n>.glb. Views and moods are those in
@@ -53,7 +53,8 @@ const here = __dirname, root = path.join(here, "..");
     const p = await page(W, H);
     for (const s of spec.shots) {
       const t0 = Date.now();
-      const r = await p.evaluate(({ v, m, over }) => { window.hall.setMood(m); window.hall.view(v, over || {}); const r = window.hall.stats(); window.hall.render(); return r; }, { v: s.view, m: s.mood || "summer", over: s.over });
+      const r = s.ortho ? await p.evaluate(([o, paint]) => { if (paint !== undefined) window.hall.paint(paint); window.hall.ortho(o.i ?? 0, o.side || "front", o); return {}; }, [s.ortho, s.paint])
+        : await p.evaluate(({ v, m, over, paint }) => { window.hall.setMood(m); if (paint !== undefined) window.hall.paint(paint); window.hall.view(v, over || {}); const r = window.hall.stats(); window.hall.render(); return r; }, { v: s.view, m: s.mood || "summer", over: s.over, paint: s.paint });
       const file = path.join(out, `${s.name}.png`); await p.locator("canvas").screenshot({ path: file });
       report.shots.push({ ...s, file: path.relative(root, file), ...r, ms: Date.now() - t0 }); console.log(`${s.name}: ${r.tris} tris, ${r.calls} calls, ${Date.now() - t0} ms`);
     }

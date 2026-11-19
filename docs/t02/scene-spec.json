@@ -1,0 +1,118 @@
+{
+  "scene_id": "T02",
+  "name": "岩隐寺（暂名；候选栖露岩寺）",
+  "game": "山门之外",
+  "chapter": "岩腹藏楼",
+  "revision": "research draft, 2026-11-17",
+  "status": "research_only; no scene has been built; see acceptance criteria in PLAN.md",
+  "source_of_truth": "this pack; numbers marked 推算/提案 come from OSM/SRTM/公开文字 and are not survey data",
+  "units": "metres; +y up; +x east (out of the cave, toward the lake); +z south; origin at the centre of the cave mouth floor",
+  "zones": [
+    {
+      "id": "Z0",
+      "name": "湖面远望（只作机位，不是可行走区）",
+      "connects_to": [],
+      "objects": ["湖面", "游船（低模）", "崖壁", "左钟右鼓岩", "洞口", "木楼剪影"],
+      "floor": "lake surface about 275 m (normal water level of Chitan reservoir, S17)",
+      "collision": "not walkable; the boat/wharf is a camera platform only"
+    },
+    {
+      "id": "Z1",
+      "name": "林间窄路",
+      "connects_to": ["Z0", "Z2"],
+      "objects": ["石板/土路", "杉木", "阔叶树", "苔", "湿石", "洞口在树后"],
+      "floor": "path from about 277 m to 290 m",
+      "collision": "path is a deck; tree trunks and rock are posts/solids; no off-path walking"
+    },
+    {
+      "id": "Z2",
+      "name": "岩口",
+      "connects_to": ["Z1", "Z3"],
+      "objects": ["101 级石阶（提案）", "砖砌券洞", "洞口（约 37 × 32 m）", "左钟右鼓岩", "滴水"],
+      "floor": "cave floor about 300 m",
+      "collision": "cave walls/roof are solids; the stair is a ramp; the mouth is a threshold, not a door"
+    },
+    {
+      "id": "Z3",
+      "name": "木楼下部",
+      "connects_to": ["Z2", "Z4"],
+      "objects": ["主平台（木栈）", "状元柱", "短柱", "大引", "横材", "平台底", "岩面"],
+      "floor": "cave floor about 300 m; platform at +6.5 m",
+      "collision": "platform is a roof overhead; the pillar and short posts are posts; the cave floor is not walkable except the marked path"
+    },
+    {
+      "id": "Z4",
+      "name": "侧向栈道",
+      "connects_to": ["Z3", "Z5"],
+      "objects": ["木栈道（净宽约 1.1 m）", "栏杆", "南安阁", "观音阁", "两阁腰檐", "岩壁"],
+      "floor": "walkway at +6.5 m",
+      "collision": "walkway is a deck; railing is a post line; the edge is not a drop (v1)"
+    },
+    {
+      "id": "Z5",
+      "name": "上层小殿",
+      "connects_to": ["Z4"],
+      "objects": ["原创小殿/上殿体块", "佛坛", "像设占位", "梁架", "残彩", "回望洞口"],
+      "floor": "upper floor about +9.0 m",
+      "collision": "hall is a solid with a door; the altar is a post rectangle; the back wall meets the rock"
+    }
+  ],
+  "route": {
+    "waypoints_xz": [
+      [70, -20],
+      [40, -10],
+      [12, 0],
+      [4, 0],
+      [2, 7],
+      [-7, 8],
+      [-6, 0]
+    ],
+    "length_one_way_m": 230,
+    "climb_m": "about 25 m (lake 275 m to upper hall 309 m); proposal, not survey data",
+    "returns_the_same_way": true,
+    "note": "+x east, +z south; waypoints are a design proposal following the OSM footway and the published plan. The 230 m includes the switchbacks of the 101-step stair; the straight-line waypoints sum shorter. Z0 (the lake view) is camera-only and is not part of the walkable route; the 433 m OSM approach from the northeast is outside the playable route."
+  },
+  "checkpoints": {
+    "system": "岩行记·五记（见 CHECKPOINTS.md）；不做集齐门槛，不评分",
+    "main": [
+      { "id": "C01", "name": "听水", "zone": "Z2/Z3", "mark": "水" },
+      { "id": "C02", "name": "认柱", "zone": "Z3", "mark": "柱" },
+      { "id": "C03", "name": "看缝", "zone": "Z3/Z5", "mark": "缝" },
+      { "id": "C05", "name": "记一笔", "zone": "any", "mark": "图" }
+    ],
+    "optional": [
+      { "id": "C04", "name": "量光", "zone": "Z5", "mark": "光" }
+    ],
+    "not_doing": ["抱柱许愿", "上香/点灯", "敲钟", "拓题记", "爬岩", "接甘露", "发现国宝式寻宝", "重源偷师剧情"]
+  },
+  "lighting": {
+    "preset": "whitebox neutral daylight first; then G01 岩下柔光 (summer-after-rain morning; reconstructed from the atlas entry because the #art page returned 401); autumn-clear-afternoon variant",
+    "main_light": "east cave-mouth daylight, 4800-5200 K, diffuse; no direct sun inside the cave; warm red bounce from the Danxia rock",
+    "local_light": "one small lamp in the upper hall only; no lamp at noon; no coloured cave lighting",
+    "fog": "thin mist outside the mouth only; none inside the cave",
+    "wetness": "rock and stone steps wet after rain; timber dry; drip falls on stone, not on timber"
+  },
+  "cameras": "camera-manifest.json",
+  "deferred": [
+    "现状 10 栋建筑的完整复原",
+    "五座宋构的逐间精模与材份",
+    "佛像/观音像精模",
+    "湖上航线/游船驾驶",
+    "一线天/状元桥/周边丹霞点",
+    "七印/结尾",
+    "16 种季时",
+    "多人/NPC"
+  ],
+  "unknowns": [
+    "洞口/洞腹的实测尺寸与洞底起伏",
+    "五座宋构的逐间米制尺寸、柱高、材份",
+    "状元柱的真实高度、直径与柱头组物",
+    "平台短柱/横材的数量与位置",
+    "1964 年重建与原构的差异程度",
+    "火灾的精确日期与原因细节",
+    "现状保护级别与公布批次",
+    "重源来访的证据",
+    "现场声压、混响、滴水流量",
+    "目标手机的性能"
+  ]
+}

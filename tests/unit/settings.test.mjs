@@ -6,7 +6,7 @@ const mem = (text = null) => { const m = { text, get: () => m.text, set: (t) => 
 test("a new visitor gets the defaults", () => { assert.deepEqual(createSettings(mem()).get(), { ...DEFAULTS }); });
 test("what is set is kept for next time", () => {
   const m = mem(), a = createSettings(m); a.set("sens", 1.6); a.set("invertY", true); a.set("quality", "low"); a.set("volume", 0.25);
-  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, lock: false, autocam: true, fov: 0, thirds: true, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
+  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, lock: false, autocam: true, fov: 0, thirds: true, blur: false, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
 });
 test("values out of range are brought back into it", () => {
   const s = createSettings(mem()); assert.equal(s.set("sens", 99), 2.5); assert.equal(s.set("sens", -3), 0.3); assert.equal(s.set("volume", 7), 1); assert.equal(s.set("volume", -1), 0);
@@ -35,4 +35,11 @@ test("the eye goes to each place's own shot unless asked not to, and that is kep
   const m = mem(), a = createSettings(m); assert.equal(a.get().autocam, true);
   a.set("autocam", false); assert.equal(createSettings(m).get().autocam, false);
   assert.equal(sanitize({ autocam: "no" }).autocam, true, "only a yes or a no is taken");
+});
+
+test("the photograph's blur is off until switched on, kept once on, and off for anything damaged (#275)", () => {
+  const m = mem(), a = createSettings(m); assert.equal(a.get().blur, false);
+  a.set("blur", true); assert.equal(createSettings(m).get().blur, true);
+  assert.equal(createSettings(mem('{"sens":1.2}')).get().blur, false);
+  assert.equal(createSettings(mem('{"blur":"yes"}')).get().blur, false);
 });

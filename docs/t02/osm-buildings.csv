@@ -1,0 +1,5 @@
+name,building,osm_id,rect_w_m,rect_h_m,angle_deg,area_m2,x_east_m,y_north_m,note
+甘露岩寺（OSM POI）,no,4979842994,,,,,0.0,0.0,amenity=place_of_worship; religion=buddhist; no building footprint
+主步道（东北进山）,footway,508733655,433,1.5,,,217.2,-321.4,"polyline length; width assumed 1.5 m, not recorded"
+北侧环线,footway,1210479500,339,1.5,,,43.0,-22.6,"polyline length; width assumed 1.5 m, not recorded"
+洞前环道,footway,1210479501,252,1.5,,,43.0,-22.6,"closed loop; perimeter; width assumed 1.5 m, not recorded"

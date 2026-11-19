@@ -1,0 +1,68 @@
+asset_id,file,type,source,author_or_origin,license,modified,used_for,status,commercial_use,attribution_required,license_url,checked_on
+TEX-wood,app/shared/textures/wood_a.webp + wood_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,柱/梁/门/经橱/展柜；调深去红,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-stone,app/shared/textures/stone_a.webp + stone_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,台基/台阶/铺地/土塔基座；调灰土色,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-blocks,app/shared/textures/blocks_a.webp + blocks_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,土红墙/围墙/土塔；调赭石,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-plaster,app/shared/textures/plaster_a.webp + plaster_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,殿内墙/壁画地仗；调土黄,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-bark,app/shared/textures/bark_a.webp + bark_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,国槐/刺槐/杨树,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-leaves,app/shared/textures/leaves_a.webp + leaves_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,槐/杨树冠；调干绿土黄,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-snow,app/shared/textures/snow_a.webp + snow_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,冬季土塔/屋顶/广场（变体）,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+TEX-weave,app/shared/textures/weave_a.webp + weave_n.jpg,scanned PBR texture,polyhaven.com (see T00 asset-register),Poly Haven,CC0,packed by tools/textures.py,经卷封面/幡/坐垫；调绀青暗红,reuse,yes,no (credit appreciated),https://polyhaven.com/license,2026-11-17
+FONT-yunjing,app/shared/fonts/,cut typefaces,OFL sources cut by tools/fonts.py,project (cut from OFL fonts),SIL OFL 1.1,cut by tools/fonts.py,标题/对白/札记/匾额/印章,reuse,yes,yes (OFL notice),https://openfontlicense.org/,2026-11-17
+FONT-ja-en-ko,app/shared/fonts/,cut typefaces,OFL sources cut by tools/fonts.py,project (cut from OFL fonts),SIL OFL 1.1,cut by tools/fonts.py,日/英/韩界面,reuse,yes,yes (OFL notice),https://openfontlicense.org/,2026-11-17
+TOOL-t00,app/src/ + tools/ + tests/,code and tools,T00 project,project,project own,—,行走/镜头/音频/界面/测试/截图/性能,reuse,yes,no,,2026-11-17
+MODEL-buddha-pedestal,app/shared/models/*.glb,3D model,如是我闻 / T00 project,owner-confirmed,project own (see T00 asset-register),—,配殿/侧厅坐佛占位；不能作卧佛,reuse,yes,no,,2026-11-17
+STATUE-arhat-monk-guanyin,app/shared/models/*.glb,3D scans,museums via T00 asset-register,museums,CC0,thinned/vertex-painted by tools/statues.py,十八罗汉/弟子/胁侍的占位（需重配）,reuse,yes,no (CC0; source line kept),https://creativecommons.org/publicdomain/zero/1.0/,2026-11-17
+AUDIO-buses,app/src/audio.js,code,T00 project,project,project own,—,三条总线/两套混响/脚步/钟鼓/鸟,reuse,yes,no,,2026-11-17
+UI-paper,app/src/ui.js + ui.css + paper.js,code,T00 project,project,project own,—,界面/纸本/札记,reuse,yes,no,,2026-11-17
+BLD-hexi-qing,app/src/building.js style=hexi-qing,procedural geometry,T04 project,project,project own,to be made,河西/清式殿宇词汇（土红墙/深木/重檐歇山）,planned,yes,no,,2026-11-17
+BLD-dafo-hall,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,大佛殿 48.3×24.5×20.2 m；九间/七间；佛坛/侧廊,planned,yes,no,,2026-11-17
+BLD-gate,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,山门 11.7×7.8 m；三间；土红墙/深木/深灰瓦,planned,yes,no,,2026-11-17
+BLD-bell-drum,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,钟楼/鼓楼 6.9×6.6 m；二层,planned,yes,no,,2026-11-17
+BLD-sutra-library,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,藏经阁 21.3×10.5 m；单檐歇山；经橱/展柜,planned,yes,no,,2026-11-17
+BLD-stupa,app/src/stupa.js,procedural geometry,T04 project,project,project own,to be made,土塔 23×23 m 基座；33.37 m；13 层；36 风铎,planned,yes,no,,2026-11-17
+BLD-side-halls,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,感应寺/金塔殿/念经堂/接待室/库房体块,planned,yes,no,,2026-11-17
+BLD-city-backdrop,app/src/backdrop.js,procedural geometry,T04 project,project,project own,to be made,广场/博物馆/小学/饭店/低层住宅；低多边形+雾,planned,yes,no,,2026-11-17
+BUDDHA-reclining,app/levels/t04/,3D model (original),T04 project,project,project own,to be made,原创 34.5 m 卧佛；木胎泥塑；暗金；头北脚南面西,planned,yes,no,,2026-11-17
+SCULP-31,app/levels/t04/,3D models (original),T04 project,project,project own,to be made,十大弟子+二胁侍+十八罗汉；3–4 变体+实例化,planned,yes,no,,2026-11-17
+ALTAR-hall,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,佛坛 1.2 m；供桌/香炉/长明灯,planned,yes,no,,2026-11-17
+MURAL-530,app/levels/t04/,baked textures (original),T04 project,project,project own,to be made,530 m² 壁画四组；东西/南北/佛身后/二层,planned,yes,no,,2026-11-17
+CABINET-12,app/levels/t04/,procedural geometry,T04 project,project,project own,to be made,经橱 12 个意象；不打开,planned,yes,no,,2026-11-17
+SCROLL-gold,app/levels/t04/,procedural geometry/texture,T04 project,project,project own,to be made,金银字经卷；绀青纸；半开一折,planned,yes,no,,2026-11-17
+CANON-north,app/levels/t04/,procedural geometry/texture,T04 project,project,project own,to be made,《永乐北藏》636 函/6361 卷的展陈;卷册/函,planned,yes,no,,2026-11-17
+TEX-earth-red,app/shared/textures/,PBR material,T04 project,project,project own,to be made,土红/赭石墙；风蚀/雨痕/返潮,planned,yes,no,,2026-11-17
+TEX-timber-hexi,app/shared/textures/,PBR material,T04 project,project,project own,to be made,河西干木；深褐/裂纹,planned,yes,no,,2026-11-17
+TEX-gold-dark,app/shared/textures/,PBR material,T04 project,project,project own,to be made,暗金/土金；佛像/经卷/铜器,planned,yes,no,,2026-11-17
+TEX-mud,app/shared/textures/,PBR material,T04 project,project,project own,to be made,草泥/泥塑/壁画地仗,planned,yes,no,,2026-11-17
+TEX-indigo-paper,app/shared/textures/,PBR material,T04 project,project,project own,to be made,绀青纸/金银字,planned,yes,no,,2026-11-17
+TEX-silk,app/shared/textures/,PBR material,T04 project,project,project own,to be made,经卷封面/幡/织物,planned,yes,no,,2026-11-17
+TEX-grey-tile,app/shared/textures/,PBR material,T04 project,project,project own,to be made,深灰筒瓦；大佛殿/山门/藏经阁,planned,yes,no,,2026-11-17
+TREE-locust-poplar,app/src/trees.js,procedural geometry,T04 project,project,project own,to be made,国槐/刺槐/杨树；院内/广场,planned,yes,no,,2026-11-17
+SFX-city,app/src/audio.js,synthesised sound,T04 project,project,project own,to be made,城市低频/车流/广场人流,planned,yes,no,,2026-11-17
+SFX-hall-reverb,app/src/audio.js,synthesised sound,T04 project,project,project own,to be made,殿内长混响 3–5 s；门洞,planned,yes,no,,2026-11-17
+SFX-bells-stupa,app/src/audio.js,synthesised sound,T04 project,project,project own,to be made,36 风铎；稀疏/偶发,planned,yes,no,,2026-11-17
+SFX-paper-wood,app/src/audio.js,synthesised sound,T04 project,project,project own,to be made,纸/木柜/铜锁；经卷展柜,planned,yes,no,,2026-11-17
+SFX-steps,app/src/steps.js,synthesised sound,T04 project,project,project own,to be made,石/砖/木/土脚步；复用+新,planned,yes,no,,2026-11-17
+MUSIC-t04,app/src/score.js,synthesised music,T04 project,project,project own,to be made,T04 主题；低音持续/箫/琴；殿内几乎无音乐,planned,yes,no,,2026-11-17
+UI-i18n-t04,app/levels/t04/locales/,text,T04 project,project,project own,to be made,T04 四语文字,planned,yes,no,,2026-11-17
+UI-notes-card,app/levels/t04/,code/text,T04 project,project,project own,to be made,长照札记六格+五条观察；纸本,planned,yes,no,,2026-11-17
+REF-commons-dafo,"research only, not shipped",photographs,Wikimedia Commons Category:Great Buddha Temple (Zhangye) / Interior,"Livewireshock, Zhangzhugang, guan, Leuband, 张骐","CC BY-SA 3.0 / 4.0 (15 files)",none,研究/配色/构图参考,reference,conditional,yes if shipped,https://commons.wikimedia.org/wiki/Category:Great_Buddha_Temple_(Zhangye),2026-11-17
+REF-osm,docs/t04/osm-buildings.csv,derived map data,OpenStreetMap / Overpass/OSM API,© OpenStreetMap contributors,ODbL,computed by this research,白盒布局/轴线/逐栋,reference,yes,yes (ODbL),https://www.openstreetmap.org/copyright,2026-11-17
+REF-srtm,docs/t04/elevation-grid.csv,derived elevation data,opentopodata / SRTM 30m,NASA/USGS,public domain (SRTM),queried by this research,白盒高程,reference,yes,no,https://api.opentopodata.org/,2026-11-17
+REF-articles,docs/t04/SOURCES.md,text/documents,government/academic/media sources (see SOURCES.md),various,various,summarised by this research,研究/著录/矛盾表,reference,conditional,yes if quoted,https://www.zhangye.gov.cn/,2026-11-17
+REF-met-qiaobin,"research only, not shipped",artwork photograph,https://www.metmuseum.org/art/collection/search/53924,乔彬（Qiao Bin）; 大都会艺术博物馆,Met Open Access (public domain/CC0),none (reference only),卧佛+弟子组像的比例/釉色参考；1503 年彩釉陶 36.4 cm（25.227.1-.6）,reference,yes,no (CC0; credit requested),https://www.metmuseum.org/policies/image-resources,2026-11-17
+REF-met-tangut-horseman,"research only, not shipped",artwork photograph,https://www.metmuseum.org/art/collection/search/51288,佚名; 大都会艺术博物馆,Met Open Access (public domain/CC0),none (reference only),西夏/党项服饰参考；Tangut Horseman 13.100.19,reference,yes,no (CC0; credit requested),https://www.metmuseum.org/policies/image-resources,2026-11-17
+WORK-met-gandhara-parinirvana,"not downloaded",artwork photograph,https://www.metmuseum.org/art/collection/search/38452,佚名; 大都会艺术博物馆（2015.500.4.1）,"Met Open Access (public domain/CC0)",none yet,侧厅涅槃三件之一；3 世纪犍陀罗片岩 66×66×7.6 cm,candidate,yes,no (CC0; credit requested; no museum marks),https://www.metmuseum.org/policies/image-resources,2026-11-17
+WORK-colbase-nehan-10599,"not downloaded",artwork photograph,https://colbase.nich.go.jp/collection_items/tnm/A-10599,佚名; 东京国立博物馆（A-10599）,ColBase terms of use: free reuse incl. commercial with source line,none yet,侧厅涅槃三件之一；平安 12 世纪 绢本着色 155.1×202.8 cm 国宝,candidate,yes,yes: 出典行+加工说明,https://colbase.nich.go.jp/pages/term?locale=ja,2026-11-17
+WORK-colbase-nehan-757,"not downloaded",artwork photograph,https://colbase.nich.go.jp/collection_items/tnm/A-757,佚名; 东京国立博物馆（A-757）,ColBase terms of use: free reuse incl. commercial with source line,none yet,侧厅涅槃三件之一；镰仓 14 世纪 绢本着色 190.7×120.4 cm,candidate,yes,yes: 出典行+加工说明,https://colbase.nich.go.jp/pages/term?locale=ja,2026-11-17
+WORK-met-chusonji-sutra,"not downloaded",artwork photograph,https://www.metmuseum.org/art/collection/search/44887,佚名; 大都会艺术博物馆（2002.447.1）,"Met Open Access (public domain/CC0)",none yet,藏经阁经卷三件之一；约 1175 平安 金银字/绀青纸 25.4×18.1 cm,candidate,yes,no (CC0; credit requested; no museum marks),https://www.metmuseum.org/policies/image-resources,2026-11-17
+WORK-met-diamond-sutra,"not downloaded",artwork photograph,https://www.metmuseum.org/art/collection/search/51753,佚名; 大都会艺术博物馆（47.136.4）,"Met Open Access (public domain/CC0)",none yet,藏经阁经卷三件之一；明万历 木刻印本 31.8×14 cm,candidate,yes,no (CC0; credit requested; no museum marks),https://www.metmuseum.org/policies/image-resources,2026-11-17
+WORK-met-sutra-cover,"not downloaded",artwork photograph,https://www.metmuseum.org/art/collection/search/50538,佚名; 大都会艺术博物馆（46.186.8）,"Met Open Access (public domain/CC0)",none yet,藏经阁经卷三件之一；16 世纪中国 丝织 36.2×12.7 cm,candidate,yes,no (CC0; credit requested; no museum marks),https://www.metmuseum.org/policies/image-resources,2026-11-17
+WORK-cma-goryeo-gold-sutra,"not downloaded",artwork photograph,https://clevelandart.org/art/1994.25,佚名; 克利夫兰艺术博物馆（1994.25）,Cleveland Open Access (CC0),none yet,备选暂缓；高丽 14 世纪 绀纸金银字 20.6×43.7 cm；公开图只有整卷细条,deferred,yes,no (CC0; credit requested),https://www.clevelandart.org/open-access,2026-11-17
+BLK-hermitage-xixia,do not use,blocked,艾尔米塔什/黑水城西夏佛教绘画,,,,,blocked,no,,,2026-11-17
+BLK-cn-museum,do not use,blocked,中国博物馆藏品的网页图,,,,,blocked,no,,,2026-11-17
+BLK-temple-web,do not use,blocked,寺方网页文字/图片,,,,,blocked,no,,,2026-11-17
+BLK-travel-photos,do not use,blocked,旅游博客/游记照片,,,,,blocked,no,,,2026-11-17
+BLK-ai-photo,do not use,blocked,AI 生成的「大佛寺实景」,,,,,blocked,no,,,2026-11-17
+BLK-scan-statue,do not use,blocked,张掖大佛寺卧佛的 3D 扫描/照片贴图（无授权/文保）,,,,,blocked,no,,,2026-11-17
+BLK-real-temple-name,do not use,blocked,游戏内使用真实寺名「张掖大佛寺」作关卡名（未取得许可）,,,,,blocked,no,,,2026-11-17
+BLK-treasure-mechanic,do not use,blocked,进入佛像/取装藏/开经柜/宝库玩法（宗教/伦理）,,,,,blocked,no,,,2026-11-17

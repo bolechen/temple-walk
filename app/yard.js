@@ -25,7 +25,7 @@ import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
-import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
+import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
@@ -251,6 +251,10 @@ const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.g
 if (Q.has("cam") && !Q.has("in")) { const p = settleAt(walker, pose[0], pose[1]) || { x: site.start[0], z: site.start[1] }; pose[0] = p.x; pose[1] = p.z; }
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
+// Where he stands in the picture from behind him is held fixed (eye.js, FRAMES; issue #271): by default B, in the middle
+// and a little below it; ?frame=a over his shoulder, a little left of the middle; ?frame=old the eye as it was, 1.2 m to
+// his right, eased in to his back by every wall, kept for comparing.
+const FRAME_KEY = Q.get("frame") === "old" ? "old" : Q.get("frame") === "a" ? "a" : "b", FRAME = FRAME_KEY === "old" ? null : FRAMES[FRAME_KEY];
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
 const follow = createFollow();
 const LOOK_EASE = 0.06, look = { yaw, pitch, vy: 0, vp: 0 };   // the way the view looks this frame, coming round after yaw and pitch
@@ -621,9 +625,9 @@ function frame(now) {
     footstep(kind, { speed: speedNow, side: -f.side * (view === "third" ? 1 : 0.5), loud: (view === "third" ? 0.8 : 1) * (walker.onStairs(f.x, f.z) ? 1.15 : 1), wet: mood.wet, late: f.late || 0 });
   }
   if (!inside) { trail.follow(pos.x, pos.z); drift.keep?.(pos.x, pos.z, still ? 0 : dt, U.uWind.value.x, U.uWind.value.y); } trail.update(dt);
-  // The eye: his own, or one that follows behind, as low as a child and a little to one side, so that he stands
-  // small in the lower left of the picture and the place fills the rest. It comes in close rather than pass through
-  // anything solid, and it never sinks into the ground or the hillside.
+  // The eye: his own, or one that follows behind, as low as a child, so that he stands small in the middle of the
+  // picture, a little below its centre, and the place fills the rest (eye.js, FRAMES). It comes in close rather than
+  // pass through anything solid, and it never sinks into the ground or the hillside.
   // From behind him the view comes round a moment after the hand (0.06 s, as a third-person camera's axis eases in
   // and out), so a jerk of the mouse is not a jerk of the whole place; from his own eyes it turns with the hand.
   if (view === "first" || follow.fresh || cine) { look.yaw = yaw; look.pitch = pitch; look.vy = look.vp = 0; }
@@ -633,9 +637,9 @@ function frame(now) {
   bob.phase += moved / 0.55; bob.amp += ((still || aloft ? 0 : Math.min(1, speedNow / 2.1)) - bob.amp) * (1 - Math.exp(-dt / 0.15));
   if (view === "first") camera.position.set(pos.x, eyeY + (stage && (stage.pose === "sit" || stage.pose === "chair") ? (stage.lift || 0) + 0.68 : EYE) - (1 - Math.cos(bob.phase * Math.PI * 2)) * 0.006 * bob.amp, pos.z);
   else {
-    const rx = Math.cos(look.yaw), rz = Math.sin(look.yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
+    const rx = Math.cos(look.yaw), rz = Math.sin(look.yaw), wantSide = FRAME ? 0 : walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant };
+    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
     camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
@@ -645,6 +649,13 @@ function frame(now) {
     if (monkHidden && !photo.on) monk.group.visible = false;
   }
   camera.rotation.set(look.pitch, -look.yaw, 0, "YXZ");
+  // From behind him the eye looks at him, not only along the view (eye.js, aimAt): on a flight of steps, looking level,
+  // it would put him at the foot of the picture or over its top (a visitor's picture of 2026-11-19 on the stair by the
+  // half-way pavilion had him cut off at the waist), and while its arm moves over past the censer it would lose the middle.
+  if (view === "third" && FRAME && !monkHidden && !cine) {
+    const m = monk.group.position, aim = aimAt(camera.position.toArray(), [m.x, m.y, m.z], look.yaw, FRAME, camera.fov);
+    if (aim) camera.rotation.set(aim[1], -aim[0], 0, "YXZ");
+  }
   // The place's own shot, mixed over the eye that follows him (src/director.js). In the picture he is drawn whenever the
   // eye stands clear of his head, from his own eyes too.
   if (director.active()) {
@@ -684,7 +695,7 @@ function frame(now) {
   ground.mirror?.(mirrorOn && !inside);
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
-  post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
+  post.focus(photo.on && settings.get().blur ? focusAt() : 0);   // depth of field only with the camera raised and 虚化 switched on: never walking, never ?shot (the picture a visitor sees is the picture a tool takes)
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
@@ -740,6 +751,11 @@ on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute
 const thirds = (v) => { document.body.classList.toggle("thirds", v); $("thirdsToggle")?.setAttribute("aria-pressed", String(v)); };
 thirds(settings.get().thirds);
 on("thirdsToggle", () => { settings.set("thirds", !settings.get().thirds); thirds(settings.get().thirds); });
+// 虚化: the photograph's very shallow depth of field, off unless asked for. Offered only where the tier keeps the depth to draw it.
+const blur = (v) => $("blurToggle")?.setAttribute("aria-pressed", String(v));
+blur(settings.get().blur);
+if (quality.depth && quality.dof) $("blurToggle").hidden = false;
+on("blurToggle", () => { settings.set("blur", !settings.get().blur); blur(settings.get().blur); });
 on("prayToggle", (e) => { photo.pray = !photo.pray; e.currentTarget.setAttribute("aria-pressed", String(photo.pray)); });
 
 // Draw the framed part of the view again, large, and mount it on its card.
@@ -1176,6 +1192,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
+window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).

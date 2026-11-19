@@ -5,9 +5,9 @@
 export const SETTINGS_KEY = "yunjing.settings.v1";
 export const QUALITIES = ["auto", "low", "medium", "high"];
 export const LEVELS = ["volume", "music", "ambience", "effects"];
-/** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, autocam: boolean, fov: number, thirds: boolean, volume: number, music: number, ambience: number, effects: number }} Settings */
+/** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, autocam: boolean, fov: number, thirds: boolean, blur: boolean, volume: number, music: number, ambience: number, effects: number }} Settings */
 /** @type {Readonly<Settings>} */
-export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, autocam: true, fov: 0, thirds: true, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
+export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, autocam: true, fov: 0, thirds: true, blur: false, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
 export const FOV_RANGE = [-6, 16];   // degrees taken from or added to the angle of view, which differs by view and screen
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -24,6 +24,8 @@ export function sanitize(saved) {
     // default (2026-11-17), every save carried `thirds: false` whether or not it was chosen, so only a save that knows the
     // new default (`rev` 2) may keep them off.
     if (typeof saved.thirds === "boolean" && (saved.rev === 2 || saved.thirds)) s.thirds = saved.thirds;
+    // The photograph's shallow depth of field, off unless the visitor has switched it on (owner, 2026-11-19: off by default); a missing or damaged value is off.
+    if (typeof saved.blur === "boolean") s.blur = saved.blur;
     if (Number.isFinite(saved.fov)) s.fov = clamp(Math.round(saved.fov), FOV_RANGE[0], FOV_RANGE[1]);
     for (const k of LEVELS) if (Number.isFinite(saved[k])) s[k] = clamp(saved[k], 0, 1);
   }

@@ -1,0 +1,182 @@
+{
+  "spec": "tools/t05-hall/specs/color-one.json",
+  "shots": [
+    {
+      "name": "door-winter-clay",
+      "view": "door",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/color-one/door-winter-clay.png",
+      "tris": 83404,
+      "calls": 182,
+      "ms": 9491
+    },
+    {
+      "name": "door-winter-paint",
+      "view": "door",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/door-winter-paint.png",
+      "tris": 83404,
+      "calls": 182,
+      "ms": 9070
+    },
+    {
+      "name": "front10-winter-clay",
+      "view": "front10",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/color-one/front10-winter-clay.png",
+      "tris": 81896,
+      "calls": 113,
+      "ms": 6554
+    },
+    {
+      "name": "front10-winter-paint",
+      "view": "front10",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/front10-winter-paint.png",
+      "tris": 81896,
+      "calls": 113,
+      "ms": 6948
+    },
+    {
+      "name": "side-winter-clay",
+      "view": "side",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/color-one/side-winter-clay.png",
+      "tris": 82236,
+      "calls": 130,
+      "ms": 6699
+    },
+    {
+      "name": "side-winter-paint",
+      "view": "side",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/side-winter-paint.png",
+      "tris": 82236,
+      "calls": 130,
+      "ms": 7002
+    },
+    {
+      "name": "front-winter-paint",
+      "view": "front",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/front-winter-paint.png",
+      "tris": 81036,
+      "calls": 98,
+      "ms": 7454
+    },
+    {
+      "name": "front-winter-clay",
+      "view": "front",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/color-one/front-winter-clay.png",
+      "tris": 81036,
+      "calls": 98,
+      "ms": 6822
+    },
+    {
+      "name": "face-close-winter-paint",
+      "view": "faceClose",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/face-close-winter-paint.png",
+      "tris": 72484,
+      "calls": 51,
+      "ms": 9432
+    },
+    {
+      "name": "face-from10-winter-paint",
+      "view": "faceFrom10",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/face-from10-winter-paint.png",
+      "tris": 72164,
+      "calls": 47,
+      "ms": 8593
+    },
+    {
+      "name": "face-from10-winter-clay",
+      "view": "faceFrom10",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/color-one/face-from10-winter-clay.png",
+      "tris": 72164,
+      "calls": 47,
+      "ms": 9276
+    },
+    {
+      "name": "hands-winter-paint",
+      "view": "handsClose",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/color-one/hands-winter-paint.png",
+      "tris": 80960,
+      "calls": 69,
+      "ms": 9322
+    },
+    {
+      "name": "front10-winter-noprobe",
+      "view": "front10",
+      "mood": "winter",
+      "paint": {
+        "env": false
+      },
+      "file": "tools/out/t05/color-one/front10-winter-noprobe.png",
+      "tris": 81896,
+      "calls": 113,
+      "ms": 7896
+    },
+    {
+      "name": "door-winter-noprobe",
+      "view": "door",
+      "mood": "winter",
+      "paint": {
+        "env": false
+      },
+      "file": "tools/out/t05/color-one/door-winter-noprobe.png",
+      "tris": 83404,
+      "calls": 182,
+      "ms": 7275
+    },
+    {
+      "name": "door-summer-paint",
+      "view": "door",
+      "mood": "summer",
+      "paint": true,
+      "file": "tools/out/t05/color-one/door-summer-paint.png",
+      "tris": 83404,
+      "calls": 182,
+      "ms": 7288
+    },
+    {
+      "name": "front10-summer-paint",
+      "view": "front10",
+      "mood": "summer",
+      "paint": true,
+      "file": "tools/out/t05/color-one/front10-summer-paint.png",
+      "tris": 81896,
+      "calls": 113,
+      "ms": 6550
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}

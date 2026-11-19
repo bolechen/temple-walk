@@ -1,0 +1,93 @@
+{
+  "scene_id": "T02",
+  "name": "岩隐寺（暂名；候选栖露岩寺）",
+  "game": "山门之外",
+  "chapter": "岩腹藏楼",
+  "revision": "research draft, 2026-11-17",
+  "status": "draft; not implemented; positions to be fixed after the first whitebox",
+  "units": "metres; +x east (out of the cave, toward the lake); +z south; y up",
+  "origin": "the centre of the cave-mouth floor, at about 300 m above sea level (proposal; SRTM cannot resolve the cave floor)",
+  "yaw_convention": "yaw_deg is clockwise from north (-z): 0 = north, 90 = east (+x), 180 = south, 270 = west (-x)",
+  "height_note": "ground_m is a design proposal (lake 275 m + 101 steps, S17/S08); eye_m is above the local ground. Do not treat either as survey data.",
+  "season_time": "whitebox neutral daylight first; then G01 岩下柔光 (summer-after-rain morning, reconstructed from the atlas entry); autumn-clear-afternoon variant",
+  "fov_deg": 44,
+  "fov_note": "exterior cameras 44 deg (about 45 mm equivalent); cave interiors 52 deg (about 38 mm) to hold the scale of the cave; see each camera",
+  "cameras": [
+    {
+      "id": "cam01",
+      "name": "湖上远望",
+      "purpose": "lake -> rock; the cave mouth is a dark inverted triangle in a huge cliff; the timber building reads small inside it",
+      "position": { "x": 150.0, "z": -60.0, "ground_m": 275.0, "eye_m": 1.65 },
+      "look": { "yaw_deg": 248.0, "pitch_deg": 8.0 },
+      "fov_deg": 44,
+      "must_show": ["湖面与船影", "丹霞崖壁与左钟右鼓岩", "倒三角形的洞口", "洞口内的一点木楼檐口/柱"],
+      "must_not": ["洞口被树完全挡住", "木楼占满洞口", "现代游船/码头设施抢主体"],
+      "notes": "From a boat or the wharf. The mouth must read darker than the cliff."
+    },
+    {
+      "id": "cam02",
+      "name": "林间窄路",
+      "purpose": "path -> mouth; the cave is hidden until the last turn",
+      "position": { "x": 34.0, "z": -10.0, "ground_m": 284.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 254.0, "pitch_deg": 10.0 },
+      "fov_deg": 44,
+      "must_show": ["湿石阶/窄路", "两侧岩壁或杉木", "洞口亮部", "林下散射光"],
+      "must_not": ["宽阔的景区大道", "洞口一开始就全露", "现代栏杆/指示牌抢主体"],
+      "notes": "The path should feel 'only wide enough for a single rider' (嘉靖《邵武府志》)."
+    },
+    {
+      "id": "cam03",
+      "name": "岩口",
+      "purpose": "threshold; the cave opens; the platform underside and the pillar appear",
+      "position": { "x": 12.0, "z": 0.0, "ground_m": 300.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 270.0, "pitch_deg": 0.0 },
+      "fov_deg": 52,
+      "must_show": ["洞腹展开（外大内小）", "平台底/状元柱/短柱/横材", "蜃阁檐口从平台后露出", "洞顶高不见顶"],
+      "must_not": ["洞内一片死黑", "洞口过曝成白", "平台看起来像贴图/悬浮"],
+      "notes": "First reveal. Keep the mouth frame; do not fill the frame with the building."
+    },
+    {
+      "id": "cam04",
+      "name": "木楼下部",
+      "purpose": "under the platform; the player counts the supports",
+      "position": { "x": 4.0, "z": 0.0, "ground_m": 300.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 270.0, "pitch_deg": 28.0 },
+      "fov_deg": 52,
+      "must_show": ["状元柱", "柱头组物/大引", "短柱", "横材", "岩壁接触", "平台底"],
+      "must_not": ["一根柱撑起全部的画面暗示", "柱脚悬空", "梁/岩之间没有接触"],
+      "notes": "The single pillar must read as one support among several, not as a miracle."
+    },
+    {
+      "id": "cam05",
+      "name": "侧向栈道",
+      "purpose": "the walkway; the two side pavilions and their different heights",
+      "position": { "x": -2.0, "z": 9.0, "ground_m": 306.5, "eye_m": 1.60 },
+      "look": { "yaw_deg": 336.0, "pitch_deg": 5.0 },
+      "fov_deg": 52,
+      "must_show": ["木栈道与栏杆", "南安阁三重檐", "观音阁平座", "洞顶"],
+      "must_not": ["栏杆挡住视线", "栈道窄到不可走", "两阁高低差读不出"],
+      "notes": "The 8 m height difference between the two pavilions is the asymmetry to preserve."
+    },
+    {
+      "id": "cam06",
+      "name": "上层小殿回望",
+      "purpose": "the upper hall; the cave mouth becomes the bright distant view",
+      "position": { "x": -6.0, "z": 0.0, "ground_m": 309.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 90.0, "pitch_deg": -3.0 },
+      "fov_deg": 52,
+      "must_show": ["小殿梁架/佛坛一角", "洞口亮部", "湖面与对岸", "木构剪影"],
+      "must_not": ["洞口过曝", "室内死黑", "把洞口拍成门/窗"],
+      "notes": "This is the closing beat: the mouth as a bright opening, the building as a dark frame."
+    }
+  ],
+  "to_verify_after_whitebox": [
+    "every camera stands on walkable ground",
+    "the cave mouth is never clipped by the frame in cam01",
+    "the timber building reads small in cam01 and cam03",
+    "the single pillar does not read as the only support in cam04",
+    "the cave roof is not pierced by the third-person eye",
+    "the mouth is not blown out in cam06",
+    "the two pavilions' height difference reads in cam05",
+    "no modern railing/sign dominates any frame"
+  ]
+}

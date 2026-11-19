@@ -547,9 +547,9 @@ export function buildHall(M, opts) {
     // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
     const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
     const cheek = stairProfile(p.platH).count > 2 ? CHEEK : 0;   // (a flight of two steps has no cheek stones, but the ends of its treads still stop his shoes)
-    for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - cheek - BODY, x1: sx > 0 ? w / 2 + cheek + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02 });
+    for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - cheek - BODY, x1: sx > 0 ? w / 2 + cheek + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02, h: p.platH });   // (`h`: as high as its platform, for the eye)
     walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
-    walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true });
+    walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true, h: p.platH });   // (`h`: no higher than the platform it climbs, for the eye)
   };
   if (p.walkAll) {
     walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way

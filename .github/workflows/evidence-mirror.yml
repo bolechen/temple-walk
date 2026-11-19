@@ -46,12 +46,13 @@ jobs:
       - name: The bucket holds what the manifests say (S3, size and SHA-256)
         if: always()
         run: node tools/evidence.mjs verify-store
-      # The public domain answers a datacenter address with Cloudflare's verification page for some files (Bot Fight Mode
+      # On a pull request neither of the two reads that follow is made (#296): a read that times out says nothing of the
+      # branch, and the nightly run (e2e.yml) reads both stores in full. The public domain answers a datacenter address with Cloudflare's verification page for some files (Bot Fight Mode
       # judges by IP reputation, which no hostname rule can skip). Such a read is counted as challenged, by extension, and
       # hashed from the fallback; failing is neither store giving the manifest's bytes.
       - name: Every listed file through the public domain (challenged reads via the fallback)
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run: EVIDENCE_BASE="$PUBLIC" node tools/evidence.mjs verify --all
       - name: The original agrees
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all

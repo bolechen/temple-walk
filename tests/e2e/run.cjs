@@ -1945,7 +1945,21 @@ const scenarios = {
       await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
       expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
     p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
-    expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
+    expect(!p.post.dof && p.post.focus === 0, "a fixed view (?shot) is sharp too, as walking is (#275): " + JSON.stringify(p.post));
+    // #275 (PHOTO-02): the raised camera changes nothing on any tier; 虚化 is a switch in the photograph's settings, off at first, offered only where the tier can draw it.
+    for (const q of ["high", "medium", "low"]) {
+      const t = await open(b, base, `q=${q}&cam=0,29,0,0.1&view=first&season=autumn&time=dusk`, { viewport: { width: 480, height: 270 } }); await t.frames(2);
+      const before = await t.probe(); await t.page.evaluate(() => window.__photo(true)); await t.frames(3); const after = await t.probe();
+      expect(!before.post.dof && !after.post.dof, `${q}: the raised camera should not blur (switch off): ` + JSON.stringify([before.post, after.post]));
+      const offered = await t.page.evaluate(() => !document.getElementById("blurToggle").hidden);
+      expect(offered === (q === "high"), `${q}: the 虚化 switch should show only where depth is drawn, showed ${offered}`);
+      if (q === "high") {
+        await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click()); await t.page.click("#blurToggle"); await t.frames(3);
+        const on = await t.probe(); expect(on.post.dof && on.post.focus > 0 && (await t.page.evaluate(() => window.__settings().blur)), "switching 虚化 on should focus the raised camera: " + JSON.stringify(on.post));
+        await t.page.evaluate(() => window.__photo(false)); await t.frames(3); expect(!(await t.probe()).post.dof, "putting the camera away should end the blur");
+      }
+      expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close();
+    }
     p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk&off=gtao,lut,halation,layers,dof");
     expect(!p.post.gtao && !p.post.lut && !p.post.halation && p.layers === 0, "?off= should put out each part of the finish: " + JSON.stringify([p.post, p.layers]));
     p = await look("q=high&shot=1&show=cam06");

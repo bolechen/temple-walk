@@ -319,7 +319,19 @@ for (const p of Object.values(pieces).filter((q) => q.skinInside)) {
     const [h, s, val] = hsv(...sample(tex, u, v).map((c) => c / 255));
     skinT[t] = h > 12 && h < 45 && s > 0.18 && s < 0.6 && val > 0.55 ? 1 : 0;   // peach, not the robe's brick red
   }
-  // islands smaller than a forearm are flecks in the cloth
+  // islands smaller than a forearm are flecks in the cloth: only the largest island of skin-coloured triangles (joined by
+  // shared points) is the forearm (FLECKS=0 keeps every island, as before #286; the flecks, light patches of the robe's
+  // own texture, went to the skin and came out as pale shards on the sleeve once the forearm's texture was repainted)
+  if (+(process.env.FLECKS ?? 1)) {
+    const key = (v) => `${p.P[v * 3]},${p.P[v * 3 + 1]},${p.P[v * 3 + 2]}`, byPoint = new Map(), comp = new Int32Array(nt).fill(-1);
+    for (let t = 0; t < nt; t++) if (skinT[t]) for (let k = 0; k < 3; k++) { const q = key(p.I[t * 3 + k]); if (!byPoint.has(q)) byPoint.set(q, []); byPoint.get(q).push(t); }
+    let best = -1, bestN = 0, c = 0, flecks = 0;
+    for (let t0 = 0; t0 < nt; t0++) { if (!skinT[t0] || comp[t0] >= 0) continue; const st = [t0]; comp[t0] = c; let m = 0;
+      while (st.length) { const t = st.pop(); m++; for (let k = 0; k < 3; k++) for (const u of byPoint.get(key(p.I[t * 3 + k]))) if (comp[u] < 0) { comp[u] = c; st.push(u); } }
+      if (m > bestN) { bestN = m; best = c; } c++; }
+    for (let t = 0; t < nt; t++) if (skinT[t] && comp[t] !== best) { skinT[t] = 0; flecks++; }
+    console.log(`${p.what}: ${c - 1} flecks of ${flecks} triangles left in the cloth`);
+  }
   const n = skinT.reduce((a, b) => a + b, 0);
   const skin = filter(p, (t) => skinT[t]), cloth = filter(p, (t) => !skinT[t]);
   pieces[p.name + "_skin"] = { ...p, name: p.name + "_skin", what: "right forearm", part: "skin", arm: "right", ...skin, shareTile: p.name };
@@ -421,6 +433,62 @@ for (const p of Object.values(pieces)) {
   trisOut += p.I.length / 3;
 }
 console.log(`thinned ${trisIn} -> ${trisOut} triangles`);
+
+// ---- 5a. the colours at the cuffs (#286, second round of the review) ----
+// Tripo painted each forearm as it lay inside its sleeve: skin at the wrist, going over through brown to the robe's red
+// up the arm, and the sleeves with patches of that skin where the forearm met them. Hanging, the sleeve hid both; with
+// the arms raised (the incense, the tea) the forearm slides out of the cuff and the painted brown came out on it, and the
+// skin on the sleeves showed at the cuffs ("skin-coloured smudges on both cuffs", the 3D review). Here, in each sleeve's
+// texture, whatever lies under the sleeve's own triangles and is skin-coloured or pale is painted the sleeve's own red;
+// in each forearm's, everything under the forearm's triangles is painted the forearm's own skin. Each
+// texel keeps a little of its own lightness, so the cloth's weave and the skin's shading stay. CUFFS=0 leaves them.
+const CUFFS = +(process.env.CUFFS ?? 1);
+if (CUFFS) {
+  const isSkin = ([h, s, v]) => h > 16 && h < 42 && s > 0.12 && s < 0.52 && v > 0.6, isPale = ([, s, v]) => s < 0.16 && v > 0.55;
+  /** Which texels of a w×h image the triangles `tris` (indices into UV) cover, grown by `grow` px. */
+  const cover = (w, h, UV, tris, grow = 2) => {
+    const m = new Uint8Array(w * h);
+    for (let t = 0; t < tris.length; t += 3) {
+      const P = [0, 1, 2].map((k) => [UV[tris[t + k] * 2] * (w - 1), UV[tris[t + k] * 2 + 1] * (h - 1)]);
+      const x0 = Math.max(0, Math.floor(Math.min(...P.map((q) => q[0])) - grow)), x1 = Math.min(w - 1, Math.ceil(Math.max(...P.map((q) => q[0])) + grow));
+      const y0 = Math.max(0, Math.floor(Math.min(...P.map((q) => q[1])) - grow)), y1 = Math.min(h - 1, Math.ceil(Math.max(...P.map((q) => q[1])) + grow));
+      const [[ax, ay], [bx, by], [cx, cy]] = P, d = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay); if (Math.abs(d) < 1e-9) continue;
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const u = ((bx - x) * (cy - y) - (cx - x) * (by - y)) / d, v = ((cx - x) * (ay - y) - (ax - x) * (cy - y)) / d, ww = 1 - u - v, e = grow / Math.sqrt(Math.abs(d));
+        if (u > -e && v > -e && ww > -e) m[y * w + x] = 1;
+      }
+    }
+    return m;
+  };
+  const median = (arr) => { const a = [...arr].sort((x, y) => x - y); return a[a.length >> 1] ?? 0; };
+  // paint `mask`'s texels for which `wrong(hsv)` with the median colour of its texels for which `right(hsv)`
+  const repaint = (tex, mask, wrong, right) => {
+    const ok = [[], [], []], L = []; let n = 0;
+    for (let i = 0; i < mask.length; i++) if (mask[i]) { const c = [tex.data[i * 3], tex.data[i * 3 + 1], tex.data[i * 3 + 2]]; if (right(hsv(...c.map((k) => k / 255)))) { for (let k = 0; k < 3; k++) ok[k].push(c[k]); L.push(c[0] + c[1] + c[2]); } }
+    const ref = ok.map(median), refL = median(L) || 1;
+    for (let i = 0; i < mask.length; i++) if (mask[i]) { const c = [tex.data[i * 3], tex.data[i * 3 + 1], tex.data[i * 3 + 2]]; if (!wrong(hsv(...c.map((k) => k / 255)))) continue;
+      const k = Math.min(1.05, Math.max(0.85, 0.85 + 0.2 * ((c[0] + c[1] + c[2]) / refL - 0.5))); for (let j = 0; j < 3; j++) tex.data[i * 3 + j] = Math.min(255, Math.round(ref[j] * k)); n++; }
+    return { n, ref };
+  };
+  for (const [sleeve, arm] of [["tripo_part_13", "tripo_part_14"], ["tripo_part_1", "tripo_part_1_skin"]]) {
+    const sl = pieces[sleeve], fa = pieces[arm];
+    const tex = await rawOf(sl.base), clothM = cover(tex.w, tex.h, sl.UV, sl.I);
+    // the right forearm was cut out of its sleeve and drew on the sleeve's texture: it is given a tile of its own (a copy
+    // of that texture, 256 px as the left forearm's), so that each can be painted without the other's texels
+    if (fa.shareTile === sleeve) { const core = cover(tex.w, tex.h, fa.UV, fa.I, 0); for (let i = 0; i < clothM.length; i++) if (core[i]) clothM[i] = 0; fa.base = sl.base; delete fa.shareTile; fa.tile = 256; }
+    const a = repaint(tex, clothM, (c) => isSkin(c) || isPale(c), (c) => !isSkin(c) && !isPale(c) && c[2] > 0.25);
+    sl.base = new Uint8Array(await sharp(Buffer.from(tex.data), { raw: { width: tex.w, height: tex.h, channels: 3 } }).png().toBuffer());
+    const t2 = await rawOf(fa.base), b = repaint(t2, cover(t2.w, t2.h, fa.UV, fa.I, 3), () => true, isSkin);   // the whole forearm, one skin
+    fa.base = new Uint8Array(await sharp(Buffer.from(t2.data), { raw: { width: t2.w, height: t2.h, channels: 3 } }).png().toBuffer());
+    console.log(`cuffs: ${sl.what}: ${a.n} texels of skin or pale painted rgb(${a.ref}); ${fa.what}: ${b.n} texels painted skin rgb(${b.ref})`);
+  }
+  // the hands' pieces run some way up the forearm, painted brown there too: what is not skin under them is painted skin
+  for (const h of ["tripo_part_0", "tripo_part_15"]) {
+    const pc = pieces[h], t = await rawOf(pc.base), r = repaint(t, cover(t.w, t.h, pc.UV, pc.I, 3), (c) => !isSkin(c), isSkin);
+    pc.base = new Uint8Array(await sharp(Buffer.from(t.data), { raw: { width: t.w, height: t.h, channels: 3 } }).png().toBuffer());
+    console.log(`cuffs: ${pc.what}: ${r.n} texels painted skin rgb(${r.ref})`);
+  }
+}
 
 // ---- 6. one atlas ----
 const order = Object.values(pieces).filter((p) => !p.shareTile).sort((a, b) => b.tile - a.tile || a.name.localeCompare(b.name, "en", { numeric: true }));
