@@ -90,6 +90,7 @@ test("pages.yml: the publication waits for both sets of unit tests, the build an
   assert.match(jobOf(y, "deploy"), /needs: verify/);
   assert.match(jobOf(y, "unit"), /pnpm test\b/);
   assert.match(jobOf(y, "grid"), /swap\.mjs --test tests\/unit/);
+  assert.ok(jobOf(y, "grid").indexOf("node tools/bake-walk.mjs") < jobOf(y, "grid").indexOf("swap.mjs"), "the grid job writes the floor before the swapped walker reads it");
   const site = jobOf(y, "site");
   assert.match(site, /pnpm run build/); assert.match(site, /run\.cjs boot/);
   // none waits for another (they are parallel); only `changes` comes first

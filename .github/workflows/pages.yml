@@ -149,6 +149,9 @@ jobs:
       - uses: ./.github/actions/prepare
         with:
           floor: ${{ needs.changes.outputs.walk }}
+      # Writes the floor into app/shared/walk/ from the cache (a few seconds), or bakes it; the swapped walker reads that file.
+      - name: The floor, from the cache or baked
+        run: node tools/bake-walk.mjs
       - name: The same unit tests on the walker over the baked floor (#265)
         run: WALKER=court node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
 
