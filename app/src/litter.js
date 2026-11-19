@@ -19,13 +19,14 @@ import * as THREE from "three";
 // slides for each m/s of breeze over its grip. HEAP and HEAP_GRIP: the share of a heap the breeze moves on to the next
 // cell each second for each m/s over HEAP_GRIP (2: a heap moves as fast as its leaves would slide, a quarter metre a cell). RISE: a step up this high stops a leaf (the foot of a wall, a platform, a
 // stair). LIFT: of what the breeze drives against such a rise, the share it lifts up over it and away, as the eddy at the
-// foot of a wall lifts leaves (what is left heaps there). KICK: how far round a shoe leaves are scuffed, how far they go, and the share of the heap under it pushed on.
+// foot of a wall lifts leaves (what is left heaps there). KEEP: seconds a leaf is kept each in its own place before it
+// goes onto its cell's heap (the heap is drawn as many leaves as it holds, the way the old leaves are). KICK: how far round a shoe leaves are scuffed, how far they go, and the share of the heap under it pushed on.
 export const MEM = {
   PER: 4, SLOTS: 7, DMAX: 12,
   GRIP: [0.5, 0.45], LANE: 0.6, KERB: 2.2, SLIDE: 0.5,
   HEAP: 2, HEAP_GRIP: 0.7, RISE: 0.05, TICK: 0.1,
   KICK: { r: 0.17, push: [0.08, 0.2], heap: 0.2 },
-  LIFT: 0.5,
+  LIFT: 0.5, KEEP: 120,
   POOL: 20000,
 };
 // The swept lane down the middle of the courts and its kerbs, as the paving draws them (ground.js: `path`, `kerb`).
@@ -113,7 +114,10 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
     // side or the other of the wind as a leaf skitters; and a tenth of a second at a time the heaps move on downwind.
     // Below every grip nothing moves at all.
     wind(dt, wx, wz) {
-      clock += dt; const w = Math.hypot(wx, wz); if (!(w > 0) || dt <= 0) return;
+      clock += dt;
+      // Leaves that have lain KEEP seconds join the heap of the cell they lie in: as many leaves, drawn as the heap is.
+      for (let k = nLive - 1; k >= 0; k--) { const i = live[k]; if (clock - lborn[i] > MEM.KEEP) { const c = lcell[i]; kill(i); heapUp(c, 1); count.heaped++; dirty = true; } }
+      const w = Math.hypot(wx, wz); if (!(w > 0) || dt <= 0) return;
       if (w > MEM.GRIP[0] * MEM.LANE) {
         const ux = wx / w, uz = wz / w;
         for (let k = nLive - 1; k >= 0; k--) {
@@ -208,7 +212,7 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
 // The record on the card, and the uniforms the paving reads it by: (centre x, centre z, cells to a metre, cells across).
 /** @param {{ span?: number, ground?: (x: number, z: number) => number }} [o] */
 export function createLitter({ span = 32, ground = undefined } = {}) {
-  const mem = createMemory({ span, ground }), N = mem.N, data = new Uint16Array(2 * N * N * 4);
+  const mem = createMemory({ span, ground }), N = mem.N, data = new Uint16Array(2 * N * N * 4), sent = new Uint16Array(data.length);
   const tex = new THREE.DataTexture(data, 2 * N, N, THREE.RGBAIntegerFormat, THREE.UnsignedShortType);
   tex.internalFormat = "RGBA16UI"; tex.minFilter = tex.magFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
   const cdata = new Uint8Array(N * N * 2), cover = new THREE.DataTexture(cdata, N, N, THREE.RGFormat, THREE.UnsignedByteType);
@@ -216,7 +220,18 @@ export function createLitter({ span = 32, ground = undefined } = {}) {
   const box = new THREE.Vector4(0, 0, MEM.PER, N);
   return {
     mem, tex, cover, box,
-    upload() { if (mem.pack(data, cdata)) { tex.needsUpdate = true; cover.needsUpdate = true; } const [x, z] = mem.centre(); box.x = x; box.y = z; },
+    // Only the rows of the record that changed go to the card (one row of the picture is one row of cells).
+    upload() {
+      if (mem.pack(data, cdata)) {
+        const row = 2 * N * 4; let changed = 0;
+        for (let j = 0; j < N; j++) {
+          let same = true; for (let o = j * row, e = o + row; o < e; o++) if (data[o] !== sent[o]) { same = false; break; }
+          if (!same) { tex.addUpdateRange(j * row, row); sent.set(data.subarray(j * row, (j + 1) * row), j * row); changed++; }
+        }
+        if (changed) tex.needsUpdate = true; cover.needsUpdate = true;
+      }
+      const [x, z] = mem.centre(); box.x = x; box.y = z;
+    },
     bytes: data.byteLength + cdata.byteLength,
   };
 }

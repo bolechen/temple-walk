@@ -60,7 +60,7 @@ test("the breeze slides them downwind and a step up stops them; with no breeze n
   const before = mem.leaves().map((l) => l.slice());
   for (let k = 0; k < 300; k++) mem.wind(1 / 30, 0, 0);
   assert.deepEqual(mem.leaves(), before, "still air moved a leaf");
-  for (let k = 0; k < 30 * 120; k++) mem.wind(1 / 30, 1.0, 0);   // a strong breeze toward +x for two minutes
+  for (let k = 0; k < 30 * 100; k++) mem.wind(1 / 30, 1.0, 0);   // a strong breeze toward +x for 100 s (within KEEP: each leaf still in its own place)
   const after = mem.leaves(), mx = (a) => a.reduce((s, l) => s + l[0], 0) / a.length;
   assert.ok(mx(after) > mx(before) + 1, `the leaves did not go downwind: ${mx(before).toFixed(2)} → ${mx(after).toFixed(2)}`);
   assert.ok(after.every((l) => l[0] < 2 + 1e-9), "a leaf went up onto the platform");
