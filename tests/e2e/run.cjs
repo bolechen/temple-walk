@@ -215,18 +215,23 @@ const scenarios = {
   // great hall is taken when he comes near it, and fades in; the altar stands where it stood seen through the door when
   // he goes in; and every hall can be taken.
   doorway: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=medium&view=third&season=summer&time=day&cam=0,60,3.14,0&off=bamboo,trees,backdrop,drift,props");   // the halls, the paving and its mirror drawn; the rest left out, so that software rendering gets through the warming
+    const t = await open(b, base, "q=high&view=third&season=summer&time=day&cam=0,60,3.14,0");
     await t.frames(4);
+    // Nothing of the doorways is fetched with the page: no picture, and not the code that draws rooms into cubes.
+    const early = await t.page.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name).filter((n) => /shared\/doorways\/|doorway-capture/.test(n)));
+    expect(early.length === 0, "the doorways were fetched with the page: " + early.join(", "));
     let r = await t.page.evaluate(() => window.__doorways());
     expect(r && Object.keys(r.halls).length === 8, "every hall that can be entered should have a doorway: " + JSON.stringify(r));
     expect(Object.values(r.halls).every((h) => !h.taken), "rooms were taken while the page opened, far from any door: " + JSON.stringify(r.halls));
     const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
     await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
-    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 600000, "the great hall's room never came into its doorway");   // its shaders are made ready one a frame first, and software rendering draws a frame in seconds
+    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 240000, "the great hall's room never came into its doorway");
     r = await t.page.evaluate(() => window.__doorways()); expect(r.halls.main.taken === 1, "the great hall was taken more than once: " + JSON.stringify(r.halls.main));
-    // Its shaders were compiled before its first face, by one of the two ways (doorway.js), and the report says which.
-    expect(["parallel", "frames"].includes(r.warm.path) && r.warm.programs >= 0, "the doorway does not say how it made its shaders ready: " + JSON.stringify(r.warm));
-    console.log("     warming:", JSON.stringify(r.warm), "longest frame while taking", r.worstFrameMs, "ms");
+    // Its room came from the baked pictures (tools/bake-doorways.mjs), and nothing was drawn into a cube in the page.
+    expect(r.halls.main.source === "baked", "the great hall's doorway did not come from its baked pictures: " + JSON.stringify(r.halls.main));
+    const drew = await t.page.evaluate(() => performance.getEntriesByType("resource").some((e) => /doorway-capture/.test(e.name)));
+    expect(!drew, "the code that draws rooms into cubes was fetched by a visitor's page");
+    console.log("     the doorways:", JSON.stringify({ main: r.halls.main, mb: r.mb, worstFrameMs: r.worstFrameMs }));
     await t.shot("e2e-doorway");
     // At the door, then the first frame inside: the altar keeps its place across the picture, seen with his own eyes. From
     // behind him the eye also comes 2.5 m nearer on going in (he is set down inside the room, interior.js's `door`), so
@@ -247,6 +252,20 @@ const scenarios = {
     expect(across.first.moved <= 0.05, `the altar jumps across the door: ${JSON.stringify(across.first)} (more than 5% of the width)`);
     r = await t.page.evaluate(() => window.__doorways(true));
     expect(Object.values(r.halls).every((x) => x.taken >= 1 && x.fade === 1), "not every hall's room could be taken: " + JSON.stringify(r.halls));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,
+  // no error, and the great hall still opens.
+  "doorway-none": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third&season=summer&time=day&cam=0,60,3.14,0" + BARE.replace(",doorway", ""), { init: () => {
+      const f = window.fetch; window.fetch = (u, ...a) => (/shared\/doorways\/t00\.json/.test(String(u)) ? Promise.resolve(new Response("{}", { status: 200, headers: { "content-type": "application/json" } })) : f(u, ...a));
+    } });
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
+    await t.until(async () => (await t.page.evaluate(() => window.__doorways())).halls.main.source === "none", 60000, "the doorway never gave up on pictures it does not have");
+    await t.frames(5);
+    const r = await t.page.evaluate(() => window.__doorways());
+    expect(r.halls.main.fade === 0 && !r.halls.main.taken, "a doorway without pictures should keep its dark box: " + JSON.stringify(r.halls.main));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   halls: { tier: 2, async run(b, base) {
