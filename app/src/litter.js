@@ -48,6 +48,10 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
   const slots = new Int32Array(N * N * S).fill(-1), flow = new Float32Array(N * N);
   const P = MEM.POOL, lx = new Float64Array(P), lz = new Float64Array(P), lid = new Uint8Array(P), lgrip = new Float32Array(P), lborn = new Float64Array(P), lcell = new Int32Array(P).fill(-1);
   const free = []; for (let i = P - 1; i >= 0; i--) free.push(i);
+  // The leaves now lying, packed at the front of one list, so that the breeze and the feet look only at those.
+  const live = new Int32Array(P), at = new Int32Array(P).fill(-1); let nLive = 0;
+  const take = () => { const i = free.pop(); at[i] = nLive; live[nLive++] = i; return i; };
+  const release = (i) => { lcell[i] = -1; free.push(i); const k = at[i], j = live[--nLive]; live[k] = j; at[j] = k; at[i] = -1; };
   let cx = 0, cz = 0, placed = false, clock = 0, since = 0, dirty = true;
   const count = { landed: 0, heaped: 0, slid: 0, kicked: 0, blown: 0, stopped: 0, full: 0, lifted: 0 };
   // A heap at DMAX covers the stone: a leaf more on it cannot be seen, and is counted as `full` rather than kept.
@@ -55,8 +59,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
   const mod = (a) => ((a % N) + N) % N;
   const idx = (ix, iz) => mod(ix) + mod(iz) * N;
   const inSquare = (ix, iz) => placed && Math.abs((ix + 0.5) / PER - cx) < half && Math.abs((iz + 0.5) / PER - cz) < half;
-  const kill = (i) => { const c = lcell[i]; if (c < 0) return; for (let k = 0; k < S; k++) if (slots[c * S + k] === i) slots[c * S + k] = -1; lcell[i] = -1; free.push(i); };
-  const clearCell = (c) => { dens[c] = 0; for (let k = 0; k < S; k++) { const i = slots[c * S + k]; if (i >= 0) { lcell[i] = -1; free.push(i); slots[c * S + k] = -1; } } };
+  const kill = (i) => { const c = lcell[i]; if (c < 0) return; for (let k = 0; k < S; k++) if (slots[c * S + k] === i) slots[c * S + k] = -1; release(i); };
+  const clearCell = (c) => { dens[c] = 0; for (let k = 0; k < S; k++) { const i = slots[c * S + k]; if (i >= 0) { release(i); slots[c * S + k] = -1; } } };
   // The cell for a world cell, taken over from whatever ground it last held (the square wraps round).
   const claim = (ix, iz) => {
     const c = idx(ix, iz);
@@ -67,13 +71,13 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
   const placeIn = (c, i) => {
     let k = -1, old = -1;
     for (let q = 0; q < S; q++) { const j = slots[c * S + q]; if (j < 0) { k = q; break; } if (old < 0 || lborn[j] < lborn[slots[c * S + old]]) old = q; }
-    if (k < 0) { const j = slots[c * S + old]; lcell[j] = -1; free.push(j); heapUp(c, 1); count.heaped++; k = old; }
+    if (k < 0) { const j = slots[c * S + old]; release(j); heapUp(c, 1); count.heaped++; k = old; }
     slots[c * S + k] = i; lcell[i] = c;
   };
   const cellOf = (x, z) => [Math.floor(x * PER), Math.floor(z * PER)];
   // Moves a lying leaf; a rise in the ground stops it, and off the square it is gone with the ground it lay on.
   const move = (i, nx, nz) => {
-    const [ix, iz] = cellOf(nx, nz), c0 = lcell[i];
+    const ix = Math.floor(nx * PER), iz = Math.floor(nz * PER), c0 = lcell[i];
     if (!inSquare(ix, iz)) { kill(i); count.blown++; dirty = true; return true; }
     const c = idx(ix, iz);
     if (c !== c0 || ownX[c] !== ix || ownZ[c] !== iz) {
@@ -84,7 +88,7 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
     }
     lx[i] = nx; lz[i] = nz; dirty = true; return true;
   };
-  const alive = function* () { for (let i = 0; i < P; i++) if (lcell[i] >= 0) yield i; };
+  const alive = function* () { for (let k = 0; k < nLive; k++) yield live[k]; };
 
   return {
     N, span, PER,
@@ -102,7 +106,7 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
       const c = claim(ix, iz); if (gnd[c] <= NO / 2) return false;
       count.landed++; dirty = true;
       if (!free.length) { heapUp(c, 1); count.heaped++; return true; }
-      const i = free.pop(); lx[i] = x; lz[i] = z; lid[i] = Math.max(1, Math.min(255, id | 0)); lgrip[i] = MEM.GRIP[0] + MEM.GRIP[1] * hash(i * 1.37 + id * 0.11 + count.landed * 0.013); lborn[i] = clock;
+      const i = take(); lx[i] = x; lz[i] = z; lid[i] = Math.max(1, Math.min(255, id | 0)); lgrip[i] = MEM.GRIP[0] + MEM.GRIP[1] * hash(i * 1.37 + id * 0.11 + count.landed * 0.013); lborn[i] = clock;
       placeIn(c, i); return true;
     },
     // The breeze for `dt` seconds, (wx, wz) in m/s: each leaf whose grip it beats slides on along it, a little to one
@@ -112,8 +116,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
       clock += dt; const w = Math.hypot(wx, wz); if (!(w > 0) || dt <= 0) return;
       if (w > MEM.GRIP[0] * MEM.LANE) {
         const ux = wx / w, uz = wz / w;
-        for (let i = 0; i < P; i++) {
-          if (lcell[i] < 0) continue;
+        for (let k = nLive - 1; k >= 0; k--) {
+          const i = live[k]; if (k >= nLive) continue;
           const g = lgrip[i] * surface(lx[i], lz[i]); if (w <= g) continue;
           const a = (hash(lid[i] + 0.5) - 0.5) * 0.9 + 0.35 * Math.sin(clock * 1.3 + lid[i]), ca = Math.cos(a), sa = Math.sin(a), d = MEM.SLIDE * (w - g) * dt;
           if (move(i, lx[i] + (ux * ca - uz * sa) * d, lz[i] + (ux * sa + uz * ca) * d)) count.slid++;
@@ -127,8 +131,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
         if (!(dens[c] > 0) || ownX[c] === -1 << 30) continue;
         const ix = ownX[c], iz = ownZ[c], m = 1 / surface((ix + 0.5) / PER, (iz + 0.5) / PER), over = w - MEM.HEAP_GRIP / m; if (over <= 0) continue;
         const f = Math.min(0.5, MEM.HEAP * over * T * m) * dens[c];
-        for (const [jx, jz, share] of [[ix + sx, iz, ax], [ix, iz + sz, 1 - ax]]) {
-          const a = f * share; if (a <= 0) continue;
+        for (let e = 0; e < 2; e++) {
+          const jx = e ? ix : ix + sx, jz = e ? iz + sz : iz, a = f * (e ? 1 - ax : ax); if (a <= 0) continue;
           if (!inSquare(jx, jz)) { flow[c] -= a; count.blown += a; moved = true; continue; }
           const j = claim(jx, jz);
           if (gnd[j] <= NO / 2 || gnd[j] - gnd[c] > MEM.RISE || dens[j] >= MEM.DMAX) { flow[c] -= a * MEM.LIFT; count.lifted += a * MEM.LIFT; moved = true; continue; }
@@ -142,8 +146,8 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
     kick(x, z, yaw) {
       if (!placed) return;
       const fx = Math.sin(yaw), fz = Math.cos(yaw), R = MEM.KICK.r;
-      for (let i = 0; i < P; i++) {
-        if (lcell[i] < 0) continue;
+      for (let k = nLive - 1; k >= 0; k--) {
+        const i = live[k];
         const dx = lx[i] - x, dz = lz[i] - z, r = Math.hypot(dx, dz); if (r > R) continue;
         let ux = dx / (r || 1) + fx * 0.8, uz = dz / (r || 1) + fz * 0.8; const l = Math.hypot(ux, uz) || 1; ux /= l; uz /= l;
         const d = MEM.KICK.push[0] + (MEM.KICK.push[1] - MEM.KICK.push[0]) * hash(lid[i] + clock) * (1 - 0.5 * r / R);
@@ -159,7 +163,7 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
     // How many leaves lie within r of x, z: those kept each in its place, and the heaps' share of the circle.
     amountAt(x, z, r = 0.1) {
       let n = 0;
-      for (let i = 0; i < P; i++) if (lcell[i] >= 0 && Math.hypot(lx[i] - x, lz[i] - z) <= r) n++;
+      for (let k = 0; k < nLive; k++) { const i = live[k]; if (Math.hypot(lx[i] - x, lz[i] - z) <= r) n++; }
       const PERr = Math.max(1, Math.ceil(r * PER));
       const [ix, iz] = cellOf(x, z);
       let h = 0;
@@ -174,19 +178,22 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
     // Every leaf kept in its place: [x, z, id], for the tests and `__litter()`.
     leaves() { const out = []; for (const i of alive()) out.push([lx[i], lz[i], lid[i]]); return out; },
     heap() { let s = 0; for (let c = 0; c < N * N; c++) if (ownX[c] !== -1 << 30) s += dens[c]; return s; },
-    stats() { let n = 0; for (let i = 0; i < P; i++) if (lcell[i] >= 0) n++; return { kept: n, heap: +this.heap().toFixed(2), ...Object.fromEntries(Object.entries(count).map(([k, v]) => [k, +(+v).toFixed(2)])), centre: [cx, cz], span, cells: N }; },
+    stats() { return { kept: nLive, heap: +this.heap().toFixed(2), ...Object.fromEntries(Object.entries(count).map(([k, v]) => [k, +(+v).toFixed(2)])), centre: [cx, cz], span, cells: N }; },
     clear() { for (let c = 0; c < N * N; c++) { clearCell(c); ownX[c] = -1 << 30; } for (const k in count) count[k] = 0; dirty = true; },
     centre: () => [cx, cz],
     // Writes the record as the paving reads it: a picture 2N × N of four 16-bit numbers a point, two points to a cell.
     // The first number is the heap (0 to DMAX as 0 to 65535); each of the other seven is a place: its spot in the cell
     // (x and z, a sixteenth each) in the high byte and the leaf's own number (1 to 255; 0: empty) in the low. Returns
-    // whether anything changed since the last time.
-    pack(out) {
-      if (!dirty) return false; dirty = false; out.fill(0);
+    // whether anything changed since the last time. `cover` (N × N, two bytes a cell), if given, gets the heap again
+    // (0 to DMAX as 0 to 255) and 255 where any place in the cell is taken: one smooth look-up there tells the paving
+    // how deep the heap is and whether any kept leaf lies near enough to look for.
+    pack(out, cover = null) {
+      if (!dirty) return false; dirty = false; out.fill(0); if (cover) cover.fill(0);
       for (let c = 0; c < N * N; c++) {
         if (ownX[c] === -1 << 30) continue;
         const ci = c % N, cj = (c / N) | 0, o = (cj * 2 * N + ci * 2) * 4;
         out[o] = Math.round((dens[c] / MEM.DMAX) * 65535);
+        if (cover) { cover[c * 2] = Math.round((dens[c] / MEM.DMAX) * 255); for (let k = 0; k < S; k++) if (slots[c * S + k] >= 0) { cover[c * 2 + 1] = 255; break; } }
         for (let k = 0; k < S; k++) {
           const i = slots[c * S + k]; if (i < 0) continue;
           const qx = Math.min(15, Math.max(0, Math.floor((lx[i] * PER - ownX[c]) * 16))), qz = Math.min(15, Math.max(0, Math.floor((lz[i] * PER - ownZ[c]) * 16)));
@@ -204,27 +211,25 @@ export function createLitter({ span = 32, ground = undefined } = {}) {
   const mem = createMemory({ span, ground }), N = mem.N, data = new Uint16Array(2 * N * N * 4);
   const tex = new THREE.DataTexture(data, 2 * N, N, THREE.RGBAIntegerFormat, THREE.UnsignedShortType);
   tex.internalFormat = "RGBA16UI"; tex.minFilter = tex.magFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
+  const cdata = new Uint8Array(N * N * 2), cover = new THREE.DataTexture(cdata, N, N, THREE.RGFormat, THREE.UnsignedByteType);
+  cover.minFilter = cover.magFilter = THREE.LinearFilter; cover.wrapS = cover.wrapT = THREE.RepeatWrapping; cover.generateMipmaps = false; cover.unpackAlignment = 1; cover.needsUpdate = true;
   const box = new THREE.Vector4(0, 0, MEM.PER, N);
   return {
-    mem, tex, box,
-    upload() { if (mem.pack(data)) tex.needsUpdate = true; const [x, z] = mem.centre(); box.x = x; box.y = z; },
-    bytes: data.byteLength,
+    mem, tex, cover, box,
+    upload() { if (mem.pack(data, cdata)) { tex.needsUpdate = true; cover.needsUpdate = true; } const [x, z] = mem.centre(); box.x = x; box.y = z; },
+    bytes: data.byteLength + cdata.byteLength,
   };
 }
 
 // The paving's reading of the record. `freshLeaves(p, gk)`: the leaves kept each in its place that cover the point p,
 // as litterLayer returns a leaf (colour pick, age, coverage, which tree; `gk` the source map's say of whose leaves fall
-// here); `heapAt(p)`: the heap there, in the units litterLayer's amount is measured in.
+// here); `litCover(p)`: the heap there, in the units litterLayer's amount is measured in, and whether to look for kept leaves.
 export const LITTER_MEM = /* glsl */`
-uniform highp usampler2D tLitMem; uniform vec4 uLitMem; uniform float uLitOn;
+uniform highp usampler2D tLitMem; uniform sampler2D tLitCover; uniform vec4 uLitMem; uniform float uLitOn;
 bool litIn(vec2 p){ vec2 d=abs(p-uLitMem.xy)*uLitMem.z; return uLitOn>.5&&max(d.x,d.y)<uLitMem.w*.5-1.; }
 ivec2 litCell(vec2 c){ return ivec2(int(mod(c.x,uLitMem.w))*2,int(mod(c.y,uLitMem.w))); }
-float heapAt(vec2 p){
-  vec2 g=p*uLitMem.z-.5, c0=floor(g), w=g-c0;
-  float h00=float(texelFetch(tLitMem,litCell(c0),0).r), h10=float(texelFetch(tLitMem,litCell(c0+vec2(1.,0.)),0).r);
-  float h01=float(texelFetch(tLitMem,litCell(c0+vec2(0.,1.)),0).r), h11=float(texelFetch(tLitMem,litCell(c0+vec2(1.,1.)),0).r);
-  return mix(mix(h00,h10,w.x),mix(h01,h11,w.x),w.y)*${(MEM.DMAX * MEM.PER * MEM.PER / 166 / 65535).toExponential(4)};   // leaves to the square metre over 166 (a leaf to a cell of each of litterLayer's three grids)
-}
+// (heap, whether a kept leaf lies within the 2×2 cells round p): one smooth look-up of the cover picture.
+vec2 litCover(vec2 p){ vec2 c=texture(tLitCover,p*uLitMem.z/uLitMem.w).rg; return vec2(c.x*${(MEM.DMAX * MEM.PER * MEM.PER / 166).toFixed(4)},c.y); }   // the heap in leaves to the square metre over 166 (a leaf to a cell of each of litterLayer's three grids)
 vec4 freshLeaves(vec2 p, float gk){
   vec4 best=vec4(0.); vec2 c0=floor(p*uLitMem.z-.5);
   for(int j=0;j<2;j++) for(int i=0;i<2;i++){

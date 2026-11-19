@@ -16,7 +16,7 @@ export const U = {
   // lies, how much lies there this season (0 when none), which channel of the map (leaf or petal) and the three colours.
   tFallMap: { value: null }, uFallBox: { value: new THREE.Vector4(0, 0, 0, 0) }, uLitter: { value: 0 }, uLitterCh: { value: new THREE.Vector3() }, uLitterCol: { value: [new THREE.Color(), new THREE.Color(), new THREE.Color(), new THREE.Color()] },
   // The ground's record of the leaves and petals that came down while he was here (litter.js): the texture, its square, whether it is read.
-  tLitMem: { value: null }, uLitMem: { value: new THREE.Vector4(0, 0, 4, 1) }, uLitOn: { value: 0 }, uLitBase: { value: 1 },
+  tLitMem: { value: null }, tLitCover: { value: null }, uLitMem: { value: new THREE.Vector4(0, 0, 4, 1) }, uLitOn: { value: 0 }, uLitBase: { value: 1 },
   // The colour of lamplight seen through paper (the lattice's glow after dusk), set by the hour (mood.js `win`).
   uWin: { value: new THREE.Color(0.8, 0.47, 0.18) },
   // The mist lies in layers (fog.js): how much of it follows the height (0: none, the air the same at every height),

@@ -114,14 +114,24 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   // it touched. Over a jump of the clock (a photograph held, a hidden tab) nothing is handed over: the leaves that fell
   // while nobody looked are not heaped up at once.
   const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z) }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0, sent = 0, sentAt = -1, kicked = false;
-  if (lit) U.tLitMem.value = lit.tex;
+  if (lit) { U.tLitMem.value = lit.tex; U.tLitCover.value = lit.cover; }
+  // Each point's timing for this kind of weather, worked out once (fall.js, leafTimes): no sums are redone every frame.
+  const sTf = new Float64Array(count), sP = new Float64Array(count), sOff = new Float64Array(count), sTree = new Uint8Array(count); let timed = null;
+  const retime = () => {
+    timed = cur.fall + ":" + bam;
+    for (let i = 0; i < count; i++) {
+      const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]], T = leafTimes(s, cur.fall || 1, false);
+      sTree[i] = fract13(s) < bam ? 0 : 1; sTf[i] = T.Tf; sP[i] = T.P; sOff[i] = T.off;
+    }
+  };
   const handOver = (t, cam) => {
+    if (timed !== cur.fall + ":" + bam) retime();
     const ok = mem && u.uLand.value > 0 && SOURCES[curName] && lastT !== null && t > lastT && t - lastT < 0.25;
     for (let i = 0; i < count; i++) {
-      const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]];
-      if (fract13(s) < bam) continue;
-      const T = leafTimes(s, cur.fall, false), L = Math.floor((t + T.off - T.Tf) / T.P);
+      if (!sTree[i]) continue;
+      const L = Math.floor((t + sOff[i] - sTf[i]) / sP[i]);
       if (ok && L > landed[i]) {
+        const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]];
         const [x, z] = spotOf(s, L, [34, 13, 34], cam), g = groundAt(map, x, z);
         const want = shown(curName, densityAt(map, CHANNEL[curName], x, z)) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
         if (g > NO_GROUND / 2 && want > 0.001 && fract(s[0] * 7.31 + s[2] * 3.7) <= want && mem.land(x, z, 1 + Math.floor(fract(s[0] * 91.7 + s[3] * 13.1 + L * 0.618) * 254))) handed++;
@@ -149,7 +159,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     // second at a time; then the cloud's own clock is moved on to match, so none is handed over twice.
     runOn(secs, cam, windAt, dt = 0.1) {
       if (!mem) return;
-      let t = u.uT.value; const c = cam.toArray(); if (lastT === null) handOver(t, c);
+      let t = u.uT.value; const c = cam.toArray(); mem.follow(c[0], c[2]); if (lastT === null) handOver(t, c);
       for (let k = 0; k < secs / dt; k++) { t += dt; handOver(t, c); const w = windAt(t); mem.wind(dt, w[0], w[1]); }
       skew += t - u.uT.value; u.uT.value = t;
     },
@@ -157,10 +167,13 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     // The ground round him for this frame: the square follows him, the breeze (wx, wz) moves what lies, and the record
     // goes to the card. `dt` 0 (a still picture, indoors) keeps everything where it lies.
     keep(x, z, dt, wx, wz) {
-      // The record goes to the card at once when a leaf has come down or been scuffed, and otherwise (leaves sliding in
-      // the breeze) ten times a second: a slide of a centimetre a tenth of a second is not seen as steps.
-      if (!lit) return; mem.follow(x, z); if (dt > 0) mem.wind(dt, wx, wz); sent += dt;
-      if (handed !== sentAt || kicked || sent >= 0.1) { lit.upload(); sent = 0; sentAt = handed; kicked = false; }
+      // The breeze is worked and the record sent to the card ten times a second (at once after a scuff): a leaf that has
+      // just come down shows within a tenth of a second, under the falling one still settling (0.4 s), and a slide of a
+      // centimetre a tenth of a second is not seen as steps.
+      if (!lit) return; mem.follow(x, z); sent += dt;
+      if (sent >= 0.1) { mem.wind(sent, wx, wz); lit.upload(); sent = 0; }
+      else if (kicked || (dt === 0 && handed !== sentAt)) lit.upload();
+      kicked = false; sentAt = handed;
       U.uLitMem.value.copy(lit.box);
     },
     // A shoe has come down (monk.steps): the leaves under it are scuffed aside.
