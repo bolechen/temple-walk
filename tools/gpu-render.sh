@@ -34,6 +34,8 @@ STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 SITE="$(node -e 'console.log(require("./tools/site.cjs").site())')"   # the built site, staged under the name the job expects
 cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/plate.webp"; [ -n "${KEEP_MODELS:-}" ] || rm -rf "$STAGE/app/shared/models";   # KEEP_MODELS=1: the statues go along (the walk-round survey wants the Buddha)
  cp tools/gpu/job.cjs "$STAGE/job.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
+# BASE_SITE: another build (the base commit), served at base/ in the same job so the two can be measured turn about.
+if [ -n "${BASE_SITE:-}" ]; then cp -R "$BASE_SITE" "$STAGE/app/base"; rm -rf "$STAGE/app/base/shared/models" "$STAGE/app/base/plate.webp"; fi
 # Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
 # mid-job (a sync of in/ with --delete removes everything else under it).
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null

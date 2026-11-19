@@ -30,7 +30,7 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 
 验收：修改并合并 delivery 记录 → 状态工作流成功 → JSON 的 source.sha 与 main 一致 → Pages 完成后 verification/deployment 正确 → Site 展示同一 SHA；旧评审仍为待复验。网络失败应显示错误，不能出现假成功。运行 `node --test tests/unit/site-status.test.mjs` 验证失败部署、旧评审和证据串版场景。
 
-现有每六小时独立评审计划保留；评审任务应将结论提交本仓库 independent-review.json，而非反复修改 Site 的进度快照。例行状态更新不重新发布 Site。
+独立评审由定时任务每天跑一次（新加坡时间 9:00，Opus，读 `skills/temple-review/` v1.1）；评审任务应将结论提交本仓库 independent-review.json，而非反复修改 Site 的进度快照。例行状态更新不重新发布 Site。
 
 ## 证据图的位置（#223）
 

@@ -4,6 +4,7 @@ import { NOISE, FOGLAYER, fogMix, U } from "./glsl.js";
 import { FOG, SUN_DIR } from "./sky.js";
 import { declare, bind } from "./textures.js";
 import { TRAIL } from "./trail.js";
+import { LITTER_MEM } from "./litter.js";
 
 const MAX_LAMPS = 14;
 // A step into standing water sends two rings across it, the second a moment behind the first, as the well's drop
@@ -44,7 +45,7 @@ export function createGround(scene, shade, censer, paving) {
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -72,12 +73,14 @@ export function createGround(scene, shade, censer, paving) {
       // Leaves and petals lie where the trees let them fall (fall.js's map, the same one the falling ones read): two layers of
       // small leaves, each one to a cell of a rotated grid, each laid its own way, more of them at the foot of a wall or a
       // platform (where the wind and the broom leave them) and few on the swept lane down the middle of a court.
-      uniform sampler2D tFallMap; uniform vec4 uFallBox; uniform float uLitter; uniform vec3 uLitterCh, uLitterCol[4];
+      uniform sampler2D tFallMap; uniform vec4 uFallBox; uniform float uLitter, uLitBase; uniform vec3 uLitterCh, uLitterCol[4];
+      ` + LITTER_MEM + /* glsl */`
       // One layer: a leaf to a cell of a rotated grid, each its own size (a third of the length to full), its own turn and shape,
-      // some folded so that only half shows. Returns (colour pick, age, coverage, which tree).
+      // some folded so that only half shows; a leaf comes and goes softly as the amount passes its own threshold (the heaps
+      // in litter.js grow and shrink). Returns (colour pick, age, coverage, which tree).
       vec4 litterLayer(vec2 p, float amt, float gk, float a0){
         float c0=cos(a0), s0=sin(a0); vec2 r=mat2(c0,-s0,s0,c0)*p/.12+a0*9.; vec2 id=floor(r), f=fract(r)-.5;
-        float h=h21(id+a0), on=step(h,amt); vec2 jit=(vec2(h21(id+7.1),h21(id+13.3))-.5)*.25;
+        float h=h21(id+a0), on=smoothstep(h-.03,h+.03,amt); vec2 jit=(vec2(h21(id+7.1),h21(id+13.3))-.5)*.25;
         float ang=h21(id+3.7)*6.2832, ca=cos(ang), sa=sin(ang), big=h21(id+31.7), tree=step(h21(id+8.8),gk);
         vec2 l=mat2(ca,-sa,sa,ca)*(f-jit)*.12;
         float len=mix(.017,.05,big*big), wid=len*mix(.4,.62,h21(id+2.2))*mix(1.,1.5,tree);   // the ginkgo's is a broad fan
@@ -131,12 +134,18 @@ export function createGround(scene, shade, censer, paving) {
         if(uLitter>.001){
           vec2 fuv=(p-uFallBox.xy)*uFallBox.zw;
           if(fuv.x>0.&&fuv.x<1.&&fuv.y>0.&&fuv.y<1.){
-            vec4 fm=texture2D(tFallMap,fuv); float src=pow(max(dot(fm.rgb,uLitterCh),0.),5.);
-            if(src>.01){
+            vec4 fm=texture2D(tFallMap,fuv); float src=pow(max(dot(fm.rgb,uLitterCh),0.),5.)*uLitBase;
+            // What came down while he was here, kept by the ground (litter.js): the leaves each where it lies, and the heaps.
+            bool kept=litIn(p)&&uLitter>.001; vec2 cov=kept?litCover(p):vec2(0.); float heap=mod(uLitMode,2.)>.5?cov.x:0.; kept=kept&&cov.y>.001&&uLitMode>1.5;   // (uLitMode: 1 the heaps, 2 the kept leaves, 3 both; for measuring each)
+            if(src>.01||heap>.004){
               float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
-              float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB);
-              float amt=1.3*src*uLitter*sweep*smoothstep(-.3,.1,dB)*mix(.015,2.4,clump)*(.4+1.6*foot);
-              if(amt>.02) for(int L=0;L<3;L++){
+              // The leaves that lay here before he came (the broom has kept the lane all but clear of them this morning), and the heaps
+              // since. (Where only a heap lies the old leaves' clumping is not worked out: it is two noises a point.)
+              float amt=heap;
+              if(src>.01){ float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB); amt+=1.3*src*uLitter*sweep*smoothstep(-.3,.1,dB)*mix(.015,2.4,clump)*(.4+1.6*foot); }
+              // Where only a heap lies (and on the low tier) it is drawn as one layer holding as many leaves as three would.
+              bool one=src<=.01||uLitBase<.5; if(one) amt*=2.4;
+              if(amt>.02) for(int L=0;L<3;L++){ if(L>0&&one) break;
                 vec4 ll=litterLayer(p,amt*(L==0?1.:L==1?.8:.6),fm.a,float(L)*.9+.4);
                 if(ll.z>.01){
                   float age=clamp(ll.y*.8+.4*smoothstep(.2,.8,fbm2(p*.6+5.)),0.,1.);   // those under the trees longest have gone brown
@@ -144,6 +153,11 @@ export function createGround(scene, shade, censer, paving) {
                   alb=mix(alb,lc*mix(1.,.7,smoothstep(.3,.58,low)),ll.z*.9);
                 }
               }
+            }
+            // On top, the leaves that came down last, each where it touched and turned its own way, still fresh in colour.
+            if(kept){
+              vec4 fl=freshLeaves(p,fm.a);
+              if(fl.z>.01){ vec3 lc=fl.w>.5?mix(uLitterCol[2],uLitterCol[3],fl.y):mix(uLitterCol[0],uLitterCol[1],fl.y); lc*=fl.w>.5?.55+.9*fl.x:.75+.5*fl.x; alb=mix(alb,lc*mix(1.,.7,smoothstep(.3,.58,low)),fl.z*.9); }
             }
           }
         }

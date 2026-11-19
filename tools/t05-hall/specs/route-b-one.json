@@ -1,0 +1,61 @@
+{
+ "out": "tools/out/t05/route-b-one",
+ "size": [
+  1600,
+  900
+ ],
+ "statues": [
+  {
+   "url": "app/shared/models/buddha-lacquer.glb",
+   "x": 0,
+   "h": 9.0,
+   "halo": {
+    "rings": 3,
+    "tips": 9
+   },
+   "lotus": false
+  }
+ ],
+ "shots": [
+  {
+   "name": "door-summer",
+   "view": "door",
+   "mood": "summer"
+  },
+  {
+   "name": "door-winter",
+   "view": "door",
+   "mood": "winter"
+  },
+  {
+   "name": "front-summer",
+   "view": "front",
+   "mood": "summer"
+  },
+  {
+   "name": "front-winter",
+   "view": "front",
+   "mood": "winter"
+  },
+  {
+   "name": "front10-summer",
+   "view": "front10",
+   "mood": "summer"
+  },
+  {
+   "name": "front10-winter",
+   "view": "front10",
+   "mood": "winter"
+  },
+  {
+   "name": "side-summer",
+   "view": "side",
+   "mood": "summer"
+  },
+  {
+   "name": "side-winter",
+   "view": "side",
+   "mood": "winter"
+  }
+ ]
+}

@@ -45,6 +45,23 @@ const scenarios = {
   } },
   // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
   // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  // The ground keeps what comes down on it (#267): in the real page, leaves that touch the paving under the first
+  // court's maple are handed to the ground's record as the frames go, and on an autumn night (a breeze below every leaf's
+  // grip) none of them goes in the next minute; run on three minutes, more lie there than before.
+  litter: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=-7.5,33,-0.38,-0.42&season=autumn&time=night" + BARE);
+    const got = () => t.page.evaluate(() => window.__litter(0, true));
+    await t.until(async () => (await got()).kept >= 5, 240000, "no leaf was handed to the ground under the maple");
+    const L = (await got()).leaves.filter((l) => Math.abs(l[0]) > 3).slice(0, 30);
+    const amount = (l) => t.page.evaluate(([x, z]) => window.__litter(0, [x, z, 0.1]).at, l);
+    const before = []; for (const l of L) before.push(await amount(l));
+    expect(before.every((n) => n >= 1), "a leaf handed over is not on the ground: " + JSON.stringify(before));
+    await t.page.evaluate(() => window.__litter(60)); await t.frames(2);
+    for (let i = 0; i < L.length; i++) { const n = await amount(L[i]); expect(n >= before[i], `on a still night the leaves round ${L[i]} went from ${before[i]} to ${n}`); }
+    const a = await got(); await t.page.evaluate(() => window.__litter(180)); const c = await got();
+    expect(c.kept + c.heap > a.kept + a.heap + 20, "three more minutes and no more leaves lie on the ground: " + JSON.stringify([a.kept, a.heap, c.kept, c.heap]));
+    await t.close();
+  } },
   treeseed: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low" + BARE);
     const page = await t.page.evaluate(() => window.__trees());
@@ -1323,6 +1340,11 @@ const scenarios = {
     // (Played and listened to within one call, as the steps are: the place's bus carries nothing else here.)
     const k = await t.page.evaluate(() => { const r = window.__knock(true), t0 = performance.now(); while (performance.now() - t0 < 60); return { ...r, heard: window.__listen("ambience") }; });
     expect(k.knocks >= 1 && k.heard.rms > 0.0005, "the culms made no knock: " + JSON.stringify(k));
+    // The wind heard keeps the picture's clock (#267): the ambience's last gust was taken at the page's time, not at a
+    // count of its own begun at the first touch (it ticks four times a second, so within a second of now).
+    { await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(800);   // the place heard: its ticks run on the audio's own timer
+      const a = await t.page.evaluate(() => ({ ...window.__knock(), now: performance.now() / 1000 }));
+      expect(a.gustT !== null && Math.abs(a.now - a.gustT) < 1.0, "the wind heard is not on the picture's clock: " + JSON.stringify(a)); }
     // The third stroke of the bell, the first time: the birds in the old trees by the tower go up, with a rattle of wings.
     await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); });
     await t.frames(3);
@@ -1607,7 +1629,8 @@ const scenarios = {
         // and the seal were heard. (Seconds: nothing is drawn, so there are no frames to wait on.)
         const sounds = await t.page.evaluate(() => window.__shots());
         expect(sounds.shutter >= 1 && sounds.stamp >= 1, "the shutter and the seal should sound: " + JSON.stringify(sounds));
-        const f0 = (await t.state()).frames, drift0 = JSON.stringify(await t.page.evaluate(() => window.__drift(200))); await t.page.waitForTimeout(1500);
+        const f0 = (await t.state()).frames, drift0 = JSON.stringify(await t.page.evaluate(() => window.__drift(200))), lit0 = JSON.stringify(await t.page.evaluate(() => window.__litter(0, true))); await t.page.waitForTimeout(1500);
+        expect(lit0 === JSON.stringify(await t.page.evaluate(() => window.__litter(0, true))), "the leaves on the ground moved while the print was out (#267)");
         // The leaves, those in the air and those lying on the ground, stand with it (#219).
         expect(drift0 === JSON.stringify(await t.page.evaluate(() => window.__drift(200))), "the falling leaves moved while the print was out");
         const held = await t.page.evaluate(() => ({ frames: window.__yard().frames, frozen: document.body.classList.contains("frozen"), still: getComputedStyle(document.getElementById("still")).display }));
