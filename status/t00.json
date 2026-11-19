@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-19T01:20:56.793Z",
+  "generated_at": "2026-11-19T01:37:40.270Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395",
-    "url": "https://github.com/bolechen/temple-walk/commit/81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395"
+    "sha": "fc7956fc16821c84dddd335fe4fcf830e2673fb6",
+    "url": "https://github.com/bolechen/temple-walk/commit/fc7956fc16821c84dddd335fe4fcf830e2673fb6"
   },
   "delivery": {
     "analytics": {
@@ -568,21 +568,21 @@
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 44435955715,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44435955715",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 44438284476,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44438284476",
     "checks": {
       "syntax": "pending",
-      "unit": "success",
-      "e2e": "skipped"
+      "unit": "in_progress",
+      "e2e": "pending"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395",
     "url": "https://bolechen.github.io/temple-walk/",
     "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44435955715"
@@ -591,24 +591,24 @@
     "schema_version": "1.0",
     "scene_id": "T00",
     "status": "not_reviewed",
-    "run_id": "t00-20261118-ea2f3d0",
+    "run_id": "t00-20261119-4aa2d5c",
     "source": {
       "repository": "https://github.com/bolechen/temple-walk",
       "ref": "main",
-      "reviewed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-      "code_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "reviewed_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+      "code_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
       "evidence_commit": null,
-      "observed_head": "f22b9aba021b113e82ded90dd3c42fab83b4b5f3",
-      "previous_reviewed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-      "code_equivalence": "none: main advanced to f22b9aba021b113e82ded90dd3c42fab83b4b5f3 during the review (#179 interface walk-through: ui.css menu layout, settings thirds default, game/hints/journey/yard; #158 marketing; process docs). This report applies only to ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e."
+      "observed_head": "81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395",
+      "previous_reviewed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+      "code_equivalence": "none for the latest head: main advanced to 81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395 (#249) after the review began; it changes only tools/ and tests/ (offline novice tools), app/ is unchanged from 4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127, but nothing was re-run there. This report applies only to 4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127."
     },
     "reviewed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
     "reviewer": "Claude 定时独立评审",
     "reviewer_details": {
       "method": "commit-traceable independent review",
       "skill_commit": "c4c3ba5cad3eb9337c3f21c07cbdbd4ac62f3ee3",
-      "checked_at": "2026-11-18T04:10:00Z",
-      "latest_head_pending_retest": "f22b9aba021b113e82ded90dd3c42fab83b4b5f3"
+      "checked_at": "2026-11-19T01:40:00Z",
+      "latest_head_pending_retest": "81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395"
     },
     "change_kind": "ui",
     "run_status": "completed",
@@ -619,32 +619,31 @@
       "renderer": "SwiftShader (software GL)",
       "node": "22.23.5",
       "credentials": "GH/GitHub/AWS/cloud/HF tokens removed from every subprocess that ran repository code; servers bound to 127.0.0.1",
-      "target_device": false
+      "target_device": false,
+      "site_access": "research Site returned a ChatGPT sign-in page to this environment; its content was not read. GitHub entries were used."
     },
     "selection": {
       "selected": [
-        "diff 727687e..ea2f3d0 (117 commits, 140 app/tests files)",
+        "diff ea2f3d0..4aa2d5c (50 commits, app/ tools/ tests/)",
         "parser",
         "typecheck",
-        "378 unit tests",
+        "487 unit tests",
         "validator 17 tests",
-        "edges",
-        "e2e boot; keys jump drop stairs camera menu layers hallexit taps music sound phone director opening (serial), one diagnostic retry of the four failures one process each",
-        "cam01-cam06 screenshots, opened, with crops",
-        "normal-speed key/mouse from title through the opening to the first flight",
-        "photo frame on desktop and upright phone, DOF state on the high tier",
-        "static check of photo DOF path, settings thirds default, asset register, LICENSE",
-        "status JSON before writing; open PRs #179/#180 read for context"
+        "e2e:quick (nogl, boot)",
+        "e2e menu and menufit (four languages, three sizes)",
+        "cam01-cam06 screenshots generated; cam01, cam03, cam06 opened and examined",
+        "PHOTO-02 recheck with the real P key on the high tier (__probe post state)"
       ],
       "skipped": [
         "Mac/phone performance (no device; no HF Job)",
+        "full e2e / smoke tiers (nightly CI runs them; CI success is not acceptance)",
+        "edges and nearplane (not rerun; geometry changed since ea2f3d0, so the ea2f3d0 edges pass is not inherited)",
         "five-zone normal-input round trip and a human recording",
-        "halls, 16 hall views, statues, gallery; loft; ending",
-        "listening review (music Goal reviewed as proposal only)",
-        "real touch device, Safari/iOS",
-        "tier-3 and other tier-2 scenarios (nightly CI runs them; CI success is not acceptance)",
-        "upward view for STR-15, hall terrace view for ART-01, wall close-up for ART-05",
-        "retest on f22b9ab"
+        "halls, loft, ending, sound listening (music Goal reviewed as a proposal only; no music generated)",
+        "cam02/cam04/cam05 detailed viewing",
+        "raised-camera frame image on the high tier (screenshot timed out under SwiftShader)",
+        "real touch device",
+        "retest on 81e4ee2"
       ]
     },
     "checks": [
@@ -653,410 +652,201 @@
         "scope": "static",
         "criterion": "锁定提交源码可解析",
         "status": "pass",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "pnpm run check: 73 files checked, 0 problems.",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "pnpm run check: 83 files checked, 0 problems.",
         "evidence_ids": [
-          "B-CHECK"
+          "C-CHECK"
         ]
       },
       {
         "id": "C02",
         "scope": "static",
-        "criterion": "锁定提交类型检查通过",
+        "criterion": "类型检查",
         "status": "pass",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "pnpm typecheck exit 0.",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "pnpm run typecheck exited 0.",
         "evidence_ids": [
-          "B-TYPECHECK"
+          "C-TYPECHECK"
         ]
       },
       {
         "id": "C03",
-        "scope": "static",
-        "criterion": "锁定提交单元回归通过",
+        "scope": "unit",
+        "criterion": "单元测试",
         "status": "pass",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "378/378 unit tests in a credential-free subprocess (206 at 727687e).",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "487 tests, 487 pass, 0 fail; validator tests pass.",
         "evidence_ids": [
-          "B-UNIT"
+          "C-UNIT",
+          "C-VALIDATOR"
         ]
       },
       {
         "id": "C04",
-        "scope": "static",
-        "criterion": "评审结构/证据校验器自身回归通过",
-        "status": "pass",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "17/17 validator tests.",
+        "scope": "runtime",
+        "criterion": "页面启动并绘制，无页面/控制台错误",
+        "status": "partial",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "e2e:quick (nogl, boot) passed and shots.js reported errors: [] for six cameras. Only the boot tier was run; nothing here covers the full route.",
         "evidence_ids": [
-          "B-VALIDATOR"
+          "C-E2E-QUICK",
+          "C-SHOTS-LOG"
         ]
       },
       {
         "id": "C05",
-        "scope": "static",
-        "criterion": "角色包络在全部可站立点不进入建成物（EDGE-001/002 几何部分）",
-        "status": "pass",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "pnpm run edges: 1,891,145 places, 16 groups 0 over, deepest 0.0 cm; below the knee 0.0 cm. Walker/body geometry only; normal-speed video, turning/backing/Shift/jump envelope not covered.",
+        "scope": "visual",
+        "criterion": "cam01-cam06 固定机位",
+        "status": "partial",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "cam01, cam03 and cam06 opened: stair treads read, the screen-wall characters and gate board are legible, the first court has layered depth. cam02/04/05 generated but not examined; no acceptance verdict on them.",
         "evidence_ids": [
-          "B-EDGES"
+          "C-SHOTS-LOG",
+          "C-INSPECTION"
         ]
       },
       {
         "id": "C06",
         "scope": "runtime",
-        "criterion": "受影响 e2e 场景在锁定提交通过",
-        "status": "fail",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "SwiftShader, serial. boot passed. First run of 14: keys jump drop stairs camera layers taps music sound phone passed; menu hallexit director opening failed. One diagnostic retry, one process per scenario: menu failed again on the same assertion (en 1280x720 hour row clipped, product); hallexit, director and opening passed alone (first failures attributed to the runner leaving a failed scenario's pages drawing, harness, the same diagnosis as open PR #180). No timeout or assertion was changed.",
+        "criterion": "歇脚菜单四语言三尺寸不裁切（UI-01）",
+        "status": "pass",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "menu (418 s) and menufit (zh/ja/en/ko × 1280×720, 1366×768, 1920×1080, 103 s) passed. The menu is opened by a real Esc key press; the 随时辰 row is shown by adding the body class \"seasons\" from the script (diagnostic), and the sizes are set by the runner.",
         "evidence_ids": [
-          "B-E2E-QUICK",
-          "B-E2E-FIRST",
-          "B-E2E-RETRY-MENU",
-          "B-E2E-RETRY-HALLEXIT",
-          "B-E2E-RETRY-DIRECTOR",
-          "B-E2E-RETRY-OPENING"
+          "C-E2E-MENU",
+          "C-E2E-MENUFIT"
         ]
       },
       {
         "id": "C07",
-        "scope": "visual",
-        "criterion": "六个验收机位（J01 夏昼雨后）逐张看图",
-        "status": "partial",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "cam01-cam06 rendered at q=high and opened. STR-10, ART-14, STR-14 close; STR-15 gap absent at cam01/cam02 (upward view not taken); ART-02 sky, ART-07 bamboo canopy, ART-10 cryptomeria silhouettes still open; ART-05 not inspected closely. Shots carry the shallow depth of field #125 gives ?shot on the high tier (PHOTO-02).",
+        "scope": "runtime",
+        "criterion": "留影：全景清晰无景深（PHOTO-02）",
+        "status": "fail",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "With the real P key on the high tier, __probe().post.dof goes false → true, focus 6.12 m; yard.js:652 still passes photo.on to post.focus. Frame image not obtainable under SwiftShader.",
         "evidence_ids": [
-          "B-CAM01",
-          "B-CAM02",
-          "B-CAM03",
-          "B-CAM04",
-          "B-CAM05",
-          "B-CAM06",
-          "B-CAM02-CROP",
-          "B-CAM06-RIDGE",
-          "B-CAM06-RIGHT",
-          "B-SHOTS-LOG",
-          "B-INSPECTION"
+          "C-PROBE-PHOTO",
+          "C-PROBE-SCRIPT"
         ]
       },
       {
         "id": "C08",
-        "scope": "runtime",
-        "criterion": "正常速度真实输入：标题→入山→开场→W 行走与拖动视角",
-        "status": "partial",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "Playwright key/mouse events, no ?cam/?fast/__walk/__pose: real click on 入山, the opening played whole (13.5 s), W held 60 frames moved 5.45 m up the first flight, drag turned yaw 0→0.31, no page errors. Only the start of the route; five-zone round trip not walked; automated events, not a human recording.",
-        "evidence_ids": [
-          "B-PROBE-2",
-          "B-INPUT-TITLE",
-          "B-INPUT-W",
-          "B-PROBE-SCRIPT"
-        ]
+        "scope": "performance",
+        "criterion": "Mac 与手机目标设备 120 s×3 帧率",
+        "status": "blocked",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "No target device; no HF Job started (a T4 cannot answer the Mac/phone question).",
+        "evidence_ids": []
       },
       {
         "id": "C09",
         "scope": "runtime",
-        "criterion": "留影：默认全幅、风景优先、简洁界面、全景清晰无景深",
-        "status": "fail",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "Frame and UI pass: desktop 1280x720 → print 2294x1525, phone 390x844 → 1108x2415, which with card.js's mount is a 16:9 and an upright full-screen picture; finder shows only 收起/设置/快门. Fails 无景深: with the camera raised on the high tier __probe().post reports dof:true, focus 6.18 m (post.focus(... photo.on ? focusAt() : 0) in yard.js, reintroduced by #125 after 8e4cb3f removed it).",
-        "evidence_ids": [
-          "B-PROBE-1",
-          "B-PROBE-2",
-          "B-PHOTO-DESKTOP",
-          "B-PHOTO-PHONE"
-        ]
-      },
-      {
-        "id": "C10",
-        "scope": "performance",
-        "criterion": "Mac 与手机目标设备 120 s×3 帧率",
+        "criterion": "edges / 殿内 / 凌霄阁 / 结尾 / 配乐听评",
         "status": "blocked",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "No target device in this environment. No HF Job was started: a T4 cannot answer the Mac/phone question and nothing in this round needed a real GPU to attribute. SwiftShader numbers are not performance evidence.",
-        "evidence_ids": []
-      },
-      {
-        "id": "C11",
-        "scope": "runtime",
-        "criterion": "殿内、凌霄阁顶层、结尾、配乐/钟声/脚步听评",
-        "status": "blocked",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reason": "Not run this round (scope and time); the music Goal is reviewed as a proposal only, no music was generated. No listening device.",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "reason": "Not run this round; the music Goal is reviewed as a proposal only and no music was generated; no listening device.",
         "evidence_ids": []
       }
     ],
     "artifacts": [
       {
-        "id": "B-CHECK",
+        "id": "C-CHECK",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/check.log",
-        "sha256": "ec54cccb1a9c118665a44d2959eb39ae1efa62f70bdb46afb5bfc7cb9446f49b"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/check.log",
+        "sha256": "c68add574bb758ef64e277d276483890d3988a35efa853d65d3a6d492da3f30d"
       },
       {
-        "id": "B-TYPECHECK",
+        "id": "C-TYPECHECK",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/typecheck.log",
-        "sha256": "bf0b00d3aaf1f62a8618d6a473d4acf5a1fbd809317b52111cb7c4d11cf24908"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/typecheck.log",
+        "sha256": "6f9d9b63c5e6ffa454e19901bbbcdd084f5bace550e1f409a484418caeb44f93"
       },
       {
-        "id": "B-UNIT",
+        "id": "C-UNIT",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/unit.log",
-        "sha256": "c99b36c1ff45648ad7d40fb4e6b1dee9b6bfc5527b82d691f5e3d8bc460325d7"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/unit.log",
+        "sha256": "2f4d5791acfe73dead14bc8a606a830c4e3bfb95ef7391972865bd0a5d801bd5"
       },
       {
-        "id": "B-VALIDATOR",
+        "id": "C-VALIDATOR",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/validator-tests.log",
-        "sha256": "8275ae5805efc08aab47e3449008488d70a110b6990ed0d4508e09fe19c1729d"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/validator-tests.log",
+        "sha256": "ecc2234155b0f106d2de00bf4d959adf1558e2cf2d3b4b5aa2a9c91caf672f86"
       },
       {
-        "id": "B-EDGES",
+        "id": "C-E2E-QUICK",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/edges.log",
-        "sha256": "5208376bc6b8a1e7540b7cb869b65bf1fe0ebb8caccdd7d9ae06580e76dba2aa"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/e2e-quick.log",
+        "sha256": "da165bec1e3db24ec942eb712451f6d9d55b96edef2d81afe9912b0ca6c28949"
       },
       {
-        "id": "B-E2E-QUICK",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-quick.log",
-        "sha256": "9754d95846bd3f189146672c91d14ae06970d779648246fec721cdaa1c7e7785"
-      },
-      {
-        "id": "B-E2E-FIRST",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-first-run.log",
-        "sha256": "04059e9bb9f5594739c972c511e112699804758595ee287f5d90361c588d36d2"
-      },
-      {
-        "id": "B-E2E-RETRY-MENU",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-menu.log",
-        "sha256": "e4401f8f502c4835d84afe408482983019fb2989f1406cfc4c384f7580348a0e"
-      },
-      {
-        "id": "B-E2E-RETRY-HALLEXIT",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-hallexit.log",
-        "sha256": "ed231ccb3f834bb5aeac681bbbbbf10520a32b6ec38d3b1ca6571cc074339daa"
-      },
-      {
-        "id": "B-E2E-RETRY-DIRECTOR",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-director.log",
-        "sha256": "d1e6d6ff470cc2417b84bed67a4b3a3849a4f3d908c58123122423eb9295abb4"
-      },
-      {
-        "id": "B-E2E-RETRY-OPENING",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/e2e-retry-opening.log",
-        "sha256": "4ceadafb36783cff697899844daa3b60a23ea4d3a4d8b4c77723779f99af563e"
-      },
-      {
-        "id": "B-SHOTS-LOG",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots.log",
-        "sha256": "08931807c3d3afdedce4adc27203e4546b861e6778d9098db28de9e2ae30771c"
-      },
-      {
-        "id": "B-PROBE-1",
-        "type": "test_log",
-        "mode": "diagnostic",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/probe-run1.log",
-        "sha256": "0a5bbeddb0e8d856a21842f108bfb22d55ae2a6344c59f3e4886a65d35771e28"
-      },
-      {
-        "id": "B-PROBE-2",
+        "id": "C-E2E-MENU",
         "type": "test_log",
         "mode": "user_input",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/probe-run2.log",
-        "sha256": "34a7516e719955f1ce8211383afa63479edfcdce299ecc7058a2e01ee06f0b78"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/e2e-menu.log",
+        "sha256": "31d9109873b97037679901a58db375448e97b5828a81af4432f25180d215ca68"
       },
       {
-        "id": "B-PROBE-SCRIPT",
+        "id": "C-E2E-MENUFIT",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/e2e-menufit.log",
+        "sha256": "1f5523337250d4e5bb5d5c3691ca421ab9eb8702a09d695a3135bee717ef7205"
+      },
+      {
+        "id": "C-SHOTS-LOG",
+        "type": "test_log",
+        "mode": "sanitized_subprocess",
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/shots.log",
+        "sha256": "593fe647d8f4377a04d3f89db784e5a27fe145d407e07cd38a4931e9264476d7"
+      },
+      {
+        "id": "C-PROBE-PHOTO",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/probe-photo.log",
+        "sha256": "b22e9e632d9236438040737dbca89c44fe2edecb03c0648f711ed8e2ff7d8cfc"
+      },
+      {
+        "id": "C-PROBE-SCRIPT",
         "type": "script",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/probes/check.cjs",
-        "sha256": "3706b4323eee585986dda53957e7c038a2afd87ccfccd0fbe3784e9f3b7e37e7"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/probes/photo.cjs",
+        "sha256": "eb22725cbab830fb2679439fb699e3b7c2c6e4247c9380b0b04b8e9222272031"
       },
       {
-        "id": "B-INSPECTION",
+        "id": "C-INSPECTION",
         "type": "review_notes",
         "mode": "manual_review",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/inspection.md",
-        "sha256": "af51aaaa70870bf66059676127394b61a2ededf69a35ce6ff233fe60a2940d29"
-      },
-      {
-        "id": "B-STATUS-BEFORE",
-        "type": "status_snapshot",
-        "mode": "read_only",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/status-t00-before.json",
-        "sha256": "a399ffd01dac496073ead1c36e4d05e10aac6ad4ca79821fd3c083f6471a6797"
-      },
-      {
-        "id": "B-CAM01",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam01.jpg",
-        "sha256": "adbf70938609c2c1bf931379b94248424e4592e0594d3c112fc28af87277d0b8"
-      },
-      {
-        "id": "B-CAM02",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam02.jpg",
-        "sha256": "e65d1dee4f942cc890407d9ff5744b82933531763b126c25cca0f497cff1b7e1"
-      },
-      {
-        "id": "B-CAM03",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam03.jpg",
-        "sha256": "3f7523df0ae4bf27fc1bc4fee81c9149fd1d6cf8ac598f3a486a1ec7b4dfbba0"
-      },
-      {
-        "id": "B-CAM04",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam04.jpg",
-        "sha256": "2ce82d70a1a7a2a55463a4e87e467e2ef7412a66bd6461d234e464655beecb3c"
-      },
-      {
-        "id": "B-CAM05",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam05.jpg",
-        "sha256": "59e358b663a1b1dc6490206771710f4c2b2d5732f9a57f6148bbbbfe56e028ac"
-      },
-      {
-        "id": "B-CAM06",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam06.jpg",
-        "sha256": "72ac0608c11d7ef70c236161d19bb1dd0936c0f1080ffe4fe5182dc47fcc07c0"
-      },
-      {
-        "id": "B-CAM02-CROP",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam02-right-crop.jpg",
-        "sha256": "4ae1c7a5383a42fa9e3c5caae2ff19ae3188ad2b87f778031fd77d77431765b7"
-      },
-      {
-        "id": "B-CAM06-RIDGE",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam06-ridge-crop.jpg",
-        "sha256": "96e88f755114d4f16fa984065182004d734eef2f744b4a46bc6de24d0bb4211d"
-      },
-      {
-        "id": "B-CAM06-RIGHT",
-        "type": "runtime_screenshot",
-        "mode": "fixed_camera",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/cam06-right-crop.jpg",
-        "sha256": "aa0cba6714d79bd7fe07f2efe2769e15d3688b1b3667cadd3e8b27569af48b32"
-      },
-      {
-        "id": "B-INPUT-TITLE",
-        "type": "runtime_screenshot",
-        "mode": "user_input",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/input-title.jpg",
-        "sha256": "cac3dbdbc4701e75241ea22653c32a8f585e8dfaf10371d76dc1695dfd6df777"
-      },
-      {
-        "id": "B-INPUT-W",
-        "type": "runtime_screenshot",
-        "mode": "user_input",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/input-after-w.jpg",
-        "sha256": "dfc522dd1e5147779fbde4a9e7dc60b9a6e21e9a83790428006fd28ba57ebf86"
-      },
-      {
-        "id": "B-PHOTO-DESKTOP",
-        "type": "runtime_screenshot",
-        "mode": "user_input",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/photo-desktop.jpg",
-        "sha256": "d4319e74acf7bcc95a85f57d4464e285d831e889b9dde98f5085de79729a771a"
-      },
-      {
-        "id": "B-PHOTO-PHONE",
-        "type": "runtime_screenshot",
-        "mode": "user_input",
-        "created_at": "2026-11-18T04:10:00Z",
-        "commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "file": "docs/t00/evidence/independent/20261118-ea2f3d0/shots/photo-phone.jpg",
-        "sha256": "ee287489dbe6dbd54774728d4c09c3a7c687181a54b2a71a067e847ff5a97be4"
+        "created_at": "2026-11-19T01:40:00Z",
+        "commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "file": "docs/t00/evidence/independent/20261119-4aa2d5c/inspection.md",
+        "sha256": "439f3519971f696d590bdfcd751dce6b0408a2a30d53d232aa8464aa27bbcda1"
       }
     ],
     "issues": [
@@ -1073,27 +863,14 @@
           "confidence": "high"
         },
         "evidence_ids": [
-          "B-PROBE-1"
+          "B-PROBE-1",
+          "C-PROBE-PHOTO"
         ],
-        "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
-      },
-      {
-        "id": "UI-01",
-        "state": "open",
-        "severity": "minor",
-        "finding": "歇脚菜单英文在 1280×720 宽屏下时辰一行被裁（menu 场景首跑与单独重跑同一断言失败：{\"fits\":true,\"clipped\":true}）。开放 PR #180 写明由 #137 加「随时辰」引入、溢出 2 px；#179（f22b9ab）又改了菜单版面。",
-        "recommendation": "合入一种修法后跑 menu/menufit 四语言三尺寸。",
-        "target": "#menu 宽屏布局，en（及 ja/ko）1280×720",
-        "acceptance_condition": "新提交上 menu 场景（或 menufit）四语言在 1280×720、1366×768、1920×1080 均 fits 且无 clipped。",
-        "attribution": {
-          "cause": "product",
-          "confidence": "high"
-        },
-        "evidence_ids": [
-          "B-E2E-FIRST",
-          "B-E2E-RETRY-MENU"
+        "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+        "reproduced_commits": [
+          "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127"
         ],
-        "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
+        "current_reproduced_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127"
       },
       {
         "id": "TEST-03",
@@ -1192,64 +969,6 @@
         ],
         "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
         "retest_note_ea2f3d0": "cam04/cam06: cryptomerias still repeated brush-like spires."
-      },
-      {
-        "id": "ART-14",
-        "state": "verified_closed",
-        "severity": "minor",
-        "finding": "CAM-06 与补充机位积水里仍有显眼的硬边屋顶倒影。",
-        "recommendation": "限制倒影到洼地并增加粗糙模糊与边缘过渡。",
-        "target": "CAM-06 与大殿月台",
-        "acceptance_condition": "固定机位中倒影边界不再读作几何瑕疵。",
-        "evidence_ids": [
-          "A-CAM06"
-        ],
-        "retest_note": "727687e cam06: no hard-edged roof reflection in the puddles. Hall terrace supplementary view not taken; stays open.",
-        "retest_note_ea2f3d0": "cam06 and the court photo: puddle reflections are soft dark masses, no hard roof edge.",
-        "retest_evidence_ids": [
-          "B-CAM06",
-          "B-PHOTO-DESKTOP"
-        ],
-        "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
-      },
-      {
-        "id": "STR-10",
-        "state": "verified_closed",
-        "severity": "minor",
-        "finding": "大殿正脊下仍可见浅色直线，屋脊与屋面连接偏悬浮。",
-        "recommendation": "封闭脊下缝隙并校正正脊、脊端的支承关系。",
-        "target": "CAM-06 与大殿月台",
-        "acceptance_condition": "同机位截图无透天缝或悬浮浅线。",
-        "evidence_ids": [
-          "A-CAM06",
-          "A-HALL"
-        ],
-        "retest_note_ea2f3d0": "cam06 ridge crop: ridge sits on the roof, no pale floating line or sky slit.",
-        "retest_evidence_ids": [
-          "B-CAM06",
-          "B-CAM06-RIDGE"
-        ],
-        "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
-      },
-      {
-        "id": "STR-14",
-        "state": "verified_closed",
-        "severity": "minor",
-        "finding": "修复提交声称解决竹竿从湿铺地直接长出，但没有匹配版本的独立复测。",
-        "recommendation": "保留待复验；在 CAM-05 与近地补充机位检查根部落点。",
-        "target": "CAM-05",
-        "acceptance_condition": "新运行截图确认竹竿均落在土坡/种植带且无穿铺地。",
-        "evidence_ids": [
-          "A-CAM05"
-        ],
-        "retest_note": "727687e cam05: no bamboo culm rises from the paving in this view. Near-ground supplementary view still missing; stays pending.",
-        "retest_note_ea2f3d0": "cam03, cam05, cam06 and the court photo: no culm grows out of paving. Scope: these views.",
-        "retest_evidence_ids": [
-          "B-CAM03",
-          "B-CAM05",
-          "B-CAM06"
-        ],
-        "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
       },
       {
         "id": "UX-08",
@@ -1518,32 +1237,6 @@
         "retest_note_ea2f3d0": "music and sound passed once, but music reported its boundary check skipped (step back took 5.31 s of audio time); three consecutive passes not shown."
       },
       {
-        "id": "PHOTO-01",
-        "state": "verified_closed",
-        "severity": "minor",
-        "finding": "留影默认画幅是'全幅'（屏幕比例），不是目标写明的默认 16:9 横幅；竖握手机时默认得到竖图。",
-        "recommendation": "默认选'横幅'16:9，或由用户确认'全幅'可以替代。",
-        "target": "拍照设置默认画幅",
-        "acceptance_condition": "新提交首次举相机即为 16:9（或有用户确认改目标的记录），桌面与竖屏手机各一张照片为证。",
-        "attribution": {
-          "cause": "product",
-          "confidence": "high"
-        },
-        "evidence_ids": [
-          "A-IN-PRINT",
-          "A-INSPECTION"
-        ],
-        "current_reproduced_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
-        "retest_note": "727687e: first raise is 全幅, print 1700×1130 on a 1280×720 window. docs/PHOTO-MODE.md quotes an owner request (2026-11-15) for 全幅 as default, written by the developer; docs/handoff/LATEST-GOALS.md still says 16:9. Needs the owner to confirm which goal holds.",
-        "retest_note_ea2f3d0": "Target changed by the owner (LATEST-GOALS 已确认：风景留影, 2026-11-16: 默认全幅). Desktop and upright phone first raise both give the screen's own frame.",
-        "retest_evidence_ids": [
-          "B-PHOTO-DESKTOP",
-          "B-PHOTO-PHONE",
-          "B-PROBE-2"
-        ],
-        "closed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e"
-      },
-      {
         "id": "STR-15",
         "state": "fixed_pending_retest",
         "severity": "minor",
@@ -1611,10 +1304,35 @@
         ],
         "retest_note": "727687e: camera scenario passed; it asserts that a drag does not change yaw/pitch with the photo camera raised.",
         "closed_in_run": "t00-20261116-727687e"
+      },
+      {
+        "id": "UI-01",
+        "state": "verified_closed",
+        "severity": "minor",
+        "finding": "歇脚菜单英文在 1280×720 宽屏下时辰一行被裁（menu 场景首跑与单独重跑同一断言失败：{\"fits\":true,\"clipped\":true}）。开放 PR #180 写明由 #137 加「随时辰」引入、溢出 2 px；#179（f22b9ab）又改了菜单版面。",
+        "recommendation": "合入一种修法后跑 menu/menufit 四语言三尺寸。",
+        "target": "#menu 宽屏布局，en（及 ja/ko）1280×720",
+        "acceptance_condition": "新提交上 menu 场景（或 menufit）四语言在 1280×720、1366×768、1920×1080 均 fits 且无 clipped。",
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "B-E2E-FIRST",
+          "B-E2E-RETRY-MENU"
+        ],
+        "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+        "closed_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "retest_evidence_ids": [
+          "C-E2E-MENU",
+          "C-E2E-MENUFIT"
+        ],
+        "closed_in_run": "t00-20261119-4aa2d5c",
+        "retest_note": "4aa2d5c: menu and menufit passed (zh/ja/en/ko × 1280×720, 1366×768, 1920×1080); fix commit not identified, closed on the new run."
       }
     ],
     "evidence": [
-      "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261118-ea2f3d0",
+      "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261119-4aa2d5c",
       "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
     ],
     "publish": {
@@ -1623,18 +1341,19 @@
       "url": "https://temple-atlas-research.floralpage64.chatgpt.site/",
       "site_version": null,
       "hosting_commit": null,
-      "note": "Routine status is synchronized by the site-status workflow from this file; the Site source was not changed."
+      "note": "Routine status is synchronized by the site-status workflow from this file; the Site source was not changed. The Site itself needs a sign-in and was not read."
     },
     "limitations": [
       "SwiftShader only; no target-device performance.",
-      "Automated Playwright input events, not a human recording; normal-input route covers only the title, the opening and the first flight.",
-      "Fixed-camera shots taken at q=high carry #125's shallow depth of field.",
-      "Halls, loft, ending and sound not inspected or listened to.",
-      "Main advanced to f22b9aba021b113e82ded90dd3c42fab83b4b5f3 during review; nothing here applies to it.",
+      "Automated Playwright input (the P key); not a human recording; no five-zone normal-input route this round.",
+      "Only cam01, cam03 and cam06 were looked at in detail; screenshots are kept in tools/out (not committed), their SHA-256 are in inspection.md.",
+      "Main advanced to 81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395 during the review (tools/tests only); not re-run.",
+      "Halls, loft, ending and sound not inspected or listened to; the music Goal is a proposal and was not implemented or generated.",
       "No GPU job was run; exterior GPU evidence would exclude statue models anyway.",
-      "Goals recorded at ea2f3d0 but implemented only in f22b9ab (first visit by day, thirds on by default) were not judged against the locked commit."
+      "edges was not rerun at this commit.",
+      "Research Site content not read (sign-in required)."
     ],
-    "note": "ea2f3d0：解析、类型检查、378 项单测、edges 全部通过。新问题 PHOTO-02（major）：#125 让高档举相机时重新开景深，与所有者确认的「全景清晰无景深」冲突（运行中 dof:true）。UI-01：歇脚菜单英文 1280×720 时辰一行被裁，单独重跑仍失败（修法在开放 PR #180）。TEST-03：运行器失败后残留页拖慢后续场景，hallexit/director/opening 单独重跑通过。关闭 STR-10、ART-14、STR-14、PHOTO-01（所有者改为默认全幅，桌面与竖屏各一张为证）；STR-15 机位上缺口消失，待仰视补拍。性能、殿内、凌霄阁、结尾、听评 blocked；仓库仍无 LICENSE。总体 partial / not_accepted。最新 HEAD f22b9ab 待复验。",
+    "note": "4aa2d5c（锁定）：解析、类型检查、487 项单测、e2e quick 通过；cam01/03/06 已看，画面正常，cam02/04/05 未细看。PHOTO-02（major）仍开：真实按 P，高档 dof 由 false 变 true，焦距 6.12 m，与「全景清晰无景深」冲突。UI-01 在 menu/menufit 四语言三尺寸通过，关闭。其余旧问题本轮未复测，状态不变。性能、edges、殿内、凌霄阁、结尾、听评 blocked；研究 Site 需登录未读。总体 partial / not_accepted。最新 HEAD 81e4ee2（仅 tools/tests，app 无改动）未重跑。",
     "supplemental_reviews": [
       {
         "run_id": "T00-20261114-edges-3e67700",
@@ -1659,6 +1378,12 @@
         "run_id": "t00-20261116-727687e",
         "reviewed_commit": "727687edc9d1b22c0fd19ed90ae22e21d5b33c99",
         "report": "https://github.com/bolechen/temple-walk/blob/ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e/docs/t00/independent-review.json",
+        "verdict": "not_accepted"
+      },
+      {
+        "run_id": "t00-20261118-ea2f3d0",
+        "reviewed_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+        "report": "https://github.com/bolechen/temple-walk/blob/834f6e6695f908019a428ddcc0abd4e04e2ed748/docs/t00/independent-review.json",
         "verdict": "not_accepted"
       }
     ],
