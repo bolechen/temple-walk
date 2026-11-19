@@ -1,0 +1,32 @@
+name: Install, and take the newest baked floor
+description: >
+  What every job of pages.yml starts with (#296): pnpm, Node 22, the locked install, and the baked floor from the cache so that
+  no job of the parallel set bakes it again when its fingerprint is already kept. Needs the repository checked out.
+inputs:
+  floor:
+    description: "'true' when what the floor is baked from may have changed: its fingerprint is then looked for first"
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+    - name: Which floor is wanted
+      id: key
+      if: inputs.floor == 'true'
+      shell: bash
+      run: echo "key=$(node tools/bake-walk.mjs --key)" >> "$GITHUB_OUTPUT"
+    # Restored only: the unit job is the one that keeps the cache (it bakes this commit's floor and the base's), the others
+    # find its entry by prefix. A job that starts before it is done bakes for itself, the same floor.
+    - uses: actions/cache/restore@v4
+      with:
+        path: node_modules/.cache/walk
+        key: walk-t00-wanted-${{ github.run_id }}-${{ github.job }}
+        restore-keys: |
+          walk-t00-${{ steps.key.outputs.key || 'none' }}-
+          walk-t00-

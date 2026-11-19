@@ -15,6 +15,10 @@ on:
         description: "Scenario names separated by spaces, or --smoke; empty runs them all"
         required: false
         default: ""
+      evidence:
+        description: "Also read the evidence over the network and compare hashes (always done by the nightly run)"
+        type: boolean
+        default: false
   schedule:
     - cron: "17 19 * * *"
 
@@ -106,13 +110,15 @@ jobs:
         if: steps.mine.outputs.run == 'true' && matrix.shard == 1
         run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run test:grid && pnpm run edges && pnpm run edges:grid
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
-      # network, so only here and by hand, never in the way of a merge.
+      # network, so only in the nightly run and when a run by hand asks for it (`evidence`), never in the way of a merge:
+      # a branch's run by hand went red on a read of the public address that timed out (#276, #296), which says nothing
+      # of the branch. A real mismatch is still found every night.
       # Two stores (#247): the original (Hugging Face, `fallback`) and the copy readers use (`base`, R2). The bucket is read
       # over its S3 interface with the repository's secrets; the public domain is read too, a read it answers with
       # Cloudflare's verification page being hashed from the original instead. If they disagree, the original is right
       # and the copy is mirrored again (`node tools/evidence.mjs mirror`).
       - name: The bucket holds what the manifests say (S3)
-        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1 && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true')
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -120,10 +126,10 @@ jobs:
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: node tools/evidence.mjs verify-store
       - name: The evidence at the public address is what the manifests say
-        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1 && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true')
         run: node tools/evidence.mjs verify --all
       - name: The evidence in the original store is what the manifests say
-        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1 && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true')
         run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all
       - name: Remember the browser between runs
         if: steps.mine.outputs.run == 'true'

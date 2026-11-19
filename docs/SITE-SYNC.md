@@ -7,7 +7,7 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 1. 阅读研究 Site 的 `llms.txt`、本仓库 `AGENTS.md` 和当前独立评审。
 2. 以评审 goal 为目标，更新 `docs/t00/delivery.json`：本轮摘要、实际变更、已知问题、截图/录像/测试报告的仓库路径或公开链接。不能仅写“已完成”。记录属于开发方陈述，不是独立验收。
 3. 提交 Conventional Commits PR，说明复现、修改、验证、未验范围，统一 squash 合并。不要手填 CI 成功或自行修改独立验收结论。
-4. main 上 Pages CI 解析、单测、运行 `boot stairs drop` 后才部署游戏。状态工作流在主线更新与 Pages 结束时查询 GitHub 真实结果，发布 `site-status` 分支的 `status/t00.json`。不向 main 回写生成文件，不触发循环。
+4. main 上 Pages CI 并行跑解析与类型、两套单测、建站与 `boot`，全部通过（`verify`）后才部署游戏；「改没改站点」与上次成功部署的提交比（#296）。`stairs drop` 在 e2e.yml 里同时跑，不拦发布。状态工作流在主线更新与 Pages 结束时查询 GitHub 真实结果，发布 `site-status` 分支的 `status/t00.json`。不向 main 回写生成文件，不触发循环。
 5. Site 打开 T00 时读取 JSON，打开期间每 60 秒刷新；失败则标记不可更新并保留明确标注的历史资料。GitHub CDN 可能有短暂缓存。关闭网页时，GitHub 工作流仍生成最新数据。
 
 ## 状态契约
@@ -41,3 +41,7 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 3. README、`delivery.json` 里写的图地址已是完整地址，可直接打开；整目录取回：`node tools/evidence.mjs pull docs/t00/evidence/<目录>`。
 
 已移出仓库的目录以 `MANIFEST.json` 存在为准（逐步迁移时，没有清单的目录仍按旧路径）。
+
+## 为什么「改没改站点」与上次部署比（#296）
+
+main 的发布并发组不取消正在跑的运行，但新排队的会顶掉旧的排队。2026-11-19 12:13，改了 `app/` 的 7c86432 排队中被紧跟的文档提交顶掉（cancelled），最后一个文档提交 39692ee 与它的上一个提交（也是文档）比，判为没改站点，`deploy` 跳过。所以 `tools/ci/changes.cjs` 现在读 Actions 历史，找最近一次 `deploy` 作业成功的运行，与它的提交比；找不到就按改了站点处理。
