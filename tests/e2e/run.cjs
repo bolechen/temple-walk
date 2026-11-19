@@ -1923,11 +1923,14 @@ const scenarios = {
     for (const [x, z, shift] of [[-13.2, 11.3, false], [-13.25, 6.9, true], [-13.2, 16.7, true]]) {
       const tz = z < 14 ? 9.1 : 18.9; await t.page.evaluate(async () => { if (window.__yard().inside) await window.__inside(null); }); await t.frames(2);
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(-13.83 - x, -(tz - z))]); await t.frames(3);
-      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping || s.dropping, s.dropping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
       if (shift) await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
       for (let k = 0; k < 3; k++) { await t.page.keyboard.press("Space"); await t.until(async () => !(await t.state()).jumping, 120000, "he did not come down at the tea table"); await t.frames(2); }
       await t.page.keyboard.up("w"); if (shift) await t.page.keyboard.up("Shift");
-      const tea = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
+      const all = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
+      // (Going on past the table he may come to an end of the porch the baked floor opens, #265, where Space hops down off its
+      // edge: from there on he is no longer at the table.)
+      const off = all.findIndex((q) => q[4]), tea = off < 0 ? all : all.slice(0, off);
       // (How near: the written plan keeps him BODY, 0.37 m, off the table's rectangle; the grid baked from the drawn meshes keeps
       // him his outline's reach at the table's height, 0.343 m, less half a cell (#265, as tests/unit/walkers.mjs keptOff).)
       const m = (await t.page.evaluate(() => window.__walker().mode)) === "old" ? 0.37 : 0.343 - 0.046;
