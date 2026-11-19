@@ -1940,7 +1940,13 @@ const scenarios = {
       const offered = await t.page.evaluate(() => !document.getElementById("blurToggle").hidden);
       expect(offered === (q === "high"), `${q}: the 虚化 switch should show only where depth is drawn, showed ${offered}`);
       if (q === "high") {
-        await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click()); await t.page.click("#blurToggle"); await t.frames(3);
+        // #302: at 480x270 the settings panel is 96 px tall and 虚化 lies in the part of it scrolled away; the high tier under
+        // software rendering draws one frame in about 2 s, and Playwright's scroll, stability and hit checks each wait on
+        // frames (a click took 26 s here, past 30 s on a slower nightly machine). Bring it into sight and let two frames
+        // pass first, then press it as a visitor would, the hit check kept, with room for this one step's slow frames.
+        await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click());
+        await t.page.locator("#blurToggle").scrollIntoViewIfNeeded(); await t.frames(2);
+        await t.page.click("#blurToggle", { timeout: 120000 }); await t.frames(3);
         const on = await t.probe(); expect(on.post.dof && on.post.focus > 0 && (await t.page.evaluate(() => window.__settings().blur)), "switching 虚化 on should focus the raised camera: " + JSON.stringify(on.post));
         await t.page.evaluate(() => window.__photo(false)); await t.frames(3); expect(!(await t.probe()).post.dof, "putting the camera away should end the blur");
       }
