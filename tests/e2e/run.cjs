@@ -1738,7 +1738,8 @@ const scenarios = {
   } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
-  // and on a phone all three in the lower half, each a thumb's size. Four languages, five screens.
+  // on a phone all three in the lower half, each a thumb's size; and 三分线 and 虚化 seen as the settings open, with no
+  // scrolling. Four languages, five screens.
   photofit: { tier: 2, async run(b, base) {
     const screens = [["desk", 1280, 720, false], ["desk", 1920, 1080, false], ["phone", 390, 844, true], ["phone", 844, 390, true], ["phone", 360, 640, true]];
     for (const lg of ["zh", "ja", "en", "ko"]) for (const [kind, w, h, touch] of screens) {
@@ -1755,13 +1756,20 @@ const scenarios = {
         const far = Math.max(...[[0, 1], [1, 2], [0, 2]].map(([i, j]) => Math.hypot(bs[i].x - bs[j].x, bs[i].y - bs[j].y)));
         document.getElementById("photoSettingsToggle").click();
         const panel = box(document.getElementById("photoSettings")), covers = !document.getElementById("photoSettings").hidden && hit(panel, bs[1]);
+        // 三分线 and 虚化 are seen as soon as the panel opens, with the seasons' rows open too: 虚化 shows on the high tier
+        // only, so it is unhidden here as that tier would; nothing else differs.
+        const blurBtn = document.getElementById("blurToggle"), wasHidden = blurBtn.hidden, hadSeasons = document.body.classList.contains("seasons");
+        blurBtn.hidden = false; document.body.classList.add("seasons");
+        const pv = box(document.getElementById("photoSettings")), unseen = ["thirdsToggle", "blurToggle"].filter((id) => { const c = box(document.getElementById(id)); return c.t < Math.max(pv.t, 0) - 0.5 || c.b > Math.min(pv.b, innerHeight) + 0.5; });
+        blurBtn.hidden = wasHidden; document.body.classList.toggle("seasons", hadSeasons);
         document.getElementById("photoSettingsToggle").click();
-        return { on, far: Math.round(far), short: Math.min(innerWidth, innerHeight), low: bs.every((c) => c.t >= innerHeight / 2), small: bs.filter((c) => c.w < 43.5 || c.h < 43.5).length, covers, esc: /Esc/.test(document.getElementById("photoClose").textContent) };
+        return { on, far: Math.round(far), short: Math.min(innerWidth, innerHeight), low: bs.every((c) => c.t >= innerHeight / 2), small: bs.filter((c) => c.w < 43.5 || c.h < 43.5).length, covers, unseen, esc: /Esc/.test(document.getElementById("photoClose").textContent) };
       });
       const at = `${lg} ${w}x${h}: ` + JSON.stringify(m);
       expect(!m.on.length, "the camera's controls should lie clear of the finder's corners and thirds, " + at);
       expect(!m.covers, "the camera's settings, open, should not cover the shutter, " + at);
       expect(!m.small, "every camera control should be a thumb's size, " + at);
+      expect(!m.unseen.length, "三分线 and 虚化 should be seen without scrolling as the camera's settings open, " + at);
       if (kind === "desk") { expect(m.far <= m.short / 3, "settings, shutter and close should be a small move apart (a third of the short side), " + at); expect(m.esc, "收起 should say Esc where there is a keyboard, " + at); }
       else expect(m.low, "on a phone the camera's controls should all be in the lower half, " + at);
       await u.close();
