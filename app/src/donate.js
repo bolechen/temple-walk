@@ -19,12 +19,12 @@ export function donateURL(lang, content = lang) {
 // The owner's WeChat payment code, as the sponsor page shows it (docs/t00/asset-register.csv: its source, its hash, and that it
 // must change when the sponsor page's does). It lies outside the folders the build copies whole, and is named only here, so that
 // only a build that holds this file (the web build) holds the picture. WeChat pays only inside China: the Chinese interface shows
-// it and the others do not.
+// it, and so do the others (the owner, 2026-11-19: for Chinese players abroad), with the words saying plainly what it is.
 const QR = new URL("../web/wechat-support-2026-08-28.jpg", import.meta.url).href;
 /** Whether the code is on the sheet when it opens (the owner's call, 2026-11-18); false folds it under 微信赞赏 until pressed. */
 export const QR_OPEN = true;
-/** Whether the sheet carries the payment code in this language. @param {string} lang */
-export const qrFor = (lang) => lang === "zh";
+/** Whether the sheet carries the payment code in this language: all four (the owner's call, 2026-11-19). @param {string} _lang */
+export const qrFor = (_lang) => true;
 
 /**
  * The sheet of paper that follows a coin: what the coin was, what the link is for, and in Chinese the code to scan, one
