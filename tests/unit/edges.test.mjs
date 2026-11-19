@@ -9,6 +9,11 @@ const { createMonk } = await import("../../app/src/monk.js");
 const { dressed } = await import("./novice-glb.mjs");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site);
+const { keptOff, isGrid } = await import("./walkers.mjs");
+const { CUSHION } = await import("../../app/src/geo.js");
+// A table, a cheek stone: the written plan draws its rectangle larger by BODY; the thing itself, and how near each walker keeps him.
+const tableOf = (/** @type {any} */ t, h = 0.4) => { const g = BODY - keptOff(walker, h); return isGrid(walker) ? { x0: t.x0 + g, x1: t.x1 - g, z0: t.z0 + g, z1: t.z1 - g } : t; };
+const { isColumn: column } = await import("./walkers.mjs"), isColumn = (/** @type {any} */ p) => column(site, p);
 
 for (const [which, make] of [["built in code", createMonk], ["sculpted", () => dressed(createMonk)]]) test(`the width the plan allows him is the width of the model, in every pose it takes (${which})`, () => {
   let reach = 0; const v = new THREE.Vector3();
@@ -27,9 +32,9 @@ for (const [which, make] of [["built in code", createMonk], ["sculpted", () => d
 });
 
 test("no column lets his sleeve in, and he can still pass between columns and along every porch", () => {
-  const round = site.walk.posts.filter((p) => p.r !== undefined); assert.ok(round.length >= 100);
+  const round = site.walk.posts.filter((p) => (isGrid(walker) ? isColumn(p) : p.r !== undefined)); assert.ok(round.length >= 100);   // (on the grid the trees, cushions and tables are held below, each by its drawn height)
   for (const p of round) for (let a = 0; a < 6.283; a += 0.39) {
-    const d = p.r + BODY - 0.012, x = p.x + Math.cos(a) * d, z = p.z + Math.sin(a) * d;
+    const d = p.r + keptOff(walker), x = p.x + Math.cos(a) * d, z = p.z + Math.sin(a) * d;
     assert.ok(walker.blocked(x, z), `standing ${d.toFixed(2)} m from the column at (${p.x.toFixed(1)}, ${p.z.toFixed(1)}) puts part of him inside it`);
   }
   // Along the front of each hall, at some depth of the porch, there is a way past every column from end to end.
@@ -42,8 +47,8 @@ test("no column lets his sleeve in, and he can still pass between columns and al
 
 test("the tea house's two tables are in the way, and are walked round on the porch", () => {
   const tables = site.walk.posts.filter((p) => p.r === undefined && p.x0 > -14.4 && p.x1 < -12.5 && p.z0 > 6 && p.z1 < 22); assert.equal(tables.length, 2, "two tables under the tea house's eave");
-  for (const t of tables) {
-    const cz = (t.z0 + t.z1) / 2;
+  for (const w of tables) {
+    const t = tableOf(w), cz = (t.z0 + t.z1) / 2;
     for (let x = t.x0 + 0.02; x < t.x1; x += 0.05) for (let z = t.z0 + 0.02; z < t.z1; z += 0.05) assert.ok(walker.blocked(x, z), `he can stand in the table at (${x.toFixed(2)}, ${z.toFixed(2)})`);
     // from the door side of the table to the far side, keeping to the porch (its floor is at 0.45)
     const seen = new Set(), todo = [[Math.round(-13.0 / 0.05), Math.round((cz + 1.6) / 0.05)]], goal = Math.round((cz - 1.6) / 0.05); let through = false;
@@ -82,7 +87,10 @@ test("every tree in the courts is in the way, by its trunk and his width, and no
   for (const [x, , z, kind, h] of near) {
     const post = site.walk.posts.find((p) => p.r !== undefined && Math.hypot(p.x - x, p.z - z) < 1e-6); assert.ok(post, `the ${kind} at (${x}, ${z}) has nothing to stop him`);
     const trunk = kind === "cedar" ? 0.2 + h * 0.012 : 0.09 + h * 0.019; assert.ok(post.r >= trunk * 1.2, `the ${kind} at (${x}, ${z}) is closed to ${post.r.toFixed(2)} m but its trunk is ${trunk.toFixed(2)} m before its roots spread`);
-    for (let a = 0; a < 6.283; a += 0.5) assert.ok(walker.blocked(x + Math.cos(a) * (post.r + BODY - 0.02), z + Math.sin(a) * (post.r + BODY - 0.02)), `he can lean into the ${kind} at (${x}, ${z})`);
+    // (The written plan closes it to its roots' spread and BODY; the grid, to the trunk as it is drawn and his outline.)
+    const drawn = kind === "cedar" && h < 8 ? 0.035 + h * 0.009 : trunk;   // a young evergreen's trunk is slender (trees.js); its boughs are leaves, not in the way
+    const d = isGrid(walker) ? drawn + keptOff(walker) : post.r + BODY - 0.02;
+    for (let a = 0; a < 6.283; a += 0.5) assert.ok(walker.blocked(x + Math.cos(a) * d, z + Math.sin(a) * d), `he can lean into the ${kind} at (${x}, ${z})`);
     for (const b of site.buildings) assert.ok(!(x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3), `the ${kind} at (${x}, ${z}) grows through the platform of ${b.name || "a building"}`);
   }
 });
@@ -91,8 +99,8 @@ test("a jump at either tea table, from any side, walking or hurrying, neither la
   const { stride, leapStep, JUMP } = await import("../../app/src/stride.js");
   const tables = site.walk.posts.filter((p) => p.r === undefined && p.x0 > -14.4 && p.x1 < -12.5 && p.z0 > 6 && p.z1 < 22); assert.equal(tables.length, 2);
   let runs = 0;
-  for (const t of tables) {
-    const cx = (t.x0 + t.x1) / 2, cz = (t.z0 + t.z1) / 2;
+  for (const w of tables) {
+    const t = tableOf(w), cx = (t.x0 + t.x1) / 2, cz = (t.z0 + t.z1) / 2;
     for (let a = 0; a < 24; a++) for (const speed of [2.1, 4.2]) {   // every way round it the porch allows, at a walk and at a hurry (which way he faces does not matter to where he may be)
       const dir = [Math.sin((a / 24) * 6.283), Math.cos((a / 24) * 6.283)];
       let pos = null; for (let r = 1.0; r < 2.6 && !pos; r += 0.05) { const x = cx - dir[0] * r, z = cz - dir[1] * r; if (!walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - 0.45) < 0.01) pos = { x, z }; }
@@ -115,7 +123,8 @@ test("a jump at either tea table, from any side, walking or hurrying, neither la
 
 test("below the knee: the tea house's cushions are walked round, and the gate's sill and the summit mat are floors his shoes come down on", () => {
   const cushions = site.walk.posts.filter((p) => p.r === 0.292 && p.x < -12 && p.x > -15); assert.equal(cushions.length, 4, "a cushion at either end of each tea table");
-  for (const c of cushions) assert.ok(walker.blocked(c.x, c.z) && walker.blocked(c.x + c.r + BODY - 0.02, c.z), `the cushion at (${c.x.toFixed(2)}, ${c.z.toFixed(2)}) can be walked into`);
+  const top = Math.max(...CUSHION.map((p) => p[1]));
+  for (const c of cushions) assert.ok(walker.blocked(c.x, c.z) && walker.blocked(c.x + c.r + (isGrid(walker) ? keptOff(walker, top) : BODY - 0.02), c.z), `the cushion at (${c.x.toFixed(2)}, ${c.z.toFixed(2)}) can be walked into`);
   const gate = site.buildings.find((b) => b.name === "万年正续"), sill = [];   // the gate house, platform and all
   for (let zz = gate.z0; zz < gate.z1; zz += 0.01) sill.push(walker.heightAt(0, zz));
   const floor = Math.min(...sill.filter((h) => h > 0.1)); assert.ok(Math.max(...sill) - floor > 0.04 && Math.max(...sill) - floor < 0.06, `crossing the gate the floor rises ${(Math.max(...sill) - floor).toFixed(3)} m over the sill, not its 5 cm`);

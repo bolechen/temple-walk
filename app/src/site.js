@@ -115,7 +115,10 @@ export function buildSite(M) {
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
       // He is inside as soon as he has stepped between the leaves up to the sill: his robe at the door, not through it.
       halls.push({ ...opts.hall, xs: [...opts.xs], zs: [...opts.zs], door: out(0, Z + DOOR.reach + 0.01), out: out(0, Math.min(Z + 0.66, b.zF - 0.4)), outYaw: Math.atan2(f[0], -f[1]),
-        inside: (x, z) => { const [lx, lz] = turn(x - at[0], z - at[1], (4 - q) % 4); return Math.abs(lx) < DOOR.half + 0.02 && lz < Z + DOOR.reach + 0.035 && lz > Z - 0.3; } });
+        inside: (x, z) => { const [lx, lz] = turn(x - at[0], z - at[1], (4 - q) % 4); return Math.abs(lx) < DOOR.half + 0.02 && lz < Z + DOOR.reach + 0.035 && lz > Z - 0.3; },
+        // The doorway beyond the place where the door takes him in: drawn open, but walked no further (the floor baked
+        // from the drawn meshes closes it, #265; the written plan's platform stops at the door already).
+        stop: (() => { const [ax, az] = out(-DOOR.half - 0.1, Z - 0.6), [bx, bz] = out(DOOR.half + 0.1, Z + DOOR.reach); return { x0: Math.min(ax, bx), x1: Math.max(ax, bx), z0: Math.min(az, bz), z1: Math.max(az, bz) }; })() });
     }
     return b;
   };
@@ -185,7 +188,8 @@ export function buildSite(M) {
       const [ax, az] = turn(x - 0.75 - BODY, z - 0.26, 1), [bx, bz] = turn(x + 0.75 + BODY, z + 0.26 + BODY, 1);
       walk.posts.push({ x0: Math.min(ax, bx) - 16.6, x1: Math.max(ax, bx) - 16.6, z0: Math.min(az, bz) + 14, z1: Math.max(az, bz) + 14 });
     }
-    tea.group.add(mesh(merge(parts.wood), M.woodX), mesh(merge(parts.glaze), M.glaze), mesh(merge(parts.iron), M.iron), mesh(merge(parts.straw), M.hide));
+    // All of it is walked round, not stood on (#265: the floor baked from the drawn meshes looks through it to the porch).
+    for (const m of [mesh(merge(parts.wood), M.woodX), mesh(merge(parts.glaze), M.glaze), mesh(merge(parts.iron), M.iron), mesh(merge(parts.straw), M.hide)]) { m.userData.walk = "post"; tea.group.add(m); }
   }
   // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts; and the pair of young
   // evergreens that stand clear of everything in the corners before the great hall. trees.js grows them; the plan
@@ -426,7 +430,7 @@ export function buildSite(M) {
     P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 18, 0.006, 6),
       new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 10, 0.004, 5));
     const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, lacquer: M.lacquer };
-    for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
+    for (const k in P) { const m = mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]); m.userData.walk = "post"; root.add(m); }   // walked round, not stood on (#265)
     // The table stands askew to the court, so it is closed off as three round things along its length; each stool as one.
     // (He does not walk into his own stool: he comes to stand behind it, and is seated on it. See `seat` below.)
     for (const lx of [-0.42, 0, 0.42]) { const t = teaFrom(lx, -0.12); walk.posts.push({ x: t[0], z: t[1], r: 0.42 }); }
@@ -650,6 +654,9 @@ export function createWalker(site) {
   const upHere = (x, z) => { const c = carved(x, z); return c !== null && Math.abs(c - lofts[loft].floor) < 1e-6; };
   const wall = (x, z) => { if (room) return shut(x, z); if (post(x, z, 0.15)) return true; if (loft) return !upHere(x, z); if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; };
   return {
+    kind: "old",
+    // The porch edges he may hop down from and jump up onto (drop.js), as written (#265: the grid walker finds its own).
+    drops: site.walk.drops || [],
     setRoom(r) { room = r || null; }, get room() { return room; },
     setLoft(id) { loft = id && lofts[id] ? id : null; }, get loft() { return loft; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },

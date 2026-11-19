@@ -7,6 +7,7 @@ import * as THREE from "three";
 const { buildSite, createWalker, BODY } = await import("../../app/src/site.js");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createMonk } = await import("../../app/src/monk.js");
+const { isGrid } = await import("./walkers.mjs");
 const { logSwing } = await import("../../app/src/rites.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site), rooms = buildInteriors(M, site.halls);
@@ -38,7 +39,9 @@ test("the bell's log is drawn back, touches the bronze and goes no further, and 
   assert.equal(logSwing(s, 8600), 0); assert.ok(Math.abs(logSwing(s, 10000) + 0.18) < 1e-9, "it should meet the bell at the moment it sounds"); assert.equal(logSwing(s, 19500), 0);
   const tap = { t0: 10000, lead: 0, gap: 0.18 }; assert.equal(logSwing(tap, 9990), 0); assert.ok(Math.abs(logSwing(tap, 10080) + 0.18) < 1e-9 && logSwing(tap, 10040) < -0.05, "a tap should send the log to the bell");
   const bellS = site.strikers.find((k) => k.kind === "bell"); assert.ok(bellS.rope && bellS.gap > 0.1, "the bell's log has no rope to pull");
-  const p = site.places.bell; assert.ok(!walker.blocked(p.at[0], p.at[1]) && walker.blocked(p.at[0], p.at[1] + 0.06), "he should stand at the edge of what he can reach, before the rope");
+  // He stands at the edge of what he can reach before the rope: open where he stands, stopped a step on toward it (within
+  // 6 cm on the written plan, which drew that edge where he stands; within a cell and his outline's difference on the grid).
+  const p = site.places.bell, on = isGrid(walker) ? 0.15 : 0.06; assert.ok(!walker.blocked(p.at[0], p.at[1]) && walker.blocked(p.at[0], p.at[1] + on), "he should stand at the edge of what he can reach, before the rope");
 });
 test("every cushion and every stool is a seat, and he can come within a step or two of each", () => {
   const all = [...site.seats, ...rooms.seats]; assert.ok(all.length >= 30, `only ${all.length} seats`);

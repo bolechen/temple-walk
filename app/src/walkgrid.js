@@ -6,7 +6,9 @@
 //
 // The file: four bytes "TWWG", the format's version and the header's length (little-endian u32 each), the header as
 // JSON, then the cells, compressed (deflate, raw), grid after grid in the header's order. For each grid, per cell:
-//   height  Int16, centimetres above the grid's `base`; NO_FLOOR where he cannot stand (only open cells keep theirs)
+//   height  Int16, centimetres above the grid's `base`, wherever the flood reached a floor (a shut cell keeps its floor
+//           too: the foot of a wall, the edge of a porch, so that his shoes and a ledge's foot can be measured); NO_FLOOR
+//           where it reached none
 //   state   Uint8: 0 open; otherwise 1 + the index into the header's `names` of what shut it (a material, "ledge",
 //           "nofloor", "unreached")
 //   old     one bit a cell, packed eight to a byte: could he reach this cell on the walker of the written plan
@@ -65,6 +67,16 @@ export function decode(bytes, inflate) {
     return { ...g, height, state, old, cell: (/** @type {number} */ x, /** @type {number} */ z) => cellOf(g, x, z) };
   });
   return { header, grids };
+}
+
+/**
+ * The cells of a file inflated in the page, where node:zlib is not: the browser's own DecompressionStream (deflate-raw).
+ * @param {Uint8Array} bytes the whole file @returns {Promise<Uint8Array>} what decode's `inflate` is to return
+ */
+export async function inflateRawAsync(bytes) {
+  const { at } = readHeader(bytes);
+  const stream = new Blob([bytes.slice(at)]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
 /** The cell (x, z) falls in, or -1 outside the grid. @param {{ x0: number, z0: number, nx: number, nz: number, step: number }} g @param {number} x @param {number} z */
