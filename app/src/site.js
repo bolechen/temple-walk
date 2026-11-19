@@ -223,7 +223,7 @@ export function buildSite(M) {
     ]), M.rubble); niche.name = "well-niche"; g.add(niche);
     const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, crown).translate(0, crown / 2, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.15).rotateX(-Math.PI / 2).translate(0, 0.2, 0.62), new THREE.MeshStandardMaterial({ color: 0x0a1210, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.4 }));
-    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.65); board.position.set(0, crown, mid + t * deep + 0.06);   // hung on the face of the arch's crown
+    const board = makePlaque("龙井", { style: "wood", back: M.woodV }); board.name = "well-board"; board.scale.setScalar(0.65); board.position.set(0, crown, mid + t * deep + 0.06);   // hung on the face of the arch's crown
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
     g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, jamb).translate(sx * R, jamb / 2, 1.103), new THREE.PlaneGeometry(0.9, jamb - 0.1).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), (jamb - 0.1) / 2, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
@@ -310,7 +310,7 @@ export function buildSite(M) {
     stone.push(box(3.3, 0.2, 0.3, px, yB + 0.05, pz + 1.15), box(3.3, 0.2, 0.3, px, yB + 0.05, pz - 1.15), box(0.3, 0.2, 2.0, px + 1.5, yB + 0.05, pz), box(0.3, 0.2, 2.0, px - 1.5, yB + 0.05, pz));   // its rim, the water standing a hand below it
     stone.push(box(0.5, 0.3, 0.9, sx, yB + 0.15, pz), box(0.24, 1.42, 0.62, sx, yB + 1.01, pz), box(0.32, 0.1, 0.74, sx, yB + 1.77, pz));   // plinth, slab and a thin cap
     const ink = mesh(new THREE.PlaneGeometry(2.7, 2.0, 8, 6).rotateX(-Math.PI / 2).translate(px, yB + 0.02, pz), M.inkpool, { ao: () => 0.7 }); ink.name = "inkpool"; ink.userData.keep = true;
-    const tag = makePlaque("洗砚池", { vertical: true, style: "stone" }); tag.name = "inkpool-stele"; tag.scale.setScalar(0.55); tag.position.set(sx - 0.14, yB + 1.0, pz); tag.rotation.y = -Math.PI / 2;
+    const tag = makePlaque("洗砚池", { vertical: true, style: "stone", back: M.woodV }); tag.name = "inkpool-stele"; tag.scale.setScalar(0.55); tag.position.set(sx - 0.14, yB + 1.0, pz); tag.rotation.y = -Math.PI / 2;
     root.add(ink, tag);
   }
   root.add(mesh(merge(stone), M.stone), mesh(merge(flights), M.steps));
