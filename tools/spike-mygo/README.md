@@ -45,6 +45,17 @@ SPIKE_URL="/?in=main" ./spike       # 直接进大殿，验证殿内模型
 - Windows（WebView2）与 Linux（WebKitGTK）上的实际运行：只验证了交叉编译。
 - 打包（dmg、签名、公证、自动更新）：这次只用 `go build`，没有走 mygo 的打包流程。
 
+## 打包与自动更新（第二阶段，tools/spike-mygo-pack/，2026-11-19）
+
+第二阶段在 `tools/spike-mygo-pack/`：同样的站点，换成 `mygo build` 的正式打包，加上 `mygo.Updater` 的真实更新检查（启动 3 秒后查一次、安装、`App.Relaunch()`，全部写进 `/tmp/mygo-update.log`）。
+
+- **mygo.json**：`frontendDist: "dist"`（`mygo build` 自己嵌站点，不用 `SetFrontend`）、`slug: temple-walk`、`updates.url`。构建还要求 URL 是 https——本地试验用自签证书（`SSL_CERT_FILE` 让 app 信任它），生产直接用 `https://temple.rushiwowen.co/...`。
+- **密钥**：`mygo keygen` 生成 Ed25519 对；公钥放进 mygo.json，私钥经 `MYGO_UPDATER_PRIVATE_KEY` 给构建。试验密钥在 `keys/`（git 忽略），**不能当生产密钥**。
+- **打包产物**（17.8 秒）：`山门之外.app`（32.8 MB，ad-hoc 签名）、更新包 `temple-walk-0.3.0-darwin-arm64.tar.gz`（24.4 MB）、签名清单 `update-darwin-arm64.json`、`install.sh`、`SHA256SUMS`。
+- **更新闭环实测**：装 0.3.0 → 清单换 0.3.1 → 启动后自动发现、下载、验签、安装 → 自动重启为 0.3.1 → 再查显示已是最新。app 被替换的是 `~/Applications` 式的用户目录安装（`/tmp/mygo-install`），与生产安装位置一致。
+- **中途踩的坑**：构建机要能读到上一版的清单才生成增量更新（第一次服务器没起，构建自动跳过增量并说明原因）；服务器目录要指向新 build，否则 app 拿到旧清单会解析失败。两者都对应生产流程的正常步骤（先传包、最后传清单）。
+- **生产部署**：`updates.url` 指向 HTTPS 目录，构建后上传 tar.gz 和 install.sh、**最后传清单**（避免 app 看到指向缺失文件的清单）。S3/R2 可用 `updates.s3` 让 `mygo build -upload` 直接传；或走 GitHub Releases。增量更新自动从已发布的最近 3 版生成。分发前还应配 Developer ID 签名 + `macos.notarize` 公证（试验是 ad-hoc）。
+
 ## 结论（暂定）
 
 技术上可行：mygo 的网页模式就是系统 WebView，托管现有 `dist/` 不改一行前端代码，且自带签名自动更新，正好补上 Pake 的缺口。但它比 Pake 多引入 Go 工具链和一份 Go 源码，是否采用要看上面未验证项的结果。
