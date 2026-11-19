@@ -40,8 +40,21 @@ export function compare(base, next) {
     }
     if (changed) pictures.push({ id: g.id, nx: g.nx, nz: g.nz, diff, open: g.state });
   }
+  // What the drawn floor opens that the written plan's walker never reached (#265, the lead from the census, #252): each
+  // part over LIMIT is to be said in the PR to be floor the written plan missed, or closed where it is drawn (site.closed).
+  const fresh = new Map();
+  for (const g of next.grids) {
+    if (!g.old) continue;
+    const a = g.step * g.step, parts = g.kind === "outdoors" ? next.header.parts : [{ name: g.name, x0: -1e9, x1: 1e9, z0: -1e9, z1: 1e9 }];
+    for (let k = 0; k < g.nx * g.nz; k++) {
+      if (g.state[k] !== 0 || oldReached(g.old, k)) continue;
+      const i = k % g.nx, j = (k - i) / g.nx, part = partOf(parts, g.x0 + (i + 0.5) * g.step, g.z0 + (j + 0.5) * g.step), key = `${g.id}|${part}`;
+      fresh.set(key, (fresh.get(key) || 0) + a);
+    }
+  }
+  const newOnly = [...fresh].map(([k, m2]) => { const [grid, part] = k.split("|"); return { grid, part, m2 }; }).sort((p, q) => q.m2 - p.m2);
   const lost = next.header.targets.filter((t) => !t.new || !t.old);
-  return { rows: [...rows.values()].sort((p, q) => q.gained + q.lost - (p.gained + p.lost)), lost, pictures, notes };
+  return { rows: [...rows.values()].sort((p, q) => q.gained + q.lost - (p.gained + p.lost)), lost, pictures, notes, newOnly };
 }
 
 /** The report, as Markdown. */
@@ -56,6 +69,9 @@ export function report(c, { baseName = "基准", total = null } = {}) {
     out.push(big.length ? `可走面积变化超过 ${LIMIT} m² 的部分：` : `可走面积有变化，没有哪一部分超过 ${LIMIT} m²：`, "", "| 层 | 格子 | 部分 | 多出 m² | 少了 m² |", "|---|---|---|---|---|");
     for (const r of big.length ? big : c.rows.slice(0, 8)) out.push(`| ${r.layer} | ${r.grid} | ${r.part} | ${f(r.gained)} | ${f(r.lost)} |`);
   }
+  const fresh = (c.newOnly || []).filter((r) => r.m2 > LIMIT);
+  out.push("", fresh.length ? `画的地面能站、旧数据走不到的（超过 ${LIMIT} m² 的部分；页面默认只在首院这一层用画的地面：首院、山门前和其中的建筑）：` : "画的地面能站而旧数据走不到的，没有哪一部分超过 " + LIMIT + " m²。");
+  if (fresh.length) { out.push("", "| 格子 | 部分 | m² |", "|---|---|---|"); for (const r of fresh) out.push(`| ${r.grid} | ${r.part} | ${f(r.m2)} |`); }
   for (const n of c.notes) out.push("", `- ${n}`);
   if (total) out.push("", total);
   return out.join("\n") + "\n";

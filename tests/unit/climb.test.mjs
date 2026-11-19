@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker } = await import("../../app/src/site.js");
-const { findClimb, climbPose, findDrop, dropPose, REACH } = await import("../../app/src/drop.js");
+const { findClimb, climbPose, findDrop, dropPose, REACH, CLEARANCE } = await import("../../app/src/drop.js");
 const { JUMP } = await import("../../app/src/stride.js");
 const M = new Proxy({}, { get(t, k) { return k === "plaster" || k === "interior" ? () => (t[k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial()); } });
 const site = buildSite(M), walker = createWalker(site);
@@ -20,14 +20,14 @@ test("the reach is the top of his own jump", () => assert.ok(Math.abs(REACH - re
 
 test("every unrailed edge whose platform he can reach is climbable from below, along an arc that clears the edge; the rest are not", () => {
   const rows = [];
-  for (const e of site.walk.drops) {
+  for (const e of walker.drops) {
     // somewhere along the edge: a table or a cushion on the porch may stand at the landing in some places, and then he does not land there
     let p = null, plan = null;
     for (const along of [0.5, 0.15, 0.3, 0.7, 0.85, 0.95, 0.05]) { p = below(e, along); if (!p) continue; plan = findClimb(walker, [e], p.x, p.z, -e.normal[0], -e.normal[1]); if (plan) break; }
     assert.ok(p, `no ground below the edge at ${e.a}`);
     const rise = e.top - walker.heightAt(p.x, p.z);
     rows.push([e.top.toFixed(2), rise.toFixed(2), !!plan]);
-    if (rise > reach * 0.995 || rise < 0.1) { assert.equal(plan, null, `a ${rise.toFixed(2)} m platform is beyond his jump`); continue; }
+    if (rise > reach + CLEARANCE || rise < 0.1) { assert.equal(plan, null, `a ${rise.toFixed(2)} m platform is beyond his jump`); continue; }
     assert.ok(plan, `no way up a ${rise.toFixed(2)} m edge at ${e.a} from ${p.d.toFixed(2)} m out`);
     assert.ok(!walker.blocked(plan.to[0], plan.to[2]) && Math.abs(walker.heightAt(plan.to[0], plan.to[2]) - e.top) < 0.03, "he comes down on the platform");
     let top = 0;
@@ -37,7 +37,8 @@ test("every unrailed edge whose platform he can reach is climbable from below, a
       assert.ok(q.y >= plan.from[1] - 1e-9, "he does not sink");
       if (out < 0.3) assert.ok(q.y >= e.top - 1e-6, `his leading foot is over the edge at ${(q.y - plan.from[1]).toFixed(3)} of ${rise.toFixed(3)}`);
     }
-    assert.ok(top <= reach + 1e-9, "no higher than his jump goes");
+    // No higher than his jump goes, or than clearing the edge by CLEARANCE takes; and it clears the edge by that much.
+    assert.ok(top <= Math.max(reach, rise + CLEARANCE) + 1e-9, "no higher than his jump goes"); assert.ok(top >= rise + CLEARANCE - 0.002, `the arc clears the edge by ${(top - rise).toFixed(3)} m, not ${CLEARANCE}`);
     const end = climbPose(plan, plan.duration + 1); assert.deepEqual([end.x, end.y, end.z, end.done], [...plan.to, true]);
   }
   assert.ok(rows.filter((r) => r[2]).length >= 4, "the tea house and the meditation hall (0.45) can be climbed: " + JSON.stringify(rows));
@@ -45,7 +46,7 @@ test("every unrailed edge whose platform he can reach is climbable from below, a
 });
 
 test("not from the side or the back, not from the platform, not walking, not into a blocked landing", () => {
-  const e = site.walk.drops.find((q) => Math.abs(q.top - 0.45) < 1e-6 && findClimb(walker, [q], below(q, 0.9).x, below(q, 0.9).z, -q.normal[0], -q.normal[1])), p = below(e, 0.9);
+  const e = walker.drops.find((q) => Math.abs(q.top - 0.45) < 1e-6 && findClimb(walker, [q], below(q, 0.9).x, below(q, 0.9).z, -q.normal[0], -q.normal[1])), p = below(e, 0.9);
   assert.equal(findClimb(walker, [e], p.x, p.z, e.normal[0], e.normal[1]), null, "facing away");
   assert.equal(findClimb(walker, [e], p.x, p.z, -e.normal[1], e.normal[0]), null, "facing along the edge");
   const on = { x: p.x - e.normal[0] * 1.0, z: p.z - e.normal[1] * 1.0 }; assert.equal(findClimb(walker, [e], on.x, on.z, -e.normal[0], -e.normal[1]), null, "already on the platform");
@@ -56,7 +57,7 @@ test("not from the side or the back, not from the platform, not walking, not int
 });
 
 test("up and down again: from each climbable edge, the hop down from where he came down leads back to the ground", () => {
-  for (const e of site.walk.drops) {
+  for (const e of walker.drops) {
     const p = below(e, 0.9), plan = findClimb(walker, [e], p.x, p.z, -e.normal[0], -e.normal[1]); if (!plan) continue;
     const drop = findDrop(walker, [e], plan.to[0], plan.to[2], e.normal[0], e.normal[1]);
     assert.ok(drop || true); if (drop) { const end = dropPose(drop, drop.duration + 1); assert.ok(!walker.blocked(end.x, end.z), "he comes down on open ground"); }

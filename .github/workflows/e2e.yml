@@ -45,6 +45,8 @@ jobs:
         run: pnpm run edges
       - name: The camera's near plane cuts into nothing
         run: pnpm run nearplane
+      - name: The same two on the walker over the baked floor (#265)
+        run: pnpm run edges:grid && pnpm run nearplane:grid
       - name: Remember the browser between runs
         id: pw
         uses: actions/cache@v4
@@ -102,7 +104,7 @@ jobs:
       # A nightly run stands on its own, with no publication beside it: the quick checks go with the first machine.
       - name: Parse, types, unit tests, and his body against everything built
         if: steps.mine.outputs.run == 'true' && matrix.shard == 1
-        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
+        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run test:grid && pnpm run edges && pnpm run edges:grid
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
       # network, so only here and by hand, never in the way of a merge.
       # Two stores (#247): the original (Hugging Face, `fallback`) and the copy readers use (`base`, R2). The bucket is read
