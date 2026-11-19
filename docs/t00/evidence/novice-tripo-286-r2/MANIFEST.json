@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 258996,
+   "sha256": "28c20a5474536196b427d861cddf2c8714521509f4b36329de108446cc368fc2",
+   "rev": "aeec1d1d2b5faa0d1c07705632d06fbd5ed5bafe"
+  },
+  {
+   "path": "director-incense.png",
+   "bytes": 103122,
+   "sha256": "15926dcb7307124fc1cd1588ba8d8d19f64c224997c4b8a64739eacb3c6f7324",
+   "rev": "4c2e9e4807a4a53fe268d9e63b13881fde8e5217"
+  },
+  {
+   "path": "director-tea.png",
+   "bytes": 285457,
+   "sha256": "0162628dbb93d7425605337b1e87a44b418570d7bc7268f61c8a54a698a78603",
+   "rev": "4c2e9e4807a4a53fe268d9e63b13881fde8e5217"
+  },
+  {
+   "path": "front-cuffs.png",
+   "bytes": 980664,
+   "sha256": "d60591dc5d57c87a641faced9cf634ea024f43ec818acf09a82de2fc8ea5175a",
+   "rev": "4c2e9e4807a4a53fe268d9e63b13881fde8e5217"
+  },
+  {
+   "path": "front-unlit.png",
+   "bytes": 623262,
+   "sha256": "48dc8d4be337124f33d3a7899d380e19908a9b8d7628dc8dc059e78942310259",
+   "rev": "4c2e9e4807a4a53fe268d9e63b13881fde8e5217"
+  },
+  {
+   "path": "sleeve-light.png",
+   "bytes": 645052,
+   "sha256": "b2fed913b7d43f635e86577d0927ba1531172fa20350e67c1bc75cd10a5921f8",
+   "rev": "4c2e9e4807a4a53fe268d9e63b13881fde8e5217"
+  },
+  {
+   "path": "tea-grip.png",
+   "bytes": 1237733,
+   "sha256": "64b84e64a4ad5646bde7cfc45d43e1a82961dfca5725da5215c32b51137ee944",
+   "rev": "4c2e9e4807a4a53fe268d9e63b13881fde8e5217"
+  }
+ ]
+}

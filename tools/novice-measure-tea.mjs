@@ -4,6 +4,10 @@
 // that far below the eye; negative: they come up over it.
 //
 //   node tools/novice-measure-tea.mjs [<body.glb> ...]     (the figure built in code is measured first)
+//   node tools/novice-measure-tea.mjs --sequence [<body.glb> ...]
+// --sequence (#286): the whole drink as rites.js's drinkTea makes it, seated on his stool: the bowl from his chest to his
+// lips, tilted to 0.5 and on to 0.78 with the head back, and down again, three times, frame by frame at 30 a second;
+// the least margin over all of it, and the frame where it falls.
 //
 // The eyes are found as tools/novice-measure.mjs finds them: the dark of the iris in the body's texture (or the closed
 // lids' strokes in the vertex colours of the figure built in code), on the front of the face; each eye's lower edge is
@@ -47,6 +51,39 @@ function tea(m) {
   }
   m.group.updateMatrixWorld(true);
 }
+// HOLD (env, x,y,z): where each hand holds the bowl in the bowl's frame; rites.js's hold() has 0.068,0.034,0.012. Only to try a
+// lower grip without touching app/ (#286).
+const HOLD = (process.env.HOLD || "0.068,0.034,0.012").split(",").map(Number);
+/** rites.js's drinkTea from the bowl at his chest on, seated: each frame calls `each(phase)`. */
+function sequence(m, each) {
+  const hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 });
+  const act = { bow: 0.06, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } }, cup = new THREE.Vector3(), q = new THREE.Quaternion(), X = new THREE.Vector3(1, 0, 0), rim = new THREE.Vector3(0, 0.06, -0.07);
+  const ease = (u) => u * u * (3 - 2 * u), chestAt = () => m.bones.chest.localToWorld(new THREE.Vector3(0, 0, 0.17)), toLips = () => m.bones.head.localToWorld(new THREE.Vector3(0, 0.052, 0.128)).sub(rim.clone().applyQuaternion(q));
+  const hold = () => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * HOLD[0], HOLD[1], HOLD[2]).applyQuaternion(q).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); } };
+  const tiltTo = (t) => q.setFromAxisAngle(X, -t);
+  let t = 0; const frame = (fn, label) => { m.group.updateMatrixWorld(true); fn(); hold(); m.update(1 / 30, 0, "chair", t, () => -0.44, { act }); t += 1 / 30; each(label); };
+  for (let i = 0; i < 60; i++) frame(() => { tiltTo(0); cup.copy(chestAt()); }, null);   // settling: the hands come to the bowl (not measured)
+  const steps = (secs) => Math.round(secs * 30);
+  for (let sip = 1; sip <= 3; sip++) {
+    for (let i = 1; i <= steps(0.75); i++) { const k = ease(i / steps(0.75)); frame(() => { act.nod = -0.17 * k; tiltTo(0.5 * k); cup.copy(chestAt()).lerp(toLips(), k); }, `sip ${sip}: up to the lips`); }
+    for (let i = 1; i <= steps(0.75); i++) { const k = ease(i / steps(0.75)); frame(() => { act.nod = -0.17 - 0.07 * k; tiltTo(0.5 + 0.28 * k); cup.copy(toLips()); }, `sip ${sip}: tilted`); }
+    for (let i = 1; i <= steps(0.75); i++) { const k = 1 - ease(i / steps(0.75)); frame(() => { act.nod = -0.24 * k; tiltTo(0.78 * k); cup.copy(chestAt()).lerp(toLips(), k); }, `sip ${sip}: down`); }
+    for (let i = 1; i <= steps(0.6); i++) frame(() => { tiltTo(0); cup.copy(chestAt()); }, `sip ${sip}: at the chest`);
+  }
+}
+/** The least margin (m) over both eyes, now; and how it is made up. */
+function margin(m, eyes) {
+  const mesh = m.parts.skin, g = mesh.geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, names = m.skeleton.bones.map((b) => b.name);
+  if (!margin.hands) { margin.hands = []; for (let i = 0; i < g.attributes.position.count; i++) { let w = 0; for (let k = 0; k < 4; k++) if (/Hand$/.test(names[si.getComponent(i, k)])) w += sw.getComponent(i, k); if (w > 0.5) margin.hands.push(i); } }
+  m.group.updateMatrixWorld(true); const pos = (i) => mesh.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(mesh.matrixWorld), H = margin.hands.map(pos);
+  let least = Infinity;
+  for (const side of [1, -1]) {
+    const e = eyes.filter((i) => Math.sign(g.attributes.position.getX(i)) === side).map(pos);
+    const x0 = Math.min(...e.map((q) => q.x)) - 0.005, x1 = Math.max(...e.map((q) => q.x)) + 0.005, low = Math.min(...e.map((q) => q.y)), z = Math.max(...e.map((q) => q.z));
+    for (const q of H) if (q.x > x0 && q.x < x1 && q.z > z - 0.04) least = Math.min(least, low - q.y);
+  }
+  return least;
+}
 function measure(label, m, eyes) {
   const mesh = m.parts.skin, g = mesh.geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, names = m.skeleton.bones.map((b) => b.name), v = new THREE.Vector3();
   const pos = (i) => mesh.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(mesh.matrixWorld);
@@ -63,7 +100,12 @@ function measure(label, m, eyes) {
   }
   console.log(label.padEnd(24), rows.join(" | "));
 }
-const code = createMonk(); const codeEyes = eyePoints(code.parts.skin.geometry, null); tea(code); measure("code", code, codeEyes);
-for (const f of process.argv.slice(2)) {
-  const b = readNovice(f), tex = await textureOf(f, b.json), m = wear(createMonk(), b), eyes = eyePoints(b.geometries.skin, tex); tea(m); measure(f.split("/").pop(), m, eyes);
-}
+const seq = process.argv.includes("--sequence"), files = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const run = (label, m, eyes) => {
+  if (!seq) { tea(m); measure(label, m, eyes); return; }
+  margin.hands = null; let least = Infinity, where = "", n = 0;
+  sequence(m, (phase) => { if (!phase) return; n++; const g = margin(m, eyes); if (g < least) { least = g; where = `${phase}, frame ${n}`; } });
+  console.log(label.padEnd(24), `the whole drink, ${n} frames: hands at least ${(least * 100).toFixed(1)} cm ${least >= 0 ? "below" : "OVER"} the eyes' lower edge (${where})`);
+};
+const code = createMonk(); run("code", code, eyePoints(code.parts.skin.geometry, null));
+for (const f of files) { const b = readNovice(f), tex = await textureOf(f, b.json); run(f.split("/").pop(), wear(createMonk(), b), eyePoints(b.geometries.skin, tex)); }
