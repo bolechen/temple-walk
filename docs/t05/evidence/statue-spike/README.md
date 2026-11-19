@@ -8,7 +8,7 @@
 | --- | --- |
 | `route-a-one/` | 路 A（Tripo）毗婆尸一尊。`door`：月台上中轴，离像约 24 m。`front`：佛前 6 m 仰视。`front10`：佛前 10 m。`side`：侧廊约 12 m。每处一张夏昼、一张初冬晴冷，1600×900。`report.json` 记三角形数、绘制次数和渲染器 |
 | `route-b-one/` | 路 B：Mia 明代漆佛（CC0），同样八张 |
-| `route-a-three/` | 路 A 三尊：迦叶（东）、毗婆尸、释迦（西），在 x = 0、±5.80。`door3`：殿门内；`side3`：侧廊；`front` / `front10`。两季。另有 `walk-winter.mp4`：第一人称，眼高 1.6 m，从月台按 2.1 m/s 走进殿门，到佛前 6 m 停下抬头，约 15 秒，1280×720 |
+| `route-a-three/` | 路 A 三尊：迦叶（东）、毗婆尸、释迦（西），在 x = 0、±5.80。`door3`：殿门内；`side3`：侧廊；`front` / `front10`。两季。另有 `walk-winter.mp4`：第一人称，眼高 1.6 m，从月台按 2.1 m/s 走进殿门，到佛前 6 m 停下抬头，约 15 秒，1280×720；`film-strip.png` 是从中取的六帧 |
 | `tex-vs-clay.png` | 毗婆尸：左是 Tripo 自己的贴图，右是统一的素泥材质，殿门内和侧廊各一张 |
 | `scans-in-hall.png` | 路 B 的三件候选扫描并排放进殿里：Freer 唐坐佛、雷峰塔像、Mia 漆佛 |
 | `tripo/` | 每尊的请求（提示词、种子、版本），以及 Tripo 内部从文字生成的那张图 |

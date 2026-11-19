@@ -105,6 +105,12 @@
    "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
   },
   {
+   "path": "route-a-three/film-strip.png",
+   "bytes": 641761,
+   "sha256": "b14423164bc0604b6b7fd0479dbd8c85c72059599eca5fdede589682f61c73d8",
+   "rev": "d7b5d1aa76951fdf8986f57283d12648c32dfb45"
+  },
+  {
    "path": "route-a-three/front-summer.png",
    "bytes": 837754,
    "sha256": "5e058282827d1c47476321a3c8b65e337b743fa187988d51997cf6cf3ae1ff5d",
@@ -139,6 +145,12 @@
    "bytes": 706949,
    "sha256": "e39d98e97d32922ed1fa278b5b448c11e072a43d860f7fcbcedbec1fb4e3e6ca",
    "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/walk-winter.mp4",
+   "bytes": 3138571,
+   "sha256": "86bfd55b45c9fa9d679ad186a4a819b9a7417224009216dd92ad89abf750693e",
+   "rev": "d7b5d1aa76951fdf8986f57283d12648c32dfb45"
   },
   {
    "path": "route-b-one/door-summer.png",
