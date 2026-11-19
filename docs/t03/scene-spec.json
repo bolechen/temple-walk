@@ -1,0 +1,119 @@
+{
+  "scene_id": "T03",
+  "name": "照尘寺（暂名）",
+  "game": "山门之外",
+  "chapter": "寺前有戏",
+  "revision": "research draft, 2026-11-17",
+  "status": "research_only; no scene has been built; see acceptance criteria in PLAN.md",
+  "source_of_truth": "atlas-entry.json (T03) + this pack; numbers marked 推算 come from OSM/SRTM and are not survey data",
+  "real_prototype": "云南剑川沙溪兴教寺 (Xingjiao Temple, Shaxi, Jianchuan, Yunnan) and 寺登街四方街",
+  "units": "metres; +y up; north is -z; origin at the centroid of Sifang Square",
+  "origin_wgs84": { "lat": 26.3195491, "lon": 99.8519663 },
+  "zones": [
+    {
+      "id": "Z1",
+      "name": "街巷（东巷）",
+      "connects_to": ["Z2"],
+      "objects": ["东巷（3-4 m 宽）", "东寨门（石基土坯墙，重建物）", "两侧铺面/马店体块", "红砂石/块石铺地"],
+      "floor": "lane level, about 2099 m (SRTM estimate), slightly lower than the square",
+      "collision": "lane is a deck; gate walls and shop fronts are solids; the lane is 3-4 m wide"
+    },
+    {
+      "id": "Z2",
+      "name": "广场（四方街）",
+      "connects_to": ["Z1", "Z3", "Z4", "Z5"],
+      "objects": ["四方街（约 59.7 × 22.1 m，896.6 m²，OSM 推算）", "红砂石铺地（1904）", "两棵古槐（南树 2004 补种）", "寺门（西）与古戏台（东）相对", "四周铺面/马店体块", "生活事件 3-5 个（摆货/扫地/送货/开门/收摊）"],
+      "floor": "about 2105-2107 m (SRTM estimate); proposed 0.3 m fall to the east",
+      "collision": "square is a deck; the locust trunks are posts; shop fronts are solids; the stage and gate are solids with doorways"
+    },
+    {
+      "id": "Z3",
+      "name": "戏台侧边",
+      "connects_to": ["Z2"],
+      "objects": ["古戏台（9.5 × 11.2 m，三层三重檐歇山，14 飞角，脊顶 12.2 m）", "一层铺面（不可进）", "背面室外楼梯（后加，可看不可上）", "二层展厅入口（不进）", "三层魁星阁（不进）"],
+      "floor": "stage platform about 0.1 m above the square",
+      "collision": "the stage is a solid; a 3-4 m standing band in front; the rear stair is visible but not climbable"
+    },
+    {
+      "id": "Z4",
+      "name": "寺院一进",
+      "connects_to": ["Z2"],
+      "objects": ["寺门/门楼（10.1 × 8.3 m，两层重檐硬山，中开间通道）", "一对石狮", "第一进天井（提案 8-10 m 深）", "南北厢房（各约 15.9 × 5 m）", "观音楼（10.9 × 8.6 m，两层重檐悬山）", "原创壁画 1-3 幅（第一进侧墙/观音楼）"],
+      "floor": "gate threshold about 0.3 m above the square; the first court about 0.4 m",
+      "collision": "the gate middle bay is walkable; side walls are solids; wing buildings and Guanyin tower are solids; the middle hall and main hall are solids (out of scope)"
+    },
+    {
+      "id": "Z5",
+      "name": "回到广场",
+      "connects_to": ["Z2"],
+      "objects": ["傍晚收摊状态", "灯亮", "人声变稀", "影子变长", "生活事件状态切换"],
+      "floor": "same as Z2",
+      "collision": "same as Z2"
+    }
+  ],
+  "route": {
+    "waypoints_xz": [
+      [72, -5.5],
+      [61, -5.5],
+      [30, 0],
+      [0, 0],
+      [12, 6],
+      [0, 0],
+      [-13, -9],
+      [-22, -11],
+      [-13, -9],
+      [0, 0]
+    ],
+    "length_one_way_m": "about 120-150 m round the loop",
+    "climb_m": "almost none; the square is nearly flat (SRTM); proposed 0.3-0.6 m steps at the gate",
+    "returns_the_same_way": false,
+    "note": "x east, z south (north is -z); waypoints are draft and follow the OSM building centres; the loop is 东巷→广场→戏台→一进→回广场"
+  },
+  "checkpoints": {
+    "system": "广场记·五处（见 CHECKPOINTS.md）；不做集齐门槛，不评分，不做表演",
+    "main": [
+      { "id": "C01", "name": "先声", "zone": "Z1", "mark": "声" },
+      { "id": "C02", "name": "一帧", "zone": "Z4", "mark": "框" },
+      { "id": "C03", "name": "摊", "zone": "Z2", "mark": "摊" },
+      { "id": "C04", "name": "门", "zone": "Z4", "mark": "门" },
+      { "id": "C05", "name": "回", "zone": "Z5", "mark": "回" }
+    ],
+    "optional": [
+      { "id": "C06", "name": "灯·石狮油灯", "zone": "Z2", "mark": "灯", "condition": "evening; the lion-hole story is oral tradition" },
+      { "id": "C07", "name": "节·太子会余韵", "zone": "Z2", "mark": "节", "condition": "around lunar 2/8; needs community consent" },
+      { "id": "C08", "name": "戏·排练", "zone": "Z3", "mark": "戏", "condition": "when a rehearsal is on; needs performers' consent" },
+      { "id": "C09", "name": "槐·两棵古槐", "zone": "Z2", "mark": "槐" },
+      { "id": "C10", "name": "马·古宗巷", "zone": "Z1", "mark": "马" }
+    ],
+    "not_doing": ["民俗表演/戏曲小游戏", "穿白族服装拍照", "求子/转运/抽签", "功德箱/捐款", "登戏台/魁星阁", "进入商铺/民居/马店", "拍人脸/儿童", "录完整唱段/诵经", "复制兴教寺壁画"]
+  },
+  "lighting": {
+    "preset": "S01 autumn soft light (late afternoon) as the base; winter clear and after-rain as separate variants; no interior preset in v1",
+    "main_light": "autumn 10-11月, 16:00-17:30; diffuse sky with a soft low sun from the west/southwest; long shadows, warm-neutral, thin haze; no golden-hour orange filter",
+    "local_light": "evening square lamps (the lion-lamp story is oral tradition); gate threshold lantern; no lamp at noon",
+    "fog": "thin autumn haze toward Aofeng Mountain and the fields; the lane stays darker",
+    "wetness": "red sandstone dry in the base preset; wet after rain; the earthen wall shows damp at its foot"
+  },
+  "cameras": "camera-manifest.json",
+  "deferred": [
+    "中殿/大殿内部与壁画近距离观看",
+    "戏台二层展厅/三层魁星阁",
+    "完整三进寺院",
+    "太子会游行/周五集市/完整乡戏",
+    "石宝山/玉津桥/欧阳大院内部/南北寨门",
+    "16 种季时",
+    "多人/NPC/对话"
+  ],
+  "unknowns": [
+    "四方街的精确边界/四角/排水坡向",
+    "戏台一层/二层/三层的平面尺寸与楼梯位置",
+    "寺门中门净宽/门槛高/门楼台基高",
+    "第一进天井进深与厢房开间",
+    "寺门—戏台轴线的真实偏移（官方轴线 vs OSM 偏南 10-16 m）",
+    "壁画逐幅位置/尺寸/题记/保存状况",
+    "戏台二层展厅当前是否开放",
+    "广场四周铺面/马店的檐口高/店面宽",
+    "当代演出/集市的完整记录与社区同意",
+    "目标手机的性能"
+  ]
+}
