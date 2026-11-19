@@ -1,0 +1,90 @@
+{
+  "spec": "tools/t05-hall/specs/route-a-one.json",
+  "shots": [
+    {
+      "name": "door-summer",
+      "view": "door",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-one/door-summer.png",
+      "tris": 169072,
+      "calls": 541,
+      "ms": 6402
+    },
+    {
+      "name": "door-winter",
+      "view": "door",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-one/door-winter.png",
+      "tris": 169072,
+      "calls": 541,
+      "ms": 4750
+    },
+    {
+      "name": "front-summer",
+      "view": "front",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-one/front-summer.png",
+      "tris": 166704,
+      "calls": 457,
+      "ms": 4133
+    },
+    {
+      "name": "front-winter",
+      "view": "front",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-one/front-winter.png",
+      "tris": 166704,
+      "calls": 457,
+      "ms": 4458
+    },
+    {
+      "name": "front10-summer",
+      "view": "front10",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-one/front10-summer.png",
+      "tris": 167564,
+      "calls": 472,
+      "ms": 4109
+    },
+    {
+      "name": "front10-winter",
+      "view": "front10",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-one/front10-winter.png",
+      "tris": 167564,
+      "calls": 472,
+      "ms": 3875
+    },
+    {
+      "name": "side-summer",
+      "view": "side",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-one/side-summer.png",
+      "tris": 167904,
+      "calls": 489,
+      "ms": 4162
+    },
+    {
+      "name": "side-winter",
+      "view": "side",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-one/side-winter.png",
+      "tris": 167904,
+      "calls": 489,
+      "ms": 4134
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}

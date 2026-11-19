@@ -1,0 +1,141 @@
+[
+  {
+    "name": "vipasyin-a",
+    "task_id": "4ab94565-1f4f-47b0-9ec5-6c78665242c2",
+    "type": "text_to_model",
+    "status": "success",
+    "credits": 10,
+    "created": 1795090588,
+    "input": {
+      "prompt": "A monumental seated Buddha statue, northern Chinese Liao dynasty (11th century) painted clay temple sculpture. Seated upright in full lotus position on a simple round lotus seat. Broad, full, serene face, eyes half closed looking down, long earlobes, small tightly curled snail-shell hair with a low rounded ushnisha. Heavy monastic robe covering both shoulders, falling in deep regular parallel folds, inner garment across the chest. Hands in the teaching gesture: right hand raised before the chest, palm facing forward, thumb and index finger touching in a ring; left hand resting palm up on the left knee. Solid, calm, symmetrical body with broad shoulders and a full chest, front facing.",
+      "negative_prompt": "crown, jewelry, necklace, halo, mandorla, multiple arms, thin limbs, cartoon, Thai style, Tibetan style, standing, pedestal",
+      "model_version": "v3.1-20260211",
+      "texture": false,
+      "pbr": false,
+      "image_seed": 2801,
+      "model_seed": 2801,
+      "texture_alignment": "geometry",
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "vipasyin-a.base_model.glb",
+        "bytes": 42147576,
+        "sha256": "3e67ecce91a040dce7c32989a29810c437b40bfb8128991c19446280d1c8ecab"
+      },
+      "generated_image": {
+        "file": "vipasyin-a.generated_image.jpeg",
+        "bytes": 139759,
+        "sha256": "8da27aced812b66bfc18b337065aea6161145cc5e46a57b6f9a5b758c2b2a7d7"
+      },
+      "rendered_image": {
+        "file": "vipasyin-a.rendered_image.webp",
+        "bytes": 85832,
+        "sha256": "190d5e23fed36fe8254547710d5407c58dbe83eac47336adae21f310703fc039"
+      }
+    }
+  },
+  {
+    "name": "sakyamuni-a",
+    "task_id": "e8df9d33-d516-4911-aa5f-f837a9d53999",
+    "type": "text_to_model",
+    "status": "success",
+    "credits": 10,
+    "created": 1795090835,
+    "input": {
+      "prompt": "A monumental seated Buddha statue, northern Chinese Liao dynasty (11th century) painted clay temple sculpture. Seated upright in full lotus position on a simple round lotus seat. Broad, full, serene face, eyes half closed looking down, long earlobes, small tightly curled snail-shell hair with a low rounded ushnisha. Heavy monastic robe draped over the left shoulder only, leaving the right shoulder, right side of the chest and right arm bare, falling in deep regular parallel folds. Hands: right arm lowered, right hand resting over the right knee, palm facing outward, fingers pointing down (gift-giving gesture); left hand resting palm up in the lap. Solid, calm, symmetrical body with broad shoulders and a full chest, front facing.",
+      "negative_prompt": "crown, jewelry, necklace, halo, mandorla, multiple arms, thin limbs, cartoon, Thai style, Tibetan style, standing, pedestal",
+      "model_version": "v3.1-20260211",
+      "texture": false,
+      "pbr": false,
+      "image_seed": 2801,
+      "model_seed": 2801,
+      "texture_alignment": "geometry",
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "sakyamuni-a.base_model.glb",
+        "bytes": 41417124,
+        "sha256": "881b964daff7d7b1723117a847bc0387396022b043b8ae597d9a80f31c213eb8"
+      },
+      "generated_image": {
+        "file": "sakyamuni-a.generated_image.jpeg",
+        "bytes": 138125,
+        "sha256": "e86dda8f459142d7351f44e23be149409f4f7370f16a1a4484025e49406d9c54"
+      },
+      "rendered_image": {
+        "file": "sakyamuni-a.rendered_image.webp",
+        "bytes": 82146,
+        "sha256": "1fb5ff80e744671d766039a494c2b6c5f28617b4629127a503843f8ecccf54d7"
+      }
+    }
+  },
+  {
+    "name": "kasyapa-a",
+    "task_id": "f2ff6a07-4ca2-4aa0-8e51-e643851cc8df",
+    "type": "text_to_model",
+    "status": "success",
+    "credits": 10,
+    "created": 1795090835,
+    "input": {
+      "prompt": "A monumental seated Buddha statue, northern Chinese Liao dynasty (11th century) painted clay temple sculpture. Seated upright in full lotus position on a simple round lotus seat. Broad, full, serene face, eyes half closed looking down, long earlobes, small tightly curled snail-shell hair with a low rounded ushnisha. Heavy monastic robe covering both shoulders, falling in deep regular parallel folds, inner garment across the chest. Hands in the meditation gesture: both hands resting together in the lap, palms up, right hand on top of the left, thumb tips touching. Solid, calm, symmetrical body with broad shoulders and a full chest, front facing.",
+      "negative_prompt": "crown, jewelry, necklace, halo, mandorla, multiple arms, thin limbs, cartoon, Thai style, Tibetan style, standing, pedestal",
+      "model_version": "v3.1-20260211",
+      "texture": false,
+      "pbr": false,
+      "image_seed": 2801,
+      "model_seed": 2801,
+      "texture_alignment": "geometry",
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "kasyapa-a.base_model.glb",
+        "bytes": 42149980,
+        "sha256": "00a885e6c1e668564212f187fba42a27403f30f031b0611aaa17b68babb4932a"
+      },
+      "generated_image": {
+        "file": "kasyapa-a.generated_image.jpeg",
+        "bytes": 137699,
+        "sha256": "d471b483635f3c00996c8d60bdd614c58e2455d6cea43da98af2c89d83d1e33e"
+      },
+      "rendered_image": {
+        "file": "kasyapa-a.rendered_image.webp",
+        "bytes": 85162,
+        "sha256": "abe2b3e8935ff977d157172f6f30a4912b280c5af4ad20e1d911c8b44bf4c28d"
+      }
+    }
+  },
+  {
+    "name": "vipasyin-tex",
+    "task_id": "dcb04657-8340-4141-b53d-31fee8b344c8",
+    "type": "texture_model",
+    "status": "success",
+    "credits": 10,
+    "created": 1795091158,
+    "input": {
+      "model_version": "v2.5-20250123",
+      "original_model_id": "4ab94565-1f4f-47b0-9ec5-6c78665242c2",
+      "texture": true,
+      "pbr": true,
+      "texture_seed": 2801,
+      "texture_quality": "standard"
+    },
+    "files": {
+      "model": {
+        "file": "vipasyin-tex.model.glb",
+        "bytes": 46490840,
+        "sha256": "2437ca98015d2554fad5dbdd8cba9d14a9bc9274734d787e51d1d8a8fd01762c"
+      },
+      "rendered_image": {
+        "file": "vipasyin-tex.rendered_image.webp",
+        "bytes": 177662,
+        "sha256": "16408740853f59064e0681d1f01b9020de03d7246e18b097ab2cb4cdd8f21270"
+      }
+    }
+  }
+]
