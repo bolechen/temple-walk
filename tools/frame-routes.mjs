@@ -17,6 +17,9 @@ const { followEye, createFollow } = EYE, FRAMES = EYE.FRAMES || {}, frameArm = E
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
 const site = buildSite(M), walker = createWalker(site), dt = 1 / 60;
+// The page tilts the view at the height the eye itself rides at (eased over the steps, yard.js), as it should; `AIM_AT_FOOT`
+// measures it as it was from #271 to the fix of the nod on stairs (aimed at his feet, which go up a tread at a time).
+const AIM_AT_FOOT = process.env.AIM_AT_FOOT === "1";
 const FOV = { "16x9": 50, "4x3": 50, phone: 62 }, ASPECT = { "16x9": 16 / 9, "4x3": 4 / 3, phone: 390 / 844 };
 // Each walk is a line of points; round the censer the view is turned with him as a visitor turns it.
 const ring = [...Array(25)].map((_, i) => { const a = (i / 24) * Math.PI * 2; return [-2.6 * Math.sin(a), 13 + 2.6 * Math.cos(a)]; });
@@ -36,7 +39,7 @@ const stats = (xs) => {
 };
 export function measure(fr, size, path, pitch0 = 0.06) {
   const cam = new THREE.PerspectiveCamera(FOV[size], ASPECT[size], 0.05, 500), v = new THREE.Vector3(), F = FRAMES[fr] || null;
-  const arm = F ? frameArm(F, FOV[size], ASPECT[size]) : null, follow = createFollow(), xs = [], ys = [], tops = [], bots = [];
+  const arm = F ? frameArm(F, FOV[size], ASPECT[size]) : null, follow = createFollow(), xs = [], ys = [], tops = [], bots = [], pitches = [];
   let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), side = 1.2, frames = 0, feet = 0, knees = 0, hidden = 0;
   const frame = (count) => {
     const foot = walker.heightAt(x, z);
@@ -46,7 +49,8 @@ export function measure(fr, size, path, pitch0 = 0.06) {
     if (!count) return;
     frames++;
     if (follow.dist < 0.85) { hidden++; return; }   // so near that he is hidden (yard.js)
-    const aim = F ? aimAt(c, [x, foot, z], yaw, F, FOV[size]) : null;
+    const aim = F ? aimAt(c, [x, AIM_AT_FOOT ? foot : eyeY, z], yaw, F, FOV[size]) : null;
+    pitches.push(aim ? aim[1] : pitch0);
     cam.position.fromArray(c); cam.rotation.set(aim ? aim[1] : pitch0, -(aim ? aim[0] : yaw), 0, "YXZ"); cam.updateMatrixWorld();
     const down = (h) => { v.set(x, foot + h, z).project(cam); return [(v.x + 1) * 50, (1 - v.y) * 50]; };
     const [mx, my] = down(0.61); xs.push(mx); ys.push(my); tops.push(down(1.22)[1]); const bot = down(0)[1]; bots.push(bot);
@@ -60,7 +64,9 @@ export function measure(fr, size, path, pitch0 = 0.06) {
     frame(true);
   }
   const pc = (n) => +((n / Math.max(1, frames)) * 100).toFixed(1);
-  return { across: stats(xs), down: stats(ys), top: +Math.min(...tops).toFixed(1), bottom: +Math.max(...bots).toFixed(1), feetIn: pc(feet), kneesIn: pc(knees), hidden: pc(hidden) };
+  // How far the view tips up or down from one frame to the next, in degrees: on a flight of steps it must not nod with each tread.
+  let pitchStep = 0; for (let i = 1; i < pitches.length; i++) pitchStep = Math.max(pitchStep, Math.abs(pitches[i] - pitches[i - 1]) * 180 / Math.PI);
+  return { across: stats(xs), down: stats(ys), pitchStep: +pitchStep.toFixed(2), top: +Math.min(...tops).toFixed(1), bottom: +Math.max(...bots).toFixed(1), feetIn: pc(feet), kneesIn: pc(knees), hidden: pc(hidden) };
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   const report = {};
