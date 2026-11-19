@@ -27,7 +27,7 @@ const srv = http.createServer((req, res) => {
   for (let i = 0; i < secs * fps; i++) {
     const r = await p.evaluate((dt) => window.__litter(dt), 1 / fps);
     await p.evaluate(() => new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok))));
-    await p.screenshot({ path: path.join(out, `f${String(i).padStart(5, "0")}.png`) });
+    await p.screenshot({ path: path.join(out, `f${String(i).padStart(5, "0")}.png`), timeout: 300000 });
     if (i % fps === 0) { const t = from + i / fps; log.push({ t, wind: +windAt(1.05, t).toFixed(2), kept: r.kept, landed: r.landed }); console.log(JSON.stringify(log.at(-1))); }
   }
   fs.writeFileSync(out + ".json", JSON.stringify(log, null, 1));
