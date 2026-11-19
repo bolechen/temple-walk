@@ -22,5 +22,11 @@ SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要
 ## 待办
 
 - ~~**仓库 README 首屏链接**：PR #257 待合并，合并后生效。~~ 已合并上线，见上表。
-- **itch.io / IndieDB / Game Jolt 游戏页**：需所有者在 ego lite 人工登录后建页（标题、简介、正式站链接、三张实机图作封面）。
+- **AxiomeCG/awesome-threejs PR #88**（Games 子节）：待维护者合并，合并即上线。fork 分支 `bolechen:awesome-threejs/add-temple-walk`。
+- ~~awesome-online-games/awesome-browser-games~~：**已放弃**——它要求先在自己网站发文回链它的仓库才肯合并（交换链接），backlink 规范里属中风险模式，不做。
+- **itch.io / IndieDB / Game Jolt 游戏页**：需所有者在 ego lite 人工登录后建页（素材见下节）。
 - **重构后首发**（等树/远山/小沙弥定稿、T4 重拍素材）：小红书笔记（rushiwowen_co 号）、Product Hunt。这两处是「一次性首发」，按 #152 的调子不提前发。
+
+## 建页素材（itch / IndieDB / Game Jolt 通用）
+
+英文标题：**Beyond the Mountain Gate · 山门之外**；一句话：A slow, quiet temple walk in your browser — bamboo path, bell, tea, and 16 seasons of light. 玩游戏链接 `https://temple.rushiwowen.co`，源码 `https://github.com/bolechen/temple-walk`，封面用上表三张实机图。
