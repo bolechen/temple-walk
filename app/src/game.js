@@ -115,6 +115,7 @@ export function createGame(y) {
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
   function earned(id) {
+    if (rite && rite.id === id) rite.done = true;
     track("demo.seal", { id, count: journey.count() });
     chime(1, journey.count()); refresh();
     const el = $("toast"), d = SEAL[id]; if (!el) return;
@@ -143,7 +144,7 @@ export function createGame(y) {
   // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
   const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
   const rites = createRites(y, fast, { enso: tex, burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
-  const end = () => { rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breathWord")?.setAttribute("hidden", ""); };
+  const end = () => { if (rite?.t0) track("demo.rite", { id: rite.id, phase: "end", seconds: Math.round((performance.now() - rite.t0) / 1000), done: rite.done ? 1 : 0 }); rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breathWord")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
@@ -154,6 +155,8 @@ export function createGame(y) {
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
     const st = { face: p.face, pose: p.sit ? seatPose(p.seat || p.at, p.room || null) : id === "well" || id === "bell" ? false : "pray", lift: p.sit ? placeLift(p, y.site.seats, y.walker.heightAt) : 0, seat: p.seat, act: rites.act, leave: () => { if (on()) end(); } };
     y.stage(st);
+    mineRite.t0 = performance.now();
+    track("demo.rite", { id, phase: "start" });
     // The eye leaves his shoulder for the place's own shot (src/director.js), and comes back before his hands are done.
     y.direct(id);
     if (id === "bell") {   // he takes the rope; each press after that is one pull, one stroke, counted as it sounds (below)
@@ -396,7 +399,7 @@ export function createGame(y) {
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
     const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
-    $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 朱印") }); } catch {} };
+    $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 朱印") }); track("demo.share", { from: "book" }); } catch {} };
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
     const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
     if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
@@ -415,7 +418,7 @@ export function createGame(y) {
   window.__goBack = (id) => goBack(id);
   // The book, opened by the visitor: a full book that has not been shown its own seal is shown it now (once), then the page.
   function openBookOwed() { if (journey.owed() && !closing && !completing && !rite) complete(); else openBook(); }
-  $("bookBtn")?.addEventListener("click", openBookOwed);
+  $("bookBtn")?.addEventListener("click", () => { track("demo.book", { seals: journey.count() }); openBookOwed(); });
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
   $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 

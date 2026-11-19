@@ -36,3 +36,13 @@ test("previews, tests and a missing tracker stay silent", () => {
   restore();
   assert.deepEqual(calls, []);
 });
+
+test("an event is remembered for the tests even where it is not sent", () => {
+  const restore = page("127.0.0.1", { track() { throw new Error("not reached"); } });
+  assert.equal(track("demo.hall", { id: "main", count: 1 }), false);
+  const last = (globalThis.__events || []).at(-1);
+  assert.equal(last.name, "demo.hall");
+  assert.deepEqual(last.data, { lang: "zh", id: "main", count: 1 });
+  delete globalThis.__events;
+  restore();
+});
