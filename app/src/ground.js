@@ -45,7 +45,7 @@ export function createGround(scene, shade, censer, paving) {
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -136,7 +136,7 @@ export function createGround(scene, shade, censer, paving) {
           if(fuv.x>0.&&fuv.x<1.&&fuv.y>0.&&fuv.y<1.){
             vec4 fm=texture2D(tFallMap,fuv); float src=pow(max(dot(fm.rgb,uLitterCh),0.),5.)*uLitBase;
             // What came down while he was here, kept by the ground (litter.js): the leaves each where it lies, and the heaps.
-            bool kept=litIn(p)&&uLitter>.001; vec2 cov=kept?litCover(p):vec2(0.); float heap=cov.x; kept=kept&&cov.y>.001;
+            bool kept=litIn(p)&&uLitter>.001; vec2 cov=kept?litCover(p):vec2(0.); float heap=mod(uLitMode,2.)>.5?cov.x:0.; kept=kept&&cov.y>.001&&uLitMode>1.5;   // (uLitMode: 1 the heaps, 2 the kept leaves, 3 both; for measuring each)
             if(src>.01||heap>.004){
               float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
               // The leaves that lay here before he came (the broom has kept the lane all but clear of them this morning), and the heaps

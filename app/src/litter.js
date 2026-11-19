@@ -205,7 +205,7 @@ export function createLitter({ span = 32, ground = undefined, pool = undefined }
 // as litterLayer returns a leaf (colour pick, age, coverage, which tree; `gk` the source map's say of whose leaves fall
 // here); `litCover(p)`: the heap there, in the units litterLayer's amount is measured in, and whether to look for kept leaves.
 export const LITTER_MEM = /* glsl */`
-uniform highp usampler2D tLitMem; uniform sampler2D tLitCover; uniform vec4 uLitMem; uniform float uLitOn;
+uniform highp usampler2D tLitMem; uniform sampler2D tLitCover; uniform vec4 uLitMem; uniform float uLitOn, uLitMode;
 bool litIn(vec2 p){ vec2 d=abs(p-uLitMem.xy)*uLitMem.z; return uLitOn>.5&&max(d.x,d.y)<uLitMem.w*.5-1.; }
 ivec2 litCell(vec2 c){ return ivec2(int(mod(c.x,uLitMem.w))*2,int(mod(c.y,uLitMem.w))); }
 // (heap, whether a kept leaf lies within the 2×2 cells round p): one smooth look-up of the cover picture.
