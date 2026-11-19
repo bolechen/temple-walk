@@ -677,7 +677,7 @@ function frame(now) {
   ground.mirror?.(mirrorOn && !inside);
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
-  post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
+  post.focus(Q.has("shot") || (photo.on && settings.get().blur) ? focusAt() : 0);   // ?shot is focused always; the raised camera only when the visitor has asked for 虚化
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
@@ -733,6 +733,11 @@ on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute
 const thirds = (v) => { document.body.classList.toggle("thirds", v); $("thirdsToggle")?.setAttribute("aria-pressed", String(v)); };
 thirds(settings.get().thirds);
 on("thirdsToggle", () => { settings.set("thirds", !settings.get().thirds); thirds(settings.get().thirds); });
+// 虚化: the photograph's very shallow depth of field, off unless asked for. Offered only where the tier keeps the depth to draw it.
+const blur = (v) => $("blurToggle")?.setAttribute("aria-pressed", String(v));
+blur(settings.get().blur);
+if (quality.depth && quality.dof) $("blurToggle").hidden = false;
+on("blurToggle", () => { settings.set("blur", !settings.get().blur); blur(settings.get().blur); });
 on("prayToggle", (e) => { photo.pray = !photo.pray; e.currentTarget.setAttribute("aria-pressed", String(photo.pray)); });
 
 // Draw the framed part of the view again, large, and mount it on its card.
