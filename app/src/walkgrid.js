@@ -2,7 +2,7 @@
 // a walk is laid out on (the courts and the path up to them, the top storey of the summit pavilion, each room under
 // the courts), a grid of 5 cm cells saying the height of the floor there and whether he may stand in it, and if not,
 // what stops him. `tools/bake-walk.mjs` bakes it in Node from the meshes as they are drawn and writes
-// `app/shared/walk/<level>.bin`; the page does not read it yet (the walker that will is the migration's third step).
+// `app/shared/walk/<level>.bin`; the page walks on it (app/src/gridwalker.js).
 //
 // The file: four bytes "TWWG", the format's version and the header's length (little-endian u32 each), the header as
 // JSON, then the cells, compressed (deflate, raw), grid after grid in the header's order. For each grid, per cell:
@@ -56,10 +56,11 @@ export function readHeader(bytes) {
 
 /**
  * The header and each grid with its cells, ready to ask. `keep(g)`, if given, says what of each grid to keep: undefined
- * for all of it, false for none, or a box { x0, x1, z0, z1 } for only the cells inside it, cut out of the inflated body
- * row by row, so that the page never holds a second copy of a grid it keeps only a corner of (#265).
+ * for all of it (with the written plan's bits), false for none, a box { x0, x1, z0, z1 } for only the cells inside it, or
+ * "floors" for only the rows and columns a floor was reached in (the page, #274: the hillside round the courts is
+ * a third of the outdoor grid), cut out of the inflated body row by row, so that the page never holds a second copy.
  * @param {Uint8Array} bytes @param {(b: Uint8Array) => Uint8Array} inflate
- * @param {(g: any) => ({ x0: number, x1: number, z0: number, z1: number } | false | undefined)} [keep]
+ * @param {(g: any) => ({ x0: number, x1: number, z0: number, z1: number } | "floors" | false | undefined)} [keep]
  */
 export function decode(bytes, inflate, keep) {
   const { header, at } = readHeader(bytes), body = inflate(bytes.subarray(at));
@@ -68,8 +69,15 @@ export function decode(bytes, inflate, keep) {
     const L = layout(g), from = o, want = keep ? keep(g) : undefined; o += L.bytes;
     if (want === false) continue;
     if (want) {
-      const i0 = Math.max(0, Math.floor((want.x0 - g.x0) / g.step)), j0 = Math.max(0, Math.floor((want.z0 - g.z0) / g.step));
-      const nx = Math.max(0, Math.min(g.nx, Math.ceil((want.x1 - g.x0) / g.step)) - i0), nz = Math.max(0, Math.min(g.nz, Math.ceil((want.z1 - g.z0) / g.step)) - j0);
+      let i0, j0, nx, nz;
+      if (want === "floors") {   // only the rows and columns a floor was reached in (a NO_FLOOR height is the bytes 00 80)
+        let a = g.nx, b = -1, c = g.nz, d = -1;
+        for (let j = 0, at = from + L.height + 1; j < g.nz; j++) for (let i = 0; i < g.nx; i++, at += 2) if (body[at] !== 0x80 || body[at - 1] !== 0) { if (i < a) a = i; if (i > b) b = i; if (j < c) c = j; if (j > d) d = j; }
+        i0 = Math.min(a, b + 1); j0 = Math.min(c, d + 1); nx = Math.max(0, b - a + 1); nz = Math.max(0, d - c + 1);
+      } else {
+        i0 = Math.max(0, Math.floor((want.x0 - g.x0) / g.step)); j0 = Math.max(0, Math.floor((want.z0 - g.z0) / g.step));
+        nx = Math.max(0, Math.min(g.nx, Math.ceil((want.x1 - g.x0) / g.step)) - i0); nz = Math.max(0, Math.min(g.nz, Math.ceil((want.z1 - g.z0) / g.step)) - j0);
+      }
       const height = new Int16Array(nx * nz), state = new Uint8Array(nx * nz), hb = new Uint8Array(height.buffer);
       for (let j = 0; j < nz; j++) {
         const k = (j + j0) * g.nx + i0;

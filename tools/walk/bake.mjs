@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 20,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 23,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -281,6 +281,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       intersectsBounds: (bb) => bb.intersectsBox(qbox),
       intersectsTriangle: (t, ti) => {
         const id = S.mat[(index[ti * 3] / 3) | 0], p = isPost[id];
+        if (isFloor[id]) return false;   // a thing marked as floor is floor all over, rim and all: nothing of it stands in his way (#274: the summit's mat)
         // A face that lies flat is a floor, not a wall: unless it lies higher over this cell's floor than he steps (a level
         // bough at his head, a bar), where it is in his way like any wall.
         if (!p && Math.abs(t.getNormal(nrm).y) > 0.5) {
@@ -333,6 +334,17 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       const lo = Math.max(BAKE.LOW, lowBot[k0] - h[kk]), hi = Math.min(CLIMB, lowTop[k0] - h[kk]); if (hi < lo) continue;
       if (d < lowReach(lo, hi)) state[kk] = 1 + c;
     }
+  }
+  // A lip too narrow for his shoe at the head of a drop (the base course under a platform's edge, a hand wide and a step
+  // down from the floor): a floor cell with nowhere to stand at its height beside it and a fall of more than CLIMB next to
+  // it. He does not stand there (#274: the library's platform; found when its edge was looked for and not found).
+  for (let j = 1; j + 1 < nz; j++) for (let i = 1; i + 1 < nx; i++) {
+    const k = j * nx + i; if (state[k] || Number.isNaN(h[k])) continue;
+    let hold = false, fall = false;
+    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const kk = k + b * nx + a; if (foothold[kk] && Math.abs(h[kk] - h[k]) <= 0.02) hold = true; }
+    if (hold) continue;
+    for (let b = -3; b <= 3 && !fall; b++) for (let a = -3; a <= 3; a++) { const jj = j + b, ii = i + a; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; if (h[k] - h[jj * nx + ii] > CLIMB) { fall = true; break; } }
+    if (fall) state[k] = 1 + LEDGE;
   }
   T.push(performance.now());
   // What the plan closes though it is drawn as floor: a doorway he is taken in at, beyond that line (`hall.stop`: the door is

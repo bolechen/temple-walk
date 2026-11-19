@@ -142,7 +142,7 @@ function buildRoom(M, hall, ox, figures) {
     add(table(big ? 2.6 : 1.8, 0.7, 0.86, 0, tz), M.woodX); block(-(big ? 1.6 : 1.2), big ? 1.6 : 1.2, tz - 0.6, tz + 0.6);
     add(merge([lathe([[0, 0.02], [0.1, 0.02], [0.17, 0.08], [0.2, 0.17], [0.18, 0.22], [0.14, 0.22], [0.13, 0.18], [0, 0.16]], 24).translate(0, Y + 0.895, tz), ...[-1, 1].map((sx) => lathe([[0, 0], [0.08, 0], [0.03, 0.04], [0.025, 0.26], [0.07, 0.3], [0.07, 0.32], [0, 0.32]], 16).translate(sx * 0.6, Y + 0.895, tz))]), M.bronze, () => 0.8);
     for (const sx of [-1, 1]) flame(sx * 0.6, 1.26, tz, 0.016);
-    add(merge([-1.1, 0, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7);
+    add(merge([-1.1, 0, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7).userData.walk = "floor";   // the cushions before an altar are stepped onto (he bows on one, and reaches the stand from it), not walked round
     for (const sx of [-1, 1]) lampStand(sx * (big ? 3.3 : 2.2), tz + 0.2);
     altar.position.set(ox, Y + ah, (az0 + az1) / 2);
     if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
@@ -193,9 +193,14 @@ function buildRoom(M, hall, ox, figures) {
   } else if (hall.kind === "chan") {
     // The meditation hall: long sitting platforms down both sides, a cushion at every place, the aisle between.
     const plat = [], mats = [];
-    for (const sx of [-1, 1]) { plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) mats.push(seat(x, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0), 0.32, 0.42, sx > 0 ? Math.PI : 0).translate(0, 0.42, 0)); }   // each faces the aisle
+    // The platform on the door's side is two, with the way in from the door between them (#274: it was drawn as one, across
+    // the way the written plan left open, and he walked through it and the three cushions on it).
+    const WAY = 1.6, zOf = (sx) => sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0), half = (K.w - 3) / 2;
+    plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, zOf(-1)));
+    for (const s of [-1, 1]) plat.push(box(half - WAY, 0.42, 1.7, s * (half + WAY) / 2, Y + 0.21, zOf(1)));
+    for (const sx of [-1, 1]) for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) if (sx < 0 || Math.abs(x) > WAY + 0.4) mats.push(seat(x, zOf(sx), 0.32, 0.42, sx > 0 ? Math.PI : 0).translate(0, 0.42, 0));   // each faces the aisle
     add(merge(plat), M.woodX); add(merge(mats), M.straw, () => 0.7);
-    block(-K.w / 2 + 1.5, K.w / 2 - 1.5, -K.d / 2, -K.d / 2 + 2.2); block(-K.w / 2 + 1.5, -1.6, K.d / 2 - 4.4, K.d / 2 - 2.4); block(1.6, K.w / 2 - 1.5, K.d / 2 - 4.4, K.d / 2 - 2.4);
+    block(-K.w / 2 + 1.5, K.w / 2 - 1.5, -K.d / 2, -K.d / 2 + 2.2); block(-K.w / 2 + 1.5, -WAY, K.d / 2 - 4.4, K.d / 2 - 2.4); block(WAY, K.w / 2 - 1.5, K.d / 2 - 4.4, K.d / 2 - 2.4);
     lampStand(0, -K.d / 2 + 3.2); lightAt.push([0, 2.0, -K.d / 2 + 3.2, 0xffa050, 9, 14], [0, K.h - 1.4, 0.5, 0xffe6c4, 6, 14, true]);
   } else if (hall.kind === "tea") {
     // The tea house: tables with stools, each set with a ewer and bowls.
@@ -220,7 +225,7 @@ function buildRoom(M, hall, ox, figures) {
     // A plain hall: a table, cushions, a lamp. (The patriarchs' hall and the summit pavilion: their walls are the point.)
     add(table(1.8, 0.7, 0.8, 0, -K.d / 2 + 1.6), M.woodX); block(-1.1, 1.1, -K.d / 2 + 1, -K.d / 2 + 2.2);
     if (stand.table) later.push((get) => get(stand.table[0], stand.table[1]).then((o) => { o.position.set(ox, Y + 0.82, -K.d / 2 + 1.5); g.add(o); }));   // the patriarch's likeness, on the table
-    add(merge([-0.9, 0.9].map((x) => seat(x, -K.d / 2 + 3.2))), M.straw, () => 0.7);
+    add(merge([-0.9, 0.9].map((x) => seat(x, -K.d / 2 + 3.2))), M.straw, () => 0.7).userData.walk = "floor";
     lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14, true]);
   }
   // A hall with a storey that is walked round (the summit pavilion's top) has a stair up to it in the north-west corner,

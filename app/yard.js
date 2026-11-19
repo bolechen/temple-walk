@@ -48,7 +48,7 @@ import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
 import { planSteps, clearLine } from "./src/route.js";
-import { createGridWalker, gridsByPlace, courtRegion, walkerMode, gridBytes, keepFor, settle as settleAt } from "./src/gridwalker.js";
+import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
@@ -60,9 +60,9 @@ const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
 const Q = new URLSearchParams(location.search);
-// The floor baked from the drawn meshes (#265): fetched while the place is built, and walked on over the first court
-// unless `?walker=old` asks for the written plan everywhere (`?walker=mesh`: the grid wherever it has one).
-// Only the bytes are fetched here; they are opened once the plan is built, keeping only what this mode walks on, and let go.
+// The floor baked from the drawn meshes (#265, #274): fetched while the place is built, and walked on everywhere (the
+// courts and the path, the summit pavilion's balcony, every room) unless `?walker=old` asks for the written plan.
+// Only the bytes are fetched here; they are opened once the plan is built, and let go.
 const WALKER = walkerMode(Q.get("walker"));
 let walkFile = WALKER === "old" ? null : (() => {
   const t0 = performance.now();
@@ -122,9 +122,9 @@ const walker = await (async () => {
   if (!walkFile) return Object.assign(old, { stats: { mode: "old" } });
   try {
     const f = await walkFile; walkFile = null;
-    const mode = WALKER === "mesh" ? "mesh" : "court", region = mode === "court" ? courtRegion(site, SITE, LEVELS[0]) : null, t0 = performance.now();
-    let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, keepFor(mode, region)); body = /** @type {any} */ (null);
-    const t1 = performance.now(), grids = gridsByPlace(d, mode, region), w = createGridWalker(old, grids, { mode, region, drops: site.walk.drops });
+    const mode = WALKER, t0 = performance.now();
+    let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
+    const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids);
     return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
   } catch (e) {
     console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
