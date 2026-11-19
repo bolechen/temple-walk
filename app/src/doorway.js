@@ -100,6 +100,13 @@ export const NEAR = 40, SEEN = 90, FADE = 0.8;
 export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, keep = 4, base = null }) {
   const halls = {}, frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
   let manifest = null, asked = null, failed = 0, lastTick = 0, worstFrame = 0, busyFor = 0; const spikes = [];
+  // The first picture a page ever sends to the card as a cube takes the browser's slow road once (a cold T4 held a frame
+  // for it): a cube of one pixel of each kind is sent while the page is still loading, so no hall pays it on the walk.
+  if (renderer && typeof createImageBitmap !== "undefined" && typeof ImageData !== "undefined") {
+    createImageBitmap(new ImageData(1, 1), { colorSpaceConversion: "none", premultiplyAlpha: "none" }).then((b) => {
+      for (const exact of [false, true]) { const t = cube([b, b, b, b, b, b], exact); try { renderer.initTexture(t); } catch { /* nothing to warm */ } t.dispose(); }
+    }).catch(() => {});
+  }
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
     const R = r.room, wx = (R.x1 - R.x0) / 2 + 0.3, zs = R.z1 + 0.3, zn = R.z0 - 0.3;

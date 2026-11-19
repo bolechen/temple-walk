@@ -651,7 +651,7 @@ function frame(now) {
   // approach where the eye is under it. A jump does not change which of these he is in.
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
-  if (doors && !inside && document.body.dataset.ready) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; not before the page is up
+  if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(Q.has("shot") || photo.on ? focusAt() : 0);
   post.render(t);

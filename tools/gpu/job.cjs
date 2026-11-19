@@ -44,7 +44,7 @@ function fingerprint(dir) {
   });
   await new Promise((r) => srv.listen(0, "127.0.0.1", r)); const base = `http://127.0.0.1:${srv.address().port}/`;
 
-  let browser = null, how = null;
+  let browser = null, how = null, launchWith = null;
   pick: for (const [name, flags] of Object.entries(FLAGS)) for (const channel of ["chromium", undefined]) {
     const key = name + (channel ? "+new-headless" : "+headless-shell"); let b = null;
     try {
@@ -52,7 +52,7 @@ function fingerprint(dir) {
       const p = await b.newPage(); await p.goto(base + "favicon.svg");   // any same-origin page that is not the app will do. It must exist and be shown as a document (a script is, as text; a file this server sends as a download is not), or this flavour is passed over and the frame rates are no longer comparable
       const gl = await p.evaluate(() => { const c = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")   /* the probe page is an SVG document, where createElement makes an SVG element */, g = c.getContext("webgl2"); if (!g) return "no webgl2"; const e = g.getExtension("WEBGL_debug_renderer_info"); return String(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); });
       report.tried[key] = gl; await p.close();
-      if ((/NVIDIA|Tesla|GeForce|RTX|Quadro|AMD|Radeon/i.test(gl) && !/SwiftShader|llvmpipe/i.test(gl)) || name === "swiftshader") { browser = b; how = key; break pick; }
+      if ((/NVIDIA|Tesla|GeForce|RTX|Quadro|AMD|Radeon/i.test(gl) && !/SwiftShader|llvmpipe/i.test(gl)) || name === "swiftshader") { browser = b; how = key; launchWith = { channel, args: [...COMMON, ...flags] }; break pick; }
       await b.close();
     } catch (e) { report.tried[key] = "launch failed: " + String(e.message).split("\n")[0].slice(0, 160); if (b) await b.close().catch(() => {}); }
   }
@@ -62,8 +62,12 @@ function fingerprint(dir) {
   save();
   if (!browser) { console.log("no browser could be started"); process.exit(1); }
 
-  const open = async (query, [w, h], scale = 1, extra = {}) => {
-    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, ...extra }), page = await ctx.newPage();
+  // `fresh`: a browser of its own, started for this page and closed with it, so that nothing (compiled shaders, the GPU
+  // process's first uploads) is left warm by an earlier page: a visitor's first visit.
+  const open = async (query, [w, h], scale = 1, { fresh = false, ...extra } = {}) => {
+    const own = fresh ? await chromium.launch(launchWith) : null;
+    const ctx = await (own || browser).newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, ...extra }), page = await ctx.newPage();
+    if (own) { const close = ctx.close.bind(ctx); ctx.close = async () => { await close().catch(() => {}); await own.close(); }; }
     // The hall's statue is deliberately not sent to the job, so its absence is not an error here.
     const ours = (t) => !/hall\.js|plate\.webp|\/m\/|404|Failed to load resource|Failed to fetch dynamically/.test(t);
     // An error printed by a library says what went wrong but not for which thing: keep where it was called from as well.
