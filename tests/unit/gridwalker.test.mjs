@@ -350,3 +350,31 @@ test("#272: the great hall's two back flights come down into the court behind it
     assert.ok(kh >= 0 && seen[kh] && Math.abs(walker.heightAt(...head) - floor) < 0.05, `the head of the flight at x=${r.low[0]} is not on the platform he walks to`);
   }
 });
+
+// Round the summit pavilion's ground gallery as a visitor walks it (#278; the lead, by real keys on abe89fe): along one side
+// as close to the railing as he gets, held on until he can go no farther, then turned along the next side. At every corner,
+// from both of its sides, he gets round; a step of the page (2.1 m/s at 60 frames a second) at a time.
+test("#278: round each corner of the summit pavilion's gallery, along the railing from either side, he gets on along the next", () => {
+  const b = site.buildings.find((q) => q.name === "凌霄阁" && q.frame && !q.frame.storey), floor = (b.y || 0) + 0.9, step = 2.1 / 60;
+  const on = (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - floor) < 0.05;
+  const mx = (b.x0 + b.x1) / 2, mz = (b.z0 + b.z1) / 2, stuck = [];
+  // the line along each side nearest the railing: the outermost open cell on the platform, across the side's middle
+  const edge = (side) => { const out = { E: [1, 0], W: [-1, 0], N: [0, -1], S: [0, 1] }[side], far = 3; let best = null;
+    for (let t = 0; t < far; t += 0.01) { const x = side === "E" ? b.x1 - t : side === "W" ? b.x0 + t : mx + toward * 5, z = side === "N" ? b.z0 + t : side === "S" ? b.z1 - t : mz; if (on(x, z)) { best = [x, z]; break; } }
+    return { at: best, out }; };
+  let toward = 0;   // (the front's middle is its stair: along the front he starts between the stair and the corner he goes to)
+  const corners = [["E", "N"], ["N", "E"], ["N", "W"], ["W", "N"], ["W", "S"], ["S", "W"], ["S", "E"], ["E", "S"]];
+  for (const [from, to] of corners) {
+    toward = from === "S" ? (to === "E" ? 1 : -1) : 0;
+    const a = edge(from); toward = 0;
+    const pos = { x: a.at[0], z: a.at[1] }, along = edge(to).out.map((v) => v * step), next = a.out.map((v) => -v * step);
+    // hold the key that runs him along `from` toward `to`'s side until he goes no farther
+    for (let n = 0; n < 1200; n++) { const x = pos.x, z = pos.z; stride(walker, pos, along[0], along[1]); if (Math.hypot(pos.x - x, pos.z - z) < 1e-4) break; }
+    // then turn and hold the key that runs him along `to`, back across the pavilion
+    const sx = pos.x, sz = pos.z;
+    for (let n = 0; n < 100; n++) stride(walker, pos, next[0], next[1]);
+    const went = Math.hypot(pos.x - sx, pos.z - sz);
+    if (went < 2.5 || !on(pos.x, pos.z)) stuck.push(`along ${from} then ${to}: from (${sx.toFixed(2)}, ${sz.toFixed(2)}) only ${went.toFixed(2)} m, to (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)})`);
+  }
+  assert.deepEqual(stuck, [], "he is held at a corner of the gallery");
+});
