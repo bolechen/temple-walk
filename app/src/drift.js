@@ -51,7 +51,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   g.setAttribute("seed", new THREE.BufferAttribute(seed, 4));
   const u = { uT: { value: 0 }, uCam: { value: new THREE.Vector3() }, uCol: { value: new THREE.Color() }, uSize: { value: 0 }, uFall: { value: 0 }, uSway: { value: 0 }, uOp: { value: 0 }, uGlow: { value: 0 }, uPx: { value: 800 }, uLight: { value: new THREE.Color(1, 1, 1) },
     uCol2: { value: new THREE.Color() }, uCol3: { value: new THREE.Color() }, uPart: { value: 1 }, uNear: { value: 1 }, uPoint: { value: 0 },
-    uWS: { value: 0 }, tMap: { value: tMap }, tGround: { value: tGround }, uMapBox: { value: box }, uCh: { value: new THREE.Vector3() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, uLand: { value: 0 },
+    uWS: { value: 0 }, uFallK: { value: 1 }, tMap: { value: tMap }, tGround: { value: tGround }, uMapBox: { value: box }, uCh: { value: new THREE.Vector3() }, uFromTrees: { value: 0 }, uBoost: { value: BOOST }, uLand: { value: 0 },
     uBam: { value: 0 }, uBPart: { value: BAMBOO.part }, uBSize: { value: BAMBOO.size }, uBFall: { value: BAMBOO.fall }, uBSway: { value: BAMBOO.sway }, uBCol: { value: new THREE.Color(...BAMBOO.col[0]) }, uBCol2: { value: new THREE.Color(...BAMBOO.col[1]) },
     tShelter: U.tShelter, uShelter: U.uShelter, uWind: U.uWind, uWindPath: U.uWindPath };
   const mat = new THREE.ShaderMaterial({
@@ -59,7 +59,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     vertexShader: /* glsl */`
       ${SHELTER}
       ${SHED_GLSL}
-      uniform sampler2D tMap, tGround; uniform vec4 uMapBox; uniform vec3 uCh; uniform float uWS, uFromTrees, uBoost, uLand, uBam, uBPart, uBSize, uBFall, uBSway;
+      uniform sampler2D tMap, tGround; uniform vec4 uMapBox; uniform vec3 uCh; uniform float uWS, uFallK, uFromTrees, uBoost, uLand, uBam, uBPart, uBSize, uBFall, uBSway;
       attribute vec4 seed; uniform float uT, uSize, uFall, uSway, uPx, uGlow, uPart, uNear; uniform vec3 uCam; uniform vec2 uWind, uWindPath; varying float vA; varying float vS; varying float vH; varying float vB; varying float vTum; varying float vRest;
       void main(){
         vec3 B=vec3(34.,13.,34.), p; float want, life=1., ph=uT, Tf=1e9;
@@ -77,7 +77,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
           p=vec3(b.x+sin(ph*.7+seed.w*40.)*sw*(1.-k), gr+${LAND.LIE.toFixed(2)}+${LAND.HEIGHT.toFixed(1)}*(1.-k), b.y+cos(ph*.53+seed.w*31.)*sw*.7*(1.-k));
           p.xz-=uWind*${LAND.HEIGHT.toFixed(1)}*(1.-k)*.6;   // it comes down on the breeze (wind.js), as the censer's smoke leans, to where it lies
           // A tree lets go of a leaf only as readily as the breeze says when it leaves the branch (wind.js, shedAt): a few in still air, a flurry in a gust.
-          want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees)*mix(1.,shedAt(uWS,cyc*P-off),uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
+          want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees)*mix(1.,uFallK<0.?1.:shedAt(uWS,cyc*P-off)*uFallK,uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
           life=smoothstep(0.,${LAND.IN.toFixed(1)},ph)*(1.-smoothstep(Tf+Tr,P,ph)); vRest=step(Tf,ph); ph=min(ph,Tf);
         } else {
           p=seed.xyz*B;
@@ -127,6 +127,9 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       sTree[i] = fract13(s) < bam ? 0 : 1; sTf[i] = T.Tf; sP[i] = T.P; sOff[i] = T.off;
     }
   };
+  // How readily the trees let go at time t: the breeze's say (wind.js) times `uFallK`; a negative `uFallK` is the old
+  // steady fall, for setting the densities side by side (`__fall(k)`).
+  const fallK = (t) => (u.uFallK.value < 0 ? 1 : shedAt(u.uWS.value, t) * u.uFallK.value);
   const handOver = (t, cam) => {
     if (timed !== cur.fall + ":" + bam) retime();
     const ok = mem && u.uLand.value > 0 && SOURCES[curName] && lastT !== null && t > lastT && t - lastT < 0.25;
@@ -136,7 +139,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       if (ok && L > landed[i]) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]];
         const [x, z] = spotOf(s, L, [34, 13, 34], cam), g = groundAt(map, x, z);
-        const want = KINDS[curName].part * BOOST * densityAt(map, CHANNEL[curName], x, z) * shedAt(u.uWS.value, L * sP[i] - sOff[i]) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
+        const want = KINDS[curName].part * BOOST * densityAt(map, CHANNEL[curName], x, z) * fallK(L * sP[i] - sOff[i]) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
         if (g > NO_GROUND / 2 && want > 0.001 && fract(s[0] * 7.31 + s[2] * 3.7) <= want && mem.land(x, z, 1 + Math.floor(fract(s[0] * 91.7 + s[3] * 13.1 + L * 0.618) * 254))) handed++;
       }
       landed[i] = L;
@@ -167,6 +170,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       skew += t - u.uT.value; u.uT.value = t;
     },
     handed: () => handed,
+    fall(k) { if (k !== undefined) u.uFallK.value = k; return u.uFallK.value; },
     // The ground round him for this frame: the square follows him, the heaps sink a little, and the record goes to the
     // card. `dt` 0 (a still picture) keeps everything as it is. (wx, wz: the breeze, which no longer moves what lies.)
     keep(x, z, dt, wx, wz) {
@@ -192,7 +196,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]], isB = fract13(s) < bam;
         const L = leafAt(map, s, t, isB ? { fall: BAMBOO.fall, sway: BAMBOO.sway, bamboo: true } : cfg(), cam);
         const d = isB ? fallAt(map, "bamboo", opts.shelter, L.bx, L.y, L.bz) : curName in SOURCES ? fallAt(map, curName, opts.shelter, L.bx, L.y, L.bz) : 0;
-        const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d * shedAt(u.uWS.value, t - L.ph) : 1));
+        const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d * fallK(t - L.ph) : 1));
         if (!L.live || !(fract(s[0] * 7.31 + s[2] * 3.7) <= want) || want <= 0.001) continue;
         out.leaves.push({ bamboo: isB, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3), ground: +L.ground.toFixed(3), rest: L.rest, restFor: +L.Tr.toFixed(2), alpha: +L.alpha.toFixed(3), phase: +L.ph.toFixed(3) }); sum += L.x * 3 + L.y * 5 + L.z * 7;
       }

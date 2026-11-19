@@ -988,6 +988,7 @@ window.__ripples = (go) => {
 // What the falling leaves are doing, as fall.js's sums have it: kind, how many lie on the ground, and where each is (a diagnostic for tests).
 window.__drift = (n) => drift.report(n);
 // The ground's record of what has come down (litter.js); `__litter(secs, [x, z, r])` runs the falling and the breeze on that long first and counts what lies within r of x, z (`true`: lists the leaves kept each in its place).
+window.__fall = (k) => drift.fall?.(k);   // how readily the trees let go: 1 as built, 0.5 half, -1 the old steady fall (#267)
 window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
