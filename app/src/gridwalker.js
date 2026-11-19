@@ -91,6 +91,16 @@ export function createGridWalker(old, grids) {
     K = k; return k;
   };
   const floorY = () => G.height[K] / 100 + G.base;
+  const onStairs = (/** @type {number} */ x, /** @type {number} */ z) => {
+    if (cell(x, z) < 0) return old.onStairs(x, z);
+    const g = G, k = K, i = k % g.nx, j = (k - i) / g.nx, h = g.height[k], n = Math.round(0.3 / g.step);
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let d = 1; d <= n; d++) {
+      const ii = i + di * d, jj = j + dj * d; if (ii < 0 || jj < 0 || ii >= g.nx || jj >= g.nz) break;
+      const kk = jj * g.nx + ii, hh = g.height[kk]; if (hh === NO_FLOOR) break; if (g.state[kk]) continue;   // (only a tread he can stand on)
+      const rise = Math.abs(hh - h); if (rise >= 8 && rise <= 25) return true; if (rise > 25) break;
+    }
+    return false;
+  };
   // The porch edges, found in the grid.
   const outdoors = grids.outdoors, found = outdoors ? ledgesOf(outdoors) : [];
   return {
@@ -116,16 +126,7 @@ export function createGridWalker(old, grids) {
     // On a stair: where the grid answers, where the open floor steps by a tread (0.08 to 0.25 m) within 0.3 m, so that his pace
     // and gait there (#273) and the eye's slope ask the same floor his feet stand on. (The written stairs' rectangles take
     // in the landing at their head and stop a cell short of their foot.)
-    onStairs(/** @type {number} */ x, /** @type {number} */ z) {
-      if (cell(x, z) < 0) return old.onStairs(x, z);
-      const g = G, k = K, i = k % g.nx, j = (k - i) / g.nx, h = g.height[k], n = Math.round(0.3 / g.step);
-      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let d = 1; d <= n; d++) {
-        const ii = i + di * d, jj = j + dj * d; if (ii < 0 || jj < 0 || ii >= g.nx || jj >= g.nz) break;
-        const kk = jj * g.nx + ii, hh = g.height[kk]; if (hh === NO_FLOOR) break; if (g.state[kk]) continue;   // (only a tread he can stand on)
-        const rise = Math.abs(hh - h); if (rise >= 8 && rise <= 25) return true; if (rise > 25) break;
-      }
-      return false;
-    },
+    onStairs,
     // Where the eye rides: the floor he stands on; on a stair, its slope rather than its treads (the mean of the open floor
     // within half a tread of him, leaving out whatever lies more than a step above or below: the court under a porch's edge).
     // It is the grid's own floor, not the written plan's ramp: asking the written plan put the eye under a platform whose
@@ -133,7 +134,7 @@ export function createGridWalker(old, grids) {
     // underside of the floor), and where its ramp and the drawn treads drifted a tread apart the eye flipped between them (#274).
     eyeAt(/** @type {number} */ x, /** @type {number} */ z) {
       if (cell(x, z) < 0) return old.eyeAt(x, z);
-      if (!this.onStairs(x, z)) { cell(x, z); return floorY(); }
+      if (!onStairs(x, z)) { cell(x, z); return floorY(); }
       cell(x, z);
       const g = G, k = K, fx = (x - g.x0) / g.step - 0.5, fz = (z - g.z0) / g.step - 0.5, h = g.height[k], R = EYE_RUN / g.step, n = Math.ceil(R);
       const ci = Math.round(fx), cj = Math.round(fz); let sum = 0, w = 0;

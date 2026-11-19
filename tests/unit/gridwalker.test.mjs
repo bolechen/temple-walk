@@ -34,6 +34,9 @@ test("the address chooses the walker: the baked floor everywhere by default, the
     assert.ok(Math.abs(walker.heightAt(L.door[0], L.door[1]) - L.floor) < 0.02, "at the balcony's own height");
   });
   assert.ok(gridBytes(grids) > 1e6);
+  // The page hands these about as plain functions (the novice is given `walker.heightAt` and `walker.eyeAt` to ask): none may lean on `this`.
+  const [x, z] = site.start, r = site.walk.ramps[0], mid = [(r.low[0] + r.high[0]) / 2, (r.low[1] + r.high[1]) / 2];
+  for (const name of ["heightAt", "blocked", "eyeAt", "onStairs", "onGround", "floorAt", "landAt", "wall", "answers"]) { const f = walker[name]; assert.doesNotThrow(() => { f(x, z); f(mid[0], mid[1]); }, `walker.${name} called on its own`); }
 });
 
 test("on every flight of the plan, up and down, the floor never jumps, he is never stuck, and the eye climbs it as a slope", () => {
