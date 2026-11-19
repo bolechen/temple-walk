@@ -22,7 +22,8 @@
     "postinstall": "node tools/setup.mjs",
     "edges": "node tools/edges.mjs",
     "nearplane": "node --test tests/slow/*.test.mjs",
-    "bake-walk": "node tools/bake-walk.mjs"
+    "bake-walk": "node tools/bake-walk.mjs",
+    "app": "node tools/app.mjs"
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {

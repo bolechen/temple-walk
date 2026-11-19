@@ -22,3 +22,6 @@ app/shared/walk/
 
 # Local-only community invitation and screenshots containing its QR code
 app/local-community/
+
+# The desktop app's update keys (tools/app/README.md): the secret must never be committed
+tools/app-keys/
