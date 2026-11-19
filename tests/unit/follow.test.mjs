@@ -168,3 +168,16 @@ for (const [name, path] of Object.entries({
   if (process.env.FOLLOW_REPORT) console.log(name, { frames: frames.length, flat: +worst.flat.toFixed(3), forced: +worst.forced.toFixed(3) });
   assert.ok(worst.flat <= FLAT && worst.forced <= FLAT, `the eye moved ${worst.flat.toFixed(3)} m on its own (put out ${worst.forced.toFixed(2)} m) in one frame at (${worst.x.toFixed(2)}, ${worst.z.toFixed(2)}), ${worst.dist.toFixed(2)} m behind`);
 });
+
+// The owner, 2026-11-19 (after #291): going up a flight the view shook. The view was tilted every frame at his feet, which
+// go up a tread at a time, so it nodded with each step (1.4° in one frame on the page, the direction turning back fifty
+// times on one flight). It is tilted at the height the eye itself rides at, eased over the steps: up the flight by the
+// half-way pavilion and on up the last flight, it tips no more than 0.3° from one frame to the next. (Coming down, the
+// eye is still put in by metres in one frame where the flight rises behind him, and the view turns with it: #295.)
+test("on a flight of steps the view does not nod with each tread", async () => {
+  const { measure, WALKS } = await import("../../tools/frame-routes.mjs");
+  for (const size of ["16x9", "phone"]) for (const name of ["stair-up"]) {
+    const r = measure("b", size, WALKS[name]);
+    assert.ok(r.pitchStep <= 0.3, `${size} ${name}: the view tipped ${r.pitchStep}° in one frame`);
+  }
+});
