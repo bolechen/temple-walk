@@ -8,30 +8,50 @@
 // (`d`), what stopped it there (`stop`: "post" for a column or a trunk, true for anything larger, null for nothing),
 // whether the eye could stand at a given distance (`open(dist)`), how much it would rise there to see his feet over a
 // platform's edge (`liftAt(dist)`), and `at(dist)`, where the eye stands when it is `dist` behind with that whole rise.
-export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach }) {
-  const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = eyeY + 1.18;
+//
+// `arm` (issue #271, `?frame=a|b`, not the default yet; `frameArm` below): where he stands across the picture is fixed
+// instead, as a fraction of it, and kept there however near the eye has to come. The eye stands on one straight arm out
+// of the same point over him (`h`, 1.18 m over his feet), its direction fixed against the view: `kx` of each metre back
+// goes to his right, `ky` up the picture. Something in the way only shortens the arm; it never swings it in behind him,
+// and the side step below is not taken. Across, he stays put at every length of the arm; up and down he is where the
+// frame says at the eye's usual distance and a little lower in the picture when it has had to come in (an arm out of his
+// middle would hold that too, but it would bring the eye down to his hip by every wall, under a stair's cheek).
+export function frameArm(frame, fov, aspect, at = 6.2) {
+  const tv = Math.tan((fov * Math.PI) / 360);
+  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (1.18 - frame.hold) / at, h: 1.18 };
+}
+export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = null }) {
+  const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
+  // The picture's own up, square to the way it looks (the arm's `ky` is along it).
+  const ux = -Math.sin(yaw) * Math.sin(pitch), uy = cp, uz = Math.cos(yaw) * Math.sin(pitch);
+  if (arm) side = 1;   // with an arm, `side` is how much of its sideways lean is taken (1 all, 0 none: straight behind him)
   // How far the eye would have to rise to see his feet over the ground at a point (see `need` below), and the most
   // it may: past that it is not a platform's edge but a terrace wall or a flight of stairs far above him, and an eye
   // sent up it stands metres over his head and loses him below the frame. Such a point is closed to the eye, as a wall is.
   const MAXRISE = 1.5;
   const rise = (px, y, pz) => { const under = walker.landAt(px, pz); return under + 0.35 + Math.max(0, under - foot) * 1.6 - y; };
   const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null);
+  // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open below).
+  const base = arm
+    ? (dist, sd = s0) => [x + (rx * arm.kx * sd + ux * arm.ky - lx) * dist, ty + (uy * arm.ky - ly) * dist, z + (rz * arm.kx * sd + uz * arm.ky - lz) * dist]
+    : (dist, sd = s0) => [x + rx * sd - lx * dist, ty - ly * dist, z + rz * sd - lz * dist];
   // First to his side, only as far as is open: on a porch that side may be a column, the lattice or a roof's edge.
   let s0 = 0;
-  for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
+  if (!arm) for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
   // Then back, in short steps, and no farther than the last that was open: right against a wall it stays at his shoulder.
   const back = (sd) => {
     const ox = x + rx * sd, oz = z + rz * sd; let d = 0, stop = null;
-    for (let s = 0.25; s <= reach + 1e-3; s += 0.25) { const h = shut(ox - lx * s, ty - ly * s, oz - lz * s); if (h) { stop = h; break; } d = s; }
+    for (let s = 0.25; s <= reach + 1e-3; s += 0.25) { const h = arm ? shut(...base(s, sd)) : shut(ox - lx * s, ty - ly * s, oz - lz * s); if (h) { stop = h; break; } d = s; }
     return { d, stop };
   };
   // From his side the line back may pass behind a tower that straight behind him it would clear: then nearer behind
   // him it stands, as far to the side as still lets it stand back as far.
   let { d, stop } = back(s0);
-  for (let k = s0 - 0.3; d < reach - 0.25 && k > -0.3; k -= 0.3) { const sd = Math.max(0, k), b = back(sd); if (b.d > d + 0.5) { s0 = sd; d = b.d; stop = b.stop; } }
+  // With an arm leaning to his right (A), a wall or a column on that side would bring it all the way in to him: then it
+  // leans less, as Cinemachine's third-person follow draws its shoulder in, by as little as lets it stand back farthest.
+  if (arm && arm.kx) for (let f = 1; f >= -1e-6; f -= 0.25) { const b = back(Math.max(0, f)); if (b.d > d + 0.25 || f === 1) { s0 = Math.max(0, f); d = b.d; stop = b.stop; } if (d >= reach - 0.25) break; }
+  if (!arm) for (let k = s0 - 0.3; d < reach - 0.25 && k > -0.3; k -= 0.3) { const sd = Math.max(0, k), b = back(sd); if (b.d > d + 0.5) { s0 = sd; d = b.d; stop = b.stop; } }
   const ox = x + rx * s0, oz = z + rz * s0;
-  // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open just now).
-  const base = (dist, sd = s0) => [x + rx * sd - lx * dist, ty - ly * dist, z + rz * sd - lz * dist];
   // Over a platform or a stair higher than his feet it rises to see them over the edge. The rise needed at one spot.
   const need = (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
   const liftAt = (dist, sd = s0) => {
@@ -49,7 +69,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach })
     const [cx, y, cz] = base(dist), lifted = y + need(dist, s0, y);
     return [cx, lifted > y && shut(cx, lifted, cz) ? y : lifted, cz];   // never up into an eave
   };
-  return { ox, oz, ty, lx, ly, lz, d, stop, side: s0, base, open, liftAt, floorAt, at, shut };
+  return { ox, oz, ty, lx, ly, lz, d, stop, side: s0, base, open, liftAt, floorAt, at, shut, arm };
 }
 
 // How the eye moves from one frame to the next, after the third-person camera of 《小王子》 (its
@@ -66,6 +86,7 @@ export const FOLLOW = {
   outTime: 0.4,     // backing out again once the way is clear
   outSpeed: 5,      // and unhurried about it
   sideTime: 0.3,    // stepping to his side or back behind him
+  leanTime: 1.2,    // with ?frame=a, drawing the arm's lean in by a wall and out again: slow, so he drifts across the picture unnoticed (#271)
   liftUp: 0.22,     // rising to see his feet over a platform's edge
   liftHold: 0.35,   // and staying up a while, so that walking along an edge does not make it bob
   liftDown: 0.5,    // coming down again
@@ -103,7 +124,7 @@ export function createFollow(T = FOLLOW) {
       // To his side: back behind him at once only if where it stands has become a column or a wall.
       if (eye.side < side && eye.shut(...eye.base(0, side))) { forced = Math.max(forced, side - eye.side); side = eye.side; vs = 0; }
       else {
-        const [ns, nv] = damp(side, eye.side, vs, T.sideTime, dt);
+        const [ns, nv] = damp(side, eye.side, vs, eye.arm ? T.leanTime : T.sideTime, dt);
         if (ns <= side || eye.open(dist, ns)) [side, vs] = [ns, nv]; else vs = 0;   // stepping out sideways only into the open
       }
       // Behind him. If the eye would stand inside something (the view has swung it into a trunk, or he has walked it
@@ -150,3 +171,13 @@ export function createFollow(T = FOLLOW) {
     },
   };
 }
+
+// The two ways of holding him in the picture put to the owner in issue #271 (`?frame=a|b`), as fractions of the
+// picture from its middle (`nx` to the right, `ny` upward; -1 is the left or bottom edge) and the point in him that
+// is held there (`hold`, metres over his feet: the middle of the box `__probe().monkBox` measures, 0 to 1.22 m).
+// A: over his shoulder as the default eye stands on open ground (measured there: his middle 38% across and 61% down a
+// 16:9 picture), but fixed: on every screen and however near the eye comes. B: in the middle, on the lower third.
+export const FRAMES = {
+  a: { nx: -0.25, ny: -0.21, hold: 0.61 },
+  b: { nx: 0, ny: -1 / 3, hold: 0.61 },
+};

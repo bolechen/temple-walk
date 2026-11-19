@@ -25,7 +25,7 @@ import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
-import { followEye, createFollow, damp, FOLLOW } from "./src/eye.js";
+import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm } from "./src/eye.js";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
@@ -249,6 +249,9 @@ const pose = Q.has("cam") ? Q.get("cam").split(",").map(Number) : site.views[Q.g
 if (Q.has("cam") && !Q.has("in")) { const p = settleAt(walker, pose[0], pose[1]) || { x: site.start[0], z: site.start[1] }; pose[0] = p.x; pose[1] = p.z; }
 const pos = new THREE.Vector3(pose[0], EYE, pose[1]);
 let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, footY = walker.heightAt(pos.x, pos.z), doorArmed = true;
+// ?frame=a|b (issue #271, for the owner to choose between; neither is the default): where he stands in the picture is
+// held fixed (eye.js, FRAMES), A a little left of the middle as over a shoulder, B in the middle on the lower third.
+const FRAME = FRAMES[Q.get("frame")] || null;
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
 const follow = createFollow();
 const LOOK_EASE = 0.06, look = { yaw, pitch, vy: 0, vp: 0 };   // the way the view looks this frame, coming round after yaw and pitch
@@ -629,9 +632,9 @@ function frame(now) {
   bob.phase += moved / 0.55; bob.amp += ((still || aloft ? 0 : Math.min(1, speedNow / 2.1)) - bob.amp) * (1 - Math.exp(-dt / 0.15));
   if (view === "first") camera.position.set(pos.x, eyeY + (stage && (stage.pose === "sit" || stage.pose === "chair") ? (stage.lift || 0) + 0.68 : EYE) - (1 - Math.cos(bob.phase * Math.PI * 2)) * 0.006 * bob.amp, pos.z);
   else {
-    const rx = Math.cos(look.yaw), rz = Math.sin(look.yaw), wantSide = walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
+    const rx = Math.cos(look.yaw), rz = Math.sin(look.yaw), wantSide = FRAME ? 0 : walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant };
+    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
     camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
@@ -1171,6 +1174,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
+window.__frame = () => ({ frame: Q.get("frame") in FRAMES ? Q.get("frame") : null, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).

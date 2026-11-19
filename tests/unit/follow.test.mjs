@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
-import { followEye, createFollow, FOLLOW } from "../../app/src/eye.js";
+import { followEye, createFollow, FOLLOW, FRAMES, frameArm } from "../../app/src/eye.js";
 import { ROUTE } from "../../app/src/tour.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
@@ -18,7 +18,7 @@ const dt = 1 / 60;
 
 // Walk `path` at his pace, the view turning after the way he goes as the measured walk turns it (`tour.js`), the eye
 // riding as `yard.js` makes it ride. Returns, for every frame, how far the eye moved beyond the step he took.
-function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
+function walk(path, { reach = 6.2, pitch = 0.04, arm = null } = {}) {
   const follow = createFollow(), out = [];
   let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), side = 1.2, prev = null;
   for (const [tx, tz] of path.slice(1)) {
@@ -30,14 +30,14 @@ function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
       const foot = walker.heightAt(x, z);
       eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
       const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
-      const eye = followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach });
+      const eye = followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm });
       // Where the eye would be if it only followed him and turned with the view: the same offset as the frame before,
       // turned through the same angle. What it moves beyond that is its own doing.
       const c = follow.step(dt, eye);
       if (prev) {
         const dy = yaw - prev.yaw, ox = prev.c[0] - prev.x, oz = prev.c[2] - prev.z;
         const ex = x + ox * Math.cos(dy) - oz * Math.sin(dy), ez = z + ox * Math.sin(dy) + oz * Math.cos(dy);
-        out.push({ x, z, flat: Math.hypot(c[0] - ex, c[2] - ez), up: Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)), dist: follow.dist, forced: follow.forced });
+        out.push({ x, z, yaw, eyeY, c, lean: follow.side, flat: Math.hypot(c[0] - ex, c[2] - ez), up: Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)), dist: follow.dist, forced: follow.forced });
       }
       prev = { c, x, z, yaw, eyeY };
     }
@@ -111,3 +111,32 @@ test("swinging the view round where he stands does not throw the eye about", () 
   assert.ok(put <= frames / 100, `the eye was put out of something in ${put} of ${frames} frames`);
   assert.ok(far <= frames / 600, `the eye was thrown more than a metre in ${far} of ${frames} frames`);
 });
+
+// Issue #271, `?frame=a|b`: where he stands in the picture is held, as a fraction of it, however near the eye comes.
+// Along the same routes, the point in him that is held is carried through a camera at the eye, looking the way the view
+// looks; across the picture it may not stray from where it is held (the eye's rise over a platform's edge moves it only
+// up and down), and the eye must not jump any more than the eye of today. A leans its arm in by a wall on his right
+// (eye.js, FOLLOW.leanTime): it is held to where that lean puts him.
+for (const [key, F] of Object.entries(FRAMES)) for (const [w, h] of [[16, 9], [4, 3], [9, 19.5]]) {
+  test(`frame ${key} at ${w}:${h} holds him where it says, on every route`, () => {
+    const cam = new THREE.PerspectiveCamera(50, w / h, 0.05, 500), arm = frameArm(F, 50, w / h), v = new THREE.Vector3();
+    let most = 0, n = 0;
+    for (const [name, path] of Object.entries(routes)) {
+      const frames = walk(path, { arm }), put = frames.filter((f) => f.forced > FLAT);
+      for (const f of frames) {
+        assert.ok(f.forced || f.flat <= FLAT, `${name}: the eye moved ${f.flat.toFixed(3)} m on its own at (${f.x.toFixed(1)}, ${f.z.toFixed(1)})`);
+        if (f.dist < 0.85) continue;   // he is hidden when it is as near as that (yard.js, monkHidden)
+        cam.position.fromArray(f.c); cam.rotation.set(0.04, -f.yaw, 0, "YXZ"); cam.updateMatrixWorld();
+        v.set(f.x, f.eyeY + F.hold, f.z).project(cam); most = Math.max(most, Math.abs(v.x - F.nx * (F.nx ? f.lean : 1))); n++;
+      }
+      if (process.env.FOLLOW_REPORT) console.log(key, w, h, name, { frames: frames.length, forced: put.length, most: +Math.max(0, ...put.map((f) => f.forced)).toFixed(2), where: put.map((f) => `${f.x.toFixed(1)},${f.z.toFixed(1)}:${f.forced.toFixed(2)}`).join(" ") });
+      // How often the eye is put straight out of something is reported, not yet held: shortening the arm alone puts it
+      // out by up to 1.5 m a few times on these routes (the censer behind him on the axis, the gate's passage), where
+      // today's eye, stepping in behind him, is put out by 0.5 m at most. Whichever the owner chooses is held to today's
+      // bound when it becomes the default, with #161's fifth step (a swept sphere, not a point).
+      void put;
+    }
+    // 0.02 of the half-width is 1% of the picture's width
+    assert.ok(most < 0.02, `across ${n} frames he strayed ${(most * 50).toFixed(2)}% of the width from where frame ${key} holds him`);
+  });
+}
