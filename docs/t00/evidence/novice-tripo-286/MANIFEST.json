@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "armsin-hands.png",
+   "bytes": 1413753,
+   "sha256": "dab1502e82889ac55b518db40a09af7490974824e7e53e5cf7920bf112243501",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  },
+  {
+   "path": "beads.png",
+   "bytes": 1405068,
+   "sha256": "afabac6a298f8b1ff9bbcfb8f1f9a342adefc1eecf3b78f84f0f4c00dc8e17bb",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 360858,
+   "sha256": "e5e2dc7d07214b9b4c9dbba614db882888c8c3299e1422ba2976967ee1395217",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  },
+  {
+   "path": "hand-bind.png",
+   "bytes": 611864,
+   "sha256": "98fa0b3ec6e51211b595f87c057d503100a54bffeeeb1cff41b0adc13368e8b0",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  },
+  {
+   "path": "incense.png",
+   "bytes": 682917,
+   "sha256": "b607969934c6b9fe972150af8bf646e1d074d42f589739743394adb72b0b6e66",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  },
+  {
+   "path": "tea.png",
+   "bytes": 822643,
+   "sha256": "70c0f6e90e4b19997e2c93d1929660c9e1e2d3e8ae4789b505a28b570c259cb7",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  },
+  {
+   "path": "views-3col.png",
+   "bytes": 4005612,
+   "sha256": "da1a76977de59b0bb3ac00eeda2c67210c0ea9c95a4926d3b65a6c26dd18d968",
+   "rev": "58cf197de0a262bbc6c36cbab52d1de5de87c750"
+  }
+ ]
+}

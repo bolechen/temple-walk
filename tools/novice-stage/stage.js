@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createMonk } from "../../app/src/monk.js";
 import { bodyOf } from "../../app/src/novice.js";
+import { rig, helpersOf, relayBeads } from "../novice-rig.mjs";
 
 const W = 300, H = 640;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -42,7 +43,8 @@ function showFaces(m) {
     mat.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>', '#include <dithering_fragment>\n  if (!gl_FrontFacing) gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);'); };
     mat.customProgramCacheKey = () => 'faces'; o.material = mat; });
 }
-function dress(m) { if (!body) return; const { geometries, material, robeColor } = bodyOf(body.gltf.scene, body.gltf.parser.json.extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }
+function dress(m) { if (!body) return; if (helpersOf(body.gltf.parser.json.extras).length) rig(m, helpersOf(body.gltf.parser.json.extras));   // a body weighted to helper bones (#286)
+  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, body.gltf.parser.json.extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {

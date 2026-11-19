@@ -31,7 +31,9 @@ GROUPS = {
     # the upper robe and both sleeves together, by the trunk, the shoulders and the arms: with the weights of the figure
     # built in code, the cloth under a raised arm tore in streaks and opened at the armpit (#256 review)
     "upper": {"pieces": lambda p: p["name"] in ("tripo_part_6", "tripo_part_1", "tripo_part_13"),
-              "bones": ["hips", "spine", "chest", "neck", "leftShoulder", "leftUpperArm", "leftLowerArm", "rightShoulder", "rightUpperArm", "rightLowerArm"]},
+              "bones": ["hips", "spine", "chest", "neck", "leftShoulder", "leftUpperArm", "leftLowerArm", "rightShoulder", "rightUpperArm", "rightLowerArm",
+                        # the helper bones under the arms, when the skeleton has them (tools/novice-rig.mjs, #286)
+                        "leftArmpit", "rightArmpit"]},
     "skirt": {"pieces": lambda p: p["name"] == "tripo_part_5", "bones": ["hips", "robeFront", "robeBack", "robeLeft", "robeRight"]},
 }
 import os
@@ -46,6 +48,7 @@ for s in ("left", "right"):
                  s + "UpperLeg": s + "LowerLeg", s + "LowerLeg": s + "Foot", s + "Foot": ("+", (0, -0.03, 0.09))})
 
 def tail(name):
+    if ours[name].get("tail"): return Y(ours[name]["tail"])   # given with the bone (the helpers under the arms)
     t = TAIL[name]
     if isinstance(t, str): return J[t]
     if t[0] == "+": return J[name] + Y(t[1])
