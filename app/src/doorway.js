@@ -93,7 +93,7 @@ function distMaterial() {
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
 export function createDoorways({ renderer, scene, site, rooms, U, size = 256, steps = 12, keep = 4, sync = false, warmTarget = () => null }) {
   const halls = {}, dm = distMaterial(), queue = [], frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
-  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false, lastTick = 0, worstFrame = 0, quietFor = 1; const faces = []; let yielded = false;   // pinned: a tool took them all, and none is given back
+  let sun = null, hemi = null, ready = false, busy = null, worst = 0, dropped = 0, pinned = false, lastTick = 0, worstFrame = 0, quietFor = 1; const faces = [], spikes = []; let yielded = false, act = "", standing = 0;   // pinned: a tool took them all, and none is given back
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
   for (const h of site.halls) {
     const d = site.doorways[h.id], r = rooms.rooms[h.id]; if (!d || !r) continue;
@@ -165,6 +165,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
     return list;
   };
   const warmCam = new THREE.PerspectiveCamera(90, 1, 0.05, 80);
+  const label = (o, it) => `${o.hall.id} ${it.tex ? "texture " + (it.tex.image?.width || "?") : it.deep ? "distance" : (it.obj.material?.type || "?") + " " + (it.obj.material?.name || it.obj.name || "")}`.trim();
   const compileOne = (o, item) => {
     if (item.tex) { if (renderer.properties.get(item.tex).__webglTexture) return false; try { renderer.initTexture(item.tex); } catch { /* sent when first drawn */ } return true; }
     const undress = dress(o), target = renderer.getRenderTarget(), fog = scene.fog, before = renderer.info.programs?.length || 0, t0 = performance.now();
@@ -201,7 +202,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   };
   const want = (o) => {
     if (o.want) return; o.want = true;
-    o.r.stand().catch(() => {}).then(() => { if (!queue.includes(o)) queue.push(o); });
+    standing++; o.r.stand().catch(() => {}).then(() => { standing--; if (!queue.includes(o)) queue.push(o); });
   };
   // Every frame from outside: who is near or seen, the next face of the hall being taken, and the fading in.
   // `still`: false while the eye is being swung (an observance's shot, the opening, the close): no face is drawn then,
@@ -211,6 +212,9 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   const tick = (camera, dt, eye, still = true, idle = false) => {
     // The longest frame while a room is being taken (and for a second after), from one tick to the next.
     const now = performance.now(), interval = lastTick ? now - lastTick : 0; if (lastTick && quietFor < 1) worstFrame = Math.max(worstFrame, interval); lastTick = now;
+    // A slow frame, and what the doorways did in the tick before it (and how many figures were still being fetched), for the report.
+    if (interval > 100 && spikes.length < 24) spikes.push({ ms: +interval.toFixed(0), after: act, standing });
+    act = "";
     quietFor = busy || queue.length ? 0 : quietFor + dt;
     if (camera) { camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)); }
     for (const o of Object.values(halls)) {
@@ -248,7 +252,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
         if (!next.todo) next.todo = warmList(next).filter((x) => !x.tex);
         if (interval > SLOW && !yielded) { yielded = true; warmStats.skipped++; return; }
         yielded = false;
-        const t0 = performance.now(); while (next.todo.length && !compileOne(next, next.todo.shift()) && performance.now() - t0 < 4);
+        const t0 = performance.now(); while (next.todo.length && !compileOne(next, (act = label(next, next.todo[0]), next.todo.shift())) && performance.now() - t0 < 4);
         if (!next.todo.length) { next.warmed = true; next.todo = null; }
       }
       return;
@@ -258,11 +262,11 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
     yielded = false;
     const todo = busy.o.todo;
     if (todo?.length) {   // what is already compiled or sent costs nothing: go on until one thing was really done, or 4 ms
-      const t0 = performance.now(); while (todo.length && !compileOne(busy.o, todo.shift()) && performance.now() - t0 < 4);
+      const t0 = performance.now(); while (todo.length && !compileOne(busy.o, (act = label(busy.o, todo[0]), todo.shift())) && performance.now() - t0 < 4);
       if (todo.length) return;
     }
     busy.o.compiled = true;
-    const t0 = performance.now(); face(busy.o, busy.i++); if (sync) renderer.getContext().finish(); const ms = performance.now() - t0; worst = Math.max(worst, ms); faces.push(+ms.toFixed(1)); if (faces.length > 24) faces.shift();   // `sync`: with the card made to finish it (?doorsync)
+    act = `${busy.o.hall.id} face ${busy.i}`; const t0 = performance.now(); face(busy.o, busy.i++); if (sync) renderer.getContext().finish(); const ms = performance.now() - t0; worst = Math.max(worst, ms); faces.push(+ms.toFixed(1)); if (faces.length > 24) faces.shift();   // `sync`: with the card made to finish it (?doorsync)
     if (busy.i === 12) { busy.o.taken++; busy = null; }
   };
   // Give a room's cubes back: its door is the dark box again until it is taken anew.
@@ -286,5 +290,5 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   // Where a point of a room is seen from outside, through the door: the room's frame carried back into the world.
   const seenAt = (id, p) => { const o = halls[id]; if (!o) return null; const R = o.r.room; return p.clone().sub(new THREE.Vector3(R.cx, R.y, 0)).applyMatrix4(m4.copy(o.mat.uniforms.uW2R.value).invert()); };
   return { halls, tick, retake, takeAll, seenAt,
-    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1), worstFrameMs: +worstFrame.toFixed(1), lastFacesMs: faces.slice(), warm: { ...warmStats, longestMs: +warmStats.longestMs.toFixed(1) } }) };
+    report: () => ({ halls: Object.fromEntries(Object.entries(halls).map(([k, o]) => [k, { want: o.want, taken: o.taken, fade: +o.fade.toFixed(2) }])), queued: queue.map((o) => o.hall.id), busy: busy && busy.o.hall.id, size, steps, keep, dropped, mb: +(bytes() / 2 ** 20).toFixed(2), worstFaceMs: +worst.toFixed(1), worstFrameMs: +worstFrame.toFixed(1), lastFacesMs: faces.slice(), spikes: spikes.slice(), warm: { ...warmStats, longestMs: +warmStats.longestMs.toFixed(1) } }) };
 }

@@ -34,7 +34,7 @@ exports.run = async ({ open, log, runs = [{ q: "high" }, { q: "high", off: 1 }, 
       row.frames = ft.length; row.maxMs = Math.max(...ft); row.over100 = ft.filter((x) => x > 100).length; row.over50 = ft.filter((x) => x > 50).length;
       row.worst5 = [...ft].sort((a, b) => b - a).slice(0, 5);
       row.at = [+m.y.x.toFixed(1), +m.y.z.toFixed(1)]; row.tier = m.y.tier;
-      if (m.doors) row.doors = { warm: m.doors.warm, worstFrameMs: m.doors.worstFrameMs, worstFaceMs: m.doors.worstFaceMs, lastFacesMs: m.doors.lastFacesMs, mb: m.doors.mb, taken: Object.entries(m.doors.halls).filter(([, x]) => x.taken).map(([k]) => k) };
+      if (m.doors) row.doors = { warm: m.doors.warm, worstFrameMs: m.doors.worstFrameMs, worstFaceMs: m.doors.worstFaceMs, lastFacesMs: m.doors.lastFacesMs, spikes: m.doors.spikes, mb: m.doors.mb, taken: Object.entries(m.doors.halls).filter(([, x]) => x.taken).map(([k]) => k) };
       await ctx.close();
     } catch (e) { row.error = String(e.message || e).slice(0, 300); }
     log("doorway-walk", JSON.stringify(row));
