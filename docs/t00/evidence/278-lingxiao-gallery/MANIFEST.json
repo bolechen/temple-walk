@@ -43,6 +43,36 @@
    "bytes": 183211,
    "sha256": "1037dd9555284650ababc397196149f19abe87731f45e0fb616e8ae5939e8c58",
    "rev": "3a1eb980d1f62c7549e304eead115b41f52befb0"
+  },
+  {
+   "path": "tower/terrace-south-low.jpg",
+   "bytes": 119607,
+   "sha256": "fc4e905db14c7c2759001f80b6617f44790067eaa19f3c40f6cb769f098067c9",
+   "rev": "1424a0aeffd03ef1eba1adc5724e77a32f651357"
+  },
+  {
+   "path": "tower/terrace-south.jpg",
+   "bytes": 193335,
+   "sha256": "a6d00fe57f7450dbb124a01227b95e39b396bbd753043a388bb854da13b82347",
+   "rev": "1424a0aeffd03ef1eba1adc5724e77a32f651357"
+  },
+  {
+   "path": "tower/tower-front.jpg",
+   "bytes": 188310,
+   "sha256": "8bc0e0e6ae480faa78c336881be17b67ef6bfa5421f80ff653d6b800dcd241a4",
+   "rev": "1424a0aeffd03ef1eba1adc5724e77a32f651357"
+  },
+  {
+   "path": "tower/tower-oblique.jpg",
+   "bytes": 204611,
+   "sha256": "57811b8db19916fc1d1f883f05feae2b7e83aa53f63bdee28e7be455e6d5c795",
+   "rev": "1424a0aeffd03ef1eba1adc5724e77a32f651357"
+  },
+  {
+   "path": "tower/tower-side.jpg",
+   "bytes": 90283,
+   "sha256": "bc11bf732f7d97b4af3d5fd325b8f13887fe6d6549249fef96a6c83bc7a9eddd",
+   "rev": "1424a0aeffd03ef1eba1adc5724e77a32f651357"
   }
  ]
 }
