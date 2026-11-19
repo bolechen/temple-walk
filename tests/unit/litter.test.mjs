@@ -7,7 +7,7 @@ import * as THREE from "three";
 const { buildSite, createWalker, GROVE } = await import("../../app/src/site.js");
 const { bakeShelter } = await import("../../app/src/shelter.js");
 const { createDrift } = await import("../../app/src/drift.js");
-const { createMemory, MEM, surface } = await import("../../app/src/litter.js");
+const { createMemory, MEM } = await import("../../app/src/litter.js");
 const { WIND_DIR, windAt } = await import("../../app/src/wind.js");
 const { groundAt, bakeFall } = await import("../../app/src/fall.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -48,7 +48,7 @@ test("a leaf that touches the ground is kept there: 200 tracked, the leaves with
   assert.ok(spots.length >= 200, `only ${spots.length} leaves came down under the maple in 150 s of still air`);
 });
 
-test("standing under the maple the leaves on the ground grow, then hold at what the breeze takes away", () => {
+test("standing under the maple the leaves on the ground grow, then hold where the old ones sink away as fast as new ones come", () => {
   const d = cloud("leaf", 1.05), mem = d.memory, wind = (t) => { const w = windAt(1.05, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; };   // autumn by day (mood.js)
   const under = () => { let n = 0; for (let x = -3; x <= 3; x += 0.5) for (let z = -3; z <= 3; z += 0.5) n += mem.amountAt(MAPLE[0] + x, MAPLE[1] + z, 0.25); return n; };
   const at = {}; let t = 100;
@@ -56,21 +56,18 @@ test("standing under the maple the leaves on the ground grow, then hold at what 
   console.log("under the maple:", JSON.stringify(at), JSON.stringify(mem.stats()));
   assert.ok(at[60] > 0 && at[180] > at[60] * 1.3, "the leaves under the tree do not grow");
   assert.ok(Math.abs(at[900] - at[600]) < 0.15 * at[600], "they keep growing: nothing takes them away");
-  assert.ok(mem.stats().slid > 0, "the breeze moved nothing");
 });
 
-test("the breeze slides them downwind and a step up stops them; with no breeze nothing moves", () => {
-  const ground = (x, z) => (x > 2 ? 0.4 : 0);   // a platform's edge two metres downwind
-  const mem = createMemory({ span: 32, ground }); mem.follow(0, 0);
-  for (let i = 0; i < 400; i++) mem.land(-4 + (i % 20) * 0.2, -2 + Math.floor(i / 20) * 0.2, 1 + (i % 250));
-  const before = mem.leaves().map((l) => l.slice());
-  for (let k = 0; k < 300; k++) mem.wind(1 / 30, 0, 0);
-  assert.deepEqual(mem.leaves(), before, "still air moved a leaf");
-  for (let k = 0; k < 30 * 100; k++) mem.wind(1 / 30, 1.0, 0);   // a strong breeze toward +x for 100 s (within KEEP: each leaf still in its own place)
-  const after = mem.leaves(), mx = (a) => a.reduce((s, l) => s + l[0], 0) / a.length;
-  assert.ok(mx(after) > mx(before) + 1, `the leaves did not go downwind: ${mx(before).toFixed(2)} → ${mx(after).toFixed(2)}`);
-  assert.ok(after.every((l) => l[0] < 2 + 1e-9), "a leaf went up onto the platform");
-  assert.ok(after.filter((l) => l[0] > 1.5).length > after.length * 0.3, "they are not heaped at the foot of the step");
+test("the pool keeps a fixed number of leaves each in its place; the oldest gives up its place to the heap, and the heaps sink away", () => {
+  const mem = createMemory({ span: 32, pool: 100 }); mem.follow(0, 0);
+  for (let i = 0; i < 250; i++) { mem.land(-5 + (i % 50) * 0.2, -3 + Math.floor(i / 50) * 0.3, 1 + (i % 250)); mem.tick(0.05); }
+  assert.equal(mem.leaves().length, 100, "the pool is not of a fixed size");
+  const last = mem.leaves().some((l) => Math.abs(l[0] - (-5 + 49 * 0.2)) < 1e-6 && Math.abs(l[1] - (-3 + 4 * 0.3)) < 1e-6);
+  assert.ok(last, "the newest leaf is not among those kept");
+  assert.equal(mem.stats().heaped, 150, "the 150 oldest did not go onto the heaps");
+  for (let k = 0; k < 10 * 60 * 12; k++) mem.tick(0.1);   // twelve minutes: four FADEs
+  assert.ok(mem.heap() < 5, "the heaps did not sink away: " + mem.heap());
+  assert.equal(mem.leaves().length, 100, "the kept leaves went with the heaps");
 });
 
 test("his feet scuff the leaves aside, a little", () => {
@@ -80,10 +77,6 @@ test("his feet scuff the leaves aside, a little", () => {
   const n1 = mem.amountAt(0, 0, 0.1);
   assert.ok(n1 < n0, `nothing moved under the shoe: ${n0} → ${n1}`);
   assert.ok(Math.abs(total() - all0) < 1e-6, `a scuffed leaf was lost: ${all0} → ${total()}`);
-});
-
-test("on the lane's smooth slabs leaves grip less than beside it, at the kerb more", () => {
-  assert.ok(surface(0, 20) < 1 && surface(1.9, 20) > 1 && surface(6, 20) === 1);
 });
 
 test("a tree's leaf does not lie on the ground in the air's cloud: it settles over SETTLE; a bamboo leaf still lies", async () => {

@@ -143,7 +143,9 @@ export function createGround(scene, shade, censer, paving) {
               // since. (Where only a heap lies the old leaves' clumping is not worked out: it is two noises a point.)
               float amt=heap;
               if(src>.01){ float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB); amt+=1.3*src*uLitter*sweep*smoothstep(-.3,.1,dB)*mix(.015,2.4,clump)*(.4+1.6*foot); }
-              if(amt>.02) for(int L=0;L<3;L++){ if(L>0&&uLitBase<.5) break;   // the low tier draws the heaps as one layer
+              // Where only a heap lies (and on the low tier) it is drawn as one layer holding as many leaves as three would.
+              bool one=src<=.01||uLitBase<.5; if(one) amt*=2.4;
+              if(amt>.02) for(int L=0;L<3;L++){ if(L>0&&one) break;
                 vec4 ll=litterLayer(p,amt*(L==0?1.:L==1?.8:.6),fm.a,float(L)*.9+.4);
                 if(ll.z>.01){
                   float age=clamp(ll.y*.8+.4*smoothstep(.2,.8,fbm2(p*.6+5.)),0.,1.);   // those under the trees longest have gone brown

@@ -10,7 +10,7 @@ import { U } from "./glsl.js";
 import { SHELTER } from "./shelter.js";
 import { SOURCES, CHANNEL, LAND, NO_GROUND, PER_M, bakeFall, leafAt, leafTimes, spotOf, densityAt, groundAt, fallAt } from "./fall.js";
 import { shelterAt } from "./shelter.js";
-import { createLitter } from "./litter.js";
+import { createLitter, MEM } from "./litter.js";
 import { shedAt, SHED_GLSL } from "./wind.js";
 
 // col: three hues a kind comes in; part: how many of the cloud are shown; near: none closer to the eye than this.
@@ -116,7 +116,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   // just touched the ground, and if it was one the shader shows (its source, no roof over it), the ground keeps it where
   // it touched. Over a jump of the clock (a photograph held, a hidden tab) nothing is handed over: the leaves that fell
   // while nobody looked are not heaped up at once.
-  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z) }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0, sent = 0, sentAt = -1, kicked = false;
+  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z), pool: opts.keep >= 32 ? MEM.POOL.high : MEM.POOL.low }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0, sent = 0, sentAt = -1, kicked = false;
   if (lit) { U.tLitMem.value = lit.tex; U.tLitCover.value = lit.cover; }
   // Each point's timing for this kind of weather, worked out once (fall.js, leafTimes): no sums are redone every frame.
   const sTf = new Float64Array(count), sP = new Float64Array(count), sOff = new Float64Array(count), sTree = new Uint8Array(count); let timed = null;
@@ -158,23 +158,23 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     },
     update(t, cam, px) { t += skew; u.uT.value = t; u.uCam.value.copy(cam); u.uPx.value = px; if (mem && map && t !== lastT) handOver(t, cam.toArray()); },
     // Runs the cloud on by `secs` (for a tool or test that wants the ground as it will be): every leaf that comes down
-    // meanwhile is handed over as it would have been, the breeze given by `windAt(t)` moving what lies, a tenth of a
-    // second at a time; then the cloud's own clock is moved on to match, so none is handed over twice.
+    // meanwhile is handed over as it would have been, a tenth of a second at a time (`windAt` is no longer used: what
+    // lies is not moved by the breeze); then the cloud's own clock is moved on to match, so none is handed over twice.
     runOn(secs, cam, windAt, dt = 0.1) {
       if (!mem) return;
       let t = u.uT.value; const c = cam.toArray(); mem.follow(c[0], c[2]); if (lastT === null) handOver(t, c);
-      for (let k = 0; k < secs / dt; k++) { t += dt; handOver(t, c); const w = windAt(t); mem.wind(dt, w[0], w[1]); }
+      for (let k = 0; k < secs / dt; k++) { t += dt; handOver(t, c); mem.tick(dt); }
       skew += t - u.uT.value; u.uT.value = t;
     },
     handed: () => handed,
-    // The ground round him for this frame: the square follows him, the breeze (wx, wz) moves what lies, and the record
-    // goes to the card. `dt` 0 (a still picture, indoors) keeps everything where it lies.
+    // The ground round him for this frame: the square follows him, the heaps sink a little, and the record goes to the
+    // card. `dt` 0 (a still picture) keeps everything as it is. (wx, wz: the breeze, which no longer moves what lies.)
     keep(x, z, dt, wx, wz) {
       // The breeze is worked and the record sent to the card ten times a second (at once after a scuff): a leaf that has
       // just come down shows within a tenth of a second, under the falling one still settling (0.4 s), and a slide of a
       // centimetre a tenth of a second is not seen as steps.
       if (!lit) return; mem.follow(x, z); sent += dt;
-      if (sent >= 0.1) { mem.wind(sent, wx, wz); lit.upload(); sent = 0; }
+      if (sent >= 0.1) { mem.tick(sent); lit.upload(); sent = 0; }
       else if (kicked || (dt === 0 && handed !== sentAt)) lit.upload();
       kicked = false; sentAt = handed;
       U.uLitMem.value.copy(lit.box);

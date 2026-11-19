@@ -14,47 +14,36 @@
 import * as THREE from "three";
 
 // PER: cells to a metre. SLOTS: leaves kept each where it lies, in a cell. DMAX: most leaves a cell's heap holds (192 to the
-// square metre: the stone covered). GRIP: the breeze (m/s, wind.js) a lying leaf begins to slide at, 0.5 to 0.95, its own;
-// on the lane's large smooth slabs a leaf grips less (LANE), in the kerb's joints more (KERB). SLIDE: metres a second it
-// slides for each m/s of breeze over its grip. HEAP and HEAP_GRIP: the share of a heap the breeze moves on to the next
-// cell each second for each m/s over HEAP_GRIP (2: a heap moves as fast as its leaves would slide, a quarter metre a cell). RISE: a step up this high stops a leaf (the foot of a wall, a platform, a
-// stair). LIFT: of what the breeze drives against such a rise, the share it lifts up over it and away, as the eddy at the
-// foot of a wall lifts leaves (what is left heaps there). KEEP: seconds a leaf is kept each in its own place before it
-// goes onto its cell's heap (the heap is drawn as many leaves as it holds, the way the old leaves are). KICK: how far round a shoe leaves are scuffed, how far they go, and the share of the heap under it pushed on.
+// square metre: the stone covered). POOL: how many leaves are kept each in its own place at once, by tier (as a game keeps a
+// fixed ring of decals): when a new one comes down and the pool is full, the oldest goes onto its cell's heap. FADE: seconds
+// in which a heap sinks to a third, into the old leaves the paving draws anyway (litterLayer), so that the ground does not
+// go on filling. RISE: a step up this high stops a scuffed leaf. KICK: how far round a shoe leaves are scuffed, how far they
+// go, and the share of the heap under it pushed on.
 export const MEM = {
   PER: 4, SLOTS: 7, DMAX: 12,
-  GRIP: [0.5, 0.45], LANE: 0.6, KERB: 2.2, SLIDE: 0.5,
-  HEAP: 2, HEAP_GRIP: 0.7, RISE: 0.05, TICK: 0.1,
+  POOL: { high: 1500, medium: 1500, low: 500 }, FADE: 180, RISE: 0.05,
   KICK: { r: 0.17, push: [0.08, 0.2], heap: 0.2 },
-  LIFT: 0.5, KEEP: 300,
-  POOL: 20000,
 };
-// The swept lane down the middle of the courts and its kerbs, as the paving draws them (ground.js: `path`, `kerb`).
-export const AXIS = { path: 1.7, kerb: 2.02, z0: -0.95, z1: 53.9 };
 const NO = -1000;
 const fract = (x) => x - Math.floor(x);
 const hash = (n) => fract(Math.sin(n * 12.9898) * 43758.5453);
-// How readily a leaf moves on this stone: the lane's slabs are smooth and swept, the kerb's joints catch.
-export function surface(x, z) {
-  if (z <= AXIS.z0 || z >= AXIS.z1) return 1;
-  const a = Math.abs(x); return a < AXIS.path ? MEM.LANE : a < AXIS.kerb ? MEM.KERB : 1;
-}
-
 // `span`: the side of the square in metres; `ground(x, z)`: the height of the ground (fall.js's groundAt, the same cells),
 // NO_GROUND (-1000) where there is none.
-/** @param {{ span?: number, ground?: (x: number, z: number) => number }} [o] */
-export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
+/** @param {{ span?: number, ground?: (x: number, z: number) => number, pool?: number }} [o] */
+export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.high } = {}) {
   const PER = MEM.PER, N = Math.round(span * PER), S = MEM.SLOTS, half = span / 2, step = span / 8;
   const dens = new Float32Array(N * N), gnd = new Float32Array(N * N), ownX = new Int32Array(N * N).fill(-1 << 30), ownZ = new Int32Array(N * N);
-  const slots = new Int32Array(N * N * S).fill(-1), flow = new Float32Array(N * N);
-  const P = MEM.POOL, lx = new Float64Array(P), lz = new Float64Array(P), lid = new Uint8Array(P), lgrip = new Float32Array(P), lborn = new Float64Array(P), lcell = new Int32Array(P).fill(-1);
+  const slots = new Int32Array(N * N * S).fill(-1);
+  const P = pool, lx = new Float64Array(P), lz = new Float64Array(P), lid = new Uint8Array(P), lborn = new Float64Array(P), lcell = new Int32Array(P).fill(-1);
   const free = []; for (let i = P - 1; i >= 0; i--) free.push(i);
   // The leaves now lying, packed at the front of one list, so that the breeze and the feet look only at those.
   const live = new Int32Array(P), at = new Int32Array(P).fill(-1); let nLive = 0;
   const take = () => { const i = free.pop(); at[i] = nLive; live[nLive++] = i; return i; };
   const release = (i) => { lcell[i] = -1; free.push(i); const k = at[i], j = live[--nLive]; live[k] = j; at[j] = k; at[i] = -1; };
   let cx = 0, cz = 0, placed = false, clock = 0, since = 0, dirty = true;
-  const count = { landed: 0, heaped: 0, slid: 0, kicked: 0, blown: 0, stopped: 0, full: 0, lifted: 0 };
+  // The order they came down in, oldest first, so that the oldest can give up its place when the pool is full.
+  const order = new Int32Array(P); let head = 0, tail = 0, queued = 0;
+  const count = { landed: 0, heaped: 0, kicked: 0, blown: 0, stopped: 0, full: 0, faded: 0 };
   // A heap at DMAX covers the stone: a leaf more on it cannot be seen, and is counted as `full` rather than kept.
   const heapUp = (c, a) => { const room = MEM.DMAX - dens[c]; if (a > room) count.full += a - room; dens[c] = Math.min(MEM.DMAX, dens[c] + a); };
   const mod = (a) => ((a % N) + N) % N;
@@ -106,44 +95,19 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
       const [ix, iz] = cellOf(x, z); if (!inSquare(ix, iz)) return false;
       const c = claim(ix, iz); if (gnd[c] <= NO / 2) return false;
       count.landed++; dirty = true;
+      while (!free.length && queued) { const j = order[head]; head = (head + 1) % P; queued--; if (lcell[j] >= 0) { const cj = lcell[j]; kill(j); heapUp(cj, 1); count.heaped++; } }
       if (!free.length) { heapUp(c, 1); count.heaped++; return true; }
-      const i = take(); lx[i] = x; lz[i] = z; lid[i] = Math.max(1, Math.min(255, id | 0)); lgrip[i] = MEM.GRIP[0] + MEM.GRIP[1] * hash(i * 1.37 + id * 0.11 + count.landed * 0.013); lborn[i] = clock;
+      const i = take(); lx[i] = x; lz[i] = z; lid[i] = Math.max(1, Math.min(255, id | 0)); lborn[i] = clock;
+      if (queued === P) { head = (head + 1) % P; queued--; }
+      order[tail] = i; tail = (tail + 1) % P; queued++;
       placeIn(c, i); return true;
     },
-    // The breeze for `dt` seconds, (wx, wz) in m/s: each leaf whose grip it beats slides on along it, a little to one
-    // side or the other of the wind as a leaf skitters; and a tenth of a second at a time the heaps move on downwind.
-    // Below every grip nothing moves at all.
-    wind(dt, wx, wz) {
-      clock += dt;
-      // Leaves that have lain KEEP seconds join the heap of the cell they lie in: as many leaves, drawn as the heap is.
-      for (let k = nLive - 1; k >= 0; k--) { const i = live[k]; if (clock - lborn[i] > MEM.KEEP) { const c = lcell[i]; kill(i); heapUp(c, 1); count.heaped++; dirty = true; } }
-      const w = Math.hypot(wx, wz); if (!(w > 0) || dt <= 0) return;
-      if (w > MEM.GRIP[0] * MEM.LANE) {
-        const ux = wx / w, uz = wz / w;
-        for (let k = nLive - 1; k >= 0; k--) {
-          const i = live[k]; if (k >= nLive) continue;
-          const g = lgrip[i] * surface(lx[i], lz[i]); if (w <= g) continue;
-          const a = (hash(lid[i] + 0.5) - 0.5) * 0.9 + 0.35 * Math.sin(clock * 1.3 + lid[i]), ca = Math.cos(a), sa = Math.sin(a), d = MEM.SLIDE * (w - g) * dt;
-          if (move(i, lx[i] + (ux * ca - uz * sa) * d, lz[i] + (ux * sa + uz * ca) * d)) count.slid++;
-        }
-      }
-      since += dt; if (since < MEM.TICK) return; const T = since; since = 0;
-      if (w <= MEM.HEAP_GRIP * MEM.LANE) return;
-      const ax = Math.abs(wx) / (Math.abs(wx) + Math.abs(wz)), sx = Math.sign(wx), sz = Math.sign(wz);
-      flow.fill(0); let moved = false;
-      for (let c = 0; c < N * N; c++) {
-        if (!(dens[c] > 0) || ownX[c] === -1 << 30) continue;
-        const ix = ownX[c], iz = ownZ[c], m = 1 / surface((ix + 0.5) / PER, (iz + 0.5) / PER), over = w - MEM.HEAP_GRIP / m; if (over <= 0) continue;
-        const f = Math.min(0.5, MEM.HEAP * over * T * m) * dens[c];
-        for (let e = 0; e < 2; e++) {
-          const jx = e ? ix : ix + sx, jz = e ? iz + sz : iz, a = f * (e ? 1 - ax : ax); if (a <= 0) continue;
-          if (!inSquare(jx, jz)) { flow[c] -= a; count.blown += a; moved = true; continue; }
-          const j = claim(jx, jz);
-          if (gnd[j] <= NO / 2 || gnd[j] - gnd[c] > MEM.RISE || dens[j] >= MEM.DMAX) { flow[c] -= a * MEM.LIFT; count.lifted += a * MEM.LIFT; moved = true; continue; }
-          flow[c] -= a; flow[j] += a; moved = true;
-        }
-      }
-      if (moved) { for (let c = 0; c < N * N; c++) if (flow[c]) dens[c] = Math.max(0, Math.min(MEM.DMAX, dens[c] + flow[c])); dirty = true; }
+    // Time going by (`dt` seconds): the heaps sink slowly into the old leaves, a tenth of a second at a time.
+    tick(dt) {
+      clock += dt; since += dt; if (since < 0.1) return; const T = since; since = 0;
+      const k = Math.exp(-T / MEM.FADE); let any = false;
+      for (let c = 0; c < N * N; c++) if (dens[c] > 0) { const d = dens[c] * k; count.faded += dens[c] - d; dens[c] = d < 0.01 ? 0 : d; any = true; }
+      if (any) dirty = true;
     },
     // A shoe has come down at x, z, its toes toward `yaw` (0 is +z): the leaves round it are scuffed on and aside, and a
     // share of the heap under it is pushed on into the next cell.
@@ -210,9 +174,9 @@ export function createMemory({ span = 32, ground = (x, z) => 0 } = {}) {
 }
 
 // The record on the card, and the uniforms the paving reads it by: (centre x, centre z, cells to a metre, cells across).
-/** @param {{ span?: number, ground?: (x: number, z: number) => number }} [o] */
-export function createLitter({ span = 32, ground = undefined } = {}) {
-  const mem = createMemory({ span, ground }), N = mem.N, data = new Uint16Array(2 * N * N * 4), sent = new Uint16Array(data.length);
+/** @param {{ span?: number, ground?: (x: number, z: number) => number, pool?: number }} [o] */
+export function createLitter({ span = 32, ground = undefined, pool = undefined } = {}) {
+  const mem = createMemory({ span, ground, pool }), N = mem.N, data = new Uint16Array(2 * N * N * 4), sent = new Uint16Array(data.length);
   const tex = new THREE.DataTexture(data, 2 * N, N, THREE.RGBAIntegerFormat, THREE.UnsignedShortType);
   tex.internalFormat = "RGBA16UI"; tex.minFilter = tex.magFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
   const cdata = new Uint8Array(N * N * 2), cover = new THREE.DataTexture(cdata, N, N, THREE.RGFormat, THREE.UnsignedByteType);
