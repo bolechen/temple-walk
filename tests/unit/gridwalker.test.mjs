@@ -78,9 +78,7 @@ test("every named place can be walked to on the baked floor from where he comes 
 // #148 (the owner: 殿两边有空间但是走不过去). Round every hall, wherever its platform is drawn wide enough for him between
 // the wall and the edge (or the railing), he can walk: the open floor at the platform's height runs along each of its four
 // sides, and all of it is one piece with the floor before its door. A hall where that does not hold is named here with why.
-const NARROW = {
-  lingxiao: "#278: its gallery is 0.83 m between the faces of its columns and its railing: his outline, with room for his eye, does not pass a column",
-};
+const NARROW = {};   // (the summit pavilion's ground gallery was the last, until its platform was drawn wider: #278)
 test("#148: round every hall the platform can be walked, on every side that is drawn wide enough for him", () => {
   const out = {};
   for (const h of site.halls) {

@@ -261,7 +261,9 @@ export function buildSite(M) {
 
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
-    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
+    // The ground storey's platform reaches 1.7 m past its columns (#278, the structure review): a gallery he walks round between
+    // the columns and the railing, its drip still 0.3 m outside the platform under the 2.0 m eave.
+    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.7, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
     { cai: 0.186, ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
     { cai: 0.186, ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
