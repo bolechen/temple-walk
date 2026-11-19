@@ -1,0 +1,156 @@
+{
+  "issue": 188,
+  "site": "https://temple.rushiwowen.co/",
+  "startedAt": "2026-11-18T13:28:34.007Z",
+  "device": {
+    "model": "Pixel 8a",
+    "android": "17",
+    "chrome": "157.0.8103.78",
+    "batteryLevel": "33",
+    "acPowered": true,
+    "screen": {
+      "w": 411,
+      "h": 812,
+      "dpr": 2.625
+    },
+    "gpu": "ANGLE (ARM, Mali-G715, OpenGL ES 3.2)"
+  },
+  "load": {
+    "coldToReadyMs": 12795,
+    "enterBtnEnabled": false
+  },
+  "tour": {
+    "durationMs": 375833,
+    "phase": "done",
+    "done": true,
+    "runs": [
+      {
+        "seconds": 120.01,
+        "frames": 7147,
+        "fps_mean": 59.55,
+        "p95_ms": 16.8,
+        "max_ms": 192.1
+      },
+      {
+        "seconds": 120.01,
+        "frames": 7185,
+        "fps_mean": 59.87,
+        "p95_ms": 16.8,
+        "max_ms": 33.4
+      },
+      {
+        "seconds": 120.01,
+        "frames": 7187,
+        "fps_mean": 59.88,
+        "p95_ms": 16.8,
+        "max_ms": 17
+      }
+    ],
+    "ready_ms": 11388
+  },
+  "cost": 32.63,
+  "census": {
+    "site": {
+      "meshes": 132,
+      "tris": 627712,
+      "hidden": false
+    },
+    "interior": {
+      "meshes": 256,
+      "tris": 425080,
+      "hidden": false
+    },
+    "sky": {
+      "meshes": 1,
+      "tris": 960,
+      "hidden": false
+    },
+    "ground": {
+      "meshes": 4,
+      "tris": 8,
+      "hidden": false
+    },
+    "backdrop": {
+      "meshes": 47,
+      "tris": 52444,
+      "hidden": false
+    },
+    "bamboo": {
+      "meshes": 2,
+      "tris": 34732,
+      "hidden": false
+    },
+    "props": {
+      "meshes": 8,
+      "tris": 1342,
+      "hidden": false
+    },
+    "trees": {
+      "meshes": 6,
+      "tris": 146255,
+      "hidden": false
+    },
+    "drift": {
+      "meshes": 1,
+      "tris": 0,
+      "hidden": false
+    },
+    "Points": {
+      "meshes": 1,
+      "tris": 0,
+      "hidden": false
+    },
+    "Mesh": {
+      "meshes": 12,
+      "tris": 538,
+      "hidden": true
+    },
+    "flock": {
+      "meshes": 1,
+      "tris": 36,
+      "hidden": true
+    },
+    "monk": {
+      "meshes": 8,
+      "tris": 38326,
+      "hidden": true
+    },
+    "rope": {
+      "meshes": 2,
+      "tris": 104,
+      "hidden": false
+    },
+    "wisp": {
+      "meshes": 17,
+      "tris": 34,
+      "hidden": false
+    },
+    "bowl": {
+      "meshes": 2,
+      "tris": 356,
+      "hidden": false
+    },
+    "incense": {
+      "meshes": 6,
+      "tris": 204,
+      "hidden": false
+    },
+    "breath": {
+      "meshes": 1,
+      "tris": 2,
+      "hidden": true
+    },
+    "coin": {
+      "meshes": 1,
+      "tris": 64,
+      "hidden": true
+    }
+  },
+  "mem": {
+    "afterReadyPSS_KB": null,
+    "afterEnterPSS_KB": null,
+    "afterTourPSS_KB": 202185
+  },
+  "notes": [],
+  "finishedAt": "2026-11-18T13:35:30.928Z"
+}
