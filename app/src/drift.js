@@ -76,8 +76,8 @@ export function createDrift(scene, count, trees = [], opts = {}) {
           float inb=step(0.,min(muv.x,muv.y))*step(max(muv.x,muv.y),1.)*step(-500.,gr), k=min(ph/Tf,1.);
           p=vec3(b.x+sin(ph*.7+seed.w*40.)*sw*(1.-k), gr+${LAND.LIE.toFixed(2)}+${LAND.HEIGHT.toFixed(1)}*(1.-k), b.y+cos(ph*.53+seed.w*31.)*sw*.7*(1.-k));
           p.xz-=uWind*${LAND.HEIGHT.toFixed(1)}*(1.-k)*.6;   // it comes down on the breeze (wind.js), as the censer's smoke leans, to where it lies
-          // A tree lets go of a leaf only as readily as the breeze says when it leaves the branch (wind.js, shedAt): a few in still air, a flurry in a gust.
-          want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees)*mix(1.,uFallK<0.?1.:shedAt(uWS,cyc*P-off)*uFallK,uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
+          // A tree lets go of a leaf only as readily as the breeze says (wind.js, shedAt), asked of the moment the leaf is half way down, so the flurry is in the air while the gust blows: a few in still air, a flurry in a gust.
+          want=mix(uPart*mix(1.,uBoost*dot(m.rgb,uCh),uFromTrees)*mix(1.,uFallK<0.?1.:shedAt(uWS,cyc*P-off+Tf*.5)*uFallK,uFromTrees),uBPart*m.b,isB)*inb*(1.-shelter(p));
           life=smoothstep(0.,${LAND.IN.toFixed(1)},ph)*(1.-smoothstep(Tf+Tr,P,ph)); vRest=step(Tf,ph); ph=min(ph,Tf);
         } else {
           p=seed.xyz*B;
@@ -139,7 +139,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       if (ok && L > landed[i]) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]];
         const [x, z] = spotOf(s, L, [34, 13, 34], cam), g = groundAt(map, x, z);
-        const want = KINDS[curName].part * BOOST * densityAt(map, CHANNEL[curName], x, z) * fallK(L * sP[i] - sOff[i]) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
+        const want = KINDS[curName].part * BOOST * densityAt(map, CHANNEL[curName], x, z) * fallK(L * sP[i] - sOff[i] + sTf[i] * 0.5) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
         if (g > NO_GROUND / 2 && want > 0.001 && fract(s[0] * 7.31 + s[2] * 3.7) <= want && mem.land(x, z, 1 + Math.floor(fract(s[0] * 91.7 + s[3] * 13.1 + L * 0.618) * 254))) handed++;
       }
       landed[i] = L;
@@ -196,7 +196,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]], isB = fract13(s) < bam;
         const L = leafAt(map, s, t, isB ? { fall: BAMBOO.fall, sway: BAMBOO.sway, bamboo: true } : cfg(), cam);
         const d = isB ? fallAt(map, "bamboo", opts.shelter, L.bx, L.y, L.bz) : curName in SOURCES ? fallAt(map, curName, opts.shelter, L.bx, L.y, L.bz) : 0;
-        const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d * fallK(t - L.ph) : 1));
+        const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d * fallK(t - L.ph + L.Tf * 0.5) : 1));
         if (!L.live || !(fract(s[0] * 7.31 + s[2] * 3.7) <= want) || want <= 0.001) continue;
         out.leaves.push({ bamboo: isB, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3), ground: +L.ground.toFixed(3), rest: L.rest, restFor: +L.Tr.toFixed(2), alpha: +L.alpha.toFixed(3), phase: +L.ph.toFixed(3) }); sum += L.x * 3 + L.y * 5 + L.z * 7;
       }

@@ -8,7 +8,7 @@ const { buildSite, createWalker, GROVE } = await import("../../app/src/site.js")
 const { bakeShelter } = await import("../../app/src/shelter.js");
 const { createDrift } = await import("../../app/src/drift.js");
 const { createMemory, MEM } = await import("../../app/src/litter.js");
-const { WIND_DIR, windAt } = await import("../../app/src/wind.js");
+const { WIND_DIR, windAt, gust } = await import("../../app/src/wind.js");
 const { groundAt, bakeFall } = await import("../../app/src/fall.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site), shelter = bakeShelter(site.walk.roofs);
@@ -31,10 +31,10 @@ function run(d, secs, wind = () => [0, 0], t0 = 100, onLand = null) {
   mem.land = land; return t;
 }
 
-test("a leaf that touches the ground is kept there: 200 tracked, the leaves within 10 cm of where each came down never fewer for a minute after (no breeze)", () => {
-  // Still air: only the few that fall without a gust (wind.js, shedAt), so they are gathered over a longer while, each
-  // watched for the minute after it came down.
-  const d = cloud(), mem = d.memory, spots = []; let t = 100;
+test("a leaf that touches the ground is kept there: 200 tracked, the leaves within 10 cm of where each came down never fewer for a minute after", () => {
+  // An autumn day's gusts bring them down (wind.js, shedAt); the breeze no longer moves what lies. Each is watched for the
+  // minute after it came down.
+  const d = cloud("leaf", 1.05), mem = d.memory, spots = []; let t = 100;
   for (let s = 0; s < 210; s++) {
     t = run(d, 1, () => [0, 0], t, (x, z, at) => { if (spots.length < 200 && Math.hypot(x - MAPLE[0], z - MAPLE[1]) < 8) spots.push({ x, z, t: at, n: null }); });
     for (const p of spots) {
@@ -45,7 +45,7 @@ test("a leaf that touches the ground is kept there: 200 tracked, the leaves with
       p.n = n;
     }
   }
-  assert.ok(spots.length >= 200, `only ${spots.length} leaves came down under the maple in 150 s of still air`);
+  assert.ok(spots.length >= 200, `only ${spots.length} leaves came down under the maple in 150 s`);
 });
 
 test("standing under the maple the leaves on the ground grow, then hold where the old ones sink away as fast as new ones come", () => {
@@ -99,4 +99,15 @@ test("the paving's texture says where each kept leaf lies, to a sixteenth of its
   const ix = Math.floor(1.3 * 4), iz = Math.floor(-0.7 * 4), ci = ((ix % mem.N) + mem.N) % mem.N, cj = ((iz % mem.N) + mem.N) % mem.N, o = (cj * 2 * mem.N + ci * 2) * 4;
   assert.equal(out[o + 1] & 255, 77); const q = out[o + 1] >> 8;
   assert.ok(Math.abs((ix + (Math.floor(q / 16) + 0.5) / 16) / 4 - 1.3) < 1 / 64 && Math.abs((iz + ((q % 16) + 0.5) / 16) / 4 + 0.7) < 1 / 64);
+});
+
+test("the trees let go with the gusts: over ten minutes most leaves come down in the gustiest third of the time, few in the stillest", () => {
+  const d = cloud("leaf", 1.05), times = [];
+  run(d, 600, () => [0, 0], 100, (x, z, at) => times.push(at));
+  const g = [], step = 0.25; for (let t = 100; t < 700; t += step) g.push(gust(t));
+  const sorted = [...g].sort((a, b) => a - b), lo = sorted[Math.floor(g.length / 3)], hi = sorted[Math.floor((2 * g.length) / 3)];
+  const top = times.filter((t) => gust(t) >= hi).length / times.length, low = times.filter((t) => gust(t) <= lo).length / times.length;
+  console.log("landings", times.length, "in the gustiest third", top.toFixed(2), "in the stillest", low.toFixed(2));
+  assert.ok(top > 0.5, "the gustiest third of the time brings down only " + top.toFixed(2));
+  assert.ok(low < 0.1, "the stillest third of the time still brings down " + low.toFixed(2));
 });

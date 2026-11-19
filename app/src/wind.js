@@ -13,7 +13,7 @@ export const windAt = (strength, t) => strength * (0.35 + 0.65 * gust(t));
 // SHED[2]) a flurry goes, and it thins again as the gust passes. Decided once for each leaf as it leaves the tree, so none
 // appears or vanishes in the air. SHED[0] is the share that falls with no wind at all, SHED[3] the share of the old
 // steady fall (before #267) that a full gust brings down.
-export const SHED = Object.freeze([0.12, 0.5, 1.0, 0.55]);
+export const SHED = Object.freeze([0.03, 0.5, 1.0, 0.55]);
 const smooth = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 export const shedAt = (strength, t) => SHED[3] * (SHED[0] + (1 - SHED[0]) * smooth(SHED[1], SHED[2], windAt(strength, t)));
 // The same in a shader (`uWS` the mood's strength).
