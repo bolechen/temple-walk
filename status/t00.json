@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-19T10:59:16.378Z",
+  "generated_at": "2026-11-19T11:00:35.985Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "6c9960c39bd30b4feefa42b8fd3cf4b789206265",
-    "url": "https://github.com/bolechen/temple-walk/commit/6c9960c39bd30b4feefa42b8fd3cf4b789206265"
+    "sha": "d3da81dc6a849eebd3e4689f18226ebcdb045e2b",
+    "url": "https://github.com/bolechen/temple-walk/commit/d3da81dc6a849eebd3e4689f18226ebcdb045e2b"
   },
   "delivery": {
     "analytics": {
@@ -188,7 +188,8 @@
       "#147：序章结尾后停在凌霄阁远景（director.holdShot，漂移≤1°/秒），不再自动弹出朱印帐；底部一行「翻开朱印帐」，B 或点这一行翻开；「七印圆满」印在翻开朱印帐时盖一次（journey.owed/stamp）；走一步、点地面或 Esc 以移动镜头回到他身边",
       "#156（PR #201）：静坐的呼吸圈从屏幕中央的固定圆改为地上的圆相（rites.js breathRing；与打卡点地面标记同一贴图），「吸」「呼」改为底部小字；结尾不画圈；tools/breath-views.cjs、mobile-audit 的 sit/sitsay 面",
       "#203：藏经楼纸条放进屏内（game.js fitSlip：缩字，再横排）；e2e slipfit（14 首×四语言×竖横屏）；mobile-audit 的 slip 面固定第 8 首",
-      "#213：名匾挂在斗拱昂嘴之外（building.js BEAK）；tests/unit/plaques.test.mjs：18 块匾的每个字 3×3 点，从院落里走得到的点（站立眼与跟随眼）看，字面前 0.6 米内不得有别的构件；改前 12 个字（6 块匾）红"
+      "#213：名匾挂在斗拱昂嘴之外（building.js BEAK）；tests/unit/plaques.test.mjs：18 块匾的每个字 3×3 点，从院落里走得到的点（站立眼与跟随眼）看，字面前 0.6 米内不得有别的构件；改前 12 个字（6 块匾）红",
+      "#265：首院这一层（前院、山门、首院、大殿台基）走路、被挡、点地、跳上跳下改问画出来的网格烘的格子（app/src/gridwalker.js）；?walker=old 回旧，?walker=mesh 全用格子；台沿从格子派生；已存位置与 ?cam 落进挡住处挪到半米内或回起点。T4 20261119-061017（41c5991）新旧交替四次：高档 −0.40 ms，低档 +0.03 ms"
     ],
     "known_issues": [
       "凌霄阁各层不同材（一层 0.205、二三层 0.186），评审方建议三层同材 0.205，交所有者取舍（decisions.md）；子角梁截面略小于卷五；攒尖顶没有按簇角梁分段折",
@@ -540,7 +541,8 @@
       "#147：四种语言手机图、远景实拍一张（photo 场景只验了举起相机不离开远景）、T4 未验；证据图是软件渲染、夏昼、中文",
       "#156：英文/日文/韩文手机图未拍；mobile-audit 只跑了中文的 sit/sitsay 面；reduced-motion 只有单测；pilgrimage 场景与 T4 帧耗未跑；证据图是软件渲染",
       "#203：T4 未拍；殿内画框题字没有逐条测；证据是软件渲染",
-      "#213：nearplane、edges、T4 并排图、六个锁定机位并排未做（见 PR）；匾的实物挂法没有查到出处"
+      "#213：nearplane、edges、T4 并排图、六个锁定机位并排未做（见 PR）；匾的实物挂法没有查到出处",
+      "#265：格子 walker 在手机真机上的载入、内存（页面留 5.2 MB，打开时短暂 21.5 MB）未测，交 #188"
     ],
     "hosting": {
       "provider": "Cloudflare Workers",
@@ -564,14 +566,14 @@
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
       "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
     ],
-    "record_commit": "52dc953db273e73d2c64fb8ab89c612488780ed2",
+    "record_commit": "d3da81dc6a849eebd3e4689f18226ebcdb045e2b",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "in_progress",
+    "status": "pending",
     "conclusion": null,
-    "run_id": 44510624891,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44510624891",
+    "run_id": 44510822902,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44510822902",
     "checks": {
       "syntax": "pending",
       "unit": "pending",
