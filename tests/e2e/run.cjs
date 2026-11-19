@@ -1716,6 +1716,11 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 800, height: 500 } });
     expect(!(await t.page.isVisible("#menu")), "the menu should wait to be asked for");
     await t.page.keyboard.press("Escape"); expect(await t.page.isVisible("#menu") && (await t.page.textContent("#menu")).includes("环顾快慢"), "Esc with nothing open should bring the pause menu");
+    // Which build this is (#310): one line at the menu's foot, seen as it opens and the same as the page says it is.
+    { const v = await t.page.evaluate(() => { const el = document.getElementById("menuVersion"), r = el.getBoundingClientRect(), card = document.querySelector("#menu .card").getBoundingClientRect(); return { text: el.textContent, hook: window.__version(), seen: r.height > 0 && r.top >= card.top && r.bottom <= Math.min(card.bottom, innerHeight) + 0.5, px: parseFloat(getComputedStyle(el).fontSize) }; });
+      expect(v.text && v.text === v.hook.line && v.hook.version && v.hook.deploy, "the menu's foot should say which build this is, as __version() does: " + JSON.stringify(v));
+      expect(v.hook.deploy === "production" ? v.text.includes("v" + v.hook.version) : v.text.includes(v.hook.commit.slice(0, 7)), "the line should carry the version on the public page and the commit elsewhere: " + JSON.stringify(v));
+      expect(v.seen && v.px >= 12, "the version line should be seen without scrolling, at 12 px or more: " + JSON.stringify(v)); }
     const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(4); await t.page.keyboard.up("w"); expect(Math.abs((await t.state()).z - z0) < 0.01, "he should stand still while the menu is open");
     await t.page.keyboard.press("v"); await t.page.mouse.click(90, 420); await t.page.mouse.wheel(0, 300); await t.frames(3);
     { const p = await t.probe(), st0 = await t.state(); expect(p.view === "first" && st0.target === null && !(await t.page.evaluate(() => document.pointerLockElement)), "nothing behind the open menu should answer a key, a click or the wheel"); }
@@ -1724,6 +1729,7 @@ const scenarios = {
     let st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3 && st.quality === "medium", "the menu did not set what it shows: " + JSON.stringify(st));
     // The page of thanks opens over the menu, lists the 14 ColBase pictures and links the licence summary the build carries; Esc puts away only it.
     await t.page.click("#menuCredits"); await t.until(() => t.page.isVisible("#credits"), 10000, "the menu has no way to the page of thanks");
+    expect(await t.page.evaluate(() => document.getElementById("creditsVersion").textContent === window.__version().line), "the thanks should end on the same version line as the menu");
     { const c = await t.page.evaluate(() => ({ text: document.getElementById("creditsBody").textContent, links: [...document.querySelectorAll("#creditsBody a")].map((a) => a.href), modal: window.__ui().modal }));
       expect(c.text.includes("ColBase") && c.text.includes("Poly Haven") && c.text.includes("Basis Universal") && c.text.includes("Yunjing Kai"), "the page of thanks lacks a source: " + c.text.slice(0, 120));
       expect(c.links.filter((h) => /colbase\.nich\.go\.jp\/collection_items\//.test(h)).length === 15, "the page should link 14 ColBase items and the plaque's: " + c.links.length);

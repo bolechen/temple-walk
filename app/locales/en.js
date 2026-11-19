@@ -350,4 +350,9 @@ export default {
   "长按识别，或保存后在微信里从相册扫": "Press and hold to recognise it, or save it and scan it from the album in WeChat",
   "付款后可在护持页登记": "After paying, you can register on the support page",
   "微信赞赏": "WeChat support",
+  // Which build this is (#310): the version and the commit are not translated.
+  "云径禅寺 v{v}": "Yunjing Temple v{v}",
+  "内测版 · {c}": "canary · {c}",
+  "预览 · PR #{pr} · {c}": "preview · PR #{pr} · {c}",
+  "预览 · {c}": "preview · {c}",
 };

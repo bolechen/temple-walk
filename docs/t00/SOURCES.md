@@ -96,6 +96,7 @@
 | 大殿两侧四尊、药师殿、观音殿、大慧院的像 | `shared/models/*.glb`、`interior.js` 的 `STAND` | 明尼阿波利斯美术馆、克利夫兰美术馆 CC0 扫描，取自 Hugging Face 上的 Objaverse 镜像（`asset-register.csv`）；只是占位 | 已核许可；不是径山原物 |
 | 画框里的真迹（径山住持墨迹、梁楷、张即之、建盏等 17 件） | `levels/t00/works.js`、`levels/t00/gallery/` | ColBase 与大都会博物馆开放获取的馆藏著录，来源行随卡片显示（馆方原文，不译）；ColBase 的 14 件在来源行之下另加一行加工说明，写法照其利用规约的示例「『ColBase』（URL）を加工して作成」（`src/credits.js` 的 `processedLine`，`works.js` 每件的 `processed` 字段：`resize` 或 `crop`） | 已核原始著录；加工说明已核规约原文（`docs/t00/evidence/licensing/colbase-term-ja-2026-11-16.txt`），#113 |
 | 鸣谢与来源页（歇脚菜单「鸣谢」） | `src/credits.js`、`index.html` 的 `#credits` | 按 `LICENSING-AUDIT.md` 第六节的署名清单：馆藏三家、名匾、三维扫描、Poly Haven、字体及其版权行、程序库；名匾一节写明出典和加工（分离墨迹、裁切为四字）；链到 `shared/licenses/THIRD-PARTY-NOTICES.txt` 与 `shared/fonts/OFL.txt` | 已核各家条款（见审计报告）；页面文字自拟，日英韩为开发方初稿 |
+| 版本行：歇脚菜单最底下、鸣谢页末尾一行 12 px 小字。生产页写「云径禅寺 v0.5.0」（另一种样式「v0.5.0 · 3f2a1c4」待主创选），内部地址写「内测版 · 提交号」，PR 预览写「预览 · PR #号 · 提交号」；版本号和提交号不翻译 | `src/deploy.js`、`src/version.js`、`vite.config.mjs`、`index.html` 的 `#menuVersion`、`#creditsVersion` | 所有者 2026-11-19（#310）：「线上加个版本号展示的地方」；位置和文字按 #310 的建议，部署目标的变量与 #308 共用 | 所有者要求；样式自拟，日英韩为开发方初稿 |
 | 第三方许可汇总与 Basis 的许可文件 | `shared/licenses/`、`vendor/basis/LICENSE`、`NOTICE` | three.js、meshoptimizer 的 MIT 全文读自安装的包；lil-gui、stats.js、Basis Universal（Apache-2.0，含 NOTICE）取自各自仓库 2026-11-16；`tools/notices.mjs` 合成，构建在缺失时失败 | 原文已读 |
 | 每殿西墙第一幅墨画帖 | `leaves.js` | 自己画的 | 自拟 |
 | 八幅帖的短文（入山、坐、茶、经、药、灯、井、顶） | `interior.js` 的 `GALLERY` | 为这座虚构寺院写的人物与器物，不是史实；只有茶帖（茶宴东传）、井帖（龙让山）写「相传」，出处见上文径山茶宴与龙井；2026-11-16 改写坐、经、药、灯、顶、入山六帖，去掉替玩家下结论的句子 | 自拟 |

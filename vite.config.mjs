@@ -2,6 +2,8 @@
 // the site to dist/, which is what the tests open and what is published.
 import { defineConfig } from "vite";
 import { channelOf } from "./app/src/channel.js";
+import { deployOf } from "./app/src/deploy.js";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "app"), dist = path.join(here, "dist");
@@ -35,8 +37,20 @@ const channelStub = () => ({
   load(id) { if (id === "\0temple-walk:no-donate") return "export const donateURL = () => \"\"; export const mountOffering = () => {};"; },
 });
 
+// Where the build is served (app/src/deploy.js): VITE_DEPLOY=production|canary|preview, preview when unset.
+const deploy = deployOf(process.env.VITE_DEPLOY);
+// Which build this is (app/src/version.js, #310): package.json's version; the commit named by VITE_COMMIT (a pull
+// request's head, which GITHUB_SHA is not there), else GITHUB_SHA, else what git says here, else none; VITE_PR is the
+// pull request a preview is for.
+const version = JSON.parse(fs.readFileSync(path.join(here, "package.json"), "utf8")).version;
+const commitOf = () => {
+  for (const v of [process.env.VITE_COMMIT, process.env.GITHUB_SHA]) if (v && /^[0-9a-f]{7,40}$/.test(v)) return v;
+  try { return execFileSync("git", ["rev-parse", "HEAD"], { cwd: here, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { return ""; }
+};
+const commit = commitOf(), pr = /^\d+$/.test(process.env.VITE_PR || "") ? process.env.VITE_PR : "";
+
 export default defineConfig({
-  define: { __CHANNEL__: JSON.stringify(channel) },
+  define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy), __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(commit), __PR__: JSON.stringify(pr) },
   root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), keep()],
   server: { host: "127.0.0.1", port: 8000 }, preview: { host: "127.0.0.1", port: 8000 },
   build: { outDir: dist, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 2000 },

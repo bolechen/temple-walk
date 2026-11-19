@@ -350,4 +350,9 @@ export default {
   "长按识别，或保存后在微信里从相册扫": "長押しで認識するか、保存して WeChat のアルバムから読み取ってください",
   "付款后可在护持页登记": "支払い後はご支援ページで登録",
   "微信赞赏": "WeChat での支援",
+  // Which build this is (#310): the version and the commit are not translated.
+  "云径禅寺 v{v}": "雲径禅寺 v{v}",
+  "内测版 · {c}": "テスト版 · {c}",
+  "预览 · PR #{pr} · {c}": "プレビュー · PR #{pr} · {c}",
+  "预览 · {c}": "プレビュー · {c}",
 };

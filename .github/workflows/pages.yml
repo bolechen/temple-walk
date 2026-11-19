@@ -188,6 +188,13 @@ jobs:
           restore-keys: doorways-t00-
       - name: Build the site
         run: pnpm run build
+        env:
+          # Which build this is, as the page says at the foot of its menu (#310, app/src/version.js): a pull request is a
+          # preview of its own head (GITHUB_SHA is the merge commit there), main is the public page until #308 sends it
+          # to the canary.
+          VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+          VITE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          VITE_PR: ${{ github.event.pull_request.number }}
       - name: End to end, startup and movement
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots

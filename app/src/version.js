@@ -1,0 +1,32 @@
+// The line that says which build the visitor is walking in: at the foot of the pause menu and at the end of the
+// thanks (#310), small and quiet, never over the walk. On the public page it is the version; on the internal address
+// and a pull request's preview, the commit, so that a report can say exactly what was played.
+import { t } from "./i18n.js";
+import { DEPLOY } from "./deploy.js";
+
+// What the build was made from (vite.config.mjs defines them; absent when the sources are run in Node): package.json's
+// version, the full commit (VITE_COMMIT, else GITHUB_SHA, else git, else none) and the pull request a preview is for.
+export const VERSION = typeof __VERSION__ === "undefined" ? "" : __VERSION__;
+export const COMMIT = typeof __COMMIT__ === "undefined" ? "" : __COMMIT__;
+export const PR = typeof __PR__ === "undefined" ? "" : __PR__;
+
+/** How the public page writes its version: "name" (云径禅寺 v0.5.0) or "commit" (v0.5.0 · 3f2a1c4). The lead chooses (#310). */
+export const STYLE = "name";
+
+/** The line for a build. @param {{ deploy?: string, version?: string, commit?: string, pr?: string, style?: string, to?: string }} [o] */
+export function versionLine({ deploy = DEPLOY, version = VERSION, commit = COMMIT, pr = PR, style = STYLE, to } = {}) {
+  const c = commit.slice(0, 7) || "?";
+  if (deploy === "canary") return t("内测版 · {c}", { c }, to);
+  if (deploy === "preview") return pr ? t("预览 · PR #{pr} · {c}", { pr, c }, to) : t("预览 · {c}", { c }, to);
+  if (style === "commit" && commit) return `v${version} · ${c}`;
+  return t("云径禅寺 v{v}", { v: version }, to);
+}
+
+/** Writes the line into the page's places for it, and lays the hook. A style named to the hook redraws the line in
+ *  it, for the lead's pictures; nothing is kept. @param {Document} doc */
+export function mountVersion(doc) {
+  const write = (style) => { const line = versionLine({ style }); for (const id of ["menuVersion", "creditsVersion"]) { const el = doc.getElementById(id); if (el) el.textContent = line; } return line; };
+  let line = write(STYLE);
+  /** @param {string=} style */
+  window.__version = (style) => { if (style) line = write(style); return { version: VERSION, commit: COMMIT, deploy: DEPLOY, pr: PR, line }; };
+}

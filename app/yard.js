@@ -43,6 +43,7 @@ import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
 import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
+import { mountVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
@@ -74,6 +75,7 @@ createPaper();   // the paper, strokes and seals the interface is drawn with (sr
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
 createCommunity(ui);
 createCredits(ui);
+mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
