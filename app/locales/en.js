@@ -111,6 +111,7 @@ export default {
   "特写": "Close-up",
   "取景": "Framing",
   "三分线": "Thirds",
+  "虚化": "Blur",
   "人物": "Figure",
   "入画": "In the picture",
   "合掌": "Hands joined",

@@ -1,0 +1,37 @@
+{
+ "tea": {
+  "dof": [
+   false,
+   false,
+   true
+  ],
+  "focus": 18,
+  "errors": []
+ },
+ "court": {
+  "dof": [
+   false,
+   false,
+   true
+  ],
+  "focus": 18,
+  "errors": []
+ },
+ "cam04": {
+  "dof": [
+   false,
+   false,
+   true
+  ],
+  "focus": 18,
+  "errors": []
+ },
+ "shot": {
+  "cam01": false,
+  "cam02": false,
+  "cam03": false,
+  "cam04": false,
+  "cam05": false,
+  "cam06": false
+ }
+}
