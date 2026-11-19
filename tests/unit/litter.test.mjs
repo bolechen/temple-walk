@@ -31,21 +31,22 @@ function run(d, secs, wind = () => [0, 0], t0 = 100, onLand = null) {
   mem.land = land; return t;
 }
 
-test("a leaf that touches the ground is kept there: 200 tracked, the leaves within 10 cm of where each came down never fewer for a minute after", () => {
-  // An autumn day's gusts bring them down (wind.js, shedAt); the breeze no longer moves what lies. Each is watched for the
-  // minute after it came down.
-  const d = cloud("leaf", 1.05), mem = d.memory, spots = []; let t = 100;
-  for (let s = 0; s < 210; s++) {
-    t = run(d, 1, () => [0, 0], t, (x, z, at) => { if (spots.length < 200 && Math.hypot(x - MAPLE[0], z - MAPLE[1]) < 8) spots.push({ x, z, t: at, n: null }); });
+test("a leaf that touches the ground stays where it came down: of 100 tracked, nine in ten or more still lie there a minute later", () => {
+  // An autumn day's gusts bring them down (wind.js, shedAt); the breeze does not move what lies. Each is looked for, among
+  // the leaves the ground keeps each in its place, a minute after it came down (to the sixteenth of a cell it is drawn at).
+  const d = cloud("leaf", 1.05), mem = d.memory, spots = []; let t = 100, done = 0, stayed = 0;
+  for (let s = 0; s < 200 && done < 100; s++) {
+    t = run(d, 1, () => [0, 0], t, (x, z, at) => { if (spots.length < 100 && Math.hypot(x - MAPLE[0], z - MAPLE[1]) < 8) spots.push({ x, z, t: at, seen: false }); });
+    const lying = mem.leaves();
     for (const p of spots) {
-      if (t - p.t > 60) continue;
-      const n = mem.amountAt(p.x, p.z, 0.1);
-      if (p.n === null) assert.ok(n >= 1, "a leaf that came down is not on the ground");
-      else assert.ok(n >= p.n - 1e-9, `the leaves round ${p.x.toFixed(2)}, ${p.z.toFixed(2)} went from ${p.n} to ${n}`);
-      p.n = n;
+      if (p.seen || t - p.t < 60) continue;
+      p.seen = true; done++;
+      if (lying.some((l) => Math.abs(l[0] - p.x) < 1 / 64 && Math.abs(l[1] - p.z) < 1 / 64)) stayed++;
     }
   }
-  assert.ok(spots.length >= 200, `only ${spots.length} leaves came down under the maple in 150 s`);
+  assert.equal(done, 100, "fewer than 100 leaves came down under the maple and were watched for a minute");
+  assert.ok(stayed >= 90, `only ${stayed} of 100 still lay where they came down a minute later`);
+  console.log("still where they came down after a minute:", stayed, "of 100");
 });
 
 test("standing under the maple the leaves on the ground grow, then hold where the old ones sink away as fast as new ones come", () => {

@@ -21,7 +21,7 @@ import * as THREE from "three";
 // go, and the share of the heap under it pushed on.
 export const MEM = {
   PER: 4, SLOTS: 7, DMAX: 12,
-  POOL: { high: 1500, medium: 1500, low: 500 }, FADE: 180, RISE: 0.05,
+  POOL: { high: 1000, medium: 1000, low: 500 }, FADE: 180, RISE: 0.05,
   KICK: { r: 0.17, push: [0.08, 0.2], heap: 0.2 },
 };
 const NO = -1000;
