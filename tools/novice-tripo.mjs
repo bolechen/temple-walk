@@ -145,10 +145,11 @@ function distanceTo(S, p) {
 // code hand's palm (forward in the bind pose) faces where it should, so these palms came out facing forward or back, did
 // not meet when he put his palms together, and covered his face at the tea and the incense (#246, second round). Each
 // hand is turned about the forearm so that its palm faces forward, scaled toward the code hand's length, width and
-// thickness (HAND: 1 is the code hand's size, 0 leaves Tripo's), and its middle moved onto the bone's line; all of it
+// thickness (HAND: 1 is the code hand's size; 0, the default since the lead's review of #255, leaves Tripo's size: shrunk,
+// the fingers came out thin and flat), and its middle moved onto the bone's line; all of it
 // comes in over the first 2.5 cm past the wrist, so the wrist still meets the forearm. Past the knuckles the fingers are
 // bent CURL degrees toward the palm at their tips, baked in (the skeleton has one bone to a hand, as VRM requires and no more).
-const HAND = +(process.env.HAND ?? 1), CURL = +(process.env.CURL ?? 18);
+const HAND = +(process.env.HAND ?? 0), CURL = +(process.env.CURL ?? 18);
 const { createMonk } = await import("../app/src/monk.js");
 const monk = createMonk(); monk.update(1 / 30, 0, "bind", 0); monk.group.updateMatrixWorld(true);
 const handReport = {};
@@ -180,7 +181,7 @@ const handReport = {};
     const scaled = turned.map((r) => d.clone().multiplyScalar(r.dot(d) * sd).add(a.clone().multiplyScalar(r.dot(a) * sa)).add(z.clone().multiplyScalar(r.dot(z) * sz)));
     // its middle onto the bone's line, as the code hand's is (across and front to back; along the arm it stays)
     const fwd = scaled.filter((r, i) => pts[i].dot(d) > 0), mid = fwd.reduce((s, r) => s.add(r), new THREE.Vector3()).divideScalar(fwd.length).add(W).sub(wr);
-    const shift = a.clone().multiplyScalar(HAND * (C.c.a - mid.dot(a))).add(z.clone().multiplyScalar(HAND * (C.c.z - mid.dot(z))));
+    const shift = a.clone().multiplyScalar(C.c.a - mid.dot(a)).add(z.clone().multiplyScalar(C.c.z - mid.dot(z)));
     const sm = (x0, x1, x) => { const u = Math.min(1, Math.max(0, (x - x0) / (x1 - x0))); return u * u * (3 - 2 * u); };
     // The turn is spread along the last 10 cm of the forearm, as a forearm rolls over; the size and the move come in over
     // the wrist. The forearm's own pieces go with it, so nothing parts at the wrist.
@@ -365,6 +366,9 @@ for (const p of Object.values(pieces)) {
 console.log(`atlas: ${order.length} tiles, base ${OUT_BASE} px ${(baseImg.length / 1e3).toFixed(0)} kB, normal ${OUT_NORMAL} px ${(normalImg.length / 1e3).toFixed(0)} kB, roughness ${roughness}, trousers' plain colour rgb(${legColor})`);
 
 // ---- 7. weights ----
+// NOVICE_PIECES=<file>: write every piece as it stands now (bind pose, thinned), for an outside weigher such as
+// tools/novice-heat.py (Blender's bone heat); NOVICE_HEAT=<file>: read the weights it gives back, for the pieces it names.
+if (process.env.NOVICE_PIECES) { fs.writeFileSync(process.env.NOVICE_PIECES, JSON.stringify(Object.values(pieces).map((p) => ({ name: p.name, what: p.what, part: p.part, P: Array.from(p.P, (x) => +x.toFixed(6)), I: Array.from(p.I) })))); console.log("wrote the pieces to", process.env.NOVICE_PIECES); }
 const boneNames = monk.skeleton.bones.map((b) => b.name);
 // all pieces as one surface, to weigh and weld together
 const all = { P: [], I: [], part: [], piece: [] }; let base = 0;
@@ -401,15 +405,45 @@ for (const p of list) if (p.robeBody) for (let i = p.offset; i < p.offset + p.P.
   for (let j = 0; j < 4; j++) { J[i * 4 + j] = w[j] ? boneNames.indexOf(w[j][0]) : 0; W[i * 4 + j] = w[j] ? w[j][1] / s : 0; }
 }
 const nArm = armWeights(P0, vparts, J, W, monk);
+// Weights from Blender's bone heat for the pieces it was asked to weigh (tools/novice-heat.py): they replace the ones above.
+const HEAT_LAP = +(process.env.HEAT_LAP ?? 1);
+// NOVICE_BPY=<python with bpy>: run tools/novice-heat.py here, on the pieces as they now stand, so one command does it all.
+let heatFile = process.env.NOVICE_HEAT;
+if (!heatFile && process.env.NOVICE_BPY) {
+  const { execFileSync } = await import("node:child_process"), os = await import("node:os");
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "novice-heat-")), here = path.dirname(new URL(import.meta.url).pathname);
+  fs.writeFileSync(path.join(tmp, "bones.json"), JSON.stringify(monk.skeleton.bones.map((b) => ({ name: b.name, parent: b.parent.isBone ? b.parent.name : null, p: b.getWorldPosition(new THREE.Vector3()).toArray() }))));
+  fs.writeFileSync(path.join(tmp, "pieces.json"), JSON.stringify(Object.values(pieces).map((p) => ({ name: p.name, part: p.part, P: Array.from(p.P, (x) => +x.toFixed(6)), I: Array.from(p.I) }))));
+  const log = execFileSync(process.env.NOVICE_BPY, ["-I", path.join(here, "novice-heat.py"), path.join(tmp, "bones.json"), path.join(tmp, "pieces.json"), path.join(tmp, "heat.json")], { encoding: "utf8" });
+  for (const line of log.split("\n")) if (/points|wrote/.test(line)) console.log("  bpy:", line.trim());
+  heatFile = path.join(tmp, "heat.json");
+}
+const heat = heatFile ? JSON.parse(fs.readFileSync(heatFile, "utf8")) : null;
+if (heatFile && !process.env.NOVICE_HEAT) fs.rmSync(path.dirname(heatFile), { recursive: true, force: true });
+if (heat) {
+  let n = 0;
+  for (const p of list) { const h = heat[p.name]; if (!h) continue; if (h.length !== p.P.length / 3) throw new Error(`heat weights for ${p.name}: ${h.length} vertices, the piece has ${p.P.length / 3}`);
+    h.forEach((ws, v) => { const i = p.offset + v, top = ws.filter(([b]) => boneNames.includes(b)).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 4), s = top.reduce((a, [, w]) => a + w, 0);
+      if (!s) return;
+      // the skirt keeps the round-two lap: its front below the hips still goes with the thighs at the sides and partly
+      // with the hips at the middle (HEAT_LAP=0 leaves the heat weights as they are)
+      const fin = p.robeBody && HEAT_LAP ? thighFront(top.map(([b, w]) => [b, w / s]), P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]).sort((a, b) => b[1] - a[1]).slice(0, 4) : top, fs = fin.reduce((a, [, w]) => a + w, 0);
+      for (let k = 0; k < 4; k++) { J[i * 4 + k] = fin[k] ? boneNames.indexOf(fin[k][0]) : 0; W[i * 4 + k] = fin[k] ? fin[k][1] / fs : 0; } n++; }); }
+  console.log(`bone heat weights for ${Object.keys(heat).join(", ")}: ${n} vertices`);
+}
 console.log(`weights from the figure built in code; ${nArm} vertices weighted along the arm`);
 // The sash's end hangs from the knot on its own bone: within 8 cm of its top it goes over from the weights it took (the
 // skirt's and the hips') to the sashTail bone, below that wholly on it. It is kept out of the welding, so that its edge
 // is free of the skirt it lay on.
 const sashBone = boneNames.indexOf("sashTail"), sashV = new Uint8Array(nv);
 for (const p of list) if (p.isSash) sashV.fill(1, p.offset, p.offset + p.P.length / 3);
+const WRAPS = new Set(["tripo_part_4", "tripo_part_10"]), WRAP_RANK = +(process.env.WRAP_RANK ?? 3);
 const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, WELD = +(process.env.NOVICE_WELD || 8);
 {
-  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]), Pw = Float32Array.from(P0);
+  // The leg wraps rank with the shoes (WRAP_RANK): where a wrap's lower edge meets the shoe's collar, the point takes half of each,
+// the shin's and the foot's (wholly the shoe's, the back foot of a stride pulled the wrap's edge out in white strips; wholly the
+// wrap's, it pulled the shoe's heel up in grey ones; #256).
+const rank = Int8Array.from(all.part, (p, i) => (WRAPS.has(all.piece[i]) ? WRAP_RANK : RANK[PARTS[p]])), Pw = Float32Array.from(P0);
   for (let i = 0; i < nv; i++) if (sashV[i]) Pw[i * 3 + 1] += 100;
   const r = weldWeights(Pw, J, W, { smooth: Math.max(0, WELD - 1), index: I0, rank });
   J.set(r.J); W.set(r.W);
@@ -427,7 +461,7 @@ const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, WELD = +(process.env.NOVIC
 }
 
 {
-  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]);
+  const rank = Int8Array.from(all.part, (p, i) => (WRAPS.has(all.piece[i]) ? WRAP_RANK : RANK[PARTS[p]]));
 // Copies that fall in one cell of 0.01 mm but lie a hair further apart than the welding's reach take one weight too:
   // the highest-ranked copy's, as the welding gives (tests/unit/novice-tripo.test.mjs asks it of every such cell). The top
   // edge of the sash's end, where it has not yet gone over to its bone, is sewn to the knot the same way.
