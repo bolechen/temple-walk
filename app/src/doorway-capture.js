@@ -67,9 +67,11 @@ export function createCapture({ renderer, scene, U, size = 256 }) {
     return canvas;
   };
   // One hall: its figures fetched first (else the door shows an empty dais), then a day, a night and the distances.
-  // `mood(season, time)` sets the page's hour; it is put back after. Returns three canvases.
-  const bake = async (hall, room, mood, back) => {
+  // `mood(season, time)` sets the page's hour; `keep()` remembers the hour the page had and returns what puts it back.
+  // Returns three canvases.
+  const bake = async (hall, room, mood, keep) => {
     await room.stand();
+    const back = keep();
     const R = room.room, C = new THREE.Vector3(R.cx, R.y + EYE, R.z1 + 0.3 - INSET);
     mood("summer", "day"); const day = read(room, C, "col", GAIN[0]);
     mood("summer", "night"); const night = read(room, C, "col", GAIN[1]);

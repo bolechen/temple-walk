@@ -250,8 +250,12 @@ const scenarios = {
     }
     console.log("     the altar across the door, as a fraction of the picture's width:", JSON.stringify(across));
     expect(across.first.moved <= 0.05, `the altar jumps across the door: ${JSON.stringify(across.first)} (more than 5% of the width)`);
+    const hour = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
     r = await t.page.evaluate(() => window.__doorways(true));
     expect(Object.values(r.halls).every((x) => x.taken >= 1 && x.fade === 1), "not every hall's room could be taken: " + JSON.stringify(r.halls));
+    // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
+    const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
+    expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,

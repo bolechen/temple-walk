@@ -185,11 +185,11 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
   // with (doorway-capture.js, loaded only here), shown at once and kept.
   let capture = null;
   const drawn = async (o, cap) => {
-    const c = await cap.bake(o.hall, o.r, mood.set, mood.back);
+    const c = await cap.bake(o.hall, o.r, mood.set, mood.keep);
     const faces = await Promise.all([c.day, c.night, c.dist].map((cv) => createImageBitmap(cv, { colorSpaceConversion: "none", premultiplyAlpha: "none" }).then(cut)));
     return { c, tex: [cube(faces[0]), cube(faces[1]), cube(faces[2], true)] };
   };
-  let mood = { set: () => {}, back: () => {} };   // how a tool sets the page's hour for the drawing, and puts it back (yard.js)
+  let mood = { set: () => {}, keep: () => () => {} };   // how a tool sets the page's hour for the drawing, and how the hour it had is kept to be put back (yard.js)
   const takeAll = async (only = null) => {
     pinned = true;   // none is given back while (and after) a tool has them drawn
     capture ||= (await import("./doorway-capture.js")).createCapture({ renderer, scene, U });
