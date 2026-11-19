@@ -1615,7 +1615,8 @@ const scenarios = {
         await t.page.evaluate(() => { const c = document.getElementById("yardGl"); for (let i = 0; i < 40; i++) c.dispatchEvent(new WheelEvent("wheel", { deltaY: 400, bubbles: true, cancelable: true })); }); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
       }
       expect(!(await t.page.isVisible("#photoSettings")) && (await t.page.getAttribute("#photoSettingsToggle", "aria-expanded")) === "false", "settings should start folded");
-      expect((await t.page.locator('#photoBar button:visible').count()) === 2, "only settings and the shutter belong on the lower bar");
+      const onBar = await t.page.$$eval("#photoBar button", (bs) => bs.filter((e) => e.offsetParent).map((e) => e.id));
+      expect(onBar.join() === "photoSettingsToggle,shutter,photoClose", "only settings, the shutter and close belong on the lower bar, in that order (#297): " + onBar.join());
       for (const id of ["shutter", "photoSettingsToggle", "photoClose"]) { const r = await t.page.locator("#" + id).boundingBox(); expect(r && r.width >= 44 && r.height >= 44 && r.x >= 0 && r.y >= 0, id + " is not a reachable touch target"); }
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
@@ -1788,6 +1789,45 @@ const scenarios = {
         return { foot: Math.round(f.top), out }; });
       expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
+  } },
+  // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
+  // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
+  // on a phone all three in the lower half, each a thumb's size; and 三分线 and 虚化 seen as the settings open, with no
+  // scrolling. Four languages, five screens.
+  photofit: { tier: 2, async run(b, base) {
+    const screens = [["desk", 1280, 720, false], ["desk", 1920, 1080, false], ["phone", 390, 844, true], ["phone", 844, 390, true], ["phone", 360, 640, true]];
+    for (const lg of ["zh", "ja", "en", "ko"]) for (const [kind, w, h, touch] of screens) {
+      const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: w, height: h }, hasTouch: touch, isMobile: touch });
+      await u.page.evaluate(() => { window.__photo(true); document.body.classList.add("thirds"); }); await u.frames(2);
+      const m = await u.page.evaluate(() => {
+        const box = (el) => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+        const hit = (a, c) => a.l < c.r - 0.5 && c.l < a.r - 0.5 && a.t < c.b - 0.5 && c.t < a.b - 0.5;
+        const f = box(document.getElementById("frame")), L = 22, marks = [];
+        for (const [x, y] of [[f.l, f.t], [f.r - L, f.t], [f.l, f.b - L], [f.r - L, f.b - L]]) marks.push({ l: x, t: y, r: x + L, b: y + L });
+        for (const k of [1, 2]) { const x = f.l + (f.w * k) / 3, y = f.t + (f.h * k) / 3; marks.push({ l: x - 0.5, t: f.t, r: x + 0.5, b: f.b }, { l: f.l, t: y - 0.5, r: f.r, b: y + 0.5 }); }
+        const ids = ["photoSettingsToggle", "shutter", "photoClose"], bs = ids.map((id) => box(document.getElementById(id)));
+        const on = ids.filter((id, i) => marks.some((mk) => hit(bs[i], mk)));
+        const far = Math.max(...[[0, 1], [1, 2], [0, 2]].map(([i, j]) => Math.hypot(bs[i].x - bs[j].x, bs[i].y - bs[j].y)));
+        document.getElementById("photoSettingsToggle").click();
+        const panel = box(document.getElementById("photoSettings")), covers = !document.getElementById("photoSettings").hidden && hit(panel, bs[1]);
+        // 三分线 and 虚化 are seen as soon as the panel opens, with the seasons' rows open too: 虚化 shows on the high tier
+        // only, so it is unhidden here as that tier would; nothing else differs.
+        const blurBtn = document.getElementById("blurToggle"), wasHidden = blurBtn.hidden, hadSeasons = document.body.classList.contains("seasons");
+        blurBtn.hidden = false; document.body.classList.add("seasons");
+        const pv = box(document.getElementById("photoSettings")), unseen = ["thirdsToggle", "blurToggle"].filter((id) => { const c = box(document.getElementById(id)); return c.t < Math.max(pv.t, 0) - 0.5 || c.b > Math.min(pv.b, innerHeight) + 0.5; });
+        blurBtn.hidden = wasHidden; document.body.classList.toggle("seasons", hadSeasons);
+        document.getElementById("photoSettingsToggle").click();
+        return { on, far: Math.round(far), short: Math.min(innerWidth, innerHeight), low: bs.every((c) => c.t >= innerHeight / 2), small: bs.filter((c) => c.w < 43.5 || c.h < 43.5).length, covers, unseen, esc: /Esc/.test(document.getElementById("photoClose").textContent) };
+      });
+      const at = `${lg} ${w}x${h}: ` + JSON.stringify(m);
+      expect(!m.on.length, "the camera's controls should lie clear of the finder's corners and thirds, " + at);
+      expect(!m.covers, "the camera's settings, open, should not cover the shutter, " + at);
+      expect(!m.small, "every camera control should be a thumb's size, " + at);
+      expect(!m.unseen.length, "三分线 and 虚化 should be seen without scrolling as the camera's settings open, " + at);
+      if (kind === "desk") { expect(m.far <= m.short / 3, "settings, shutter and close should be a small move apart (a third of the short side), " + at); expect(m.esc, "收起 should say Esc where there is a keyboard, " + at); }
+      else expect(m.low, "on a phone the camera's controls should all be in the lower half, " + at);
+      await u.close();
+    }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
   // the focus goes into the sheet and comes back to what opened it.
@@ -1962,7 +2002,13 @@ const scenarios = {
       const offered = await t.page.evaluate(() => !document.getElementById("blurToggle").hidden);
       expect(offered === (q === "high"), `${q}: the 虚化 switch should show only where depth is drawn, showed ${offered}`);
       if (q === "high") {
-        await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click()); await t.page.click("#blurToggle"); await t.frames(3);
+        // #302: at 480x270 the settings panel is 96 px tall and 虚化 lies in the part of it scrolled away; the high tier under
+        // software rendering draws one frame in about 2 s, and Playwright's scroll, stability and hit checks each wait on
+        // frames (a click took 26 s here, past 30 s on a slower nightly machine). Bring it into sight and let two frames
+        // pass first, then press it as a visitor would, the hit check kept, with room for this one step's slow frames.
+        await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click());
+        await t.page.locator("#blurToggle").scrollIntoViewIfNeeded(); await t.frames(2);
+        await t.page.click("#blurToggle", { timeout: 120000 }); await t.frames(3);
         const on = await t.probe(); expect(on.post.dof && on.post.focus > 0 && (await t.page.evaluate(() => window.__settings().blur)), "switching 虚化 on should focus the raised camera: " + JSON.stringify(on.post));
         await t.page.evaluate(() => window.__photo(false)); await t.frames(3); expect(!(await t.probe()).post.dof, "putting the camera away should end the blur");
       }
