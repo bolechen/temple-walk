@@ -243,7 +243,12 @@ export function bird(level = 1) {
   }
   birds++;
 }
-export const ambienceState = () => ({ knocks, birds, running: !!ambient });
+// The gust heard at a moment of the walk. `place().t` is the picture's own clock (yard.js: the frame's time in seconds,
+// on performance.now()'s timeline), so the wind heard rises and falls with the leaves seen coming down; the ambience's
+// own count of quarter seconds is only for a page that gives no clock. There is no clock of the sound's own: when the
+// page comes back from the background both pick up where performance.now() has got to, together.
+export const gustHeard = (p, own) => windGust(Number.isFinite(p.t) ? p.t : own);
+export const ambienceState = () => ({ knocks, birds, running: !!ambient, gust: ambient && ambient.gust != null ? +ambient.gust.toFixed(4) : null, gustT: ambient && ambient.gustT != null ? +ambient.gustT.toFixed(3) : null });
 
 // ---- Two cues of the story ----
 // Wings: a dozen small birds going up at once from a tree, a rattle of quick wingbeats that thins as they climb away,
@@ -370,8 +375,8 @@ export function startAmbience(place) {
     if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
     const p = place(), now = ctx.currentTime, g = p.grove, a = ambient; a.t += 0.25;
     room(p.zone === "hall");
-    // Gusts: two slow waves that sometimes meet.
-    const gust = windGust(a.t);   // the same gusts the smoke leans with (wind.js)
+    // Gusts: the same two slow waves, on the same clock, as the leaves the trees let go and the censer's smoke (wind.js).
+    const gust = gustHeard(p, a.t); a.gust = gust; a.gustT = Number.isFinite(p.t) ? p.t : a.t;
     // Deep in the bamboo the wind is the floor of the sound, not its loudest part: about 5 dB under what it was, so
     // that the music and his steps are heard over it there (2026-11-16); in the first court (g 0.12) it is unchanged.
     low.gain.setTargetAtTime(0.5 * gust * (0.41 + 0.15 * g), now, 0.8);

@@ -28,3 +28,18 @@ test("most at first light, fewer by day, a last few at dusk, none at night, few 
   assert.ok(g("day", "winter") > g("day") * 2, "winter is not quieter");
   assert.ok(g("dawn") >= 5, "so many birds that they crowd the quiet");
 });
+
+// The wind heard and the wind seen are one wind (#267): the ambience takes its gusts from the picture's clock, the same
+// moment the trees let go of their leaves by (wind.js's shedAt) and the smoke leans by.
+const { gustHeard } = await import("../../app/src/audio.js");
+const { gust, windAt } = await import("../../app/src/wind.js");
+test("the gust heard at a moment is the gust the leaves and the smoke are drawn by at that moment", () => {
+  for (const t of [0, 3.25, 41.5, 133.75, 600.1, 3601.9, 86400.5]) {
+    // Whatever the ambience's own count says (it began at the first touch, and stops in the background), the page's clock wins.
+    for (const own of [0, 12.5, t - 37, t + 210]) assert.equal(gustHeard({ t }, own), gust(t), `heard and seen differ at t=${t}, own=${own}`);
+    // The breeze the smoke and the falling leaves are carried by (yard.js: windAt at the frame's t) is that same gust.
+    assert.equal(windAt(1, t), 0.35 + 0.65 * gust(t));
+  }
+  // A page that gives no clock keeps the ambience's own count, as before.
+  assert.equal(gustHeard({}, 17.25), gust(17.25));
+});
