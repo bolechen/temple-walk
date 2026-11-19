@@ -95,9 +95,14 @@ jobs:
         run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
       # network, so only here and by hand, never in the way of a merge.
-      - name: The evidence in the store is what the manifests say
+      # Two stores (#247): `origin` (Hugging Face) is the original, `base` (R2) the copy readers use. Both are checked;
+      # if they disagree, the original is right and the copy is mirrored again (`node tools/evidence.mjs mirror`).
+      - name: The evidence in the store is what the manifests say (the copy readers use)
         if: steps.mine.outputs.run == 'true' && matrix.shard == 1
         run: node tools/evidence.mjs verify --all
+      - name: The evidence in the original store is what the manifests say
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").origin')" node tools/evidence.mjs verify --all
       - name: Remember the browser between runs
         if: steps.mine.outputs.run == 'true'
         id: pw
