@@ -34,10 +34,19 @@ let body = null; const bodies = {};
 // `load` fetches a body and wears it from then on; `use(url)` goes back to one already fetched, `use(null)` to the body built in code.
 async function load(url) { const gltf = await new GLTFLoader().loadAsync(url); body = bodies[url] = { gltf }; }
 function use(url) { body = url ? bodies[url] : null; }
+// `stage.faces`: back faces magenta and the background green, to tell the inside of the cloth from a hole through it.
+function showFaces(m) {
+  if (!stage.faces) { scene.background.set(0x8e9497); return; }
+  scene.background.set(0x00ff00);
+  m.group.traverse((o) => { if (!o.isMesh || !o.material) return; const mat = o.material.clone(); mat.side = THREE.DoubleSide;
+    mat.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>', '#include <dithering_fragment>\n  if (!gl_FrontFacing) gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);'); };
+    mat.customProgramCacheKey = () => 'faces'; o.material = mat; });
+}
 function dress(m) { if (!body) return; const { geometries, material, robeColor } = bodyOf(body.gltf.scene, body.gltf.parser.json.extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {
+  bind: (m) => { m.update(1 / 30, 0, "bind", 0); },
   stand: (m) => { for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {}); },
   pray: (m) => { for (let i = 0; i < 90; i++) m.update(1 / 30, 0, "pray", i / 30, () => 0, {}); },
   walk: (m, f = 52) => { for (let i = 0; i <= f; i++) m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); },
@@ -51,7 +60,7 @@ const POSES = {
     bowl.position.copy(cup); scene.add(bowl);
     for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * 0.068, 0.034, 0.012).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
   }),
-  incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; B.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),
+  incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; const [by, bz] = stage.brow || [0.15, 0.15]; B.head.localToWorld(h.at.set(s * 0.0125, by, bz)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),
 };
 const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.035, 0.05, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0x3d3a36, roughness: 0.5, side: THREE.DoubleSide }));
 function hold(m, set) {
@@ -60,14 +69,15 @@ function hold(m, set) {
   for (let i = 0; i < 90; i++) { m.group.updateMatrixWorld(true); set(m.bones, act); m.update(1 / 30, 0, false, i / 30, () => 0, { act }); }
 }
 /** Pose him and look from `yaw` (0: before him) and `pitch`; returns a PNG data URL. */
-function shot(pose, yaw, pitch = 0.08, frame) {
-  scene.remove(bowl); const m = fresh(); dress(m); POSES[pose](m, frame); m.group.updateMatrixWorld(true);
+function shot(pose, yaw, pitch = 0.08, frame, near = 1) {
+  scene.remove(bowl); const m = fresh(); dress(m); showFaces(m); POSES[pose](m, frame); for (const n of stage.hide || []) if (m.parts[n]) m.parts[n].visible = false; m.group.updateMatrixWorld(true);
   const seated = pose === "chair" || pose === "sit";
   scene.remove(stool, cushion); if (pose !== "tea") scene.remove(bowl); if (pose === "chair") scene.add(stool); if (pose === "sit") scene.add(cushion);
   floor.position.y = pose === "chair" ? -0.44 : pose === "sit" ? -0.104 : 0;
-  const cy = seated ? 0.35 : 0.6, d = 3.3;
+  const cy = (seated ? 0.35 : 0.6) * (near > 1 ? 0.0 : 1) + (near > 1 ? stage.focus ?? (seated ? 0.3 : 0.6) : 0), d = 3.3 / near;
   camera.position.set(Math.sin(yaw) * Math.cos(pitch) * d, cy + Math.sin(pitch) * d, Math.cos(yaw) * Math.cos(pitch) * d);
-  camera.lookAt(0, cy, 0); renderer.render(scene, camera);
+  const fx = near > 1 ? stage.focusX || 0 : 0; camera.position.x += fx; camera.lookAt(fx, cy, 0); renderer.render(scene, camera);
   return renderer.domElement.toDataURL("image/png");
 }
-window.stage = { load, use, shot, ready: true };
+const stage = { load, use, shot, ready: true, focus: null };
+window.stage = stage;
