@@ -10,7 +10,8 @@
 # Blender's Python module (`pip install bpy`, 5.3.0, GPL-2.0-or-later) runs here with no window and only in tools/: it
 # computes numbers that the tool writes into the file; nothing of Blender ships with the page. Each group of pieces is
 # weighed on its own, with only its own bones allowed to deform it (GROUPS): the trousers and leg wraps by the hips and
-# the legs, the skirt by the hips and the four skirt bones. Copies of one point (texture seams) are welded first, so the
+# the legs, the leg wraps by the shins, the upper robe and its sleeves by the trunk and the arms, the skirt by the hips and
+# the four skirt bones. Copies of one point (texture seams) are welded first, so the
 # heat flows across seams, and each copy takes its point's weights.
 import json, sys
 import bpy
@@ -23,7 +24,14 @@ Y = lambda p: Vector((p[0], -p[2], p[1]))   # three.js (y up, +z toward the view
 J = {n: Y(b["p"]) for n, b in ours.items()}
 
 GROUPS = {
-    "legs": {"pieces": lambda p: p["part"] == "legs", "bones": ["hips", "leftUpperLeg", "leftLowerLeg", "leftFoot", "rightUpperLeg", "rightLowerLeg", "rightFoot"]},
+    "legs": {"pieces": lambda p: p["name"] == "tripo_part_7", "bones": ["hips", "leftUpperLeg", "leftLowerLeg", "leftFoot", "rightUpperLeg", "rightLowerLeg", "rightFoot"]},
+    # the leg wraps go with the shins alone: with the foot's weight in their lower edge, it pulled out in white strips
+    # behind the back foot of a stride (#256 review)
+    "wraps": {"pieces": lambda p: p["name"] in ("tripo_part_4", "tripo_part_10"), "bones": ["leftLowerLeg", "rightLowerLeg"]},
+    # the upper robe and both sleeves together, by the trunk, the shoulders and the arms: with the weights of the figure
+    # built in code, the cloth under a raised arm tore in streaks and opened at the armpit (#256 review)
+    "upper": {"pieces": lambda p: p["name"] in ("tripo_part_6", "tripo_part_1", "tripo_part_13"),
+              "bones": ["hips", "spine", "chest", "neck", "leftShoulder", "leftUpperArm", "leftLowerArm", "rightShoulder", "rightUpperArm", "rightLowerArm"]},
     "skirt": {"pieces": lambda p: p["name"] == "tripo_part_5", "bones": ["hips", "robeFront", "robeBack", "robeLeft", "robeRight"]},
 }
 import os

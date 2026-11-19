@@ -63,7 +63,8 @@ test("his hands go with his hands, both forearms with their forearms, his shoes 
     assert.ok(nh > 30 && wh > 0.95, `${side} hand: ${nh} vertices, ${wh.toFixed(2)} on hand and forearm`);
     assert.ok(nf > 20 && wf > 0.95, `${side} forearm: ${nf} vertices, ${wf.toFixed(2)} on the arm`);
   }
-  const [ns, ws] = share("shoes", () => true, (b) => /Foot$/.test(b)); assert.ok(ns > 100 && ws > 0.95, `shoes ${ws.toFixed(2)}`);
+  // below the collar: the ring the shoe shares with the leg wrap takes half the shin's weight on purpose (WRAP_RANK)
+  const [ns, ws] = share("shoes", (x, y) => y < 0.06, (b) => /Foot$/.test(b)); assert.ok(ns > 100 && ws > 0.95, `shoes below the collar ${ws.toFixed(2)}`);
 });
 
 // Copies of one point (a seam, or where two pieces meet) must take one weight and stay together. The sash's end is
@@ -120,4 +121,40 @@ test("no triangle of the trousers is half on the plain colour and half on the te
   for (let t = 0; t < idx.count; t += 3) { const n = [0, 1, 2].filter((k) => key(idx.getX(t + k)) === plain).length; if (n === 1 || n === 2) mixed++; }
   assert.ok(count.get(plain) > 100, `${count.get(plain)} corners on the plain colour`);
   assert.equal(mixed, 0, `${mixed} triangles stretch from the plain colour across the atlas`);
+});
+
+// #256 review: with the arms raised over the shoulders (the incense at the brow) the sleeves tore along the upper arm and
+// opened at the armpit, and walking, the back foot's leg wrap tore at its lower edge. Copies of one point must stay
+// together there too.
+test("copies stay within a millimetre with the arms raised to the brow, and on the back foot through a stride", { skip }, () => {
+  const m = dressed(), hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 });
+  const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
+  for (let i = 0; i < 90; i++) {
+    m.group.updateMatrixWorld(true);
+    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; m.bones.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); }
+    m.update(1 / 30, 0, false, i / 30, () => 0, { act });
+    if (i >= 60 && i % 10 === 0) together(m, `arms raised to the brow, frame ${i}`);
+  }
+  const w = dressed();
+  for (let i = 0; i < 90; i++) { w.update(1 / 30, 2.1, false, i / 30, () => 0, {}); if (i >= 40 && i % 2 === 0) together(w, `walking, frame ${i}`); }
+});
+
+// #256 review, measured: what tore under the raised arms and at the back foot's leg wrap was not copies parting (the
+// test above held there) but edges drawn out many times their length. Edges stretched past 3× with the arms at the brow,
+// and edge-frames past 2× round the ankles through a stride, counted on the file before the sleeves, the shoulders and the
+// wraps took bone heat (629 and 1,896) and after (about 420 and 350).
+const stretched = (m, part, over, keep = () => true) => {
+  const g = body.geometries[part], p = g.attributes.position, idx = g.index, mesh = m.parts[part], a = new THREE.Vector3(), c = new THREE.Vector3(), A = new THREE.Vector3(), C = new THREE.Vector3(); let n = 0;
+  m.group.updateMatrixWorld(true);
+  for (let t = 0; t < idx.count; t += 3) for (let k = 0; k < 3; k++) { const i = idx.getX(t + k), j = idx.getX(t + (k + 1) % 3); a.fromBufferAttribute(p, i); c.fromBufferAttribute(p, j); const L0 = a.distanceTo(c); if (L0 < 1e-4 || !keep(a)) continue; mesh.getVertexPosition(i, A).applyMatrix4(mesh.matrixWorld); mesh.getVertexPosition(j, C).applyMatrix4(mesh.matrixWorld); if (A.distanceTo(C) / L0 > over) n++; }
+  return n;
+};
+test("the cloth is not drawn out under the raised arms, nor round the back foot's ankle", { skip }, () => {
+  const m = dressed(), hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 }), act = { hands: { left: hand(), right: hand() } };
+  for (let i = 0; i < 90; i++) { m.group.updateMatrixWorld(true); for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; m.bones.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); } m.update(1 / 30, 0, false, i / 30, () => 0, { act }); }
+  const arms = stretched(m, "robe", 3);
+  assert.ok(arms < 500, `arms at the brow: ${arms} robe edges stretched past 3×`);
+  const w = dressed(); let ankles = 0;
+  for (let i = 0; i < 90; i++) { w.update(1 / 30, 2.1, false, i / 30, () => 0, {}); if (i >= 40 && i % 2 === 0) ankles += stretched(w, "legs", 2, (v) => v.y < 0.22); }
+  assert.ok(ankles < 800, `walking: ${ankles} edge-frames round the ankles stretched past 2×`);
 });

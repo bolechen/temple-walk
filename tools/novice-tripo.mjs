@@ -437,9 +437,13 @@ console.log(`weights from the figure built in code; ${nArm} vertices weighted al
 // is free of the skirt it lay on.
 const sashBone = boneNames.indexOf("sashTail"), sashV = new Uint8Array(nv);
 for (const p of list) if (p.isSash) sashV.fill(1, p.offset, p.offset + p.P.length / 3);
+const WRAPS = new Set(["tripo_part_4", "tripo_part_10"]), WRAP_RANK = +(process.env.WRAP_RANK ?? 3);
 const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, WELD = +(process.env.NOVICE_WELD || 8);
 {
-  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]), Pw = Float32Array.from(P0);
+  // The leg wraps rank with the shoes (WRAP_RANK): where a wrap's lower edge meets the shoe's collar, the point takes half of each,
+// the shin's and the foot's (wholly the shoe's, the back foot of a stride pulled the wrap's edge out in white strips; wholly the
+// wrap's, it pulled the shoe's heel up in grey ones; #256).
+const rank = Int8Array.from(all.part, (p, i) => (WRAPS.has(all.piece[i]) ? WRAP_RANK : RANK[PARTS[p]])), Pw = Float32Array.from(P0);
   for (let i = 0; i < nv; i++) if (sashV[i]) Pw[i * 3 + 1] += 100;
   const r = weldWeights(Pw, J, W, { smooth: Math.max(0, WELD - 1), index: I0, rank });
   J.set(r.J); W.set(r.W);
@@ -457,7 +461,7 @@ const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, WELD = +(process.env.NOVIC
 }
 
 {
-  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]);
+  const rank = Int8Array.from(all.part, (p, i) => (WRAPS.has(all.piece[i]) ? WRAP_RANK : RANK[PARTS[p]]));
 // Copies that fall in one cell of 0.01 mm but lie a hair further apart than the welding's reach take one weight too:
   // the highest-ranked copy's, as the welding gives (tests/unit/novice-tripo.test.mjs asks it of every such cell). The top
   // edge of the sash's end, where it has not yet gone over to its bone, is sewn to the knot the same way.
