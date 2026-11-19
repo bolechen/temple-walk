@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-19T23:51:42.414Z",
+  "generated_at": "2026-11-19T23:56:52.715Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
     "sha": "4577abddbf42644771f41b87757050413d1be448",
@@ -571,24 +571,24 @@
     "kind": "developer_report"
   },
   "verification": {
-    "status": "in_progress",
-    "conclusion": null,
+    "status": "completed",
+    "conclusion": "success",
     "run_id": 44641090818,
     "url": "https://github.com/bolechen/temple-walk/actions/runs/44641090818",
     "checks": {
       "syntax": "pending",
-      "unit": "pending",
-      "e2e": "pending"
+      "unit": "success",
+      "e2e": "success"
     },
     "scope": [
       "boot"
     ]
   },
   "deployment": {
-    "status": "not_current",
-    "sha": "d75674845b3d4885292342eca4e09fe2a468d2ad",
+    "status": "deployed",
+    "sha": "4577abddbf42644771f41b87757050413d1be448",
     "url": "https://bolechen.github.io/temple-walk/",
-    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44637734460"
+    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44641090818"
   },
   "independent_review": {
     "schema_version": "1.0",
