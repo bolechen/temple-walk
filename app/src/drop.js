@@ -1,6 +1,8 @@
 import { JUMP } from "./stride.js";
 // Deliberate hops from authored, unrailed porch edges; not a general wall/cliff jump.
 export const MAX_DROP = 1.5;
+/** How far out from a porch's edge he may come down, nearest last: the first of these where the ground is clear (#274). */
+export const LAND_OUT = Object.freeze([0.9, 0.75, 0.6]);
 export function findDrop(walker, edges, x, z, dx, dz) {
   if (walker.room || Math.hypot(dx, dz) < 0.01) return null;
   const length = Math.hypot(dx, dz); dx /= length; dz /= length;
@@ -10,13 +12,20 @@ export function findDrop(walker, edges, x, z, dx, dz) {
     const along = ((x - edge.a[0]) * ax + (z - edge.a[1]) * az) / span;
     const back = (x - edge.a[0]) * nx + (z - edge.a[1]) * nz;
     if (along < 0.25 || along > span - 0.25 || back > 0.01 || back < -0.65 || Math.abs(walker.heightAt(x, z) - edge.top) > 0.03) continue;
-    const tx = edge.a[0] + ax * along / span + nx * 0.9, tz = edge.a[1] + az * along / span + nz * 0.9, y = walker.heightAt(tx, tz), fall = edge.top - y;
-    if (fall < 0.2 || fall > MAX_DROP) continue;
-    let clear = true;
-    for (const [ox, oz] of [[0, 0], [0.25, 0], [-0.25, 0], [0, 0.25], [0, -0.25], [0.17, 0.17], [0.17, -0.17], [-0.17, 0.17], [-0.17, -0.17]]) if (walker.blocked(tx + ox, tz + oz) || Math.abs(walker.heightAt(tx + ox, tz + oz) - y) > 0.04) clear = false;
-    if (!clear) continue;
+    // Where he comes down: 0.9 m out, on ground clear a quarter of a metre round; or, where that is a wall (a lane between a
+    // platform and the court's wall, #274: the tea house's back), nearer, on ground clear a quarter of a metre along the edge.
+    let tx = 0, tz = 0, y = 0, out = 0;
+    for (const o of LAND_OUT) {
+      const px = edge.a[0] + ax * along / span + nx * o, pz = edge.a[1] + az * along / span + nz * o, py = walker.heightAt(px, pz), fall = edge.top - py;
+      if (fall < 0.2 || fall > MAX_DROP) continue;
+      const round = o === LAND_OUT[0] ? [[0, 0], [0.25, 0], [-0.25, 0], [0, 0.25], [0, -0.25], [0.17, 0.17], [0.17, -0.17], [-0.17, 0.17], [-0.17, -0.17]] : [[0, 0], [ax / span * 0.25, az / span * 0.25], [-ax / span * 0.25, -az / span * 0.25]];
+      if (round.some(([ox, oz]) => walker.blocked(px + ox, pz + oz) || Math.abs(walker.heightAt(px + ox, pz + oz) - py) > 0.04)) continue;
+      tx = px; tz = pz; y = py; out = o; break;
+    }
+    if (!out) continue;
+    const fall = edge.top - y;
     // Clear the ledge and the trailing foot before descending below the takeoff plane.
-    const travel = 0.9 - back, fraction = (-back + 0.3) / travel, gravity = 9.8;
+    const travel = out - back, fraction = (-back + 0.3) / travel, gravity = 9.8;
     const lift = Math.max(1.7, Math.sqrt(gravity * fall * fraction * fraction / (2 * (1 - fraction))) + 0.25);
     const duration = (lift + Math.sqrt(lift * lift + 2 * gravity * fall)) / gravity;
     return { from: [x, edge.top, z], to: [tx, y, tz], normal: edge.normal, lift, gravity, duration };

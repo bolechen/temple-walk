@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 20,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 26,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -217,7 +217,10 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       // (Under a face that looks up, the ray may be inside a closed solid, seeing the inside of its top: the ground under a
       // terrace's stone mass is no floor, however much room the stone leaves over it. Or only under a tile's lip that
       // overhangs a step: asked sideways, below.)
-      if ((Math.abs(ny) >= BAKE.SLOPE || (isFloor[id] && Math.abs(ny) >= 0.5)) && above - y >= CLEAR && !(aboveUp && inside(S, h.point.x, y + 0.1, h.point.z))) ys.push(y);
+      // A floor looks up (#274: the underside of a terrace's stone mass, a face looking down with the whole mass over it, was
+      // taken for one wherever the mass shares a face with the terrace below, which the sideways test cannot tell apart; so
+      // under every wall and table of the upper terraces there was a floor three metres down, and nothing kept him off them).
+      if ((ny >= BAKE.SLOPE || (isFloor[id] && ny >= 0.5)) && above - y >= CLEAR && !(aboveUp && inside(S, h.point.x, y + 0.1, h.point.z))) ys.push(y);
       aboveUp = Math.abs(above - y) < 0.002 ? aboveUp || ny > 0.2 : ny > 0.2; above = y;   // (faces that meet at one height are one: any of them looking up counts)
     }
   }
@@ -259,7 +262,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // A low thing in a cell: a face that stands up from LOW to CLIMB over its floor, unless just across that face (behind it,
   // seen from this cell) there is a foothold at its top: then it is the riser of a step he takes, or the face of a sill he
   // steps over. The side of a stair's cheek has only the cheek's sloping top across it; a root, the censer's foot, nothing.
-  const lowBot = new Float32Array(N).fill(NaN), lowTop = new Float32Array(N), lowWhat = new Int16Array(N).fill(-1), sillTop = new Float32Array(N).fill(NaN);
+  const lowBot = new Float32Array(N).fill(NaN), lowTop = new Float32Array(N), lowWhat = new Int16Array(N).fill(-1), sillTop = new Float32Array(N).fill(NaN), matTop = new Uint8Array(N);
   const across = (x, z, t, y0, y1) => {
     t.getNormal(nrm); let ax = nrm.x, az = nrm.z; const l = Math.hypot(ax, az) || 1; ax /= l; az /= l;
     const mx = (t.a.x + t.b.x + t.c.x) / 3, mz = (t.a.z + t.b.z + t.c.z) / 3; if ((x - mx) * ax + (z - mz) * az > 0) { ax = -ax; az = -az; }   // pointing away from this cell, into the thing
@@ -274,20 +277,26 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       const hn = h[jj * nx + ii]; if (Number.isNaN(hn)) { open = false; continue; }
       lo = Math.min(lo, hn); up = Math.max(up, hn - h[k]);
     }
-    const x = cx(i), z = cz(j), y = h[k];
-    qbox.min.set(x - r, lo + 0.02, z - r); qbox.max.set(x + r, y + CLEAR, z + r);
+    // How high to look for what stands here: to CLEAR over this cell's own floor, and over the highest floor beside it. (#274:
+    // under the walls and tables of the upper terraces a cell's floor is the ground far below, reached round the hill under the
+    // terrace's stone; looked at only to CLEAR over that, the wall above went unseen, and nothing kept him off its plaster.)
+    const x = cx(i), z = cz(j), y = h[k], ceil = y + CLEAR + up;
+    qbox.min.set(x - r, lo + 0.02, z - r); qbox.max.set(x + r, ceil, z + r);
     let what = -1, wlo = Infinity, whi = -Infinity, wpost = 0, llo = NaN, lhi = -Infinity, lwhat = -1, sill = NaN;
     if (S.bvh) S.bvh.shapecast({
       intersectsBounds: (bb) => bb.intersectsBox(qbox),
       intersectsTriangle: (t, ti) => {
         const id = S.mat[(index[ti * 3] / 3) | 0], p = isPost[id];
+        // A thing marked as floor is floor all over, rim and all: nothing of it stands in his way (#274: the summit's mat), and
+        // within his shoes' reach of its rim he stands at its top, as astride a sill, however high it is (it is under CLIMB).
+        if (isFloor[id]) { if (slabDistance(t.a, t.b, t.c, y + BAKE.LOW, y + CLIMB, x, z) < r && !(sill >= slabY[1])) { sill = slabY[1]; matTop[k] = 1; } return false; }
         // A face that lies flat is a floor, not a wall: unless it lies higher over this cell's floor than he steps (a level
         // bough at his head, a bar), where it is in his way like any wall.
         if (!p && Math.abs(t.getNormal(nrm).y) > 0.5) {
-          if (slabDistance(t.a, t.b, t.c, y + CLIMB, y + CLEAR, x, z) < r) { if (what < 0) what = id; wlo = Math.min(wlo, slabY[0]); whi = Math.max(whi, slabY[1]); }
+          if (slabDistance(t.a, t.b, t.c, y + CLIMB, ceil, x, z) < r) { if (what < 0) what = id; wlo = Math.min(wlo, slabY[0]); whi = Math.max(whi, slabY[1]); }
           return false;
         }
-        if (slabDistance(t.a, t.b, t.c, lo + 0.02, y + CLEAR, x, z) < r) {
+        if (slabDistance(t.a, t.b, t.c, lo + 0.02, ceil, x, z) < r) {
           if (what < 0 || p) what = id; wlo = Math.min(wlo, p ? y : slabY[0]); whi = Math.max(whi, slabY[1]); if (p) wpost = 1;
         }
         if (!p && slabDistance(t.a, t.b, t.c, y + BAKE.LOW, y + CLIMB, x, z) < r) {
@@ -334,6 +343,17 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       if (d < lowReach(lo, hi)) state[kk] = 1 + c;
     }
   }
+  // A lip too narrow for his shoe at the head of a drop (the base course under a platform's edge, a hand wide and a step
+  // down from the floor): a floor cell with nowhere to stand at its height beside it and a fall of more than CLIMB next to
+  // it. He does not stand there (#274: the library's platform; found when its edge was looked for and not found).
+  for (let j = 1; j + 1 < nz; j++) for (let i = 1; i + 1 < nx; i++) {
+    const k = j * nx + i; if (state[k] || Number.isNaN(h[k])) continue;
+    let hold = false, fall = false;
+    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const kk = k + b * nx + a; if (foothold[kk] && Math.abs(h[kk] - h[k]) <= 0.02) hold = true; }
+    if (hold) continue;
+    for (let b = -3; b <= 3 && !fall; b++) for (let a = -3; a <= 3; a++) { const jj = j + b, ii = i + a; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; if (h[k] - h[jj * nx + ii] > CLIMB) { fall = true; break; } }
+    if (fall) state[k] = 1 + LEDGE;
+  }
   T.push(performance.now());
   // What the plan closes though it is drawn as floor: a doorway he is taken in at, beyond that line (`hall.stop`: the door is
   // drawn open), and `site.closed` (the gate's shut side bays, the bamboo either side of the forecourt).
@@ -360,7 +380,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     for (const [a, b, d] of disk) {
       if (d > R) break;
       const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
-      const kk = jj * nx + ii; if (state[kk] || h[kk] >= top || top - h[kk] > BAKE.SILL) continue;
+      const kk = jj * nx + ii; if (state[kk] || h[kk] >= top || top - h[kk] > (matTop[k0] ? CLIMB : BAKE.SILL)) continue;
       h[kk] = top;
     }
   }

@@ -16,6 +16,13 @@ const below = (e, along = 0.5) => {
   return null;
 };
 
+// Is there anywhere along an edge to come down on its platform: open floor at its height 0.4 m in from it and 0.15 m either way along it (findClimb's LAND)?
+const landing = (e) => {
+  const [nx, nz] = e.normal, ax = e.b[0] - e.a[0], az = e.b[1] - e.a[1], span = Math.hypot(ax, az);
+  for (let s = 0.25; s <= span - 0.25; s += 0.05) if ([0, 0.15, -0.15].every((k) => { const x = e.a[0] + (ax / span) * (s + k) - nx * 0.4, z = e.a[1] + (az / span) * (s + k) - nz * 0.4; return !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - e.top) <= 0.03; })) return true;
+  return false;
+};
+
 test("the reach is the top of his own jump", () => assert.ok(Math.abs(REACH - reach) < 1e-12 && reach > 0.45 && reach < 0.47));
 
 test("every unrailed edge whose platform he can reach is climbable from below, along an arc that clears the edge; the rest are not", () => {
@@ -28,6 +35,9 @@ test("every unrailed edge whose platform he can reach is climbable from below, a
     const rise = e.top - walker.heightAt(p.x, p.z);
     rows.push([e.top.toFixed(2), rise.toFixed(2), !!plan]);
     if (rise > reach + CLEARANCE || rise < 0.1) { assert.equal(plan, null, `a ${rise.toFixed(2)} m platform is beyond his jump`); continue; }
+    // An edge found in the grid may have nowhere to come down behind it (a bench, a column at the platform's rim: he can
+    // still hop down from the strip before it): then there is no way up, and none is offered.
+    if (!plan && !landing(e)) continue;
     assert.ok(plan, `no way up a ${rise.toFixed(2)} m edge at ${e.a} from ${p.d.toFixed(2)} m out`);
     assert.ok(!walker.blocked(plan.to[0], plan.to[2]) && Math.abs(walker.heightAt(plan.to[0], plan.to[2]) - e.top) < 0.03, "he comes down on the platform");
     let top = 0;

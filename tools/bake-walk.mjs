@@ -15,7 +15,7 @@ import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { buildDrawn, gridsOf, targetsOf, partsOf, planText } from "./walk/scene.mjs";
-import { gather, bakeGrid, oldReach, cellsOf, bodyPrint, textHash, BAKE } from "./walk/bake.mjs";
+import { gather, bakeGrid, oldReach, cellsOf, bodyPrint, textHash, BAKE, OUTLINE } from "./walk/bake.mjs";
 import { encode, decode, readHeader, VERSION } from "../app/src/walkgrid.js";
 const { createWalker } = await import("../app/src/site.js");
 
@@ -77,7 +77,7 @@ export function bake(prep, { force = false, file = FILE } = {}) {
       const k = j * B.nx + i; if (!B.state[k]) t.new = true; if ((g.bits[k >> 3] >> (k & 7)) & 1) t.old = true;
     }
   }
-  const header = { level: LEVEL, format: VERSION, bake: BAKE, body: prep.body, plan: prep.plan, defs: prep.defs, grids, targets, parts: partsOf(prep.drawn) };
+  const header = { level: LEVEL, format: VERSION, bake: BAKE, outline: OUTLINE, body: prep.body, plan: prep.plan, defs: prep.defs, grids, targets, parts: partsOf(prep.drawn) };
   return { bytes: encode(header, cells, (b) => deflateRawSync(b, { level: 9 })), header, ms, stale };
 }
 

@@ -153,7 +153,7 @@ jobs:
       - name: The floor, from the cache or baked
         run: node tools/bake-walk.mjs
       - name: The same unit tests on the walker over the baked floor (#265)
-        run: WALKER=court node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
+        run: WALKER=mesh node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
 
   # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
   # preview.

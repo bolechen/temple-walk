@@ -1,0 +1,435 @@
+{
+  "started": "2026-11-19T12:21:25.700Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [
+    {
+      "name": "01-out",
+      "file": "01-out.png",
+      "tris": 1619886,
+      "calls": 259
+    },
+    {
+      "name": "01-walltop",
+      "file": "01-walltop.png",
+      "tris": 1493532,
+      "calls": 220
+    },
+    {
+      "name": "01-back",
+      "file": "01-back.png",
+      "tris": 1327752,
+      "calls": 244
+    },
+    {
+      "name": "02-out",
+      "file": "02-out.png",
+      "tris": 523967,
+      "calls": 69
+    },
+    {
+      "name": "02-walltop",
+      "file": "02-walltop.png",
+      "tris": 523971,
+      "calls": 71
+    },
+    {
+      "name": "02-back",
+      "file": "02-back.png",
+      "tris": 530979,
+      "calls": 86
+    },
+    {
+      "name": "03-out",
+      "file": "03-out.png",
+      "tris": 524319,
+      "calls": 81
+    },
+    {
+      "name": "03-walltop",
+      "file": "03-walltop.png",
+      "tris": 526403,
+      "calls": 80
+    },
+    {
+      "name": "03-back",
+      "file": "03-back.png",
+      "tris": 786805,
+      "calls": 139
+    },
+    {
+      "name": "04-out",
+      "file": "04-out.png",
+      "tris": 1627788,
+      "calls": 267
+    },
+    {
+      "name": "04-walltop",
+      "file": "04-walltop.png",
+      "tris": 1497660,
+      "calls": 230
+    },
+    {
+      "name": "04-back",
+      "file": "04-back.png",
+      "tris": 1304210,
+      "calls": 226
+    },
+    {
+      "name": "05-out",
+      "file": "05-out.png",
+      "tris": 1292916,
+      "calls": 158
+    },
+    {
+      "name": "05-walltop",
+      "file": "05-walltop.png",
+      "tris": 1291572,
+      "calls": 151
+    },
+    {
+      "name": "05-back",
+      "file": "05-back.png",
+      "tris": 990028,
+      "calls": 130
+    },
+    {
+      "name": "06-out",
+      "file": "06-out.png",
+      "tris": 1023876,
+      "calls": 107
+    },
+    {
+      "name": "06-walltop",
+      "file": "06-walltop.png",
+      "tris": 1023876,
+      "calls": 107
+    },
+    {
+      "name": "06-back",
+      "file": "06-back.png",
+      "tris": 1320004,
+      "calls": 180
+    },
+    {
+      "name": "07-out",
+      "file": "07-out.png",
+      "tris": 647699,
+      "calls": 83
+    },
+    {
+      "name": "07-walltop",
+      "file": "07-walltop.png",
+      "tris": 647795,
+      "calls": 85
+    },
+    {
+      "name": "07-back",
+      "file": "07-back.png",
+      "tris": 841013,
+      "calls": 193
+    },
+    {
+      "name": "08-out",
+      "file": "08-out.png",
+      "tris": 1023818,
+      "calls": 104
+    },
+    {
+      "name": "08-walltop",
+      "file": "08-walltop.png",
+      "tris": 1023816,
+      "calls": 103
+    },
+    {
+      "name": "08-back",
+      "file": "08-back.png",
+      "tris": 1322286,
+      "calls": 194
+    },
+    {
+      "name": "09-out",
+      "file": "09-out.png",
+      "tris": 569477,
+      "calls": 78
+    },
+    {
+      "name": "09-walltop",
+      "file": "09-walltop.png",
+      "tris": 648533,
+      "calls": 86
+    },
+    {
+      "name": "09-back",
+      "file": "09-back.png",
+      "tris": 801503,
+      "calls": 164
+    },
+    {
+      "name": "10-out",
+      "file": "10-out.png",
+      "tris": 648895,
+      "calls": 93
+    },
+    {
+      "name": "10-walltop",
+      "file": "10-walltop.png",
+      "tris": 649117,
+      "calls": 95
+    },
+    {
+      "name": "10-back",
+      "file": "10-back.png",
+      "tris": 800687,
+      "calls": 166
+    },
+    {
+      "name": "11-out",
+      "file": "11-out.png",
+      "tris": 801677,
+      "calls": 168
+    },
+    {
+      "name": "11-walltop",
+      "file": "11-walltop.png",
+      "tris": 801365,
+      "calls": 162
+    },
+    {
+      "name": "11-back",
+      "file": "11-back.png",
+      "tris": 649479,
+      "calls": 107
+    },
+    {
+      "name": "12-out",
+      "file": "12-out.png",
+      "tris": 965979,
+      "calls": 218
+    },
+    {
+      "name": "12-walltop",
+      "file": "12-walltop.png",
+      "tris": 940757,
+      "calls": 153
+    },
+    {
+      "name": "12-back",
+      "file": "12-back.png",
+      "tris": 499471,
+      "calls": 64
+    },
+    {
+      "name": "13-out",
+      "file": "13-out.png",
+      "tris": 921096,
+      "calls": 107
+    },
+    {
+      "name": "13-walltop",
+      "file": "13-walltop.png",
+      "tris": 940118,
+      "calls": 109
+    },
+    {
+      "name": "13-back",
+      "file": "13-back.png",
+      "tris": 1299752,
+      "calls": 182
+    },
+    {
+      "name": "14-out",
+      "file": "14-out.png",
+      "tris": 651347,
+      "calls": 95
+    },
+    {
+      "name": "14-walltop",
+      "file": "14-walltop.png",
+      "tris": 647789,
+      "calls": 92
+    },
+    {
+      "name": "14-back",
+      "file": "14-back.png",
+      "tris": 497525,
+      "calls": 61
+    },
+    {
+      "name": "15-out",
+      "file": "15-out.png",
+      "tris": 6364,
+      "calls": 27
+    },
+    {
+      "name": "15-walltop",
+      "file": "15-walltop.png",
+      "tris": 6748,
+      "calls": 28
+    },
+    {
+      "name": "15-back",
+      "file": "15-back.png",
+      "tris": 12730,
+      "calls": 49
+    },
+    {
+      "name": "16-out",
+      "file": "16-out.png",
+      "tris": 921164,
+      "calls": 116
+    },
+    {
+      "name": "16-walltop",
+      "file": "16-walltop.png",
+      "tris": 942764,
+      "calls": 118
+    },
+    {
+      "name": "16-back",
+      "file": "16-back.png",
+      "tris": 1930222,
+      "calls": 384
+    },
+    {
+      "name": "17-out",
+      "file": "17-out.png",
+      "tris": 911313,
+      "calls": 207
+    },
+    {
+      "name": "17-walltop",
+      "file": "17-walltop.png",
+      "tris": 837035,
+      "calls": 140
+    },
+    {
+      "name": "17-back",
+      "file": "17-back.png",
+      "tris": 506195,
+      "calls": 68
+    },
+    {
+      "name": "18-out",
+      "file": "18-out.png",
+      "tris": 834505,
+      "calls": 156
+    },
+    {
+      "name": "18-walltop",
+      "file": "18-walltop.png",
+      "tris": 834519,
+      "calls": 158
+    },
+    {
+      "name": "18-back",
+      "file": "18-back.png",
+      "tris": 319932,
+      "calls": 52
+    },
+    {
+      "name": "19-out",
+      "file": "19-out.png",
+      "tris": 966119,
+      "calls": 218
+    },
+    {
+      "name": "19-walltop",
+      "file": "19-walltop.png",
+      "tris": 966119,
+      "calls": 218
+    },
+    {
+      "name": "19-back",
+      "file": "19-back.png",
+      "tris": 454513,
+      "calls": 57
+    },
+    {
+      "name": "20-out",
+      "file": "20-out.png",
+      "tris": 966403,
+      "calls": 222
+    },
+    {
+      "name": "20-walltop",
+      "file": "20-walltop.png",
+      "tris": 966399,
+      "calls": 220
+    },
+    {
+      "name": "20-back",
+      "file": "20-back.png",
+      "tris": 454511,
+      "calls": 56
+    },
+    {
+      "name": "21-out",
+      "file": "21-out.png",
+      "tris": 962052,
+      "calls": 109
+    },
+    {
+      "name": "21-walltop",
+      "file": "21-walltop.png",
+      "tris": 963228,
+      "calls": 112
+    },
+    {
+      "name": "21-back",
+      "file": "21-back.png",
+      "tris": 1922200,
+      "calls": 347
+    },
+    {
+      "name": "22-out",
+      "file": "22-out.png",
+      "tris": 967424,
+      "calls": 133
+    },
+    {
+      "name": "22-walltop",
+      "file": "22-walltop.png",
+      "tris": 967430,
+      "calls": 131
+    },
+    {
+      "name": "22-back",
+      "file": "22-back.png",
+      "tris": 1561390,
+      "calls": 205
+    },
+    {
+      "name": "owner-spot",
+      "file": "owner-spot.png",
+      "tris": 1628928,
+      "calls": 293
+    },
+    {
+      "name": "owner-spot-autumn",
+      "file": "owner-spot-autumn.png",
+      "tris": 1628928,
+      "calls": 293
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "bae2d244c6e57147e6e7ae44713f193d5be119f7",
+    "entry": "assets/index-B2CUurgR.js",
+    "files": 145,
+    "sha256": "80ea89af2d8d1747beb48b074815104f215766b42a4474288fa839c9498d2a5b"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-19T12:38:18.688Z"
+}

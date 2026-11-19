@@ -6,7 +6,7 @@
   "scripts": {
     "check": "node tools/check.cjs",
     "test": "node --test tests/unit/*.test.mjs",
-    "test:grid": "node tools/bake-walk.mjs && WALKER=court node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs",
+    "test:grid": "node tools/bake-walk.mjs && WALKER=mesh node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs",
     "e2e": "node tests/e2e/run.cjs",
     "e2e:smoke": "node tests/e2e/run.cjs --smoke",
     "e2e:quick": "node tests/e2e/run.cjs --quick",
@@ -22,9 +22,9 @@
     "setup": "node tools/setup.mjs",
     "postinstall": "node tools/setup.mjs",
     "edges": "node tools/edges.mjs",
-    "edges:grid": "node tools/bake-walk.mjs && WALKER=court node --import ./tools/walk/swap.mjs tools/edges.mjs",
+    "edges:grid": "node tools/bake-walk.mjs && WALKER=mesh node --import ./tools/walk/swap.mjs tools/edges.mjs",
     "nearplane": "node --test tests/slow/*.test.mjs",
-    "nearplane:grid": "node tools/bake-walk.mjs && WALKER=court node --import ./tools/walk/swap.mjs --test tests/slow/*.test.mjs",
+    "nearplane:grid": "node tools/bake-walk.mjs && WALKER=mesh node --import ./tools/walk/swap.mjs --test tests/slow/*.test.mjs",
     "bake-walk": "node tools/bake-walk.mjs",
     "bake-doorways": "node tools/bake-doorways.mjs"
   },

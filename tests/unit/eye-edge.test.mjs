@@ -46,6 +46,10 @@ const settle = (x, z, yaw, pitch, frames = 120) => {
 };
 
 test("under a terrace's retaining wall the eye does not climb the stair above to look at his feet (cam 2.1,-66.63, yaw -2.794, pitch -0.459 once stood at 10 m and lost him)", () => {
-  const { c, foot } = settle(2.1, -66.63, -2.794, -0.459);
+  // (On the grid that address is a tread of the flight, by its cheek: there he is stood on the nearest open ground at the
+  // court's height beside the flight, under the wall, which is what the address was about.)
+  let x = 2.1; const z = -66.63, court = LEVELS[0].y + 0.1;
+  if (walker.kind === "grid") while (x < 8 && (walker.blocked(x, z) || walker.heightAt(x, z) > court)) x += 0.05;
+  const { c, foot } = settle(x, z, -2.794, -0.459);
   assert.ok(c[1] < foot + 2, `the eye stands at ${c[1].toFixed(2)} m over his ${foot} m`);
 });

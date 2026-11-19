@@ -5,8 +5,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { decode } from "../../app/src/walkgrid.js";
-import { createGridWalker, gridsByPlace, courtRegion } from "../../app/src/gridwalker.js";
-import { SITE, LEVELS } from "../../app/src/site.js?real";
+import { createGridWalker, gridsByPlace } from "../../app/src/gridwalker.js";
 
 export const FILE = fileURLToPath(new URL("../../app/shared/walk/t00.bin", import.meta.url));
 let decoded = null;
@@ -15,8 +14,7 @@ export function bakedGrid() {
   if (!existsSync(FILE)) throw new Error(`${FILE} is missing: run node tools/bake-walk.mjs`);
   return (decoded = decode(readFileSync(FILE), (b) => inflateRawSync(b)));
 }
-/** createGridWalker for this site, in `mode` ("court" or "mesh"), holding `old`. */
-export function gridWalkerFor(site, old, mode = "court") {
-  const region = mode === "court" ? courtRegion(site, SITE, LEVELS[0]) : null;
-  return createGridWalker(old, gridsByPlace(bakedGrid(), mode, region), { mode, region, drops: site.walk.drops });
+/** createGridWalker for this site, holding `old`. */
+export function gridWalkerFor(site, old) {
+  return createGridWalker(old, gridsByPlace(bakedGrid()));
 }

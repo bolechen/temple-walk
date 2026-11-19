@@ -70,7 +70,7 @@ export function report(c, { baseName = "基准", total = null } = {}) {
     for (const r of big.length ? big : c.rows.slice(0, 8)) out.push(`| ${r.layer} | ${r.grid} | ${r.part} | ${f(r.gained)} | ${f(r.lost)} |`);
   }
   const fresh = (c.newOnly || []).filter((r) => r.m2 > LIMIT);
-  out.push("", fresh.length ? `画的地面能站、旧数据走不到的（超过 ${LIMIT} m² 的部分；页面默认只在首院这一层用画的地面：首院、山门前和其中的建筑）：` : "画的地面能站而旧数据走不到的，没有哪一部分超过 " + LIMIT + " m²。");
+  out.push("", fresh.length ? `画的地面能站、旧数据走不到的（超过 ${LIMIT} m² 的部分；页面默认处处走画的地面，#274；每处都要在 PR 里说一句是旧数据漏了还是该关）：` : "画的地面能站而旧数据走不到的，没有哪一部分超过 " + LIMIT + " m²。");
   if (fresh.length) { out.push("", "| 格子 | 部分 | m² |", "|---|---|---|"); for (const r of fresh) out.push(`| ${r.grid} | ${r.part} | ${f(r.m2)} |`); }
   for (const n of c.notes) out.push("", `- ${n}`);
   if (total) out.push("", total);

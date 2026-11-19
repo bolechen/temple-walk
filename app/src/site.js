@@ -242,6 +242,8 @@ export function buildSite(M) {
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
     g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, jamb).translate(sx * R, jamb / 2, 1.103), new THREE.PlaneGeometry(0.9, jamb - 0.1).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), (jamb - 0.1) / 2, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
+    // Drawn as floor, but it is water: inside the sill the niche is the pool, which he looks into and does not wade (#274).
+    closed.push({ x0: 13.2 - w, x1: 13.2 + w, z0: T2.zS, z1: T2.zS + 1.1, why: "the dragon well's pool, inside its sill" });
     walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY });
   }
 
@@ -305,17 +307,16 @@ export function buildSite(M) {
     const yC = yB - A.rise3;
     flights.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1)); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
     walk.ramps.push({ x0: A.xC - A.w / 2 + clear, x1: A.xC + A.w / 2 - clear, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
-    walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
+    walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.9 - 2.3 - stairGeo(1, 0.3).run - 0.02, z0: A.zC0, z1: A.zC1 - pad, h: yC });   // (as far as the foot of the river-view pavilion's steps)
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
     const rest = { cai: 0.186, xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, crest: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
-      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
+      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true };   // (two treads up from the landing, #274: the floor stands 0.3 m over it, more than he steps; nearly the middle bay wide)
     // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
     // level ground under every column, and the valley to look at.
     put({ ...rest, plaque: { text: "半山亭", style: "wood" } }, [5.2, A.zA1 + 2.75], 2, 0, yA);
     stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
-    walk.decks.push({ x0: 3.2, x1: 7.2, z0: A.zA1 - 0.4, z1: A.zA1 + 0.6, h: yA });   // the step between its floor and the landing
-    put({ ...rest, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
+    put({ ...rest, steps: 0, stepsBack: 2.6, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where Su Shi, climbing to the temple, washed his ink-stone (the county gazetteer: outside the gate, its
     // water clear, the ripples glinting on a still moonlit night as though there were ink in them), beside the second
     // landing: clear water in a tank of dressed stone, and behind it, facing the stair, a small stele with its name cut

@@ -149,7 +149,9 @@ test("walls, halls and the hillside keep the visitor out", () => {
   assert.ok(!can(12, (T2.zN + LEVELS[2].zS) / 2, 0.3), "on the tea slope, off the stair");
 });
 test("heights: the courts are level, the stairs climb evenly", () => {
-  assert.equal(walker.heightAt(0, 20), 0); assert.equal(walker.heightAt(0, LEVELS[0].zS - 5), LEVELS[0].y);
+  // (The grid's floor is the drawn paving, laid a centimetre over the terrace's stone.)
+  const lift = walker.kind === "grid" ? 0.02 : 0;
+  assert.ok(Math.abs(walker.heightAt(0, 20)) <= lift); assert.ok(Math.abs(walker.heightAt(0, LEVELS[0].zS - 5) - LEVELS[0].y) <= lift, `the first terrace stands at ${walker.heightAt(0, LEVELS[0].zS - 5)}`);
   for (const r of site.walk.ramps) {
     let last = null; const run = Math.hypot(r.high[0] - r.low[0], r.high[1] - r.low[1]);
     // A stair is treads: the height holds across a tread and rises by one step, never more, and it ends at the top.

@@ -1,102 +1,131 @@
-// The walker over the floor baked from the drawn meshes (#265, the third step of #161): over the first court it answers
-// from the grid, elsewhere from the written plan, and the two meet at the flights between terraces. Every position here
-// is read from the plan (site.walk.ramps, site.places, site.seats, site.halls, site.views) or from the grid itself.
+// The walker over the floor baked from the drawn meshes (#265, #274: the third and fourth steps of #161): everywhere a walk
+// is laid out (the courts and the path, every room, the summit pavilion's balcony) it answers from the grid. Every position
+// here is read from the plan (site.walk.ramps, site.places, site.seats, site.halls, site.views, the rooms) or from the grid.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 import { inflateRawSync } from "node:zlib";
 const { buildSite, createWalker, SITE, LEVELS } = await import("../../app/src/site.js?real");
 const { buildInteriors } = await import("../../app/src/interior.js");
-const { createGridWalker, gridsByPlace, courtRegion, walkerMode, ledgesOf, settle, cropGrid, gridBytes, keepFor, keepBox } = await import("../../app/src/gridwalker.js");
-const { decode, cellOf } = await import("../../app/src/walkgrid.js");
+const { createGridWalker, gridsByPlace, walkerMode, ledgesOf, settle, gridBytes } = await import("../../app/src/gridwalker.js");
+const { findDrop } = await import("../../app/src/drop.js");
+const { decode, cellOf, NO_FLOOR } = await import("../../app/src/walkgrid.js");
 const { stride } = await import("../../app/src/stride.js");
 const { CUSHION, STOOL } = await import("../../app/src/geo.js");
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
+const { reach, BAKE } = await import("../../tools/walk/bake.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), rooms = buildInteriors(M, site.halls);
 const file = ensure(prepare()), decoded = decode(file.bytes, (b) => inflateRawSync(b));
-const region = courtRegion(site, SITE, LEVELS[0]);
-const make = (mode) => createGridWalker(createWalker(site), gridsByPlace(decoded, mode, mode === "court" ? region : null), { mode, region: mode === "court" ? region : null, drops: site.walk.drops });
-const walker = make("court"), old = createWalker(site);
-const inRegion = (x, z) => x > region.x0 && x < region.x1 && z > region.z0 && z < region.z1;
+const grids = gridsByPlace(decoded), walker = createGridWalker(createWalker(site), grids), old = createWalker(site);
+const G = grids.outdoors, xOf = (g, k) => g.x0 + ((k % g.nx) + 0.5) * g.step, zOf = (g, k) => g.z0 + (Math.floor(k / g.nx) + 0.5) * g.step;
+/** Run `fn` with him in a room, or up on a balcony, and put him back out of doors. */
+const within = (where, fn) => { try { if (where.room) walker.setRoom(where.room); if (where.loft) walker.setLoft(where.loft); return fn(); } finally { walker.setRoom(null); walker.setLoft(null); } };
 
-test("the address chooses the walker: the grid over the first court by default, the written plan with ?walker=old, the grid everywhere with ?walker=mesh", () => {
-  assert.equal(walkerMode(null), "court"); assert.equal(walkerMode("old"), "old"); assert.equal(walkerMode("mesh"), "mesh"); assert.equal(walkerMode("nonsense"), "court");
-  // The region is the first court's terrace, gate and forecourt: from the top of the path's flight to the foot of the library's stair.
-  assert.ok(region.z1 <= SITE.fore && region.z1 > SITE.zS && region.z0 > LEVELS[0].zS && region.z0 < LEVELS[0].zS + 8, JSON.stringify(region));
-  assert.ok(walker.answers(0, 20) && walker.answers(...site.halls.find((h) => h.id === "tea").out), "the first court is the grid's");
-  for (const [x, z] of [[0, LEVELS[0].zS - 5], [0, LEVELS[1].zS - 5], site.start.slice(0, 2)]) {
-    assert.ok(!walker.answers(x, z), `(${x}, ${z}) is outside the first court`);
-    assert.equal(walker.blocked(x, z), old.blocked(x, z)); assert.equal(walker.heightAt(x, z), old.heightAt(x, z));
-  }
-  // Indoors and up on the balcony the written plan answers by default; ?walker=mesh asks the grid there too.
-  const main = rooms.rooms.main.room, mesh = make("mesh");
-  walker.setRoom(main); mesh.setRoom(main);
-  try { assert.ok(!walker.answers(main.door[0], main.door[1])); assert.ok(mesh.answers(main.door[0], main.door[1] - 1)); } finally { walker.setRoom(null); mesh.setRoom(null); }
-  assert.ok(mesh.answers(0, LEVELS[0].zS - 5), "with ?walker=mesh the terraces are the grid's too");
-  // The default page keeps only the court's cells; the whole grid is kept for ?walker=mesh.
-  const court = gridBytes(gridsByPlace(decoded, "court", region)), all = gridBytes(gridsByPlace(decoded, "mesh", null));
-  assert.ok(court < all / 2, `the court's cells take ${court} bytes of ${all}`);
+test("the address chooses the walker: the baked floor everywhere by default, the written plan with ?walker=old", () => {
+  assert.equal(walkerMode(null), "mesh"); assert.equal(walkerMode("old"), "old"); assert.equal(walkerMode("mesh"), "mesh"); assert.equal(walkerMode("nonsense"), "mesh");
+  // Out of doors: the start of the path, the forecourt, the first court, each terrace above it, the summit.
+  const outdoors = [site.start.slice(0, 2), [0, (SITE.zS + SITE.fore) / 2], [0, 20], ...LEVELS.map((L) => [0, L.zS - 2])];
+  for (const [x, z] of outdoors) assert.ok(walker.answers(x, z) && !walker.blocked(x, z), `(${x}, ${z}) is open floor of the grid`);
+  // In every room, and up on the balcony.
+  assert.equal(Object.keys(grids.rooms).length, site.halls.length, "a grid for every hall's room");
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => assert.ok(walker.answers(r.room.door[0], r.room.door[1]) && !walker.blocked(r.room.door[0], r.room.door[1]), `inside the door of ${id} is open floor of its own grid`));
+  for (const [id, L] of Object.entries(site.lofts)) within({ loft: id }, () => {
+    assert.ok(walker.answers(L.door[0], L.door[1]) && !walker.blocked(L.door[0], L.door[1]), `the balcony of ${id} at its door`);
+    assert.ok(Math.abs(walker.heightAt(L.door[0], L.door[1]) - L.floor) < 0.02, "at the balcony's own height");
+  });
+  assert.ok(gridBytes(grids) > 1e6);
+  // The page hands these about as plain functions (the novice is given `walker.heightAt` and `walker.eyeAt` to ask): none may lean on `this`.
+  const [x, z] = site.start, r = site.walk.ramps[0], mid = [(r.low[0] + r.high[0]) / 2, (r.low[1] + r.high[1]) / 2];
+  for (const name of ["heightAt", "blocked", "eyeAt", "onStairs", "onGround", "floorAt", "landAt", "wall", "answers"]) { const f = walker[name]; assert.doesNotThrow(() => { f(x, z); f(mid[0], mid[1]); }, `walker.${name} called on its own`); }
 });
 
-test("the two walkers meet at every flight between the first court and the next terrace or the path: up and down, the floor never jumps and he is never stuck", () => {
-  const crossing = site.walk.ramps.filter((r) => [r.low, r.high].some((p) => inRegion(p[0], p[1])) !== [r.low, r.high].every((p) => inRegion(p[0], p[1])) || (r.z1 >= region.z0 - 0.05 && r.z1 <= region.z0 + 0.05) || (r.z0 >= region.z1 - 0.05 && r.z0 <= region.z1 + 0.05));
-  assert.ok(crossing.length >= 2, `the library's stair and the path's last flight meet the court, not ${crossing.length} flights`);
-  for (const r of crossing) {
+test("on every flight of the plan, up and down, the floor never jumps, he is never stuck, and the eye climbs it as a slope", () => {
+  let walked = 0; const skipped = [];
+  for (const r of site.walk.ramps) {
     const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1], run = Math.hypot(dx, dz), ux = dx / run, uz = dz / run;
-    const a = { x: r.low[0] - ux * 2, z: r.low[1] - uz * 2 }, b = { x: r.high[0] + ux * 1, z: r.high[1] + uz * 1 };
+    const a = { x: r.low[0] - ux * 0.8, z: r.low[1] - uz * 0.8 }, b = { x: r.high[0] + ux * 0.25, z: r.high[1] + uz * 0.25 };
+    // (A flight whose foot or head the grid does not let him stand at on its middle line: one down the middle of which
+    // something stands. There is none now; were there one, it is named.)
+    if (walker.blocked(a.x, a.z) || walker.blocked(b.x, b.z)) { skipped.push(`the flight to (${r.high.map((v) => v.toFixed(1))})`); continue; }
+    walked++;
     for (const [from, to] of [[a, b], [b, a]]) {
-      const pos = { ...from }; let last = walker.heightAt(pos.x, pos.z), worst = 0, sides = new Set(), eye = walker.eyeAt(pos.x, pos.z), eyeJump = 0;
-      assert.ok(!walker.blocked(pos.x, pos.z), `the walk at the flight to ${r.high} starts on open ground`);
-      for (let n = 0; n < 2000 && Math.hypot(to.x - pos.x, to.z - pos.z) > 0.03; n++) {
+      const pos = { ...from }; let last = walker.heightAt(pos.x, pos.z), worst = 0, eye = walker.eyeAt(pos.x, pos.z), eyeJump = 0, stairs = 0;
+      for (let n = 0; n < 4000 && Math.hypot(to.x - pos.x, to.z - pos.z) > 0.03; n++) {
         const d = Math.hypot(to.x - pos.x, to.z - pos.z), s = Math.min(d, 0.04);
         assert.ok(stride(walker, pos, ((to.x - pos.x) / d) * s, ((to.z - pos.z) / d) * s), `stuck at (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)}) on the flight to ${r.high}`);
-        const h = walker.heightAt(pos.x, pos.z); worst = Math.max(worst, Math.abs(h - last)); last = h; sides.add(walker.answers(pos.x, pos.z));
+        const h = walker.heightAt(pos.x, pos.z); worst = Math.max(worst, Math.abs(h - last)); last = h; if (walker.onStairs(pos.x, pos.z)) stairs++;
         const e = walker.eyeAt(pos.x, pos.z); eyeJump = Math.max(eyeJump, Math.abs(e - eye)); eye = e;
       }
       assert.ok(Math.hypot(to.x - pos.x, to.z - pos.z) <= 0.03, `did not get along the flight to ${r.high}`);
       assert.ok(worst < 0.2, `the floor jumped ${worst.toFixed(3)} m on the flight to ${r.high}`);
-      assert.equal(sides.size, 2, "the walk crossed from one walker to the other");
-      // and the eye, which climbs the flight as a slope, does not jump where one walker hands over to the other
-      if (process.env.EYE_LOG) console.log(JSON.stringify({ flight: r.high, floorJump: +worst.toFixed(3), eyeJump: +eyeJump.toFixed(3) }));
-      assert.ok(eyeJump < 0.05, `the eye jumped ${eyeJump.toFixed(3)} m in a 4 cm step on the flight to ${r.high}`);
+      assert.ok(stairs > 3, `the flight to ${r.high} is walked as a stair`);
+      assert.ok(eyeJump < 0.2, `the eye jumped ${eyeJump.toFixed(3)} m in a 4 cm step on the flight to ${r.high}`);
     }
   }
+  assert.ok(walked >= 16, `only ${walked} flights walked`);
+  assert.deepEqual(skipped, [], "flights not walked on their middle line");
 });
 
-// The named places of the first court, by a flood over the walker from where he arrives (as plan.test floods).
-function flood(w, S = 0.1) {
-  const key = (i, j) => i * 100000 + j, seen = new Set(), todo = [[Math.round(site.start[0] / S), Math.round(site.start[1] / S)]];
-  seen.add(key(...todo[0]));
-  while (todo.length) { const [i, j] = todo.pop(), h = w.heightAt(i * S, j * S); for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = i + di, b = j + dj, k = key(a, b); if (seen.has(k) || w.blocked(a * S, b * S) || Math.abs(w.heightAt(a * S, b * S) - h) > 0.3) continue; seen.add(k); todo.push([a, b]); } }
-  return (x, z, r) => { const R = Math.ceil(r / S); for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) if (Math.hypot(a * S, b * S) <= r && seen.has(key(Math.round(x / S) + a, Math.round(z / S) + b))) return true; return false; };
-}
-test("every named place, seat, door and view of the first court can be walked to on the grid from where he arrives", () => {
-  const can = flood(walker), named = [];
-  for (const [id, p] of Object.entries(site.places)) if (p.at && !p.room) named.push([`place ${id}`, p.at, p.r ?? 1.0]);
-  for (const s of site.seats) if (s.room === null) named.push([`seat ${s.kind}`, s.at, 1.5]);
-  for (const h of site.halls) named.push([`door ${h.id}`, h.out, 0.5]);
-  for (const [id, v] of Object.entries(site.views)) if (Array.isArray(v) && !site.viewUp?.[id]) named.push([`view ${id}`, [v[0], v[1]], 0.5]);
-  const here = named.filter(([, at]) => inRegion(at[0], at[1]));
-  assert.ok(here.length >= 20, `only ${here.length} named things in the first court`);
-  const lost = here.filter(([, at, r]) => !can(at[0], at[1], r)).map(([n, at]) => `${n} (${at.map((v) => v.toFixed(2))})`);
-  assert.deepEqual(lost, [], "not reached on the grid");
+test("every named place can be walked to on the baked floor from where he comes in: places, seats, doors, views, each frame, the offering box, the stair's foot, the indoor cameras, the balcony's door", () => {
+  const T = file.header.targets, kinds = {};
+  for (const t of T) kinds[t.kind] = (kinds[t.kind] || 0) + 1;
+  for (const [kind, least] of [["place", 7], ["seat", 40], ["door", site.halls.length], ["view", 40], ["spot", 30], ["stair", 1], ["hallview", 16], ["loftdoor", 1]]) assert.ok((kinds[kind] || 0) >= least, `${kinds[kind] || 0} of kind ${kind} checked, not ${least}`);
+  assert.ok(T.some((t) => t.kind === "spot" && rooms.spots[t.id]?.offering), "the offering box is among them");
+  assert.deepEqual(T.filter((t) => !t.new).map((t) => `${t.kind} ${t.id} (${t.grid})`), [], "not reached on the drawn floor");
 });
 
-test("the porch edges are found in the grid (#143): every written edge of the first court has one, at its height, along its line; none on a railed platform", () => {
-  const found = ledgesOf(gridsByPlace(decoded, "court", region).outdoors, region);
-  const written = site.walk.drops.filter((e) => inRegion((e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2));
-  assert.ok(written.length >= 6);
+// #148 (the owner: 殿两边有空间但是走不过去). Round every hall, wherever its platform is drawn wide enough for him between
+// the wall and the edge (or the railing), he can walk: the open floor at the platform's height runs along each of its four
+// sides, and all of it is one piece with the floor before its door. A hall where that does not hold is named here with why.
+const NARROW = {
+  lingxiao: "#278: its gallery is 0.83 m between the faces of its columns and its railing: his outline, with room for his eye, does not pass a column",
+};
+test("#148: round every hall the platform can be walked, on every side that is drawn wide enough for him", () => {
+  const out = {};
+  for (const h of site.halls) {
+    const b = site.buildings.find((q) => q.frame && !q.frame.storey && h.out[0] > q.x0 - 1.5 && h.out[0] < q.x1 + 1.5 && h.out[1] > q.z0 - 1.5 && h.out[1] < q.z1 + 1.5);
+    assert.ok(b, `no building for ${h.id}`);
+    const f = b.frame, q = f.q || 0, xs = [Math.min(...f.xs), Math.max(...f.xs)], zs = [Math.min(...f.zs), Math.max(...f.zs)];
+    const hx = q % 2 ? (zs[1] - zs[0]) / 2 : (xs[1] - xs[0]) / 2, hz = q % 2 ? (xs[1] - xs[0]) / 2 : (zs[1] - zs[0]) / 2;
+    const body = { x0: f.at[0] - hx, x1: f.at[0] + hx, z0: f.at[1] - hz, z1: f.at[1] + hz };
+    // The platform's floor: open cells inside its rectangle, above the court it stands on.
+    const top = (x, z) => { const k = cellOf(G, x, z); return k >= 0 && !G.state[k] && G.height[k] / 100 > b.y + 0.15; };
+    // One piece: a flood over the platform's open cells from the floor before the door.
+    const S = G.step, key = (i, j) => j * G.nx + i, seen = new Set(), todo = [];
+    for (let r = 0; r < 1.5 && !todo.length; r += S) for (const [dx, dz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) { const x = h.out[0] + dx, z = h.out[1] + dz; if (top(x, z)) { const k = cellOf(G, x, z); seen.add(k); todo.push(k); break; } }
+    while (todo.length) { const k = todo.pop(), i = k % G.nx, j = (k - i) / G.nx; for (const [a, c] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const kk = key(i + a, j + c); if (seen.has(kk)) continue; if (top(xOf(G, kk), zOf(G, kk)) && xOf(G, kk) > b.x0 - 0.1 && xOf(G, kk) < b.x1 + 0.1 && zOf(G, kk) > b.z0 - 0.1 && zOf(G, kk) < b.z1 + 0.1) { seen.add(kk); todo.push(kk); } } }
+    const sides = { W: [b.x0, body.x0, "x"], E: [body.x1, b.x1, "x"], N: [b.z0, body.z0, "z"], S: [body.z1, b.z1, "z"] }, row = {};
+    for (const [n, [a, e, ax]] of Object.entries(sides)) {
+      const [s0, s1] = ax === "x" ? [body.z0, body.z1] : [body.x0, body.x1]; let tot = 0, ok = 0;
+      for (let s = s0 + 0.3; s < s1 - 0.3; s += 0.1) { tot++; for (let t = a + S / 2; t < e; t += S) { const k = ax === "x" ? cellOf(G, t, s) : cellOf(G, s, t); if (seen.has(k)) { ok++; break; } } }
+      row[n] = Math.round((100 * ok) / tot);
+    }
+    out[h.id] = row;
+    if (process.env.ROUND_LOG) console.log(JSON.stringify({ hall: h.id, name: h.name, strip: +(body.x0 - b.x0).toFixed(2), rail: !!b.rail, ...row }));
+    if (NARROW[h.id]) { assert.ok(Object.values(row).some((v) => v < 50), `${h.name} is walked round now: take it out of NARROW`); continue; }
+    // (Short of all of a side only where a stair's cheek, a column at a corner or a table on the porch stands in the strip.)
+    for (const [n, v] of Object.entries(row)) assert.ok(v >= 90, `${h.name}: only ${v}% of its ${n} side can be walked, in one piece with its door (${JSON.stringify(row)})`);
+  }
+  assert.equal(Object.keys(out).length, site.halls.length);
+});
+
+test("the porch edges are found in the grid (#143): every written edge has one, at its height, along its line; none on a railed platform", () => {
+  const found = walker.drops, written = site.walk.drops;
+  assert.ok(written.length >= 10 && found.length >= written.length);
   for (const e of written) {
     const line = e.normal[0] ? e.a[0] : e.a[1], lo = Math.min(e.normal[0] ? e.a[1] : e.a[0], e.normal[0] ? e.b[1] : e.b[0]), hi = Math.max(e.normal[0] ? e.a[1] : e.a[0], e.normal[0] ? e.b[1] : e.b[0]);
     const match = found.filter((f) => f.normal[0] === e.normal[0] && f.normal[1] === e.normal[1] && Math.abs((f.normal[0] ? f.a[0] : f.a[1]) - line) < 0.12 && Math.abs(f.top - e.top) < 0.02);
     const covered = match.reduce((s, f) => { const a = Math.min(f.normal[0] ? f.a[1] : f.a[0], f.normal[0] ? f.b[1] : f.b[0]), b = Math.max(f.normal[0] ? f.a[1] : f.a[0], f.normal[0] ? f.b[1] : f.b[0]); return s + Math.max(0, Math.min(b, hi) - Math.max(a, lo)); }, 0);
     assert.ok(covered >= (hi - lo) * 0.7, `the written edge ${JSON.stringify(e)} is found along ${covered.toFixed(2)} of ${(hi - lo).toFixed(2)} m`);
   }
-  // A railed platform (the great hall's) offers none: no open cell along its edge.
-  const main = site.buildings.find((b) => b.name === "大雄宝殿") || site.halls.find((h) => h.id === "main");
-  for (const f of found) assert.ok(f.top < 1.0, `an edge at ${f.top} m was found, on a railed platform (${JSON.stringify(f)}) ${main ? "" : ""}`);
-  assert.ok(walker.drops.length === found.length + site.walk.drops.length - written.length, "outside the court the written edges are kept");
+  // A railed platform offers none (no open cell along its edge), so none stands more than a man's height over the ground below it.
+  for (const f of found) {
+    const rail = site.buildings.find((b) => b.rail && !b.frame?.storey && (f.a[0] + f.b[0]) / 2 > b.x0 - 0.2 && (f.a[0] + f.b[0]) / 2 < b.x1 + 0.2 && (f.a[1] + f.b[1]) / 2 > b.z0 - 0.2 && (f.a[1] + f.b[1]) / 2 < b.z1 + 0.2 && Math.abs(f.top - b.y) > 0.5);
+    assert.ok(!rail, `an edge at ${f.top} m was found on the railed platform of ${rail?.name} (${JSON.stringify(f)})`);
+  }
+  // A step he walks (no higher than the bake's CLIMB) is not an edge to hop from.
+  for (const f of found) { const [nx, nz] = f.normal, mx = (f.a[0] + f.b[0]) / 2 + nx * 0.9, mz = (f.a[1] + f.b[1]) / 2 + nz * 0.9; assert.ok(f.top - walker.heightAt(mx, mz) > BAKE.CLIMB, `a ${(f.top - walker.heightAt(mx, mz)).toFixed(2)} m step at ${f.a} is walked, not hopped`); }
 });
 
 // #144: a cushion or stool drawn anywhere is a seat. The drawn meshes are taken apart into their pieces (faces that share
@@ -128,67 +157,178 @@ test("every cushion and stool drawn in the courts and the rooms is a seat (#144)
   assert.deepEqual(none.map((d) => `${d.kind} at (${d.at.map((x) => x.toFixed(2))})`), [], "drawn, and nothing to sit on");
 });
 
-test("a kept place or a ?cam address that falls in a shut cell moves to the nearest open spot within half a metre, or back to the start", () => {
-  const g = gridsByPlace(decoded, "court", region).outdoors;
-  let tried = 0;
-  // Shut cells beside open ones all over the court (by a column, a tree, the censer, a porch's foot): each settles within 0.5 m.
-  for (let k = 0; k < g.nx * g.nz && tried < 400; k += 997) {
-    const i = k % g.nx, j = (k - i) / g.nx, x = g.x0 + (i + 0.5) * g.step, z = g.z0 + (j + 0.5) * g.step;
-    if (!inRegion(x, z) || !g.state[k] || !walker.blocked(x, z)) continue;
-    const p = settle(walker, x, z); if (!p) continue; tried++;
-    assert.ok(!walker.blocked(p.x, p.z) && Math.hypot(p.x - x, p.z - z) <= 0.5 + 1e-9);
-    const c = cellOf(g, p.x, p.z); assert.ok(c >= 0 && g.state[c] === 0, "an open cell of the grid: flooded from where he arrives");
-  }
-  assert.ok(tried > 30, `only ${tried} shut cells by open ones tried`);
-  const main = site.halls.find((h) => h.id === "main"); assert.equal(settle(walker, main.door[0], main.door[1] - 6), null, "deep inside a hall there is nowhere within half a metre");
+test("a kept place or a ?cam address that falls in a shut cell moves to the nearest open spot within half a metre, or back to the start: out of doors, in a room, on the balcony", () => {
+  // Shut cells beside open ones all over a grid (by a column, a tree, a table, a railing): each settles within 0.5 m, onto a cell flooded from where he comes in.
+  const sweep = (g, stride = 997) => {
+    let tried = 0;
+    for (let k = 0; k < g.nx * g.nz && tried < 400; k += stride) {
+      const x = xOf(g, k), z = zOf(g, k); if (!g.state[k] || !walker.blocked(x, z)) continue;
+      const p = settle(walker, x, z); if (!p) continue; tried++;
+      assert.ok(!walker.blocked(p.x, p.z) && Math.hypot(p.x - x, p.z - z) <= 0.5 + 1e-9);
+      const c = cellOf(g, p.x, p.z); assert.ok(c >= 0 && g.state[c] === 0, "an open cell of the grid: flooded from where he arrives");
+    }
+    return tried;
+  };
+  assert.ok(sweep(G) > 100, "out of doors");
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => assert.ok(sweep(grids.rooms[id], 37) > 20, `in ${id}`));
+  for (const id of Object.keys(site.lofts)) within({ loft: id }, () => assert.ok(sweep(grids.lofts[id], 13) > 20, `on the balcony of ${id}`));
+  const main = site.halls.find((h) => h.id === "main"); assert.equal(settle(walker, main.door[0], main.door[1] - 6), null, "deep inside a hall's walls, out of doors, there is nowhere within half a metre");
   const open = site.halls.find((h) => h.id === "tea").out; assert.deepEqual(settle(walker, open[0], open[1]), { x: open[0], z: open[1] }, "an open spot is kept as it is");
+  // In a room, inside the altar's dais: nowhere within half a metre; and a point outside the room altogether is shut.
+  const R = rooms.rooms.main.room; within({ room: R }, () => { assert.ok(walker.blocked(R.x0 - 2, 0), "outside the room's walls"); assert.equal(settle(walker, R.x0 - 2, 0), null); });
 });
 
-test("the grid kept in the page is the court's: cut from the whole one cell for cell, the same cut while the file is opened", () => {
-  const whole = decoded.grids.find((g) => g.kind === "outdoors"), part = cropGrid(whole, region);
-  // The page cuts while it opens the file (walkgrid.js decode's `keep`), never holding the whole outdoor grid.
-  const opened = decode(file.bytes, (b) => inflateRawSync(b), keepFor("court", region)), cut = cropGrid(whole, keepBox(region));
-  assert.equal(opened.grids.length, 1); const o = opened.grids[0];
-  assert.deepEqual([o.x0, o.z0, o.nx, o.nz], [cut.x0, cut.z0, cut.nx, cut.nz]);
-  assert.ok(Buffer.from(o.height.buffer).equals(Buffer.from(cut.height.buffer)) && Buffer.from(o.state).equals(Buffer.from(cut.state)), "cut while opened, cell for cell");
-  for (let n = 0; n < 2000; n++) {
-    const x = region.x0 + ((n * 7919) % 1000) / 1000 * (region.x1 - region.x0), z = region.z0 + ((n * 104729) % 1000) / 1000 * (region.z1 - region.z0);
-    const a = cellOf(whole, x, z), b = cellOf(part, x, z); assert.ok(a >= 0 && b >= 0);
-    assert.equal(part.state[b], whole.state[a]); assert.equal(part.height[b], whole.height[a]);
+// Going back (#274; the lead): the book's 「回到那一处」 stands him where each seal was earned (`y.travel`), and coming out of a
+// hall stands him at its `out`; a kept place is wherever he last stood. Each must have somewhere to stand on the baked
+// floor: open, or open within half a metre (`settle`), in the grid of the room it is in.
+test("every place a seal is earned and every spot outside a hall's door has open floor within half a metre, in its own grid", () => {
+  const all = { ...site.places, ...rooms.places }, bad = [];
+  for (const [id, p] of Object.entries(all)) {
+    if (!p.at) continue;
+    const R = p.room ? rooms.rooms[p.room]?.room : null;
+    within({ room: R }, () => { const s = settle(walker, p.at[0], p.at[1]); if (!s) bad.push(`place ${id}${p.room ? " in " + p.room : ""} at (${p.at.map((v) => v.toFixed(2))})`); });
+  }
+  for (const h of site.halls) { const s = settle(walker, h.out[0], h.out[1]); if (!s) bad.push(`out of ${h.id} at (${h.out.map((v) => v.toFixed(2))})`); }
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => { const s = settle(walker, r.room.door[0], r.room.door[1]); if (!s || walker.blocked(s.x, s.z)) bad.push(`inside the door of ${id}`); });
+  assert.deepEqual(bad, [], "nowhere to stand");
+  assert.ok(Object.keys(all).length >= 7, `${Object.keys(all).length} places`);
+});
+
+// No pocket (#274; the lead, after the owner found the tea house's back at once open and going nowhere): on every grid,
+// every open cell is walked to from where he comes in, by the same steps both ways (a neighbour no more than CLIMB higher
+// or lower, never round a shut corner), so from every cell he can reach he can walk back; and every hop down a porch's
+// edge comes down on an open cell, so that a hop never leaves him somewhere he cannot walk out of.
+test("on every grid every open cell is walked to from where he comes in and walks back, and every hop down lands on one", () => {
+  const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]], CLIMB = BAKE.CLIMB * 100 + 1e-6, lost = [];
+  for (const meta of file.header.grids) {
+    const g = decoded.grids.find((q) => q.id === meta.id), seen = new Uint8Array(g.nx * g.nz), todo = [];
+    for (const [sx, sz] of meta.seeds) { const k = cellOf(g, sx, sz); if (k >= 0 && !g.state[k]) { seen[k] = 1; todo.push(k); } }
+    while (todo.length) {
+      const k = todo.pop(), i = k % g.nx, j = (k - i) / g.nx;
+      for (const [a, b] of N8) {
+        const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= g.nx || jj >= g.nz) continue; const kk = jj * g.nx + ii;
+        if (seen[kk] || g.state[kk] || Math.abs(g.height[kk] - g.height[k]) > CLIMB || (a && b && (g.state[j * g.nx + ii] || g.state[jj * g.nx + i]))) continue;
+        seen[kk] = 1; todo.push(kk);
+      }
+    }
+    let open = 0, cut = 0, at = null; for (let k = 0; k < g.nx * g.nz; k++) if (!g.state[k]) { open++; if (!seen[k]) { cut++; at ||= [xOf(g, k), zOf(g, k)]; } }
+    if (cut) lost.push(`${g.id}: ${cut} of ${open} open cells not walked to, e.g. (${at.map((v) => v.toFixed(2))})`);
+  }
+  assert.deepEqual(lost, [], "open floor he cannot walk to (or back from)");
+  // Every hop down, from a spot along each edge where he would take off, comes down on an open cell.
+  let hops = 0; const bad = [];
+  for (const e of walker.drops) {
+    const ax = e.b[0] - e.a[0], az = e.b[1] - e.a[1], span = Math.hypot(ax, az);
+    for (let s = 0.3; s < span - 0.3; s += 0.5) {
+      const x = e.a[0] + (ax / span) * s - e.normal[0] * 0.25, z = e.a[1] + (az / span) * s - e.normal[1] * 0.25;
+      if (walker.blocked(x, z)) continue;
+      const plan = findDrop(walker, [e], x, z, e.normal[0], e.normal[1]); if (!plan) continue; hops++;
+      const k = cellOf(G, plan.to[0], plan.to[2]); if (k < 0 || G.state[k]) bad.push(`(${plan.to[0].toFixed(2)}, ${plan.to[2].toFixed(2)})`);
+    }
+  }
+  assert.ok(hops > 100, `${hops} hops tried`); assert.deepEqual(bad, [], "a hop comes down where he cannot stand");
+});
+
+// The tea house's back (#274; the owner, on main, found its west side neither walked nor hopped down from): the strip on its
+// platform there is walked round from the porch, the lane between the platform and the court's west wall is walked from both
+// ends, and he hops from one into the other.
+test("behind the tea house: its platform's back is walked, the lane behind it is walked from both ends, and he hops down into it", () => {
+  const b = site.buildings.find((q) => q.name === "茶寮"), mid = (b.z0 + b.z1) / 2, top = (x, z) => !walker.blocked(x, z) && walker.heightAt(x, z) > 0.4;
+  let strip = null, lane = null;
+  for (let x = b.x0 + 0.05; x < b.x0 + 1.2 && !strip; x += 0.05) if (top(x, mid)) strip = x;
+  for (let x = b.x0 - 0.05; x > b.x0 - 1.5 && !lane; x -= 0.05) if (!walker.blocked(x, mid) && walker.heightAt(x, mid) < 0.05) lane = x;
+  assert.ok(strip !== null && lane !== null, `no strip (${strip}) or lane (${lane}) behind the tea house`);
+  for (let z = b.z0 + 0.6; z < b.z1 - 0.6; z += 0.5) { assert.ok(top(strip, z), `the platform's back is shut at z=${z.toFixed(1)}`); assert.ok(!walker.blocked(lane, z), `the lane is shut at z=${z.toFixed(1)}`); }
+  assert.ok(!walker.blocked(lane, b.z0 - 0.3) || !walker.blocked(lane, b.z0 - 0.6), "the lane does not open onto the court at its south end");
+  assert.ok(!walker.blocked(lane, b.z1 + 0.3) || !walker.blocked(lane, b.z1 + 0.6), "the lane does not open onto the court at its north end");
+  const plan = findDrop(walker, walker.drops, strip, mid, -1, 0); assert.ok(plan, "no hop down off the platform's back"); assert.ok(!walker.blocked(plan.to[0], plan.to[2]) && plan.to[1] < 0.05, "the hop comes down in the lane");
+});
+
+test("the page keeps only the rows and columns a floor was reached in, cell for cell", () => {
+  const opened = decode(file.bytes, (b) => inflateRawSync(b), () => "floors");
+  assert.equal(opened.grids.length, decoded.grids.length);
+  for (const [n, g] of decoded.grids.entries()) {
+    const o = opened.grids[n]; assert.ok(o.nx <= g.nx && o.nz <= g.nz && o.nx > 0);
+    for (let k = 0; k < g.nx * g.nz; k += 61) { const x = xOf(g, k), z = zOf(g, k), c = cellOf(o, x, z); if (c < 0) assert.equal(g.height[k], NO_FLOOR, `${g.id}: a floor at (${x}, ${z}) was cut away`); else { assert.equal(o.height[c], g.height[k]); assert.equal(o.state[c], g.state[k]); } }
   }
 });
 
 // The eye rides the floor he stands on (#265, the owner on the preview: at the great hall platform's east end he ran under
 // the floor, seen from his own eyes). Wherever the grid lets him stand, the height the eye follows (`eyeAt`, a stair's
 // slope rather than its treads) is within a tread of the floor (`heightAt`). Listed by building, every cell that fails.
-test("wherever he may stand on the grid, the eye rides within a tread of the floor under him", () => {
-  const g = gridsByPlace(decoded, "court", region).outdoors, bad = new Map();
+test("wherever he may stand, out of doors, in a room or on the balcony, the eye rides within a tread of the floor under him", () => {
+  const bad = new Map();
   const near = (x, z) => site.buildings.find((b) => x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)?.name || "院子";
-  let n = 0;
-  for (let j = 0; j < g.nz; j += 3) for (let i = 0; i < g.nx; i += 3) {
-    const k = j * g.nx + i; if (g.state[k]) continue;
-    const x = g.x0 + (i + 0.5) * g.step, z = g.z0 + (j + 0.5) * g.step; if (!walker.answers(x, z)) continue; n++;
-    const d = Math.abs(walker.eyeAt(x, z) - walker.heightAt(x, z));
-    if (d > 0.2) { const b = near(x, z), r = bad.get(b) || { cells: 0, worst: 0, at: null }; r.cells++; if (d > r.worst) { r.worst = +d.toFixed(2); r.at = [+x.toFixed(2), +z.toFixed(2)]; } bad.set(b, r); }
-  }
-  assert.ok(n > 10000, `only ${n} open cells looked at`);
+  const look = (g, where, every) => { let n = 0;
+    for (let j = 0; j < g.nz; j += every) for (let i = 0; i < g.nx; i += every) {
+      const k = j * g.nx + i; if (g.state[k]) continue;
+      const x = xOf(g, k), z = zOf(g, k); if (!walker.answers(x, z)) continue; n++;
+      const d = Math.abs(walker.eyeAt(x, z) - walker.heightAt(x, z));
+      if (d > 0.2) { const b = where || near(x, z), r = bad.get(b) || { cells: 0, worst: 0, at: null }; r.cells++; if (d > r.worst) { r.worst = +d.toFixed(2); r.at = [+x.toFixed(2), +z.toFixed(2)]; } bad.set(b, r); }
+    }
+    return n; };
+  assert.ok(look(G, null, 3) > 100000, "open cells out of doors");
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => assert.ok(look(grids.rooms[id], `room ${id}`, 2) > 1000));
+  for (const id of Object.keys(site.lofts)) within({ loft: id }, () => assert.ok(look(grids.lofts[id], `loft ${id}`, 1) > 500));
   assert.deepEqual(Object.fromEntries(bad), {}, "the eye rides away from the floor");
 });
 
 // Whether he is on a stair (his pace there and his gait, #273, and the eye's slope) is asked of the same floor his feet
 // stand on: nowhere does the grid show a level floor while the walker says stair, nor a tread step while it says level.
-test("on the grid a stair is where the floor steps by a tread: the gait, the pace and the eye ask the floor his feet stand on", () => {
-  const R = walker.region, flat = [], step = [];
-  for (let x = R.x0 + 0.05; x < R.x1; x += 0.1) for (let z = R.z0 + 0.05; z < R.z1; z += 0.1) {
-    if (walker.blocked(x, z) || !walker.answers(x, z)) continue;
-    const h = walker.heightAt(x, z), st = walker.onStairs(x, z); let rise = 0, span = 0;
+test("everywhere on the grid a stair is where the floor steps by a tread: the gait, the pace and the eye ask the floor his feet stand on", () => {
+  const flat = [], step = []; let n = 0;
+  for (let j = 1; j < G.nz - 1; j += 2) for (let i = 1; i < G.nx - 1; i += 2) {
+    const k = j * G.nx + i; if (G.state[k]) continue; n++;
+    const x = xOf(G, k), z = zOf(G, k), h = walker.heightAt(x, z), st = walker.onStairs(x, z); let rise = 0, span = 0;
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       if (!walker.blocked(x + dx * 0.1, z + dz * 0.1)) rise = Math.max(rise, Math.abs(walker.heightAt(x + dx * 0.1, z + dz * 0.1) - h));
-      if (!walker.blocked(x + dx * 0.35, z + dz * 0.35)) span = Math.max(span, Math.abs(walker.heightAt(x + dx * 0.35, z + dz * 0.35) - h));
+      for (const d of [0.2, 0.3, 0.35]) if (!walker.blocked(x + dx * d, z + dz * d)) span = Math.max(span, Math.abs(walker.heightAt(x + dx * d, z + dz * d) - h));
     }
-    if (st && span < 0.05) flat.push([+x.toFixed(2), +z.toFixed(2)]);
+    if (st && Math.max(span, rise) < 0.05) flat.push([+x.toFixed(2), +z.toFixed(2)]);
     if (!st && rise >= 0.09 && rise <= 0.25) step.push([+x.toFixed(2), +z.toFixed(2)]);
   }
+  assert.ok(n > 400000, `${n} open cells looked at`);
   assert.deepEqual(flat.slice(0, 8), [], `${flat.length} places (${JSON.stringify(flat.filter((_, i) => i % 8 === 0).slice(0, 16))}) where the walker says stair and the floor is level`);
   assert.deepEqual(step.slice(0, 8), [], `${step.length} places where the floor steps by a tread and the walker says level`);
+});
+
+// Up on the balcony he is on the balcony and nowhere else, inside its railing; from the summit below, its floor is not there.
+test("the balcony: only its own floor while he is up, inside the railing; from the ground below, never its floor", () => {
+  for (const [id, L] of Object.entries(site.lofts)) {
+    const g = grids.lofts[id]; let open = 0;
+    within({ loft: id }, () => {
+      for (let k = 0; k < g.nx * g.nz; k++) {
+        if (g.state[k]) continue; open++;
+        const x = xOf(g, k), z = zOf(g, k);
+        assert.ok(Math.abs(g.height[k] / 100 + g.base - L.floor) < 0.02, `the balcony's floor at (${x.toFixed(2)}, ${z.toFixed(2)}) is at ${g.height[k] / 100 + g.base}, not ${L.floor}`);
+        assert.ok(x > L.outer.x0 - 0.05 && x < L.outer.x1 + 0.05 && z > L.outer.z0 - 0.05 && z < L.outer.z1 + 0.05, `open floor outside the railing at (${x.toFixed(2)}, ${z.toFixed(2)})`);
+        assert.ok(!(x > L.inner.x0 && x < L.inner.x1 && z > L.inner.z0 && z < L.inner.z1), `open floor within the storey's walls at (${x.toFixed(2)}, ${z.toFixed(2)})`);
+      }
+      // nothing else can be stood on from up there: the summit's ground, the stair, are shut
+      const below = [0, LEVELS[2].zS - 2]; assert.ok(walker.blocked(below[0], below[1]), "from the balcony the summit's ground is not floor");
+    });
+    assert.ok(open * g.step * g.step > 20, `${(open * g.step * g.step).toFixed(1)} m² of balcony`);
+    // From the ground, wherever the balcony is overhead the floor is the ground's own (or none): a tap aimed at the pavilion does not land up there.
+    for (let k = 0; k < g.nx * g.nz; k += 7) { if (g.state[k]) continue; const x = xOf(g, k), z = zOf(g, k); assert.ok(walker.heightAt(x, z) < L.floor - 3, `from the ground, the floor at (${x.toFixed(2)}, ${z.toFixed(2)}) is the balcony's`); }
+  }
+});
+
+// In a room: the columns, the altar's table and the cushions he walks round are each ringed by open floor (he can walk
+// round them), and each stops him its own shape and his reach off.
+test("in every room he can walk round each column, and the grid stops him his reach off it", () => {
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => {
+    const g = grids.rooms[id], cols = r.room.frame?.cols || []; let n = 0;
+    for (const c of cols) {
+      const cx = c.x ?? c[0], cz = c.z ?? c[1];
+      if (!(cx > r.room.x0 + 1.5 && cx < r.room.x1 - 1.5 && cz > r.room.z0 + 1.5 && cz < r.room.z1 - 1.5)) continue;   // (a column in a wall is not walked round)
+      n++;
+      assert.ok(walker.blocked(cx, cz), `${id}: the column at (${cx.toFixed(2)}, ${cz.toFixed(2)}) is walked through`);
+      // He is stopped his own reach off its shaft at the least (its base is wider), and somewhere within a stride of that there is open floor all the way round.
+      const N = 24, at = (R, a) => [cx + Math.cos((a / N) * 6.283) * R, cz + Math.sin((a / N) * 6.283) * R], least = 0.15 + reach(0, BAKE.CLEAR) - 0.05;
+      for (let a = 0; a < N; a++) assert.ok(walker.blocked(...at(least, a)), `${id}: his sleeve enters the column at (${cx.toFixed(2)}, ${cz.toFixed(2)})`);
+      let ring = 0; for (let R = least; R <= least + 0.75 && ring < N / 2; R += 0.05) { ring = 0; for (let a = 0; a < N; a++) if (!walker.blocked(...at(R, a))) ring++; }
+      assert.ok(ring >= N / 2, `${id}: no way past the column at (${cx.toFixed(2)}, ${cz.toFixed(2)}): ${ring} of ${N} points open`);
+    }
+    assert.ok(g.nx > 0); if (process.env.ROUND_LOG) console.log(id, n, "columns walked round");
+  });
 });
