@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "stair-strip-collage.jpg",
+   "bytes": 162224,
+   "sha256": "d69ab1a80046871352b28eeea907534f5f75108c6a5cf54422741320206d25f1",
+   "rev": "be1c1e8ce4c4f6307df1e34a80ccb4651f7a0fa5"
+  },
+  {
+   "path": "stair-strip-full.png",
+   "bytes": 778471,
+   "sha256": "5c4092e79809b56a2e076c18fe99f34482dbd6a9f9554d9f388fc9b92d101370",
+   "rev": "be1c1e8ce4c4f6307df1e34a80ccb4651f7a0fa5"
+  }
+ ]
+}
