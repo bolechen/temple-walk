@@ -520,7 +520,7 @@ export function buildHall(M, opts) {
   }
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
-    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq);
+    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, { ...pq, back: M.woodV });
     // Outside the slanting arm's beak, the farthest any timber of a set reaches (BEAK, drawn for a cai of 0.21 and scaled with the
     // frame), with the board's foot swung back by its lean and a finger of air: not through the beak, which lay over the writing (#213).
     const lean = pq.vertical ? 0.3 : 0.2, zz = Z + (p.brackets ? Math.max(1.3, BEAK * K + (m.userData.height / 2) * Math.sin(lean) + 0.04 + 0.06) : 0.45);
