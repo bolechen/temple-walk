@@ -8,7 +8,7 @@
 import * as THREE from "three";
 import { U } from "./glsl.js";
 import { SHELTER } from "./shelter.js";
-import { SOURCES, CHANNEL, LAND, NO_GROUND, bakeFall, leafAt, leafTimes, spotOf, densityAt, groundAt, fallAt } from "./fall.js";
+import { SOURCES, CHANNEL, LAND, NO_GROUND, PER_M, bakeFall, leafAt, leafTimes, spotOf, densityAt, groundAt, fallAt } from "./fall.js";
 import { shelterAt } from "./shelter.js";
 import { createLitter } from "./litter.js";
 
@@ -68,7 +68,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
           // A tree's leaf does not lie: the ground takes it as it touches (litter.js) and it settles into that over SETTLE.
           float v=fl*(.6+.8*seed.w); Tf=${LAND.HEIGHT.toFixed(1)}/v; float Tr=isB*(${LAND.REST[0].toFixed(1)}+${LAND.REST[1].toFixed(1)}*fract(seed.y*13.7)), P=Tf+Tr+mix(${LAND.SETTLE.toFixed(2)},${LAND.FADE.toFixed(1)},isB);
           float off=fract(seed.y*7.7)*P, cyc=floor((uT+off)/P); ph=mod(uT+off,P);
-          vec2 b=fract(seed.xz+cyc*vec2(.7548776,.5698403))*B.xz;
+          vec2 b=fract(seed.xz+cyc*vec2(.7548776,.5698403))*B.xz; b=mix(b,(floor(b*${PER_M.toFixed(1)})+.5)/${PER_M.toFixed(1)},isB);   // the grove's leaves still come down on the middle of a map point
           b=mod(b-uCam.xz+B.xz*.5,B.xz)-B.xz*.5+uCam.xz;
           vec2 muv=(b-uMapBox.xy)*uMapBox.zw; vec4 m=texture2D(tMap,muv); float gr=texture2D(tGround,muv).r;
           float inb=step(0.,min(muv.x,muv.y))*step(max(muv.x,muv.y),1.)*step(-500.,gr), k=min(ph/Tf,1.);

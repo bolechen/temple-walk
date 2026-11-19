@@ -80,9 +80,11 @@ export function leafTimes(s, fall, bamboo) {
   return { Tf, Tr, Td, P: Tf + Tr + Td, off: fract(s[1] * 7.7) * (Tf + Tr + Td) };
 }
 // Where a leaf comes down in its cycle `cyc`: a spot picked from the golden-ratio sequence (a new spot every cycle) in the
-// box round the eye, wherever on it the sequence falls (no longer snapped to the map's points: the ground keeps it there).
-export function spotOf(s, cyc, B, cam) {
+// box round the eye, wherever on it the sequence falls (a tree's leaf no longer snapped to the map's points: the ground
+// keeps it there; `snap`: the grove's, as before).
+export function spotOf(s, cyc, B, cam, snap = false) {
   let bx = fract(s[0] + cyc * 0.7548776) * B[0], bz = fract(s[2] + cyc * 0.5698403) * B[2];
+  if (snap) { bx = (Math.floor(bx * PER_M) + 0.5) / PER_M; bz = (Math.floor(bz * PER_M) + 0.5) / PER_M; }   // the grove's leaves, which lie where nothing keeps them, as before #267
   bx = ((bx - cam[0] + B[0] / 2) % B[0] + B[0]) % B[0] - B[0] / 2 + cam[0]; bz = ((bz - cam[2] + B[2] / 2) % B[2] + B[2]) % B[2] - B[2] / 2 + cam[2];
   return [bx, bz];
 }
@@ -93,7 +95,7 @@ export function spotOf(s, cyc, B, cam) {
 export function leafAt(map, s, t, { fall, sway, bamboo = false, B = [34, 13, 34] }, cam = [0, 0, 0]) {
   const { Tf, Tr, P, off } = leafTimes(s, fall, bamboo);
   const ph = (t + off) % P, cyc = Math.floor((t + off) / P);
-  const [bx, bz] = spotOf(s, cyc, B, cam);
+  const [bx, bz] = spotOf(s, cyc, B, cam, bamboo);
   const k = Math.min(ph / Tf, 1), g = map && map.ground ? groundAt(map, bx, bz) : NO_GROUND;
   const rest = ph >= Tf, alpha = smooth(0, LAND.IN, ph) * (1 - smooth(Tf + Tr, P, ph));
   return { x: bx + Math.sin(ph * 0.7 + s[3] * 40) * sway * (1 - k), y: g + LAND.LIE + LAND.HEIGHT * (1 - k), z: bz + Math.cos(ph * 0.53 + s[3] * 31) * sway * 0.7 * (1 - k), ground: g, bx, bz, rest, alpha, ph, Tf, Tr, P, cyc, live: g > NO_GROUND / 2 };
