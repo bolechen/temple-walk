@@ -1,7 +1,7 @@
 // The walks of tools/frame-measure.cjs worked out in Node (issue #271): the same plan, walker and eye as the page
 // (eye.js), sixty frames a second, the eye's height easing over the steps as yard.js eases it, the view turning after
 // the way he goes as the measured walk turns it (`tour.js`), and with an arm the view tilted at him as the page tilts it
-// (`aimPitch`). For the eye as it was (`old`, `?frame=old`) and each of `FRAMES`, on three screens: where his middle
+// (`aimAt`). For the eye as it was (`old`, `?frame=old`) and each of `FRAMES`, on three screens: where his middle
 // (0.61 m over his feet, the middle of __probe().monkBox) falls across and down the picture, in percent, with mean, range
 // and the fastest change in any second; and how much of him is in the picture (his feet, his knees at 0.35 m).
 // It agrees with the page's own measure (frame-measure.cjs) and takes seconds instead of an hour of software drawing.
@@ -12,7 +12,7 @@ import fs from "fs";
 import { buildSite, createWalker } from "../app/src/site.js";
 import * as EYE from "../app/src/eye.js";
 // (read as a whole, so that the same file measures a checkout from before #271, which has only the old eye)
-const { followEye, createFollow } = EYE, FRAMES = EYE.FRAMES || {}, frameArm = EYE.frameArm, aimPitch = EYE.aimPitch;
+const { followEye, createFollow } = EYE, FRAMES = EYE.FRAMES || {}, frameArm = EYE.frameArm, aimAt = EYE.aimAt;
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -46,8 +46,8 @@ export function measure(fr, size, path, pitch0 = 0.06) {
     if (!count) return;
     frames++;
     if (follow.dist < 0.85) { hidden++; return; }   // so near that he is hidden (yard.js)
-    const aim = F ? aimPitch(c, [x, foot, z], yaw, F, FOV[size]) : null;
-    cam.position.fromArray(c); cam.rotation.set(aim ?? pitch0, -yaw, 0, "YXZ"); cam.updateMatrixWorld();
+    const aim = F ? aimAt(c, [x, foot, z], yaw, F, FOV[size]) : null;
+    cam.position.fromArray(c); cam.rotation.set(aim ? aim[1] : pitch0, -(aim ? aim[0] : yaw), 0, "YXZ"); cam.updateMatrixWorld();
     const down = (h) => { v.set(x, foot + h, z).project(cam); return [(v.x + 1) * 50, (1 - v.y) * 50]; };
     const [mx, my] = down(0.61); xs.push(mx); ys.push(my); tops.push(down(1.22)[1]); const bot = down(0)[1]; bots.push(bot);
     if (bot <= 100) feet++; if (down(0.35)[1] <= 100) knees++;

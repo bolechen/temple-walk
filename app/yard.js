@@ -25,7 +25,7 @@ import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
-import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimPitch } from "./src/eye.js";
+import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
@@ -645,12 +645,12 @@ function frame(now) {
     if (monkHidden && !photo.on) monk.group.visible = false;
   }
   camera.rotation.set(look.pitch, -look.yaw, 0, "YXZ");
-  // From behind him the eye looks at him, not only along the view (eye.js, aimPitch): on a flight of steps, looking level,
+  // From behind him the eye looks at him, not only along the view (eye.js, aimAt): on a flight of steps, looking level,
   // it would put him at the foot of the picture or over its top (a visitor's picture of 2026-11-19 on the stair by the
-  // half-way pavilion had him cut off at the waist).
+  // half-way pavilion had him cut off at the waist), and while its arm moves over past the censer it would lose the middle.
   if (view === "third" && FRAME && !monkHidden && !cine) {
-    const m = monk.group.position, aim = aimPitch(camera.position.toArray(), [m.x, m.y, m.z], look.yaw, FRAME, camera.fov);
-    if (aim !== null) camera.rotation.x = aim;
+    const m = monk.group.position, aim = aimAt(camera.position.toArray(), [m.x, m.y, m.z], look.yaw, FRAME, camera.fov);
+    if (aim) camera.rotation.set(aim[1], -aim[0], 0, "YXZ");
   }
   // The place's own shot, mixed over the eye that follows him (src/director.js). In the picture he is drawn whenever the
   // eye stands clear of his head, from his own eyes too.
@@ -1182,7 +1182,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
-window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight });   // monkBox as __probe() has it, without drawing a frame
+window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).

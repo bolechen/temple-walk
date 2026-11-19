@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "censer-b-v2.jpg",
+   "bytes": 136675,
+   "sha256": "410a1c7b8cf36135d99315b45743d85159df5540122b1cffdfc9dc14ae70811e",
+   "rev": "669a17ae79ff8f5dee68b91375b9de012dff92e8"
+  },
+  {
+   "path": "censer-b.jpg",
+   "bytes": 135681,
+   "sha256": "7b1dc9f22fec9bafa4d9cc646933e8591771f08bf5a2fad390aea95a4ee414c7",
+   "rev": "8860cfe8bb0ca365894336bbd3190e365e17e303"
+  },
+  {
+   "path": "gate-b-v2.jpg",
+   "bytes": 149870,
+   "sha256": "89edcb6f24d2d6c9f96731febede72f3b88196e3cd8bf58b9fd8d0450b3ee32f",
+   "rev": "669a17ae79ff8f5dee68b91375b9de012dff92e8"
+  },
+  {
+   "path": "gate-b.jpg",
+   "bytes": 149834,
+   "sha256": "b0a62cfff1f3db5e6b7ab6f44836b61cc6351a187f080c90a3b412a1e2bb2252",
+   "rev": "8860cfe8bb0ca365894336bbd3190e365e17e303"
+  }
+ ]
+}

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
-import { followEye, createFollow, FOLLOW, FRAMES, frameArm } from "../../app/src/eye.js";
+import { followEye, createFollow, FOLLOW, FRAMES, frameArm, aimAt } from "../../app/src/eye.js";
 import { ROUTE } from "../../app/src/tour.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
@@ -18,7 +18,7 @@ const dt = 1 / 60;
 
 // Walk `path` at his pace, the view turning after the way he goes as the measured walk turns it (`tour.js`), the eye
 // riding as `yard.js` makes it ride. Returns, for every frame, how far the eye moved beyond the step he took.
-function walk(path, { reach = 6.2, pitch = 0.04, arm = null } = {}) {
+function walk(path, { reach = 6.2, pitch = 0.04, arm = undefined } = {}) {   // (no arm: the default eye, B; `arm: null` the eye before #271)
   const follow = createFollow(), out = [];
   let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), side = 1.2, prev = null;
   for (const [tx, tz] of path.slice(1)) {
@@ -37,7 +37,7 @@ function walk(path, { reach = 6.2, pitch = 0.04, arm = null } = {}) {
       if (prev) {
         const dy = yaw - prev.yaw, ox = prev.c[0] - prev.x, oz = prev.c[2] - prev.z;
         const ex = x + ox * Math.cos(dy) - oz * Math.sin(dy), ez = z + ox * Math.sin(dy) + oz * Math.cos(dy);
-        out.push({ x, z, yaw, eyeY, c, lean: follow.side, flat: Math.hypot(c[0] - ex, c[2] - ez), up: Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)), dist: follow.dist, forced: follow.forced });
+        out.push({ x, z, yaw, eyeY, foot, c, lean: follow.side, flat: Math.hypot(c[0] - ex, c[2] - ez), up: Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)), dist: follow.dist, forced: follow.forced });
       }
       prev = { c, x, z, yaw, eyeY };
     }
@@ -126,7 +126,7 @@ for (const [key, F] of Object.entries(FRAMES)) for (const [w, h] of [[16, 9], [4
       for (const f of frames) {
         assert.ok(f.forced || f.flat <= FLAT, `${name}: the eye moved ${f.flat.toFixed(3)} m on its own at (${f.x.toFixed(1)}, ${f.z.toFixed(1)})`);
         if (f.dist < 0.85) continue;   // he is hidden when it is as near as that (yard.js, monkHidden)
-        cam.position.fromArray(f.c); cam.rotation.set(0.04, -f.yaw, 0, "YXZ"); cam.updateMatrixWorld();
+        const aim = aimAt(f.c, [f.x, f.foot, f.z], f.yaw, F, 50); cam.position.fromArray(f.c); cam.rotation.set(0.04, -(aim ? aim[0] : f.yaw), 0, "YXZ"); cam.updateMatrixWorld();   // (across as the page turns it; up and down is aimAt's own business)
         v.set(f.x, f.eyeY + F.hold, f.z).project(cam); most = Math.max(most, Math.abs(v.x - F.nx * (F.nx ? f.lean : 1))); n++;
       }
       if (process.env.FOLLOW_REPORT) console.log(key, w, h, name, { frames: frames.length, forced: put.length, most: +Math.max(0, ...put.map((f) => f.forced)).toFixed(2), where: put.map((f) => `${f.x.toFixed(1)},${f.z.toFixed(1)}:${f.forced.toFixed(2)}`).join(" ") });
@@ -154,4 +154,17 @@ test("the default eye holds him in the middle, and on the stair his whole body i
     assert.ok(Math.abs(r.across.mean - 50) <= 1.5, `${size} ${name}: his middle is ${r.across.mean}% across`);
     if (name.startsWith("stair")) assert.ok(r.kneesIn === 100 && r.feetIn === 100 && r.hidden === 0, `${size} ${name}: feet in ${r.feetIn}%, knees in ${r.kneesIn}%, hidden ${r.hidden}%`);
   }
+});
+
+// Issue #271 (the lead's review of #291): with the arm straight behind him, walking north past the censer and on, and
+// in through the gate's middle bay from the forecourt, the eye was put straight out of the censer by 1.4 m in one
+// frame. The owner will not have the eye jump: on these two walks it may not move more than FLAT on its own in any
+// frame, put out of something or not.
+for (const [name, path] of Object.entries({
+  "from behind the censer north past it": [[0, 18], [1.3, 13], [0, 9], [0, 3]],
+  "in through the gate's middle bay": [[8.5, 52], [8.5, 49], [0, 46.5], [0, 34]],
+})) test(`the default eye never jumps: ${name}`, () => {
+  const frames = walk(path), worst = frames.reduce((b, f) => (Math.max(f.flat, f.forced) > Math.max(b.flat, b.forced) ? f : b), frames[0]);
+  if (process.env.FOLLOW_REPORT) console.log(name, { frames: frames.length, flat: +worst.flat.toFixed(3), forced: +worst.forced.toFixed(3) });
+  assert.ok(worst.flat <= FLAT && worst.forced <= FLAT, `the eye moved ${worst.flat.toFixed(3)} m on its own (put out ${worst.forced.toFixed(2)} m) in one frame at (${worst.x.toFixed(2)}, ${worst.z.toFixed(2)}), ${worst.dist.toFixed(2)} m behind`);
 });
