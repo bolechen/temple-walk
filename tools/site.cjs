@@ -11,7 +11,7 @@ function site() {
   if (!fs.existsSync(stamp) || fs.statSync(stamp).mtimeMs < want) {
     execFileSync(process.execPath, [path.join(top, "node_modules", "vite", "bin", "vite.js"), "build", "--logLevel", "warn"], { cwd: top, stdio: ["ignore", "inherit", "inherit"] });
     // The rooms seen through the doors (#218): from the cache, or drawn in this site if their fingerprint is new.
-    if (!process.env.TEMPLE_NO_DOORWAYS) execFileSync(process.execPath, [path.join(top, "tools", "bake-doorways.mjs")], { cwd: top, stdio: ["ignore", "inherit", "inherit"] });
+    if (!process.env.TEMPLE_NO_DOORWAYS) execFileSync(process.execPath, [path.join(top, "tools", "bake-doorways.mjs")], { cwd: top, stdio: ["ignore", 2, 2] });   // its words to stderr: callers read the path from stdout
     fs.writeFileSync(stamp, new Date().toISOString() + "\n");
   }
   return dist;
