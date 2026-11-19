@@ -14,6 +14,10 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { paintMaterial } from "./paint.js";
+import recipe from "./paint/recipe.json";
+const ANCHORS = Object.fromEntries(Object.entries(import.meta.glob("./paint/*.json", { eager: true, import: "default" }))
+  .filter(([k]) => !k.endsWith("recipe.json")).map(([k, v]) => [k.replace(/^.*\/(.*)\.json$/, "$1"), v]));
 
 const Q = new URLSearchParams(location.search);
 const W = +(Q.get("w") || innerWidth), H = +(Q.get("h") || innerHeight);
@@ -248,6 +252,7 @@ function setMood(name) {
     bounce.position.set(-dx * c, F + 0.05, -dz * c - 0.6); bounce.width = DOOR.w; bounce.height = Math.min(reach, 22); bounce.rotation.set(-Math.PI / 2, 0, Math.atan2(dx, -dz)); bounce.intensity = m.sunI * 0.35; }
   else bounce.intensity = 0;
   renderer.shadowMap.needsUpdate = true;
+  if (probe) { const old = probe; probe = captureProbe(); for (const f of figures) for (const m of Object.values(f.painted || {})) if (m.envMap === old) m.envMap = probe; old.dispose(); }   // the probe follows the light
 }
 
 // Statues: each a glTF, scaled to its height above the base, centred on its seat, facing south.
@@ -273,7 +278,8 @@ async function setStatues(list) {
       if (s.tint && o.material) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(s.tint)); } } });
     const figH = size.y * k, top = AT + seatH + figH, headY = top - figH * (s.headAt ?? 0.14);
     if (s.halo !== false) group.add(mandorla(x, s.haloTop ?? top + 1.6, headY, s.halo || {}));
-    figures.push({ group, s, tris: countTris(obj), size: new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3()).toArray().map((v) => +v.toFixed(2)) });
+    const meshes = []; obj.traverse((o) => { if (o.isMesh) meshes.push(o); });
+    figures.push({ group, pivot, obj, meshes, clay: meshes.map((o) => o.material), s, tris: countTris(obj), size: new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3()).toArray().map((v) => +v.toFixed(2)) });
   }
   renderer.shadowMap.needsUpdate = true;
   return figures.map((f) => ({ url: f.s.url, tris: f.tris, size: f.size }));
@@ -295,6 +301,11 @@ const VIEWS = {
   cam05: { at: [0, F + 1.6, -12], yaw: 0, pitch: 58, fov: 55, exp: 5.5 },
   cam06: { at: [0, F + 1.6, -2], yaw: 0, pitch: 9, fov: 65, exp: 3.5 },
   court: { at: [0, 1.6, 55], yaw: 0, pitch: 11, fov: 50, exp: 1.0 },
+  // close looks for judging the paint (issue #287), not places a visitor stands: the middle figure's face from 3.2 m in
+  // front of it at its own height, and the same face as the eye sees it from 10 m before the altar through a long lens
+  faceClose: { at: [0, AT + BASE_H + 4.75, SZ + 3.2], look: [0, AT + BASE_H + 4.75, SZ - 0.8], fov: 32, exp: 4.5 },
+  faceFrom10: { at: [0, F + 1.6, SZ + 10], look: [0, AT + BASE_H + 4.75, SZ - 0.5], fov: 11, exp: 4.5 },
+  handsClose: { at: [0, AT + BASE_H + 2.4, SZ + 5.5], look: [0, AT + BASE_H + 2.0, SZ], fov: 42, exp: 4.5 },
 };
 let exposureScale = 1;
 function view(name, over = {}) {
@@ -329,8 +340,69 @@ function stats() { if (renderer.shadowMap.needsUpdate) renderer.render(scene, ca
 // what a frame costs with the card made to finish it (as the site's __cost does): mean milliseconds over n frames
 function cost(n = 60) { const gl = renderer.getContext(); render(); gl.finish(); const t0 = performance.now(); for (let i = 0; i < n; i++) { render(); gl.finish(); } return (performance.now() - t0) / n; }
 
+// Paint (issue #287): each figure that names its anchors (s.colour, a file in paint/) is drawn with the recipe's zones,
+// or in plain clay. Gold needs something to reflect, and a dark hall gives it almost nothing but the doors: the hall
+// itself, figures left out, is captured once from before the altar into a prefiltered environment (a light probe, the
+// usual stand-in for baked reflections), which only the painted figures use. paint(false) is clay, paint(true) painted,
+// paint({ env: false }) painted without the probe (to show what gold does without it).
+let probe = null, painted = false;
+function captureProbe() {
+  const pm = new THREE.PMREMGenerator(renderer);
+  const hide = figures.map((f) => f.group); for (const g of hide) g.visible = false;
+  const rt = pm.fromScene(scene, 0.02, 0.1, 300, { size: 256, position: new THREE.Vector3(0, AT + 4.5, ALTAR.z + 7) });
+  for (const g of hide) g.visible = true; pm.dispose(); return rt.texture;
+}
+function paint(on = true) {
+  const o = typeof on === "object" ? { on: true, ...on } : { on: !!on };
+  if (o.on && o.env !== false && !probe) probe = captureProbe();
+  for (const f of figures) {
+    const A = f.s.colour && ANCHORS[f.s.colour];
+    if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
+    const key = o.env === false ? "noenv" : "env";
+    f.painted ??= {};
+    f.painted[key] ??= paintMaterial(recipe, A.anchors, f.pivot, o.env === false ? {} : { envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+    f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
+    for (const m of f.meshes) m.material = f.painted[key];
+  }
+  painted = o.on; return figures.map((f) => ({ colour: f.s.colour || null, painted: o.on && !!(f.s.colour && ANCHORS[f.s.colour]) }));
+}
+
+// An orthographic look at one figure in its own frame (pivot: x to the viewer's right when facing it, y up from the top of
+// its seat, z toward the viewer), shaded by its normals, with a metric grid laid over it: 0.1 m faint, 0.5 m stronger, 1 m
+// red. The frame is fixed (x -3.5…3.5, y -0.5…6.5 m from the front; z -3.5…3.5 from the side), so a pixel of a 1400 px
+// picture is 5 mm and a point read off the grid is a point in the frame the paint's anchors are written in.
+const orthoCam = new THREE.OrthographicCamera(-3.5, 3.5, 3.5, -3.5, 0.1, 100);
+let orthoGrid = null;
+function ortho(i, side = "front", z = {}) {
+  const f = figures[i], P = f.pivot; P.updateMatrixWorld(true);
+  if (orthoGrid) orthoGrid.removeFromParent();
+  const pts = [[], [], []];
+  // zoomed in (z.half under 1 m) the faint lines are every 2 cm, the stronger every 10 cm and the red every 50 cm
+  const fine = (z.half ?? 3.5) < 1, st = fine ? 50 : 10, mid = fine ? 5 : 5, big = fine ? 25 : 10;
+  for (let k = -3.5 * st; k <= 3.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(v, -0.5, 0, v, 6.5, 0); }
+  for (let k = -0.5 * st; k <= 6.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(-3.5, v, 0, 3.5, v, 0); }
+  orthoGrid = new THREE.Group();
+  [[0x8a8a8a, 0.25], [0xffffff, 0.6], [0xff3030, 0.9]].forEach(([col, op], c) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pts[c], 3));
+    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op, depthTest: false })); l.renderOrder = 10; orthoGrid.add(l); });
+  P.add(orthoGrid);
+  if (side === "side") orthoGrid.rotation.y = -Math.PI / 2; else orthoGrid.rotation.y = 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
+  const d = 20, cx = z.cx ?? 0, cy = z.cy ?? 3, hh = z.half ?? 3.5;
+  Object.assign(orthoCam, { left: -hh, right: hh, top: hh, bottom: -hh });
+  const at = side === "side" ? new THREE.Vector3(-d, cy, cx) : new THREE.Vector3(cx, cy, d);
+  orthoCam.position.copy(P.localToWorld(at.clone())); orthoCam.up.set(0, 1, 0); orthoCam.lookAt(P.localToWorld(at.clone().add(side === "side" ? new THREE.Vector3(d, 0, 0) : new THREE.Vector3(0, 0, -d))));
+  orthoCam.updateProjectionMatrix();
+  const keep = scene.overrideMaterial; scene.overrideMaterial = null;
+  const hidden = []; scene.traverse((o) => { if (o.isMesh && !isIn(o, f.obj) && o.visible) { o.visible = false; hidden.push(o); } });
+  const mats = new Map(); if (!z.lit) f.obj.traverse((o) => { if (o.isMesh) { mats.set(o, o.material); o.material = new THREE.MeshNormalMaterial(); } });
+  const ex = renderer.toneMappingExposure; if (z.lit) renderer.toneMappingExposure = z.exp ?? 4.5; else renderer.toneMapping = THREE.NoToneMapping; renderer.setClearColor(0x202020); const bg = scene.background; scene.background = new THREE.Color(0x202020); sky.visible = false;
+  renderer.render(scene, orthoCam);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = ex; scene.background = bg; sky.visible = true;
+  for (const [o, m] of mats) o.material = m; for (const o of hidden) o.visible = true; orthoGrid.visible = false; scene.overrideMaterial = keep;
+}
+function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
+
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, ortho, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site
