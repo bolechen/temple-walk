@@ -16,6 +16,18 @@ import { STAIR } from "./geo.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// A shoe in the air between two stair heights: `y0` the tread it left, `y1` the one it will come down on, `w` how far on
+// its way it is (0..1), `here` the tread under it now. Returns the height of its toe and heel line and its pitch (+ toe down).
+export function swingOnStair(y0, y1, w, here) {
+  const G = STAIRGAIT, d = y1 - y0, arc = Math.sin(Math.PI * w);
+  if (d > G.kind) return { y: Math.max(y0 + d * smooth(0, G.upBy, w) + G.upClear * arc, here), pitch: -G.upToe * arc };
+  if (d < -G.kind) return { y: Math.max(y0 + d * smooth(G.downFrom, G.downTo, w) + G.downClear * arc, here), pitch: G.downToe * smooth(G.downFrom, 0.7, w) * (1 - smooth(0.8, 1, w)) };
+  return { y: Math.max(y0 + G.flat * arc, here), pitch: 0 };
+}
+// How much of his weight a shoe carries, 0..1, at `u` of its stride (0 as it comes down, 0.5 as it lifts): the pelvis goes
+// from one foot's height to the other's across the whole step, reaching the landing foot's just as it comes down, so the
+// two feet's loads always add to one.
+export function loadOf(u) { return u < 0.5 ? 1 - smooth(0, 0.5, u) : smooth(0.5, 1, u); }
 const sq = (v) => v * v, clamp = THREE.MathUtils.clamp, damp = THREE.MathUtils.damp, TAU = Math.PI * 2;
 const col = (hex) => new THREE.Color(hex);
 const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -23,6 +35,12 @@ const XV = V3(1, 0, 0), UPV = V3(0, 1, 0);
 
 // His measure, in metres: 1.18 tall, the head a quarter of it, the arms bound 38° from his sides.
 const APOSE = 0.66, UPPER = 0.2, FORE = 0.15, THIGH = 0.22, SHIN = 0.22, ANKLE = 0.06;
+const LEG = THIGH + SHIN;
+// How a shoe goes over the steps (issue #270), in his own measure so that another body keeps it. Up, the foot is lifted
+// early and comes over the nosing a finger above it, toe up; down, it goes forward at the height of the tread it leaves and
+// only then lets itself down onto the one below, toe first (a foot lifted on the way down is what read as a high knee).
+// Where the pelvis stands is decided by the feet that bear him, not by the slope.
+export const STAIRGAIT = { upBy: 0.42, upClear: 0.034 * LEG, upToe: 0.2, downFrom: 0.35, downTo: 0.95, downClear: 0.008 * LEG, downToe: 0.35, flat: 0.09 * LEG, kind: 0.08 * LEG, sag: 0.1 * LEG, upFollow: 0.5, toeLen: 0.117, heelLen: 0.056 };
 const SIT_DROP = 0.41;   // seated, how far he comes down: his hip joints about 9 cm above the seat
 const SKULL = V3(0, 1.04, -0.004), R = 0.14;
 const FOOT_X = 0.088, FOOT_Z = 0.012, TOE_OUT = 0.12;
@@ -425,12 +443,12 @@ export function createMonk() {
   // ---- What the pose is computed from ----
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
-  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false];
-  const footY = [null, null], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
+  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
+  const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
   const steps = [], lastN = [null, null];
-  const gq = new THREE.Quaternion(), tq = new THREE.Quaternion(), tq2 = new THREE.Quaternion(), q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion(), q2 = new THREE.Quaternion(), qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qc = new THREE.Quaternion();
+  const gq = new THREE.Quaternion(), tq = new THREE.Quaternion(), tq2 = new THREE.Quaternion(), q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion(), q2 = new THREE.Quaternion(), qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qc = new THREE.Quaternion(), pq = new THREE.Quaternion();
   const hipL = V3(), kneeL = V3(), ankL = V3(), kneeW = V3(), ankW = V3(), hipW = V3();   // a seated leg, in his frame and in the world
   const tv = V3(), tv2 = V3(), _inv = new THREE.Matrix4(), _m = new THREE.Matrix4(), _t = V3(), _p = V3(), _d = V3(), _k = V3(), _u = V3(), _x = V3(), _y = V3(), _z = V3();
   // Two bones reaching for a point: `target` in the world, `pole` a world direction the middle joint should point
@@ -537,7 +555,7 @@ export function createMonk() {
       // The stride: short steps for short legs; on a stair, a step to each tread.
       const A = stairs ? STAIR.tread / 2 : clamp(0.07 + 0.055 * speed, 0.07, 0.19), rate = stairs ? Math.PI / STAIR.tread : (0.8 * Math.PI) / (2 * A);
       const pace = Math.max(speed, 0.4 * gait) * rate; phase += dt * pace;
-      const step = [0, Math.PI].map((o) => { const u = ((((phase + o) / TAU) % 1) + 1) % 1; if (u < 0.5) return { off: A * (1 - 4 * u), lift: 0 }; const w = (u - 0.5) * 2; return { off: A * (2 * smooth(0, 1, w) - 1), lift: Math.sin(Math.PI * w) }; });
+      const step = [0, Math.PI].map((o) => { const u = ((((phase + o) / TAU) % 1) + 1) % 1; if (u < 0.5) return { off: A * (1 - 4 * u), lift: 0, u, w: -1 }; const w = (u - 0.5) * 2; return { off: A * (2 * smooth(0, 1, w) - 1), lift: Math.sin(Math.PI * w), u, w }; });
       const lead = step.map((s) => (s.off / A) * gait), breathe = Math.sin(t * 1.6);
 
       // His body follows a smooth height over the steps, which the root bone carries; the shoes find each tread.
@@ -582,8 +600,40 @@ export function createMonk() {
           if (surfaceAt && grounding.heightAt && bodyHeight !== null && ground < bodyHeight - 0.3) { ground = bodyHeight - 0.3; hangs[i] = true; }
           if (footY[i] !== null && Math.abs(footY[i] - ground) < 0.6 && dt > 0) ground = Math.max(ground, damp(footY[i], ground, 16, dt));   // down a step gently, never through it
           footY[i] = ground;
-          group.localToWorld(targets[i].copy(tv)); targets[i].y = ground + ANKLE + step[i].lift * gait * (stairs ? 0.075 : 0.05);
+          // On a stair a shoe in the air goes by its own path from the tread it left to the one it will come down on; the
+          // pelvis below then rides on the feet's heights. Elsewhere: the plain arc.
+          const w = step[i].w; let y = ground + step[i].lift * gait * 0.05, pitch = 0, landing = ground;
+          if (w < 0) launchY[i] = ground;
+          else if (stairs && surfaceAt && launchY[i] !== null) {
+            // where it will come down: the body goes on by the rest of the tread as the foot completes its swing
+            tv2.set(s * FOOT_X, 0, FOOT_Z + A + (1 - w) * 2 * A); landing = -Infinity;
+            for (const pr of PROBES) { tv.copy(pr).applyAxisAngle(UPV, s * TOE_OUT).add(tv2); tv.y = 0; group.localToWorld(tv); landing = Math.max(landing, surfaceAt(tv.x, tv.z)); }
+            const sw = swingOnStair(launchY[i], landing, w, ground);
+            y = ground + gait * (sw.y - ground); pitch = gait * sw.pitch;
+            y += STAIRGAIT.toeLen * Math.sin(Math.max(pitch, 0)) + STAIRGAIT.heelLen * Math.sin(Math.max(-pitch, 0));   // a toe down raises the heel, a toe up the toe
+          }
+          landY[i] = w < 0 ? ground : landing; pitchOf[i] = pitch;
+          group.localToWorld(targets[i].copy(tv.set(s * FOOT_X, 0, FOOT_Z + step[i].off * gait))); targets[i].y = y + ANKLE;
         });
+        // The pelvis rides on the feet that carry him: the height of the stance foot, passing to the landing one as its
+        // weight comes over. (A straight slope under him, as before, made the foot left behind on a higher tread fold its
+        // knee on the way down and the lifted one come up to meet a pelvis that had already risen.)
+        stairW += (((stairs && surfaceAt && gait > 0.02) ? 1 : 0) - stairW) * ease(6);
+        if (pelvisRef === null || !stairs) pelvisRef = bodyHeight;
+        if (stairW > 0.002 && bodyHeight !== null) {
+          let l0 = loadOf(step[0].u), l1 = loadOf(step[1].u);
+          l0 = 0.5 + (l0 - 0.5) * gait; l1 = 0.5 + (l1 - 0.5) * gait;
+          if (hangs[0] && !hangs[1]) { l0 = 0; l1 = 1; } else if (hangs[1] && !hangs[0]) { l0 = 1; l1 = 0; }
+          // Going up, the body is pushed up by the foot behind it and the feet's heights alone would make him bob, so there the
+          // slope's own smooth line counts for half; going down, the feet alone: the body is let down onto the lower one.
+          const sw = step[0].w >= 0 ? 0 : 1, dh = landY[sw] - launchY[sw];
+          if (launchY[sw] !== null && Math.abs(dh) > STAIRGAIT.kind) climbing += ((dh > 0 ? 1 : 0) - climbing) * ease(8);
+          const follow = 1 - (1 - STAIRGAIT.upFollow) * smooth(0, 1, climbing);
+          const H = follow * ((l0 * landY[0] + l1 * landY[1]) / (l0 + l1 || 1) - STAIRGAIT.sag) + (1 - follow) * bodyHeight;
+          pelvisRef = Math.abs(H - pelvisRef) > 1.2 ? H : damp(pelvisRef, H, 12, dt);
+          B.root.position.y += stairW * (clamp(pelvisRef - rootY, -0.35, 0.2) - lift);
+          group.updateMatrixWorld(true);
+        }
         // The pelvis comes down when a foot could not otherwise reach its ground.
         let need = 0;
         SIDES.forEach(([n], i) => { if (hangs[i] && !hangs[1 - i]) return; const hip = B[n + "UpperLeg"].getWorldPosition(tv), h = Math.hypot(targets[i].x - hip.x, targets[i].z - hip.z), L = (THIGH + SHIN) * 0.992; need = Math.max(need, hip.y - targets[i].y - Math.sqrt(Math.max(0, L * L - h * h))); });
@@ -594,7 +644,7 @@ export function createMonk() {
           const up = B[n + "UpperLeg"], lo = B[n + "LowerLeg"], ft = B[n + "Foot"];
           reach(up, lo, THIGH, SHIN, targets[i], tv2.set(s * 0.15, 0, 1).applyQuaternion(gq), 1);
           up.updateMatrixWorld(true); lo.getWorldQuaternion(tq);
-          tq2.setFromAxisAngle(UPV, s * TOE_OUT).premultiply(gq);   // the sole flat, the toes a little out
+          tq2.setFromAxisAngle(UPV, s * TOE_OUT).multiply(pq.setFromAxisAngle(XV, pitchOf[i])).premultiply(gq);   // the sole flat (on a stair, pitched with the step), the toes a little out
           ft.quaternion.copy(tq.invert().multiply(tq2));
           tv.set(0, -1, 0).applyQuaternion(up.quaternion); thigh[i] = Math.atan2(tv.z, -tv.y);
         });

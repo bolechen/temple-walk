@@ -35,7 +35,10 @@ export function mesh(geo, mat, { cast = true, receive = true, ao } = /** @type {
   return m;
 }
 // A flight of stone steps with sloped cheeks. Top edge at z = 0, descending toward +z, rising `rise` from y = 0.
-export const STAIR = Object.freeze({ rise: 0.18, tread: 0.34, nosing: 0.05 });
+// `steps` and `hurry`: how many steps a second he takes on a flight, walking and with Shift (issue #270). Grown men go up
+// and down at about 1.7–1.85 a second; the step rate of a leg scales with the root of its length, which gives a child with
+// 0.44 m legs about 2.4–2.6, and the rise is four tenths of his leg where an adult's is two, so he goes slower than that.
+export const STAIR = Object.freeze({ rise: 0.18, tread: 0.34, nosing: 0.05, steps: 2.1, hurry: 2.8 });
 // How far the novice reaches from the point he stands on: his sleeves, his hands when he walks, the hat on his back.
 // The walker moves a point; everything that stands in his way keeps that point this far off, so that no part of
 // him enters it. (tools/edges.mjs measures the model, a unit test holds this to it, and the sweep checks the whole plan.)
