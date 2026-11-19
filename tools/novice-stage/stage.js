@@ -43,12 +43,27 @@ const POSES = {
   walk: (m, f = 52) => { for (let i = 0; i <= f; i++) m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); },
   chair: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "chair", i / 30, () => -0.44, {}); },
   sit: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },
+  // Two of the observances' hand places, as rites.js sets them (issue #246: do the hands still meet the body?): the bowl
+  // of tea held in both hands at his lips, and the incense raised between his palms to the brow. Each frame the hands
+  // are sent where rites.js would send them from the bones of the frame before.
+  tea: (m) => hold(m, (B, act) => {
+    const mouth = B.head.localToWorld(new THREE.Vector3(0, 0.052, 0.128)), cup = mouth.sub(new THREE.Vector3(0, 0.06, -0.07));
+    bowl.position.copy(cup); scene.add(bowl);
+    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * 0.068, 0.034, 0.012).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
+  }),
+  incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; B.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),
 };
+const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.035, 0.05, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0x3d3a36, roughness: 0.5, side: THREE.DoubleSide }));
+function hold(m, set) {
+  const hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 0 });
+  const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
+  for (let i = 0; i < 90; i++) { m.group.updateMatrixWorld(true); set(m.bones, act); m.update(1 / 30, 0, false, i / 30, () => 0, { act }); }
+}
 /** Pose him and look from `yaw` (0: before him) and `pitch`; returns a PNG data URL. */
 function shot(pose, yaw, pitch = 0.08, frame) {
-  const m = fresh(); dress(m); POSES[pose](m, frame); m.group.updateMatrixWorld(true);
+  scene.remove(bowl); const m = fresh(); dress(m); POSES[pose](m, frame); m.group.updateMatrixWorld(true);
   const seated = pose === "chair" || pose === "sit";
-  scene.remove(stool, cushion); if (pose === "chair") scene.add(stool); if (pose === "sit") scene.add(cushion);
+  scene.remove(stool, cushion); if (pose !== "tea") scene.remove(bowl); if (pose === "chair") scene.add(stool); if (pose === "sit") scene.add(cushion);
   floor.position.y = pose === "chair" ? -0.44 : pose === "sit" ? -0.104 : 0;
   const cy = seated ? 0.35 : 0.6, d = 3.3;
   camera.position.set(Math.sin(yaw) * Math.cos(pitch) * d, cy + Math.sin(pitch) * d, Math.cos(yaw) * Math.cos(pitch) * d);

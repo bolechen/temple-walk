@@ -324,6 +324,17 @@ const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, WELD = +(process.env.NOVIC
   }
 }
 
+{
+  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]);
+// Copies that fall in one cell of 0.01 mm but lie a hair further apart than the welding's reach take one weight too:
+  // the highest-ranked copy's, as the welding gives (tests/unit/novice-tripo.test.mjs asks it of every such cell). The top
+  // edge of the sash's end, where it has not yet gone over to its bone, is sewn to the knot the same way.
+  const cell = new Map(); let fixed = 0;
+  for (let i = 0; i < nv; i++) { if (sashV[i]) continue; const k = `${Math.round(P0[i * 3] * 1e5)},${Math.round(P0[i * 3 + 1] * 1e5)},${Math.round(P0[i * 3 + 2] * 1e5)}`; const h = cell.get(k); if (h === undefined || rank[i] > rank[h]) cell.set(k, i); }
+  for (let i = 0; i < nv; i++) { if (sashV[i] && (W[i * 4] === 1 && J[i * 4] === sashBone || [0, 1, 2, 3].some((k) => J[i * 4 + k] === sashBone && W[i * 4 + k] > 0))) continue; const h = cell.get(`${Math.round(P0[i * 3] * 1e5)},${Math.round(P0[i * 3 + 1] * 1e5)},${Math.round(P0[i * 3 + 2] * 1e5)}`); if (h !== i) { for (let k = 0; k < 4; k++) { if (J[i * 4 + k] !== J[h * 4 + k] || W[i * 4 + k] !== W[h * 4 + k]) fixed++; J[i * 4 + k] = J[h * 4 + k]; W[i * 4 + k] = W[h * 4 + k]; } } }
+  if (fixed) console.log(`  ${fixed} weights of copies just beyond the welding's reach made one`);
+  }
+
 // ---- 8. write ----
 const out = new Document(); out.createBuffer();
 out.createExtension(EXTTextureWebP).setRequired(true);

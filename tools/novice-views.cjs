@@ -11,7 +11,7 @@
 // move him (monk.update, frame by frame from his rest pose). `--code` shows the body built in code; `--glb` a sculpted one
 // from any file in novice.glb's format, so the shipped file and a rebuilt one can be set beside each other without
 // touching app/. Given more than one of them (issue #246), each pose's row holds every body's views in the order given,
-// with a gap between bodies. `--poses` (stand, pray, walk, chair, sit) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
+// with a gap between bodies. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
 // quick look while a body is being adjusted. The walking row is frame 52 of a stride from standing (`--walk` for another).
 // The page itself, the light and the paving are portrait.js's job; this is for the shape and the seams.
 const { chromium } = require("playwright");
@@ -48,7 +48,7 @@ const onlyPoses = arg("poses", null)?.split(","), onlySides = arg("sides", null)
   for (const u of urls) if (u) await p.evaluate((u) => window.stage.load(u), u);
   const F = 0, S = Math.PI / 2, B = Math.PI, A = Math.PI / 4;   // front, his left side, behind, front-left from above
   const SIDES = [["正", F], ["侧", S], ["背", B], ["斜俯", A, 0.6]].filter(([n]) => !onlySides || onlySides.includes(n));
-  const ROWS = [["站立", "stand"], ["合掌", "pray"], ["走路", "walk"], ["坐凳", "chair"], ["盘坐", "sit"]].filter(([, k]) => !onlyPoses || onlyPoses.includes(k));
+  const ROWS = [["站立", "stand"], ["合掌", "pray"], ["走路", "walk"], ["坐凳", "chair"], ["盘坐", "sit"], ["吃茶", "tea"], ["举香", "incense"]].filter(([, k]) => onlyPoses || (k !== "tea" && k !== "incense")).filter(([, k]) => !onlyPoses || onlyPoses.includes(k));
   const sheet = [];
   for (const [label, pose] of ROWS) {
     const groups = [];
