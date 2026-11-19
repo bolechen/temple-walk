@@ -11,7 +11,7 @@
 // move him (monk.update, frame by frame from his rest pose). `--code` shows the body built in code; `--glb` a sculpted one
 // from any file in novice.glb's format, so the shipped file and a rebuilt one can be set beside each other without
 // touching app/. Given more than one of them (issue #246), each pose's row holds every body's views in the order given,
-// with a gap between bodies. `--near=<k>` comes k times closer, looking at height `--focus=<m>` (and `--focusx=<m>` across); `--faces` paints back faces magenta on a green ground (a hole shows green); `--hide=legs,skin` leaves parts out; `--brow=y,z` puts the incense hands elsewhere in the head's frame (rites.js has 0.15,0.15), to try an offset without touching app/. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
+// with a gap between bodies. `--near=<k>` comes k times closer, looking at height `--focus=<m>` (and `--focusx=<m>` across); `--faces` paints back faces magenta on a green ground (a hole shows green); `--hide=legs,skin` leaves parts out; `--beads[=gap]` lays the beads on the body worn, gap metres off its cloth (#286, tools/novice-rig.mjs); `--brow=y,z` puts the incense hands elsewhere in the head's frame (rites.js has 0.15,0.15), to try an offset without touching app/. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
 // quick look while a body is being adjusted. The walking row is frame 52 of a stride from standing (`--walk` for another).
 // The page itself, the light and the paving are portrait.js's job; this is for the shape and the seams.
 const { chromium } = require("playwright");
@@ -49,6 +49,7 @@ const onlyPoses = arg("poses", null)?.split(","), onlySides = arg("sides", null)
   for (const u of urls) if (u) await p.evaluate((u) => window.stage.load(u), u);
   if (process.argv.includes("--faces")) await p.evaluate(() => { window.stage.faces = true; });
   if (arg("hide", null)) await p.evaluate((h) => { window.stage.hide = h.split(","); }, arg("hide"));
+  if (process.argv.some((a) => a.startsWith("--beads"))) await p.evaluate((g) => { window.stage.beads = g; }, +(arg("beads", "0.004")) || 0.004);   // #286: the beads laid on the body worn (tools/novice-rig.mjs relayBeads)
   if (arg("brow", null)) await p.evaluate((b) => { window.stage.brow = b.split(",").map(Number); }, arg("brow"));
   if (focus) await p.evaluate(([f, x]) => { window.stage.focus = f; window.stage.focusX = x; }, [+focus, +arg("focusx", 0)]);
   const F = 0, S = Math.PI / 2, B = Math.PI, A = Math.PI / 4;   // front, his left side, behind, front-left from above
