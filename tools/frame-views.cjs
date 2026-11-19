@@ -7,7 +7,7 @@ const path = require("path"), fs = require("fs");
 const { serve, launch, open } = require("../tests/e2e/lib.cjs");
 const out = path.resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) || path.join(__dirname, "out", "frame-views"));
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || `--${k}=${d}`).split("=")[1].split(",");
-const FRAMES = arg("frame", "old,a,b"), only = arg("walk", "open,censer,columns,wall,stair-up,stair-down"), at = arg("at", "0,1,2,3,4,5").map(Number), SIZES = { "16x9": [640, 360], "4x3": [480, 360], phone: [300, 650] }, sizes = arg("size", "16x9,4x3,phone");
+const FRAMES = arg("frame", "old,a,b"), only = arg("walk", "open,censer,columns,wall,stair-up,stair-down"), pick = arg("at", "0,1,2,3,4,5").map(Number), SIZES = { "16x9": [640, 360], "4x3": [480, 360], phone: [300, 650] }, sizes = arg("size", "16x9,4x3,phone");
 const six = (f) => [0, 1, 2, 3, 4, 5].map((i) => f(i / 5));
 const WALKS = {
   open: six((k) => [5, 32 - 14 * k, 0]),
@@ -24,7 +24,7 @@ const WALKS = {
     const [w, h] = SIZES[size];
     const t = await open(b, srv.base, `q=low&view=third&season=summer&time=day&frame=${fr}`, { viewport: { width: w, height: h } });
     for (const [name, pts] of Object.entries(WALKS)) for (const [i, [x, z, yaw]] of pts.entries()) {
-      if (!only.includes(name) || !at.includes(i) || fs.existsSync(path.join(out, `${size}-${name}-${i}-${fr}.png`)) && process.argv.includes("--keep")) continue;
+      if (!only.includes(name) || !pick.includes(i) || fs.existsSync(path.join(out, `${size}-${name}-${i}-${fr}.png`)) && process.argv.includes("--keep")) continue;
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.06), [x, z, yaw]);
       await t.frames(5);
       const s = await t.page.evaluate(() => window.__frame ? window.__frame() : { monkBox: window.__probe().monkBox, w: innerWidth, h: innerHeight, dist: null, side: null }), file = `${size}-${name}-${i}-${fr}.png`;
