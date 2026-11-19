@@ -30,7 +30,7 @@ const ALTAR = { w: 37.5, d: 4.8, h: 0.87, z: -17.9 };
 const SEATS = [-16.45, -11.33, -5.8, 0, 5.8, 11.33, 16.45];
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.info.autoReset = false;   // count the scene pass, not the post passes
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;
 document.body.appendChild(renderer.domElement);
@@ -64,7 +64,7 @@ box(48.2, 0.06, DEPTH, M.floor, 0, F + 0.03, -DEPTH / 2);         // the hall's 
 
 // Walls: the eave column lines carry walls 1.2 m thick; the front opens three doors in the middle bays and four windows
 // in the next two each side (三门四窗); the ends and the back are shut (the back door is drawn closed).
-const DOOR = { w: 3.6, h: 5.0 }, WIN = { w: 3.0, sill: 1.2, top: 4.2 };
+const DOOR = { w: 4.6, h: 5.3 }, WIN = { w: 3.0, sill: 1.2, top: 4.2 };
 const OPENINGS = [];
 for (let b = 0; b < 9; b++) {
   const cx = (XS[b] + XS[b + 1]) / 2;
@@ -157,10 +157,23 @@ for (let i = 1; i < 9; i++) {
 box(ALTAR.w, ALTAR.h, ALTAR.d, M.altar, 0, F + ALTAR.h / 2, ALTAR.z);
 box(ALTAR.w + 0.3, 0.12, ALTAR.d + 0.3, M.stone, 0, F + ALTAR.h - 0.06, ALTAR.z);
 const AT = F + ALTAR.h;                                           // top of the altar
-const BASE_H = 1.4;
-function sumeru(x) {
-  const g = new THREE.Group(); const tiers = [[4.3, 3.7, 0.25], [4.0, 3.4, 0.2], [3.5, 2.9, 0.5], [3.9, 3.3, 0.2], [4.2, 3.6, 0.25]];
-  let y = AT; for (const [w, d, h] of tiers) { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M.base); o.position.set(x, y + h / 2, ALTAR.z + 0.3); o.castShadow = o.receiveShadow = true; g.add(o); y += h; }
+// The throne: a Sumeru base 2.0 m and an upturned lotus 1.0 m, so the figure itself is about two thirds of the whole —
+// the proportion the 2021 survey reading gives for these figures with their thrones (高宽比近 3∶2, docs/t05/statue-spike-research.md).
+const SUMERU_H = 2.0, LOTUS_H = 1.0, BASE_H = SUMERU_H + LOTUS_H, SEAT_W = 5.5, SEAT_D = 4.2;
+function sumeru(x, lotusOn = true) {
+  const g = new THREE.Group(), z = ALTAR.z + 0.3;
+  const tiers = [[1.0, 1.0, 0.3], [0.94, 0.94, 0.22], [0.82, 0.8, 0.8], [0.94, 0.94, 0.22], [1.02, 1.02, 0.46]];
+  let y = AT; for (const [kw, kd, h] of tiers) { const o = new THREE.Mesh(new THREE.BoxGeometry(SEAT_W * kw, h, SEAT_D * kd), M.base); o.position.set(x, y + h / 2, z); o.castShadow = o.receiveShadow = true; g.add(o); y += h; }
+  // the lotus: two rows of petals round an oval drum, opening upward
+  const parts = [], petal = new THREE.SphereGeometry(1, 10, 8);
+  for (const [row, n, k, tilt] of [[0, 28, 1.0, 0.5], [1, 28, 0.9, 0.25]]) for (let i = 0; i < n; i++) {
+    const a = (i + row * 0.5) / n * Math.PI * 2, rx = SEAT_W / 2 * k * 0.92, rz = SEAT_D / 2 * k * 0.92;
+    const p = petal.clone(); p.scale(0.42, 0.62, 0.14); p.rotateX(-tilt); p.rotateY(-a + Math.PI / 2);
+    p.translate(x + Math.cos(a) * rx, y + 0.42 + row * 0.32, z + Math.sin(a) * rz); parts.push(p);
+  }
+  const drum = new THREE.CylinderGeometry(1, 1, LOTUS_H, 40); drum.scale(SEAT_W * 0.42, 1, SEAT_D * 0.42); drum.translate(x, y + LOTUS_H / 2, z); parts.push(drum);
+  if (!lotusOn) { scene.add(g); return g; }
+  const lotus = new THREE.Mesh(mergeGeometries(parts.map((q) => q.toNonIndexed())), M.base); lotus.castShadow = lotus.receiveShadow = true; g.add(lotus);
   scene.add(g); return g;
 }
 
@@ -168,7 +181,7 @@ function sumeru(x) {
 // flame tips are the per-figure differences (the pack: 七尊各有背光).
 function mandorla(x, topY, headY, v = {}) {
   const g = new THREE.Group();
-  const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 6.6, z = ALTAR.z - 1.75;
+  const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 5.6, z = ALTAR.z - 2.25;
   const s = new THREE.Shape(); const h = topY - AT - BASE_H, b = AT + BASE_H;
   s.moveTo(-wB / 2, 0); s.bezierCurveTo(-wB / 2, h * 0.55, -wB * 0.32, h * 0.82, 0, h); s.bezierCurveTo(wB * 0.32, h * 0.82, wB / 2, h * 0.55, wB / 2, 0); s.lineTo(-wB / 2, 0);
   const body = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
@@ -214,8 +227,8 @@ const altarLamp = new THREE.PointLight(0xffa860, 0, 14, 2); altarLamp.position.s
 // Two moods. Summer by day (the T00 baseline, for comparison) and early winter, clear and cold, about 09:45 in early
 // December at 41.5° N (docs/t05/ART.md §4.2): the sun at about 17° in the south-south-east comes in low through the doors.
 const MOODS = {
-  summer: { el: 68, az: 180, sun: [1.0, 0.97, 0.9], sunI: 3.2, top: [0.42, 0.58, 0.82], hor: [0.78, 0.82, 0.86], skyI: 2.6, skyC: [0.75, 0.82, 0.92], fill: 0.35, amb: 0.03, lamp: 0.0, floor: 0.10 },
-  winter: { el: 17, az: 152, sun: [1.0, 0.9, 0.78], sunI: 3.4, top: [0.36, 0.52, 0.78], hor: [0.8, 0.84, 0.9], skyI: 2.0, skyC: [0.7, 0.8, 0.96], fill: 0.26, amb: 0.02, lamp: 0.0, floor: 0.12 },
+  summer: { el: 68, az: 180, sun: [1.0, 0.97, 0.9], sunI: 3.2, top: [0.42, 0.58, 0.82], hor: [0.78, 0.82, 0.86], skyI: 2.6, skyC: [0.75, 0.82, 0.92], fill: 0.35, amb: 0.03, lamp: 0.0, floor: 0.10, floorC: [0.88, 0.8, 0.68] },
+  winter: { el: 17, az: 152, sun: [1.0, 0.9, 0.78], sunI: 3.4, top: [0.36, 0.52, 0.78], hor: [0.8, 0.84, 0.9], skyI: 2.0, skyC: [0.7, 0.8, 0.96], fill: 0.26, amb: 0.02, lamp: 0.0, floor: 0.11, floorC: [0.74, 0.76, 0.8] },
 };
 let mood = "summer";
 function setMood(name) {
@@ -228,7 +241,7 @@ function setMood(name) {
   for (const l of skyLights) { l.color.setRGB(...m.skyC); l.intensity = m.skyI * (l.userData.o.door ? 1 : 0.7); }
   const fill = new THREE.Color(...m.skyC).multiplyScalar(m.fill);
   for (const mm of OUT) mm.emissive.copy(fill).multiply(mm.color);
-  ambient.intensity = m.amb; altarLamp.intensity = m.lamp; floorFill.intensity = m.floor;
+  ambient.intensity = m.amb; altarLamp.intensity = m.lamp; floorFill.intensity = m.floor; floorFill.color.setRGB(...m.floorC);
   // where the sun through the middle door lands on the floor: its warm bounce, if it comes in at all
   const reach = DOOR.h / Math.tan(el);
   if (reach > 2) { const dx = dir.x / Math.hypot(dir.x, dir.z), dz = dir.z / Math.hypot(dir.x, dir.z); const c = Math.min(reach, 22) / 2;
@@ -245,24 +258,25 @@ async function setStatues(list) {
   for (const s of list) {
     const group = new THREE.Group(); scene.add(group);
     const x = s.x ?? SEATS[3], total = s.h ?? 9.0;          // 通高 above the altar, base included
-    if (s.base !== false) group.add(sumeru(x));
+    if (s.base !== false) group.add(sumeru(x, s.lotus !== false));
+    const seatH = s.base === false ? 0 : s.lotus === false ? SUMERU_H : BASE_H;   // a figure that brings its own lotus sits on the Sumeru base
     const gltf = await loader.loadAsync(s.url); const obj = gltf.scene;
     obj.rotation.y = s.turn ?? 0; obj.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(obj), size = bb.getSize(new THREE.Vector3());
-    const k = (total - (s.base !== false ? BASE_H : 0)) / size.y; obj.scale.setScalar(k); obj.updateMatrixWorld(true);
+    const k = Math.min((total - seatH) / size.y, (s.maxW ?? SEAT_W) / Math.max(size.x, 0.01)); obj.scale.setScalar(k); obj.updateMatrixWorld(true);   // no wider than its seat
     const bb2 = new THREE.Box3().setFromObject(obj), c = bb2.getCenter(new THREE.Vector3());
     const pivot = new THREE.Group(); pivot.add(obj); obj.position.sub(new THREE.Vector3(c.x, bb2.min.y, c.z));
-    pivot.position.set(x, AT + (s.base !== false ? BASE_H : 0), ALTAR.z + 0.3 + (s.dz ?? 0)); pivot.rotation.y = s.yaw ?? 0; group.add(pivot);
+    pivot.position.set(x, AT + seatH, ALTAR.z + 0.3 + (s.dz ?? 0)); pivot.rotation.y = s.yaw ?? 0; group.add(pivot);
     obj.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
       if (s.paint) o.material = M[s.paint];
       else if (o.material) { o.material.envMapIntensity = 0; if (o.geometry.attributes.color && !o.material.map) o.material.vertexColors = true; }
       if (s.tint && o.material) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(s.tint)); } } });
-    const top = AT + total, headY = top - (total - (s.base !== false ? BASE_H : 0)) * (s.headAt ?? 0.14);
+    const figH = size.y * k, top = AT + seatH + figH, headY = top - figH * (s.headAt ?? 0.14);
     if (s.halo !== false) group.add(mandorla(x, s.haloTop ?? top + 1.6, headY, s.halo || {}));
-    figures.push({ group, s, tris: countTris(obj) });
+    figures.push({ group, s, tris: countTris(obj), size: new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3()).toArray().map((v) => +v.toFixed(2)) });
   }
   renderer.shadowMap.needsUpdate = true;
-  return figures.map((f) => ({ url: f.s.url, tris: f.tris }));
+  return figures.map((f) => ({ url: f.s.url, tris: f.tris, size: f.size }));
 }
 function countTris(o) { let n = 0; o.traverse((m) => { if (m.isMesh) n += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3; }); return n; }
 
@@ -270,8 +284,9 @@ function countTris(o) { let n = 0; o.traverse((m) => { if (m.isMesh) n += (m.geo
 // the altar 6 m from it looking up, and from the side aisle at about 12 m; then the pack's six cameras (camera-manifest.json).
 const SZ = ALTAR.z + 0.3;
 const VIEWS = {
-  door: { at: [0, F + 1.6, 6.0], look: [0, F + 4.6, SZ], fov: 50, exp: 1.4 },
-  front: { at: [0, F + 1.6, SZ + 6], look: [0, F + 7.4, SZ], fov: 60, exp: 5 },
+  door: { at: [0, F + 1.6, 6.0], look: [0, F + 4.6, SZ], fov: 50, exp: 1.15 },
+  front: { at: [0, F + 1.6, SZ + 6], look: [0, F + 8.6, SZ], fov: 60, exp: 5 },
+  front10: { at: [0, F + 1.6, SZ + 10], look: [0, F + 7.0, SZ], fov: 55, exp: 4.5 },
   side: { at: [8.6, F + 1.6, SZ + 8.4], look: [0, F + 5.6, SZ], fov: 55, exp: 4.5 },
   door3: { at: [0, F + 1.6, -1.2], look: [0, F + 5.0, SZ], fov: 55, exp: 3.5 },
   side3: { at: [15.5, F + 1.6, -7.5], look: [-2.0, F + 5.0, SZ], fov: 55, exp: 4.5 },
@@ -306,11 +321,14 @@ function buildComposer() {
   const ao = new GTAOPass(scene, camera, W, H); ao.output = GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
   ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 2, scale: 1, samples: 12 }); composer.addPass(ao); composer.addPass(new OutputPass());
 }
-function render() { if (useAO) { if (!composer) buildComposer(); composer.render(); } else renderer.render(scene, camera); return { tris: renderer.info.render.triangles, calls: renderer.info.render.calls }; }
+function render() { if (useAO) { if (!composer) buildComposer(); composer.render(); } else renderer.render(scene, camera); }
+// what one plain pass of the scene draws (GTAO draws the scene again for its normals; that is not counted here)
+function stats() { renderer.info.reset(); renderer.render(scene, camera); return { tris: renderer.info.render.triangles, calls: renderer.info.render.calls }; }
 // what a frame costs with the card made to finish it (as the site's __cost does): mean milliseconds over n frames
 function cost(n = 60) { const gl = renderer.getContext(); render(); gl.finish(); const t0 = performance.now(); for (let i = 0; i < n; i++) { render(); gl.finish(); } return (performance.now() - t0) / n; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, setMood, setStatues, view, walk, render, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
+document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site

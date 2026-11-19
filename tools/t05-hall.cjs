@@ -53,7 +53,7 @@ const here = __dirname, root = path.join(here, "..");
     const p = await page(W, H);
     for (const s of spec.shots) {
       const t0 = Date.now();
-      const r = await p.evaluate(({ v, m, over }) => { window.hall.setMood(m); window.hall.view(v, over || {}); return window.hall.render(); }, { v: s.view, m: s.mood || "summer", over: s.over });
+      const r = await p.evaluate(({ v, m, over }) => { window.hall.setMood(m); window.hall.view(v, over || {}); const r = window.hall.stats(); window.hall.render(); return r; }, { v: s.view, m: s.mood || "summer", over: s.over });
       const file = path.join(out, `${s.name}.png`); await p.locator("canvas").screenshot({ path: file });
       report.shots.push({ ...s, file: path.relative(root, file), ...r, ms: Date.now() - t0 }); console.log(`${s.name}: ${r.tris} tris, ${r.calls} calls, ${Date.now() - t0} ms`);
     }
