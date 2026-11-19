@@ -22,6 +22,7 @@
 |---|---|---|---|
 | 竹林古道、三段折线石阶、洗砚池、半山亭、御碑亭 | `site.js` | 径山古道与寺前步道（`JINGSHAN.md`「灵魂」表） | 游记与照片 |
 | 石阶尽头照壁「雙徑歸堂」，砖心嵌金字、不挂匾 | `site.js`、`plaque.js` | 真寺照壁；UBC FROGBEAR 2019-07-03 现场照片（CC BY 4.0）；题字者游记称大慧宗杲 | 照片；题字者转引 |
+| 从殿外看殿内：门洞里是这座殿自己的那间屋子（像、供案、灯、幡、柱），走动时有视差；每座可进的殿从门内 0.25 米、1.6 米高处把自己的屋子拍成立方体贴图（昼、夜颜色各一张，距离一张），**构建时烘好**（`tools/bake-doorways.mjs`，每殿按指纹缓存，WebP/PNG 约 125 KB），访客走近才取图；门后暗盒用室内映射加沿视线对距离图走 12 步求交来画，昼夜按灯光 `uLamp` 混合（#218） | `doorway.js`、`doorway-capture.js`、`doorway-shape.js`、`tools/bake-doorways.mjs`、`building.js`、`site.js`、`yard.js` | 室内映射：Joost van Dongen 2008（论文原文未读，读的是 Game Developer 综述）。读过代码和许可的三份：three-fenestra 0.3.0（MIT，Edgar Perez；一张照片投影、不是立方体，且会替换材质的 onBeforeCompile，不用）、mohsenheydari/three-interior-mapping（MIT，2022；单位立方体房间，r126，借公式思路）、Kristian Dixon 2025 笔记（未声明许可，只借思路）。距离图求交是自拟（按常理，同类于视差校正立方体贴图）。白天门洞的亮度系数自拟。构建时烘焙而不在页面里拍：T4 的 ANGLE/Vulkan 没有 KHR_parallel_shader_compile，页面里拍时每个房间着色器编译 100–300 毫秒、卡在走路的帧里（实测）；烘焙缓存的做法照本仓库的 `bake-walk.mjs`（按指纹、CI 缓存、不进 git） | 参考做法已核代码；系数自拟 |
 | 素匾只有正面有字，背面和四边是素木板（#245；一块带字的面片挂在一块用场景自带木材质的板上） | `plaque.js` | 实物的匾字漆在正面，背面是木板；所有者 2026-11-19 转述望江亭背后看得到「望江亭」 | 按常理；所有者反馈，未对照实物背面照片 |
 | 五凤重阁山门，门前一对柳杉 | `site.js`、`building.js` | 真寺五凤山门（`JINGSHAN.md`） | 照片 |
 | 东钟西鼓 | `site.js` | 真寺钟楼鼓楼、永乐大钟（`JINGSHAN.md`） | 游记 |
