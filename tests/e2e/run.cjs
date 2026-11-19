@@ -815,16 +815,33 @@ const scenarios = {
     expect((await R()).sat >= seats.length, "not every seat was sat on");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // Which floor he walks on (#265): the grid baked from the drawn meshes over the first court by default, the written plan
-  // with ?walker=old; and a ?cam address that falls where the grid shuts him out is moved to the nearest open spot within
-  // half a metre, or back to the start of the path.
+  // Which floor he walks on (#265, #274): the grid baked from the drawn meshes everywhere by default (a spot on every level
+  // out of doors, inside a hall, up on the balcony), the written plan with ?walker=old; and a ?cam address that falls
+  // where the grid shuts him out is moved to the nearest open spot within half a metre, or back to the start of the path
+  // (in a room: left at its door; on the balcony: at its door).
   walkgrid: { tier: 2, async run(b, base) {
     let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
     const w = await t.page.evaluate(() => window.__walker());
     console.log("    walker " + JSON.stringify(w));
-    expect(w.mode === "court" && w.bytes > 10000 && w.memory > 1e6 && w.drops > 6 && !w.failed, "the page should walk the first court on the baked floor: " + JSON.stringify(w));
+    expect(w.mode === "mesh" && w.grid === "outdoors" && w.answers && w.bytes > 10000 && w.memory > 1e6 && w.drops > 12 && !w.failed, "the page should walk on the baked floor: " + JSON.stringify(w));
+    // One named view on every level of the place, from the page's own list: the path, the forecourt, the first court, each terrace, the summit.
+    let last = -Infinity; const floors = [];
+    for (const v of ["arrive", "halfway", "forecourt", "court", "terrace", "guanyin", "summit"]) {
+      expect(await t.page.evaluate((n) => window.__show(n), v), `no view called ${v}`); await t.frames(2);
+      const q = await t.page.evaluate(() => window.__walker()); floors.push(+q.floor.toFixed(2));
+      expect(q.grid === "outdoors" && q.answers && !q.blockedHere, `at "${v}" he should stand on open floor of the grid: ${JSON.stringify(q)}`);
+      expect(q.floor >= last - 0.01, `"${v}" stands at ${q.floor}, lower than the level before it (${last})`); last = q.floor;
+    }
+    expect(floors[floors.length - 1] - floors[0] > 25, `the walk climbs from ${floors[0]} to ${floors[floors.length - 1]} m`);
     // A spot just inside what the censer shuts, and its middle (nowhere open within half a metre), both from the page.
+    await t.page.evaluate(() => window.__show("court")); await t.frames(2);
     const spots = await t.page.evaluate(() => { const [x, z] = [0, 13]; let r = 0; while (window.__blocked(x + r, z) && r < 3) r += 0.02; return { near: [x + r - 0.2, z], deep: [x, z], start: window.__walker().start }; });
+    // Inside a hall: its own grid; and a walk across the room by the keys' own path ends on open floor.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall");
+    const inHall = await t.page.evaluate(() => window.__walker());
+    expect(inHall.grid === "room:main" && inHall.answers && !inHall.blockedHere, `in the great hall he should stand on its own grid: ${JSON.stringify(inHall)}`);
+    // A point of the room that is shut (the nearest shut point north of where he stands: the cushions are floor, the stand and the table are not).
+    const shut = await t.page.evaluate(() => { const y = window.__yard(); let d = 0; while (!window.__blocked(y.x, y.z - d) && d < 12) d += 0.05; return { at: [y.x, y.z - d - 0.1], door: [y.x, y.z] }; });
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     t = await open(b, base, `q=low&view=first&cam=${spots.near[0]},${spots.near[1]},0,0` + BARE);
     let y = await t.state();
@@ -834,11 +851,26 @@ const scenarios = {
     y = await t.state();
     expect(Math.hypot(y.x - spots.start[0], y.z - spots.start[1]) < 0.05, `a ?cam with nowhere open near should go back to the start: ${JSON.stringify([y.x, y.z, spots.start])}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
-    t = await open(b, base, "q=low&view=first&walker=old&cam=0,20,0,0" + BARE);
-    expect((await t.page.evaluate(() => window.__walker())).mode === "old", "?walker=old should walk the written plan");
+    // In a room: an address in something is moved onto open floor of that room.
+    t = await open(b, base, `q=low&view=first&in=main&cam=${shut.at[0]},${shut.at[1]},0,0` + BARE);
+    y = await t.state(); const r = await t.page.evaluate(() => window.__walker());
+    expect(y.room === "main" && r.grid === "room:main" && !r.blockedHere && Math.hypot(y.x - shut.at[0], y.z - shut.at[1]) <= 0.51, `?in=main&cam in a shut cell should settle in the room: ${JSON.stringify([shut.at, y.x, y.z, r.blockedHere])}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
-    t = await open(b, base, "q=low&view=first&walker=mesh&cam=0,20,0,0" + BARE);
-    expect((await t.page.evaluate(() => window.__walker())).mode === "mesh", "?walker=mesh should walk the grid everywhere");
+    // Up on the balcony: its own grid; nothing but the balcony can be stood on; an address off it stands him at its door.
+    t = await open(b, base, "q=low&up=lingxiao" + BARE);
+    const up = await t.page.evaluate(() => { const w = window.__walker(), y = window.__yard(), L = window.__lofts.lingxiao; return { w, at: [y.x, y.z], door: L.door, floor: L.floor, outer: L.outer, ground: window.__blocked(0, L.outer.z1 + 6) }; });
+    expect(up.w.grid === "loft:lingxiao" && up.w.answers && !up.w.blockedHere && Math.abs(up.w.floor - up.floor) < 0.03, `up on the balcony he should stand on its own grid at its height: ${JSON.stringify(up.w)}`);
+    expect(up.ground, "from the balcony the summit's ground should not be floor");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&up=lingxiao&cam=${up.outer.x1 + 3},${up.door[1]},0,0` + BARE);
+    y = await t.state();
+    expect(Math.hypot(y.x - up.door[0], y.z - up.door[1]) < 0.05, `?up=lingxiao&cam off the balcony should stand him at its door: ${JSON.stringify([y.x, y.z, up.door])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, "q=low&view=first&walker=old&cam=0,20,0,0" + BARE);
+    const o = await t.page.evaluate(() => window.__walker());
+    expect(o.mode === "old" && o.grid === null && !o.bytes, "?walker=old should walk the written plan, and fetch no grid: " + JSON.stringify(o));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall on the written plan");
+    expect((await t.page.evaluate(() => window.__walker())).grid === null, "?walker=old is the written plan indoors too");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great
@@ -1462,6 +1494,17 @@ const scenarios = {
     try {
       let t = await open(pb, host, "q=low&cam=0,30,0,0" + BARE);
       await t.until(() => t.page.evaluate(() => !!document.querySelector(".lil-gui")), 60000, "the preview did not open the debug panel");
+      // What stops him, drawn (#274): nothing of it exists until the switch is on; on, the floor's cells round him, his outline and the ball round his eye; off, nothing is left.
+      const before = await t.page.evaluate(async () => ({ viz: await window.__walkviz(), calls: window.__yard().calls }));
+      expect(before.viz.on === false && before.viz.objects === 0, "the collision drawing should not exist before it is switched on: " + JSON.stringify(before.viz));
+      const on = await t.page.evaluate(() => window.__walkviz(true)); await t.frames(3);
+      const drawn = await t.page.evaluate(() => window.__walkviz());
+      expect(on.on && drawn.grid === "outdoors" && drawn.open > 5000 && drawn.shut > 0 && drawn.outline && drawn.eyeR > 0.2 && drawn.objects === 3, "switched on, it should draw the cells round him, his outline and his eye: " + JSON.stringify(drawn));
+      const off = await t.page.evaluate(() => window.__walkviz(false)); await t.frames(2);
+      expect(off.on === false && off.objects === 0 && (await t.page.evaluate(() => window.__yard().calls)) <= before.calls, "switched off, nothing of it should be left or drawn");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      t = await open(b, base, "q=low&cam=0,30,0,0" + BARE); await t.frames(2);
+      expect(await t.page.evaluate(() => typeof window.__walkviz === "undefined"), "the published site should not carry the collision drawing's switch");
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
       t = await open(pb, host, "q=low&cam=0,30,0,0&debug=0" + BARE); await t.frames(6);
       expect(!(await t.page.evaluate(() => !!document.querySelector(".lil-gui"))), "?debug=0 should keep the panel shut on a preview");

@@ -117,6 +117,7 @@ const M = createMaterials();
 const site = buildSite(M);
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
+/** @type {{ bake: any, outline: any }} */ let walkBaked = { bake: null, outline: null };   // the bake's settings and his outline, for the debug panel's drawing (src/walkviz.js)
 const walker = await (async () => {
   const old = createWalker(site);
   if (!walkFile) return Object.assign(old, { stats: { mode: "old" } });
@@ -125,6 +126,7 @@ const walker = await (async () => {
     const mode = WALKER, t0 = performance.now();
     let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
     const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids);
+    walkBaked = { bake: d.header.bake || null, outline: d.header.outline || null };
     return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
   } catch (e) {
     console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
@@ -535,6 +537,7 @@ new ResizeObserver(resize).observe(canvas); resize();
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
 const load = { tris: 0, calls: 0, ms: 0 };
 let frozen = false;   // a photograph holds the picture still from the shutter until the print is put away
+/** @type {any} */ let walkViz = null;   // (the debug panel's drawing of what stops him; null until it is switched on)
 function frame(now) {
   if (!running) return;
   if (frozen) { prev = now; requestAnimationFrame(frame); return; }
@@ -599,6 +602,7 @@ function frame(now) {
   else { const k = Math.min(1, dt * 7); drawn[0] += ((sat ? sat[0] : pos.x) - drawn[0]) * k; drawn[2] += ((sat ? sat[1] : pos.z) - drawn[2]) * k; drawn[1] += (footY + (stage.lift || 0) - drawn[1]) * k; }
   monk.group.position.set(drawn[0], stage ? drawn[1] : footY, drawn[2]); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
+  if (walkViz) walkViz.update(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   // (`posed`: a tool may have him walk, hurry, climb, hop or sit on the spot, to be looked at closely: `__act`.)
   if (posed) monk.update(dt || 1 / 30, posed.speed || 0, posed.pose || false, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: !!posed.stairs, act: posed.act || null });
   else monk.update(dt, stage && stage.speed != null ? stage.speed : still || aloft ? 0 : speedNow, aloft || (climb && climb.t < climb.plan.duration * 0.5) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
@@ -873,7 +877,7 @@ async function pass(hall) {
 function upstairs(L, at = null, turn = null) {
   if (inside) indoors(null);
   upIn = L || null; walker.setLoft(L ? L.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
-  if (L) { if (viewBefore === null) viewBefore = view; setView("first"); pos.set(at ? at[0] : L.door[0], EYE, at ? at[1] : L.door[1]); yaw = turn ?? L.face; pitch = -0.12; }
+  if (L) { if (viewBefore === null) viewBefore = view; setView("first"); const p = at ? settleAt(walker, at[0], at[1]) : null; pos.set(p ? p.x : L.door[0], EYE, p ? p.z : L.door[1]); yaw = turn ?? L.face; pitch = -0.12; }   // (a kept place or an address that falls in the railing, or off the balcony: the nearest open floor up there, or its door)
   else if (viewBefore !== null) { const v = viewBefore; viewBefore = null; setView(v); }
   footY = eyeY = walker.heightAt(pos.x, pos.z); heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)); follow.reset(0.6);
   document.body.classList.toggle("aloft", !!L);
@@ -899,7 +903,7 @@ else if (Q.has("show") && site.viewUp[Q.get("show")]) upstairs(site.lofts[site.v
 if (upIn && (Q.has("cam") || Q.has("show"))) pitch = pose[3];
 // ?show=shot-<id> of an observance made in a hall begins inside that hall.
 { const sp = site.places[(Q.get("show") || "").replace(/^shot-/, "")] || rooms.spots[(Q.get("show") || "").replace(/^shot-/, "")]; if (Q.get("show")?.startsWith("shot-") && sp?.room && !Q.has("in")) { indoors(site.halls.find((h) => h.id === sp.room)); pos.x = sp.at[0]; pos.z = sp.at[1]; yaw = Math.PI - sp.face; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }
-if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { pos.x = pose[0]; pos.z = pose[1]; yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall
+if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { const p = settleAt(walker, pose[0], pose[1]); if (p) { pos.x = p.x; pos.z = p.z; } yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall (an address that falls in something there is moved to the nearest open floor of the room, or left at its door)
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__columns = (id) => (rooms?.rooms?.[id]?.room.frame.cols || []).map((c) => ({ x: c.x, z: c.z }));   // where a hall's free columns stand, for the scenarios that walk into one
 window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out, outYaw: h.outYaw }));
@@ -1018,7 +1022,7 @@ window.__cues = cueState;   // how many times the wings and the far bell have so
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__blocked = (x, z) => walker.blocked(x, z);
 // Which walker answers (#265): its mode, what the baked floor weighed and cost to fetch, open and keep, and the porch edges.
-window.__walker = () => ({ ...walker.stats, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
+window.__walker = () => ({ ...walker.stats, grid: walker.grid ? walker.grid()?.id || null : null, answers: walker.answers ? walker.answers(pos.x, pos.z) : false, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
 window.__drops = () => walker.drops.map((e) => ({ a: e.a, b: e.b, normal: e.normal, top: e.top }));   // the porch edges as this walker has them
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
 window.__pose = (x, z, y, p) => { interrupt(); director.drop(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
@@ -1195,6 +1199,16 @@ const PREVIEW = /-temple-walk-preview\./.test(location.hostname);
 if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {
   const { mountDebug } = await import("./src/debug.js");
   await mountDebug({ link: () => (devpose ? devpose.link() : null) });
+}
+// What stops him, drawn (src/walkviz.js, #274): the floor's cells round him, his outline, the ball round his eye. Behind
+// the same door as the panel, whose switch calls this; nothing is fetched, built or drawn until it is first switched on.
+if (import.meta.env.DEV || PREVIEW) {
+  window.__walkviz = async (on) => {
+    if (on === undefined) return walkViz ? walkViz.state() : { on: false, objects: 0 };
+    if (on && !walkViz) { const { createWalkViz } = await import("./src/walkviz.js"); walkViz = createWalkViz({ scene, walker, bake: walkBaked.bake, outline: walkBaked.outline }); }
+    else if (!on && walkViz) { walkViz.dispose(); walkViz = null; }
+    return walkViz ? walkViz.state() : { on: false, objects: 0 };
+  };
 }
 
 await loading.step(tr("山路"));

@@ -113,6 +113,13 @@ export async function mountDebug({ link }) {
   levelFolder.add(ls, "seals").name("已得").listen().disable();
   levelFolder.add(ls, "visit").name("这一趟").listen().disable();
 
+  // What stops him, drawn (src/walkviz.js): the floor's cells round him, his outline, the ball round his own eye.
+  const hit = gui.addFolder("碰撞");
+  const hs = { viz: false, cells: "—", walker: W.__walker().mode };
+  hit.add(hs, "walker").name("walker").disable();
+  hit.add(hs, "viz").name("画出格子、外廓、眼球").onChange(async (v) => { const r = await W.__walkviz(v); hs.cells = r.on ? `${r.grid || "无格子"} · 开 ${r.open} · 挡 ${r.shut}` : "—"; });
+  hit.add(hs, "cells").name("他周围 5 米").listen().disable();
+
   const parts = gui.addFolder("开关");
   const on = W.__part();
   for (const name of Object.keys(on)) parts.add(on, name).name(LABELS[name] || name).onChange((v) => { on[name] = W.__part(name, v); });
@@ -125,12 +132,13 @@ export async function mountDebug({ link }) {
     if (document.activeElement?.closest?.("#debug")) return;   // not while a control is being used
     s.season = y.season; s.time = y.time; s.eye = y.view;
     Object.assign(ls, levelState(W.__journey(), W.__visit()));
+    if (hs.viz) W.__walkviz().then((/** @type {any} */ r) => { if (r.on) hs.cells = `${r.grid || "无格子"} · 开 ${r.open} · 挡 ${r.shut}`; });
   }, EVERY);
 
   const show = (v) => { gui.show(v); stats.dom.style.display = v ? "" : "none"; try { sessionStorage.setItem(STORE, JSON.stringify({ hidden: !v })); } catch {} };
   show(!saved.hidden);
   // Capture phase: the key works with focus on any control of the panel, which may stop its own key events.
   addEventListener("keydown", (e) => { if (e.code === KEY && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) show(gui._hidden); }, true);
-  W.__debug = () => ({ level, rooms: rooms.length, hidden: gui._hidden, parts: Object.keys(on) });
+  W.__debug = () => ({ level, rooms: rooms.length, hidden: gui._hidden, parts: Object.keys(on), viz: hs.viz });
   return gui;
 }

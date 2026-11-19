@@ -105,6 +105,8 @@ export function createGridWalker(old, grids) {
       if (G && cellOf(G, x, z) >= 0) return true;
       return old.blocked(x, z);
     },
+    /** The grid that answers where he is now (out of doors, the room he is in, the balcony he is on), for the debug panel's drawing of it (walkviz.js). */
+    grid: () => gridNow(),
     /** Is (x, z) answered by the grid (true) or by the written plan (false)? */
     answers(/** @type {number} */ x, /** @type {number} */ z) { return cell(x, z) >= 0; },
     // Where he stands on the court's own ground rather than on a building's floor or a stair (a tap aimed at a hall).

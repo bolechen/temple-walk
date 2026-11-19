@@ -542,17 +542,21 @@ export function buildHall(M, opts) {
   for (const c of perimeter) walk.posts.push({ x: c.x, z: c.z, r: COL_R * 1.03 });
   // An edge with a railing along it is kept back by the rail and by his own width; an open edge only so that his feet stay on the stone.
   const edgeIn = p.rail ? 0.16 + 0.1 + BODY : 0.25;
-  if (p.walkAll) walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way
-  else {
+  const stair = (w, sign) => {   // sign = +1 front, -1 back
+    // The treads are walked clear of the cheek stones by his own width; the cheeks themselves, and the ground
+    // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
+    const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
+    const cheek = stairProfile(p.platH).count > 2 ? CHEEK : 0;   // (a flight of two steps has no cheek stones, but the ends of its treads still stop his shoes)
+    for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - cheek - BODY, x1: sx > 0 ? w / 2 + cheek + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02 });
+    walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
+    walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true });
+  };
+  if (p.walkAll) {
+    walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way
+    if (p.steps) stair(p.steps, 1);   // (an open pavilion with steps up to it, #274: the path's two)
+    if (p.stepsBack) stair(p.stepsBack, -1);
+  } else {
     walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5, own: true });   // `own`: the building's own platform, whose height the eye knows
-    const stair = (w, sign) => {   // sign = +1 front, -1 back
-      // The treads are walked clear of the cheek stones by his own width; the cheeks themselves, and the ground
-      // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
-      const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
-      if (stairProfile(p.platH).count > 2) for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02 });
-      walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
-      walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true });
-    };
     if (p.steps) stair(p.steps, 1);
     if (p.stepsBack) stair(p.stepsBack, -1);
     const passing = p.front === "pass" && p.back === "pass";

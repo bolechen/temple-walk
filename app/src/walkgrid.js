@@ -16,7 +16,8 @@
 //           shows in the comparison CI makes (tools/walk-diff.mjs).
 // The header carries the fingerprints of what it was baked from (`geometry`: the gathered triangles; `body`: his
 // outline and the bake's own settings; `plan`: the written plan's walk data), which tests and the build compare with
-// the present ones, the grids' extents, and the named places checked for whether they can still be walked to.
+// the present ones, the grids' extents, the named places checked for whether they can still be walked to, and the bake's
+// settings and his outline as it was baked with (`bake`, `outline`: the debug panel draws them, walkviz.js).
 
 export const MAGIC = "TWWG", VERSION = 1, NO_FLOOR = -32768;
 
