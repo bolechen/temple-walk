@@ -505,11 +505,11 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 .community-invite .chip { font-size: var(--t-m); color: var(--ink-2); }
 .community-invite p { margin: 4px 0; font: 400 var(--t-xs)/1.7 var(--kai); color: var(--ink-3); letter-spacing: .04em; }
 #community, #offering { position: absolute; inset: 0; z-index: 46; display: grid; place-items: center; background: var(--veil); touch-action: none; }
-.offering-card { width: min(92vw, 420px); box-sizing: border-box; padding: 30px 30px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; text-align: center; color: var(--ink-1); }
-.offering-card h2 { margin: 0 0 14px; font: 400 34px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
-.offering-card p { margin: 8px 0; font: 400 var(--t-s)/1.9 var(--kai); letter-spacing: .06em; color: var(--ink-2); }
+.offering-card { width: min(92vw, 420px); box-sizing: border-box; padding: 30px 32px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; text-align: center; color: var(--ink-1); }
+.offering-card h2 { margin: 0 0 14px; font: 400 32px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
+.offering-card p { margin: 8px 0; font: 400 var(--t-s)/1.85 var(--kai); letter-spacing: .04em; color: var(--ink-2); }
 .offering-card .offering-go { display: flex; justify-content: center; margin-top: 18px; }
-.offering-card footer { position: sticky; bottom: -20px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 10px 0 -20px; padding: 14px 0 20px; background: linear-gradient(to top, var(--paper-hi) 72%, rgba(242,236,224,0)); }
+.offering-card footer { position: sticky; bottom: -20px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 10px 0 -20px; padding: 14px 0 20px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
 .offering-qr { margin-top: 20px; text-align: center; }
 .offering-qr figure { margin: 0 auto; width: 240px; max-width: 100%; box-sizing: border-box; background: #fff; border: 1px solid rgba(93,85,74,.25); line-height: 0; }
 .offering-qr img { display: block; width: 240px; max-width: 100%; height: auto; aspect-ratio: 1; }
@@ -517,7 +517,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 .offering-qr .offering-how { font-size: var(--t-xs); color: var(--ink-3); }
 .offering-card a.tap { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 400 var(--t-s)/1.4 var(--kai); color: var(--ink-1); text-decoration: underline; text-decoration-color: #8a2a1e; text-underline-offset: 3px; }
 .offering-card summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; font: 400 var(--t-s)/1.4 var(--kai); color: var(--ink-2); }
-.offering-card .stamp { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; text-align: center; line-height: 1.5; letter-spacing: .03em; padding-inline: 18px; white-space: nowrap; }
+.offering-card .stamp { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; text-align: center; line-height: 1.5; letter-spacing: .03em; padding-inline: 18px; max-width: 100%; box-sizing: border-box; padding-block: 8px; text-wrap: balance; }
 .offering-card .chip { min-height: 44px; min-width: 44px; }
 .community-card { width: min(92vw, 440px); box-sizing: border-box; padding: 30px 30px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; text-align: center; }
 .community-kicker { font: 400 var(--t-xs)/1.5 var(--kai); letter-spacing: .2em; color: var(--ink-3); }
@@ -529,7 +529,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #communityHelp p { margin: 12px 0 0; font: 400 var(--t-xs)/1.8 var(--kai); letter-spacing: .04em; color: var(--ink-3); }
 #communityExpiry { opacity: .8; }
 .community-mobile { display: none; }
-.community-card footer { position: sticky; bottom: -20px; display: flex; justify-content: center; align-items: center; gap: 16px; margin: 4px 0 -8px; padding: 14px 0 8px; background: linear-gradient(to top, var(--paper-hi) 72%, rgba(242,236,224,0)); }
+.community-card footer { position: sticky; bottom: -20px; display: flex; justify-content: center; align-items: center; gap: 16px; margin: 4px 0 -8px; padding: 14px 0 8px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
 .community-card footer .chip { color: var(--ink-3); font-size: var(--t-s); }
 @media (pointer: coarse) { .community-desktop { display: none; } .community-mobile { display: block; } }
 @media (max-width: 400px) { .community-card { padding: 26px 24px 20px; } .community-card h2 { font-size: 30px; } }
@@ -636,7 +636,7 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 .credits-card a.tap { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 400 var(--t-s)/1.4 var(--kai); }
 .credits-card li a.tap { padding-right: 4px; }
 .credits-card a:focus-visible { outline: 2px solid #8a2a1e; outline-offset: 2px; }
-.credits-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: linear-gradient(to top, var(--paper-hi) 72%, rgba(242,236,224,0)); }
+.credits-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
 @media (max-width: 400px) { .credits-card { padding: 26px 22px 16px; } .credits-card h2 { font-size: 28px; } }
 
 /* The jump, on a touch screen: a faint ring lower right, across from the stick, that is the jump and, before a porch's edge, the way down or up. */

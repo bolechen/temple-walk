@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.4.0](https://github.com/bolechen/temple-walk/compare/v0.3.0...v0.4.0) (2026-11-18)
+
+
+### Features
+
+* **censer:** 殿前铁香炉恢复径山寺明万历塔式原形制 ([#217](https://github.com/bolechen/temple-walk/issues/217) 一) ([#230](https://github.com/bolechen/temple-walk/issues/230)) ([ee62767](https://github.com/bolechen/temple-walk/commit/ee6276759028f14cbda380afd8788ad6a7c96951))
+* **censer:** 炉里的灰与香、细烟随风、四季时辰 ([#217](https://github.com/bolechen/temple-walk/issues/217) 二) ([#231](https://github.com/bolechen/temple-walk/issues/231)) ([81bb390](https://github.com/bolechen/temple-walk/commit/81bb39075e54da768e8675353196d1b75f412f93))
+* **debug:** a console link to the view he has now ([#165](https://github.com/bolechen/temple-walk/issues/165)) ([#166](https://github.com/bolechen/temple-walk/issues/166)) ([cb35228](https://github.com/bolechen/temple-walk/commit/cb35228e0c4abf8087cd00b6c69c0b178d43b53d))
+* **drift:** 叶落地停留再淡出、竹叶、铺地积叶、树下更密 ([#219](https://github.com/bolechen/temple-walk/issues/219) 二/二) ([#226](https://github.com/bolechen/temple-walk/issues/226)) ([b97ed33](https://github.com/bolechen/temple-walk/commit/b97ed335e1757204e42dc0f4fb3ecf47bec7c6c7))
+* **ending:** 序章结尾后停在远景，朱印帐由玩家翻开 ([#147](https://github.com/bolechen/temple-walk/issues/147)) ([#204](https://github.com/bolechen/temple-walk/issues/204)) ([3261063](https://github.com/bolechen/temple-walk/commit/326106367731ae5b73400b5c1f35c1dddf731a9f))
+* **evidence:** 证据二进制放仓库外，仓库只留清单 ([#223](https://github.com/bolechen/temple-walk/issues/223) 一) ([#224](https://github.com/bolechen/temple-walk/issues/224)) ([37dace8](https://github.com/bolechen/temple-walk/commit/37dace8e65fb002ca700089ba609826024f4e852))
+* **evidence:** 迁移 docs/t00/evidence 其余全部二进制到数据集（[#223](https://github.com/bolechen/temple-walk/issues/223) 二） ([#228](https://github.com/bolechen/temple-walk/issues/228)) ([317e8de](https://github.com/bolechen/temple-walk/commit/317e8de543955f0b371e7ba464f026c8773c4f07))
+* **input:** a faint jump ring on a touch screen ([#160](https://github.com/bolechen/temple-walk/issues/160)) ([47f60da](https://github.com/bolechen/temple-walk/commit/47f60daa0696be468e6e7b5651841b8d57f315b7)), closes [#142](https://github.com/bolechen/temple-walk/issues/142)
+* **offering:** show the WeChat 赞赏码 in the Chinese web sheet ([#202](https://github.com/bolechen/temple-walk/issues/202)) ([#227](https://github.com/bolechen/temple-walk/issues/227)) ([3faa87b](https://github.com/bolechen/temple-walk/commit/3faa87bb8d424224d8dc272305367da6b3a5e653))
+* **offering:** 大殿一只功德箱，网页版可由此去如是我闻护持页 ([#205](https://github.com/bolechen/temple-walk/issues/205)) ([ccf3f42](https://github.com/bolechen/temple-walk/commit/ccf3f4274c7d72dada53ebeeced5bb0bbd1be2bc))
+* **offering:** 投币由他自己的手送到口上，眼睛去箱自己的机位 ([#214](https://github.com/bolechen/temple-walk/issues/214)) ([8049650](https://github.com/bolechen/temple-walk/commit/8049650450e27b15815e62d6ed2c319a90095c4a))
+* **structure:** cut each building to the timber of its rank, and give every eave its corner beams ([#133](https://github.com/bolechen/temple-walk/issues/133)) ([017d732](https://github.com/bolechen/temple-walk/commit/017d7322668802b83f7293336bfba6f5f7b503c0))
+* **trees:** every branch as thick as what it carries, and the maple as a Japanese maple ([#200](https://github.com/bolechen/temple-walk/issues/200)) ([10e999c](https://github.com/bolechen/temple-walk/commit/10e999cd3e5843e63e50b901b041bf4c8258a1a9))
+* **trees:** grow the cryptomerias' wood with three's TreeGenerator ([#199](https://github.com/bolechen/temple-walk/issues/199)) ([3b63974](https://github.com/bolechen/temple-walk/commit/3b639742ae966ad6a012e0869c54fbacde0153ab))
+* **ui:** a wide pause menu on wide screens, and a title bar that fits a phone ([#139](https://github.com/bolechen/temple-walk/issues/139)) ([2334da1](https://github.com/bolechen/temple-walk/commit/2334da10d831da4bc283e97f01eac15df9743c77))
+* **ui:** the pause menu in four parts, 眼 身 耳 意, the three levels folded under 分开调 ([#195](https://github.com/bolechen/temple-walk/issues/195)) ([b2615f3](https://github.com/bolechen/temple-walk/commit/b2615f398e03700f74f4b4fb1f2ef7bcd68c2399))
+* **ui:** touch hints when the hand needs them, the book at once, a walk told fittingly ([#189](https://github.com/bolechen/temple-walk/issues/189)) ([50de0c9](https://github.com/bolechen/temple-walk/commit/50de0c9232ee2fb43fda0a835cd548449140b40a))
+* **walk:** 构建时从画出来的网格烘可走格子，CI 报可走面积变化（[#194](https://github.com/bolechen/temple-walk/issues/194) 第 2 步） ([#198](https://github.com/bolechen/temple-walk/issues/198)) ([8c96ef2](https://github.com/bolechen/temple-walk/commit/8c96ef2235dc67300c74f4314486cba93a52ef97))
+
+
+### Bug Fixes
+
+* **building:** 檐下斗拱按朝向取回地面的光，不再是剪影 ([#229](https://github.com/bolechen/temple-walk/issues/229)) ([c508e26](https://github.com/bolechen/temple-walk/commit/c508e26e3d3b973f75f25afe2c12181c8a17ee4c))
+* **censer:** 烟的着色器不再在真显卡上算出 NaN，殿门前不再大片黑屏 ([#217](https://github.com/bolechen/temple-walk/issues/217)) ([#236](https://github.com/bolechen/temple-walk/issues/236)) ([d0da596](https://github.com/bolechen/temple-walk/commit/d0da596db27f4456cfeb19c1c83a667dfc89556b))
+* **director:** 摇镜回家的断言按角速度，远景行不被别的提示顶掉 ([#233](https://github.com/bolechen/temple-walk/issues/233)) ([#234](https://github.com/bolechen/temple-walk/issues/234)) ([a3f2d33](https://github.com/bolechen/temple-walk/commit/a3f2d332e54cbc632a230aa04fcbd60acad36b79))
+* **drift:** 落叶落花只从枫和银杏来，檐下不落 ([#219](https://github.com/bolechen/temple-walk/issues/219) 一/二) ([#221](https://github.com/bolechen/temple-walk/issues/221)) ([2ddec7a](https://github.com/bolechen/temple-walk/commit/2ddec7a175bbc0502900f5f738984abdf1a1c16d))
+* **ending:** 手机息屏后收尾动画不再被跳过 ([#171](https://github.com/bolechen/temple-walk/issues/171)) ([cd0c12f](https://github.com/bolechen/temple-walk/commit/cd0c12f2369bbeaa2b820a5e13f4ef69a0e376f0))
+* **input:** a right-click in the middle of a look-drag does not open the browser's menu ([#170](https://github.com/bolechen/temple-walk/issues/170)) ([36cad65](https://github.com/bolechen/temple-walk/commit/36cad65584b1a6b2c0bbfd21acd792c96e727c0a))
+* **plaque:** name boards in an even brush regular hand, each character evened to its neighbours' weight ([#207](https://github.com/bolechen/temple-walk/issues/207)) ([bc7a68f](https://github.com/bolechen/temple-walk/commit/bc7a68f31781d8a00d659e080ec42ae1cca0297a))
+* **plaque:** 名匾挂在斗拱昂嘴之外，字面不再被木件盖住 ([#213](https://github.com/bolechen/temple-walk/issues/213)) ([#216](https://github.com/bolechen/temple-walk/issues/216)) ([52dc953](https://github.com/bolechen/temple-walk/commit/52dc953db273e73d2c64fb8ab89c612488780ed2))
+* **sit:** 静坐的呼吸圈画在地上，字移到底部 ([#201](https://github.com/bolechen/temple-walk/issues/201)) ([367ecb8](https://github.com/bolechen/temple-walk/commit/367ecb8ee5c7d5816df02c5b320e54fc20515166))
+* **slip:** the library's slip lies whole on the screen in every language ([#203](https://github.com/bolechen/temple-walk/issues/203)) ([#208](https://github.com/bolechen/temple-walk/issues/208)) ([ea6f2c2](https://github.com/bolechen/temple-walk/commit/ea6f2c20f809c66dfa4d43041a00d6c1ac594db7))
+* **test:** the nightly run is green again — pages closed after each scenario, positions read from the page ([#180](https://github.com/bolechen/temple-walk/issues/180)) ([61d1b54](https://github.com/bolechen/temple-walk/commit/61d1b5429793c5824284182ee144af855eed3812))
+* **trees:** light each tree's foot from outside, and give its top ring the trunk's own normal ([#178](https://github.com/bolechen/temple-walk/issues/178)) ([5cb8bb2](https://github.com/bolechen/temple-walk/commit/5cb8bb262c7777317a7b5565a58a70889012b452))
+* **trees:** make each tree one piece from the ground up, and slim the young cryptomerias ([#159](https://github.com/bolechen/temple-walk/issues/159)) ([995e772](https://github.com/bolechen/temple-walk/commit/995e7729983459b83af1faec20a1450eef583aa7))
+* **trees:** the cryptomerias stand in their beds of earth again ([#206](https://github.com/bolechen/temple-walk/issues/206)) ([7523b1b](https://github.com/bolechen/temple-walk/commit/7523b1b0002808aeae6f7e002faf9f811a86a11e))
+* **trees:** the trunk meets its foot without a seam, and every tube faces outward ([#197](https://github.com/bolechen/temple-walk/issues/197)) ([15ea861](https://github.com/bolechen/temple-walk/commit/15ea8616e90ffc329119d0f70566d5a626b5ab86))
+* **trees:** winter snow up to every trunk, and the young cedars clothed to the top ([#215](https://github.com/bolechen/temple-walk/issues/215)) ([82aa3a4](https://github.com/bolechen/temple-walk/commit/82aa3a4aed5596c6d49598dd387fb26da90942b0))
+* **ui:** show WebGL fallback message without retry and preserve language switcher ([#190](https://github.com/bolechen/temple-walk/issues/190)) ([834f6e6](https://github.com/bolechen/temple-walk/commit/834f6e6695f908019a428ddcc0abd4e04e2ed748))
+* **ui:** walk-through of every surface — phone layout, pacing, honest wording ([#179](https://github.com/bolechen/temple-walk/issues/179)) ([f22b9ab](https://github.com/bolechen/temple-walk/commit/f22b9aba021b113e82ded90dd3c42fab83b4b5f3))
+
 ## [0.3.0](https://github.com/bolechen/temple-walk/compare/v0.2.0...v0.3.0) (2026-11-17)
 
 

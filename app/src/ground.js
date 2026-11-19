@@ -131,7 +131,7 @@ export function createGround(scene, shade, censer, paving) {
         if(uLitter>.001){
           vec2 fuv=(p-uFallBox.xy)*uFallBox.zw;
           if(fuv.x>0.&&fuv.x<1.&&fuv.y>0.&&fuv.y<1.){
-            vec4 fm=texture2D(tFallMap,fuv); float src=pow(dot(fm.rgb,uLitterCh),5.);
+            vec4 fm=texture2D(tFallMap,fuv); float src=pow(max(dot(fm.rgb,uLitterCh),0.),5.);
             if(src>.01){
               float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
               float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB);
@@ -151,7 +151,7 @@ export function createGround(scene, shade, censer, paving) {
         // each morning: a dusting on its stone, grainy and clean-edged, snow packed in the joints, the swept snow banked
         // along both sides over the kerbs. Off the lane it lies deeper against walls and platforms and in long low waves
         // out in the open; none under a roof.
-        float lane=abs(p.x)-1.7, bank=exp(-pow((lane-.32)/.3,2.)), open=smoothstep(-.15,.2,lane);
+        float lane=abs(p.x)-1.7, bank=exp(-(lane-.32)*(lane-.32)/.09), open=smoothstep(-.15,.2,lane);
         float deep=.5+.6*fbm2(p*.09+4.)+.25*fbm2(p*.35+8.)+.45*smoothstep(0.,.2,dB)*exp(-max(dB,0.)*.7)+.35*bank;
         float dust=.15+.14*fbm2(p*1.3+2.)+.22*smoothstep(-.6,0.,lane)+joint*.6, grain=(n2(p*38.)*.6+n2(p*90.)*.4)*.35, roofS=smoothstep(-.3,.1,dB);
         float sn=uSnow*mix(smoothstep(.46,.475,dust+grain),smoothstep(.15,.3,deep),open)*roofS*smoothstep(.8,1.4,length(p-uCenser)), snD=mix(dust,deep,open)*roofS; puddle*=1.-sn; damp*=1.-sn;
@@ -162,10 +162,10 @@ export function createGround(scene, shade, censer, paving) {
         vec3 tr=sn>.001?trail(vWP):vec3(0.); sn*=1.-tr.x*smoothstep(.8,.2,sn)*.6;
         vec3 wN=texture2D(tSnowN,p*.55).xyz; alb=mix(alb,vec3(.8,.84,.9)*.6*(.88+.24*wN.z)*(.86+.14*min(snD,1.3))*mix(vec3(1.),vec3(.6,.65,.76),tr.x),sn); ao*=1.-.25*tr.x*sn;
         float dist=length(vWP-cameraPosition), nf=1./(1.+dist*dist*.012);
-        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(sign(p.x)*bank*(lane-.32)*6.,0.)+(vec2(n2(p*.4),n2(p*.4+5.))-.5)*.35*open)*sn*(1.-tr.x)+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(nf);
+        vec2 g=(sN.xy*2.-1.)*.5*(1.-puddle)*(1.-sn)*(1.-joint)+(wN.xy*2.-1.)*.3*sn*(1.-.6*tr.x)+tr.yz*sn+(vec2(sign(p.x)*bank*(lane-.32)*6.,0.)+(vec2(n2(p*.4),n2(p*.4+5.))-.5)*.35*open)*sn*(1.-tr.x)+(vec2(n2(p*3.),n2(p*3.+9.))-.5)*.03*sqrt(max(nf,0.));
         vec2 rp=puddle>.01?ripples(p,vWP.y)*puddle:vec2(0.); g+=rp*.5;
-        vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP);
-        float ndv=max(dot(N,V),0.), fres=.035+.965*pow(1.-ndv,5.);
+        vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP); /* nan-ok: the eye is never on the surface it draws (the near plane is 0.1 m off) */
+        float ndv=max(dot(N,V),0.), fres=.035+.965*pow(max(1.-ndv,0.),5.);
         float sun=getShadowMask();
         vec3 lit=alb*(uAmb*ao*mix(.86,1.,sun)+uSunC*1.5*max(dot(N,uSun),0.)*ao*sun);
         // After dark every lamp lays a warm pool on the stone round its foot.

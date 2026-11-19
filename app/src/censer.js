@@ -234,16 +234,16 @@ export function censerMaterial(procMat, tex, at = new THREE.Vector3()) {
         col=vec3(.42,.4,.37)*(.82+.3*g)*(1.-.55*hole)*(1.-.45*wet); metal_=0.; rough_=mix(.95,.6,wet); bump_=g*.004-hole*.002;
         emit_+=vec3(1.,.38,.12)*uEmber*(.12+.9*smoothstep(.1,.0,length(lp.xz-vec2(.08,.05)))+.7*smoothstep(.08,.0,length(lp.xz-vec2(-.1,-.07))))*(.6+.4*g);   // two or three ends burning down into the ash
       } else if(kind>-3.){
-        float rank=(-kind-2.)/.9, up=vUv2.y; if(rank>uIncense) discard;
+        float rank=(-kind-2.)/.9, up=vUv2.y; if(!(rank<=uIncense)) discard;
         col=mix(vec3(.38,.05,.035),vec3(.26,.15,.08),step(.2,up)); metal_=0.; rough_=.8;
         float tip=smoothstep(.93,.99,up); col=mix(col,vec3(.35,.33,.3),tip*.7);
         emit_+=vec3(1.,.32,.07)*tip*(1.5+6.*uEmber)*(.85+.15*sin(uT*3.+rank*40.));
       } else if(kind>-3.5){
         col=mix(vec3(.4,.05,.04),vec3(.28,.26,.24),smoothstep(.85,1.,vWN.y)*.6); metal_=0.; rough_=.8;
       } else if(kind>-4.5){
-        if(uSeasonK.x<.5) discard; float t=vUv2.y; col=mix(vec3(.3,.07,.03),vec3(.36,.25,.05),step(.55,t))*(.7+.4*t); col*=1.-.4*wet; metal_=0.; rough_=.75;
+        if(!(uSeasonK.x>=.5)) discard; float t=vUv2.y; col=mix(vec3(.3,.07,.03),vec3(.36,.25,.05),step(.55,t))*(.7+.4*t); col*=1.-.4*wet; metal_=0.; rough_=.75;
       } else {
-        if(uSeasonK.y<.5) discard; col=mix(vec3(.7,.6,.6),vec3(.74,.7,.68),vUv2.y); metal_=0.; rough_=.6;
+        if(!(uSeasonK.y>=.5)) discard; col=mix(vec3(.7,.6,.6),vec3(.74,.7,.68),vUv2.y); metal_=0.; rough_=.6;
       }
       if(uSnow>.001){ float sn_=uSnow*smoothstep(1.875,1.885,lp.y)*smoothstep(.35,.75,vWN.y)*smoothstep(.2,.5,fbm3(vWP*3.)+.3);
         col=mix(col,vec3(.82,.86,.92),sn_); rough_=mix(rough_,.85,sn_); metal_*=1.-sn_; emit_+=vec3(.82,.86,.92)*uAmb*.2*sn_; }`, { snow: false });
@@ -325,15 +325,19 @@ export function createSmoke(at, U) {
       uniform vec3 uAt; uniform float uT, uRise; uniform vec2 uWind; varying vec2 vQ; varying float vA, vH, vI;
       vec3 at(float i, float a){
         float top=step(3.5,i), w=mod(i,4.)*1.5707963+top*.7853982, r0=mix(${(STOREYS[0].r - 0.05).toFixed(3)},${(STOREYS[1].r - 0.05).toFixed(3)},top), y0=mix(${(STOREYS[0].y0 + 0.12).toFixed(3)},${(STOREYS[1].y0 + 0.12).toFixed(3)},top);
-        float out_=r0+.3*min(1.,a*6.), h=a*${SMOKE.rise.toFixed(2)}*mix(1.,.8,top)*uRise, lean=${SMOKE.lean.toFixed(2)}*pow(h,1.4);
+        float out_=r0+.3*min(1.,a*6.), h=a*${SMOKE.rise.toFixed(2)}*mix(1.,.8,top)*uRise, lean=${SMOKE.lean.toFixed(2)}*pow(max(h,0.),1.4);
         return uAt+vec3(sin(w)*out_+uWind.x*lean+sin(uT*.7-h*2.6+i)*.06*a, y0+h, cos(w)*out_+uWind.y*lean+cos(uT*.53-h*2.2+i*1.7)*.06*a);
       }
       void main(){
         float i=position.x, a=position.y, s=position.z;
-        vec3 c=at(i,a), d=normalize(at(i,min(a+.02,1.))-at(i,max(a-.02,0.))), v=normalize(cameraPosition-c), side=normalize(cross(d,v));
-        float wid=.02+.5*pow(a,1.3);
+        // (every length divided by is kept off zero: a thread seen straight along its way has no side, and is drawn
+        // with none rather than with a number that is not one)
+        vec3 c=at(i,a), d=at(i,min(a+.02,1.))-at(i,max(a-.02,0.)), v=cameraPosition-c;
+        d/=max(length(d),1e-6); v/=max(length(v),1e-6);
+        vec3 side=cross(d,v); side/=max(length(side),1e-6);
+        float wid=.02+.5*pow(clamp(a,0.,1.),1.3);
         vec4 mv=viewMatrix*vec4(c+side*s*wid,1.); gl_Position=projectionMatrix*mv;
-        vQ=vec2(s,a); vA=a; vH=a*${SMOKE.rise.toFixed(2)}; vI=i;
+        vQ=vec2(s,a); vA=clamp(a,0.,1.); vH=a*${SMOKE.rise.toFixed(2)}; vI=i;
       }`,
     fragmentShader: /* glsl */`
       uniform vec3 uCol; uniform float uOp, uT, uIncense; varying vec2 vQ; varying float vA, vH, vI;
@@ -344,9 +348,12 @@ export function createSmoke(at, U) {
         vec2 q=vec2(vQ.x*(1.+vA*3.)+vI*7.3, vH*3.-uT*.55);
         float n=n1(q*vec2(2.2,1.6))*.55+n1(q*vec2(5.,3.5)+3.)*.3+n1(q*vec2(11.,7.)+7.)*.15, edge=1.-smoothstep(.1+.3*n,1.,abs(vQ.x+(n-.5)*.7*vA));
         float alive=step(vI/6.,uIncense+.05)+step(3.5,vI)*step(.25,uIncense);
-        float a=edge*smoothstep(.0,.18,vA)*pow(1.-vA,1.5)*(.3+.7*n*n)*uOp*min(alive,1.)*(1.-.5*smoothstep(.6,1.,abs(vQ.x)));
-        if(a<.004) discard;
-        gl_FragColor=vec4(uCol,a);
+        // the up-the-thread share comes from a value interpolated across the ribbon, which on a graphics card can land a
+        // hair past 1 at its tip: a power of a number below zero is not a number there, and one such pixel, spread by the
+        // bloom, blacked out half the picture (#217). Kept in range, and anything that is not a number is not drawn.
+        float k=clamp(vA,0.,1.), a=edge*smoothstep(.0,.18,k)*pow(max(1.-k,0.),1.5)*(.3+.7*n*n)*uOp*min(alive,1.)*(1.-.5*smoothstep(.6,1.,abs(vQ.x)));
+        if(!(a>=.004)) discard;
+        gl_FragColor=vec4(uCol,clamp(a,0.,1.));
       }` });
   const smoke = new THREE.Mesh(g, mat); smoke.frustumCulled = false; smoke.renderOrder = 2;
   return {

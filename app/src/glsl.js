@@ -49,7 +49,7 @@ export const BUMP = /* glsl */`
 vec3 bumpN(vec3 sp, vec3 N, float h){
   vec3 dpdx=dFdx(sp), dpdy=dFdy(sp); float dhx=dFdx(h), dhy=dFdy(h);
   vec3 r1=cross(dpdy,N), r2=cross(N,dpdx); float det=dot(dpdx,r1);
-  vec3 g=sign(det)*(dhx*r1+dhy*r2); return normalize(abs(det)*N-g);
+  vec3 g=sign(det)*(dhx*r1+dhy*r2); return normalize(abs(det)*N-g); /* nan-ok: of no length only on a degenerate face; its one caller (procMat) keeps the old normal unless the result's length is sane */
 }`;
 
 // Layered mist: how much thicker (or thinner) the air is along a line of sight from a height yc to a height yp than
@@ -67,5 +67,5 @@ float fogLayer(float yc, float yp, vec4 L){
 // the mist's layers too (needs FOGLAYER and `uniform vec4 uFogLayer`).
 export const FOG_DENSITY = 0.009;
 export const fogMix = (c, d, y) => y
-  ? `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)*fogLayer(cameraPosition.y,${y},uFogLayer)));`
-  : `${c}=mix(${c},uFog,1.-exp(-pow(${d}*uFogD,2.)));`;   // needs `uniform float uFogD`
+  ? `${c}=mix(${c},uFog,1.-exp(-pow(abs(${d}*uFogD),2.)*fogLayer(cameraPosition.y,${y},uFogLayer)));`
+  : `${c}=mix(${c},uFog,1.-exp(-pow(abs(${d}*uFogD),2.)));`;   // needs `uniform float uFogD`

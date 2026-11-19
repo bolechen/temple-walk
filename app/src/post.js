@@ -72,7 +72,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
           if(uDof.z>.5){
             float coc=min(abs(1.-uDof.x/z),1.5)*uDof.y;
             if(coc>.35){ vec3 s=c; float n=1.; float ph=h21(vUv*uRes)*6.283;
-              for(int i=0;i<12;i++){ float r=sqrt((float(i)+.5)/12.), a=float(i)*2.39996+ph; vec2 o=vec2(cos(a),sin(a))*r*coc/uRes;
+              for(int i=0;i<12;i++){ float r=sqrt((float(i)+.5)/12.), a=float(i)*2.39996+ph; /* nan-ok: of a loop count, always above zero */ vec2 o=vec2(cos(a),sin(a))*r*coc/uRes;
                 float zs=viewDist(vUv+o); float w=zs<z-.5?min(1.,abs(1.-uDof.x/zs)*uDof.y/max(coc,.01)):1.;   // a sharp thing in front is not smeared over what lies behind it
                 s+=max(texture2D(tDiffuse,vUv+o).rgb,0.)*w; n+=w; }
               c=s/n; }
@@ -84,12 +84,12 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
         c*=uExp; float l=dot(c,vec3(.2126,.7152,.0722));
         c*=mix(uSh,vec3(1.),smoothstep(0.,.3,l));                 // the colour of the shadows
         c*=mix(vec3(1.),uHi,smoothstep(.22,1.3,l));               // and of the lights
-        c=pow(c/.18,vec3(uCon))*.18;                              // contrast, turning about middle grey
+        c=pow(max(c/.18,0.),vec3(uCon))*.18;                              // contrast, turning about middle grey
         l=dot(c,vec3(.2126,.7152,.0722)); c=max(mix(vec3(l),c,uSat*mix(1.,.8,smoothstep(.8,3.,l))),0.);   // saturation, easing off in the lights
         vec2 d=vUv-.5; c*=1.-dot(d,d)*.5;                         // vignette
         float m=max(c.r,max(c.g,c.b)); c=mix(film(c),c*(film(vec3(m)).r/max(m,1e-4)),.3);   // the shoulder, partly keeping hue
         c=c*(1.-uLift)+uLift;                                     // lifted blacks: the air is wet
-        c=mix(c*12.92,1.055*pow(c,vec3(1./2.4))-.055,step(.0031308,c));
+        c=mix(c*12.92,1.055*pow(max(c,0.),vec3(1./2.4))-.055,step(.0031308,c));
         if(uLut>.5) c=texture(tLut,clamp(c,0.,1.)*${((LUT_SIZE - 1) / LUT_SIZE).toFixed(6)}+${(0.5 / LUT_SIZE).toFixed(6)}).rgb;   // the season's colour table
         c+=(h21(vUv*uRes+fract(uT)*91.)-.5)*.018;                 // grain, and dither against banding in the sky
         gl_FragColor=vec4(c,1.);

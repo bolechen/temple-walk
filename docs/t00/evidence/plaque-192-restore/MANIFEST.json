@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "boards-three-builds.jpg",
+   "bytes": 300440,
+   "sha256": "cfe92138936c87bcbbfa03a2b5cb83e24dfa84c4686b10bd95ea7e20ef874a96",
+   "rev": "30b46fa3ec46727ea42ba1b65d52be6aef3552cb"
+  }
+ ]
+}

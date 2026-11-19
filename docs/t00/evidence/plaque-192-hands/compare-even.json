@@ -1,0 +1,146 @@
+{
+ "A  Yuji Boku（Syuku、Mai 的汉字与它逐点相同）": {
+  "file": "ofl_yujiboku_YujiBoku-Regular.ttf",
+  "licence": "OFL 1.1，无保留名",
+  "from": "google/fonts (ofl/…) on GitHub",
+  "breadth_per_mille": 55.8,
+  "five_boards_spread_pct": {
+   "正法眼藏": 3.3,
+   "萬年正續": 2.6,
+   "雙徑歸堂": 5.4,
+   "喫茶去": 1.2,
+   "雲徑禪寺": 4.6
+  },
+  "five_boards_raw_spread_pct": {
+   "正法眼藏": 43.5,
+   "萬年正續": 49.6,
+   "雙徑歸堂": 18.4,
+   "喫茶去": 12.5,
+   "雲徑禪寺": 25.4
+  },
+  "all_boards_failing": 0,
+  "all_boards": 19,
+  "evening_at_limit": []
+ },
+ "B1 Kaisei Tokumin Bold": {
+  "file": "ofl_kaiseitokumin_KaiseiTokumin-Bold.ttf",
+  "licence": "OFL 1.1，无保留名",
+  "from": "google/fonts (ofl/…) on GitHub",
+  "breadth_per_mille": 63.2,
+  "five_boards_spread_pct": {
+   "正法眼藏": 11.5,
+   "萬年正續": 2.1,
+   "雙徑歸堂": 4.3,
+   "喫茶去": 8.9,
+   "雲徑禪寺": 3.1
+  },
+  "five_boards_raw_spread_pct": {
+   "正法眼藏": 46.0,
+   "萬年正續": 58.5,
+   "雙徑歸堂": 38.9,
+   "喫茶去": 48.2,
+   "雲徑禪寺": 58.8
+  },
+  "all_boards_failing": 4,
+  "all_boards": 19,
+  "evening_at_limit": [
+   "亭",
+   "山",
+   "御",
+   "慧",
+   "望",
+   "池",
+   "眼",
+   "續",
+   "鐘",
+   "雲",
+   "音"
+  ]
+ },
+ "B2 Potta One": {
+  "file": "PottaOne-Regular.ttf",
+  "licence": "OFL 1.1，无保留名",
+  "from": "google/fonts (ofl/…) on GitHub",
+  "breadth_per_mille": 109.3,
+  "five_boards_spread_pct": {
+   "正法眼藏": 8.2,
+   "萬年正續": 16.1,
+   "雙徑歸堂": 2.1,
+   "喫茶去": 8.7,
+   "雲徑禪寺": 0.9
+  },
+  "five_boards_raw_spread_pct": {
+   "正法眼藏": 30.1,
+   "萬年正續": 99.4,
+   "雙徑歸堂": 24.8,
+   "喫茶去": 39.0,
+   "雲徑禪寺": 36.5
+  },
+  "all_boards_failing": 6,
+  "all_boards": 19,
+  "evening_at_limit": [
+   "井",
+   "功",
+   "去",
+   "大",
+   "山",
+   "德",
+   "慧",
+   "望",
+   "正",
+   "江",
+   "池",
+   "洗",
+   "續",
+   "雙",
+   "霄",
+   "龍"
+  ]
+ },
+ "B3 全字庫正楷體": {
+  "file": "TW-Kai-98_1.ttf",
+  "licence": "政府资料开放授权 v1.0 / OFL 1.1 双许可",
+  "from": "data.cns11643.gov.tw (Debian fonts-cns11643-kai)",
+  "breadth_per_mille": 58.0,
+  "five_boards_spread_pct": {
+   "正法眼藏": 2.2,
+   "萬年正續": 3.4,
+   "雙徑歸堂": 2.0,
+   "喫茶去": 3.0,
+   "雲徑禪寺": 5.4
+  },
+  "five_boards_raw_spread_pct": {
+   "正法眼藏": 40.2,
+   "萬年正續": 47.7,
+   "雙徑歸堂": 12.9,
+   "喫茶去": 25.4,
+   "雲徑禪寺": 17.2
+  },
+  "all_boards_failing": 0,
+  "all_boards": 19,
+  "evening_at_limit": []
+ },
+ "C  霞鹜文楷 TC 粗体（#207 起线上，拟撤）": {
+  "file": "lxgw-bang.woff2",
+  "licence": "OFL 1.1，原名为保留名（已改名 Yunjing Bang）",
+  "from": "npm @fontsource/lxgw-wenkai-tc (the bang.woff2 of #207)",
+  "breadth_per_mille": 58.2,
+  "five_boards_spread_pct": {
+   "正法眼藏": 4.9,
+   "萬年正續": 5.4,
+   "雙徑歸堂": 1.8,
+   "喫茶去": 1.4,
+   "雲徑禪寺": 6.4
+  },
+  "five_boards_raw_spread_pct": {
+   "正法眼藏": 27.4,
+   "萬年正續": 37.8,
+   "雙徑歸堂": 8.1,
+   "喫茶去": 8.6,
+   "雲徑禪寺": 8.0
+  },
+  "all_boards_failing": 0,
+  "all_boards": 19,
+  "evening_at_limit": []
+ }
+}

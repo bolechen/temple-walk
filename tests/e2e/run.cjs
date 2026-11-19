@@ -1874,6 +1874,9 @@ const scenarios = {
     expect(links[1].href === UTM + "zh-qr" && links[1].text === "付款后可在护持页登记", "the registration link is wrong: " + JSON.stringify(links[1]));
     const qr = await t.page.evaluate(() => { const i = document.getElementById("offeringQrImg"), r = i && i.getBoundingClientRect(); return i && { ok: i.complete && i.naturalWidth === 1152, w: r.width, h: r.height, src: i.getAttribute("src"), shown: !!i.offsetParent }; });
     expect(qr && qr.ok && qr.shown && qr.w >= 220 && qr.h >= 220 && /wechat-support-2026-08-28/.test(qr.src), "the code is not shown whole and large enough: " + JSON.stringify(qr));
+    // The sheet is built after the page opened, and is torn like every sheet (paper.js watches what is added to the body).
+    const torn = await t.page.evaluate(() => document.querySelector(".offering-card").style.getPropertyValue("--deckle") || "");
+    expect(/^url\(/.test(torn), "the offering sheet has no torn edge of its own (--deckle is the plain-rectangle fallback): " + torn.slice(0, 20));
     const words = await t.page.textContent("#offering");
     expect(!/功德无量|供养|募捐/.test(words), "the sheet used a word it must not");
     const zone = await t.page.textContent(".offering-qr"); expect(!/功德|供养|布施|回向/.test(zone) && zone.includes("微信扫码，支持如是我闻与本游戏的制作"), "the code's zone says the wrong thing: " + zone);
@@ -1884,18 +1887,27 @@ const scenarios = {
     expect((await kept()) === book, "a coin changed the book: " + book + " -> " + (await kept()));
     await t.until(async () => (await t.journey()).rite === null, 20000, "he is still at the box");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
-    // In any other language the sheet keeps only the original link: no code, no registration line.
-    const e = await open(b, base, "q=low&lang=en" + BARE);
-    await e.page.evaluate(() => window.__inside("main")); await e.frames(3);
-    const eb = await e.page.evaluate(() => window.__gallery["main-box"]);
-    await e.page.evaluate((p) => window.__pose(p.at[0], p.at[1] + 0.2, 0, 0), eb);
-    await e.until(() => e.page.isVisible("#act"), 30000, "no button before the box (en)"); await e.page.click("#act");
-    await e.until(() => e.page.evaluate(() => !!document.getElementById("offering")?.open), 150000, "no sheet in English");
-    const el = await e.page.$$eval("#offering a", (as) => as.map((a) => a.href));
-    expect(el.length === 1 && el[0] === UTM.replace("co/donate", "co/en/donate") + "en", "the English sheet should keep only the original link: " + el);
-    expect(!(await e.page.$("#offeringQrImg")) && !(await e.page.$(".offering-qr")), "the English sheet holds the code");
-    expect((await e.page.evaluate(() => (globalThis.__events || []).filter((x) => x.name === "offering.qr").length)) === 0, "offering.qr was sent in English");
-    expect(e.errors.length === 0, e.errors.join("\n")); await e.close();
+    // In the other three languages the same sheet carries the same code, its words in that language, the sponsor button still the
+    // chief way in (above the code), the registration link `<lang>-qr`, and one offering.qr each (the coin's way there is the zh run's).
+    const LANGS = { en: { path: "co/en/donate", alt: "WeChat Pay code", scan: "WeChat Pay (optional)", reg: "After paying, you can register on the support page" },
+      ja: { path: "co/ja/donate", alt: "WeChat Pay のコード", scan: "WeChat Pay（任意）", reg: "支払い後はご支援ページで登録" },
+      ko: { path: "co/en/donate", alt: "WeChat Pay 코드", scan: "WeChat Pay(선택)", reg: "결제한 뒤 후원 페이지에서 등록할 수 있습니다" } };
+    for (const [lang, want] of Object.entries(LANGS)) {
+      const e = await open(b, base, `q=low&lang=${lang}` + BARE);
+      await e.until(() => e.page.evaluate(() => typeof window.__offeringSheet === "function"), 60000, `no sheet hook (${lang})`);
+      await e.until(() => e.page.evaluate(() => window.__offeringSheet()), 60000, `no sheet in ${lang}`);
+      await e.frames(2);
+      const ls = await e.page.$$eval("#offering a", (as) => as.map((a) => ({ href: a.href, text: a.textContent, y: a.getBoundingClientRect().top })));
+      expect(ls.length === 2 && ls[0].href === UTM.replace("co/donate", want.path) + lang && ls[1].href === UTM.replace("co/donate", want.path) + lang + "-qr", `${lang}: the sheet's two links are wrong: ` + JSON.stringify(ls));
+      expect(ls[0].text !== "支持如是我闻与本游戏的制作" && ls[1].text === want.reg && (lang === "ja" || !/[\u4e00-\u9fff]/.test(ls[0].text + ls[1].text)), `${lang}: the links' words are not in ${lang}: ` + JSON.stringify(ls.map((l) => l.text)));
+      const q = await e.page.evaluate(() => { const i = document.getElementById("offeringQrImg"), r = i.getBoundingClientRect(); return { ok: i.complete && i.naturalWidth === 1152, w: r.width, alt: i.alt, y: r.top, scan: document.getElementById("offeringScan").textContent, how: document.getElementById("offeringHow").textContent }; });
+      expect(q.ok && q.w >= 220 && q.alt === want.alt && q.scan.startsWith(want.scan), `${lang}: the code or its words are wrong: ` + JSON.stringify(q));
+      expect(q.scan !== "微信扫码，支持如是我闻与本游戏的制作" && q.how !== "用微信扫一扫" && (lang === "ja" || !/[\u4e00-\u9fff]/.test(q.scan + q.how)), `${lang}: Chinese left beside the code: ` + q.scan + " | " + q.how);
+      expect(ls[0].y < q.y, `${lang}: the sponsor button should lie above the code`);
+      const ev = await e.page.evaluate(() => (globalThis.__events || []).filter((x) => x.name === "offering.qr").map((x) => x.data.lang));
+      expect(ev.join() === lang, `${lang}: offering.qr should be sent once with lang: ` + ev);
+      expect(e.errors.length === 0, e.errors.join("\n")); await e.close();
+    }
     return;
   } },
   drop: { tier: 2, async run(b, base) {
