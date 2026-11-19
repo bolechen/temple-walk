@@ -1291,6 +1291,11 @@ const scenarios = {
     // (Played and listened to within one call, as the steps are: the place's bus carries nothing else here.)
     const k = await t.page.evaluate(() => { const r = window.__knock(true), t0 = performance.now(); while (performance.now() - t0 < 60); return { ...r, heard: window.__listen("ambience") }; });
     expect(k.knocks >= 1 && k.heard.rms > 0.0005, "the culms made no knock: " + JSON.stringify(k));
+    // The wind heard keeps the picture's clock (#267): the ambience's last gust was taken at the page's time, not at a
+    // count of its own begun at the first touch (it ticks four times a second, so within a second of now).
+    { await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(800);   // the place heard: its ticks run on the audio's own timer
+      const a = await t.page.evaluate(() => ({ ...window.__knock(), now: performance.now() / 1000 }));
+      expect(a.gustT !== null && Math.abs(a.now - a.gustT) < 1.0, "the wind heard is not on the picture's clock: " + JSON.stringify(a)); }
     // The third stroke of the bell, the first time: the birds in the old trees by the tower go up, with a rattle of wings.
     await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); });
     await t.frames(3);

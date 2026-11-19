@@ -294,7 +294,10 @@ let down = null, hop = null, leap = null, climb = null, climbFor = null, climbs 
 const grove = () => (pos.z > SITE.fore - 6 ? Math.min(1, (pos.z - SITE.fore + 6) / 10) : pos.z < LEVELS[1].zN ? 0.55 : 0.12);
 // What the sound needs to know of the place: the bamboo, which part of the mountain (the music follows it), the mood.
 const ZB = zoneBounds(SITE, LEVELS, APPROACH, SCREEN);
-const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time, wet: mood.wet, snow: mood.snow });
+// `t`: the clock the frame draws the wind by (`now / 1000`, the same timeline as performance.now()), so that the gusts
+// heard are the ones the leaves and the smoke are seen to follow. (Under ?shot or reduced motion the picture holds its
+// clock at 0; the sound goes on along the timeline.)
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
