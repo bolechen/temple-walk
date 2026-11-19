@@ -170,5 +170,6 @@ export function makeWallPanel(text, w, h, back = null) {
   // stone and never a mirrored or squashed copy of the brick and the characters (#272, as the plain boards since #245).
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, 0, 0.04), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
   m.castShadow = false; m.userData.height = h;
-  const slab = mesh(new THREE.BoxGeometry(w, h, 0.078), back || PLANK(), { cast: false }); slab.name = "panel slab"; m.add(slab); return m;
+  // (It casts, as the wall does, so that it joins the wall's stone in one draw.)
+  const slab = mesh(new THREE.BoxGeometry(w, h, 0.078), back || PLANK()); slab.name = "panel slab"; m.add(slab); return m;
 }
