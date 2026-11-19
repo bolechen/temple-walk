@@ -145,6 +145,8 @@
 
 63. **下一关定 T05。** 所有者 2026-11-19：「下一关就定 T05，先做佛像试验」。主创推荐 T05（取意义县奉国寺，「七佛同堂」）的理由：辽代木构与 T00 宋式生成器同源、殿内彻上明造已有、范围是一段院落加一间殿、敏感内容最少；备选 T02 甘露寺（画面最独特，岩洞技术风险最高，留到后面）。整关成败在七尊原创坐佛，先做造像试验 https://github.com/bolechen/temple-walk/issues/280 （路 A Tripo、路 B 公有领域扫描做底、路 C 程序对照；Tripo 上限 60 点），结论出来后再写 PRD（全程 Opus，第 62 条③）。三个常驻专项评审换新会话：旧会话写交接文档（`docs/handoff/review-*.md`）后归档，所有者：「好，安排换新会话」。
 
+64. **研究 Site 与下一关。** 所有者 2026-11-19：下一关的候选与决定「以仓库为准，Site 先不标」。T05 的 PRD 写在仓库；Site 上 T01–T05 的图集条目与仓库 #172–#176 的调研包不对齐时，以仓库为准，定稿后再由管 Site 的一方引用。同日独立评审定时任务由所有者改为 Opus、读 `skills/temple-review/` v1.1（main `65e57ac`）。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。
