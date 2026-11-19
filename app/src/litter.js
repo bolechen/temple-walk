@@ -162,10 +162,11 @@ export function createMemory({ span = 32, ground = (x, z) => 0, pool = MEM.POOL.
         const ci = c % N, cj = (c / N) | 0, o = (cj * 2 * N + ci * 2) * 4;
         out[o] = Math.round((dens[c] / MEM.DMAX) * 65535);
         if (cover) { cover[c * 2] = Math.round((dens[c] / MEM.DMAX) * 255); for (let k = 0; k < S; k++) if (slots[c * S + k] >= 0) { cover[c * 2 + 1] = 255; break; } }
+        let w = 0;   // the places are written one after another, so that a cell of three or fewer needs only its first point
         for (let k = 0; k < S; k++) {
           const i = slots[c * S + k]; if (i < 0) continue;
           const qx = Math.min(15, Math.max(0, Math.floor((lx[i] * PER - ownX[c]) * 16))), qz = Math.min(15, Math.max(0, Math.floor((lz[i] * PER - ownZ[c]) * 16)));
-          out[o + 1 + k] = (qx * 16 + qz) * 256 + lid[i];
+          out[o + 1 + w++] = (qx * 16 + qz) * 256 + lid[i];
         }
       }
       return true;
@@ -209,23 +210,30 @@ bool litIn(vec2 p){ vec2 d=abs(p-uLitMem.xy)*uLitMem.z; return uLitOn>.5&&max(d.
 ivec2 litCell(vec2 c){ return ivec2(int(mod(c.x,uLitMem.w))*2,int(mod(c.y,uLitMem.w))); }
 // (heap, whether a kept leaf lies within the 2×2 cells round p): one smooth look-up of the cover picture.
 vec2 litCover(vec2 p){ vec2 c=texture(tLitCover,p*uLitMem.z/uLitMem.w).rg; return vec2(c.x*${(MEM.DMAX * MEM.PER * MEM.PER / 166).toFixed(4)},c.y); }   // the heap in leaves to the square metre over 166 (a leaf to a cell of each of litterLayer's three grids)
-vec4 freshLeaves(vec2 p, float gk){
-  vec4 best=vec4(0.); vec2 c0=floor(p*uLitMem.z-.5);
-  for(int j=0;j<2;j++) for(int i=0;i<2;i++){
-    vec2 c=c0+vec2(float(i),float(j)); ivec2 t=litCell(c);
-    uvec4 A=texelFetch(tLitMem,t,0), B=texelFetch(tLitMem,t+ivec2(1,0),0);
-    if((A.g|A.b|A.a|B.r|B.g|B.b|B.a)==0u) continue;
-    for(int k=0;k<${MEM.SLOTS};k++){
-      uint sl=k==0?A.g:k==1?A.b:k==2?A.a:k==3?B.r:k==4?B.g:k==5?B.b:B.a; if(sl==0u) continue;
-      float id=float(sl&255u), pb=float(sl>>8u); vec2 q=vec2(floor(pb/16.),mod(pb,16.));
-      vec2 lp=(c+(q+.5)/16.)/uLitMem.z, d0=p-lp; if(dot(d0,d0)>.0026) continue;   // no leaf reaches past 5 cm from its middle
-      float ang=h21(vec2(id,3.7))*6.2832, ca=cos(ang), sa=sin(ang), big=h21(vec2(id,31.7)), tree=step(h21(vec2(id,8.8)),gk);
-      vec2 l=mat2(ca,-sa,sa,ca)*d0;
-      float len=mix(.02,.05,big*big), wid=len*mix(.4,.62,h21(vec2(id,2.2)))*mix(1.,1.5,tree);
-      float d=length(l/vec2(len,wid)), fold=h21(vec2(id,44.4))<.25?step(-.1*len,l.y):1.;
-      float m=fold*smoothstep(1.,.7,d);
-      if(m>best.z) best=vec4(h21(vec2(id,21.9)),.15*h21(vec2(id,5.5)),m,tree);
-    }
+// One cell's kept leaves over p (the best cover so far in best): its first point holds three places, the second the
+// other four, read only when the third place is taken.
+void cellLeaves(vec2 c, vec2 p, float gk, inout vec4 best){
+  ivec2 t=litCell(c); uvec4 A=texelFetch(tLitMem,t,0); if((A.g|A.b|A.a)==0u) return;
+  uvec4 B=A.a!=0u?texelFetch(tLitMem,t+ivec2(1,0),0):uvec4(0u);
+  for(int k=0;k<${MEM.SLOTS};k++){
+    uint sl=k==0?A.g:k==1?A.b:k==2?A.a:k==3?B.r:k==4?B.g:k==5?B.b:B.a; if(sl==0u) break;
+    float id=float(sl&255u), pb=float(sl>>8u); vec2 q=vec2(floor(pb/16.),mod(pb,16.));
+    vec2 lp=(c+(q+.5)/16.)/uLitMem.z, d0=p-lp; if(dot(d0,d0)>.0026) continue;   // no leaf reaches past 5 cm from its middle
+    float ang=h21(vec2(id,3.7))*6.2832, ca=cos(ang), sa=sin(ang), big=h21(vec2(id,31.7)), tree=step(h21(vec2(id,8.8)),gk);
+    vec2 l=mat2(ca,-sa,sa,ca)*d0;
+    float len=mix(.02,.05,big*big), wid=len*mix(.4,.62,h21(vec2(id,2.2)))*mix(1.,1.5,tree);
+    float d=length(l/vec2(len,wid)), fold=h21(vec2(id,44.4))<.25?step(-.1*len,l.y):1.;
+    float m=fold*smoothstep(1.,.7,d);
+    if(m>best.z) best=vec4(h21(vec2(id,21.9)),.15*h21(vec2(id,5.5)),m,tree);
   }
+}
+// The cell p lies in, and a neighbour only where p is within a leaf's reach (5 cm) of the edge they share.
+vec4 freshLeaves(vec2 p, float gk){
+  vec4 best=vec4(0.); vec2 g=p*uLitMem.z, c=floor(g), f=g-c; float r=.05*uLitMem.z;
+  float sx=f.x<r?-1.:f.x>1.-r?1.:0., sz=f.y<r?-1.:f.y>1.-r?1.:0.;
+  cellLeaves(c,p,gk,best);
+  if(sx!=0.) cellLeaves(c+vec2(sx,0.),p,gk,best);
+  if(sz!=0.) cellLeaves(c+vec2(0.,sz),p,gk,best);
+  if(sx!=0.&&sz!=0.) cellLeaves(c+vec2(sx,sz),p,gk,best);
   return best;
 }`;
