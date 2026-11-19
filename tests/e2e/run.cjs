@@ -1423,7 +1423,9 @@ const scenarios = {
     const seen = {};
     for (const [name, v] of Object.entries(views)) {
       await t.page.evaluate((v) => { window.__pose(v[0], v[1], 0, 0.1); const g = window.__yard().h; window.__look([v[0], g + 2.2, v[1]], [v[0], g + v[3], v[2]]); }, v); await t.frames(3);
-      const grid = await t.page.evaluate(([W, H]) => { const r = []; for (let y = 10; y < H * 0.62; y += 20) for (let x = 10; x < W; x += 20) { const h = window.__pick(x, y, 1)[0]; if (h) r.push([x, y, h.material, h.at[1]]); } return r; }, [W, H]);
+      // Every 10 px (#274): at every 20 px which points fell on a bracket set and which on the band moved with a centimetre of
+      // the eye's height, enough to swing the ratio by three points (the baked floor is the drawn paving, 1.2 cm over the stone).
+      const grid = await t.page.evaluate(([W, H]) => { const r = []; for (let y = 5; y < H * 0.62; y += 10) for (let x = 5; x < W; x += 10) { const h = window.__pick(x, y, 1)[0]; if (h) r.push([x, y, h.material, h.at[1]]); } return r; }, [W, H]);
       const band = grid.filter((g) => g[2] === "plaster"), ys = band.map((g) => g[3]).sort((a, b) => a - b);
       expect(band.length > 20, `${name}: the limed band under the eave is not in view (${band.length} samples)`);
       const lo = ys[Math.floor(ys.length * 0.05)], hi = ys[Math.floor(ys.length * 0.95)], r0 = Math.min(...band.map((g) => g[1])), r1 = Math.max(...band.map((g) => g[1]));
