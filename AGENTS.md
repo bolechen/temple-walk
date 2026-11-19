@@ -90,7 +90,7 @@
 
 | 会话 | 管什么 | 什么时候找它 |
 | --- | --- | --- |
-| 建筑结构评审 `session_01Cq65vGpoA1eTVxus21s3vZ` | 营造规制、构件、台基踏步、殿内陈设的依据 | 凡改建筑或陈设形体的 issue，写验收前先问；PR 合并前请它看图 |
+| 建筑结构评审 `session_01Cq65vHdW3DqaTtb3EXX5YP`（交接：`docs/handoff/review-architecture.md`） | 营造规制、构件、台基踏步、殿内陈设的依据 | 凡改建筑或陈设形体的 issue，写验收前先问；PR 合并前请它看图 |
 | 3d 模型评审 `session_01Cq65vGFGo4gM9QSabvXfHn` | 小沙弥的身体、蒙皮、步态、造像模型 | 人物和模型的 PR；新身体接不接 |
 | music 音乐评审 `session_01Cq65vFwzUeVVRQPh7TVN8f` | 配乐、环境声、脚步、器物声 | 凡加了看得见的动静（落叶、水、门、仪式），问它该不该有声 |
 | 产品全面审查与优化 `session_01Cq65vGZNxhYejMudm6nJ13` | 界面走查（开发会话，不是独立评审） | 菜单、提示、手机界面的小修可以直接交给它 |
