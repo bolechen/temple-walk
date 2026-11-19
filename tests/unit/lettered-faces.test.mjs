@@ -9,12 +9,7 @@ import "./dom-stub.mjs";
 import * as THREE from "three";
 const { buildDrawn } = await import("../../tools/walk/scene.mjs");
 
-const KNOWN = new Set([
-  // The screen wall's two lettered panels (plaque.js makeWallPanel): a 0.08 m box with the picture on all six faces, so the
-  // four characters and the brick are drawn again, mirrored, on the back of each and along its edges. Walkable on both sides.
-  "Mesh at (0.0, 2.3, 54.6) 9.70×3.15×0.08: picture drawn facing 6 ways",
-  "Mesh at (0.0, 2.3, 55.4) 9.70×3.15×0.08: picture drawn facing 6 ways",
-]);
+const KNOWN = new Set([]);   // the screen wall's two panels were the last (#272)
 
 /** Every picture-bearing mesh in `root`: the way(s) its pictured triangles face, in the mesh's own frame, and the material's side. */
 export function pictured(root) {

@@ -176,7 +176,11 @@ Conventions: 1 unit = 1 m, north/uphill is -z, the visitor arrives from +z, buil
 function: the halls' platforms, the terraces, the approach. The treads come from `stairProfile(rise)`. A flight of three
 steps or more has a cheek each side (`cheekProfile`): one sloped stone a little proud of the tread noses, level into the
 platform at its head and cut square at the lowest nose, over a pier against the platform and a panel set back between
-them (cut back twice more on a flight tall enough to show it). All of it keeps within `CHEEK` of the treads and between
+them (cut back twice more on a flight tall enough to show it). The stone's square foot stands a hand's length on the ground
+and, with the pier and the panel, goes 0.4 m into it (`CHEEK_STONE.base`, #272), so a flight whose foot is a little above the
+ground beside it shows no slot; `tests/unit/cheek-feet.test.mjs` looks under every cheek of every flight in the place as drawn
+(the flights are recorded where they stand, `userData.flights`). A building's back stairs are on its middle unless
+`stepsBackAt` lists where across it each comes down (the great hall's two, in the bays next to the middle, #272). All of it keeps within `CHEEK` of the treads and between
 the head of the flight and 6 cm past its foot: that is the ground each cheek's `walk.posts` rectangle closes, so a new
 level only has to place the flight and its post. `sides: [1]` or `[]` builds a flight against a wall. The cheek tests in
 `tests/unit/stairs.test.mjs` hold this for any rise and width: inside its footprint, proud of every nose, solid from

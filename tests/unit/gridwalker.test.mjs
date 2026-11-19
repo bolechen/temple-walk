@@ -332,3 +332,23 @@ test("in every room he can walk round each column, and the grid stops him his re
     assert.ok(g.nx > 0); if (process.env.ROUND_LOG) console.log(id, n, "columns walked round");
   });
 });
+
+// The great hall's two back flights (#148, #272): in its east and west bays next to the middle, each is walked up from the
+// court behind the hall onto the platform and down again, and its foot and its head are both on the floor he walks to from
+// where he comes in (so neither leads into a pocket he cannot leave).
+test("#272: the great hall's two back flights come down into the court behind it, and lead to the floor he arrives on", () => {
+  const b = site.buildings.find((q) => q.name === "大雄宝殿"), floor = (b.y || 0) + 1.5;
+  const back = site.walk.ramps.filter((r) => Math.abs(r.high[1] - b.z0) < 0.6 && r.low[1] < r.high[1]).sort((p, q) => p.low[0] - q.low[0]);
+  assert.equal(back.length, 2, `the back flights found: ${back.map((r) => r.low.map((v) => v.toFixed(2))).join(" ")}`);
+  assert.ok(Math.abs(back[0].low[0] + 8.85) < 0.05 && Math.abs(back[1].low[0] - 8.85) < 0.05, "in the east and west bays next to the middle");
+  const meta = file.header.grids.find((q) => q.id === "outdoors"), g = G, seen = new Uint8Array(g.nx * g.nz), todo = [], CLIMB = BAKE.CLIMB * 100 + 1e-6;
+  for (const [sx, sz] of meta.seeds) { const k = cellOf(g, sx, sz); if (k >= 0 && !g.state[k]) { seen[k] = 1; todo.push(k); } }
+  while (todo.length) { const k = todo.pop(), i = k % g.nx, j = (k - i) / g.nx;
+    for (const [a, c] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + c; if (ii < 0 || jj < 0 || ii >= g.nx || jj >= g.nz) continue; const kk = jj * g.nx + ii;
+      if (!seen[kk] && !g.state[kk] && Math.abs(g.height[kk] - g.height[k]) <= CLIMB) { seen[kk] = 1; todo.push(kk); } } }
+  for (const r of back) {
+    const foot = [r.low[0], r.low[1] - 0.8], head = [r.high[0], r.high[1] + 0.3], kf = cellOf(g, ...foot), kh = cellOf(g, ...head);
+    assert.ok(kf >= 0 && seen[kf] && walker.heightAt(...foot) < 0.05, `the foot of the flight at x=${r.low[0]} is not on the court's floor he walks to`);
+    assert.ok(kh >= 0 && seen[kh] && Math.abs(walker.heightAt(...head) - floor) < 0.05, `the head of the flight at x=${r.low[0]} is not on the platform he walks to`);
+  }
+});

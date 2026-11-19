@@ -5,7 +5,7 @@
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "three";
-import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
+import { box, merge, mesh, smooth, stairGeo, stairProfile, cheekProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
 import { PURLIN, PING, buildHall, DOOR } from "./building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
@@ -222,6 +222,9 @@ export function buildSite(M) {
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
     cai: 0.232, xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
+    // Two flights down from the back of its platform, in the east and west bays next to the middle (#148, #272): not on the
+    // axis, where the foot of the library terrace's stair comes too near.
+    stepsBack: 3.9, stepsBackAt: [-8.85, 8.85],
   }, { cai: 0.256, xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [4.3, 0, -4.3], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
@@ -272,10 +275,13 @@ export function buildSite(M) {
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
+  // Each flight is also kept as where it stands (`root.userData.flights`), so that its cheeks' feet can be looked under (#272).
+  const flightAt = (w, rise, m) => { (root.userData.flights ||= []).push({ w, rise, sides: [-1, 1], m }); return stairGeo(w, rise).geo.applyMatrix4(m); };
+  const placed = (x, y, z, turn = 0) => new THREE.Matrix4().makeTranslation(x, y, z).multiply(new THREE.Matrix4().makeRotationY(turn));
   LEVELS.forEach((L, i) => {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
     const bottom = i === 2 ? 4 : y0 - 0.2 < 0 ? 0 : y0 - 0.2;
-    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(st.geo.translate(0, y0, L.zS));
+    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(flightAt(L.stair, rise, placed(0, y0, L.zS)));
     // The summit's edge is the low plaster wall built below (the same line), not a second, stone one under its tiles.
     if (i < 2) for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
     paving.push({ level: i + 1, y: L.y + 0.012, x: L.x, zS: L.zS, zN: L.zN });
@@ -287,10 +293,13 @@ export function buildSite(M) {
     for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? L.stair / 2 - BODY - 0.021 : -L.stair / 2 - CHEEK - BODY, x1: sx > 0 ? L.stair / 2 + CHEEK + BODY : -L.stair / 2 + BODY + 0.021, z0: L.zS + 0.02, z1: L.zS + st.run + BODY + 0.06 });
     shade[i].push({ x0: -L.x, x1: L.x, z0: L.zN, z1: L.zS });
   });
+  // Where the summit flight leaves the Guanyin terrace for the hill, the earth is cut back for the stair: a block of the
+  // terrace's own stone fills under its lowest two metres, so its cheeks stand on stone and not over a slot (#272).
+  { const hw = TOP.stair / 2 + cheekProfile(TOP.y - T2.y).width; stone.push(box(hw * 2, 1.4, 2.6, 0, T2.y - 0.7, T2.zN - 1.3)); }
   walk.solids.push({ x0: -60, x1: 60, z0: HILL.zN, z1: HILL.zS - 0.05, open: true });   // the hillside itself: not to be walked on, but open air above it
   {   // the approach: lower landing, a flight west to the half-way pavilion, a turn, a flight north to the forecourt
     const A = APPROACH, yA = -A.rise, yB = -A.rise - A.rise2, pad = 0.3, clear = BODY + 0.02;   // `clear`: the treads are walked this far inside the cheek stones
-    flights.push(stairGeo(A.w, A.rise).geo.translate(0, yA, A.top), stairGeo(A.zA1 - A.zA0 - 0.6, A.rise2).geo.rotateY(Math.PI / 2).translate(A.xTurn, yB, A.zMid));
+    flights.push(flightAt(A.w, A.rise, placed(0, yA, A.top)), flightAt(A.zA1 - A.zA0 - 0.6, A.rise2, placed(A.xTurn, yB, A.zMid, Math.PI / 2)));
     stone.push(box(A.xTurn + A.w / 2 + 0.4, 0.4, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.2, yA - 0.2, A.zMid),
       box(A.xB1 - A.xB0, 0.4, A.zA1 - A.zA0, (A.xB0 + A.xB1) / 2, yB - 0.2, A.zMid));
     walk.ramps.push({ x0: -A.w / 2 + clear, x1: A.w / 2 - clear, z0: A.top - 0.4, z1: A.zA0 + 0.2, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
@@ -305,7 +314,7 @@ export function buildSite(M) {
     walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn + 0.2, z0: A.zA0 - 0.05, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 + 0.2, h: yB });
     // Below that, a third flight coming up from the south, from the landing where the walk begins.
     const yC = yB - A.rise3;
-    flights.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1)); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
+    flights.push(flightAt(A.w, A.rise3, placed(A.xC, yC, A.zA1))); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
     walk.ramps.push({ x0: A.xC - A.w / 2 + clear, x1: A.xC + A.w / 2 - clear, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
     walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.9 - 2.3 - stairGeo(1, 0.3).run - 0.02, z0: A.zC0, z1: A.zC1 - pad, h: yC });   // (as far as the foot of the river-view pavilion's steps)
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
@@ -385,7 +394,7 @@ export function buildSite(M) {
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
     // Both faces: a panel of diamond-laid grey brick in a frame of pale stone, the four characters gilt upon it, as on the real wall.
-    for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
+    for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05, M.stone); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
     walk.solids.push({ x0: -w / 2 - 0.7, x1: w / 2 + 0.7, z0: z - 0.9, z1: z + 0.9 });
     shade[0].push({ x0: -w / 2, x1: w / 2, z0: z - 0.35, z1: z + 0.35 });
   }

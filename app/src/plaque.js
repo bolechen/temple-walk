@@ -135,7 +135,7 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
 
 // The face of the screen wall, as it is at the real temple: no hanging board, but a panel of grey bricks laid on the
 // diamond inside a frame of pale dressed stone, and the four characters set into it large and gilt, read from the right.
-export function makeWallPanel(text, w, h) {
+export function makeWallPanel(text, w, h, back = null) {
   const chars = [...text].map((ch) => OLD[ch] || ch), n = chars.length, W = 2048, H = Math.round((W * h) / w);
   const c = doc.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
@@ -166,6 +166,9 @@ export function makeWallPanel(text, w, h) {
   }
   draw();
   if (doc.fonts && doc.fonts.load) doc.fonts.load(`200px "Yunjing Bang"`, chars.join("")).then(draw, () => {});
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
-  m.castShadow = false; m.userData.height = h; return m;
+  // The picture is a sheet on the face of a slab of the wall's own stone, so that its back and its four edges are plain
+  // stone and never a mirrored or squashed copy of the brick and the characters (#272, as the plain boards since #245).
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, 0, 0.04), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
+  m.castShadow = false; m.userData.height = h;
+  const slab = mesh(new THREE.BoxGeometry(w, h, 0.078), back || PLANK(), { cast: false }); slab.name = "panel slab"; m.add(slab); return m;
 }
