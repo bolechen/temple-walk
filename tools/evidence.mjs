@@ -5,11 +5,14 @@
 //   node tools/evidence.mjs push <dir>          upload <dir>'s binaries, write <dir>/MANIFEST.json, fetch each back and check it
 //   node tools/evidence.mjs verify [--all]      fetch what every manifest lists: size of every file and a sample's hash; --all hashes them all
 //   node tools/evidence.mjs pull <dir> [--into <out>]   fetch <dir>'s binaries by its manifest (hash-checked) into tools/out/evidence/<store path>/, which git ignores
-//   node tools/evidence.mjs mirror [--dry-run]  copy what the manifests list from the original (CONFIG.origin) to the R2 bucket; CI's job (#247)
+//   node tools/evidence.mjs mirror [--dry-run]  copy what the manifests list from the original (CONFIG.fallback) to the R2 bucket; CI's job (#247)
+//   node tools/evidence.mjs verify-store        every manifest entry read from the bucket over its S3 interface (the repository's four secrets), size and SHA-256
 //   node tools/evidence.mjs check               offline, for CI: manifests well-formed, no file over 1 MB, no unlisted binary
 //
 // Where the bytes are read from is stated once, in tools/evidence.config.json's `base` (or EVIDENCE_BASE for a try-out);
-// `origin` is where they were first put (Hugging Face), the copy `mirror` fills the `base` store from. Moving to another
+// `fallback` is where they were first put (Hugging Face): the original, the copy `mirror` fills the `base` store from,
+// and where a read goes when `base` answers a datacenter address with Cloudflare's verification page (cf-mitigated:
+// challenge, an IP-reputation rule that no hostname rule can skip, #247). Moving to another
 // store means changing that file and pushing again. Nothing here deletes or overwrites: a path already in a manifest
 // (or already in the store) with different bytes is refused. `hf` must be logged in for push; give HF_TOKEN any
 // placeholder in a sandbox whose proxy supplies the real one; verify and pull need only a network.
@@ -102,7 +105,12 @@ async function get(url, tries = 3) {
     try {
       const r = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(CONFIG.timeoutMs || 60000) });
       if (r.status === 404) throw Object.assign(new Error(`404 ${url}`), { fatal: true });
-      if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
+      if (!r.ok) {
+        // A verification page is the zone's answer to who is asking, not to what is asked for: asking again changes nothing.
+        const challenged = r.headers.get("cf-mitigated") === "challenge";
+        await r.body?.cancel();
+        throw Object.assign(new Error(`HTTP ${r.status} ${url}`), { fatal: challenged, challenged });
+      }
       return r;
     } catch (e) {
       last = e;
@@ -202,7 +210,10 @@ export async function push(dirArg, { log = console.log } = {}) {
   return files;
 }
 
-/** Fetch every manifest's files. all: hash every file; otherwise sizes of all (from the response) and a sample of hashes. */
+/** Fetch every manifest's files from `base`. all: hash every file; otherwise sizes of all (from the response) and a sample of
+ *  hashes. A read that `base` answers with a verification page (cf-mitigated: challenge) is not a mismatch: it is counted as
+ *  challenged (by extension) and the file is fetched from `fallback` and hashed there. Failing is: neither store gives the
+ *  manifest's bytes. */
 export async function verify({ all = false, root = ROOT, log = console.log } = {}) {
   const fails = [];
   const mans = manifestsUnder(root);
@@ -213,25 +224,60 @@ export async function verify({ all = false, root = ROOT, log = console.log } = {
     const prefix = remoteOf(rel + "/x").replace(/\/x$/, "");
     const bad = manifestProblems(m);
     if (bad.length) { fails.push(`${rel}: ${bad.join("; ")}`); continue; }
-    m.files.forEach((f, i) => jobs.push({ f, url: urlOf(`${prefix}/${f.path}`, f.rev), hash: all || i % 10 === 0 }));
+    m.files.forEach((f, i) => jobs.push({ f, remote: `${prefix}/${f.path}`, url: urlOf(`${prefix}/${f.path}`, f.rev), hash: all || i % 10 === 0 }));
   }
-  let hashed = 0;
-  await pool(jobs, 16, async ({ f, url, hash }) => {
+  const n = { hashed: 0, sized: 0, viaFallback: 0 };
+  const challenged = {};
+  const sameAsManifest = (buf, f) => buf.length === f.bytes && sha256(buf) === f.sha256;
+  await pool(jobs, 16, async ({ f, remote, url, hash }) => {
     try {
       const r = await get(url);
       const len = Number(r.headers.get("content-length"));
       if (!hash) {
         await r.body?.cancel();
+        n.sized++;
         if (len && len !== f.bytes) fails.push(`${url}: ${len} bytes, manifest ${f.bytes}`);
         return;
       }
       const buf = Buffer.from(await r.arrayBuffer());
-      hashed++;
+      n.hashed++;
       if (buf.length !== f.bytes) fails.push(`${url}: ${buf.length} bytes, manifest ${f.bytes}`);
       else if (sha256(buf) !== f.sha256) fails.push(`${url}: SHA-256 differs from the manifest`);
-    } catch (e) { fails.push(`${url}: ${e.message.replace(url, "").trim() || e.message}`); }
+    } catch (e) {
+      if (!e.challenged) { fails.push(`${url}: ${e.message.replace(url, "").trim() || e.message}`); return; }
+      const ext = path.extname(f.path).slice(1).toLowerCase() || "(none)";
+      challenged[ext] = (challenged[ext] || 0) + 1;
+      const back = urlOf(remote, f.rev, CONFIG.fallback);
+      try {
+        if (sameAsManifest(await bytesOf(back), f)) n.viaFallback++;
+        else fails.push(`${url}: challenged, and the fallback's bytes differ from the manifest`);
+      } catch (e2) { fails.push(`${url}: challenged, and the fallback failed: ${e2.message.replace(back, "").trim()}`); }
+    }
   });
-  log(`${mans.length} manifests, ${jobs.length} files checked, ${hashed} hashed${all ? " (all)" : " (sample)"}, ${fails.length} failed`);
+  const ch = Object.entries(challenged).map(([k, v]) => `${k} ${v}`).join(", ") || "none";
+  log(`${mans.length} manifests, ${jobs.length} files: ${n.hashed} hashed and ${n.sized} sized directly at the base, ${n.viaFallback} hashed via the fallback (challenged by extension: ${ch}), ${fails.length} failed${all ? " (all)" : " (sample)"}`);
+  return fails;
+}
+
+/** The bucket's own word: every manifest entry read over its S3 interface (never the public domain), size and SHA-256. */
+export async function verifyStore({ log = console.log } = {}) {
+  const missing = SECRETS.filter((n) => !process.env[n]);
+  if (missing.length) throw new Error(`missing or empty: ${missing.join(", ")}`);
+  const entries = mirrorEntries();
+  const fails = [];
+  let ok = 0;
+  await pool(entries, 8, async (e) => {
+    const tmp = path.join(os.tmpdir(), `verify-${process.pid}-${e.sha256.slice(0, 16)}`);
+    try {
+      await aws("get-object", ["--key", e.key, tmp, "--output", "json"]);
+      const buf = fs.readFileSync(tmp);
+      if (buf.length !== e.bytes) fails.push(`${e.key}: ${buf.length} bytes in the bucket, manifest ${e.bytes}`);
+      else if (sha256(buf) !== e.sha256) fails.push(`${e.key}: SHA-256 in the bucket differs from the manifest`);
+      else ok++;
+    } catch (err) { fails.push(`${e.key}: ${err.message}`); }
+    finally { fs.rmSync(tmp, { force: true }); }
+  });
+  log(`bucket (S3): ${entries.length} listed, ${ok} read and matching, ${fails.length} failed`);
   return fails;
 }
 
@@ -247,7 +293,9 @@ export async function pull(dirArg, { into, log = console.log } = {}) {
     const to = path.join(out, f.path);
     if (fs.existsSync(to) && sha256(fs.readFileSync(to)) === f.sha256) return;
     try {
-      const buf = await bytesOf(urlOf(`${prefix}/${f.path}`, f.rev));
+      let buf;
+      try { buf = await bytesOf(urlOf(`${prefix}/${f.path}`, f.rev)); }
+      catch (e) { if (!e.challenged) throw e; buf = await bytesOf(urlOf(`${prefix}/${f.path}`, f.rev, CONFIG.fallback)); }
       if (sha256(buf) !== f.sha256) throw new Error("SHA-256 differs from the manifest");
       fs.mkdirSync(path.dirname(to), { recursive: true });
       fs.writeFileSync(to, buf);
@@ -293,7 +341,7 @@ async function sizeAt(key) {
 }
 
 /** Put into the bucket what the manifests list and it lacks. An object already there with the manifest's size is left;
- *  one with another size is a conflict (exit 1), never replaced. Nothing is deleted. Bytes come from CONFIG.origin and are
+ *  one with another size is a conflict (exit 1), never replaced. Nothing is deleted. Bytes come from CONFIG.fallback and are
  *  hashed before they are sent. */
 export async function mirror({ dryRun = false, log = console.log } = {}) {
   const missing = SECRETS.filter((n) => !process.env[n]);
@@ -309,7 +357,7 @@ export async function mirror({ dryRun = false, log = console.log } = {}) {
         return;
       }
       if (dryRun) { res.sent++; res.bytes += e.bytes; return; }
-      const buf = await bytesOf(urlOf(e.remote, e.rev, CONFIG.origin));
+      const buf = await bytesOf(urlOf(e.remote, e.rev, CONFIG.fallback));
       if (buf.length !== e.bytes || sha256(buf) !== e.sha256) throw new Error("the original's bytes differ from the manifest");
       const tmp = path.join(os.tmpdir(), `mirror-${process.pid}-${e.sha256.slice(0, 16)}`);
       fs.writeFileSync(tmp, buf);
@@ -339,12 +387,13 @@ export async function mirror({ dryRun = false, log = console.log } = {}) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [cmd, ...rest] = process.argv.slice(2);
-  const usage = "usage: evidence.mjs push <dir> | verify [--all] | pull <dir> [--into <out>] | mirror [--dry-run] | check";
+  const usage = "usage: evidence.mjs push <dir> | verify [--all] | pull <dir> [--into <out>] | mirror [--dry-run] | verify-store | check";
   try {
     let fails = [];
     if (cmd === "push" && rest[0]) await push(rest[0]);
     else if (cmd === "pull" && rest[0]) fails = await pull(rest[0], { into: rest[1] === "--into" ? rest[2] : undefined });
     else if (cmd === "mirror") fails = await mirror({ dryRun: rest.includes("--dry-run") });
+    else if (cmd === "verify-store") fails = await verifyStore();
     else if (cmd === "verify") {
       fails = await verify({ all: rest.includes("--all") });
       if (fails.length) console.error(`base: ${process.env.EVIDENCE_BASE || CONFIG.base}`);

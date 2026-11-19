@@ -176,11 +176,12 @@
 **证据放在仓库外（#223，所有者 2026-11-18：「点头，干吧，现有的也移走」，先放 Hugging Face，之后换 R2）。** 上面那条 1 MB 的规矩保留，并换成做法：
 
 - **PR 的证据用 `node tools/evidence.mjs push docs/<level>/evidence/<目录>`。** 它把目录里的二进制（图、录像）传到公开数据集 `bolechen/temple-walk-evidence`（Hugging Face，**原本**）的同名路径，逐个取回核 SHA-256，再写出该目录的 `MANIFEST.json`（路径、字节数、SHA-256、数据集提交号）。开发会话不持有 R2 的钥匙，做法一点没变。进仓库的只有：README、清单、文本（json、log、md、脚本）和最多一张不超过 1 MB 的拼图。README 里的图用清单里钉了提交号的地址，不用相对路径；要看原图的人和工具用 `pull`（取到 `tools/out/evidence/`，git 忽略）。
-- **R2 是镜像，由 CI 做（#247）。** 清单（`MANIFEST.json`）一变，`.github/workflows/evidence-mirror.yml` 就把清单里 R2 桶没有的对象从原本取来、核 SHA-256、传到 R2（`node tools/evidence.mjs mirror`；四个仓库 secret `R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY`、`R2_ENDPOINT`、`R2_BUCKET` 只有 Actions 读得到，轮换只在仓库设置里）。R2 上的键与地址里 `resolve/` 之后一字不差：`<rev>/<level>/<目录>/<path>`，读的一侧只换 `base`。同仓库分支的 PR 读得到 secret，镜像在合并前就跑；fork 的 PR 读不到，不镜像，这时读图用 `EVIDENCE_BASE=<config 的 origin>`（Hugging Face 地址）。镜像失败不拦合并，运行摘要里写明哪些没传上。
+- **R2 是镜像，由 CI 做（#247）。** 清单（`MANIFEST.json`）一变，`.github/workflows/evidence-mirror.yml` 就把清单里 R2 桶没有的对象从原本取来、核 SHA-256、传到 R2（`node tools/evidence.mjs mirror`；四个仓库 secret `R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY`、`R2_ENDPOINT`、`R2_BUCKET` 只有 Actions 读得到，轮换只在仓库设置里）。R2 上的键与地址里 `resolve/` 之后一字不差：`<rev>/<level>/<目录>/<path>`，读的一侧只换 `base`。同仓库分支的 PR 读得到 secret，镜像在合并前就跑；fork 的 PR 读不到，不镜像，这时读图用 `EVIDENCE_BASE=<config 的 fallback>`（Hugging Face 地址）。镜像失败不拦合并，运行摘要里写明哪些没传上。
 - **哪一处说了算。** Hugging Face 是原本、R2 是镜像；两处不一致时以原本为准，把镜像补上（只补不覆盖：R2 上同名字节数不同的对象会让镜像退出 1，由人看，不自动改）。HF 数据集只增不删，仍是回退的路。
+- **机房地址取录像会被拦（#247）。** R2 域名所在的 zone 开着 Bot Fight Mode，它按 IP 信誉在 WAF 之前判，不按主机名或路径，WAF 的 Skip 规则对它无效，所有者不关它：GitHub 的机器取 `.webm` 会得到 403 加 `cf-mitigated: challenge`（验证页），人在浏览器里打开会过验证页。所以「桶里的就是清单说的」由 S3 接口证明（`node tools/evidence.mjs verify-store`，用四个仓库 secret，不经公开域名）；`verify` 和 `pull` 走公开域名时，被验证页拦下的读不算内容不符，改从 `fallback`（HF 原件，钉提交号的同一路径）取来核哈希，输出里分别报直接核过几个、经备用核过几个、被拦的各扩展名几个、失败几个。今后证据仍不交录像。
 - **只增不改。** 工具不提供删除和覆盖：清单里或存放处已有的路径，内容不同就拒绝（退出码 1）；新图起新名字。地址钉在提交号上，不用 `main`。
-- **CI 只做离线检查**：`node tools/evidence.mjs check`（证据目录下没有超过 1 MB 的文件，清单格式合法）。联网核哈希是 `node tools/evidence.mjs verify --all`，手动跑，夜间任务里对两处各跑一次（`EVIDENCE_BASE` 指向 `origin` 即核原本），不拦合并（存放处的可达性不能决定一个 PR 能不能合）。
-- **存放处只在一处写**：`tools/evidence.config.json` 的 `base`（读）和 `origin`（原本，镜像的来源）。
+- **CI 只做离线检查**：`node tools/evidence.mjs check`（证据目录下没有超过 1 MB 的文件，清单格式合法）。联网核哈希是 `node tools/evidence.mjs verify --all`，手动跑，夜间任务里对两处各跑一次（`EVIDENCE_BASE` 指向 `fallback` 即核原本），不拦合并（存放处的可达性不能决定一个 PR 能不能合）。
+- **存放处只在一处写**：`tools/evidence.config.json` 的 `base`（读）和 `fallback`（原本，镜像的来源，也是读不通时的备用）。
 - 沙箱里 `hf` 要一个 `HF_TOKEN`，写占位值 `hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`，代理换成真的；不要找、打印或写入真令牌。Node 走代理要 `NODE_USE_ENV_PROXY=1`。
 
 **2026-11-19 白天补四条**（等今晚复盘时并入）

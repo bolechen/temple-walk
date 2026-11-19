@@ -16,8 +16,8 @@ test("every mirror key is the address after `base`, and no key repeats", () => {
   }
 });
 
-test("origin and base are both full addresses ending in a slash", () => {
-  for (const k of ["base", "origin"]) assert.match(CONFIG[k], /^https:\/\/.+\/$/, k);
+test("fallback and base are both full addresses ending in a slash", () => {
+  for (const k of ["base", "fallback"]) assert.match(CONFIG[k], /^https:\/\/.+\/$/, k);
 });
 
 test("a mirror without its four secrets says which are missing and sends nothing", async () => {

@@ -37,7 +37,7 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 证据的二进制（截图、录像）不再在仓库里，Site 和独立评审不要再按 `docs/t00/evidence/<目录>/<图>` 读图。读法：
 
 1. 目录里的 `MANIFEST.json`（`https://raw.githubusercontent.com/bolechen/temple-walk/<提交>/docs/t00/evidence/<目录>/MANIFEST.json`）列出该目录每个二进制的 `path`、`bytes`、`sha256`、`rev`。
-2. 图的地址是基础地址 + `rev` + `/t00/<目录>/<path>`，基础地址在 `tools/evidence.config.json` 的 `base`（R2 桶的公开域名，`https://evidence.dev.rushiwowen.co/`；原本在 Hugging Face，地址是同一文件的 `origin`，两处路径相同，只是前缀不同）。地址钉在数据集的提交号上，内容不会变；取回后可用 `sha256` 核对。
+2. 图的地址是基础地址 + `rev` + `/t00/<目录>/<path>`，基础地址在 `tools/evidence.config.json` 的 `base`（R2 桶的公开域名，`https://evidence.dev.rushiwowen.co/`；原本在 Hugging Face，地址是同一文件的 `fallback`，两处路径相同，只是前缀不同）。R2 域名对机房地址（服务器、CI）可能返回验证页（403，`cf-mitigated: challenge`），尤其是录像：这时改用 `fallback` 的地址取同一路径，内容一样，`sha256` 照核。地址钉在数据集的提交号上，内容不会变；取回后可用 `sha256` 核对。
 3. README、`delivery.json` 里写的图地址已是完整地址，可直接打开；整目录取回：`node tools/evidence.mjs pull docs/t00/evidence/<目录>`。
 
 已移出仓库的目录以 `MANIFEST.json` 存在为准（逐步迁移时，没有清单的目录仍按旧路径）。

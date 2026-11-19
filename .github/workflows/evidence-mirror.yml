@@ -10,7 +10,7 @@ on:
     branches: [main]
     paths: ["docs/**/evidence/**/MANIFEST.json"]
   # A same-repository branch is given the secrets; a fork's pull request is not, and is skipped (its evidence is read from
-  # Hugging Face by setting EVIDENCE_BASE to `origin`, see AGENTS.md).
+  # Hugging Face by setting EVIDENCE_BASE to `fallback`, see AGENTS.md).
   pull_request:
     paths: ["docs/**/evidence/**/MANIFEST.json", ".github/workflows/evidence-mirror.yml", "tools/evidence.mjs"]
 
@@ -42,20 +42,16 @@ jobs:
         run: |
           aws --version
           node tools/evidence.mjs mirror
-      - name: Every listed file read back from the public domain (SHA-256)
-        run: EVIDENCE_BASE="$PUBLIC" node tools/evidence.mjs verify --all 2>&1 | tail -n 20
-        shell: bash {0}
-      - name: Why a public read is refused, if one was (response headers of one .webm and one .jpg, public addresses only)
-        run: |
-          for f in 5d2782b3ae8df484bb855d8475377d20d3fb366a/t00/M4/walkthrough.webm; do
-            for ua in "curl" "Mozilla/5.0"; do
-              echo "== webm, user-agent $ua"; curl -s -o /dev/null -D - -A "$ua" "$PUBLIC$f" | head -15
-            done
-            echo "== webm, range 0-0"; curl -s -o /dev/null -D - -r 0-0 "$PUBLIC$f" | head -15
-          done
-          jpg=$(node -e 'import("./tools/evidence.mjs").then(m=>{const e=m.mirrorEntries().find(x=>x.path.endsWith(".jpg"));console.log(e.key)})')
-          echo "== jpg control"; curl -s -o /dev/null -D - "$PUBLIC$jpg" | head -8
-        shell: bash {0}
-      - name: The original still agrees
-        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").origin')" node tools/evidence.mjs verify --all 2>&1 | tail -n 20
-        shell: bash {0}
+      # The bucket's own word, over its S3 interface and the repository's four secrets (never the public domain).
+      - name: The bucket holds what the manifests say (S3, size and SHA-256)
+        if: always()
+        run: node tools/evidence.mjs verify-store
+      # The public domain answers a datacenter address with Cloudflare's verification page for some files (Bot Fight Mode
+      # judges by IP reputation, which no hostname rule can skip). Such a read is counted as challenged, by extension, and
+      # hashed from the fallback; failing is neither store giving the manifest's bytes.
+      - name: Every listed file through the public domain (challenged reads via the fallback)
+        if: always()
+        run: EVIDENCE_BASE="$PUBLIC" node tools/evidence.mjs verify --all
+      - name: The original agrees
+        if: always()
+        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all

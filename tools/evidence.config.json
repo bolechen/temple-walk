@@ -1,5 +1,5 @@
 {
   "dataset": "bolechen/temple-walk-evidence",
   "base": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/",
-  "origin": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/"
+  "fallback": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/"
 }

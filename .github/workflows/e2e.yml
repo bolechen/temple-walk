@@ -95,6 +95,74 @@ jobs:
         run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
       # network, so only here and by hand, never in the way of a merge.
+      # Two stores (#247): the original (Hugging Face, `fallback`) and the copy readers use (`base`, R2). The bucket is read
+      # over its S3 interface with the repository's secrets; the public domain is read too, a read it answers with
+      # Cloudflare's verification page being hashed from the original instead. If they disagree, the original is right
+      # and the copy is mirrored again (`node tools/evidence.mjs mirror`).
+      - name: The bucket holds what the manifests say (S3)
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: node tools/evidence.mjs verify-store
+      - name: The evidence at the public address is what the manifests say
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: node tools/evidence.mjs verify --all
+      - name: The evidence in the original store is what the manifests say
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: The stairs, the low drop, and the pause menu whole in every language
+        run: node tests/e2e/run.cjs stairs drop menufit
+      - name: Keep the report and the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-regression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Every scenario, once a night and when asked: four machines take a quarter of the list each. Asked for by name, the
+  # scenarios named are run on the first machine alone.
+  full:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Is there anything for this machine
+        id: mine
+        run: echo "run=${{ (github.event.inputs.scenarios == '' || github.event.inputs.scenarios == null || matrix.shard == 1) && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.mine.outputs.run == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.mine.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.mine.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.mine.outputs.run == 'true'
+      # A nightly run stands on its own, with no publication beside it: the quick checks go with the first machine.
+      - name: Parse, types, unit tests, and his body against everything built
+        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
+        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run edges
+      # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
+      # network, so only here and by hand, never in the way of a merge.
       # Two stores (#247): `origin` (Hugging Face) is the original, `base` (R2) the copy readers use. Both are checked;
       # if they disagree, the original is right and the copy is mirrored again (`node tools/evidence.mjs mirror`).
       - name: The evidence in the store is what the manifests say (the copy readers use)
