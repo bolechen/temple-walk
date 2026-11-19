@@ -30,8 +30,10 @@ function fresh() {
   monk.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
   return monk;
 }
-let body = null;
-async function load(url) { const gltf = await new GLTFLoader().loadAsync(url); body = { gltf }; }
+let body = null; const bodies = {};
+// `load` fetches a body and wears it from then on; `use(url)` goes back to one already fetched, `use(null)` to the body built in code.
+async function load(url) { const gltf = await new GLTFLoader().loadAsync(url); body = bodies[url] = { gltf }; }
+function use(url) { body = url ? bodies[url] : null; }
 function dress(m) { if (!body) return; const { geometries, material, robeColor } = bodyOf(body.gltf.scene, body.gltf.parser.json.extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
@@ -53,4 +55,4 @@ function shot(pose, yaw, pitch = 0.08, frame) {
   camera.lookAt(0, cy, 0); renderer.render(scene, camera);
   return renderer.domElement.toDataURL("image/png");
 }
-window.stage = { load, shot, ready: true };
+window.stage = { load, use, shot, ready: true };

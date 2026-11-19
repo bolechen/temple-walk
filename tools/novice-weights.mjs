@@ -82,3 +82,22 @@ export function armWeights(P, vparts, J, W, monk) {
   }
   return n;
 }
+
+/**
+ * The robe's weights as monk.js gives its own robe (`robeW` there, copied: it is not exported and app/ is not changed
+ * for this trial): chest above, then spine, hips at the waist; below the sash the four skirt bones, each the side it
+ * faces, smoothly round him; at the shoulders some way with the arm. Used for a body whose skirt is one closed piece
+ * (issue #246), where the nearest vertices of the built figure can change bone abruptly across his front.
+ * @returns {[string, number][]} bone names and weights
+ */
+export function robeWeights(x, y, z) {
+  const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); }, sq = (v) => v * v;
+  const w = {}, add = (n, v) => { if (v > 1e-5) w[n] = (w[n] || 0) + v; };
+  const up = smooth(0.585, 0.655, y), top = smooth(0.67, 0.76, y), skirt = smooth(0.62, 0.4, y), a = Math.atan2(x, z), sk = (1 - up) * skirt;
+  add("chest", up * top); add("spine", up * (1 - top)); add("hips", (1 - up) * (1 - skirt));
+  add("robeFront", sk * sq(Math.max(0, Math.cos(a)))); add("robeBack", sk * sq(Math.max(0, -Math.cos(a))));
+  add("robeLeft", sk * sq(Math.max(0, Math.sin(a)))); add("robeRight", sk * sq(Math.max(0, -Math.sin(a))));
+  const arm = 0.55 * smooth(0.07, 0.112, Math.abs(x)) * smooth(0.7, 0.775, y) * smooth(0.885, 0.83, y);
+  if (arm > 0) { for (const k in w) w[k] *= 1 - arm; add(x > 0 ? "leftUpperArm" : "rightUpperArm", arm); }
+  return Object.entries(w);
+}

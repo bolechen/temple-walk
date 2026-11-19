@@ -16,8 +16,8 @@
 //      which came without texture and are black) are drawn in the trousers' own mean colour;
 //   3. moves the bare forearm that the segmentation left inside his right sleeve to the skin, by the colour under it, so
 //      that both arms are the same: skin from the cuff down;
-//   4. cuts the hanging end of the sash out of the skirt it was segmented with (SASH: a box on his left front, and only
-//      what stands proud of the skirt there), and lays a copy of it a few millimetres further in, weighted with the
+//   4. cuts the hanging end of the sash out of the skirt it was segmented with (SASH: the angles on his left front between
+//      which it hangs, and only what stands proud of the skirt there), and lays a copy of it a few millimetres further in, weighted with the
 //      skirt, so the skirt stays whole when the end swings away from it;
 //   5. thins every piece with meshoptimizer, keeping its borders and texture seams (KEEP: the fraction of each kept);
 //   6. lays the pieces' textures side by side in one atlas (colour and normal; the metal-roughness maps become one
@@ -38,7 +38,7 @@ import sharp from "sharp";
 import { Document, NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions";
 import { MeshoptSimplifier } from "meshoptimizer";
-import { transferWeights, armWeights } from "./novice-weights.mjs";
+import { transferWeights, armWeights, robeWeights } from "./novice-weights.mjs";
 import { weldWeights } from "./novice-weld.mjs";
 
 const HEIGHT = 1.18, PARTS = ["skin", "robe", "legs", "shoes"];
@@ -52,11 +52,11 @@ const PIECES = {
   tripo_part_0: { what: "right hand", part: "skin", tile: 256, keep: 0.8 },
   tripo_part_15: { what: "left hand", part: "skin", tile: 256, keep: 0.8 },
   tripo_part_14: { what: "left forearm", part: "skin", tile: 256, keep: 0.8 },
-  tripo_part_6: { what: "upper robe", part: "robe", tile: 512, keep: 0.7 },
+  tripo_part_6: { robeBody: true, what: "upper robe", part: "robe", tile: 512, keep: 0.7 },
   tripo_part_1: { what: "right sleeve", part: "robe", tile: 512, keep: 0.7, skinInside: true },
   tripo_part_13: { what: "left sleeve", part: "robe", tile: 512, keep: 0.7 },
-  tripo_part_9: { what: "belt", part: "robe", tile: 256, keep: 0.7 },
-  tripo_part_5: { what: "skirt", part: "robe", tile: 1024, keep: 0.7, sash: true },
+  tripo_part_9: { robeBody: true, what: "belt", part: "robe", tile: 256, keep: 0.7 },
+  tripo_part_5: { robeBody: true, what: "skirt", part: "robe", tile: 1024, keep: 0.7, sash: true },
   tripo_part_7: { what: "trousers", part: "legs", tile: 512, keep: 0.45, from: "comp" },
   tripo_part_4: { what: "right leg wrap", part: "legs", tile: 256, keep: 0.7 },
   tripo_part_10: { what: "left leg wrap", part: "legs", tile: 256, keep: 0.7 },
@@ -65,7 +65,7 @@ const PIECES = {
 };
 // The hanging end of the sash, in metres on him (x to his left, z forward, y up): a box round it, and how far proud of
 // the skirt a point must stand to be the sash rather than the skirt under it.
-const SASH = { x: [0.02, 0.2], y: [0.2, 0.62], z: [0.0, 0.3], proud: 0.004, inset: 0.006 };
+const SASH = { a: [30, 72], y: [0.355, 0.6], proud: 0.006, inset: 0.004 };
 const ATLAS = 2048, OUT_BASE = 2048, OUT_NORMAL = 1024;
 
 const dir = process.argv[2], dst = process.argv[3] || path.join(path.dirname(new URL(import.meta.url).pathname), "out", "novice-tripo.glb");
@@ -175,11 +175,47 @@ for (const p of Object.values(pieces).filter((q) => q.skinInside)) {
 }
 
 // ---- 4. the sash's hanging end, cut from the skirt ----
-// placeholder: filled in once the sash is found on the model
+// Tripo gave the sash's end as part of the skirt's one surface, standing 2-3 cm proud of it. Round his middle, at each
+// height, the skirt's own radius is taken either side of the sash (SASH.a: the angles, to his left of straight ahead,
+// that bound it) and drawn straight across; a vertex standing more than SASH.proud beyond that line, inside SASH's box,
+// is the sash. Its triangles become a piece of their own; a copy of them, pressed back onto that line (less SASH.inset)
+// where they do not touch the rest of the skirt, fills the skirt where they were.
 for (const p of Object.values(pieces).filter((q) => q.sash)) {
-  if (process.env.SASH_DEBUG) {
-    // print how far each vertex stands from the axis, by height and angle, to find the sash
+  const nv = p.P.length / 3; let cx = 0, cz = 0; for (let i = 0; i < nv; i++) { cx += p.P[i * 3] / nv; cz += p.P[i * 3 + 2] / nv; }
+  const ang = (i) => Math.atan2(p.P[i * 3] - cx, p.P[i * 3 + 2] - cz) * 180 / Math.PI, rad = (i) => Math.hypot(p.P[i * 3] - cx, p.P[i * 3 + 2] - cz);
+  const band = (y) => Math.floor(y / 0.01), rIn = new Map(), rOut = new Map();
+  for (let i = 0; i < nv; i++) { const a = ang(i), b = band(p.P[i * 3 + 1]), r = rad(i); if (a > SASH.a[0] - 6 && a < SASH.a[0]) rIn.set(b, Math.max(rIn.get(b) || 0, r)); if (a > SASH.a[1] && a < SASH.a[1] + 6) rOut.set(b, Math.max(rOut.get(b) || 0, r)); }
+  const baseR = (i) => { const b = band(p.P[i * 3 + 1]), r0 = rIn.get(b) ?? rIn.get(b - 1) ?? rIn.get(b + 1), r1 = rOut.get(b) ?? rOut.get(b - 1) ?? rOut.get(b + 1); if (r0 == null || r1 == null) return Infinity; const k = (ang(i) - SASH.a[0]) / (SASH.a[1] - SASH.a[0]); return r0 + (r1 - r0) * k; };
+  const proud = new Uint8Array(nv);
+  for (let i = 0; i < nv; i++) { const a = ang(i), y = p.P[i * 3 + 1]; if (a > SASH.a[0] && a < SASH.a[1] && y > SASH.y[0] && y < SASH.y[1] && rad(i) > baseR(i) + SASH.proud) proud[i] = 1; }
+  // the same point may have two copies (a texture seam): a point is proud if any copy is
+  const key = (i) => `${p.P[i * 3]},${p.P[i * 3 + 1]},${p.P[i * 3 + 2]}`, pk = new Set(); for (let i = 0; i < nv; i++) if (proud[i]) pk.add(key(i)); for (let i = 0; i < nv; i++) if (pk.has(key(i))) proud[i] = 1;
+  const nt = p.I.length / 3; let isSash = new Uint8Array(nt);
+  for (let t = 0; t < nt; t++) isSash[t] = proud[p.I[t * 3]] && proud[p.I[t * 3 + 1]] && proud[p.I[t * 3 + 2]] ? 1 : 0;
+  // keep the largest island (by shared points): flecks elsewhere in the box stay skirt
+  { const owner = new Map(), comp = new Int32Array(nt).fill(-1); let best = -1, bestN = 0, c = 0;
+    const byPoint = new Map(); for (let t = 0; t < nt; t++) if (isSash[t]) for (let k = 0; k < 3; k++) { const q = key(p.I[t * 3 + k]); if (!byPoint.has(q)) byPoint.set(q, []); byPoint.get(q).push(t); }
+    for (let t0 = 0; t0 < nt; t0++) { if (!isSash[t0] || comp[t0] >= 0) continue; const st = [t0]; comp[t0] = c; let n = 0;
+      while (st.length) { const t = st.pop(); n++; for (let k = 0; k < 3; k++) for (const u of byPoint.get(key(p.I[t * 3 + k]))) if (comp[u] < 0) { comp[u] = c; st.push(u); } }
+      if (n > bestN) { bestN = n; best = c; } c++; }
+    for (let t = 0; t < nt; t++) if (isSash[t] && comp[t] !== best) isSash[t] = 0; void owner; }
+  const usedBySkirt = new Set(); for (let t = 0; t < nt; t++) if (!isSash[t]) for (let k = 0; k < 3; k++) usedBySkirt.add(key(p.I[t * 3 + k]));
+  const sash = filter(p, (t) => isSash[t]);
+  // the backing: the sash's triangles again, inside the skirt; corners shared with the skirt stay put, the rest go back
+  const P = [...p.P], N = [...p.N], UV = [...p.UV], I = [], copy = new Map();
+  for (let t = 0; t < nt; t++) {
+    if (!isSash[t]) { I.push(p.I[t * 3], p.I[t * 3 + 1], p.I[t * 3 + 2]); continue; }
+    for (let k = 0; k < 3; k++) {
+      const v = p.I[t * 3 + k]; if (usedBySkirt.has(key(v))) { I.push(v); continue; }
+      if (!copy.has(v)) { const r = rad(v), to = Math.max(0.02, baseR(v) - SASH.inset), s = to / r, o = P.length / 3;
+        P.push(cx + (p.P[v * 3] - cx) * s, p.P[v * 3 + 1], cz + (p.P[v * 3 + 2] - cz) * s); N.push(p.N[v * 3], p.N[v * 3 + 1], p.N[v * 3 + 2]); UV.push(p.UV[v * 2], p.UV[v * 2 + 1]); copy.set(v, o); }
+      I.push(copy.get(v));
+    }
   }
+  Object.assign(p, filter({ P: Float32Array.from(P), N: Float32Array.from(N), UV: Float32Array.from(UV), I: Uint32Array.from(I) }, () => true));
+  let top = -Infinity; for (let i = 1; i < sash.P.length; i += 3) top = Math.max(top, sash.P[i]);
+  pieces[p.name + "_sash"] = { ...p, ...sash, name: p.name + "_sash", what: "sash end", part: "robe", isSash: true, sashTop: top, shareTile: p.name, sash: false, robeBody: true, keep: 0.8 };
+  console.log(`sash: ${sash.I.length / 3} triangles cut from the ${p.what}, top at ${top.toFixed(3)} m; ${copy.size} points pressed back to fill it`);
 }
 
 // ---- 5. thin each piece, keeping borders and seams ----
@@ -255,16 +291,37 @@ for (const p of list) { p.offset = base; for (const v of p.P) all.P.push(v); for
 const P0 = Float32Array.from(all.P), I0 = Uint32Array.from(all.I), nv = P0.length / 3;
 const vparts = all.part.map((x) => new Set([x]));
 const { J, W } = transferWeights(P0, vparts, monk, PARTS);
+// The body of the robe (the upper robe, the belt, the skirt and what fills it behind the sash) takes the robe's weights
+// as monk.js gives them, by height and by the way each point faces (ROBE_BODY): the built figure's robe has an opening
+// down its front where this skirt is closed, and the nearest of its vertices tore this one open there when he sat.
+for (const p of list) if (p.robeBody) for (let i = p.offset; i < p.offset + p.P.length / 3; i++) {
+  const w = robeWeights(P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]).sort((a, b) => b[1] - a[1]).slice(0, 4), s = w.reduce((a, [, v]) => a + v, 0);
+  for (let j = 0; j < 4; j++) { J[i * 4 + j] = w[j] ? boneNames.indexOf(w[j][0]) : 0; W[i * 4 + j] = w[j] ? w[j][1] / s : 0; }
+}
 const nArm = armWeights(P0, vparts, J, W, monk);
 console.log(`weights from the figure built in code; ${nArm} vertices weighted along the arm`);
-const sashBone = boneNames.indexOf("sashTail");
-for (let i = 0; i < nv; i++) if (list.find((p) => p.offset <= i && i < p.offset + p.P.length / 3)?.isSash) { J.fill(0, i * 4, i * 4 + 4); W.fill(0, i * 4, i * 4 + 4); J[i * 4] = sashBone; W[i * 4] = 1; }
+// The sash's end hangs from the knot on its own bone: within 8 cm of its top it goes over from the weights it took (the
+// skirt's and the hips') to the sashTail bone, below that wholly on it. It is kept out of the welding, so that its edge
+// is free of the skirt it lay on.
+const sashBone = boneNames.indexOf("sashTail"), sashV = new Uint8Array(nv);
+for (const p of list) if (p.isSash) sashV.fill(1, p.offset, p.offset + p.P.length / 3);
 const RANK = { skin: 1, robe: 2, legs: 0, shoes: 3 }, WELD = +(process.env.NOVICE_WELD || 8);
 {
-  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]);
-  const r = weldWeights(P0, J, W, { smooth: Math.max(0, WELD - 1), index: I0, rank });
+  const rank = Int8Array.from(all.part, (p) => RANK[PARTS[p]]), Pw = Float32Array.from(P0);
+  for (let i = 0; i < nv; i++) if (sashV[i]) Pw[i * 3 + 1] += 100;
+  const r = weldWeights(Pw, J, W, { smooth: Math.max(0, WELD - 1), index: I0, rank });
   J.set(r.J); W.set(r.W);
   console.log(`welded weights: ${nv} vertices in ${r.groups} points, smoothed ${Math.max(0, WELD - 1)} times`);
+}
+{
+  const p = list.find((q) => q.isSash), ramp = (v) => { const t = Math.min(1, Math.max(0, v)); return t * t * (3 - 2 * t); };
+  for (let i = p.offset; i < p.offset + p.P.length / 3; i++) {
+    const k = ramp((p.sashTop - P0[i * 3 + 1]) / 0.08), m = new Map();
+    for (let j = 0; j < 4; j++) if (W[i * 4 + j] > 0) m.set(J[i * 4 + j], (m.get(J[i * 4 + j]) || 0) + (1 - k) * W[i * 4 + j]);
+    m.set(sashBone, (m.get(sashBone) || 0) + k);
+    const top = [...m].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 4), s = top.reduce((a, [, w]) => a + w, 0);
+    for (let j = 0; j < 4; j++) { J[i * 4 + j] = top[j] ? top[j][0] : 0; W[i * 4 + j] = top[j] ? top[j][1] / s : 0; }
+  }
 }
 
 // ---- 8. write ----
