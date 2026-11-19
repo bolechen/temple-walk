@@ -213,7 +213,7 @@ export function buildSite(M) {
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
   const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
-    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.5, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];
+    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.8, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];   // (the summit ginkgo kept 0.6 m off the pavilion's platform as it widened, #278)
   for (const [x, , z, kind, h] of seasonal) walk.posts.push({ x, z, r: girth(kind, h) });
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
   for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
@@ -261,7 +261,9 @@ export function buildSite(M) {
 
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
-    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
+    // The ground storey's platform reaches 1.7 m past its columns (#278, the structure review): a gallery he walks round between
+    // the columns and the railing, its drip still 0.3 m outside the platform under the 2.0 m eave.
+    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.7, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
     { cai: 0.186, ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
     { cai: 0.186, ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);

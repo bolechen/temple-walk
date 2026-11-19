@@ -17,7 +17,10 @@ import { join, dirname } from "node:path";
 import { buildDrawn, gridsOf, targetsOf, partsOf, planText } from "./walk/scene.mjs";
 import { gather, bakeGrid, oldReach, cellsOf, bodyPrint, textHash, BAKE, OUTLINE } from "./walk/bake.mjs";
 import { encode, decode, readHeader, VERSION } from "../app/src/walkgrid.js";
-const { createWalker } = await import("../app/src/site.js");
+// The written plan's own walker, whatever loader runs this: under tools/walk/swap.mjs (the unit tests on the grid) a bare
+// import of site.js is the grid's walker, and a bake made there would record the grid's reach as the written plan's.
+const { createWalker } = await import("../app/src/site.js?real");
+export { createWalker as writtenWalker };
 
 export const LEVEL = "t00";
 export const FILE = fileURLToPath(new URL(`../app/shared/walk/${LEVEL}.bin`, import.meta.url));
