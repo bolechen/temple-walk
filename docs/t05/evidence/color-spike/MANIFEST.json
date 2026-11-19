@@ -1,0 +1,234 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 306303,
+   "sha256": "10f948a8d2ecb60d2fd3b35b1674e18d85ccc0135c1cd75b54bb98cc3aff037f",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "gpu/three-clay-2-door3.png",
+   "bytes": 876477,
+   "sha256": "e0a3011c89aa173ccc68d45e017851255918948fecf029cfb645bdf9681a039c",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "gpu/three-clay-2-front10.png",
+   "bytes": 1143961,
+   "sha256": "4e5f8f000cb30857cce903cefc5c330ddf8ba19b02d292026e37958aaf776363",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "gpu/three-clay-2-side3.png",
+   "bytes": 952412,
+   "sha256": "50b8cbc3ef1daef8d74b1456385fdd599c9eaae5e822df0c3af5b87959b84b55",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "gpu/three-paint-2-door3.png",
+   "bytes": 897851,
+   "sha256": "75251fe3ee94ee3b77326751d1ce6c44096febf1ed9e99259312e2f55a5ffef7",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "gpu/three-paint-2-front10.png",
+   "bytes": 1184238,
+   "sha256": "0f222042cc95e8d020f856a872350c29290206b8f5c7543acf54052eb613656d",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "gpu/three-paint-2-side3.png",
+   "bytes": 960945,
+   "sha256": "e50f496b436aac89e155efa6780333b30de57bd9ea50e59ebe51a2c73ba3194a",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/door-summer-paint.png",
+   "bytes": 316086,
+   "sha256": "211aacf1d8d55bf156be0b453fe643df4c797c6b5b5ab9d90ea391dec6fcd2cc",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/door-winter-clay.png",
+   "bytes": 335846,
+   "sha256": "c181a67cb2f31251945acffac17726273371454ea22e27ff7542fe993d62df8d",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/door-winter-noprobe.png",
+   "bytes": 329108,
+   "sha256": "b1cfba8d5957c64ce52d2fa7dc58876e9b50710c266328b22ae336fea1449bd9",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/door-winter-paint.png",
+   "bytes": 335683,
+   "sha256": "99ffec3f2413b222b7479e3b28250da79b7e3275715e1c8a3c7ecda751ea59b8",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/face-close-winter-paint.png",
+   "bytes": 815951,
+   "sha256": "fc1a7217705f382fea21119dfc8f58429186d152bed58a5386c75c7c182036c9",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/face-from10-winter-clay.png",
+   "bytes": 545847,
+   "sha256": "aa5687fc2560577849e211b136d5f1cbb54fc20eb9f44eef18decca50331c188",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/face-from10-winter-paint.png",
+   "bytes": 624805,
+   "sha256": "c8aee0d292a385a631d3a9c7ebfff8ae10d2503683ccc0bb08c46aa4ad26f868",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/front-winter-clay.png",
+   "bytes": 522149,
+   "sha256": "b138652f1edffc22fe4b6b772fc7382f444fc3a33f4f923327058b890442e641",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/front-winter-paint.png",
+   "bytes": 538757,
+   "sha256": "1b1484aca983953d8653bac2663b4f48441fb14470df18383d098db5716c9ae0",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/front10-summer-paint.png",
+   "bytes": 581071,
+   "sha256": "d476e3a3d44e8dffb21b4678a38036a0f4be8de7dd9f782c7cb265ee51e44bb1",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/front10-winter-clay.png",
+   "bytes": 519668,
+   "sha256": "209ea3ab1886400bc5d4de1a28988decf3306ac8c6fa5aaf9fa33dad6e75ff62",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/front10-winter-noprobe.png",
+   "bytes": 512846,
+   "sha256": "e895a816c2f3c18cbddfb0af449200fd22d5ec769decf2c193acc42205315541",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/front10-winter-paint.png",
+   "bytes": 529650,
+   "sha256": "90b6b244707b66458f9460d05f2f5a87fdb7bcc56ddde97395533c41a251bb2b",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/hands-winter-paint.png",
+   "bytes": 950443,
+   "sha256": "0c5f5561b524f2c88c653751d9d797f32889bbb0743920e0044215e1ff2ae339",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/side-winter-clay.png",
+   "bytes": 529379,
+   "sha256": "2bb41efcbf681b4ebc0edc3370324bc16b5cd71ed5d013fe40846b915717949e",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "one/side-winter-paint.png",
+   "bytes": 535059,
+   "sha256": "b2604ef8a449bc7bec877f496e9ca4e19006c158c10c71c60143a561f0d86093",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "ortho/k-front.png",
+   "bytes": 793968,
+   "sha256": "b735f9673afb07bc4bd2b2df418b86c7f9dd6c9e7fd934370c402096d8ee0215",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "ortho/k-side.png",
+   "bytes": 447960,
+   "sha256": "42d1a65c21a6f79105276523fa293fa099099ba3ebbbc4e0c6f104f81fa2b6f0",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "ortho/s-front.png",
+   "bytes": 766798,
+   "sha256": "05e1342f0e95028c7861dcf8703763ed455ffc8d2fa1fea78d1cff77126e0976",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "ortho/s-side.png",
+   "bytes": 424445,
+   "sha256": "97eb3a7adaae408513b11e9b1029ef00fd8d3eba09703cd123b8f5928688aacb",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "ortho/v-front.png",
+   "bytes": 873256,
+   "sha256": "a2781701d667695ae2db72c66e8fd0ad49033a8d3e7abdd42c3a770b23db16ba",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "ortho/v-side.png",
+   "bytes": 485772,
+   "sha256": "68300178e6b34f6c534776b0d062281a168be64fa3970366f232b0121e682b9d",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/door-winter-clay.png",
+   "bytes": 452647,
+   "sha256": "6aba054b7324c32b061749d654b3d6c27381a6f7c3e3ddf478df989005455a75",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/door-winter-paint.png",
+   "bytes": 453582,
+   "sha256": "d13bda5d5b5e282c2e5588832e9574ec10bc827b8c80298bb2248b63e9fee29d",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/door3-summer-paint.png",
+   "bytes": 715791,
+   "sha256": "01cf10368b9a434f77d97fc40b50ebde51d87690b4a107b98be8c50fa3b71d33",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/door3-winter-clay.png",
+   "bytes": 661090,
+   "sha256": "f9ab1af918fb9b2d37c56efc68d99cf1d156b154e3c1ce34aca7dc6f471f67a0",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/door3-winter-paint.png",
+   "bytes": 675097,
+   "sha256": "4ea75132abc87d6959392c3c5774fce29cf634d2a239a156326d68ee21f2b5f7",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/front10-winter-clay.png",
+   "bytes": 858475,
+   "sha256": "872c3e731346245b839c2faf89b6512df58b6d91f7fa3086b9379fec7172a80f",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/front10-winter-paint.png",
+   "bytes": 888224,
+   "sha256": "33e70f1e3d850f0aa513e099397a5540f959154688732ac0cb52b2e6fe5ea94f",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/side3-winter-clay.png",
+   "bytes": 707306,
+   "sha256": "a4f2af6ddf35d8e23de71bcbf49dcb048a2cc62f6177a49f266a9abd5403a55e",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  },
+  {
+   "path": "three/side3-winter-paint.png",
+   "bytes": 713849,
+   "sha256": "ce9d7ff2f9304ebc5b47eded9009f7968fa17228da74a4274b4f0fc26e9eb60b",
+   "rev": "57b805516ab5123dd83f2e6a5c2dccf567064a3f"
+  }
+ ]
+}

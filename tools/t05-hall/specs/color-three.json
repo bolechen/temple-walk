@@ -1,0 +1,103 @@
+{
+ "out": "tools/out/t05/color-three",
+ "size": [
+  1600,
+  900
+ ],
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+   "x": 0,
+   "h": 9.0,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 3,
+    "tips": 9
+   },
+   "colour": "vipasyin"
+  },
+  {
+   "url": "tools/out/t05/tripo/kasyapa-a.60k.glb",
+   "x": 5.8,
+   "h": 8.8,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 2,
+    "tips": 0
+   },
+   "colour": "kasyapa"
+  },
+  {
+   "url": "tools/out/t05/tripo/sakyamuni-a.60k.glb",
+   "x": -5.8,
+   "h": 8.8,
+   "paint": "clay",
+   "turn": -1.5708,
+   "yaw": 0.12,
+   "halo": {
+    "rings": 4,
+    "tips": 0,
+    "head": 1.7
+   },
+   "colour": "sakyamuni"
+  }
+ ],
+ "shots": [
+  {
+   "name": "door-winter-clay",
+   "view": "door",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "door-winter-paint",
+   "view": "door",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "door3-winter-clay",
+   "view": "door3",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "door3-winter-paint",
+   "view": "door3",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "front10-winter-clay",
+   "view": "front10",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "front10-winter-paint",
+   "view": "front10",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "side3-winter-clay",
+   "view": "side3",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "side3-winter-paint",
+   "view": "side3",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "door3-summer-paint",
+   "view": "door3",
+   "mood": "summer",
+   "paint": true
+  }
+ ]
+}

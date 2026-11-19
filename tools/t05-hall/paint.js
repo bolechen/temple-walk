@@ -1,0 +1,170 @@
+// Painting a clay statue as a painted sculpture (彩塑) without a texture (issue #287): the figure is divided into zones by
+// shapes written in its own frame (ellipsoids, capsules, boxes, half-spaces, a curved band), each shape placed by a few
+// anchor points read off the figure once, and each zone has its own colour, roughness and metalness. The face's fine
+// lines (brows, lids, eyes, lips, the urna) are drawn as a decal projected from the front in the head's frame, measured
+// from the eyes and the mouth, so they are as sharp at any distance as the screen allows and do not depend on how many
+// triangles the face has. The same recipe paints every figure; a figure brings only its anchors (paint/<figure>.json).
+//
+// The figure's frame (the pivot in stage.js): metres, x to the viewer's right when facing it, y up from the top of its
+// seat, z toward the viewer. A shape in the recipe names anchors with "@name" (or "@name.x" for one number of a point).
+// A zone whose anchors a figure does not have (a bare shoulder on a figure wearing the robe over both) is not drawn.
+//
+// The recipe compiles to one shader for all figures; the numbers are uniforms, so seven figures share one program.
+import * as THREE from "three";
+
+// Leaf shapes and the GLSL that tests a point against each, softly over `e` metres at its edge (1 inside, 0 outside).
+const GLSL = /* glsl */ `
+uniform mat4 uToFig;
+uniform vec4 uL[LEAVES];
+uniform vec4 uFace[8];
+uniform float uEdge;
+varying vec3 vFig;
+varying vec3 vFigN;
+float pEll(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 q = (p - a.xyz) / b.xyz; float k = min(b.x, min(b.y, b.z));
+  return 1. - smoothstep(-uEdge, uEdge, (length(q) - 1.) * k); }
+float pCap(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 pa = p - a.xyz, ba = b.xyz - a.xyz; float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.);
+  return 1. - smoothstep(-uEdge, uEdge, length(pa - ba * h) - b.w); }
+float pBox(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 d = max(a.xyz - p, p - b.xyz); return 1. - smoothstep(-uEdge, uEdge, max(d.x, max(d.y, d.z))); }
+float pHalf(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; return smoothstep(-uEdge, uEdge, dot(p - a.xyz, b.xyz)); }
+// a band round the figure whose middle line rises as y0 + c·x² (a neckline, a sash), half-height h, across |x| < w, in front of z0
+float pBand(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; float d = abs(p.y - (a.x + a.y * p.x * p.x)) - a.z;
+  d = max(d, abs(p.x) - b.x); d = max(d, b.y - p.z); return 1. - smoothstep(-uEdge, uEdge, d); }
+float hash12(vec2 p) { vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
+float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+  return mix(mix(hash12(i), hash12(i + vec2(1, 0)), f.x), mix(hash12(i + vec2(0, 1)), hash12(i + 1.), f.x), f.y); }
+// a pattern of round flowers in a lattice (团花) seen from the front: 1 on the flower, 0 on the ground
+float flowers(vec2 q, float cell) { vec2 g = q / cell; vec2 id = floor(g); vec2 f = fract(g) - .5;
+  if (mod(id.x + id.y, 2.) > .5) f = fract(g + .5) - .5;   // staggered rows
+  float r = length(f), a = atan(f.y, f.x); float petal = .30 + .08 * cos(a * 6.);
+  return max(1. - smoothstep(petal - .03, petal, r), 0.) * (1. - (1. - smoothstep(.07, .10, r)) * .6); }
+// the decal on the face: brows, upper lids, the eyes beneath, the lips and the urna, in the head's front plane.
+// uFace[0] = eyeL.xy, eyeR.xy (eyeL is on the viewer's right); [1] = mouth.xy, urna.xy; [2] = brow up, brow half-width,
+// brow thickness, lid half-width; [3] = lid thickness, lid sag, iris radius, lip half-width; [4] = lip half-height,
+// urna radius, front of the face (z below which nothing is drawn), on (0/1); [5] = lid lift above the eye's centre, -, -, -
+float arcDist(vec2 q, vec2 c, float w, float sag) { float x = clamp((q.x - c.x) / w, -1., 1.); float y = c.y - sag * x * x; return abs(q.y - y) + max(abs(q.x - c.x) - w, 0.); }
+vec3 faceDecal(vec3 p, vec3 n, out float ink, out float lip, out float urna) {
+  ink = 0.; lip = 0.; urna = 0.;
+  if (uFace[4].w < .5 || p.z < uFace[4].z || n.z < .15) return vec3(0);
+  vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002;
+  for (int s = 0; s < 2; s++) {
+    vec2 e = s == 0 ? uFace[0].xy : uFace[0].zw;
+    float bw = uFace[2].y, bt = uFace[2].z * (1. - .55 * pow(clamp(abs(q.x - e.x) / bw, 0., 1.), 2.));   // a brow thins to its ends
+    ink = max(ink, 1. - smoothstep(bt - aa, bt + aa, arcDist(q, e + vec2(0., uFace[2].x), bw, uFace[2].x * .35)));
+    float lt = uFace[3].x; vec2 lc = e + vec2(0., uFace[5].x);
+    ink = max(ink, 1. - smoothstep(lt - aa, lt + aa, arcDist(q, lc, uFace[2].w, -uFace[3].y)));
+    // the eye under the lid: a half disc hanging from the lid's line, downcast
+    vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
+    ink = max(ink, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9);
+  }
+  vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
+  lip = 1. - smoothstep(1. - aa * 8., 1. + aa * 8., length(m));
+  urna = 1. - smoothstep(uFace[4].y - aa, uFace[4].y + aa, length(q - uFace[1].zw));
+  return vec3(0);
+}
+`;
+
+// Compile the recipe's zone expressions into GLSL; return the code, the number of leaves and how to fill their uniforms.
+export function compileRecipe(recipe) {
+  const leaves = [];   // { type, spec }
+  function expr(node) {
+    if (node.and) return "(" + node.and.map(expr).join(" * ") + ")";
+    if (node.or) return node.or.map(expr).reduce((a, b) => `max(${a}, ${b})`);
+    if (node.not) return "(1. - " + expr(node.not) + ")";
+    const type = Object.keys(node).find((k) => ["ell", "cap", "box", "half", "band"].includes(k));
+    if (!type) throw new Error("paint: unknown shape " + JSON.stringify(node));
+    const i = leaves.length; leaves.push({ type, spec: node[type] });
+    const fn = { ell: "pEll", cap: "pCap", box: "pBox", half: "pHalf", band: "pBand" }[type];
+    return `${fn}(p, uL[${2 * i}], uL[${2 * i + 1}])`;
+  }
+  const zones = recipe.zones.map((z) => ({ ...z, glsl: expr(z.where) }));
+  return { zones, leaves };
+}
+
+// Resolve "@name", "@name.x" and plain numbers or arrays against a figure's anchors; undefined if an anchor is missing.
+function val(v, A) {
+  if (typeof v === "string" && v[0] === "@") {
+    const [name, comp] = v.slice(1).split("."); const a = A[name]; if (a === undefined) return undefined;
+    return comp ? a["xyz".indexOf(comp)] : a;
+  }
+  if (Array.isArray(v)) { const r = v.map((x) => val(x, A)); return r.some((x) => x === undefined) ? undefined : r.flat(); }
+  return v;
+}
+const add = (a, b) => a.map((x, i) => x + b[i]);
+// each leaf as two vec4s: the first's w says whether the figure has what it needs
+function leafUniforms(leaf, A) {
+  const s = leaf.spec, off = val(s.offset ?? [0, 0, 0], A) || [0, 0, 0];
+  const out = [0, 0, 0, 0, 0, 0, 0, 0];
+  if (leaf.type === "ell") { const c = val(s.c, A), r = val(s.r, A); if (!c || !r) return out; const cc = add(c, off); return [...cc, 1, ...r, 0]; }
+  if (leaf.type === "cap") { const a = val(s.a, A), b = val(s.b, A), r = val(s.r, A); if (!a || !b || r === undefined) return out; return [...add(a, off), 1, ...add(b, off), r]; }
+  if (leaf.type === "box") { const mn = val(s.min, A), mx = val(s.max, A); if (!mn || !mx) return out; return [...mn, 1, ...mx, 0]; }
+  if (leaf.type === "half") {   // through a point with a normal, or the plane through two points in the y–z plane, its normal upward
+    if (s.through) { const a = val(s.through[0], A), b = val(s.through[1], A); if (!a || !b) return out;
+      const dy = b[1] - a[1], dz = b[2] - a[2], l = Math.hypot(dy, dz); let n = [0, -dz / l, dy / l]; if (n[1] < 0) n = n.map((x) => -x);
+      return [...a, 1, ...n, 0]; }
+    const p = val(s.p, A), n = val(s.n, A); if (!p || !n) return out; const l = Math.hypot(...n); return [...p, 1, ...n.map((x) => x / l), 0];
+  }
+  if (leaf.type === "band") { const y0 = val(s.y0, A), c = val(s.c ?? 0, A), h = val(s.h, A), w = val(s.w, A), z0 = val(s.z0 ?? -99, A);
+    if ([y0, c, h, w, z0].some((x) => x === undefined)) return out; return [y0, c, h, 1, w, z0, 0, 0]; }
+  return out;
+}
+
+function faceUniforms(face, A) {
+  const out = new Array(32).fill(0);
+  const L = A.eyeL, R = A.eyeR, M = A.mouth, U = A.urna; if (!face || !L || !R || !M) return out;
+  const e = Math.abs(L[0] - R[0]) / 2, k = (x) => x * e;
+  out.splice(0, 4, L[0], L[1], R[0], R[1]);
+  out.splice(4, 4, M[0], M[1], U ? U[0] : 0, U ? U[1] : -99);
+  out.splice(8, 4, k(face.browUp), k(face.browHalf), k(face.browT), k(face.lidHalf));
+  out.splice(12, 4, k(face.lidT), k(face.lidSag), k(face.iris), A.lipHalf ?? k(face.lipHalf));
+  out.splice(16, 4, A.lipH ?? k(face.lipH), k(face.urna), (A.faceZ ?? A.eyeL[2]) - face.depth, 1);
+  out.splice(20, 4, k(face.lidLift ?? 0), 0, 0, 0);
+  return out;
+}
+
+const lin = (hex) => new THREE.Color(hex);   // sRGB hex → working (linear) colour, as three's own materials take it
+const v3 = (c) => `vec3(${c.r.toFixed(5)}, ${c.g.toFixed(5)}, ${c.b.toFixed(5)})`;
+
+// One material for a figure: the recipe's shader (shared by every figure) with this figure's anchors in its uniforms.
+// `pivot` is the figure's frame (an Object3D); the material reads its matrix each frame.
+export function paintMaterial(recipe, anchors, pivot, opts = {}) {
+  const { zones, leaves } = compileRecipe(recipe);
+  const N = Math.max(1, leaves.length);
+  const L = new Float32Array(N * 8); leaves.forEach((lf, i) => L.set(leafUniforms(lf, anchors), i * 8));
+  const uL = []; for (let i = 0; i < N * 2; i++) uL.push(new THREE.Vector4().fromArray(L, i * 4));
+  const F = faceUniforms(recipe.face, anchors), uFace = []; for (let i = 0; i < 8; i++) uFace.push(new THREE.Vector4().fromArray(F, i * 4));
+  const base = recipe.base;
+  const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
+  const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 } };
+  m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
+  const zoneCode = zones.map((z, i) => {
+    const c = lin(z.color);
+    let col = v3(c);
+    if (z.pattern === "flowers") { const c2 = lin(z.pattern2 ?? "#9A7A3E"); col = `mix(${v3(c)}, ${v3(c2)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))`; }
+    const metal = z.pattern === "flowers" ? `mix(${(z.metal ?? 0).toFixed(3)}, ${(z.metal2 ?? 0.6).toFixed(3)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))` : (z.metal ?? 0).toFixed(3);
+    const wear = z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "";
+    return `  { float k = ${z.glsl}; pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
+  }).join("\n");
+  const fc = recipe.face, ink = lin(fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform mat4 uToFig;\nvarying vec3 vFig;\nvarying vec3 vFigN;")
+      .replace("#include <project_vertex>", "#include <project_vertex>\n  vFig = (uToFig * modelMatrix * vec4(transformed, 1.)).xyz;\n  vFigN = normalize(mat3(uToFig * modelMatrix) * objectNormal);");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\n" + GLSL.replace(/LEAVES/g, String(N * 2)))
+      .replace("#include <color_fragment>", `#include <color_fragment>
+  vec3 p = vFig; vec3 pCol = diffuseColor.rgb; float pRough = roughness; float pMetal = metalness; float zone = 0.;
+${zoneCode}
+  float ink_, lip_, urna_; faceDecal(p, normalize(vFigN), ink_, lip_, urna_);
+  float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
+  pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
+  pCol = mix(pCol, ${v3(ink)}, ink_ * onFace); pRough = mix(pRough, ${fc.inkRough.toFixed(3)}, ink_ * onFace); pMetal = mix(pMetal, 0., ink_ * onFace);
+  pCol = mix(pCol, ${v3(urnaC)}, urna_ * onFace); pMetal = mix(pMetal, .2, urna_ * onFace);
+  diffuseColor.rgb = pCol;`)
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = clamp(pRough, .04, 1.);")
+      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);");
+  };
+  m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N;
+  const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };
+  upd(); m.userData.update = upd;
+  if (opts.envMap) { m.envMap = opts.envMap; m.envMapIntensity = opts.envIntensity ?? 1; }
+  return m;
+}

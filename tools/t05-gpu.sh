@@ -4,6 +4,12 @@
 # tools/gpu/t05-hall-gpu.cjs on a Hugging Face Job, and brings back tools/out/gpu/<run>/ (report.json and pictures).
 #
 #   tools/t05-gpu.sh <a.glb> <b.glb> <c.glb> [flavor]      the three statues of one route (centre, east, west)
+#   SETS=paint tools/t05-gpu.sh <vipasyin> <kasyapa> <sakyamuni>   the three in clay and painted (issue #287), taken in
+#                                                       turn twice over in the same job, so the card's warming up and
+#                                                       any drift fall on both alike
+#
+# The report's site.commit is HEAD, with "+dirty" if anything the page is built from has changes not committed: run it
+# on a clean commit, after building the page from that commit.
 #
 # Needs `hf` logged in (in the sandbox: HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, the proxy adds the real one).
 # Build the page first: node tools/t05-hall.cjs <any spec> writes tools/out/t05-hall-page/.
@@ -17,17 +23,22 @@ mkdir -p "$STAGE/app/s"; cp -R tools/out/t05-hall-page/. "$STAGE/app/"
 cp "$A" "$STAGE/app/s/0.glb"; cp "$B" "$STAGE/app/s/1.glb"; cp "$C" "$STAGE/app/s/2.glb"
 cp app/favicon.svg "$STAGE/app/favicon.svg"                       # job.cjs probes the card on a same-origin page
 cp tools/gpu/job.cjs tools/gpu/t05-hall-gpu.cjs "$STAGE/"
-SPEC="$(node -e '
+SPEC="$(SETS="${SETS:-}" node -e '
 const S = (u, x, turn, extra = {}) => ({ url: "s/" + u + ".glb", x, h: x ? 8.8 : 9.0, turn, paint: "clay", ...extra });
 const T = -Math.PI / 2, three = [S(0, 0, T), S(1, 5.8, T), S(2, -5.8, T)];
 const seven = [S(0, 0, T), S(1, 5.8, T), S(2, -5.8, T), S(1, 11.33, T), S(2, -11.33, T), S(1, 16.45, T), S(2, -16.45, T)];
+if (process.env.SETS === "paint") {
+  const C = ["vipasyin", "kasyapa", "sakyamuni"], P = three.map((s, i) => ({ ...s, colour: C[i], ...(i === 2 ? { yaw: 0.12 } : {}) })), V = ["door3", "side3", "front10"];
+  const sets = []; for (const k of [1, 2]) sets.push({ name: "three-clay-" + k, statues: P, paint: false, views: V }, { name: "three-paint-" + k, statues: P, paint: true, views: V });
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
+}
 console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [
   { name: "none", statues: [] }, { name: "one", statues: [S(0, 0, T)] }, { name: "three", statues: three }, { name: "seven", statues: seven },
   { name: "seven-noao", statues: seven, ao: false } ] } }));')"
 hf buckets create "$BUCKET" --private --exist-ok >/dev/null
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
 echo "run $RUN on $FLAVOR"
-COMMIT="$(git rev-parse HEAD)$(git diff --quiet HEAD -- tools/t05-hall || echo +dirty)"
+COMMIT="$(git rev-parse HEAD)$(git diff --quiet HEAD -- tools/t05-hall tools/t05-hall.cjs tools/gpu tools/t05-gpu.sh && [ -z "$(git ls-files --others --exclude-standard tools/t05-hall tools/gpu)" ] || echo +dirty)"
 hf jobs run --flavor "$FLAVOR" --timeout "${JOB_TIMEOUT:-25m}" --name "temple-walk-$RUN" \
   -e RUN="$RUN" -e COMMIT="$COMMIT" -e SPEC="$(printf %s "$SPEC" | base64 | tr -d '\n')" \
   -v "hf://buckets/$BUCKET:/work" \
