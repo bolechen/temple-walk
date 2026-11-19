@@ -5,6 +5,7 @@
 //   lift         the most any shoe's lowest point stands over the tread it left (m)
 //   clear        the closest any swinging shoe's lowest vertex comes to the stair under that vertex (m; < 0 is in the stone)
 //   kneeStance   the smallest angle between thigh and shin of a leg that is on the stair (degrees; 180 is straight)
+//   kneeBack     the knee of the trailing leg at the moment the leading shoe comes down
 //   kneeSwing    the same for the leg in the air
 //   pelvis       how far the hips depart from the straight line of the flight (± m), and the largest step of it between frames
 //   eye          the peak vertical acceleration of the smoothed eye heights (third person 0.14 s, first 0.08 s), as yard.js works them
@@ -22,7 +23,7 @@ const ANKLE_Y = 0.06;
 export function flight(n, dir) {
   const lead = 4, run = n * TREAD, top = n * RISE, base = dir > 0 ? 0 : top;
   const f = (z) => Math.min(1, Math.max(0, (z - lead) / run + NOSING / run));
-  return {
+    return {
     lead, run, length: lead * 2 + run,
     surface: (z) => base + dir * top * (Math.ceil(f(z) * n - 1e-6) / n),
     eye: (z) => base + dir * top * f(z),
@@ -36,7 +37,7 @@ export function measure({ n = 10, dir = 1, speed = 1.25, fps = 60, body = create
   const z0 = 0.2;   // start a little way in so that the stride has begun by the foot of the flight
   let z = z0, t = 0, eye3 = fl.eye(z), eye1 = eye3;
   const rows = [], landings = [], planted = [false, false], takeoffY = [null, null], lastClear = [Infinity, Infinity];
-  const lifts = [], clears = [], stanceK = [], swingK = [], hipY = [], eye3s = [], eye1s = [], hipT = [];
+  const backKnee = [], lifts = [], clears = [], stanceK = [], swingK = [], hipY = [], eye3s = [], eye1s = [], hipT = [];
   const legs = [["left", 0], ["right", 1]];
   // The shoes are told apart by x in his frame: left is +x (he faces +z at yaw 0).
   const sole = (side) => {
@@ -54,7 +55,7 @@ export function measure({ n = 10, dir = 1, speed = 1.25, fps = 60, body = create
     const onStair = z > fl.lead - 0.3 && z < fl.lead + fl.run + 0.3;
     m.update(dt, speed, false, t, (x, zz) => fl.surface(zz), { heightAt: (x, zz) => fl.eye(zz), stairs: onStair });
     m.group.updateMatrixWorld(true);
-    for (const s of m.steps.splice(0)) landings.push({ t, z: s.z });
+    for (const s of m.steps.splice(0)) { landings.push({ t, z: s.z }); if (z > fl.lead + 0.5 && z < fl.lead + fl.run - 0.5) backKnee.push(interior(m.bones[s.side > 0 ? "rightLowerLeg" : "leftLowerLeg"])); }
     eye3 += (fl.eye(z) - eye3) * (1 - Math.exp(-dt / 0.14)); eye1 += (fl.eye(z) - eye1) * (1 - Math.exp(-dt / 0.08));
     if (z < fl.lead + 0.5 || z > fl.lead + fl.run - 0.5) continue;   // only the flight itself, with half a metre either side dropped
     const hip = m.bones.hips.getWorldPosition(v).y;
@@ -78,18 +79,18 @@ export function measure({ n = 10, dir = 1, speed = 1.25, fps = 60, body = create
   const inFlight = landings.filter((l) => l.z > fl.lead && l.z < fl.lead + fl.run);
   const span = inFlight.length > 1 ? inFlight[inFlight.length - 1].t - inFlight[0].t : NaN;
   let jump = 0; for (let i = 1; i < hipY.length; i++) jump = Math.max(jump, Math.abs(hipY[i] - hipY[i - 1]));
-  return {
+    return {
     n, dir, speed, fps,
     cadence: inFlight.length > 1 ? (inFlight.length - 1) / span : NaN,
     lift: Math.max(...lifts), clear: Math.min(...clears),
-    kneeStance: Math.min(...stanceK), kneeSwing: Math.min(...swingK),
+    kneeStance: Math.min(...stanceK), kneeBack: Math.min(...backKnee), kneeSwing: Math.min(...swingK),
     pelvisAmp: (Math.max(...resid) - Math.min(...resid)) / 2, pelvisJump: jump,
     eye3Acc: accPeak(eye3s), eye1Acc: accPeak(eye1s),
     rows,
   };
 }
 
-const fmt = (r) => `${r.dir > 0 ? "up  " : "down"} ${r.speed.toFixed(2)} m/s ${r.fps}fps  cadence ${r.cadence.toFixed(2)}/s  lift ${(r.lift * 100).toFixed(1)} cm  clear ${(r.clear * 100).toFixed(1)} cm  knee stance ${r.kneeStance.toFixed(0)}° swing ${r.kneeSwing.toFixed(0)}°  pelvis ±${(r.pelvisAmp * 100).toFixed(1)} cm (jump ${(r.pelvisJump * 100).toFixed(2)} cm/frame)  eye accel ${r.eye3Acc.toFixed(2)} / ${r.eye1Acc.toFixed(2)} m/s²`;
+const fmt = (r) => `${r.dir > 0 ? "up  " : "down"} ${r.speed.toFixed(2)} m/s ${r.fps}fps  cadence ${r.cadence.toFixed(2)}/s  lift ${(r.lift * 100).toFixed(1)} cm  clear ${(r.clear * 100).toFixed(1)} cm  knee stance ${r.kneeStance.toFixed(0)}° back-at-landing ${r.kneeBack.toFixed(0)}° swing ${r.kneeSwing.toFixed(0)}°  pelvis ±${(r.pelvisAmp * 100).toFixed(1)} cm (jump ${(r.pelvisJump * 100).toFixed(2)} cm/frame)  eye accel ${r.eye3Acc.toFixed(2)} / ${r.eye1Acc.toFixed(2)} m/s²`;
 if (import.meta.url === `file://${process.argv[1]}`) {
   const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
   const speeds = arg("speed", "1.25,1.6").split(",").map(Number), fps = +arg("fps", 60), csv = arg("csv", null);
