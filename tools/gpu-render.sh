@@ -32,7 +32,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)"
 hf buckets create "$BUCKET" --private --exist-ok >/dev/null
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 SITE="$(node -e 'console.log(require("./tools/site.cjs").site())')"   # the built site, staged under the name the job expects
-cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/shared/models" "$STAGE/app/plate.webp"; cp tools/gpu/job.cjs "$STAGE/job.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
+cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/shared/models" "$STAGE/app/plate.webp"; if [ -n "${BASE_SITE:-}" ]; then cp -R "$BASE_SITE" "$STAGE/app/base"; rm -rf "$STAGE/app/base/shared/models" "$STAGE/app/base/plate.webp"; fi;   # BASE_SITE: another build (the base commit), served at base/ in the same job so the two can be measured turn about cp tools/gpu/job.cjs "$STAGE/job.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
 # Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
 # mid-job (a sync of in/ with --delete removes everything else under it).
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
