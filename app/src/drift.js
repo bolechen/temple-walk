@@ -1,12 +1,16 @@
 // What falls through the air: petals in spring, leaves in autumn, snow in winter, and on summer nights
 // fireflies that rise instead. A cloud of points that follows the visitor, wrapping round as they walk.
 // Leaves and petals come from the trees that bear them and the grove's few narrow bamboo leaves from the grove, and they
-// come down to the ground, lie there a few seconds and fade (fall.js says where and how long; the sums below are its
-// `leafAt` line for line). Snow and fireflies keep to the whole sky and the old even cloud.
+// come down to the ground (fall.js says where and how long; the sums below are its `leafAt` line for line). A tree's leaf
+// or a petal that touches the ground is handed to it there (litter.js keeps it and the paving draws it), and the point
+// that carried it settles for a moment and goes back up; a bamboo leaf lies a few seconds and fades. Snow and fireflies
+// keep to the whole sky and the old even cloud.
 import * as THREE from "three";
 import { U } from "./glsl.js";
 import { SHELTER } from "./shelter.js";
-import { SOURCES, LAND, NO_GROUND, PER_M, bakeFall, leafAt, fallAt } from "./fall.js";
+import { SOURCES, CHANNEL, LAND, NO_GROUND, bakeFall, leafAt, leafTimes, spotOf, densityAt, groundAt, fallAt } from "./fall.js";
+import { shelterAt } from "./shelter.js";
+import { createLitter } from "./litter.js";
 
 // col: three hues a kind comes in; part: how many of the cloud are shown; near: none closer to the eye than this.
 export const KINDS = {
@@ -61,9 +65,10 @@ export function createDrift(scene, count, trees = [], opts = {}) {
         if(uLand>.5){
           // Down to the ground and a few seconds there (fall.js, leafAt): a spot is picked each time round, snapped to the
           // middle of a point of the map, and the sway dies away as the leaf comes down onto it.
-          float v=fl*(.6+.8*seed.w); Tf=${LAND.HEIGHT.toFixed(1)}/v; float Tr=${LAND.REST[0].toFixed(1)}+${LAND.REST[1].toFixed(1)}*fract(seed.y*13.7), P=Tf+Tr+${LAND.FADE.toFixed(1)};
+          // A tree's leaf does not lie: the ground takes it as it touches (litter.js) and it settles into that over SETTLE.
+          float v=fl*(.6+.8*seed.w); Tf=${LAND.HEIGHT.toFixed(1)}/v; float Tr=isB*(${LAND.REST[0].toFixed(1)}+${LAND.REST[1].toFixed(1)}*fract(seed.y*13.7)), P=Tf+Tr+mix(${LAND.SETTLE.toFixed(2)},${LAND.FADE.toFixed(1)},isB);
           float off=fract(seed.y*7.7)*P, cyc=floor((uT+off)/P); ph=mod(uT+off,P);
-          vec2 b=fract(seed.xz+cyc*vec2(.7548776,.5698403))*B.xz; b=(floor(b*${PER_M.toFixed(1)})+.5)/${PER_M.toFixed(1)};
+          vec2 b=fract(seed.xz+cyc*vec2(.7548776,.5698403))*B.xz;
           b=mod(b-uCam.xz+B.xz*.5,B.xz)-B.xz*.5+uCam.xz;
           vec2 muv=(b-uMapBox.xy)*uMapBox.zw; vec4 m=texture2D(tMap,muv); float gr=texture2D(tGround,muv).r;
           float inb=step(0.,min(muv.x,muv.y))*step(max(muv.x,muv.y),1.)*step(-500.,gr), k=min(ph/Tf,1.);
@@ -103,18 +108,61 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.renderOrder = 5; scene.add(pts);
   let cur = KINDS.none, curName = "none", bam = 0;
   const cfg = () => ({ fall: cur.fall, sway: cur.sway });
+  // The leaves handed to the ground (opts.memory, litter.js's record): for every point of the cloud that is a tree's leaf
+  // or a petal, the count of its cycles whose fall has ended; when that count goes up between two frames, that leaf has
+  // just touched the ground, and if it was one the shader shows (its source, no roof over it), the ground keeps it where
+  // it touched. Over a jump of the clock (a photograph held, a hidden tab) nothing is handed over: the leaves that fell
+  // while nobody looked are not heaped up at once.
+  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z) }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0;
+  if (lit) U.tLitMem.value = lit.tex;
+  const handOver = (t, cam) => {
+    const ok = mem && u.uLand.value > 0 && SOURCES[curName] && lastT !== null && t > lastT && t - lastT < 0.25;
+    for (let i = 0; i < count; i++) {
+      const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]];
+      if (fract13(s) < bam) continue;
+      const T = leafTimes(s, cur.fall, false), L = Math.floor((t + T.off - T.Tf) / T.P);
+      if (ok && L > landed[i]) {
+        const [x, z] = spotOf(s, L, [34, 13, 34], cam), g = groundAt(map, x, z);
+        const want = shown(curName, densityAt(map, CHANNEL[curName], x, z)) * (1 - shelterAt(opts.shelter, x, g + LAND.LIE, z));
+        if (g > NO_GROUND / 2 && want > 0.001 && fract(s[0] * 7.31 + s[2] * 3.7) <= want && mem.land(x, z, 1 + Math.floor(fract(s[0] * 91.7 + s[3] * 13.1 + L * 0.618) * 254))) handed++;
+      }
+      landed[i] = L;
+    }
+    lastT = t;
+  };
   return {
     setMood(m, light) {
       const k = KINDS[m.drift] || KINDS.none, key = SOURCES[m.drift] ? m.drift : null;
-      cur = k; curName = m.drift; bam = bambooOn(m.drift) ? BAMBOO.share : 0;
+      if (m.drift !== curName && mem) { mem.clear(); landed.fill(NaN); lastT = null; }   // a new season's ground starts bare (what it had was another kind)
+      cur = k; curName = m.drift; bam = bambooOn(m.drift) ? BAMBOO.share : 0; U.uLitOn.value = mem && key ? 1 : 0;
       u.uCol.value.fromArray(k.col[0]); u.uCol2.value.fromArray(k.col[1]); u.uCol3.value.fromArray(k.col[2]); u.uPart.value = k.part; u.uNear.value = k.near; u.uPoint.value = k.point; u.uSize.value = k.size; u.uFall.value = k.fall; u.uSway.value = k.sway; u.uOp.value = k.op; u.uGlow.value = k.glow;
       u.uFromTrees.value = key ? 1 : 0; u.uCh.value.set(key === "leaf" ? 1 : 0, key === "petal" ? 1 : 0, 0); u.uBam.value = bam;
       u.uLand.value = bambooOn(m.drift) ? 1 : 0;   // snow and fireflies keep the old cloud
       // The paving's leaves: autumn's and spring's, not on the low tier, and in place only where trees stand to drop them.
-      U.uLitter.value = opts.litter && key ? (key === "leaf" ? 1 : 0.7) : 0; U.uLitterCh.value.copy(u.uCh.value); (LITTER[key] || LITTER.leaf).forEach((c, i) => U.uLitterCol.value[i].fromArray(c));
+      // (On the low tier the ground draws only what it has kept, none of the leaves that lay there before he came: uLitBase.)
+      U.uLitter.value = (opts.litter || mem) && key ? (key === "leaf" ? 1 : 0.7) : 0; U.uLitBase.value = opts.litter ? 1 : 0; U.uLitterCh.value.copy(u.uCh.value); (LITTER[key] || LITTER.leaf).forEach((c, i) => U.uLitterCol.value[i].fromArray(c));
       u.uLight.value.copy(light); pts.visible = k.op > 0 || bam > 0; mat.blending = k.glow ? THREE.AdditiveBlending : THREE.NormalBlending;
     },
-    update(t, cam, px) { u.uT.value = t; u.uCam.value.copy(cam); u.uPx.value = px; },
+    update(t, cam, px) { t += skew; u.uT.value = t; u.uCam.value.copy(cam); u.uPx.value = px; if (mem && map && t !== lastT) handOver(t, cam.toArray()); },
+    // Runs the cloud on by `secs` (for a tool or test that wants the ground as it will be): every leaf that comes down
+    // meanwhile is handed over as it would have been, the breeze given by `windAt(t)` moving what lies, a tenth of a
+    // second at a time; then the cloud's own clock is moved on to match, so none is handed over twice.
+    runOn(secs, cam, windAt, dt = 0.1) {
+      if (!mem) return;
+      let t = u.uT.value; const c = cam.toArray(); if (lastT === null) handOver(t, c);
+      for (let k = 0; k < secs / dt; k++) { t += dt; handOver(t, c); const w = windAt(t); mem.wind(dt, w[0], w[1]); }
+      skew += t - u.uT.value; u.uT.value = t;
+    },
+    handed: () => handed,
+    // The ground round him for this frame: the square follows him, the breeze (wx, wz) moves what lies, and the record
+    // goes to the card. `dt` 0 (a still picture, indoors) keeps everything where it lies.
+    keep(x, z, dt, wx, wz) {
+      if (!lit) return; mem.follow(x, z); if (dt > 0) mem.wind(dt, wx, wz); lit.upload(); U.uLitMem.value.copy(lit.box);
+    },
+    // A shoe has come down (monk.steps): the leaves under it are scuffed aside.
+    kick(f) { if (mem && U.uLitOn.value) mem.kick(f.x, f.z, f.yaw); },
+    litter: (at) => (mem ? { ...mem.stats(), handed, bytes: lit.bytes, ...(at ? { at: +mem.amountAt(at[0], at[1], at[2] ?? 0.1).toFixed(3) } : {}) } : null),
+    memory: mem,
     // For `__drift()`: what the leaves of the cloud are doing at the shader's time, worked out in Node's way (fall.js).
     report(n = 200) {
       const t = u.uT.value, cam = u.uCam.value.toArray(), out = { kind: curName, landing: u.uLand.value > 0, count, bamboo: bam, leaves: [] };
@@ -122,13 +170,13 @@ export function createDrift(scene, count, trees = [], opts = {}) {
       let sum = 0;
       for (let i = 0; i < count && out.leaves.length < n; i++) {
         const s = [seed[i * 4], seed[i * 4 + 1], seed[i * 4 + 2], seed[i * 4 + 3]], isB = fract13(s) < bam;
-        const L = leafAt(map, s, t, isB ? { fall: BAMBOO.fall, sway: BAMBOO.sway } : cfg(), cam);
+        const L = leafAt(map, s, t, isB ? { fall: BAMBOO.fall, sway: BAMBOO.sway, bamboo: true } : cfg(), cam);
         const d = isB ? fallAt(map, "bamboo", opts.shelter, L.bx, L.y, L.bz) : curName in SOURCES ? fallAt(map, curName, opts.shelter, L.bx, L.y, L.bz) : 0;
         const want = (isB ? BAMBOO.part * d : KINDS[curName].part * (SOURCES[curName] ? BOOST * d : 1));
         if (!L.live || !(fract(s[0] * 7.31 + s[2] * 3.7) <= want) || want <= 0.001) continue;
         out.leaves.push({ bamboo: isB, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3), ground: +L.ground.toFixed(3), rest: L.rest, restFor: +L.Tr.toFixed(2), alpha: +L.alpha.toFixed(3), phase: +L.ph.toFixed(3) }); sum += L.x * 3 + L.y * 5 + L.z * 7;
       }
-      out.resting = out.leaves.filter((l) => l.rest).length; out.hash = +sum.toFixed(4);
+      out.resting = out.leaves.filter((l) => l.rest).length; out.aloft = out.leaves.filter((l) => !l.rest).length; out.hash = +sum.toFixed(4); out.handed = handed;
       return out;
     },
   };

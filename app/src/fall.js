@@ -1,7 +1,10 @@
 // Where the things that fall come from, and where they come down. Leaves and petals do not fall out of the open air: they
 // come off the maples and ginkgos, thickest under the crown and gone a dozen metres away; the few narrow leaves of bamboo
 // come off the grove. Under a roof nothing falls (the same map that keeps the snow off, shelter.js). A leaf then falls to
-// the ground, to the height the walker says the ground is there, lies on it for a few seconds and fades.
+// the ground, to the height the walker says the ground is there. A maple's or ginkgo's leaf, or a petal, is then the
+// ground's to keep (litter.js records it where it came down and the paving draws it there), so the falling one only
+// settles into it for a moment and goes back up into the air; the grove's narrow leaves, which come down on earth and
+// on the path where nothing is drawn, still lie a few seconds and fade (#267).
 // All of it is worked out here from the plan and baked once into one small map seen from above (three channels of
 // density, one byte each, and the height of the ground, four points to the metre); drift.js reads that map in its
 // vertex shader, and the unit tests and the page's `__drift()` read the same numbers in Node through `leafAt`, which
@@ -14,9 +17,11 @@ export const SOURCES = { leaf: ["maple", "ginkgo"], petal: ["maple"] };
 export const CHANNEL = { leaf: 0, petal: 1, bamboo: 2 };
 export const REACH = 14;               // metres from a trunk beyond which nothing falls from it
 export const BAMBOO_REACH = 4;         // and from the edge of the grove
-export const PER_M = 4;                // points of the map to a metre (a leaf comes to rest at the middle of one)
-// A leaf's life: it starts HEIGHT over the ground, falls at its own speed, lies REST seconds (3.2 to 6.2) and fades over FADE.
-export const LAND = { HEIGHT: 6, REST: [3.2, 3.0], FADE: 1.5, IN: 0.6, LIE: 0.02 };
+export const PER_M = 4;                // points of the map to a metre (the ground's record of what lies on it, litter.js, keeps the same cells)
+// A leaf's life: it starts HEIGHT over the ground and falls at its own speed. A tree's leaf is handed to the ground
+// as it touches (litter.js) and fades over SETTLE while the one drawn on the stone takes its place; a bamboo leaf lies
+// REST seconds (3.2 to 6.2) and fades over FADE.
+export const LAND = { HEIGHT: 6, REST: [3.2, 3.0], FADE: 1.5, SETTLE: 0.4, IN: 0.6, LIE: 0.02 };
 export const NO_GROUND = -1000;
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const fract = (x) => x - Math.floor(x);
@@ -69,17 +74,35 @@ export function fallAt(map, kind, shelter, x, y, z) {
 }
 export const groundAt = (map, x, z) => { const c = cell(map, x, z); return c < 0 || !map.ground ? NO_GROUND : map.ground[c]; };
 
-// Where one leaf of the cloud is at time `t`, and how it lies. The same sums as drift.js's vertex shader, in doubles:
-// `s` is its four seeds, `fall` and `sway` its kind's. It begins a cycle high over a spot picked from the golden-ratio
-// sequence (a new spot every cycle), snapped to the middle of a map point, drops and loses its sway as it comes down,
-// lies on the ground for REST seconds and fades. (The grove's own narrow leaves pass their own `fall` and `sway`.)
-export function leafAt(map, s, t, { fall, sway, B = [34, 13, 34] }, cam = [0, 0, 0]) {
-  const v = fall * (0.6 + 0.8 * s[3]), Tf = LAND.HEIGHT / v, Tr = LAND.REST[0] + LAND.REST[1] * fract(s[1] * 13.7), P = Tf + Tr + LAND.FADE;
-  const off = fract(s[1] * 7.7) * P, ph = (t + off) % P, cyc = Math.floor((t + off) / P);
+// A leaf's timing: how long it falls (Tf), lies (Tr) and fades (Td), and the whole cycle P. `bamboo` lies; a tree's leaf does not.
+export function leafTimes(s, fall, bamboo) {
+  const Tf = LAND.HEIGHT / (fall * (0.6 + 0.8 * s[3])), Tr = bamboo ? LAND.REST[0] + LAND.REST[1] * fract(s[1] * 13.7) : 0, Td = bamboo ? LAND.FADE : LAND.SETTLE;
+  return { Tf, Tr, Td, P: Tf + Tr + Td, off: fract(s[1] * 7.7) * (Tf + Tr + Td) };
+}
+// Where a leaf comes down in its cycle `cyc`: a spot picked from the golden-ratio sequence (a new spot every cycle) in the
+// box round the eye, wherever on it the sequence falls (no longer snapped to the map's points: the ground keeps it there).
+export function spotOf(s, cyc, B, cam) {
   let bx = fract(s[0] + cyc * 0.7548776) * B[0], bz = fract(s[2] + cyc * 0.5698403) * B[2];
-  bx = (Math.floor(bx * PER_M) + 0.5) / PER_M; bz = (Math.floor(bz * PER_M) + 0.5) / PER_M;
   bx = ((bx - cam[0] + B[0] / 2) % B[0] + B[0]) % B[0] - B[0] / 2 + cam[0]; bz = ((bz - cam[2] + B[2] / 2) % B[2] + B[2]) % B[2] - B[2] / 2 + cam[2];
+  return [bx, bz];
+}
+// Where one leaf of the cloud is at time `t`, and how it lies. The same sums as drift.js's vertex shader, in doubles:
+// `s` is its four seeds, `fall` and `sway` its kind's. It begins a cycle high over its spot, drops and loses its sway as it
+// comes down; a tree's leaf then settles into the ground over SETTLE, a bamboo leaf (`bamboo`) lies for REST seconds and
+// fades. (The grove's own narrow leaves pass their own `fall` and `sway`.)
+export function leafAt(map, s, t, { fall, sway, bamboo = false, B = [34, 13, 34] }, cam = [0, 0, 0]) {
+  const { Tf, Tr, P, off } = leafTimes(s, fall, bamboo);
+  const ph = (t + off) % P, cyc = Math.floor((t + off) / P);
+  const [bx, bz] = spotOf(s, cyc, B, cam);
   const k = Math.min(ph / Tf, 1), g = map && map.ground ? groundAt(map, bx, bz) : NO_GROUND;
   const rest = ph >= Tf, alpha = smooth(0, LAND.IN, ph) * (1 - smooth(Tf + Tr, P, ph));
-  return { x: bx + Math.sin(ph * 0.7 + s[3] * 40) * sway * (1 - k), y: g + LAND.LIE + LAND.HEIGHT * (1 - k), z: bz + Math.cos(ph * 0.53 + s[3] * 31) * sway * 0.7 * (1 - k), ground: g, bx, bz, rest, alpha, ph, Tf, Tr, P, live: g > NO_GROUND / 2 };
+  return { x: bx + Math.sin(ph * 0.7 + s[3] * 40) * sway * (1 - k), y: g + LAND.LIE + LAND.HEIGHT * (1 - k), z: bz + Math.cos(ph * 0.53 + s[3] * 31) * sway * 0.7 * (1 - k), ground: g, bx, bz, rest, alpha, ph, Tf, Tr, P, cyc, live: g > NO_GROUND / 2 };
+}
+// The source map as the vertex shader samples it (linear between the map's points, as a texture is), for one channel.
+export function densityAt(map, ch, x, z) {
+  if (!map) return 0;
+  const u = (x - map.box[0]) * map.box[2] * map.W - 0.5, v = (z - map.box[1]) * map.box[3] * map.H - 0.5;
+  const i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j;
+  const at = (a, b) => map.data[(Math.min(map.H - 1, Math.max(0, b)) * map.W + Math.min(map.W - 1, Math.max(0, a))) * 4 + ch] / 255;
+  return (at(i, j) * (1 - fu) + at(i + 1, j) * fu) * (1 - fv) + (at(i, j + 1) * (1 - fu) + at(i + 1, j + 1) * fu) * fv;
 }

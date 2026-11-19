@@ -47,8 +47,9 @@ const { leafAt, groundAt, LAND, NO_GROUND, PER_M, bambooFrom } = await import(".
 const walker = createWalker(site), gmap = bakeFall(site.trees, GROVE.areas, (x, z) => walker.landAt(x, z));
 const seeds = (n) => { let a = 12345; const r = () => (a = (a * 1664525 + 1013904223) >>> 0) / 4294967296; return Array.from({ length: n }, () => [r(), r(), r(), r()].map(Math.fround)); };
 
-test("200 leaves tracked to the ground: they lie within 5 cm of it for at least 3 s, then fade, and never go through it", () => {
-  const cfg = { fall: 0.75, sway: 1.0 }; let tracked = 0;
+// (Since #267 only the grove's narrow leaves lie and fade; a tree's leaf is handed to the ground, litter.test.mjs.)
+test("200 bamboo leaves tracked to the ground: they lie within 5 cm of it for at least 3 s, then fade, and never go through it", () => {
+  const cfg = { fall: 0.4, sway: 1.3, bamboo: true }; let tracked = 0;
   for (const s of seeds(4000)) {
     const L0 = leafAt(gmap, s, 100, cfg); if (!L0.live) continue;
     let restFor = 0, worst = 0, fading = false, minY = Infinity; const P = L0.P;
@@ -67,6 +68,18 @@ test("200 leaves tracked to the ground: they lie within 5 cm of it for at least 
     if (++tracked >= 200) break;
   }
   assert.equal(tracked, 200, "fewer than 200 leaves fall anywhere on the map");
+});
+
+test("a tree's leaf comes down onto the ground, never through it, and is gone from the air within SETTLE", () => {
+  const cfg = { fall: 0.75, sway: 1.0 }; let tracked = 0;
+  for (const s of seeds(4000)) {
+    const L0 = leafAt(gmap, s, 100, cfg); if (!L0.live) continue;
+    const t0 = 100 - L0.ph;
+    for (let t = t0 + 0.02; t < t0 + L0.P - 0.02; t += 0.05) { const L = leafAt(gmap, s, t, cfg); assert.ok(L.y >= groundAt(gmap, L.bx, L.bz) + LAND.LIE - 1e-9, "a leaf went through the ground"); if (L.rest) assert.ok(L.ph - L.Tf <= LAND.SETTLE + 1e-9); }
+    assert.ok(Math.abs(L0.P - L0.Tf - LAND.SETTLE) < 1e-9);
+    if (++tracked >= 200) break;
+  }
+  assert.equal(tracked, 200);
 });
 
 test("the ground under the leaves is the walker's: the stair's treads, the court's paving, the terraces", () => {
