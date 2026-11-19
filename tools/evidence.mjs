@@ -120,7 +120,18 @@ async function get(url, tries = 3) {
   }
   throw last;
 }
-const bytesOf = async (url) => Buffer.from(await (await get(url)).arrayBuffer());
+// A body cut off halfway ("terminated", a reset) is asked for again, whole: the headers had come, so `get` alone does not
+// see it. A wrong size or hash is never asked again; that is the answer, not the road to it.
+async function body(url, tries = 3) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    const r = await get(url);
+    try { return { r, buf: Buffer.from(await r.arrayBuffer()) }; }
+    catch (e) { last = e; await new Promise((ok) => setTimeout(ok, 300 * 2 ** i)); }
+  }
+  throw last;
+}
+const bytesOf = async (url) => (await body(url)).buf;
 
 /** Run `fn` over items, `n` at a time; collect results in order. */
 async function pool(items, n, fn) {
@@ -231,15 +242,14 @@ export async function verify({ all = false, root = ROOT, log = console.log } = {
   const sameAsManifest = (buf, f) => buf.length === f.bytes && sha256(buf) === f.sha256;
   await pool(jobs, 16, async ({ f, remote, url, hash }) => {
     try {
-      const r = await get(url);
-      const len = Number(r.headers.get("content-length"));
       if (!hash) {
+        const r = await get(url), len = Number(r.headers.get("content-length"));
         await r.body?.cancel();
         n.sized++;
         if (len && len !== f.bytes) fails.push(`${url}: ${len} bytes, manifest ${f.bytes}`);
         return;
       }
-      const buf = Buffer.from(await r.arrayBuffer());
+      const { buf } = await body(url);
       n.hashed++;
       if (buf.length !== f.bytes) fails.push(`${url}: ${buf.length} bytes, manifest ${f.bytes}`);
       else if (sha256(buf) !== f.sha256) fails.push(`${url}: SHA-256 differs from the manifest`);

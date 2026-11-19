@@ -73,3 +73,24 @@ test("push refuses a name the manifest holds with other bytes, before sending an
     await assert.rejects(push(dir, { log() {} }), /refusing to overwrite .*a\.jpg/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+// The nightly run of 2026-11-19 (44597656836): one picture's body was cut off halfway at the public address
+// ("terminated") and the whole check went red, though the bucket held it whole. A body cut off is asked for again; a
+// body that arrives whole but wrong is still a failure.
+test("verify asks again for a body cut off halfway, and still fails one that arrives whole and wrong", async () => {
+  const { verify, sha256 } = await import("../../tools/evidence.mjs");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "evidence-")), dir = path.join(root, "docs/t00/evidence/cut");
+  fs.mkdirSync(dir, { recursive: true });
+  const bytes = Buffer.from("a whole picture");
+  fs.writeFileSync(path.join(dir, "MANIFEST.json"), JSON.stringify({ version: 1, dataset: "x/y", files: [{ path: "a.jpg", bytes: bytes.length, sha256: sha256(bytes), rev: REV }] }));
+  const real = globalThis.fetch;
+  const cut = () => new Response(new ReadableStream({ start(c) { c.enqueue(bytes.subarray(0, 4)); c.error(new TypeError("terminated")); } }), { status: 200 });
+  try {
+    let calls = 0;
+    globalThis.fetch = async () => (++calls === 1 ? cut() : new Response(bytes, { status: 200 }));
+    assert.deepEqual(await verify({ all: true, root, log: () => {} }), [], "a body cut off once should be asked for again");
+    assert.equal(calls, 2);
+    globalThis.fetch = async () => new Response(Buffer.from("a whole fiction!"), { status: 200 });
+    assert.equal((await verify({ all: true, root, log: () => {} })).length, 1, "a whole body with other bytes is a failure, not asked again");
+  } finally { globalThis.fetch = real; fs.rmSync(root, { recursive: true, force: true }); }
+});
