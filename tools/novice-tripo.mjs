@@ -145,11 +145,15 @@ function distanceTo(S, p) {
   const d = distanceTo(orig, p), made = (t) => d[t] > 0.003;
   let lowest = Infinity; for (let i = 1; i < orig.P.length; i += 3) lowest = Math.min(lowest, orig.P[i]);
   const cy = (t) => (p.P[p.I[t * 3] * 3 + 1] + p.P[p.I[t * 3 + 1] * 3 + 1] + p.P[p.I[t * 3 + 2] * 3 + 1]) / 3;
-  p.flag = new Uint8Array(p.P.length / 3);
-  // a vertex is "made" when every triangle round it is: it then takes the plain colour
-  const any = new Uint8Array(p.P.length / 3);
-  for (let t = 0; t < d.length; t++) for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k]; if (!made(t)) any[v] = 1; }
-  for (let v = 0; v < any.length; v++) p.flag[v] = any[v] ? 0 : 1;
+  // Each triangle is either made (drawn plain) or not: a made triangle gets corners of its own, so that no triangle has
+  // some corners on the plain colour and some on the texture (their texture coordinates would sweep across the whole
+  // atlas between them, and drew red and cream zigzags on his thighs).
+  const P = [...p.P], N = [...p.N], UV = [...p.UV], I = Array.from(p.I), copy = new Map(), flag = new Array(p.P.length / 3).fill(0);
+  for (let t = 0; t < d.length; t++) if (made(t)) for (let k = 0; k < 3; k++) {
+    const v = p.I[t * 3 + k]; if (!copy.has(v)) { copy.set(v, P.length / 3); P.push(p.P[v * 3], p.P[v * 3 + 1], p.P[v * 3 + 2]); N.push(p.N[v * 3], p.N[v * 3 + 1], p.N[v * 3 + 2]); UV.push(p.UV[v * 2], p.UV[v * 2 + 1]); flag.push(1); }
+    I[t * 3 + k] = copy.get(v);
+  }
+  Object.assign(p, { P: Float32Array.from(P), N: Float32Array.from(N), UV: Float32Array.from(UV), I: Uint32Array.from(I), flag: Uint8Array.from(flag) });
   const nMade = d.filter((x) => x > 0.003).length, before = d.length;
   Object.assign(p, filter(p, (t) => !(made(t) && cy(t) < lowest + 0.05)));
   console.log(`trousers: ${nMade} of ${before} triangles made by the completion; ${before - p.I.length / 3} closing the cuffs dropped`);
@@ -240,7 +244,7 @@ for (const p of Object.values(pieces)) {
   // weld exact copies that share position and texture coordinate first (Tripo writes each triangle's corners apart at seams)
   const map = new Map(), remap = new Uint32Array(p.P.length / 3), keepV = [];
   for (let i = 0; i < remap.length; i++) {
-    const k = `${p.P[i * 3]},${p.P[i * 3 + 1]},${p.P[i * 3 + 2]},${p.UV[i * 2]},${p.UV[i * 2 + 1]}`;
+    const k = `${p.P[i * 3]},${p.P[i * 3 + 1]},${p.P[i * 3 + 2]},${p.UV[i * 2]},${p.UV[i * 2 + 1]},${p.flag ? p.flag[i] : 0}`;
     if (!map.has(k)) { map.set(k, keepV.length); keepV.push(i); } remap[i] = map.get(k);
   }
   const P = new Float32Array(keepV.length * 3), N = new Float32Array(keepV.length * 3), UV = new Float32Array(keepV.length * 2), F = p.flag ? new Uint8Array(keepV.length) : null;
