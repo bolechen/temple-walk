@@ -1,0 +1,132 @@
+name: Roll back the live site
+
+# Issue #308: one click puts the live site back to a tag or a commit. Actions → this workflow → Run workflow, fill `ref`
+# (a tag such as v0.5.0, or a commit), and the site is built from that ref, driven through once in a browser, and
+# published as `deploy` in pages.yml does it. Nothing else decides what is live: the next push to main that changes the
+# site publishes main again, so a rollback is followed by the fix, not left alone (docs/RELEASING.md).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or commit to put live, e.g. v0.5.0"
+        required: true
+        type: string
+      check:
+        description: "Drive the built page once in a browser before publishing (the boot scenario, about two minutes); untick only in a hurry"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# The same group as pages.yml's production runs: a rollback and a deploy of main never publish at the same moment. A run
+# waiting for its turn is replaced by a newer waiting one (GitHub's rule), so a rollback shown as cancelled is run again.
+concurrency:
+  group: pages-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      sha: ${{ steps.at.outputs.sha }}
+    steps:
+      # The ref's own tree: its own build and its own `boot`, as it was when it was good.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - id: at
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Caches only read, by prefix: what the ref bakes from is named inside them, so what does not fit is baked again.
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules/.cache/walk
+          key: walk-t00-rollback-${{ github.run_id }}
+          restore-keys: walk-t00-
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-rollback-${{ github.run_id }}
+          restore-keys: doorways-t00-
+      - name: Remember the browser between runs
+        if: inputs.check
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-rollback-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: A browser to drive the page with
+        if: inputs.check
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Build the site
+        run: pnpm run build
+      - name: End to end, startup and movement
+        if: inputs.check
+        run: node tests/e2e/run.cjs boot
+      - name: Keep the report and screenshots
+        if: always() && inputs.check
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Hand the site over for publication
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist
+          name: rollback-site-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 1
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The Worker's settings come from the branch this workflow runs from (main), never from the ref being put live.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: wrangler.production.jsonc
+      - uses: actions/download-artifact@v4
+        with:
+          name: rollback-site-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Publish the demo
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx --yes wrangler@4.162.0 deploy -c wrangler.production.jsonc
+      # What is live is read back: the address's first page must be the very page just built.
+      - name: The live page is the one built
+        id: live
+        env:
+          REF: ${{ inputs.ref }}
+          SHA: ${{ needs.build.outputs.sha }}
+        run: |
+          want=$(sha256sum dist/index.html | cut -c1-64)
+          got=none
+          for i in 1 2 3 4 5 6; do
+            got=$(curl -fsS "https://temple.rushiwowen.co/?rollback=$GITHUB_RUN_ID" | sha256sum | cut -c1-64) || got=none
+            [ "$got" = "$want" ] && break
+            sleep 10
+          done
+          {
+            echo "### 线上已换成 \`$REF\`"
+            echo "- 提交 \`$SHA\`"
+            echo "- index.html SHA-256：构建 \`$want\`，线上 \`$got\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "live=$got" ; echo "built=$want"
+          [ "$got" = "$want" ]

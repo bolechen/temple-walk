@@ -86,8 +86,8 @@ const jobOf = (yml, name) => { const a = yml.indexOf(`\n  ${name}:\n`); assert.o
 
 test("pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, grid, site\]/);
-  assert.match(jobOf(y, "deploy"), /needs: verify/);
+  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, grid, site, quick\]/);
+  assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
   assert.match(jobOf(y, "unit"), /pnpm test\b/);
   assert.match(jobOf(y, "grid"), /swap\.mjs --test tests\/unit/);
   assert.ok(jobOf(y, "grid").indexOf("node tools/bake-walk.mjs") < jobOf(y, "grid").indexOf("swap.mjs"), "the grid job writes the floor before the swapped walker reads it");
@@ -112,4 +112,37 @@ test("no pull request reads the evidence over the network to compare hashes; the
     const i = e2e.search(new RegExp(name)); assert.ok(i > 0, name);
     assert.match(e2e.slice(i, i + 500), /github\.event_name == 'schedule'/, name);
   }
+});
+
+// #308: what stops a bad walk or camera before it is live, and the way back.
+test("pages.yml: deploy waits for the quick scenarios, which run beside the site job and only when it is built", () => {
+  const y = read("pages.yml");
+  assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
+  const quick = jobOf(y, "quick");
+  assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
+  assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
+  assert.match(quick, /scenario: \[stairs, drop\]/);
+  assert.match(quick, /run\.cjs \$\{\{ matrix\.scenario \}\}/);
+  assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
+});
+
+test("e2e.yml no longer repeats the scenarios that stop the publication", () => {
+  const e = read("e2e.yml");
+  const regression = jobOf(e, "regression");
+  assert.doesNotMatch(regression, /run\.cjs[^\n]*\b(stairs|drop)\b/);
+  assert.match(regression, /run\.cjs menufit/, "the menu in every language stays where it was");
+});
+
+test("rollback.yml: a tag or commit is asked for, built, and published to the same place under the same lock", () => {
+  const r = read("rollback.yml");
+  assert.match(r, /workflow_dispatch:\s*\n\s*inputs:\s*\n\s*ref:/, "ref is an input");
+  assert.match(r, /ref: \$\{\{ inputs\.ref \}\}/, "and is what is checked out");
+  assert.match(r, /group: pages-production\n\s*cancel-in-progress: false/, "one publication at a time, like pages.yml");
+  assert.match(jobOf(r, "deploy"), /needs: build/);
+  assert.match(jobOf(r, "deploy"), /wrangler@4\.162\.0 deploy -c wrangler\.production\.jsonc/);
+  assert.match(jobOf(r, "deploy"), /sparse-checkout: wrangler\.production\.jsonc/, "the Worker's settings come from the workflow's branch, not the ref");
+  assert.match(jobOf(r, "build"), /pnpm run build/);
+  assert.match(jobOf(r, "build"), /run\.cjs boot/);
+  const pages = read("pages.yml");
+  assert.equal(pages.match(/wrangler@[\d.]+ deploy/)[0], r.match(/wrangler@[\d.]+ deploy/)[0], "the same wrangler as pages.yml");
 });

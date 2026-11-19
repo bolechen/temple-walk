@@ -1,5 +1,7 @@
 # 发版流程
 
+**网页持续部署，版本只作里程碑（所有者 2026-11-19，#308）。** 推送到 `main`，过了 `pages.yml` 的检查（解析与类型、两套单测、建站与 `boot`、走路与镜头的快检 `stairs`、`drop`）就上线，不等版本。版本（`vX.Y.Z` 标签）是给人看的里程碑：对外分享前，或大约每周合一次版本 PR；Steam / 平台版从标签打包。版本不决定玩家玩到什么；线上出事，先回滚，再修（见下）。
+
 当前接入基线为 **0.1.0**，版本由根目录`package.json`与`.release-please-manifest.json`共同记录。Release Please使用`node`策略维护这两处版本及`CHANGELOG.md`。这是浏览器游戏的源码版本流程，保留`private: true`，不发布npm包。
 
 ## 日常发布
@@ -30,6 +32,15 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 
 ## 与试玩部署的关系
 
-`pages.yml`仍在`app/**`改变时验证`main`，通过后把`dist/`发布到 Cloudflare Worker `temple-walk`。GitHub Release是命名的源码版本；试玩网址持续跟随已通过部署验证的主线，不保证与最新发布标签完全相同。仅更新版本文件和日志不会强行重新部署游戏。
+`pages.yml`在站点改变时验证`main`，通过后把`dist/`发布到 Cloudflare Worker `temple-walk`（`temple.rushiwowen.co`）。GitHub Release是命名的源码版本；试玩网址持续跟随已通过部署验证的主线，不保证与最新发布标签完全相同。仅更新版本文件和日志不会强行重新部署游戏。
+
+部署前的检查全部过了才发布：`verify` 汇总 `unit`、`grid`、`site`（建站与 `boot`）和 `quick`（`stairs`、`drop`，各占一台机器，与 `site` 并行），`deploy` 等 `verify` 和 `quick`。只改文档的推送什么都不建、不发。
+
+## 出事先回滚，再修
+
+1. 打开 Actions → **Roll back the live site** → Run workflow（`rollback.yml`），在 `ref` 里填要回到的标签（如 `v0.5.0`）或提交号，点运行。它从那个 ref 自己的代码建站，在浏览器里跑一次 `boot`（可取消勾选 `check` 以求最快），再用同一个 `deploy` 发布，最后把线上首页和刚建好的首页比哈希，写进运行摘要。
+2. 它和 `pages.yml` 的发布排在同一个队列（`pages-production`），不会同时发布；排队中的运行会被更新的排队顶掉，看到「已取消」就再点一次。
+3. 回滚之后线上停在那个 ref，直到下一次改了站点的推送：那次推送会把 `main` 重新发布。所以先在 `main` 上修好（或还原出事的提交），修的提交合并就会重新上线；只改文档的推送不会改变线上。
+4. 回滚不改 `main`，也不动标签和版本；回滚的运行不算 `pages.yml` 的「上次部署」，所以修好之后的那次推送仍会正常建站、发布。
 
 官方说明：[Release Please Action](https://github.com/googleapis/release-please-action)、[manifest配置与初始化](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)。

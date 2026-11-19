@@ -20,8 +20,7 @@ concurrency:
 jobs:
   # Nothing is published that does not parse, pass its unit tests (both walkers), build, and come up in a real browser. Since
   # #296 those run side by side instead of one after the other (`unit`, `grid`, `site`); `verify` is the one check that says
-  # all of them passed, and `deploy` waits for it. The slower scenarios (the stairs, the low drop) run beside this in
-  # e2e.yml and do not hold the publication up. A push of papers alone is checked in under a minute (DOC_TESTS in
+  # all of them passed, and `deploy` waits for it (and, since #308, for `quick`, the stairs and the low drop, by name). The stairs and the low drop are `quick` below and hold the publication up (#308). A push of papers alone is checked in under a minute (DOC_TESTS in
   # tools/ci/changes.cjs, the offline evidence check) and publishes nothing, because there is nothing new to publish.
   #
   # What is the site's, and so what is built and published, is decided here, once, for the jobs below.
@@ -218,10 +217,55 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  # What walking and the camera break most often, run before the site goes out and not beside it (#308): the stairs and the
+  # low drop, one machine each, side by side with `site` (each builds its own copy from the caches, so none waits for another).
+  # Only when the site is built at all. `e2e.yml`'s regression run no longer repeats them.
+  quick:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [stairs, drop]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-t00-
+      - name: The scenario, on the built site
+        run: node tests/e2e/run.cjs ${{ matrix.scenario }}
+      - name: Keep the report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 7
+          if-no-files-found: ignore
+
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, grid, site]
+    needs: [changes, unit, grid, site, quick]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -287,7 +331,7 @@ jobs:
   # `success()` every `if` without a status function carries).
   deploy:
     if: github.event_name != 'pull_request' && needs.verify.outputs.site == 'true'
-    needs: verify
+    needs: [verify, quick]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
