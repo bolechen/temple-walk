@@ -343,8 +343,8 @@ export default {
   "若你愿意，也可以去如是我闻的护持页，那里说明了款项的用处。": "If you wish, you may visit the support page of Rushi Wowen, where it says what the money is for.",
   "支持如是我闻与本游戏的制作": "Support Rushi Wowen and the making of this game",
   // ---- The 功德箱's payment code (Chinese interface only; the other languages' lines are for the test and a folded sheet) ----
-  "微信赞赏码": "WeChat support code",
-  "微信扫码，支持如是我闻与本游戏的制作": "Scan with WeChat to support Rushi Wowen and the making of this game",
+  "微信赞赏码": "WeChat Pay code",
+  "微信扫码，支持如是我闻与本游戏的制作": "WeChat Pay (optional) — scan with WeChat to support Rushi Wowen and the making of this game",
   "用微信扫一扫": "Scan it with WeChat",
   "长按识别，或保存后在微信里从相册扫": "Press and hold to recognise it, or save it and scan it from the album in WeChat",
   "付款后可在护持页登记": "After paying, you can register on the support page",

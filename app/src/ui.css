@@ -517,7 +517,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 .offering-qr .offering-how { font-size: var(--t-xs); color: var(--ink-3); }
 .offering-card a.tap { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 400 var(--t-s)/1.4 var(--kai); color: var(--ink-1); text-decoration: underline; text-decoration-color: #8a2a1e; text-underline-offset: 3px; }
 .offering-card summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; font: 400 var(--t-s)/1.4 var(--kai); color: var(--ink-2); }
-.offering-card .stamp { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; text-align: center; line-height: 1.5; letter-spacing: .03em; padding-inline: 18px; white-space: nowrap; }
+.offering-card .stamp { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; text-align: center; line-height: 1.5; letter-spacing: .03em; padding-inline: 18px; max-width: 100%; box-sizing: border-box; padding-block: 8px; text-wrap: balance; }
 .offering-card .chip { min-height: 44px; min-width: 44px; }
 .community-card { width: min(92vw, 440px); box-sizing: border-box; padding: 30px 30px 20px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; text-align: center; }
 .community-kicker { font: 400 var(--t-xs)/1.5 var(--kai); letter-spacing: .2em; color: var(--ink-3); }
