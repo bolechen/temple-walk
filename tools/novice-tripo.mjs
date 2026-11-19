@@ -146,8 +146,9 @@ function distanceTo(S, p) {
 // not meet when he put his palms together, and covered his face at the tea and the incense (#246, second round). Each
 // hand is turned about the forearm so that its palm faces forward, scaled toward the code hand's length, width and
 // thickness (HAND: 1 is the code hand's size, 0 leaves Tripo's), and its middle moved onto the bone's line; all of it
-// comes in over the first 2.5 cm past the wrist, so the wrist still meets the forearm.
-const HAND = +(process.env.HAND ?? 1);
+// comes in over the first 2.5 cm past the wrist, so the wrist still meets the forearm. Past the knuckles the fingers are
+// bent CURL degrees toward the palm at their tips, baked in (the skeleton has one bone to a hand, as VRM requires and no more).
+const HAND = +(process.env.HAND ?? 1), CURL = +(process.env.CURL ?? 18);
 const { createMonk } = await import("../app/src/monk.js");
 const monk = createMonk(); monk.update(1 / 30, 0, "bind", 0); monk.group.updateMatrixWorld(true);
 const handReport = {};
@@ -190,8 +191,13 @@ const handReport = {};
         if (kr <= 0) continue;
         qk.slerpQuaternions(I0, q, kr); r.applyQuaternion(qk);
         const S = d.clone().multiplyScalar(r.dot(d) * sd).add(a.clone().multiplyScalar(r.dot(a) * sa)).add(z.clone().multiplyScalar(r.dot(z) * sz));
-        r.lerp(S, ks).add(W).addScaledVector(shift, ks); piece.P.set([r.x, r.y, r.z], i * 3);
-        const nn = new THREE.Vector3().fromArray(piece.N, i * 3).applyQuaternion(qk).normalize(); piece.N.set([nn.x, nn.y, nn.z], i * 3);
+        r.lerp(S, ks);
+        // past the knuckles the fingers bend toward the palm, CURL at the tips, as the code hand's fingers do (no finger
+        // bones: the hand is baked in this one natural shape, and the one hand bone carries it)
+        const tk = 0.5 * C.len, tt2 = r.dot(d); let curl = null;
+        if (piece.hand && tt2 > tk) { const ph = (CURL * Math.PI / 180) * Math.min(1, (tt2 - tk) / (C.len - tk)) * ks; curl = new THREE.Quaternion().setFromAxisAngle(a, ph); r.sub(d.clone().multiplyScalar(tk)).applyQuaternion(curl).add(d.clone().multiplyScalar(tk)); }
+        r.add(W).addScaledVector(shift, ks); piece.P.set([r.x, r.y, r.z], i * 3);
+        const nn = new THREE.Vector3().fromArray(piece.N, i * 3).applyQuaternion(qk); if (curl) nn.applyQuaternion(curl); nn.normalize(); piece.N.set([nn.x, nn.y, nn.z], i * 3);
       }
     }
     handReport[side] = { turnDeg: +(2 * Math.acos(Math.min(1, Math.abs(q.w))) * 180 / Math.PI).toFixed(0), scale: [sd, sa, sz].map((x) => +x.toFixed(2)), shiftCm: +(shift.length() * 100).toFixed(1) };

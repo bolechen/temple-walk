@@ -15,10 +15,22 @@
    "rev": "ffe719217079dd5318c1d47f6317b212a0c9f762"
   },
   {
+   "path": "hand-curl-closeup.png",
+   "bytes": 522526,
+   "sha256": "2f0377e8a37f2171bd9e1dd42b62ad4ae69e8cefaeeb97b9c7af94c60a4456c5",
+   "rev": "5d2830c13e68566a3725dc544230e37b33429eb8"
+  },
+  {
    "path": "hands-3col.png",
    "bytes": 1260512,
    "sha256": "734bfd884a54f2e0d79b7006cef41756a8f0c22b8f34f6425cd7764f0df5c67a",
    "rev": "ffe719217079dd5318c1d47f6317b212a0c9f762"
+  },
+  {
+   "path": "hands-close-curl.png",
+   "bytes": 2152137,
+   "sha256": "f0e0f42f63efcae62677486a9a9b38a4c751783c7d29fc0c28c72585c341eb8a",
+   "rev": "5d2830c13e68566a3725dc544230e37b33429eb8"
   },
   {
    "path": "hands-stand-before-after.png",
