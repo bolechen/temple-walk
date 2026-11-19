@@ -139,9 +139,10 @@ export function createGround(scene, shade, censer, paving) {
             bool kept=litIn(p)&&uLitter>.001; vec2 cov=kept?litCover(p):vec2(0.); float heap=cov.x; kept=kept&&cov.y>.001;
             if(src>.01||heap>.004){
               float lane0=abs(p.x)-1.7, sweep=smoothstep(-.1,.7,lane0)*.9+.1;
-              float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB);
-              // The leaves that lay here before he came (the broom has kept the lane all but clear of them this morning), and the heaps since.
-              float amt=1.3*src*uLitter*sweep*smoothstep(-.3,.1,dB)*mix(.015,2.4,clump)*(.4+1.6*foot)+heap;
+              // The leaves that lay here before he came (the broom has kept the lane all but clear of them this morning), and the heaps
+              // since. (Where only a heap lies the old leaves' clumping is not worked out: it is two noises a point.)
+              float amt=heap;
+              if(src>.01){ float clump=smoothstep(.4,.58,.65*fbm2(p*.32+17.)+.35*fbm2(p*1.3+3.)), foot=smoothstep(1.7,.1,dB); amt+=1.3*src*uLitter*sweep*smoothstep(-.3,.1,dB)*mix(.015,2.4,clump)*(.4+1.6*foot); }
               if(amt>.02) for(int L=0;L<3;L++){ if(L>0&&uLitBase<.5) break;   // the low tier draws the heaps as one layer
                 vec4 ll=litterLayer(p,amt*(L==0?1.:L==1?.8:.6),fm.a,float(L)*.9+.4);
                 if(ll.z>.01){
