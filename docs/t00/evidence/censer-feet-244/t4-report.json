@@ -1,0 +1,152 @@
+{
+  "started": "2026-11-19T01:23:18.892Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "16",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 47.5,
+      "ms": 21.05,
+      "cost": 11.15,
+      "loadMs": 16556,
+      "tris": 2000736,
+      "calls": 370,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        0,
+        29
+      ]
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "night",
+      "fps": 47.9,
+      "ms": 20.88,
+      "cost": 11.9,
+      "loadMs": 10790,
+      "tris": 1985324,
+      "calls": 368,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": null,
+      "at": [
+        0,
+        29
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "censer-day-0",
+      "file": "censer-day-0.png",
+      "tris": 1714236,
+      "calls": 307
+    },
+    {
+      "name": "censer-day-90",
+      "file": "censer-day-90.png",
+      "tris": 1137792,
+      "calls": 155
+    },
+    {
+      "name": "censer-day-180",
+      "file": "censer-day-180.png",
+      "tris": 1399222,
+      "calls": 218
+    },
+    {
+      "name": "censer-day-270",
+      "file": "censer-day-270.png",
+      "tris": 1482980,
+      "calls": 482
+    },
+    {
+      "name": "censer-night-0",
+      "file": "censer-night-0.png",
+      "tris": 1714236,
+      "calls": 309
+    },
+    {
+      "name": "censer-night-90",
+      "file": "censer-night-90.png",
+      "tris": 1137792,
+      "calls": 157
+    },
+    {
+      "name": "censer-night-180",
+      "file": "censer-night-180.png",
+      "tris": 1399222,
+      "calls": 220
+    },
+    {
+      "name": "censer-night-270",
+      "file": "censer-night-270.png",
+      "tris": 1482980,
+      "calls": 484
+    },
+    {
+      "name": "censer-wnight-0",
+      "file": "censer-wnight-0.png",
+      "tris": 1698824,
+      "calls": 305
+    },
+    {
+      "name": "censer-wnight-90",
+      "file": "censer-wnight-90.png",
+      "tris": 1122380,
+      "calls": 153
+    },
+    {
+      "name": "censer-wnight-180",
+      "file": "censer-wnight-180.png",
+      "tris": 1383810,
+      "calls": 216
+    },
+    {
+      "name": "censer-wnight-270",
+      "file": "censer-wnight-270.png",
+      "tris": 1467568,
+      "calls": 480
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "18416f71940bf764489704be212bde7c1751b98e",
+    "entry": "assets/index-DTDv4km6.js",
+    "files": 115,
+    "sha256": "be6b19ad60228e03506c6aed16220992449413809f33ec4ece2bf79d86a4ae09"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-19T01:26:44.851Z"
+}
