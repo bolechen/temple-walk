@@ -9,7 +9,7 @@
 // written plan (createWalker in site.js), which it holds; the fifth step moves the eye. `?walker=old` is the written plan
 // everywhere, with no code to roll back, until the sixth step deletes it.
 import { NO_FLOOR, cellOf } from "./walkgrid.js";
-import { MAX_DROP } from "./drop.js";
+import { MAX_DROP, LAND_OUT } from "./drop.js";
 
 /** The modes a page may be opened in: "mesh" (the default: the baked floor everywhere), "old" (the written plan). @param {string | null | undefined} q */
 /** How far round him the floor is averaged for the eye on a stair: half a tread (geo.js STAIR.tread is 0.34 m). */
@@ -26,16 +26,20 @@ export const walkerMode = (q) => (q === "old" ? "old" : "mesh");
  * hops (so an edge stops short of a stair's cheek or a column at its foot, as the written ones did).
  * @param {any} g @param {{ x0: number, x1: number, z0: number, z1: number } | null} box only edges whose middle is inside
  */
-export function ledgesOf(g, box = null, { min = 0.255, max = MAX_DROP, span = 0.6, even = 0.02, out: OUT = 0.9, round = 0.25 } = {}) {
+export function ledgesOf(g, box = null, { min = 0.255, max = MAX_DROP, span = 0.6, even = 0.02, outs = LAND_OUT, round = 0.25 } = {}) {
   const { nx, nz, step, height, state } = g, out = [];
   const hAt = (/** @type {number} */ k) => (height[k] === NO_FLOOR ? NaN : height[k] / 100 + g.base);
-  const far = Math.round(OUT / step), R = Math.round(round / step);
-  // (i, j) of a cell; is the ground OUT beyond it, along (di, dj), open and level a quarter of a metre round?
-  const lands = (/** @type {number} */ i, /** @type {number} */ j, /** @type {number} */ di, /** @type {number} */ dj) => {
-    const ci = i + di * far, cj = j + dj * far; if (ci < R || cj < R || ci >= nx - R || cj >= nz - R) return false;
-    const y = hAt(cj * nx + ci);
-    for (const [a, b] of [[0, 0], [R, 0], [-R, 0], [0, R], [0, -R]]) { const k = (cj + b) * nx + ci + a; if (state[k] || !(Math.abs(hAt(k) - y) <= 0.04)) return false; }
-    return true;
+  const R = Math.round(round / step);
+  // (i, j) of a cell; is the ground some way beyond it, along (di, dj), open and level where he would come down (drop.js
+  // findDrop: 0.9 m out, clear a quarter of a metre round; or nearer, clear a quarter of a metre along the edge)?
+  const lands = (/** @type {number} */ i, /** @type {number} */ j, /** @type {number} */ di, /** @type {number} */ dj, /** @type {number} */ top) => {
+    for (const [n, o] of outs.entries()) {
+      const far = Math.round(o / step), ci = i + di * far, cj = j + dj * far; if (ci < R || cj < R || ci >= nx - R || cj >= nz - R) continue;
+      const y = hAt(cj * nx + ci); if (!(top - y >= 0.2 && top - y <= max)) continue;
+      const pts = n === 0 ? [[0, 0], [R, 0], [-R, 0], [0, R], [0, -R]] : di ? [[0, 0], [0, R], [0, -R]] : [[0, 0], [R, 0], [-R, 0]];
+      if (pts.every(([a, b]) => { const k = (cj + b) * nx + ci + a; return !state[k] && Math.abs(hAt(k) - y) <= 0.04; })) return true;
+    }
+    return false;
   };
   // For an edge facing ±x, the cells of one column whose neighbour in the next column is lower, run along z; facing ±z,
   // of one row, run along x. A run breaks where a cell is shut, the fall is out of range, or the porch steps.
@@ -58,7 +62,7 @@ export function ledgesOf(g, box = null, { min = 0.255, max = MAX_DROP, span = 0.
         const top = hAt(k); let fall = top - hAt(kk);
         // (Past a lip too narrow to stand on, a little lower and shut: the base course under a platform's edge.)
         for (let n = 2; n <= 5 && fall >= 0 && fall < min && state[kk]; n++) { const far2 = L + d * n; if (far2 < 0 || far2 >= lines) break; fall = top - hAt(di ? s * nx + far2 : far2 * nx + s); if (!(fall < min)) break; }
-        if (state[k] || !(fall >= min && fall <= max) || !lands(di ? L : s, di ? s : L, di, dj)) { close(); continue; }
+        if (state[k] || !(fall >= min && fall <= max) || !lands(di ? L : s, di ? s : L, di, dj, top)) { close(); continue; }
         if (run && Math.abs(top - run.sum / run.n) > even) close();
         if (!run) run = { s0: s, n: 0, sum: 0 };
         run.n++; run.sum += top;

@@ -36,7 +36,12 @@ test('large drops have no route',()=>{
 });
 test('landing body clearance includes diagonal corners',()=>{
  const walker={room:null,heightAt:(x,z)=>z<0?.45:0,blocked:(x,z)=>x>.15&&z>1.05};
- assert.equal(findDrop(walker,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1),null);
+ // 0.9 m out a corner of what blocks is within a quarter of a metre: he does not come down there, but nearer, where it is clear (#274).
+ const plan=findDrop(walker,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1);
+ assert.ok(plan&&plan.to[2]<0.9-1e-9&&!walker.blocked(plan.to[0],plan.to[2]));
+ // and where nowhere out to 0.6 m is clear, there is no hop
+ const shut={room:null,heightAt:(x,z)=>z<0?.45:0,blocked:(x,z)=>z>0.5};
+ assert.equal(findDrop(shut,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1),null);
 });
 
 test("too short to step onto a stool, he hops up onto it with his own jump and comes down on its top", async () => {

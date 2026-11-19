@@ -7,6 +7,7 @@ import { inflateRawSync } from "node:zlib";
 const { buildSite, createWalker, SITE, LEVELS } = await import("../../app/src/site.js?real");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createGridWalker, gridsByPlace, walkerMode, ledgesOf, settle, gridBytes } = await import("../../app/src/gridwalker.js");
+const { findDrop } = await import("../../app/src/drop.js");
 const { decode, cellOf, NO_FLOOR } = await import("../../app/src/walkgrid.js");
 const { stride } = await import("../../app/src/stride.js");
 const { CUSHION, STOOL } = await import("../../app/src/geo.js");
@@ -191,6 +192,56 @@ test("every place a seal is earned and every spot outside a hall's door has open
   for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => { const s = settle(walker, r.room.door[0], r.room.door[1]); if (!s || walker.blocked(s.x, s.z)) bad.push(`inside the door of ${id}`); });
   assert.deepEqual(bad, [], "nowhere to stand");
   assert.ok(Object.keys(all).length >= 7, `${Object.keys(all).length} places`);
+});
+
+// No pocket (#274; the lead, after the owner found the tea house's back at once open and going nowhere): on every grid,
+// every open cell is walked to from where he comes in, by the same steps both ways (a neighbour no more than CLIMB higher
+// or lower, never round a shut corner), so from every cell he can reach he can walk back; and every hop down a porch's
+// edge comes down on an open cell, so that a hop never leaves him somewhere he cannot walk out of.
+test("on every grid every open cell is walked to from where he comes in and walks back, and every hop down lands on one", () => {
+  const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]], CLIMB = BAKE.CLIMB * 100 + 1e-6, lost = [];
+  for (const meta of file.header.grids) {
+    const g = decoded.grids.find((q) => q.id === meta.id), seen = new Uint8Array(g.nx * g.nz), todo = [];
+    for (const [sx, sz] of meta.seeds) { const k = cellOf(g, sx, sz); if (k >= 0 && !g.state[k]) { seen[k] = 1; todo.push(k); } }
+    while (todo.length) {
+      const k = todo.pop(), i = k % g.nx, j = (k - i) / g.nx;
+      for (const [a, b] of N8) {
+        const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= g.nx || jj >= g.nz) continue; const kk = jj * g.nx + ii;
+        if (seen[kk] || g.state[kk] || Math.abs(g.height[kk] - g.height[k]) > CLIMB || (a && b && (g.state[j * g.nx + ii] || g.state[jj * g.nx + i]))) continue;
+        seen[kk] = 1; todo.push(kk);
+      }
+    }
+    let open = 0, cut = 0, at = null; for (let k = 0; k < g.nx * g.nz; k++) if (!g.state[k]) { open++; if (!seen[k]) { cut++; at ||= [xOf(g, k), zOf(g, k)]; } }
+    if (cut) lost.push(`${g.id}: ${cut} of ${open} open cells not walked to, e.g. (${at.map((v) => v.toFixed(2))})`);
+  }
+  assert.deepEqual(lost, [], "open floor he cannot walk to (or back from)");
+  // Every hop down, from a spot along each edge where he would take off, comes down on an open cell.
+  let hops = 0; const bad = [];
+  for (const e of walker.drops) {
+    const ax = e.b[0] - e.a[0], az = e.b[1] - e.a[1], span = Math.hypot(ax, az);
+    for (let s = 0.3; s < span - 0.3; s += 0.5) {
+      const x = e.a[0] + (ax / span) * s - e.normal[0] * 0.25, z = e.a[1] + (az / span) * s - e.normal[1] * 0.25;
+      if (walker.blocked(x, z)) continue;
+      const plan = findDrop(walker, [e], x, z, e.normal[0], e.normal[1]); if (!plan) continue; hops++;
+      const k = cellOf(G, plan.to[0], plan.to[2]); if (k < 0 || G.state[k]) bad.push(`(${plan.to[0].toFixed(2)}, ${plan.to[2].toFixed(2)})`);
+    }
+  }
+  assert.ok(hops > 100, `${hops} hops tried`); assert.deepEqual(bad, [], "a hop comes down where he cannot stand");
+});
+
+// The tea house's back (#274; the owner, on main, found its west side neither walked nor hopped down from): the strip on its
+// platform there is walked round from the porch, the lane between the platform and the court's west wall is walked from both
+// ends, and he hops from one into the other.
+test("behind the tea house: its platform's back is walked, the lane behind it is walked from both ends, and he hops down into it", () => {
+  const b = site.buildings.find((q) => q.name === "茶寮"), mid = (b.z0 + b.z1) / 2, top = (x, z) => !walker.blocked(x, z) && walker.heightAt(x, z) > 0.4;
+  let strip = null, lane = null;
+  for (let x = b.x0 + 0.05; x < b.x0 + 1.2 && !strip; x += 0.05) if (top(x, mid)) strip = x;
+  for (let x = b.x0 - 0.05; x > b.x0 - 1.5 && !lane; x -= 0.05) if (!walker.blocked(x, mid) && walker.heightAt(x, mid) < 0.05) lane = x;
+  assert.ok(strip !== null && lane !== null, `no strip (${strip}) or lane (${lane}) behind the tea house`);
+  for (let z = b.z0 + 0.6; z < b.z1 - 0.6; z += 0.5) { assert.ok(top(strip, z), `the platform's back is shut at z=${z.toFixed(1)}`); assert.ok(!walker.blocked(lane, z), `the lane is shut at z=${z.toFixed(1)}`); }
+  assert.ok(!walker.blocked(lane, b.z0 - 0.3) || !walker.blocked(lane, b.z0 - 0.6), "the lane does not open onto the court at its south end");
+  assert.ok(!walker.blocked(lane, b.z1 + 0.3) || !walker.blocked(lane, b.z1 + 0.6), "the lane does not open onto the court at its north end");
+  const plan = findDrop(walker, walker.drops, strip, mid, -1, 0); assert.ok(plan, "no hop down off the platform's back"); assert.ok(!walker.blocked(plan.to[0], plan.to[2]) && plan.to[1] < 0.05, "the hop comes down in the lane");
 });
 
 test("the page keeps only the rows and columns a floor was reached in, cell for cell", () => {
