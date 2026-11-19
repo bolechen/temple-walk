@@ -120,6 +120,7 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   const deploy = jobOf(y, "deploy");
   assert.match(deploy, /needs: \[verify, quick\]/, "the canary waits for verify and the quick scenarios, by name");
   assert.match(deploy, /deploy -c wrangler\.canary\.jsonc/);
+  assert.match(deploy, /shell: bash\n\s*run: npx[^\n]*wrangler\.canary\.jsonc \| tee/, "a pipe to tee runs under pipefail (shell: bash), or a failed deploy shows green");
   assert.doesNotMatch(y, /wrangler\.production\.jsonc|CLOUDFLARE_PREVIEW_TOKEN.*deploy/, "pages.yml no longer touches the production Worker");
   const quick = jobOf(y, "quick");
   assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
