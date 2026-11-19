@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
-import { mergeStatic } from "./src/geo.js";
+import { mergeStatic, STAIR } from "./src/geo.js";
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain } from "./src/site.js";
 import { createSky, FOG, SUN_DIR, SHADOW_BOX } from "./src/sky.js";
 import { layerFog } from "./src/fog.js";
@@ -559,7 +559,7 @@ function frame(now) {
   if (len > 0) { const ux = vx / len, uz = vz / len; pace.v *= Math.max(0, ux * pace.dir[0] + uz * pace.dir[1]); pace.dir = [ux, uz]; }   // turned right round, he starts again
   if ((len > 0 || pace.v > 0) && !airborne) {
     const walkPace = keys.shift || Math.hypot(joy.x, joy.y) > 0.94 ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);
-    let want = len === 0 ? 0 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? keys.shift ? 1.6 : 1.25 : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
+    let want = len === 0 ? 0 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? STAIR.tread * (keys.shift ? STAIR.hurry : STAIR.steps) : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
     if (target) { let left = len, at = target; for (const p of route) { left += Math.hypot(p.x - at.x, p.z - at.z); at = p; } want = Math.min(want, Math.sqrt(2 * WALK.down * left) + 0.15); }
     if (Q.has("fast")) pace.v = len === 0 ? 0 : 14;
     else pace.v += Math.max(-WALK.down * dt, Math.min(WALK.up * dt, want - pace.v));
