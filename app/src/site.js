@@ -242,6 +242,8 @@ export function buildSite(M) {
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
     g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, jamb).translate(sx * R, jamb / 2, 1.103), new THREE.PlaneGeometry(0.9, jamb - 0.1).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), (jamb - 0.1) / 2, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
+    // Drawn as floor, but it is water: inside the sill the niche is the pool, which he looks into and does not wade (#274).
+    closed.push({ x0: 13.2 - w, x1: 13.2 + w, z0: T2.zS, z1: T2.zS + 1.1, why: "the dragon well's pool, inside its sill" });
     walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY });
   }
 

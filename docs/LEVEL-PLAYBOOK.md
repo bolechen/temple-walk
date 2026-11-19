@@ -52,7 +52,7 @@
 | `mesh.userData.walk = "floor"` | 要让他踩上去的东西，圆边、斜面也算（烘焙平常只把 15° 以内的面算作地：台阶是一级一级的踏面，垂带的斜顶不能站）。整件都是地：它的边不挡他，鞋够得着它的地方他就站在它的顶面上 | 山顶凌霄阁前的蒲团（`site.js`）；佛前和祖师案前的拜垫（`interior.js`：上香的站位就在垫上） | 命名地点检查（殿门、`lookback` 机位、上香的站位都在它上面）；`edges:grid` 膝盖以下 |
 | `mesh.userData.walk = false` | 画了但不在路上：不进烘焙 | 远处的雾片、光柱、调试面板画的格子（透明、`alphaTest`、`ShaderMaterial` 的材质已自动排除） | `edges:grid`、`nearplane:grid` |
 | 殿门 `hall.stop`（`site.js` 登记殿门那一行算出来的矩形） | 画出来开着、走进去由触发器管的门：门线以里关上 | 每座能进的殿 | `edges.test`「进殿在门槛」 |
-| `site.closed`（`site.js`，一个矩形加一句为什么） | 画出来是地面、却不该走进去的地方 | 山门两侧间（前后都是关着的板门，从门洞往旁边一步就进去了）；前院两侧竹林（竹子不进烘焙，边界只能写成意图；与旧 walker 的「竹林在两侧合拢」是同一个数 `SITE.GROVE_IN`）。#274 把其余各层查了一遍，没有要再关的 | `walk-diff`「画的地面能站、旧数据走不到的」一栏，每处超过 1 m² 都要在 PR 里说一句；慢测 `eyeroom` |
+| `site.closed`（`site.js`，一个矩形加一句为什么） | 画出来是地面、却不该走进去的地方 | 山门两侧间（前后都是关着的板门，从门洞往旁边一步就进去了）；前院两侧竹林（竹子不进烘焙，边界只能写成意图；与旧 walker 的「竹林在两侧合拢」是同一个数 `SITE.GROVE_IN`）。#274 把其余各层查了一遍，加了一处：龙井龛里的池子（石槛只有 0.24 米，比一步低，他原来能跨进去站在水面上） | `walk-diff`「画的地面能站、旧数据走不到的」一栏，每处超过 1 m² 都要在 PR 里说一句；慢测 `eyeroom` |
 | 座位 `site.seats` / 殿内 `seat()`、`sitAt()`（`kind`：`stool` / `cushion`） | 能坐的地方，和画它的同一行 | 每只蒲团和凳 | `gridwalker.test` 按 `CUSHION`/`STOOL` 的尺寸把画出来的坐具一个个找出来，对上座位 |
 | `site.places`、`rooms.spots`、`room.stair`、`site.lofts`、`site.views`、`HALL_VIEWS` | 要去的地方：打卡点、画框和功德箱、梯脚、平坐、机位 | — | `walk-diff` 与 `gridwalker.test`：有一个在格子上走不到就失败 |
 | `walk.roofs`、`shade` | 镜头和雪要知道的屋顶、铺地变暗的地方：由 `building.js` 按参数生成，不是手对的，留着 | — | `eaves`、`sweeps`、`shelter` |
