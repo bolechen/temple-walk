@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "hall-down.webm",
+   "bytes": 958517,
+   "sha256": "0bc424c9b0cae9ab0f7c894052f2709ccc81a5bbdd5a3f1f2f3126726e03c9c8",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  },
+  {
+   "path": "hall-up.webm",
+   "bytes": 699325,
+   "sha256": "e837a9981f5d5d8b476f355f8f0a57cf90f18b51951928bac6c758c502a0b0ec",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  },
+  {
+   "path": "hill-down.webm",
+   "bytes": 1780348,
+   "sha256": "913afc4f26d88f781b3ab5930de93191d077d6329d2aa65204f43f2c87ea739a",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  },
+  {
+   "path": "hill-up.webm",
+   "bytes": 1170580,
+   "sha256": "04e0c25104293d6cae7cd85a0070a25cb59a6c1618c9b7acf88c9aa725e65006",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  },
+  {
+   "path": "stair-film-collage.jpg",
+   "bytes": 559340,
+   "sha256": "e630cd641981f6b74add5ab4aa29d604140b7fa1e40b643ff30911a67f5b1200",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  },
+  {
+   "path": "summit-down.webm",
+   "bytes": 1034028,
+   "sha256": "3f229ed35f3b6b0ec64ec0bbef045ff08b1cca7ffdfca49aab38107b36970f34",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  },
+  {
+   "path": "summit-up.webm",
+   "bytes": 1026033,
+   "sha256": "1f15d1c1f828d6413a58da9853280bc827c6814b17483dd643381f8343eebcad",
+   "rev": "c0975a7fdd412fa014a2938b82f1630706bd6d5e"
+  }
+ ]
+}
