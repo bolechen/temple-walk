@@ -2,8 +2,9 @@
 
 目标地址统一用正式站 `https://temple.rushiwowen.co/`（`bolechen.github.io/temple-walk/` 已 404，README 已改，见 PR #257）。
 SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要在引流量与品牌搜索；GitHub/HF 的链接是可传递的。
+宣传口径（所有者 2026-11-19）：游戏后期计划收费，第三方平台放的是**免费预览版**；文案统一写明「免费预览版 / 早期版本，正式版计划收费」，并注明「源码公开但未开源」。
 
-## 已上线并核验（七处）
+## 已上线并核验（九处）
 
 | 位置 | 链接 | 状态 |
 |---|---|---|
@@ -14,6 +15,8 @@ SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要
 | Reddit r/threejs | https://www.reddit.com/r/threejs/comments/1xzxzql/beyond_the_mountain_gate_a_quiet_temple_walk/ | markdown 正文，2 个链接（游戏站带 `utm_source=reddit`） |
 | X（@avenger） | https://x.com/avenger/status/2123242790184427601 | 2 图 + 正式站链接 |
 | 仓库 README 首屏「体验原型（正式站）」 | https://github.com/bolechen/temple-walk#readme | PR #257 已合并（2026-11-19），线上已核验 |
+| itch.io | https://bolechen.itch.io/beyond-the-mountain-gate | 免费预览版，cover + 2 截图 + 英文简介 + 正式站链接（页面 HTML 含 `<a href="https://temple.rushiwowen.co">`） |
+| Game Jolt | https://gamejolt.com/games/beyond-the-mountain-gate-preview/1120313 | Devlog-Only 页面，缩略图 + 英文简介 + 正式站链接；未托管包（不拆玩家） |
 
 配图全部是正式站实机截图（夏昼照壁 `cam03`、秋暮回望 `lookback`、冬雪首院 `court`，`?shot=1` 无 UI），未做后期添加；文案按 `first-batch.md` 的调子（虚构寺名注明、不说还原径山寺、不说开放世界）。截图存在 `/private/tmp/claude-501/tw-{screen,lookback,snow}.jpg`（临时文件，重出命令见下）。
 
@@ -24,9 +27,9 @@ SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要
 - ~~**仓库 README 首屏链接**：PR #257 待合并，合并后生效。~~ 已合并上线，见上表。
 - **AxiomeCG/awesome-threejs PR #88**（Games 子节）：待维护者合并，合并即上线。fork 分支 `bolechen:awesome-threejs/add-temple-walk`。
 - ~~awesome-online-games/awesome-browser-games~~：**已放弃**——它要求先在自己网站发文回链它的仓库才肯合并（交换链接），backlink 规范里属中风险模式，不做。
-- **itch.io / IndieDB / Game Jolt 游戏页**：需所有者在 ego lite 人工登录后建页（素材见下节）。
+- **IndieDB 游戏页**：需所有者在 ego lite 人工登录后建页（素材见下节）。Game Jolt 另有一个未发布的 Early Access 草稿（id 1120311，路径 beyond-the-mountain-gate），因 GJ 强制要求上传包而弃用，留在 dashboard 未公开。
 - **重构后首发**（等树/远山/小沙弥定稿、T4 重拍素材）：小红书笔记（rushiwowen_co 号）、Product Hunt。这两处是「一次性首发」，按 #152 的调子不提前发。
 
-## 建页素材（itch / IndieDB / Game Jolt 通用）
+## 建页素材（IndieDB 通用）
 
-英文标题：**Beyond the Mountain Gate · 山门之外**；一句话：A slow, quiet temple walk in your browser — bamboo path, bell, tea, and 16 seasons of light. 玩游戏链接 `https://temple.rushiwowen.co`，源码 `https://github.com/bolechen/temple-walk`，封面用上表三张实机图。
+英文标题：**Beyond the Mountain Gate · 山门之外**；一句话：A slow, quiet temple walk in your browser — bamboo path, bell, tea, and 16 seasons of light. 玩游戏链接 `https://temple.rushiwowen.co`，源码 `https://github.com/bolechen/temple-walk`，封面用上表三张实机图。免费预览版口径同上。
