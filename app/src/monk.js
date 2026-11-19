@@ -630,7 +630,7 @@ export function createMonk() {
           if (launchY[sw] !== null && Math.abs(dh) > STAIRGAIT.kind) climbing += ((dh > 0 ? 1 : 0) - climbing) * ease(8);
           const follow = 1 - (1 - STAIRGAIT.upFollow) * smooth(0, 1, climbing);
           const H = follow * ((l0 * landY[0] + l1 * landY[1]) / (l0 + l1 || 1) - STAIRGAIT.sag) + (1 - follow) * bodyHeight;
-          pelvisRef = Math.abs(H - pelvisRef) > 1.2 ? H : damp(pelvisRef, H, 30, dt);
+          pelvisRef = Math.abs(H - pelvisRef) > 1.2 ? H : damp(pelvisRef, H, 12, dt);
           B.root.position.y += stairW * (clamp(pelvisRef - rootY, -0.35, 0.2) - lift);
           group.updateMatrixWorld(true);
         }

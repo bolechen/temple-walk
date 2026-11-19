@@ -1,10 +1,11 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import './dom-stub.mjs';import * as THREE from 'three';import {createWalker} from '../../app/src/site.js';import {createMonk} from '../../app/src/monk.js';import {stairGeo} from '../../app/src/geo.js';
+import './dom-stub.mjs';import * as THREE from 'three';import {createWalker} from '../../app/src/site.js';import {createMonk} from '../../app/src/monk.js';import {stairGeo,STAIR} from '../../app/src/geo.js';
+const V=STAIR.tread*STAIR.hurry;   // the fastest he goes on a flight (Shift)
 function sample(dt,descending){
  const rise=4,run=stairGeo(4,rise).run,w=createWalker({walk:{solids:[],decks:[],ramps:[{x0:-1.7,x1:1.7,z0:-.3,z1:run+.3,h:rise,low:[0,run],high:[0,0]}]}}),monk=createMonk();let last=null,max=0;
  for(let i=0;i<Math.round(2.5/dt);i++){
-  const z=descending?.1+i*1.25*dt:run-.2-i*1.25*dt;const y=w.heightAt(0,z);monk.group.position.set(0,y,z);monk.group.rotation.y=descending?Math.PI:0;
-  monk.update(dt,1.25,false,i*dt,w.heightAt,{heightAt:w.eyeAt,stairs:true});monk.group.updateMatrixWorld(true);
+  const z=descending?.1+i*V*dt:run-.2-i*V*dt;const y=w.heightAt(0,z);monk.group.position.set(0,y,z);monk.group.rotation.y=descending?0:Math.PI;   // he faces the way he walks: +z going down this flight (its foot is at +z), -z going up
+  monk.update(dt,V,false,i*dt,w.heightAt,{heightAt:w.eyeAt,stairs:true});monk.group.updateMatrixWorld(true);
   const bodyY=monk.group.position.y+monk.group.children[0].position.y;
   if(last!==null&&i>10)max=Math.max(max,Math.abs(bodyY-last));last=bodyY;assert.ok(monk.group.position.y>=y-1e-6,'physical support must stay on the tread');
  }
