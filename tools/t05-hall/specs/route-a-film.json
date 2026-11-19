@@ -1,0 +1,54 @@
+{
+ "out": "tools/out/t05/route-a-film",
+ "size": [
+  1600,
+  900
+ ],
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+   "x": 0,
+   "h": 9.0,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 3,
+    "tips": 9
+   }
+  },
+  {
+   "url": "tools/out/t05/tripo/kasyapa-a.60k.glb",
+   "x": 5.8,
+   "h": 8.8,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 2,
+    "tips": 0
+   }
+  },
+  {
+   "url": "tools/out/t05/tripo/sakyamuni-a.60k.glb",
+   "x": -5.8,
+   "h": 8.8,
+   "paint": "clay",
+   "turn": -1.5708,
+   "yaw": 0.12,
+   "halo": {
+    "rings": 4,
+    "tips": 0,
+    "head": 1.7
+   }
+  }
+ ],
+ "film": {
+  "name": "walk-winter",
+  "mood": "winter",
+  "fps": 24,
+  "size": [
+   1280,
+   720
+  ],
+  "secs": 20
+ }
+}

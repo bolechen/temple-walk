@@ -310,7 +310,7 @@ function walk(t) {
   const z = t < tWalk ? z0 - v * t : z1, k = Math.max(0, Math.min(1, (t - tWalk) / 6)), e = k * k * (3 - 2 * k);
   const inside = Math.max(0, Math.min(1, (2 - z) / 6));
   camera.fov = 55; camera.position.set(0, F + 1.6 + Math.sin(t * 2 * Math.PI * 1.75) * 0.012 * (t < tWalk ? 1 : 0), z);
-  camera.lookAt(0, F + 1.6 + 1.2 + e * 7.2 + inside * 1.2, SZ); camera.updateProjectionMatrix();
+  const level = F + 2.8 + inside * 1.2; camera.lookAt(0, level + e * (F + 9.0 - level), SZ);   // the eye ends on the face (about 9 m up) camera.updateProjectionMatrix();
   renderer.toneMappingExposure = (1.4 + inside * 3.6) * exposureScale;
   return tWalk + 7;
 }
@@ -322,8 +322,10 @@ function buildComposer() {
   ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 2, scale: 1, samples: 12 }); composer.addPass(ao); composer.addPass(new OutputPass());
 }
 function render() { if (useAO) { if (!composer) buildComposer(); composer.render(); } else renderer.render(scene, camera); }
-// what one plain pass of the scene draws (GTAO draws the scene again for its normals; that is not counted here)
-function stats() { renderer.info.reset(); renderer.render(scene, camera); return { tris: renderer.info.render.triangles, calls: renderer.info.render.calls }; }
+// what one plain pass of the scene draws, as every frame after the first does (GTAO draws the scene again for its normals,
+// and the shadow map is drawn only when the light changes; neither is counted here)
+function stats() { if (renderer.shadowMap.needsUpdate) renderer.render(scene, camera);   // draw the (static) shadow map first, so only the frame itself is counted
+  renderer.info.reset(); renderer.render(scene, camera); return { tris: renderer.info.render.triangles, calls: renderer.info.render.calls }; }
 // what a frame costs with the card made to finish it (as the site's __cost does): mean milliseconds over n frames
 function cost(n = 60) { const gl = renderer.getContext(); render(); gl.finish(); const t0 = performance.now(); for (let i = 0; i < n; i++) { render(); gl.finish(); } return (performance.now() - t0) / n; }
 

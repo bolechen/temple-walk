@@ -82,15 +82,5 @@
    "view": "front10",
    "mood": "winter"
   }
- ],
- "film": {
-  "name": "walk-winter",
-  "mood": "winter",
-  "fps": 24,
-  "size": [
-   1280,
-   720
-  ],
-  "secs": 20
- }
+ ]
 }
