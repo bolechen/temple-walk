@@ -46,6 +46,7 @@ function dress(m) { if (!body) return; const { geometries, material, robeColor }
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {
+  bind: (m) => { m.update(1 / 30, 0, "bind", 0); },
   stand: (m) => { for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {}); },
   pray: (m) => { for (let i = 0; i < 90; i++) m.update(1 / 30, 0, "pray", i / 30, () => 0, {}); },
   walk: (m, f = 52) => { for (let i = 0; i <= f; i++) m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); },
@@ -59,7 +60,7 @@ const POSES = {
     bowl.position.copy(cup); scene.add(bowl);
     for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * 0.068, 0.034, 0.012).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
   }),
-  incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; B.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),
+  incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; const [by, bz] = stage.brow || [0.15, 0.15]; B.head.localToWorld(h.at.set(s * 0.0125, by, bz)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),
 };
 const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.035, 0.05, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0x3d3a36, roughness: 0.5, side: THREE.DoubleSide }));
 function hold(m, set) {
@@ -75,7 +76,7 @@ function shot(pose, yaw, pitch = 0.08, frame, near = 1) {
   floor.position.y = pose === "chair" ? -0.44 : pose === "sit" ? -0.104 : 0;
   const cy = (seated ? 0.35 : 0.6) * (near > 1 ? 0.0 : 1) + (near > 1 ? stage.focus ?? (seated ? 0.3 : 0.6) : 0), d = 3.3 / near;
   camera.position.set(Math.sin(yaw) * Math.cos(pitch) * d, cy + Math.sin(pitch) * d, Math.cos(yaw) * Math.cos(pitch) * d);
-  camera.lookAt(0, cy, 0); renderer.render(scene, camera);
+  const fx = near > 1 ? stage.focusX || 0 : 0; camera.position.x += fx; camera.lookAt(fx, cy, 0); renderer.render(scene, camera);
   return renderer.domElement.toDataURL("image/png");
 }
 const stage = { load, use, shot, ready: true, focus: null };

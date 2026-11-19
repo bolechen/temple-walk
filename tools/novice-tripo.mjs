@@ -49,9 +49,9 @@ const PIECES = {
   tripo_part_8: { what: "head", part: "skin", tile: 1024, keep: 0.8 },
   tripo_part_2: { what: "right ear", part: "skin", tile: 128, keep: 0.6 },
   tripo_part_12: { what: "left ear", part: "skin", tile: 128, keep: 0.6 },
-  tripo_part_0: { what: "right hand", part: "skin", tile: 256, keep: 0.8 },
-  tripo_part_15: { what: "left hand", part: "skin", tile: 256, keep: 0.8 },
-  tripo_part_14: { what: "left forearm", part: "skin", tile: 256, keep: 0.8 },
+  tripo_part_0: { hand: "right", what: "right hand", part: "skin", tile: 256, keep: 0.8 },
+  tripo_part_15: { hand: "left", what: "left hand", part: "skin", tile: 256, keep: 0.8 },
+  tripo_part_14: { arm: "left", what: "left forearm", part: "skin", tile: 256, keep: 0.8 },
   tripo_part_6: { robeBody: true, what: "upper robe", part: "robe", tile: 512, keep: 0.7 },
   tripo_part_1: { what: "right sleeve", part: "robe", tile: 512, keep: 0.7, skinInside: true },
   tripo_part_13: { what: "left sleeve", part: "robe", tile: 512, keep: 0.7 },
@@ -139,6 +139,66 @@ function distanceTo(S, p) {
   return out;
 }
 
+// ---- 1a. the hands, made to the skeleton's hands ----
+// Tripo's hands hang with the palm to the thigh and the fingers spread front to back, larger than the hands of the
+// figure built in code and some 3 cm off the line of its hand bones. Every observance turns the hand bone so that the
+// code hand's palm (forward in the bind pose) faces where it should, so these palms came out facing forward or back, did
+// not meet when he put his palms together, and covered his face at the tea and the incense (#246, second round). Each
+// hand is turned about the forearm so that its palm faces forward, scaled toward the code hand's length, width and
+// thickness (HAND: 1 is the code hand's size, 0 leaves Tripo's), and its middle moved onto the bone's line; all of it
+// comes in over the first 2.5 cm past the wrist, so the wrist still meets the forearm.
+const HAND = +(process.env.HAND ?? 1);
+const { createMonk } = await import("../app/src/monk.js");
+const monk = createMonk(); monk.update(1 / 30, 0, "bind", 0); monk.group.updateMatrixWorld(true);
+const handReport = {};
+{
+  const at = (n) => monk.bones[n].getWorldPosition(new THREE.Vector3());
+  const codeHand = (side) => {   // the code hand: length past the wrist, width across, thickness front to back, middle from the bone
+    const g = monk.parts.skin.geometry, p = g.attributes.position, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, hb = monk.skeleton.bones.findIndex((b) => b.name === side + "Hand");
+    const wr = at(side + "Hand"), d = wr.clone().sub(at(side + "LowerArm")).normalize(), z = new THREE.Vector3(0, 0, 1), a = d.clone().cross(z).normalize(), pts = [];
+    for (let i = 0; i < p.count; i++) { let w = 0; for (let k = 0; k < 4; k++) if (si.getComponent(i, k) === hb) w += sw.getComponent(i, k); if (w > 0.6) pts.push(new THREE.Vector3().fromBufferAttribute(p, i).sub(wr)); }
+    const ext = (v) => { const t = pts.map((q) => q.dot(v)); return [Math.min(...t), Math.max(...t)]; }, c = pts.reduce((s, q) => s.add(q), new THREE.Vector3()).divideScalar(pts.length);
+    return { d, a, z, len: ext(d)[1], wid: ext(a)[1] - ext(a)[0], thick: ext(z)[1] - ext(z)[0], c: { a: c.dot(a), z: c.dot(z) } };
+  };
+  for (const p of Object.values(pieces).filter((q) => q.hand)) {
+    const side = p.hand, C = codeHand(side), wr = at(side + "Hand"), { d, a, z } = C, n = p.P.length / 3, v = new THREE.Vector3();
+    // the wrist: where the bone's wrist lies across this arm (Tripo's hand pieces run some way up the forearm)
+    const t = Array.from({ length: n }, (_, i) => v.fromArray(p.P, i * 3).sub(wr).dot(d)), W = new THREE.Vector3(); let m = 0;
+    for (let i = 0; i < n; i++) if (Math.abs(t[i]) < 0.012) { W.add(v.fromArray(p.P, i * 3)); m++; }
+    W.divideScalar(m); W.sub(d.clone().multiplyScalar(W.clone().sub(wr).dot(d)));   // on the wrist's plane
+    // the palm's normal: the direction in which the hand is thinnest, across the forearm, turned toward his middle
+    const pts = Array.from({ length: n }, (_, i) => new THREE.Vector3().fromArray(p.P, i * 3).sub(W)), past = pts.filter((r) => r.dot(d) > 0);
+    let best = null, bestW = Infinity; for (let k = 0; k < 180; k += 2) { const ang = k * Math.PI / 180, u = a.clone().applyAxisAngle(d, ang), e = past.map((q) => q.dot(u)), w = Math.max(...e) - Math.min(...e); if (w < bestW) { bestW = w; best = u; } }
+    if (best.x * (side === "left" ? -1 : 1) < 0) best.negate();   // toward his middle: that is where the palm faces, hanging
+    const q = new THREE.Quaternion().setFromUnitVectors(best, z);   // both lie across the forearm, so this turns about it
+    const turned = pts.map((r) => r.clone().applyQuaternion(q));
+    const ext = (u) => { const e = turned.filter((r) => r.dot(d) > 0).map((r) => r.dot(u)); return [Math.min(...e), Math.max(...e)]; };
+    const [, l1] = ext(d), [a0, a1] = ext(a), [z0, z1] = ext(z), mix = (from, to) => 1 + HAND * (to / from - 1);
+    if (process.env.HAND_DEBUG) console.log(side, "code", JSON.stringify(C, (k, x) => (typeof x === "number" ? +x.toFixed(3) : x)), "tripo len", l1.toFixed(3), "wid", (a1 - a0).toFixed(3), "thick", (z1 - z0).toFixed(3), "wrist from bone", W.clone().sub(wr).toArray().map((x) => x.toFixed(3)), "n", n);
+    const sd = mix(l1, C.len), sa = mix(a1 - a0, C.wid), sz = mix(z1 - z0, C.thick);
+    const scaled = turned.map((r) => d.clone().multiplyScalar(r.dot(d) * sd).add(a.clone().multiplyScalar(r.dot(a) * sa)).add(z.clone().multiplyScalar(r.dot(z) * sz)));
+    // its middle onto the bone's line, as the code hand's is (across and front to back; along the arm it stays)
+    const fwd = scaled.filter((r, i) => pts[i].dot(d) > 0), mid = fwd.reduce((s, r) => s.add(r), new THREE.Vector3()).divideScalar(fwd.length).add(W).sub(wr);
+    const shift = a.clone().multiplyScalar(HAND * (C.c.a - mid.dot(a))).add(z.clone().multiplyScalar(HAND * (C.c.z - mid.dot(z))));
+    const sm = (x0, x1, x) => { const u = Math.min(1, Math.max(0, (x - x0) / (x1 - x0))); return u * u * (3 - 2 * u); };
+    // The turn is spread along the last 10 cm of the forearm, as a forearm rolls over; the size and the move come in over
+    // the wrist. The forearm's own pieces go with it, so nothing parts at the wrist.
+    const I0 = new THREE.Quaternion(), qk = new THREE.Quaternion();
+    for (const piece of Object.values(pieces).filter((o) => o.hand === side || o.arm === side)) {
+      for (let i = 0; i < piece.P.length / 3; i++) {
+        const r = new THREE.Vector3().fromArray(piece.P, i * 3).sub(W), tt = r.dot(d), kr = sm(-0.1, 0, tt), ks = sm(-0.005, 0.02, tt);
+        if (kr <= 0) continue;
+        qk.slerpQuaternions(I0, q, kr); r.applyQuaternion(qk);
+        const S = d.clone().multiplyScalar(r.dot(d) * sd).add(a.clone().multiplyScalar(r.dot(a) * sa)).add(z.clone().multiplyScalar(r.dot(z) * sz));
+        r.lerp(S, ks).add(W).addScaledVector(shift, ks); piece.P.set([r.x, r.y, r.z], i * 3);
+        const nn = new THREE.Vector3().fromArray(piece.N, i * 3).applyQuaternion(qk).normalize(); piece.N.set([nn.x, nn.y, nn.z], i * 3);
+      }
+    }
+    handReport[side] = { turnDeg: +(2 * Math.acos(Math.min(1, Math.abs(q.w))) * 180 / Math.PI).toFixed(0), scale: [sd, sa, sz].map((x) => +x.toFixed(2)), shiftCm: +(shift.length() * 100).toFixed(1) };
+  }
+  console.log(`hands (HAND ${HAND}): ${JSON.stringify(handReport)}`);
+}
+
 // ---- 2. the completed trousers: drop the closed cuffs, colour what came without texture ----
 {
   const p = pieces.tripo_part_7, orig = readPiece(docs.seg, "tripo_part_7"); turn(orig.P); stand(orig.P);
@@ -187,7 +247,7 @@ for (const p of Object.values(pieces).filter((q) => q.skinInside)) {
   // islands smaller than a forearm are flecks in the cloth
   const n = skinT.reduce((a, b) => a + b, 0);
   const skin = filter(p, (t) => skinT[t]), cloth = filter(p, (t) => !skinT[t]);
-  pieces[p.name + "_skin"] = { ...p, name: p.name + "_skin", what: "right forearm", part: "skin", ...skin, shareTile: p.name };
+  pieces[p.name + "_skin"] = { ...p, name: p.name + "_skin", what: "right forearm", part: "skin", arm: "right", ...skin, shareTile: p.name };
   Object.assign(p, cloth);
   console.log(`${p.what}: ${n} triangles of bare forearm moved to the skin`);
 }
@@ -299,8 +359,6 @@ for (const p of Object.values(pieces)) {
 console.log(`atlas: ${order.length} tiles, base ${OUT_BASE} px ${(baseImg.length / 1e3).toFixed(0)} kB, normal ${OUT_NORMAL} px ${(normalImg.length / 1e3).toFixed(0)} kB, roughness ${roughness}, trousers' plain colour rgb(${legColor})`);
 
 // ---- 7. weights ----
-const { createMonk } = await import("../app/src/monk.js");
-const monk = createMonk(); monk.update(1 / 30, 0, "bind", 0); monk.group.updateMatrixWorld(true);
 const boneNames = monk.skeleton.bones.map((b) => b.name);
 // all pieces as one surface, to weigh and weld together
 const all = { P: [], I: [], part: [], piece: [] }; let base = 0;
