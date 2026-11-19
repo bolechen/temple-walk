@@ -24,7 +24,7 @@ const srv = http.createServer((req, res) => {
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
   let done = 0; const rows = [];
   for (const s of at) {
-    const r = await p.evaluate(([n]) => window.__litter(n), [s - done]); done = s;
+    const r = await p.evaluate(([n]) => (window.__litter ? window.__litter(n) : null), [s - done]); done = s;
     await p.evaluate(() => new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok))));
     await p.waitForTimeout(800);
     const file = path.join(out, `${tag}${season}-${time}-${s}.png`); await p.screenshot({ path: file });
