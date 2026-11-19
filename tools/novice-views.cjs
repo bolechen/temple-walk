@@ -11,7 +11,7 @@
 // move him (monk.update, frame by frame from his rest pose). `--code` shows the body built in code; `--glb` a sculpted one
 // from any file in novice.glb's format, so the shipped file and a rebuilt one can be set beside each other without
 // touching app/. Given more than one of them (issue #246), each pose's row holds every body's views in the order given,
-// with a gap between bodies. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
+// with a gap between bodies. `--near=<k>` comes k times closer, looking at height `--focus=<m>`; `--faces` paints back faces magenta on a green ground (a hole shows green); `--hide=legs,skin` leaves parts out. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
 // quick look while a body is being adjusted. The walking row is frame 52 of a stride from standing (`--walk` for another).
 // The page itself, the light and the paving are portrait.js's job; this is for the shape and the seams.
 const { chromium } = require("playwright");
@@ -24,6 +24,7 @@ for (const a of process.argv.slice(2)) { if (a === "--code") bodies.push(null); 
 if (!bodies.length) bodies.push(path.join(here, "../app/shared/models/novice.glb"));
 const nameOf = (g) => (g ? path.basename(g, ".glb") : "code");
 const dest = path.resolve(arg("out", path.join(out, `novice-views-${bodies.map(nameOf).join("+")}.png`))), walkFrame = +arg("walk", 52);
+const near = +arg("near", 1), focus = arg("focus", null);
 const onlyPoses = arg("poses", null)?.split(","), onlySides = arg("sides", null)?.split(",");
 
 (async () => {
@@ -46,6 +47,9 @@ const onlyPoses = arg("poses", null)?.split(","), onlySides = arg("sides", null)
   await p.goto(`http://127.0.0.1:${srv.address().port}/`); await p.waitForFunction(() => window.stage?.ready, null, { timeout: 120000 });
   const urls = bodies.map((g) => (g ? `body${files.indexOf(g)}.glb` : null));
   for (const u of urls) if (u) await p.evaluate((u) => window.stage.load(u), u);
+  if (process.argv.includes("--faces")) await p.evaluate(() => { window.stage.faces = true; });
+  if (arg("hide", null)) await p.evaluate((h) => { window.stage.hide = h.split(","); }, arg("hide"));
+  if (focus) await p.evaluate((f) => { window.stage.focus = f; }, +focus);
   const F = 0, S = Math.PI / 2, B = Math.PI, A = Math.PI / 4;   // front, his left side, behind, front-left from above
   const SIDES = [["正", F], ["侧", S], ["背", B], ["斜俯", A, 0.6]].filter(([n]) => !onlySides || onlySides.includes(n));
   const ROWS = [["站立", "stand"], ["合掌", "pray"], ["走路", "walk"], ["坐凳", "chair"], ["盘坐", "sit"], ["吃茶", "tea"], ["举香", "incense"]].filter(([, k]) => onlyPoses || (k !== "tea" && k !== "incense")).filter(([, k]) => !onlyPoses || onlyPoses.includes(k));
@@ -55,7 +59,7 @@ const onlyPoses = arg("poses", null)?.split(","), onlySides = arg("sides", null)
     for (const u of urls) {
       await p.evaluate((u) => window.stage.use(u), u);
       const shots = [];
-      for (const [side, yaw, pitch] of SIDES) shots.push([side, await p.evaluate(([pose, yaw, pitch, f]) => window.stage.shot(pose, yaw, pitch, f), [pose, yaw, pitch ?? 0.08, walkFrame])]);
+      for (const [side, yaw, pitch] of SIDES) shots.push([side, await p.evaluate(([pose, yaw, pitch, f, n]) => window.stage.shot(pose, yaw, pitch, f, n), [pose, yaw, pitch ?? 0.08, walkFrame, near])]);
       groups.push(shots);
     }
     sheet.push([label, groups]);

@@ -155,6 +155,20 @@ function distanceTo(S, p) {
   console.log(`trousers: ${nMade} of ${before} triangles made by the completion; ${before - p.I.length / 3} closing the cuffs dropped`);
 }
 
+// ---- 2a. the trousers are slimmed where the skirt hides them ----
+// Tripo's trousers are as baggy under the skirt as below it. Seated, monk.js lifts the front of the skirt onto his lap,
+// and thighs this full came up through it; nothing of them shows standing above the hem, so there they are drawn in
+// towards each leg's own line (SLIM: by how much, from 0.40 m up; none below 0.36, where the bulge over the leg wraps shows).
+const SLIM = { k: +(process.env.SLIM ?? 0.75), from: 0.36, full: 0.4, top: 0.6 };
+{
+  const p = pieces.tripo_part_7, sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let v = 0; v < p.P.length / 3; v++) {
+    const x = p.P[v * 3], y = p.P[v * 3 + 1], z = p.P[v * 3 + 2], s = 1 - (1 - SLIM.k) * sm(SLIM.from, SLIM.full, y) * sm(SLIM.top, SLIM.top - 0.08, y);
+    const ax = Math.sign(x || 1) * 0.085 * sm(0.62, 0.5, y);   // each leg's own line, meeting at his middle by the waist
+    p.P[v * 3] = ax + (x - ax) * s; p.P[v * 3 + 2] = z * s;
+  }
+}
+
 // ---- 3. the bare forearm inside the right sleeve goes to the skin ----
 const hsv = (r, g, b) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let h = 0; if (d) h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [h * 60, mx ? d / mx : 0, mx]; };
 const rawOf = async (img) => { const { data, info } = await sharp(Buffer.from(img)).removeAlpha().raw().toBuffer({ resolveWithObject: true }); return { data, w: info.width, h: info.height }; };
@@ -294,8 +308,28 @@ const { J, W } = transferWeights(P0, vparts, monk, PARTS);
 // The body of the robe (the upper robe, the belt, the skirt and what fills it behind the sash) takes the robe's weights
 // as monk.js gives them, by height and by the way each point faces (ROBE_BODY): the built figure's robe has an opening
 // down its front where this skirt is closed, and the nearest of its vertices tore this one open there when he sat.
+// Seated on a stool, monk.js lifts the front of its skirt on the robeFront bone onto his lap. This skirt hangs further
+// before that bone's pivot than the built figure's and over fuller thighs: lifted, it stood level some 9 cm above the
+// knees, or (where the thighs are full) inside them, and from before him one looked under it at the trousers.
+// So the front half below his hips is weighted (#246, second round):
+//   - either side of his middle, with the thigh under it (THIGH, full beyond 7 cm from the middle): cloth that turns with
+//     the thigh it lies on stays outside it;
+//   - in the middle, between the thighs, robeFront still, with HEM_HIPS of it left on the hips toward the hem, so that
+//     lifted it slopes down from the sash onto the lap rather than standing out above it.
+// Walking, the two thighs swing either way and the middle keeps robeFront's motion, so the hem moves much as before.
+const THIGH = +(process.env.THIGH ?? 1), HEM_HIPS = +(process.env.HEM_HIPS ?? 0.45);
+function thighFront(w, x, y, z) {
+  const sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const c = Math.cos(Math.atan2(x, z)), front = sm(-0.1, 0.5, c);
+  const hold = HEM_HIPS * front * sm(0.47, 0.31, y) * sm(0.09, 0.02, Math.abs(x));
+  if (hold > 0) { const t = w.reduce((a, [, v]) => a + v, 0); w = w.map(([n, v]) => [n, v * (1 - hold)]); w.push(["hips", hold * t]); }
+  const k = THIGH * front * sm(0.53, 0.42, y) * sm(0.0, 0.07, Math.abs(x)); if (k <= 0) return w;
+  const left = sm(-0.05, 0.05, x), out = w.map(([n, v]) => [n, v * (1 - k)]), tot = w.reduce((a, [, v]) => a + v, 0);
+  out.push(["leftUpperLeg", k * tot * left], ["rightUpperLeg", k * tot * (1 - left)]);
+  return out.filter(([, v]) => v > 1e-5);
+}
 for (const p of list) if (p.robeBody) for (let i = p.offset; i < p.offset + p.P.length / 3; i++) {
-  const w = robeWeights(P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]).sort((a, b) => b[1] - a[1]).slice(0, 4), s = w.reduce((a, [, v]) => a + v, 0);
+  const w = thighFront(robeWeights(P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]), P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]).sort((a, b) => b[1] - a[1]).slice(0, 4), s = w.reduce((a, [, v]) => a + v, 0);
   for (let j = 0; j < 4; j++) { J[i * 4 + j] = w[j] ? boneNames.indexOf(w[j][0]) : 0; W[i * 4 + j] = w[j] ? w[j][1] / s : 0; }
 }
 const nArm = armWeights(P0, vparts, J, W, monk);
