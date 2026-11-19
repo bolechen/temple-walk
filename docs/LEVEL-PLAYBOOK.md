@@ -45,6 +45,7 @@
 | `mesh.userData.walk = "floor"` | 一个面陡过 15° 却要让他站上去的东西（烘焙只把 15° 以内的面算作地，台阶是一级一级的踏面，不是斜坡；垂带的斜顶因此不能站） | 山顶凌霄阁前的蒲团，圆边也算（`site.js`） | `walk-bake` 的命名地点检查（门、`lookback` 机位都在它上面） |
 | `mesh.userData.walk = false` | 画了但不在路上：不进烘焙 | 远处的雾片、光柱（透明、`alphaTest`、`ShaderMaterial` 的材质已自动排除） | `edges`、`nearplane` |
 | 殿门 `hall.stop`（`site.js` 登记殿门那一行算出来的矩形） | 画出来开着、走进去由触发器管的门：门线以里关上 | 每座能进的殿 | `edges.test`「进殿在门槛」 |
+| `site.closed`（`site.js`，一个矩形加一句为什么） | 画出来是地面、却不该走进去的地方：两边关着门的山门侧间（从门洞往旁边一步就进去了），前院两侧竹林（竹子不进烘焙，竹林的边界只能写成意图；与旧 walker 的「竹林在两侧合拢」是同一个数 `SITE.GROVE_IN`） | 山门两侧间、前院两侧 | `walk-diff`「画的地面能站、旧数据走不到的」一栏，每处超过 1 m² 都要在 PR 里说是旧数据漏了还是该关；慢测 `eyeroom` 断言能到的格子不在院墙外、眼离远景片子不少于 1.2 米 |
 | 座位 `site.seats`（`kind`：`stool` / `cushion`） | 能坐的地方 | 照旧手写，和画它的同一行 | `gridwalker.test` 按 `CUSHION`/`STOOL` 的尺寸把画出来的坐具一个个找出来，对上座位 |
 | `site.places`、层与入口（烘焙的种子）、`walk.roofs`、`shade` | 要点的地方；从哪里进；镜头和雪要知道的屋顶（由 `building.js` 生成） | — | `walk-diff`：命名地点有一个走不到就失败 |
 

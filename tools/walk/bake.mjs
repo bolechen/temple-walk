@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 19,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 20,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -335,7 +335,8 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     }
   }
   T.push(performance.now());
-  // A doorway he is taken in at, beyond that line (the plan's intent, `hall.stop`: the door is drawn open).
+  // What the plan closes though it is drawn as floor: a doorway he is taken in at, beyond that line (`hall.stop`: the door is
+  // drawn open), and `site.closed` (the gate's shut side bays, the bamboo either side of the forecourt).
   for (const c of closed) for (let j = Math.max(0, Math.floor((c.z0 - box.z0) / step)); j < Math.min(nz, Math.ceil((c.z1 - box.z0) / step)); j++) for (let i = Math.max(0, Math.floor((c.x0 - box.x0) / step)); i < Math.min(nx, Math.ceil((c.x1 - box.x0) / step)); i++) {
     const x = cx(i), z = cz(j), k = j * nx + i; if (x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1 && !state[k]) state[k] = 1 + DOOR;
   }

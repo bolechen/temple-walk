@@ -1928,7 +1928,10 @@ const scenarios = {
       for (let k = 0; k < 3; k++) { await t.page.keyboard.press("Space"); await t.until(async () => !(await t.state()).jumping, 120000, "he did not come down at the tea table"); await t.frames(2); }
       await t.page.keyboard.up("w"); if (shift) await t.page.keyboard.up("Shift");
       const tea = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
-      const inside = tea.filter(([px, pz]) => px > -14.09 - 0.37 && px < -13.57 + 0.37 && pz > tz - 0.75 - 0.37 && pz < tz + 0.75 + 0.37);
+      // (How near: the written plan keeps him BODY, 0.37 m, off the table's rectangle; the grid baked from the drawn meshes keeps
+      // him his outline's reach at the table's height, 0.343 m, less half a cell (#265, as tests/unit/walkers.mjs keptOff).)
+      const m = (await t.page.evaluate(() => window.__walker().mode)) === "old" ? 0.37 : 0.343 - 0.046;
+      const inside = tea.filter(([px, pz]) => px > -14.09 - m && px < -13.57 + m && pz > tz - 0.75 - m && pz < tz + 0.75 + m);
       expect(tea.some((q) => q[3]) && inside.length === 0, `jumping at the tea table from (${x}, ${z}) he came within his width of it: ${JSON.stringify(inside.slice(0, 3))} (${tea.length} frames outdoors, ${tea.filter((q) => q[3]).length} in the air)`);
       expect(tea.filter((q) => !q[3]).every((q) => Math.abs(q[2] - 0.45) < 0.01), `between jumps at the tea table he should stand on the porch (from ${x}, ${z}): ` + JSON.stringify(tea.slice(0, 2)) + JSON.stringify(tea.filter((q) => !q[3] && Math.abs(q[2] - 0.45) >= 0.01).slice(0, 3)));
     }

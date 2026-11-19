@@ -44,7 +44,7 @@ export function buildDrawn() {
 export function gridsOf({ site, scene, rooms }) {
   const out = [];
   const [x, z0, z1] = [SITE.x + 10, SITE.zN - 1, Math.ceil(APPROACH.end) + 2];
-  out.push({ id: "outdoors", kind: "outdoors", name: "院落与山路", box: { x0: -x, x1: x, z0, z1, top: 60, bottom: -30 }, base: 0, seeds: [[site.start[0], site.start[1], -1e9]], closed: site.halls.map((h) => h.stop).filter(Boolean), roots: [scene], enter: (w) => { w.setRoom(null); w.setLoft?.(null); } });
+  out.push({ id: "outdoors", kind: "outdoors", name: "院落与山路", box: { x0: -x, x1: x, z0, z1, top: 60, bottom: -30 }, base: 0, seeds: [[site.start[0], site.start[1], -1e9]], closed: [...site.halls.map((h) => h.stop).filter(Boolean), ...(site.closed || [])], roots: [scene], enter: (w) => { w.setRoom(null); w.setLoft?.(null); } });
   for (const [id, L] of Object.entries(site.lofts)) {
     const o = L.outer;
     out.push({ id: `loft:${id}`, kind: "loft", name: `${id} 顶层`, box: { x0: o.x0 - 0.6, x1: o.x1 + 0.6, z0: o.z0 - 0.6, z1: o.z1 + 0.6, top: L.ceil + 8, bottom: L.floor - 2 }, base: L.floor, seeds: [[L.door[0], L.door[1], L.floor]], roots: [scene], enter: (w) => { w.setRoom(null); w.setLoft(id); } });

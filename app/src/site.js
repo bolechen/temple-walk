@@ -11,7 +11,7 @@ export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
 import { CENSER } from "./censer.js";
 
-export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0 };
+export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0, GROVE_IN: 20.5 };   // GROVE_IN: where the bamboo closes in on the forecourt
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
 // Terraces above the entrance court, as on the mountain: each hall stands higher than the one before.
 // zS is the front edge, where the stairs arrive.
@@ -151,9 +151,18 @@ export function buildSite(M) {
   };
   const putTwo = (lower, upper, at, q = 0, lvl = 0) => putStack([lower, upper], at, q, lvl);
 
+  // What is drawn as floor but is not to be walked (#265): an intent the meshes cannot say, written once here and read by the
+  // written plan's walker and by the floor baked from the drawn meshes alike. Each is a rectangle and why.
+  const closed = [];
   // ---- Buildings, from the gate uphill ----
+  const GATE = { xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3] };
+  // You pass through the gate's middle bay; the bays either side are shut behind planked doors, front and back, and are not
+  // walked into from the passage (the bake sees their floor as the passage's own).
+  for (const sx of [-1, 1]) { const inner = GATE.xs[3] + 0.25, outer = GATE.xs[5] + 0.3; closed.push({ x0: sx < 0 ? -outer : inner, x1: sx < 0 ? -inner : outer, z0: SITE.zS + GATE.zs[1] + 0.05, z1: SITE.zS + GATE.zs[0] - 0.05, why: "the gate's shut side bays" }); }
+  // The bamboo closes in on both sides of the forecourt (the near grove, bamboo.js; it is not in the bake).
+  for (const sx of [-1, 1]) closed.push({ x0: sx < 0 ? -SITE.x - 1 : SITE.GROVE_IN, x1: sx < 0 ? -SITE.GROVE_IN : SITE.x + 1, z0: SITE.zS + 0.05, z1: SITE.fore, why: "the bamboo either side of the forecourt" });
   putTwo({   // the gate: you pass through its middle bay, under an upper storey
-    cai: 0.232, xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
+    cai: 0.232, ...GATE, platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
     front: "pass", back: "pass", dark: false, timber: true, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
   }, { cai: 0.232, timber: true, ping: true, platOut: 0.85, rail: true, xs: [-6.2, -2.5, 2.5, 6.2], zs: [3, -3], colTop: 3.0, overhang: 1.8, crest: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
 
@@ -547,7 +556,7 @@ export function buildSite(M) {
   const censer = new THREE.Vector3(0, 0, 13);
   walk.posts.push({ x: censer.x, z: censer.z, r: CENSER.reach, eyeR: CENSER.ears + 0.1, top: censer.y + CENSER.height + 0.05 });   // the eye kept off its ears too
 
-  return { root, walk, shade, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
@@ -710,7 +719,7 @@ export function createWalker(site) {
       if (loft) return !upHere(x, z);
       if (carved(x, z) !== null) return false;
       if (Math.abs(x) > SITE.x + 8 || z < SITE.zN || z > APPROACH.end) return true;
-      if (z > SITE.zS && Math.abs(x) > 20.5) return true;                                  // the grove closes in on both sides of the forecourt
+      if (z > SITE.zS && Math.abs(x) > SITE.GROVE_IN) return true;                          // the grove closes in on both sides of the forecourt (site.closed says so too)
       for (const s of solids) if (inRect(s, x, z)) return true;
       return false;
     },
