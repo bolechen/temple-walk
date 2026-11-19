@@ -129,7 +129,7 @@ await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: quality.name === "low" ? 24 : 32 }));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -987,7 +987,7 @@ window.__ripples = (go) => {
 };
 // What the falling leaves are doing, as fall.js's sums have it: kind, how many lie on the ground, and where each is (a diagnostic for tests).
 window.__drift = (n) => drift.report(n);
-// The ground's record of what has come down (litter.js); `__litter(secs, [x, z, r])` runs the falling and the breeze on that long first and counts what lies within r of x, z.
+// The ground's record of what has come down (litter.js); `__litter(secs, [x, z, r])` runs the falling and the breeze on that long first and counts what lies within r of x, z (`true`: lists the leaves kept each in its place).
 window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };

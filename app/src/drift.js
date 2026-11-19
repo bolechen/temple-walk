@@ -113,7 +113,7 @@ export function createDrift(scene, count, trees = [], opts = {}) {
   // just touched the ground, and if it was one the shader shows (its source, no roof over it), the ground keeps it where
   // it touched. Over a jump of the clock (a photograph held, a hidden tab) nothing is handed over: the leaves that fell
   // while nobody looked are not heaped up at once.
-  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z) }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0;
+  const lit = opts.keep && map && map.ground ? createLitter({ span: opts.keep, ground: (x, z) => groundAt(map, x, z) }) : null, mem = lit && lit.mem, landed = new Float64Array(count).fill(NaN); let lastT = null, handed = 0, skew = 0, sent = 0, sentAt = -1, kicked = false;
   if (lit) U.tLitMem.value = lit.tex;
   const handOver = (t, cam) => {
     const ok = mem && u.uLand.value > 0 && SOURCES[curName] && lastT !== null && t > lastT && t - lastT < 0.25;
@@ -157,11 +157,15 @@ export function createDrift(scene, count, trees = [], opts = {}) {
     // The ground round him for this frame: the square follows him, the breeze (wx, wz) moves what lies, and the record
     // goes to the card. `dt` 0 (a still picture, indoors) keeps everything where it lies.
     keep(x, z, dt, wx, wz) {
-      if (!lit) return; mem.follow(x, z); if (dt > 0) mem.wind(dt, wx, wz); lit.upload(); U.uLitMem.value.copy(lit.box);
+      // The record goes to the card at once when a leaf has come down or been scuffed, and otherwise (leaves sliding in
+      // the breeze) ten times a second: a slide of a centimetre a tenth of a second is not seen as steps.
+      if (!lit) return; mem.follow(x, z); if (dt > 0) mem.wind(dt, wx, wz); sent += dt;
+      if (handed !== sentAt || kicked || sent >= 0.1) { lit.upload(); sent = 0; sentAt = handed; kicked = false; }
+      U.uLitMem.value.copy(lit.box);
     },
     // A shoe has come down (monk.steps): the leaves under it are scuffed aside.
-    kick(f) { if (mem && U.uLitOn.value) mem.kick(f.x, f.z, f.yaw); },
-    litter: (at) => (mem ? { ...mem.stats(), handed, bytes: lit.bytes, ...(at ? { at: +mem.amountAt(at[0], at[1], at[2] ?? 0.1).toFixed(3) } : {}) } : null),
+    kick(f) { if (mem && U.uLitOn.value) { mem.kick(f.x, f.z, f.yaw); kicked = true; } },
+    litter: (at) => (mem ? { ...mem.stats(), handed, bytes: lit.bytes, ...(Array.isArray(at) ? { at: +mem.amountAt(at[0], at[1], at[2] ?? 0.1).toFixed(3) } : at === true ? { leaves: mem.leaves().slice(0, 400).map((l) => [+l[0].toFixed(4), +l[1].toFixed(4), l[2]]) } : {}) } : null),
     memory: mem,
     // For `__drift()`: what the leaves of the cloud are doing at the shader's time, worked out in Node's way (fall.js).
     report(n = 200) {
