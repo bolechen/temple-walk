@@ -1,0 +1,202 @@
+{
+  "scene_id": "T04",
+  "name": "长照寺",
+  "alt_name": "长觉寺",
+  "game": "山门之外",
+  "chapter": "河西长梦",
+  "prototype": "甘肃张掖大佛寺（Zhangye Giant Buddha Temple）",
+  "revision": "research draft, 2026-11-17",
+  "status": "research_only; no scene has been built; see acceptance criteria in PLAN.md",
+  "source_of_truth": "this pack; numbers marked 推算 come from OSM/SRTM and are not survey data",
+  "units": "metres; +y up; +z south (north is -z); the visitor arrives from the west; origin at the centre of the temple gate (山门)",
+  "zones": [
+    {
+      "id": "Z1",
+      "name": "前院",
+      "connects_to": ["Z2"],
+      "objects": [
+        "山门（三间，牌楼式/门殿，土红墙、深木、深灰瓦）",
+        "钟楼（南）与鼓楼（北）",
+        "第一进院落铺地",
+        "大佛殿西立面与深檐",
+        "土塔尖在屋顶之上"
+      ],
+      "floor": "first courtyard, about +0.4 m above the gate",
+      "collision": "the courtyard is a deck; the gate's middle bay is walkable; the bell/drum towers are solids with posts; the hall platform is a solid edge with stairs"
+    },
+    {
+      "id": "Z2",
+      "name": "门口适应区",
+      "connects_to": ["Z1", "Z3"],
+      "objects": [
+        "大佛殿门槛与门框",
+        "门两侧砖雕（祇园演法/西方圣境，4.6 m 见方）",
+        "殿内暗部",
+        "佛的侧身一小块（不是全长）",
+        "西晒光柱与尘"
+      ],
+      "floor": "the hall platform, about +1.2 m above the gate",
+      "collision": "the threshold is a step; the door is walkable; the wall and brick carvings are solids; the Buddha is a solid behind the altar"
+    },
+    {
+      "id": "Z3",
+      "name": "巨像近侧",
+      "connects_to": ["Z2", "Z4"],
+      "objects": [
+        "佛首/佛手/耳（34.5 m 卧佛的北端）",
+        "佛坛（约 1.2 m 高）",
+        "十大弟子举哀像（佛身后）",
+        "东墙与壁画局部"
+      ],
+      "floor": "the hall floor, about +1.2 m above the gate",
+      "collision": "the altar and the Buddha are solids; the disciples are solids/posts; the side aisle is a deck at least 2.5 m wide; no climbing on the altar"
+    },
+    {
+      "id": "Z4",
+      "name": "侧向观察",
+      "connects_to": ["Z3", "Z5"],
+      "objects": [
+        "南侧廊、佛脚、东侧（佛身后）、佛首、北侧廊",
+        "34.5 m 卧佛全长",
+        "十八罗汉沿南北壁",
+        "530 m² 壁画（四壁/佛身后/二层）"
+      ],
+      "floor": "the hall floor, about +1.2 m above the gate",
+      "collision": "the aisle is a deck; the altar, Buddha, disciples, arhats and offering table are solids/posts; the player may walk around the altar but not behind the disciples"
+    },
+    {
+      "id": "Z5",
+      "name": "经卷展柜",
+      "connects_to": ["Z4", "Z6"],
+      "objects": [
+        "藏经阁（OSM 经籍厅，21.3 × 10.5 m，单檐歇山）",
+        "经橱（12 个意象，不打开）",
+        "玻璃展柜 2–3 个",
+        "金银字《大般若经》复制/北藏卷册/经卷封面",
+        "说明牌与来源行"
+      ],
+      "floor": "the sutra library platform, about +1.0 m above the gate",
+      "collision": "the cases and cabinets are solids; the aisle in front of the cases is at least 1.5 m; no opening, no touching, no removal"
+    },
+    {
+      "id": "Z6",
+      "name": "院外远景",
+      "connects_to": ["Z5", "Z1"],
+      "objects": [
+        "大佛寺广场",
+        "山门、钟鼓楼、大佛殿深檐",
+        "土塔（33.37 m）在屋顶之上",
+        "低层城市/树冠/博物馆/小学/饭店"
+      ],
+      "floor": "the plaza, about -0.3 m below the gate",
+      "collision": "the plaza is a deck; the street/city backdrop is not walkable; no climbing on the stupa"
+    }
+  ],
+  "route": {
+    "waypoints_xz": [
+      [-95, 17],
+      [-60, 10],
+      [-20, 5],
+      [0, 0],
+      [20, -2],
+      [40, -6],
+      [58, -13],
+      [62.5, -15.8],
+      [68, -27],
+      [72, 7],
+      [77, 1.5],
+      [77, -33],
+      [90, -15],
+      [120, -18],
+      [144, -15],
+      [166, -19.3],
+      [190, -26],
+      [166, -19.3],
+      [90, -15],
+      [62.5, -15.8],
+      [0, 0],
+      [-95, 17]
+    ],
+    "length_one_way_m": 300,
+    "climb_m": "about 1.5 m gross by the proposed platforms; the site is nearly flat (SRTM 1477–1483 m); not survey data",
+    "returns_the_same_way": false,
+    "note": "x east, z south (north is -z); waypoints include the side-aisle loop around the altar; the return follows the axis but not the same path"
+  },
+  "checkpoints": {
+    "system": "长照札记·六格（见 CHECKPOINTS.md）；不做集齐门槛，不评分",
+    "main": [
+      { "id": "C01", "name": "院·前院", "zone": "Z1", "mark": "院" },
+      { "id": "C02", "name": "门·门口适应区", "zone": "Z2", "mark": "门" },
+      { "id": "C03", "name": "近·巨像近侧", "zone": "Z3", "mark": "近" },
+      { "id": "C04", "name": "长·侧向观察", "zone": "Z4", "mark": "长" },
+      { "id": "C05", "name": "经·经卷展柜", "zone": "Z5", "mark": "经" },
+      { "id": "C06", "name": "远·院外远景", "zone": "Z6", "mark": "远" }
+    ],
+    "quiet_observations": [
+      { "id": "O1", "name": "尺度", "where": "Z3", "note": "耳/手/脚 vs 人的身高" },
+      { "id": "O2", "name": "修补", "where": "Z3/Z4", "note": "衣襟/莲座/佛首的补塑色差与接缝" },
+      { "id": "O3", "name": "时间", "where": "Z5", "note": "1098/1477/1747/2005 的年表" },
+      { "id": "O4", "name": "守护", "where": "Z5", "note": "1941 夹壁/1995 发现/本觉尼师（若采用）" },
+      { "id": "O5", "name": "光", "where": "Z2/Z4", "note": "西晒光柱随时间移动" }
+    ],
+    "not_doing": [
+      "进入佛像/佛肚/装藏",
+      "取宝/开柜/取经",
+      "开夹壁/进密室",
+      "登土塔/进地宫",
+      "触摸佛像/壁画/经橱/碑刻",
+      "敲钟/敲鼓/敲风铎",
+      "求财/求姻缘/算命/许愿",
+      "数罗汉换签诗",
+      "「西游记壁画早于吴承恩」",
+      "「睡佛/卧佛很可爱」",
+      "Boss/唤醒/战斗",
+      "功德值/捐款/领养"
+    ]
+  },
+  "lighting": {
+    "preset": "Z01 室内侧向天光（Interior Side Daylight）；whitebox neutral daylight first",
+    "main_light": "late autumn, 16:00–17:30, sun WSW (azimuth 245°), altitude 18°, 3,400 K; the west door admits a low slab of light that rakes across the reclining body",
+    "fill": "sky 5,200 K; interior bounce 4,200 K from earth-red walls and dark timber; the face is lit by bounce, not direct sun",
+    "local_light": "two butter/eternal lamps at the altar, 2,200 K, small radius; no track lights",
+    "fog": "dry haze outside; dust motes 0.3 inside the light slab; no god rays without dust",
+    "wetness": "stone dry in the autumn baseline; damp at the foot of the earth-red wall after rain; no global wetness",
+    "exposure": "outside EV 10 / inside EV 6; highlight roll-off; shadow lift 0.15; murals readable; no crushed black",
+    "must_not": [
+      "direct sun on the Buddha's face",
+      "global orange grade",
+      "bloom on the gold",
+      "lens flare",
+      "god rays from nowhere",
+      "black shadows",
+      "modern track lighting"
+    ]
+  },
+  "cameras": "camera-manifest.json",
+  "deferred": [
+    "卧佛/31 尊/壁画精模",
+    "大佛殿完整室内（藻井/梁架/彩画）",
+    "藏经阁完整经橱/经卷",
+    "土塔地宫/内部",
+    "登土塔",
+    "开经柜/取经/装藏取宝",
+    "本觉尼师/1941/1995 的具名叙事",
+    "山西会馆",
+    "全城/祁连山/沙漠远景",
+    "多人/NPC",
+    "16 种季时"
+  ],
+  "unknowns": [
+    "大佛殿逐间面阔/进深/柱网/台基/门洞的实测",
+    "佛坛的准确尺寸/高度；侧廊最窄处",
+    "卧佛的准确长/宽/高/脚/耳",
+    "31 尊塑像的位置/高度/间距",
+    "壁画的逐幅尺寸/年代/病害",
+    "藏经阁的经橱/展柜/经卷现状",
+    "土塔 13 层/36 风铎/地宫的细节",
+    "1941/1995 夹壁、本觉尼师的报道核对",
+    "下午西晒的角度/强度；殿内曝光",
+    "现场声压与六段声场的实际差异",
+    "目标手机的性能"
+  ]
+}
