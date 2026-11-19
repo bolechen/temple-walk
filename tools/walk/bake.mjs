@@ -36,9 +36,18 @@ import { MeshBVH, SAH } from "three-mesh-bvh";
 import { readFileSync } from "node:fs";
 import { NO_FLOOR } from "../../app/src/walkgrid.js";
 
+/**
+ * How far from the eye the near plane's corners lie, at the widest angle of view his own eyes are drawn with: yard.js's
+ * camera (near 0.1 m) and `lens()`, 65° on a wide screen and 75° held upright, and up to FOV_RANGE[1] more from the
+ * settings; the widest screen tests/slow/nearplane looks through is 21:9. BAKE.EYE_R is held to it by walk-bake.test.
+ */
+export function eyeR(near = 0.1, extra = 16) {
+  let r = 0; for (const [fov, aspect] of [[65, 21 / 9], [65, 16 / 9], [75, 390 / 780]]) { const t = Math.tan(((fov + extra) * Math.PI) / 360); r = Math.max(r, near * Math.sqrt(1 + t * t + (aspect * t) ** 2)); }
+  return r;
+}
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 17,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 19,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -48,6 +57,10 @@ export const BAKE = Object.freeze({
                    // spike's 60° had let it be stood on. A thing marked `userData.walk = "floor"` (the summit's mat, rounded rim
                    // and all) is floor to 60°.
   HEAD: 0.13,      // his reach over the top of his outline (the hat), up to CLEAR
+  // His own eyes have a size (#265, the owner and the lead, 2026-11-19; the spike's §九 list): seen from them, the picture is
+  // cut off by the near plane, whose corners lie EYE_R from the eye at the widest view the page draws (eyeR() below), so
+  // over the heights EYE ± EYE_R nothing comes nearer than that. (The eye that follows him is still the written plan's.)
+  EYE: 1.3, EYE_R: 0.24,
   LOW: 0.015,      // the least a thing must stand up from his floor, below CLIMB, to be kept his shoe's reach off (a cheek stands 2 cm proud of a porch)
   FOOTHOLD: 0.015, // a 15 cm square of floor level within this is somewhere his shoe can stand: the top of a tread, a sill
   SILL: 0.08,      // a step no higher than this (a sill) raises the floor his reach round it to its top, as a sill he stands astride
@@ -147,7 +160,10 @@ function slabDistance(a, b, c, y0, y1, px, pz) {
 /** His reach from his centre over the heights [lo, hi] above the floor he stands on (his outline, 5 cm bins). */
 export function reach(lo, hi) {
   let r = 0; const b = OUTLINE.bin;
-  for (let i = Math.max(0, Math.floor(lo / b)); i * b <= hi + 1e-9; i++) r = Math.max(r, i < OUTLINE.reach.length && OUTLINE.reach[i] > 0 ? OUTLINE.reach[i] : BAKE.HEAD);
+  for (let i = Math.max(0, Math.floor(lo / b)); i * b <= hi + 1e-9; i++) {
+    r = Math.max(r, i < OUTLINE.reach.length && OUTLINE.reach[i] > 0 ? OUTLINE.reach[i] : BAKE.HEAD);
+    if (Math.abs((i + 0.5) * b - BAKE.EYE) <= BAKE.EYE_R + b / 2) r = Math.max(r, BAKE.EYE_R);   // round his eye, the near plane
+  }
   return r;
 }
 const BINS = Math.ceil(BAKE.CLEAR / OUTLINE.bin) + 1, TABLE = new Float32Array(BINS * BINS);
@@ -265,7 +281,12 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       intersectsBounds: (bb) => bb.intersectsBox(qbox),
       intersectsTriangle: (t, ti) => {
         const id = S.mat[(index[ti * 3] / 3) | 0], p = isPost[id];
-        if (!p && Math.abs(t.getNormal(nrm).y) > 0.5) return false;   // a face that lies flat is a floor, not a wall
+        // A face that lies flat is a floor, not a wall: unless it lies higher over this cell's floor than he steps (a level
+        // bough at his head, a bar), where it is in his way like any wall.
+        if (!p && Math.abs(t.getNormal(nrm).y) > 0.5) {
+          if (slabDistance(t.a, t.b, t.c, y + CLIMB, y + CLEAR, x, z) < r) { if (what < 0) what = id; wlo = Math.min(wlo, slabY[0]); whi = Math.max(whi, slabY[1]); }
+          return false;
+        }
         if (slabDistance(t.a, t.b, t.c, lo + 0.02, y + CLEAR, x, z) < r) {
           if (what < 0 || p) what = id; wlo = Math.min(wlo, p ? y : slabY[0]); whi = Math.max(whi, slabY[1]); if (p) wpost = 1;
         }

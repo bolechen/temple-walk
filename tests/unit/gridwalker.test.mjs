@@ -153,3 +153,20 @@ test("the grid kept in the page is the court's: cut from the whole one cell for 
     assert.equal(part.state[b], whole.state[a]); assert.equal(part.height[b], whole.height[a]);
   }
 });
+
+// The eye rides the floor he stands on (#265, the owner on the preview: at the great hall platform's east end he ran under
+// the floor, seen from his own eyes). Wherever the grid lets him stand, the height the eye follows (`eyeAt`, a stair's
+// slope rather than its treads) is within a tread of the floor (`heightAt`). Listed by building, every cell that fails.
+test("wherever he may stand on the grid, the eye rides within a tread of the floor under him", () => {
+  const g = gridsByPlace(decoded, "court", region).outdoors, bad = new Map();
+  const near = (x, z) => site.buildings.find((b) => x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)?.name || "院子";
+  let n = 0;
+  for (let j = 0; j < g.nz; j += 3) for (let i = 0; i < g.nx; i += 3) {
+    const k = j * g.nx + i; if (g.state[k]) continue;
+    const x = g.x0 + (i + 0.5) * g.step, z = g.z0 + (j + 0.5) * g.step; if (!walker.answers(x, z)) continue; n++;
+    const d = Math.abs(walker.eyeAt(x, z) - walker.heightAt(x, z));
+    if (d > 0.2) { const b = near(x, z), r = bad.get(b) || { cells: 0, worst: 0, at: null }; r.cells++; if (d > r.worst) { r.worst = +d.toFixed(2); r.at = [+x.toFixed(2), +z.toFixed(2)]; } bad.set(b, r); }
+  }
+  assert.ok(n > 10000, `only ${n} open cells looked at`);
+  assert.deepEqual(Object.fromEntries(bad), {}, "the eye rides away from the floor");
+});

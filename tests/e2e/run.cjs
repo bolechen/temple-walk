@@ -778,6 +778,29 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__walker())).mode === "mesh", "?walker=mesh should walk the grid everywhere");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great
+  // hall's east end): along every porch edge of the first court, a little in from it, first person and third, his feet
+  // are on the floor under him and his own eye is well over it.
+  platforms: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
+    const edges = await t.page.evaluate(() => window.__drops().filter((e) => e.top < 2 && Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]) > 1));
+    expect(edges.length >= 8, `only ${edges.length} porch edges in the court`);
+    let n = 0;
+    for (const view of ["first", "third"]) {
+      await t.page.evaluate((v) => window.__view(v), view);
+      for (const e of edges) for (const f of [0.2, 0.5, 0.8]) {
+        const x = e.a[0] + (e.b[0] - e.a[0]) * f - e.normal[0] * 0.3, z = e.a[1] + (e.b[1] - e.a[1]) * f - e.normal[1] * 0.3;
+        if (await t.page.evaluate(([x, z]) => window.__blocked(x, z), [x, z])) continue;
+        await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(e.normal[0], -e.normal[1])]); await t.frames(3);
+        const w = await t.page.evaluate(() => window.__walker()), y = await t.state(); n++;
+        expect(Math.abs(w.floor - e.top) < 0.03, `${view}: at (${x.toFixed(2)}, ${z.toFixed(2)}) on a ${e.top} m porch the floor reads ${w.floor}`);
+        expect(y.footY >= w.floor - 0.05, `${view}: his feet are under the floor at (${x.toFixed(2)}, ${z.toFixed(2)}): ${y.footY} under ${w.floor}`);
+        expect(w.eye >= w.floor + 0.6, `${view}: the eye is at ${w.eye.toFixed(2)}, the floor at ${w.floor} (${x.toFixed(2)}, ${z.toFixed(2)})`);
+      }
+    }
+    expect(n >= 40, `only ${n} places round the platforms were stood on`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Coming back: a first visit is offered only the way in; where he was is kept, and the next visit may go on from
   // there or begin again.
   resume: { tier: 2, async run(b, base) {

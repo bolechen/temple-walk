@@ -6,8 +6,9 @@
 // mountain path, through the forecourt, the gate and the first court, to the foot of the stair to the library's
 // terrace), and only for walking, being stopped, a tap on the ground and the hops up and down a porch's edge. Everything
 // else is asked of the walker of the written plan (createWalker in site.js), which it holds: the other terraces, the
-// path, the rooms, the summit pavilion's balcony, and every question the eye asks (eyeShut, eyeAt, railNear, wall,
-// landAt), which the fifth step moves. `?walker=old` is the written plan everywhere; `?walker=mesh` is the grid
+// path, the rooms, the summit pavilion's balcony, and every question the eye asks (eyeShut, railNear, wall, landAt), which
+// the fifth step moves. The height the eye rides at (eyeAt) is the floor's, so it follows the grid. `?walker=old` is
+// the written plan everywhere; `?walker=mesh` is the grid
 // wherever there is one (outdoors, the balcony, every room), to look ahead at the fourth step.
 //
 // The two meet at the flights between terraces: the grid stops at the first tread of each, where both say the floor is
@@ -138,7 +139,15 @@ export function createGridWalker(old, grids, { mode = "court", region = null, dr
     // What a shoe comes down on, whether this is a stair, and every question the eye asks: still the written plan's.
     floorAt: (/** @type {number} */ x, /** @type {number} */ z) => old.floorAt(x, z),
     onStairs: (/** @type {number} */ x, /** @type {number} */ z) => old.onStairs(x, z),
-    eyeAt: (/** @type {number} */ x, /** @type {number} */ z) => old.eyeAt(x, z),
+    // Where the eye rides: the floor he stands on. Where the grid answers that is the grid's floor, except on a stair, where
+    // the written plan's slope (smoother than the treads) is kept while it is within a tread of it. (Asking the written plan
+    // alone put the eye under a platform whose sides the grid opens and the plan had solid: the owner, at the great hall's
+    // east end, saw from his own eyes the underside of the floor.)
+    eyeAt(/** @type {number} */ x, /** @type {number} */ z) {
+      if (cell(x, z) < 0) return old.eyeAt(x, z);
+      const h = floorY(), e = old.onStairs(x, z) ? old.eyeAt(x, z) : NaN;
+      return Math.abs(e - h) <= 0.2 ? e : h;
+    },
     landAt: (/** @type {number} */ x, /** @type {number} */ z) => old.landAt(x, z),
     wall: (/** @type {number} */ x, /** @type {number} */ z) => old.wall(x, z),
     railNear: (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {number} */ m) => old.railNear(x, y, z, m),
