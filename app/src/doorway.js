@@ -166,16 +166,34 @@ export function createDoorways({ renderer, scene, site, rooms, U, size = 256, st
   };
   const warmCam = new THREE.PerspectiveCamera(90, 1, 0.05, 80);
   const label = (o, it) => `${o.hall.id} ${it.tex ? "texture " + (it.tex.image?.width || "?") : it.deep ? "distance" : (it.obj.material?.type || "?") + " " + (it.obj.material?.name || it.obj.name || "")}`.trim();
+  // Not only compiled but drawn once, alone, into a target of the cube's own kind (half floats; one channel for the
+  // distances): a graphics driver may make the last of a shader's work only when it is first drawn into a target of a
+  // given kind, and the first face of a room once waited 0.4–1.5 s on that (T4, 20261119-005112).
+  const drawnKeys = new Set(), warmCol = new THREE.WebGLRenderTarget(8, 8, { type: THREE.HalfFloatType }), warmDist = new THREE.WebGLRenderTarget(8, 8, { type: THREE.HalfFloatType, format: THREE.RedFormat });
+  const alone = (o, obj) => {   // only `obj` of all the rooms is drawn; what it changed is given back by the function it returns
+    const rooms = o.r.group.parent ? o.r.group.parent.children : [o.r.group], was = rooms.map((g) => g.visible), meshes = [];
+    rooms.forEach((g) => { g.visible = g === o.r.group; });
+    o.r.group.traverse((m) => { if ((m.isMesh || m.isPoints || m.isLine) && m !== obj) { meshes.push([m, m.visible]); m.visible = false; } });
+    const culled = obj.frustumCulled; obj.frustumCulled = false; obj.visible = true;
+    return () => { obj.frustumCulled = culled; meshes.forEach(([m, v]) => { m.visible = v; }); rooms.forEach((g, i) => { g.visible = was[i]; }); };
+  };
   const compileOne = (o, item) => {
     if (item.tex) { if (renderer.properties.get(item.tex).__webglTexture) return false; try { renderer.initTexture(item.tex); } catch { /* sent when first drawn */ } return true; }
     const undress = dress(o), target = renderer.getRenderTarget(), fog = scene.fog, before = renderer.info.programs?.length || 0, t0 = performance.now();
+    let back = null, added = false;
     try {
-      renderer.setRenderTarget(warmTarget());
-      if (item.deep) scene.fog = null;
-      warmCam.position.copy(o.C); warmCam.updateMatrixWorld(); renderer.compile(item.obj, warmCam, scene);
-    } catch { /* compiled when first drawn */ } finally { scene.fog = fog; renderer.setRenderTarget(target); undress(); }
+      if (item.deep) { scene.fog = null; dm.uniforms.uC.value.copy(o.C); scene.overrideMaterial = dm; if (!item.obj.parent) { o.r.group.add(item.obj); added = true; } }
+      back = alone(o, item.obj);
+      warmCam.position.copy(o.C); warmCam.updateMatrixWorld();
+      if (!item.deep && !renderer.properties.get(item.obj.material).currentProgram) renderer.compile(item.obj, warmCam, scene);
+      renderer.setRenderTarget(item.deep ? warmDist : warmCol); renderer.render(scene, warmCam);
+    } catch { /* made ready when first drawn */ } finally {
+      back?.(); if (added) o.r.group.remove(item.obj);
+      scene.overrideMaterial = null; scene.fog = fog; renderer.setRenderTarget(target); undress();
+    }
     const made = (renderer.info.programs?.length || 0) - before; warmStats.programs += made; if (made) warmStats.longestMs = Math.max(warmStats.longestMs, performance.now() - t0);
-    return made > 0;
+    const key = `${item.deep ? "deep" : item.obj.material.uuid}|${o.r.lights.length}|${!!item.obj.isInstancedMesh}`, fresh = !drawnKeys.has(key); drawnKeys.add(key);
+    return made > 0 || fresh;   // a frame's one piece of work: a new program, or a first drawing into a target of this kind
   };
   const prepareAll = (o) => {
     const undress = dress(o), target = renderer.getRenderTarget(), fog = scene.fog, jobs = [], before = renderer.info.programs?.length || 0;
