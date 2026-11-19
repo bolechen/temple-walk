@@ -99,6 +99,9 @@ export function stationsFor(item, fl, { reach = Math.max(1.6, item.d * 0.45) } =
   for (const [name, dir] of sides) {
     const d = item.d, p = fl.near(grid, item.at[0] + dir[0] * d, item.at[2] + dir[1] * d, reach);
     // for a thing against a wall (a frame, a board) only its front is asked for from the room's side; the others are the wall's back, which no one stands behind
+    // the nearest open cell may lie across the thing from the side asked for: it must keep at least half the ring's distance on that side
+    const onSide = p && (p.x - item.at[0]) * dir[0] + (p.z - item.at[2]) * dir[1] >= d * 0.5;
+    if (p && !onSide) { out.push({ side: name, stand: false, why: "the nearest open floor is not on this side of it" }); continue; }
     if (!p) { out.push({ side: name, stand: false, why: "no open floor within " + reach + " m of the ring" }); continue; }
     out.push({ side: name, stand: true, eye: [round(p.x), round(p.y + EYE), round(p.z)] });
   }

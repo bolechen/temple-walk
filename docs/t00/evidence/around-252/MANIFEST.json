@@ -1,0 +1,192 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 262249,
+   "sha256": "ccdd5f14f253eb4975bb61355c3900ce02b675b85a3b57c7ff65a835cd42bfb8",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "screen-wall-3views.jpg",
+   "bytes": 89916,
+   "sha256": "61b5e4a9c23f2d970430939e2f7bc64ee296fc38adfdf67b9a7e0b0954259730",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-佛像与台座.jpg",
+   "bytes": 379118,
+   "sha256": "a9e42ba4486943b94f1ddf330cf275e63cccd1b06b8fc021e8232ccd6179775a",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-功德箱.jpg",
+   "bytes": 52851,
+   "sha256": "1b883fc5471b2f2434ae10d4d63df561b36c7d482ec9e33bf655c65cc8525f84",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-匾-1.jpg",
+   "bytes": 326089,
+   "sha256": "5b5e7aa685ecd9d91a47a644c6e48aa1fd4dbac465d062fd2ec3788a93564bd5",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-匾-2.jpg",
+   "bytes": 341418,
+   "sha256": "5fad34a0a3aab2eed02ae14570a6bdb2f7b14ab733ec362282ba01fb913b156b",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-匾-3.jpg",
+   "bytes": 85903,
+   "sha256": "39e23f32860ad66ffbf97a97164086c15b059e720fac846bf8e3de1019e9a995",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-座cushion.jpg",
+   "bytes": 165525,
+   "sha256": "f407b3b426c09e7021b249c997c15a3684afe307df3a93f478c23fbb67bedbaa",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-座stool.jpg",
+   "bytes": 151842,
+   "sha256": "1978ec55e1a12a492d9a19af18f407d277e258412738afa894bb75529b8027b5",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-建筑-1.jpg",
+   "bytes": 340421,
+   "sha256": "e93d71a55644ca5333a5ad60280ec75a34276d1214e012922afbc13c9b33a6bb",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-建筑-2.jpg",
+   "bytes": 374651,
+   "sha256": "c415a155dc5b2a34e37301952649365e804cb26e7f4a0e999222f072aa435321",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-建筑-3.jpg",
+   "bytes": 83354,
+   "sha256": "eee2534a75870898a24e6975fb88a457b0928b91cb66cd1a5b0bf47a3263c17e",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-柳杉.jpg",
+   "bytes": 100233,
+   "sha256": "1fb3f9409250032d0f1f112aebb3036307a61795e788dc077494da70135514d4",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-栏杆.jpg",
+   "bytes": 137665,
+   "sha256": "ede10d0e61d22222ec1e23a1edcf116f335d764e748528de2ba157c87e22cf57",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-树.jpg",
+   "bytes": 213510,
+   "sha256": "cc0632e0f6039f219259f93238a06901010a5c867c2a1cd5fff8ec37c74f5a61",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-殿门.jpg",
+   "bytes": 97182,
+   "sha256": "2c3877c0a41cf06c348d2c0ede70f1cf4f4fb2a59c2780536209965e2a6a0839",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-独立柱石.jpg",
+   "bytes": 198355,
+   "sha256": "07e3df6b97a16e6317e56fac584fc4e5e2d0643424c48c4523f6884f1e2d4730",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-画框.jpg",
+   "bytes": 180254,
+   "sha256": "adea7aba04d7a96dff5030c0fd84f6c5be76bb5c052ce96c83df4df43aa224e0",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-观礼处.jpg",
+   "bytes": 296593,
+   "sha256": "7f30a68f70cccf50887bcd23c914847dd3b6e9faf41875da5fb88177f282bc8a",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-钟鼓.jpg",
+   "bytes": 80523,
+   "sha256": "cdac67783d336b0ac68bf2c8d393908c2b1fc9b3f4043bdeadfb8f360ae3b1aa",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/items-香炉.jpg",
+   "bytes": 55005,
+   "sha256": "aa14e174a18378b1ccc56d45da3d38894cdf60f7d5fc3ab18af0b7c3b2b210a7",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-01.jpg",
+   "bytes": 460661,
+   "sha256": "50b9e35192e0ce5f736d45889bc5ffaed032d6c3bd3c20949ae3aff26bfdd535",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-02.jpg",
+   "bytes": 475845,
+   "sha256": "dd13a78c2cb97d0e63887a549e37d115518032bda54850ea636850ccd1f331e2",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-03.jpg",
+   "bytes": 477279,
+   "sha256": "e9f86b155c2b868522ca69c5a1fa25331fe3e81bd9dc5c2043aaded8fe7123b9",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-04.jpg",
+   "bytes": 482178,
+   "sha256": "cf11dd76283d8c43e791f6915d65e9576e7596163cfd2296a07478def3e9383d",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-05.jpg",
+   "bytes": 485753,
+   "sha256": "7286365a774f4b5038e223d46c7e493b4623d9e0ec6bceeb0a77deaa1778ce25",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-06.jpg",
+   "bytes": 452149,
+   "sha256": "7d7a35c772bcd08e8f305a4f4b1f8d2875b36c54083c9158f77d3888bba0a934",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-07.jpg",
+   "bytes": 495406,
+   "sha256": "2e5531cdf000ee397ecdbb7fc154941ddf5757a0caa53948e9b136472e7f214f",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-08.jpg",
+   "bytes": 468231,
+   "sha256": "d4c7392db32e5a2dea76ae9aa9b6c12de1045c2f735f8ab258bd121344bfede3",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-09.jpg",
+   "bytes": 477612,
+   "sha256": "ef2350aab08301a54288ebc338eafef4455b72396b19c1fde237757bc18fe4a8",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  },
+  {
+   "path": "sheets/visitors-10.jpg",
+   "bytes": 454335,
+   "sha256": "8c5d4c2c5b5f18af8cfde8c3a78ff8953721368ed1524fe85842bec23f70791a",
+   "rev": "f54e16c5843e99a35110dfaab2c71821d7103733"
+  }
+ ]
+}

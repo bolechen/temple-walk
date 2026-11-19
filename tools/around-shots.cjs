@@ -27,6 +27,7 @@ async function run({ open, out, plan: planArg, size = [960, 540], vsize = [320, 
   for (const [grid, shots] of work) {
     const w = where(grid), { ctx, page } = await open(`shot=1&q=high&view=first${w ? "&" + w : "&show=arrive"}`, shots[0].size);
     const draw = async (k = 3) => { const f = await page.evaluate(() => window.__yard().frames); await page.waitForFunction((x) => window.__yard().frames >= x, f + k, { timeout: 300000 }); };
+    if (grid.startsWith("room:")) await page.waitForFunction(() => { try { return !/loading/.test(JSON.stringify(window.__figures())); } catch { return true; } }, null, { timeout: 60000 }).catch(() => log(grid + ": figures still loading"));   // the statue is fetched when the room is first entered
     let cur = shots[0].size.join("x");
     for (const s of shots) {
       if (s.size.join("x") !== cur) { await page.setViewportSize({ width: s.size[0], height: s.size[1] }); cur = s.size.join("x"); }

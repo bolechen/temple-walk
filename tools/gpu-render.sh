@@ -32,7 +32,8 @@ RUN="$(date -u +%Y%m%d-%H%M%S)"
 hf buckets create "$BUCKET" --private --exist-ok >/dev/null
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 SITE="$(node -e 'console.log(require("./tools/site.cjs").site())')"   # the built site, staged under the name the job expects
-cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/shared/models" "$STAGE/app/plate.webp"; cp tools/gpu/job.cjs "$STAGE/job.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
+cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/plate.webp"; [ -n "${KEEP_MODELS:-}" ] || rm -rf "$STAGE/app/shared/models";   # KEEP_MODELS=1: the statues go along (the walk-round survey wants the Buddha)
+ cp tools/gpu/job.cjs "$STAGE/job.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
 # Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
 # mid-job (a sync of in/ with --delete removes everything else under it).
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
