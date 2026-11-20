@@ -252,6 +252,7 @@ export default {
   // ---- On the way (game.js, hints.js) ----
   "云径禅寺": "Yunjing Temple",
   "奉拜": "奉拜",
+  "扫码入山": "Scan to walk in",
   "下一处": "Next",
   "{n} 步": "{n} steps",
   "朱印 {n}": "Seals: {n}",
@@ -336,7 +337,7 @@ export default {
   "字体均以 SIL Open Font License 1.1 授权，本项目切取子集，许可全文见": "All typefaces are licensed under the SIL Open Font License 1.1, and this project uses subsets of them. The full licence:",
   "LXGW WenKai（霞鹜文楷）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Hand KO 为名。": "The names LXGW WenKai and Nanum Brush Script are reserved, so the modified versions in this project are named Yunjing Kai and Yunjing Hand KO inside the files.",
   "程序库": "Libraries",
-  "three.js、meshoptimizer、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见": "three.js, meshoptimizer, lil-gui and stats.js (MIT) and Basis Universal (Apache-2.0). The full licences:",
+  "three.js、meshoptimizer、qrcode-generator、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见": "three.js, meshoptimizer, qrcode-generator, lil-gui and stats.js (MIT) and Basis Universal (Apache-2.0). The full licences:",
   "第三方许可声明": "Third-party notices",
   // ---- The 功德箱 ----
   "功德箱": "Offering box",

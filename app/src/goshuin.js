@@ -1,10 +1,12 @@
 // The page of seals a visitor carries away: the temple's name in brush, the day, the line the library gave,
-// the temple's own seal pressed over the name, and along the foot the seven small seals of the visit, red where
+// the three-treasures seal beside the name and the temple's own small seal below it to the left (as on a Japanese
+// goshuin, where the 三宝印 and the temple's seal are two different seals and neither repeats the brush name), and along the foot the seven small seals of the visit, red where
 // earned and a faint outline where not. One drawing serves the book on screen and the picture that is shared.
 // The page is calligraphy: in Japanese it is written in Japanese forms, in English it keeps the
 // temple's own characters, as a seal book from a temple abroad would; only the names under the seals and the line at
 // the foot are in the visitor's language.
-import { t as tr, glyphs, FONT, FACE } from "./i18n.js";
+import { t as tr, glyphs, lang, FONT, FACE } from "./i18n.js";
+import { qrMatrix, qrSide, paintQr } from "./qr.js";
 const BRUSH = FONT.brush, SERIF = FONT.serif, SEAL = FONT.seal;
 const NUM = "〇一二三四五六七八九";
 const digits = (n) => String(n).split("").map((d) => NUM[+d]).join("");
@@ -31,16 +33,33 @@ const vertical = (x, text, cx, top, step) => [...text].forEach((ch, i) => x.fill
 // `seals`: journey.list(); `verse`: { text, from } or null; `when`: the day shown; `label`: season and hour.
 // Where each of the `n` seals along the foot of the page lies, as fractions of the page (left, top, width, height),
 // its place name under it included: the book lays a button over each seal that has been earned, to go back there.
+
+// Where the big things lie on the 1200 × 1600 page, so that a test can say none of them lies on another. The brush name
+// runs down the middle; the 三宝印 stands to its right, the temple's own seal below it to the left, the code (share picture
+// and book alike: one drawing serves both) at the lower right under the day.
+export const MAIN = { host: "temple.rushiwowen.co", url: "https://temple.rushiwowen.co/" };
+/** What the code says: always the main site, whatever address drew the picture. @param {string} l the page's language */
+export const shareUrl = (l) => `${MAIN.url}?utm_source=goshuin&utm_medium=share&utm_content=${l}`;
+export const NAME = { cx: 600, top: 250, step: 262, fs: 250 };
+export const SANBAO = { text: "佛法僧宝", cx: 868, cy: 600, size: 210, turn: 0.03 };
+export const TEMPLE_SEAL = { cx: 215, cy: 1190, size: 130, turn: -0.04 };
+const QR = { px: 5, right: 1125, y: 1010 };
+/** The code's whole square (quiet zone included) and the dark part inside it, on the page. @param {string} l */
+export function qrBox(l) { const n = qrMatrix(shareUrl(l)).length, side = qrSide(n, QR.px), x = QR.right - side; return { x, y: QR.y, w: side, h: side, px: QR.px, modules: n, dark: n * QR.px, label: QR.y + side + 22 }; }
+/** Each character of the brush name as the square it is set in. @param {number} n */
+export const nameBoxes = (n = 4) => Array.from({ length: n }, (_, i) => ({ x: NAME.cx - NAME.fs / 2, y: NAME.top + i * NAME.step - NAME.fs / 2, w: NAME.fs, h: NAME.fs }));
+/** A seal's square, turned a little: its bounding box. @param {{cx:number,cy:number,size:number,turn:number}} s */
+export const sealBox = (s) => { const r = Math.abs(Math.sin(s.turn)) + Math.abs(Math.cos(s.turn)), h = s.size * r / 2; return { x: s.cx - h, y: s.cy - h, w: 2 * h, h: 2 * h }; };
 const PAGE = { W: 1200, H: 1600, size: 126, top: 1318 };
 export function sealBoxes(n) {
   const { W, H, size, top } = PAGE, gap = (W - 150 - n * size) / (n - 1), pitch = size + gap;
   return Array.from({ length: n }, (_, i) => [(75 + i * pitch - gap / 2) / W, (top - 14) / H, pitch / W, (size + 62) / H]);
 }
 
-export async function drawGoshuin({ seals, verse, when, label, temple = glyphs("云径禅寺"), url = "" }) {
+export async function drawGoshuin({ seals, verse, when, label, temple = glyphs("云径禅寺"), qr = true }) {
   const homage = glyphs("奉拜"), names = seals.map((sl) => tr(sl.place));
   if (verse) verse = { text: glyphs(verse.text), from: glyphs(verse.from) };
-  try { await Promise.all([document.fonts.load(`200px ${FACE.brush}`, temple + homage + (verse ? verse.text : "")), document.fonts.load(`40px ${FACE.serif}`, homage + names.join("") + label), document.fonts.load(`80px ${FACE.seal}`, temple + seals.map((sl) => glyphs(sl.seal)).join(""))]); } catch {}
+  try { await Promise.all([document.fonts.load(`200px ${FACE.brush}`, temple + homage + (verse ? verse.text : "")), document.fonts.load(`40px ${FACE.serif}`, homage + names.join("") + label), document.fonts.load(`80px ${FACE.seal}`, temple + SANBAO.text + seals.map((sl) => glyphs(sl.seal)).join(""))]); } catch {}
   const W = 1200, H = 1600, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
   let s = 41; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   // Paper: warm, uneven, with its fibres showing.
@@ -48,12 +67,13 @@ export async function drawGoshuin({ seals, verse, when, label, temple = glyphs("
   for (let i = 0; i < 2600; i++) { const px = rnd() * W, py = rnd() * H, a = rnd() * 6.3, l = 6 + rnd() * 26; x.strokeStyle = `rgba(${rnd() < 0.5 ? "120,100,70" : "255,255,250"},${0.03 + rnd() * 0.07})`; x.lineWidth = 0.6 + rnd(); x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + Math.cos(a) * l * 0.5 + rnd() * 6, py + Math.sin(a) * l * 0.5, px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke(); }
   x.textAlign = "center"; x.textBaseline = "middle";
   // The name, in brush, down the middle.
-  x.fillStyle = "#1b1815"; x.font = `250px ${BRUSH}`; vertical(x, temple, W / 2, 250, 262);
+  x.fillStyle = "#1b1815"; x.font = `250px ${BRUSH}`; vertical(x, temple, NAME.cx, NAME.top, NAME.step);
   x.globalCompositeOperation = "destination-out";   // the dry brush: streaks where the hair ran out of ink
   for (let i = 0; i < 520; i++) { const px = W / 2 - 150 + rnd() * 300, py = 120 + rnd() * 1060; x.globalAlpha = 0.1 + rnd() * 0.25; x.fillRect(px, py, 1 + rnd() * 2, 8 + rnd() * 46); }
   x.globalCompositeOperation = "destination-over"; x.globalAlpha = 1; x.fillStyle = "#f1ebde"; x.fillRect(0, 0, W, H); x.globalCompositeOperation = "source-over";
-  // The temple's seal over the name.
-  x.save(); x.translate(W / 2 + 6, 770); x.rotate(-0.03); x.globalCompositeOperation = "multiply"; x.globalAlpha = 0.9; x.drawImage(sealStamp(temple, 360, { seed: 3 }), -180, -180); x.restore();   // pressed over the ink, which shows through
+  // The 三宝印 beside the name (it says nothing the brush has said) and the temple's own small seal below it, to the left.
+  const press = (sl, text, seed) => { x.save(); x.translate(sl.cx, sl.cy); x.rotate(sl.turn); x.globalCompositeOperation = "multiply"; x.globalAlpha = 0.9; x.drawImage(sealStamp(text, sl.size * 2, { seed }), -sl.size / 2, -sl.size / 2, sl.size, sl.size); x.restore(); };
+  press(SANBAO, SANBAO.text, 3); press(TEMPLE_SEAL, temple, 5);
   // To the right: the day. To the left: the line that was given.
   x.fillStyle = "#2a2622"; x.font = `58px ${BRUSH}`; vertical(x, homage, W - 150, 190, 66);
   x.font = `36px ${SERIF}`; x.fillStyle = "#3a352f"; vertical(x, dateLine(when), W - 150, 380, 43);
@@ -73,7 +93,12 @@ export async function drawGoshuin({ seals, verse, when, label, temple = glyphs("
     x.fillStyle = sl.got ? "#4a443c" : "rgba(90,80,66,.55)"; let fs = 23; x.font = `${fs}px ${SERIF}`; while (fs > 14 && x.measureText(names[i]).width > size + gap - 12) x.font = `${--fs}px ${SERIF}`; x.fillText(names[i], cx, y + size + 30);
   });
   x.fillStyle = "#8b8475"; x.font = `22px ${SERIF}`; x.fillText(got === n ? tr("七印圆满") : tr("已得{n}印 · 共七印", { n: NUM[got], k: got }), W / 2, H - 78);
-  if (url) { x.fillStyle = "#a9a293"; x.font = `19px ${SERIF}`; x.fillText(url, W / 2, H - 44); }
+  x.fillStyle = "#a9a293"; x.font = `19px ${SERIF}`; x.fillText(MAIN.host, W / 2, H - 44);
+  if (qr) {
+    const m = qrMatrix(shareUrl(lang)), b = qrBox(lang), side = b.w;
+    paintQr(x, m, b.x, b.y, b.px, "#1b1815", "#f1ebde");
+    x.fillStyle = "#6b6458"; let fs = 24; const label = tr("扫码入山"); x.font = `${fs}px ${SERIF}`; while (fs > 14 && x.measureText(label).width > side) x.font = `${--fs}px ${SERIF}`; x.fillText(label, b.x + side / 2, b.label);
+  }
   x.strokeStyle = "rgba(60,50,40,.28)"; x.lineWidth = 2; x.strokeRect(34, 34, W - 68, H - 68);
   return c;
 }

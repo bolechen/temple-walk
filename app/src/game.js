@@ -394,7 +394,7 @@ export function createGame(y) {
     $("bookHint").textContent = next ? `${journey.closed ? t("帐上还空着{n}处。", { n: "〇一二三四五六七"[blank], k: blank }) : ""}${[t(next.hint), told()].filter(Boolean).join("　")}` : `${t("七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。")}${told()}`;
     // (an empty book has nothing to begin again: 重新朝山 is offered once there is a seal to give up)
     if (!ui.isOpen("book")) { leaf0?.classList.add("drawing"); $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); ui.open("book", { onClose: announce }); }
-    page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · "), url: location.host + location.pathname.replace(/\/$/, "") });
+    page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · ") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");

@@ -5,7 +5,7 @@
 //     node tools/notices.mjs --check    exit 1 if the file on disk is not what would be written (tests/unit/notices.test.mjs)
 //
 // three.js and meshoptimizer's texts are read from node_modules, so a new release brings its own; the others
-// (lil-gui, stats.js, Basis Universal's LICENSE and NOTICE) are not in any installed package and are kept beside this
+// (qrcode-generator, lil-gui, stats.js, Basis Universal's LICENSE and NOTICE) are not in any installed package and are kept beside this
 // file's output in app/shared/licenses/, copied from each project's repository on 2026-11-16.
 import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url";
 
@@ -17,6 +17,7 @@ const LIBS = [
   { name: "three.js", version: three, license: "MIT", url: "https://github.com/mrdoob/three.js", text: [read(path.join(ROOT, "node_modules/three/LICENSE"))], note: "Bundled into the page. Its addons used here: the Basis texture loader, the meshopt decoder, and the tree generator (examples/jsm/generators/TreeGenerator.js), copied with changes into app/src/three-tree.js, which grows the cryptomerias' wood." },
   { name: "meshoptimizer", version: "decoder shipped with three.js " + three, license: "MIT", url: "https://github.com/zeux/meshoptimizer", text: [read(path.join(ROOT, "node_modules/meshoptimizer/LICENSE.md"))], note: "The WebAssembly decoder in three's meshopt_decoder.module.js, which opens the statue models." },
   { name: "Basis Universal", version: "transcoder shipped with three.js " + three, license: "Apache-2.0", url: "https://github.com/BinomialLLC/basis_universal", text: [read(path.join(LIC, "basis-universal-LICENSE")), "NOTICE\n\n" + read(path.join(LIC, "basis-universal-NOTICE")).replace(/^NOTICE\s*/, "")], note: "app/vendor/basis/basis_transcoder.js and .wasm, unmodified, which open the KTX2 textures in the statue models. \"Basis Universal\" is a trademark of Binomial LLC." },
+  { name: "qrcode-generator", version: JSON.parse(read(path.join(ROOT, "node_modules/qrcode-generator/package.json"))).version, license: "MIT", url: "https://github.com/kazuhikoarase/qrcode-generator", text: [read(path.join(LIC, "qrcode-generator-LICENSE"))], note: "Bundled into the page. It works out the QR code on the shared page of seals (app/src/qr.js); the picture is painted by the page." },
   { name: "lil-gui", version: "0.17.0", license: "MIT", url: "https://github.com/georgealways/lil-gui", text: [read(path.join(LIC, "lil-gui-LICENSE"))], note: "The debug panel of the development server, from three.js's addons. The published site does not load it." },
   { name: "stats.js", version: "bundled with three.js " + three, license: "MIT", url: "https://github.com/mrdoob/stats.js", text: [read(path.join(LIC, "stats.js-LICENSE"))], note: "The frame graph of the debug panel, from three.js's addons. The published site does not load it." },
 ];

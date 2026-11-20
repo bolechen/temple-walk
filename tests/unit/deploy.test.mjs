@@ -31,6 +31,10 @@ test("only the production build holds the counter's address and may be indexed; 
     try {
       const html = fs.readFileSync(path.join(out, "index.html"), "utf8");
       const hits = withCounter(out), headers = path.join(out, "_headers");
+      // The shared page of seals (#319) points at the main site in every build, whichever address serves it: the code's address and the foot's host are constants in the bundle, and nothing in it reads the page's own host for the foot.
+      const bundle = walk(out).filter((f) => /\.js$/.test(f)).map((f) => fs.readFileSync(f, "utf8")).join("\n");
+      assert.ok(bundle.includes("https://temple.rushiwowen.co/") && bundle.includes("?utm_source=goshuin&utm_medium=share&utm_content="), `${name}: the shared page's code does not name the main site`);
+      assert.ok(!/location\.host\+location\.pathname|location\.host\s*\+\s*location\.pathname/.test(bundle), `${name}: a page still reads its own address for the foot`);
       if (target === "production") {
         assert.ok(hits.includes("index.html"), "production: the counter is not in the page");
         assert.ok(!/name="robots"/.test(html), "production: the page keeps itself out of search"); assert.ok(!/X-Robots-Tag/.test(fs.readFileSync(headers, "utf8")), "production: a noindex header");

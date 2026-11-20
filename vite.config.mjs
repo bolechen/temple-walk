@@ -9,7 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here,
 // What the page fetches by name rather than imports (app/src/assets.js) goes into the site as it lies in app/.
 const KEPT = ["shared", "levels", "vendor", "favicon.svg"];
 // What the published site must hold for its libraries' licences (docs/t00/LICENSING-AUDIT.md §三.3): the build fails without them.
-const NOTICES = "shared/licenses/THIRD-PARTY-NOTICES.txt", LIBRARIES = ["three.js", "meshoptimizer", "lil-gui", "stats.js", "Basis Universal"];
+const NOTICES = "shared/licenses/THIRD-PARTY-NOTICES.txt", LIBRARIES = ["three.js", "meshoptimizer", "qrcode-generator", "lil-gui", "stats.js", "Basis Universal"];
 const keep = () => {
   let out = dist;
   return {

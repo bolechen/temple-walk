@@ -142,6 +142,25 @@ const scenarios = {
   } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.
+  // The shared page of seals (#319): drawn in the page in every language, its code cut out and read back, and it says the main site
+  // although the page was served from 127.0.0.1; with and without seals, with and without the library's line.
+  goshuin: { tier: 2, async run(b, base) {
+    const { render, LANGS, KINDS } = require("../../tools/goshuin-pages.cjs"), sharp = require("sharp"), jsQR = require("jsqr");
+    const { qrBox, shareUrl } = await import("../../app/src/goshuin.js");
+    const read = async (buf, lang) => {
+      const box = qrBox(lang), { data, info } = await sharp(buf).extract({ left: box.x, top: box.y, width: box.w, height: box.h }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      return jsQR(new Uint8ClampedArray(data), info.width, info.height);
+    };
+    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"]];
+    for (const [lang, kind] of want) {
+      expect(kind in KINDS, "no such kind " + kind);
+      const buf = await render(b, base, { lang, kind }), meta = await sharp(buf).metadata();
+      expect(meta.width === 1200 && meta.height === 1600, `${lang}/${kind}: the page is ${meta.width}×${meta.height}`);
+      const got = await read(buf, lang);
+      expect(got && got.data === shareUrl(lang), `${lang}/${kind}: the code reads ${got && got.data}, not ${shareUrl(lang)}`);
+      expect(got.data.startsWith("https://temple.rushiwowen.co/"), `${lang}/${kind}: the code does not go to the main site`);
+    }
+  } },
   lang: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low" + BARE, { enter: false, locale: "ja-JP" });
     const words = (sel) => t.page.textContent(sel);
