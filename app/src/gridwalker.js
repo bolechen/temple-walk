@@ -83,6 +83,7 @@ export function ledgesOf(g, box = null, { min = 0.255, max = MAX_DROP, span = 0.
 // heads in, his step is bent toward its middle, as a game's doors draw a walker in (a door's "magnetism", a funnel).
 export const FUNNEL = Object.freeze({
   depth: 1.5,   // how far before the door's line it reaches, metres
+  past: 0.3,    // and how far past it: the pocket beside the doorway, between the leaf's frame and the threshold he may not cross
   half: 1.1,    // how far either side of the door's middle (the doorway is 2 m; past this is the wall or a column)
   core: 0.35,   // within this of the middle he is left to go straight in
   pull: 0.9,    // at most this much of his step goes across toward the middle
@@ -164,7 +165,7 @@ export function createGridWalker(old, grids, opts = {}) {
       return (w ? sum / w : h) / 100 + g.base;
     },
     /**
-     * Before a hall's door, heading in: the step (vx, vz) bent toward the door's middle, as long as it was, and the step straight across toward it for when the frame is in the way; null anywhere else
+     * Before a hall's door, heading in: the step (vx, vz) bent toward the door's middle, as long as it was, the step straight across toward it for when the frame is in the way, and the step straight in; null anywhere else
      * (stride.js asks it before each step; the written plan's walker has no funnel).
      */
     funnel(/** @type {number} */ x, /** @type {number} */ z, /** @type {number} */ vx, /** @type {number} */ vz) {
@@ -172,11 +173,11 @@ export function createGridWalker(old, grids, opts = {}) {
       const v = Math.hypot(vx, vz); if (v < 1e-6) return null;
       for (const d of doors) {
         const rx = x - d.x, rz = z - d.z, along = rx * d.ux + rz * d.uz, across = rx * d.lx + rz * d.lz, inward = (vx * d.ux + vz * d.uz) / v;
-        if (along < -FUNNEL.depth || along > 0.05 || Math.abs(across) > FUNNEL.half || inward < FUNNEL.heading) continue;
+        if (along < -FUNNEL.depth || along > FUNNEL.past || Math.abs(across) > FUNNEL.half || inward < FUNNEL.heading) continue;
         if (Math.abs(across) <= FUNNEL.core) return null;
         const pull = -Math.sign(across) * Math.min(Math.abs(across) - FUNNEL.core, v * FUNNEL.pull), fwd = Math.max(inward * v, v * 0.3);
         const bx = d.ux * fwd + d.lx * pull, bz = d.uz * fwd + d.lz * pull, b = Math.hypot(bx, bz);
-        return [(bx / b) * v, (bz / b) * v, -Math.sign(across) * d.lx * v, -Math.sign(across) * d.lz * v];   // (and, should the frame stop him, the step across toward the middle)
+        return [(bx / b) * v, (bz / b) * v, -Math.sign(across) * d.lx * v, -Math.sign(across) * d.lz * v, d.ux * v, d.uz * v];   // (and, should the frame stop him, the step across toward the middle, and the step in)
       }
       return null;
     },

@@ -397,6 +397,34 @@ test("#294: from as far as 0.9 m either side of the middle of every hall's door,
   assert.deepEqual(missed, [], "held outside a hall's door");
 });
 
+// Held on from right against the door's frame (#294, the lead on the preview of 9c07c63, at the owner's own address
+// ?cam=0.7,-5.699988: in the pocket just past the door's line beside the doorway, he slid outward along the frame and
+// never came in). From there, and from such a pocket at every hall's door, holding on at it takes him in.
+test("#294: from against the frame, just past the door's line 0.7 or 0.9 m off its middle, holding on at it, he comes in", () => {
+  const step = 2.1 / 60, missed = [], main = site.halls.find((h) => h.id === "main");
+  const starts = [[main, 0.7, -5.699988], [main, 0.9, -5.699988]];
+  for (const h of site.halls) {
+    const ix = h.door[0] - h.out[0], iz = h.door[1] - h.out[1], d = Math.hypot(ix, iz), ux = ix / d, uz = iz / d, lx = -uz, lz = ux;
+    for (const off of [0.7, 0.9]) for (const side of [1, -1]) for (const past of [0, 0.06, 0.11]) {
+      const x = h.door[0] + ux * past + lx * off * side, z = h.door[1] + uz * past + lz * off * side;
+      if (!walker.blocked(x, z)) starts.push([h, x, z]);
+    }
+    // and a few centimetres short of the sill, in the doorway's middle (where, on the preview, the page brought him from 0.9 m and held him)
+    for (const off of [0, 0.3, -0.3]) { const x = h.door[0] - ux * 0.03 + lx * off, z = h.door[1] - uz * 0.03 + lz * off; if (!walker.blocked(x, z)) starts.push([h, x, z]); }
+  }
+  // at a frame's step at 60 frames a second and at the page's longest (its frame time is held to 0.05 s), and held all but
+  // straight in, as the owner's address has him (yaw 0.009), to either hand
+  for (const [h, x, z] of starts) for (const len of [step, 2.1 * 0.05]) for (const turn of [0, 0.009, -0.009]) {
+    const ix = h.door[0] - h.out[0], iz = h.door[1] - h.out[1], d = Math.hypot(ix, iz), c = Math.cos(turn), s = Math.sin(turn), pos = { x, z };
+    const dx = ((ix * c - iz * s) / d) * len, dz = ((ix * s + iz * c) / d) * len;
+    let came = h.inside(pos.x, pos.z);
+    for (let n = 0; n < 240 && !came; n++) { stride(walker, pos, dx, dz); came = h.inside(pos.x, pos.z); }
+    if (!came) missed.push(`${h.id} from (${x.toFixed(2)}, ${z.toFixed(2)}), ${(len * 100).toFixed(1)} cm a step, turned ${turn}: held at (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)})`);
+  }
+  assert.ok(starts.length >= 3, "no spot against a frame was found");
+  assert.deepEqual(missed, [], "held against a door's frame");
+});
+
 // Off a low edge as a visitor walks it (#294; the owner, on the tea house's porch facing along its edge, could not get down):
 // at an unrailed edge no deeper than his leg (STEP_DOWN), walking out over it steps him down, at a walk; walking along it,
 // or across it at a slant, does not; a deeper edge still asks for the jump (Space), and a railed one has no way down.
