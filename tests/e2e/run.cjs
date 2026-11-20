@@ -2232,25 +2232,47 @@ const scenarios = {
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)
+      const START = [13.65, 11, -Math.PI / 2, 0.22];
       const t = await open(b, base, "q=low&cam=13.65,11,-1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
       await t.until(() => t.page.isVisible(touch ? "#jumpBtn" : "#dropBtn"), 30000, "the low unrailed porch offers no way down");
-      if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
-      if (!touch) {
-        await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
-        // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
-        const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z).map((e) => e.a[0])[0]; });
-        const edge = await t.state(); expect(line !== undefined && edge.h === 0.45 && edge.x >= line - 0.01, `ordinary walking should still stop at the porch edge (${edge.x} by ${line})`);
-      } else {
-        const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
-      }
-      await t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen");
+        const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen"); }
+      // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
+      // (the nearest such edge west of him: the tea house's back faces west too, across the court)
+      const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z && e.a[0] < s.x).map((e) => e.a[0]).sort((p, q) => q - p)[0]; });
+      expect(line !== undefined && line > 12.5, `no porch edge found before him (${line})`);
+      const record = () => t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, h: s.h, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      const recorded = () => t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
+      // Holding the way he faces: W, or on a phone the stick pushed up with a real touch.
+      const cdp = touch ? await t.page.context().newCDPSession(t.page) : null, stick = touch ? await t.page.evaluate(() => { const r = document.getElementById("stick").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }) : null;
+      const hold = async (on) => { if (!touch) { if (on) await t.page.keyboard.down("w"); else await t.page.keyboard.up("w"); return; }
+        if (on) { await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: stick[0], y: stick[1] }] }); await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: stick[0], y: stick[1] - 40 }] }); }
+        else await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
+      // The hop: Space, or the ring. It rises and comes down, onto clear ground.
+      await record();
       if (touch) await t.page.tap("#jumpBtn"); else await t.page.keyboard.press("Space");
-      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < 12.7; }, 120000, "the low porch hop never reached its clear landing");
-      const samples = await t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
+      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < line; }, 120000, "the low porch hop never reached its clear landing");
+      let samples = await recorded();
       expect(samples.filter(s => s.dropping).length >= 3 && samples.some(s => s.y > 0.5) && samples.some(s => s.y > 0 && s.y < 0.4), "the hop must rise and descend continuously, not teleport");
       expect(samples.every(s => s.y >= -0.001), "the hop fell through its landing");
       await t.shot(touch ? "drop-touch" : "drop-space");
-      if (!touch) { const x = (await t.state()).x; await t.page.keyboard.press("Space"); await t.frames(3); expect(!(await t.state()).dropping && Math.abs((await t.state()).x - x) < 0.03, "Space on ordinary ground should not start an unrestricted jump"); }
+      // Walking out over the edge (#294): he steps down it, at a walk, never rising over the porch, and is on the court.
+      await t.page.evaluate((p) => window.__pose(...p), START); await t.frames(3);
+      await record(); await hold(true);
+      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < line - 0.3; }, 120000, `walking out over the porch's edge did not step him down (${touch ? "the stick" : "W"})`);
+      await hold(false);
+      samples = await recorded();
+      const down = samples.filter(s => s.dropping), top = Math.max(...samples.map(s => s.y));
+      expect(down.length >= 3, `the step down was not drawn over several frames (${down.length})`);
+      expect(top <= 0.46, `the step down rose like a hop (${top.toFixed(3)} m)`);
+      expect(down.every((s, i) => i === 0 || s.y <= down[i - 1].y + 0.001) && samples.every(s => s.y >= -0.001), "the step down went up again, or through the court");
+      await t.shot(touch ? "step-touch" : "step-walk");
+      // Along the edge he stays on the porch: only walking out over it takes him down.
+      await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0.22), [line + 0.45, 11]); await t.frames(3);
+      await record(); await hold(true); await t.frames(20); await hold(false);
+      samples = await recorded();
+      expect(samples.every(s => s.h > 0.44 && !s.dropping), `walking along the porch's edge took him down: ${JSON.stringify(samples.filter(s => s.h <= 0.44 || s.dropping).slice(0, 3))}`);
+      if (!touch) { await t.page.evaluate(() => window.__pose(12.0, 11, -Math.PI / 2, 0.22)); await t.frames(3); const x = (await t.state()).x; await t.page.keyboard.press("Space"); await t.frames(3); expect(!(await t.state()).dropping && Math.abs((await t.state()).x - x) < 0.03, "Space on ordinary ground should not start an unrestricted jump"); }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
