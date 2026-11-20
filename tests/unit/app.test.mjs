@@ -1,4 +1,4 @@
-// tools/app.mjs and tools/app/: the MyGo shell for the desktop app — the counter taken out of the built index.html,
+// tools/app.mjs and tools/app/: the MyGo shell for the desktop app — the site built for the desktop target and checked,
 // the mygo.json written from updates.json, the app built, and its outputs found. The packaging itself is run by hand
 // and checked on the app it makes; the update loop was replayed locally on 2026-11-19 (see tools/app/README.md).
 import { test } from "node:test";
@@ -7,20 +7,11 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
-import { stripCounter, counterLeft, mygoJson, mainGo, buildOutputs } from "../../tools/app.mjs";
+import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { siteProblems, BUILD_ENV, mygoJson, mainGo, buildOutputs, main } from "../../tools/app.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-
-// The two lines the built index.html carries for the counter, as dist/ writes them.
-const COUNTER = `<link rel="preconnect" href="https://u.rushiwowen.co">
-<script defer src="https://u.rushiwowen.co/script.js" data-website-id="e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42" data-domains="temple.rushiwowen.co" data-do-not-track="true" data-exclude-hash="true" data-performance="true"></script>
-`;
-const PAGE = `<!doctype html>
-<html lang="zh-Hans">
-${COUNTER}<link rel="canonical" href="https://temple.rushiwowen.co/">
-<title>山门之外 · 云径禅寺</title>
-</html>
-`;
 
 test("the app is the game's window: the Pake settings carried over, maximised, title bar hidden, dark", () => {
   const config = mygoJson({ version: "0.3.1", updatesUrl: "https://x/y", publicKey: "PK", icon: "/tmp/icon.png" });
@@ -42,32 +33,49 @@ test("the window's size and the update check are in the generated main.go", () =
   assert.match(go, /go:embed all:site/);
 });
 
-test("the counter's preconnect and script are taken out, and the rest of the page is kept", () => {
-  const { html, removed } = stripCounter(PAGE);
-  assert.equal(removed, 2);
-  assert.equal(html.includes("u.rushiwowen.co"), false);
-  assert.match(html, /<link rel="canonical" href="https:\/\/temple\.rushiwowen\.co\/">/);
-  assert.match(html, /<title>山门之外 · 云径禅寺<\/title>/);
-  assert.equal(html.includes("<script"), false);
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "app-site-"));
+const put = (dir, rel, body) => { fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true }); fs.writeFileSync(path.join(dir, rel), body); };
+
+test("the app is built for the steam channel and the canary deploy, named in full", () => {
+  assert.deepEqual(BUILD_ENV, { VITE_CHANNEL: "steam", VITE_DEPLOY: "canary" });
+  assert.match(fs.readFileSync(path.join(ROOT, "tools/app.mjs"), "utf8"), /run\("pnpm", \["run", "build"\], ROOT, BUILD_ENV\)/);
 });
 
-test("a page without the counter comes back unchanged", () => {
-  const plain = "<!doctype html><html><body>no counter</body></html>\n";
-  assert.deepEqual(stripCounter(plain), { html: plain, removed: 0 });
-});
-
-test("the checked copy of the site names the counter's host nowhere", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "app-check-"));
+test("a site holding the counter, the sponsor address or tags, or the payment code is refused, by name and by bytes", () => {
+  const sha = crypto.createHash("sha256").update("qr-bytes").digest("hex");
+  const dir = tmp();
   try {
-    fs.mkdirSync(path.join(dir, "assets"), { recursive: true });
-    fs.writeFileSync(path.join(dir, "index.html"), stripCounter(PAGE).html);
-    fs.writeFileSync(path.join(dir, "assets", "a.js"), "fetch('https://temple.rushiwowen.co/x')\n");
-    fs.writeFileSync(path.join(dir, "assets", "b.js"), "fetch('https://u.rushiwowen.co/y')\n");
-    fs.writeFileSync(path.join(dir, "texture.webp"), "not text");
-    assert.deepEqual(counterLeft(dir), [path.join("assets", "b.js")]);
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+    put(dir, "index.html", "<html>ok</html>");
+    put(dir, "assets/a.js", "fetch('https://temple.rushiwowen.co/x')");
+    assert.deepEqual(siteProblems(dir, sha), []);
+    put(dir, "assets/b.js", "fetch('https://u.rushiwowen.co/y')");
+    put(dir, "assets/c.js", "open('https://x/rushiwowen.co/donate?utm_campaign=1')");
+    put(dir, "assets/d.js", "const offeringQr = 1");
+    put(dir, "wechat-support-2026-08-28.jpg", "x");
+    put(dir, "assets/renamed.bin", "qr-bytes");
+    const bad = siteProblems(dir, sha).join("\n");
+    for (const w of ["b.js: the counter", "c.js: rushiwowen.co/donate", "c.js: utm_campaign", "d.js: names the payment code", "wechat-support-2026-08-28.jpg: the payment code", "renamed.bin: the payment code (by its bytes)"]) assert.ok(bad.includes(w), w + "\n" + bad);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("a dist/ built the web way is refused by --skip-build, with the command that fixes it", async () => {
+  const dir = tmp();
+  try {
+    put(dir, "index.html", '<script defer src="https://u.rushiwowen.co/script.js"></script>');
+    put(dir, "assets/sheet.js", "open('https://x/rushiwowen.co/donate?utm_campaign=1')");
+    await assert.rejects(main(["--skip-build"], { dist: dir }), (e) => /not a desktop build/.test(e.message) && /VITE_CHANNEL=steam VITE_DEPLOY=canary pnpm run build/.test(e.message) && /index\.html/.test(e.message));
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("the site built as the app is built holds none of it (built for real, scanned as the package is)", () => {
+  const out = tmp();
+  try {
+    execFileSync(process.execPath, [path.join(ROOT, "node_modules/vite/bin/vite.js"), "build", "--logLevel", "warn", "--outDir", out, "--emptyOutDir"], { cwd: ROOT, env: { ...process.env, ...BUILD_ENV }, stdio: ["ignore", "inherit", "pipe"] });
+    const qr = crypto.createHash("sha256").update(fs.readFileSync(path.join(ROOT, "app/web/wechat-support-2026-08-28.jpg"))).digest("hex");
+    assert.deepEqual(siteProblems(out, qr), []);
+    assert.ok(fs.existsSync(path.join(out, "index.html")));
+    assert.match(fs.readFileSync(path.join(out, "index.html"), "utf8"), /noindex/);
+  } finally { fs.rmSync(out, { recursive: true, force: true }); }
 });
 
 test("the build's outputs are found, and a build without an app is refused", () => {

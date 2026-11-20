@@ -4,8 +4,8 @@
 
 ## What it does
 
-1. builds the site (`pnpm build`) unless `--skip-build`;
-2. copies `dist/` to a scratch folder and takes the page-view counter (`u.rushiwowen.co`) out of the copy's `index.html`; `dist/` itself is untouched;
+1. builds the site for the desktop target, `VITE_CHANNEL=steam VITE_DEPLOY=canary pnpm build`, unless `--skip-build`. Steam channel: no sponsor sheet, address or WeChat code (#202). Canary deploy: no page-view counter (only production has it, `app/src/deploy.js`), nothing else changes from production except `noindex`, which is harmless at `mygo://localhost`. Nothing is edited afterwards;
+2. scans `dist/` (also with `--skip-build`) and refuses to package one that holds the counter's host, the sponsor address or tags, or the payment code (by name or bytes), saying how to rebuild; then copies it to a scratch folder;
 3. writes the scratch mygo project: `main.go` from `main.go.template` (serve the site, check the update feed once after launch, install and relaunch), `mygo.json` from `updates.json` (the window carries over the Pake settings: 1440×900, min 960×600, maximised, hidden title bar, dark, closing quits);
 4. runs `mygo build`: embeds the site, compiles, signs (ad-hoc without a Developer ID), writes the `.app` and `.dmg` (macOS), and with the update key the signed archive and manifest;
 5. stages everything to `tools/out/app/v<version>/` (git-ignored).

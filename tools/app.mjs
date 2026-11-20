@@ -1,11 +1,12 @@
 // Packages the built site as a desktop app with MyGo (https://github.com/egoist/mygo), for macOS here and for
 // Windows and Linux from any machine by cross-compiling. The site is the one `pnpm build` wrote to dist/: it is
-// copied to a scratch folder, the page-view counter is taken out of index.html there (an app should not phone it),
-// and `mygo build` embeds the copy, names the app and signs the update files. Nothing in dist/ is changed.
+// built for the desktop target (VITE_CHANNEL=steam, VITE_DEPLOY=canary: no sponsor sheet, payment code or counter, as
+// the build itself leaves them out, not as an edit afterwards), checked, and copied to a scratch folder that
+// `mygo build` embeds; it names the app and signs the update files. Nothing in dist/ is changed.
 //
 //     pnpm run app                      build the site, then the .app and the .dmg (macOS)
 //     node tools/app.mjs --app          the .app only, no disk image
-//     node tools/app.mjs --skip-build   package the dist/ that is already there
+//     node tools/app.mjs --skip-build   package the dist/ that is already there, if it holds none of what an app leaves out (it is refused otherwise)
 //     node tools/app.mjs --keep         keep the scratch folder (the mygo project and the stripped site) to look at
 //
 // Needs the mygo CLI (PAKE → MYGO env var, or `go install github.com/egoist/mygo/cmd/mygo@v0.10.0`), Go 1.27.3+ and,
@@ -21,36 +22,52 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, "dist"), OUT = path.join(ROOT, "tools/out/app"), APP = path.join(ROOT, "tools/app");
 const NAME = "山门之外", IDENTIFIER = "com.rushiwowen.shangmen", SLUG = "temple-walk", MYGO_VERSION = "v0.10.0";
-// The page-view counter. The built index.html names it twice: a preconnect, and the script that sends the views.
+// What the desktop build must not hold: the page-view counter, and the sponsor page's address and tags and the
+// WeChat payment code (the web channel's, #202). Looked for in the built files themselves, so a dist/ built some other
+// way is caught by what it contains, not by what anyone says it is.
 const COUNTER_HOST = "u.rushiwowen.co";
-const COUNTER_TAGS = [
-  /[ \t]*<link rel="preconnect" href="https:\/\/u\.rushiwowen\.co"[^>]*>\n?/g,
-  /[ \t]*<script[^>]*src="https:\/\/u\.rushiwowen\.co\/[^"]*"[^>]*><\/script>\n?/g,
-];
-const TEXT_FILES = new Set([".html", ".js", ".css", ".json", ".webmanifest", ".svg"]);
+const SPONSOR = ["rushiwowen.co/donate", "utm_campaign", "offering-box"];
+const QR_NAME = "wechat-support-2026-08-28.jpg";
+const TEXT_FILES = new Set([".html", ".js", ".mjs", ".css", ".json", ".webmanifest", ".svg", ".txt", ".map"]);
+// The target the app is built for (app/src/deploy.js): steam channel, so no sponsor sheet and no payment code; canary
+// deploy, so no counter. Canary behaves as production in every other way and differs by noindex alone, which a
+// window at mygo://localhost makes harmless. Preview would also do, but it is a pull request's build by name.
+export const BUILD_ENV = { VITE_CHANNEL: "steam", VITE_DEPLOY: "canary" };
 
-// index.html with the counter taken out, and how many tags went. A page the counter never touched comes back unchanged.
-export function stripCounter(html) {
-  let removed = 0, out = html;
-  for (const tag of COUNTER_TAGS) out = out.replace(tag, () => (removed++, ""));
-  return { html: out, removed };
+function walk(dir, rel = "") {
+  return fs.readdirSync(path.join(dir, rel), { withFileTypes: true }).flatMap((e) => {
+    const here = path.join(rel, e.name);
+    return e.isDirectory() ? walk(dir, here) : [here];
+  });
 }
 
-// The files under a folder that still name the counter's host, relative to it.
-export function counterLeft(dir, rel = "") {
-  const hits = [];
-  for (const entry of fs.readdirSync(path.join(dir, rel), { withFileTypes: true })) {
-    const here = path.join(rel, entry.name);
-    if (entry.isDirectory()) hits.push(...counterLeft(dir, here));
-    else if (TEXT_FILES.has(path.extname(entry.name)) && fs.readFileSync(path.join(dir, here), "utf8").includes(COUNTER_HOST)) hits.push(here);
+// What in a built site does not belong in the app, as "file: what" lines; empty when it is clean. The payment code is
+// found by name and by its bytes under any name.
+export function siteProblems(dir, qrSha) {
+  const problems = [];
+  for (const rel of walk(dir)) {
+    const abs = path.join(dir, rel);
+    if (/wechat-support/.test(rel)) problems.push(`${rel}: the payment code`);
+    else if (qrSha && crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex") === qrSha) problems.push(`${rel}: the payment code (by its bytes)`);
+    if (!TEXT_FILES.has(path.extname(rel))) continue;
+    const text = fs.readFileSync(abs, "utf8");
+    if (text.includes(COUNTER_HOST)) problems.push(`${rel}: the counter's host ${COUNTER_HOST}`);
+    for (const x of SPONSOR) if (text.includes(x)) problems.push(`${rel}: ${x}`);
+    if (/wechat-support|offeringQr/.test(text)) problems.push(`${rel}: names the payment code`);
   }
-  return hits;
+  return problems;
+}
+
+function qrHash() {
+  const f = path.join(ROOT, "app/web", QR_NAME);
+  return fs.existsSync(f) ? crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex") : undefined;
 }
 
 // The mygo.json for the game. The window carries over the Pake settings this replaces (#220): maximised, the title
@@ -183,31 +200,29 @@ async function makeIcon(file) {
     .toFile(file);
 }
 
-function run(command, args, cwd, env) {  return new Promise((resolve, reject) => {
+function run(command, args, cwd, env) {
+  return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, env: { ...process.env, ...env }, stdio: "inherit" });
     child.on("error", (error) => reject(error.code === "ENOENT" ? new Error(`${command} not found`) : error));
     child.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`${command} ${args.join(" ")} exited ${code}`))));
   });
 }
 
-export async function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2), { dist = DIST } = {}) {
   const has = (flag) => argv.includes(flag);
   const version = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
   const mygoBin = process.env.MYGO || "mygo";
 
-  if (!has("--skip-build")) await run("pnpm", ["run", "build"], ROOT);
-  if (!fs.existsSync(path.join(DIST, "index.html"))) throw new Error("dist/index.html is missing: run pnpm run build");
+  if (!has("--skip-build")) await run("pnpm", ["run", "build"], ROOT, BUILD_ENV);
+  if (!fs.existsSync(path.join(dist, "index.html"))) throw new Error("dist/index.html is missing: run pnpm run build");
+  const bad = siteProblems(dist, qrHash());
+  if (bad.length) throw new Error(`dist/ is not a desktop build (it holds ${bad.length} thing(s) an app leaves out; rebuild it with ${Object.entries(BUILD_ENV).map(([k, v]) => `${k}=${v}`).join(" ")} pnpm run build, or run without --skip-build):\n  ${bad.slice(0, 8).join("\n  ")}`);
 
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "yunjing-app-"));
   try {
     const site = path.join(scratch, "site");
-    fs.cpSync(DIST, site, { recursive: true });
-    const indexPath = path.join(site, "index.html");
-    const stripped = stripCounter(fs.readFileSync(indexPath, "utf8"));
-    fs.writeFileSync(indexPath, stripped.html);
-    const left = counterLeft(site);
-    if (left.length) throw new Error(`the site still names ${COUNTER_HOST} in: ${left.join(", ")}`);
-    console.log(`site: copied dist/, removed ${stripped.removed} counter tag(s)`);
+    fs.cpSync(dist, site, { recursive: true });
+    console.log("site: copied dist/, checked: no counter, sponsor address or payment code");
 
     fs.copyFileSync(path.join(APP, "main.go.template"), path.join(scratch, "main.go"));
     const updates = JSON.parse(fs.readFileSync(path.join(APP, "updates.json"), "utf8"));
