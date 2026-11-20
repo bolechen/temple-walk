@@ -94,3 +94,15 @@ test("deploy-tag.yml: the deploy's failure is not hidden by the tee, the check i
   assert.match(y, /sparse-checkout: \|\n(?:\s+\S+\n)*?\s+tools\/ci\/live-check\.cjs/, "the job checks out the script");
   const v = (t) => t.match(/wrangler@([\d.]+)/)[1]; assert.equal(v(live), v(publish), "the check asks the wrangler that deployed"); assert.equal(v(now), v(publish));
 });
+
+// Two calls in one run (a tag put on the canary and then on production, from one workflow) share github.run_id: a build's artifact
+// named by the run alone is then one of several of the same name, and the deploy took another call's site (found on 2026-11-20:
+// v0.6.0 was asked for and v0.5.0's build was put up).
+test("deploy-tag.yml: what one call builds is named by what it is for, so that another call's deploy cannot take it", () => {
+  const y = fs.readFileSync(new URL("../../.github/workflows/deploy-tag.yml", import.meta.url), "utf8");
+  const names = [...y.matchAll(/^\s+name: (tag-(?:site|e2e)-[^\n]+)$/gm)].map((m) => m[1]);
+  assert.ok(names.length >= 3, "the artifacts' names were not found");
+  for (const n of names) assert.match(n, /\$\{\{ inputs\.target \}\}-\$\{\{ inputs\.ref \}\}-\$\{\{ github\.run_id \}\}/, n);
+  const site = names.filter((n) => n.startsWith("tag-site-"));
+  assert.equal(new Set(site).size, 1, "the site is uploaded under one name and downloaded under another");
+});

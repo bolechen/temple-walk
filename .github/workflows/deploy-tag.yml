@@ -128,7 +128,7 @@ jobs:
         if: always() && inputs.check
         uses: actions/upload-artifact@v4
         with:
-          name: tag-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tag-e2e-${{ inputs.target }}-${{ inputs.ref }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
@@ -136,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: dist
-          name: tag-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tag-site-${{ inputs.target }}-${{ inputs.ref }}-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
           include-hidden-files: true
 
@@ -164,7 +164,7 @@ jobs:
           sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4
         with:
-          name: tag-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tag-site-${{ inputs.target }}-${{ inputs.ref }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
       - uses: actions/setup-node@v4
         with:
