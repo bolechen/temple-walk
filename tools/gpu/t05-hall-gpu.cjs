@@ -7,7 +7,14 @@ const path = require("path"), fs = require("fs");
 exports.run = async ({ open, out, log, size = [1920, 1080], frames = 120, sets }) => {
   fs.mkdirSync(out, { recursive: true });
   const rows = [];
-  for (const set of sets) for (const view of set.views || ["door3", "side3"]) {
+  for (const set of sets.filter((x) => x.shots)) {   // pictures for review (issue #370): window.hall.shoot, one page
+    const sz = set.size || size, { ctx, page } = await open(`w=${sz[0]}&h=${sz[1]}&ao=1`, sz, 1);
+    await page.evaluate((l) => window.hall.setStatues(l), set.statues);
+    for (const sh of set.shots) { await page.evaluate((s) => window.hall.shoot(s), sh.shoot); const file = `${set.name}-${sh.name}.png`;
+      await page.screenshot({ path: path.join(out, file) }); rows.push({ set: set.name, view: sh.name, file, ms: 0, tris: 0, calls: 0, shot: true }); log(set.name, sh.name); }
+    await ctx.close();
+  }
+  for (const set of sets.filter((x) => !x.shots)) for (const view of set.views || ["door3", "side3"]) {
     const { ctx, page } = await open(`w=${size[0]}&h=${size[1]}&ao=${set.ao === false ? 0 : 1}`, size, 1);
     await page.evaluate((l) => window.hall.setStatues(l), set.statues);
     if (set.paint !== undefined) await page.evaluate((p) => window.hall.paint(p), set.paint);

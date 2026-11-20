@@ -14,6 +14,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { paintMaterial } from "./paint.js";
 import recipe from "./paint/recipe.json";
 const ANCHORS = Object.fromEntries(Object.entries(import.meta.glob("./paint/*.json", { eager: true, import: "default" }))
@@ -203,7 +204,7 @@ function mandorla(x, topY, headY, v = {}) {
     const px = Math.cos(a) * wB * 0.52, py = Math.sin(a) * h * 0.98;
     cone.position.set(x + px, b + py * 0.92 + 0.2, z + 0.1); cone.rotation.z = a - Math.PI / 2; g.add(cone);
   }
-  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.userData.halo = true; } });
   scene.add(g); return g;
 }
 
@@ -370,6 +371,44 @@ function occlusion(i, pts, near = 0.3) {
   return out;
 }
 
+// Pictures of one figure for review (issue #370: the owner asked to see the hands and the paint before acceptance went on):
+// shoot({ studio: { az, el, dist, at, fov, exp } }) stands the eye round figure 0 at `az` degrees (0 in front, 90 its
+// right, 180 behind, 270 its left), `el` up, `dist` metres from `at` (a point in its own frame), with the hall hidden,
+// a warm key, a cool fill and a rim, and a room environment for the gold to reflect; shoot({ view, over, mood, lamp })
+// is a view in the hall, with the altar lamp (a warm point before the altar) at `lamp`.
+let studioOn = false, studioEnv = null; const studioLights = [];
+function studio(on) {
+  if (on === studioOn) return; studioOn = on;
+  if (!studioLights.length) {
+    const key = new THREE.DirectionalLight(0xffd9a8, 3.2), fill = new THREE.DirectionalLight(0xb8c8e0, 0.9), rim = new THREE.DirectionalLight(0xfff0d8, 2.2);
+    studioLights.push(key, fill, rim); for (const l of studioLights) { l.visible = false; scene.add(l, l.target); }
+    const pm = new THREE.PMREMGenerator(renderer); studioEnv = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+  }
+  const keepIn = new Set(); for (const f of figures) f.group.traverse((o) => keepIn.add(o));
+  scene.traverse((o) => { if (o.isMesh && !keepIn.has(o)) { o.userData.studioHid ??= o.visible; o.visible = on ? false : o.userData.studioHid; } });
+  for (const f of figures) f.group.traverse((o) => { if (o.isMesh && o.userData.halo) o.visible = !on; });
+  for (const l of studioLights) l.visible = on; sun.visible = !on; for (const l of skyLights) l.visible = !on; floorFill.visible = bounce.visible = !on;
+  scene.background = on ? new THREE.Color(0x2a2622) : null; sky.visible = !on;
+  for (const f of figures) for (const m of Object.values(f.painted || {})) { m.userData.envKeep ??= m.envMap; m.envMap = on ? studioEnv : m.userData.envKeep; m.envMapIntensity = on ? 1.0 : 1.6; m.needsUpdate = true; }
+  renderer.shadowMap.needsUpdate = true;
+}
+function shoot(s) {
+  if (s.mood) setMood(s.mood); if (s.paint !== undefined) paint(s.paint);
+  if (s.studio) {
+    studio(true); const o = s.studio, f = figures[0], P = f.pivot; P.updateMatrixWorld(true);
+    const at = P.localToWorld(new THREE.Vector3(...(o.at || [0, 4.3, 0]))), az = THREE.MathUtils.degToRad(o.az || 0), el = THREE.MathUtils.degToRad(o.el ?? 8), d = o.dist ?? 16;
+    // in the figure's frame its front is +z and its right is -x (the viewer's left)
+    const dir = P.localToWorld(new THREE.Vector3(-Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el))).sub(P.localToWorld(new THREE.Vector3()));
+    camera.position.copy(at).addScaledVector(dir.normalize(), d); camera.fov = o.fov ?? 35; camera.lookAt(at); camera.updateProjectionMatrix();
+    const W3 = (v) => P.localToWorld(new THREE.Vector3(...v)).sub(P.localToWorld(new THREE.Vector3()));
+    const [key, fill, rim] = studioLights;   // lights fixed to the figure, not the eye: the four sides are lit the same way round it
+    key.position.copy(at).add(W3([-9, 10, 12])); key.target.position.copy(at); fill.position.copy(at).add(W3([12, 3, 8])); fill.target.position.copy(at);
+    rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
+    renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
+  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); }
+  render(); return { tris: renderer.info.render.triangles };
+}
+
 let composer = null, useAO = Q.get("ao") !== "0";
 function buildComposer() {
   composer = new EffectComposer(renderer); composer.setSize(W, H); composer.addPass(new RenderPass(scene, camera));
@@ -447,7 +486,7 @@ function ortho(i, side = "front", z = {}) {
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, ortho, pick, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site

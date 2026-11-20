@@ -35,6 +35,9 @@ if (process.env.SETS === "lod370") {
   const V = ["door", "door3", "front10"], sets = [];
   for (const k of [1, 2]) { sets.push({ name: "none-" + k, statues: [], views: V });
     for (const [u, n] of [[0, "near"], [1, "mid"], [2, "far"]]) sets.push({ name: n + "-clay-" + k, statues: L(u), paint: false, views: V }, { name: n + "-paint-" + k, statues: L(u), paint: true, views: V }); }
+  // the review pictures (the owner asked to see the hands and the paint, #370): the shots of tools/t05-hall/specs/sakyamuni-370-review.json on the near level
+  const R = require("./tools/t05-hall/specs/sakyamuni-370-review.json");
+  sets.unshift({ name: "review", size: R.size, statues: [{ ...L(0)[3] }], shots: R.shots });
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
 }
 if (process.env.SETS === "paint") {

@@ -53,7 +53,7 @@ const here = __dirname, root = path.join(here, "..");
     const p = await page(W, H);
     for (const s of spec.shots) {
       const t0 = Date.now();
-      const r = s.ortho ? await p.evaluate(([o, paint]) => { if (paint !== undefined) window.hall.paint(paint); window.hall.ortho(o.i ?? 0, o.side || "front", o); return {}; }, [s.ortho, s.paint])
+      const r = s.shoot ? await p.evaluate((sh) => window.hall.shoot(sh), s.shoot) : s.ortho ? await p.evaluate(([o, paint]) => { if (paint !== undefined) window.hall.paint(paint); window.hall.ortho(o.i ?? 0, o.side || "front", o); return {}; }, [s.ortho, s.paint])
         : await p.evaluate(({ v, m, over, paint }) => { window.hall.setMood(m); if (paint !== undefined) window.hall.paint(paint); window.hall.view(v, over || {}); const r = window.hall.stats(); window.hall.render(); return r; }, { v: s.view, m: s.mood || "summer", over: s.over, paint: s.paint });
       const file = path.join(out, `${s.name}.png`); await p.locator("canvas").screenshot({ path: file });
       report.shots.push({ ...s, file: path.relative(root, file), ...r, ms: Date.now() - t0 }); console.log(`${s.name}: ${r.tris} tris, ${r.calls} calls, ${Date.now() - t0} ms`);
