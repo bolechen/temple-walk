@@ -1898,7 +1898,8 @@ const scenarios = {
   // stands, as a person's eyes would; every press is a real key. Every few frames he stands across the middle of the
   // picture and the eye stays far enough behind him to show the way ahead.
   keywalk: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,50,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    // (a small picture with the mirror and the bloom left out, which the eye's space does not hold anyway: the walk is long)
+    const t = await open(b, base, "q=low&cam=0,50,0,0&view=third&off=reflect,bloom", { viewport: { width: 480, height: 320 } });
     await t.frames(10);
     const K = t.page.keyboard, held = new Set(), hold = async (k, on) => { if (on && !held.has(k)) { await K.down(k); held.add(k); } else if (!on && held.has(k)) { await K.up(k); held.delete(k); } };
     const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
