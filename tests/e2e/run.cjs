@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, doorway, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
+// picture (boot, doorway, doorway-hires, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
@@ -432,6 +432,83 @@ const scenarios = {
     // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
     const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
     expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // #320: the larger face into the room (shown by default) shows the room the same way round as the cube it
+  // sharpens. Across the great hall's door, square on from 6 m, the brightness of each column with the larger face is set
+  // against the same columns from the cube: it must follow them as they are, not as in a mirror (its first version had
+  // the attendant figures change sides, #332). On the low tier it is held smaller, within 20 MB for the halls kept.
+  "doorway-hires": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&cam=0,60,3.14,0");
+    await t.frames(4);
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI;
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);
+    await t.until(async () => (await t.page.evaluate(() => window.__doorways())).halls.main.hi, 240000, "the great hall's larger face never came");
+    await t.frames(2);
+    const rect = await t.page.evaluate(() => window.__doorRect("main")), N = 48, pts = [];
+    for (let i = 0; i < N; i++) for (let j = 0; j < 8; j++) pts.push([rect.door[0] + (rect.door[2] - rect.door[0]) * (i + 0.5) / N, rect.door[1] + (rect.door[3] - rect.door[1]) * (0.3 + 0.6 * j / 7)]);
+    const cols = async (on) => { await t.page.evaluate((v) => window.__doorHires(v), on); await t.frames(1); const at = await t.page.evaluate((p) => window.__probe(p).at, pts); return Array.from({ length: N }, (_, i) => at.slice(i * 8, i * 8 + 8).reduce((s, c) => s + c[0] + c[1] + c[2], 0) / 24); };
+    const hi = await cols(true), cube = await cols(false);
+    const corr = (a, b) => { const ma = a.reduce((s, v) => s + v, 0) / a.length, mb = b.reduce((s, v) => s + v, 0) / b.length; let n = 0, da = 0, db = 0; a.forEach((v, i) => { n += (v - ma) * (b[i] - mb); da += (v - ma) ** 2; db += (b[i] - mb) ** 2; }); return n / Math.sqrt(da * db || 1); };
+    const same = corr(hi, cube), mirrored = corr(hi, [...cube].reverse());
+    console.log("     the larger face against the cube, column by column:", JSON.stringify({ same: +same.toFixed(3), mirrored: +mirrored.toFixed(3) }));
+    expect(same > 0.45 && same > mirrored + 0.2, `the larger face does not follow the cube across the door (correlation ${same.toFixed(2)}, mirrored ${mirrored.toFixed(2)}): it shows the room the wrong way round`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // On the low tier (a phone) the larger face is held at 512, so the three halls it keeps stay under 20 MB of the card's memory (#332).
+    const p = await open(b, base, "shot=1&q=low&view=first&season=summer&time=day&cam=0,60,3.14,0" + BARE.replace(",doorway", ""));
+    await p.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);
+    await p.until(async () => (await p.page.evaluate(() => window.__doorways())).halls.main.hi, 240000, "on the low tier the great hall's larger face never came");
+    const low = await p.page.evaluate(() => window.__doorways()), held = Object.values(low.halls).filter((x) => x.taken).length, each = low.mb / Math.max(1, held);
+    console.log("     the low tier's doorways on the card:", JSON.stringify({ mb: low.mb, held, each: +each.toFixed(2), keep: low.keep, atKeep: +(each * low.keep).toFixed(1) }));
+    expect(each * low.keep <= 20, `on the low tier each hall holds ${each.toFixed(1)} MB of the card's memory: ${low.keep} halls would hold ${(each * low.keep).toFixed(1)} MB, over 20`);
+    expect(p.errors.length === 0, p.errors.join("\n")); await p.close();
+  } },
+  // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. No thin
+  // bright line runs down the door's edges (no light leaks past the room's jambs), two frames of a still view are the same
+  // (nothing shimmers), the altar keeps its place going in, and coming out the room is drawn live again at once.
+  "doorway-live": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&doorway=live&warm=0&cam=0,60,3.14,0");
+    await t.frames(4);
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    const look = {};
+    for (const [d, turn] of [[6, 0], [3, 0], [11, 0], [6, 0.35]]) {
+      const a = inYaw + turn;
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(a) * d, h.out[1] + Math.cos(a) * d, a]);
+      await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight > 0; }, 240000, `the great hall's room was never drawn live from ${d} m`);
+      await t.frames(2);
+      // __doorRect's `door` spans 1.3 m either side of the middle; the opening's edges are at 1.42 m. Square on, a column
+      // a pixel either side of each edge, down the upper half of the door (where the room's lamp lights the wall behind
+      // the jamb), must be no brighter than the frame outside it or the room inside it, a few pixels away: a leak is a
+      // thin line brighter than both. Turned, only the shimmer is held, down the door's two sides.
+      const rect = await t.page.evaluate(() => window.__doorRect("main")), cx = (rect.door[0] + rect.door[2]) / 2, half = (rect.door[2] - rect.door[0]) / 2 * (1.42 / 1.3);
+      const ys = []; for (let y = rect.door[1]; y < (rect.door[1] + rect.door[3]) / 2; y += 2) ys.push(Math.round(y));
+      const cols = turn ? [] : [-1, 1].flatMap((side) => [-1, 0, 1].map((k) => ({ side, x: Math.round(cx + side * half + k), out: Math.round(cx + side * (half + 5)), in: Math.round(cx + side * (half - 5)) })));
+      const pts = cols.flatMap((c) => ys.flatMap((y) => [[c.x, y], [c.out, y], [c.in, y]]));
+      const line = [rect.door[0], rect.door[2]].flatMap((x) => ys.map((y) => [Math.round(x), y]));   // turned: the door's two sides
+      const lum = (c) => (c[0] + c[1] + c[2]) / 3;
+      // The edges, twice, with time held (`shot=1`: the candles, which flicker by design, held too).
+      const one = await t.page.evaluate((p) => window.__probe(p).at, pts.length ? pts : line), two = await t.page.evaluate((p) => window.__probe(p).at, pts.length ? pts : line);
+      let worst = 0;
+      for (let i = 0; i < pts.length; i += 3) worst = Math.max(worst, lum(one[i]) - Math.max(lum(one[i + 1]), lum(one[i + 2])));
+      const shimmer = Math.max(...two.map((c, i) => (pts.length && i % 3 ? 0 : Math.abs(lum(c) - lum(one[i])))));
+      look[`${d}m${turn}`] = { edge: +worst.toFixed(1), shimmer: +shimmer.toFixed(1) };
+      await t.shot(`e2e-doorway-live-${d}m${turn}`);
+      expect(worst <= 12, `from ${d} m: a thin line at the door's edge is brighter by ${worst.toFixed(0)} than both the frame and the room beside it: light leaks past the room's jamb`);
+      expect(shimmer <= 3, `from ${d} m, turned ${turn}: the door changes between two still frames by ${shimmer.toFixed(1)}`);
+    }
+    console.log("     across the door:", JSON.stringify(look));
+    await t.shot("e2e-doorway-live");
+    // Going in and coming out at the door: the altar keeps its place, and the room is drawn live again on coming out.
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0], h.out[1], inYaw]); await t.frames(3);
+    const out = await t.page.evaluate(() => window.__doorAltar("main"));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(1);
+    const inn = await t.page.evaluate(() => window.__doorAltar("main")), moved = Math.abs(out.x - inn.x) / 2;
+    console.log("     the altar across the door:", JSON.stringify({ out: +out.x.toFixed(3), in: +inn.x.toFixed(3), moved: +moved.toFixed(3) }));
+    expect(moved <= 0.05, `the altar jumps across the door going in: ${moved.toFixed(3)} of the width`);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 4, h.out[1] - f[1] * 4, inYaw]);
+    await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight === 1; }, 60000, "coming out, the room was not drawn live again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,
