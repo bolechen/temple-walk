@@ -1,5 +1,5 @@
 // End-to-end scenarios: a real page in a real browser, driven the way a visitor drives it.
-//   node tests/e2e/run.cjs --shard=1/8  the first of eight parts of whatever was asked for (the full run shares it among eight machines, by each scenario's measured time: tests/e2e/shards.cjs)
+//   node tests/e2e/run.cjs --shard=1/12  the first of twelve parts of whatever was asked for (the full run shares it among twelve machines, by each scenario's measured time: tests/e2e/shards.cjs)
 //   node tests/e2e/run.cjs              every scenario (about twenty minutes without a GPU)
 //   node tests/e2e/run.cjs --smoke      tiers 1 and 2: everything but the long walks and the photograph
 //   node tests/e2e/run.cjs --quick      tier 1 only (the page comes up clean): what must pass before anything is published
@@ -2384,7 +2384,7 @@ const scenarios = {
 
 (async () => {
   const args = process.argv.slice(2), most = args.includes("--quick") ? 1 : args.includes("--smoke") ? 2 : 3, named = args.filter((a) => !a.startsWith("--"));
-  // --shard=2/8: the second of eight parts of the list, so that eight machines can share a whole run. The parts are made by
+  // --shard=2/12: the second of twelve parts of the list, so that twelve machines can share a whole run. The parts are made by
   // tests/e2e/shards.cjs from what each scenario was last measured at (durations.json), not by taking them in turn (#335).
   let shard; try { shard = require("./shards.cjs").parseShard(args); } catch (e) { console.error(e.message); process.exit(2); }
   const part = (list) => (shard ? require("./shards.cjs").plan(list, shard[1]).parts[shard[0] - 1] : list);

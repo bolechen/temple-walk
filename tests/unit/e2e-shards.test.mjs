@@ -1,12 +1,12 @@
-// A whole end-to-end run is shared among eight machines by each scenario's measured time (#335, tests/e2e/shards.cjs). Taken in
+// A whole end-to-end run is shared among twelve machines by each scenario's measured time (#335, tests/e2e/shards.cjs). Taken in
 // turn, four machines ran 35, 39, 45 and 48 minutes of the same list; these tests hold the new way to what it is for: every
 // scenario on exactly one machine, the same answer everywhere, and none much longer than another.
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import { createRequire } from "node:module"; import { fileURLToPath } from "node:url";
 const { plan, parseShard, defined, read, secsOf } = createRequire(import.meta.url)("../../tests/e2e/shards.cjs");
-const ROOT = fileURLToPath(new URL("../..", import.meta.url)), N = 8, all = defined(), data = read();
+const ROOT = fileURLToPath(new URL("../..", import.meta.url)), N = 12, all = defined(), data = read();
 const e2e = fs.readFileSync(new URL("../../.github/workflows/e2e.yml", import.meta.url), "utf8");
 
-test("every scenario of the suite is on exactly one of the eight machines", () => {
+test("every scenario of the suite is on exactly one of the twelve machines", () => {
   assert.ok(all.length >= 55, `only ${all.length} scenarios were found in run.cjs: the pattern that reads them is wrong`);
   const { parts } = plan(all, N);
   assert.equal(parts.length, N);
@@ -22,8 +22,10 @@ test("the answer is the same on every machine and for any order of the list", ()
 
 test("no machine runs much longer than another, and none runs longer than the target leaves room for", () => {
   const { loads } = plan(all, N), max = Math.max(...loads), min = Math.min(...loads);
-  // 25 minutes is the target for a machine from start to end; about two of them are setup (measured 74 to 110 s) and one is margin
-  assert.ok(max <= 22 * 60, `the longest machine is counted at ${(max / 60).toFixed(1)} min: refresh durations.json, or share among more machines`);
+  // 25 minutes is the target for a machine from start to end. About two of them are setup (measured 74 to 110 s), and what a
+  // scenario takes varies from one run and one machine to the next by 10 to 60 % (eight machines counted at 20.8 min each ran 17.8 to
+  // 29.1, run 44675254911): so the count has to leave a third and more of room.
+  assert.ok(max <= 16 * 60, `the longest machine is counted at ${(max / 60).toFixed(1)} min: refresh durations.json, or share among more machines`);
   assert.ok(max - min <= 0.1 * max, `the machines are counted at ${(min / 60).toFixed(1)} to ${(max / 60).toFixed(1)} min`);
   // what it replaced: taken in turn, the same times give the 25-to-48-minute spread of 2026-11-20
   const secs = secsOf(data.scenarios), turn = Array.from({ length: 4 }, (_, k) => all.filter((_, i) => i % 4 === k).reduce((n, x) => n + secs(x), 0));
@@ -61,7 +63,7 @@ test("a shard that is not one of the machines is refused, and none asked for is 
   assert.doesNotMatch(run, /i % shard\[1\]/, "the old way of taking them in turn is still in run.cjs");
 });
 
-test("e2e.yml: eight machines, the command says eight, the evidence reads stay on one, and a branch's run does not cancel the nightly one", () => {
+test("e2e.yml: twelve machines, the command says twelve, the evidence reads stay on one, and a branch's run does not cancel the nightly one", () => {
   const list = e2e.match(/shard: \[([\d, ]+)\]/)[1].split(",").map(Number);
   assert.deepEqual(list, Array.from({ length: N }, (_, i) => i + 1));
   assert.match(e2e, new RegExp(`--shard=\\$\\{\\{ matrix\\.shard \\}\\}/${N}\\b`), "the command shares by a different number than the matrix has");
