@@ -4,13 +4,15 @@
 #   HF_TOKEN=… tools/ci/t4-launch.sh boot photo
 # What it does: packs the checkout's tracked files and the built site (dist/, built first) into one archive, syncs it to
 # a private bucket under runs/<run>/, starts a Job on a T4 that runs tools/ci/t4-job.sh, waits for it, brings
-# /work/out/<run> back into tools/out/ and removes the run from the bucket. It exits non-zero on anything short of a
+# /work/out/<run> back into $OUT/ and removes the run from the bucket. It exits non-zero on anything short of a
 # job that finished and whose scenarios all passed: no token, no bucket, a Job that errors, times out or is cancelled,
 # a report that did not come back, an exit code that is not 0. The Job's address is printed first.
 #   T4_PACK_ONLY=/tmp/pack.tgz tools/ci/t4-launch.sh pack    # only build and pack (no token needed); T4_PACK=/tmp/pack.tgz then sends it
+#   T4_OUT=dir sets where the result comes back to (default tools/out).
 # Needs the `hf` command (pip install huggingface_hub). Never print the token. T4_FLAVOR and T4_TIMEOUT override the card and the limit; T4_GPU=0 with a CPU flavour (T4_FLAVOR=cpu-performance) tries the whole path without a card.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
+OUT="${T4_OUT:-tools/out}"   # where the report and pictures come back to (a run of several shards by hand gives each its own)
 fail() { echo "t4-launch: $*" >&2; exit 1; }
 # Asked to send, it must have what it needs before it builds anything.
 if [ -z "${T4_PACK_ONLY:-}" ]; then [ -n "${HF_TOKEN:-}" ] || fail "HF_TOKEN is not set (the repository secret of that name; see docs/RELEASING.md)"; [ -n "$*" ] || fail "say which scenarios: --shard=i/N, or their names"; fi
@@ -49,14 +51,14 @@ echo "t4-launch: job https://huggingface.co/jobs/$NS/$JOB"
 START=$(date +%s)
 hf jobs wait "$NS/$JOB" --timeout "${T4_WAIT:-50m}"; WAIT=$?
 echo "t4-launch: job ended with wait status $WAIT after $(( $(date +%s) - START )) s"
-mkdir -p tools/out
-hf jobs logs "$NS/$JOB" > tools/out/t4-job.log 2>&1 || echo "t4-launch: could not fetch the Job's log" >&2
-tail -40 tools/out/t4-job.log
-hf buckets sync "hf://buckets/$BUCKET/out/$RUN" tools/out >/dev/null || echo "t4-launch: nothing came back from the bucket" >&2
+mkdir -p "$OUT"
+hf jobs logs "$NS/$JOB" > "$OUT/t4-job.log" 2>&1 || echo "t4-launch: could not fetch the Job's log" >&2
+tail -40 "$OUT"/t4-job.log
+hf buckets sync "hf://buckets/$BUCKET/out/$RUN" "$OUT" >/dev/null || echo "t4-launch: nothing came back from the bucket" >&2
 hf buckets rm "hf://buckets/$BUCKET/runs/$RUN" -R -y >/dev/null 2>&1 || true
 hf buckets rm "hf://buckets/$BUCKET/out/$RUN" -R -y >/dev/null 2>&1 || true
 DONE=1
 [ "$WAIT" -eq 0 ] || fail "the Job did not complete: https://huggingface.co/jobs/$NS/$JOB"
-[ -f tools/out/e2e-report.json ] || fail "the Job finished but no e2e-report.json came back"
-[ "$(cat tools/out/exit 2>/dev/null)" = "0" ] || fail "scenarios failed (exit $(cat tools/out/exit 2>/dev/null || echo unknown)): see tools/out/e2e-report.json"
-echo "t4-launch: all passed on $(cat tools/out/e2e-renderer.txt 2>/dev/null)"
+[ -f "$OUT"/e2e-report.json ] || fail "the Job finished but no e2e-report.json came back"
+[ "$(cat "$OUT"/exit 2>/dev/null)" = "0" ] || fail "scenarios failed (exit $(cat "$OUT"/exit 2>/dev/null || echo unknown)): see "$OUT"/e2e-report.json"
+echo "t4-launch: all passed on $(cat "$OUT"/e2e-renderer.txt 2>/dev/null)"
