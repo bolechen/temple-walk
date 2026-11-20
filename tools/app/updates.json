@@ -1,0 +1,4 @@
+{
+  "updatesUrl": "https://temple.rushiwowen.co/updates/desktop",
+  "publicKey": "TO-BE-GENERATED: run `mygo keygen -o tools/app-keys` and paste keys/mygo-update.pub here"
+}
