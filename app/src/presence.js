@@ -87,3 +87,20 @@ export function createPresence({ on = false, base = "", doFetch = globalThis.fet
   const line = (place) => (live() ? lineFor(place, count(place)) : null);
   return { on: live(), load, count, report, line, state: () => ({ on: live(), quiet, day, traces, sent, failed, read, reported: [...reported] }) };
 }
+
+/**
+ * Reads the day, and again after a pause if the first read did not come back: the page is at its busiest when the game is made, and on a slow
+ * machine the answer can arrive after `call`'s own limit (a read once came back at 6.9 s against 6 s, #367), which left the censer without its
+ * stubs for the whole visit. `then` is told each time a read succeeds; it stops after the first success or after `tries` reads. The limit itself
+ * is not lengthened: a page that is slow to answer is asked again, not waited for.
+ * @param {{ load: (force?: boolean) => Promise<boolean> }} presence
+ * @param {() => void} then
+ * @param {{ tries?: number, gap?: number, later?: (fn: () => void, ms: number) => unknown }} [o]
+ */
+export function readDay(presence, then, { tries = 3, gap = 8000, later = (fn, ms) => setTimeout(fn, ms) } = {}) {
+  return presence.load(true).then((ok) => {
+    if (ok) { then(); return true; }
+    if (tries > 1) later(() => { readDay(presence, then, { tries: tries - 1, gap, later }); }, gap);
+    return false;
+  });
+}

@@ -77,7 +77,9 @@
 | `demo.mood` | 手动换季/换时辰/回到随时辰 | `season` `time` `follow` | 赛季权限用得多不多；偏好 |
 | `demo.view` | 按 V 或滚轮/双指切换第一/第三人称 | `to` | 视角偏好 |
 | `demo.rite` | observance 开始/结束 | `id` `phase` `seconds` `done` | 哪个仪式被开始、多久、有没有做完（补上 `demo.seal` 看不到的放弃） |
-| `demo.share` | 分享了一张图（留影或朱印簿）：系统分享成功、打开了「长按保存」那张纸，或点了下载（#344） | `from`（`print` / `book`）`method`（`share` / `save` / `download`）`scene`（链接里带的场景） | 分享出口；在 App 内置浏览器里走的是哪条路 |
+| `demo.share` | 分享了一张图或一段短片：系统分享成功、打开了「长按保存」那张纸，或点了下载（#344；短片 #342 只走系统分享） | `from`（`print` / `book` / `clip`）`method`（`share` / `save` / `download`）`scene`（链接里带的场景） | 分享出口；在 App 内置浏览器里走的是哪条路 |
+| `demo.clip.start` | 按「拍一段」，录制开始（#342） | `aspect` `tier` `fmt`（`mp4`/`webm`）`mark`（带不带落款） | 短片使用率、画幅、各浏览器出什么格式、落款有没有被关 |
+| `demo.clip.export` | 一段录完、文件出来（自然结束或中途停下） | `fmt` `secs`（取整）`early`（中途停）`tier` | 录得完不完整、平均多长；`start` 与 `export` 之差是录到一半被放弃（收起相机、切到后台）的 |
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
 | `demo.leave` | 入山后第一次页面隐藏（每次打开一次） | `seconds`（本次页面打开秒数）`seals` `metres`（这一趟）`place`（殿 id / 楼上 id / 地点名）`inside` `up` | 每次访问在哪儿结束、多久、走了多少、几枚印 |
 | `demo.setting` | 改设置（同一 key 800 ms 内合并，取最后值；值未变不发） | `key` `value`（布尔为 `1/0`） | 谁改了哪项：自动镜头、画质、锁定鼠标、音量、视野等 |
@@ -100,7 +102,7 @@
 - **事件数据**：Umami 的 Events 表按事件名筛，再按 `id`、`lang`、`from` 分组；`demo.rite` 先筛 `phase=start` 和 `phase=end`，`done=0` 是放弃。
 - **语言**：每个事件都带 `lang`，所以「日文访客走到哪一步」可以直接筛；不要用浏览器语言代替。
 - **性能降级**：`demo.quality` 的 `level` 是第几次降级（1…5），`tier` 是起始档；和 `demo.ready.tier` 对比。
-- **分享**：`demo.share.from` 只有 `print | book`；`t.co` 的 196 次进入是外部，不是站内分享。
+- **分享**：`demo.share.from` 只有 `print | book | clip`；`t.co` 的 196 次进入是外部，不是站内分享。
 - **朱印帐上的二维码（#319）**：分享出去的朱印帐带一枚码，写 `https://temple.rushiwowen.co/?utm_source=goshuin&utm_medium=share&utm_content=<lang>`；扫码进来的访问在 Umami 里按 `utm_source=goshuin` 筛，`utm_content` 是图上的语言。`demo.share` 照旧只数「分享」按钮成功的次数，扫码进来的数不能拿它去对，二者可以相差很多（图可以被保存、转发、截屏）。留影卡片上的码（默认开，可在留影设置里关）写 `utm_source=photo`，同样的筛法；`utm_content` 是卡片的语言。
 
 ---
