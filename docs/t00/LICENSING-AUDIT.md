@@ -294,7 +294,7 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 | `artsmia.org/terms-of-use` | HTTP 429 | 同上，依据是 Sketchfab 的 CC0 与 Mia 接口 `rights_type` |
 | `meshy.ai/terms-of-use` | HTTP 403 | 仍只读到帮助中心；请所有者读全文 |
 | `openai.com/policies/terms-of-use` | 直接抓取 HTTP 403；无头 Chromium 读到了全文 | 已读，见 10.6（版本 Effective 2026-01-01，原句已记）；生成当天那一版仍未读 |
-| `tripo3d.ai/terms` | 直接抓取 HTTP 403；无头 Chromium 读到了全文 | 已读，见 10.6（Last updated 2026-11-13） |
+| `tripo3d.ai/terms`（网页端）、`developers.tripo3d.com/en/terms`（API） | 网页端直接抓取 403；两份都用无头 Chromium 读到了全文 | 已读，见 10.6；小沙弥走 API，适用 API 那份（Last updated 2025-07-11） |
 
 没有任何一项因为条款变化而需要改状态。登记表里 42 行的 `checked_on` 改为 2026-11-20（只有这一栏变）；状态现为：yes 86、conditional 0、no 0、unverified 4（第一轮第九节补齐后是 yes 78、unverified 7；加上第一轮之后记的 5 行（都是 yes）为 83 / 7；再按所有者回答把 `MESHY-novice`、`REF-monk-apose`、`REF-art-prototype` 三行改为 yes，见 10.6）。
 
@@ -360,11 +360,16 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 - 条款没有区分 Plus 与其他个人档。**没有读到生成当天有效的那一版**（页面有「Previous version」链接，没有打开），也没有读 OpenAI 的使用政策（Usage Policies）。
 - 「to the extent permitted by applicable law」这句很重要：条款只是把 OpenAI 的权利转给你；**纯 AI 生成的图像在各国能否取得著作权，是法律问题，不是条款问题**，金额大的决定请律师看。
 
-**Tripo（主创问到的小沙弥新身体，#246、#286）**：截至 c38edbe，`app/` 和登记表里**没有** Tripo 的产物；Tripo 只出现在 `tools/novice-tripo.mjs`、`tools/novice-rig.mjs` 等工具里（原始导出放在 Hugging Face 存储桶 `temple-walk-render/keep/tripo-2026-11-19/`，不在仓库）。所以没有加登记行。它一旦进 `app/shared/models/`，`asset-register` 单测会拦住不登记的文件。预先核了现行条款（`https://www.tripo3d.ai/terms`，「Terms of User Agreement, Last updated: November 13, 2026」；直接抓取 403，用无头 Chromium 读到；摘录存 [`round2/tripo-terms-2026-11-20.txt`](evidence/licensing/round2/tripo-terms-2026-11-20.txt)）：
+**Tripo（主创问到的小沙弥新身体，#246、#286）**：截至 c38edbe，`app/` 和登记表里**没有** Tripo 产物（只在 `tools/novice-tripo.mjs`、`tools/novice-rig.mjs` 等工具里，原始导出在 Hugging Face 存储桶，不在仓库），所以没加登记行；它进 `app/shared/models/` 时 `asset-register` 单测会拦住不登记的文件。
 
-- **免费档的产物（Free Outputs）默认公开**，并且用户同意「waive the relevant copyright … allow anyone, worldwide and permanently, to use, copy, modify, distribute or commercially exploit them free of charge … without attribution」（§5.2.1）；已生效的放弃和公开授权**事后买付费档也撤不回**，免费档产物也不会因后来买了积分而变成付费内容（§5.2.2(b)）。
-- **付费档产物（Paid Content，在有效订阅期间或用付费权益生成）**：权利属于用户（§5.2.2）；公开发布到 Tripo 画廊则授予 Tripo 宣传用的许可（§5.2.3）。
-- 导出文件里可能有不可见的 AI 标记；条款禁止去掉可见标签、水印、元数据（§3.2），并提到 AI 生成内容标注的法律义务。
-- 要问所有者：① 生成小沙弥新身体那几次，Tripo 账户是什么套餐，用的是订阅还是买的积分（`AGENTS.md` 记了「Tripo 用 120 点、余 240」，不能据此判断套餐）？② 有没有选「公开」或发到 Tripo 画廊？③ 输入图是什么（是否是 ChatGPT 生成的 A-pose 图，或 Meshy 的产物）？④ 导出文件里的 AI 标记保不保留？这些答案决定它是「所有者拥有」还是「任何人可用」。
+*适用哪份条款。* 所有者指出，小沙弥是开发会话通过 **Tripo API**（`api.tripo3d.ai`）生成的，没有走网页端，所以适用开发者平台的条款：<https://developers.tripo3d.com/en/terms>，标题「Terms of User Agreement」，**Last updated: July 11, 2025**，运营方 Holymolly Ltd（2026-11-20 用无头 Chromium 读到全文，摘录存 [`round2/tripo-api-terms-2025-07-11-read-2026-11-20.txt`](evidence/licensing/round2/tripo-api-terms-2025-07-11-read-2026-11-20.txt)）。我起初预读的是网页端条款（`tripo3d.ai/terms`，2026-11-13 版，摘录也存了 `round2/tripo-terms-2026-11-20.txt`），**那份不适用于 API 生成的模型**；它的要点（免费档产物默认公开、放弃权利）只在用网页端免费档时才相关。
 
-**仍待所有者**：第 9、10 问；Meshy 服务条款全文；Tripo 的四个问题；`REF-jingshan-plates` 当时用的工具。
+*开发者平台条款读到的：*
+- **§3.2**：不得用 Outputs 做与 Holymolly 竞争的模型或服务；原文：「you may use Outputs for lawful commercial or non-commercial purposes, so long as such Outputs are not distributed or made available to third parties in a manner inconsistent with this Agreement or applicable laws」——可以商用，但带「不得以与本协议或法律不符的方式分发」的限定（本项目看不出冲突，但原文如此）。读到的这几节里没有署名、水印或 AI 标签的要求（网页端新版才有）。
+- **§5.2.1**（免费用户）：「Tripo retains all rights」。**§5.2.2**（付费用户）：在用户授权 Tripo 提供服务所需的非独占使用的前提下，「Paid Users generally have all rights … of the Inputs and Outputs」；同段并承诺不把 Inputs 和 Outputs 用作训练数据。注意「generally」和一串前提（遵守法律、本协议等），不是无条件的「全部权利」。
+- **§6.4**：「API Credits are prepaid and non-refundable once purchased」。条款只说 API 点数是预付的，**没有逐字写**「买了点数就算 Paid User」；这一步是所有者和主创的读法，开发方只能说它与条款不矛盾。
+- §3.1：输入不得侵权。
+
+*所有者的回答*（#105 评论，2026-11-20）：用的是所有者充值买的 API 点数（#163 记 400 点），输入图是 #163 记下的所有者自己的四视图，导出文件里的 AI 标记照原样保留，API 生成的模型不会自动公开。据此上面预读的四个问题：①套餐——付费点数；②是否公开——不会自动公开；③输入图——所有者自己的四视图；④AI 标记——保留。**登记行的写法**（等 Tripo 产物进 `app/` 时再加）：`commercial_use: yes`，依据「Tripo 开发者平台条款 2025-07-11 §3.2、§5.2.2，付费 API 点数（所有者充值，所有者确认 2026-11-20）」，不要求署名；备注 §3.2 的分发限定和 §5.2.2 的前提。我没有逐条细读条款的其余部分。
+
+**仍待所有者**：第 9、10 问；Meshy 服务条款全文；`REF-jingshan-plates` 当时用的工具。
