@@ -1,5 +1,5 @@
 {
- "measured": "the mean of two full runs, 44649643313 and 44675254911 (2026-11-20, workflow_dispatch): seconds per scenario, software rendering on GitHub's free machines; a scenario that failed in one run is counted at the other's time. One scenario takes 10 to 60 % longer or shorter from one run to the next, so the times are a mean of what was seen",
+ "measured": "the mean of two full runs, 44649643313 and 44675254911 (2026-11-20, workflow_dispatch): seconds per scenario, software rendering on GitHub's free machines; a scenario that failed in one run is counted at the other's time. One scenario takes 10 to 60 % longer or shorter from one run to the next, so the times are a mean of what was seen; goshuin, lamp and photoqr (#337, #343) added from one local run each on 2026-11-20 (software rendering, the place not drawn: 307, 274 and 17 s), until a full run measures them",
  "extra": {
   "1": 600
  },
@@ -18,6 +18,7 @@
   "events": 38,
   "farview": 211,
   "finish": 600,
+  "goshuin": 190,
   "hallexit": 336,
   "halls": 284,
   "hour": 58,
@@ -25,6 +26,7 @@
   "incense-halls": 86,
   "jump": 76,
   "keys": 45,
+  "lamp": 195,
   "lang": 64,
   "layers": 47,
   "litter": 30,
@@ -42,6 +44,7 @@
   "photo": 220,
   "photo-ui": 423,
   "photofit": 383,
+  "photoqr": 17,
   "pilgrimage": 130,
   "platforms": 196,
   "preview-debug": 46,

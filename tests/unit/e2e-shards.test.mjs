@@ -1,12 +1,12 @@
-// A whole end-to-end run is shared among twelve machines by each scenario's measured time (#335, tests/e2e/shards.cjs). Taken in
+// A whole end-to-end run is shared among thirteen machines by each scenario's measured time (#335, tests/e2e/shards.cjs). Taken in
 // turn, four machines ran 35, 39, 45 and 48 minutes of the same list; these tests hold the new way to what it is for: every
 // scenario on exactly one machine, the same answer everywhere, and none much longer than another.
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import { createRequire } from "node:module"; import { fileURLToPath } from "node:url";
 const { plan, parseShard, defined, read, secsOf } = createRequire(import.meta.url)("../../tests/e2e/shards.cjs");
-const ROOT = fileURLToPath(new URL("../..", import.meta.url)), N = 12, all = defined(), data = read();
+const ROOT = fileURLToPath(new URL("../..", import.meta.url)), N = 13, all = defined(), data = read();
 const e2e = fs.readFileSync(new URL("../../.github/workflows/e2e.yml", import.meta.url), "utf8");
 
-test("every scenario of the suite is on exactly one of the twelve machines", () => {
+test("every scenario of the suite is on exactly one of the thirteen machines", () => {
   assert.ok(all.length >= 55, `only ${all.length} scenarios were found in run.cjs: the pattern that reads them is wrong`);
   const { parts } = plan(all, N);
   assert.equal(parts.length, N);
@@ -63,7 +63,7 @@ test("a shard that is not one of the machines is refused, and none asked for is 
   assert.doesNotMatch(run, /i % shard\[1\]/, "the old way of taking them in turn is still in run.cjs");
 });
 
-test("e2e.yml: twelve machines, the command says twelve, the evidence reads stay on one, and a branch's run does not cancel the nightly one", () => {
+test("e2e.yml: thirteen machines, the command says thirteen, the evidence reads stay on one, and a branch's run does not cancel the nightly one", () => {
   const list = e2e.match(/shard: \[([\d, ]+)\]/)[1].split(",").map(Number);
   assert.deepEqual(list, Array.from({ length: N }, (_, i) => i + 1));
   assert.match(e2e, new RegExp(`--shard=\\$\\{\\{ matrix\\.shard \\}\\}/${N}\\b`), "the command shares by a different number than the matrix has");
