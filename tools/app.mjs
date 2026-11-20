@@ -1,10 +1,11 @@
 // Packages the built site as a desktop app with MyGo (https://github.com/egoist/mygo), for macOS here and for
 // Windows and Linux from any machine by cross-compiling. The site is the one `pnpm build` wrote to dist/: it is
-// built for the desktop target (VITE_CHANNEL=steam, VITE_DEPLOY=canary: no sponsor sheet, payment code or counter, as
-// the build itself leaves them out, not as an edit afterwards), checked, and copied to a scratch folder that
+// built for the desktop target (--channel=web by default, the trial build; VITE_DEPLOY=canary, so no counter, as the
+// build itself leaves it out, not as an edit afterwards), checked, and copied to a scratch folder that
 // `mygo build` embeds; it names the app and signs the update files. Nothing in dist/ is changed.
 //
 //     pnpm run app                      build the site, then the .app and the .dmg (macOS)
+//     node tools/app.mjs --channel=steam   a store build: no offering box, address or payment code
 //     node tools/app.mjs --app          the .app only, no disk image
 //     node tools/app.mjs --skip-build   package the dist/ that is already there, if it holds none of what an app leaves out (it is refused otherwise)
 //     node tools/app.mjs --keep         keep the scratch folder (the mygo project and the stripped site) to look at
@@ -29,17 +30,23 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, "dist"), OUT = path.join(ROOT, "tools/out/app"), APP = path.join(ROOT, "tools/app");
 const NAME = "山门之外", IDENTIFIER = "com.rushiwowen.shangmen", SLUG = "temple-walk", MYGO_VERSION = "v0.10.0";
-// What the desktop build must not hold: the page-view counter, and the sponsor page's address and tags and the
-// WeChat payment code (the web channel's, #202). Looked for in the built files themselves, so a dist/ built some other
-// way is caught by what it contains, not by what anyone says it is.
+// What the desktop build must not hold: the page-view counter always; and, in a build for a store (--channel=steam or
+// platform), the sponsor page's address and tags and the WeChat payment code too (the web channel's, #202). Looked for in
+// the built files themselves, so a dist/ built some other way is caught by what it contains, not by what anyone says.
 const COUNTER_HOST = "u.rushiwowen.co";
 const SPONSOR = ["rushiwowen.co/donate", "utm_campaign", "offering-box"];
 const QR_NAME = "wechat-support-2026-08-28.jpg";
 const TEXT_FILES = new Set([".html", ".js", ".mjs", ".css", ".json", ".webmanifest", ".svg", ".txt", ".map"]);
-// The target the app is built for (app/src/deploy.js): steam channel, so no sponsor sheet and no payment code; canary
-// deploy, so no counter. Canary behaves as production in every other way and differs by noindex alone, which a
-// window at mygo://localhost makes harmless. Preview would also do, but it is a pull request's build by name.
-export const BUILD_ENV = { VITE_CHANNEL: "steam", VITE_DEPLOY: "canary" };
+export const CHANNELS = ["web", "steam", "platform"];
+// The desktop app is the trial build, so its default channel is web: the same content as the web page, the offering box
+// included; a store build passes --channel=steam. The deploy is `canary`, always: only `production` carries the
+// page-view counter (app/src/deploy.js, #309), and canary behaves as production in every other way, differing by noindex
+// alone, which a window at mygo://localhost makes harmless. `preview` would drop the counter too, but is a pull
+// request's build by name.
+export function buildEnv(channel = "web") {
+  if (!CHANNELS.includes(channel)) throw new Error(`--channel must be one of ${CHANNELS.join(", ")}, not "${channel}"`);
+  return { VITE_CHANNEL: channel, VITE_DEPLOY: "canary" };
+}
 
 function walk(dir, rel = "") {
   return fs.readdirSync(path.join(dir, rel), { withFileTypes: true }).flatMap((e) => {
@@ -48,20 +55,24 @@ function walk(dir, rel = "") {
   });
 }
 
-// What in a built site does not belong in the app, as "file: what" lines; empty when it is clean. The payment code is
-// found by name and by its bytes under any name.
-export function siteProblems(dir, qrSha) {
-  const problems = [];
+// What in a built site does not belong in an app for this channel, as "file: what" lines; empty when it is clean. The
+// payment code is found by name and by its bytes under any name. A web build must also hold the sponsor sheet, or the
+// dist/ was built for another channel.
+export function siteProblems(dir, qrSha, channel = "web") {
+  const problems = [], web = channel === "web";
+  let sponsor = false;
   for (const rel of walk(dir)) {
     const abs = path.join(dir, rel);
-    if (/wechat-support/.test(rel)) problems.push(`${rel}: the payment code`);
-    else if (qrSha && crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex") === qrSha) problems.push(`${rel}: the payment code (by its bytes)`);
+    if (/wechat-support/.test(rel)) { if (web) sponsor = true; else problems.push(`${rel}: the payment code`); }
+    else if (qrSha && !web && crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex") === qrSha) problems.push(`${rel}: the payment code (by its bytes)`);
     if (!TEXT_FILES.has(path.extname(rel))) continue;
     const text = fs.readFileSync(abs, "utf8");
     if (text.includes(COUNTER_HOST)) problems.push(`${rel}: the counter's host ${COUNTER_HOST}`);
+    if (web) { if (text.includes("utm_campaign")) sponsor = true; continue; }
     for (const x of SPONSOR) if (text.includes(x)) problems.push(`${rel}: ${x}`);
     if (/wechat-support|offeringQr/.test(text)) problems.push(`${rel}: names the payment code`);
   }
+  if (web && !sponsor) problems.push(`(site): no sponsor sheet; built for another channel than web`);
   return problems;
 }
 
@@ -213,16 +224,18 @@ export async function main(argv = process.argv.slice(2), { dist = DIST } = {}) {
   const version = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
   const mygoBin = process.env.MYGO || "mygo";
 
-  if (!has("--skip-build")) await run("pnpm", ["run", "build"], ROOT, BUILD_ENV);
+  const channel = (argv.find((a) => a.startsWith("--channel=")) ?? "--channel=web").slice("--channel=".length);
+  const env = buildEnv(channel);
+  if (!has("--skip-build")) await run("pnpm", ["run", "build"], ROOT, env);
   if (!fs.existsSync(path.join(dist, "index.html"))) throw new Error("dist/index.html is missing: run pnpm run build");
-  const bad = siteProblems(dist, qrHash());
-  if (bad.length) throw new Error(`dist/ is not a desktop build (it holds ${bad.length} thing(s) an app leaves out; rebuild it with ${Object.entries(BUILD_ENV).map(([k, v]) => `${k}=${v}`).join(" ")} pnpm run build, or run without --skip-build):\n  ${bad.slice(0, 8).join("\n  ")}`);
+  const bad = siteProblems(dist, qrHash(), channel);
+  if (bad.length) throw new Error(`dist/ does not match --channel=${channel} (${bad.length} problem(s); rebuild it with ${Object.entries(env).map(([k, v]) => `${k}=${v}`).join(" ")} pnpm run build, or run without --skip-build):\n  ${bad.slice(0, 8).join("\n  ")}`);
 
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "yunjing-app-"));
   try {
     const site = path.join(scratch, "site");
     fs.cpSync(dist, site, { recursive: true });
-    console.log("site: copied dist/, checked: no counter, sponsor address or payment code");
+    console.log(`site: copied dist/, checked for channel ${channel}: no counter${channel === "web" ? "" : ", sponsor address or payment code"}`);
 
     fs.copyFileSync(path.join(APP, "main.go.template"), path.join(scratch, "main.go"));
     const updates = JSON.parse(fs.readFileSync(path.join(APP, "updates.json"), "utf8"));
