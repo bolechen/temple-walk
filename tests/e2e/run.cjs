@@ -1214,7 +1214,11 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "E at the stair's foot did not take him up"); await clear();
     const L = await t.page.evaluate(() => window.__lofts.lingxiao); let s = await t.state();
     expect(!s.inside && s.view === "first" && Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.yaw - L.face) < 0.05 && (await at(L.door, 0.1)), "up there he should stand at the top storey's door, facing south, with his own eyes: " + JSON.stringify(s));
-    expect((await t.page.evaluate(() => window.__music().zone)) === "summit", "the music up there should be the summit's");
+    // The music hears the place at once (`candidate`), and takes it as the place he is in after the zone keeper's two seconds
+    // on the audio clock (score.js, createZoneKeeper): read the instant the veil lifts, `zone` is still the room's hall (#384).
+    { const mu = () => t.page.evaluate(() => window.__music()), m0 = await mu();
+      expect(m0.candidate === "summit" || m0.zone === "summit", "the music up there should be hearing the summit's: " + JSON.stringify({ zone: m0.zone, candidate: m0.candidate, started: m0.started, state: m0.state }));
+      await t.until(async () => (await mu()).zone === "summit", 30000, "the music up there never settled on the summit's: " + JSON.stringify(await mu())); }
     // Up there he sees with his own eyes only: the summit mat's shot (#87, src/director.js), asked for from the balcony, is refused.
     expect((await t.page.evaluate(() => window.__direct("sit"))) === false && (await t.page.evaluate(() => window.__director().phase)) === "idle", "a place's shot was taken up on the balcony: " + JSON.stringify(await t.page.evaluate(() => window.__director())));
     await t.page.keyboard.press("v"); await t.frames(2); s = await t.state();
