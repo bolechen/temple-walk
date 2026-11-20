@@ -80,6 +80,21 @@ createCredits(ui);
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
+// What a visitor changes in the pause menu or the photograph's settings (#326): one event per key in 800 ms, the
+// last value winning, so that dragging a slider is a change and not a stream. A value that did not change is not sent.
+{
+  const text = (v) => (typeof v === "boolean" ? (v ? "1" : "0") : String(v));
+  const sent = new Map(Object.entries(settings.get()).map(([k, v]) => [k, text(v)]));
+  const pending = new Map(); let timer = 0;
+  settings.onChange((next, key) => {
+    pending.set(key, next[key]);
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      for (const [k, v] of pending) { const value = text(v); if (sent.get(k) === value) continue; sent.set(k, value); track("demo.setting", { key: k, value }); }
+      pending.clear();
+    }, 800);
+  });
+}
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
 
@@ -706,7 +721,7 @@ function frame(now) {
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch() }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
