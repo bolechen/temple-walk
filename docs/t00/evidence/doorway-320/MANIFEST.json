@@ -3,16 +3,34 @@
  "dataset": "bolechen/temple-walk-evidence",
  "files": [
   {
+   "path": "collage-v2.jpg",
+   "bytes": 119436,
+   "sha256": "c2b5327c391ec611d841f3a7ae818d5e777da89d802dd938e0296e674607da14",
+   "rev": "dc23bf530845fca60ded9c657beb45d9e1ce51ea"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 119318,
    "sha256": "fd192576eeda3fe5f921aa19f34cc35017a3a4ddffe98d06c2fec061055637c7",
    "rev": "f10b04dc7891365ecabac5d9c5e4beec4ae79aa5"
   },
   {
+   "path": "guanyin-sheet-v2.jpg",
+   "bytes": 311882,
+   "sha256": "8659ca0dc6260ca935f3a264005c9802e406415092c5e50844588119ea33af99",
+   "rev": "dc23bf530845fca60ded9c657beb45d9e1ce51ea"
+  },
+  {
    "path": "guanyin-sheet.jpg",
    "bytes": 311883,
    "sha256": "af6835da905ab618cbe8a6fcbbc1e1ea47c0e62f8bd3db9ae4ae1755329a2f89",
    "rev": "f10b04dc7891365ecabac5d9c5e4beec4ae79aa5"
+  },
+  {
+   "path": "main-sheet-v2.jpg",
+   "bytes": 304363,
+   "sha256": "580f5e85126df67df14dbc202bec9a7f4a9841715bc3c8e18f74476c065275e1",
+   "rev": "dc23bf530845fca60ded9c657beb45d9e1ce51ea"
   },
   {
    "path": "main-sheet.jpg",
@@ -27,6 +45,12 @@
    "rev": "f10b04dc7891365ecabac5d9c5e4beec4ae79aa5"
   },
   {
+   "path": "t4-6m-default-v2.jpg",
+   "bytes": 30961,
+   "sha256": "0f6938f605124758a87c3be499db54c9d9c38b48fcc66aab236b7b54ff13b742",
+   "rev": "1ef0ce1a4b57d9e9824b452afc80217deb81c313"
+  },
+  {
    "path": "t4-6m-hires.jpg",
    "bytes": 30403,
    "sha256": "d3a05e808702ba60d8600165ee5647372d2581f984647518104aa7945a882f23",
@@ -37,6 +61,12 @@
    "bytes": 31079,
    "sha256": "2e1fe313138681d2d675b930159b290ed7bb396544c2edf850bd2cd001e63c18",
    "rev": "f10b04dc7891365ecabac5d9c5e4beec4ae79aa5"
+  },
+  {
+   "path": "yaoshi-sheet-v2.jpg",
+   "bytes": 235956,
+   "sha256": "a1009f6f8c85726eee9e55a7ed36f31823e18d50ac24df41dbf8b082668a328f",
+   "rev": "dc23bf530845fca60ded9c657beb45d9e1ce51ea"
   },
   {
    "path": "yaoshi-sheet.jpg",
