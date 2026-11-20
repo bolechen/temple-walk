@@ -21,6 +21,7 @@ export default {
   "山门之外 · 云径禅寺": "Beyond the Mountain Gate · Yunjing Temple",
   "穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。": "Through a bamboo path into Yunjing Temple: a slow walk up the mountain, among the trees and the sound of a bell.",
   "山门之外：小沙弥站在暮色中的云径禅寺大殿前。": "Beyond the Mountain Gate: a young monk before the main hall of Yunjing Temple at dusk.",
+  "山门之外：小沙弥站在秋日暮色中的云径禅寺大殿前。": "Beyond the Mountain Gate: a young monk before the main hall of Yunjing Temple at dusk in autumn.",
   "山门之外": "山门之外",
   "序章 · 云径禅寺": "Beyond the Mountain Gate · Prologue: Yunjing Temple",
   "朝<br>山": "朝<br>山",
