@@ -29,7 +29,7 @@ import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
 import { createEyeSpace, eyeRadius } from "./src/eyespace.js";
 import { planRecenter, recenterYaw, createFollowTurn, yawBehind } from "./src/camturn.js";
-import { gatherEye } from "./src/eyegather.js";
+import { gatherEye, eyeBoxes } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
 import { clearOfCenser } from "./src/censer.js";
@@ -627,7 +627,7 @@ function growEyeSpace() {
   if (eyeInfo.state === "waiting") {
     if (frames < 30 || opening.active()) return;   // (from the title on: by the time the walk is the visitor's it is mostly built, #368)
     eyeInfo.state = "gathering"; eyeInfo.t0 = performance.now();
-    eyeGather = gatherEye(scene, L.eyeBox);
+    eyeGather = gatherEye(scene, eyeBoxes(L.eyeBox, rooms?.group), 4, OFF);   // (the rooms too, and the courts though he be in a room)
   }
   if (eyeInfo.state !== "gathering" || opening.active()) return;   // (the opening waits for steady frames and has them: the gathering waits for it)
   const r = eyeGather.next(); if (!r.done) return;
