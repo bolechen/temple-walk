@@ -1,5 +1,6 @@
 // The temple grounds: assembles the modules in src/, walks the visitor through them,
 // and hands over to the hall interior at the main hall's door.
+import { MAIN } from "./src/goshuin.js";
 import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
@@ -772,7 +773,7 @@ async function capture(at = null) {
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
-  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: tr("云径禅寺"), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") });
+  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: tr("云径禅寺"), seal: glyphs("云径"), url: MAIN.host });
 }
 let lastBlob = null;
 // The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,
