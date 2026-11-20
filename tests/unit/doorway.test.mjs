@@ -71,7 +71,7 @@ test("drawn live, every point of a room falls on the pixel where the door shows 
     }
   }
 });
-test("the doorways' trials are off unless the address asks for them", () => {
+test("the room drawn live is off unless the address asks for it; the larger face waits for its pictures", () => {
   assert.deepEqual(doors.report().modes, []);
   for (const o of Object.values(doors.halls)) { assert.equal(o.mat.uniforms.uLive.value, 0); assert.equal(o.mat.uniforms.uHi.value, 0); }
 });

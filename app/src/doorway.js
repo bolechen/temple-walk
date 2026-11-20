@@ -27,7 +27,7 @@ function doorMaterial(U, steps) {
     defines: { STEPS: steps },
     uniforms: Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.fog), {
       tDay: { value: null }, tNight: { value: null }, tDist: { value: null }, uHas: { value: 0 },
-      // #320's trials: the face into the room alone and larger (`uHi`), and the room drawn live through the door (`uLive`).
+      // The face into the room alone and larger (`uHi`, #320), and the trial of the room drawn live through the door (`uLive`, `?doorway=live`).
       tInDay: { value: null }, tInNight: { value: null }, tInDist: { value: null }, uHi: { value: 0 },
       tLive: { value: null }, uLive: { value: 0 }, uLiveOn: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uGain: { value: GAIN[0] },
       uW2R: { value: new THREE.Matrix4() }, uMin: { value: new THREE.Vector3() }, uMax: { value: new THREE.Vector3() }, uC: { value: new THREE.Vector3() }, uDoor: { value: new THREE.Vector4(-1, 1, 0, 3) },
@@ -122,8 +122,8 @@ const picture = async (url) => createImageBitmap(await (await fetch(url)).blob()
 // with no pictures (none baked, or the fetch failed) keeps the dark box. At most `keep` rooms are held at a time: past
 // that, the one farthest away (and not near) gives its cubes back, to be fetched again if he comes near it.
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
-// `modes` (#320's trials, `?doorway=`): `hires` also fetches each hall's larger face into the room; `live` (doorway-live.js)
-// draws the near room itself through its door on the middle and high tiers.
+// Each hall's larger face into the room (#320) comes with its cube whenever the bake made one. `modes`: `live`, the trial
+// left behind `?doorway=live` (doorway-live.js), the near room itself drawn through its door on the middle and high tiers.
 export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, keep = 4, base = null, modes = new Set() }) {
   const halls = {}, frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
   let manifest = null, asked = null, failed = 0, lastTick = 0, worstFrame = 0, busyFor = 0; const spikes = [];
@@ -161,7 +161,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     const m = await list(), e = m?.halls?.[o.hall.id]; if (!e) return null;
     const [day, night, dist] = await Promise.all([e.day, e.night, e.dist].map((f) => picture(base + f).then(cut)));
     const out = /** @type {THREE.Texture[]} */ ([cube(day), cube(night), cube(dist, true)]);
-    if (modes.has("hires") && e.in) out.push(...(await Promise.all([e.in.day, e.in.night, e.in.dist].map((f) => picture(base + f)))).map((b, i) => flat(b, i === 2)));
+    if (e.in) out.push(...(await Promise.all([e.in.day, e.in.night, e.in.dist].map((f) => picture(base + f)))).map((b, i) => flat(b, i === 2)));
     return out;
   };
   const show = (o, tex) => {

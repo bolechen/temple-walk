@@ -852,10 +852,10 @@ const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x 
 // What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
 // near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true[, id])` takes them
 // all (or the one named) at once, for a picture.
-// `?doorway=hires,live` (#320's trial, off by default): the larger baked face into each room, and the near room drawn live
-// through its door on the middle and high tiers (doorway-live.js; `?warm=0` leaves out its warming ahead, to measure it;
-// `?live=half` draws the room at half the frame's size).
-const DOORWAY = new Set((Q.get("doorway") || "").split(",").filter((m) => m === "hires" || m === "live"));
+// `?doorway=live` (#320's trial, deferred by the owner on 2026-11-20, off by default): the near room drawn live through
+// its door on the middle and high tiers (doorway-live.js; `?warm=0` leaves out its warming ahead, to measure it;
+// `?live=half` draws the room at half the frame's size). The larger baked face into each room is always shown.
+const DOORWAY = new Set((Q.get("doorway") || "").split(",").filter((m) => m === "live"));
 const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, base: asset("shared/doorways/"), modes: DOORWAY }) : null;
 const live = doors && DOORWAY.has("live") && quality.name !== "low" ? createLive({ renderer, scene, U, rooms, halls: doors.halls, msaa: quality.msaa, warm: Q.get("warm") !== "0", scale: Q.get("live") === "half" ? 0.5 : 1 }) : null;
 live?.camera(camera);
@@ -878,7 +878,7 @@ window.__doorRect = (id) => {
   return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4), floor };
 };
 window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => ({ ...doors.report(), live: live?.report() ?? null })) : { ...doors.report(), live: live?.report() ?? null });
-// #320: the larger face into each room switched on or off where it has come (`?doorway=hires`), to set it against the cube.
+// #320: the larger face into each room switched off or on again where it has come, to set it against the cube (doorway-hires).
 window.__doorHires = (on) => { if (!doors) return null; let n = 0; for (const o of Object.values(doors.halls)) if (o.hi) { o.mat.uniforms.uHi.value = on ? 1 : 0; n++; } return n; };
 window.__doorBake = (id, q, lossless, inward) => doors?.bakeHall(id, q, lossless, inward);   // tools/bake-doorways.mjs: one hall's three pictures, drawn in this page
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps

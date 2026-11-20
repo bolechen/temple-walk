@@ -301,12 +301,12 @@ const scenarios = {
     expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // #320's trial (`?doorway=hires`): the larger face into the room shows the room the same way round as the cube it
+  // #320: the larger face into the room (shown by default) shows the room the same way round as the cube it
   // sharpens. Across the great hall's door, square on from 6 m, the brightness of each column with the larger face is set
   // against the same columns from the cube: it must follow them as they are, not as in a mirror (its first version had
   // the attendant figures change sides, #332).
   "doorway-hires": { tier: 2, async run(b, base) {
-    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&doorway=hires&cam=0,60,3.14,0");
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&cam=0,60,3.14,0");
     await t.frames(4);
     const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI;
     await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);

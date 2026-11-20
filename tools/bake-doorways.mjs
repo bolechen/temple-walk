@@ -28,7 +28,7 @@ const { buildInteriors, STAND } = await import("../app/src/interior.js");
 
 const top = join(dirname(fileURLToPath(import.meta.url)), ".."), app = join(top, "app"), dist = join(top, "dist");
 const CACHE = join(top, "node_modules", ".cache", "doorways"), OUT = join(app, "shared", "doorways"), LEVEL = "t00";
-// `inward` (#320's trial, shown only with `?doorway=hires`): the face looking into the room again on its own, `col` pixels a
+// `inward` (#320): the face looking into the room again on its own, which the page lays over the cube's, `col` pixels a
 // side for colour (drawn `ss` times larger and averaged down), `dist` for distances (a quarter of `col`). DOORWAY_INWARD=512 for a smaller one.
 const IN = Number(process.env.DOORWAY_INWARD || 1024);
 export const BAKE = { version: 1, size: 256, quality: 0.9, moods: [["summer", "day"], ["summer", "night"]], inward: { col: IN, dist: IN / 4, ss: 2 } };   // distances at a quarter: 512 px held 160 KB a hall of PNG, over the 3 MB budget for eight
@@ -111,12 +111,12 @@ export async function bakeDoorways({ verify = false } = {}) {
     }
     writeFileSync(join(dir, `${LEVEL}.json`), JSON.stringify(manifest, null, 1));
   }
-  const total = Object.values(sizes).reduce((a, b) => a + b, 0), kb = (b) => +(b / 1024).toFixed(1);
-  const inTotal = Object.values(inSizes).reduce((a, b) => a + b, 0);
+  const inTotal = Object.values(inSizes).reduce((a, b) => a + b, 0), total = Object.values(sizes).reduce((a, b) => a + b, 0), kb = (b) => +(b / 1024).toFixed(1);
   const report = { drawn: missing, fromCache: ids.filter((i) => !missing.includes(i)), kb: Object.fromEntries(Object.entries(sizes).map(([k, v]) => [k, kb(v)])), totalKb: kb(total),
     inward: { size: BAKE.inward, kb: Object.fromEntries(Object.entries(inSizes).map(([k, v]) => [k, kb(v)])), totalKb: kb(inTotal), withBaseKb: kb(total + inTotal) }, seconds: +((Date.now() - t0) / 1000).toFixed(1) };
-  const over = Object.entries(sizes).filter(([, v]) => v > 300 * 1024).map(([k]) => k);
-  if (over.length || total > 2.5 * 1024 * 1024) console.warn(`bake-doorways: over budget (300 KB a hall, 2.5 MB in all): ${over.join(", ") || "total " + kb(total) + " KB"}`);
+  // #320's budget: 3 MB for every hall's pictures, the larger faces with the cubes.
+  const over = Object.entries(sizes).filter(([k, v]) => v + inSizes[k] > 400 * 1024).map(([k]) => k);
+  if (over.length || total + inTotal > 3 * 1024 * 1024) console.warn(`bake-doorways: over budget (400 KB a hall, 3 MB in all): ${over.join(", ") || "total " + kb(total + inTotal) + " KB"}`);
   if (verify) report.verify = await compare("main", manifest.halls.main);
   return report;
 }
