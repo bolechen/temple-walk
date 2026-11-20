@@ -1696,6 +1696,32 @@ const scenarios = {
     } finally { await pb.close(); }
   } },
   // From behind him and through his eyes.
+  // Into his own eyes and out again by the wheel is a push, not a cut (#102 in #295): every frame of it the angle of view
+  // changes by no more than 1.5°, the eye moves no more than 0.12 m of its own (he stands still), and he fades one way only.
+  push: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third");
+    await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
+    await t.page.mouse.move(210, 400);
+    const watch = async (what, notch, until) => {
+      const seen = [];
+      for (let i = 0; i < 40; i++) {
+        await t.page.mouse.wheel(0, notch); await t.frames(1); const p = await t.probe(); seen.push(p);
+        if (p.view === until) break;
+      }
+      for (let i = 0; i < 120 && (seen.at(-1).pushing || seen.at(-1).view !== until); i++) { await t.frames(1); seen.push(await t.probe()); }
+      expect(seen.at(-1).view === until && !seen.at(-1).pushing, `${what}: never came to the ${until} view: ${JSON.stringify(seen.at(-1))}`);
+      // (measured in the page, frame by frame: a probe may come a frame or two after another under software drawing)
+      const P = seen.at(-1).push;
+      expect(P && P.to === until && P.frames >= 3, `${what}: it was cut, not pushed: ${JSON.stringify(P)}`);
+      expect(P.fov <= 1.5 + 1e-3, `${what}: the angle of view changed ${P.fov}° in a frame`);
+      expect(P.move <= 0.12 + 1e-3, `${what}: the eye moved ${P.move} m in a frame`);
+      expect(P.back === 0, `${what}: he faded back the other way in ${P.back} frames`);
+      return P;
+    };
+    const into = await watch("into his eyes", -300, "first"), out = await watch("out of his eyes", 300, "third");
+    console.log("    push", JSON.stringify({ into, out }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   views: { tier: 2, async run(b, base) {
     // `devpose` and `debug` are working aids (src/devpose.js, src/debug.js): the published site must neither show them
     // nor touch the address (the panel opens only on the dev server and a pull request's preview).

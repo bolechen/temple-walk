@@ -217,6 +217,9 @@ addEventListener("flush", () => { if (!inside && mood.time !== "night" && flock.
 
 await loading.step(tr("石阶"));
 const monk = createMonk(); part("monk", () => scene.add(monk.group));
+// His opacity, for the eye going into his own eyes or out of them (#102): faded on every material he wears, and given back.
+let faded = 1;
+const fade = (a) => (faded = a, monk.group.traverse((/** @type {any} */ o) => { if (!o.isMesh) return; for (const m of [o.material].flat()) { if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity, m.userData.baseTransparent = m.transparent; m.opacity = m.userData.baseOpacity * a; const t = a < 1 || m.userData.baseTransparent; if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; } } }));
 // He is the figure built in code. The sculpted body's cloth tears at its texture seams when he walks, climbs or sits,
 // so until its weights are mended it is fetched (after the first frames) only for ?body=sculpt; ?body=code asks for
 // what he already wears.
@@ -714,6 +717,21 @@ function frame(now) {
     const m = monk.group.position, aim = aimAt(camera.position.toArray(), [m.x, stage ? m.y : eyeY, m.z], look.yaw, FRAME, camera.fov);
     if (aim) camera.rotation.set(aim[1], -aim[0], 0, "YXZ");
   }
+  if (push) {
+    if (cine || photo.on || director.active() || opening.active() || push.to !== view) { push = null; fade(1); }
+    else {
+      // how far along: by time, and by no more than the frame's own bounds on moving and widening allow (smootherstep's
+      // steepest is 1.875 times its mean)
+      const fovTo = zoomed(directedFov ?? baseFov()), goes = camera.position.distanceTo(push.p), widens = Math.abs(fovTo - push.fov) || 1e-6;   // (the new view's own angle, not this frame's mixed one)
+      push.t = Math.min(1, push.t + Math.min(dt / PUSH.time, PUSH.move / (1.875 * Math.max(goes, 1e-6)), PUSH.fov / (1.875 * widens)));
+      const k = push.t * push.t * push.t * (push.t * (push.t * 6 - 15) + 10);
+      camera.position.lerpVectors(push.p, camera.position, k); camera.quaternion.slerpQuaternions(push.q, camera.quaternion, k);
+      camera.fov = push.fov + (fovTo - push.fov) * k; camera.updateProjectionMatrix();
+      monk.group.visible = true; const was = faded; fade(view === "first" ? 1 - k : k);
+      if (pushed) { const L = pushed.last; if (L) { pushed.fov = Math.max(pushed.fov, Math.abs(camera.fov - L.fov)); pushed.move = Math.max(pushed.move, camera.position.distanceTo(L.p)); } if (view === "first" ? faded > was + 1e-6 : faded < was - 1e-6) pushed.back++; pushed.frames++; pushed.last = { fov: camera.fov, p: camera.position.clone() }; }
+      if (push.t >= 1) { push = null; fade(1); monk.group.visible = view === "third" && !monkHidden; lens(); }
+    }
+  }
   // The place's own shot, mixed over the eye that follows him (src/director.js). In the picture he is drawn whenever the
   // eye stands clear of his head, from his own eyes too.
   if (director.active()) {
@@ -765,8 +783,16 @@ requestAnimationFrame(frame);
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id)), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
 if (Q.has("shot")) document.body.classList.add("bare");
+// Into his own eyes and out of them again, the eye is moved, not cut (#102, folded into #295: a phone measured the angle of
+// view jumping 13° in a frame): from where it stood, with the angle it had, it goes over to the new view's eye on a
+// smootherstep, never more than PUSH.move metres or PUSH.fov degrees in a frame, and he fades out (or in) as it comes.
+const PUSH = { time: 0.6, move: 0.12, fov: 1.5 };
+let push = null;
 const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return; }   // up on a balcony he sees with his own eyes only (#101)
-  view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize(); };
+  const from = frames > 3 && v !== view && !FIXED_VIEW && !cine && !photo.on && !reducedMotion.matches ? { p: camera.position.clone(), q: camera.quaternion.clone(), fov: camera.fov, to: v } : null;
+  view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize();
+  push = from ? { ...from, t: 0 } : null; if (push) { pushed = { to: v, frames: 0, fov: 0, move: 0, back: 0, last: null }; fade(v === "third" ? 0 : 1); } };   // (coming out of his eyes he begins unseen)
+let pushed = null;   // what the last push did, frame by frame (__probe().push): the most it turned the angle, moved the eye, and frames he faded back
 setView(view);
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
 document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => { setMood(b.dataset.season, state.time); track("demo.mood", { season: b.dataset.season, time: state.time, follow: state.follow ? 1 : 0 }); }));
@@ -1094,7 +1120,7 @@ window.__probe = (points) => {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0, 32, 32);
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
-  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible,
+  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible, opacity: +faded.toFixed(3), pushing: !!push, push: pushed && { to: pushed.to, frames: pushed.frames, fov: +pushed.fov.toFixed(3), move: +pushed.move.toFixed(4), back: pushed.back }, cam: camera.position.toArray().map((v) => +v.toFixed(3)),
     photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level, at };
 };
 // The censer before the great hall (#217): how much incense burns, whether it glows, the smoke and the breeze; and, for
