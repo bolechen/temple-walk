@@ -1359,6 +1359,35 @@ const scenarios = {
     await t.until(async () => (await t.state()).h > 20.8, 300000, "never reached the summit porch");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The mountain's sound does not come through the walls of a hall (#331): the same place bus, the same gust, in the court
+  // and then in the great hall. The wind there is at least 12 dB lower, nothing of it above 2 kHz is left, and no culm
+  // knocks and no bird sings. Taken in the page's own audio, in two stretches a few seconds apart, so the gust of each
+  // (`__knock().gust`) is divided out: the low layer of the wind goes with the gust.
+  mountain: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&show=court&season=summer&time=day" + BARE);
+    await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(1500);
+    // the place bus averaged over about two seconds, with the gust the ambience last heard it by
+    const hear = () => t.page.evaluate(async () => { let sum = 0, n = 0, hi = false; const t0 = performance.now(); while (performance.now() - t0 < 2000) { const x = window.__listen("ambience"); sum += x.rms * x.rms; n++; if (x.peaks.some(([hz]) => hz >= 2000)) hi = true; await new Promise((k) => setTimeout(k, 40)); } return { rms: Math.sqrt(sum / n), gust: window.__knock().gust, high: hi, n }; });
+    const outside = await hear();
+    expect(outside.rms > 0.001 && outside.gust > 0.1, "the wind in the court made too little sound to compare: " + JSON.stringify(outside));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+    await t.page.waitForTimeout(3500);   // the air stage settles in about a second; the leaf layer's own fade takes three
+    const before = await t.page.evaluate(() => window.__knock());
+    const inside = await hear();
+    const db = (x) => 20 * Math.log10(x), fall = db(outside.rms / outside.gust) - db(inside.rms / inside.gust);
+    expect(fall >= 12, `in the hall the wind should be at least 12 dB lower (gust divided out), it is ${fall.toFixed(1)} dB: ` + JSON.stringify({ outside, inside }));
+    expect(!inside.high, "there is still something above 2 kHz in the wind heard in the hall: " + JSON.stringify(inside));
+    // a culm and a bird, asked for in the hall, are not made
+    await t.page.evaluate(() => { window.__knock(true); window.__bird(true); }); await t.page.waitForTimeout(300);
+    const after = await t.page.evaluate(() => window.__knock());
+    expect(after.knocks === before.knocks && after.birds === before.birds, "a culm knocked or a bird sang in the hall: " + JSON.stringify({ before, after }));
+    // and out again: the wind comes back
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+    await t.page.waitForTimeout(3500);
+    const again = await hear(), back = db(again.rms / again.gust) - db(inside.rms / inside.gust);
+    expect(back >= 12, `coming out the wind should be back, it is only ${back.toFixed(1)} dB over the hall's: ` + JSON.stringify({ inside, again }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // A tap on the bell reaches it; the bell and drum sound with the partials they were built from.
   sound: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&show=court" + BARE);
