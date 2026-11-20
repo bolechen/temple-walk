@@ -1827,6 +1827,41 @@ const scenarios = {
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     } finally { await pb.close(); }
   } },
+  // Walked by the keys alone, the way a visitor who never touches the mouse walks (#295, group C): from before the gate,
+  // through it and up the court to the great hall, round the hall's platform and back to its front, with W (and Shift)
+  // and A or D to turn, nothing else pressed and the mouse never moved. Which key to hold is decided here from where he
+  // stands, as a person's eyes would; every press is a real key. Every few frames he stands across the middle of the
+  // picture and the eye stays far enough behind him to show the way ahead.
+  keywalk: { tier: 3, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,50,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    await t.frames(10);
+    const K = t.page.keyboard, held = new Set(), hold = async (k, on) => { if (on && !held.has(k)) { await K.down(k); held.add(k); } else if (!on && held.has(k)) { await K.up(k); held.delete(k); } };
+    const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+    const way = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 1], [0, 1.5]];
+    const log = { frames: 0, off: [], dist: [], turns: { a: 0, d: 0 }, keys: [] };
+    let i = 0, best = Infinity, still = 0;
+    await hold("Shift", true);
+    while (i < way.length) {
+      const s = await t.page.evaluate(() => { const y = window.__yard(), f = window.__frame(); return { x: y.x, z: y.z, yaw: y.yaw, frames: y.frames, box: f.monkBox, w: f.w, dist: f.dist }; });
+      const [wx, wz] = way[i], dx = wx - s.x, dz = wz - s.z, d = Math.hypot(dx, dz);
+      if (d < 1.2) { i++; best = Infinity; still = 0; continue; }
+      const err = wrap(Math.atan2(dx, -dz) - s.yaw);   // to his right is +
+      await hold("d", err > 0.06); await hold("a", err < -0.06); await hold("w", Math.abs(err) < 0.5);
+      if (err > 0.06) log.turns.d++; else if (err < -0.06) log.turns.a++;
+      if (s.box) { log.off.push(Math.abs(s.box[0] + s.box[2] / 2 - s.w / 2) / s.w); log.dist.push(s.dist); }
+      if (d < best - 0.05) { best = d; still = 0; } else if (++still > 300) throw new Error(`he made no way toward ${way[i]} from ${s.x.toFixed(2)},${s.z.toFixed(2)} (yaw ${s.yaw.toFixed(2)})`);
+      await t.page.waitForFunction((f) => window.__yard().frames > f, s.frames, { polling: 30, timeout: 60000 });
+      log.frames++;
+    }
+    for (const k of [...held]) await hold(k, false);
+    const p = log.off.slice().sort((a, b) => a - b), q = log.dist.slice().sort((a, b) => a - b);
+    const off95 = p[Math.floor(p.length * 0.95)] ?? 1, distLow = q[Math.floor(q.length * 0.05)] ?? 0;
+    console.log("    keywalk", JSON.stringify({ steps: log.frames, turns: log.turns, off95: +off95.toFixed(3), offMax: +(p[p.length - 1] ?? 1).toFixed(3), dist5: +distLow.toFixed(2), distMin: +(q[0] ?? 0).toFixed(2) }));
+    expect(log.turns.a > 0 && log.turns.d > 0, "the way round should have needed both A and D: " + JSON.stringify(log.turns));
+    expect(p.length > 50 && off95 < 0.08, `he should stand across the middle of the picture as he walks: 95% within ${(off95 * 100).toFixed(1)}% of its width of the middle`);
+    expect(distLow > 2, `the eye should stay far enough behind him to show the way ahead: 5th percentile ${distLow.toFixed(2)} m`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // From behind him and through his eyes.
   // Into his own eyes and out again by the wheel is a push, not a cut (#102 in #295): every frame of it the angle of view
   // changes by no more than 1.5°, the eye moves no more than 0.12 m of its own (he stands still), and he fades one way only.
@@ -1855,10 +1890,10 @@ const scenarios = {
     expect(q.pitch <= 0.3, `it tipped the view ${q.pitch}° in a frame`);
     expect(q.move <= 0.15, `the eye moved ${q.move} m of its own in a frame while it swung`);
     void during;
-    // R while he walks sideways (A held): it ends, and the view does not keep turning after
-    await t.page.keyboard.down("a"); await t.frames(3); await t.page.keyboard.press("r");
+    // R while he walks sideways (←, the side arrow, held): it ends, and the view does not keep turning after
+    await t.page.keyboard.down("ArrowLeft"); await t.frames(3); await t.page.keyboard.press("r");
     for (let i = 0; i < 400 && (await P()).active; i++) await t.frames(1);
-    const y0 = (await P()).yaw; await t.frames(40); const y1 = (await P()).yaw; await t.page.keyboard.up("a");
+    const y0 = (await P()).yaw; await t.frames(40); const y1 = (await P()).yaw; await t.page.keyboard.up("ArrowLeft");
     expect(Math.abs(wrap(y1 - y0)) < 0.01, `walking sideways after the swing, the view went on turning ${(wrap(y1 - y0) * 180 / Math.PI).toFixed(1)}°`);
     // the drift: a tapped way off to his right, the hand off the view
     await t.page.evaluate(() => window.__pose(-8, 20, 0, -0.05)); await t.frames(10);
@@ -2092,6 +2127,17 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__visit().metres)) > 0.1, "the visit should remember how far he has walked");
     await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w"); await t.frames(6); await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift");
     const z2 = (await t.state()).z; expect(z1 - z2 > (z0 - z1) * 1.4, `Shift should hurry him: ${(z0 - z1).toFixed(2)} then ${(z1 - z2).toFixed(2)}`);
+    // A and D turn him and the view (#295, group C); the side arrows step sideways; 「A/D 平移（旧）」 gives A and D back to stepping.
+    { const yd = async (k, n = 8) => { await t.frames(8); const a = await t.state(); await t.page.keyboard.down(k); await t.frames(n); await t.page.keyboard.up(k); await t.frames(6); const b2 = await t.state(); return { turn: Math.atan2(Math.sin(b2.yaw - a.yaw), Math.cos(b2.yaw - a.yaw)), move: Math.hypot(b2.x - a.x, b2.z - a.z) }; };
+      let r = await yd("d"); expect(r.turn > 0.1 && r.move < 0.05, "D should turn him and the view to his right where he stands: " + JSON.stringify(r));
+      r = await yd("a"); expect(r.turn < -0.1 && r.move < 0.05, "A should turn him to his left: " + JSON.stringify(r));
+      r = await yd("ArrowLeft"); expect(Math.abs(r.turn) < 0.01 && r.move > 0.15, "← should step him sideways, not turn: " + JSON.stringify(r));
+      expect((await t.page.textContent("#keys")).includes("转身"), "the key card should say A and D turn");
+      await t.page.keyboard.press("Escape"); await t.page.click("#setStrafe"); await t.page.keyboard.press("Escape");
+      expect((await t.page.evaluate(() => window.__settings())).strafeAD === true, "the menu should keep the old way of A and D");
+      r = await yd("a"); expect(Math.abs(r.turn) < 0.01 && r.move > 0.15, "with the old way, A should step sideways: " + JSON.stringify(r));
+      expect((await t.page.textContent("#keys")).includes("平移"), "the key card should then say A and D step sideways");
+      await t.page.keyboard.press("Escape"); await t.page.click("#setStrafe"); await t.page.keyboard.press("Escape"); }
     await t.page.keyboard.press("v"); expect((await t.probe()).view === "first", "V should change the view"); await t.page.keyboard.press("v");
     const d0 = (await t.probe()).camDist; await t.page.mouse.move(450, 300); for (let i = 0; i < 4; i++) await t.page.mouse.wheel(0, 300); await t.frames(16);
     const d1 = (await t.probe()).camDist; expect(d1 > d0 + 1, `the wheel should draw the eye back: ${d0} to ${d1}`);

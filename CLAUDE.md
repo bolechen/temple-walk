@@ -394,7 +394,7 @@ empties the book and starts at the foot of the path). A test or tool that names 
 (`sealBoxes` in `goshuin.js`); pressing it closes the book and takes him back to where that seal was earned, behind the
 veil (`y.travel`). `__left()` reports what is kept and offered, `__goBack(id)` goes. A change of language in the pause menu is not a coming back: the page that opens goes on where he was, with no title (above, Four languages; #140).
 
-**How it is played.** Keyboard and mouse as in most role-playing games: WASD or arrows walk relative to the view, Shift
+**How it is played.** Keyboard and mouse as in most role-playing games: W and S (or ↑ ↓) walk forward and back along the view, A and D turn him and the view with him (#295, group C: `keyturn.js`, at most 120° a second times 环顾快慢, gathering and letting go over 0.15 s; #295 asked for Q/E to step sideways, but E is the action key, so ← → step sideways; the pause menu's 「A/D 平移（旧）」, `settings.strafeAD`, off by default, gives A and D back to stepping and nothing turns; the stick is untouched; the `keywalk` scenario walks the gate to the great hall and round it on W, A, D and Shift alone), Shift
 hurries, dragging with a mouse button held looks round and a click on the ground walks there (or strikes the bell or drum), as a tap does; holding the pointer so that the mouse alone looks round (Esc lets go) is the pause menu's 锁定鼠标 (`settings.lock`, off by default since 2026-11-16, when visitors said the view swam whenever the mouse moved), the wheel moves the eye
 nearer or farther (and on past the nearest into his own eyes, and back out), E (or Enter) does what is offered, Space jumps (or, at the edge of a low unrailed porch, hops down), V changes the view, R (or the middle mouse button) turns the view back behind him (#295: `camturn.js`, the short way, no faster than 144° a second, a drag meanwhile not taken), B opens the book, P photographs,
 T opens the season and hour once they are the visitor's (below). While the pointer is held a click strikes the bell or drum under the dot. On a touch
@@ -460,7 +460,7 @@ drawn by every browser). All seeded, so screenshots repeat. Tokens (ink and pape
 (`unicode-range`) so that a slip written down the page has its commas in place.
 
 **The pause menu and what a visitor sets (`app/src/settings.js`, `#menu`).** Esc with nothing else open, or the 歇脚 chip,
-opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, 自动镜头 (`autocam`: the eye goes to each place's shot during an observance), 镜头跟随 (`follow`, #295), how wide the view is (`fov`, degrees
+opens it: drawing quality (takes effect on the next load), how fast the head turns, inverted look, A/D 平移（旧） (`strafeAD`, keys only), 自动镜头 (`autocam`: the eye goes to each place's shot during an observance), 镜头跟随 (`follow`, #295), how wide the view is (`fov`, degrees
 added to the walk's 50° behind him or 65° from his eyes; the fixed views keep 44°/52°), volume, the key card, and
 a way back to the start of the path, and 鸣谢 (the page of thanks and sources, below). The store is modelled on wok-ing-dead's: one key (`yunjing.settings.v1`), every value
 validated on the way in, a damaged save ignored. `__settings()` and `__menu(open)` are the hooks.
