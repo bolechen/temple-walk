@@ -1,0 +1,132 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "goshuin-full-en.jpg",
+   "bytes": 214900,
+   "sha256": "a753ec8ed520f0ef5d884e5611fb8070f1ed659b8539634547d3b5f082e85dc2",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-full-ja.jpg",
+   "bytes": 228727,
+   "sha256": "4f9f26d12157da521452eb6081d566e579c270ade94115220775a4961a266f2f",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-full-ko.jpg",
+   "bytes": 214204,
+   "sha256": "07390186e74f3c761467eb0eb24479d520289038d2331118a6123e8922909829",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-full-zh.jpg",
+   "bytes": 216533,
+   "sha256": "4928ab8aa5908df6dde561e9188a1f75848c0e448071f44d29eb993f151321d4",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-fullNoLine-en.jpg",
+   "bytes": 210503,
+   "sha256": "5985a990fcc4307a0525a324f0a5ff5be02f196d54c6612b43472daafce20010",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-fullNoLine-ja.jpg",
+   "bytes": 223483,
+   "sha256": "6a0c2398a068154eeaec08a4611845681f6d3153449cee55fd7e1dae0949fd9c",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-fullNoLine-ko.jpg",
+   "bytes": 210152,
+   "sha256": "0828ec3a603d313077ffb5b421f0b6fa5a455b928585c43a3d304d15d8d5dfd7",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-fullNoLine-zh.jpg",
+   "bytes": 212563,
+   "sha256": "c288fbca2f0085931b30f0be5525df3a04c3e9aca5e6ca1584c1473e3712dd1a",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-none-en.jpg",
+   "bytes": 186056,
+   "sha256": "d8e2504507e13fac9051ed1938776a659b7c0d2e0389217f42a9b4f4ff7291aa",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-none-ja.jpg",
+   "bytes": 199714,
+   "sha256": "90c99256366458a13b0168327cd2aa65510c31af1f5ef8c6fed0b14959e26cc7",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-none-ko.jpg",
+   "bytes": 186805,
+   "sha256": "6662a135f6bd2c2b87827bfdf633a69366e9a5b87550d0ff3c28fef3e4457725",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-none-zh.jpg",
+   "bytes": 188520,
+   "sha256": "5416398c4b9340becdf4b4f7ad0208dd27ceab0c70e53a44927db0d761ccc838",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-some-en.jpg",
+   "bytes": 192812,
+   "sha256": "0dc75f22156a16d0fa064e895c968f4747868f8d428d42ddc0a88d874020634e",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-some-ja.jpg",
+   "bytes": 206637,
+   "sha256": "36758233ba431af58375f892fb866775179299322644b5e9d952c0383d1298b1",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-some-ko.jpg",
+   "bytes": 193281,
+   "sha256": "883ca3010cbbd8361dd37e58afd85014dd31a733a3cd59f2da90c7b02e21a652",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-some-zh.jpg",
+   "bytes": 195260,
+   "sha256": "289cf1d67688c21dd48dcf2ce76f71e46cfdad058e6f496892d1fee9cf1f95e8",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-someLine-en.jpg",
+   "bytes": 200594,
+   "sha256": "20dc869fff96d2b4e47bf6c03e9e2658d49713bd0cd632c4f9be1529c918a9c8",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-someLine-ja.jpg",
+   "bytes": 215522,
+   "sha256": "28df87438ed7dc3966a759d1178c09c577a8347cb4ec928fcd6f8fb91b7bf5f7",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-someLine-ko.jpg",
+   "bytes": 200762,
+   "sha256": "b29cff834a63e611dc2d12479081b722e25c3d8cbede3aeb41c470dfeb44f672",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "goshuin-someLine-zh.jpg",
+   "bytes": 202903,
+   "sha256": "f3a553de668900436b4077638521a1919afaa771a2a74e7a02ece071762e5a31",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  },
+  {
+   "path": "sheet.jpg",
+   "bytes": 216717,
+   "sha256": "0e94ba4137ca9db4aa3963c337608467a279bb5d2ae1e9a6244751f5052573da",
+   "rev": "58544fe83fc82e6fcaa6e4b1ec2d96617d445e32"
+  }
+ ]
+}

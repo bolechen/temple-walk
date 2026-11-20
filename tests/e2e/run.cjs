@@ -1,5 +1,5 @@
 // End-to-end scenarios: a real page in a real browser, driven the way a visitor drives it.
-//   node tests/e2e/run.cjs --shard=1/4  the first of four parts of whatever was asked for (the weekly run shares it among four machines)
+//   node tests/e2e/run.cjs --shard=1/12  the first of twelve parts of whatever was asked for (the full run shares it among twelve machines, by each scenario's measured time: tests/e2e/shards.cjs)
 //   node tests/e2e/run.cjs              every scenario (about twenty minutes without a GPU)
 //   node tests/e2e/run.cjs --smoke      tiers 1 and 2: everything but the long walks and the photograph
 //   node tests/e2e/run.cjs --quick      tier 1 only (the page comes up clean): what must pass before anything is published
@@ -168,19 +168,19 @@ const scenarios = {
   // although the page was served from 127.0.0.1; with and without seals, with and without the library's line.
   goshuin: { tier: 2, async run(b, base) {
     const { render, LANGS, KINDS } = require("../../tools/goshuin-pages.cjs"), sharp = require("sharp"), jsQR = require("jsqr");
-    const { qrBox, shareUrl, STYLES } = await import("../../app/src/goshuin.js");
-    const read = async (buf, lang, style) => {
-      const box = qrBox(lang, style), { data, info } = await sharp(buf).extract({ left: Math.floor(box.x), top: Math.floor(box.y), width: Math.ceil(box.w) + 1, height: Math.ceil(box.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const { qrBox, shareUrl } = await import("../../app/src/goshuin.js");
+    const read = async (buf, lang) => {
+      const box = qrBox(lang), { data, info } = await sharp(buf).extract({ left: Math.floor(box.x), top: Math.floor(box.y), width: Math.ceil(box.w) + 1, height: Math.ceil(box.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       return jsQR(new Uint8ClampedArray(data), info.width, info.height);
     };
-    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"], ...STYLES.flatMap((st) => LANGS.map((l) => [l, "full", st]))];
-    for (const [lang, kind, style] of want) {
+    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"]];
+    for (const [lang, kind] of want) {
       expect(kind in KINDS, "no such kind " + kind);
-      const buf = await render(b, base, { lang, kind, style }), meta = await sharp(buf).metadata();
-      expect(meta.width === 1200 && meta.height === 1600, `${lang}/${kind}/${style}: the page is ${meta.width}×${meta.height}`);
-      const got = await read(buf, lang, style);
-      expect(got && got.data === shareUrl(lang), `${lang}/${kind}/${style}: the code reads ${got && got.data}, not ${shareUrl(lang)}`);
-      expect(got.data.startsWith("https://temple.rushiwowen.co/"), `${lang}/${kind}/${style}: the code does not go to the main site`);
+      const buf = await render(b, base, { lang, kind }), meta = await sharp(buf).metadata();
+      expect(meta.width === 1200 && meta.height === 1600, `${lang}/${kind}: the page is ${meta.width}×${meta.height}`);
+      const got = await read(buf, lang);
+      expect(got && got.data === shareUrl(lang), `${lang}/${kind}: the code reads ${got && got.data}, not ${shareUrl(lang)}`);
+      expect(got.data.startsWith("https://temple.rushiwowen.co/"), `${lang}/${kind}: the code does not go to the main site`);
     }
   } },
   // The card of a photograph (#319): a code on it by default that reads as the main site, in the page of seals' own look;
@@ -221,11 +221,54 @@ const scenarios = {
     expect((await words("#pieceTitle")) === "出山釈迦図" && /[ぁ-ん]/.test(await words("#pieceNote")) && (await words("#pieceFacts")).includes("東京国立博物館") && (await words("#pieceCredit")).startsWith("Source: ColBase"), "the work's card should be in Japanese: " + (await words("#pieceTitle")));
     expect((await words("#pieceProcessed")).includes("を加工して作成") && (await words("#pieceProcessed")).includes("TA-617") && await t.page.isVisible("#pieceProcessed"), "a ColBase card should say, in Japanese, that the picture was edited: " + (await words("#pieceProcessed")));
     await t.page.click("#pieceClose");
-    // Chosen in the menu: kept, and the page opens again in it.
-    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
-    expect(await t.page.getAttribute('#menu [data-lang="ja"]', "aria-pressed") === "true" && (await words("#menu")).includes("見回す速さ"), "the menu should be in Japanese, with Japanese circled");
-    await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('#menu [data-lang="en"]')]);
+    // Chosen in the menu, during the walk (#140): kept, the page opens again in it under a sheet that says so in the new
+    // language, never the title, and he is where he was, looking where he looked, the menu open on the language chosen.
+    const switchTo = async (to, where) => {
+      const before = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist }));
+      await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
+      const t0 = Date.now();
+      await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click(`#menu [data-lang="${to}"]`)]);
+      await t.page.waitForFunction(() => typeof window.templeT === "function", null, { timeout: 120000 });   // lang.js has run: the page as first painted
+      const cover = await t.page.evaluate(() => { const vis = (id) => { const el = document.getElementById(id); return !!el && !!el.offsetParent && getComputedStyle(el).display !== "none"; }; return { relang: document.documentElement.classList.contains("relang"), line: vis("relangLine") ? document.getElementById("relangLine").textContent : "", enter: vis("enterBtn"), h1: vis("title") && !!document.querySelector("#title h1")?.offsetParent }; });
+      await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 30000, `${where}: the menu was not open again after the change of language`);
+      const secs = (Date.now() - t0) / 1000;
+      const after = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist, focus: document.activeElement?.dataset?.lang || document.activeElement?.id, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), kept: sessionStorage.getItem("yunjing.relang.v1"), from: sessionStorage.getItem("yunjing.lang.from"), lang: document.documentElement.lang, events: window.__eventLog().map((e) => e.name) }));
+      const at = `${where} → ${to}: ` + JSON.stringify({ cover, before: [before.x, before.z, before.yaw, before.pitch, before.view, before.room, before.up, before.camDist], after: [after.x, after.z, after.yaw, after.pitch, after.view, after.room, after.up, after.camDist], focus: after.focus, title: after.title, events: after.events, secs });
+      expect(cover.relang && cover.line && !cover.enter && !cover.h1, "the page should open again under the sheet, not the title: " + at);
+      expect(after.lang === to && after.entered && !after.title && !after.opening.active && after.kept === null && after.from === null, "the walk should go on in the new language, the handover read and forgotten, no opening: " + at);
+      expect(Math.hypot(after.x - before.x, after.z - before.z) < 0.05 && Math.abs(after.yaw - before.yaw) < 0.0175 && Math.abs(after.pitch - before.pitch) < 0.0175 && after.view === before.view && after.room === before.room && after.up === before.up && Math.abs(after.camDist - before.camDist) < 0.3, "he should be where he was, looking where he looked: " + at);
+      expect(after.focus === to, "the menu should be open with the language just chosen in hand: " + at);
+      expect(after.season === before.season && after.time === before.time, "the season and hour of this visit should be as they were: " + JSON.stringify([before.season, before.time, after.season, after.time]));
+      expect(!after.events.includes("demo.enter") && !after.events.includes("demo.menu") && after.events.includes("demo.ready"), "the reload should not count as stepping in or opening the menu: " + at);
+      console.log(`  relang ${where} → ${to}: ${secs.toFixed(1)} s from the click to the menu open again`);
+      return after;
+    };
+    await t.page.evaluate(() => window.__mood("autumn", "dusk"));   // a hand's choice, for this visit only
+    await t.page.evaluate(() => { window.__view("third"); const p = window.__places.bell; window.__pose(p.at[0] + 0.6, p.at[1] - 0.6, 0.7, -0.08); }); await t.frames(3);
+    await switchTo("en", "first court");
+    // Esc puts the menu away and he walks on at once.
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.evaluate(() => window.__ui().stack.length)), 10000, "Esc did not put the menu away");
+    { const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w"); expect(Math.abs((await t.state()).z - z0) > 0.05, "after the menu is put away he should walk"); }
+    // Inside the great hall, from his own eyes: the same.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the hall");
+    await t.page.evaluate(() => { window.__view("first"); const y = window.__yard(); window.__pose(y.x + 0.6, y.z - 1.5, 0.3, 0.12); }); await t.frames(3);
+    await switchTo("ko", "great hall");
+    await t.page.keyboard.press("Escape");
+    // Up on the summit pavilion's balcony (#101), climbed to from the stair in its room: the same, and still up there.
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 60000, "never got into the summit pavilion");
+    await t.page.evaluate(() => window.__up(true)); await t.until(async () => (await t.state()).up === "lingxiao", 60000, "never got up onto the balcony");
+    await t.frames(3);
+    { const a = await switchTo("ja", "summit balcony"); expect(a.up === "lingxiao" && a.view === "first", "he should be up on the balcony still, seeing with his own eyes: " + JSON.stringify([a.up, a.view])); }
+    await t.page.keyboard.press("Escape"); await t.page.evaluate(() => window.__up(false)); await t.until(async () => !(await t.state()).up, 60000, "never came down");
+    // A reload of any other kind is the title, as before (src/relang.js reads its handover once), in the language kept.
+    await t.page.evaluate(() => window.__inside(null));
+    await t.page.goto(base + "?q=low" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
+    expect(await t.page.isVisible("#enterBtn") && !(await t.page.evaluate(() => document.documentElement.classList.contains("relang"))), "an ordinary reload should show the title");
+    // On the title a language is chosen as before: the title again, in it.
+    await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('.langs [data-lang="en"]')]);
     await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(await t.page.isVisible("#enterBtn") && !(await t.page.evaluate(() => window.__ui().stack.length)), "a language chosen on the title should stay on the title");
     expect(await t.page.evaluate(() => sessionStorage.getItem("yunjing.lang.from")) === null, "the page that a language switch opened should have read, and forgotten, where it came from");
     expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
     expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");
@@ -1647,10 +1690,13 @@ const scenarios = {
       expect(await t.page.evaluate(() => window.__joyaFlush()), "the report did not go");
       expect(api.posts.length === 1 && api.posts[0].n === 1 && Number.isInteger(api.posts[0].tz), "one report of one stroke with the clock's offset: " + JSON.stringify(api.posts));
       // Others ring: the mountain passes 108 (and 216) between two answers; the far hills answer once.
-      const far0 = (await t.page.evaluate(() => window.__cues())).farBell;
+      // It waits for a gap of three seconds after his own stroke, and is counted apart from the close's far bell.
+      const c0 = await t.page.evaluate(() => window.__cues());
       api.total = 230; await t.page.evaluate(() => window.__joyaPoll());
-      j = await t.page.evaluate(() => window.__joya());
-      expect(j.heard === 1 && (await t.page.evaluate(() => window.__cues())).farBell === far0 + 1, "the far bell should answer the round once: " + JSON.stringify(j));
+      await t.until(async () => (await t.page.evaluate(() => window.__joya())).heard === 1, 30000, "the far bell never answered the round");
+      j = await t.page.evaluate(() => window.__joya()); const c1 = await t.page.evaluate(() => window.__cues());
+      expect(c1.farAnswer === c0.farAnswer + 1 && c1.farBell === c0.farBell, "the answer should be counted as an answer, once: " + JSON.stringify({ c0, c1, j }));
+      const m = await t.page.evaluate(() => window.__music()); expect(m.zone === "joya" || m.candidate === "joya", "the bell's court should play only the drone on the night: " + JSON.stringify({ zone: m.zone, candidate: m.candidate, section: m.section }));
       expect(j.line.includes("230"), "the line should follow the mountain: " + j.line);
       api.total = 240; await t.page.evaluate(() => window.__joyaPoll());
       expect((await t.page.evaluate(() => window.__joya())).heard === 1, "no far bell without a round");
@@ -1663,6 +1709,10 @@ const scenarios = {
       await t.page.keyboard.press("Escape"); await t.until(() => t.page.isHidden("#joyaCard"), 10000, "Esc did not put the card away");
       // The counter fails: what is shown stays, a stroke is kept, nothing is said.
       api.fail = true; expect(!(await t.page.evaluate(() => window.__joyaFlush())), "a failed report should say so to the hook");
+      // The window closes: the line goes, and the mountain is what it was before the night (not winter night).
+      j = await t.page.evaluate(() => window.__joyaEnd()); await t.frames(2);
+      const after = await t.probe();
+      expect(!j.open && !j.shown && !(after.season === "winter" && after.time === "night"), "after the window the night should give back the visitor's own: " + JSON.stringify({ j: j.open, season: after.season, time: after.time }));
       const errs = t.errors.filter((e) => !/api\/joya/.test(e)); expect(errs.length === 0, errs.join("\n")); await t.close();
       // A counter that never answers: no line at all, no error but the request itself; in English the card still reads.
       api.fail = true;
@@ -2539,8 +2589,10 @@ const scenarios = {
 
 (async () => {
   const args = process.argv.slice(2), most = args.includes("--quick") ? 1 : args.includes("--smoke") ? 2 : 3, named = args.filter((a) => !a.startsWith("--"));
-  // --shard=2/4: the second of four parts of the list, taken in turn, so that four machines can share a whole run.
-  const shard = (args.find((a) => a.startsWith("--shard=")) || "").slice(8).split("/").map(Number), part = (list) => (shard.length === 2 && shard[1] > 0 ? list.filter((_, i) => i % shard[1] === shard[0] - 1) : list);
+  // --shard=2/12: the second of twelve parts of the list, so that twelve machines can share a whole run. The parts are made by
+  // tests/e2e/shards.cjs from what each scenario was last measured at (durations.json), not by taking them in turn (#335).
+  let shard; try { shard = require("./shards.cjs").parseShard(args); } catch (e) { console.error(e.message); process.exit(2); }
+  const part = (list) => (shard ? require("./shards.cjs").plan(list, shard[1]).parts[shard[0] - 1] : list);
   const names = part(named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most));
   for (const n of names) if (!scenarios[n]) { console.error(`no scenario "${n}"; there are: ${Object.keys(scenarios).join(", ")}`); process.exit(2); }
   const srv = await serve(), browser = await launch(), report = [];

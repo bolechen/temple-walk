@@ -16,7 +16,7 @@ export function createJoya({ y, ui, say, query, bench }) {
   // ?joya=fake:105:3 (and a crowd ringing three a second).
   const fake = bench && /^fake/.test(query.get("joya") || "") ? query.get("joya").split(":").map(Number) : null;
   const counter = fake ? fakeCounter({ start: fake[1] || 0, crowd: fake[2] || 0, anyHour: true }) : httpCounter(location.href);
-  const S = { answered: 0, heard: 0, lastFar: -Infinity, cards: 0, card: /** @type {string | null} */ (null) };
+  const S = { answered: 0, heard: 0, missed: 0, lastFar: -Infinity, cards: 0, card: /** @type {string | null} */ (null) };
 
   // The line, and its one button. Made here, not in index.html: it exists only on that night.
   const view = document.getElementById("yardView") || document.body;
@@ -42,13 +42,25 @@ export function createJoya({ y, ui, say, query, bench }) {
     take.hidden = tally.snapshot().mine < 1; take.textContent = t("留一张");
   }
   // Every round of 108 the far hills answer, once in a while however fast the mountain rings; a line says so at the foot.
+  // Not over his own bell: the answer waits until three seconds after his last stroke, and is let go after a minute
+  // without such a gap. Not heard in a hall (#331 keeps the mountain out of the rooms), during the opening, with the
+  // picture held for a photograph, or under ?shot (the music reviewer, 2026-11-20).
+  let owed = 0, lastStrike = -Infinity;
+  const quiet = () => !(y.inside?.() || y.openingActive?.() || y.busy?.() || query.has("shot"));
   function answer() {
-    const now = performance.now(); if (now - S.lastFar < JOYA.farGap * 1000) return;
-    S.lastFar = now; S.heard++; farBell(); say(t("满一百零八声，远山回了一声钟"), 5);
+    const now = performance.now(); if (now - S.lastFar < JOYA.farGap * 1000 || owed) return;
+    owed = now;
   }
+  setInterval(() => {
+    if (!owed) return; const now = performance.now();
+    if (now - owed > JOYA.answerWait * 1000 || !quiet()) { owed = 0; S.missed++; return; }
+    if (now - lastStrike < JOYA.clear * 1000) return;
+    owed = 0; S.lastFar = now; S.heard++; farBell({ answer: true }); say(t("满一百零八声，远山回了一声钟"), 5);
+  }, 250);
   // A stroke of the bell tower's bell, however it was struck, while the night is open.
   addEventListener("struck", (e) => {
     if (!ev.open || /** @type {CustomEvent} */ (e).detail !== "bell") return;
+    lastStrike = performance.now();
     if (tally.strike()) { paint(); if (tally.snapshot().mine === 1) track("joya.ring", { year: ev.year, forced: ev.forced ? 1 : 0 }); }
   });
   async function makeCard() {
@@ -70,10 +82,12 @@ export function createJoya({ y, ui, say, query, bench }) {
   // While the night is open: the count asked for, what was rung sent; what is left sent as the page goes. The window is
   // looked at again every twenty seconds, so a page left open from before eight finds the night when it comes.
   const poll = () => { if (ev.open && !document.hidden) tally.poll().then(paint); };
+  let ended = false;   // __joyaEnd(): the window closed, for a test on the workbench, where ?event=joya keeps it open
   const tick = () => {
-    const was = ev.open; ev = eventFor({ query, bench });
+    const was = ev.open; ev = ended ? { ...ev, open: false } : eventFor({ query, bench });
+    if (ev.open !== was) y.setJoya?.(ev.open);
     if (ev.open && !was) { y.eventNight?.(); poll(); }
-    if (!ev.open && was) paint();
+    if (!ev.open && was) { paint(); y.eventDay?.(); }
     if (ev.open) tally.flush().then(paint);
   };
   setInterval(tick, 5000); setInterval(poll, JOYA.pollSecs * 1000);
@@ -81,10 +95,11 @@ export function createJoya({ y, ui, say, query, bench }) {
     if (document.visibilityState !== "hidden") { poll(); return; }
     const p = tally.snapshot().pending; if (p && !fake && "beacon" in counter) counter.beacon(Math.min(p, JOYA.batch), new Date().getTimezoneOffset());
   });
-  if (ev.open) poll();
+  y.setJoya?.(ev.open); if (ev.open) poll();
 
   // The tests' hooks: the count as the page keeps it; the card as a picture (made now, for the code to be read back).
-  window.__joya = () => ({ ...tally.snapshot(), count: tally.shown, open: ev.open, forced: ev.forced, year: ev.year, window: windowOf().open, fake: !!fake, shown: !line.hidden, line: line.hidden ? "" : [...words.children].map((e) => e.textContent).join(" "), take: !take.hidden, heard: S.heard, cards: S.cards });
+  window.__joya = () => ({ ...tally.snapshot(), count: tally.shown, open: ev.open, forced: ev.forced, year: ev.year, window: windowOf().open, fake: !!fake, shown: !line.hidden, line: line.hidden ? "" : [...words.children].map((e) => e.textContent).join(" "), take: !take.hidden, heard: S.heard, missed: S.missed, owed: !!owed, cards: S.cards });
+  window.__joyaEnd = () => { ended = true; tick(); return window.__joya(); };
   window.__joyaCard = async () => { await makeCard(); return S.card; };
   window.__joyaPoll = () => tally.poll().then(() => (paint(), tally.snapshot()));
   window.__joyaFlush = () => tally.flush(true).then((ok) => (paint(), ok));

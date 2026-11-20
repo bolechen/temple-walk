@@ -17,6 +17,8 @@ export const JOYA = {
   flushSecs: 15,        // strokes are gathered and sent at most this often, and when the page is left
   pollSecs: 20,         // the count is asked for this often while the night is open (#341: every 10–30 s)
   farGap: 90,           // the far bell answers a round at most this often: with thousands ringing a round comes every second
+  clear: 3,             // and only this long after the visitor's own last stroke, so it is not lost under his bell
+  answerWait: 60,       // an answer that finds no such gap within this long is let go
   api: "api/joya",      // relative to the page, as the counter's other address (#340) is
   minTz: -840, maxTz: 720,   // Date.getTimezoneOffset() runs from -840 (UTC+14) to +720 (UTC-12)
 };

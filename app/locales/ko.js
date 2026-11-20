@@ -359,6 +359,8 @@ export default {
   "预览 · PR #{pr} · {c}": "미리보기 · PR #{pr} · {c}",
   "预览 · {c}": "미리보기 · {c}",
   "新的版本已就绪，刷新即可": "새 버전이 준비되었습니다. 새로고침하면 됩니다",
+  // A change of language in the pause menu, while the page opens again in it (#140).
+  "换字中": "언어를 바꾸는 중",
   "除夕撞钟": "제야의 종",
   "今夜已撞 {n} 声": "오늘 밤 {n}번",
   "留一张": "카드로 남기기",

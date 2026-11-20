@@ -3,7 +3,7 @@
 // require. Three buses, each with its own level in the pause menu: music, the place (wind, water, eave bells) and
 // effects (bell, drum, chime). Each bus sends to one of two reverbs: the court outdoors, the timber hall indoors.
 import { createPlayer, createVoices, reverb, bell, hillEcho } from "./instruments.js";
-import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePhrase, rng } from "./score.js";
+import { joyaZone, createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePhrase, rng } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
 import { gust as windGust } from "./wind.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
@@ -278,7 +278,7 @@ export const ambienceState = () => ({ knocks, birds, running: !!ambient, gust: a
 // ---- Two cues of the story ----
 // Wings: a dozen small birds going up at once from a tree, a rattle of quick wingbeats that thins as they climb away,
 // and two or three alarm calls among them.
-const cues = { flutter: 0, farBell: 0, mountainBell: 0, prologue: 0, titled: 0, ending: 0, passed: 0 };
+const cues = { flutter: 0, farBell: 0, farAnswer: 0, mountainBell: 0, prologue: 0, titled: 0, ending: 0, passed: 0 };
 export function flutter(level = 1) {
   if (!ctx || ctx.state !== "running" || level <= 0) return;
   const now = ctx.currentTime + 0.02;
@@ -292,14 +292,15 @@ export function flutter(level = 1) {
 // The close of the chapter: a bell in the far hills answering, another temple's, a tone lower than ours, dark and
 // small with the distance, and given back once more by the valley.
 let farEcho = null;
-export function farBell() {
+// `answer`: the year-end bell's answer to a round of 108 (#341), counted apart from the close's (`cues.farAnswer`).
+export function farBell({ answer = false } = {}) {
   if (!start()) return; wake();
   const t = ctx.currentTime + 0.05, lp = ctx.createBiquadFilter(), g = ctx.createGain();
   lp.type = "lowpass"; lp.frequency.value = 650; g.gain.value = 0.32; lp.connect(g); g.connect(bus.effects.in);
   if (!farEcho) { farEcho = hillEcho(ctx, bus.effects.in); }
   if (!closing()) duck(0.3, 12);   // the close's own music has already made room for it
   bell(ctx, lp, t, 0.9, farEcho, hz(41));   // F2: in the music's mode, below the near bell's G
-  cues.farBell++;
+  if (answer) cues.farAnswer++; else cues.farBell++;
 }
 // The opening (opening.js): the same bell up on the mountain, struck once as the first visitor steps in. Far and light,
 // the top rolled off by the distance, the hillside giving it back; our own bell's G, not the far temple's F of the close
@@ -443,7 +444,7 @@ function startMusic(place) {
   music = { keeper, player, place };
   const tick = () => {
     if (ctx.state !== "running") return;
-    const p = place(), now = ctx.currentTime, zone = keeper.update(titleAwaited && p.zone === "gate" ? "stair" : p.zone || "court", now);
+    const p = place(), now = ctx.currentTime, zone = keeper.update(titleAwaited && p.zone === "gate" ? "stair" : p.joya ? joyaZone(p.zone || "court") : p.zone || "court", now);
     player.tick(now, zone, seals, moodMusic(p.season, p.time));
   };
   tick(); setInterval(tick, 250);

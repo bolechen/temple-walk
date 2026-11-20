@@ -4,7 +4,7 @@
 // at the foot the temple's seal, and the code that brings whoever reads it to the main site (the look of the page of
 // seals' code, #319, with its own source mark, utm_source=joya).
 import { t as tr, glyphs, lang, FONT, FACE } from "./i18n.js";
-import { qrMatrix, qrSide, paintQrLook, LOOKS } from "./qr.js";
+import { qrMatrix, qrSide, paintQrLook, SEAL_LOOK } from "./qr.js";
 import { sealStamp, dateLine, MAIN } from "./goshuin.js";
 import { countText } from "./joya.js";
 const BRUSH = FONT.brush, SERIF = FONT.serif;
@@ -70,7 +70,7 @@ export async function drawJoyaCard({ when, mine, total, l = lang }) {
   if (allLine) { x.fillStyle = "#6b6458"; x.font = `32px ${SERIF}`; x.fillText(allLine, L.all.x, L.all.y); }
   // The temple's seal, and the code.
   x.save(); x.translate(L.seal.cx, L.seal.cy); x.rotate(L.seal.turn); x.globalCompositeOperation = "multiply"; x.globalAlpha = 0.9; x.drawImage(sealStamp(sealText, L.seal.size * 2, { seed: 9 }), -L.seal.size / 2, -L.seal.size / 2, L.seal.size, L.seal.size); x.restore();
-  paintQrLook(x, qrMatrix(joyaUrl(l)), L.qr.x, L.qr.y, L.qr.px, LOOKS.seal, "#f1ebde");
+  paintQrLook(x, qrMatrix(joyaUrl(l)), L.qr.x, L.qr.y, L.qr.px, SEAL_LOOK, "#f1ebde");
   x.fillStyle = "#6b6458"; x.font = `24px ${SERIF}`; x.fillText(tr("扫码入山"), L.qr.x + L.qr.w / 2, L.qr.y + L.qr.h + 24);
   x.fillStyle = "#a9a293"; x.font = `20px ${SERIF}`; x.fillText(MAIN.host, L.host.x, L.host.y);
   x.strokeStyle = "rgba(60,50,40,.28)"; x.lineWidth = 2; x.strokeRect(34, 34, W - 68, H - 68);
