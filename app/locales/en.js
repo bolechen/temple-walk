@@ -356,4 +356,6 @@ export default {
   "预览 · PR #{pr} · {c}": "preview · PR #{pr} · {c}",
   "预览 · {c}": "preview · {c}",
   "新的版本已就绪，刷新即可": "A new version is ready: reload the page to get it",
+  // A change of language in the pause menu, while the page opens again in it (#140).
+  "换字中": "Changing the language",
 };

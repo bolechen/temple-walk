@@ -54,6 +54,7 @@ import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settle
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
+import { takeRelang, keepRelang } from "./src/relang.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -62,6 +63,10 @@ const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 // Address parameters, for testing: ?q=low|medium|high  ?show=<view name>  ?cam=x,z,yaw,pitch  ?fast=1  ?shot=1
 //   ?season=spring|summer|autumn|winter  ?time=dawn|day|dusk|night  ?view=first|third
 const Q = new URLSearchParams(location.search);
+// Opened by a change of language in the pause menu (#140, src/relang.js): the visit as it was, taken once. An address
+// that names its own place (a test, a tool, a link) keeps to it and the handover is dropped.
+const relang = (() => { let r = null; try { r = takeRelang(sessionStorage, { lang }); } catch {} return r && !["cam", "show", "shot", "in", "up", "enter", "tour", "at", "play", "seals"].some((k) => Q.has(k)) ? r : null; })();
+if (!relang) document.documentElement.classList.remove("relang");
 // The floor baked from the drawn meshes (#265, #274): fetched while the place is built, and walked on everywhere (the
 // courts and the path, the summit pavilion's balcony, every room) unless `?walker=old` asks for the written plan.
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
@@ -210,6 +215,8 @@ const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.
 // After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
 // choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
 state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
+// Across a change of language the season and hour of this visit are as they were, a hand's choice of hour too (#140).
+if (relang && relang.season && relang.time && !Q.has("season") && !Q.has("time")) { state.season = relang.season; state.time = relang.time; state.follow = relang.follow && !prologueDay; }
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -234,7 +241,7 @@ function setMood(season, time) {
 setMood(state.season, state.time);
 
 // ---- The novice ------------------------------------------------------------------
-let view = Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
+let view = relang ? relang.view : Q.get("view") === "third" || (!Q.has("view") && !Q.has("show") && !Q.has("cam")) ? "third" : "first";
 // The camera is raised on what he is looking at: the same eye, the same direction, the whole view. From there it
 // only draws nearer or farther (`zoom`: 1 is the view as it was); it does not turn.
 const photo = { on: false, aspect: "screen", zoom: 1, monk: false, pray: false };
@@ -704,7 +711,7 @@ function frame(now) {
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch() }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch() }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -928,6 +935,24 @@ if (upIn && (Q.has("cam") || Q.has("show"))) pitch = pose[3];
 // ?show=shot-<id> of an observance made in a hall begins inside that hall.
 { const sp = site.places[(Q.get("show") || "").replace(/^shot-/, "")] || rooms.spots[(Q.get("show") || "").replace(/^shot-/, "")]; if (Q.get("show")?.startsWith("shot-") && sp?.room && !Q.has("in")) { indoors(site.halls.find((h) => h.id === sp.room)); pos.x = sp.at[0]; pos.z = sp.at[1]; yaw = Math.PI - sp.face; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }
 if (Q.has("in")) { indoors(site.halls.find((h) => h.id === Q.get("in")) || site.halls.find((h) => h.id === "main")); if (Q.has("cam")) { const p = settleAt(walker, pose[0], pose[1]); if (p) { pos.x = p.x; pos.z = p.z; } yaw = pose[2]; pitch = pose[3]; footY = eyeY = walker.heightAt(pos.x, pos.z); follow.reset(); } }   // ?in=1 begins inside the hall (an address that falls in something there is moved to the nearest open floor of the room, or left at its door)
+// Back where he was before a change of language (#140): the balcony, the hall or the open ground, the way he faced and
+// looked. A place that falls in something moves to the nearest open floor, as a kept place does.
+if (relang) {
+  if (relang.up && site.lofts[relang.up]) upstairs(site.lofts[relang.up], [relang.x, relang.z], relang.yaw);
+  else {
+    const h = relang.hall ? site.halls.find((x) => x.id === relang.hall) : null; if (h) indoors(h);
+    const p = settleAt(walker, relang.x, relang.z); if (p) { pos.x = p.x; pos.z = p.z; } else if (!h) { [pos.x, pos.z] = site.start; }
+    yaw = relang.yaw;
+  }
+  pitch = relang.pitch; footY = eyeY = walker.heightAt(pos.x, pos.z); heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw));
+  if (relang.reach) reachWant = THREE.MathUtils.clamp(relang.reach, 2.6, 11);
+  follow.reset();
+}
+// Choosing another language in the pause menu hands the walk across the reload that follows (lang.js calls this first).
+window.templeRelang = (to) => {
+  if (!document.body.classList.contains("entered") || Q.has("shot")) return false;
+  return keepRelang(sessionStorage, { x: +pos.x.toFixed(3), z: +pos.z.toFixed(3), yaw: +yaw.toFixed(4), pitch: +pitch.toFixed(4), view, reach: reachWant, hall: inside && lastHall ? lastHall.id : null, up: upIn ? upIn.id : null, season: state.season, time: state.time, follow: !!state.follow, from: lang, to });
+};
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__columns = (id) => (rooms?.rooms?.[id]?.room.frame.cols || []).map((c) => ({ x: c.x, z: c.z }));   // where a hall's free columns stand, for the scenarios that walk into one
 window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, out: h.out, outYaw: h.outYaw }));
@@ -1075,9 +1100,9 @@ ui.layer("menu", { kind: "modal" });
 // A slider on paper is a line of ink, darker as far as it is set (src/ui.css reads --v).
 const inked = (r) => r.style.setProperty("--v", `${(100 * (r.value - r.min)) / (r.max - r.min || 1)}%`);
 menuEl.querySelectorAll("input[type=range]").forEach((r) => r.addEventListener("input", () => inked(r)));
-function openMenu(open) {
+function openMenu(open, quiet = false) {
   if (!open) { ui.close("menu"); return; }
-  if (!ui.isOpen("menu")) track("demo.menu", { inside: inside ? 1 : 0, up: upIn ? upIn.id : "", tier: quality.name });
+  if (!ui.isOpen("menu") && !quiet) track("demo.menu", { inside: inside ? 1 : 0, up: upIn ? upIn.id : "", tier: quality.name });
   if (ui.open("menu")) { interrupt(); target = null; route = []; }
   const S = settings.get();
   menuEl.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.q === S.quality)));
@@ -1108,6 +1133,14 @@ function openMenu(open) {
   // Lost, or wedged somewhere he should not be: back to where the path begins.
   on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
 }
+// Back after a change of language (#140): the menu open again as it was, the language just chosen in hand, so that Esc
+// puts it away and he walks on. Not counted as the visitor opening the menu (docs/t00/ANALYTICS.md). Sound waits, as
+// it always does, for the first touch or key.
+function relangBack() {
+  openMenu(true, true);
+  const b = /** @type {HTMLElement | null} */ (menuEl.querySelector(`[data-lang="${lang}"]`)); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: "nearest" }); }
+  for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
+}
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
@@ -1127,7 +1160,7 @@ function directShot(id, opts) {
 }
 window.__direct = (id) => directShot(id);
 createGame({
-  hints, ui, tier: quality.name,
+  hints, ui, tier: quality.name, relang: !!relang,
   site, walker, scene,
   where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null }),
   // Up on a balcony walked round: which one; the stair's foot in the room he is in, if it has one; go up or come down.
