@@ -23,8 +23,8 @@ export const qrSide = (n, px) => (n + 2 * QUIET) * px;
 /** @type {Record<"plain" | "ink" | "seal", Look>} */
 export const LOOKS = {
   plain: { ink: "#1b1815", round: 0, frame: null },
-  ink: { ink: "#1b1815", round: 0.3, frame: null },
-  seal: { ink: "#9c2217", round: 0.3, frame: "#9c2217" },
+  ink: { ink: "#1b1815", round: 0.12, frame: null },
+  seal: { ink: "#7a160e", round: 0.12, frame: "#7a160e" },
 };
 
 /** Paints the code in a look: paper under the whole square (quiet zone included), each dark module rounded by `look.round` of its side,
