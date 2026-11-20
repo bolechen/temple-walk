@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "guanyin-brow-front.png",
+   "bytes": 1132721,
+   "sha256": "7ef0e1af6425cd27a255eff70eeaea5f607f1a2e551d6f80e3ea2222a00bdb5d",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "guanyin-brow-side.png",
+   "bytes": 1076052,
+   "sha256": "3cb68df0601ce982b36fc35c8f1ce7d3819f7a92c4cf57abe233db6070ae77bb",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "guanyin-brow.png",
+   "bytes": 1055665,
+   "sha256": "575157af40baf9086c92922c71a71a0b426006d27209d65027f6c49c7f90dc59",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "guanyin-plant-front.png",
+   "bytes": 1118814,
+   "sha256": "3743c18af2757bf40f9543f10ebfefabcd5d7ba0b25d2b6e234fe7a26961e3a9",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "guanyin-plant-side.png",
+   "bytes": 1073760,
+   "sha256": "1bc5bacda1d9dbefd205d2b58ae944e5724a458cb58eb00202e8dc734df0cb54",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "guanyin-plant.png",
+   "bytes": 1053343,
+   "sha256": "ea8b2aa8f8d343b17d67be7d63c6d41779834ec5cd83ae28c3709c2ab2f06e05",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-brow-front.png",
+   "bytes": 1090857,
+   "sha256": "0ac3c0e53271eb66f1d7c3e4eb289b653895a1e9f646fd33cadc2c3317457519",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-brow-side.png",
+   "bytes": 1038300,
+   "sha256": "cb41ae0053e9ee97ddbcebddb941a55ecff26e9664a4f81108b7c1e395d9f2ca",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-brow.png",
+   "bytes": 1064752,
+   "sha256": "2368acc1d7a26f79fccd888d3a265c0a70647ee7fed21e76f28afd8b65deb0e8",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-plant-front.png",
+   "bytes": 1071918,
+   "sha256": "36017f32fb7c8c598e2561749113a24a67ee57791e2dc2d7690c069847a39ca7",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-plant-side.png",
+   "bytes": 1034291,
+   "sha256": "6a741bb3ba60b3439b992fbe4315429d00f43ad9e2cd4530fc7461659bb6dfed",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-plant.png",
+   "bytes": 1067059,
+   "sha256": "361cddf8741f04fb435e6e64fc3f5e64fddf4e649cc0b5dd4fcbd075ccb77ff2",
+   "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  }
+ ]
+}
