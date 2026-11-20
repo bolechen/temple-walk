@@ -22,11 +22,13 @@ export function* gatherEye(scene, box, budget = 4) {
   /** @type {{ geo: THREE.BufferGeometry, m: THREE.Matrix4 }[]} */
   const jobs = [], tb = new THREE.Box3(), m4 = new THREE.Matrix4();
   for (const top of scene.children) {
-    if (!EYE_PARTS.has(top.userData.part) || !top.visible) continue;
+    // (a part switched off for a test or a measurement, `?off=site`, still stands there: the floor is baked from it, and the eye must be kept out of it as well, #354's hallexit)
+    if (!EYE_PARTS.has(top.userData.part)) continue;
     top.updateMatrixWorld(true);
     top.traverse((/** @type {any} */ o) => {
       if (!o.isMesh || o.userData.walk === false || !o.visible) return;
-      if (airy(Array.isArray(o.material) ? o.material[0] : o.material)) return;
+      // (a hall's dark box behind its open door is drawn with a shader that paints the room, so it counts as airy, but it is a box the eye must not go into: before, the eye backed out through the door into the hall, #354)
+      if (airy(Array.isArray(o.material) ? o.material[0] : o.material) && !o.userData.doorway) return;
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
       if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); if (tb.copy(o.geometry.boundingBox).applyMatrix4(m4).intersectsBox(keep)) jobs.push({ geo: o.geometry, m: m4.clone() }); } return; }
       if (tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld).intersectsBox(keep)) jobs.push({ geo: o.geometry, m: o.matrixWorld });
