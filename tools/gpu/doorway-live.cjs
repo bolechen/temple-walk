@@ -25,7 +25,7 @@ exports.run = async ({ open, log, out, runs = RUNS, dist = 6, quick = false }) =
     const query = `q=${r.q}&season=summer&time=day&view=third` + (doorway ? `&doorway=${doorway}` : "");
     const row = { ...r, size, query };
     try {
-      const { ctx, page, loadMs } = await open(query, size, scale, { fresh: true, path: r.base ? "base/" : "" });
+      const { ctx, page, loadMs } = await open(query, size, scale, { fresh: true, path: r.base ? "base/index.html" : "" });
       row.loadMs = loadMs;
       await page.evaluate(() => { window.__ft = []; window.__slow = []; let last = performance.now(); const go = (t) => { const d = +(t - last).toFixed(1); window.__ft.push(d); if (d > 50 && window.__slow.length < 40) { const l = window.__doorways?.()?.live; window.__slow.push({ ms: d, at: window.__ft.length, live: l ? JSON.stringify(l.halls) : null }); } last = t; requestAnimationFrame(go); }; requestAnimationFrame(go); });
       if (await page.isVisible("#title")) { await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await page.click("#enterBtn"); }
