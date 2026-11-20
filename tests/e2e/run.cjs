@@ -207,7 +207,7 @@ const scenarios = {
       const box = qrBox(lang), { data, info } = await sharp(buf).extract({ left: Math.floor(box.x), top: Math.floor(box.y), width: Math.ceil(box.w) + 1, height: Math.ceil(box.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       return jsQR(new Uint8ClampedArray(data), info.width, info.height);
     };
-    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["en", "someLine"]];   // (tools/goshuin-pages.cjs draws all twenty states for the eye; a page takes about half a minute here)
+    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"]];
     for (const [lang, kind] of want) {
       expect(kind in KINDS, "no such kind " + kind);
       const buf = await render(b, base, { lang, kind }), meta = await sharp(buf).metadata();
@@ -267,7 +267,7 @@ const scenarios = {
       expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
     }
     // Links that name nothing on the list: nothing is shown, nothing of theirs is written on the page.
-    for (const hash of ["#lamp=<img src=x onerror=alert(1)>", "#" + pack("lamp", [WISHES.length + 5, 0]), "#nonsense"]) {   // (the rest, damaged, cut, oversize and a season off its list, are tests/unit/wishes.test.mjs's)
+    for (const hash of ["#lamp=AAAA", "#lamp=<img src=x onerror=alert(1)>", "#" + pack("lamp", [WISHES.length + 5, 0]), "#" + pack("lamp", [0, 200]), "#lamp=" + "A".repeat(5000), "#nonsense"]) {
       const r = await open(b, base, "q=low&fast=1" + BARE + hash); await r.frames(2);
       const st = await r.page.evaluate(() => ({ ...window.__lamp(), text: document.body.innerText })); expect(st.arrival === null && !st.shown && !/onerror|nonsense/.test(st.text), `a link that names nothing was taken: ${hash.slice(0, 40)} ${JSON.stringify({ ...st, text: "" })}`);
       expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
