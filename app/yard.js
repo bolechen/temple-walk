@@ -1389,6 +1389,7 @@ function directShot(id, opts) {
 window.__direct = (id) => directShot(id);
 createGame({
   hints, ui, tier: quality.name, relang: !!relang,
+  level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
   where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null }),
