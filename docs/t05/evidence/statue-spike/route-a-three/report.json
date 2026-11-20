@@ -1,0 +1,99 @@
+{
+  "spec": "tools/t05-hall/specs/route-a-three.json",
+  "shots": [
+    {
+      "name": "door3-summer",
+      "view": "door3",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-three/door3-summer.png",
+      "tris": 447624,
+      "calls": 562,
+      "ms": 7087
+    },
+    {
+      "name": "door3-winter",
+      "view": "door3",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-three/door3-winter.png",
+      "tris": 447624,
+      "calls": 562,
+      "ms": 4713
+    },
+    {
+      "name": "side3-summer",
+      "view": "side3",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-three/side3-summer.png",
+      "tris": 448624,
+      "calls": 617,
+      "ms": 5158
+    },
+    {
+      "name": "side3-winter",
+      "view": "side3",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-three/side3-winter.png",
+      "tris": 448624,
+      "calls": 617,
+      "ms": 5072
+    },
+    {
+      "name": "front-summer",
+      "view": "front",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-three/front-summer.png",
+      "tris": 445900,
+      "calls": 509,
+      "ms": 6048
+    },
+    {
+      "name": "front-winter",
+      "view": "front",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-three/front-winter.png",
+      "tris": 445900,
+      "calls": 509,
+      "ms": 6017
+    },
+    {
+      "name": "front10-summer",
+      "view": "front10",
+      "mood": "summer",
+      "file": "tools/out/t05/route-a-three/front10-summer.png",
+      "tris": 446760,
+      "calls": 524,
+      "ms": 6031
+    },
+    {
+      "name": "front10-winter",
+      "view": "front10",
+      "mood": "winter",
+      "file": "tools/out/t05/route-a-three/front10-winter.png",
+      "tris": 446760,
+      "calls": 524,
+      "ms": 5886
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo/kasyapa-a.60k.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo/sakyamuni-a.60k.glb",
+      "tris": 59998
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": [],
+  "note": "film: see film-report.json (drawn again after the eye was set to end on the face)"
+}

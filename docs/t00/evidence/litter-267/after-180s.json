@@ -1,0 +1,22 @@
+[
+ {
+  "secs": 180,
+  "kept": 1500,
+  "heap": 624.2,
+  "landed": 2233,
+  "heaped": 733,
+  "kicked": 0,
+  "blown": 0,
+  "stopped": 0,
+  "full": 0,
+  "faded": 108.8,
+  "centre": [
+   -8,
+   32
+  ],
+  "span": 32,
+  "cells": 128,
+  "handed": 2233,
+  "bytes": 294912
+ }
+]

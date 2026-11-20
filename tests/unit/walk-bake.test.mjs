@@ -81,3 +81,10 @@ test("his outline the bake keeps the floor off things by is the one measured fro
   assert.deepEqual(kept.reach, Array.from(o, (v) => +v.toFixed(3)), "run node tools/walk/outline.mjs, then node tools/bake-walk.mjs");
   assert.deepEqual(kept.low, Array.from(o.low, (v) => +v.toFixed(3)));
 });
+
+// A bake made under the swap hook (pnpm run test:grid, where a bare import of site.js is the grid's walker) once recorded the
+// grid's reach as the written plan's, and walk-diff then reported every hall's floor as changed (#278).
+test("the bake asks the written plan's own walker, whatever loader it runs under", async () => {
+  const { writtenWalker } = await import("../../tools/bake-walk.mjs"), { createWalker: real } = await import("../../app/src/site.js?real");
+  assert.equal(writtenWalker, real);
+});

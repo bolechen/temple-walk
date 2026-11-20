@@ -53,7 +53,9 @@ function sweep(b) {
     const foot = walker.heightAt(x, z); if (Math.abs(foot - ground) > 2.6 || foot > b.centre.y - 0.8) continue;   // in its court (the building's own floor and a stair's rise below it), with the board above the eye
     const yaw = Math.atan2(-dx, dz), pitch = Math.atan2(b.centre.y - foot - 1.2, d);
     const third = followEye(walker, { x, z, foot, eyeY: foot, yaw, pitch, side: 1.2, reach: 6.2 });
-    for (const e of [eye.set(x, walker.eyeAt(x, z), z).clone(), new THREE.Vector3(...third.at(third.d))]) {
+    // (the eye from behind him as the page has it: never under the floor, where createFollow puts it back up)
+    const back = third.at(third.d); back[1] = Math.max(back[1], third.floorAt(third.d));
+    for (const e of [eye.set(x, walker.eyeAt(x, z), z).clone(), new THREE.Vector3(...back)]) {
       for (const { ci, p } of points) {
         dir.copy(p).sub(e); const len = dir.length(); dir.divideScalar(len);
         if (dir.dot(b.normal) > -0.1) continue;   // only where its front is seen

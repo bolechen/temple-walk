@@ -6,6 +6,7 @@ const { buildSite, createWalker, SITE, LEVELS, APPROACH, terrain, BODY } = await
 // Materials are only handed on to meshes; any object will do, but they must be distinct and cloneable.
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site);
+const { keptOff, isGrid, isColumn } = await import("./walkers.mjs");
 
 test("the terraces rise one above another, going north", () => {
   for (let i = 1; i < LEVELS.length; i++) { assert.ok(LEVELS[i].y > LEVELS[i - 1].y); assert.ok(LEVELS[i].zS <= LEVELS[i - 1].zN + 1e-6); }
@@ -111,8 +112,13 @@ test("every hall with a door can be walked up to, entered at its threshold, and 
 test("the columns of the open pavilions stand in the way", () => {
   assert.ok(site.walk.posts.length >= 8, "the pavilions on the approach have columns");
   for (const r of site.walk.posts) {   // a round post is its centre and radius; a square one is its rectangle
-    const x = r.r !== undefined ? r.x : (r.x0 + r.x1) / 2, z = r.r !== undefined ? r.z : (r.z0 + r.z1) / 2; assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through what stands at (${x.toFixed(1)}, ${z.toFixed(1)})`);
-    if (r.r !== undefined) { assert.ok(walker.blocked(x + r.r + BODY - 0.02, z), `his sleeve can enter the column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
+    const x = r.r !== undefined ? r.x : (r.x0 + r.x1) / 2, z = r.r !== undefined ? r.z : (r.z0 + r.z1) / 2;
+    // (A square one is a rectangle drawn larger by BODY round a table or a stair's cheek: on the grid baked from what is
+    // drawn its middle may be the cheek's own sloping top, a floor; there `pnpm run edges` holds his body out of the stone.)
+    if (r.r === undefined && isGrid(walker)) { assert.ok(walker.wall(x, z), `the eye can pass through what stands at (${x.toFixed(1)}, ${z.toFixed(1)})`); continue; }
+    assert.ok(walker.blocked(x, z) && walker.wall(x, z), `he can walk through what stands at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+    // (On the grid only a column is held here: a tree's written radius is its roots' spread, and edges.test holds the trunk, the cushions and the tables.)
+    if (r.r !== undefined && (!isGrid(walker) || isColumn(site, r))) { assert.ok(walker.blocked(x + r.r + (isGrid(walker) ? keptOff(walker) : BODY - 0.02), z), `his sleeve can enter the column at (${x.toFixed(1)}, ${z.toFixed(1)})`); }
   }
   assert.ok(site.walk.posts.filter((r) => r.r !== undefined).length >= 100, "every outer column of every building is a post");
   assert.ok(!walker.blocked(5.2, APPROACH.zA1 + 2.75), "the middle of the half-way pavilion is open floor");
@@ -143,7 +149,9 @@ test("walls, halls and the hillside keep the visitor out", () => {
   assert.ok(!can(12, (T2.zN + LEVELS[2].zS) / 2, 0.3), "on the tea slope, off the stair");
 });
 test("heights: the courts are level, the stairs climb evenly", () => {
-  assert.equal(walker.heightAt(0, 20), 0); assert.equal(walker.heightAt(0, LEVELS[0].zS - 5), LEVELS[0].y);
+  // (The grid's floor is the drawn paving, laid a centimetre over the terrace's stone.)
+  const lift = walker.kind === "grid" ? 0.02 : 0;
+  assert.ok(Math.abs(walker.heightAt(0, 20)) <= lift); assert.ok(Math.abs(walker.heightAt(0, LEVELS[0].zS - 5) - LEVELS[0].y) <= lift, `the first terrace stands at ${walker.heightAt(0, LEVELS[0].zS - 5)}`);
   for (const r of site.walk.ramps) {
     let last = null; const run = Math.hypot(r.high[0] - r.low[0], r.high[1] - r.low[1]);
     // A stair is treads: the height holds across a tread and rises by one step, never more, and it ends at the top.

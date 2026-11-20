@@ -1,6 +1,6 @@
 // The picture after the render: a little bloom with a film's warm halation round the lights, ambient occlusion where
 // things meet (high tier), a clear landscape finish, a colour table for the season and the hour, and on a photograph
-// or a fixed view a very shallow depth of field.
+// or a photograph (when the visitor switches 虚化 on) a very shallow depth of field.
 //
 // Each part can be switched off on its own to see what it costs (`?off=` at load, `__part()` while walking):
 // gtao, halation, lut, dof (and bloom, as before). The high tier keeps the scene's depth with its colour, which is
@@ -67,7 +67,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
         vec3 c=max(texture2D(tDiffuse,vUv).rgb,0.);
         #ifdef DEPTH
           float z=viewDist(vUv);
-          // Depth of field, very shallow, for a fixed view or a photograph only: uDof = (focus in metres, blur at
+          // Depth of field, very shallow, for a photograph only, when switched on: uDof = (focus in metres, blur at
           // infinity in pixels, on). A thin lens: the blur grows as |1 - focus / distance|.
           if(uDof.z>.5){
             float coc=min(abs(1.-uDof.x/z),1.5)*uDof.y;
@@ -124,7 +124,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
       composer.render();
     },
     setMood(m) { mood = m; g.uSh.value.set(...m.sh); g.uHi.value.set(...m.hi); g.uSat.value = m.sat; g.uLift.value = m.lift; g.uExp.value = m.exp; g.uCon.value = m.con ?? 1.1; apply(); },
-    // The depth of field's focus, in metres (0: none). Only a fixed view or a photograph sets it.
+    // The depth of field's focus, in metres (0: none). Only a raised camera with 虚化 on sets it.
     focus(metres) { dof = metres; g.uDof.value.x = Math.max(0.5, metres || 1); g.uDof.value.z = on.dof && dof > 0 ? 1 : 0; },
     // Switch one of the passes while walking; returns whether it is now drawn (null: no such pass on this tier).
     part(name, state) { if (!(name in on) || (name === "gtao" && !gtao) || (name === "dof" && !depth)) return null; on[name] = !!state; apply(); return on[name]; },

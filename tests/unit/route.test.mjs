@@ -7,7 +7,8 @@ const { planRoute, clearLine, nearestOpen, planSteps, ROUTE } = await import("..
 const { stride } = await import("../../app/src/stride.js");
 const { dropPose } = await import("../../app/src/drop.js");
 const M = new Proxy({}, { get(t, k) { return k === "plaster" || k === "interior" ? () => (t[k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial()); } });
-const site = buildSite(M), walker = createWalker(site), drops = site.walk.drops;
+const site = buildSite(M), walker = createWalker(site), drops = walker.drops;   // (the porch edges as this walker has them: written, or found in the baked grid)
+const { isGrid } = await import("./walkers.mjs");
 
 // Walk a route as the page does, a few centimetres at a time, sliding as stride does; a hop is made as dropPose gives it.
 function walkIt(route, from) {
@@ -25,7 +26,9 @@ function walkIt(route, from) {
 }
 
 test("the owner's spot at the tea house's south end (a blocked point at ground level): out, and to the court", () => {
-  const from = { x: -12.85, z: 5.98 }; assert.ok(walker.blocked(from.x, from.z), "this is the spot that was reported");
+  // On the written plan the spot is inside the porch's apron, drawn wider than the porch; on the grid baked from what is
+  // drawn it is open ground beside the porch (#161: the cause of #154 is not there), and the routes out are held all the same.
+  const from = { x: -12.85, z: 5.98 }; assert.ok(isGrid(walker) || walker.blocked(from.x, from.z), "this is the spot that was reported");
   for (const [x, z] of [[-12.3, 4.82], [-10.56, 3.92], [-8, 4], [-9, 9], [-5, 12], [0, 20], [-11, 0.5]]) {
     const r = planRoute(walker, drops, from, { x, z }); assert.ok(r.reached, `no way to (${x}, ${z})`);
     const at = walkIt(r, from); assert.ok(Math.hypot(at.x - x, at.z - z) < 0.3, `reached (${at.x.toFixed(2)}, ${at.z.toFixed(2)}), not (${x}, ${z})`);
@@ -33,6 +36,12 @@ test("the owner's spot at the tea house's south end (a blocked point at ground l
 });
 
 test("from the porches' ends, beside the tables and cushions, to the court below, on every platform with a hop down", () => {
+  // "The court below" is ground that can be walked to from where he arrives: not ground the walker would let him stand on
+  // but nothing leads to (beyond a court's wall, where a porch's back edge now looks out, #265).
+  const S = 0.25, key = (i, j) => i * 100000 + j, seen = new Set(), todo = [[Math.round(site.start[0] / S), Math.round(site.start[1] / S)]];
+  seen.add(key(...todo[0]));
+  while (todo.length) { const [i, j] = todo.pop(), h = walker.heightAt(i * S, j * S); for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = i + di, b = j + dj, k = key(a, b); if (seen.has(k) || walker.blocked(a * S, b * S) || Math.abs(walker.heightAt(a * S, b * S) - h) > ROUTE.step) continue; seen.add(k); todo.push([a, b]); } }
+  const reachable = (x, z) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (seen.has(key(Math.round(x / S) + a, Math.round(z / S) + b))) return true; return false; };
   let tried = 0; const bad = [];
   for (const e of drops) {
     if (e.top > 1.5) continue;
@@ -42,7 +51,7 @@ test("from the porches' ends, beside the tables and cushions, to the court below
       if (walker.blocked(x, z) || Math.abs(walker.heightAt(x, z) - e.top) > 0.03) continue;
       for (const out of [2, 4, 7]) for (const slide of [-3, 0, 3]) {
         const tx = e.a[0] + (ax * along) / span + nx * out + (ax / span) * slide, tz = e.a[1] + (az * along) / span + nz * out + (az / span) * slide;
-        if (walker.blocked(tx, tz) || walker.heightAt(tx, tz) > 0.05) continue;
+        if (walker.blocked(tx, tz) || walker.heightAt(tx, tz) > 0.05 || !reachable(tx, tz)) continue;
         tried++; const r = planRoute(walker, drops, { x, z }, { x: tx, z: tz });
         try { assert.ok(r.reached, "no route"); const at = walkIt(r, { x, z }); assert.ok(Math.hypot(at.x - tx, at.z - tz) < 0.3, `ended ${Math.hypot(at.x - tx, at.z - tz).toFixed(2)} m short`); }
         catch (err) { bad.push(`(${x.toFixed(2)}, ${z.toFixed(2)}) -> (${tx.toFixed(2)}, ${tz.toFixed(2)}): ${err.message}`); }

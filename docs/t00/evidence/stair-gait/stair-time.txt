@@ -1,0 +1,11 @@
+12 flights of 0.5 m or more, 222 treads, 75.5 m of run
+walk:   60.4 s -> 105.7 s (+45.3 s)
+hurry:  47.2 s -> 79.3 s (+32.1 s)
+  rise 14.80 m run 27.9 m: walk +16.7 s
+  rise 6.00 m run 11.2 m: walk +6.7 s
+  rise 4.50 m run 8.5 m: walk +5.1 s
+  rise 4.00 m run 7.5 m: walk +4.5 s
+  rise 2.80 m run 5.4 m: walk +3.3 s
+  rise 2.40 m run 4.4 m: walk +2.7 s
+  rise 1.50 m run 2.7 m: walk +1.6 s
+  rise 1.26 m run 2.4 m: walk +1.4 s

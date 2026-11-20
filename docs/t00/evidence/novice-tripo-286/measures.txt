@@ -1,0 +1,38 @@
+code         left length 7.6 cm, 5 fingers beyond the knuckles; fingertips to palm centre 5.8 / 6.1 / 3.8 / 6.1 / 5.8 cm; tips spread across 2.8 cm, front-back 0.8 cm
+novice-tripo-r4.glb left length 8.2 cm, 4 fingers beyond the knuckles; fingertips to palm centre 6.5 / 6.4 / 5.7 / 5.8 cm; tips spread across 6.2 cm, front-back 1.5 cm
+novice-tripo-r5.glb left length 8.2 cm, 4 fingers beyond the knuckles; fingertips to palm centre 6.2 / 6.5 / 5.4 / 4.7 cm; tips spread across 3.2 cm, front-back 1.5 cm
+code       left  n 759 | length past wrist 7.6 cm (from -1.2) | width 5.8 cm | thickness 3.9 cm | centre from the hand bone: along 3.7, across -0.2, front 0.5 cm
+code       right n 759 | length past wrist 7.6 cm (from -1.2) | width 5.8 cm | thickness 3.9 cm | centre from the hand bone: along 3.7, across 0.2, front 0.5 cm
+novice-tripo-r4.glb left  n 231 | length past wrist 8.2 cm (from -0.6) | width 10.7 cm | thickness 4.9 cm | centre from the hand bone: along 3.6, across -0.2, front 0.7 cm
+novice-tripo-r4.glb right n 242 | length past wrist 8.2 cm (from -1.0) | width 10.3 cm | thickness 5.0 cm | centre from the hand bone: along 3.6, across 0.2, front 0.6 cm
+novice-tripo-r5.glb left  n 232 | length past wrist 8.2 cm (from -0.9) | width 7.1 cm | thickness 4.9 cm | centre from the hand bone: along 3.6, across 0.3, front 0.7 cm
+novice-tripo-r5.glb right n 238 | length past wrist 8.1 cm (from -0.3) | width 7.1 cm | thickness 5.0 cm | centre from the hand bone: along 3.6, across -0.1, front 0.6 cm
+code                     left eye: lower edge 99.8 cm; highest hand point before it (left hand) 97.7 cm, below it by 2.1 cm | right eye: lower edge 99.8 cm; highest hand point before it (right hand) 97.7 cm, below it by 2.1 cm
+novice-tripo-r4.glb      left eye: lower edge 98.5 cm; highest hand point before it (left hand) 100.2 cm, OVER it by 1.7 cm | right eye: lower edge 98.4 cm; highest hand point before it (right hand) 100.3 cm, OVER it by 1.8 cm
+novice-tripo-r5.glb      left eye: lower edge 98.5 cm; highest hand point before it (left hand) 96.7 cm, below it by 1.8 cm | right eye: lower edge 98.4 cm; highest hand point before it (right hand) 97.2 cm, below it by 1.2 cm
+novice-tripo-r5-armsin15.glb left eye: lower edge 98.5 cm; highest hand point before it (left hand) 95.0 cm, below it by 3.6 cm | right eye: lower edge 98.4 cm; highest hand point before it (right hand) 95.3 cm, below it by 3.1 cm
+--- beads, r4 as it was
+tripo  back      bead points 168, inside the outer cloth: median 0.7 cm, worst 2.9 cm, share inside 75%
+tripo  shoulders bead points 167, inside the outer cloth: median -2.2 cm, worst 1.1 cm, share inside 5%
+tripo  chest     bead points 412, inside the outer cloth: median 1.4 cm, worst 3.4 cm, share inside 77%
+--- beads laid on r5 (--relay)
+beads laid on the body: 24 of 32 moved, at most 3.9 cm
+tripo  back      bead points 179, inside the outer cloth: median -1.7 cm, worst 0.2 cm, share inside 1%
+tripo  shoulders bead points 156, inside the outer cloth: median -2.5 cm, worst 0.0 cm, share inside 1%
+tripo  chest     bead points 412, inside the outer cloth: median -1.8 cm, worst 0.3 cm, share inside 0%
+--- stretch at the brow
+novice-tripo-r4
+robe >3x 422 >2x 1140 skin >3x 42
+by piece {"?":422}
+novice-tripo-r5
+robe >3x 420 >2x 579 skin >3x 36
+by piece {"tripo_part_1":210,"tripo_part_13":210}
+--- helper share k (r5 weights)
+start [ 0.5, 0, 0, 0 ] [ 420, 176437.85757504642 ]
+k 0 [ 465, 129396.88553557466 ]
+k 0.25 [ 447, 147139.09506316652 ]
+k 0.4 [ 427, 163816.37429598463 ]
+k 0.5 [ 420, 176437.85757504642 ]
+k 0.6 [ 412, 189569.24667974736 ]
+k 0.75 [ 406, 208840.61051710555 ]
+k 1 [ 392, 234694.65573283882 ]

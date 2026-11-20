@@ -1,0 +1,98 @@
+{
+  "scene_id": "T04",
+  "name": "长照寺",
+  "game": "山门之外",
+  "chapter": "河西长梦",
+  "revision": "research draft, 2026-11-17",
+  "status": "draft; not implemented; positions to be fixed after the first whitebox",
+  "units": "metres; +x east; +z south; north is -z; y up; origin at the centre of the temple gate (山门)",
+  "yaw_convention": "degrees clockwise from north (-z); east = 90, south = 180, west = 270",
+  "height_note": "ground_m is the local floor elevation relative to the gate (design proposal, not survey); eye_m is above the local ground. SRTM cannot resolve the hall floor or the altar.",
+  "season_time": "late autumn, 16:00–17:30, low WSW sun (Z01 interior side daylight); winter snow as a variant",
+  "fov_deg": 44,
+  "cameras": [
+    {
+      "id": "cam01",
+      "name": "前院",
+      "purpose": "the first courtyard inside the gate; the axis, the bell/drum towers, the hall's deep eaves, the stupa tip",
+      "position": { "x": 8.0, "z": -2.0, "ground_m": 0.4, "eye_m": 1.62 },
+      "look": { "yaw_deg": 80.0, "pitch_deg": 3.0 },
+      "fov_deg": 60,
+      "must_show": ["山门内的铺地/门槛", "钟楼（右）与鼓楼（左）", "大佛殿西立面与深檐", "土塔尖在屋顶之上"],
+      "must_not": ["整尊卧佛", "一眼看到全长", "土塔被屋顶完全挡住", "江南白墙/黄墙琉璃"],
+      "notes": "Stand just inside the gate; fov 60 to hold the two towers at the edges and the hall at the centre. The gate is behind the camera."
+    },
+    {
+      "id": "cam02",
+      "name": "门口适应区",
+      "purpose": "the threshold of the Great Buddha Hall; the door frame, the brick carvings, the dark interior, the first partial view of the Buddha",
+      "position": { "x": 62.5, "z": -15.8, "ground_m": 1.2, "eye_m": 1.62 },
+      "look": { "yaw_deg": 90.0, "pitch_deg": 3.0 },
+      "fov_deg": 50,
+      "must_show": ["门槛/门框", "门两侧砖雕（祇园演法/西方圣境）", "殿内暗部", "佛的侧身一小块（不是全长）", "西晒光柱/尘"],
+      "must_not": ["整尊卧佛", "殿内死黑", "门外/门内硬切", "Boss 追光"],
+      "notes": "The exposure should adapt over 2–3 s; the player sees the flank, not the head or feet. The door is 3.6 m wide by design."
+    },
+    {
+      "id": "cam03",
+      "name": "巨像近侧",
+      "purpose": "beside the head/hand; the ear, the hand, the folds, the ten disciples; the scale of the body",
+      "position": { "x": 68.0, "z": -27.0, "ground_m": 1.2, "eye_m": 1.62 },
+      "look": { "yaw_deg": 56.0, "pitch_deg": 6.0 },
+      "fov_deg": 44,
+      "must_show": ["佛首/佛手/耳", "佛身向佛脚延伸", "十大弟子/东墙的暗影", "佛坛"],
+      "must_not": ["切掉佛首", "整尊佛", "正面追光/过曝", "触摸/攀爬"],
+      "notes": "The west-door side light rakes the face and hand; the face is lit by bounce, not direct sun. The ear is about 4 m (published claim; do not put the number in UI)."
+    },
+    {
+      "id": "cam04",
+      "name": "侧向观察",
+      "purpose": "the south aisle at the feet, looking north along the 34.5 m body; the full length, the head far, the eighteen arhats",
+      "position": { "x": 72.0, "z": 7.0, "ground_m": 1.2, "eye_m": 1.62 },
+      "look": { "yaw_deg": 5.0, "pitch_deg": 4.0 },
+      "fov_deg": 55,
+      "must_show": ["佛脚/佛坛南端", "34.5 m 佛身向佛首延伸", "佛首（远端）", "十八罗汉/侧廊"],
+      "must_not": ["头/脚被切", "透视压扁", "侧廊窄于 2.5 m", "整尊佛被门框压缩"],
+      "notes": "This is the 'full length' shot: only at one end does 34.5 m read. The camera stands in the south aisle; the body recedes from right-near (feet) to centre-far (head)."
+    },
+    {
+      "id": "cam05",
+      "name": "经卷展柜",
+      "purpose": "inside the Sutra Library; the cabinets, the display cases, the gold sutra, the Northern Canon, the labels",
+      "position": { "x": 166.0, "z": -19.3, "ground_m": 1.0, "eye_m": 1.62 },
+      "look": { "yaw_deg": 90.0, "pitch_deg": 0.0 },
+      "fov_deg": 44,
+      "must_show": ["经橱/展柜", "金银字经卷（复制/展陈）", "《永乐北藏》卷册", "说明牌/来源行"],
+      "must_not": ["开柜/取经", "宝库/金币/开箱感", "亮金泛光", "字不可读", "馆标/馆方背书"],
+      "notes": "Low illuminance, 3,000 K, no UV; the gold is dark, not bright. The player stands 1.5 m from the case."
+    },
+    {
+      "id": "cam06",
+      "name": "院外远景",
+      "purpose": "from the plaza, looking back at the gate, the roofs, the 33.37 m stupa, and the low city",
+      "position": { "x": -95.0, "z": 17.0, "ground_m": 0.0, "eye_m": 1.62 },
+      "look": { "yaw_deg": 80.0, "pitch_deg": 5.0 },
+      "fov_deg": 55,
+      "must_show": ["广场/树/行人（不拍正脸）", "山门、钟鼓楼、大佛殿深檐", "土塔在屋顶之上", "低层城市/树冠"],
+      "must_not": ["土塔被屋顶完全挡住", "群山/沙丘替代城市", "高层/玻璃幕墙", "金色琉璃满铺"],
+      "notes": "The afternoon sun is behind the camera; the gate/roofs are lit, the stupa is a warm silhouette. The stupa must clear the roofs."
+    }
+  ],
+  "scale_arc": [
+    { "order": 1, "camera": "cam01", "sees": "courtyard/axis/stupa tip", "amount": "the hall is a dark mass; the Buddha is not visible" },
+    { "order": 2, "camera": "cam02", "sees": "door frame and a sliver of the flank", "amount": "partial; no head/feet" },
+    { "order": 3, "camera": "cam03", "sees": "ear/hand/face", "amount": "close; the body is larger than the doorway" },
+    { "order": 4, "camera": "cam04", "sees": "the full 34.5 m length", "amount": "whole; head and feet in frame" },
+    { "order": 5, "camera": "cam05", "sees": "cabinets/sutras", "amount": "the canon is larger than a life" },
+    { "order": 6, "camera": "cam06", "sees": "stupa/roofs/city", "amount": "the temple is small in the city; the Buddha is huge inside" }
+  ],
+  "to_verify_after_whitebox": [
+    "every camera stands on walkable ground",
+    "cam02 shows only a partial Buddha, not the full length",
+    "cam04 keeps both head and feet in frame; the aisle is at least 2.5 m",
+    "cam05 labels are readable at 1.62 m; the gold is not blown",
+    "cam06 keeps the stupa above the roofs; the city is low-rise",
+    "the west-door light reaches the Buddha's flank at 16:00–17:30",
+    "the hall's interior is readable in shadow, not crushed"
+  ]
+}

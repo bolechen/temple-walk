@@ -131,7 +131,7 @@ function buildRoom(M, hall, ox, figures) {
   const table = (w, d, T, x, z) => merge([box(w, 0.07, d, x, Y + T, z), box(w - 0.1, 0.1, 0.05, x, Y + T - 0.1, z + d / 2 - 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.07, T, 0.07, x + a * (w / 2 - 0.08), Y + T / 2, z + c * (d / 2 - 0.07)))]);
   const lampStand = (x, z) => { add(lathe([[0, 0], [0.24, 0], [0.26, 0.04], [0.08, 0.12], [0.035, 0.2], [0.03, 1.3], [0.1, 1.36], [0.17, 1.44], [0.16, 1.47], [0, 1.45]], 20).translate(x, Y, z), M.bronze, () => 0.8); flame(x, 1.54, z); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35); };
   let coinBox = null;   // the great hall's 功德箱, registered with the frames below (a spot he stands before and presses E at)
-  const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
+  const places = {}, altar = new THREE.Group(), stand = STAND[hall.id] || {}, later = [], stood = []; altar.position.set(ox, Y, 0); g.add(altar);   // `later`: what is fetched only when someone first comes in
   const tz = -K.d / 2 + 5.4, lightAt = [];
 
   if (hall.kind === "buddha" || hall.kind === "figure") {
@@ -142,7 +142,7 @@ function buildRoom(M, hall, ox, figures) {
     add(table(big ? 2.6 : 1.8, 0.7, 0.86, 0, tz), M.woodX); block(-(big ? 1.6 : 1.2), big ? 1.6 : 1.2, tz - 0.6, tz + 0.6);
     add(merge([lathe([[0, 0.02], [0.1, 0.02], [0.17, 0.08], [0.2, 0.17], [0.18, 0.22], [0.14, 0.22], [0.13, 0.18], [0, 0.16]], 24).translate(0, Y + 0.895, tz), ...[-1, 1].map((sx) => lathe([[0, 0], [0.08, 0], [0.03, 0.04], [0.025, 0.26], [0.07, 0.3], [0.07, 0.32], [0, 0.32]], 16).translate(sx * 0.6, Y + 0.895, tz))]), M.bronze, () => 0.8);
     for (const sx of [-1, 1]) flame(sx * 0.6, 1.26, tz, 0.016);
-    add(merge([-1.1, 0, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7);
+    add(merge([-1.1, 0, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7).userData.walk = "floor";   // the cushions before an altar are stepped onto (he bows on one, and reaches the stand from it), not walked round
     for (const sx of [-1, 1]) lampStand(sx * (big ? 3.3 : 2.2), tz + 0.2);
     altar.position.set(ox, Y + ah, (az0 + az1) / 2);
     if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
@@ -179,7 +179,7 @@ function buildRoom(M, hall, ox, figures) {
       add(merge([box(0.16, 0.006, 0.026, bx, Y + bh + 0.003, slotZ)]), M.bronze, () => 0.8);   // the slot's brass rim
       // On its front, the three characters 功德箱 written down the board in the name boards' own hand (plaque.js: Yunjing Bang, each
       // character evened to its neighbours' weight): gilt on a dark ground, the column two thirds as tall as the front of the box.
-      const board = /** @type {THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>} */ (makePlaque("功德箱", { vertical: true, style: "ink", seals: false }));   // an unshaped board is one mesh
+      const board = /** @type {THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>} */ (makePlaque("功德箱", { vertical: true, style: "ink", seals: false, back: M.woodV }));   // an unshaped board is one mesh
       board.scale.setScalar(0.25); board.position.set(ox + bx, Y + 0.4, bz + bd / 2 + 0.008); board.castShadow = false; g.add(board);
       Object.assign(board.material, { emissive: new THREE.Color(0xffffff), emissiveMap: board.material.map, emissiveIntensity: 0.4 });   // the gilt holds what light there is: read from the door, in a hall of lamps
       block(bx - lw / 2 - BODY, bx + lw / 2 + BODY, bz - ld / 2 - BODY, bz + ld / 2 + BODY);
@@ -193,9 +193,14 @@ function buildRoom(M, hall, ox, figures) {
   } else if (hall.kind === "chan") {
     // The meditation hall: long sitting platforms down both sides, a cushion at every place, the aisle between.
     const plat = [], mats = [];
-    for (const sx of [-1, 1]) { plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0))); for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) mats.push(seat(x, sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0), 0.32, 0.42, sx > 0 ? Math.PI : 0).translate(0, 0.42, 0)); }   // each faces the aisle
+    // The platform on the door's side is two, with the way in from the door between them (#274: it was drawn as one, across
+    // the way the written plan left open, and he walked through it and the three cushions on it).
+    const WAY = 1.6, zOf = (sx) => sx * (K.d / 2 - 1.2) - (sx > 0 ? 2.2 : 0), half = (K.w - 3) / 2;
+    plat.push(box(K.w - 3, 0.42, 1.7, 0, Y + 0.21, zOf(-1)));
+    for (const s of [-1, 1]) plat.push(box(half - WAY, 0.42, 1.7, s * (half + WAY) / 2, Y + 0.21, zOf(1)));
+    for (const sx of [-1, 1]) for (let x = -K.w / 2 + 2.4; x < K.w / 2 - 2; x += 1.25) if (sx < 0 || Math.abs(x) > WAY + 0.4) mats.push(seat(x, zOf(sx), 0.32, 0.42, sx > 0 ? Math.PI : 0).translate(0, 0.42, 0));   // each faces the aisle
     add(merge(plat), M.woodX); add(merge(mats), M.straw, () => 0.7);
-    block(-K.w / 2 + 1.5, K.w / 2 - 1.5, -K.d / 2, -K.d / 2 + 2.2); block(-K.w / 2 + 1.5, -1.6, K.d / 2 - 4.4, K.d / 2 - 2.4); block(1.6, K.w / 2 - 1.5, K.d / 2 - 4.4, K.d / 2 - 2.4);
+    block(-K.w / 2 + 1.5, K.w / 2 - 1.5, -K.d / 2, -K.d / 2 + 2.2); block(-K.w / 2 + 1.5, -WAY, K.d / 2 - 4.4, K.d / 2 - 2.4); block(WAY, K.w / 2 - 1.5, K.d / 2 - 4.4, K.d / 2 - 2.4);
     lampStand(0, -K.d / 2 + 3.2); lightAt.push([0, 2.0, -K.d / 2 + 3.2, 0xffa050, 9, 14], [0, K.h - 1.4, 0.5, 0xffe6c4, 6, 14, true]);
   } else if (hall.kind === "tea") {
     // The tea house: tables with stools, each set with a ewer and bowls.
@@ -220,7 +225,7 @@ function buildRoom(M, hall, ox, figures) {
     // A plain hall: a table, cushions, a lamp. (The patriarchs' hall and the summit pavilion: their walls are the point.)
     add(table(1.8, 0.7, 0.8, 0, -K.d / 2 + 1.6), M.woodX); block(-1.1, 1.1, -K.d / 2 + 1, -K.d / 2 + 2.2);
     if (stand.table) later.push((get) => get(stand.table[0], stand.table[1]).then((o) => { o.position.set(ox, Y + 0.82, -K.d / 2 + 1.5); g.add(o); }));   // the patriarch's likeness, on the table
-    add(merge([-0.9, 0.9].map((x) => seat(x, -K.d / 2 + 3.2))), M.straw, () => 0.7);
+    add(merge([-0.9, 0.9].map((x) => seat(x, -K.d / 2 + 3.2))), M.straw, () => 0.7).userData.walk = "floor";
     lampStand(-1.8, -K.d / 2 + 1.6); lampStand(1.8, -K.d / 2 + 1.6); lightAt.push([-1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [1.8, 1.9, -K.d / 2 + 1.6, 0xffa050, 8, 13], [0, K.h - 1.4, 0, 0xffe6c4, 6, 14, true]);
   }
   // A hall with a storey that is walked round (the summit pavilion's top) has a stair up to it in the north-west corner,
@@ -330,7 +335,7 @@ function buildRoom(M, hall, ox, figures) {
   const lights = lightAt.map(([x, y, z, c, i, d]) => { const l = new THREE.PointLight(c, i, d, 1.6); l.position.set(ox + x, Y + y, z); l.visible = false; g.add(l); return l; });
   // `hang()`: fetch and mount this hall's works, the first time someone comes in.
   const m = timber.members, frame = { ...m, cols: m.cols.map((c) => ({ ...c, x: c.x + ox })), beams: m.beams.map((q) => ({ ...q, x: q.x + ox })), ties: m.ties.map((q) => ({ ...q, x0: q.x0 + ox, x1: q.x1 + ox })), wx: m.wx, ox };
-  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, hang(get) { hangs.splice(0).forEach((f) => f()); later.splice(0).forEach((f) => f(get)); } };
+  return { group: g, room: { ...R, solids, frame }, lights, flames, spots, places, seats, outlook: out, altar, stand(get) { const now = later.splice(0).map((f) => f(get)); stood.push(...now); return Promise.all(stood); }, hang(get) { hangs.splice(0).forEach((f) => f()); return this.stand(get); } };
 }
 
 // Every room, one for each hall the plan says can be entered. Returns them by the hall's id.
@@ -363,7 +368,7 @@ export function buildInteriors(M, halls, renderer) {
   });
   halls.forEach((hall, i) => {
     const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places); seats.push(...r.seats);
-    const hang = r.hang; r.hang = () => hang(get);
+    const hang = r.hang.bind(r), standUp = r.stand.bind(r); r.hang = () => hang(get); r.stand = () => standUp(get);   // `stand`: only the figures, without the works on the walls (doorway.js)
   });
-  return { group, rooms, spots, places, seats, state };
+  return { group, rooms, spots, places, seats, state, ready: figures };
 }

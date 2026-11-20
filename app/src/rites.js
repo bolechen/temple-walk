@@ -180,8 +180,11 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   const steam = wisp(5, { size: 0.09, rise: 0.34, spread: 0.07, life: 3.4, opacity: 0.2 }), ewer = wisp(5, { size: 0.1, rise: 0.4, spread: 0.08, life: 3.8, opacity: 0.2 });
   if (home) { cup.position.copy(home); cup.rotation.y = T.face; scene.add(cup); steam.src.copy(home).y += 0.06; steam.show(true); if (T.steam) { ewer.src.fromArray(T.steam); ewer.show(true); } }
   const rim = V(0, 0.06, -0.07), chestAt = (out) => B.chest.localToWorld(out.set(0, 0.0, 0.17)), mouthAt = (out) => B.head.localToWorld(out.set(0, 0.052, 0.128));
-  // Wherever the bowl is, his hands are on either side of it.
-  const hold = () => HANDS.forEach(([n, s]) => { const h = act.hands[n]; h.at.set(s * 0.068, 0.034, 0.012).applyQuaternion(cup.quaternion).add(cup.position); dir(-s * 0.45, 0.15, 1, h.fingers); dir(-s, 0.25, 0, h.palm); });
+  // Wherever the bowl is, his hands are on either side of it, low, cradling it from beneath and a little toward him.
+  // They turn with the bowl as he tilts it to drink; held at its sides above the foot (0.034 up, 0.012 out, as they were
+  // until #286), they went round with it at the full tilt and came up over his eyes, 4.5 cm above their lower edge.
+  // Held here they stay 2.3 cm below it the whole drink (tests/unit/rites-tea.test.mjs).
+  const hold = () => HANDS.forEach(([n, s]) => { const h = act.hands[n]; h.at.set(s * 0.068, -0.025, -0.025).applyQuaternion(cup.quaternion).add(cup.position); dir(-s * 0.45, 0.15, 1, h.fingers); dir(-s, 0.25, 0, h.palm); });
   const cupAt = (p, tilt) => { tea.tilt = tilt; cup.quaternion.copy(G.quaternion).multiply(qA.setFromAxisAngle(V(1, 0, 0), -tilt)); cup.position.copy(p); };
   const toLips = (out) => mouthAt(out).sub(tB.copy(rim).applyQuaternion(cup.quaternion));
   /** @param {() => boolean} on @param {(what: string) => void} [cue] */

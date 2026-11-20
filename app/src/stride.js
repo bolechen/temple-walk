@@ -18,6 +18,14 @@ export function stride(walker, pos, vx, vz) {
     const c = Math.cos(a), s = Math.sin(a), sx = (vx * c - vz * s) * 0.8, sz = (vx * s + vz * c) * 0.8;
     if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; break; }
   }
+  // Something no wider than a hand stands just across his way along a wall or a railing (a railing's post, #278): he
+  // steps aside, by as little as lets the step go on, to either hand. Only when the way past it is open: walking into a
+  // wall he does not shuffle along it.
+  const v = Math.hypot(vx, vz);
+  for (const off of moved || v < 1e-6 ? [] : [0.02, 0.04, 0.06]) for (const hand of [1, -1]) {
+    const px = (-vz / v) * off * hand, pz = (vx / v) * off * hand;
+    if (!walker.blocked(pos.x + px, pos.z + pz) && !walker.blocked(pos.x + px + vx, pos.z + pz + vz)) { pos.x += px + vx; pos.z += pz + vz; return true; }
+  }
   return moved;
 }
 

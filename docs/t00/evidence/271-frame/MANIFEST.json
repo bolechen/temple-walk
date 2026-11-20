@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "sheet-16x9.jpg",
+   "bytes": 216657,
+   "sha256": "faa2ade2ed7f6baecde9600dca96a0d1a0cc04e478acfe91a55e65828442b13e",
+   "rev": "e01f88bac889eff4b0a4831bce7142ce584ba1b9"
+  },
+  {
+   "path": "sheet-4x3.jpg",
+   "bytes": 274249,
+   "sha256": "b0a57f53f385fd82dbe7b3301dde2e24ec7032539fb18e8da0b947de7168197d",
+   "rev": "e01f88bac889eff4b0a4831bce7142ce584ba1b9"
+  },
+  {
+   "path": "sheet-phone.jpg",
+   "bytes": 276207,
+   "sha256": "9d6c845caf235ad1fa2fbacb69cbfd544ebc6283045189c7f6b2d024aac10d86",
+   "rev": "e01f88bac889eff4b0a4831bce7142ce584ba1b9"
+  }
+ ]
+}

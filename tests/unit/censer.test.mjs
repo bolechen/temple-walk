@@ -138,3 +138,23 @@ test("the incense, the ash and the season's leaves and petals are in the censer,
   for (let i = 0; i < uv.count; i++) { const k = uv.getX(i); kinds.add(k >= 0 ? "cast" : k > -1.1 ? "iron" : k > -1.5 ? "ash" : k > -3 ? "stick" : k > -3.5 ? "stub" : k > -4.5 ? "leaf" : "petal"); }
   assert.deepEqual([...kinds].sort(), ["ash", "cast", "iron", "leaf", "petal", "stick", "stub"]);
 });
+
+// The feet are cast with the belly (#244): the real censer's three feet grow out of the lower arc of the drum, thick at the
+// root. Each foot's top ring must lie inside the belly, at least 3 cm under its surface (the foot's root goes into it), so
+// that from no side is there a gap between the foot and the belly.
+test("each foot's top ring is inside the belly, at least 3 cm under its surface", async () => {
+  const { BELLY, FOOT } = await import("../../app/src/censer.js");
+  const wall = [...BELLY, [0, BELLY[BELLY.length - 1][1]]];   // the profile (radius, height) closed along the axis
+  const inside = (r, y) => { let c = false; for (let i = 0, j = wall.length - 1; i < wall.length; j = i++) { const [ri, yi] = wall[i], [rj, yj] = wall[j]; if ((yi > y) !== (yj > y) && r < ((rj - ri) * (y - yi)) / (yj - yi) + ri) c = !c; } return c; };
+  const depth = (r, y) => { let d = 9; for (let i = 1; i < BELLY.length; i++) { const [ax, ay] = BELLY[i - 1], [bx, by] = BELLY[i], dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((r - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))); d = Math.min(d, Math.hypot(r - ax - t * dx, y - ay - t * dy)); } return d; };
+  const top = Math.max(...FOOT.map(([, y]) => y));
+  for (const [fx, fz] of CENSER.legs) {
+    const g = new THREE.LatheGeometry(FOOT.map(([r, y]) => new THREE.Vector2(r, y)), 12).translate(fx, 0, fz), p = g.attributes.position; let n = 0;
+    for (let i = 0; i < p.count; i++) {
+      if (p.getY(i) < top - 0.04) continue; n++;
+      const r = Math.hypot(p.getX(i), p.getZ(i)), y = p.getY(i);
+      assert.ok(inside(r, y) && depth(r, y) >= 0.03, `a foot's top vertex at radius ${r.toFixed(3)}, height ${y.toFixed(3)} is ${inside(r, y) ? depth(r, y).toFixed(3) + " m" : "outside"} the belly`);
+    }
+    assert.ok(n > 0);
+  }
+});

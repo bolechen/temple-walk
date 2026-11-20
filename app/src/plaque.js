@@ -6,6 +6,7 @@
 // seals at the left; the lesser ones gold on black, on dark blue, or on plain red-brown wood.
 import * as THREE from "three";
 import { asset } from "./assets.js";
+import { mesh } from "./geo.js";
 
 // A heavy brush regular hand for what is written large (Yuji Boku), with the kai behind it.
 const FONT = '"Yunjing Bang", "Yunjing Kai", "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", serif', SEAL = '"Yunjing Seal", "Yunjing Serif", "Songti SC", serif';
@@ -22,6 +23,8 @@ const GROUND = {
   wood: { top: "#3d2016", foot: "#472619", ink: "#b89a52", rim: "#2a150d", fillet: "#6a4a26" },
   stone: { top: "#8a8880", foot: "#7a7871", ink: "#1d1a17", rim: "#5f5d57", fillet: "#6c6a63" },   // a stele of grey stone, the characters cut and inked
 };
+let plankMat = null;   // a board made with no material to hand (a test) shares this one
+const PLANK = () => (plankMat ||= new THREE.MeshStandardMaterial({ color: 0x2a150d, roughness: 0.85 }));
 const doc = typeof document !== "undefined" ? document : null;
 
 // `vertical`: characters stacked top to bottom. `style`: gold | ink | navy | wood | stone (what the ground is). `gold` is the
@@ -29,8 +32,10 @@ const doc = typeof document !== "undefined" ? document : null;
 // upright board of four characters). `cols`: columns on a banded board, read from the right. `hand`: characters
 // taken from a picture of the original instead of a typeface. `notes`: two small columns either side of the name
 // [right, left], as the date and the writer are given on the real board. `seals`: a lead-in seal and the writer's.
-// `bare`: no board at all, only gilt characters, as they are set into the brick of the screen wall.
-export function makePlaque(text, { vertical = false, gold = false, style = gold ? "gold" : "ink", hand = null, band = vertical && [...text].length === 4, cols = hand ? 1 : 2, notes = null, seals = style === "gold", bare = false } = {}) {
+// `bare`: no board at all, only gilt characters, as they are set into the brick of the screen wall. `back`: the material of
+// the plank behind a plain board (its back and four edges), one the scene already has so that the plank joins that material's
+// batch; only the front of a board is lettered.
+export function makePlaque(text, { vertical = false, gold = false, style = gold ? "gold" : "ink", hand = null, band = vertical && [...text].length === 4, cols = hand ? 1 : 2, notes = null, seals = style === "gold", bare = false, back = null } = {}) {
   const chars = [...text].map((ch) => OLD[ch] || ch), n = chars.length, G = GROUND[style] || GROUND.ink;
   const cell = band ? 320 : 448, pad = 168, long = cell * n + pad * 2, short = 616;   // large enough to read the brush at arm's length
   const rows = band ? Math.ceil(n / cols) : 1, pw = band ? Math.round(cols * cell * (notes ? 1.9 : 1.04) + 70) : 0, ph = band ? Math.round(rows * cell * 1.06 + 80) : 0;
@@ -116,7 +121,10 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
   const boxes = chars.map((_, i) => { const [cx, cy] = where(i); return { u: cx / W, v: cy / H, du: (cell * 0.36) / W, dv: (cell * 0.36) / H }; });
   if (!cut) {
     const a = n * 0.6 + 0.45, b = (a * short) / long, w = vertical ? b : a, h = vertical ? a : b;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.07), mat); m.castShadow = true; m.userData.height = h; m.userData.plaque = { text, w, h, z: 0.035, chars: boxes }; return m;
+    // The lettered face is a sheet on the front of a plank of the scene's own timber, so that the back and the four edges are
+    // plain wood and never a mirrored or squashed copy of the writing (#245). The sheet is the board's mesh; the plank hangs from it.
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, 0, 0.035), mat); m.userData.height = h; m.userData.plaque = { text, w, h, z: 0.035, chars: boxes };
+    const plank = mesh(new THREE.BoxGeometry(w, h, 0.068), back || PLANK()); plank.name = "plank"; m.add(plank); return m;
   }
   // A board with a shaped edge: the painted face, and behind it a dark plank the size of the panel for its thickness.
   const h = bare ? 0.9 : rows >= 4 ? 2.9 : rows === 3 ? 2.35 : 2.3, w = (h * W) / H, g = new THREE.Group();
@@ -127,7 +135,7 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
 
 // The face of the screen wall, as it is at the real temple: no hanging board, but a panel of grey bricks laid on the
 // diamond inside a frame of pale dressed stone, and the four characters set into it large and gilt, read from the right.
-export function makeWallPanel(text, w, h) {
+export function makeWallPanel(text, w, h, back = null) {
   const chars = [...text].map((ch) => OLD[ch] || ch), n = chars.length, W = 2048, H = Math.round((W * h) / w);
   const c = doc.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
@@ -158,6 +166,10 @@ export function makeWallPanel(text, w, h) {
   }
   draw();
   if (doc.fonts && doc.fonts.load) doc.fonts.load(`200px "Yunjing Bang"`, chars.join("")).then(draw, () => {});
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
-  m.castShadow = false; m.userData.height = h; return m;
+  // The picture is a sheet on the face of a slab of the wall's own stone, so that its back and its four edges are plain
+  // stone and never a mirrored or squashed copy of the brick and the characters (#272, as the plain boards since #245).
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, 0, 0.04), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
+  m.castShadow = false; m.userData.height = h;
+  // (It casts, as the wall does, so that it joins the wall's stone in one draw.)
+  const slab = mesh(new THREE.BoxGeometry(w, h, 0.078), back || PLANK()); slab.name = "panel slab"; m.add(slab); return m;
 }

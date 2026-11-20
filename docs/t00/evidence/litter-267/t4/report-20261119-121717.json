@@ -1,0 +1,1396 @@
+{
+  "started": "2026-11-19T12:18:16.330Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "base",
+      "path": "base/index.html",
+      "fps": 130.2,
+      "ms": 7.68,
+      "cost": 4.25,
+      "loadMs": 15188,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 153642,
+        "inflated": 21517225,
+        "fetchMs": 1640,
+        "decodeMs": 486,
+        "prepareMs": 155,
+        "memory": 5238480,
+        "ledges": 8,
+        "drops": 8,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "tea": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "main": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 5408.4,
+        "spikes": [
+          5408
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "new",
+      "before": "window.__litter(300)",
+      "fps": 115.5,
+      "ms": 8.66,
+      "cost": 4.61,
+      "loadMs": 10726,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 158427,
+        "inflated": 21517225,
+        "fetchMs": 2019,
+        "decodeMs": 62,
+        "prepareMs": 133,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 10.13,
+        "worstFrameMs": 1297.5,
+        "spikes": [
+          1298
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "new",
+      "before": "window.__litter(300)",
+      "fps": 122.1,
+      "ms": 8.19,
+      "cost": 4.38,
+      "loadMs": 10513,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 158427,
+        "inflated": 21517225,
+        "fetchMs": 1684,
+        "decodeMs": 487,
+        "prepareMs": 138,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 10.13,
+        "worstFrameMs": 909.4,
+        "spikes": [
+          909
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "base",
+      "path": "base/index.html",
+      "fps": 126.4,
+      "ms": 7.91,
+      "cost": 4.41,
+      "loadMs": 10483,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 153642,
+        "inflated": 21517225,
+        "fetchMs": 1673,
+        "decodeMs": 511,
+        "prepareMs": 150,
+        "memory": 5238480,
+        "ledges": 8,
+        "drops": 8,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "tea": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "main": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 899.7,
+        "spikes": [
+          900
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "base",
+      "path": "base/index.html",
+      "fps": 122.5,
+      "ms": 8.16,
+      "cost": 4.45,
+      "loadMs": 10320,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 153642,
+        "inflated": 21517225,
+        "fetchMs": 1894,
+        "decodeMs": 62,
+        "prepareMs": 127,
+        "memory": 5238480,
+        "ledges": 8,
+        "drops": 8,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "tea": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "main": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 922.2,
+        "spikes": [
+          922
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "new",
+      "before": "window.__litter(300)",
+      "fps": 120,
+      "ms": 8.33,
+      "cost": 4.3,
+      "loadMs": 10667,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 158427,
+        "inflated": 21517225,
+        "fetchMs": 1723,
+        "decodeMs": 528,
+        "prepareMs": 131,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 10.13,
+        "worstFrameMs": 930.8,
+        "spikes": [
+          931
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "new",
+      "before": "window.__litter(300)",
+      "fps": 121.9,
+      "ms": 8.2,
+      "cost": 4.33,
+      "loadMs": 10705,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 158427,
+        "inflated": 21517225,
+        "fetchMs": 1668,
+        "decodeMs": 530,
+        "prepareMs": 138,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 10.13,
+        "worstFrameMs": 945.4,
+        "spikes": [
+          945
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "base",
+      "path": "base/index.html",
+      "fps": 124.6,
+      "ms": 8.03,
+      "cost": 4.36,
+      "loadMs": 10577,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 153642,
+        "inflated": 21517225,
+        "fetchMs": 1651,
+        "decodeMs": 522,
+        "prepareMs": 126,
+        "memory": 5238480,
+        "ledges": 8,
+        "drops": 8,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "tea": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "main": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 909.8,
+        "spikes": [
+          910
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "base",
+      "path": "base/index.html",
+      "fps": 126.6,
+      "ms": 7.9,
+      "cost": 4.47,
+      "loadMs": 10578,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 153642,
+        "inflated": 21517225,
+        "fetchMs": 1593,
+        "decodeMs": 508,
+        "prepareMs": 149,
+        "memory": 5238480,
+        "ledges": 8,
+        "drops": 8,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "tea": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "main": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 947.4,
+        "spikes": [
+          947
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "new",
+      "before": "window.__litter(300)",
+      "fps": 123.6,
+      "ms": 8.09,
+      "cost": 4.52,
+      "loadMs": 10770,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 158427,
+        "inflated": 21517225,
+        "fetchMs": 1706,
+        "decodeMs": 521,
+        "prepareMs": 150,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 10.13,
+        "worstFrameMs": 951.7,
+        "spikes": [
+          952
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "new",
+      "before": "window.__litter(300)",
+      "fps": 116.5,
+      "ms": 8.58,
+      "cost": 4.42,
+      "loadMs": 10897,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 158427,
+        "inflated": 21517225,
+        "fetchMs": 1759,
+        "decodeMs": 547,
+        "prepareMs": 157,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "source": "baked"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 10.13,
+        "worstFrameMs": 935.8,
+        "spikes": [
+          936
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    },
+    {
+      "cam": "-7.5,33,-0.38,-0.42",
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "season": "autumn",
+      "time": "day",
+      "tag": "base",
+      "path": "base/index.html",
+      "fps": 129.1,
+      "ms": 7.75,
+      "cost": 4.31,
+      "loadMs": 10651,
+      "tris": 757507,
+      "calls": 130,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 153642,
+        "inflated": 21517225,
+        "fetchMs": 2122,
+        "decodeMs": 62,
+        "prepareMs": 123,
+        "memory": 5238480,
+        "ledges": 8,
+        "drops": 8,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 2.6071615857084955,
+        "msPerFrame": null
+      },
+      "doors": {
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "tea": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "main": {
+            "want": true,
+            "taken": 0,
+            "fade": 0,
+            "source": "none"
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 4,
+        "keep": 3,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 947.2,
+        "spikes": [
+          947
+        ]
+      },
+      "at": [
+        -7.5,
+        33
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "maple-autumn-day-low",
+      "file": "maple-autumn-day-low.png",
+      "tris": 728837,
+      "calls": 131
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "c5d6c11628282756d0d94f2495d726b5c2f0d472",
+    "entry": "assets/index-8JQ6ro5e.js",
+    "files": 258,
+    "sha256": "3ed2756aa9e9ed8aae000e60a483b72b061fda65ea274925b82a963a79041cea"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-19T12:22:36.318Z"
+}

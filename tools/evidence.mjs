@@ -5,9 +5,14 @@
 //   node tools/evidence.mjs push <dir>          upload <dir>'s binaries, write <dir>/MANIFEST.json, fetch each back and check it
 //   node tools/evidence.mjs verify [--all]      fetch what every manifest lists: size of every file and a sample's hash; --all hashes them all
 //   node tools/evidence.mjs pull <dir> [--into <out>]   fetch <dir>'s binaries by its manifest (hash-checked) into tools/out/evidence/<store path>/, which git ignores
+//   node tools/evidence.mjs mirror [--dry-run]  copy what the manifests list from the original (CONFIG.fallback) to the R2 bucket; CI's job (#247)
+//   node tools/evidence.mjs verify-store        every manifest entry read from the bucket over its S3 interface (the repository's four secrets), size and SHA-256
 //   node tools/evidence.mjs check               offline, for CI: manifests well-formed, no file over 1 MB, no unlisted binary
 //
-// Where the bytes are is stated once, in tools/evidence.config.json (or EVIDENCE_BASE for a try-out). Moving to another
+// Where the bytes are read from is stated once, in tools/evidence.config.json's `base` (or EVIDENCE_BASE for a try-out);
+// `fallback` is where they were first put (Hugging Face): the original, the copy `mirror` fills the `base` store from,
+// and where a read goes when `base` answers a datacenter address with Cloudflare's verification page (cf-mitigated:
+// challenge, an IP-reputation rule that no hostname rule can skip, #247). Moving to another
 // store means changing that file and pushing again. Nothing here deletes or overwrites: a path already in a manifest
 // (or already in the store) with different bytes is refused. `hf` must be logged in for push; give HF_TOKEN any
 // placeholder in a sandbox whose proxy supplies the real one; verify and pull need only a network.
@@ -15,7 +20,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import os from "node:os";
-import { execFileSync } from "node:child_process";
+import { execFileSync, execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -100,7 +105,12 @@ async function get(url, tries = 3) {
     try {
       const r = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(CONFIG.timeoutMs || 60000) });
       if (r.status === 404) throw Object.assign(new Error(`404 ${url}`), { fatal: true });
-      if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
+      if (!r.ok) {
+        // A verification page is the zone's answer to who is asking, not to what is asked for: asking again changes nothing.
+        const challenged = r.headers.get("cf-mitigated") === "challenge";
+        await r.body?.cancel();
+        throw Object.assign(new Error(`HTTP ${r.status} ${url}`), { fatal: challenged, challenged });
+      }
       return r;
     } catch (e) {
       last = e;
@@ -110,7 +120,18 @@ async function get(url, tries = 3) {
   }
   throw last;
 }
-const bytesOf = async (url) => Buffer.from(await (await get(url)).arrayBuffer());
+// A body cut off halfway ("terminated", a reset) is asked for again, whole: the headers had come, so `get` alone does not
+// see it. A wrong size or hash is never asked again; that is the answer, not the road to it.
+async function body(url, tries = 3) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    const r = await get(url);
+    try { return { r, buf: Buffer.from(await r.arrayBuffer()) }; }
+    catch (e) { last = e; await new Promise((ok) => setTimeout(ok, 300 * 2 ** i)); }
+  }
+  throw last;
+}
+const bytesOf = async (url) => (await body(url)).buf;
 
 /** Run `fn` over items, `n` at a time; collect results in order. */
 async function pool(items, n, fn) {
@@ -200,7 +221,10 @@ export async function push(dirArg, { log = console.log } = {}) {
   return files;
 }
 
-/** Fetch every manifest's files. all: hash every file; otherwise sizes of all (from the response) and a sample of hashes. */
+/** Fetch every manifest's files from `base`. all: hash every file; otherwise sizes of all (from the response) and a sample of
+ *  hashes. A read that `base` answers with a verification page (cf-mitigated: challenge) is not a mismatch: it is counted as
+ *  challenged (by extension) and the file is fetched from `fallback` and hashed there. Failing is: neither store gives the
+ *  manifest's bytes. */
 export async function verify({ all = false, root = ROOT, log = console.log } = {}) {
   const fails = [];
   const mans = manifestsUnder(root);
@@ -211,25 +235,59 @@ export async function verify({ all = false, root = ROOT, log = console.log } = {
     const prefix = remoteOf(rel + "/x").replace(/\/x$/, "");
     const bad = manifestProblems(m);
     if (bad.length) { fails.push(`${rel}: ${bad.join("; ")}`); continue; }
-    m.files.forEach((f, i) => jobs.push({ f, url: urlOf(`${prefix}/${f.path}`, f.rev), hash: all || i % 10 === 0 }));
+    m.files.forEach((f, i) => jobs.push({ f, remote: `${prefix}/${f.path}`, url: urlOf(`${prefix}/${f.path}`, f.rev), hash: all || i % 10 === 0 }));
   }
-  let hashed = 0;
-  await pool(jobs, 16, async ({ f, url, hash }) => {
+  const n = { hashed: 0, sized: 0, viaFallback: 0 };
+  const challenged = {};
+  const sameAsManifest = (buf, f) => buf.length === f.bytes && sha256(buf) === f.sha256;
+  await pool(jobs, 16, async ({ f, remote, url, hash }) => {
     try {
-      const r = await get(url);
-      const len = Number(r.headers.get("content-length"));
       if (!hash) {
+        const r = await get(url), len = Number(r.headers.get("content-length"));
         await r.body?.cancel();
+        n.sized++;
         if (len && len !== f.bytes) fails.push(`${url}: ${len} bytes, manifest ${f.bytes}`);
         return;
       }
-      const buf = Buffer.from(await r.arrayBuffer());
-      hashed++;
+      const { buf } = await body(url);
+      n.hashed++;
       if (buf.length !== f.bytes) fails.push(`${url}: ${buf.length} bytes, manifest ${f.bytes}`);
       else if (sha256(buf) !== f.sha256) fails.push(`${url}: SHA-256 differs from the manifest`);
-    } catch (e) { fails.push(`${url}: ${e.message.replace(url, "").trim() || e.message}`); }
+    } catch (e) {
+      if (!e.challenged) { fails.push(`${url}: ${e.message.replace(url, "").trim() || e.message}`); return; }
+      const ext = path.extname(f.path).slice(1).toLowerCase() || "(none)";
+      challenged[ext] = (challenged[ext] || 0) + 1;
+      const back = urlOf(remote, f.rev, CONFIG.fallback);
+      try {
+        if (sameAsManifest(await bytesOf(back), f)) n.viaFallback++;
+        else fails.push(`${url}: challenged, and the fallback's bytes differ from the manifest`);
+      } catch (e2) { fails.push(`${url}: challenged, and the fallback failed: ${e2.message.replace(back, "").trim()}`); }
+    }
   });
-  log(`${mans.length} manifests, ${jobs.length} files checked, ${hashed} hashed${all ? " (all)" : " (sample)"}, ${fails.length} failed`);
+  const ch = Object.entries(challenged).map(([k, v]) => `${k} ${v}`).join(", ") || "none";
+  log(`${mans.length} manifests, ${jobs.length} files: ${n.hashed} hashed and ${n.sized} sized directly at the base, ${n.viaFallback} hashed via the fallback (challenged by extension: ${ch}), ${fails.length} failed${all ? " (all)" : " (sample)"}`);
+  return fails;
+}
+
+/** The bucket's own word: every manifest entry read over its S3 interface (never the public domain), size and SHA-256. */
+export async function verifyStore({ log = console.log } = {}) {
+  const missing = SECRETS.filter((n) => !process.env[n]);
+  if (missing.length) throw new Error(`missing or empty: ${missing.join(", ")}`);
+  const entries = mirrorEntries();
+  const fails = [];
+  let ok = 0;
+  await pool(entries, 8, async (e) => {
+    const tmp = path.join(os.tmpdir(), `verify-${process.pid}-${e.sha256.slice(0, 16)}`);
+    try {
+      await aws("get-object", ["--key", e.key, tmp, "--output", "json"]);
+      const buf = fs.readFileSync(tmp);
+      if (buf.length !== e.bytes) fails.push(`${e.key}: ${buf.length} bytes in the bucket, manifest ${e.bytes}`);
+      else if (sha256(buf) !== e.sha256) fails.push(`${e.key}: SHA-256 in the bucket differs from the manifest`);
+      else ok++;
+    } catch (err) { fails.push(`${e.key}: ${err.message}`); }
+    finally { fs.rmSync(tmp, { force: true }); }
+  });
+  log(`bucket (S3): ${entries.length} listed, ${ok} read and matching, ${fails.length} failed`);
   return fails;
 }
 
@@ -245,7 +303,9 @@ export async function pull(dirArg, { into, log = console.log } = {}) {
     const to = path.join(out, f.path);
     if (fs.existsSync(to) && sha256(fs.readFileSync(to)) === f.sha256) return;
     try {
-      const buf = await bytesOf(urlOf(`${prefix}/${f.path}`, f.rev));
+      let buf;
+      try { buf = await bytesOf(urlOf(`${prefix}/${f.path}`, f.rev)); }
+      catch (e) { if (!e.challenged) throw e; buf = await bytesOf(urlOf(`${prefix}/${f.path}`, f.rev, CONFIG.fallback)); }
       if (sha256(buf) !== f.sha256) throw new Error("SHA-256 differs from the manifest");
       fs.mkdirSync(path.dirname(to), { recursive: true });
       fs.writeFileSync(to, buf);
@@ -256,15 +316,94 @@ export async function pull(dirArg, { into, log = console.log } = {}) {
   return fails;
 }
 
+// ---------------------------------------------------------------- mirror (#247)
+
+/** Every manifest entry with the key it has in the bucket: the part of its address after `resolve/`, i.e. <rev>/<level>/<dir>/<path>. */
+export function mirrorEntries(root = ROOT) {
+  const out = [];
+  for (const mf of manifestsUnder(root)) {
+    const m = JSON.parse(fs.readFileSync(mf, "utf8"));
+    const rel = path.relative(root, path.dirname(mf)).split(path.sep).join("/");
+    const prefix = remoteOf(rel + "/x").replace(/\/x$/, "");
+    for (const f of m.files) out.push({ ...f, remote: `${prefix}/${f.path}`, key: `${f.rev}/${prefix}/${f.path}` });
+  }
+  return out;
+}
+const SECRETS = ["R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_ENDPOINT", "R2_BUCKET"];
+const TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", webm: "video/webm", mp4: "video/mp4" };
+
+/** The AWS CLI, with the bucket's credentials taken from the environment under the names the repository secrets have.
+ *  Its arguments hold the endpoint (an account id), so a failure reports only the service's own error code. */
+function aws(sub, args) {
+  const env = { ...process.env, AWS_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION: "auto", AWS_PAGER: "" };
+  return new Promise((resolve, reject) => {
+    execFile("aws", ["s3api", sub, "--endpoint-url", process.env.R2_ENDPOINT, "--bucket", process.env.R2_BUCKET, ...args], { env, maxBuffer: 1 << 24 }, (err, stdout, stderr) => {
+      if (!err) return resolve(stdout);
+      const code = /An error occurred \(([A-Za-z0-9]+)\)/.exec(String(stderr))?.[1] || "no error code";
+      reject(Object.assign(new Error(`aws ${sub}: ${code}`), { code }));
+    });
+  });
+}
+/** Size of the object under `key`, or null when there is none. */
+async function sizeAt(key) {
+  try { return JSON.parse(await aws("head-object", ["--key", key, "--output", "json"])).ContentLength; }
+  catch (e) { if (e.code === "404" || e.code === "NoSuchKey" || e.code === "NotFound") return null; throw e; }
+}
+
+/** Put into the bucket what the manifests list and it lacks. An object already there with the manifest's size is left;
+ *  one with another size is a conflict (exit 1), never replaced. Nothing is deleted. Bytes come from CONFIG.fallback and are
+ *  hashed before they are sent. */
+export async function mirror({ dryRun = false, log = console.log } = {}) {
+  const missing = SECRETS.filter((n) => !process.env[n]);
+  if (missing.length && !dryRun) throw new Error(`missing or empty: ${missing.join(", ")}`);
+  const entries = mirrorEntries();
+  const res = { listed: entries.length, present: 0, sent: 0, bytes: 0, conflicts: [], failed: [] };
+  await pool(entries, 8, async (e) => {
+    try {
+      const have = dryRun && missing.length ? null : await sizeAt(e.key);
+      if (have !== null) {
+        if (have === e.bytes) { res.present++; return; }
+        res.conflicts.push(`${e.key}: the bucket holds ${have} bytes, the manifest ${e.bytes}`);
+        return;
+      }
+      if (dryRun) { res.sent++; res.bytes += e.bytes; return; }
+      const buf = await bytesOf(urlOf(e.remote, e.rev, CONFIG.fallback));
+      if (buf.length !== e.bytes || sha256(buf) !== e.sha256) throw new Error("the original's bytes differ from the manifest");
+      const tmp = path.join(os.tmpdir(), `mirror-${process.pid}-${e.sha256.slice(0, 16)}`);
+      fs.writeFileSync(tmp, buf);
+      try {
+        await aws("put-object", ["--key", e.key, "--body", tmp, "--content-type", TYPES[path.extname(e.path).slice(1).toLowerCase()] || "application/octet-stream",
+          "--cache-control", "public, max-age=31536000, immutable", "--if-none-match", "*"]);
+      } catch (err) {
+        // Somebody else put it in between: fine if it is the same size, a conflict if not.
+        if (err.code !== "PreconditionFailed") throw err;
+        const now = await sizeAt(e.key);
+        if (now !== e.bytes) { res.conflicts.push(`${e.key}: appeared meanwhile with ${now} bytes, the manifest ${e.bytes}`); return; }
+        res.present++; return;
+      } finally { fs.rmSync(tmp, { force: true }); }
+      res.sent++; res.bytes += e.bytes;
+    } catch (err) { res.failed.push(`${e.key}: ${err.message.replace(/https?:\/\/\S+/g, "<url>")}`); }
+  });
+  log(`${dryRun ? "would mirror" : "mirrored"}: ${res.listed} listed, ${res.present} already there, ${res.sent} ${dryRun ? "to send" : "sent"} (${(res.bytes / 1e6).toFixed(1)} MB), ${res.conflicts.length} conflicts, ${res.failed.length} failed`);
+  const lines = [...res.conflicts.map((c) => `conflict ${c}`), ...res.failed.map((c) => `failed ${c}`)];
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Evidence mirror\n\n${res.listed} listed, ${res.present} already there, ${res.sent} sent (${(res.bytes / 1e6).toFixed(1)} MB), ${res.conflicts.length} conflicts, ${res.failed.length} failed\n\n` +
+      (lines.length ? "Not in the bucket:\n\n```\n" + lines.slice(0, 100).join("\n") + "\n```\n" : "Everything the manifests list is in the bucket.\n"));
+  }
+  return lines;
+}
+
 // ---------------------------------------------------------------- CLI
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [cmd, ...rest] = process.argv.slice(2);
-  const usage = "usage: evidence.mjs push <dir> | verify [--all] | pull <dir> [--into <out>] | check";
+  const usage = "usage: evidence.mjs push <dir> | verify [--all] | pull <dir> [--into <out>] | mirror [--dry-run] | verify-store | check";
   try {
     let fails = [];
     if (cmd === "push" && rest[0]) await push(rest[0]);
     else if (cmd === "pull" && rest[0]) fails = await pull(rest[0], { into: rest[1] === "--into" ? rest[2] : undefined });
+    else if (cmd === "mirror") fails = await mirror({ dryRun: rest.includes("--dry-run") });
+    else if (cmd === "verify-store") fails = await verifyStore();
     else if (cmd === "verify") {
       fails = await verify({ all: rest.includes("--all") });
       if (fails.length) console.error(`base: ${process.env.EVIDENCE_BASE || CONFIG.base}`);

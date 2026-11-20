@@ -1,0 +1,22 @@
+## 导演机位（1280×720；举香 at [-3.2,0.8,-2.4] look [0,1.69,1.98] fov 44；吃茶 at [-0.45,0.98,2.05] look [0,0.85,0.8] fov 42，坐凳、碗倾 0.78）
+举香 正 novice-tripo-r5: outline 30317 px, sleeves 2406 px, robe median luminance 94.9; sleeve pixels > 1.25x: 323 = 1.07% of his outline; forearms and hands 143 px, of them brown or white smudges 20
+坐着吃茶 正 novice-tripo-r5: outline 105433 px, sleeves 8897 px, robe median luminance 146.7; sleeve pixels > 1.25x: 3 = 0.00% of his outline; forearms and hands 6588 px, of them brown or white smudges 705
+举香 正 novice-tripo-r6: outline 30316 px, sleeves 2438 px, robe median luminance 94.9; sleeve pixels > 1.25x: 313 = 1.03% of his outline; forearms and hands 110 px, of them brown or white smudges 0
+坐着吃茶 正 novice-tripo-r6: outline 105425 px, sleeves 8945 px, robe median luminance 146.8; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 6539 px, of them brown or white smudges 0
+
+## 正面（600×600）
+合掌 正 novice-tripo-r5: outline 157533 px, sleeves 20670 px, robe median luminance 146.2; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 21424 px, of them brown or white smudges 938
+合掌 正 novice-tripo-r6: outline 157484 px, sleeves 20903 px, robe median luminance 146.1; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 21070 px, of them brown or white smudges 0
+举香 正 novice-tripo-r5: outline 171538 px, sleeves 38062 px, robe median luminance 144.9; sleeve pixels > 1.25x: 46 = 0.03% of his outline; forearms and hands 19052 px, of them brown or white smudges 794
+举香 正 novice-tripo-r6: outline 171454 px, sleeves 38194 px, robe median luminance 144.9; sleeve pixels > 1.25x: 21 = 0.01% of his outline; forearms and hands 18903 px, of them brown or white smudges 0
+坐着吃茶 正 novice-tripo-r5: outline 68187 px, sleeves 1435 px, robe median luminance 200.6; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 19878 px, of them brown or white smudges 147
+坐着吃茶 正 novice-tripo-r6: outline 68185 px, sleeves 1423 px, robe median luminance 200.6; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 19891 px, of them brown or white smudges 0
+
+## 吃茶整段（坐凳，rites.js drinkTea 从胸前起：举到唇、倾到 0.5、再倾到 0.78、放下，三次）
+code                     the whole drink, 261 frames: hands at least -4.5 cm OVER the eyes' lower edge (sip 2: tilted, frame 133)
+novice-tripo-r4.glb      the whole drink, 261 frames: hands at least -8.3 cm OVER the eyes' lower edge (sip 3: tilted, frame 220)
+novice-tripo-r5.glb      the whole drink, 261 frames: hands at least -5.3 cm OVER the eyes' lower edge (sip 2: tilted, frame 133)
+novice-tripo-r6.glb      the whole drink, 261 frames: hands at least -5.3 cm OVER the eyes' lower edge (sip 2: tilted, frame 133)
+### 换握法 HOLD=0.068,-0.025,-0.025（rites.js 的 hold() 现为 0.068,0.034,0.012），只试，不改 app/
+code                     the whole drink, 261 frames: hands at least 2.3 cm below the eyes' lower edge (sip 2: tilted, frame 133)
+novice-tripo-r6.glb      the whole drink, 261 frames: hands at least 1.5 cm below the eyes' lower edge (sip 2: tilted, frame 133)

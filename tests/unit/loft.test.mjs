@@ -71,8 +71,8 @@ test("he cannot get off the gallery: walking, hurrying or jumping outward ends o
         assert.ok(Math.max(lx, lz) <= L.half.edge - 0.16 - BODY + 0.01, "he stands into the railing");
       }
     }
-    assert.ok(!site.walk.drops.some((d) => Math.abs(d.top - L.floor) < 1), "the top storey offers a hop down");
-    for (const [x, z] of [...cells.values()].filter((_, i) => i % 97 === 0)) for (let k = 0; k < 8; k++) assert.equal(findDrop(walker, site.walk.drops, x, z, Math.sin(k), -Math.cos(k)), null, `a drop is offered at (${x.toFixed(2)}, ${z.toFixed(2)})`);
+    assert.ok(!walker.drops.some((d) => Math.abs(d.top - L.floor) < 1), "the top storey offers a hop down");
+    for (const [x, z] of [...cells.values()].filter((_, i) => i % 97 === 0)) for (let k = 0; k < 8; k++) assert.equal(findDrop(walker, walker.drops, x, z, Math.sin(k), -Math.cos(k)), null, `a drop is offered at (${x.toFixed(2)}, ${z.toFixed(2)})`);
   } finally { walker.setLoft(null); }
 });
 

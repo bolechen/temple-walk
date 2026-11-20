@@ -5,13 +5,13 @@
 // a library and a dragon well on the terrace behind; and a last stair between rows of tea to a pavilion
 // at the summit, from which every roof lies below. 1 unit = 1 m. North is -z and uphill; you arrive from the south.
 import * as THREE from "three";
-import { box, merge, mesh, smooth, stairGeo, stairProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
+import { box, merge, mesh, smooth, stairGeo, stairProfile, cheekProfile, footAt, BODY, CHEEK, STOOL, CUSHION } from "./geo.js";
 import { PURLIN, PING, buildHall, DOOR } from "./building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "./plaque.js";
 import { CENSER } from "./censer.js";
 
-export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0 };
+export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0, GROVE_IN: 20.5 };   // GROVE_IN: where the bamboo closes in on the forecourt
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
 // Terraces above the entrance court, as on the mountain: each hall stands higher than the one before.
 // zS is the front edge, where the stairs arrive.
@@ -85,7 +85,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {};
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {};
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. A pointed (tent) roof rises half its span.
@@ -95,10 +95,10 @@ export function buildSite(M) {
   const put = (opts, at, q = 0, lvl = 0, base) => {
     const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y });
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
-    for (const r of b.walk.solids) walk.solids.push(place(r, at, q));
+    for (const r of b.walk.solids) walk.solids.push(r.h === undefined ? place(r, at, q) : { ...place(r, at, q), top: r.h + y });
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
     for (const r of b.walk.ramps) walk.ramps.push({ ...place(r, at, q), base: y });
-    for (const r of b.walk.posts) walk.posts.push(place(r, at, q));
+    for (const r of b.walk.posts) walk.posts.push(r.h === undefined ? place(r, at, q) : { ...place(r, at, q), eyeTop: r.h + y });   // (a stair's cheek: as high as its platform)
     for (const r of b.walk.rails || []) walk.rails.push({ ...place(r, at, q), bottom: r.bottom + y, top: r.top + y });
     for (const r of b.walk.roofs) walk.roofs.push({ ...place(r, at, q), bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, floor: r.floor + y, edge: r.edge + y, body: r.body && place(r.body, at, q), core: place(r.core, at, q),
       crest: r.crest && r.crest.map(([cx, cy, cz]) => { const [x, z] = turn(cx, cz, q); return [x + at[0], cy + y, z + at[1]]; }) });
@@ -112,10 +112,15 @@ export function buildSite(M) {
       frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cai: b.cai, parts: b.parts, corners: b.corners, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
     // A hall that can be entered: where its door is, out in the world, and where to stand on coming out again.
     if (opts.hall) {
+      // What is seen through its open door from outside: the dark box behind the leaves, and how the building stands (doorway.js).
+      const box = b.group.children.find((o) => o.userData.doorway); if (box) doorways[opts.hall.id] = { mesh: box, flames: b.group.children.filter((o) => o.userData.doorFlame), group: b.group, Z: b.frontZ, platH: b.platH };
       const Z = b.frontZ, out = (x, z) => { const [a, c] = turn(x, z, q); return [a + at[0], c + at[1]]; }, f = turn(0, 1, q);
       // He is inside as soon as he has stepped between the leaves up to the sill: his robe at the door, not through it.
       halls.push({ ...opts.hall, xs: [...opts.xs], zs: [...opts.zs], door: out(0, Z + DOOR.reach + 0.01), out: out(0, Math.min(Z + 0.66, b.zF - 0.4)), outYaw: Math.atan2(f[0], -f[1]),
-        inside: (x, z) => { const [lx, lz] = turn(x - at[0], z - at[1], (4 - q) % 4); return Math.abs(lx) < DOOR.half + 0.02 && lz < Z + DOOR.reach + 0.035 && lz > Z - 0.3; } });
+        inside: (x, z) => { const [lx, lz] = turn(x - at[0], z - at[1], (4 - q) % 4); return Math.abs(lx) < DOOR.half + 0.02 && lz < Z + DOOR.reach + 0.035 && lz > Z - 0.3; },
+        // The doorway beyond the place where the door takes him in: drawn open, but walked no further (the floor baked
+        // from the drawn meshes closes it, #265; the written plan's platform stops at the door already).
+        stop: (() => { const [ax, az] = out(-DOOR.half - 0.1, Z - 0.6), [bx, bz] = out(DOOR.half + 0.1, Z + DOOR.reach); return { x0: Math.min(ax, bx), x1: Math.max(ax, bx), z0: Math.min(az, bz), z1: Math.max(az, bz) }; })() });
     }
     return b;
   };
@@ -146,9 +151,18 @@ export function buildSite(M) {
   };
   const putTwo = (lower, upper, at, q = 0, lvl = 0) => putStack([lower, upper], at, q, lvl);
 
+  // What is drawn as floor but is not to be walked (#265): an intent the meshes cannot say, written once here and read by the
+  // written plan's walker and by the floor baked from the drawn meshes alike. Each is a rectangle and why.
+  const closed = [];
   // ---- Buildings, from the gate uphill ----
+  const GATE = { xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3] };
+  // You pass through the gate's middle bay; the bays either side are shut behind planked doors, front and back, and are not
+  // walked into from the passage (the bake sees their floor as the passage's own).
+  for (const sx of [-1, 1]) { const inner = GATE.xs[3] + 0.25, outer = GATE.xs[5] + 0.3; closed.push({ x0: sx < 0 ? -outer : inner, x1: sx < 0 ? -inner : outer, z0: SITE.zS + GATE.zs[1] + 0.05, z1: SITE.zS + GATE.zs[0] - 0.05, why: "the gate's shut side bays" }); }
+  // The bamboo closes in on both sides of the forecourt (the near grove, bamboo.js; it is not in the bake).
+  for (const sx of [-1, 1]) closed.push({ x0: sx < 0 ? -SITE.x - 1 : SITE.GROVE_IN, x1: sx < 0 ? -SITE.GROVE_IN : SITE.x + 1, z0: SITE.zS + 0.05, z1: SITE.fore, why: "the bamboo either side of the forecourt" });
   putTwo({   // the gate: you pass through its middle bay, under an upper storey
-    cai: 0.232, xs: [-9.6, -6.2, -2.5, 2.5, 6.2, 9.6], zs: [3, -3], platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
+    cai: 0.232, ...GATE, platH: 0.5, platOut: 1.2, colTop: 4.3, overhang: 2.0,
     front: "pass", back: "pass", dark: false, timber: true, steps: 4.0, stepsBack: 4.0, plaque: { text: "万年正续", gold: true },
   }, { cai: 0.232, timber: true, ping: true, platOut: 0.85, rail: true, xs: [-6.2, -2.5, 2.5, 6.2], zs: [3, -3], colTop: 3.0, overhang: 1.8, crest: 3.9, G: 2.6, plaque: { text: "云径禅寺", vertical: true } }, [0, SITE.zS]);
 
@@ -185,7 +199,8 @@ export function buildSite(M) {
       const [ax, az] = turn(x - 0.75 - BODY, z - 0.26, 1), [bx, bz] = turn(x + 0.75 + BODY, z + 0.26 + BODY, 1);
       walk.posts.push({ x0: Math.min(ax, bx) - 16.6, x1: Math.max(ax, bx) - 16.6, z0: Math.min(az, bz) + 14, z1: Math.max(az, bz) + 14 });
     }
-    tea.group.add(mesh(merge(parts.wood), M.woodX), mesh(merge(parts.glaze), M.glaze), mesh(merge(parts.iron), M.iron), mesh(merge(parts.straw), M.hide));
+    // All of it is walked round, not stood on (#265: the floor baked from the drawn meshes looks through it to the porch).
+    for (const m of [mesh(merge(parts.wood), M.woodX), mesh(merge(parts.glaze), M.glaze), mesh(merge(parts.iron), M.iron), mesh(merge(parts.straw), M.hide)]) { m.userData.walk = "post"; tea.group.add(m); }
   }
   // Tall cryptomerias, as old as the walls: a pair before the gate, others in the courts; and the pair of young
   // evergreens that stand clear of everything in the corners before the great hall. trees.js grows them; the plan
@@ -198,7 +213,7 @@ export function buildSite(M) {
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
   const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
-    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.5, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];
+    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.8, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];   // (the summit ginkgo kept 0.6 m off the pavilion's platform as it widened, #278)
   for (const [x, , z, kind, h] of seasonal) walk.posts.push({ x, z, r: girth(kind, h) });
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
   for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
@@ -207,6 +222,9 @@ export function buildSite(M) {
   const mz = -14.6;   // the main hall: double-eaved, seven bays, the largest roof in the temple
   const main = putTwo({
     cai: 0.232, xs: [-14.4, -10.8, -6.9, -2.7, 2.7, 6.9, 10.8, 14.4], zs: [8.6, 4.3, 0, -4.3, -8.6], platH: 1.5, platOut: 2.4, colTop: 4.8, overhang: 2.6, steps: 6.4, rail: true, plaque: { text: "正法眼藏", gold: true }, hall: { id: "main", kind: "buddha", name: "大雄宝殿" },
+    // Two flights down from the back of its platform, in the east and west bays next to the middle (#148, #272): not on the
+    // axis, where the foot of the library terrace's stair comes too near.
+    stepsBack: 3.9, stepsBackAt: [-8.85, 8.85],
   }, { cai: 0.256, xs: [-10.8, -6.9, -2.7, 2.7, 6.9, 10.8], zs: [4.3, 0, -4.3], colTop: 1.45, front: "wall", overhang: 2.8, crest: 5.4, G: 3.6, plaque: { text: "释迦宝殿", vertical: true, band: true, hand: "shijia", style: "navy", notes: ["淳祐丁未重陽", "徑山佛鑑圓照"] } }, [0, mz]);
 
   putTwo({   // on the first terrace: the sutra library
@@ -223,10 +241,12 @@ export function buildSite(M) {
     ]), M.rubble); niche.name = "well-niche"; g.add(niche);
     const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.0, crown).translate(0, crown / 2, 0.06), M.dark.clone()); dark.material.side = THREE.FrontSide;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.15).rotateX(-Math.PI / 2).translate(0, 0.2, 0.62), new THREE.MeshStandardMaterial({ color: 0x0a1210, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.4 }));
-    const board = makePlaque("龙井", { style: "wood" }); board.name = "well-board"; board.scale.setScalar(0.65); board.position.set(0, crown, mid + t * deep + 0.06);   // hung on the face of the arch's crown
+    const board = makePlaque("龙井", { style: "wood", back: M.woodV }); board.name = "well-board"; board.scale.setScalar(0.65); board.position.set(0, crown, mid + t * deep + 0.06);   // hung on the face of the arch's crown
     // Water seeping down the jambs, inside and out, with moss where it gathers (the pool is fed by the rock, not a spout).
     g.add(mesh(merge([-1, 1].flatMap((sx) => [new THREE.PlaneGeometry(0.5, jamb).translate(sx * R, jamb / 2, 1.103), new THREE.PlaneGeometry(0.9, jamb - 0.1).rotateY(-sx * Math.PI / 2).translate(sx * (w - 0.003), (jamb - 0.1) / 2, 0.6)])), M.seep, { ao: () => 0.6 }));
     g.add(dark, pool, board); g.position.set(13.2, T1.y, T2.zS); root.add(g);
+    // Drawn as floor, but it is water: inside the sill the niche is the pool, which he looks into and does not wade (#274).
+    closed.push({ x0: 13.2 - w, x1: 13.2 + w, z0: T2.zS, z1: T2.zS + 1.1, why: "the dragon well's pool, inside its sill" });
     walk.solids.push({ x0: 11.2, x1: 15.2, z0: T2.zS, z1: T2.zS + 1.8 + BODY });
   }
 
@@ -241,7 +261,9 @@ export function buildSite(M) {
 
   const topZ = TOP.zS - 12.9;   // at the summit: the pavilion that looks back over everything below
   putStack([
-    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.4, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
+    // The ground storey's platform reaches 1.7 m past its columns (#278, the structure review): a gallery he walks round between
+    // the columns and the railing, its drip still 0.3 m outside the platform under the 2.0 m eave.
+    { cai: 0.205, xs: [-7.5, -5.4, -2.3, 2.3, 5.4, 7.5], zs: [7.5, 5.4, 2.3, -2.3, -5.4, -7.5], platH: 0.9, platOut: 1.7, colTop: 3.9, overhang: 2.0, steps: 3.6, lamps: false, rail: true, hall: { id: "lingxiao", kind: "pavilion", name: "凌霄阁", up: "lingxiao" } },
     { cai: 0.186, ping: true, xs: [-5.4, -3.4, -1.2, 1.2, 3.4, 5.4], zs: [5.4, 3.4, 1.2, -1.2, -3.4, -5.4], colTop: 3.0, overhang: 2.0, platOut: 1.0, rail: true },
     { cai: 0.186, ping: true, xs: [-3.4, -1.2, 1.2, 3.4], zs: [3.4, 1.2, -1.2, -3.4], colTop: 3.0, overhang: LOFT.overhang, crest: 4.0, G: 2.4, platOut: LOFT.out, rail: true, loft: "lingxiao", plaque: { text: "凌霄阁", vertical: true, band: true, cols: 1 } },
   ], [0, topZ], 0, 3);
@@ -255,10 +277,13 @@ export function buildSite(M) {
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
+  // Each flight is also kept as where it stands (`root.userData.flights`), so that its cheeks' feet can be looked under (#272).
+  const flightAt = (w, rise, m) => { (root.userData.flights ||= []).push({ w, rise, sides: [-1, 1], m }); return stairGeo(w, rise).geo.applyMatrix4(m); };
+  const placed = (x, y, z, turn = 0) => new THREE.Matrix4().makeTranslation(x, y, z).multiply(new THREE.Matrix4().makeRotationY(turn));
   LEVELS.forEach((L, i) => {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
     const bottom = i === 2 ? 4 : y0 - 0.2 < 0 ? 0 : y0 - 0.2;
-    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(st.geo.translate(0, y0, L.zS));
+    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(flightAt(L.stair, rise, placed(0, y0, L.zS)));
     // The summit's edge is the low plaster wall built below (the same line), not a second, stone one under its tiles.
     if (i < 2) for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
     paving.push({ level: i + 1, y: L.y + 0.012, x: L.x, zS: L.zS, zN: L.zN });
@@ -270,10 +295,13 @@ export function buildSite(M) {
     for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? L.stair / 2 - BODY - 0.021 : -L.stair / 2 - CHEEK - BODY, x1: sx > 0 ? L.stair / 2 + CHEEK + BODY : -L.stair / 2 + BODY + 0.021, z0: L.zS + 0.02, z1: L.zS + st.run + BODY + 0.06 });
     shade[i].push({ x0: -L.x, x1: L.x, z0: L.zN, z1: L.zS });
   });
+  // Where the summit flight leaves the Guanyin terrace for the hill, the earth is cut back for the stair: a block of the
+  // terrace's own stone fills under its lowest two metres, so its cheeks stand on stone and not over a slot (#272).
+  { const hw = TOP.stair / 2 + cheekProfile(TOP.y - T2.y).width; stone.push(box(hw * 2, 1.4, 2.6, 0, T2.y - 0.7, T2.zN - 1.3)); }
   walk.solids.push({ x0: -60, x1: 60, z0: HILL.zN, z1: HILL.zS - 0.05, open: true });   // the hillside itself: not to be walked on, but open air above it
   {   // the approach: lower landing, a flight west to the half-way pavilion, a turn, a flight north to the forecourt
     const A = APPROACH, yA = -A.rise, yB = -A.rise - A.rise2, pad = 0.3, clear = BODY + 0.02;   // `clear`: the treads are walked this far inside the cheek stones
-    flights.push(stairGeo(A.w, A.rise).geo.translate(0, yA, A.top), stairGeo(A.zA1 - A.zA0 - 0.6, A.rise2).geo.rotateY(Math.PI / 2).translate(A.xTurn, yB, A.zMid));
+    flights.push(flightAt(A.w, A.rise, placed(0, yA, A.top)), flightAt(A.zA1 - A.zA0 - 0.6, A.rise2, placed(A.xTurn, yB, A.zMid, Math.PI / 2)));
     stone.push(box(A.xTurn + A.w / 2 + 0.4, 0.4, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.2, yA - 0.2, A.zMid),
       box(A.xB1 - A.xB0, 0.4, A.zA1 - A.zA0, (A.xB0 + A.xB1) / 2, yB - 0.2, A.zMid));
     walk.ramps.push({ x0: -A.w / 2 + clear, x1: A.w / 2 - clear, z0: A.top - 0.4, z1: A.zA0 + 0.2, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
@@ -288,19 +316,18 @@ export function buildSite(M) {
     walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn + 0.2, z0: A.zA0 - 0.05, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 + 0.2, h: yB });
     // Below that, a third flight coming up from the south, from the landing where the walk begins.
     const yC = yB - A.rise3;
-    flights.push(stairGeo(A.w, A.rise3).geo.translate(A.xC, yC, A.zA1)); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
+    flights.push(flightAt(A.w, A.rise3, placed(A.xC, yC, A.zA1))); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
     walk.ramps.push({ x0: A.xC - A.w / 2 + clear, x1: A.xC + A.w / 2 - clear, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
-    walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.6, z0: A.zC0, z1: A.zC1 - pad, h: yC });
+    walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.9 - 2.3 - stairGeo(1, 0.3).run - 0.02, z0: A.zC0, z1: A.zC1 - pad, h: yC });   // (as far as the foot of the river-view pavilion's steps)
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
     // Three open pavilions mark the climb, as pavilions mark the old path: somewhere to stop and look back.
     const rest = { cai: 0.186, xs: [-1.5, 1.5], zs: [1.5, -1.5], platH: 0.3, platOut: 0.8, colTop: 3.0, overhang: 1.3, crest: 2.3, G: 9, lift: 0.5, liftLen: 2.2,
-      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 0, walkAll: true };
+      brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true };   // (two treads up from the landing, #274: the floor stands 0.3 m over it, more than he steps; nearly the middle bay wide)
     // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
     // level ground under every column, and the valley to look at.
     put({ ...rest, plaque: { text: "半山亭", style: "wood" } }, [5.2, A.zA1 + 2.75], 2, 0, yA);
     stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
-    walk.decks.push({ x0: 3.2, x1: 7.2, z0: A.zA1 - 0.4, z1: A.zA1 + 0.6, h: yA });   // the step between its floor and the landing
-    put({ ...rest, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
+    put({ ...rest, steps: 0, stepsBack: 2.6, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where Su Shi, climbing to the temple, washed his ink-stone (the county gazetteer: outside the gate, its
     // water clear, the ripples glinting on a still moonlit night as though there were ink in them), beside the second
     // landing: clear water in a tank of dressed stone, and behind it, facing the stair, a small stele with its name cut
@@ -310,7 +337,7 @@ export function buildSite(M) {
     stone.push(box(3.3, 0.2, 0.3, px, yB + 0.05, pz + 1.15), box(3.3, 0.2, 0.3, px, yB + 0.05, pz - 1.15), box(0.3, 0.2, 2.0, px + 1.5, yB + 0.05, pz), box(0.3, 0.2, 2.0, px - 1.5, yB + 0.05, pz));   // its rim, the water standing a hand below it
     stone.push(box(0.5, 0.3, 0.9, sx, yB + 0.15, pz), box(0.24, 1.42, 0.62, sx, yB + 1.01, pz), box(0.32, 0.1, 0.74, sx, yB + 1.77, pz));   // plinth, slab and a thin cap
     const ink = mesh(new THREE.PlaneGeometry(2.7, 2.0, 8, 6).rotateX(-Math.PI / 2).translate(px, yB + 0.02, pz), M.inkpool, { ao: () => 0.7 }); ink.name = "inkpool"; ink.userData.keep = true;
-    const tag = makePlaque("洗砚池", { vertical: true, style: "stone" }); tag.name = "inkpool-stele"; tag.scale.setScalar(0.55); tag.position.set(sx - 0.14, yB + 1.0, pz); tag.rotation.y = -Math.PI / 2;
+    const tag = makePlaque("洗砚池", { vertical: true, style: "stone", back: M.woodV }); tag.name = "inkpool-stele"; tag.scale.setScalar(0.55); tag.position.set(sx - 0.14, yB + 1.0, pz); tag.rotation.y = -Math.PI / 2;
     root.add(ink, tag);
   }
   root.add(mesh(merge(stone), M.stone), mesh(merge(flights), M.steps));
@@ -369,7 +396,7 @@ export function buildSite(M) {
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
     // Both faces: a panel of diamond-laid grey brick in a frame of pale stone, the four characters gilt upon it, as on the real wall.
-    for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
+    for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05, M.stone); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
     walk.solids.push({ x0: -w / 2 - 0.7, x1: w / 2 + 0.7, z0: z - 0.9, z1: z + 0.9 });
     shade[0].push({ x0: -w / 2, x1: w / 2, z0: z - 0.35, z1: z + 0.35 });
   }
@@ -426,7 +453,7 @@ export function buildSite(M) {
     P.wood.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.17, 0], [0.01, 0.34, 0.01], [-0.05, 0.5, 0.03], [-0.02, 0.66, -0.04], [-0.12, 0.8, -0.02]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 18, 0.006, 6),
       new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.05, 0.5, 0.03], [0.04, 0.58, 0.1], [0.1, 0.7, 0.13]].map((v) => new THREE.Vector3(v[0] + BX, v[1] + 0.78, v[2] + BZ))), 10, 0.004, 5));
     const o = teaFrom(0, 0), mats = { straw: M.straw, wood: M.woodX, glaze: M.glaze, iron: M.iron, lacquer: M.lacquer };
-    for (const k in P) root.add(mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]));
+    for (const k in P) { const m = mesh(merge(P[k]).rotateY(teaTurn).translate(o[0], 0, o[1]), mats[k]); m.userData.walk = "post"; root.add(m); }   // walked round, not stood on (#265)
     // The table stands askew to the court, so it is closed off as three round things along its length; each stool as one.
     // (He does not walk into his own stool: he comes to stand behind it, and is seated on it. See `seat` below.)
     for (const lx of [-0.42, 0, 0.42]) { const t = teaFrom(lx, -0.12); walk.posts.push({ x: t[0], z: t[1], r: 0.42 }); }
@@ -464,7 +491,7 @@ export function buildSite(M) {
   }
   // A straw cushion at the top of the summit pavilion's steps, facing back down the mountain.
   const porchY = TOP.y + 0.9, porchZ = topZ + 7.5 + 0.8;
-  root.add(mesh(cushion().translate(0, porchY, porchZ), M.straw));
+  { const mat = mesh(cushion().translate(0, porchY, porchZ), M.straw); mat.userData.walk = "floor"; root.add(mat); }   // a floor his shoes come down on, rounded rim and all (#265: the baked floor takes a face to 15° unless told)
   // It is where he comes out of the pavilion and where he sits: walked onto, not into. Its top is a floor, its own height.
   walk.decks.push({ x: 0, z: porchZ, r: 0.292, x0: -0.292, x1: 0.292, z0: porchZ - 0.292, z1: porchZ + 0.292, h: porchY + 0.1, floor: "wood" });
   // Whatever can be sat on out of doors: the three stools at the tea table (each turned to the table) and the mat on
@@ -541,7 +568,7 @@ export function buildSite(M) {
   const censer = new THREE.Vector3(0, 0, 13);
   walk.posts.push({ x: censer.x, z: censer.z, r: CENSER.reach, eyeR: CENSER.ears + 0.1, top: censer.y + CENSER.height + 0.05 });   // the eye kept off its ears too
 
-  return { root, walk, shade, paving, hall, halls, buildings, lofts, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
@@ -650,6 +677,9 @@ export function createWalker(site) {
   const upHere = (x, z) => { const c = carved(x, z); return c !== null && Math.abs(c - lofts[loft].floor) < 1e-6; };
   const wall = (x, z) => { if (room) return shut(x, z); if (post(x, z, 0.15)) return true; if (loft) return !upHere(x, z); if (carved(x, z) !== null) return false; for (const s of solids) if (!s.open && inRect(s, x, z)) return true; return false; };
   return {
+    kind: "old",
+    // The porch edges he may hop down from and jump up onto (drop.js), as written (#265: the grid walker finds its own).
+    drops: site.walk.drops || [],
     setRoom(r) { room = r || null; }, get room() { return room; },
     setLoft(id) { loft = id && lofts[id] ? id : null; }, get loft() { return loft; },
     heightAt(x, z) { if (room) return room.y; const c = carved(x, z); return c === null ? level(x, z) : c; },
@@ -681,7 +711,7 @@ export function createWalker(site) {
       // that has come down near the floor it stands on, as it does looking up.
       const p = post(x, z, 0.15, true);
       // (A round thing that stops short of the roofs, the censer, keeps the eye out only up to its own top.)
-      if (p) { if (p.r !== undefined) { if (p.top === undefined || y < p.top) return p.r < 0.45 ? "post" : true; } else { const c = carved(x, z); if (y < (c === null ? level(x, z) : c) + 1.1) return true; } }
+      if (p) { if (p.r !== undefined) { if (p.top === undefined || y < p.top) return p.r < 0.45 ? "post" : true; } else { const c = carved(x, z); if (y < (p.eyeTop !== undefined ? p.eyeTop + 0.3 : (c === null ? level(x, z) : c) + 1.1)) return true; } }
       if (carved(x, z) !== null) return false;
       // He stands on a terrace: the eye stays over it too, and does not step out past its edge to look back at him along
       // the wall's outer face. Past the front edge it may be only where the wall is open to the stair (the view back down
@@ -689,8 +719,13 @@ export function createWalker(site) {
       for (const L of LEVELS) if (Math.abs(foot - L.y) < 0.6 && (Math.abs(x) > L.x || z < L.zN || (z > L.zS && Math.abs(x) > L.stair / 2 + 0.5))) return true;
       let top = -Infinity, own = false;
       for (const r of roofs) if (r.body && inRect(r.body, x, z)) top = Math.max(top, inRect(r.core, x, z) ? r.top : r.edge);
-      for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.own) own = true; else top = Math.max(top, foot + 5.5); }
-      if (own && top === -Infinity) top = foot + 5.5;   // the cheeks of a building's stair, beyond its platform
+      let flight = -Infinity;
+      for (const s of solids) if (!s.open && inRect(s, x, z)) { if (s.top !== undefined) flight = Math.max(flight, s.top + 0.3); else if (s.own) own = true; else top = Math.max(top, foot + 5.5); }
+      if (own && top === -Infinity) top = foot + 5.5;
+      // The cheeks of a building's stair, and the ground beside them, beyond its platform: only up to a little over the
+      // platform the flight climbs (#271: they used to be shut 5.5 m up, and an eye straight behind him was brought in to
+      // his back each time he walked across the foot of a hall's steps).
+      else if (top === -Infinity) top = flight;
       return y < top;
     },
     onGround: (x, z) => !room && !loft && carved(x, z) === null,
@@ -701,7 +736,7 @@ export function createWalker(site) {
       if (loft) return !upHere(x, z);
       if (carved(x, z) !== null) return false;
       if (Math.abs(x) > SITE.x + 8 || z < SITE.zN || z > APPROACH.end) return true;
-      if (z > SITE.zS && Math.abs(x) > 20.5) return true;                                  // the grove closes in on both sides of the forecourt
+      if (z > SITE.zS && Math.abs(x) > SITE.GROVE_IN) return true;                          // the grove closes in on both sides of the forecourt (site.closed says so too)
       for (const s of solids) if (inRect(s, x, z)) return true;
       return false;
     },

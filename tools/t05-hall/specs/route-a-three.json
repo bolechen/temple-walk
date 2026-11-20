@@ -1,0 +1,86 @@
+{
+ "out": "tools/out/t05/route-a-three",
+ "size": [
+  1600,
+  900
+ ],
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+   "x": 0,
+   "h": 9.0,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 3,
+    "tips": 9
+   }
+  },
+  {
+   "url": "tools/out/t05/tripo/kasyapa-a.60k.glb",
+   "x": 5.8,
+   "h": 8.8,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 2,
+    "tips": 0
+   }
+  },
+  {
+   "url": "tools/out/t05/tripo/sakyamuni-a.60k.glb",
+   "x": -5.8,
+   "h": 8.8,
+   "paint": "clay",
+   "turn": -1.5708,
+   "yaw": 0.12,
+   "halo": {
+    "rings": 4,
+    "tips": 0,
+    "head": 1.7
+   }
+  }
+ ],
+ "shots": [
+  {
+   "name": "door3-summer",
+   "view": "door3",
+   "mood": "summer"
+  },
+  {
+   "name": "door3-winter",
+   "view": "door3",
+   "mood": "winter"
+  },
+  {
+   "name": "side3-summer",
+   "view": "side3",
+   "mood": "summer"
+  },
+  {
+   "name": "side3-winter",
+   "view": "side3",
+   "mood": "winter"
+  },
+  {
+   "name": "front-summer",
+   "view": "front",
+   "mood": "summer"
+  },
+  {
+   "name": "front-winter",
+   "view": "front",
+   "mood": "winter"
+  },
+  {
+   "name": "front10-summer",
+   "view": "front10",
+   "mood": "summer"
+  },
+  {
+   "name": "front10-winter",
+   "view": "front10",
+   "mood": "winter"
+  }
+ ]
+}
