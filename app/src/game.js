@@ -428,7 +428,8 @@ export function createGame(y) {
     if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
       SEALS.forEach((d, i) => { if (!journey.has(d.id) || !places[d.id]) return; const b = document.createElement("button"), [l, top, w, h] = boxes[i];
         b.type = "button"; b.className = "seal-go"; b.dataset.id = d.id; b.setAttribute("aria-label", t("回到{place}", { place: t(d.place) })); b.title = t("回到{place}", { place: t(d.place) });
-        b.style.cssText = `left:${(l * 100).toFixed(2)}%;top:${(top * 100).toFixed(2)}%;width:${(w * 100).toFixed(2)}%;height:${(h * 100).toFixed(2)}%`;
+        // The row of seals was shortened to leave the foot's end to the code (#337), so a seal's share of the page is 38 px wide at 388, not 51: the button is never narrower than a thumb (44 px), centred on its seal; the drawn seals are 30 px apart, so neighbours' buttons overlap by 3 px at the least.
+        b.style.cssText = `left:calc(${((l + w / 2) * 100).toFixed(2)}% - max(${(w * 100).toFixed(2)}%, 44px) / 2);top:${(top * 100).toFixed(2)}%;width:max(${(w * 100).toFixed(2)}%, 44px);height:max(${(h * 100).toFixed(2)}%, 44px)`;
         b.addEventListener("click", () => goBack(d.id)); leaf.appendChild(b); });
       if ($("bookGo")) $("bookGo").hidden = !journey.count(); }
     leaf0?.classList.remove("drawing");
