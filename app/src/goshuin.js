@@ -55,7 +55,7 @@ const QR_PX = 5;
 export function layout(style = STYLE, l = lang) {
   const n = qrMatrix(shareUrl(l)).length, side = qrSide(n, QR_PX), box = (x, y) => ({ x, y, w: side, h: side, px: QR_PX, modules: n, dark: n * QR_PX });
   const base = { style, look: /** @type {"seal" | "ink"} */ (style === "colophon" ? "ink" : "seal"), temple: { ...TEMPLE_SEAL }, host: { x: 600, y: 1556, align: "center" }, progress: { x: 600, y: 1522, align: "center" } };
-  if (style === "colophon") { const q = box(600 - side / 2, 1339); return { ...base, row: { left: 75, right: 1125, size: 126, top: 1166 }, temple: { ...TEMPLE_SEAL, cy: 1050 }, qr: q, label: { x: 735, y: 1445, align: "left", width: 380 }, progress: { x: 465, y: 1455, align: "right" }, host: { x: 735, y: 1485, align: "left" } }; }
+  if (style === "colophon") { const q = box(600 - side / 2, 1350); return { ...base, row: { left: 75, right: 1125, size: 116, top: 1186 }, temple: { ...TEMPLE_SEAL, cy: 1050 }, qr: q, label: { x: 735, y: 1445, align: "left", width: 380 }, progress: { x: 465, y: 1455, align: "right" }, host: { x: 735, y: 1485, align: "left" } }; }
   if (style === "inscribed") { const q = box(1125 - side, 1000); return { ...base, row: { left: 75, right: 1125, size: 126, top: 1318 }, qr: q, label: { x: q.x + side / 2, y: q.y + side + 22, align: "center", width: side } }; }
   const q = box(1125 - side, 1282); return { ...base, row: { left: 75, right: q.x - 24, size: 96, top: 1306 }, qr: q, label: { x: q.x + side / 2, y: q.y + side + 20, align: "center", width: side } };
 }

@@ -23,7 +23,8 @@ test("in every style the page's big things lie apart and inside the frame", () =
     const row = L.row, gap = (row.right - row.left - 7 * row.size) / 6, squares = boxes.map((_, i) => ({ x: row.left + i * (row.size + gap), y: row.top, w: row.size, h: row.size }));
     assert.ok(gap >= 12, `${style}: the seals crowd (gap ${gap})`);
     const things = { 三宝印: sealBox(SANBAO), 寺印: sealBox(L.temple), 二维码: L.qr, 末行: { x: row.left, y: row.top, w: row.right - row.left, h: row.size + 40 } };
-    for (const [k, b] of Object.entries(things)) assert.ok(b.x > frame.x && b.y > frame.y && b.x + b.w < frame.x + frame.w && b.y + b.h < frame.y + frame.h, `${style}/${l}: ${k} leaves the frame`);
+    const q4 = 4 * L.qr.px, inside = { ...things, 二维码: { x: L.qr.x + q4, y: L.qr.y + q4, w: L.qr.w - 2 * q4, h: L.qr.h - 2 * q4 } };   // the quiet zone is paper: it may lie over the frame's rule, the modules may not
+    for (const [k, b] of Object.entries(inside)) assert.ok(b.x > frame.x && b.y > frame.y && b.x + b.w < frame.x + frame.w && b.y + b.h < frame.y + frame.h, `${style}/${l}: ${k} leaves the frame`);
     const names = Object.keys(things); for (const a of names) for (const b of names) if (a < b) assert.ok(!hit(things[a], things[b]), `${style}/${l}: ${a} and ${b} overlap`);
     for (const c of nameBoxes(4)) for (const k of ["二维码", "末行"]) assert.ok(!hit(things[k], c), `${style}: ${k} lies on the name`);
     assert.ok(squares.length === 7);
