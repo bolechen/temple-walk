@@ -49,6 +49,17 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 
 **发版即上线。** 对外分享、或要让一个修复让玩家玩到，都靠发版：版本 PR 随时可合，看过 canary 觉得好就立刻合。合并后 `release-please.yml` 在打出标签的同一次运行里调用 `deploy-tag.yml`（`target: production`）（默认令牌打的标签不会触发别的 workflow，所以由它按 `release_created` 输出接着调用），从标签构建、跑一次 `boot`、部署到生产，并把线上首页与刚建好的首页比哈希。
 
+## 发版前的全量：免费机器或 T4（#335）
+
+发版前要看全量时：Actions → **End to end, every scenario** → Run workflow，选 `runner`。
+
+- `github`（默认，夜间也是它）：十二台免费机器，软件渲染，按各场景上次实测的时间分片（`tests/e2e/shards.cjs`）。
+- `t4`：四个 Hugging Face Job，每个一块 T4，Chromium 经 Vulkan 用显卡画。流程：`t4-pack` 建站并连检出一起打成一个包；`t4` 四片各把包传到私有桶 `<账号>/temple-walk-e2e` 的 `runs/<运行>/`，起 Job 跑 `tools/ci/t4-job.sh`（解包、`pnpm install`、`tests/e2e/run.cjs --shard=i/4`），等它结束，把报告、截图、Job 日志取回作为 artifact `e2e-t4-<片>-…`，再从桶里删掉这一次的文件；`t4-checks` 在免费机器上并行跑 shard 1 通常先跑的解析、类型、单测和 `edges`。运行摘要里有每片的显卡型号和各场景耗时。
+- 红的情况都是真红：没有 `HF_TOKEN`、Job 起不来、报错、超时、被取消、没带回报告、场景不过，都让那一片失败，日志第一行附近有 Job 的地址（`https://huggingface.co/jobs/<账号>/<id>`）。浏览器若退回软件渲染（`SwiftShader`/`llvmpipe`），`run.cjs` 直接退出码 3：T4 的运行不会是披着 T4 名字的免费机器运行。取消这次运行会取消 Job，不会留着显卡计费。
+- 密钥：仓库 secret `HF_TOKEN`（只给这个 workflow，需要有建桶和跑 Job 的权限；Settings → Secrets and variables → Actions 里加，值不进任何日志或文件）。只在 `t4` 的启动那一步读取。这个 workflow 没有 `pull_request` 触发，所以 PR（包括外部 fork 的 PR）碰不到它；手动触发只有有写权限的人能做。
+- 费用：T4 约 0.4 美元每小时，四个 Job 各按墙钟计，一次全量按每片约 15 分钟算，约 0.4 美元。夜间默认用哪个，等 T4 与免费机器的对比（结果是否一致、墙钟时间）出来后由所有者定。
+- 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/4`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
+
 ## 出事先回滚，再修
 
 1. 打开 Actions → **Deploy a version tag** → Run workflow（`deploy-tag.yml`）：`ref` 填要回到的标签（如 `v0.4.0`；必须是 `vX.Y.Z` 标签，分支和提交号会被拒绝），`target` 选 `production`（线上）或 `canary`（内部 Worker，用来演练，不碰玩家），点运行。它从那个标签自己的代码建站（可取消勾选 `check` 以略过 `boot`、求最快），部署到所选的 Worker，把线上首页和刚建好的首页比哈希，写进运行摘要。`dry_run` 勾上则只建站、检查、打印「要把哪个标签部署到哪个 Worker」，不部署。
