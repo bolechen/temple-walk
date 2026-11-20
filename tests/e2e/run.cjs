@@ -367,9 +367,8 @@ const scenarios = {
     for (const [name, x, z, yaw, lo] of [["the court", 0, 30, 0, -0.1], ["the first terrace", 12, -40, 0, 2.3], ["the second terrace", 6, -70.5, Math.PI / 2, 5.1], ["the summit", -10, -120.4, Math.PI / 2, 19.9], ["the foot of the path, looking up its steps", 21.3, 91.5, 0, -15]]) {
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, yaw]); await t.frames(2);
       const s0 = await t.state(); expect(s0.h > lo, `${name}: posed at the wrong height ${s0.h}`);
-      await t.page.touchscreen.tap(210, 520);   // below the horizon: a spot on the ground a few steps ahead
-      await t.frames(1); const s1 = await t.state();
-      expect(s1.target, `${name}: a tap on the ground set no destination`);
+      // below the horizon: a spot on the ground a few steps ahead. He hurries (?fast=1) and the walk can be over before a poll looks, so the page says what the tap set.
+      const s1 = { target: await t.tapTarget(() => t.page.touchscreen.tap(210, 520), `${name}: a tap on the ground`) };
       const ahead = (s1.target[0] - x) * Math.sin(yaw) - (s1.target[1] - z) * Math.cos(yaw), aside = Math.abs((s1.target[0] - x) * Math.cos(yaw) + (s1.target[1] - z) * Math.sin(yaw));
       expect(ahead > 1.5 && ahead < 9 && aside < 0.5, `${name}: the tap should land a few steps straight ahead, not ${ahead.toFixed(1)} m ahead and ${aside.toFixed(1)} m aside at ${s1.target}`);
       await t.until(async () => (await t.state()).target === null, 60000, `${name}: never arrived`);
@@ -1214,7 +1213,8 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "E at the stair's foot did not take him up"); await clear();
     const L = await t.page.evaluate(() => window.__lofts.lingxiao); let s = await t.state();
     expect(!s.inside && s.view === "first" && Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.yaw - L.face) < 0.05 && (await at(L.door, 0.1)), "up there he should stand at the top storey's door, facing south, with his own eyes: " + JSON.stringify(s));
-    expect((await t.page.evaluate(() => window.__music().zone)) === "summit", "the music up there should be the summit's");
+    // A place counts as where he is only after two seconds of the audio clock (createZoneKeeper in score.js): a card that draws sixty frames a second has not let them pass by the time `clear()` returns.
+    await t.until(async () => (await t.page.evaluate(() => window.__music().zone)) === "summit", 30000, "the music up there should be the summit's");
     // Up there he sees with his own eyes only: the summit mat's shot (#87, src/director.js), asked for from the balcony, is refused.
     expect((await t.page.evaluate(() => window.__direct("sit"))) === false && (await t.page.evaluate(() => window.__director().phase)) === "idle", "a place's shot was taken up on the balcony: " + JSON.stringify(await t.page.evaluate(() => window.__director())));
     await t.page.keyboard.press("v"); await t.frames(2); s = await t.state();
