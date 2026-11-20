@@ -39,6 +39,42 @@
    "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
   },
   {
+   "path": "shot-incense-guanyin-1024x768.png",
+   "bytes": 1145122,
+   "sha256": "afaab3beddc5173041ba58c3101d5e82084d4ae55dd786b39a81de1bee42deb7",
+   "rev": "20389104a7a79337ea45c41f49ae44cdaa90c2c5"
+  },
+  {
+   "path": "shot-incense-guanyin-1280x720.png",
+   "bytes": 1311472,
+   "sha256": "db121bd07ad76835c7d41df1db2a369c1c35743efa75599f57e4caf9c11e3386",
+   "rev": "20389104a7a79337ea45c41f49ae44cdaa90c2c5"
+  },
+  {
+   "path": "shot-incense-guanyin-390x844.png",
+   "bytes": 504942,
+   "sha256": "bb115034181061368cae31af49329e2de86d77110748c5cf70f8cfeb81aed707",
+   "rev": "20389104a7a79337ea45c41f49ae44cdaa90c2c5"
+  },
+  {
+   "path": "shot-incense-yaoshi-1024x768.png",
+   "bytes": 1123653,
+   "sha256": "fa36d94bd84bbd6ca6ddabbe6dd4befac16ce981ac0141fd2d9769ff9a9d103a",
+   "rev": "20389104a7a79337ea45c41f49ae44cdaa90c2c5"
+  },
+  {
+   "path": "shot-incense-yaoshi-1280x720.png",
+   "bytes": 1288938,
+   "sha256": "96e8371ffacac156f331a26e1941ea43761d12a199476a0301eab1bde338fb03",
+   "rev": "20389104a7a79337ea45c41f49ae44cdaa90c2c5"
+  },
+  {
+   "path": "shot-incense-yaoshi-390x844.png",
+   "bytes": 509516,
+   "sha256": "bed48a5e01f095c0603d6b5d1d87efbd4c185b57f79c75e15c6b9b8a82df6da7",
+   "rev": "20389104a7a79337ea45c41f49ae44cdaa90c2c5"
+  },
+  {
    "path": "yaoshi-brow-front.png",
    "bytes": 1090857,
    "sha256": "0ac3c0e53271eb66f1d7c3e4eb289b653895a1e9f646fd33cadc2c3317457519",
