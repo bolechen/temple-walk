@@ -7,7 +7,7 @@
 | 阶段 | 产出 | 判据（`PRD.md` §9 的条目） | 等什么 |
 |---|---|---|---|
 | **一 白盒可走** | 院落、台基与月台、踏道、大雄殿外壳与殿内地面、佛坛与七尊体块、六站、烘焙地面；从 T00 走进来或 `?level=t05` 直达 | 第 1、2、3 条；第 4 条的机位先站得住 | `LEVEL-SPLIT.md` S1、S2、S5；§11 第 1 项已定；范围档位（`SCOPE-OPTIONS.md`）定下后补第一阶段的前奏 PR。**不等顾问** |
-| 二 光与殿内 | 「在殿内的程度」连续过渡；持灯（`SCOPE-OPTIONS.md` (b)）；光照探针（PMREM 与 `LightProbeGridWebGL` 比一次）；曝光渐变；J01 季时；Z1/Z3 声场与大殿混响 | 第 4 条出图；第 6 条光比；T4 第一次量 | S8（关卡自己的季时）；第 4 项（基线季时） |
+| 二 光与殿内 | 「在殿内的程度」连续过渡；持灯（`SCOPE-OPTIONS.md` (b)）；光照探针（PMREM 与 `LightProbeGridWebGL` 比一次）；曝光渐变；J01 季时；Z1/Z3 声场与大殿混响。**光照与曝光的目标图**：`refs/t05-concept-2026-11-20/02-hall-from-door.webp`（#372），取门光在地上铺成一道、往里渐弱、浮尘、梁架褪色；按主创意见，门光要照亮中间三尊的脸（图里像身亮度偏平均）、彩画要更温哑、像要更压人，图上的手印和比例不作参考 | 第 4 条出图；第 6 条光比；T4 第一次量；cam03 与目标图并排出图 | S8（关卡自己的季时）；第 4 项（基线季时） |
 | 三 七佛与群像 | 正式七尊（Tripo 生成、LOD、法线、上色）；认七佛（(c)，按位置认，不等手印；2026-11-20 改写）；胁侍与天王体块到中模；梁架与彩画色带 | 第 5 条；第 7 条 T4 部分 | 释迦样件 #370 先过（顾问评审 2026-11-20：先做一尊，按实测工时估七尊）；Tripo 已充值（约 1080 点，T05 已批约 110）；`STATUE-PIPELINE.md` 的工具 |
 | 四 印、书、声音、语言 | 一枚印与三张观察页；抄碑（(a)，抄一句进书）；书上 T05 页；标题页「第一章」；配乐两小段；四种语言；鸣谢与登记表 | 第 8 条；`mobile-audit` | S3a、S3c、S4；§11 第 2、3、5、6 项 |
 | 五 验收 | 六机位 T4 重拍、独立评审、手机实测、所有者走十分钟 | 第 7 条手机部分；全部八条在同一提交上有证据 | #188 的 `tools/device.cjs` |
@@ -30,7 +30,7 @@
 | 8 | `feat(t05): the axis from the outer gate, its terraces and walls`（T05-A1，范围 C 第一批） | 前奏：外山门外到院子北口的地形，无量殿一组的第二层高台（高差按 `SITE.md` §4.2 提案 +1.0 m）、甬道、围墙；到达点改到外山门外 (0, +215)；在月台西留碑亭的体块、殿内门侧留灯案的位置（只占位，不做互动，`SCOPE-OPTIONS.md` S-1）；`t05-plan.test.mjs` 洪水填充加外山门、内山门、牌坊、无量殿穿堂、院子北口 | 5 | 可以：全是新文件 |
 | 9 | `feat(t05): the outer gate, the inner gate and the Wuliang hall, as shells`（T05-A2） | 外山门、内山门（三间带两侧便门）、无量殿（五间、单檐歇山，前后开门可穿过）用 `buildHall` 的参数出外壳；位置照 `SCOPE-OPTIONS.md` §二 B 的图（顺序照真寺，位置是提案）；穿堂过 `edges:grid`、`nearplane:grid` | 8 | 可以 |
 | 10 | `feat(building): a four-post, three-bay archway (paifang)`（T05-A3） | `building.js` 没有牌坊：新写四柱三间三楼木牌坊的生成器（或单独一个模块），先出正、侧、俯三向图给结构评审，再放到中轴上 | 生成器不依赖别的；放上中轴依赖 8 | 可以：生成器从第一天就能做；若改 `building.js`，与 #315、结构评审的改动对一下 |
-| 11 | `feat(t05): seven named views and their manifest`（T05-4） | `views.cam01…cam07`（cam01–cam06 照 `PRD.md` §3，新加 cam07「内山门望殿」，所有者 2026-11-20 定七个，`SCOPE-OPTIONS.md` S-4）、`views.arrive`；`tools/cameras.mjs --level=t05` 写 `docs/t05/camera-manifest.json`；`shots.js --level=t05` 出七张；单测每个机位站在可走格子上 | 7、9、10；`LEVEL-SPLIT.md` S6（`cameras.mjs`、`shots.js` 带关卡名，可并进本 PR 或先合） | 可以 |
+| 11 | `feat(t05): seven named views and their manifest`（T05-4） | `views.cam01…cam07`（cam01–cam06 照 `PRD.md` §3，新加 cam07「内山门望殿」，所有者 2026-11-20 定七个，`SCOPE-OPTIONS.md` S-4；**cam07 的构图目标**是 `refs/t05-concept-2026-11-20/03-axis-from-inner-gate.webp`（#372：门洞框住柏树甬道、牌坊、高台上的无量殿和远处大殿的庑殿顶），白盒出图与它并排看）、`views.arrive`；`tools/cameras.mjs --level=t05` 写 `docs/t05/camera-manifest.json`；`shots.js --level=t05` 出七张；单测每个机位站在可走格子上 | 7、9、10；`LEVEL-SPLIT.md` S6（`cameras.mjs`、`shots.js` 带关卡名，可并进本 PR 或先合） | 可以 |
 | 12 | `test(e2e): t05-walk, from the prologue's book or straight in`（T05-5） | e2e `t05-walk`：`?level=t05` 直达，从外山门外走到 F；从 T00 进来那条先用工作台入口（`?level=t05` 加书上的按钮存在性），书上翻页的正式入口在第四阶段；断言 T00 存档不动；`edges:grid`、`nearplane:grid` 带 `--level=t05` 跑通 | 11 | 可以 |
 | 13 | `docs(t05): phase one measured`（T05-6） | T4 一个 Job 里 T00 首院与 T05 cam03、cam06、cam07 交替量 `__cost`；有人连着手机就量一次低档；数写进 `docs/HANDOFF.md` 与 `docs/t05/`；七张图推证据库 | 12 | 可以 |
 
