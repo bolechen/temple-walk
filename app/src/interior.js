@@ -26,11 +26,11 @@ const FLOOR = -60;
 // the building's own bays (framing.js), and how it is furnished from its kind (below).
 // The eye's shot for the incense (src/director.js), in the place's frame: x to his left, z the way he faces, y up from the floor there.
 // Low, below his brow, from behind him and well to his right, so that he stands side-on, the stand with its bowl of ash
-// beside him and the Buddha above; it draws a little nearer as he offers (our own draft). The great hall's room is wide enough
-// to hold its whole Buddha from there; a small hall's is not (the figure stands taller against its room), so its shot is
-// farther back and a little higher and wider, and takes the figure to its chest and shoulders: see docs/t00/incense-halls.md.
-// The Guanyin hall's two front columns stand either side of the aisle a step behind his cushion and would stand across the
-// figure from the others' camera: here it stands level with the stand, beside him, and looks across and up at her.
+// beside him and the Buddha above; it draws a little nearer as he offers (our own draft).
+// A small hall's figure stands farther from the cushion and its dais is narrow, so from the great hall's 3.2 m out the dais's
+// shaded end showed as a black block at the edge of the picture and the figure fell to the right: its camera stands 2.2 m out and
+// aims between him and the figure. The Guanyin hall's two front columns stand either side of the aisle a step behind his
+// cushion and would stand across the figure from either: there the camera stands in the aisle behind him, a little to his right.
 const GUANYIN_CAM = { at: [-1.4, 1.2, -3.2], look: [0, 1.9, 2.8], fov: 56 };
 const INCENSE_SHOT = {
   buddha: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, 4.55], [0, 4.9, 4.55]] },
