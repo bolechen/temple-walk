@@ -1562,6 +1562,9 @@ const scenarios = {
     // The bell: the music steps back, then returns of itself.
     await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(800);
     s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
+    // A drum struck inside the bell's stepping back (0.5 against 0.18) must not lift the music: the deeper one holds (#341).
+    { const before = (await m()).duck; await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(600);
+      s = await m(); expect(s.ducked && s.duck <= before + 0.02, "a drum inside the bell's stepping back lifted the music: " + JSON.stringify({ before, after: s.duck })); }
     await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
     // Its own level, apart from everything else.
     // The three levels under the whole volume are folded until asked for (分开调).
