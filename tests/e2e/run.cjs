@@ -148,7 +148,7 @@ const scenarios = {
     const { render, LANGS, KINDS } = require("../../tools/goshuin-pages.cjs"), sharp = require("sharp"), jsQR = require("jsqr");
     const { qrBox, shareUrl, STYLES } = await import("../../app/src/goshuin.js");
     const read = async (buf, lang, style) => {
-      const box = qrBox(lang, style), { data, info } = await sharp(buf).extract({ left: box.x, top: box.y, width: box.w, height: box.h }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const box = qrBox(lang, style), { data, info } = await sharp(buf).extract({ left: Math.floor(box.x), top: Math.floor(box.y), width: Math.ceil(box.w) + 1, height: Math.ceil(box.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       return jsQR(new Uint8ClampedArray(data), info.width, info.height);
     };
     const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"], ...STYLES.flatMap((st) => LANGS.map((l) => [l, "full", st]))];
