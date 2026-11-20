@@ -1,0 +1,90 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "goshuin-colophon-full-en.jpg",
+   "bytes": 223888,
+   "sha256": "48fa58bd610c6dd86c9f13c93a7dc49cddff7847345eedf12a2b81458081b56a",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-colophon-full-ja.jpg",
+   "bytes": 235542,
+   "sha256": "6c617630a3e74e24ebb221aa056db586227f14e1a1189c671bf7690ad52bb959",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-colophon-full-ko.jpg",
+   "bytes": 221318,
+   "sha256": "a16098cd8f80b3fca4aa68953f72d70950efb3470068b3594123681468455798",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-colophon-full-zh.jpg",
+   "bytes": 223190,
+   "sha256": "5e6c0a0e1e9854feba2db15e4eeda0c33fdcb71bdc534f72ef6cae5820c03a63",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-inscribed-full-en.jpg",
+   "bytes": 233601,
+   "sha256": "12bc362cf4b538f0ec139265d52f19fa12bdc03fc83b26dd5104c92045b78bb2",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-inscribed-full-ja.jpg",
+   "bytes": 246402,
+   "sha256": "2015ca48122dac9b3fae8b8c5667d2c6a3a48e3b06409e1c0f5eabfef4e0fb2f",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-inscribed-full-ko.jpg",
+   "bytes": 232279,
+   "sha256": "21aff0d01cf53a45330e99de27b76b5f1f486e213b39d5f91ca7a4a90c7d0289",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-inscribed-full-zh.jpg",
+   "bytes": 233552,
+   "sha256": "d44b40a7ab69e7023d77548d08d569052a56276bb8802e14538278f70ffd1952",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-seal-full-en.jpg",
+   "bytes": 214900,
+   "sha256": "a753ec8ed520f0ef5d884e5611fb8070f1ed659b8539634547d3b5f082e85dc2",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-seal-full-ja.jpg",
+   "bytes": 228727,
+   "sha256": "4f9f26d12157da521452eb6081d566e579c270ade94115220775a4961a266f2f",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-seal-full-ko.jpg",
+   "bytes": 213986,
+   "sha256": "67bb264795fb5f85e4c4e9e54d590967205c084b101679a8ca1524840354b307",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "goshuin-seal-full-zh.jpg",
+   "bytes": 216533,
+   "sha256": "4928ab8aa5908df6dde561e9188a1f75848c0e448071f44d29eb993f151321d4",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "photo-card-qr.jpg",
+   "bytes": 260806,
+   "sha256": "1d6dde42588283f09a5d27f8ba272596194352b9dd461bfc0fdb2e6392ae5c29",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  },
+  {
+   "path": "sheet.jpg",
+   "bytes": 145100,
+   "sha256": "3428e7bbace4cd91d2b3f88d8265e69f47582e3b4ea47854d7cbce6920e84b45",
+   "rev": "d6068cf0e5e32f2e08ada11e123380c9e2eac7d4"
+  }
+ ]
+}

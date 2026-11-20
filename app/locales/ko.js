@@ -113,6 +113,7 @@ export default {
   "取景": "구도",
   "三分线": "삼분할선",
   "虚化": "블러",
+  "二维码": "QR 코드",
   "人物": "인물",
   "入画": "함께 찍기",
   "合掌": "합장",
@@ -253,6 +254,7 @@ export default {
   // ---- On the way (game.js, hints.js) ----
   "云径禅寺": "운경선사",
   "奉拜": "奉拜",
+  "扫码入山": "스캔하여 입산",
   "下一处": "다음",
   "{n} 步": "{n}걸음",
   "朱印 {n}": "주인 {n}",
@@ -337,7 +339,7 @@ export default {
   "字体均以 SIL Open Font License 1.1 授权，本项目切取子集，许可全文见": "서체는 모두 SIL Open Font License 1.1에 따라 제공되며, 이 프로젝트에서는 필요한 글자만 잘라 사용합니다. 라이선스 전문:",
   "LXGW WenKai（霞鹜文楷）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Hand KO 为名。": "LXGW WenKai와 Nanum Brush Script는 이름이 보류되어 있으므로, 이 프로젝트의 수정본은 파일 안에서 Yunjing Kai, Yunjing Hand KO라는 이름을 씁니다.",
   "程序库": "라이브러리",
-  "three.js、meshoptimizer、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见": "three.js, meshoptimizer, lil-gui, stats.js(MIT)와 Basis Universal(Apache-2.0). 라이선스 전문:",
+  "three.js、meshoptimizer、qrcode-generator、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见": "three.js, meshoptimizer, qrcode-generator, lil-gui, stats.js(MIT)와 Basis Universal(Apache-2.0). 라이선스 전문:",
   "第三方许可声明": "서드파티 라이선스 고지",
   // ---- The 功德箱 ----
   "功德箱": "시주함",
@@ -357,4 +359,6 @@ export default {
   "预览 · PR #{pr} · {c}": "미리보기 · PR #{pr} · {c}",
   "预览 · {c}": "미리보기 · {c}",
   "新的版本已就绪，刷新即可": "새 버전이 준비되었습니다. 새로고침하면 됩니다",
+  // A change of language in the pause menu, while the page opens again in it (#140).
+  "换字中": "언어를 바꾸는 중",
 };
