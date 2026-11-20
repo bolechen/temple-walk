@@ -160,6 +160,7 @@ jobs:
           sparse-checkout: |
             wrangler.production.jsonc
             wrangler.canary.jsonc
+            tools/ci/live-check.cjs
           sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4
         with:
@@ -180,26 +181,34 @@ jobs:
           } | tee -a "$GITHUB_STEP_SUMMARY"
         env:
           DRY: ${{ inputs.dry_run && 'yes' || '' }}
+      # What wrangler prints is kept: its "Current Version ID" is what the check after it compares Cloudflare's deployments with.
+      # `shell: bash` runs this under pipefail, so a failed deploy fails the step and is not hidden by the `tee`.
       - name: Publish the demo
         if: inputs.dry_run != true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: "false"
-        run: npx --yes wrangler@4.162.0 deploy -c "wrangler.$TARGET.jsonc"
-      # What is live is read back: the address's first page must be the very page just built.
-      - name: The live page is the one built
+        shell: bash
+        run: npx --yes wrangler@4.162.0 deploy -c "wrangler.$TARGET.jsonc" | tee "$RUNNER_TEMP/deploy.txt"
+      # Is what is live the build just put up? (tools/ci/live-check.cjs says how it asks, and in what order.) The public address
+      # is behind a bot protection that gives a runner a challenge page and rewrites every page it does serve, so a hash of the
+      # page cannot be compared there; the page's version.json and Cloudflare's own list of deployments can.
+      - name: The live site is the build just deployed
         if: inputs.dry_run != true
-        run: |
-          want=$(sha256sum dist/index.html | cut -c1-64)
-          got=none
-          for i in 1 2 3 4 5 6; do
-            got=$(curl -fsS "$URL/?live=$GITHUB_RUN_ID" | sha256sum | cut -c1-64) || got=none
-            [ "$got" = "$want" ] && break
-            sleep 10
-          done
-          {
-            echo "- index.html SHA-256：构建 \`$want\`，线上 \`$got\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "live=$got"; echo "built=$want"
-          [ "$got" = "$want" ]
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+          WRANGLER: wrangler@4.162.0
+          DEPLOY_LOG: ${{ runner.temp }}/deploy.txt
+        run: node tools/ci/live-check.cjs
+      # A dry run deployed nothing, so there is nothing to compare with: it says what each way of asking makes of what is live now.
+      - name: What is live now (a dry run, read-only)
+        if: inputs.dry_run == true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+          WRANGLER: wrangler@4.162.0
+        run: node tools/ci/live-check.cjs --now
