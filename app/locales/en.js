@@ -79,6 +79,8 @@ export default {
   "镜头转回身后（鼠标中键亦可）": "Turn the view back behind him (or the middle mouse button)",
   "{r}镜头转回身后": "{r} turns the view back behind him",
   "上方的小圈，镜头转回身后": "The small ring above turns the view back behind him",
+  "跟随": "Follow",
+  "镜头跟随：点地走时，镜头慢慢转到身后": "Camera follow: on a tapped way the view turns slowly behind him",
   "回正": "Back",
   "自动镜头": "Auto camera",
   "开": "On",

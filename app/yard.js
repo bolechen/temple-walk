@@ -1245,7 +1245,7 @@ function openMenu(open, quiet = false) {
   $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? tr("开") : tr("关");
   $("setLock").setAttribute("aria-pressed", String(S.lock)); $("setLock").textContent = S.lock ? tr("开") : tr("关");
   $("setAutocam").setAttribute("aria-pressed", String(S.autocam)); $("setAutocam").textContent = S.autocam ? tr("开") : tr("关");
-  $("setFollow").setAttribute("aria-pressed", String(S.follow)); $("setFollow").textContent = S.follow ? tr("开") : tr("关");
+  $("setFollow").setAttribute("aria-pressed", String(S.follow));   // (its word stays 跟随; the ring round it says whether it is on)
   menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
