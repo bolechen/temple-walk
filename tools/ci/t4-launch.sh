@@ -43,9 +43,13 @@ hf buckets create "$BUCKET" --private --exist-ok >/dev/null || fail "could not m
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null || fail "could not send the site to the bucket"
 echo "t4-launch: run $RUN, scenarios: $ARGS"
 COMMIT="$(git rev-parse HEAD)"
-JOB="$(hf jobs run -d --flavor "${T4_FLAVOR:-t4-small}" --timeout "${T4_TIMEOUT:-40m}" --name "temple-walk-e2e-$RUN" \
+STARTED="$(hf jobs run -d --flavor "${T4_FLAVOR:-t4-small}" --timeout "${T4_TIMEOUT:-40m}" --name "temple-walk-e2e-$RUN" \
   -e RUN="$RUN" -e COMMIT="$COMMIT" -e E2E_ARGS="$ARGS" -e GPU_ON="${T4_GPU:-1}" -e T4_CMD="${T4_CMD:-}" -v "hf://buckets/$BUCKET:/work" \
-  mcr.microsoft.com/playwright:v1.63.0-noble bash /work/runs/$RUN/t4-job.sh | sed -n 's/.*\bid=\([0-9a-f]\{8,\}\).*/\1/p' | tail -1)"
+  mcr.microsoft.com/playwright:v1.63.0-noble bash /work/runs/$RUN/t4-job.sh 2>&1)"
+echo "$STARTED" | grep -v "^ *\(COMMIT\|RUN\|E2E_ARGS\|GPU_ON\|T4_CMD\)" | head -20
+# The Job's id, as the command says it: in its own line (`id=…`), in the hint to wait for it (`hf jobs wait <account>/<id>`), or, failing both, a lone 24-character id. Versions of hf word these differently.
+JOB="$(printf '%s\n' "$STARTED" | sed 's/\x1b\[[0-9;]*m//g' | sed -n -e 's/.*\bid=\([0-9a-f]\{8,\}\).*/\1/p' -e 's#.*hf jobs wait [^ /]*/\([0-9a-f]\{8,\}\).*#\1#p' | head -1)"
+[ -n "$JOB" ] || JOB="$(printf '%s\n' "$STARTED" | grep -oE '(^|[^0-9a-f])[0-9a-f]{24}($|[^0-9a-f])' | grep -oE '[0-9a-f]{24}' | head -1)"
 [ -n "$JOB" ] || fail "the Job did not start"
 echo "t4-launch: job https://huggingface.co/jobs/$NS/$JOB"
 START=$(date +%s)
