@@ -272,6 +272,12 @@ export function buildHall(M, opts) {
     const d = Math.min(2.4, Z - ZB - 0.4);
     const m = new THREE.Mesh(box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), M.interior(p.platH));
     m.userData.doorway = true; g.add(m);   // a hall that can be entered paints its own room here instead (doorway.js)
+    // To the eye that follows him out of the door, the dark is a wall: it is painted (a shader, which the eye's gathering
+    // passes over), and behind it the hall is hollow, so the eye backed in through the open leaves into the building
+    // (#391). Sheets a hand apart, never drawn nor stood on, as in the rooms' doorways (interior.js): one sheet with
+    // nothing behind it the eye would let pass for a moment, as it does a column.
+    const W = X * 2 - 0.3, H = topY - p.platH - 0.03, stop = new THREE.Mesh(merge(Array.from({ length: 11 }, (_, k) => new THREE.PlaneGeometry(W, H).translate(0, p.platH + H / 2, Z - 0.1 - k * 0.12))), new THREE.MeshBasicMaterial());
+    stop.visible = false; stop.userData.walk = false; stop.userData.eye = "stop"; g.add(stop);
     if (p.lamps) for (const sx of [-1, 1]) {
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), M.flame);
       f.position.set(sx * 1.1, p.platH + 1.2, Z - d + 0.1); f.userData.doorFlame = true; g.add(f);
