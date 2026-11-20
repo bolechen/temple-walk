@@ -160,6 +160,7 @@ jobs:
           sparse-checkout: |
             wrangler.production.jsonc
             wrangler.canary.jsonc
+            worker/
           sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4
         with:

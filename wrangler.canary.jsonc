@@ -1,14 +1,19 @@
 // The canary: what main last deployed, on a Worker of its own with its own workers.dev address (#308). Testers are sent
 // here before a version is cut. It behaves as production does (no debug panel, no workbench addresses) but carries no visitor
-// counter and says in the page and in a header that it is not to be indexed (VITE_DEPLOY=canary, vite.config.mjs). The public site is wrangler.production.jsonc, deployed from a version tag; previews are wrangler.jsonc.
+// counter and says in the page and in a header that it is not to be indexed (VITE_DEPLOY=canary, vite.config.mjs). Its Worker (worker/, #340) answers only /api/*, with a Durable Object of its own, so the canary's counts never meet the public site's. The public site is wrangler.production.jsonc, deployed from a version tag; previews are wrangler.jsonc.
 {
   "name": "temple-walk-canary",
   "compatibility_date": "2026-11-16",
   "workers_dev": true,
   "preview_urls": false,
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
-  }
+  },
+  "durable_objects": { "bindings": [{ "name": "TRACES", "class_name": "TraceCounter" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TraceCounter"] }]
 }

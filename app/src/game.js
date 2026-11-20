@@ -11,6 +11,8 @@ import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
+import { createPresence, presenceOn } from "./presence.js";
+import { traceStubCount } from "./censer.js";
 import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
@@ -120,6 +122,7 @@ export function createGame(y) {
   function earned(id) {
     if (rite && rite.id === id) rite.done = true;
     track("demo.seal", { id, count: journey.count() });
+    if (presence.on) presence.report(id, "seal");
     chime(1, journey.count()); refresh();
     const el = $("toast"), d = SEAL[id]; if (!el) return;
     $("toastSeal").src = sealStamp(glyphs(d.seal), 220, { seed: SEALS.indexOf(d) + 11 }).toDataURL(); $("toastLine").textContent = id === "sutra" && journey.verse ? t(journey.verse.text) : t(d.line); $("toastName").textContent = `${t(d.place)} · ${t(d.seal)}`;
@@ -147,6 +150,14 @@ export function createGame(y) {
   // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
   const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
   const rites = createRites(y, fast, { enso: tex, burn, onPlant: (at, hall) => { try { localStorage.setItem(INCENSE, writeIncense(localStorage.getItem(INCENSE), hall, at)); } catch {} } });
+  // ---- 同修留痕 (#340, presence.js): that others have been here today, said once at each place, and their stubs in the censer ----
+  // Anything that goes wrong is silent. The visitor who has asked not to be tracked is read for but not counted.
+  const presence = createPresence({ on: presenceOn(location.search), quiet: navigator.doNotTrack === "1" || /** @type {any} */ (navigator).globalPrivacyControl === true });
+  const INCENSE_PLACES = ["incense", "incense-yaoshi", "incense-guanyin"];
+  const showStubs = () => y.traceStubs?.(traceStubCount(INCENSE_PLACES.reduce((n, p) => n + presence.count(p), 0)));
+  presence.load().then((ok) => { if (ok) showStubs(); });
+  /** An observance done at `id` (a place's id): counted once in this page. */
+  const did = (id) => { if (presence.on) presence.report(id, "rite").then((ok) => { if (ok) showStubs(); }); };
   const end = () => { if (rite?.t0) track("demo.rite", { id: rite.id, phase: "end", seconds: Math.round((performance.now() - rite.t0) / 1000), done: rite.done ? 1 : 0 }); rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breathWord")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
@@ -172,6 +183,7 @@ export function createGame(y) {
     }
     if (id === "tea") {
       await wait(1.6); if (!on()) return; if (!(await rites.drinkTea(on, () => say(t(d.line), 6)))) { if (!on()) return; say(t(d.line), 6); await wait(3); } await wait(0.8); if (!on()) return;
+      did("tea");
       if (journey.earn("tea")) earned("tea");
       // And he sits on, the bowl steaming beside him, until the visitor stands him up.
       mineRite.word = "起身"; mineRite.press = () => y.leave(); hush(true); lingering = true;
@@ -191,9 +203,11 @@ export function createGame(y) {
       await wait(1.6); if (!on()) return;
       const day = Math.floor(Date.now() / 864e5), verse = pickVerse(Q.has("seed") ? +Q.get("seed") : day + (journey.born % 97));
       await new Promise((r) => { mineRite.take = () => ui.close("slip"); holdOut(t(verse.text), t(verse.from), t("收下"), r); }); if (!on()) return;
+      did("sutra");
       if (journey.earn("sutra", { verse })) earned("sutra"); end(); return;
     }
     if (!on()) return;
+    did(id);
     const fresh = SEAL[id] ? journey.earn(id) : false; if (fresh) earned(id);   // the seal for the incense is the great hall's; the other halls' offerings earn none (#146)
     // The prologue closes here the first time he has sat and breathed on the summit, whatever else is in the book.
     if (id === "sit" && !closedHere()) { await wait(fresh ? 4.6 : 1.5); if (on()) await finale(on); if (on()) rite = null; return; }
@@ -280,6 +294,7 @@ export function createGame(y) {
   }
   const farEnd = () => { if (!far) return; far = 0; document.body.classList.remove("far"); y.hints?.release(); };
   $("hint")?.addEventListener("click", () => { if (far) openBookOwed(); });
+  window.addEventListener("struck", (e) => { if (/** @type {CustomEvent} */ (e).detail === "bell") did("bell"); });   // the first stroke of the bell is the offering
   window.addEventListener("struck", (e) => {
     if (/** @type {CustomEvent} */ (e).detail !== "bell" || journey.has("bell")) return;
     const r = journey.strike(); say(["", t("一下"), t("两下"), t("三下")][r.strikes] || "", 3);
@@ -289,7 +304,7 @@ export function createGame(y) {
   window.addEventListener("incense-offered", () => { if (journey.earn("incense")) earned("incense"); });
 
   // ---- The button that offers what can be done here ----
-  let acc = 0, look = null, seatHere = null, climb = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
+  let presenceAt = null, acc = 0, look = null, seatHere = null, climb = null, wasIndoors = false, lingering = false, summitSaid = false; const seen = new Set();
   y.onTick((dt) => {
     if (far && !y.directArrived()) farEnd();   // the eye has gone home (a step, a tap on the ground, Esc, or a door): the far view is over
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
@@ -309,6 +324,8 @@ export function createGame(y) {
     const w = y.where(), free = entered && !rite && !y.busy(), indoors = y.inside();
     const room = y.room(), here = free ? placeAt(Object.fromEntries(Object.entries(places).filter(([, p]) => (p.room || null) === room)), w.x, w.z) : null;
     near = here && offered(here) && !(here === "sit" && y.staged()) ? here : null;
+    // Standing where an observance is made, the day's count of those who have made it, once, if anyone has (presence.js).
+    if (near !== presenceAt) { presenceAt = near; const line = near && presence.line(near); if (line) y.hints?.tip("presence-" + near, line, 6); else if (near && presence.on) presence.load(); }
     if (near === "sit" && !closedHere() && !summitSaid) { summitSaid = true; say(t("凌霄阁前这只蒲团，朝着来时的路。"), 6); }
     // Indoors, standing before a frame on the wall offers a look at what hangs there.
     look = free && indoors && !near ? placeAt(Object.fromEntries(Object.entries(y.gallery).filter(([, p]) => p.room === room)), w.x, w.z) : null;
@@ -561,6 +578,7 @@ export function createGame(y) {
   window.__visit = () => ({ metres: visit.metres, seconds: visit.seconds });
   // For the tests: the slip of paper with the i-th of the library's lines on it (`__slip(null)` puts it away).
   window.__verses = VERSES.length; window.__slip = (i) => { if (i == null) { ui.close("slip"); return null; } const v = pickVerse(i); holdOut(t(v.text), t(v.from), t("收下"), () => {}); return v.text; };
+  window.__presence = () => ({ ...presence.state(), line: presence.line(near || ""), near });
   window.__places = places; window.__rite = (id) => begin(id); window.__enter = enter; window.__book = openBook;
   // For the phone audit and pictures: the offering sheet as it opens after a coin, without the coin (web build only; null when there is none).
   window.__offeringSheet = () => { if (!(WEB && sheet)) return false; ui.open("offering"); sheet.opened(); return true; };
