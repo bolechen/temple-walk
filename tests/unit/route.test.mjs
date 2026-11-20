@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker } = await import("../../app/src/site.js");
-const { planRoute, clearLine, nearestOpen, planSteps, ROUTE } = await import("../../app/src/route.js");
+const { planRoute, clearLine, nearestOpen, planSteps, ROUTE, wayThrough } = await import("../../app/src/route.js");
 const { stride } = await import("../../app/src/stride.js");
 const { dropPose } = await import("../../app/src/drop.js");
 const M = new Proxy({}, { get(t, k) { return k === "plaster" || k === "interior" ? () => (t[k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial()); } });
@@ -76,4 +76,40 @@ test("a way round costs a frame no more than its budget, and the search can be g
   for (;;) { r = it.next(); if (r.done) break; slices++; }
   assert.ok(slices >= 1, "a far tap is worked out over several frames"); assert.ok(r.value.points.length >= 2);
   const t0 = performance.now(); planRoute(walker, drops, { x: -13.2, z: 7 }, { x: -9, z: 6 }); assert.ok(performance.now() - t0 < 400, "a near tap is quick");
+});
+
+// The summit scenario's way (#323): its legs were laid out as straight lines before the great hall had its two back stairs
+// (#301); along z = -28 the eastern one's cheek now stands across the first leg (x 10.5 to 11.7). Walked as `__walk` walked
+// it, leg by leg in a straight line, he was held against the cheek at (11.63, -28) and gave up. Walked as `__walk` walks it
+// now, a leg that something shuts is searched round as a tap is (route.js), and every leg arrives, at a walk and at `?fast`.
+test("#323: the summit scenario's legs, a leg that something shuts searched round, all arrive", () => {
+  const legs = [[19.5, -28], [0, -28], [0, -36], [13.6, -36], [13.6, -60], [0, -61], [0, -69.2], [-13, -69.2], [-13, -89], [0, -89.5], [0, -120], [0, -123]].map(([x, z]) => ({ x, z }));
+  // walked as the page walks a way: toward each point in turn, a step a frame; a hop where the way hops; held, he gives up
+  const walkWay = (way, from, step) => {
+    const pos = { ...from };
+    for (const p of way) {
+      for (let n = 0; ; n++) {
+        if (p.drop) { pos.x = p.drop.to[0]; pos.z = p.drop.to[2]; break; }
+        const dx = p.x - pos.x, dz = p.z - pos.z, l = Math.hypot(dx, dz); if (l < 0.02) break;
+        const s = Math.min(l, step);
+        if (n > 20000 || !stride(walker, pos, (dx / l) * s, (dz / l) * s)) return { held: [+pos.x.toFixed(2), +pos.z.toFixed(2)], toward: [p.x, p.z] };
+      }
+    }
+    return { at: [pos.x, pos.z] };
+  };
+  const from = { x: 19.5, z: 0 };
+  // the straight legs: held at the back stair's cheek (this is what the scenario met on main)
+  const straight = walkWay(legs, from, 2.1 / 20);
+  assert.ok(straight.held && straight.held[0] > 10.4 && straight.held[0] < 12 && Math.abs(straight.held[1] + 28) < 0.3, `the straight first leg should meet the back stair's cheek: ${JSON.stringify(straight)}`);
+  const way = wayThrough(walker, drops, from, legs);
+  for (const step of [2.1 / 60, 2.1 / 20, 14 / 20]) {
+    const r = walkWay(way, from, step);
+    assert.ok(r.at && Math.hypot(r.at[0], r.at[1] + 123) < 0.05, `at ${step.toFixed(3)} m a step he was held: ${JSON.stringify(r)}`);
+  }
+  // and the first leg alone reaches (0, -28)
+  const first = walkWay(wayThrough(walker, drops, { x: 19.5, z: -28 }, [{ x: 0, z: -28 }]), { x: 19.5, z: -28 }, 2.1 / 20);
+  assert.ok(first.at && Math.hypot(first.at[0], first.at[1] + 28) < 0.05, `from (19.5, -28) to (0, -28): ${JSON.stringify(first)}`);
+  // a leg that is open is walked as it was: the way keeps exactly the points it was given there
+  const open = wayThrough(walker, drops, { x: 19.5, z: 0 }, [{ x: 19.5, z: -10 }]);
+  assert.deepEqual(open.map((p) => [p.x, p.z]), [[19.5, -10]]);
 });

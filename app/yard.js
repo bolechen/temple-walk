@@ -47,7 +47,7 @@ import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
-import { planSteps, clearLine } from "./src/route.js";
+import { planSteps, clearLine, wayThrough } from "./src/route.js";
 import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
@@ -1196,7 +1196,8 @@ window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: 
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
-window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
+// A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).
+window.__walk = (pts) => { planning = null; route = wayThrough(walker, walker.drops, { x: pos.x, z: pos.z }, pts.map(([x, z]) => ({ x, z }))); target = route.shift() || null; };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
 if (Q.has("tour")) setView("first");   // it is measured from his own eyes
 if (Q.has("tour")) tour = createTour(Q.get("tour"), {
