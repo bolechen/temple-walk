@@ -6,7 +6,7 @@
 
 | 阶段 | 产出 | 判据（`PRD.md` §9 的条目） | 等什么 |
 |---|---|---|---|
-| **一 白盒可走** | 院落、台基与月台、踏道、大雄殿外壳与殿内地面、佛坛与七尊体块、六站、烘焙地面；从 T00 走进来或 `?level=t05` 直达 | 第 1、2、3 条；第 4 条的机位先站得住 | `LEVEL-SPLIT.md` S1、S2、S5；所有者答 §11 第 1 项（殿连院子）。**不等顾问** |
+| **一 白盒可走** | 院落、台基与月台、踏道、大雄殿外壳与殿内地面、佛坛与七尊体块、六站、烘焙地面；从 T00 走进来或 `?level=t05` 直达 | 第 1、2、3 条；第 4 条的机位先站得住 | `LEVEL-SPLIT.md` S1、S2、S5；§11 第 1 项已定；范围档位（`SCOPE-OPTIONS.md`）定下后补第一阶段的前奏 PR。**不等顾问** |
 | 二 光与殿内 | 「在殿内的程度」连续过渡；光照探针（PMREM 与 `LightProbeGridWebGL` 比一次）；曝光渐变；J01 季时；Z1/Z3 声场与大殿混响 | 第 4 条出图；第 6 条光比；T4 第一次量 | S8（关卡自己的季时）；第 4 项（基线季时） |
 | 三 七佛与群像 | 正式七尊（Tripo 生成、LOD、法线、上色）；胁侍与天王体块到中模；梁架与彩画色带 | 第 5 条；第 7 条 T4 部分 | **顾问的手印**；Tripo 充值（§11 第 7、8 项）；`STATUE-PIPELINE.md` 的工具 |
 | 四 印、书、声音、语言 | 一枚印与三张观察页；书上 T05 页；标题页「第一章」；配乐两小段；四种语言；鸣谢与登记表 | 第 8 条；`mobile-audit` | S3a、S3c、S4；§11 第 2、3、5、6 项 |
@@ -25,7 +25,7 @@
 | 3 | `build(walk): bake and ship each level's floor and doorways`（S5） | `bake-walk --level`、`gridsOf` 读 `L.bounds`、`shared/walk/<id>.bin`、CI 缓存键带关卡名 | 2 | 可以 |
 | 4 | `test(level): a probe level with one pavilion`（S7） | `_probe` 关证明引擎不靠 T00；不进发布产物 | 2、3 | 可以 |
 | 5 | `feat(t05): the courtyard, the platform and the stair, walked from arrival`（T05-1） | `app/levels/t05/` 骨架：`level.js`、平地院子与围墙、3 米台基、月台、18 级踏道（`stairGeo`）、栏杆；`site.start`；烘出 `t05.bin`；`t05-plan.test.mjs` 洪水填充到 A、B | 3 | 可以：全是新文件 |
-| 6 | `feat(t05): the nine-bay hall, its shell and its floor`（T05-2） | 大雄殿外壳：九间开间按 `ARCHITECTURE.md` §2.1、单檐庑殿（`buildHall` 的 `G` 取进深一半，按参数推断能出庑殿，**未出图验证**；出不来就在 `building.js` 加一个屋顶式样，单独一个 PR）、三门四窗、门槛按 `PRD.md` §2；殿内地面与外面同一张烘焙地面（不换场，`PRD.md` §2.1） | 5；所有者答 §11 第 1 项 | 可以；若要改 `building.js`，与 #315、结构评审的改动对一下 |
+| 6 | `feat(t05): the nine-bay hall, its shell and its floor`（T05-2） | 大雄殿外壳：九间开间按 `ARCHITECTURE.md` §2.1、单檐庑殿（`buildHall` 的 `G` 取进深一半，按参数推断能出庑殿，**未出图验证**；出不来就在 `building.js` 加一个屋顶式样，单独一个 PR）、三门四窗、门槛按 `PRD.md` §2；殿内地面与外面同一张烘焙地面（不换场，`PRD.md` §2.1） | 5；§11 第 1 项已定（殿院连成一个空间，所有者 2026-11-20「1-10 都同意」） | 可以；若要改 `building.js`，与 #315、结构评审的改动对一下 |
 | 7 | `feat(t05): the altar, seven blocks and the aisles`（T05-3） | 佛坛 37.5×4.8×0.87 m、七个座位 x = 0、±5.80、±11.33、±16.45（`DECISIONS.md` §3）；七尊体块按白盒高度、释迦西偏 7°；十四胁侍与二天王的占位体块；内柱（减柱，柱位【提案】）；东西通道 ≥ 3 m；洪水填充到 C、D、E、F | 6 | 可以 |
 | 8 | `feat(t05): six named views and their manifest`（T05-4） | `views.cam01…cam06`、`views.arrive`；`tools/cameras.mjs --level=t05` 写 `docs/t05/camera-manifest.json`；`shots.js --level=t05` 出六张；单测每个机位站在可走格子上 | 7；`LEVEL-SPLIT.md` S6（`cameras.mjs`、`shots.js` 带关卡名，可并进本 PR 或先合） | 可以 |
 | 9 | `test(e2e): t05-walk, from the prologue's book or straight in`（T05-5） | e2e `t05-walk`：`?level=t05` 直达走 A→F；从 T00 进来那条先用工作台入口（`?level=t05` 加书上的按钮存在性），书上翻页的正式入口在第四阶段；断言 T00 存档不动；`edges:grid`、`nearplane:grid` 带 `--level=t05` 跑通 | 8 | 可以 |
@@ -41,7 +41,7 @@
 - `LEVEL-SPLIT.md` 的 S3a、S3b、S3c、S4、S8 只依赖 2，第一阶段期间就可以派，第二、四阶段之前合完即可。
 - #315 的史实表不花钱，可以和这一切并行。
 
-**第一个开发 PR 在 PRD 合并当天就能开工的**：第 1 项。它不等所有者的任何答复（§11 第 1 项只卡第 6 项）。
+**第一个开发 PR 在 PRD 合并当天就能开工的**：第 1 项。它不等所有者的任何答复；§11 第 1 项已于 2026-11-20 定下，第 6 项也不再被卡。
 
 ## 三、第一阶段做完是什么样
 
