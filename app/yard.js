@@ -871,7 +871,7 @@ function dropClip() { if (clipRec) { clipRec.cancel(); clipEnded(); } }
 function showClip(r) {
   clipUrl && URL.revokeObjectURL(clipUrl); clipUrl = URL.createObjectURL(r.blob);
   const file = new File([r.blob], clipName(r.ext, `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}`), { type: r.type });
-  clipLast = { file, type: r.type, ext: r.ext, size: r.blob.size, secs: r.secs };
+  clipLast = { file, type: r.type, ext: r.ext, size: r.blob.size, secs: r.secs, frames: r.frames };
   const v = $("clipVideo"); v.src = clipUrl; v.play?.().catch(() => {});
   $("clipSave").href = clipUrl; $("clipSave").download = file.name;
   const can = !!(navigator.canShare && navigator.canShare({ files: [file] })); $("clipShare").hidden = !can;
@@ -891,7 +891,7 @@ $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark)
 on("clipMarkToggle", () => settings.set("clipMark", !settings.get().clipMark));
 addEventListener("keydown", (e) => { if (e.key === "Escape" && clipRec) { e.stopImmediatePropagation(); e.preventDefault(); stopClip(); } }, true);
 document.addEventListener("visibilitychange", () => { if (document.hidden) dropClip(); });
-window.__clip = (o) => { if (o && o.start) return startClip(o.secs); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs } }; };
+window.__clip = (o) => { if (o && o.start) return startClip(o.secs); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs, frames: clipLast.frames } }; };
 
 // ---- Through the door ----------------------------------------------------------------
 // Eyes close on the way in and daylight floods on the way out; behind the veil he is moved between the porch and the

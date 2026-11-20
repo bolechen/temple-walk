@@ -259,7 +259,8 @@ body.thirds #frame .third { display: block; }
 #still { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
 body.frozen #still { display: block; }
 /* While the print is out, the camera's own controls step aside so nothing shows through behind the sheet. */
-body.frozen #photoBar, body.frozen #photoClose, body.frozen /* The short film (#342): the button sits over the shutter; while it runs everything but the paper outside the frame steps away, leaving a hair of progress and a way to stop. */
+body.frozen #photoBar, body.frozen #photoClose, body.frozen #photoSettings { visibility: hidden; }
+/* The short film (#342): the button sits over the shutter; while it runs everything but the paper outside the frame steps away, leaving a hair of progress and a way to stop. */
 #clipBtn { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); display: none; min-height: 44px; }
 body.photo #clipBtn { display: block; }
 body.frozen #clipBtn, body.clipping #clipBtn, body.photo-settings-open #clipBtn { visibility: hidden; }
@@ -273,7 +274,6 @@ body.clipping #photoBar, body.clipping #photoClose, body.clipping #photoSettings
 #clip video { max-width: 100%; max-height: 100%; min-height: 0; align-self: center; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #clip .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
 #clipHint { margin: 0; max-width: 28em; text-align: center; font: 400 var(--t-s)/1.7 var(--kai); letter-spacing: .08em; color: var(--ink-3); color: #d9d2c3; }
-#photoSettings { visibility: hidden; }
 /* The shutter: two leaves of ink close over the view and open again, and behind them the view has stopped. */
 #curtain { position: absolute; inset: 0; pointer-events: none; display: none; }
 #curtain i { position: absolute; left: 0; right: 0; height: 50%; background: var(--ink); transform: scaleY(0); }

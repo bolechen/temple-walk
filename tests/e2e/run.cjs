@@ -1789,11 +1789,11 @@ const scenarios = {
     await t.page.click("#clipBtn"); await t.until(() => t.page.evaluate(() => document.body.classList.contains("clipping")), 120000, "filming did not begin again");
     await t.frames(2); await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#clip"), 180000, "Esc did not end the film");
     expect((await t.probe()).photo, "Esc while filming should stop the film, not lower the camera"); await t.page.click("#clipBack");
-    // 3. The signature off (kept), a film run to its end of itself.
-    await t.page.click("#photoSettingsToggle"); expect((await t.page.getAttribute("#clipMarkToggle", "aria-pressed")) === "true", "the signature should be on by default");
+    // 3. The signature off (kept), a short film run to its end of itself (four seconds: software drawing makes a frame a second or so, and a container wants a few frames).
+    await t.page.click("#photoSettingsToggle"); await t.frames(2); { const d = await t.page.evaluate(() => ({ hidden: document.getElementById("photoSettings").hidden, exp: document.getElementById("photoSettingsToggle").getAttribute("aria-expanded"), cls: document.body.className, top: window.__ui().stack ?? window.__ui() })); expect(!d.hidden, "the settings did not open after a film: " + JSON.stringify(d)); } expect((await t.page.getAttribute("#clipMarkToggle", "aria-pressed")) === "true", "the signature should be on by default");
     await t.page.click("#clipMarkToggle"); expect((await t.page.evaluate(() => window.__settings().clipMark)) === false, "the signature switch was not kept"); await t.page.click("#photoSettingsToggle");
-    await t.page.evaluate(() => window.__clip({ start: true, secs: 2 })); await t.until(() => t.page.isVisible("#clip"), 180000, "a film of two seconds never ended");
-    last = await R(); expect(last.size > 0 && last.secs >= 1.5 && last.secs < 6, "a two-second film came out " + last.secs + " s");
+    await t.page.evaluate(() => window.__clip({ start: true, secs: 4 })); await t.until(() => t.page.isVisible("#clip"), 180000, "a short film never ended");
+    last = await R(); expect(last.size > 0 && last.secs >= 3.5 && last.secs < 8, "a four-second film came out wrong: " + JSON.stringify(last));
     await t.page.click("#clipBack");
     const ev = await t.page.evaluate(() => window.__eventLog().map((e) => e.name));
     expect(ev.filter((n) => n === "demo.clip.start").length === 3 && ev.filter((n) => n === "demo.clip.export").length === 3, "the three films should each have been counted once, started and exported: " + ev.join());
