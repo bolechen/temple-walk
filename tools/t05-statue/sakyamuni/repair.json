@@ -1,0 +1,4 @@
+{ "turn": -90, "source": "sakyamuni-mv-1.base_model.glb",
+  "ops": [
+    { "op": "laplace", "note": "right forearm: the cuff-like ring at the wrist (a bared arm has none; the concept front has none)", "seed": [-0.205, -0.035, 0.52], "r": 0.085, "kind": "smooth", "factor": 1.0, "iter": 3000 }
+  ] }

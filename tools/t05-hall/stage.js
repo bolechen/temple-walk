@@ -264,7 +264,9 @@ async function setStatues(list) {
     const group = new THREE.Group(); scene.add(group);
     const x = s.x ?? SEATS[3], total = s.h ?? 9.0;          // 通高 above the altar, base included
     if (s.base !== false) group.add(sumeru(x, s.lotus !== false));
-    const seatH = s.base === false ? 0 : s.lotus === false ? SUMERU_H : BASE_H;   // a figure that brings its own lotus sits on the Sumeru base
+    // a figure that brings its own lotus throne (issue #370's Śākyamuni) stands on a plain plinth of `plinth` metres
+    if (s.base === false && s.plinth) { const pl = new THREE.Mesh(new THREE.BoxGeometry(SEAT_W * 0.98, s.plinth, SEAT_D * 0.98), M.base); pl.position.set(x, AT + s.plinth / 2, ALTAR.z + 0.3); pl.castShadow = pl.receiveShadow = true; group.add(pl); }
+    const seatH = s.base === false ? (s.plinth || 0) : s.lotus === false ? SUMERU_H : BASE_H;   // a figure that brings its own lotus sits on the Sumeru base
     const gltf = await loader.loadAsync(s.url); const obj = gltf.scene;
     obj.rotation.y = s.turn ?? 0; obj.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(obj), size = bb.getSize(new THREE.Vector3());
@@ -326,6 +328,48 @@ function walk(t) {
   return tWalk + 7;
 }
 
+// A walk along any path (issue #370: the worship band 8–10 m before a figure, the side aisle): points [x, z] on the
+// hall's floor at eye height 1.6 m, walked at `speed` m/s, the eye kept on `look` (a point in the world, or a figure's
+// anchor). Returns the walk's length in seconds; walkPath(spec, t) poses the camera at time t.
+function walkPath(spec, t) {
+  const P = spec.points, v = spec.speed ?? 1.2; const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+  const dur = L[L.length - 1] / v; const d = Math.min(Math.max(t, 0) * v, L[L.length - 1]); let i = 1; while (i < P.length - 1 && L[i] < d) i++;
+  const k = (d - L[i - 1]) / Math.max(1e-6, L[i] - L[i - 1]), x = P[i - 1][0] + k * (P[i][0] - P[i - 1][0]), z = P[i - 1][1] + k * (P[i][1] - P[i - 1][1]);
+  camera.fov = spec.fov ?? 55; camera.position.set(x, F + 1.6 + Math.sin(t * 2 * Math.PI * 1.75) * 0.012, z);
+  const look = Array.isArray(spec.look) ? new THREE.Vector3(...spec.look) : figurePoint(spec.look.i, spec.look.at);
+  camera.lookAt(look); camera.updateProjectionMatrix(); renderer.toneMappingExposure = (spec.exp ?? 4.5) * exposureScale;
+  return dur;
+}
+// a point given in a figure's own frame (metres; x to the viewer's right, y up from its seat, z toward the viewer) in the world
+function figurePoint(i, p) { const f = figures[i]; f.pivot.updateMatrixWorld(true); return f.pivot.localToWorld(new THREE.Vector3(...p)); }
+// Which of a figure's named points the eye sees from where the camera stands: a line from the eye to each point; the
+// point counts as seen if the first thing the line meets lies within `near` metres of it (the figure's own surface
+// there), and as hidden otherwise, with what hid it (the altar, a column, a neighbour, the figure's own knee).
+const ray = new THREE.Raycaster();
+// A point on a figure's surface in its own frame (the frame the paint's anchors are written in): a line cast from the
+// front (+z), the figure's right (-x), or from above at height `top`, through (a, b) of that view (#370's pick tool, in
+// the page itself, so what it gives is exactly what the paint reads).
+function pick(i, a, b, from = "front", top = 99) {
+  const f = figures[i], P = f.pivot; P.updateMatrixWorld(true);
+  const o = from === "front" ? new THREE.Vector3(a, b, 20) : from === "right" ? new THREE.Vector3(-20, b, a) : new THREE.Vector3(a, top, b);
+  const d = from === "front" ? new THREE.Vector3(0, 0, -1) : from === "right" ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, -1, 0);
+  const wo = P.localToWorld(o.clone()), wd = P.localToWorld(o.clone().add(d)).sub(wo).normalize();
+  ray.set(wo, wd); ray.far = 100; const h = ray.intersectObject(f.obj, true)[0];
+  return h ? P.worldToLocal(h.point.clone()).toArray().map((v) => +v.toFixed(3)) : null;
+}
+function occlusion(i, pts, near = 0.3) {
+  const eye = camera.position.clone(), out = {};
+  const targets = []; scene.traverse((o) => { if (o.isMesh && o.visible && o !== sky) targets.push(o); });
+  for (const [name, p] of Object.entries(pts)) {
+    const w = figurePoint(i, p), dir = w.clone().sub(eye), dist = dir.length(); dir.normalize();
+    ray.set(eye, dir); ray.far = dist + near; const hit = ray.intersectObjects(targets, false)[0];
+    const ndc = w.clone().project(camera), onScreen = Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z < 1;
+    const by = !hit ? null : isIn(hit.object, figures[i].obj) ? "self" : figures.findIndex((f) => isIn(hit.object, f.obj)) >= 0 ? "figure" + figures.findIndex((f) => isIn(hit.object, f.obj)) : hit.object.geometry?.type || "scene";
+    out[name] = { seen: onScreen && (!hit || hit.distance > dist - near), onScreen, by: hit && hit.distance <= dist - near ? by : null, gap: hit ? +(dist - hit.distance).toFixed(2) : null };
+  }
+  return out;
+}
+
 let composer = null, useAO = Q.get("ao") !== "0";
 function buildComposer() {
   composer = new EffectComposer(renderer); composer.setSize(W, H); composer.addPass(new RenderPass(scene, camera));
@@ -379,15 +423,16 @@ function ortho(i, side = "front", z = {}) {
   const pts = [[], [], []];
   // zoomed in (z.half under 1 m) the faint lines are every 2 cm, the stronger every 10 cm and the red every 50 cm
   const fine = (z.half ?? 3.5) < 1, st = fine ? 50 : 10, mid = fine ? 5 : 5, big = fine ? 25 : 10;
-  for (let k = -3.5 * st; k <= 3.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(v, -0.5, 0, v, 6.5, 0); }
-  for (let k = -0.5 * st; k <= 6.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(-3.5, v, 0, 3.5, v, 0); }
+  for (let k = -3.5 * st; k <= 3.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(v, -0.5, 0, v, 10, 0); }
+  for (let k = -0.5 * st; k <= 10 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(-3.5, v, 0, 3.5, v, 0); }
   orthoGrid = new THREE.Group();
   [[0x8a8a8a, 0.25], [0xffffff, 0.6], [0xff3030, 0.9]].forEach(([col, op], c) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pts[c], 3));
     const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op, depthTest: false })); l.renderOrder = 10; orthoGrid.add(l); });
   P.add(orthoGrid);
   if (side === "side") orthoGrid.rotation.y = -Math.PI / 2; else orthoGrid.rotation.y = 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
   const d = 20, cx = z.cx ?? 0, cy = z.cy ?? 3, hh = z.half ?? 3.5;
-  Object.assign(orthoCam, { left: -hh, right: hh, top: hh, bottom: -hh });
+  const asp = z.square ? 1 : W / H;   // keep metres square on a wide picture (#370; #287 drew its grids square at 1400 px)
+  Object.assign(orthoCam, { left: -hh * asp, right: hh * asp, top: hh, bottom: -hh });
   const at = side === "side" ? new THREE.Vector3(-d, cy, cx) : new THREE.Vector3(cx, cy, d);
   orthoCam.position.copy(P.localToWorld(at.clone())); orthoCam.up.set(0, 1, 0); orthoCam.lookAt(P.localToWorld(at.clone().add(side === "side" ? new THREE.Vector3(d, 0, 0) : new THREE.Vector3(0, 0, -d))));
   orthoCam.updateProjectionMatrix();
@@ -402,7 +447,7 @@ function ortho(i, side = "front", z = {}) {
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, ortho, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, ortho, pick, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site

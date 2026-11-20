@@ -1,0 +1,104 @@
+{
+ "out": "tools/out/t05/sakyamuni-370/one",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370"
+  }
+ ],
+ "shots": [
+  {
+   "name": "ortho-front-clay",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cy": 4.4,
+    "half": 4.6
+   },
+   "paint": false
+  },
+  {
+   "name": "ortho-front-paint",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "lit": true,
+    "exp": 4.5,
+    "cy": 4.4,
+    "half": 4.6
+   },
+   "paint": true
+  },
+  {
+   "name": "ortho-side-paint",
+   "ortho": {
+    "i": 0,
+    "side": "side",
+    "lit": true,
+    "exp": 4.5,
+    "cy": 4.4,
+    "half": 4.6
+   },
+   "paint": true
+  },
+  {
+   "name": "ortho-hands-paint",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "lit": true,
+    "exp": 4.5,
+    "cx": -0.6,
+    "cy": 3.6,
+    "half": 1.6
+   },
+   "paint": true
+  },
+  {
+   "name": "front10-winter-paint",
+   "view": "front10",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "front10-winter-clay",
+   "view": "front10",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "hands-close-winter-paint",
+   "view": "handsClose",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "face-from10-winter-paint",
+   "view": "faceFrom10",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "door-winter-paint",
+   "view": "door",
+   "mood": "winter",
+   "paint": true
+  }
+ ]
+}

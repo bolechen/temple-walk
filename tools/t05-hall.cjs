@@ -65,15 +65,27 @@ const here = __dirname, root = path.join(here, "..");
     const [fw, fh] = spec.film.size || [1280, 720], fps = spec.film.fps || 24, dir = path.join(out, `${spec.film.name}-frames`);
     fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
     const p = await page(fw, fh); await p.evaluate((m) => window.hall.setMood(m), spec.film.mood || "winter");
-    const dur = await p.evaluate(() => window.hall.walk(0)); const n = Math.round(Math.min(dur, spec.film.secs || 20) * fps);
+    // a film may walk its own path (issue #370: the worship band, the side aisle) and log, frame by frame, which of a
+    // figure's named points the eye sees and what hides the others (window.hall.occlusion)
+    const path_ = spec.film.path, occ = spec.film.occlude, occLog = [];
+    if (spec.film.paint !== undefined) await p.evaluate((v) => window.hall.paint(v), spec.film.paint);
+    const dur = await p.evaluate((ps) => ps ? window.hall.walkPath(ps, 0) : window.hall.walk(0), path_ || null); const n = Math.round(Math.min(dur, spec.film.secs || 20) * fps);
     for (let i = 0; i < n; i++) {
-      await p.evaluate((t) => { window.hall.walk(t); window.hall.render(); }, i / fps);
+      const o = await p.evaluate(([t, ps, oc]) => { if (ps) window.hall.walkPath(ps, t); else window.hall.walk(t); window.hall.render();
+        return oc ? { t, at: window.hall.camera.position.toArray().map((v) => +v.toFixed(2)), occ: window.hall.occlusion(oc.i, oc.pts, oc.near) } : null; }, [i / fps, path_ || null, occ || null]);
+      if (o) occLog.push(o);
       await p.locator("canvas").screenshot({ path: path.join(dir, `${String(i).padStart(4, "0")}.png`) });
       if (i % 48 === 0) console.log(`film ${i}/${n}`);
     }
     const mp4 = path.join(out, `${spec.film.name}.mp4`);
     execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", path.join(dir, "%04d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23", "-movflags", "+faststart", mp4]);
     report.film = { file: path.relative(root, mp4), frames: n, fps, secs: n / fps, size: [fw, fh] }; await p.close();
+    if (occLog.length) {   // per point: the share of frames it was seen, and the stretches (metres walked) where it was not
+      const sum = {}; for (const k of Object.keys(occLog[0].occ)) { const seen = occLog.filter((f) => f.occ[k].seen).length, hidden = [];
+        for (const f of occLog) if (!f.occ[k].seen) { const last = hidden[hidden.length - 1]; if (last && f.t - last.t1 <= 1.5 / fps) { last.t1 = f.t; last.to = f.at; last.by[f.occ[k].by || "off-screen"] = 1; } else hidden.push({ t0: f.t, t1: f.t, from: f.at, to: f.at, by: { [f.occ[k].by || "off-screen"]: 1 } }); }
+        sum[k] = { seen: +(seen / occLog.length).toFixed(3), hidden: hidden.map((h) => ({ ...h, by: Object.keys(h.by) })) }; }
+      report.film.occlusion = sum; fs.writeFileSync(path.join(out, `${spec.film.name}-occlusion.json`), JSON.stringify(occLog));
+    }
     if (!spec.film.keepFrames) fs.rmSync(dir, { recursive: true, force: true });
   }
   report.errors = errs; fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 2));
