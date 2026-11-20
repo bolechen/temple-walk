@@ -11,7 +11,7 @@ import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
 import { createRites } from "./rites.js";
-import { createPresence, presenceOn } from "./presence.js";
+import { createPresence, presenceOn, readDay } from "./presence.js";
 import { traceStubCount } from "./censer.js";
 import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
@@ -155,7 +155,10 @@ export function createGame(y) {
   const presence = createPresence({ on: presenceOn(location.search), quiet: navigator.doNotTrack === "1" || /** @type {any} */ (navigator).globalPrivacyControl === true });
   const INCENSE_PLACES = ["incense", "incense-yaoshi", "incense-guanyin"];
   const showStubs = () => y.traceStubs?.(traceStubCount(INCENSE_PLACES.reduce((n, p) => n + presence.count(p), 0)));
-  presence.load().then((ok) => { if (ok) showStubs(); });
+  // The day is read once the walk has begun (not while the place is built, when the main thread is too busy to answer in time: a read once came
+  // back at 6.9 s against the 6 s limit and the censer never had its stubs, #367), and asked for again if that answer is late.
+  let dayRead = false;
+  y.onTick(() => { if (!dayRead && presence.on && entered && !y.openingActive()) { dayRead = true; readDay(presence, showStubs); } });
   /** An observance done at `id` (a place's id): counted once in this page. */
   const did = (id) => { if (presence.on) presence.report(id, "rite").then((ok) => { if (ok) showStubs(); }); };
   const end = () => { if (rite?.t0) track("demo.rite", { id: rite.id, phase: "end", seconds: Math.round((performance.now() - rite.t0) / 1000), done: rite.done ? 1 : 0 }); rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breathWord")?.setAttribute("hidden", ""); };
@@ -325,7 +328,7 @@ export function createGame(y) {
     const room = y.room(), here = free ? placeAt(Object.fromEntries(Object.entries(places).filter(([, p]) => (p.room || null) === room)), w.x, w.z) : null;
     near = here && offered(here) && !(here === "sit" && y.staged()) ? here : null;
     // Standing where an observance is made, the day's count of those who have made it, once, if anyone has (presence.js).
-    if (near !== presenceAt) { presenceAt = near; const line = near && presence.line(near); if (line) y.hints?.tip("presence-" + near, line, 6); else if (near && presence.on) presence.load(); }
+    if (near !== presenceAt) { presenceAt = near; const line = near && presence.line(near); if (line) y.hints?.tip("presence-" + near, line, 6); else if (near && presence.on) readDay(presence, showStubs, { tries: 2 }); }
     if (near === "sit" && !closedHere() && !summitSaid) { summitSaid = true; say(t("凌霄阁前这只蒲团，朝着来时的路。"), 6); }
     // Indoors, standing before a frame on the wall offers a look at what hangs there.
     look = free && indoors && !near ? placeAt(Object.fromEntries(Object.entries(y.gallery).filter(([, p]) => p.room === room)), w.x, w.z) : null;

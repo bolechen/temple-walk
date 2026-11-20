@@ -2395,8 +2395,13 @@ const scenarios = {
         // frames (a click took 26 s here, past 30 s on a slower nightly machine). Bring it into sight and let two frames
         // pass first, then press it as a visitor would, the hit check kept, with room for this one step's slow frames.
         await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click());
-        await t.page.locator("#blurToggle").scrollIntoViewIfNeeded(); await t.frames(2);
-        await t.page.click("#blurToggle", { timeout: 120000 }); await t.frames(3);
+        // Playwright's scroll and click wait for the element to hold still across animation frames, and the high tier under software
+        // rendering draws so few that they gave up (15 s, #302 and again on the nightly of 11-19). Scroll it into sight in the page,
+        // wait on frames, then find where it is and check that it is what a pointer there would hit, and press it with a real click.
+        await t.page.evaluate(() => document.getElementById("blurToggle").scrollIntoView({ block: "center" })); await t.frames(3);
+        const at = await t.page.evaluate(() => { const e = document.getElementById("blurToggle"), r = e.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, hit = document.elementFromPoint(x, y); return { x, y, hit: !!hit && (hit === e || e.contains(hit)), box: [r.left, r.top, r.width, r.height], vp: [innerWidth, innerHeight] }; });
+        expect(at.hit, `${q}: 虚化 should lie where a pointer reaches it once scrolled into sight: ` + JSON.stringify(at));
+        await t.page.mouse.click(at.x, at.y); await t.frames(3);
         const on = await t.probe(); expect(on.post.dof && on.post.focus > 0 && (await t.page.evaluate(() => window.__settings().blur)), "switching 虚化 on should focus the raised camera: " + JSON.stringify(on.post));
         await t.page.evaluate(() => window.__photo(false)); await t.frames(3); expect(!(await t.probe()).post.dof, "putting the camera away should end the blur");
       }
