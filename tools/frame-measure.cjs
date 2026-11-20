@@ -62,7 +62,9 @@ const stats = (xs, ts) => {
         } else await p.waitForTimeout(100);
       }
       await p.keyboard.up("w"); await p.mouse.up();
-      const rec = await p.evaluate(() => { const r = window.__rec; window.__rec = null; return r; });
+      const rec = (await p.evaluate(() => { const r = window.__rec; window.__rec = null; return r; })) || [];
+      // (a walk that recorded nothing, he hidden throughout or the page too slow to draw a frame of it, is said so, not crashed on)
+      if (!rec.length) { (report[size] ??= {})[fr] ??= {}; report[size][fr][name] = { empty: true }; console.log(size, fr, name, "recorded nothing"); continue; }
       const xs = rec.map((r) => ((r.box[0] + r.box[2] / 2) / r.w) * 100), ys = rec.map((r) => ((r.box[1] + r.box[3] / 2) / r.h) * 100), ts = rec.map((r) => r.t);
       const top = rec.map((r) => (r.box[1] / r.h) * 100), bottom = rec.map((r) => ((r.box[1] + r.box[3]) / r.h) * 100);
       const res = { across: stats(xs, ts), down: stats(ys, ts), head: +Math.min(...top).toFixed(1), feet: +Math.max(...bottom).toFixed(1), feetIn: +((bottom.filter((b) => b <= 100).length / bottom.length) * 100).toFixed(1), dist: stats(rec.map((r) => r.dist), ts), secs: +ts.at(-1).toFixed(1) };

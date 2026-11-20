@@ -230,6 +230,10 @@
 | 效果 | 代码 | 来源 | 核对 |
 |---|---|---|---|
 | 手机上的界面：页面自带 viewport 与 doctype；可点的东西不小于 44 像素；菜单不高过屏幕，横握时分两栏；画作卡片的「看过了」始终够得着 | `index.html`、`ui.css`、`tools/mobile-audit.cjs` | 所有者要求（「优化移动设备下的所有 ui 组件，符合最佳实践」）；44 像素取自 Apple 人机界面指南与 WCAG 2.5.5 的触控目标建议 | 所有者指定；44 像素为通行准则，未逐条核原文 |
+| 跟拍的眼睛改问画出来的网格，用一个球沿臂探路，球半径盖住近裁剪面四角、按当时的视角和画幅现算（#295，碰撞迁移第 5 步） | `eyespace.js`、`eyegather.js`、`eyebvh.worker.js`、`eye.js` 的 `space` | Godot `SpringArm3D` 文档（明说射线不准、应当用球）；Unreal `SpringArm` 的 probe size（社区资料，未读官方文档）；扫掠用 three-mesh-bvh 的 `shapecast`、`intersectsSphere`；主创 2026-11-19 定 | 转引；主创指定 |
+| 下台阶时眼睛越过身后的踏步抬高，不缩进他背后；抬多高按从眼睛到他小腿（脚上 0.3 m）的视线越过沿臂地面算；身后半米以内的那一级不算；低矮的栏杆也从上面越过 | `eye.js` 的 `sightNeed`、`riseAt` | 自拟（主创的验收：半山亭下行臂长不低于 3 m、俯仰每帧不超过 0.3°） | 按常理；数自拟 |
+| 抬高和只因地势收臂限速 1 m/s；问画出来的网格时拉近不超过 6 m/s、转向前的拉近不超过 10 m/s | `eye.js` 的 `FOLLOW.liftSpeed/inDrawn/turnDrawn` | 自拟，按 `follow.test` 每帧 0.15 m、0.05 m 和俯仰每帧 0.3° 的上限反推 | 数自拟 |
+| 滚轮拉近进第一人称、拉远回第三人称是连续推近：位置每帧不超过 0.12 m、视角每帧不超过 1.5°，他单向淡出淡入（#102 并入 #295） | `yard.js` 的 `PUSH`、`fade` | #102 原验收（真机测得硬切时 FOV 一帧跳 13°）；数照验收 | 主创指定 |
 | 小沙弥的造型与比例 | `monk.js` | 所有者画的 A-pose 三视图 | 所有者指定 |
 | 小沙弥的雕刻身体（`?body=sculpt`，默认不用）：Meshy 由去掉斗笠念珠的 A-pose 正面图生成；骨骼权重取自代码身体最近的顶点，手臂按在臂上的位置取，同一点的副本同一份权重（两个部件交界处鞋优先于袍、袍优先于皮肤、皮肤优先于裤），再在各部件里平滑 7 次（2026-11-16，#80 A 路） | `tools/novice.mjs`、`tools/novice-weld.mjs`、`novice.js` | 所有者用 Meshy Pro 生成（`asset-register.csv` MESHY-novice）；改权重的办法是 `docs/t00/monk-body-options.md` 的 A 路，部件优先次序、手臂按位置取权重、平滑 7 次是本次按测试和截图定的（`docs/t00/evidence/monk/weld/README.md`） | 所有者指定（模型与 A 路）；具体参数自拟，依据是实测和截图 |
 | 人形骨骼的 VRM 骨名、手刷权重 | `monk.js` | VRM 命名惯例；蒙皮做法参照 Watercolour 的人物 | 参考项目 |
