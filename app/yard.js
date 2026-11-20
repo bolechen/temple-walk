@@ -729,6 +729,7 @@ function frame(now) {
     post.render(t); camera.fov = keep; camera.updateProjectionMatrix();
     const a = clipRec ? clipRec.frame() : 0;
     if (a > 0 && clipView.mark) { clipView.mark.mat.opacity = a; renderer.autoClear = false; renderer.setRenderTarget(null); renderer.render(clipView.mark.scene, clipView.mark.cam); renderer.autoClear = true; }
+    clipRec?.ask();
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
@@ -865,7 +866,7 @@ async function startClip(secs, short = 0, layoutOnly = false) {
   if (info) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, info.seal), document.fonts.load(`30px ${FACE.serif}`, info.temple + info.label)]); } catch {} }
   if (clipRec || clipView || !photo.on) return false;
   const cw = canvas.clientWidth, ch = canvas.clientHeight, f = frameRect(), [aw, ah] = photo.aspect === "screen" ? [cw, ch] : ASPECT[photo.aspect];
-  let { w: W, h: H } = clipSize(aw, ah, quality.name, short); const px = W * H;   // no more pixels than the tier draws a frame with
+  let { w: W, h: H } = clipSize(aw, ah, short); const px = W * H;   // no more pixels than the tier draws a frame with
   if (!short && px > quality.budget) { const k = Math.sqrt(quality.budget / px); W = Math.max(2, Math.round((W * k) / 2) * 2); H = Math.max(2, Math.round((H * k) / 2) * 2); }
   clipTap = recordTap();
   let mark = null;

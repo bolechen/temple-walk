@@ -9,10 +9,9 @@ export const CLIP = Object.freeze({
   secs: 12,        // what is filmed by default; the visitor may stop at any moment
   max: 15,         // the longest a film may be, signature included
   tail: 1.6,       // the signature fades in over this much more (it is part of the film, and of `max`)
-  fps: 30,
-  short: 1080,     // the short side (1080×1440 for the 3:4 frame); the low tier films 720
-  shortLow: 720,
-  bits: 6_000_000, // video bits a second at 1080 (scaled by area for the smaller film)
+  fps: 24,         // frames a second taken from the canvas (each is a read-back; 24 is a film's own rate)
+  long: 960,       // the long side of every film, on every tier (720×960 for the 3:4 frame): measured, T4, as much as a read-back and an encoder will bear
+  bits: 3_500_000, // video bits a second at 720×960 (scaled by area)
   utm: "utm_source=clip",
 });
 
@@ -27,12 +26,12 @@ export function pickMime(supported) {
   return null;
 }
 
-/** The film's size: the short side fixed by the tier, the long side by the frame's shape, both even (encoders want that). */
-export function clipSize(aw, ah, tierName, force = 0) {
-  const short = force || (tierName === "low" ? CLIP.shortLow : CLIP.short), even = (n) => Math.max(2, Math.round(n / 2) * 2);
-  return aw >= ah ? { w: even((short * aw) / ah), h: short } : { w: short, h: even((short * ah) / aw) };
+/** The film's size: the long side fixed (`force` for a tool's own), the short side by the frame's shape, both even (encoders want that). */
+export function clipSize(aw, ah, force = 0) {
+  const long = force || CLIP.long, even = (n) => Math.max(2, Math.round(n / 2) * 2);
+  return aw >= ah ? { w: even(long), h: even((long * ah) / aw) } : { w: even((long * aw) / ah), h: even(long) };
 }
-export const clipBits = (w, h) => Math.round(CLIP.bits * Math.min(1, (w * h) / (1080 * 1440)) ** 0.85);
+export const clipBits = (w, h) => Math.round(CLIP.bits * Math.min(1.6, (w * h) / (720 * 960)) ** 0.85);
 
 /** How long the scene is filmed: the default, never more than leaves room for the signature inside `max`. */
 export const sceneSecs = (mark, secs = /** @type {number} */ (CLIP.secs)) => Math.max(1, Math.min(secs, CLIP.max - (mark ? CLIP.tail : 0)));
@@ -84,7 +83,10 @@ export function markCanvas(w, h, info) {
  */
 export function createClip(o) {
   const now = o.now || (() => performance.now() / 1000), scene = sceneSecs(!!o.mark, o.secs), total = scene + (o.mark ? CLIP.tail : 0);
-  const stream = o.source.captureStream(CLIP.fps); o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+  // Frames are asked for by `ask()` at CLIP.fps (captureStream(0) + requestFrame), so a read-back is made only for those; a browser without requestFrame takes them at that rate itself.
+  const probe = o.source.captureStream(0), paced = typeof (/** @type {any} */ (probe.getVideoTracks()[0]))?.requestFrame === "function";
+  const stream = paced ? probe : (probe.getTracks().forEach((t) => t.stop()), o.source.captureStream(CLIP.fps)), track = /** @type {any} */ (stream.getVideoTracks()[0]); let lastAsk = -Infinity;
+  o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
   const chunks = [], w = o.source.width, h = o.source.height;
   const rec = new MediaRecorder(stream, { mimeType: o.pick.mime, videoBitsPerSecond: clipBits(w, h), audioBitsPerSecond: 128000 });
   let t0 = 0, endAt = Infinity, early = false, state = "rec", sceneEnd = scene, drawn = 0;
@@ -103,6 +105,8 @@ export function createClip(o) {
     progress() { const t = Math.max(0, now() - t0); return { t, k: Math.min(1, t / scene) }; },
     /** The visitor stops: the scene ends here, and the signature, if there is one, takes its tail. */
     stop() { if (state !== "rec") return; early = now() - t0 < scene - 0.05; if (early) { sceneEnd = Math.max(0.5, now() - t0); endAt = t0 + sceneEnd + (o.mark ? CLIP.tail : 0); } },
+    /** After the frame, signature and all, is drawn: take it, if a frame is due. */
+    ask() { if (!paced || state !== "rec") return; const t = now(); if (t - lastAsk >= 1 / CLIP.fps - 0.004) { lastAsk = t; track.requestFrame(); } },
     frame() {
       if (state !== "rec") return 0; const t = now() - t0; drawn++;
       if (now() >= endAt) { this.finish(); return 0; }

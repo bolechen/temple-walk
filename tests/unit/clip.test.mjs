@@ -13,14 +13,15 @@ test("MP4 where the browser writes it, WebM where it does not, nothing where it 
   assert.ok(MIMES.indexOf("video/mp4") < MIMES.indexOf("video/webm"));
 });
 
-test("the film is 1080 on the short side (720 on the low tier), the long side from the frame, both even", () => {
-  assert.deepEqual(clipSize(3, 4, "high"), { w: 1080, h: 1440 });
-  assert.deepEqual(clipSize(16, 9, "medium"), { w: 1920, h: 1080 });
-  assert.deepEqual(clipSize(1, 1, "high"), { w: 1080, h: 1080 });
-  assert.deepEqual(clipSize(3, 4, "low"), { w: 720, h: 960 });
-  assert.deepEqual(clipSize(390, 844, "high"), { w: 1080, h: 2338 }, "the whole view of a phone");
-  for (const [a, b] of [[390, 844], [1280, 720], [1000, 999]]) { const s = clipSize(a, b, "low"); assert.equal(s.w % 2 + s.h % 2, 0); }
-  assert.ok(clipBits(720, 960) < clipBits(1080, 1440) && clipBits(1080, 1440) === CLIP.bits);
+test("the film's long side is 960 on every tier, the short side from the frame, both even", () => {
+  assert.deepEqual(clipSize(3, 4), { w: 720, h: 960 });
+  assert.deepEqual(clipSize(16, 9), { w: 960, h: 540 });
+  assert.deepEqual(clipSize(1, 1), { w: 960, h: 960 });
+  assert.deepEqual(clipSize(390, 844), { w: 444, h: 960 }, "the whole view of a phone");
+  assert.deepEqual(clipSize(3, 4, 1080), { w: 810, h: 1080 }, "a tool may ask for another long side");
+  for (const [a, b] of [[390, 844], [1280, 720], [1000, 999]]) { const s = clipSize(a, b); assert.equal(s.w % 2 + s.h % 2, 0); assert.equal(Math.max(s.w, s.h), 960); }
+  assert.ok(clipBits(540, 720) < clipBits(720, 960) && clipBits(720, 960) === CLIP.bits);
+  assert.equal(CLIP.fps, 24);
 });
 
 test("twelve seconds by default, never more than fifteen with the signature's tail in them", () => {
