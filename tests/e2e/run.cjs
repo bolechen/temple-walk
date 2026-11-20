@@ -187,11 +187,54 @@ const scenarios = {
     expect((await words("#pieceTitle")) === "出山釈迦図" && /[ぁ-ん]/.test(await words("#pieceNote")) && (await words("#pieceFacts")).includes("東京国立博物館") && (await words("#pieceCredit")).startsWith("Source: ColBase"), "the work's card should be in Japanese: " + (await words("#pieceTitle")));
     expect((await words("#pieceProcessed")).includes("を加工して作成") && (await words("#pieceProcessed")).includes("TA-617") && await t.page.isVisible("#pieceProcessed"), "a ColBase card should say, in Japanese, that the picture was edited: " + (await words("#pieceProcessed")));
     await t.page.click("#pieceClose");
-    // Chosen in the menu: kept, and the page opens again in it.
-    await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
-    expect(await t.page.getAttribute('#menu [data-lang="ja"]', "aria-pressed") === "true" && (await words("#menu")).includes("見回す速さ"), "the menu should be in Japanese, with Japanese circled");
-    await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('#menu [data-lang="en"]')]);
+    // Chosen in the menu, during the walk (#140): kept, the page opens again in it under a sheet that says so in the new
+    // language, never the title, and he is where he was, looking where he looked, the menu open on the language chosen.
+    const switchTo = async (to, where) => {
+      const before = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist }));
+      await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
+      const t0 = Date.now();
+      await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click(`#menu [data-lang="${to}"]`)]);
+      await t.page.waitForFunction(() => typeof window.templeT === "function", null, { timeout: 120000 });   // lang.js has run: the page as first painted
+      const cover = await t.page.evaluate(() => { const vis = (id) => { const el = document.getElementById(id); return !!el && !!el.offsetParent && getComputedStyle(el).display !== "none"; }; return { relang: document.documentElement.classList.contains("relang"), line: vis("relangLine") ? document.getElementById("relangLine").textContent : "", enter: vis("enterBtn"), h1: vis("title") && !!document.querySelector("#title h1")?.offsetParent }; });
+      await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 30000, `${where}: the menu was not open again after the change of language`);
+      const secs = (Date.now() - t0) / 1000;
+      const after = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist, focus: document.activeElement?.dataset?.lang || document.activeElement?.id, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), kept: sessionStorage.getItem("yunjing.relang.v1"), from: sessionStorage.getItem("yunjing.lang.from"), lang: document.documentElement.lang, events: window.__eventLog().map((e) => e.name) }));
+      const at = `${where} → ${to}: ` + JSON.stringify({ cover, before: [before.x, before.z, before.yaw, before.pitch, before.view, before.room, before.up, before.camDist], after: [after.x, after.z, after.yaw, after.pitch, after.view, after.room, after.up, after.camDist], focus: after.focus, title: after.title, events: after.events, secs });
+      expect(cover.relang && cover.line && !cover.enter && !cover.h1, "the page should open again under the sheet, not the title: " + at);
+      expect(after.lang === to && after.entered && !after.title && !after.opening.active && after.kept === null && after.from === null, "the walk should go on in the new language, the handover read and forgotten, no opening: " + at);
+      expect(Math.hypot(after.x - before.x, after.z - before.z) < 0.05 && Math.abs(after.yaw - before.yaw) < 0.0175 && Math.abs(after.pitch - before.pitch) < 0.0175 && after.view === before.view && after.room === before.room && after.up === before.up && Math.abs(after.camDist - before.camDist) < 0.3, "he should be where he was, looking where he looked: " + at);
+      expect(after.focus === to, "the menu should be open with the language just chosen in hand: " + at);
+      expect(after.season === before.season && after.time === before.time, "the season and hour of this visit should be as they were: " + JSON.stringify([before.season, before.time, after.season, after.time]));
+      expect(!after.events.includes("demo.enter") && !after.events.includes("demo.menu") && after.events.includes("demo.ready"), "the reload should not count as stepping in or opening the menu: " + at);
+      console.log(`  relang ${where} → ${to}: ${secs.toFixed(1)} s from the click to the menu open again`);
+      return after;
+    };
+    await t.page.evaluate(() => window.__mood("autumn", "dusk"));   // a hand's choice, for this visit only
+    await t.page.evaluate(() => { window.__view("third"); const p = window.__places.bell; window.__pose(p.at[0] + 0.6, p.at[1] - 0.6, 0.7, -0.08); }); await t.frames(3);
+    await switchTo("en", "first court");
+    // Esc puts the menu away and he walks on at once.
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.evaluate(() => window.__ui().stack.length)), 10000, "Esc did not put the menu away");
+    { const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w"); expect(Math.abs((await t.state()).z - z0) > 0.05, "after the menu is put away he should walk"); }
+    // Inside the great hall, from his own eyes: the same.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the hall");
+    await t.page.evaluate(() => { window.__view("first"); const y = window.__yard(); window.__pose(y.x + 0.6, y.z - 1.5, 0.3, 0.12); }); await t.frames(3);
+    await switchTo("ko", "great hall");
+    await t.page.keyboard.press("Escape");
+    // Up on the summit pavilion's balcony (#101), climbed to from the stair in its room: the same, and still up there.
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 60000, "never got into the summit pavilion");
+    await t.page.evaluate(() => window.__up(true)); await t.until(async () => (await t.state()).up === "lingxiao", 60000, "never got up onto the balcony");
+    await t.frames(3);
+    { const a = await switchTo("ja", "summit balcony"); expect(a.up === "lingxiao" && a.view === "first", "he should be up on the balcony still, seeing with his own eyes: " + JSON.stringify([a.up, a.view])); }
+    await t.page.keyboard.press("Escape"); await t.page.evaluate(() => window.__up(false)); await t.until(async () => !(await t.state()).up, 60000, "never came down");
+    // A reload of any other kind is the title, as before (src/relang.js reads its handover once), in the language kept.
+    await t.page.evaluate(() => window.__inside(null));
+    await t.page.goto(base + "?q=low" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
+    expect(await t.page.isVisible("#enterBtn") && !(await t.page.evaluate(() => document.documentElement.classList.contains("relang"))), "an ordinary reload should show the title");
+    // On the title a language is chosen as before: the title again, in it.
+    await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('.langs [data-lang="en"]')]);
     await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(await t.page.isVisible("#enterBtn") && !(await t.page.evaluate(() => window.__ui().stack.length)), "a language chosen on the title should stay on the title");
     expect(await t.page.evaluate(() => sessionStorage.getItem("yunjing.lang.from")) === null, "the page that a language switch opened should have read, and forgotten, where it came from");
     expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
     expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");

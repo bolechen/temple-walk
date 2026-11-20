@@ -356,4 +356,6 @@ export default {
   "预览 · PR #{pr} · {c}": "プレビュー · PR #{pr} · {c}",
   "预览 · {c}": "プレビュー · {c}",
   "新的版本已就绪，刷新即可": "新しい版の準備ができました。再読み込みで切り替わります",
+  // A change of language in the pause menu, while the page opens again in it (#140).
+  "换字中": "文字を切り替えています",
 };

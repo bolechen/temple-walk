@@ -71,7 +71,7 @@ export function createGame(y) {
   const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); fitSlip(); };
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let sat = 0, ended = 0, went = 0;
-  let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter");
+  let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter") || !!y.relang;   // (a page opened by a change of language goes on where it was, #140)
   // How long this page has been open, for the leave event: not the visit, which is kept between sittings.
   const openedAt = performance.now();
 
@@ -442,7 +442,10 @@ export function createGame(y) {
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on"); prologueNote(); track("opening.title", {});
     if (!hold) setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; }, 1300); }, 4000 * Math.max(fast, 0.5));
   };
-  y.onTick(() => { if (!titled && entered && free && !y.inside() && !y.openingActive() && atGate(y.where())) prologueTitle(); });
+  // A page opened by a change of language is not a visitor coming in (#140): if he stood before the gate then, the title
+  // waits until he has walked away from it and comes round again.
+  let relangHold = !!y.relang;
+  y.onTick(() => { const g = atGate(y.where()); if (relangHold && !g) relangHold = false; if (!titled && entered && free && !relangHold && !y.inside() && !y.openingActive() && g) prologueTitle(); });
   // What the title has done (and, for the picture tools, `__prologue(true)` raises it now, wherever he stands; "hold" keeps it up).
   window.__prologue = (show) => { if (show === true || show === "hold") prologueTitle(show === "hold"); return { titled, shown: titleShown, on: !!$("prologue")?.classList.contains("on"), text: $("prologue")?.textContent || "" }; };
 
@@ -470,7 +473,7 @@ export function createGame(y) {
     if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
     return o;
   };
-  if (left && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were
+  if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
   const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
   // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.
@@ -519,7 +522,10 @@ export function createGame(y) {
     track("opening.played", { eye: o.eye, again: again === true });
     y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
   };
-  if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
+  // After a change of language the title's place is kept by the sheet that says the words are being changed, until
+  // the page is ready; then it fades as the title does when he steps in (#140).
+  if (title && y.relang) { document.body.classList.add("entered"); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); title.classList.add("gone"); setTimeout(() => { title.hidden = true; document.documentElement.classList.remove("relang"); }, 1600); } }, 100); }
+  else if (title) { if (entered) { title.hidden = true; document.body.classList.add("entered"); } else { $("enterBtn").addEventListener("click", enter); const ready = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(ready); $("enterBtn").disabled = false; offer(); } }, 200); } }
   // ?show=shot-<id>: the observance begun where he stands, with the eye already on its shot (tools/shots.js).
   // He is put as the observance has him (seated for the tea and the summit, at the rope for the bell, his palms together
   // elsewhere), not taken through it, so that the picture is the same however slowly the page draws.
