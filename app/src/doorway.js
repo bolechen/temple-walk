@@ -111,7 +111,9 @@ const cut = async (bitmap) => {
   const n = bitmap.width / ATLAS[0];
   return Promise.all([0, 1, 2, 3, 4, 5].map((f) => createImageBitmap(bitmap, (f % ATLAS[0]) * n, Math.floor(f / ATLAS[0]) * n, n, n, { colorSpaceConversion: "none", premultiplyAlpha: "none" })));
 };
-const picture = async (url) => createImageBitmap(await (await fetch(url)).blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+// `side`: decoded down to this many pixels a side (the colour of the larger face on a phone; never the distances, whose
+// bytes are a number that averaging would make wrong).
+const picture = async (url, side = 0) => createImageBitmap(await (await fetch(url)).blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none", ...(side ? { resizeWidth: side, resizeHeight: side, resizeQuality: "high" } : {}) });
 
 // `site.doorways` (the dark box of each hall and how its building stands), `rooms` (buildInteriors), the scene and the
 // renderer. `base`: where the baked pictures lie (`<base>t00.json` names them by hall); `steps`: see doorMaterial.
@@ -124,7 +126,9 @@ const picture = async (url) => createImageBitmap(await (await fetch(url)).blob()
 export const NEAR = 40, SEEN = 90, FADE = 0.8;
 // Each hall's larger face into the room (#320) comes with its cube whenever the bake made one. `modes`: `live`, the trial
 // left behind `?doorway=live` (doorway-live.js), the near room itself drawn through its door on the middle and high tiers.
-export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, keep = 4, base = null, modes = new Set() }) {
+// `inward`: the side the larger face's colour is held at on the card (0: as baked, 1024). On the low tier it is 512: a hall
+// then holds 6.3 MB of the card's memory instead of 14.3, and three halls stay under 20 MB (#332).
+export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, keep = 4, base = null, modes = new Set(), inward = 0 }) {
   const halls = {}, frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
   let manifest = null, asked = null, failed = 0, lastTick = 0, worstFrame = 0, busyFor = 0; const spikes = [];
   // The first picture a page ever sends to the card as a cube takes the browser's slow road once (a cold T4 held a frame
@@ -161,7 +165,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     const m = await list(), e = m?.halls?.[o.hall.id]; if (!e) return null;
     const [day, night, dist] = await Promise.all([e.day, e.night, e.dist].map((f) => picture(base + f).then(cut)));
     const out = /** @type {THREE.Texture[]} */ ([cube(day), cube(night), cube(dist, true)]);
-    if (e.in) out.push(...(await Promise.all([e.in.day, e.in.night, e.in.dist].map((f) => picture(base + f)))).map((b, i) => flat(b, i === 2)));
+    if (e.in) out.push(...(await Promise.all([e.in.day, e.in.night, e.in.dist].map((f, i) => picture(base + f, i < 2 ? inward : 0)))).map((b, i) => flat(b, i === 2)));
     return out;
   };
   const show = (o, tex) => {

@@ -871,7 +871,7 @@ const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x 
 // its door on the middle and high tiers (doorway-live.js; `?warm=0` leaves out its warming ahead, to measure it;
 // `?live=half` draws the room at half the frame's size). The larger baked face into each room is always shown.
 const DOORWAY = new Set((Q.get("doorway") || "").split(",").filter((m) => m === "live"));
-const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, base: asset("shared/doorways/"), modes: DOORWAY }) : null;
+const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, inward: quality.name === "low" ? 512 : 0, base: asset("shared/doorways/"), modes: DOORWAY }) : null;
 const live = doors && DOORWAY.has("live") && quality.name !== "low" ? createLive({ renderer, scene, U, rooms, halls: doors.halls, msaa: quality.msaa, warm: Q.get("warm") !== "0", scale: Q.get("live") === "half" ? 0.5 : 1 }) : null;
 live?.camera(camera);
 // A tool that draws the doorways in the page (or the bake) sets the hour for each drawing, and the visitor's is put back.

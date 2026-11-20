@@ -326,7 +326,7 @@ const scenarios = {
   // #320: the larger face into the room (shown by default) shows the room the same way round as the cube it
   // sharpens. Across the great hall's door, square on from 6 m, the brightness of each column with the larger face is set
   // against the same columns from the cube: it must follow them as they are, not as in a mirror (its first version had
-  // the attendant figures change sides, #332).
+  // the attendant figures change sides, #332). On the low tier it is held smaller, within 20 MB for the halls kept.
   "doorway-hires": { tier: 2, async run(b, base) {
     const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&cam=0,60,3.14,0");
     await t.frames(4);
@@ -343,6 +343,14 @@ const scenarios = {
     console.log("     the larger face against the cube, column by column:", JSON.stringify({ same: +same.toFixed(3), mirrored: +mirrored.toFixed(3) }));
     expect(same > 0.45 && same > mirrored + 0.2, `the larger face does not follow the cube across the door (correlation ${same.toFixed(2)}, mirrored ${mirrored.toFixed(2)}): it shows the room the wrong way round`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // On the low tier (a phone) the larger face is held at 512, so the three halls it keeps stay under 20 MB of the card's memory (#332).
+    const p = await open(b, base, "shot=1&q=low&view=first&season=summer&time=day&cam=0,60,3.14,0" + BARE.replace(",doorway", ""));
+    await p.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);
+    await p.until(async () => (await p.page.evaluate(() => window.__doorways())).halls.main.hi, 240000, "on the low tier the great hall's larger face never came");
+    const low = await p.page.evaluate(() => window.__doorways()), held = Object.values(low.halls).filter((x) => x.taken).length, each = low.mb / Math.max(1, held);
+    console.log("     the low tier's doorways on the card:", JSON.stringify({ mb: low.mb, held, each: +each.toFixed(2), keep: low.keep, atKeep: +(each * low.keep).toFixed(1) }));
+    expect(each * low.keep <= 20, `on the low tier each hall holds ${each.toFixed(1)} MB of the card's memory: ${low.keep} halls would hold ${(each * low.keep).toFixed(1)} MB, over 20`);
+    expect(p.errors.length === 0, p.errors.join("\n")); await p.close();
   } },
   // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. No thin
   // bright line runs down the door's edges (no light leaks past the room's jambs), two frames of a still view are the same
