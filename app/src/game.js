@@ -394,7 +394,7 @@ export function createGame(y) {
   function openBless() {
     const el = $("bless"), list = $("blessList"); if (!el || !list || ui.isOpen("bless")) return;
     list.textContent = ""; blessed = null;
-    WISHES.forEach((w, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.wish = String(i); b.setAttribute("aria-pressed", "false"); b.textContent = t(w); list.append(b); });
+    WISHES.forEach((w, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "wish"; b.dataset.wish = String(i); b.setAttribute("aria-pressed", "false"); b.textContent = t(w); list.append(b); });
     for (const id of ["blessCard", "blessLink", "blessActs"]) $(id).hidden = true;
     $("blessCopy").textContent = t("复制链接");
     ui.open("bless", { onClose: () => { if (blessed) URL.revokeObjectURL(blessed.pic); blessed = null; } });

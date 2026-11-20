@@ -12,6 +12,9 @@ test("6 to 10 wishes, none empty, none alike, each short enough for a lamp's tag
   assert.ok(WISHES.length >= 6 && WISHES.length <= 10); assert.equal(new Set(WISHES).size, WISHES.length);
   for (const w of WISHES) assert.ok(w.length >= 4 && w.length <= 16, w);
 });
+test("the owner's eight lines, in the owner's order (the link means the order, so a change here is a change of what old links say)", () => {
+  assert.deepEqual(WISHES, ["一灯为你，愿你平安。", "愿你病苦渐轻，身心安稳。", "愿你今夜好眠。", "愿你前路有光，不必着急。", "愿你放下，也被放过。", "山中一灯，替你照着。", "愿所念之人，皆得安住。", "灯不大，够照见你脚下的路。"]);
+});
 test("every wish has a Japanese, English and Korean line (the Chinese is the key)", () => { for (const l of LANGS.filter((x) => x !== "zh")) for (const w of WISHES) assert.ok(has(w, l), `${l}: ${w}`); });
 test("what cannot be a lamp is not one: a number off the list, a season or hour off theirs, bad bytes, another kind, damage", () => {
   assert.equal(encodeLamp({ wish: WISHES.length, season: "summer", time: "day" }), null); assert.equal(encodeLamp({ wish: -1, season: "summer", time: "day" }), null);

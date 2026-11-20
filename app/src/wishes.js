@@ -3,20 +3,22 @@
 // (there is nowhere to write it, and a number outside the list is ignored).
 //
 // The order is the link's meaning: a line may be reworded or translated, never moved or removed, and a new one goes at
-// the end. THE LINES BELOW ARE PLACEHOLDERS until the owner settles the wording (#343).
+// the end. Settled by the owner on 2026-11-20 (#343); the Japanese, English and Korean are by meaning, not word for word, in
+// the same quiet voice (locales/*.js). The second is for the sick (the Medicine Buddha's lamps were first lit for them) and the
+// seventh for those who are gone or far away.
 import { pack, unpack } from "./fragment.js";
 import { MAIN } from "./goshuin.js";
 import { SEASONS, TIMES } from "./mood.js";
 
 export const WISHES = [
-  "愿你一路平安。",
-  "愿你身心安宁。",
-  "愿你所求，慢慢如愿。",
-  "愿你夜夜安眠，晨起有光。",
-  "愿你被善意相待。",
-  "愿你放下心头的重。",
-  "愿你近来诸事顺利。",
-  "愿你常有灯，也常有人同行。",
+  "一灯为你，愿你平安。",
+  "愿你病苦渐轻，身心安稳。",
+  "愿你今夜好眠。",
+  "愿你前路有光，不必着急。",
+  "愿你放下，也被放过。",
+  "山中一灯，替你照着。",
+  "愿所念之人，皆得安住。",
+  "灯不大，够照见你脚下的路。",
 ];
 /** The kind in the address's fragment. */
 export const KIND = "lamp";
