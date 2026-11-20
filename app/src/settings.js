@@ -1,5 +1,5 @@
 // What a visitor may set for themselves and find again next time: how finely the place is drawn, how fast the mouse
-// turns the head and which way up, whether the mouse is held as in a first-person game (`lock`), whether the eye goes to each place's own shot while an observance is made (`autocam`), how wide the view is, how loud it is (all of it, and the music, the place and the effects each apart). Kept in the browser under one key; anything unreadable or out of
+// turns the head and which way up, whether the mouse is held as in a first-person game (`lock`), whether the eye goes to each place's own shot while an observance is made (`autocam`), whether the view drifts round behind him on a tapped way (`follow`), how wide the view is, how loud it is (all of it, and the music, the place and the effects each apart). Kept in the browser under one key; anything unreadable or out of
 // range falls back to the default, so an old or damaged save can never stop the walk. (After the settings store of
 // wok-ing-dead, the reference for what a finished game's shell carries.)
 export const SETTINGS_KEY = "yunjing.settings.v1";
@@ -19,8 +19,8 @@ export function sanitize(saved) {
     if (Number.isFinite(saved.sens)) s.sens = clamp(saved.sens, 0.3, 2.5);
     if (typeof saved.invertY === "boolean") s.invertY = saved.invertY;
     if (typeof saved.lock === "boolean") s.lock = saved.lock;
-    if (typeof saved.autocam === "boolean") s.autocam = saved.autocam;
-    if (typeof saved.follow === "boolean") s.follow = saved.follow;   // the view drifts round behind him as he walks a tapped way (#295)   // the eye goes to a place's own shot while an observance is made
+    if (typeof saved.autocam === "boolean") s.autocam = saved.autocam;   // the eye goes to a place's own shot while an observance is made
+    if (typeof saved.follow === "boolean") s.follow = saved.follow;   // the view drifts round behind him as he walks a tapped way (#295)
     // The thirds drawn faintly in the viewfinder: on unless the visitor has put them away. Before the owner made them the
     // default (2026-11-17), every save carried `thirds: false` whether or not it was chosen, so only a save that knows the
     // new default (`rev` 2) may keep them off.
