@@ -40,6 +40,8 @@ const vertical = (x, text, cx, top, step) => [...text].forEach((ch, i) => x.fill
 export const MAIN = { host: "temple.rushiwowen.co", url: "https://temple.rushiwowen.co/" };
 /** What the code says: always the main site, whatever address drew the picture. @param {string} l the page's language */
 export const shareUrl = (l) => `${MAIN.url}?utm_source=goshuin&utm_medium=share&utm_content=${l}`;
+/** What the code on a photograph's card says: the main site again, told apart from the page of seals by its source. @param {string} l */
+export const photoUrl = (l) => `${MAIN.url}?utm_source=photo&utm_medium=share&utm_content=${l}`;
 export const NAME = { cx: 600, top: 250, step: 262, fs: 250 };
 export const SANBAO = { text: "佛法僧宝", cx: 868, cy: 600, size: 210, turn: 0.03 };
 export const TEMPLE_SEAL = { cx: 215, cy: 1190, size: 130, turn: -0.04 };

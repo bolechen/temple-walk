@@ -112,6 +112,7 @@ export default {
   "取景": "Framing",
   "三分线": "Thirds",
   "虚化": "Blur",
+  "二维码": "QR code",
   "人物": "Figure",
   "入画": "In the picture",
   "合掌": "Hands joined",
