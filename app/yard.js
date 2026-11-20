@@ -1,5 +1,6 @@
 // The temple grounds: assembles the modules in src/, walks the visitor through them,
 // and hands over to the hall interior at the main hall's door.
+import { MAIN, photoUrl } from "./src/goshuin.js";
 import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
 import { createMaterials } from "./src/materials.js";
@@ -780,6 +781,10 @@ on("monkToggle", (e) => { photo.monk = !photo.monk; e.currentTarget.setAttribute
 // The thirds, faint in the viewfinder; kept with the visitor's settings.
 const thirds = (v) => { document.body.classList.toggle("thirds", v); $("thirdsToggle")?.setAttribute("aria-pressed", String(v)); };
 thirds(settings.get().thirds);
+// The code on the card, kept with the visitor's settings: on until put away.
+const qrOn = (v) => $("qrToggle")?.setAttribute("aria-pressed", String(v));
+qrOn(settings.get().qr);
+on("qrToggle", () => { settings.set("qr", !settings.get().qr); qrOn(settings.get().qr); });
 on("thirdsToggle", () => { settings.set("thirds", !settings.get().thirds); thirds(settings.get().thirds); });
 // 虚化: the photograph's very shallow depth of field, off unless asked for. Offered only where the tier keeps the depth to draw it.
 const blur = (v) => $("blurToggle")?.setAttribute("aria-pressed", String(v));
@@ -800,7 +805,7 @@ async function capture(at = null) {
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
-  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: tr("云径禅寺"), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") });
+  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: tr("云径禅寺"), seal: glyphs("云径"), url: MAIN.host, qr: settings.get().qr ? photoUrl(lang) : null });
 }
 let lastBlob = null;
 // The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,

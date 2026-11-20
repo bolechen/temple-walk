@@ -1,5 +1,5 @@
 // End-to-end scenarios: a real page in a real browser, driven the way a visitor drives it.
-//   node tests/e2e/run.cjs --shard=1/4  the first of four parts of whatever was asked for (the weekly run shares it among four machines)
+//   node tests/e2e/run.cjs --shard=1/12  the first of twelve parts of whatever was asked for (the full run shares it among twelve machines, by each scenario's measured time: tests/e2e/shards.cjs)
 //   node tests/e2e/run.cjs              every scenario (about twenty minutes without a GPU)
 //   node tests/e2e/run.cjs --smoke      tiers 1 and 2: everything but the long walks and the photograph
 //   node tests/e2e/run.cjs --quick      tier 1 only (the page comes up clean): what must pass before anything is published
@@ -164,6 +164,40 @@ const scenarios = {
   } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.
+  // The shared page of seals (#319): drawn in the page in every language, its code cut out and read back, and it says the main site
+  // although the page was served from 127.0.0.1; with and without seals, with and without the library's line.
+  goshuin: { tier: 2, async run(b, base) {
+    const { render, LANGS, KINDS } = require("../../tools/goshuin-pages.cjs"), sharp = require("sharp"), jsQR = require("jsqr");
+    const { qrBox, shareUrl } = await import("../../app/src/goshuin.js");
+    const read = async (buf, lang) => {
+      const box = qrBox(lang), { data, info } = await sharp(buf).extract({ left: Math.floor(box.x), top: Math.floor(box.y), width: Math.ceil(box.w) + 1, height: Math.ceil(box.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      return jsQR(new Uint8ClampedArray(data), info.width, info.height);
+    };
+    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"]];
+    for (const [lang, kind] of want) {
+      expect(kind in KINDS, "no such kind " + kind);
+      const buf = await render(b, base, { lang, kind }), meta = await sharp(buf).metadata();
+      expect(meta.width === 1200 && meta.height === 1600, `${lang}/${kind}: the page is ${meta.width}×${meta.height}`);
+      const got = await read(buf, lang);
+      expect(got && got.data === shareUrl(lang), `${lang}/${kind}: the code reads ${got && got.data}, not ${shareUrl(lang)}`);
+      expect(got.data.startsWith("https://temple.rushiwowen.co/"), `${lang}/${kind}: the code does not go to the main site`);
+    }
+  } },
+  // The card of a photograph (#319): a code on it by default that reads as the main site, in the page of seals' own look;
+  // a switch in the camera's settings puts it away, and the card has none; the choice is kept.
+  photoqr: { tier: 2, async run(b, base) {
+    const sharp = require("sharp"), jsQR = require("jsqr"), { photoUrl } = await import("../../app/src/goshuin.js");
+    const t = await open(b, base, "q=low&lang=en&cam=0.3,2.2,0,0.05" + BARE);
+    const card = async () => { const k = await t.page.evaluate(() => window.__capture()), { data, info } = await sharp(Buffer.from(k.url.split(",")[1], "base64")).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); return jsQR(new Uint8ClampedArray(data), info.width, info.height); };
+    await t.page.evaluate(() => window.__photo(true)); await t.frames(2);
+    expect(await t.page.evaluate(() => window.__settings().qr) === true && (await t.page.getAttribute("#qrToggle", "aria-pressed")) === "true", "the code should be on by default");
+    const on = await card(); expect(on && on.data === photoUrl("en") && on.data.startsWith("https://temple.rushiwowen.co/"), "the card's code reads " + (on && on.data));
+    await t.page.evaluate(() => document.getElementById("qrToggle").click());
+    expect(await t.page.evaluate(() => window.__settings().qr) === false && (await t.page.getAttribute("#qrToggle", "aria-pressed")) === "false", "the switch did not put the code away");
+    expect((await card()) === null, "the card still has a code after it was put away");
+    await t.page.evaluate(() => document.getElementById("qrToggle").click()); const back = await card(); expect(back && back.data === photoUrl("en"), "the code did not come back");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   lang: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low" + BARE, { enter: false, locale: "ja-JP" });
     const words = (sel) => t.page.textContent(sel);
@@ -2479,8 +2513,10 @@ const scenarios = {
 
 (async () => {
   const args = process.argv.slice(2), most = args.includes("--quick") ? 1 : args.includes("--smoke") ? 2 : 3, named = args.filter((a) => !a.startsWith("--"));
-  // --shard=2/4: the second of four parts of the list, taken in turn, so that four machines can share a whole run.
-  const shard = (args.find((a) => a.startsWith("--shard=")) || "").slice(8).split("/").map(Number), part = (list) => (shard.length === 2 && shard[1] > 0 ? list.filter((_, i) => i % shard[1] === shard[0] - 1) : list);
+  // --shard=2/12: the second of twelve parts of the list, so that twelve machines can share a whole run. The parts are made by
+  // tests/e2e/shards.cjs from what each scenario was last measured at (durations.json), not by taking them in turn (#335).
+  let shard; try { shard = require("./shards.cjs").parseShard(args); } catch (e) { console.error(e.message); process.exit(2); }
+  const part = (list) => (shard ? require("./shards.cjs").plan(list, shard[1]).parts[shard[0] - 1] : list);
   const names = part(named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most));
   for (const n of names) if (!scenarios[n]) { console.error(`no scenario "${n}"; there are: ${Object.keys(scenarios).join(", ")}`); process.exit(2); }
   const srv = await serve(), browser = await launch(), report = [];
