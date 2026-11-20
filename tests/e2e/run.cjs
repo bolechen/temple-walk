@@ -1796,6 +1796,33 @@ const scenarios = {
       expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
   } },
+  // A page left open learns that a newer build has been put up (#310, src/version.js): coming back to the front it asks
+  // version.json, past the cache; the same commit says nothing, another one is said once at the foot, and nothing reloads.
+  update: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE);
+    const own = await t.page.evaluate(() => window.__version().commit);
+    let remote = own, asked = 0;
+    await t.page.route("**/version.json", (r) => { asked++; r.fulfill({ contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify({ version: "9.9.9", commit: remote, deploy: "preview" }) }); });
+    await t.page.evaluate(() => {
+      window.__updateSaid = 0; const line = document.getElementById("hint"), was = { text: "" };
+      new MutationObserver(() => { const s = line.classList.contains("on") ? line.textContent : ""; if (s && s !== was.text && /新的版本/.test(s)) window.__updateSaid++; was.text = s; }).observe(line, { childList: true, subtree: true, attributes: true, characterData: true });
+      // The tab sent behind and brought back, as a visitor does: the page's own visibility, told to it.
+      window.__flip = () => { for (const v of ["hidden", "visible"]) { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => v }); document.dispatchEvent(new Event("visibilitychange")); } };
+    });
+    await t.page.evaluate(() => window.__flip());
+    await t.until(async () => asked >= 1 && (await t.page.evaluate(() => window.__updates().asked)) >= 1, 30000, "coming back to the front did not ask version.json");
+    await t.frames(2);
+    let u = await t.page.evaluate(() => ({ ...window.__updates(), said: window.__updateSaid }));
+    expect(!u.found && !u.told && u.said === 0, "the same commit should say nothing: " + JSON.stringify(u));
+    remote = "f".repeat(40);
+    await t.page.evaluate(() => window.__flip());
+    await t.until(() => t.page.evaluate(() => window.__updates().told), 30000, "another commit was never said");
+    await t.page.evaluate(() => { window.__flip(); window.__flip(); }); await t.frames(3);
+    u = await t.page.evaluate(() => ({ ...window.__updates(), said: window.__updateSaid, hud: window.__hud().said }));
+    expect(u.found === remote && u.said === 1 && u.hud.includes("update"), "a newer build should be said once at the foot: " + JSON.stringify(u));
+    expect(await t.page.evaluate(() => document.body.dataset.ready === "1" && performance.getEntriesByType("navigation").length === 1), "the page should not have reloaded itself");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
   // on a phone all three in the lower half, each a thumb's size; and 三分线 and 虚化 seen as the settings open, with no

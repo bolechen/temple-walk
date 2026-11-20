@@ -4,7 +4,7 @@
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import os from "node:os"; import path from "node:path"; import { execFileSync } from "node:child_process"; import { fileURLToPath } from "node:url";
 import "./dom-stub.mjs";
 import { DEPLOYS } from "../../app/src/deploy.js";
-import { versionLine } from "../../app/src/version.js";
+import { versionLine, newBuild, watchVersion } from "../../app/src/version.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
@@ -59,4 +59,51 @@ test("a build nobody named a target for says it is a preview, with the commit gi
     assert.ok(js.includes(head), "the unnamed build does not carry the commit git gives");
     assert.ok(/[\"'`]preview[\"'`]/.test(js), "the unnamed build is not a preview");
   } finally { fs.rmSync(out, { recursive: true, force: true }); }
+});
+
+/** A page with no screen: its own visibility, its own clock of intervals stepped by hand. */
+function fakePage() {
+  const listeners = [], timers = [];
+  const doc = { visibilityState: "visible", addEventListener: (k, f) => listeners.push(f), removeEventListener: () => {} };
+  const win = { setInterval: (f, ms) => timers.push({ f, ms }) - 1, clearInterval: () => {} };
+  return { doc, win, back: () => listeners.forEach((f) => f()), tick: (ms) => timers.filter((x) => x.ms === ms).forEach((x) => x.f()) };
+}
+
+test("a newer build: another commit on both sides; the same commit, no commit, or nothing is no news", () => {
+  assert.equal(newBuild({ commit: "b".repeat(40) }, "a".repeat(40)), true);
+  assert.equal(newBuild({ commit: SHA }, SHA), false);
+  assert.equal(newBuild({ commit: "" }, SHA), false);
+  assert.equal(newBuild(null, SHA), false);
+  assert.equal(newBuild({ version: "0.6.0" }, SHA), false);
+  assert.equal(newBuild({ commit: SHA }, ""), false, "a page that does not know its own commit cannot tell");
+});
+
+test("the page asks when it comes back to the front and every ten minutes, says it once, and only when nothing is going on", async () => {
+  const p = fakePage(); let said = 0, busy = true, remote = { commit: SHA };
+  const w = watchVersion({ own: SHA, url: "version.json", get: async () => remote, say: () => (said++, true), busy: () => busy, doc: p.doc, win: p.win });
+  p.back(); await new Promise((r) => setImmediate(r));
+  assert.deepEqual([said, w.state().found, w.state().asked], [0, "", 1], "the same commit says nothing");
+  remote = { commit: "c".repeat(40) }; p.tick(600000); await new Promise((r) => setImmediate(r));
+  assert.equal(w.state().found, "c".repeat(40)); assert.equal(said, 0, "an observance or the camera is not interrupted");
+  busy = false; p.tick(2000);
+  assert.equal(said, 1, "once nothing is going on, it is said");
+  p.tick(2000); p.back(); p.tick(600000); await new Promise((r) => setImmediate(r));
+  assert.equal(said, 1, "and only once");
+});
+
+test("a failed ask, or a line refused, is no news and no error", async () => {
+  const p = fakePage(); let said = 0, ok = false;
+  const w = watchVersion({ own: SHA, url: "version.json", get: async () => { throw new TypeError("Failed to fetch"); }, say: () => (said++, ok), doc: p.doc, win: p.win });
+  p.back(); await new Promise((r) => setImmediate(r));
+  assert.deepEqual([said, w.state().found], [0, ""]);
+  const q = fakePage(), v = watchVersion({ own: SHA, url: "version.json", get: async () => ({ commit: "d".repeat(40) }), say: () => (said++, ok), doc: q.doc, win: q.win });
+  q.back(); await new Promise((r) => setImmediate(r));
+  assert.equal(v.state().told, false, "a line the foot refused (another held there) is tried again");
+  ok = true; q.tick(2000); assert.equal(v.state().told, true);
+});
+
+test("each build writes version.json, the same as the page says it is", () => {
+  const out = build({ VITE_DEPLOY: "canary", VITE_COMMIT: SHA });
+  try { assert.deepEqual(JSON.parse(fs.readFileSync(path.join(out, "version.json"), "utf8")), { version: VERSION, commit: SHA, deploy: "canary" }); }
+  finally { fs.rmSync(out, { recursive: true, force: true }); }
 });

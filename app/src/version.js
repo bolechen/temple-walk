@@ -2,6 +2,7 @@
 // thanks (#310), small and quiet, never over the walk. On the public page it is the version; on the internal address
 // and a pull request's preview, the commit, so that a report can say exactly what was played.
 import { t } from "./i18n.js";
+import { asset } from "./assets.js";
 import { DEPLOY } from "./deploy.js";
 
 // What the build was made from (vite.config.mjs defines them; absent when the sources are run in Node): package.json's
@@ -29,4 +30,27 @@ export function mountVersion(doc) {
   let line = write(STYLE);
   /** @param {string=} style */
   window.__version = (style) => { if (style) line = write(style); return { version: VERSION, commit: COMMIT, deploy: DEPLOY, pr: PR, line }; };
+}
+
+/** Whether what version.json says is a build other than this page's: a commit on both sides, and not the same one. */
+export const newBuild = (remote, own = COMMIT) => !!(remote && typeof remote.commit === "string" && remote.commit && own && remote.commit !== own);
+
+/** A page left open does not know that a newer build has been put up since (the published files are revalidated on
+ *  every load, so a reload always brings it). When the page comes back to the front, and every ten minutes, version.json
+ *  is asked for past every cache; once it names another commit, the line at the foot says so, once, when nothing is
+ *  being made or watched (`busy`). Nothing reloads by itself. A failed ask is no news.
+ *  @param {{ own?: string, url?: string, get?: (url: string) => Promise<any>, say: () => boolean, busy?: () => boolean, every?: number, doc?: any, win?: any }} o */
+export function watchVersion({ own = COMMIT, url = asset("version.json"), get = (u) => fetch(u, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)), say, busy = () => false, every = 600000, doc = document, win = window }) {
+  let found = "", told = false, asking = false, asked = 0;
+  const tell = () => { if (found && !told && !busy() && say()) told = true; };
+  const ask = async () => {
+    if (found || asking || !own) return;
+    asking = true; asked++;
+    try { const r = await get(url); if (newBuild(r, own)) found = r.commit; } catch { /* no news */ } finally { asking = false; }
+    tell();
+  };
+  const seen = () => { if (doc.visibilityState === "visible") ask(); };
+  doc.addEventListener("visibilitychange", seen);
+  const a = win.setInterval(ask, every), b = win.setInterval(tell, 2000);
+  return { ask, tell, state: () => ({ found, told, asked }), stop() { doc.removeEventListener("visibilitychange", seen); win.clearInterval(a); win.clearInterval(b); } };
 }

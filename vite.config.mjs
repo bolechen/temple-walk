@@ -48,10 +48,16 @@ const commitOf = () => {
   try { return execFileSync("git", ["rev-parse", "HEAD"], { cwd: here, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { return ""; }
 };
 const commit = commitOf(), pr = /^\d+$/.test(process.env.VITE_PR || "") ? process.env.VITE_PR : "";
+// The same three, written beside the page as version.json: an open page asks it, now and then, whether a newer build
+// has been put up since it was loaded (app/src/version.js, #310).
+const versionFile = () => ({
+  name: "temple-walk:version", apply: /** @type {const} */ ("build"),
+  generateBundle() { this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version, commit, deploy }) + "\n" }); },
+});
 
 export default defineConfig({
   define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy), __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(commit), __PR__: JSON.stringify(pr) },
-  root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), keep()],
+  root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), versionFile(), keep()],
   server: { host: "127.0.0.1", port: 8000 }, preview: { host: "127.0.0.1", port: 8000 },
   build: { outDir: dist, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 2000 },
 });
