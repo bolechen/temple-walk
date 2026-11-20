@@ -296,19 +296,19 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 | `openai.com/policies/terms-of-use` | 直接抓取 HTTP 403；无头 Chromium 读到了全文 | 已读，见 10.6（版本 Effective 2026-01-01，原句已记）；生成当天那一版仍未读 |
 | `tripo3d.ai/terms`（网页端）、`developers.tripo3d.com/en/terms`（API） | 网页端直接抓取 403；两份都用无头 Chromium 读到了全文 | 已读，见 10.6；小沙弥走 API，适用 API 那份（Last updated 2025-07-11） |
 
-没有任何一项因为条款变化而需要改状态。登记表里 42 行的 `checked_on` 改为 2026-11-20（只有这一栏变）；状态现为：yes 86、conditional 0、no 0、unverified 4（第一轮第九节补齐后是 yes 78、unverified 7；加上第一轮之后记的 5 行（都是 yes）为 83 / 7；再按所有者回答把 `MESHY-novice`、`REF-monk-apose`、`REF-art-prototype` 三行改为 yes，见 10.6）。
+没有任何一项因为条款变化而需要改状态。登记表里 46 行的 `checked_on` 改为 2026-11-20（只有这一栏变）；状态现为：yes 88、conditional 0、no 0、unverified 2（第一轮第九节补齐后是 yes 78、unverified 7；加上第一轮之后记的 5 行（都是 yes）为 83 / 7；再按所有者回答把 `MESHY-novice`、`REF-monk-apose`、`REF-art-prototype`、`REF-T00-main`、`REF-T00-sheet` 五行改为 yes，见 10.6）。
 
 ### 10.3 总表（2026-11-20）
 
 | | 行数 | yes | conditional | no | unverified |
 |---|---:|---:|---:|---:|---:|
-| 登记表合计 | 90 | 86 | 0 | 0 | 4 |
+| 登记表合计 | 90 | 88 | 0 | 0 | 2 |
 | 其中第二轮自己新增的行 | 0 | | | | |
-| 其中第二轮重新打开并改了 `checked_on` 的行 | 44 | 44 | | | 0 |
-| 其中因所有者回答由 unverified 改为 yes 的行 | 3 | 3 | | | |
-| 仍是 unverified | 4 | | | | `REF-T00-main`、`REF-T00-sheet`（第 9 问）、`OG-share`（第 10 问）、`REF-jingshan-plates`（工具没记录） |
+| 其中第二轮重新打开并改了 `checked_on` 的行 | 46 | 46 | | | 0 |
+| 其中因所有者回答由 unverified 改为 yes 的行 | 5 | 5 | | | |
+| 仍是 unverified | 2 | | | | `OG-share`（第 10 问）、`REF-jingshan-plates`（工具没记录） |
 
-「第二轮新增」指第二轮自己新加的行：没有（第一轮之后记的 5 行是别的 PR 记的，本轮核了它们，都是 yes）。条目变化：措辞变化、不改状态 2 项（`FONT-kai` 附加许可多了一个条件、Meshy 帮助中心免费档署名位置）；状态变化 3 项（见 10.6）。
+「第二轮新增」指第二轮自己新加的行：没有（第一轮之后记的 5 行是别的 PR 记的，本轮核了它们，都是 yes）。条目变化：措辞变化、不改状态 2 项（`FONT-kai` 附加许可多了一个条件、Meshy 帮助中心免费档署名位置）；状态变化 5 项（见 10.6）。
 
 ### 10.4 Steam 对 AI 生成内容的披露要求（原文摘要）
 
@@ -324,7 +324,7 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 
 1. **小沙弥的雕刻身体 `novice.glb`（Meshy 生成）**：属于「随游戏发出」的 AI 生成美术。它 11-15 起默认不加载，但仍在 `dist/` 里（`?body=sculpt`）。要么披露，要么上架构建里去掉；版权上已无问题（10.6），披露与否是另一个决定。
 2. **生成它的输入图（GPT Image 改图）**：不随游戏发出，不属于披露范围；它们的权利问题见 10.6（OpenAI 条款）。
-3. **商店页、预告片素材**：`refs/` 里的 AI 生成图和美术原型不随游戏发出。其中 A-pose 三视图、六张美术原型的版权问题已按 OpenAI 条款解决（10.6）；`jingshan-*` 三张的工具没有记录，`T00*` 两张和分享预览图来历未答。拿去做商店页或预告片时，页面原文没有明说商店素材是否算在内，**未核实**；OpenAI 条款还禁止把 AI 输出说成是人做的。
+3. **商店页、预告片素材**：`refs/` 里的 AI 生成图和美术原型不随游戏发出。其中 A-pose 三视图、六张美术原型和 `T00*` 两张的版权问题已按 OpenAI 条款解决（10.6）；`T00*` 两张也是 GPT 做的（同样按 OpenAI 条款）；`jingshan-*` 三张的工具没有记录，分享预览图来历未答。拿去做商店页或预告片时，页面原文没有明说商店素材是否算在内，**未核实**；OpenAI 条款还禁止把 AI 输出说成是人做的。
 4. **分享预览图 `OG-share`**（`unverified`，来历不明）：若是 AI 生成要一并算。
 5. **日、英、韩的译文**：`localization` 是原文列出的内容类别。这些译文是开发会话（Claude）写的初稿，没有经过母语者审读（见 `docs/t00/I18N.md`），属于 Steam 要披露的 localization；填不填、怎么填由所有者定。
 6. **代码里的程序化内容**（建筑、植物、声音、配乐）：是代码生成，不是 AI 模型出的内容；若代码是在 AI 编程助手帮助下写的，按页面原文属于「efficiency」工具，不是调查重点。这是开发方的读法，Valve 的审核口径未核实。
@@ -333,7 +333,7 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 
 ### 10.5 第二轮还没做、留给后面的
 
-- 第五节还剩第 9、10 问（`T00.png`、`T00-sheet.png`、`OG-share`）待所有者回答；第 3、4 问见 10.6。
+- 第五节还剩第 10 问（`OG-share`）待所有者回答；第 3、4 问见 10.6。
 - 大都会、Mia 政策页与 Meshy、OpenAI 条款全文仍是「未能核实」，需要有人在浏览器里手开。
 - 主创按关闭条件抽查（≥10 项，每类至少 1 项）。
 
@@ -349,7 +349,8 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 | 8 | `jingshan-*` 三张是主创派单生成的 | 登记表 `REF-jingshan-plates` 的来历改为「本项目会话生成，工具未记录」；最早见于提交 `89439a7`（2026-11-11）；**状态仍是 `unverified`**，因为不知道用的什么工具，不能套 OpenAI 条款 |
 | 11 | 佛像与莲座是所有者原有项目 buddhist-say 的 zen 模块的模型，所有者持有版权 | `MODEL-buddha`、`MODEL-pedestal` 的依据补上这句：「所有者确认（2026-11-15、2026-11-20）」 |
 | 3 | 没有单独答；由第 5、6 问的回答覆盖（输入是文字，不是别人的图） | Meshy 的输入图是 GPT 图像对 A-pose 正面图的改图，A-pose 图由文字生成，没有第三方作品入图 |
-| 9、10 | 待答 | `REF-T00-main`、`REF-T00-sheet`、`OG-share` 仍是 `unverified` |
+| 9 | 研究站上的 `T00.png`、`T00-sheet.png` 也是 GPT 做的 | `REF-T00-main`、`REF-T00-sheet` → `yes`，依据同 `REF-art-prototype`（OpenAI 条款 2026-01-01 版）。所有者没说是哪个套餐、哪天、输入是什么；两张是参考图，不随游戏发出 |
+| 10 | 待答 | `OG-share` 仍是 `unverified` |
 
 **OpenAI 现行使用条款，版本与原句**（`https://openai.com/policies/terms-of-use/`，页面标「Published: January 1, 2026 … Effective: January 1, 2026」，2026-11-20 用无头 Chromium 读到全文，直接抓取仍是 403；摘录存 [`round2/openai-terms-of-use-2026-11-20.txt`](evidence/licensing/round2/openai-terms-of-use-2026-11-20.txt)）：
 
@@ -372,4 +373,4 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 
 *所有者的回答*（#105 评论，2026-11-20）：用的是所有者充值买的 API 点数（#163 记 400 点），输入图是 #163 记下的所有者自己的四视图，导出文件里的 AI 标记照原样保留，API 生成的模型不会自动公开。据此上面预读的四个问题：①套餐——付费点数；②是否公开——不会自动公开；③输入图——所有者自己的四视图；④AI 标记——保留。**登记行的写法**（等 Tripo 产物进 `app/` 时再加）：`commercial_use: yes`，依据「Tripo 开发者平台条款 2025-07-11 §3.2、§5.2.2，付费 API 点数（所有者充值，所有者确认 2026-11-20）」，不要求署名；备注 §3.2 的分发限定和 §5.2.2 的前提。我没有逐条细读条款的其余部分。
 
-**仍待所有者**：第 9、10 问；Meshy 服务条款全文；`REF-jingshan-plates` 当时用的工具。
+**仍待所有者**：第 10 问；Meshy 服务条款全文；`REF-jingshan-plates` 当时用的工具。
