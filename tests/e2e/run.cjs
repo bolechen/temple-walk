@@ -577,10 +577,10 @@ const scenarios = {
     for (const p of round) {
       await t.page.evaluate((q) => window.__walk([q]), p);
       for (let i = 0; i < 2000; i++) {
-        const s2 = await t.page.evaluate(() => { const y = window.__yard(), e = window.__eyeSpace(); return { x: y.x, z: y.z, done: !y.target && !y.route, shut: e.shutNow, eye: window.__frame().eye }; });
+        const s2 = await t.page.evaluate(() => { const y = window.__yard(), e = window.__eyeSpace(); return { x: y.x, z: y.z, f: y.frames, done: !y.target && !y.route, shut: e.shutNow, eye: window.__frame().eye }; });
         samples++; if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)) });
         if (s2.done && Math.hypot(s2.x - p[0], s2.z - p[1]) < 1.5) break;
-        await t.frames(1);
+        await t.page.waitForFunction((f) => window.__yard().frames > f, s2.f, { polling: 30, timeout: 120000 });   // (the next frame: t.frames looks only every 1.2 s)
       }
     }
     expect(samples > 30, "too few looks at the eye on the way round: " + samples);
