@@ -38,7 +38,7 @@ export function createJoya({ y, ui, say, query, bench }) {
   function paint() {
     const n = tally.shown, on = ev.open && n != null;
     line.hidden = !on; if (!on) return;
-    words.textContent = t("今夜已撞{n}声", { n: countText(n, lang) });
+    words.replaceChildren(...[t("除夕撞钟"), "·", t("今夜已撞 {n} 声", { n: countText(n, lang) })].map((w) => Object.assign(document.createElement("span"), { textContent: w })));
     take.hidden = tally.snapshot().mine < 1; take.textContent = t("留一张");
   }
   // Every round of 108 the far hills answer, once in a while however fast the mountain rings; a line says so at the foot.
@@ -84,7 +84,7 @@ export function createJoya({ y, ui, say, query, bench }) {
   if (ev.open) poll();
 
   // The tests' hooks: the count as the page keeps it; the card as a picture (made now, for the code to be read back).
-  window.__joya = () => ({ open: ev.open, forced: ev.forced, year: ev.year, window: windowOf().open, fake: !!fake, shown: !line.hidden, line: line.hidden ? "" : words.textContent, take: !take.hidden, heard: S.heard, cards: S.cards, ...tally.snapshot() });
+  window.__joya = () => ({ ...tally.snapshot(), count: tally.shown, open: ev.open, forced: ev.forced, year: ev.year, window: windowOf().open, fake: !!fake, shown: !line.hidden, line: line.hidden ? "" : [...words.children].map((e) => e.textContent).join(" "), take: !take.hidden, heard: S.heard, cards: S.cards });
   window.__joyaCard = async () => { await makeCard(); return S.card; };
   window.__joyaPoll = () => tally.poll().then(() => (paint(), tally.snapshot()));
   window.__joyaFlush = () => tally.flush(true).then((ok) => (paint(), ok));

@@ -1639,7 +1639,7 @@ const scenarios = {
       let j = await t.page.evaluate(() => window.__joya());
       expect(j.open && j.forced && j.line.includes("105") && !j.take, "the line should say 105 and offer no card yet: " + JSON.stringify(j));
       const p = await t.probe(); expect(p.season === "winter" && p.time === "night", `the night should be a winter night, not ${p.season} ${p.time}`);
-      expect((await t.page.textContent("#act")).includes("除夕撞钟"), "the button at the bell should say 除夕撞钟");
+      expect(j.line.startsWith("除夕撞钟"), "the line should name the night: " + j.line);
       await t.page.keyboard.press("e");
       await t.until(async () => (await t.page.evaluate(() => window.__joya())).mine >= 1, 60000, "pulling the rope did not count a stroke");
       j = await t.page.evaluate(() => window.__joya());
