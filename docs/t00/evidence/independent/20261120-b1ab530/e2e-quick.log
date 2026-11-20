@@ -1,0 +1,9 @@
+
+> temple-walk@0.5.0 e2e:quick /home/user/temple-walk
+> node tests/e2e/run.cjs --quick
+
+ok   nogl        1s
+ok   boot       93s
+ok   events     34s
+all 3 scenarios passed
+exit=0
