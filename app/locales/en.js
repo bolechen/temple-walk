@@ -358,4 +358,13 @@ export default {
   "预览 · PR #{pr} · {c}": "preview · PR #{pr} · {c}",
   "预览 · {c}": "preview · {c}",
   "新的版本已就绪，刷新即可": "A new version is ready: reload the page to get it",
+  "除夕撞钟": "The Year-End Bell",
+  "今夜已撞{n}声": "Rung tonight: {n}",
+  "留一张": "Keep a card",
+  "满一百零八声，远山回了一声钟": "A hundred and eight: a bell in the far hills answers",
+  "除夕撞钟的卡片": "A card of the year-end bell",
+  "云径禅寺-除夕撞钟.jpg": "yunjing-year-end-bell.jpg",
+  "云径禅寺 · 除夕撞钟": "Yunjing Temple · The Year-End Bell",
+  "今夜你撞了{n}声": "You rang the bell {n} times tonight",
+  "这一夜，山中同撞{n}声": "Rung together on the mountain this night: {n}",
 };

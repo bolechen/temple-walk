@@ -18,6 +18,7 @@ import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
 import { WEB } from "./channel.js";
 import { processedLine } from "./credits.js";
+import { createJoya } from "./joya-ui.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -117,6 +118,8 @@ export function createGame(y) {
   // ---- Words on the page ----
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
+  // The year-end bell (#341): on the last night of the year every stroke of the bell tower's bell counts toward the mountain's.
+  const joya = createJoya({ y, ui, say, query: Q, bench: BENCH });
   function earned(id) {
     if (rite && rite.id === id) rite.done = true;
     track("demo.seal", { id, count: journey.count() });
@@ -327,7 +330,7 @@ export function createGame(y) {
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
     const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
     if (held || near || look || seatHere || climb || rise) {
-      const w = held || (near ? (SEAL[near] || SEAL.incense).act : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
+      const w = held || (near ? (near === "bell" && joya.open ? "除夕撞钟" : (SEAL[near] || SEAL.incense).act) : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;

@@ -29,6 +29,7 @@ import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { eventFor } from "./src/joya.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
@@ -221,11 +222,15 @@ const nowMood = moodNow();
 // visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
 const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
 const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
-const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
+const state = { hand: false, follow: false, season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
                 time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
 // After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
 // choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
 state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
+// The year-end bell (#341): on that night (or on the workbench with ?event=joya) the mountain is a winter night, unless the
+// address names a season, an hour or a fixed view. A hand that picks one later keeps it (`state.hand`).
+const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname) }).open && !(SEASONS.includes(Q.get("season")) || TIMES.includes(Q.get("time")) || Q.has("shot") || Q.has("show") || Q.has("cam"));
+if (joyaNight()) { state.season = "winter"; state.time = "night"; state.follow = false; }
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -735,9 +740,9 @@ const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return
   view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize(); };
 setView(view);
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
-document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => { setMood(b.dataset.season, state.time); track("demo.mood", { season: b.dataset.season, time: state.time, follow: state.follow ? 1 : 0 }); }));
-document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.follow = false; setMood(state.season, b.dataset.time); track("demo.mood", { season: state.season, time: b.dataset.time, follow: 0 }); }));
-document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.follow = true; setMood(state.season, moodNow().time); track("demo.mood", { season: state.season, time: state.time, follow: 1 }); }));
+document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => { state.hand = true; setMood(b.dataset.season, state.time); track("demo.mood", { season: b.dataset.season, time: state.time, follow: state.follow ? 1 : 0 }); }));
+document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.hand = true; state.follow = false; setMood(state.season, b.dataset.time); track("demo.mood", { season: state.season, time: b.dataset.time, follow: 0 }); }));
+document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.hand = true; state.follow = true; setMood(state.season, moodNow().time); track("demo.mood", { season: state.season, time: state.time, follow: 1 }); }));
 // Following the clock is live: when the real hour turns, the picture turns with it (setMood has no fade of its own; a change of hour is a cut today).
 setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if (t) setMood(state.season, t); }, 20000);
 
@@ -1196,6 +1201,8 @@ createGame({
   // usual swing. Not for an observance: it is gone to with 自动镜头 off too, as the close itself is.
   holdEye(eye) { const { place, shot } = holdShot(eye, camera.aspect || 16 / 9); return director.go("ending", { ...place, shot }, 0, { now: true, force: true }); },
   undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(), directArrived: () => director.state().phase === "hold",
+  // The year-end bell's night has come while the page was open (joya-ui.js): a winter night, unless a hand has chosen.
+  eventNight() { if (!state.hand && joyaNight() && (state.season !== "winter" || state.time !== "night")) { state.follow = false; setMood("winter", "night"); } },
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),
