@@ -84,3 +84,27 @@ for (const [name, path] of Object.entries(routes)) {
     assert.ok(!unseen.length, `he was out of the picture in ${unseen.length} of ${n} frames, first at (${unseen[0]?.x.toFixed(1)}, ${unseen[0]?.z.toFixed(1)})`);
   });
 }
+
+// The lead's measures of the arm on a flight of steps and on a phone held upright (#295, from #271/#291 and #306), worked out
+// as tools/frame-routes.mjs works them, on the baked floor with the eye asking what is drawn: going down the flight by the
+// half-way pavilion the arm does not draw in below 3 m nor change its picture by more than 5% a second, the view does not
+// tip by more than 0.3° from one frame to the next up the flight or down it, and round the censer on a phone held upright
+// (390 × 844) his head and feet are in the picture every frame.
+const { measure, WALKS } = await import("../../tools/frame-routes.mjs");
+test("#295: down the flight by the half-way pavilion the arm keeps 3 m and the view does not jump", () => {
+  for (const size of ["16x9", "phone"]) {
+    const r = measure("b", size, WALKS["stair-down"], 0.06, { walker, space });
+    if (process.env.ARM_REPORT) console.log("stair-down", size, JSON.stringify(r));
+    assert.ok(r.armMin >= 3, `${size}: the arm drew in to ${r.armMin} m going down the flight`);
+    assert.ok(r.down.perSec <= 5, `${size}: his height in the picture changed ${r.down.perSec}% in a second going down`);
+    assert.ok(r.pitchStep <= 0.3, `${size}: the view tipped ${r.pitchStep}° in one frame going down`);
+  }
+});
+test("#295: up the flight the view does not tip more than 0.3° a frame either", () => {
+  for (const size of ["16x9", "phone"]) { const r = measure("b", size, WALKS["stair-up"], 0.06, { walker, space }); assert.ok(r.pitchStep <= 0.3, `${size}: ${r.pitchStep}° in one frame going up`); }
+});
+test("#295: round the censer on a phone held upright, his head and feet are in the picture", () => {
+  const r = measure("b", "phone", WALKS.censer, 0.06, { walker, space });
+  if (process.env.ARM_REPORT) console.log("censer phone", JSON.stringify(r));
+  assert.ok(r.top >= 0 && r.bottom <= 100 && r.feetIn === 100 && r.hidden === 0, `head at ${r.top}%, feet at ${r.bottom}%, feet in ${r.feetIn}%, hidden ${r.hidden}%`);
+});

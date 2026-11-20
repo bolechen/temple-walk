@@ -39,10 +39,33 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const shut = space
     ? (px, py, pz) => drawn(px, py, pz) || (rise(px, py, pz) > MAXRISE ? true : null)
     : (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null) || (arm && walker.railNear?.(px, py, pz, 0.25) ? true : null);
+  // Asked of what is drawn (#295), how far the eye must rise to see his feet is worked out from the line of sight itself:
+  // the ground along the arm is sampled once a quarter-metre, and the eye must stand where the line from it to his feet
+  // clears every sample between (and a little over the ground under it). Over a platform's edge that is the rise the
+  // written plan's rule gave (a fixed 1.6 of the edge's height); down a flight of steps, where the treads behind him rise
+  // as a slope and hide nothing of him, it is next to none, and the arm is not drawn in to his back (#295: the lead
+  // measured it at 1.3 m by the half-way pavilion).
+  const prof = new Map();
+  const groundAt = (gx, gz) => (walker.answers?.(gx, gz) ? Math.max(walker.heightAt(gx, gz), walker.landAt(gx, gz)) : walker.landAt(gx, gz));   // (the drawn floor where the grid has it: its treads, not the written ramp)
+  const groundAlong = (sd) => { let g = prof.get(sd); if (!g) { g = []; for (let k = 0; k * 0.25 <= reach + 0.5; k++) { const [gx, , gz] = base(k * 0.25, sd); g.push(groundAt(gx, gz)); } prof.set(sd, g); } return g; };
+  const sightNeed = (dist, sd, y) => {
+    // (seen down to his shins, 0.3 m over his feet, past the ground from half a metre behind him: the tread he has just
+    // stepped down from hides his heels from any eye that is not over him, and is not there to be cleared)
+    const g = groundAlong(sd), K = Math.min(g.length - 1, Math.max(0, Math.round(dist / 0.25))), shin = foot + 0.3; let Y = g[K] + 0.35;
+    for (let j = 2; j <= K; j++) if (g[j] + 0.05 > shin) Y = Math.max(Y, shin + ((g[j] + 0.05 - shin) * dist) / (j * 0.25));
+    return Y - y;
+  };
   // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open below).
   const base = arm
     ? (dist, sd = s0) => { const o = (arm.kx ? arm.kx * sd : sd / reach) * dist; return [x + rx * o + (ux * arm.ky - lx) * dist, ty + (uy * arm.ky - ly) * dist, z + rz * o + (uz * arm.ky - lz) * dist]; }
     : (dist, sd = s0) => [x + rx * sd - lx * dist, ty - ly * dist, z + rz * sd - lz * dist];
+  // At a distance along the arm (with `space`): something drawn there, or ground the line of sight cannot clear without
+  // the eye rising more than it may.
+  // (Asked where the eye would stand once risen to see him: down a flight the arm itself runs into the treads behind him,
+  // and the eye goes over them, not in to his back.)
+  const shutAt = (dist, sd = s0) => { const p = base(dist, sd), n = sightNeed(dist, sd, p[1]); return n > MAXRISE ? true : drawn(p[0], p[1] + Math.max(0, n), p[2]); };
+  // and whether the eye there, risen as far as it may, would be inside something drawn (not only too low to see him)
+  const solidAt = (dist, sd = s0) => { const p = base(dist, sd); return !!drawn(p[0], p[1] + Math.max(0, Math.min(MAXRISE, sightNeed(dist, sd, p[1]))), p[2]); };
   // First to his side, only as far as is open: on a porch that side may be a column, the lattice or a roof's edge.
   let s0 = 0;
   if (!arm) for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
@@ -54,12 +77,13 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     let thing = false;   // what stopped it was something built or set down, not the lie of the ground
     if (space && arm) space.along(base(0, sd), base(reach, sd));   // (what lies along this arm, gathered once)
     for (let s = 0.25; s <= reach + 1e-3; s += 0.25) {
-      const pts = arm ? [base(s - 0.125, sd), base(s, sd)] : [[ox - lx * s, ty - ly * s, oz - lz * s]], h = pts.map((p) => shut(...p)).find(Boolean);
+      const pts = arm ? [base(s - 0.125, sd), base(s, sd)] : [[ox - lx * s, ty - ly * s, oz - lz * s]];
+      const h = space && arm ? [s - 0.125, s].map((q) => shutAt(q, sd)).find(Boolean) : pts.map((p) => shut(...p)).find(Boolean);
       if (h) {
-        stop = h; thing = pts.some((p) => drawn(p[0], p[1], p[2]));
+        stop = h; thing = space && arm ? [s - 0.125, s].some((q) => solidAt(q, sd)) : pts.some((p) => drawn(p[0], p[1], p[2]));
         // Asked of what is drawn, a column or a trunk is not told from a wall by name but by its thickness: what the arm
         // is clear of again within half a metre beyond is let pass a moment, as a column was (`FOLLOW.postWait`).
-        if (space && arm && thing && s + 0.75 <= reach && !shut(...base(s + 0.5, sd)) && !shut(...base(s + 0.75, sd))) stop = "post";
+        if (space && arm && thing && s + 0.75 <= reach && !shutAt(s + 0.5, sd) && !shutAt(s + 0.75, sd)) stop = "post";
         break;
       }
       d = s;
@@ -69,6 +93,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // From his side the line back may pass behind a tower that straight behind him it would clear: then nearer behind
   // him it stands, as far to the side as still lets it stand back as far.
   let { d, stop, thing } = back(s0);
+  const firstThing = thing;
   // With an arm leaning to his right (A), a wall or a column on that side would bring it all the way in to him: then it
   // leans less, as Cinemachine's third-person follow draws its shoulder in, by as little as lets it stand back farthest.
   // With an arm straight behind him (B), something standing behind him that he is walking past (the censer, a stair's
@@ -85,7 +110,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   if (!arm) for (let k = s0 - 0.3; d < reach - 0.25 && k > -0.3; k -= 0.3) { const sd = Math.max(0, k), b = back(sd); if (b.d > d + 0.5) { s0 = sd; d = b.d; stop = b.stop; } }
   const ox = x + rx * (arm ? 0 : s0), oz = z + rz * (arm ? 0 : s0);   // (an arm turns about the point over his head; it is not set over beside him)
   // Over a platform or a stair higher than his feet it rises to see them over the edge. The rise needed at one spot.
-  const need = (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
+  const need = space && arm ? (dist, sd, y) => Math.max(0, sightNeed(dist, sd, y)) : (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
   const liftAt = (dist, sd = s0) => {
     // Looking a little to either side of where the eye stands, so that it is already rising when it comes to the edge
     // of a platform, not climbing out of the stone after it has crossed into it. Only as far as it can ever stand: ground
@@ -94,14 +119,22 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     for (let s = Math.max(0, dist - 0.5); s <= Math.min(dist + 1.0, Math.max(d, dist)) + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
     return Math.min(L, MAXRISE);
   };
-  const open = (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
+  const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.
   const floorAt = (dist, sd = s0) => { const [cx, , cz] = base(dist, sd); return walker.landAt(cx, cz) + 0.12; };
   const at = (dist) => {
     const [cx, y, cz] = base(dist), lifted = y + need(dist, s0, y);
     return [cx, lifted > y && shut(cx, lifted, cz) ? y : lifted, cz];   // never up into an eave
   };
-  return { ox, oz, ty, lx, ly, lz, d, stop, side: s0, base, open, liftAt, floorAt, at, shut, arm };
+  // (createFollow asks `shut` of single points: whether the eye there would be in something. With `space` that is what is
+  // drawn; how high it must stand to see him is already in `open` and `liftAt`.)
+  // With `space`, whether the eye at a distance would be inside something drawn (risen as far as it may), as against only
+  // too low to see him: the first is put right at once, the second is come in from on the spring, as the ground behind him
+  // rises step by step (a flight he goes down), and never by a jump.
+  const solid = space && arm ? solidAt : null;
+  // (and whether what holds the arm in is only the lie of the ground: then it comes in as slowly as it rises, FOLLOW.liftSpeed)
+  const ground = !!(space && arm && stop && !firstThing);
+  return { ox, oz, ty, lx, ly, lz, d, stop, ground, side: s0, base, open, solid, liftAt, floorAt, at, shut: space && arm ? drawn : shut, arm };
 }
 
 // How the eye moves from one frame to the next, after the third-person camera of 《小王子》 (its
@@ -123,6 +156,7 @@ export const FOLLOW = {
   slideBack: 1.2,    // coming back in behind him once past it: slowly, so that he drifts back to the middle unnoticed
   leanTime: 1.2,    // with ?frame=a, drawing the arm's lean in by a wall and out again: slow, so he drifts across the picture unnoticed (#271)
   liftUp: 0.22,     // rising to see his feet over a platform's edge
+  liftSpeed: 1.0,   // and, asked of what is drawn (#295), never faster than this, up or down, in metres a second: down a flight the rise comes on as he steps off its head and goes as he steps off its foot, and the view tipped half a degree a frame
   liftHold: 0.35,   // and staying up a while, so that walking along an edge does not make it bob
   liftDown: 0.5,    // coming down again
 };
@@ -170,7 +204,7 @@ export function createFollow(T = FOLLOW) {
       // narrow sweeping past (a wall's end, a tree, the corner of an eave), and like a column it is let through, for
       // no longer than a column is.
       const clears = !!ahead && ahead.open(dist, side);
-      const inside = !eye.open(dist, side), passing = inside && clears && through < T.postWait;
+      const inside = eye.solid ? eye.solid(dist, side) : !eye.open(dist, side), passing = inside && clears && through < T.postWait;
       through = passing ? through + dt : 0;
       if (inside && !passing) {
         const [px, , pz] = eye.base(dist, side); let best = null;
@@ -188,7 +222,7 @@ export function createFollow(T = FOLLOW) {
       if (want < dist - 1e-4) {
         waited += dt;
         // A column or a trunk crossing the line of sight is let pass; anything larger, or one that stays, is not.
-        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? T.turnSpeed : T.inSpeed);
+        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? T.turnSpeed : eye.ground ? T.liftSpeed : T.inSpeed);
         else vd = 0;
       } else {
         waited = 0;
@@ -197,9 +231,9 @@ export function createFollow(T = FOLLOW) {
       }
       const [cx, y, cz] = eye.base(dist, side);
       const wantLift = eye.liftAt(dist, side);
-      if (wantLift > lift) { [lift, vl] = damp(lift, wantLift, vl, T.liftUp, dt); held = T.liftHold; }
+      if (wantLift > lift) { [lift, vl] = damp(lift, wantLift, vl, T.liftUp, dt, eye.solid ? T.liftSpeed : Infinity); held = T.liftHold; }
       else if (held > 0) { held -= dt; vl = 0; }
-      else [lift, vl] = damp(lift, wantLift, vl, T.liftDown, dt);
+      else [lift, vl] = damp(lift, wantLift, vl, T.liftDown, dt, eye.solid ? T.liftSpeed : Infinity);
       let cy = y + lift;
       // Never up into an eave: down to the highest it may be under it, by as little as will do.
       if (lift > 0 && eye.shut(cx, cy, cz)) { const was = lift; while (lift > 0 && eye.shut(cx, y + lift, cz)) lift = Math.max(0, lift - 0.05); forced = Math.max(forced, was - lift); vl = 0; cy = y + lift; }
