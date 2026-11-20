@@ -847,7 +847,7 @@ if (!clipPick) $("clipBtn").hidden = true;
 ui.layer("clip", { kind: "modal" });
 let clipUrl = null, clipTimer = 0, clipTap = null, clipLast = null;
 const clipEnded = () => { clearInterval(clipTimer); clipTimer = 0; clipTap?.release(); clipTap = null; document.body.classList.remove("clipping"); $("clipRec").hidden = true; $("clipBar").style.removeProperty("width"); $("shutter").disabled = false; clipRec = null; };
-async function startClip(secs) {
+async function startClip(secs, short = 0, dry = false) {
   if (!clipPick || clipRec || frozen || !photo.on) return false;
   const mark = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") + "/?" + CLIP.utm } : null;
   if (mark) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, mark.seal), document.fonts.load(`30px ${FACE.serif}`, mark.temple + mark.label)]); } catch {} }
@@ -856,7 +856,7 @@ async function startClip(secs) {
   const crop = () => { const f = frameRect(), kx = canvas.width / canvas.clientWidth, ky = canvas.height / canvas.clientHeight; return { x: f.x * kx, y: f.y * ky, w: f.w * kx, h: f.h * ky }; };
   clipTap = recordTap();
   try {
-    clipRec = createClip({ source: canvas, crop, size: clipSize(aw, ah, quality.name), audio: clipTap?.stream, pick: clipPick, mark, secs,
+    clipRec = createClip({ source: canvas, crop, size: clipSize(aw, ah, quality.name, short), audio: clipTap?.stream, pick: clipPick, mark, secs, dry,
       onEnd: (r) => { const early = r.early; clipEnded(); showClip(r); track("demo.clip.export", { fmt: r.ext, secs: Math.round(r.secs), early, tier: quality.name }); },
       onFail: () => { clipEnded(); } });
   } catch (e) { clipEnded(); return false; }
@@ -891,7 +891,7 @@ $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark)
 on("clipMarkToggle", () => settings.set("clipMark", !settings.get().clipMark));
 addEventListener("keydown", (e) => { if (e.key === "Escape" && clipRec) { e.stopImmediatePropagation(); e.preventDefault(); stopClip(); } }, true);
 document.addEventListener("visibilitychange", () => { if (document.hidden) dropClip(); });
-window.__clip = (o) => { if (o && o.start) return startClip(o.secs); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs, frames: clipLast.frames } }; };
+window.__clip = (o) => { if (o && o.start) return startClip(o.secs, o.short, o.dry); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs, frames: clipLast.frames } }; };
 
 // ---- Through the door ----------------------------------------------------------------
 // Eyes close on the way in and daylight floods on the way out; behind the veil he is moved between the porch and the

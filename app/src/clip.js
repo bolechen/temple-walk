@@ -28,8 +28,8 @@ export function pickMime(supported) {
 }
 
 /** The film's size: the short side fixed by the tier, the long side by the frame's shape, both even (encoders want that). */
-export function clipSize(aw, ah, tierName) {
-  const short = tierName === "low" ? CLIP.shortLow : CLIP.short, even = (n) => Math.max(2, Math.round(n / 2) * 2);
+export function clipSize(aw, ah, tierName, force = 0) {
+  const short = force || (tierName === "low" ? CLIP.shortLow : CLIP.short), even = (n) => Math.max(2, Math.round(n / 2) * 2);
   return aw >= ah ? { w: even((short * aw) / ah), h: short } : { w: short, h: even((short * ah) / aw) };
 }
 export const clipBits = (w, h) => Math.round(CLIP.bits * Math.min(1, (w * h) / (1080 * 1440)) ** 0.85);
@@ -73,15 +73,15 @@ export function drawMark(x, w, h, a, { temple, label, url, seal }) {
  * A recording in progress. `source` is the page's drawing canvas, `crop()` the framed part of it in that canvas's own
  * pixels; `audio` (optional) is a MediaStream with the place's sound. `frame(t)` is called straight after each frame is
  * drawn (the drawing buffer is not kept past that task) and copies the crop onto the film's canvas.
- * @param {{ source: HTMLCanvasElement, crop: () => { x: number, y: number, w: number, h: number }, size: { w: number, h: number }, audio?: MediaStream | null, pick: { mime: string, type: string, ext: string }, mark?: any, secs?: number, now?: () => number, onEnd: (r: { blob: Blob, type: string, ext: string, secs: number, early: boolean, frames: number }) => void, onFail?: (e: any) => void }} o
+ * @param {{ source: HTMLCanvasElement, crop: () => { x: number, y: number, w: number, h: number }, size: { w: number, h: number }, audio?: MediaStream | null, pick: { mime: string, type: string, ext: string }, mark?: any, secs?: number, dry?: boolean, now?: () => number, onEnd: (r: { blob: Blob, type: string, ext: string, secs: number, early: boolean, frames: number }) => void, onFail?: (e: any) => void }} o
  */
 export function createClip(o) {
   const now = o.now || (() => performance.now() / 1000), scene = sceneSecs(!!o.mark, o.secs), total = scene + (o.mark ? CLIP.tail : 0);
   const film = document.createElement("canvas"); film.width = o.size.w; film.height = o.size.h;
   const x = film.getContext("2d", { alpha: false });
-  const stream = film.captureStream(CLIP.fps); o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+  const dry = !!o.dry, stream = dry ? new MediaStream() : film.captureStream(CLIP.fps);   // `dry`: draw the frames, record nothing (to tell the copy's cost from the encoder's) o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
   const chunks = [];
-  const rec = new MediaRecorder(stream, { mimeType: o.pick.mime, videoBitsPerSecond: clipBits(o.size.w, o.size.h), audioBitsPerSecond: 128000 });
+  const rec = dry ? /** @type {any} */ ({ start() {}, requestData() {}, stop() { setTimeout(() => rec.onstop?.(), 0); }, state: "inactive" }) : new MediaRecorder(stream, { mimeType: o.pick.mime, videoBitsPerSecond: clipBits(o.size.w, o.size.h), audioBitsPerSecond: 128000 });
   let t0 = 0, endAt = Infinity, early = false, state = "rec", sceneEnd = scene, drawn = 0;
   rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
   rec.onerror = (e) => { state = "failed"; o.onFail?.(e.error || e); };

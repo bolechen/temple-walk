@@ -266,7 +266,7 @@ function fingerprint(dir) {
       const probe = (n) => page.evaluate((n) => new Promise((res) => { const d = []; let p = performance.now(); const end = p + n; const f = (t) => { d.push(t - p); p = t; if (t < end) requestAnimationFrame(f); else { d.shift(); d.sort((a, b) => a - b); const m = d.reduce((a, b) => a + b, 0) / d.length; res({ frames: d.length, mean: +m.toFixed(2), p95: +d[Math.floor(d.length * 0.95)].toFixed(2), max: +d[d.length - 1].toFixed(2) }); } }; requestAnimationFrame(f); }), n);
       for (let i = 0; i < runs; i++) {
         log.off.push(await probe(ms));
-        await page.evaluate((s) => window.__clip({ start: true, secs: s }), C.secs || Math.ceil(ms / 1000) + 4);
+        await page.evaluate(([s, sh, d]) => window.__clip({ start: true, secs: s, short: sh, dry: d }), [C.secs || Math.ceil(ms / 1000) + 4, C.short || 0, !!C.dry]);
         await page.waitForFunction(() => window.__clip().drawn > 5, null, { timeout: 60000 });
         log.on.push(await probe(ms));
         await page.waitForFunction(() => window.__clip().last != null, null, { timeout: 120000, polling: 500 });
