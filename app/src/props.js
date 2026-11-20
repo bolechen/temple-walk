@@ -2,13 +2,22 @@
 import * as THREE from "three";
 import { mesh } from "./geo.js";
 import { procMat } from "./materials.js";
-import { castTexture, censerGeometry, censerMaterial, createSmoke } from "./censer.js";
+import { castTexture, censerGeometry, censerMaterial, createSmoke, traceStubsGeometry } from "./censer.js";
 import { U } from "./glsl.js";
 
 export function createProps(scene, M, at, centre) {
   // The Wanli censer of Jingshan, in its three parts (censer.js).
   const iron = censerMaterial(procMat, castTexture(), at);
   scene.add(mesh(censerGeometry().translate(at.x, 0, at.z), iron));
+  // The stubs other visitors left today (同修留痕, censer.js): one more draw call when there are any, none when there are not.
+  let traces = null, traceK = 0;
+  const setTraces = (k) => {
+    k = Math.floor(k) || 0; if (k === traceK) return traceK;
+    if (traces) { scene.remove(traces); traces.geometry.dispose(); traces = null; }
+    const g = traceStubsGeometry(k); traceK = g ? k : 0;
+    if (g) { traces = mesh(g.translate(at.x, 0, at.z), iron); traces.castShadow = false; scene.add(traces); }
+    return traceK;
+  };
   const smoke = createSmoke(at, U); scene.add(smoke.mesh);
 
   const c = document.createElement("canvas"); c.width = c.height = 128;
@@ -56,7 +65,8 @@ export function createProps(scene, M, at, centre) {
   return {
     setMood(m) { setShafts(m); iron.userData.setMood(m); smoke.setMood(m); mu.uCol.value.fromArray(m.fog).multiplyScalar(1.08); mu.uOp.value = 0.5 * m.mist; },
     // what the censer shows now (`__censer` in yard.js)
-    censer: () => ({ ...iron.userData.state(), smoke: smoke.state() }),
+    censer: () => ({ ...iron.userData.state(), smoke: smoke.state(), traceStubs: traceK, traceTris: traces ? (traces.geometry.index?.count ?? traces.geometry.attributes.position.count) / 3 : 0 }),
+    setTraces,
     update(t, dt, still, px = 800) {
       if (!still) mu.uT.value = t;
     },

@@ -114,6 +114,40 @@ const scenarios = {
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // 同修留痕 (#340): the day's count said once where an observance is made, the first stroke reported once, the stubs in the censer;
+  // and, with the API made to fail in every way, nothing said, nothing broken. The API is a stub: nothing here reaches Cloudflare.
+  presence: { tier: 2, async run(b, base) {
+    const day = "2026-11-20", posts = [], fake = { bell: { rite: 12, seal: 2 }, incense: { rite: 30, seal: 5 }, tea: { rite: 1500, seal: 0 } };
+    const api = ["**/api/**", (r) => {
+      const q = r.request();
+      if (q.method() === "POST") { const body = JSON.parse(q.postData()); posts.push(body); const c = (fake[body.place] ||= { rite: 0, seal: 0 }); c[body.kind]++; return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ day, ...body, n: c[body.kind] }) }); }
+      return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ day, traces: fake }) });
+    }];
+    const stand = async (t, id) => { await t.page.evaluate((i) => { const p = window.__places[i]; window.__pose(p.at[0], p.at[1], p.face + Math.PI, 0); }, id); await t.until(() => t.page.evaluate((i) => window.__presence().near === i, id), 30000, "the place was not offered: " + id); };
+    const t = await open(b, base, "q=low&presence=1" + BARE, { route: api });
+    await t.until(() => t.page.evaluate(() => window.__presence().read >= 1), 30000, "the day was never read");
+    const stubs = await t.page.evaluate(() => window.__censer());
+    expect(stubs.traceStubs === 18 && stubs.traceTris === 216, "30 offerings of incense should put 18 stubs (216 triangles) in the censer: " + JSON.stringify([stubs.traceStubs, stubs.traceTris]));
+    await stand(t, "bell"); await t.until(() => t.page.evaluate(() => document.getElementById("hint").textContent.includes("当日已有12人在此敲钟")), 20000, "the bell's count was not said: " + await t.page.evaluate(() => document.getElementById("hint").textContent));
+    await stand(t, "tea"); await t.until(() => t.page.evaluate(() => document.getElementById("hint").textContent.includes("当日已有约1500人在此吃茶")), 20000, "the tea's count was not said");
+    await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); window.dispatchEvent(new CustomEvent("struck", { detail: "drum" })); });
+    await t.until(() => posts.length >= 1, 20000, "the stroke was not reported"); await t.frames(8);
+    expect(posts.filter((x) => x.kind === "rite").length === 1 && posts.every((x) => x.place === "bell") && posts.length <= 2, "three strokes and a drum are one report of the bell (the third stroke also earns its seal, one more): " + JSON.stringify(posts));
+    expect(await t.page.evaluate(() => window.__presence().traces.bell.rite) === 13, "the count the answer gave should be kept");
+    expect(!JSON.stringify(posts).match(/[0-9]{3,}|ip|agent/i), "the report names a place and a kind and nothing else: " + JSON.stringify(posts));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // Every way the API can fail: no line, no stubs, nothing the page complains of beyond the browser's own note of the request.
+    for (const [name, handler] of [["refused", (r) => r.abort("failed")], ["500", (r) => r.fulfill({ status: 500, body: "" })], ["404", (r) => r.fulfill({ status: 404, body: "" })], ["429", (r) => r.fulfill({ status: 429, body: "{}" })], ["html", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<html>" })], ["slow", () => {}]]) {
+      const f = await open(b, base, "q=low&presence=1" + BARE, { route: ["**/api/**", handler] });
+      await stand(f, "bell"); await f.frames(6);
+      await f.page.evaluate(() => window.dispatchEvent(new CustomEvent("struck", { detail: "bell" }))); await f.frames(4);
+      const st = await f.page.evaluate(() => ({ p: window.__presence(), hint: document.getElementById("hint").textContent, censer: window.__censer().traceStubs, y: window.__yard().frames }));
+      expect(!/当日已有/.test(st.hint) && st.censer === 0 && st.p.line === null, `${name}: nothing should be said or drawn: ` + JSON.stringify(st));
+      const own = f.errors.filter((x) => !/\/api\//.test(x)); expect(own.length === 0, `${name}: ` + own.join("\n")); await f.close();
+    }
+    // Off where it should be off: a preview with no ?presence, and ?presence=0, never ask.
+    for (const q of ["q=low", "q=low&presence=0"]) { const asked = []; const o = await open(b, base, q + BARE, { route: ["**/api/**", (r) => { asked.push(r.request().url()); r.fulfill({ status: 404, body: "" }); }] }); await stand(o, "bell"); await o.frames(4); expect(asked.length === 0 && !(await o.page.evaluate(() => window.__presence().on)), `${q}: the page should not ask: ` + asked.join()); expect(o.errors.length === 0, o.errors.join("\n")); await o.close(); }
+  } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {

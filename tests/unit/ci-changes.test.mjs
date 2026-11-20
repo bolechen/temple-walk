@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 const { siteChanged, walkChanged, codeChanged, lastDeployed, DOC_TESTS, LIMIT } = createRequire(import.meta.url)("../../tools/ci/changes.cjs");
 
 test("a change under app/ builds; so do the files the build or the browser tests are made of", () => {
-  for (const f of ["app/yard.js", "app/src/interior.js", "app/shared/fonts/kai.woff2", "tests/e2e/run.cjs", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "wrangler.production.jsonc", "wrangler.canary.jsonc", "tools/setup.mjs", "tools/site.cjs", ".github/workflows/pages.yml", "tools/ci/changes.cjs"]) {
+  for (const f of ["app/yard.js", "app/src/interior.js", "app/shared/fonts/kai.woff2", "tests/e2e/run.cjs", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "wrangler.production.jsonc", "wrangler.canary.jsonc", "worker/index.js", "worker/trace-core.js", "tools/worker-smoke.mjs", "tools/setup.mjs", "tools/site.cjs", ".github/workflows/pages.yml", "tools/ci/changes.cjs"]) {
     assert.equal(siteChanged([f]), true, f);
     assert.equal(siteChanged(["docs/HANDOFF.md", f]), true, `${f} beside a paper`);
   }
@@ -86,7 +86,7 @@ const jobOf = (yml, name) => { const a = yml.indexOf(`\n  ${name}:\n`); assert.o
 
 test("pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, grid, site, quick\]/);
+  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, grid, site, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
   assert.match(jobOf(y, "unit"), /pnpm test\b/);
   assert.match(jobOf(y, "grid"), /swap\.mjs --test tests\/unit/);
