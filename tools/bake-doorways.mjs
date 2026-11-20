@@ -28,7 +28,10 @@ const { buildInteriors, STAND } = await import("../app/src/interior.js");
 
 const top = join(dirname(fileURLToPath(import.meta.url)), ".."), app = join(top, "app"), dist = join(top, "dist");
 const CACHE = join(top, "node_modules", ".cache", "doorways"), OUT = join(app, "shared", "doorways"), LEVEL = "t00";
-export const BAKE = { version: 1, size: 256, quality: 0.9, moods: [["summer", "day"], ["summer", "night"]] };
+// `inward` (#320's trial, shown only with `?doorway=hires`): the face looking into the room again on its own, `col` pixels a
+// side for colour (drawn `ss` times larger and averaged down), `dist` for distances (a quarter of `col`). DOORWAY_INWARD=512 for a smaller one.
+const IN = Number(process.env.DOORWAY_INWARD || 1024);
+export const BAKE = { version: 1, size: 256, quality: 0.9, moods: [["summer", "day"], ["summer", "night"]], inward: { col: IN, dist: IN / 4, ss: 2 } };   // distances at a quarter: 512 px held 160 KB a hall of PNG, over the 3 MB budget for eight
 const sha = (...parts) => { const h = createHash("sha256"); for (const p of parts) h.update(p); return h.digest("hex"); };
 const filesUnder = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: true }).map((f) => join(dir, String(f))).filter((f) => statSync(f).isFile()).sort() : []);
 
@@ -51,6 +54,8 @@ export function fingerprints() {
 }
 
 const names = (id, fp) => ({ day: `${id}.${fp}.day.webp`, night: `${id}.${fp}.night.webp`, dist: `${id}.${fp}.dist.png` });
+const inNames = (id, fp) => ({ inDay: `${id}.${fp}.in.day.webp`, inNight: `${id}.${fp}.in.night.webp`, inDist: `${id}.${fp}.in.dist.png` });
+const allNames = (id, fp) => ({ ...names(id, fp), ...inNames(id, fp) });
 
 // Serve a built site and open it in Chromium with software rendering, as the tests do.
 async function withPage(root, query, fn) {
@@ -83,8 +88,8 @@ async function draw(ids, fps) {
   // were merged into with the courts); only the passes the cubes do not use.
   await withPage(dist, "shot=1&q=high&enter&off=reflect,bloom,gtao", async (page, errs) => {
     for (const id of ids) {
-      const t0 = Date.now(), p = await page.evaluate(([i, q]) => window.__doorBake(i, q), [id, BAKE.quality]);
-      const n = names(id, fps[id]); for (const k of ["day", "night", "dist"]) writeFileSync(join(CACHE, n[k]), dataOf(p[k]));
+      const t0 = Date.now(), p = await page.evaluate(([i, q, w]) => window.__doorBake(i, q, false, w), [id, BAKE.quality, BAKE.inward]);
+      const n = allNames(id, fps[id]); for (const k of Object.keys(n)) writeFileSync(join(CACHE, n[k]), dataOf(p[k]));
       console.log(`bake-doorways: drew ${id} in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
     }
     if (errs.length) throw new Error("bake-doorways: the page reported errors: " + errs.slice(0, 3).join(" | "));
@@ -94,16 +99,22 @@ async function draw(ids, fps) {
 /** Take every hall's pictures from the cache (drawing what is missing) and write them where the site is served from. */
 export async function bakeDoorways({ verify = false } = {}) {
   const t0 = Date.now(), fps = fingerprints(), ids = Object.keys(fps);
-  const missing = ids.filter((id) => !Object.values(names(id, fps[id])).every((f) => existsSync(join(CACHE, f))));
+  const missing = ids.filter((id) => !Object.values(allNames(id, fps[id])).every((f) => existsSync(join(CACHE, f))));
   if (missing.length) await draw(missing, fps);
-  const manifest = { level: LEVEL, bake: BAKE, halls: {} }, sizes = {};
+  const manifest = { level: LEVEL, bake: BAKE, halls: {} }, sizes = {}, inSizes = {};
   for (const dir of [OUT, existsSync(join(dist, "index.html")) ? join(dist, "shared", "doorways") : null].filter(Boolean)) {
     rmSync(dir, { recursive: true, force: true }); mkdirSync(dir, { recursive: true });
-    for (const id of ids) { const n = names(id, fps[id]); for (const f of Object.values(n)) copyFileSync(join(CACHE, f), join(dir, f)); manifest.halls[id] = { fp: fps[id], ...n }; sizes[id] = Object.values(n).reduce((s, f) => s + statSync(join(CACHE, f)).size, 0); }
+    for (const id of ids) {
+      const n = names(id, fps[id]), m = inNames(id, fps[id]); for (const f of [...Object.values(n), ...Object.values(m)]) copyFileSync(join(CACHE, f), join(dir, f));
+      manifest.halls[id] = { fp: fps[id], ...n, in: { day: m.inDay, night: m.inNight, dist: m.inDist } };
+      sizes[id] = Object.values(n).reduce((s, f) => s + statSync(join(CACHE, f)).size, 0); inSizes[id] = Object.values(m).reduce((s, f) => s + statSync(join(CACHE, f)).size, 0);
+    }
     writeFileSync(join(dir, `${LEVEL}.json`), JSON.stringify(manifest, null, 1));
   }
   const total = Object.values(sizes).reduce((a, b) => a + b, 0), kb = (b) => +(b / 1024).toFixed(1);
-  const report = { drawn: missing, fromCache: ids.filter((i) => !missing.includes(i)), kb: Object.fromEntries(Object.entries(sizes).map(([k, v]) => [k, kb(v)])), totalKb: kb(total), seconds: +((Date.now() - t0) / 1000).toFixed(1) };
+  const inTotal = Object.values(inSizes).reduce((a, b) => a + b, 0);
+  const report = { drawn: missing, fromCache: ids.filter((i) => !missing.includes(i)), kb: Object.fromEntries(Object.entries(sizes).map(([k, v]) => [k, kb(v)])), totalKb: kb(total),
+    inward: { size: BAKE.inward, kb: Object.fromEntries(Object.entries(inSizes).map(([k, v]) => [k, kb(v)])), totalKb: kb(inTotal), withBaseKb: kb(total + inTotal) }, seconds: +((Date.now() - t0) / 1000).toFixed(1) };
   const over = Object.entries(sizes).filter(([, v]) => v > 300 * 1024).map(([k]) => k);
   if (over.length || total > 2.5 * 1024 * 1024) console.warn(`bake-doorways: over budget (300 KB a hall, 2.5 MB in all): ${over.join(", ") || "total " + kb(total) + " KB"}`);
   if (verify) report.verify = await compare("main", manifest.halls.main);

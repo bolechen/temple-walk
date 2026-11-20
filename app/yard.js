@@ -39,6 +39,7 @@ import { logSwing, riteNow, pauseRites } from "./src/rites.js";
 import { buildInteriors } from "./src/interior.js";
 import { INCENSE_HALLS, incenseId } from "./src/incense.js";
 import { createDoorways } from "./src/doorway.js";
+import { createLive } from "./src/doorway-live.js";
 import { asset } from "./src/assets.js";
 import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
@@ -698,7 +699,8 @@ function frame(now) {
   // approach where the eye is under it. A jump does not change which of these he is in.
   if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
   ground.mirror?.(mirrorOn && !inside);
-  if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
+  if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);
+  if (live && !inside && arrived) live.frame(camera, camera.position, post.size());   // #320's trial: the near room drawn live into the door's own pixels   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(photo.on && settings.get().blur ? focusAt() : 0);   // depth of field only with the camera raised and 虚化 switched on: never walking, never ?shot (the picture a visitor sees is the picture a tool takes)
   post.render(t);
@@ -850,7 +852,12 @@ const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x 
 // What is seen of each room from outside, through its door (doorway.js, #218): each hall is taken when he first comes
 // near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true[, id])` takes them
 // all (or the one named) at once, for a picture.
-const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, base: asset("shared/doorways/") }) : null;
+// `?doorway=hires,live` (#320's trial, off by default): the larger baked face into each room, and the near room drawn live
+// through its door on the middle and high tiers (doorway-live.js; `?warm=0` leaves out its warming ahead, to measure it).
+const DOORWAY = new Set((Q.get("doorway") || "").split(",").filter((m) => m === "hires" || m === "live"));
+const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, base: asset("shared/doorways/"), modes: DOORWAY }) : null;
+const live = doors && DOORWAY.has("live") && quality.name !== "low" ? createLive({ renderer, scene, U, rooms, halls: doors.halls, msaa: quality.msaa, warm: Q.get("warm") !== "0" }) : null;
+live?.camera(camera);
 // A tool that draws the doorways in the page (or the bake) sets the hour for each drawing, and the visitor's is put back.
 doors?.moods({ set: (season, time) => setMood(season, time), keep: () => { const { season, time } = state; return () => setMood(season, time); } });   // `keep` remembers the hour before the drawing changes it
 // Where the altar of a hall stands in the picture (x and y from -1 to 1): from inside, the altar itself; from outside,
@@ -869,8 +876,8 @@ window.__doorRect = (id) => {
   const floor = rect([[xs[mid] + 0.4, d.platH, d.Z + 1.6], [xs[mid + 1] - 0.4, d.platH, d.Z + 1.6], [xs[mid] + 0.4, d.platH, d.Z + 2.4], [xs[mid + 1] - 0.4, d.platH, d.Z + 2.4]]);
   return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4), floor };
 };
-window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => doors.report()) : doors.report());
-window.__doorBake = (id, q, lossless) => doors?.bakeHall(id, q, lossless);   // tools/bake-doorways.mjs: one hall's three pictures, drawn in this page
+window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => ({ ...doors.report(), live: live?.report() ?? null })) : { ...doors.report(), live: live?.report() ?? null });
+window.__doorBake = (id, q, lossless, inward) => doors?.bakeHall(id, q, lossless, inward);   // tools/bake-doorways.mjs: one hall's three pictures, drawn in this page
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
@@ -975,7 +982,7 @@ window.__part = (name, on) => {
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
 window.__cost = (n = 40) => {
   const gl = renderer.getContext(), px = new Uint8Array(4);
-  const one = () => { renderer.info.reset(); if (quality.planar > 0) ground.render(renderer, camera); post.render(0); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+  const one = () => { renderer.info.reset(); if (live && !inside) live.frame(camera, camera.position, post.size()); if (quality.planar > 0) ground.render(renderer, camera); post.render(0); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
   for (let i = 0; i < 6; i++) one();
   const t0 = performance.now(); for (let i = 0; i < n; i++) one();
   return +((performance.now() - t0) / n).toFixed(2);
