@@ -1220,7 +1220,8 @@ if (DEVPOSE) {
 }
 // The debug panel: where he stands, what the frame costs, the hour, and switches for each part (src/debug.js). It acts
 // only through the hooks above. It opens by itself on the dev server and on a pull request's preview
-// (<deployment>-temple-walk-preview.<account>.workers.dev, docs/PREVIEWS.md); ?debug=0 keeps it shut there. The published
+// (<deployment>-temple-walk-preview.<account>.workers.dev, docs/PREVIEWS.md); ?debug=0 keeps it shut there. The canary is
+// shown to testers and behaves as production does: no panel, no workbench addresses (#308). The published
 // site never loads it: the module is a separate chunk fetched only here.
 const PREVIEW = /-temple-walk-preview\./.test(location.hostname);
 if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {

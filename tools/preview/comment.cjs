@@ -49,6 +49,8 @@ const stamp = (m) => [m.deployed && `<!-- deployed:${m.deployed} -->`, m.fixed &
 function links(fixed, manifest) {
   return ["<details><summary>六个验收机位与评审直达（点开）</summary>", "", `验收机位（J01 夏·昼）：${cameraLinks(fixed, manifest)}`, "", `评审直达（不读不写本机朱印帐，属诊断证据）：${benchLinks(fixed)}`, "", "</details>"];
 }
+// What main last deployed (#308: pages.yml, wrangler.canary.jsonc): where the next version is played before it is cut.
+const CANARY = "https://temple-walk-canary.bole-chen.workers.dev";
 const FOOT = (run) => `[运行记录](${run})：预览只用来看效果，不是验收结论；反馈问题请附固定地址或提交号。`;
 
 function body({ state, sha, run, record, previous, manifest, files }) {
@@ -56,7 +58,7 @@ function body({ state, sha, run, record, previous, manifest, files }) {
   const tail = note ? ["", note] : [];
   if (state === "success") {
     const m = { deployed: sha, fixed: record.deployment_urls[0], latest: record.preview_urls[0] };
-    return [MARK, ...stamp(m), "### PR 预览", "", `- 提交 \`${sha}\``, `- 最新地址（随推送更新）：${m.latest}`, `- 本提交固定地址：${m.fixed}`, "",
+    return [MARK, ...stamp(m), "### PR 预览", "", `- 提交 \`${sha}\``, `- 最新地址（随推送更新）：${m.latest}`, `- 本提交固定地址：${m.fixed}`, `- canary（main 的最新版，内部地址）：${CANARY}`, "",
       ...links(m.fixed, manifest), "", FOOT(run), ...tail].join("\n");
   }
   if (state === "same") {

@@ -1,0 +1,14 @@
+// The canary: what main last deployed, on a Worker of its own with its own workers.dev address (#308). Testers are sent
+// here before a version is cut. It behaves as production does (no debug panel, no workbench addresses) but carries no visitor
+// counter and says in the page and in a header that it is not to be indexed (VITE_DEPLOY=canary, vite.config.mjs). The public site is wrangler.production.jsonc, deployed from a version tag; previews are wrangler.jsonc.
+{
+  "name": "temple-walk-canary",
+  "compatibility_date": "2026-11-16",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}

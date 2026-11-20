@@ -7,3 +7,4 @@ interface Window { umami?: { track?: (name: string, data?: Record<string, string
 interface ParentNode { querySelectorAll(selectors: string): NodeListOf<HTMLElement> }
 // The build's channel (src/channel.js), defined by vite.config.mjs; absent when the sources are run in Node.
 declare const __CHANNEL__: "web" | "steam" | "platform";
+declare const __DEPLOY__: "production" | "canary" | "preview";
