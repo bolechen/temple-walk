@@ -1,7 +1,7 @@
 name: End to end, every scenario
 
 # The whole suite takes the better part of an hour on one machine without a GPU, so it does not run on every push:
-# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among four machines.
+# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among eight machines by each scenario's measured time (tests/e2e/shards.cjs, #335).
 on:
   # Beside every publication, and not in its way: his body and the camera's near plane against everything built, and the
   # pause menu in every language. (The stairs and the low drop, which change most often, stop the publication itself since
@@ -27,7 +27,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: e2e-${{ github.event_name == 'push' && 'regression' || 'full' }}
+  # A full run on a branch keeps to its own branch: it must not cancel the nightly run of main (#335).
+  group: e2e-${{ github.event_name == 'push' && 'regression' || format('full-{0}', github.ref) }}
   cancel-in-progress: true
 
 jobs:
@@ -82,16 +83,18 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  # Every scenario, once a night and when asked: four machines take a quarter of the list each. Asked for by name, the
+  # Every scenario, once a night and when asked: eight machines take a share of the list each, made by tests/e2e/shards.cjs from the
+  # last measured time of every scenario (tests/e2e/durations.json; `node tests/e2e/shards.cjs update <reports>` refreshes them after a run), so
+  # that none runs much longer than another: taken in turn, four machines ran 35 to 48 minutes of the same list. Asked for by name, the
   # scenarios named are run on the first machine alone.
   full:
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - name: Is there anything for this machine
         id: mine
@@ -137,7 +140,7 @@ jobs:
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
-          if [ -n "$SCENARIOS" ]; then node tests/e2e/run.cjs $SCENARIOS; else node tests/e2e/run.cjs --shard=${{ matrix.shard }}/4; fi
+          if [ -n "$SCENARIOS" ]; then node tests/e2e/run.cjs $SCENARIOS; else node tests/e2e/run.cjs --shard=${{ matrix.shard }}/8; fi
       # Read after the scenarios, and whatever they gave: a read of the public address that timed out once stood before
       # them and left the first machine's quarter of the scenarios unwalked (#276).
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
