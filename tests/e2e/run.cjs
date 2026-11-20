@@ -139,6 +139,12 @@ const scenarios = {
     const e = await t.page.evaluate(() => window.__eventLog());
     expect(e.every((x) => "lang" in x.data), "every event should carry the language: " + JSON.stringify(e.filter((x) => !("lang" in x.data))));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A surface that is not there (#328): the walk goes on with its mean colour, and the one failed-load event says which file.
+    const lost = await open(b, base, "q=low" + BARE, { enter: false, route: (p) => p.route(/\/shared\/textures\/[^/]*_a\.webp(\?.*)?$/, (r) => r.fulfill({ status: 404, body: "" })) });
+    const ev = await lost.page.evaluate(() => window.__eventLog().filter((x) => x.name === "demo.load_error"));
+    expect(ev.length === 1 && ev[0].data.kind === "resource" && /^\/?(.*\/)?shared\/textures\/[^/?]*_a\.webp$/.test(ev[0].data.resource) && ev[0].data.reason === "error" && ev[0].data.stage && ev[0].data.percent != null, "a missing texture should be named once, as a resource: " + JSON.stringify(ev));
+    expect(!JSON.stringify(ev).match(/\?|http/), "the event should carry no query or address: " + JSON.stringify(ev));
+    expect(lost.errors.every((x) => /404|_a\.webp/.test(x)), "only the made-up 404s were expected: " + lost.errors.join("\n")); await lost.close();
   } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.

@@ -9,7 +9,7 @@ import { SURFACES } from "../shared/textures/index.js";
 export { SURFACES };
 // One pair of uniforms per surface, shared by every material that uses it.
 export const TEX = {};
-const state = { total: 0, loaded: 0, failed: [] };
+const state = { total: 0, loaded: 0, failed: [], failedUrls: [] };
 const flat = (r, g, b, srgb) => { const t = new THREE.DataTexture(new Uint8Array([r, g, b, 255]), 1, 1); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; return t; };
 const toSrgb = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
 for (const [name, s] of Object.entries(SURFACES)) {
@@ -27,7 +27,7 @@ export function loadTextures(anisotropy = 8, onChange = () => {}) {
       t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = anisotropy; if (srgb) t.colorSpace = THREE.SRGBColorSpace;
       t.minFilter = THREE.LinearMipmapLinearFilter; t.needsUpdate = true;
       const old = TEX[name][slot].value; TEX[name][slot].value = t; old.dispose(); state.loaded++; onChange(state);
-    }, undefined, () => { state.failed.push(file); onChange(state); });
+    }, undefined, () => { state.failed.push(file); state.failedUrls.push(base + file); onChange(state); });
   }
   return state;
 }

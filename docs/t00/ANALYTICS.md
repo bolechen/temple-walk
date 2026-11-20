@@ -1,6 +1,6 @@
 # T00 运营埋点（Umami）
 
-更新：2026-11-19。站点 `temple.rushiwowen.co`，自建 Umami 3.5（`u.rushiwowen.co`），站点 id `e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42`。
+更新：2026-11-20（`demo.load_error` 补字段、`__eventLog()` 与 `offering.*` 两处过期说明改正：#328）。站点 `temple.rushiwowen.co`，自建 Umami 3.5（`u.rushiwowen.co`），站点 id `e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42`。
 本文记两件事：**现在看到的数据**，以及**这一轮补的埋点**。数据是从 Umami 的 Postgres 只读查询得到的，不是估算。
 
 ---
@@ -31,7 +31,7 @@
 
 **七印分布**（事件次数，不是人数）：香 31、钟 11、茶 11、经 8、井 7、灯 7、坐 6。
 
-> 另有一组 `offering.*` 事件（open/coin/qr/sheet）存在库里，但当前 `app/` 没有这些调用；应是旧构建或另一条分支的遗留，**不在本 PR 的事件表内**，也不据此判断现状。
+> `offering.*`（coin/sheet/open/qr）不是遗留：`app/src/game.js` 里确有调用（功德箱投币 `offering.coin`，网页版再开供养单 `offering.sheet`/`offering.open`，扫码 `offering.qr`，`src/donate.js`）。第 1 节的快照取自 11-19 上午，当时的数据与现状分开看；事件表在 3.3。
 
 ---
 
@@ -48,7 +48,7 @@
 
 ## 3. 事件表
 
-事件名一律 `demo.*` / `opening.*`；每个事件自动带 `lang`（`zh|ja|en|ko`），字符串值截到 50 字符，布尔转 `1/0`。只在 `temple.rushiwowen.co` 发送；预览、测试、本机不发送（`__events()` 仍可在本机读到内存里的最后 200 条）。
+事件名一律 `demo.*` / `opening.*`；每个事件自动带 `lang`（`zh|ja|en|ko`），字符串值截到 50 字符，布尔转 `1/0`。只在 `temple.rushiwowen.co` 发送；预览、测试、本机不发送（`__eventLog()` 仍可在本机读到内存里的最后 100 条）。
 
 ### 3.1 已有（本轮不改）
 
@@ -63,9 +63,9 @@
 | `demo.complete` | 第七印、书满 | `count` `seconds` | 通关 |
 | `demo.ending` | 收尾看完/跳过 | `skipped` `count` `seconds` | 结尾 |
 | `demo.restart` | 从头走起 | `from` `seals` | 重开 |
-| `demo.load_error` | 加载失败 | `reason`（本轮补） | 失败原因 |
+| `demo.load_error` | 加载失败 | 见 3.2 末的字段表 | 失败在哪一步、哪个资源、什么错 |
 
-### 3.2 本轮新增
+### 3.2 本轮新增（`demo.load_error` 的字段见下表）
 
 | 事件 | 何时 | 数据 | 回答什么 |
 |---|---|---|---|
@@ -80,7 +80,30 @@
 | `demo.share` | 系统分享成功（留影或朱印簿） | `from` | 分享出口 |
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
 
+**`demo.load_error` 的字段（#328）**。一个页面只发一次，取第一次失败，连锁的报错不再发。`loading.js` 是纯脚本，单测在 Node 里直接跑它，拿不到 `deploy.js` 的 `PRODUCTION`，所以仍按 hostname（`temple.rushiwowen.co`）判断是否发送；金丝雀和预览不发。
+
+| 字段 | 值 |
+|---|---|
+| `reason` | 旧字段，保留：`webgl` 或 `error`，旧报表照用 |
+| `stage` | 失败时最后一个 `step(name)` 的名字；还没进第一步是 `boot`（截 50 字） |
+| `percent` | 失败时进度条的值（0–99） |
+| `kind` | `script-error`（window `error`，代码抛错）、`resource`（`<img>` `<script>` `<link>` 的 `error`，在捕获阶段听；以及纹理没取到）、`rejection`（`unhandledrejection`）、`webgl` |
+| `resource` | 失败资源的路径：站内只留路径，去掉域名、查询串和片段，截 120 字；站外只写域名。只有 `kind=resource` 有 |
+| `message` | 错误信息头 120 字，其中的完整网址换成路径（站外换成域名），`?` 之后的内容去掉。`resource` 没有 |
+| `where` | 抛错的文件名和行号（`app.js:42`，不含目录和查询串）。只有 `script-error` 有 |
+
+两点要知道：一，纹理没取到不会让页面打不开（以它的均色顶替），所以只记 `kind=resource`，不弹重试；`<img>`、`<link>` 同样只记不弹，`<script>` 没取到才弹。二，因为只发一次，先因一张图记了、随后才崩的页面，数据里留的是那张图。事件也进 `__eventLog()`（本机可读）。
+
 **为什么是这些，不是更多**：它们正好补上「ready → enter → 第一枚印 → 第一座殿 → 第一次留影/分享」这条运营主线，以及「仪式中途放弃」和「性能降级」两个质量信号。点击热区、每帧位置、滚动深度都不做——页面没有滚动，也不该把访客的每一步都记下来。
+
+### 3.3 供养（`offering.*`，`game.js`，只带 `lang`）
+
+| 事件 | 何时 |
+|---|---|
+| `offering.coin` | 在功德箱前合掌、投下一枚（每个渠道的构建都有） |
+| `offering.sheet` | 投币后打开供养单（仅网页版） |
+| `offering.open` | 在供养单上点了去往如是我闻的链接（仅网页版） |
+| `offering.qr` | 供养单上展开了赞赏码（仅网页版，每次访问一次） |
 
 ---
 
@@ -98,7 +121,7 @@
 
 - 不采集姓名、账号、位置、设备指纹；只有 Umami 自带的浏览器/系统/语言/国家与页面性能。
 - 事件值截到 50 字符，避免把长文本带出去；`track()` 在非公开域名直接返回，不发送。
-- `__events()` 是测试与主控台用的内存记录（最后 200 条），不上传。
+- `__eventLog()` 是测试与主控台用的内存记录（最后 100 条），不上传。
 - 这份数据是自建 Umami 的 Postgres 只读查询；查询日期 2026-11-19，之后会变。引用时写日期。
 
 ---
@@ -108,4 +131,4 @@
 - 不做 A/B 测试框架；先看「默认指向钟楼 vs 香」哪个人更容易拿到第一枚印，用现有数据加一次运营改动即可。
 - 不做 session replay、热图、逐帧位置。
 - 不改 Umami 的采样与保留策略；站点流量还小。
-- 不把 `offering.*` 旧事件接回来；若主创要「供养」玩法，另立 issue。
+- `offering.*` 已在 `game.js` 里发送（见第 1 节的说明），本文不重新设计它们。
