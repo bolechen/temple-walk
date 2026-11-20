@@ -17,7 +17,7 @@ GitHub 是开发交付与证据的来源；研究 Site 展示状态。无需向 
 - `source.sha`：生成时检查的主线完整 SHA。
 - `delivery.record_commit`：交付文档最后变更提交，避免把历史自报当作本次交付。
 - `verification`：该 SHA 的 Pages workflow、实际步骤结果及证据链接；scope 仅为 boot、stairs、drop，不代表全游戏或美术通过。
-- `deployment.sha`：最近 100 次主线 push 部署中最后成功版本；与 source 不同则显示尚未部署到当前提交。找不到时显示未知，不推测成功。
+- `deployment.sha`：`pages.yml` 在 main 上**部署那一步（job `deploy`）成功**的最近一次运行的提交；只改文档的运行虽然成功但不部署，不算（#299）。取法与 `tools/ci/changes.cjs` 判断「上次部署」共用 `tools/ci/deployed.cjs` 的 `findLastDeploy`，别各写一份。与 source 不同则显示尚未部署到当前提交。找不到时显示未知，不推测成功。`deployment.target` 是 `canary`：自 #308 起 main 部署到 canary Worker（`deployment.url`），生产只从版本标签部署，看板暂不报生产的标签。
 - `independent_review`：独立评审人、完整 reviewed_commit、报告和问题。只有与 source SHA 完全相同才适用于当前版本；旧评审保留但新版本自动显示待复验。
 
 开发者只维护 delivery.json。评审者维护 independent-review.json；主创维护 `docs/handoff/LATEST-GOALS.md`（用户需求与所有者决定，见 AGENTS.md「目标记录」）；此处是协作责任约定，不是仓库写权限隔离。同一源码改动后的旧验收不能自动转为通过。历史 `review-log.json` 不删除。
