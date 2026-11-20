@@ -1,5 +1,4 @@
 // `?debug`: the panel's readings and addresses, and the promises that keep it out of the published page.
-import { CANARY_HOST } from "../../app/src/deploy.js";
 import test from "node:test"; import assert from "node:assert/strict";
 import fs from "node:fs";
 import "./dom-stub.mjs";
@@ -59,10 +58,9 @@ test("every switch the page offers has a name on the panel", () => {
 });
 
 test("the panel opens by itself on the dev server and on a pull request's preview, and is fetched nowhere else", () => {
-  assert.match(yard, /const PREVIEW = \/-temple-walk-preview\\\.\/\.test\(location\.hostname\) \|\| \(DEPLOY === "canary" && CANARY_HOST\.test\(location\.hostname\)\);\s*if \(\(import\.meta\.env\.DEV \|\| PREVIEW\) && Q\.get\("debug"\) !== "0"\) \{\s*const \{ mountDebug \} = await import\("\.\/src\/debug\.js"\)/);
-  // The canary Worker (#308): only a build made for it, and only on its own address, never on a test's 127.0.0.1.
-  assert.ok(CANARY_HOST.test("temple-walk-canary.bole-chen.workers.dev") && !CANARY_HOST.test("127.0.0.1") && !CANARY_HOST.test("temple.rushiwowen.co"));
+  assert.match(yard, /const PREVIEW = \/-temple-walk-preview\\\.\/\.test\(location\.hostname\);\s*if \(\(import\.meta\.env\.DEV \|\| PREVIEW\) && Q\.get\("debug"\) !== "0"\) \{\s*const \{ mountDebug \} = await import\("\.\/src\/debug\.js"\)/);
   const host = /-temple-walk-preview\./;
+  assert.ok(!host.test("temple-walk-canary.bole-chen.workers.dev"), "the canary is shown to testers and has no panel (#308)");
   for (const h of ["pr-68-temple-walk-preview.bole-chen.workers.dev", "06c1ed68-temple-walk-preview.bole-chen.workers.dev"]) assert.ok(host.test(h), h);
   for (const h of ["temple.rushiwowen.co", "bolechen.github.io", "127.0.0.1", "temple-walk-preview.example.com"]) assert.ok(!host.test(h), h);
   assert.ok(!/^import .*debug\.js/m.test(yard), "a static import would put it in the published build");

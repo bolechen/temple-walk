@@ -54,7 +54,6 @@ import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
-import { DEPLOY, CANARY_HOST } from "./src/deploy.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
 const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 
@@ -1221,10 +1220,10 @@ if (DEVPOSE) {
 }
 // The debug panel: where he stands, what the frame costs, the hour, and switches for each part (src/debug.js). It acts
 // only through the hooks above. It opens by itself on the dev server and on a pull request's preview
-// (<deployment>-temple-walk-preview.<account>.workers.dev, docs/PREVIEWS.md) and on the canary Worker's own address, in a
-// build made for it (src/deploy.js, #308); ?debug=0 keeps it shut there. The published
+// (<deployment>-temple-walk-preview.<account>.workers.dev, docs/PREVIEWS.md); ?debug=0 keeps it shut there. The canary is
+// shown to testers and behaves as production does: no panel, no workbench addresses (#308). The published
 // site never loads it: the module is a separate chunk fetched only here.
-const PREVIEW = /-temple-walk-preview\./.test(location.hostname) || (DEPLOY === "canary" && CANARY_HOST.test(location.hostname));
+const PREVIEW = /-temple-walk-preview\./.test(location.hostname);
 if ((import.meta.env.DEV || PREVIEW) && Q.get("debug") !== "0") {
   const { mountDebug } = await import("./src/debug.js");
   await mountDebug({ link: () => (devpose ? devpose.link() : null) });

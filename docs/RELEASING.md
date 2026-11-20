@@ -2,7 +2,7 @@
 
 **main 自动上 canary，发版才上生产（所有者 2026-11-19，#308）。** 推送到 `main`，过了 `pages.yml` 的检查（解析与类型、两套单测、建站与 `boot`、走路与镜头的快检 `stairs`、`drop`）就部署到 canary，先在那里玩；合并版本 PR、打出 `vX.Y.Z` 标签之后，才把那个版本部署到生产。生产只从版本标签构建，Steam / 平台版也从标签打包。
 
-- **canary**：<https://temple-walk-canary.bole-chen.workers.dev>（Worker `temple-walk-canary`，配置 `wrangler.canary.jsonc`）。不加访问限制，只是不公开：页面带 `noindex`，Worker 回 `X-Robots-Tag: noindex, nofollow`，不放访问统计，调试面板默认打开（和 PR 预览一样，`?debug=0` 关）。
+- **canary**：<https://temple-walk-canary.bole-chen.workers.dev>（Worker `temple-walk-canary`，配置 `wrangler.canary.jsonc`）。内测地址，公开给内测玩家，不加访问限制，只是不被搜索引擎收录。页面行为和生产完全一样（不开调试面板，`?debug`、`?seals`、`?at`、`?play`、`?devpose` 这些工作台参数一律不生效；这些只有 PR 预览才有），只有三处不同：`noindex`（页面 meta 和 Worker 回的 `X-Robots-Tag: noindex, nofollow`）、没有访问统计、版本行显示提交号。
 - **生产**：`temple.rushiwowen.co`，只从 `vX.Y.Z` 标签部署（`deploy-tag.yml`，`target` 选 `production`，默认）。
 
 当前接入基线为 **0.1.0**，版本由根目录`package.json`与`.release-please-manifest.json`共同记录。Release Please使用`node`策略维护这两处版本及`CHANGELOG.md`。这是浏览器游戏的源码版本流程，保留`private: true`，不发布npm包。
