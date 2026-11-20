@@ -284,6 +284,7 @@ jobs:
             worker
             tools/worker-smoke.mjs
             wrangler.canary.jsonc
+            app/src
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -370,6 +371,7 @@ jobs:
           sparse-checkout: |
             wrangler.canary.jsonc
             worker
+            app/src
       - uses: actions/download-artifact@v4
         with:
           name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}

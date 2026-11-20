@@ -64,6 +64,7 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 |---|---|
 | 接口 | `POST /api/trace`，体 `{ "place", "kind" }`（`place` 取 `worker/trace-core.js` 的 `PLACES`，`kind` 取 `rite`/`seal`，其余 400）；`GET /api/traces?day=today`（或保留期内的 `YYYY-MM-DD`）回 `{ day, traces: { <place>: { rite, seal } } }`，今天的在边缘缓存 30 秒 |
 | 绑定 | `TRACES` → Durable Object 类 `TraceCounter`（SQLite 存储，`migrations` 的 `v1` 用 `new_sqlite_classes`），整座寺一个对象（`idFromName("temple")`），表只有 `counts(day, place, kind, n)` |
+| 绑定（#341 除夕撞钟） | `JOYA` → Durable Object 类 `JoyaShard`（SQLite，`migrations` 的 `v2`，`v1` 不改），16 个对象（`idFromName("joya:0".."joya:15")`），每个表只有 `joya(year, n)`；`/api/joya` 的 POST 随机落一片，GET 读 16 片的和并在机房缓存 10 秒。部署后第一次运行 `v2` 迁移，令牌要有 Durable Objects 的写权限（同 `v1`） |
 | 隔离 | Durable Object 的命名空间属于 Worker：`temple-walk`（生产）和 `temple-walk-canary` 是两个 Worker，计数天然各自独立，没有共用的 id 要配。PR 预览（`wrangler.jsonc`，`wrangler preview`）**没有**这段脚本和绑定，页面也不会在预览里请求接口（`?presence=1` 只给测试和工作台，对预览 Worker 是 404，页面静默）。本地和测试：`node tools/worker-smoke.mjs [wrangler.canary.jsonc]`（`wrangler dev --local`，workerd 加本地 SQLite，不碰 Cloudflare），单测 `tests/unit/trace.test.mjs` 用 `node:sqlite` 跑同一条 SQL |
 | 发布 | 只经 CI：`pages.yml` 的 `deploy`（canary）和 `deploy-tag.yml` 照旧执行 `wrangler deploy -c wrangler.<target>.jsonc`，两处的稀疏检出加了 `worker/`；`pages.yml` 多一个 `worker` 作业（上面的本地冒烟），列入 `verify` |
 | 首次部署要注意 | 迁移 `v1` 会在第一次 `wrangler deploy` 时创建 Durable Object；`CLOUDFLARE_API_TOKEN` 要有 Workers Scripts 编辑权限（Durable Object 迁移随脚本一起提交，不另需权限；这一点未在本账号上实测，第一次发 canary 时看 `deploy` 作业的输出）；账号要是 Workers Paid（免费档每天 10 万请求，见下） |

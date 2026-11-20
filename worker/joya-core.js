@@ -82,7 +82,8 @@ export async function respondJoya(request, { shards, sum, now = Date.now }) {
   let body; try { body = JSON.parse(text); } catch { return json({ error: "json" }, 400); }
   const r = parseRing(body); if (!r) return json({ error: "n or tz" }, 400);
   const w = serverWindow(t, r.tz); if (!w.open) return json({ error: "not tonight" }, 403);
-  const got = await shards.pick().add(w.year, r.n);
+  const year = w.year;
+  const got = await shards.pick().add(year, r.n);
   if (!got.ok) return json({ error: got.why === "limited" ? "slow down" : "full" }, 429, got.why === "limited" ? { "retry-after": "10" } : {});
-  return json(reply(w.year, await total(w.year), t));
+  return json(reply(year, await total(year), t));
 }

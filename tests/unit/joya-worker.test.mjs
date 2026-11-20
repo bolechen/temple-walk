@@ -63,3 +63,4 @@ test("the SQL the Durable Object runs: one row a year, raised atomically, held a
   assert.equal(store.bump(2028, 1, 10), 1); assert.equal(store.get(2027), 9);
   assert.deepEqual(db.prepare("SELECT * FROM joya ORDER BY year").all().map((r) => ({ ...r })), [{ year: 2027, n: 9 }, { year: 2028, n: 1 }], "a year and a count, nothing else");
 });
+

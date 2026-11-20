@@ -38,6 +38,8 @@ test("the Worker asks the same window in UTC, with the visitor's offset, and ref
   assert.equal(serverWindow(ms(2026, 6, 1, 12), 0).anywhere, false);
   assert.equal(yearNear(ms(2026, 11, 20, 12)), 2027);
   assert.equal(yearNear(ms(2027, 0, 1, 3)), 2027);
+  assert.equal(yearNear(ms(2026, 10, 20, 4)), 2027, "in November the next night is looked to");
+  assert.equal(yearNear(ms(2027, 0, 2, 4)), 2028);
 });
 
 test("only the workbench opens the night early, and only by ?event=joya", () => {

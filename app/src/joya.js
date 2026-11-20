@@ -55,9 +55,10 @@ export function serverWindow(ms, tz) {
   return { open: here.open && anywhere, year: here.year, anywhere, tzOk };
 }
 
-/** The year a count is asked for when no year is given: the night nearest `ms` (December rings in the next year).
- * @param {number} ms */
-export const yearNear = (ms) => { const u = new Date(ms); return yearOf({ month: u.getUTCMonth(), year: u.getUTCFullYear() }); };
+/** The year a count is asked for when no year is given, and the year rung in by a night opened early (the workbench, the
+ * canary): the next night's, so 1 January keeps the year just rung in and every other day looks ahead to the next.
+ * @param {number} ms @param {boolean} [local] the visitor's clock rather than UTC */
+export const yearNear = (ms, local = false) => { const u = new Date(ms), m = local ? u.getMonth() : u.getUTCMonth(), d = local ? u.getDate() : u.getUTCDate(), y = local ? u.getFullYear() : u.getUTCFullYear(); return m === 0 && d === 1 ? y : y + 1; };
 
 /** Whether the night is open for this page: by the visitor's clock, or, on the workbench only (the dev server and a pull
  * request's preview), by `?event=joya` at any hour. `?event=none` on the workbench keeps it shut on the night itself.
@@ -65,7 +66,7 @@ export const yearNear = (ms) => { const u = new Date(ms); return yearOf({ month:
  * @returns {{ open: boolean, year: number, forced: boolean }} */
 export function eventFor({ query, bench, now = new Date() }) {
   const w = windowOf(now), ask = bench ? query.get("event") : null;
-  if (ask === "joya") return { open: true, year: w.open ? w.year : yearOf({ month: 11, year: now.getFullYear() }), forced: !w.open };
+  if (ask === "joya") return { open: true, year: w.open ? w.year : yearNear(now.getTime(), true), forced: !w.open };
   if (ask === "none") return { open: false, year: w.year, forced: true };
   return { open: w.open, year: w.year, forced: false };
 }

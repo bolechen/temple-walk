@@ -161,6 +161,7 @@ jobs:
             wrangler.production.jsonc
             wrangler.canary.jsonc
             worker/
+            app/src/joya.js
             tools/ci/live-check.cjs
           sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4

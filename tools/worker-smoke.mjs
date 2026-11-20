@@ -38,5 +38,14 @@ try {
   const t0 = Date.now(), flood = []; for (let i = 0; i < 300; i++) flood.push(post({ place: "well", kind: "rite" }));
   const codes = (await Promise.all(flood)).map((x) => x[0]), took = (Date.now() - t0) / 1000, passed = codes.filter((c) => c === 200).length;
   check(codes.includes(429) && passed <= 120 + 12 * (took + 1), "a flood is dropped past the bucket (the burst, and 12 a second while it lasts)", `${passed} passed in ${took.toFixed(1)} s`);
+  // 除夕撞钟 (#341): the year-end bell's count, on its sixteen shards. Off the night a report is refused (403), whatever it
+  // carries; a bad one is 400 first; the count reads as this year's, from nothing.
+  const jy = (body, type = "application/json") => j("/api/joya", { method: "POST", headers: { "content-type": type }, body: JSON.stringify(body) });
+  [s, b] = await j("/api/joya"); check(s === 200 && Number.isInteger(b?.year) && b.total === 0 && b.rounds === 0, "the year-end bell's count reads, from nothing", JSON.stringify([s, b]));
+  [s, b] = await jy({ n: 9, tz: 0 }); check(s === 400, "a report of nine strokes is 400", String(s));
+  [s, b] = await jy({ n: 1, tz: 0, who: "x" }); check(s === 400, "a report with anything else in it is 400", String(s));
+  const open = (() => { const d = new Date(); return (d.getUTCMonth() === 11 && d.getUTCDate() === 31) || (d.getUTCMonth() === 0 && d.getUTCDate() === 1); })();
+  if (!open) { [s, b] = await jy({ n: 1, tz: 0 }); check(s === 403, "off the night a stroke is not counted (403)", String(s)); }
+  [s, b] = await j("/api/joya?year=1999"); check(s === 400, "a year long gone is 400", String(s));
 } catch (e) { console.error(String(e.message || e)); bad++; }
 stop(); process.exit(bad ? 1 : 0);
