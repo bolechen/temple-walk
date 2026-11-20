@@ -202,8 +202,9 @@ export function createFollow(T = FOLLOW) {
     // is about to sweep into brings the eye in before it gets there, not after it is inside (then it can only be put
     // straight out, and that is a jump of metres).
     step(dt, eye, ahead = null) {
-      forced = 0; fresh = false;
+      forced = 0; const first = fresh; fresh = false;
       if (dist === null) dist = eye.d;
+      if (first && eye.solid) lift = eye.liftAt(dist, eye.side);   // (put down somewhere, it starts already risen as far as it would rise there)
       if (side === null) side = eye.side;
       // To his side: back behind him at once only if where it stands has become a column or a wall.
       // (With B's arm `side` may lie either way; the side nearer behind him is the smaller one.)
@@ -252,6 +253,9 @@ export function createFollow(T = FOLLOW) {
       let cy = y + lift;
       // Never up into an eave: down to the highest it may be under it, by as little as will do.
       if (lift > 0 && eye.shut(cx, cy, cz)) { const was = lift; while (lift > 0 && eye.shut(cx, y + lift, cz)) lift = Math.max(0, lift - 0.05); forced = Math.max(forced, was - lift); vl = 0; cy = y + lift; }
+      // Asked of what is drawn, something low that it has come into (a railing it was rising over too slowly) it is put
+      // over, by as little as clears it: down under it there is nothing but the railing itself.
+      if (eye.solid && eye.shut(cx, cy, cz)) { const was = lift; for (let k = lift + 0.05; k <= wantLift + 0.3 + 1e-6; k += 0.05) if (!eye.shut(cx, y + k, cz)) { lift = k; break; } if (lift !== was) { forced = Math.max(forced, lift - was); vl = 0; cy = y + lift; } }
       const floor = eye.floorAt(dist, side);
       if (cy < floor && !eye.shut(cx, floor, cz)) { lift = floor - y; vl = 0; cy = floor; }   // nor down into the stone
       return [cx, cy, cz];

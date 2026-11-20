@@ -33,7 +33,7 @@ space.radius = eyeRadius(FOV, ASPECT, 0.1);
 const NEAR = 2.0, NEAREST = 1.0, OFTEN = 0.9;
 
 /** Walk `path` as follow.test walks it, on the baked floor; for every frame, how far the eye stands from him and whether he is in the picture. */
-function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
+function walk(path, { reach = 6.2, pitch = 0.04, clear = false } = {}) {
   const follow = createFollow(), out = [], cam = new THREE.PerspectiveCamera(FOV, ASPECT, 0.1, 500);
   let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), prev = null, lastYaw = yaw;
   for (const [tx, tz] of path.slice(1)) {
@@ -58,7 +58,7 @@ function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
         cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
         seen = [foot, foot + 1.22].every((y) => { const p = new THREE.Vector3(x, y, z).project(cam); return p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1; });
       }
-      out.push({ x, z, back: Math.hypot(c[0] - x, c[1] - (eyeY + arm.h), c[2] - z), seen, flat, up, forced: follow.forced });
+      out.push({ x, z, back: Math.hypot(c[0] - x, c[1] - (eyeY + arm.h), c[2] - z), seen, flat, up, forced: follow.forced, cut: clear && follow.dist > 0.6 ? space.shut(c[0], c[1], c[2]) : false });
     }
   }
   return out;
@@ -161,4 +161,22 @@ test("#295: on every metre of the floor the written plan never reached, the eye 
   // metre behind him at a slant, where the eye comes to 0.5–0.75 m and he is still drawn: listed in the PR for the lead)
   assert.ok(bad.length <= looked / 100, `the eye came nearer than ${NEAREST} m or lost him in ${bad.length} of ${looked} looks: ${bad.slice(0, 8).join("; ")}`);
   assert.ok(!bad.some((b) => / 0\.[0-4]\d m back/.test(b)), `the eye came into him: ${bad.filter((b) => / 0\.[0-4]\d m back/.test(b)).join("; ")}`);
+});
+
+// The sphere is worked out for the lens and the screen of the frame (#295; collision-spike.md: a fixed 0.24 m did not cover
+// the widest picture the page draws): a phone held upright at the walk's 62° and the most the settings add (+16°), a 21:9
+// screen at 50° + 16°, and that screen with the camera raised and drawn out to its widest (photo.zoom 0.7). With each, round
+// the great hall's platform and through the gate, the eye's sphere is clear of everything drawn on every frame he is seen.
+test("#295: the eye's sphere covers the near plane at the widest lenses the page draws", async () => {
+  const { FOV_RANGE } = await import("../../app/src/settings.js");
+  const widest = (fov, zoom) => (2 * Math.atan(Math.tan((fov * Math.PI) / 360) / zoom) * 180) / Math.PI;
+  const lenses = [["a phone held upright", widest(62 + FOV_RANGE[1], 1), 390 / 844], ["21:9", widest(50 + FOV_RANGE[1], 1), 21 / 9], ["21:9, the camera drawn out", widest(50 + FOV_RANGE[1], 0.7), 21 / 9]];
+  const bad = [];
+  try {
+    for (const [name, fov, aspect] of lenses) {
+      space.radius = eyeRadius(fov, aspect, 0.1);
+      for (const route of ["round the great hall's platform", "in through the gate"]) { const cut = walk(routes[route], { clear: true }).filter((f) => f.cut); if (cut.length) bad.push(`${name} (r ${space.radius.toFixed(3)} m), ${route}: ${cut.length} frames, first at (${cut[0].x.toFixed(1)}, ${cut[0].z.toFixed(1)})`); if (process.env.ARM_REPORT && cut.length) console.log(name, route, cut.map((f) => `${f.x.toFixed(1)},${f.z.toFixed(1)}`).join(' ')); }
+    }
+  } finally { space.radius = eyeRadius(FOV, ASPECT, 0.1); }
+  assert.deepEqual(bad, []);
 });

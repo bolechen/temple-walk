@@ -304,7 +304,13 @@ const interrupt = () => { settle(false); if (stage) { const st = stage; stage = 
 const curtainLeaves = /** @type {HTMLElement[]} */ ([...document.querySelectorAll("#curtain i")]);
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const inkVeil = (k) => { const c = document.getElementById("curtain"); if (!c) return; c.classList.toggle("cut", k > 0); for (const l of curtainLeaves) l.style.transform = k > 0 ? `scaleY(${k.toFixed(3)})` : ""; };
-const director = createDirector({ walker,
+// What the director's swings and shots are kept out of (#295): once the eye's hierarchy is built, what is drawn, with the
+// sphere of this frame's lens (a railing is drawn, so `railNear` has nothing more to add); until then the written plan.
+const eyeWalker = Object.assign(Object.create(walker), {
+  eyeShut: (x, y, z, foot) => (eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
+  railNear: (x, y, z, m) => (eyeSpace ? false : walker.railNear(x, y, z, m)),
+});
+const director = createDirector({ walker: eyeWalker,
   enabled: () => settings.get().autocam && !Q.has("shot") || Q.get("show")?.startsWith("shot-") === true,
   reduced: () => reducedMotion.matches,
   veil: inkVeil,
