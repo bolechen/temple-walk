@@ -680,5 +680,10 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 @media (pointer: coarse) { #dropBtn { display: none !important; } }   /* the ring is that button on a touch screen */
 /* The ring and the slips at the edge share the lower right: upright, the slips stand above the ring; in a short window,
    where they lie in a row along the foot, they lie to the ring's left. Neither is ever drawn over the other. */
-@media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 14px + env(safe-area-inset-bottom, 0px)); } }
+/* Over the ring, a smaller one that turns the view back behind him (#295): upright the slips stand above both. */
+#turnBtn { position: absolute; right: calc(max(22px, env(safe-area-inset-right, 0px)) + 15px); bottom: calc(46px + 82px + 12px + env(safe-area-inset-bottom, 0px)); width: 52px; height: 52px; z-index: 4; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font: 400 12px/1 var(--kai); letter-spacing: .08em; color: var(--on); text-shadow: 0 1px 6px rgba(0,0,0,.7); background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .3; transition: opacity .4s var(--ease); touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
+#turnBtn:active { opacity: .9; transition-duration: .1s; }
+#turnBtn[hidden], body.photo #turnBtn, body.bare #turnBtn, body:not(.entered) #turnBtn { display: none; }
+body.directing #turnBtn, body.opening #turnBtn, body.ending #turnBtn, body:has(dialog.layer[open]) #turnBtn { opacity: 0 !important; pointer-events: none; }
+@media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 12px + 52px + 14px + env(safe-area-inset-bottom, 0px)); } }
 @media (pointer: coarse) and (max-height: 560px) { .rail { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: calc(max(22px, env(safe-area-inset-right, 0px)) + 82px + 12px); } }

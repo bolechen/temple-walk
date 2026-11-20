@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, doorway, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
+// picture (boot, doorway, doorway-hires, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
@@ -113,6 +113,40 @@ const scenarios = {
     for (const id of ["moodPanel", "print", "photoBar", "frame", "book", "slip", "toast", "act"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // 同修留痕 (#340): the day's count said once where an observance is made, the first stroke reported once, the stubs in the censer;
+  // and, with the API made to fail in every way, nothing said, nothing broken. The API is a stub: nothing here reaches Cloudflare.
+  presence: { tier: 2, async run(b, base) {
+    const day = "2026-11-20", posts = [], fake = { bell: { rite: 12, seal: 2 }, incense: { rite: 30, seal: 5 }, tea: { rite: 1500, seal: 0 } };
+    const api = ["**/api/**", (r) => {
+      const q = r.request();
+      if (q.method() === "POST") { const body = JSON.parse(q.postData()); posts.push(body); const c = (fake[body.place] ||= { rite: 0, seal: 0 }); c[body.kind]++; return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ day, ...body, n: c[body.kind] }) }); }
+      return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ day, traces: fake }) });
+    }];
+    const stand = async (t, id) => { await t.page.evaluate((i) => { const p = window.__places[i]; window.__pose(p.at[0], p.at[1], p.face + Math.PI, 0); }, id); await t.until(() => t.page.evaluate((i) => window.__presence().near === i, id), 30000, "the place was not offered: " + id); };
+    const t = await open(b, base, "q=low&presence=1" + BARE, { route: api });
+    await t.until(() => t.page.evaluate(() => window.__presence().read >= 1), 30000, "the day was never read");
+    const stubs = await t.page.evaluate(() => window.__censer());
+    expect(stubs.traceStubs === 18 && stubs.traceTris === 216, "30 offerings of incense should put 18 stubs (216 triangles) in the censer: " + JSON.stringify([stubs.traceStubs, stubs.traceTris]));
+    await stand(t, "bell"); await t.until(() => t.page.evaluate(() => document.getElementById("hint").textContent.includes("当日已有12人在此敲钟")), 20000, "the bell's count was not said: " + await t.page.evaluate(() => document.getElementById("hint").textContent));
+    await stand(t, "tea"); await t.until(() => t.page.evaluate(() => document.getElementById("hint").textContent.includes("当日已有约1500人在此吃茶")), 20000, "the tea's count was not said");
+    await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); window.dispatchEvent(new CustomEvent("struck", { detail: "drum" })); });
+    await t.until(() => posts.length >= 1, 20000, "the stroke was not reported"); await t.frames(8);
+    expect(posts.filter((x) => x.kind === "rite").length === 1 && posts.every((x) => x.place === "bell") && posts.length <= 2, "three strokes and a drum are one report of the bell (the third stroke also earns its seal, one more): " + JSON.stringify(posts));
+    expect(await t.page.evaluate(() => window.__presence().traces.bell.rite) === 13, "the count the answer gave should be kept");
+    expect(!JSON.stringify(posts).match(/[0-9]{3,}|ip|agent/i), "the report names a place and a kind and nothing else: " + JSON.stringify(posts));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // Every way the API can fail: no line, no stubs, nothing the page complains of beyond the browser's own note of the request.
+    for (const [name, handler] of [["refused", (r) => r.abort("failed")], ["500", (r) => r.fulfill({ status: 500, body: "" })], ["404", (r) => r.fulfill({ status: 404, body: "" })], ["429", (r) => r.fulfill({ status: 429, body: "{}" })], ["html", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "<html>" })], ["slow", () => {}]]) {
+      const f = await open(b, base, "q=low&presence=1" + BARE, { route: ["**/api/**", handler] });
+      await stand(f, "bell"); await f.frames(6);
+      await f.page.evaluate(() => window.dispatchEvent(new CustomEvent("struck", { detail: "bell" }))); await f.frames(4);
+      const st = await f.page.evaluate(() => ({ p: window.__presence(), hint: document.getElementById("hint").textContent, censer: window.__censer().traceStubs, y: window.__yard().frames }));
+      expect(!/当日已有/.test(st.hint) && st.censer === 0 && st.p.line === null, `${name}: nothing should be said or drawn: ` + JSON.stringify(st));
+      const own = f.errors.filter((x) => !/\/api\//.test(x)); expect(own.length === 0, `${name}: ` + own.join("\n")); await f.close();
+    }
+    // Off where it should be off: a preview with no ?presence, and ?presence=0, never ask.
+    for (const q of ["q=low", "q=low&presence=0"]) { const asked = []; const o = await open(b, base, q + BARE, { route: ["**/api/**", (r) => { asked.push(r.request().url()); r.fulfill({ status: 404, body: "" }); }] }); await stand(o, "bell"); await o.frames(4); expect(asked.length === 0 && !(await o.page.evaluate(() => window.__presence().on)), `${q}: the page should not ask: ` + asked.join()); expect(o.errors.length === 0, o.errors.join("\n")); await o.close(); }
   } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
@@ -274,6 +308,7 @@ const scenarios = {
       await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
       await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 30000, `${where}: the menu was not open again after the change of language`);
       const secs = (Date.now() - t0) / 1000;
+      await t.frames(3);   // the eye's first frames after the page is built settle it (as they did before the "before" was read)
       const after = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist, focus: document.activeElement?.dataset?.lang || document.activeElement?.id, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), kept: sessionStorage.getItem("yunjing.relang.v1"), from: sessionStorage.getItem("yunjing.lang.from"), lang: document.documentElement.lang, events: window.__eventLog().map((e) => e.name) }));
       const at = `${where} → ${to}: ` + JSON.stringify({ cover, before: [before.x, before.z, before.yaw, before.pitch, before.view, before.room, before.up, before.camDist], after: [after.x, after.z, after.yaw, after.pitch, after.view, after.room, after.up, after.camDist], focus: after.focus, title: after.title, events: after.events, secs });
       expect(cover.relang && cover.line && !cover.enter && !cover.h1, "the page should open again under the sheet, not the title: " + at);
@@ -439,6 +474,83 @@ const scenarios = {
     // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
     const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
     expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // #320: the larger face into the room (shown by default) shows the room the same way round as the cube it
+  // sharpens. Across the great hall's door, square on from 6 m, the brightness of each column with the larger face is set
+  // against the same columns from the cube: it must follow them as they are, not as in a mirror (its first version had
+  // the attendant figures change sides, #332). On the low tier it is held smaller, within 20 MB for the halls kept.
+  "doorway-hires": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&cam=0,60,3.14,0");
+    await t.frames(4);
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI;
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);
+    await t.until(async () => (await t.page.evaluate(() => window.__doorways())).halls.main.hi, 240000, "the great hall's larger face never came");
+    await t.frames(2);
+    const rect = await t.page.evaluate(() => window.__doorRect("main")), N = 48, pts = [];
+    for (let i = 0; i < N; i++) for (let j = 0; j < 8; j++) pts.push([rect.door[0] + (rect.door[2] - rect.door[0]) * (i + 0.5) / N, rect.door[1] + (rect.door[3] - rect.door[1]) * (0.3 + 0.6 * j / 7)]);
+    const cols = async (on) => { await t.page.evaluate((v) => window.__doorHires(v), on); await t.frames(1); const at = await t.page.evaluate((p) => window.__probe(p).at, pts); return Array.from({ length: N }, (_, i) => at.slice(i * 8, i * 8 + 8).reduce((s, c) => s + c[0] + c[1] + c[2], 0) / 24); };
+    const hi = await cols(true), cube = await cols(false);
+    const corr = (a, b) => { const ma = a.reduce((s, v) => s + v, 0) / a.length, mb = b.reduce((s, v) => s + v, 0) / b.length; let n = 0, da = 0, db = 0; a.forEach((v, i) => { n += (v - ma) * (b[i] - mb); da += (v - ma) ** 2; db += (b[i] - mb) ** 2; }); return n / Math.sqrt(da * db || 1); };
+    const same = corr(hi, cube), mirrored = corr(hi, [...cube].reverse());
+    console.log("     the larger face against the cube, column by column:", JSON.stringify({ same: +same.toFixed(3), mirrored: +mirrored.toFixed(3) }));
+    expect(same > 0.45 && same > mirrored + 0.2, `the larger face does not follow the cube across the door (correlation ${same.toFixed(2)}, mirrored ${mirrored.toFixed(2)}): it shows the room the wrong way round`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // On the low tier (a phone) the larger face is held at 512, so the three halls it keeps stay under 20 MB of the card's memory (#332).
+    const p = await open(b, base, "shot=1&q=low&view=first&season=summer&time=day&cam=0,60,3.14,0" + BARE.replace(",doorway", ""));
+    await p.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);
+    await p.until(async () => (await p.page.evaluate(() => window.__doorways())).halls.main.hi, 240000, "on the low tier the great hall's larger face never came");
+    const low = await p.page.evaluate(() => window.__doorways()), held = Object.values(low.halls).filter((x) => x.taken).length, each = low.mb / Math.max(1, held);
+    console.log("     the low tier's doorways on the card:", JSON.stringify({ mb: low.mb, held, each: +each.toFixed(2), keep: low.keep, atKeep: +(each * low.keep).toFixed(1) }));
+    expect(each * low.keep <= 20, `on the low tier each hall holds ${each.toFixed(1)} MB of the card's memory: ${low.keep} halls would hold ${(each * low.keep).toFixed(1)} MB, over 20`);
+    expect(p.errors.length === 0, p.errors.join("\n")); await p.close();
+  } },
+  // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. No thin
+  // bright line runs down the door's edges (no light leaks past the room's jambs), two frames of a still view are the same
+  // (nothing shimmers), the altar keeps its place going in, and coming out the room is drawn live again at once.
+  "doorway-live": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&doorway=live&warm=0&cam=0,60,3.14,0");
+    await t.frames(4);
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    const look = {};
+    for (const [d, turn] of [[6, 0], [3, 0], [11, 0], [6, 0.35]]) {
+      const a = inYaw + turn;
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(a) * d, h.out[1] + Math.cos(a) * d, a]);
+      await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight > 0; }, 240000, `the great hall's room was never drawn live from ${d} m`);
+      await t.frames(2);
+      // __doorRect's `door` spans 1.3 m either side of the middle; the opening's edges are at 1.42 m. Square on, a column
+      // a pixel either side of each edge, down the upper half of the door (where the room's lamp lights the wall behind
+      // the jamb), must be no brighter than the frame outside it or the room inside it, a few pixels away: a leak is a
+      // thin line brighter than both. Turned, only the shimmer is held, down the door's two sides.
+      const rect = await t.page.evaluate(() => window.__doorRect("main")), cx = (rect.door[0] + rect.door[2]) / 2, half = (rect.door[2] - rect.door[0]) / 2 * (1.42 / 1.3);
+      const ys = []; for (let y = rect.door[1]; y < (rect.door[1] + rect.door[3]) / 2; y += 2) ys.push(Math.round(y));
+      const cols = turn ? [] : [-1, 1].flatMap((side) => [-1, 0, 1].map((k) => ({ side, x: Math.round(cx + side * half + k), out: Math.round(cx + side * (half + 5)), in: Math.round(cx + side * (half - 5)) })));
+      const pts = cols.flatMap((c) => ys.flatMap((y) => [[c.x, y], [c.out, y], [c.in, y]]));
+      const line = [rect.door[0], rect.door[2]].flatMap((x) => ys.map((y) => [Math.round(x), y]));   // turned: the door's two sides
+      const lum = (c) => (c[0] + c[1] + c[2]) / 3;
+      // The edges, twice, with time held (`shot=1`: the candles, which flicker by design, held too).
+      const one = await t.page.evaluate((p) => window.__probe(p).at, pts.length ? pts : line), two = await t.page.evaluate((p) => window.__probe(p).at, pts.length ? pts : line);
+      let worst = 0;
+      for (let i = 0; i < pts.length; i += 3) worst = Math.max(worst, lum(one[i]) - Math.max(lum(one[i + 1]), lum(one[i + 2])));
+      const shimmer = Math.max(...two.map((c, i) => (pts.length && i % 3 ? 0 : Math.abs(lum(c) - lum(one[i])))));
+      look[`${d}m${turn}`] = { edge: +worst.toFixed(1), shimmer: +shimmer.toFixed(1) };
+      await t.shot(`e2e-doorway-live-${d}m${turn}`);
+      expect(worst <= 12, `from ${d} m: a thin line at the door's edge is brighter by ${worst.toFixed(0)} than both the frame and the room beside it: light leaks past the room's jamb`);
+      expect(shimmer <= 3, `from ${d} m, turned ${turn}: the door changes between two still frames by ${shimmer.toFixed(1)}`);
+    }
+    console.log("     across the door:", JSON.stringify(look));
+    await t.shot("e2e-doorway-live");
+    // Going in and coming out at the door: the altar keeps its place, and the room is drawn live again on coming out.
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0], h.out[1], inYaw]); await t.frames(3);
+    const out = await t.page.evaluate(() => window.__doorAltar("main"));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(1);
+    const inn = await t.page.evaluate(() => window.__doorAltar("main")), moved = Math.abs(out.x - inn.x) / 2;
+    console.log("     the altar across the door:", JSON.stringify({ out: +out.x.toFixed(3), in: +inn.x.toFixed(3), moved: +moved.toFixed(3) }));
+    expect(moved <= 0.05, `the altar jumps across the door going in: ${moved.toFixed(3)} of the width`);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 4, h.out[1] - f[1] * 4, inYaw]);
+    await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight === 1; }, 60000, "coming out, the room was not drawn live again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,
@@ -958,7 +1070,8 @@ const scenarios = {
         const vp = t.page.viewportSize();
         for (const [fx, fy] of [[0.5, 0.75], [0.5, 0.65], [0.3, 0.64]]) {
           await tap(vp.width * fx, vp.height * fy); await t.frames(1);
-          const s1 = await t.state();
+          let s1 = await t.state();
+          for (let n = 0; n < 40 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (the way round from a porch is worked out over a few frames; wait on frames, not on a single read)
           expect(s1.target && s1.target[1] > -0.48, `main hall: a tap on the court from the porch should set a target past the foot of the steps (z > -0.48), got ${s1.target}`);
         }
         await t.until(async () => { const s = await t.state(); return !s.target && s.z > -0.48; }, 120000, "he did not walk down the steps");
@@ -967,7 +1080,7 @@ const scenarios = {
       if (view === "first") {
         // What the rule is for, kept: from the court a tap on the hall leads to its door and in; on the porch a tap on the door goes in, a tap on the porch floor does not.
         const vp = t.page.viewportSize(), at = async (x, z, yaw, pitch) => { await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), [x, z, yaw, pitch]); await t.frames(3); };
-        await at(0.3, 2.2, 0, 0.05); await tap(vp.width / 2, vp.height * 0.375); await t.until(t.inHall, 300000, "from the court, a tap on the hall never led inside");
+        await at(0.3, 2.2, 0, 0.05); await tap(vp.width / 2, vp.height * 0.375); await t.until(t.inHall, 300000, "from the court, a tap on the hall never led inside"); await settle();   // (a pass still under way drops __inside(null))
         await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, "never came out"); await settle();
         await at(0, -3.5, 0, -0.45); await tap(vp.width / 2, vp.height * 0.85); await t.frames(1);
         const f = await t.state(); expect(f.target && f.target[1] > -5.0 && f.target[1] < -1, `on the porch, a tap on the porch floor should walk there, got ${f.target}`);
@@ -1456,6 +1569,22 @@ const scenarios = {
     st = await k.state(); expect(Math.hypot(st.x - before.x, st.z - before.z) < 0.01 && !st.target, "the click that skipped should not walk him: " + JSON.stringify(st));
     await reach(k, "how to walk was never said after a skip", () => window.__hud().tip === "walk");
     expect(k.errors.length === 0, k.errors.join("\n")); await k.close();
+    // On a touch screen (#185, the Pixel 8a of 2026-11-19): a drag made while the line about walking shows is kept, and once
+    // that line has gone two fingers are told; the stick first, then two fingers. (A drag that passes over the opening is
+    // taken by the opening and is no drag of the view.)
+    const ph = await open(b, base, "q=low" + BARE, { enter: false, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const cdp = await ph.page.context().newCDPSession(ph.page);   // a finger as the browser has one: real touches, real pointer ids
+    const swipe = async () => { await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 150, y: 420 }] }); for (let i = 1; i <= 6; i++) await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 150 + i * 14, y: 420 }] }); await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
+    await stepIn(ph); await reach(ph, "the eye never started down on the phone", () => window.__opening().phase === "fly" && window.__opening().s > 1);
+    await swipe(); await reach(ph, "the swipe did not pass over the opening", () => window.__opening().phase === "done", null, 60000);
+    await reach(ph, "how to walk was never said after the opening", () => window.__hud().tip === "walk");
+    const yaw0 = (await ph.state()).yaw; await swipe(); await ph.frames(2);
+    expect(Math.abs((await ph.state()).yaw - yaw0) > 0.01 && (await ph.page.evaluate(() => window.__hud().tip)) === "walk", "a drag while the line about walking shows turns the view and leaves the line");
+    await ph.page.keyboard.down("w");
+    await reach(ph, "two fingers were never told after the line about walking went", () => window.__hud().said.includes("pinch"), null, 120000);
+    await ph.page.keyboard.up("w");
+    { const said = await ph.page.evaluate(() => window.__hud().said), st = await ph.state(); expect(said.indexOf("walk") === 0 && said.indexOf("pinch") > 0 && (await ph.page.textContent("#hint")).includes("双指"), "the stick first, then two fingers, a few steps on (not 60 m): " + JSON.stringify(said)); }
+    expect(ph.errors.length === 0, ph.errors.join("\n")); await ph.close();
     // Reduced motion: the summit held, then only the ink, the bell as ever.
     const r = await open(b, base, "q=low" + BARE, { enter: false, ...vp, reducedMotion: "reduce" });
     await stepIn(r); o = await O(r); expect(o.mode === "ink" && o.cues.mountainBell === 1, "with reduced motion: the ink, and the bell: " + JSON.stringify(o));
@@ -1569,6 +1698,9 @@ const scenarios = {
     // The bell: the music steps back, then returns of itself.
     await t.page.evaluate(() => window.__strike("bell")); await t.page.waitForTimeout(800);
     s = await m(); expect(s.ducked && s.duck < 0.5, "the music should step back for the bell: " + JSON.stringify(s));
+    // A drum struck inside the bell's stepping back (0.5 against 0.18) must not lift the music: the deeper one holds (#341).
+    { const before = (await m()).duck; await t.page.evaluate(() => window.__strike("drum")); await t.page.waitForTimeout(600);
+      s = await m(); expect(s.ducked && s.duck <= before + 0.02, "a drum inside the bell's stepping back lifted the music: " + JSON.stringify({ before, after: s.duck })); }
     await t.until(async () => (await m()).duck > 0.9, 30000, "the music never came back after the bell");
     // Its own level, apart from everything else.
     // The three levels under the whole volume are folded until asked for (分开调).
@@ -1737,6 +1869,77 @@ const scenarios = {
     } finally { await pb.close(); }
   } },
   // From behind him and through his eyes.
+  // Into his own eyes and out again by the wheel is a push, not a cut (#102 in #295): every frame of it the angle of view
+  // changes by no more than 1.5°, the eye moves no more than 0.12 m of its own (he stands still), and he fades one way only.
+  // Turning the view back behind him (#295, group B): R swings it round to the way he faces by the short way, never faster
+  // than the director's 144° a second, never tipping it, a drag meanwhile not taken; walking sideways while it swings, it
+  // stops when it is there and does not go on turning. And walking a tapped way with the hand off the view, it drifts round
+  // behind the way he goes, slowly, after the wait; a drag stops it.
+  recenter: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third");
+    const P = () => t.probe().then((p) => p.turn);
+    const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a)), behind = (h) => wrap(Math.PI - h);
+    await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(10);
+    // he walks a few steps the way the view looks (so that he faces it), then the view is put well off his back
+    await t.page.keyboard.down("w"); await t.frames(12); await t.page.keyboard.up("w"); await t.frames(20);
+    const st = await t.state(); await t.page.evaluate(([x, z, y]) => window.__pose(x, z, y + 2.2, -0.05), [st.x, st.z, st.yaw]); await t.frames(8);
+    let q = await P(); const off = Math.abs(wrap(q.yaw - behind(q.heading)));
+    expect(off > 1.0, "the drag should have turned the view well off his back: " + off.toFixed(2));
+    // R, and a drag while it swings
+    await t.page.keyboard.press("r"); await t.frames(2);
+    q = await P(); expect(q.active && q.swings === 1, "R should start a swing: " + JSON.stringify(q));
+    const during = q.yaw; await t.page.mouse.move(210, 400); await t.page.mouse.down(); await t.page.mouse.move(400, 400); await t.page.mouse.up();
+    for (let i = 0; i < 400 && (await P()).active; i++) await t.frames(1);
+    q = await P();
+    expect(!q.active && Math.abs(wrap(q.yaw - behind(q.heading))) < 0.03, "it should end looking the way he faces: " + JSON.stringify(q));
+    expect(q.rate <= 144 + 0.5, `it turned ${q.rate}° in a second`);
+    expect(q.pitch <= 0.3, `it tipped the view ${q.pitch}° in a frame`);
+    expect(q.move <= 0.15, `the eye moved ${q.move} m of its own in a frame while it swung`);
+    void during;
+    // R while he walks sideways (A held): it ends, and the view does not keep turning after
+    await t.page.keyboard.down("a"); await t.frames(3); await t.page.keyboard.press("r");
+    for (let i = 0; i < 400 && (await P()).active; i++) await t.frames(1);
+    const y0 = (await P()).yaw; await t.frames(40); const y1 = (await P()).yaw; await t.page.keyboard.up("a");
+    expect(Math.abs(wrap(y1 - y0)) < 0.01, `walking sideways after the swing, the view went on turning ${(wrap(y1 - y0) * 180 / Math.PI).toFixed(1)}°`);
+    // the drift: a tapped way off to his right, the hand off the view
+    await t.page.evaluate(() => window.__pose(-8, 20, 0, -0.05)); await t.frames(10);
+    const before = await P();
+    await t.page.evaluate(() => window.__walk([[8, 20]]));
+    for (let i = 0; i < 300 && (await P()).drifted - before.drifted < 20; i++) await t.frames(2);
+    q = await P();
+    expect(q.drifted - before.drifted >= 20, `walking a tapped way, the view should have drifted round behind him: ${q.drifted - before.drifted}°`);
+    expect(q.driftRate <= 30 + 0.5, `the drift turned ${q.driftRate}° in a second`);
+    // a drag stops it
+    await t.page.mouse.move(210, 400); await t.page.mouse.down(); for (const x of [230, 250, 270]) { await t.page.mouse.move(x, 400); await t.frames(1); } await t.page.mouse.up();
+    const d0 = (await P()).drifted; await t.frames(20); const d1 = (await P()).drifted;
+    expect(Math.abs(d1 - d0) < 0.01, `after a drag the drift should wait: it turned ${(d1 - d0).toFixed(2)}° more`);
+    console.log("    recenter", JSON.stringify({ rate: q.rate, pitch: q.pitch, move: q.move, driftRate: q.driftRate }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  push: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third");
+    await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
+    await t.page.mouse.move(210, 400);
+    const watch = async (what, notch, until) => {
+      const seen = [];
+      for (let i = 0; i < 40; i++) {
+        await t.page.mouse.wheel(0, notch); await t.frames(1); const p = await t.probe(); seen.push(p);
+        if (p.view === until) break;
+      }
+      for (let i = 0; i < 120 && (seen.at(-1).pushing || seen.at(-1).view !== until); i++) { await t.frames(1); seen.push(await t.probe()); }
+      expect(seen.at(-1).view === until && !seen.at(-1).pushing, `${what}: never came to the ${until} view: ${JSON.stringify(seen.at(-1))}`);
+      // (measured in the page, frame by frame: a probe may come a frame or two after another under software drawing)
+      const P = seen.at(-1).push;
+      expect(P && P.to === until && P.frames >= 3, `${what}: it was cut, not pushed: ${JSON.stringify(P)}`);
+      expect(P.fov <= 1.5 + 1e-3, `${what}: the angle of view changed ${P.fov}° in a frame`);
+      expect(P.move <= 0.12 + 1e-3, `${what}: the eye moved ${P.move} m in a frame`);
+      expect(P.back === 0, `${what}: he faded back the other way in ${P.back} frames`);
+      return P;
+    };
+    const into = await watch("into his eyes", -300, "first"), out = await watch("out of his eyes", 300, "third");
+    console.log("    push", JSON.stringify({ into, out }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   views: { tier: 2, async run(b, base) {
     // `devpose` and `debug` are working aids (src/devpose.js, src/debug.js): the published site must neither show them
     // nor touch the address (the panel opens only on the dev server and a pull request's preview).

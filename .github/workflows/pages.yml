@@ -270,10 +270,30 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # The Worker behind 同修留痕 (#340), run for real on this machine (workerd, a Durable Object on local SQLite): never Cloudflare.
+  # It needs only node; the page is not built for it.
+  worker:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            worker
+            tools/worker-smoke.mjs
+            wrangler.canary.jsonc
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The canary's Worker answers the API as it should (the public site's is the same script and binding, held equal by tests/unit/trace.test.mjs)
+        run: node tools/worker-smoke.mjs wrangler.canary.jsonc
+
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, grid, site, quick]
+    needs: [changes, unit, grid, site, quick, worker]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -347,7 +367,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: wrangler.canary.jsonc
+          sparse-checkout: |
+            wrangler.canary.jsonc
+            worker
       - uses: actions/download-artifact@v4
         with:
           name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}

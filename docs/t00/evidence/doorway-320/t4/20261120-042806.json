@@ -1,0 +1,130 @@
+{
+  "started": "2026-11-20T04:28:39.780Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "72853ea91d1f2e73db54d618b1ced9b5bd3766e3",
+    "entry": "assets/index-B66-0B8p.js",
+    "files": 181,
+    "sha256": "224c8898e85683ed914dd7f9e6dc2cba071d15a11db99fb4de5e0232b41be44c"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "script": {
+    "name": "doorway-live.cjs",
+    "timeline": [
+      {
+        "q": "high",
+        "mode": "",
+        "i": 3,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 18643,
+        "walkS": 88.7,
+        "frames": 4404,
+        "maxMs": 68.9,
+        "over50": 2,
+        "over100": 0,
+        "worst5": [
+          68.9,
+          55.9,
+          42.6,
+          41.8,
+          40.8
+        ],
+        "slow": [
+          {
+            "ms": 55.9,
+            "at": 56,
+            "live": null
+          },
+          {
+            "ms": 68.9,
+            "at": 2409,
+            "live": null
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 50,
+          "spikes": [],
+          "mb": 57.17,
+          "live": null
+        },
+        "fps": 50.5,
+        "tris": 1705918,
+        "calls": 308,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 10.32,
+        "live": null,
+        "shot": "main-6m-high-baked-3.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 3,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 15693,
+        "walkS": 88.8,
+        "frames": 9902,
+        "maxMs": 164.5,
+        "over50": 1,
+        "over100": 1,
+        "worst5": [
+          164.5,
+          29.3,
+          29.3,
+          28.6,
+          28.6
+        ],
+        "slow": [
+          {
+            "ms": 164.5,
+            "at": 2994,
+            "live": null
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 155.9,
+          "spikes": [
+            156
+          ],
+          "mb": 42.87,
+          "live": null
+        },
+        "fps": 119,
+        "tris": 759305,
+        "calls": 163,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 4.79,
+        "live": null,
+        "shot": "main-6m-low-baked-3.png"
+      }
+    ]
+  },
+  "finished": "2026-11-20T04:32:54.278Z"
+}

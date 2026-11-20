@@ -6,6 +6,13 @@ const types = { ".html": "text/html", ".js": "text/javascript", ".json": "applic
 
 async function serve() {
   const srv = http.createServer((req, res) => {
+    // The canary's and production's pages ask the Worker for the day's traces (#340); this server is only the site's files,
+    // so it answers as a Worker with an empty day would: nothing counted yet, and a report taken with nothing to say.
+    // A scenario that wants counts stubs /api/ itself with `route` (the presence scenario).
+    if (req.url.startsWith("/api/")) {
+      if (req.url.startsWith("/api/traces")) { res.writeHead(200, { "content-type": "application/json" }); return res.end('{"day":null,"traces":{}}'); }
+      res.writeHead(204); return res.end();
+    }
     let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
     if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });

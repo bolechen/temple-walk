@@ -1,14 +1,20 @@
 // The published demo. Previews stay on temple-walk-preview (wrangler.jsonc); do not deploy that Worker.
+// Its Worker (worker/, #340) answers only /api/* (同修留痕: a count of who has been where today, in one Durable Object that this Worker alone owns, so the public site's counts are its own); every other request is a static file, served as before.
 {
   "name": "temple-walk",
   "compatibility_date": "2026-11-16",
   "workers_dev": false,
   "preview_urls": false,
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   },
+  "durable_objects": { "bindings": [{ "name": "TRACES", "class_name": "TraceCounter" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TraceCounter"] }],
   "routes": [
     { "pattern": "temple.rushiwowen.co", "custom_domain": true }
   ]
