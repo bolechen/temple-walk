@@ -215,6 +215,25 @@ export function geometryHash(geos) {
   return h.toString(16);
 }
 
+// A young male ginkgo's boughs, laid out layer by layer (#162, docs/t00/SOURCES.md): one straight leader to the top, and
+// from it boughs in whorls, 3 to 5 to a layer about a metre apart, each layer's boughs leaving at one height (within
+// 0.2 m), climbing at 50-70 degrees off the leader low down and 30-45 degrees up in the crown, the longest the lowest and each
+// layer shorter than the one below, so that the crown is a cone about 0.55 as wide as the
+// tree is tall. The lowest layer is 2.0 to 2.8 m up, high enough to walk under. Heights are above the ground.
+export function ginkgoLayout(h, rnd) {
+  const base = 2.0 + (0.8 * Math.min(3, Math.max(0, h - 8))) / 3, top = h - 1.8, count = Math.max(2, 2 * Math.round(((top - base) / 0.9 + 1) / 2)), step = (top - base) / (count - 1), rmax = 0.275 * h, layers = [];
+  for (let i = 0; i < count; i++) {
+    const y = base + i * step, u = (y - base) / (top - base), n = u > 0.7 ? 3 : [4, 5, 4, 3][i % 4], spin = i * 2.4 + rnd() * 6.283, boughs = [];
+    const f = 1 - 0.85 * u;   // the crown's width at this height: widest at its foot, a cone
+    for (let k = 0; k < n; k++) {
+      const theta = (u < 0.5 ? 64 - (10 * u) / 0.5 : 42 - (7 * (u - 0.5)) / 0.5) + (rnd() - 0.5) * 4;
+      boughs.push({ dy: (rnd() - 0.5) * 0.16, az: spin + (k / n) * 6.283 + (rnd() - 0.5) * 0.4, theta, reach: rmax * f * (0.92 + rnd() * 0.16) });
+    }
+    layers.push({ y, u, boughs });
+  }
+  return { base, layers };
+}
+
 export function createTrees(scene, M, spots, opts = {}) {
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
@@ -241,7 +260,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     }
   };
   const grow = (pts, r0, r1, radial, flare) => { const l = limb(pts, r0, r1, radial, flare); wood.push(l.geo); return l.curve; };
-  const cedarSkeletons = [];   // (each cedar's skeleton as the generator grew it: for the tests)
+  const cedarSkeletons = [], ginkgoSkeletons = [];   // (each cedar's skeleton as the generator grew it: for the tests)
   const beds = [], joints = [], branches = [], forks = [], census = [], limbs = []; let nth = 0;   // (where each foot meets its trunk, where each cedar branch ends, each fork: for the tests)
   // Where the trunk is at `h` above the ground: found on its own curve, as thick as it is drawn there.
   const along = (curve, rad, y) => { const P = new THREE.Vector3(), lo0 = curve.getPoint(0).y; return (h) => { const want = Math.max(lo0, y + h); let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; curve.getPoint(mid, P); if (P.y < want) lo = mid; else hi = mid; } curve.getPoint(lo, P); return { x: P.x, z: P.z, r: rad(lo) }; }; };
@@ -378,7 +397,42 @@ export function createTrees(scene, M, spots, opts = {}) {
         }
       }
       const tip = V(x, y + h - 0.2, z); for (let k = 0; k < 3; k++) { q.setFromEuler(e.set(0, k * 2.1, 0)); card(cards.cedar, new THREE.PlaneGeometry(1.5 * Math.min(1, h / 18) + 0.4, 2.3 * Math.min(1, h / 18) + 0.5).translate(0, -0.6, 0), tip.clone().add(V(0, 0.9, 0)), tip.clone().add(V(0, -1, 0)), 0.95, 0.4, 0.5); }
-    } else if (kind === "ginkgo") {
+    } else if (kind === "ginkgo" && (opts.ginkgo || "gen") !== "old") {
+      // A young male ginkgo (#162): see ginkgoLayout for its shape. `?ginkgo=hand` is the same layout drawn with the
+      // hand-planned wood below, `gen` (the default) with three's TreeGenerator.
+      const back = own(x, z, 3), lay = ginkgoLayout(h, rnd), top = y + h, centre = V(x, y + h * 0.55, z), r0 = 0.09 + h * 0.019, sk = { at: [x, z], h, base: y, route: opts.ginkgo || "gen", trunk: [], boughs: [] };
+      if ((opts.ginkgo || "gen") === "gen") {
+        const seed = Math.abs(Math.round(x * 211 + z * 37)) + 29, whorls = [];
+        for (const L of lay.layers) for (const b of L.boughs) whorls.push({ t: (L.y + b.dy + 0.2) / h, tilt: b.theta, roll: b.az, length: b.reach / Math.sin((b.theta * Math.PI) / 180) });
+        const gen = /** @type {any} */ (new TreeGenerator(null));
+        for (const [k, v] of Object.entries({ seed, levels: 3, trunkLength: h, trunkRadius: r0, taper: [0.82, 0.6, 0.5], taperCurve: 0.85, rootFlare: 0.5, flareFrac: 0.07, radialSegments: [20, 6, 4], whorls, childRadius: [0.2, 0.55], children: [0, 3], branchAngle: [0, 50], angleVariance: 12, lengthRatio: [0, 0.22], branchLengthFalloff: 0.3, childStart: 0.35, minRadius: 0.006, minLength: 0.3, droop: 0.015, upPull: 0.12, gnarl: [0.004, 0.02, 0.05], sectionLength: 0.9, collar: 0.3, radiusExponent: 2.6 })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
+        const m = gen.build(), tubes = m.userData.tubes; m.geometry.translate(x, y - 0.2, z); for (const t of tubes) for (const r of t.rings) r.pos.add(V(x, y - 0.2, z));
+        wood.push(m.geometry); info.tris += m.geometry.index.count / 3;
+        const at = (t, u) => { const f = u * (t.rings.length - 1), i = Math.min(t.rings.length - 2, Math.floor(f)); return t.rings[i].pos.clone().lerp(t.rings[i + 1].pos, f - i); };
+        for (const t of tubes) {
+          if (t.level === 0) { sk.trunk = t.rings.map((r) => r.pos.toArray()); continue; }
+          if (t.level === 1) { sk.boughs.push({ from: t.rings[0].pos.toArray(), to: t.rings[t.rings.length - 1].pos.toArray(), r: t.base }); for (const u of [0.45, 0.7, 0.95]) clump(kind, at(t, u), centre, 0.95 + rnd() * 0.5, 4); }
+          else clump(kind, at(t, 1), centre, 0.9 + rnd() * 0.4, 4);
+        }
+        const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
+        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth));
+      } else {
+        const lead = plan([V(x, y - 0.15, z), V(x + jit(0.04), y + h * 0.3, z + jit(0.04)), V(x + jit(0.05), y + h * 0.65, z + jit(0.05)), V(x, top, z)], { tip: 0.03, load: 0.6, radial: 24, seg: 3 });
+        for (const L of lay.layers) for (const b of L.boughs) {
+          const want = y + L.y + b.dy; let lo = 0, hi = 1; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (lead.curve.getPoint(mid).y < want) lo = mid; else hi = mid; }
+          const t = lo, from = lead.curve.getPoint(t), th = (b.theta * Math.PI) / 180, dir = V(Math.cos(b.az), 0, Math.sin(b.az)), reach = b.reach, rise = reach / Math.tan(th);
+          const bough = offshoot(lead, t, bend(from, dir, reach, rise, 4, 0.03, 1), { tip: 0.012, load: reach * 0.8, radial: 6 });
+          sk.boughs.push({ from: from.toArray(), to: bough.curve.getPoint(1).toArray(), r: 0 });
+          twigs(bough, dir, 2, 0.45);
+          for (const u of [0.45, 0.7, 0.95]) { const p = bough.curve.getPoint(u); clump(kind, p, centre, 0.95 + rnd() * 0.5, 4);
+            if (u < 0.9) { const bb = b.az + 1.3 * (rnd() < 0.5 ? -1 : 1), side = p.clone().add(V(Math.cos(bb) * reach * 0.15, reach * 0.12, Math.sin(bb) * reach * 0.15)); offshoot(bough, u, [p, p.clone().lerp(side, 0.5).add(V(0, -0.04, 0)), side], { tip: 0.008, load: reach * 0.12, radial: 4 }); clump(kind, side, centre, 0.9 + rnd() * 0.4, 4); } }
+        }
+        const m = settle(lead, r0), l = paint(lead, m, { ...info, startY: y + footTop(r0) }); sk.trunk = [0, 0.25, 0.5, 0.75, 1].map((u) => lead.curve.getPoint(u).toArray()); root(x, y, z, r0, false, { curve: l.curve, rad: l.rad, sides: 24, kind, h });
+      }
+      clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
+      ginkgoSkeletons.push(sk);
+      back();
+    } else if (kind === "ginkgo") {   // (the old one: `?ginkgo=old`, until the choice is made)
       // Ginkgo: one leader, and boughs that climb away from it, bending as they go.
       const back = own(x, z, 3), top = y + h, centre = V(x, y + h * 0.62, z), r0 = 0.09 + h * 0.019;
       const lead = plan([V(x, y - 0.15, z), V(x + jit(0.3), y + h * 0.3, z + jit(0.3)), V(x + jit(0.5), y + h * 0.65, z + jit(0.5)), V(x + jit(0.4), top, z + jit(0.4))], { tip: 0.03, load: 0.6, radial: 24, seg: 3 });
@@ -448,7 +502,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs, cedars: cedarSkeletons, beds: soil,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;

@@ -154,7 +154,7 @@ const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const T1 = LEVELS[0], TOP = LEVELS[2];
-const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
+const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0, ginkgo: new URLSearchParams(location.search).get("ginkgo") || undefined }));
 const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: GROVE.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
