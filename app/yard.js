@@ -57,6 +57,7 @@ import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
 import { createShare, shareOrSave, countDownload } from "./src/share.js";
 import { FROM, fromOf } from "./src/sharelink.js";
+import { createCarryOut } from "./src/carry-page.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
@@ -98,6 +99,11 @@ const ui = createUI();   // what lies over the picture, in order: Esc puts away 
 createCommunity(ui);
 createCredits(ui);
 createShare(ui);   // the sheet a picture is saved from where the system cannot share it (#344)
+// 带走存档 (#338): a link that takes this visit to another browser or device. Its way in is in the book of seals, beside
+// saving and sharing the page, which is the record it carries: the pause menu has no height to spare on a phone held
+// upright (the lead's choice, 2026-11-20).
+const carryOut = createCarryOut(ui);
+document.getElementById("bookCarry")?.addEventListener("click", () => carryOut.open());
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
