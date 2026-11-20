@@ -22,7 +22,7 @@ const scripts = (out) => walk(out).filter(([rel]) => rel.startsWith("assets/") &
 test("the line: the version on the public page, the commit on the internal address and on a preview, in every language", () => {
   const o = { version: VERSION, commit: SHA };
   assert.equal(versionLine({ ...o, deploy: "production", to: "zh" }), `云径禅寺 v${VERSION}`);
-  assert.equal(versionLine({ ...o, deploy: "production", style: "commit", to: "zh" }), `v${VERSION} · 3f2a1c4`);
+  assert.ok(!versionLine({ ...o, deploy: "production", to: "zh" }).includes("3f2a1c4"), "the public page does not show the commit");
   assert.equal(versionLine({ ...o, deploy: "canary", to: "zh" }), "内测版 · 3f2a1c4");
   assert.equal(versionLine({ ...o, deploy: "preview", pr: "123", to: "zh" }), "预览 · PR #123 · 3f2a1c4");
   assert.equal(versionLine({ ...o, deploy: "preview", to: "zh" }), "预览 · 3f2a1c4");

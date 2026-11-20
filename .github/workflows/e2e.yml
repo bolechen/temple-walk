@@ -3,8 +3,9 @@ name: End to end, every scenario
 # The whole suite takes the better part of an hour on one machine without a GPU, so it does not run on every push:
 # once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among four machines.
 on:
-  # Beside every publication, and not in its way: the stairs and the low drop, about three minutes, because walking and
-  # collision change most often. The photograph's interface (photo-ui, several minutes on its own) breaks only when the
+  # Beside every publication, and not in its way: his body and the camera's near plane against everything built, and the
+  # pause menu in every language. (The stairs and the low drop, which change most often, stop the publication itself since
+  # #308: `quick` in pages.yml.) The photograph's interface (photo-ui, several minutes on its own) breaks only when the
   # photograph is changed; it waits for the nightly run or a run asked for by hand.
   push:
     branches: [main]
@@ -69,8 +70,9 @@ jobs:
           path: node_modules/.cache/doorways
           key: doorways-t00-${{ steps.doorways.outputs.key }}
           restore-keys: doorways-t00-
-      - name: The stairs, the low drop, and the pause menu whole in every language
-        run: node tests/e2e/run.cjs stairs drop menufit
+      # The stairs and the low drop are `quick` in pages.yml since #308 and stop the publication; not repeated here.
+      - name: The pause menu whole in every language
+        run: node tests/e2e/run.cjs menufit
       - name: Keep the report and the screenshots
         if: always()
         uses: actions/upload-artifact@v4

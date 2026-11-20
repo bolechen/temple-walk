@@ -14,14 +14,13 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
+  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'canary' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Nothing is published that does not parse, pass its unit tests (both walkers), build, and come up in a real browser. Since
   # #296 those run side by side instead of one after the other (`unit`, `grid`, `site`); `verify` is the one check that says
-  # all of them passed, and `deploy` waits for it. The slower scenarios (the stairs, the low drop) run beside this in
-  # e2e.yml and do not hold the publication up. A push of papers alone is checked in under a minute (DOC_TESTS in
+  # all of them passed, and `deploy` waits for it (and, since #308, for `quick`, the stairs and the low drop, by name). The stairs and the low drop are `quick` below and hold the publication up (#308). A push of papers alone is checked in under a minute (DOC_TESTS in
   # tools/ci/changes.cjs, the offline evidence check) and publishes nothing, because there is nothing new to publish.
   #
   # What is the site's, and so what is built and published, is decided here, once, for the jobs below.
@@ -162,14 +161,14 @@ jobs:
     if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Which build this is, as the page says at the foot of its menu (#310, app/src/version.js): a pull request is a
-    # preview of its own head (GITHUB_SHA is the merge commit there), main is the public page until #308 sends it to the
-    # canary. Set for the whole job, not the build step: the scenario after it asks tools/site.cjs for the site, which
-    # builds it again (its stamp is not `pnpm build`'s), and that build is the one handed on.
     env:
-      VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
-      VITE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      # Where this build is going (app/src/deploy.js): a pull request's preview, or the canary. Never production: that is
+      # built from a version tag by deploy-tag.yml. Neither carries the visitor counter.
+      VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'canary' }}
+      # The pull request's number, for a preview build to say which it is (#310 reads it; empty on the canary).
       VITE_PR: ${{ github.event.pull_request.number }}
+      # The commit the page was built from: a pull request's own head, not the merge commit GITHUB_SHA names there.
+      VITE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -207,12 +206,12 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
       # The site is what Vite built into dist/, the same files the browser above was just driven through.
-      - name: Hand the site over for publication
+      - name: Hand the site over for the canary
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           path: dist
-          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
           include-hidden-files: true
       # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
@@ -226,10 +225,55 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  # What walking and the camera break most often, run before the site goes out and not beside it (#308): the stairs and the
+  # low drop, one machine each, side by side with `site` (each builds its own copy from the caches, so none waits for another).
+  # Only when the site is built at all. `e2e.yml`'s regression run no longer repeats them.
+  quick:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [stairs, drop]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-t00-
+      - name: The scenario, on the built site
+        run: node tests/e2e/run.cjs ${{ matrix.scenario }}
+      - name: Keep the report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 7
+          if-no-files-found: ignore
+
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, grid, site]
+    needs: [changes, unit, grid, site, quick]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -291,27 +335,35 @@ jobs:
         with:
           script: await require(`${process.env.GITHUB_WORKSPACE}/tools/preview/comment.cjs`)({ github, context, core })
 
-  # Only after `verify`: both sets of unit tests, the build and `boot` have all passed (a skipped or failed job fails the
-  # `success()` every `if` without a status function carries).
+  # The canary (#308): what main last deployed, on a Worker of its own with its own address, so that it can be played before
+  # a version is cut. The public site is deployed from a version tag (deploy-tag.yml). Only after `verify`: both sets of unit
+  # tests, the build and `boot` have all passed, and after `quick` (the stairs and the low drop), by name; a skipped or
+  # failed job fails the `success()` every `if` without a status function carries.
   deploy:
     if: github.event_name != 'pull_request' && needs.verify.outputs.site == 'true'
-    needs: verify
+    needs: [verify, quick]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: wrangler.production.jsonc
+          sparse-checkout: wrangler.canary.jsonc
       - uses: actions/download-artifact@v4
         with:
-          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Publish the demo
+      - name: Publish the canary
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: "false"
-        run: npx --yes wrangler@4.162.0 deploy -c wrangler.production.jsonc
+        # pipefail: a failed deploy must fail the job, not be hidden by the `tee` after it
+        shell: bash
+        run: npx --yes wrangler@4.162.0 deploy -c wrangler.canary.jsonc | tee "$RUNNER_TEMP/deploy.txt"
+      - name: Say where it is
+        run: |
+          url=$(grep -Eo 'https://temple-walk-canary[^ ]*workers\.dev' "$RUNNER_TEMP/deploy.txt" | head -1)
+          { echo "### canary"; echo "- 地址：${url:-（未从 wrangler 输出读到）}"; echo "- 提交 \`$GITHUB_SHA\`"; } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,195 @@
+{
+  "issue": 188,
+  "part": "medium+touch",
+  "site": "https://temple.rushiwowen.co/",
+  "startedAt": "2026-11-18T13:48:05.403Z",
+  "device": {
+    "model": "Pixel 8a",
+    "android": "17",
+    "chrome": "157.0.8103.78",
+    "batteryLevel": "43",
+    "acPowered": true,
+    "screen": {
+      "w": 411,
+      "h": 812,
+      "dpr": 2.625
+    }
+  },
+  "mediumTour": {
+    "durationMs": 375596,
+    "phase": "done",
+    "done": true,
+    "runs": [
+      {
+        "seconds": 120.03,
+        "frames": 3613,
+        "fps_mean": 30.1,
+        "p95_ms": 116.7,
+        "max_ms": 283.9
+      },
+      {
+        "seconds": 120.01,
+        "frames": 3494,
+        "fps_mean": 29.11,
+        "p95_ms": 116.8,
+        "max_ms": 142.2
+      },
+      {
+        "seconds": 120.04,
+        "frames": 3438,
+        "fps_mean": 28.64,
+        "p95_ms": 116.9,
+        "max_ms": 142
+      }
+    ],
+    "ready_ms": 12073.9,
+    "cost": 52.33,
+    "census": {
+      "site": {
+        "meshes": 132,
+        "tris": 627712,
+        "hidden": false
+      },
+      "interior": {
+        "meshes": 256,
+        "tris": 425080,
+        "hidden": false
+      },
+      "sky": {
+        "meshes": 1,
+        "tris": 960,
+        "hidden": false
+      },
+      "ground": {
+        "meshes": 4,
+        "tris": 8,
+        "hidden": false
+      },
+      "backdrop": {
+        "meshes": 47,
+        "tris": 52444,
+        "hidden": false
+      },
+      "bamboo": {
+        "meshes": 2,
+        "tris": 128408,
+        "hidden": false
+      },
+      "props": {
+        "meshes": 8,
+        "tris": 1342,
+        "hidden": false
+      },
+      "trees": {
+        "meshes": 6,
+        "tris": 146255,
+        "hidden": false
+      },
+      "drift": {
+        "meshes": 1,
+        "tris": 0,
+        "hidden": false
+      },
+      "Points": {
+        "meshes": 1,
+        "tris": 0,
+        "hidden": false
+      },
+      "Mesh": {
+        "meshes": 12,
+        "tris": 538,
+        "hidden": true
+      },
+      "flock": {
+        "meshes": 1,
+        "tris": 36,
+        "hidden": true
+      },
+      "monk": {
+        "meshes": 8,
+        "tris": 38326,
+        "hidden": true
+      },
+      "rope": {
+        "meshes": 2,
+        "tris": 104,
+        "hidden": false
+      },
+      "wisp": {
+        "meshes": 17,
+        "tris": 34,
+        "hidden": false
+      },
+      "bowl": {
+        "meshes": 2,
+        "tris": 356,
+        "hidden": false
+      },
+      "incense": {
+        "meshes": 6,
+        "tris": 204,
+        "hidden": false
+      },
+      "breath": {
+        "meshes": 1,
+        "tris": 2,
+        "hidden": true
+      },
+      "coin": {
+        "meshes": 1,
+        "tris": 64,
+        "hidden": true
+      }
+    }
+  },
+  "opening": {
+    "phase": "idle",
+    "mode": "fly",
+    "skipped": false,
+    "cuts": 0,
+    "waited": 0,
+    "secs": null,
+    "length": null,
+    "s": 0,
+    "active": false,
+    "hint": "walk",
+    "cues": {
+      "flutter": 0,
+      "farBell": 0,
+      "mountainBell": 0,
+      "prologue": 0,
+      "titled": 0,
+      "ending": 0,
+      "passed": 0,
+      "musicHeld": false
+    }
+  },
+  "tapWalk": [],
+  "jump": {},
+  "pinch": {},
+  "screenshots": {},
+  "notVerified": [
+    {
+      "item": "坐下（茶寮门侧蒲团）",
+      "reason": "needs the character walked to the tea-house cushion; no playthrough harness in this one-shot probe"
+    },
+    {
+      "item": "息屏（收尾时关屏五秒）",
+      "reason": "needs the ending state (all 7 rites done); requires a full playthrough"
+    },
+    {
+      "item": "登顶 ?up=lingxiao 绕回廊",
+      "reason": "needs summit navigation + railing-bounds check; not attempted in this pass"
+    },
+    {
+      "item": "茶寮台前 上台/下台阶",
+      "reason": "character was not at the tea-house terrace after entering; prompt not observed"
+    }
+  ],
+  "mem": {
+    "afterMediumTourPSS_KB": null
+  },
+  "notes": [],
+  "touchError": "Error: touchscreen.tap: hasTouch must be enabled on the browser context before using the touchscreen.",
+  "finishedAt": "2026-11-18T13:55:21.063Z"
+}
