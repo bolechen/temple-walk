@@ -164,6 +164,40 @@ const scenarios = {
   } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.
+  // The shared page of seals (#319): drawn in the page in every language, its code cut out and read back, and it says the main site
+  // although the page was served from 127.0.0.1; with and without seals, with and without the library's line.
+  goshuin: { tier: 2, async run(b, base) {
+    const { render, LANGS, KINDS } = require("../../tools/goshuin-pages.cjs"), sharp = require("sharp"), jsQR = require("jsqr");
+    const { qrBox, shareUrl, STYLES } = await import("../../app/src/goshuin.js");
+    const read = async (buf, lang, style) => {
+      const box = qrBox(lang, style), { data, info } = await sharp(buf).extract({ left: Math.floor(box.x), top: Math.floor(box.y), width: Math.ceil(box.w) + 1, height: Math.ceil(box.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      return jsQR(new Uint8ClampedArray(data), info.width, info.height);
+    };
+    const want = [...LANGS.map((l) => [l, "full"]), ["zh", "none"], ["zh", "fullNoLine"], ["en", "someLine"], ["ko", "some"], ...STYLES.flatMap((st) => LANGS.map((l) => [l, "full", st]))];
+    for (const [lang, kind, style] of want) {
+      expect(kind in KINDS, "no such kind " + kind);
+      const buf = await render(b, base, { lang, kind, style }), meta = await sharp(buf).metadata();
+      expect(meta.width === 1200 && meta.height === 1600, `${lang}/${kind}/${style}: the page is ${meta.width}×${meta.height}`);
+      const got = await read(buf, lang, style);
+      expect(got && got.data === shareUrl(lang), `${lang}/${kind}/${style}: the code reads ${got && got.data}, not ${shareUrl(lang)}`);
+      expect(got.data.startsWith("https://temple.rushiwowen.co/"), `${lang}/${kind}/${style}: the code does not go to the main site`);
+    }
+  } },
+  // The card of a photograph (#319): a code on it by default that reads as the main site, in the page of seals' own look;
+  // a switch in the camera's settings puts it away, and the card has none; the choice is kept.
+  photoqr: { tier: 2, async run(b, base) {
+    const sharp = require("sharp"), jsQR = require("jsqr"), { photoUrl } = await import("../../app/src/goshuin.js");
+    const t = await open(b, base, "q=low&lang=en&cam=0.3,2.2,0,0.05" + BARE);
+    const card = async () => { const k = await t.page.evaluate(() => window.__capture()), { data, info } = await sharp(Buffer.from(k.url.split(",")[1], "base64")).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); return jsQR(new Uint8ClampedArray(data), info.width, info.height); };
+    await t.page.evaluate(() => window.__photo(true)); await t.frames(2);
+    expect(await t.page.evaluate(() => window.__settings().qr) === true && (await t.page.getAttribute("#qrToggle", "aria-pressed")) === "true", "the code should be on by default");
+    const on = await card(); expect(on && on.data === photoUrl("en") && on.data.startsWith("https://temple.rushiwowen.co/"), "the card's code reads " + (on && on.data));
+    await t.page.evaluate(() => document.getElementById("qrToggle").click());
+    expect(await t.page.evaluate(() => window.__settings().qr) === false && (await t.page.getAttribute("#qrToggle", "aria-pressed")) === "false", "the switch did not put the code away");
+    expect((await card()) === null, "the card still has a code after it was put away");
+    await t.page.evaluate(() => document.getElementById("qrToggle").click()); const back = await card(); expect(back && back.data === photoUrl("en"), "the code did not come back");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   lang: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low" + BARE, { enter: false, locale: "ja-JP" });
     const words = (sel) => t.page.textContent(sel);
