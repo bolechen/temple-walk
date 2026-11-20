@@ -1610,6 +1610,76 @@ const scenarios = {
     await t.shot("e2e-censer-winter");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The year-end bell (#341), on a preview where ?event=joya opens the night at any hour, against a counter made in the
+  // test (the Worker's address answered by page.route): a stroke of the rope counts one and shows at once, the report
+  // carries it, the mountain passing 108 brings the far bell once, the card is 1200 × 1600 and its code reads the main
+  // site marked joya, in two languages; a counter that fails leaves nothing on the picture and no error; the published
+  // page ignores ?event=, and on the night itself the mountain is a winter night.
+  joya: { tier: 2, async run(b, base) {
+    const { chromium } = require("playwright"), sharp = require("sharp"), jsQR = require("jsqr"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
+    const { joyaUrl, joyaLayout } = await import("../../app/src/joya-card.js");
+    const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
+    const api = { total: 105, posts: [], gets: 0, fail: false };
+    const counter = async (route) => {
+      const req = route.request();
+      if (api.fail) return route.fulfill({ status: 503, body: "" });
+      if (req.method() === "POST") { const body = JSON.parse(req.postData() || "{}"); api.posts.push(body); api.total += body.n; }
+      else api.gets++;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ year: 2027, total: api.total, rounds: Math.floor(api.total / 108), at: Date.now() }) });
+    };
+    const read = async (dataUrl, lang) => {
+      const buf = Buffer.from(dataUrl.split(",")[1], "base64"), meta = await sharp(buf).metadata(), q = joyaLayout(lang).qr;
+      const { data, info } = await sharp(buf).extract({ left: Math.floor(q.x), top: Math.floor(q.y), width: Math.ceil(q.w) + 1, height: Math.ceil(q.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      return { size: [meta.width, meta.height], code: jsQR(new Uint8ClampedArray(data), info.width, info.height) };
+    };
+    try {
+      let t = await open(pb, host, "q=low&fast=1&debug=0&event=joya&at=bell" + BARE, { enter: false, route: ["**/api/joya*", counter] });
+      await t.until(async () => (await t.journey()).near === "bell", 120000, "?at=bell did not stand him at the bell");
+      await t.until(async () => (await t.page.evaluate(() => window.__joya())).shown, 30000, "the night's line never showed");
+      let j = await t.page.evaluate(() => window.__joya());
+      expect(j.open && j.forced && j.line.includes("105") && !j.take, "the line should say 105 and offer no card yet: " + JSON.stringify(j));
+      const p = await t.probe(); expect(p.season === "winter" && p.time === "night", `the night should be a winter night, not ${p.season} ${p.time}`);
+      expect((await t.page.textContent("#act")).includes("除夕撞钟"), "the button at the bell should say 除夕撞钟");
+      await t.page.keyboard.press("e");
+      await t.until(async () => (await t.page.evaluate(() => window.__joya())).mine >= 1, 60000, "pulling the rope did not count a stroke");
+      j = await t.page.evaluate(() => window.__joya());
+      expect(j.line.includes("106") && j.take, "the stroke should show at once and offer the card: " + JSON.stringify(j));
+      expect(await t.page.evaluate(() => window.__joyaFlush()), "the report did not go");
+      expect(api.posts.length === 1 && api.posts[0].n === 1 && Number.isInteger(api.posts[0].tz), "one report of one stroke with the clock's offset: " + JSON.stringify(api.posts));
+      // Others ring: the mountain passes 108 (and 216) between two answers; the far hills answer once.
+      const far0 = (await t.page.evaluate(() => window.__cues())).farBell;
+      api.total = 230; await t.page.evaluate(() => window.__joyaPoll());
+      j = await t.page.evaluate(() => window.__joya());
+      expect(j.heard === 1 && (await t.page.evaluate(() => window.__cues())).farBell === far0 + 1, "the far bell should answer the round once: " + JSON.stringify(j));
+      expect(j.line.includes("230"), "the line should follow the mountain: " + j.line);
+      api.total = 240; await t.page.evaluate(() => window.__joyaPoll());
+      expect((await t.page.evaluate(() => window.__joya())).heard === 1, "no far bell without a round");
+      // The card, from its button, and its code read back.
+      await t.page.click("#joyaTake"); await t.until(() => t.page.isVisible("#joyaCard"), 20000, "the card did not open");
+      expect(await t.page.evaluate(() => /^blob:/.test(document.getElementById("joyaImg").src)), "the card should be shown");
+      const zh = await read(await t.page.evaluate(() => window.__joyaCard()), "zh");
+      expect(zh.size[0] === 1200 && zh.size[1] === 1600, "the card should be 3:4, 1200 × 1600: " + zh.size);
+      expect(zh.code && zh.code.data === joyaUrl("zh") && zh.code.data.includes("utm_source=joya"), "the card's code reads " + (zh.code && zh.code.data));
+      await t.page.keyboard.press("Escape"); await t.until(() => t.page.isHidden("#joyaCard"), 10000, "Esc did not put the card away");
+      // The counter fails: what is shown stays, a stroke is kept, nothing is said.
+      api.fail = true; expect(!(await t.page.evaluate(() => window.__joyaFlush())), "a failed report should say so to the hook");
+      const errs = t.errors.filter((e) => !/api\/joya/.test(e)); expect(errs.length === 0, errs.join("\n")); await t.close();
+      // A counter that never answers: no line at all, no error but the request itself; in English the card still reads.
+      api.fail = true;
+      t = await open(pb, host, "q=low&debug=0&event=joya&lang=en&cam=0.3,2.2,0,0.05" + BARE, { route: ["**/api/joya*", counter] });
+      await t.frames(6); await t.page.evaluate(() => window.__joyaPoll());
+      j = await t.page.evaluate(() => window.__joya());
+      expect(j.open && !j.shown && j.total === null, "with no counter the line should not be there: " + JSON.stringify(j));
+      const en = await read(await t.page.evaluate(() => window.__joyaCard()), "en");
+      expect(en.code && en.code.data === joyaUrl("en"), "the English card's code reads " + (en.code && en.code.data));
+      const errs2 = t.errors.filter((e) => !/api\/joya/.test(e)); expect(errs2.length === 0, errs2.join("\n")); await t.close();
+    } finally { await pb.close(); }
+    // The published page (the plain test host) ignores ?event=: the night opens only on the visitor's clock.
+    const t = await open(b, base, "q=low&event=joya&cam=0.3,2.2,0,0.05" + BARE);
+    const j = await t.page.evaluate(() => window.__joya());
+    expect(j.open === j.window && !j.forced, "the published page should ignore ?event=joya: " + JSON.stringify(j));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   bench: { tier: 2, async run(b, base) {
     const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
     const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
