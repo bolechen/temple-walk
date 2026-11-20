@@ -6,7 +6,7 @@ const mem = (text = null) => { const m = { text, get: () => m.text, set: (t) => 
 test("a new visitor gets the defaults", () => { assert.deepEqual(createSettings(mem()).get(), { ...DEFAULTS }); });
 test("what is set is kept for next time", () => {
   const m = mem(), a = createSettings(m); a.set("sens", 1.6); a.set("invertY", true); a.set("quality", "low"); a.set("volume", 0.25);
-  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, lock: false, autocam: true, fov: 0, thirds: true, blur: false, qr: true, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
+  assert.deepEqual(createSettings(m).get(), { quality: "low", sens: 1.6, invertY: true, lock: false, autocam: true, follow: true, fov: 0, thirds: true, blur: false, qr: true, volume: 0.25, music: 0.7, ambience: 0.8, effects: 1 });
 });
 test("values out of range are brought back into it", () => {
   const s = createSettings(mem()); assert.equal(s.set("sens", 99), 2.5); assert.equal(s.set("sens", -3), 0.3); assert.equal(s.set("volume", 7), 1); assert.equal(s.set("volume", -1), 0);

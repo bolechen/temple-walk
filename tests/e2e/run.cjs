@@ -1830,6 +1830,51 @@ const scenarios = {
   // From behind him and through his eyes.
   // Into his own eyes and out again by the wheel is a push, not a cut (#102 in #295): every frame of it the angle of view
   // changes by no more than 1.5°, the eye moves no more than 0.12 m of its own (he stands still), and he fades one way only.
+  // Turning the view back behind him (#295, group B): R swings it round to the way he faces by the short way, never faster
+  // than the director's 144° a second, never tipping it, a drag meanwhile not taken; walking sideways while it swings, it
+  // stops when it is there and does not go on turning. And walking a tapped way with the hand off the view, it drifts round
+  // behind the way he goes, slowly, after the wait; a drag stops it.
+  recenter: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third");
+    const P = () => t.probe().then((p) => p.turn);
+    const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a)), behind = (h) => wrap(Math.PI - h);
+    await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(10);
+    // he walks a few steps the way the view looks (so that he faces it), then the view is put well off his back
+    await t.page.keyboard.down("w"); await t.frames(12); await t.page.keyboard.up("w"); await t.frames(20);
+    const st = await t.state(); await t.page.evaluate(([x, z, y]) => window.__pose(x, z, y + 2.2, -0.05), [st.x, st.z, st.yaw]); await t.frames(8);
+    let q = await P(); const off = Math.abs(wrap(q.yaw - behind(q.heading)));
+    expect(off > 1.0, "the drag should have turned the view well off his back: " + off.toFixed(2));
+    // R, and a drag while it swings
+    await t.page.keyboard.press("r"); await t.frames(2);
+    q = await P(); expect(q.active && q.swings === 1, "R should start a swing: " + JSON.stringify(q));
+    const during = q.yaw; await t.page.mouse.move(210, 400); await t.page.mouse.down(); await t.page.mouse.move(400, 400); await t.page.mouse.up();
+    for (let i = 0; i < 400 && (await P()).active; i++) await t.frames(1);
+    q = await P();
+    expect(!q.active && Math.abs(wrap(q.yaw - behind(q.heading))) < 0.03, "it should end looking the way he faces: " + JSON.stringify(q));
+    expect(q.rate <= 144 + 0.5, `it turned ${q.rate}° in a second`);
+    expect(q.pitch <= 0.3, `it tipped the view ${q.pitch}° in a frame`);
+    expect(q.move <= 0.15, `the eye moved ${q.move} m of its own in a frame while it swung`);
+    void during;
+    // R while he walks sideways (A held): it ends, and the view does not keep turning after
+    await t.page.keyboard.down("a"); await t.frames(3); await t.page.keyboard.press("r");
+    for (let i = 0; i < 400 && (await P()).active; i++) await t.frames(1);
+    const y0 = (await P()).yaw; await t.frames(40); const y1 = (await P()).yaw; await t.page.keyboard.up("a");
+    expect(Math.abs(wrap(y1 - y0)) < 0.01, `walking sideways after the swing, the view went on turning ${(wrap(y1 - y0) * 180 / Math.PI).toFixed(1)}°`);
+    // the drift: a tapped way off to his right, the hand off the view
+    await t.page.evaluate(() => window.__pose(-8, 20, 0, -0.05)); await t.frames(10);
+    const before = await P();
+    await t.page.evaluate(() => window.__walk([[8, 20]]));
+    for (let i = 0; i < 300 && (await P()).drifted - before.drifted < 20; i++) await t.frames(2);
+    q = await P();
+    expect(q.drifted - before.drifted >= 20, `walking a tapped way, the view should have drifted round behind him: ${q.drifted - before.drifted}°`);
+    expect(q.driftRate <= 30 + 0.5, `the drift turned ${q.driftRate}° in a second`);
+    // a drag stops it
+    await t.page.mouse.move(210, 400); await t.page.mouse.down(); for (const x of [230, 250, 270]) { await t.page.mouse.move(x, 400); await t.frames(1); } await t.page.mouse.up();
+    const d0 = (await P()).drifted; await t.frames(20); const d1 = (await P()).drifted;
+    expect(Math.abs(d1 - d0) < 0.01, `after a drag the drift should wait: it turned ${(d1 - d0).toFixed(2)}° more`);
+    console.log("    recenter", JSON.stringify({ rate: q.rate, pitch: q.pitch, move: q.move, driftRate: q.driftRate }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   push: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&view=third");
     await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
