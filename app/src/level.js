@@ -24,6 +24,9 @@ import t00 from "../levels/t00/level.js";
  * @property {(x: number, z: number) => number} groveSound how deep in the bamboo the place is heard, 0 to 1
  * @property {{ x0: number, x1: number, y0: number, y1: number, z0: number, z1: number }} eyeBox what the eye's space gathers
  * @property {number} hallTapZ a tap on the great hall from south of this line is not a walk to its door
+ * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
+ * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
+ * @property {boolean} [title] raises the prologue's title at its gate
  */
 
 /** @type {Record<string, () => Promise<Level>>} */

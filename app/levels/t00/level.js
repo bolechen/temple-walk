@@ -23,4 +23,8 @@ export default {
   eyeBox: { x0: -SITE.x - 30, x1: SITE.x + 30, y0: -90, y1: 90, z0: SITE.zN - 30, z1: APPROACH.end + 30 },
   // From the first court a tap on the great hall means "go to its door"; from the forecourt south of the gate it does not.
   hallTapZ: SITE.zS - 4,
+  // The prologue keeps the visitor's place (yunjing.place.v1), plays its opening and raises its title (#385).
+  keepsPlace: true,
+  opening: true,
+  title: true,
 };
