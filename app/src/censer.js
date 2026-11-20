@@ -162,6 +162,22 @@ function incense() {
   }
   return list;
 }
+// The sticks other visitors set in the ash today (同修留痕, #340): burnt-out stubs, a few more for each person who has offered
+// incense in any hall since midnight, up to a ceiling. They stand among the ones above, as cold as they are; nobody's
+// own incense is marked. Each is drawn from the same seeded run, so a count that grows only adds stubs, none move.
+export const TRACE_STUBS = 60;
+/** How many stubs a day's offerings put in: about 3.6 for each doubling of the people, from the first (1 → 4, 100 → 24, 10 000 → 48), never over `TRACE_STUBS`. @param {number} people */
+export const traceStubCount = (people) => (people >= 1 ? Math.min(TRACE_STUBS, Math.round(Math.log2(1 + people) * 3.6)) : 0);
+/** `k` of them as one geometry at the censer's own origin; null for none. 12 triangles each. @param {number} k */
+export function traceStubsGeometry(k) {
+  k = Math.min(TRACE_STUBS, Math.max(0, Math.floor(k))); if (!k) return null;
+  const r = rng(340), list = [];
+  for (let i = 0; i < k; i++) {
+    const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 0.29, h = 0.02 + r() * 0.06, tx = (r() - 0.5) * 0.3, tz = (r() - 0.5) * 0.3, w = r();
+    list.push(markUV(new THREE.BoxGeometry(0.0045, h, 0.0045).translate(0, h / 2, 0).rotateX(tx).rotateZ(tz).translate(Math.sin(a) * d, CENSER.ash - 0.015, Math.cos(a) * d), KIND.stub, w));
+  }
+  return merge(list);
+}
 // Leaves in autumn and petals in spring, a few on the flange and the ash and at its feet (the material shows only
 // those of the season): blown in from the court's maples and the plum by the wall.
 function fallen() {
