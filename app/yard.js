@@ -27,6 +27,10 @@ import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
+import { createEyeSpace, eyeRadius } from "./src/eyespace.js";
+import { gatherEye } from "./src/eyegather.js";
+import EyeWorker from "./src/eyebvh.worker.js?worker";
+import { MeshBVH } from "three-mesh-bvh";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
@@ -568,13 +572,35 @@ const governor = createGovernor(quality, () => { if (!quality.gtao) post.off("gt
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
+// What the eye is kept out of (#295, eyespace.js): the place's own triangles, gathered a few milliseconds a frame once the
+// walk is the visitor's, sorted into a hierarchy by a worker, then asked with a sphere as big as the near plane's corners.
+// Until then (and with ?off=eyebvh) the eye asks the written plan, as it did.
+let eyeSpace = null, eyeGather = null;
+const eyeInfo = { state: OFF.has("eyebvh") ? "off" : "waiting", tris: 0, gatherMs: 0, buildMs: 0, t0: 0 };
+function growEyeSpace() {
+  if (eyeInfo.state === "waiting") {
+    if (frames < 30 || !document.body.classList.contains("entered") || opening.active()) return;
+    eyeInfo.state = "gathering"; eyeInfo.t0 = performance.now();
+    eyeGather = gatherEye(scene, { x0: -SITE.x - 30, x1: SITE.x + 30, y0: -90, y1: 90, z0: SITE.zN - 30, z1: APPROACH.end + 30 });
+  }
+  if (eyeInfo.state !== "gathering") return;
+  const r = eyeGather.next(); if (!r.done) return;
+  const positions = r.value; eyeGather = null; eyeInfo.tris = positions.length / 9; eyeInfo.gatherMs = Math.round(performance.now() - eyeInfo.t0); eyeInfo.state = "building";
+  const w = new EyeWorker();
+  w.onmessage = (e) => {
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(e.data.positions, 3));
+    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true })); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
+  };
+  w.onerror = () => { eyeInfo.state = "failed"; w.terminate(); console.warn("the eye's hierarchy could not be built: it asks the written plan"); };
+  w.postMessage({ positions }, [positions.buffer]);
+}
 const load = { tris: 0, calls: 0, ms: 0 };
 let frozen = false;   // a photograph holds the picture still from the shutter until the print is put away
 /** @type {any} */ let walkViz = null;   // (the debug panel's drawing of what stops him; null until it is switched on)
 function frame(now) {
   if (!running) return;
   if (frozen) { prev = now; requestAnimationFrame(frame); return; }
-  governor.tick((now - prev) / 1000); tour?.frame(now); devpose?.tick(now);
+  governor.tick((now - prev) / 1000); tour?.frame(now); devpose?.tick(now); if (eyeInfo.state === "waiting" || eyeInfo.state === "gathering") growEyeSpace();
   const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
@@ -668,7 +694,8 @@ function frame(now) {
   else {
     const rx = Math.cos(look.yaw), rz = Math.sin(look.yaw), wantSide = FRAME ? 0 : walker.wall(pos.x + rx * 1.4, pos.z + rz * 1.4) ? 0 : 1.2;
     sideNow += (wantSide - sideNow) * Math.min(1, dt * 3);
-    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null };
+    if (eyeSpace) eyeSpace.radius = eyeRadius(camera.fov, camera.aspect, camera.near);   // (the lens and the screen of this frame)
+    const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null, space: FRAME ? eyeSpace : null };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
     camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
@@ -1102,6 +1129,7 @@ window.__cues = cueState;   // how many times the wings and the far bell have so
 window.__capture = async () => { const c = await capture(); return { w: c.width, h: c.height, url: c.toDataURL("image/jpeg", 0.9) }; };
 window.__blocked = (x, z) => walker.blocked(x, z);
 // Which walker answers (#265): its mode, what the baked floor weighed and cost to fetch, open and keep, and the porch edges.
+window.__eyeSpace = () => ({ ...eyeInfo, t0: undefined, radius: eyeSpace ? +eyeSpace.radius.toFixed(3) : null });
 window.__walker = () => ({ ...walker.stats, grid: walker.grid ? walker.grid()?.id || null : null, answers: walker.answers ? walker.answers(pos.x, pos.z) : false, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
 window.__drops = () => walker.drops.map((e) => ({ a: e.a, b: e.b, normal: e.normal, top: e.top }));   // the porch edges as this walker has them
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
