@@ -878,6 +878,8 @@ window.__doorRect = (id) => {
   return { door: box(xs[mid] + 1.4, xs[mid + 1] - 1.4), beside: box(xs[mid + 1] + 0.4, xs[mid + 2] - 0.4), floor };
 };
 window.__doorways = (all, only) => (!doors ? null : all ? doors.takeAll(only).then(() => ({ ...doors.report(), live: live?.report() ?? null })) : { ...doors.report(), live: live?.report() ?? null });
+// #320: the larger face into each room switched on or off where it has come (`?doorway=hires`), to set it against the cube.
+window.__doorHires = (on) => { if (!doors) return null; let n = 0; for (const o of Object.values(doors.halls)) if (o.hi) { o.mat.uniforms.uHi.value = on ? 1 : 0; n++; } return n; };
 window.__doorBake = (id, q, lossless, inward) => doors?.bakeHall(id, q, lossless, inward);   // tools/bake-doorways.mjs: one hall's three pictures, drawn in this page
 afterMood = () => { if (inside && lastHall) { lookOut(lastHall); dress(); } };   // the doorway shows the new hour, the room keeps its lamps
 function indoors(hall) {

@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, doorway, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
+// picture (boot, doorway, doorway-hires, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
@@ -299,6 +299,27 @@ const scenarios = {
     // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
     const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
     expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // #320's trial (`?doorway=hires`): the larger face into the room shows the room the same way round as the cube it
+  // sharpens. Across the great hall's door, square on from 6 m, the brightness of each column with the larger face is set
+  // against the same columns from the cube: it must follow them as they are, not as in a mirror (its first version had
+  // the attendant figures change sides, #332).
+  "doorway-hires": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&doorway=hires&cam=0,60,3.14,0");
+    await t.frames(4);
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI;
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(inYaw) * 6, h.out[1] + Math.cos(inYaw) * 6, inYaw]);
+    await t.until(async () => (await t.page.evaluate(() => window.__doorways())).halls.main.hi, 240000, "the great hall's larger face never came");
+    await t.frames(2);
+    const rect = await t.page.evaluate(() => window.__doorRect("main")), N = 48, pts = [];
+    for (let i = 0; i < N; i++) for (let j = 0; j < 8; j++) pts.push([rect.door[0] + (rect.door[2] - rect.door[0]) * (i + 0.5) / N, rect.door[1] + (rect.door[3] - rect.door[1]) * (0.3 + 0.6 * j / 7)]);
+    const cols = async (on) => { await t.page.evaluate((v) => window.__doorHires(v), on); await t.frames(1); const at = await t.page.evaluate((p) => window.__probe(p).at, pts); return Array.from({ length: N }, (_, i) => at.slice(i * 8, i * 8 + 8).reduce((s, c) => s + c[0] + c[1] + c[2], 0) / 24); };
+    const hi = await cols(true), cube = await cols(false);
+    const corr = (a, b) => { const ma = a.reduce((s, v) => s + v, 0) / a.length, mb = b.reduce((s, v) => s + v, 0) / b.length; let n = 0, da = 0, db = 0; a.forEach((v, i) => { n += (v - ma) * (b[i] - mb); da += (v - ma) ** 2; db += (b[i] - mb) ** 2; }); return n / Math.sqrt(da * db || 1); };
+    const same = corr(hi, cube), mirrored = corr(hi, [...cube].reverse());
+    console.log("     the larger face against the cube, column by column:", JSON.stringify({ same: +same.toFixed(3), mirrored: +mirrored.toFixed(3) }));
+    expect(same > 0.45 && same > mirrored + 0.2, `the larger face does not follow the cube across the door (correlation ${same.toFixed(2)}, mirrored ${mirrored.toFixed(2)}): it shows the room the wrong way round`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. No thin
