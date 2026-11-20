@@ -109,6 +109,24 @@
    "bytes": 1067059,
    "sha256": "361cddf8741f04fb435e6e64fc3f5e64fddf4e649cc0b5dd4fcbd075ccb77ff2",
    "rev": "f88247bc33e03a348cd6a0c6bcee20d2a3ac3110"
+  },
+  {
+   "path": "yaoshi-shot-v2-1024x768.png",
+   "bytes": 1128644,
+   "sha256": "4898e2261e8f1b45c41500fe4d9c4a34ae07d672ec6239245ca2df70a93824aa",
+   "rev": "65b7681a461413de00ad31a05a42cd8c0e12c14f"
+  },
+  {
+   "path": "yaoshi-shot-v2-1280x720.png",
+   "bytes": 1315726,
+   "sha256": "d68551474140eff650e572bc2fe0b1cae7d570faa77de05f4e7616218c88b949",
+   "rev": "65b7681a461413de00ad31a05a42cd8c0e12c14f"
+  },
+  {
+   "path": "yaoshi-shot-v2-390x844.png",
+   "bytes": 502392,
+   "sha256": "40480206d5947527cb6d1b49d50b0a6324d1781b65708d93c21e59b15af30aa9",
+   "rev": "65b7681a461413de00ad31a05a42cd8c0e12c14f"
   }
  ]
 }

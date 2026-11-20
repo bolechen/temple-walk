@@ -35,7 +35,7 @@ const GUANYIN_CAM = { at: [-1.4, 1.2, -3.2], look: [0, 1.9, 2.8], fov: 56 };
 const INCENSE_SHOT = {
   buddha: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, 4.55], [0, 4.9, 4.55]] },
   // `top`: the figure's head above the floor; `far`: how far before him it stands (the dais's middle, from his cushion).
-  figure: (top, far, cam = { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44 }) => ({ ...cam, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, far], [0, top, far]] }),
+  figure: (top, far, cam = { at: [-2.2, 0.8, -2.4], look: [0, 1.4, 3.0], fov: 48 }) => ({ ...cam, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, far], [0, top, far]] }),
 };
 export const KINDS = {
   buddha:    { w: 26.4, d: 16.8, h: 7.6 },
