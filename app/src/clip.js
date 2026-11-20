@@ -69,19 +69,24 @@ export function drawMark(x, w, h, a, { temple, label, url, seal }) {
   x.restore();
 }
 
+/** The signature drawn once, on a transparent canvas the size of the film, to be laid over each frame (a texture in yard.js). */
+export function markCanvas(w, h, info) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; drawMark(c.getContext("2d"), w, h, 1, info); return c;
+}
+
 /**
- * A recording in progress. `source` is the page's drawing canvas, `crop()` the framed part of it in that canvas's own
- * pixels; `audio` (optional) is a MediaStream with the place's sound. `frame(t)` is called straight after each frame is
- * drawn (the drawing buffer is not kept past that task) and copies the crop onto the film's canvas.
- * @param {{ source: HTMLCanvasElement, crop: () => { x: number, y: number, w: number, h: number }, size: { w: number, h: number }, audio?: MediaStream | null, pick: { mime: string, type: string, ext: string }, mark?: any, secs?: number, dry?: boolean, now?: () => number, onEnd: (r: { blob: Blob, type: string, ext: string, secs: number, early: boolean, frames: number }) => void, onFail?: (e: any) => void }} o
+ * A recording in progress. `source` is the page's own drawing canvas, which the page has already sized to the film (yard.js
+ * draws the framed part of the view at the film's size while it runs, so nothing is copied from frame to frame: a copy of
+ * a WebGL canvas onto a 2D one cost 25 ms a frame on a T4, #342); `audio` (optional) is a MediaStream with the place's
+ * sound. `frame()` is called after each frame is drawn and says how strongly the signature should show in the frame
+ * just drawn (0..1), and ends the film when its time is up.
+ * @param {{ source: HTMLCanvasElement, audio?: MediaStream | null, pick: { mime: string, type: string, ext: string }, mark?: boolean, secs?: number, now?: () => number, onEnd: (r: { blob: Blob, type: string, ext: string, secs: number, early: boolean, frames: number }) => void, onFail?: (e: any) => void }} o
  */
 export function createClip(o) {
   const now = o.now || (() => performance.now() / 1000), scene = sceneSecs(!!o.mark, o.secs), total = scene + (o.mark ? CLIP.tail : 0);
-  const film = document.createElement("canvas"); film.width = o.size.w; film.height = o.size.h;
-  const x = film.getContext("2d", { alpha: false });
-  const dry = !!o.dry, stream = dry ? new MediaStream() : film.captureStream(CLIP.fps);   // `dry`: draw the frames, record nothing (to tell the copy's cost from the encoder's) o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
-  const chunks = [];
-  const rec = dry ? /** @type {any} */ ({ start() {}, requestData() {}, stop() { setTimeout(() => rec.onstop?.(), 0); }, state: "inactive" }) : new MediaRecorder(stream, { mimeType: o.pick.mime, videoBitsPerSecond: clipBits(o.size.w, o.size.h), audioBitsPerSecond: 128000 });
+  const stream = o.source.captureStream(CLIP.fps); o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+  const chunks = [], w = o.source.width, h = o.source.height;
+  const rec = new MediaRecorder(stream, { mimeType: o.pick.mime, videoBitsPerSecond: clipBits(w, h), audioBitsPerSecond: 128000 });
   let t0 = 0, endAt = Infinity, early = false, state = "rec", sceneEnd = scene, drawn = 0;
   rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
   rec.onerror = (e) => { state = "failed"; o.onFail?.(e.error || e); };
@@ -91,20 +96,17 @@ export function createClip(o) {
     state = "done"; const blob = new Blob(chunks, { type: o.pick.type });
     o.onEnd({ blob, type: o.pick.type, ext: o.pick.ext, secs: +(Math.min(total, now() - t0)).toFixed(2), early, frames: drawn });
   };
-  const paint = (t) => {
-    const c = o.crop(); x.drawImage(o.source, c.x, c.y, c.w, c.h, 0, 0, film.width, film.height); drawn++;
-    if (o.mark) drawMark(x, film.width, film.height, markAlpha(t, sceneEnd), o.mark);
-  };
   return {
-    film, get state() { return state; }, get drawn() { return drawn; }, total, scene,
-    start() { t0 = now(); endAt = t0 + total; rec.start(250); return this; },   // (nothing is drawn here: the first frame comes with the next one the page draws, whose buffer is still whole)
+    get state() { return state; }, get drawn() { return drawn; }, total, scene, w, h,
+    start() { t0 = now(); endAt = t0 + total; rec.start(250); return this; },
     /** Seconds into the film, and how far along its scene is (0..1), for the progress line. */
     progress() { const t = Math.max(0, now() - t0); return { t, k: Math.min(1, t / scene) }; },
     /** The visitor stops: the scene ends here, and the signature, if there is one, takes its tail. */
-    stop() { if (state !== "rec") return; early = now() - t0 < scene - 0.05; if (early) { sceneEnd = Math.max(0.5, now() - t0); endAt = t0 + sceneEnd + (o.mark ? CLIP.tail : 0); } },   // the film ends on a frame the page draws: the next one, or after the tail
+    stop() { if (state !== "rec") return; early = now() - t0 < scene - 0.05; if (early) { sceneEnd = Math.max(0.5, now() - t0); endAt = t0 + sceneEnd + (o.mark ? CLIP.tail : 0); } },
     frame() {
-      if (state !== "rec") return; const t = now() - t0; paint(t);
-      if (now() >= endAt) this.finish();
+      if (state !== "rec") return 0; const t = now() - t0; drawn++;
+      if (now() >= endAt) { this.finish(); return 0; }
+      return o.mark ? markAlpha(t, sceneEnd) : 0;
     },
     finish() { if (state !== "rec") return; state = "ending"; try { rec.requestData(); rec.stop(); } catch (e) { state = "failed"; o.onFail?.(e); } },
     cancel() { if (state === "done" || state === "cancelled") return; state = "cancelled"; try { rec.state !== "inactive" && rec.stop(); } catch {} stream.getTracks().forEach((tr) => tr.stop()); },

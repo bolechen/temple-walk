@@ -31,7 +31,7 @@ import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.j
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
-import { createClip, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
+import { createClip, markCanvas, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
 import { track } from "./src/analytics.js";
@@ -512,7 +512,10 @@ addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
 }
 addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
 
+/** @type {any} */ let clipView = null;   // while a film is made: the view as it was, the frame in it, and the film's size (drawn at that size, whole: see startClip)
+const viewW = () => (clipView ? clipView.w : canvas.clientWidth), viewH = () => (clipView ? clipView.h : canvas.clientHeight);
 function resize() {
+  if (clipView) { const v = clipView; renderer.setPixelRatio(1); renderer.setSize(v.W, v.H, false); post.resize(v.W, v.H, 1); ground.resize(v.W >> 1, v.H >> 1, quality.planar > 0); camera.aspect = v.W / v.H; lens(); pxH = v.H; return; }
   const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
   // Device pixels, scaled by the tier, then capped by its pixel budget.
   let k = Math.min(devicePixelRatio, 2) * quality.scale;
@@ -532,7 +535,7 @@ function resize() {
 const DEVPOSE = import.meta.env.DEV && Q.has("devpose");
 const FIXED_VIEW = (Q.has("shot") || Q.has("show") || Q.has("cam")) && !DEVPOSE;
 const baseFov = () => {
-  const w = canvas.clientWidth, h = canvas.clientHeight, tall = w < h;
+  const w = viewW(), h = viewH(), tall = w < h;
   return FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
 };
 // With the camera raised, the angle drawn in or let out by the zoom (from the walk's angle, or from a shot's).
@@ -542,7 +545,7 @@ function lens() { camera.fov = zoomed(directedFov ?? baseFov()); camera.updatePr
 let pxH = 800;
 // The frame of the photograph, drawn over the view: what is inside it is what will be kept.
 function frameRect() {
-  const cw = canvas.clientWidth, ch = canvas.clientHeight; if (photo.aspect === "screen") return { w: cw, h: ch, x: 0, y: 0 };   // the whole view, as he sees it
+  const cw = viewW(), ch = viewH(); if (photo.aspect === "screen") return { w: cw, h: ch, x: 0, y: 0 };   // the whole view, as he sees it
   const [aw, ah] = ASPECT[photo.aspect], r = aw / ah;
   let h = ch * 0.74, w = h * r; if (w > cw * 0.92) { w = cw * 0.92; h = w / r; }
   return { w, h, x: (cw - w) / 2, y: (ch - h) / 2 };
@@ -721,8 +724,12 @@ function frame(now) {
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(photo.on && settings.get().blur ? focusAt() : 0);   // depth of field only with the camera raised and 虚化 switched on: never walking, never ?shot (the picture a visitor sees is the picture a tool takes)
-  post.render(t);
-  clipRec?.frame();   // a film being made takes its frame now, from the buffer just drawn (it is not kept past this task)
+  if (clipView) {   // a film: the framed part of the view drawn at the film's own size, the signature laid over it as it rises
+    const keep = camera.fov; camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(keep) / 2) * (clipView.f.h / clipView.h))); camera.updateProjectionMatrix();
+    post.render(t); camera.fov = keep; camera.updateProjectionMatrix();
+    const a = clipRec ? clipRec.frame() : 0;
+    if (a > 0 && clipView.mark) { clipView.mark.mat.opacity = a; renderer.autoClear = false; renderer.setRenderTarget(null); renderer.render(clipView.mark.scene, clipView.mark.cam); renderer.autoClear = true; }
+  } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
   if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length }); } }
@@ -846,24 +853,41 @@ const clipPick = typeof MediaRecorder !== "undefined" && HTMLCanvasElement.proto
 if (!clipPick) $("clipBtn").hidden = true;
 ui.layer("clip", { kind: "modal" });
 let clipUrl = null, clipTimer = 0, clipTap = null, clipLast = null;
-const clipEnded = () => { clearInterval(clipTimer); clipTimer = 0; clipTap?.release(); clipTap = null; document.body.classList.remove("clipping"); $("clipRec").hidden = true; $("clipBar").style.removeProperty("width"); $("shutter").disabled = false; clipRec = null; };
-async function startClip(secs, short = 0, dry = false) {
-  if (!clipPick || clipRec || frozen || !photo.on) return false;
-  const mark = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") + "/?" + CLIP.utm } : null;
-  if (mark) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, mark.seal), document.fonts.load(`30px ${FACE.serif}`, mark.temple + mark.label)]); } catch {} }
-  if (clipRec || !photo.on) return false;
-  const [aw, ah] = photo.aspect === "screen" ? [canvas.clientWidth, canvas.clientHeight] : ASPECT[photo.aspect];
-  const crop = () => { const f = frameRect(), kx = canvas.width / canvas.clientWidth, ky = canvas.height / canvas.clientHeight; return { x: f.x * kx, y: f.y * ky, w: f.w * kx, h: f.h * ky }; };
+const clipEnded = () => {
+  clearInterval(clipTimer); clipTimer = 0; clipTap?.release(); clipTap = null; document.body.classList.remove("clipping"); $("clipRec").hidden = true; $("clipBar").style.removeProperty("width"); $("shutter").disabled = false; clipRec = null;
+  if (clipView) { clipView.mark?.dispose(); clipView = null; for (const k of ["left", "top", "width", "height"]) canvas.style.removeProperty(k); canvas.style.removeProperty("inset"); resize(); }
+};
+// Filming draws the framed part of the view at the film's size, whole, on the page's own canvas, and records that canvas: nothing is copied from frame to
+// frame (a drawImage from the WebGL canvas onto a 2D one cost 25 ms a frame on a T4). The canvas is shown at the frame's place, so what is seen is what is kept.
+async function startClip(secs, short = 0, layoutOnly = false) {
+  if (!clipPick || clipRec || clipView || frozen || !photo.on) return false;
+  const info = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") + "/?" + CLIP.utm } : null;
+  if (info) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, info.seal), document.fonts.load(`30px ${FACE.serif}`, info.temple + info.label)]); } catch {} }
+  if (clipRec || clipView || !photo.on) return false;
+  const cw = canvas.clientWidth, ch = canvas.clientHeight, f = frameRect(), [aw, ah] = photo.aspect === "screen" ? [cw, ch] : ASPECT[photo.aspect];
+  let { w: W, h: H } = clipSize(aw, ah, quality.name, short); const px = W * H;   // no more pixels than the tier draws a frame with
+  if (!short && px > quality.budget) { const k = Math.sqrt(quality.budget / px); W = Math.max(2, Math.round((W * k) / 2) * 2); H = Math.max(2, Math.round((H * k) / 2) * 2); }
   clipTap = recordTap();
+  let mark = null;
+  if (info) {
+    const tex = new THREE.CanvasTexture(markCanvas(W, H, info)); tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }), geo = new THREE.PlaneGeometry(2, 2), scene = new THREE.Scene();
+    scene.add(new THREE.Mesh(geo, mat)); mark = { scene, mat, cam: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), dispose() { tex.dispose(); mat.dispose(); geo.dispose(); } };
+  }
+  const was = { left: f.x, top: f.y, width: f.w, height: f.h };
+  clipView = { w: cw, h: ch, f, W, H, mark };
+  Object.assign(canvas.style, { left: was.left + "px", top: was.top + "px", width: was.width + "px", height: was.height + "px", inset: "auto" });
+  resize();
+  if (layoutOnly) return true;   // (a tool's: the film's size and place with nothing recorded, so that what recording adds can be told from what the size does)
   try {
-    clipRec = createClip({ source: canvas, crop, size: clipSize(aw, ah, quality.name, short), audio: clipTap?.stream, pick: clipPick, mark, secs, dry,
+    clipRec = createClip({ source: canvas, audio: clipTap?.stream, pick: clipPick, mark: !!info, secs,
       onEnd: (r) => { const early = r.early; clipEnded(); showClip(r); track("demo.clip.export", { fmt: r.ext, secs: Math.round(r.secs), early, tier: quality.name }); },
       onFail: () => { clipEnded(); } });
   } catch (e) { clipEnded(); return false; }
   ui.close("photoSettings"); document.body.classList.add("clipping"); $("shutter").disabled = true;
   $("clipRec").hidden = false; const rec = clipRec; rec.start();
   clipTimer = setInterval(() => { $("clipRec").style.setProperty("--clip", rec.progress().k.toFixed(3)); }, 100);
-  track("demo.clip.start", { aspect: photo.aspect, tier: quality.name, fmt: clipPick.ext, mark: !!mark });
+  track("demo.clip.start", { aspect: photo.aspect, tier: quality.name, fmt: clipPick.ext, mark: !!info });
   return true;
 }
 const stopClip = () => clipRec?.stop();
@@ -891,7 +915,7 @@ $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark)
 on("clipMarkToggle", () => settings.set("clipMark", !settings.get().clipMark));
 addEventListener("keydown", (e) => { if (e.key === "Escape" && clipRec) { e.stopImmediatePropagation(); e.preventDefault(); stopClip(); } }, true);
 document.addEventListener("visibilitychange", () => { if (document.hidden) dropClip(); });
-window.__clip = (o) => { if (o && o.start) return startClip(o.secs, o.short, o.dry); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs, frames: clipLast.frames } }; };
+window.__clip = (o) => { if (o && o.layout === true) return startClip(1, o.short, true); if (o && o.layout === false) { clipEnded(); return true; } if (o && o.start) return startClip(o.secs, o.short); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs, frames: clipLast.frames } }; };
 
 // ---- Through the door ----------------------------------------------------------------
 // Eyes close on the way in and daylight floods on the way out; behind the veil he is moved between the porch and the

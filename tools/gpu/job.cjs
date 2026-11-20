@@ -257,7 +257,7 @@ function fingerprint(dir) {
   // turn about in this one job (`runs` times each), so that the card and the browser are the same for both.
   // spec.clip = { size, q, runs, secs, ms, aspect }: `ms` is how long each interval is measured, `secs` how long the film runs.
   if (spec.clip) {
-    const C = spec.clip, size = C.size || [1920, 1080], runs = C.runs || 3, ms = C.ms || 6000, log = (report.clip = { size, q: C.q || "high", aspect: C.aspect || "tall", ms, off: [], on: [], files: [] });
+    const C = spec.clip, size = C.size || [1920, 1080], runs = C.runs || 3, ms = C.ms || 6000, log = (report.clip = { size, q: C.q || "high", aspect: C.aspect || "tall", ms, off: [], same: [], on: [], files: [] });
     try {
       const { ctx, page } = await open(q({ q: C.q || "high", enter: 1, view: "third", season: "summer", time: "day" }), size, 1);
       await page.waitForTimeout(4000);
@@ -266,12 +266,13 @@ function fingerprint(dir) {
       const probe = (n) => page.evaluate((n) => new Promise((res) => { const d = []; let p = performance.now(); const end = p + n; const f = (t) => { d.push(t - p); p = t; if (t < end) requestAnimationFrame(f); else { d.shift(); d.sort((a, b) => a - b); const m = d.reduce((a, b) => a + b, 0) / d.length; res({ frames: d.length, mean: +m.toFixed(2), p95: +d[Math.floor(d.length * 0.95)].toFixed(2), max: +d[d.length - 1].toFixed(2) }); } }; requestAnimationFrame(f); }), n);
       for (let i = 0; i < runs; i++) {
         log.off.push(await probe(ms));
+        await page.evaluate((sh) => window.__clip({ layout: true, short: sh }), C.short || 0); await page.waitForTimeout(800); log.same.push(await probe(ms)); await page.evaluate(() => window.__clip({ layout: false })); await page.waitForTimeout(800);   // the same size and place, nothing recorded
         await page.evaluate(([s, sh, d]) => window.__clip({ start: true, secs: s, short: sh, dry: d }), [C.secs || Math.ceil(ms / 1000) + 4, C.short || 0, !!C.dry]);
         await page.waitForFunction(() => window.__clip().drawn > 5, null, { timeout: 60000 });
         log.on.push(await probe(ms));
         await page.waitForFunction(() => window.__clip().last != null, null, { timeout: 120000, polling: 500 });
         log.files.push(await page.evaluate(() => window.__clip().last)); await page.evaluate(() => document.getElementById("clipBack").click()); await page.waitForTimeout(500);
-        console.log("clip run", i + 1, JSON.stringify({ off: log.off[i], on: log.on[i], file: log.files[i] })); save();
+        console.log("clip run", i + 1, JSON.stringify({ off: log.off[i], same: log.same[i], on: log.on[i], file: log.files[i] })); save();
       }
       await ctx.close();
     } catch (e) { log.error = String(e.message).slice(0, 300); console.log("clip failed", log.error); }

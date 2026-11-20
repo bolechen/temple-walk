@@ -269,7 +269,7 @@ body.frozen #clipBtn, body.clipping #clipBtn, body.photo-settings-open #clipBtn 
 #clipRec kbd { margin: 0 0 0 .5em; font-size: .78em; opacity: .7; }
 @media (pointer: coarse) { #clipRec kbd { display: none; } }
 #clipBar { position: absolute; left: 0; top: 0; height: 2px; width: calc(var(--clip, 0) * 100%); background: #b02a1f; box-shadow: 0 0 6px rgba(176,42,31,.6); }
-body.clipping #photoBar, body.clipping #photoClose, body.clipping #photoSettings, body.clipping #frame { visibility: hidden; }
+body.clipping #photoBar, body.clipping #photoClose, body.clipping #photoSettings, body.clipping #frame, body.clipping #finder { visibility: hidden; }
 #clip { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 12px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
 #clip video { max-width: 100%; max-height: 100%; min-height: 0; align-self: center; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #clip .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
