@@ -167,6 +167,8 @@ jobs:
       VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'canary' }}
       # The pull request's number, for a preview build to say which it is (#310 reads it; empty on the canary).
       VITE_PR: ${{ github.event.pull_request.number }}
+      # The commit the page was built from: a pull request's own head, not the merge commit GITHUB_SHA names there.
+      VITE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
