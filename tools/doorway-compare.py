@@ -51,10 +51,14 @@ for hall in halls:
         row = []
         for m, name in MODES:
             im = pic(hall, d, 0, m)
-            box = rects[m].get(f"{hall}-{d}m-0-{m}.png", {}).get("door") if im else None
-            if im is None or not box:
+            # The same pose has the same door wherever it was recorded (the runs share rects files and once raced on them).
+            box = next((rects[k].get(f"{hall}-{d}m-0-{k}.png", {}).get("door") for k, _ in MODES if rects[k].get(f"{hall}-{d}m-0-{k}.png")), None) if im else None
+            if im is None:
                 row.append(None)
                 continue
+            if not box:   # square on, the door is in the middle of the picture: a box by distance
+                s = {12: 70, 6: 120, 2: 260}[d] * im.width / 640
+                box = [im.width / 2 - s / 2, im.height * 0.42 - s / 2, im.width / 2 + s / 2, im.height * 0.42 + s / 2]
             x0, y0, x1, y1 = box
             cx, cy, s = (x0 + x1) / 2, (y0 + y1) / 2, max(x1 - x0, y1 - y0) * 1.35 + 20
             crop = im.crop((int(cx - s / 2), int(cy - s / 2), int(cx + s / 2), int(cy + s / 2))).resize((260, 260), Image.LANCZOS)

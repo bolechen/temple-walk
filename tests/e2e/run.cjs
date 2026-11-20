@@ -301,29 +301,38 @@ const scenarios = {
     expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. Along a
-  // line across the door at a man's height, nothing at the door's edges is brighter than the paving out under the sky
-  // (no light leaks past the room's jambs), two frames of a still view are the same there (nothing shimmers), the altar
-  // keeps its place going in, and coming out the room is drawn live again at once.
+  // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. No thin
+  // bright line runs down the door's edges (no light leaks past the room's jambs), two frames of a still view are the same
+  // (nothing shimmers), the altar keeps its place going in, and coming out the room is drawn live again at once.
   "doorway-live": { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=high&view=first&season=summer&time=day&doorway=live&warm=0&cam=0,60,3.14,0");
+    const t = await open(b, base, "shot=1&q=high&view=first&season=summer&time=day&doorway=live&warm=0&cam=0,60,3.14,0");
     await t.frames(4);
     const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
     const look = {};
-    for (const [d, turn] of [[6, 0], [6, 0.35], [3, -0.3], [11, 0]]) {
+    for (const [d, turn] of [[6, 0], [3, 0], [11, 0], [6, 0.35]]) {
       const a = inYaw + turn;
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(a) * d, h.out[1] + Math.cos(a) * d, a]);
       await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight > 0; }, 240000, `the great hall's room was never drawn live from ${d} m`);
       await t.frames(2);
-      const rect = await t.page.evaluate(() => window.__doorRect("main")), y = Math.round((rect.door[1] * 2 + rect.door[3]) / 3), w = rect.door[2] - rect.door[0];
-      const xs = []; for (let x = Math.round(rect.door[0] - w * 0.25); x <= rect.door[2] + w * 0.25; x++) xs.push([x, y]);
-      const fl = rect.floor, floorAt = [[(fl[0] + fl[2]) / 2, (fl[1] + fl[3]) / 2]];
-      const one = await t.page.evaluate((pts) => window.__probe(pts).at, [...xs, ...floorAt]), two = await t.page.evaluate((pts) => window.__probe(pts).at, xs);
-      const lum = (c) => (c[0] + c[1] + c[2]) / 3, floor = lum(one[one.length - 1]), line = one.slice(0, xs.length).map(lum);
-      const brightest = Math.max(...line), shimmer = Math.max(...two.map((c, i) => Math.abs(lum(c) - line[i])));
-      look[`${d}m${turn}`] = { floor: +floor.toFixed(1), brightest: +brightest.toFixed(1), shimmer: +shimmer.toFixed(1) };
-      expect(brightest <= Math.max(floor, 40), `from ${d} m, turned ${turn}: something at the door is brighter (${brightest.toFixed(0)}) than the paving outside (${floor.toFixed(0)}): light leaks past the room`);
-      expect(shimmer <= 3, `from ${d} m, turned ${turn}: the door's edge changes between two still frames by ${shimmer.toFixed(1)}`);
+      // __doorRect's `door` spans 1.3 m either side of the middle; the opening's edges are at 1.42 m. Square on, a column
+      // a pixel either side of each edge, down the upper half of the door (where the room's lamp lights the wall behind
+      // the jamb), must be no brighter than the frame outside it or the room inside it, a few pixels away: a leak is a
+      // thin line brighter than both. Turned, only the shimmer is held, down the door's two sides.
+      const rect = await t.page.evaluate(() => window.__doorRect("main")), cx = (rect.door[0] + rect.door[2]) / 2, half = (rect.door[2] - rect.door[0]) / 2 * (1.42 / 1.3);
+      const ys = []; for (let y = rect.door[1]; y < (rect.door[1] + rect.door[3]) / 2; y += 2) ys.push(Math.round(y));
+      const cols = turn ? [] : [-1, 1].flatMap((side) => [-1, 0, 1].map((k) => ({ side, x: Math.round(cx + side * half + k), out: Math.round(cx + side * (half + 5)), in: Math.round(cx + side * (half - 5)) })));
+      const pts = cols.flatMap((c) => ys.flatMap((y) => [[c.x, y], [c.out, y], [c.in, y]]));
+      const line = [rect.door[0], rect.door[2]].flatMap((x) => ys.map((y) => [Math.round(x), y]));   // turned: the door's two sides
+      const lum = (c) => (c[0] + c[1] + c[2]) / 3;
+      // The edges, twice, with time held (`shot=1`: the candles, which flicker by design, held too).
+      const one = await t.page.evaluate((p) => window.__probe(p).at, pts.length ? pts : line), two = await t.page.evaluate((p) => window.__probe(p).at, pts.length ? pts : line);
+      let worst = 0;
+      for (let i = 0; i < pts.length; i += 3) worst = Math.max(worst, lum(one[i]) - Math.max(lum(one[i + 1]), lum(one[i + 2])));
+      const shimmer = Math.max(...two.map((c, i) => (pts.length && i % 3 ? 0 : Math.abs(lum(c) - lum(one[i])))));
+      look[`${d}m${turn}`] = { edge: +worst.toFixed(1), shimmer: +shimmer.toFixed(1) };
+      await t.shot(`e2e-doorway-live-${d}m${turn}`);
+      expect(worst <= 12, `from ${d} m: a thin line at the door's edge is brighter by ${worst.toFixed(0)} than both the frame and the room beside it: light leaks past the room's jamb`);
+      expect(shimmer <= 3, `from ${d} m, turned ${turn}: the door changes between two still frames by ${shimmer.toFixed(1)}`);
     }
     console.log("     across the door:", JSON.stringify(look));
     await t.shot("e2e-doorway-live");

@@ -66,7 +66,9 @@ function doorMaterial(U, steps) {
         // The room is seen only through the open door, not through the paper of the windows either side.
         vec3 dp=ro+rd*((uMax.z-ro.z)/rd.z);
         bool through=rd.z<0. && dp.x>uDoor.x && dp.x<uDoor.y && dp.y>uDoor.z && dp.y<uDoor.w;
-        if(uLiveOn>0. && uLive>0. && tout>tin && through){ liveC=texture(tLive,gl_FragCoord.xy/uRes).rgb*uGain; lw=uLive; }
+        // Live only within the room's own opening, whose jambs stand 3 cm inside the court's door either side
+        // (interior.js): through that strip the room's lit plaster beyond the jamb showed as a thin pale line.
+        if(uLiveOn>0. && uLive>0. && tout>tin && through && dp.x>uDoor.x+.04 && dp.x<uDoor.y-.04){ liveC=texture(tLive,gl_FragCoord.xy/uRes).rgb*uGain; lw=uLive; }
         if(uHas>0. && tout>tin && through){
           float t=tout;
           #if STEPS > 0
