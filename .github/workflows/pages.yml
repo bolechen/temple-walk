@@ -284,12 +284,11 @@ jobs:
             worker
             tools/worker-smoke.mjs
             wrangler.canary.jsonc
-            wrangler.production.jsonc
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: The canary's Worker, and the public site's, answer the API as they should
-        run: node tools/worker-smoke.mjs wrangler.canary.jsonc && node tools/worker-smoke.mjs wrangler.production.jsonc
+      - name: The canary's Worker answers the API as it should (the public site's is the same script and binding, held equal by tests/unit/trace.test.mjs)
+        run: node tools/worker-smoke.mjs wrangler.canary.jsonc
 
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
