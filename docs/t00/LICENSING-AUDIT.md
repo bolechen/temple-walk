@@ -293,7 +293,8 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 | `metmuseum.org/policies/image-resources` | HTTP 429（curl 与无头 Chromium 都一样）；Wayback 的存档本机被代理拦下，没取到 | 与第一轮相同：依据是藏品接口 `isPublicDomain`；政策页请评审时人工再开一次 |
 | `artsmia.org/terms-of-use` | HTTP 429 | 同上，依据是 Sketchfab 的 CC0 与 Mia 接口 `rights_type` |
 | `meshy.ai/terms-of-use` | HTTP 403 | 仍只读到帮助中心；请所有者读全文 |
-| `openai.com/policies/terms-of-use` | HTTP 403 | 仍未读到；列为待所有者确认 |
+| `openai.com/policies/terms-of-use` | 直接抓取 HTTP 403；无头 Chromium 读到了全文 | 已读，见 10.6（版本 Effective 2026-01-01，原句已记）；生成当天那一版仍未读 |
+| `tripo3d.ai/terms` | 直接抓取 HTTP 403；无头 Chromium 读到了全文 | 已读，见 10.6（Last updated 2026-11-13） |
 
 没有任何一项因为条款变化而需要改状态。登记表里 42 行的 `checked_on` 改为 2026-11-20（只有这一栏变）；状态现为：yes 86、conditional 0、no 0、unverified 4（第一轮第九节补齐后是 yes 78、unverified 7；加上第一轮之后记的 5 行（都是 yes）为 83 / 7；再按所有者回答把 `MESHY-novice`、`REF-monk-apose`、`REF-art-prototype` 三行改为 yes，见 10.6）。
 
@@ -325,7 +326,7 @@ ColBase 全站只能用浏览器渲染出来（直接抓取只有一行「Loadin
 2. **生成它的输入图（GPT Image 改图）**：不随游戏发出，不属于披露范围；它们的权利问题见 10.6（OpenAI 条款）。
 3. **商店页、预告片素材**：`refs/` 里的 AI 生成图和美术原型不随游戏发出。其中 A-pose 三视图、六张美术原型的版权问题已按 OpenAI 条款解决（10.6）；`jingshan-*` 三张的工具没有记录，`T00*` 两张和分享预览图来历未答。拿去做商店页或预告片时，页面原文没有明说商店素材是否算在内，**未核实**；OpenAI 条款还禁止把 AI 输出说成是人做的。
 4. **分享预览图 `OG-share`**（`unverified`，来历不明）：若是 AI 生成要一并算。
-5. **日、英、韩的译文**：`localization` 是原文列出的内容类别。`docs/t00/I18N.md` 写的是开发方初稿、未经母语者审读；**请所有者确认这些译文是否由 AI 工具生成**（如是，属于要披露的「localization」）。这一条是第五节 11 个问题之外新增的，我没有替所有者回答。
+5. **日、英、韩的译文**：`localization` 是原文列出的内容类别。这些译文是开发会话（Claude）写的初稿，没有经过母语者审读（见 `docs/t00/I18N.md`），属于 Steam 要披露的 localization；填不填、怎么填由所有者定。
 6. **代码里的程序化内容**（建筑、植物、声音、配乐）：是代码生成，不是 AI 模型出的内容；若代码是在 AI 编程助手帮助下写的，按页面原文属于「efficiency」工具，不是调查重点。这是开发方的读法，Valve 的审核口径未核实。
 7. **佛像与莲座模型**：第五节问题 11 已问；若其中含生成或购买件，要回头看。
 8. **一条与 AI 无关的提醒**：微信赞赏码只在 web 构建里（`channel.js` 的 `WEB`），steam 与 platform 构建没有；上架 Steam 的构建请保持这样（`channel.test.mjs` 守着）。
