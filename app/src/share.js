@@ -21,7 +21,7 @@ export function createShare(theUI) {
 export async function shareOrSave({ blob, url, name, title, from, content }) {
   const file = new File([blob], name, { type: blob.type || "image/jpeg" }), app = inAppOf(navigator.userAgent);
   if (!app && canShareFile(file)) {
-    try { await navigator.share({ files: [file], title, url: shareURL(location.href, from, content) }); track("demo.share", { from: content, method: "share", scene: from }); } catch {}
+    try { await navigator.share({ files: [file], title, url: shareURL(from, content) }); track("demo.share", { from: content, method: "share", scene: from }); } catch {}
     return "share";
   }
   $("saveImg").src = url; $("saveImg").alt = title;

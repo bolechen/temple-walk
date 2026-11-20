@@ -37,11 +37,16 @@ test("WeChat for work is told apart from WeChat, which it also names", () => {
 
 // The address a shared picture carries (src/sharelink.js): the scene, from the list only, and where it was shared from.
 import { fromOf, shareURL, FROM } from "../../app/src/sharelink.js";
-test("a shared address names its scene and where it came from; only the list's scenes are honoured", () => {
-  const u = new URL(shareURL("https://temple.rushiwowen.co/?cam=1,2,3,4#save=x", "bell", "book"));
-  assert.equal(u.origin + u.pathname, "https://temple.rushiwowen.co/");
-  assert.deepEqual([u.searchParams.get("from"), u.searchParams.get("utm_source"), u.searchParams.get("utm_content"), u.hash], ["bell", "share", "book", ""], "the page's own address, nothing it was open with");
-  assert.equal(new URL(shareURL("https://x.test/", "nowhere", "print")).searchParams.get("from"), null, "a scene not on the list is left out");
+test("a shared address is always the public page, naming its scene and where it came from; only the list's scenes are honoured", () => {
+  // Shared from the canary, a pull request's preview or this machine, the link still leads to the public page (#319).
+  for (const here of ["https://temple-walk-canary.bole-chen.workers.dev/?cam=1,2,3,4#save=x", "https://pr-361-temple-walk-preview.bole-chen.workers.dev/?debug", "http://127.0.0.1:8000/"]) {
+    globalThis.location = new URL(here);
+    const u = new URL(shareURL("bell", "book"));
+    assert.equal(u.origin + u.pathname, "https://temple.rushiwowen.co/", here);
+    assert.deepEqual([u.searchParams.get("from"), u.searchParams.get("utm_source"), u.searchParams.get("utm_medium"), u.searchParams.get("utm_content"), u.hash], ["bell", "share", "game", "book", ""], here);
+  }
+  delete globalThis.location;
+  assert.equal(new URL(shareURL("nowhere", "print")).searchParams.get("from"), null, "a scene not on the list is left out");
   for (const f of FROM) assert.equal(fromOf(`?from=${f}`), f);
   for (const bad of ["?from=../../x", "?from=BELL", "?from=", "?x=bell", "?from=bell%20"]) assert.equal(fromOf(bad), null, bad);
 });
