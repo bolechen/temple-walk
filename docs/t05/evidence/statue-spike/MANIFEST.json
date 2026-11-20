@@ -1,0 +1,240 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 279183,
+   "sha256": "37bcdb92aaa40bc9e94cfa72827ce4fb4ff155a6d3f3f8299570a4ad5c8547ab",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "gpu/seven-door3.png",
+   "bytes": 1174653,
+   "sha256": "b13558a9c3c5f6285725f1c29a9c4e99c94d60e553a7626b463e68b48887883a",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "gpu/seven-noao-door3.png",
+   "bytes": 770193,
+   "sha256": "5a9ebf9f0dea10e837e3c44523788f975682c7d04038ebab9aa41ad25634ab48",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "gpu/seven-noao-side3.png",
+   "bytes": 887883,
+   "sha256": "03be111a078dedb41cdfdff597d4f21507d318f17d29f49416eaaca70110822c",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "gpu/seven-side3.png",
+   "bytes": 1234473,
+   "sha256": "2bc0202f55f3d12a214af77cc68169fa79802299b5d125b80aa5439b0bcd4e01",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "gpu/three-door3.png",
+   "bytes": 877619,
+   "sha256": "4e65b01beeecd2c37348107f1d88a46e1ad8594e161759851f22df4abd2aa267",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "gpu/three-side3.png",
+   "bytes": 950595,
+   "sha256": "8838c861876f3f066a8d0ea3f818da5f497012d803f34608a15a8615e9f2040b",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/door-summer.png",
+   "bytes": 316059,
+   "sha256": "a3321734c2260e2d77a9e297b19855ba4ab52d225860da36c5c50cc8fb2f9142",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/door-winter.png",
+   "bytes": 335943,
+   "sha256": "90f597977d855ee137a834f9a5f4dabb7f04958b566bb4bd151b2838a4003300",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/front-summer.png",
+   "bytes": 573216,
+   "sha256": "d762f693a60f568d9d2ef963bd54577bfd3b736e09b6305b269bf61420863227",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/front-winter.png",
+   "bytes": 522460,
+   "sha256": "644a828aad2a06d7df9376ed806db99a1cb3c3d0c02ab8810a9fb3be7299705d",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/front10-summer.png",
+   "bytes": 571149,
+   "sha256": "000445668ff5275d5eebe34f88959abef55c34e669ec1f98bfd2028383562b72",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/front10-winter.png",
+   "bytes": 518698,
+   "sha256": "aa56c4286621475210efaba9c13fd9eb2924c99f8c38482cca1c6f6f1796c9f6",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/side-summer.png",
+   "bytes": 575862,
+   "sha256": "69121a7553c1ca1d8a50fb0da1e36ac78ca550a4a82d4c7c274e9577c2cb9e45",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-one/side-winter.png",
+   "bytes": 528641,
+   "sha256": "8d61f30e795ce12ce43510b0e317e56919b0deae5224305d407cf959c6274564",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/door3-summer.png",
+   "bytes": 701658,
+   "sha256": "c8179d10e42bae49306c03ce569ba59be60ab9fd7e5d1fd0748ab75f7238e272",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/door3-winter.png",
+   "bytes": 660844,
+   "sha256": "a8cd98b501e80b95d445dce5df1d0054c3b811f82d980794492d3f8250fe17a8",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/film-strip.png",
+   "bytes": 641761,
+   "sha256": "b14423164bc0604b6b7fd0479dbd8c85c72059599eca5fdede589682f61c73d8",
+   "rev": "d7b5d1aa76951fdf8986f57283d12648c32dfb45"
+  },
+  {
+   "path": "route-a-three/front-summer.png",
+   "bytes": 837754,
+   "sha256": "5e058282827d1c47476321a3c8b65e337b743fa187988d51997cf6cf3ae1ff5d",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/front-winter.png",
+   "bytes": 783997,
+   "sha256": "699d830d51472c91a4634e16182e1a94b8261247759569c12e9dfaa44a78bb95",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/front10-summer.png",
+   "bytes": 921635,
+   "sha256": "07c08a7a60b9dc791daa41257fe50bb7014006120c779b3d6f9886f4ae79e11a",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/front10-winter.png",
+   "bytes": 857360,
+   "sha256": "c3750876bfbfca3e9f88d7a5b1e160833256811e04a0ae2b84838675c7db5900",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/side3-summer.png",
+   "bytes": 689412,
+   "sha256": "7a85dc33047fb47e1d1bb78b632402ffdcad49dfe28c0b08f8630c923700c38d",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/side3-winter.png",
+   "bytes": 706949,
+   "sha256": "e39d98e97d32922ed1fa278b5b448c11e072a43d860f7fcbcedbec1fb4e3e6ca",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-a-three/walk-winter.mp4",
+   "bytes": 3138571,
+   "sha256": "86bfd55b45c9fa9d679ad186a4a819b9a7417224009216dd92ad89abf750693e",
+   "rev": "d7b5d1aa76951fdf8986f57283d12648c32dfb45"
+  },
+  {
+   "path": "route-b-one/door-summer.png",
+   "bytes": 303761,
+   "sha256": "9d588d31f6493ee240d4fe1b054cee06e9ba061f39a83a5c732349b03aa4ad1c",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/door-winter.png",
+   "bytes": 321323,
+   "sha256": "d31c7c305ace802bf456d3777127985c4d901708c31b62fb5edb95aa7379f8b1",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/front-summer.png",
+   "bytes": 545405,
+   "sha256": "0ccf837866153014c8be2d31f4467a47f4307e656f3b272cfa0a3b2e82f10506",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/front-winter.png",
+   "bytes": 488793,
+   "sha256": "812bcd38114dbb20cc70f6c04aae1ada686eccd28b95073744559a5ddaae6426",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/front10-summer.png",
+   "bytes": 555582,
+   "sha256": "b42c004cea739affa54162e06af770d66bd25ab26ccd7ed9af88174a38e3fa65",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/front10-winter.png",
+   "bytes": 496763,
+   "sha256": "63ef5d67da742c5aac2a42c2cf1136998cd3bfd575c1cae08b9c10e354ebd528",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/side-summer.png",
+   "bytes": 553148,
+   "sha256": "3c0f44e8f19299880820852de66f01102ed7d44d75e38d377d9e5984a4e3e1cf",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "route-b-one/side-winter.png",
+   "bytes": 503261,
+   "sha256": "babb8fecbd4da5157d3840d2ed6a7c2319eb5953dc1629be157b6ff6ada19761",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "scans-in-hall.png",
+   "bytes": 434694,
+   "sha256": "dd4b96f7f4f5228666160e90049959744e9c7da22080079db748dc163c957ef3",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "tex-vs-clay.png",
+   "bytes": 615516,
+   "sha256": "fdaebe5b40abaa8469fbef9b68a9b1d744497b652932654a2040715be0b7cae7",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "tripo/kasyapa-a.generated_image.jpeg",
+   "bytes": 137699,
+   "sha256": "d471b483635f3c00996c8d60bdd614c58e2455d6cea43da98af2c89d83d1e33e",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "tripo/sakyamuni-a.generated_image.jpeg",
+   "bytes": 138125,
+   "sha256": "e86dda8f459142d7351f44e23be149409f4f7370f16a1a4484025e49406d9c54",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "tripo/three-preview.png",
+   "bytes": 833859,
+   "sha256": "73eafdb1898b1b8920e68f8179bc15f1a2444505199030d6f9e942d577d88448",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  },
+  {
+   "path": "tripo/vipasyin-a.generated_image.jpeg",
+   "bytes": 139759,
+   "sha256": "8da27aced812b66bfc18b337065aea6161145cc5e46a57b6f9a5b758c2b2a7d7",
+   "rev": "1032877c1d1b32604624eecbb997ddb6dd52697c"
+  }
+ ]
+}

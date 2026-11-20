@@ -27,8 +27,10 @@
 <meta name="twitter:description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
 <meta name="twitter:image" content="https://temple.rushiwowen.co/shared/og/temple-walk.jpg">
 <meta name="twitter:image:alt" content="山门之外：小沙弥站在暮色中的云径禅寺大殿前。">
+<!-- production-only -->
 <link rel="preconnect" href="https://u.rushiwowen.co">
 <script defer src="https://u.rushiwowen.co/script.js" data-website-id="e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42" data-domains="temple.rushiwowen.co" data-do-not-track="true" data-exclude-hash="true" data-performance="true"></script>
+<!-- /production-only -->
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="src/ui.css">
 
@@ -109,22 +111,22 @@
   <div id="finder" aria-hidden="true"></div>
   <div id="frame"><i class="third"></i></div>
   <div id="curtain" aria-hidden="true"><i></i><i></i></div>
-  <button class="chip" id="photoClose" type="button">收起</button>
   <div id="photoBar">
     <button class="chip" id="photoSettingsToggle" type="button" aria-expanded="false" aria-controls="photoSettings">设置</button>
     <button id="shutter" type="button" aria-label="按下快门"></button>
+    <button class="chip" id="photoClose" type="button">收起<kbd>Esc</kbd></button>
   </div>
   <section id="photoSettings" class="paper scrolls" aria-label="拍照设置" hidden>
     <fieldset><legend>画幅</legend><div class="row">
       <button class="chip" data-aspect="screen" aria-pressed="true" type="button">全幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="tall" aria-pressed="false" type="button">竖幅</button>
     </div></fieldset>
+    <fieldset><legend>取景</legend><div class="row">
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button>
+    </div></fieldset>
     <fieldset><legend>远近</legend><div class="row">
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
     </div></fieldset>
     <fieldset class="need-seasons"><legend>时节</legend><div class="row"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div><div class="row"><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></fieldset>
-    <fieldset><legend>取景</legend><div class="row">
-      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button>
-    </div></fieldset>
     <fieldset><legend>人物</legend><div class="row">
       <button class="chip" id="monkToggle" aria-pressed="false" type="button">入画</button><button class="chip" id="prayToggle" aria-pressed="false" type="button" disabled>合掌</button>
     </div></fieldset>

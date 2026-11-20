@@ -12,9 +12,11 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
+// picture (boot, doorway, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
-const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground";
+// `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
+// under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
+const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
@@ -43,6 +45,23 @@ const scenarios = {
   } },
   // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
   // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  // The ground keeps what comes down on it (#267): in the real page, leaves that touch the paving under the first
+  // court's maple are handed to the ground's record as the frames go, and on an autumn night (a breeze below every leaf's
+  // grip) none of them goes in the next minute; run on three minutes, more lie there than before.
+  litter: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=-7.5,33,-0.38,-0.42&season=autumn&time=night" + BARE);
+    const got = () => t.page.evaluate(() => window.__litter(0, true));
+    await t.until(async () => (await got()).kept >= 5, 240000, "no leaf was handed to the ground under the maple");
+    const L = (await got()).leaves.filter((l) => Math.abs(l[0]) > 3).slice(0, 30);
+    const amount = (l) => t.page.evaluate(([x, z]) => window.__litter(0, [x, z, 0.1]).at, l);
+    const before = []; for (const l of L) before.push(await amount(l));
+    expect(before.every((n) => n >= 1), "a leaf handed over is not on the ground: " + JSON.stringify(before));
+    await t.page.evaluate(() => window.__litter(60)); await t.frames(2);
+    for (let i = 0; i < L.length; i++) { const n = await amount(L[i]); expect(n >= before[i], `on a still night the leaves round ${L[i]} went from ${before[i]} to ${n}`); }
+    const a = await got(); await t.page.evaluate(() => window.__litter(180)); const c = await got();
+    expect(c.kept + c.heap > a.kept + a.heap + 20, "three more minutes and no more leaves lie on the ground: " + JSON.stringify([a.kept, a.heap, c.kept, c.heap]));
+    await t.close();
+  } },
   treeseed: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low" + BARE);
     const page = await t.page.evaluate(() => window.__trees());
@@ -230,11 +249,72 @@ const scenarios = {
       await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
       await t.page.touchscreen.tap(px, py); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
             await t.until(async () => { const s = await t.state(); return s.target === null && !s.dropping; }, 90000, "he never came out of the tea house porch's south end");
-      const s2 = await t.state(); expect(!(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [s2.x, s2.z])) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
+      const s2 = await t.state(); expect(!(await t.page.evaluate(() => window.__walker().blockedHere)) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
     }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Every hall with a door can be gone into, has a room of its own with frames on its walls, and lets him out again where he came in.
+  // Seen from outside, a hall's door shows its own room (doorway.js, #218): nothing is taken when the page opens; the
+  // great hall is taken when he comes near it, and fades in; the altar stands where it stood seen through the door when
+  // he goes in; and every hall can be taken.
+  doorway: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=high&view=third&season=summer&time=day&cam=0,60,3.14,0");
+    await t.frames(4);
+    // Nothing of the doorways is fetched with the page: no picture, and not the code that draws rooms into cubes.
+    const early = await t.page.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name).filter((n) => /shared\/doorways\/|doorway-capture/.test(n)));
+    expect(early.length === 0, "the doorways were fetched with the page: " + early.join(", "));
+    let r = await t.page.evaluate(() => window.__doorways());
+    expect(r && Object.keys(r.halls).length === 8, "every hall that can be entered should have a doorway: " + JSON.stringify(r));
+    expect(Object.values(r.halls).every((h) => !h.taken), "rooms were taken while the page opened, far from any door: " + JSON.stringify(r.halls));
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
+    await t.until(async () => { const d = await t.page.evaluate(() => window.__doorways()); return d.halls.main.taken >= 1 && d.halls.main.fade === 1; }, 240000, "the great hall's room never came into its doorway");
+    r = await t.page.evaluate(() => window.__doorways()); expect(r.halls.main.taken === 1, "the great hall was taken more than once: " + JSON.stringify(r.halls.main));
+    // Its room came from the baked pictures (tools/bake-doorways.mjs), and nothing was drawn into a cube in the page.
+    expect(r.halls.main.source === "baked", "the great hall's doorway did not come from its baked pictures: " + JSON.stringify(r.halls.main));
+    const drew = await t.page.evaluate(() => performance.getEntriesByType("resource").some((e) => /doorway-capture/.test(e.name)));
+    expect(!drew, "the code that draws rooms into cubes was fetched by a visitor's page");
+    console.log("     the doorways:", JSON.stringify({ main: r.halls.main, mb: r.mb, worstFrameMs: r.worstFrameMs }));
+    await t.shot("e2e-doorway");
+    // At the door, then the first frame inside: the altar keeps its place across the picture, seen with his own eyes. From
+    // behind him the eye also comes 2.5 m nearer on going in (he is set down inside the room, interior.js's `door`), so
+    // there the altar moves somewhat more; that is reported, not held (#218).
+    const across = {};
+    for (const view of ["first", "third"]) {
+      await t.page.evaluate((v) => window.__view(v), view);
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0], h.out[1], inYaw]); await t.frames(3);
+      const out = await t.page.evaluate(() => window.__doorAltar("main"));
+      await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(1);
+      const inn = await t.page.evaluate(() => window.__doorAltar("main"));
+      across[view] = { out: +out.x.toFixed(3), in: +inn.x.toFixed(3), moved: +(Math.abs(out.x - inn.x) / 2).toFixed(3) };
+      await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+      await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the daylight never cleared");
+    }
+    console.log("     the altar across the door, as a fraction of the picture's width:", JSON.stringify(across));
+    expect(across.first.moved <= 0.05, `the altar jumps across the door: ${JSON.stringify(across.first)} (more than 5% of the width)`);
+    const hour = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
+    r = await t.page.evaluate(() => window.__doorways(true));
+    expect(Object.values(r.halls).every((x) => x.taken >= 1 && x.fade === 1), "not every hall's room could be taken: " + JSON.stringify(r.halls));
+    // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
+    const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
+    expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,
+  // no error, and the great hall still opens.
+  "doorway-none": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third&season=summer&time=day&cam=0,60,3.14,0" + BARE.replace(",doorway", ""), { init: () => {
+      const f = window.fetch; window.fetch = (u, ...a) => (/shared\/doorways\/t00\.json/.test(String(u)) ? Promise.resolve(new Response("{}", { status: 200, headers: { "content-type": "application/json" } })) : f(u, ...a));
+    } });
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 6, h.out[1] - f[1] * 6, inYaw]);
+    await t.until(async () => (await t.page.evaluate(() => window.__doorways())).halls.main.source === "none", 60000, "the doorway never gave up on pictures it does not have");
+    await t.frames(5);
+    const r = await t.page.evaluate(() => window.__doorways());
+    expect(r.halls.main.fade === 0 && !r.halls.main.taken, "a doorway without pictures should keep its dark box: " + JSON.stringify(r.halls.main));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));
@@ -752,6 +832,87 @@ const scenarios = {
     expect((await R()).sat >= seats.length, "not every seat was sat on");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Which floor he walks on (#265, #274): the grid baked from the drawn meshes everywhere by default (a spot on every level
+  // out of doors, inside a hall, up on the balcony), the written plan with ?walker=old; and a ?cam address that falls
+  // where the grid shuts him out is moved to the nearest open spot within half a metre, or back to the start of the path
+  // (in a room: left at its door; on the balcony: at its door).
+  walkgrid: { tier: 2, async run(b, base) {
+    let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
+    const w = await t.page.evaluate(() => window.__walker());
+    console.log("    walker " + JSON.stringify(w));
+    expect(w.mode === "mesh" && w.grid === "outdoors" && w.answers && w.bytes > 10000 && w.memory > 1e6 && w.drops > 12 && !w.failed, "the page should walk on the baked floor: " + JSON.stringify(w));
+    // One named view on every level of the place, from the page's own list: the path, the forecourt, the first court, each terrace, the summit.
+    let last = -Infinity; const floors = [];
+    for (const v of ["arrive", "halfway", "forecourt", "court", "terrace", "guanyin", "summit"]) {
+      expect(await t.page.evaluate((n) => window.__show(n), v), `no view called ${v}`); await t.frames(2);
+      const q = await t.page.evaluate(() => window.__walker()); floors.push(+q.floor.toFixed(2));
+      expect(q.grid === "outdoors" && q.answers && !q.blockedHere, `at "${v}" he should stand on open floor of the grid: ${JSON.stringify(q)}`);
+      expect(q.floor >= last - 0.01, `"${v}" stands at ${q.floor}, lower than the level before it (${last})`); last = q.floor;
+    }
+    expect(floors[floors.length - 1] - floors[0] > 25, `the walk climbs from ${floors[0]} to ${floors[floors.length - 1]} m`);
+    // A spot just inside what the censer shuts, and its middle (nowhere open within half a metre), both from the page.
+    await t.page.evaluate(() => window.__show("court")); await t.frames(2);
+    const spots = await t.page.evaluate(() => { const [x, z] = [0, 13]; let r = 0; while (window.__blocked(x + r, z) && r < 3) r += 0.02; return { near: [x + r - 0.2, z], deep: [x, z], start: window.__walker().start }; });
+    // Inside a hall: its own grid; and a walk across the room by the keys' own path ends on open floor.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall");
+    const inHall = await t.page.evaluate(() => window.__walker());
+    expect(inHall.grid === "room:main" && inHall.answers && !inHall.blockedHere, `in the great hall he should stand on its own grid: ${JSON.stringify(inHall)}`);
+    // A point of the room that is shut (the nearest shut point north of where he stands: the cushions are floor, the stand and the table are not).
+    const shut = await t.page.evaluate(() => { const y = window.__yard(); let d = 0; while (!window.__blocked(y.x, y.z - d) && d < 12) d += 0.05; return { at: [y.x, y.z - d - 0.1], door: [y.x, y.z] }; });
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&view=first&cam=${spots.near[0]},${spots.near[1]},0,0` + BARE);
+    let y = await t.state();
+    expect(Math.hypot(y.x - spots.near[0], y.z - spots.near[1]) <= 0.51 && !(await t.page.evaluate(([x, z]) => window.__blocked(x, z), [y.x, y.z])), `a ?cam in a shut cell should settle within half a metre: ${JSON.stringify([spots.near, y.x, y.z])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&view=first&cam=${spots.deep[0]},${spots.deep[1]},0,0` + BARE);
+    y = await t.state();
+    expect(Math.hypot(y.x - spots.start[0], y.z - spots.start[1]) < 0.05, `a ?cam with nowhere open near should go back to the start: ${JSON.stringify([y.x, y.z, spots.start])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // In a room: an address in something is moved onto open floor of that room.
+    t = await open(b, base, `q=low&view=first&in=main&cam=${shut.at[0]},${shut.at[1]},0,0` + BARE);
+    y = await t.state(); const r = await t.page.evaluate(() => window.__walker());
+    expect(y.room === "main" && r.grid === "room:main" && !r.blockedHere && Math.hypot(y.x - shut.at[0], y.z - shut.at[1]) <= 0.51, `?in=main&cam in a shut cell should settle in the room: ${JSON.stringify([shut.at, y.x, y.z, r.blockedHere])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // Up on the balcony: its own grid; nothing but the balcony can be stood on; an address off it stands him at its door.
+    t = await open(b, base, "q=low&up=lingxiao" + BARE);
+    const up = await t.page.evaluate(() => { const w = window.__walker(), y = window.__yard(), L = window.__lofts.lingxiao; return { w, at: [y.x, y.z], door: L.door, floor: L.floor, outer: L.outer, ground: window.__blocked(0, L.outer.z1 + 6) }; });
+    expect(up.w.grid === "loft:lingxiao" && up.w.answers && !up.w.blockedHere && Math.abs(up.w.floor - up.floor) < 0.03, `up on the balcony he should stand on its own grid at its height: ${JSON.stringify(up.w)}`);
+    expect(up.ground, "from the balcony the summit's ground should not be floor");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, `q=low&up=lingxiao&cam=${up.outer.x1 + 3},${up.door[1]},0,0` + BARE);
+    y = await t.state();
+    expect(Math.hypot(y.x - up.door[0], y.z - up.door[1]) < 0.05, `?up=lingxiao&cam off the balcony should stand him at its door: ${JSON.stringify([y.x, y.z, up.door])}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    t = await open(b, base, "q=low&view=first&walker=old&cam=0,20,0,0" + BARE);
+    const o = await t.page.evaluate(() => window.__walker());
+    expect(o.mode === "old" && o.grid === null && !o.bytes, "?walker=old should walk the written plan, and fetch no grid: " + JSON.stringify(o));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall on the written plan");
+    expect((await t.page.evaluate(() => window.__walker())).grid === null, "?walker=old is the written plan indoors too");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great
+  // hall's east end): along every porch edge of the first court, a little in from it, first person and third, his feet
+  // are on the floor under him and his own eye is well over it.
+  platforms: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
+    const edges = await t.page.evaluate(() => window.__drops().filter((e) => e.top < 2 && Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]) > 1));
+    expect(edges.length >= 8, `only ${edges.length} porch edges in the court`);
+    let n = 0;
+    for (const view of ["first", "third"]) {
+      await t.page.evaluate((v) => window.__view(v), view);
+      for (const e of edges) for (const f of [0.2, 0.5, 0.8]) {
+        const x = e.a[0] + (e.b[0] - e.a[0]) * f - e.normal[0] * 0.3, z = e.a[1] + (e.b[1] - e.a[1]) * f - e.normal[1] * 0.3;
+        if (await t.page.evaluate(([x, z]) => window.__blocked(x, z), [x, z])) continue;
+        await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(e.normal[0], -e.normal[1])]); await t.frames(3);
+        const w = await t.page.evaluate(() => window.__walker()), y = await t.state(); n++;
+        expect(Math.abs(w.floor - e.top) < 0.03, `${view}: at (${x.toFixed(2)}, ${z.toFixed(2)}) on a ${e.top} m porch the floor reads ${w.floor}`);
+        expect(y.footY >= w.floor - 0.05, `${view}: his feet are under the floor at (${x.toFixed(2)}, ${z.toFixed(2)}): ${y.footY} under ${w.floor}`);
+        expect(w.eye >= w.floor + 0.6, `${view}: the eye is at ${w.eye.toFixed(2)}, the floor at ${w.floor} (${x.toFixed(2)}, ${z.toFixed(2)})`);
+      }
+    }
+    expect(n >= 40, `only ${n} places round the platforms were stood on`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Coming back: a first visit is offered only the way in; where he was is kept, and the next visit may go on from
   // there or begin again.
   resume: { tier: 2, async run(b, base) {
@@ -1179,6 +1340,11 @@ const scenarios = {
     // (Played and listened to within one call, as the steps are: the place's bus carries nothing else here.)
     const k = await t.page.evaluate(() => { const r = window.__knock(true), t0 = performance.now(); while (performance.now() - t0 < 60); return { ...r, heard: window.__listen("ambience") }; });
     expect(k.knocks >= 1 && k.heard.rms > 0.0005, "the culms made no knock: " + JSON.stringify(k));
+    // The wind heard keeps the picture's clock (#267): the ambience's last gust was taken at the page's time, not at a
+    // count of its own begun at the first touch (it ticks four times a second, so within a second of now).
+    { await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(800);   // the place heard: its ticks run on the audio's own timer
+      const a = await t.page.evaluate(() => ({ ...window.__knock(), now: performance.now() / 1000 }));
+      expect(a.gustT !== null && Math.abs(a.now - a.gustT) < 1.0, "the wind heard is not on the picture's clock: " + JSON.stringify(a)); }
     // The third stroke of the bell, the first time: the birds in the old trees by the tower go up, with a rattle of wings.
     await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); });
     await t.frames(3);
@@ -1257,7 +1423,17 @@ const scenarios = {
     const seen = {};
     for (const [name, v] of Object.entries(views)) {
       await t.page.evaluate((v) => { window.__pose(v[0], v[1], 0, 0.1); const g = window.__yard().h; window.__look([v[0], g + 2.2, v[1]], [v[0], g + v[3], v[2]]); }, v); await t.frames(3);
-      const grid = await t.page.evaluate(([W, H]) => { const r = []; for (let y = 10; y < H * 0.62; y += 20) for (let x = 10; x < W; x += 20) { const h = window.__pick(x, y, 1)[0]; if (h) r.push([x, y, h.material, h.at[1]]); } return r; }, [W, H]);
+      // Every 20 px over the whole view to find the band, then the same grid moved half a step both ways over the rows it
+      // takes up, the two counted together (#274): at every 20 px alone, which points fell on a bracket set and which on the band moved with a centimetre of the eye's height, enough to
+      // swing the ratio by three points (the baked floor is the drawn paving, 1.2 cm over the stone).
+      const grid = await t.page.evaluate(([W, H]) => {
+        const r = [], at = (x, y) => { const h = window.__pick(x, y, 1)[0]; if (h) r.push([x, y, h.material, h.at[1]]); };
+        for (let y = 10; y < H * 0.62; y += 20) for (let x = 10; x < W; x += 20) at(x, y);
+        const rows = r.filter((g) => g[2] === "plaster").map((g) => g[1]); if (!rows.length) return r;
+        const y0 = Math.min(...rows) - 10, y1 = Math.max(...rows) + 10;
+        for (let y = y0 + (y0 % 20 === 0 ? 0 : 10); y <= y1; y += 20) for (let x = 20; x < W; x += 20) at(x, y);
+        return r;
+      }, [W, H]);
       const band = grid.filter((g) => g[2] === "plaster"), ys = band.map((g) => g[3]).sort((a, b) => a - b);
       expect(band.length > 20, `${name}: the limed band under the eave is not in view (${band.length} samples)`);
       const lo = ys[Math.floor(ys.length * 0.05)], hi = ys[Math.floor(ys.length * 0.95)], r0 = Math.min(...band.map((g) => g[1])), r1 = Math.max(...band.map((g) => g[1]));
@@ -1350,6 +1526,17 @@ const scenarios = {
     try {
       let t = await open(pb, host, "q=low&cam=0,30,0,0" + BARE);
       await t.until(() => t.page.evaluate(() => !!document.querySelector(".lil-gui")), 60000, "the preview did not open the debug panel");
+      // What stops him, drawn (#274): nothing of it exists until the switch is on; on, the floor's cells round him, his outline and the ball round his eye; off, nothing is left.
+      const before = await t.page.evaluate(async () => ({ viz: await window.__walkviz(), calls: window.__yard().calls }));
+      expect(before.viz.on === false && before.viz.objects === 0, "the collision drawing should not exist before it is switched on: " + JSON.stringify(before.viz));
+      const on = await t.page.evaluate(() => window.__walkviz(true)); await t.frames(3);
+      const drawn = await t.page.evaluate(() => window.__walkviz());
+      expect(on.on && drawn.grid === "outdoors" && drawn.open > 5000 && drawn.shut > 0 && drawn.outline && drawn.eyeR > 0.2 && drawn.objects === 3, "switched on, it should draw the cells round him, his outline and his eye: " + JSON.stringify(drawn));
+      const off = await t.page.evaluate(() => window.__walkviz(false)); await t.frames(2);
+      expect(off.on === false && off.objects === 0 && off.inScene === false && before.viz.inScene === false, "switched off, nothing of it should be left in the scene: " + JSON.stringify(off));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      t = await open(b, base, "q=low&cam=0,30,0,0" + BARE); await t.frames(2);
+      expect(await t.page.evaluate(() => typeof window.__walkviz === "undefined"), "the published site should not carry the collision drawing's switch");
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
       t = await open(pb, host, "q=low&cam=0,30,0,0&debug=0" + BARE); await t.frames(6);
       expect(!(await t.page.evaluate(() => !!document.querySelector(".lil-gui"))), "?debug=0 should keep the panel shut on a preview");
@@ -1428,7 +1615,8 @@ const scenarios = {
         await t.page.evaluate(() => { const c = document.getElementById("yardGl"); for (let i = 0; i < 40; i++) c.dispatchEvent(new WheelEvent("wheel", { deltaY: 400, bubbles: true, cancelable: true })); }); await t.frames(2); p = await t.probe(); expect(p.zoom >= 0.69 && p.zoom < 1 && p.fov < 100, "the wheel lets the view out without end: " + JSON.stringify([p.zoom, p.fov]));
       }
       expect(!(await t.page.isVisible("#photoSettings")) && (await t.page.getAttribute("#photoSettingsToggle", "aria-expanded")) === "false", "settings should start folded");
-      expect((await t.page.locator('#photoBar button:visible').count()) === 2, "only settings and the shutter belong on the lower bar");
+      const onBar = await t.page.$$eval("#photoBar button", (bs) => bs.filter((e) => e.offsetParent).map((e) => e.id));
+      expect(onBar.join() === "photoSettingsToggle,shutter,photoClose", "only settings, the shutter and close belong on the lower bar, in that order (#297): " + onBar.join());
       for (const id of ["shutter", "photoSettingsToggle", "photoClose"]) { const r = await t.page.locator("#" + id).boundingBox(); expect(r && r.width >= 44 && r.height >= 44 && r.x >= 0 && r.y >= 0, id + " is not a reachable touch target"); }
       await t.page.click("#photoSettingsToggle");
       expect(await t.page.isVisible("#photoSettings"), "settings did not open");
@@ -1452,7 +1640,8 @@ const scenarios = {
         // and the seal were heard. (Seconds: nothing is drawn, so there are no frames to wait on.)
         const sounds = await t.page.evaluate(() => window.__shots());
         expect(sounds.shutter >= 1 && sounds.stamp >= 1, "the shutter and the seal should sound: " + JSON.stringify(sounds));
-        const f0 = (await t.state()).frames, drift0 = JSON.stringify(await t.page.evaluate(() => window.__drift(200))); await t.page.waitForTimeout(1500);
+        const f0 = (await t.state()).frames, drift0 = JSON.stringify(await t.page.evaluate(() => window.__drift(200))), lit0 = JSON.stringify(await t.page.evaluate(() => window.__litter(0, true))); await t.page.waitForTimeout(1500);
+        expect(lit0 === JSON.stringify(await t.page.evaluate(() => window.__litter(0, true))), "the leaves on the ground moved while the print was out (#267)");
         // The leaves, those in the air and those lying on the ground, stand with it (#219).
         expect(drift0 === JSON.stringify(await t.page.evaluate(() => window.__drift(200))), "the falling leaves moved while the print was out");
         const held = await t.page.evaluate(() => ({ frames: window.__yard().frames, frozen: document.body.classList.contains("frozen"), still: getComputedStyle(document.getElementById("still")).display }));
@@ -1600,6 +1789,45 @@ const scenarios = {
         return { foot: Math.round(f.top), out }; });
       expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
+  } },
+  // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
+  // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
+  // on a phone all three in the lower half, each a thumb's size; and 三分线 and 虚化 seen as the settings open, with no
+  // scrolling. Four languages, five screens.
+  photofit: { tier: 2, async run(b, base) {
+    const screens = [["desk", 1280, 720, false], ["desk", 1920, 1080, false], ["phone", 390, 844, true], ["phone", 844, 390, true], ["phone", 360, 640, true]];
+    for (const lg of ["zh", "ja", "en", "ko"]) for (const [kind, w, h, touch] of screens) {
+      const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: w, height: h }, hasTouch: touch, isMobile: touch });
+      await u.page.evaluate(() => { window.__photo(true); document.body.classList.add("thirds"); }); await u.frames(2);
+      const m = await u.page.evaluate(() => {
+        const box = (el) => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+        const hit = (a, c) => a.l < c.r - 0.5 && c.l < a.r - 0.5 && a.t < c.b - 0.5 && c.t < a.b - 0.5;
+        const f = box(document.getElementById("frame")), L = 22, marks = [];
+        for (const [x, y] of [[f.l, f.t], [f.r - L, f.t], [f.l, f.b - L], [f.r - L, f.b - L]]) marks.push({ l: x, t: y, r: x + L, b: y + L });
+        for (const k of [1, 2]) { const x = f.l + (f.w * k) / 3, y = f.t + (f.h * k) / 3; marks.push({ l: x - 0.5, t: f.t, r: x + 0.5, b: f.b }, { l: f.l, t: y - 0.5, r: f.r, b: y + 0.5 }); }
+        const ids = ["photoSettingsToggle", "shutter", "photoClose"], bs = ids.map((id) => box(document.getElementById(id)));
+        const on = ids.filter((id, i) => marks.some((mk) => hit(bs[i], mk)));
+        const far = Math.max(...[[0, 1], [1, 2], [0, 2]].map(([i, j]) => Math.hypot(bs[i].x - bs[j].x, bs[i].y - bs[j].y)));
+        document.getElementById("photoSettingsToggle").click();
+        const panel = box(document.getElementById("photoSettings")), covers = !document.getElementById("photoSettings").hidden && hit(panel, bs[1]);
+        // 三分线 and 虚化 are seen as soon as the panel opens, with the seasons' rows open too: 虚化 shows on the high tier
+        // only, so it is unhidden here as that tier would; nothing else differs.
+        const blurBtn = document.getElementById("blurToggle"), wasHidden = blurBtn.hidden, hadSeasons = document.body.classList.contains("seasons");
+        blurBtn.hidden = false; document.body.classList.add("seasons");
+        const pv = box(document.getElementById("photoSettings")), unseen = ["thirdsToggle", "blurToggle"].filter((id) => { const c = box(document.getElementById(id)); return c.t < Math.max(pv.t, 0) - 0.5 || c.b > Math.min(pv.b, innerHeight) + 0.5; });
+        blurBtn.hidden = wasHidden; document.body.classList.toggle("seasons", hadSeasons);
+        document.getElementById("photoSettingsToggle").click();
+        return { on, far: Math.round(far), short: Math.min(innerWidth, innerHeight), low: bs.every((c) => c.t >= innerHeight / 2), small: bs.filter((c) => c.w < 43.5 || c.h < 43.5).length, covers, unseen, esc: /Esc/.test(document.getElementById("photoClose").textContent) };
+      });
+      const at = `${lg} ${w}x${h}: ` + JSON.stringify(m);
+      expect(!m.on.length, "the camera's controls should lie clear of the finder's corners and thirds, " + at);
+      expect(!m.covers, "the camera's settings, open, should not cover the shutter, " + at);
+      expect(!m.small, "every camera control should be a thumb's size, " + at);
+      expect(!m.unseen.length, "三分线 and 虚化 should be seen without scrolling as the camera's settings open, " + at);
+      if (kind === "desk") { expect(m.far <= m.short / 3, "settings, shutter and close should be a small move apart (a third of the short side), " + at); expect(m.esc, "收起 should say Esc where there is a keyboard, " + at); }
+      else expect(m.low, "on a phone the camera's controls should all be in the lower half, " + at);
+      await u.close();
+    }
   } },
   // What opens over the walk lies on one stack: Esc puts away the top one, an open sheet holds the walk and the keys, and
   // the focus goes into the sheet and comes back to what opened it.
@@ -1765,7 +1993,27 @@ const scenarios = {
       await t.page.evaluate(() => window.__mood("winter", "dawn")); await t.frames(2);
       expect((await t.probe()).post.bakes === n1 + 1, "a new hour should bake its table once"); await t.close(); }
     p = await look("q=high&shot=1&show=art3&view=third&season=autumn&time=dusk");
-    expect(p.post.dof && p.post.focus > 2 && p.post.focus < 12, "a fixed view should be focused on him: " + JSON.stringify(p.post));
+    expect(!p.post.dof && p.post.focus === 0, "a fixed view (?shot) is sharp too, as walking is (#275): " + JSON.stringify(p.post));
+    // #275 (PHOTO-02): the raised camera changes nothing on any tier; 虚化 is a switch in the photograph's settings, off at first, offered only where the tier can draw it.
+    for (const q of ["high", "medium", "low"]) {
+      const t = await open(b, base, `q=${q}&cam=0,29,0,0.1&view=first&season=autumn&time=dusk`, { viewport: { width: 480, height: 270 } }); await t.frames(2);
+      const before = await t.probe(); await t.page.evaluate(() => window.__photo(true)); await t.frames(3); const after = await t.probe();
+      expect(!before.post.dof && !after.post.dof, `${q}: the raised camera should not blur (switch off): ` + JSON.stringify([before.post, after.post]));
+      const offered = await t.page.evaluate(() => !document.getElementById("blurToggle").hidden);
+      expect(offered === (q === "high"), `${q}: the 虚化 switch should show only where depth is drawn, showed ${offered}`);
+      if (q === "high") {
+        // #302: at 480x270 the settings panel is 96 px tall and 虚化 lies in the part of it scrolled away; the high tier under
+        // software rendering draws one frame in about 2 s, and Playwright's scroll, stability and hit checks each wait on
+        // frames (a click took 26 s here, past 30 s on a slower nightly machine). Bring it into sight and let two frames
+        // pass first, then press it as a visitor would, the hit check kept, with room for this one step's slow frames.
+        await t.page.evaluate(() => document.getElementById("photoSettingsToggle").click());
+        await t.page.locator("#blurToggle").scrollIntoViewIfNeeded(); await t.frames(2);
+        await t.page.click("#blurToggle", { timeout: 120000 }); await t.frames(3);
+        const on = await t.probe(); expect(on.post.dof && on.post.focus > 0 && (await t.page.evaluate(() => window.__settings().blur)), "switching 虚化 on should focus the raised camera: " + JSON.stringify(on.post));
+        await t.page.evaluate(() => window.__photo(false)); await t.frames(3); expect(!(await t.probe()).post.dof, "putting the camera away should end the blur");
+      }
+      expect(t.errors.length === 0, q + ": " + t.errors.join("\n")); await t.close();
+    }
     p = await look("q=high&cam=0,29,0,0.1&view=first&season=autumn&time=dusk&off=gtao,lut,halation,layers,dof");
     expect(!p.post.gtao && !p.post.lut && !p.post.halation && p.layers === 0, "?off= should put out each part of the finish: " + JSON.stringify([p.post, p.layers]));
     p = await look("q=high&shot=1&show=cam06");
@@ -1811,12 +2059,18 @@ const scenarios = {
     for (const [x, z, shift] of [[-13.2, 11.3, false], [-13.25, 6.9, true], [-13.2, 16.7, true]]) {
       const tz = z < 14 ? 9.1 : 18.9; await t.page.evaluate(async () => { if (window.__yard().inside) await window.__inside(null); }); await t.frames(2);
       await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0), [x, z, Math.atan2(-13.83 - x, -(tz - z))]); await t.frames(3);
-      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      await t.page.evaluate(() => { window.__tea = []; window.__teaOn = true; const read = () => { const s = window.__yard(); window.__tea.push([s.x, s.z, s.footY, s.jumping || s.dropping, s.dropping]); if (window.__teaOn) requestAnimationFrame(read); }; requestAnimationFrame(read); });
       if (shift) await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
       for (let k = 0; k < 3; k++) { await t.page.keyboard.press("Space"); await t.until(async () => !(await t.state()).jumping, 120000, "he did not come down at the tea table"); await t.frames(2); }
       await t.page.keyboard.up("w"); if (shift) await t.page.keyboard.up("Shift");
-      const tea = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
-      const inside = tea.filter(([px, pz]) => px > -14.09 - 0.37 && px < -13.57 + 0.37 && pz > tz - 0.75 - 0.37 && pz < tz + 0.75 + 0.37);
+      const all = (await t.page.evaluate(() => { window.__teaOn = false; return window.__tea; })).filter((q) => q[2] > -1);   // (going round the table and on, he may walk in at the tea house's door: the room is not the porch)
+      // (Going on past the table he may come to an end of the porch the baked floor opens, #265, where Space hops down off its
+      // edge: from there on he is no longer at the table.)
+      const off = all.findIndex((q) => q[4]), tea = off < 0 ? all : all.slice(0, off);
+      // (How near: the written plan keeps him BODY, 0.37 m, off the table's rectangle; the grid baked from the drawn meshes keeps
+      // him his outline's reach at the table's height, 0.343 m, less half a cell (#265, as tests/unit/walkers.mjs keptOff).)
+      const m = (await t.page.evaluate(() => window.__walker().mode)) === "old" ? 0.37 : 0.343 - 0.046;
+      const inside = tea.filter(([px, pz]) => px > -14.09 - m && px < -13.57 + m && pz > tz - 0.75 - m && pz < tz + 0.75 + m);
       expect(tea.some((q) => q[3]) && inside.length === 0, `jumping at the tea table from (${x}, ${z}) he came within his width of it: ${JSON.stringify(inside.slice(0, 3))} (${tea.length} frames outdoors, ${tea.filter((q) => q[3]).length} in the air)`);
       expect(tea.filter((q) => !q[3]).every((q) => Math.abs(q[2] - 0.45) < 0.01), `between jumps at the tea table he should stand on the porch (from ${x}, ${z}): ` + JSON.stringify(tea.slice(0, 2)) + JSON.stringify(tea.filter((q) => !q[3] && Math.abs(q[2] - 0.45) >= 0.01).slice(0, 3)));
     }
@@ -1904,7 +2158,9 @@ const scenarios = {
       if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
       if (!touch) {
         await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
-        const edge = await t.state(); expect(edge.h === 0.45 && edge.x > 13.2, "ordinary walking should still stop at the porch edge");
+        // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
+        const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z).map((e) => e.a[0])[0]; });
+        const edge = await t.state(); expect(line !== undefined && edge.h === 0.45 && edge.x >= line - 0.01, `ordinary walking should still stop at the porch edge (${edge.x} by ${line})`);
       } else {
         const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
       }

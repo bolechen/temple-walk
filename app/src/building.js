@@ -39,6 +39,7 @@ const DEFAULTS = {
   sides: "wall",                // wall | open
   dark: true, lamps: true,      // a dark interior behind the front, with two lamps far back
   steps: 4.6, stepsBack: 0,     // width of the stairs, 0 for none
+  stepsBackAt: null,            // where the back stairs come down, as x across the building (a flight to each); on the middle when not given
   walkAll: false,               // the whole platform is open floor (covered walks)
   plaque: "",                   // name board over the front: a string, or { text, vertical, gold }
   rail: false,                  // a white stone balustrade round the platform
@@ -95,6 +96,11 @@ export function buildHall(M, opts) {
   };
 
   const g = new THREE.Group();
+  const backAt = p.stepsBack ? (p.stepsBackAt || [0]) : [];   // the back stairs, by the x of each
+  // what of a line along the back from a to b is not where a back stair comes up, widened by `pad` either side of each
+  const besideBack = (a, b, pad) => { const out = []; let x = a;
+    for (const bx of [...backAt].sort((u, v) => u - v)) { const l = bx - p.stepsBack / 2 - pad, r = bx + p.stepsBack / 2 + pad; if (l > x) out.push([x, Math.min(l, b)]); x = Math.max(x, r); }
+    if (b > x) out.push([x, b]); return out.filter(([u, v]) => v - u > 1e-6); };
   // Each mesh says how its occlusion was baked (for the tests): `eave` lit back from the court by `bracketAO`, `position`
   // by `ao` alone, `own` by something the caller gave.
   const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); m.userData.ao = o.ao === bracketAO ? "eave" : "ao" in o ? "own" : "position"; g.add(m); return m; };
@@ -104,13 +110,18 @@ export function buildHall(M, opts) {
   {
     const parts = [box(PX * 2, p.platH - p.platBase, zF - zB, 0, (p.platH + p.platBase) / 2, (zF + zB) / 2)];
     const flights = [];
-    if (p.steps) flights.push(stairs(p.steps).translate(0, 0, zF));
-    if (p.stepsBack) flights.push(stairs(p.stepsBack).rotateY(Math.PI).translate(0, 0, zB));
+    // Each flight is also kept as where it stands in the building (`userData.flights`), so that its cheeks' feet can be
+    // looked under (#272).
+    const at = (g.userData.flights = []), flight = (w, m) => { at.push({ w, rise: p.platH, sides: [-1, 1], m }); flights.push(stairs(w).applyMatrix4(m)); };
+    if (p.steps) flight(p.steps, new THREE.Matrix4().makeTranslation(0, 0, zF));
+    for (const bx of backAt) flight(p.stepsBack, new THREE.Matrix4().makeTranslation(bx, 0, zB).multiply(new THREE.Matrix4().makeRotationY(Math.PI)));
     if (flights.length) add(merge(flights), p.platBase > 0 ? M.woodX : M.steps, { ao: null });   // steps are dressed stone, not the platform's rubble
     add(merge(parts), p.platBase > 0 ? M.woodX : M.stone, { ao: null });   // an upper floor is a timber gallery, not a stone platform
     // The platform's edge: a course of long slabs, cut from single stones, standing a hand proud of the wall below.
     if (p.platBase <= 0 && p.platH >= 0.4) {
-      const t = 0.19, o = 0.07, y = p.platH - t / 2 + 0.004, half = p.steps ? p.steps / 2 : 0, cap = [box(PX * 2 + o * 2, t, 0.6, 0, y, zB + 0.3 - o), box(0.6, t, zF - zB + o * 2, -PX - o + 0.3, y, (zF + zB) / 2), box(0.6, t, zF - zB + o * 2, PX + o - 0.3, y, (zF + zB) / 2)];
+      const t = 0.19, o = 0.07, y = p.platH - t / 2 + 0.004, half = p.steps ? p.steps / 2 : 0, cap = [box(0.6, t, zF - zB + o * 2, -PX - o + 0.3, y, (zF + zB) / 2), box(0.6, t, zF - zB + o * 2, PX + o - 0.3, y, (zF + zB) / 2)];
+      // Along the back, broken where a stair placed off the middle comes up (the gate's middle one still runs under it, as it always has).
+      for (const [a, b] of p.stepsBackAt ? besideBack(-PX - o, PX + o, 0) : [[-PX - o, PX + o]]) cap.push(box(b - a, t, 0.6, (a + b) / 2, y, zB + 0.3 - o));
       for (const sx of [-1, 1]) cap.push(box(PX + o - half, t, 0.6, sx * (PX + o + half) / 2, y, zF - 0.3 + o));
       add(merge(cap), M.monolith, { ao: null });
       // A tall platform is a sumeru base: a foot and a head that stand proud, a waist drawn in between them, and
@@ -121,7 +132,7 @@ export function buildHall(M, opts) {
           for (const sx of [-1, 1]) su.push(box(w - half, hh, 0.12, sx * (w + half) / 2, yy, zf - 0.06)); };
         ring(0.16, 0, 0.2); ring(0.09, 0.2, 0.32); ring(0.09, h - 0.5, h - 0.38); ring(0.14, h - 0.38, h - 0.2);
         const post = (x, z) => su.push(box(0.16, h - 0.82, 0.16, x, (0.32 + h - 0.5) / 2, z));
-        for (let x = -PX; x <= PX + 1e-6; x += (PX * 2) / Math.round((PX * 2) / 1.7)) { post(x, zB - 0.03); if (Math.abs(x) > half + 0.3) post(x, zF + 0.03); }
+        for (let x = -PX; x <= PX + 1e-6; x += (PX * 2) / Math.round((PX * 2) / 1.7)) { if (backAt.every((bx) => Math.abs(x - bx) > p.stepsBack / 2 + 0.3)) post(x, zB - 0.03); if (Math.abs(x) > half + 0.3) post(x, zF + 0.03); }
         for (let z = zB; z <= zF + 1e-6; z += (zF - zB) / Math.round((zF - zB) / 1.7)) { post(-PX - 0.03, z); post(PX + 0.03, z); }
         add(merge(su), M.monolith, { ao: null });
       }
@@ -129,7 +140,7 @@ export function buildHall(M, opts) {
   }
   const rails = [];   // each run of railing as the ground it stands on and how high it reaches (walk.rails)
   if (p.rail) {   // posts with caps, a top rail and a panel between, broken where the stairs arrive
-    const parts = [], ends = (g.userData.railEnds = []), runs = (g.userData.railRuns = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0, gapB = p.stepsBack ? p.stepsBack / 2 + 0.5 : 0;
+    const parts = [], ends = (g.userData.railEnds = []), runs = (g.userData.railRuns = []), y = p.platH, inset = 0.16, gapF = p.steps ? p.steps / 2 + 0.5 : 0;
     const run = (ax, a, b, fixed) => {   // a line of railing along x (ax = "x") or z, from a to b
       // Round a gallery that is walked, each run has an odd number of bays: its middle, before the door and on the
       // axis of the view, is a panel to look over, not a post in the eye.
@@ -147,7 +158,8 @@ export function buildHall(M, opts) {
       bar(0.1, 0.14, 0.05); bar(0.44, 0.05, 0.34); bar(0.08, 0.14, 0.6); bar(0.09, 0.1, 0.88);
     };
     const ex = PX - inset;
-    for (const [z, gap] of [[zF - inset, gapF], [zB + inset, gapB]]) { if (gap) { run("x", -ex, -gap, z); run("x", gap, ex, z); } else run("x", -ex, ex, z); }
+    if (gapF) { run("x", -ex, -gapF, zF - inset); run("x", gapF, ex, zF - inset); } else run("x", -ex, ex, zF - inset);
+    for (const [a, b] of besideBack(-ex, ex, 0.5)) run("x", a, b, zB + inset);   // along the back, broken where each stair comes up
     run("z", zB + inset, zF - inset, -ex); run("z", zB + inset, zF - inset, ex);
     add(merge(parts), p.platBase > 0 ? M.woodX : M.monolith, { ao: null });   // a stone railing is the stone of its platform, not white marble
   }
@@ -259,10 +271,10 @@ export function buildHall(M, opts) {
   if (p.dark) {
     const d = Math.min(2.4, Z - ZB - 0.4);
     const m = new THREE.Mesh(box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), M.interior(p.platH));
-    g.add(m);
+    m.userData.doorway = true; g.add(m);   // a hall that can be entered paints its own room here instead (doorway.js)
     if (p.lamps) for (const sx of [-1, 1]) {
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), M.flame);
-      f.position.set(sx * 1.1, p.platH + 1.2, Z - d + 0.1); g.add(f);
+      f.position.set(sx * 1.1, p.platH + 1.2, Z - d + 0.1); f.userData.doorFlame = true; g.add(f);
     }
   }
 
@@ -520,7 +532,7 @@ export function buildHall(M, opts) {
   }
 
   if (p.plaque) {   // hung forward of the bracket arms, tucked under the eave
-    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, pq);
+    const pq = typeof p.plaque === "string" ? { text: p.plaque } : p.plaque, m = makePlaque(pq.text, { ...pq, back: M.woodV });
     // Outside the slanting arm's beak, the farthest any timber of a set reaches (BEAK, drawn for a cai of 0.21 and scaled with the
     // frame), with the board's foot swung back by its lean and a finger of air: not through the beak, which lay over the writing (#213).
     const lean = pq.vertical ? 0.3 : 0.2, zz = Z + (p.brackets ? Math.max(1.3, BEAK * K + (m.userData.height / 2) * Math.sin(lean) + 0.04 + 0.06) : 0.45);
@@ -542,19 +554,23 @@ export function buildHall(M, opts) {
   for (const c of perimeter) walk.posts.push({ x: c.x, z: c.z, r: COL_R * 1.03 });
   // An edge with a railing along it is kept back by the rail and by his own width; an open edge only so that his feet stay on the stone.
   const edgeIn = p.rail ? 0.16 + 0.1 + BODY : 0.25;
-  if (p.walkAll) walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way
-  else {
+  const stair = (w, sign, cx = 0) => {   // sign = +1 front, -1 back; `cx`: where it stands across the building
+    // The treads are walked clear of the cheek stones by his own width; the cheeks themselves, and the ground
+    // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
+    const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
+    const cheek = stairProfile(p.platH).count > 2 ? CHEEK : 0;   // (a flight of two steps has no cheek stones, but the ends of its treads still stop his shoes)
+    for (const sx of [-1, 1]) walk.posts.push({ x0: cx + (sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - cheek - BODY), x1: cx + (sx > 0 ? w / 2 + cheek + BODY : -w / 2 + BODY + 0.021), z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02, h: p.platH });   // (`h`: as high as its platform, for the eye)
+    walk.ramps.push({ x0: cx - hw, x1: cx + hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [cx, b], high: [cx, edge] });
+    walk.solids.push({ x0: cx - w / 2 - 0.8, x1: cx + w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true, h: p.platH });   // (`h`: no higher than the platform it climbs, for the eye)
+  };
+  if (p.walkAll) {
+    walk.decks.push({ x0: -PX + edgeIn - 0.25, x1: PX - edgeIn + 0.25, z0: zB + edgeIn - 0.25, z1: zF - edgeIn + 0.25, h: p.platH });   // open floor, but its columns still stand in the way
+    if (p.steps) stair(p.steps, 1);   // (an open pavilion with steps up to it, #274: the path's two)
+    for (const bx of backAt) stair(p.stepsBack, -1, bx);
+  } else {
     walk.solids.push({ x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5, own: true });   // `own`: the building's own platform, whose height the eye knows
-    const stair = (w, sign) => {   // sign = +1 front, -1 back
-      // The treads are walked clear of the cheek stones by his own width; the cheeks themselves, and the ground
-      // round their feet, are closed to him even where a floor or the stair would otherwise let him stand.
-      const edge = sign > 0 ? zF : zB, a = edge - sign * Math.max(0.25, edgeIn + 0.06), b = edge + sign * run, hw = w / 2 - BODY - 0.02;
-      if (stairProfile(p.platH).count > 2) for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: sign > 0 ? edge + 0.02 : b - BODY - 0.06, z1: sign > 0 ? b + BODY + 0.06 : edge - 0.02 });
-      walk.ramps.push({ x0: -hw, x1: hw, z0: Math.min(a, b) - STAIR.nosing - 0.02, z1: Math.max(a, b) + STAIR.nosing + 0.02, h: p.platH, low: [0, b], high: [0, edge] });
-      walk.solids.push({ x0: -w / 2 - 0.8, x1: w / 2 + 0.8, z0: Math.min(edge, b), z1: Math.max(edge, b), own: true });
-    };
     if (p.steps) stair(p.steps, 1);
-    if (p.stepsBack) stair(p.stepsBack, -1);
+    for (const bx of backAt) stair(p.stepsBack, -1, bx);
     const passing = p.front === "pass" && p.back === "pass";
     // The way through a gate runs between its open leaves, which stand against the sides with their ledges and studs.
     if (passing) { const hw = (xs[mid + 1] - xs[mid]) / 2 - (p.timber ? 0.25 + 0.2 + BODY + 0.01 : 0.45); walk.decks.push({ x0: -hw, x1: hw, z0: zB + 0.25, z1: zF - 0.25, h: p.platH });

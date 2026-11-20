@@ -1,0 +1,46 @@
+{
+ "censer": {
+  "pictures": 17,
+  "frames": 121,
+  "mostPerFrame": 0.307,
+  "mostAt60": 0.051,
+  "where": {
+   "frame": 110,
+   "at": [
+    -0.02,
+    0,
+    7.25
+   ],
+   "dist": 5.53,
+   "side": 1.48,
+   "dt": 0.1
+  },
+  "across": [
+   49.8,
+   50
+  ],
+  "slideMost": 1.8
+ },
+ "gate": {
+  "pictures": 23,
+  "frames": 163,
+  "mostPerFrame": 0.166,
+  "mostAt60": 0.028,
+  "where": {
+   "frame": 120,
+   "at": [
+    -0.07,
+    0.17,
+    45.25
+   ],
+   "dist": 6,
+   "side": 0,
+   "dt": 0.1
+  },
+  "across": [
+   49.9,
+   49.9
+  ],
+  "slideMost": 0
+ }
+}

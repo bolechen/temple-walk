@@ -1,0 +1,94 @@
+{
+  "scene_id": "T01",
+  "name": "栖岚寺（暂名）",
+  "game": "山门之外",
+  "chapter": "城中入山",
+  "revision": "research draft, 2026-11-17",
+  "status": "draft; not implemented; positions to be fixed after the first whitebox",
+  "units": "metres; +x east; +z south (north/uphill is -z); y up",
+  "origin": "the centre of the temple gate (山门), ground at 42 m above sea level (SRTM estimate)",
+  "height_note": "ground_m is an SRTM estimate (±5-10 m); eye_m is above the local ground. Do not treat either as survey data.",
+  "season_time": "whitebox neutral daylight first; then B01 autumn-fog courtyard as the first art comparison (S58); winter clear with the pagoda shadow on the caitai field as a separate variant; B02 cold dark interior",
+  "fov_deg": 44,
+  "cameras": [
+    {
+      "id": "cam01",
+      "name": "街边山门",
+      "purpose": "city → temple; the gate holds the street; the pagoda is already visible above the roofs (as in the 2024 photo)",
+      "position": { "x": 0.0, "z": -25.0, "ground_m": 41.5, "eye_m": 1.65 },
+      "look": { "yaw_deg": 0.0, "pitch_deg": 3.0 },
+      "fov_deg": 44,
+      "must_show": ["武珞路路面/人行道/栏杆", "山门三间与石狮", "蓝底金匾与朱红拱门", "门殿右上方的整座塔（或大半座）"],
+      "must_not": ["塔被门殿完全挡住", "塔与门殿屋脊相切", "现代玻璃幕墙/赛博城市"],
+      "notes": "The 2024 photo shows the whole pagoda from across the street; keep it in frame, but do not let its eaves touch the gate ridge."
+    },
+    {
+      "id": "cam02",
+      "name": "放生池与圣僧桥",
+      "purpose": "entering; water, bell/drum towers, the first courtyard",
+      "position": { "x": 0.0, "z": -30.0, "ground_m": 43.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 4.0, "pitch_deg": 0.0 },
+      "fov_deg": 44,
+      "must_show": ["石桥栏杆与水面", "钟楼/鼓楼", "弥勒殿", "银杏或塔尖"],
+      "must_not": ["把钟鼓楼做成山门两端的小楼", "水面全反射镜面"],
+      "notes": "Keep the city audible under the gate arch; do not silence it completely."
+    },
+    {
+      "id": "cam03",
+      "name": "大雄宝殿前",
+      "purpose": "the third terrace; the five-bay hip roof; the pagoda is hidden here",
+      "position": { "x": 9.0, "z": -112.0, "ground_m": 47.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 2.0, "pitch_deg": 5.0 },
+      "fov_deg": 44,
+      "must_show": ["宽石阶、石栏与阶中石雕", "重檐立面、竖匾「大雄寶殿」与横匾", "两侧银杏"],
+      "must_not": ["重檐七间（那是 T00 的大殿；这里是五间）", "整座塔在画面里", "把大殿做成单檐平立面"],
+      "notes": "This is the 'the pagoda disappears' beat; verify that the hall and trees actually hide it."
+    },
+    {
+      "id": "cam04",
+      "name": "玉佛殿与后院",
+      "purpose": "the fourth terrace; the two-storey Jade Buddha hall / library; the upper terraces begin",
+      "position": { "x": 12.0, "z": -160.0, "ground_m": 53.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 6.0, "pitch_deg": 0.0 },
+      "fov_deg": 44,
+      "must_show": ["后院廊庑/斋堂一角", "两层玉佛殿/藏经楼", "万佛殿重檐或塔"],
+      "must_not": ["后院黑成一片", "把玉佛殿做成单层"],
+      "notes": "The back courtyard is darker; add a believable eave bounce, not a global lift."
+    },
+    {
+      "id": "cam05",
+      "name": "法界宫与塔",
+      "purpose": "the fifth/sixth terrace; the five-pavilion roof; the pagoda appears whole",
+      "position": { "x": 30.0, "z": -272.0, "ground_m": 74.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 18.0, "pitch_deg": 8.0 },
+      "fov_deg": 44,
+      "must_show": ["罗汉堂五亭顶（黄琉璃）", "石阶", "塔身", "塔北山脊"],
+      "must_not": ["把五亭顶改成普通歇山", "塔与近屋脊相切"],
+      "notes": "The five-pavilion roof is the one building that should look foreign; keep its rotation."
+    },
+    {
+      "id": "cam06",
+      "name": "塔院与塔影田回望城市",
+      "purpose": "the seventh terrace; the pagoda and the city behind the roofs",
+      "position": { "x": 95.0, "z": -300.0, "ground_m": 90.0, "eye_m": 1.60 },
+      "look": { "yaw_deg": 190.0, "pitch_deg": -3.0 },
+      "fov_deg": 44,
+      "must_show": ["塔基/铁栏/菜薹田", "层层屋顶（万佛殿、罗汉堂、玉佛殿、大雄宝殿）", "武珞路楼群与灰天"],
+      "must_not": ["群山代替城市", "塔顶被画面裁掉"],
+      "notes": "A second frame from the same spot, looking up at the pagoda, is expected for the pair."
+    }
+  ],
+  "three_reveals": [
+    { "order": 1, "camera": "cam01", "amount": "whole or most of it, far away", "method": "seen above the gate and roofs from across the street; the destination is announced" },
+    { "order": 2, "camera": "cam02/cam03/cam04", "amount": "hidden or a corner", "method": "the gate, halls and ginkgo block it after entering" },
+    { "order": 3, "camera": "cam05/cam06", "amount": "whole, close", "method": "turn the corner on the upper terraces, no obstruction, ridge behind" }
+  ],
+  "to_verify_after_whitebox": [
+    "every camera stands on walkable ground",
+    "the pagoda is never cut by the frame in cam06",
+    "the city skyline stays below the height controls (40/60 m above 1985 datum)",
+    "the five-pavilion roof reads at cam05",
+    "the street sound is still audible at cam02",
+    "the pagoda is not visible at cam03"
+  ]
+}

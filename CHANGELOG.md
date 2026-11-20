@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.5.0](https://github.com/bolechen/temple-walk/compare/v0.4.0...v0.5.0) (2026-11-19)
+
+
+### Features
+
+* **analytics:** 补运营埋点，记录 Umami 数据快照 ([#260](https://github.com/bolechen/temple-walk/issues/260)) ([92d9528](https://github.com/bolechen/temple-walk/commit/92d9528327d4a9356a3e803f8b8b024ca4a0dde5))
+* **camera:** 第三人称默认居中（B），台阶上俯仰随他修正，被挡时绕头顶让位 ([#291](https://github.com/bolechen/temple-walk/issues/291)) ([8d290ea](https://github.com/bolechen/temple-walk/commit/8d290eac78a852073149b14ff86b2e22f91ec927))
+* **doorway:** 从殿外看进门洞，画的是这座殿自己的屋子（[#218](https://github.com/bolechen/temple-walk/issues/218)） ([#222](https://github.com/bolechen/temple-walk/issues/222)) ([cfb9f01](https://github.com/bolechen/temple-walk/commit/cfb9f01bfd7dcb77ae7681c3d647223f5298b5d2))
+* **evidence:** mirror the manifests' files to R2 from CI ([#251](https://github.com/bolechen/temple-walk/issues/251)) ([56ea4cb](https://github.com/bolechen/temple-walk/commit/56ea4cb634265880592f8e743393f557f7844ce4))
+* **ground:** the ground keeps the leaves that fall on it ([#267](https://github.com/bolechen/temple-walk/issues/267)) ([#269](https://github.com/bolechen/temple-walk/issues/269)) ([a507eae](https://github.com/bolechen/temple-walk/commit/a507eae4c2a81e99753cd8ac6b8fbe70548a44bc))
+* **novice:** Tripo body round five offline: fingers together, armpit helpers, beads laid on the robe, outline both ways ([#289](https://github.com/bolechen/temple-walk/issues/289)) ([274d899](https://github.com/bolechen/temple-walk/commit/274d899386c342ea83d47e31e80cbb9948d67a4f)), closes [#286](https://github.com/bolechen/temple-walk/issues/286)
+* **novice:** Tripo 分层小沙弥的离线接入工具 ([#249](https://github.com/bolechen/temple-walk/issues/249)) ([81e4ee2](https://github.com/bolechen/temple-walk/commit/81e4ee29b788fe03fcf6d21374ee7fb6c0ff1395))
+* **novice:** Tripo 小沙弥第三轮——裤子和袍摆改用 Blender 骨热自动权重 ([#256](https://github.com/bolechen/temple-walk/issues/256)) ([fa3f86b](https://github.com/bolechen/temple-walk/commit/fa3f86b70685497e3f4660ec68e61046427ed5ac))
+* **offering:** show the WeChat 赞赏码 in all four languages ([#243](https://github.com/bolechen/temple-walk/issues/243)) ([26127fd](https://github.com/bolechen/temple-walk/commit/26127fd510027ad3693f19a2edc876722d003b0c))
+* **tools:** 全场「绕一圈」普查——清单、出图脚本、守贴图朝向的单测（[#252](https://github.com/bolechen/temple-walk/issues/252)） ([#268](https://github.com/bolechen/temple-walk/issues/268)) ([734c852](https://github.com/bolechen/temple-walk/commit/734c852e657513c5d9bc4a27307417d676900e28))
+* **walk:** 全图默认走烘出来的格子（碰撞迁移第 4 步，[#274](https://github.com/bolechen/temple-walk/issues/274)） ([#276](https://github.com/bolechen/temple-walk/issues/276)) ([be27d70](https://github.com/bolechen/temple-walk/commit/be27d701f79f10a403888782ab424496dddbef60))
+* **walk:** 首院默认走烘出来的格子，旧 walker 留作回退（[#265](https://github.com/bolechen/temple-walk/issues/265)） ([#266](https://github.com/bolechen/temple-walk/issues/266)) ([d3da81d](https://github.com/bolechen/temple-walk/commit/d3da81dc6a849eebd3e4689f18226ebcdb045e2b))
+
+
+### Bug Fixes
+
+* **audio:** the wind heard keeps the picture's clock ([#281](https://github.com/bolechen/temple-walk/issues/281)) ([7c86432](https://github.com/bolechen/temple-walk/commit/7c8643237b5e3a9f96de828121aedaa149a9cce0))
+* **censer:** 三足的足根长进炉腹，不再悬在腹下 ([#244](https://github.com/bolechen/temple-walk/issues/244)) ([#253](https://github.com/bolechen/temple-walk/issues/253)) ([7ca94ed](https://github.com/bolechen/temple-walk/commit/7ca94ed95042b42fdfd9d1622ac0fef2745ff03b))
+* **evidence:** 读到一半断掉的文件整份再读 ([#304](https://github.com/bolechen/temple-walk/issues/304)) ([9410a36](https://github.com/bolechen/temple-walk/commit/9410a36614d2879ebe5106c39c05d77c1b827c23))
+* **novice:** Tripo body round six offline: clean cuffs, sleeve light measured, the whole tea measured ([#292](https://github.com/bolechen/temple-walk/issues/292)) ([5b5703c](https://github.com/bolechen/temple-walk/commit/5b5703c0549bfa34c8ce041bad19d7d584ecb899)), closes [#286](https://github.com/bolechen/temple-walk/issues/286)
+* **novice:** Tripo 小沙弥第二轮——坐凳袍前片、裤上红白碎块、手的朝向和大小、念珠量 ([#255](https://github.com/bolechen/temple-walk/issues/255)) ([4609bdf](https://github.com/bolechen/temple-walk/commit/4609bdfabaf59a6eb4ee011f0753fa60bc41169d))
+* **novice:** 上下台阶的步子——上与下分开、骨盆跟支撑脚、步频放慢 ([#273](https://github.com/bolechen/temple-walk/issues/273)) ([d3a7cde](https://github.com/bolechen/temple-walk/commit/d3a7cde3ee487a8a87b0ff00892332175c9dde44))
+* **offering:** tear the offering sheet's edge like every other sheet ([#239](https://github.com/bolechen/temple-walk/issues/239)) ([1f84cbc](https://github.com/bolechen/temple-walk/commit/1f84cbca32cde93ad9225ac0a5a4aa230045ff21))
+* **photo:** 举相机默认不虚化，景深改成留影设置里的「虚化」开关 ([#277](https://github.com/bolechen/temple-walk/issues/277)) ([a0ad8f9](https://github.com/bolechen/temple-walk/commit/a0ad8f9b7475a92828e267084d6abd3212d7a41f))
+* **photo:** 设置和收起挪到快门两侧；finish 先滚到虚化再真点 ([#303](https://github.com/bolechen/temple-walk/issues/303)) ([346c5b3](https://github.com/bolechen/temple-walk/commit/346c5b3e26d8f18825833fff47803da7f5574b76))
+* **plaque:** 匾字恢复为 Yuji Boku，不再套用按字补墨 ([#192](https://github.com/bolechen/temple-walk/issues/192)) ([#241](https://github.com/bolechen/temple-walk/issues/241)) ([8fb533e](https://github.com/bolechen/temple-walk/commit/8fb533ee84c457edcb980b7a57240e1a98d8b8a2))
+* **plaque:** 素匾只有正面带字，背面和四边用场景自带木材质 ([#245](https://github.com/bolechen/temple-walk/issues/245)) ([#248](https://github.com/bolechen/temple-walk/issues/248)) ([19e65ae](https://github.com/bolechen/temple-walk/commit/19e65ae1730c9e40c52a42e16821f570f59e3a12))
+* **rites:** 吃茶握法放低，倾碗时两手不再遮眼 ([#293](https://github.com/bolechen/temple-walk/issues/293)) ([2d9fb95](https://github.com/bolechen/temple-walk/commit/2d9fb958517d87aa3c8fb850d0046f1227a27722))
+* **shaders:** 着色器里不再算出非法数；check 加守卫扫全场 ([#217](https://github.com/bolechen/temple-walk/issues/217)) ([#237](https://github.com/bolechen/temple-walk/issues/237)) ([c7e3dcd](https://github.com/bolechen/temple-walk/commit/c7e3dcd8d4adfa9c0af6b3cd929c79f8f8932fdc))
+* **stairs:** 垂带方头落地、照壁字板只留正面、大殿台基背面两道后阶 ([#301](https://github.com/bolechen/temple-walk/issues/301)) ([45d36f2](https://github.com/bolechen/temple-walk/commit/45d36f2388e529990a995e4291a33a5c7844ea35))
+
 ## [0.4.0](https://github.com/bolechen/temple-walk/compare/v0.3.0...v0.4.0) (2026-11-18)
 
 

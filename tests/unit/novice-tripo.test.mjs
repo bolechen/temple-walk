@@ -9,18 +9,21 @@ import "./dom-stub.mjs";
 import * as THREE from "three";
 const { createMonk } = await import("../../app/src/monk.js");
 const { readNovice } = await import("./novice-glb.mjs");
+const { rig, wear, helpersOf } = await import("../../tools/novice-rig.mjs");
 
 const FILE = process.env.NOVICE_TRIPO || new URL("../../tools/out/novice-tripo.glb", import.meta.url).pathname;
 const SHIPPED = new URL("../../app/shared/models/novice.glb", import.meta.url);
 const skip = !fs.existsSync(FILE) && `no ${FILE}: run tools/novice-tripo.mjs first`;
 const PARTS = ["skin", "robe", "legs", "shoes"];
 const body = skip ? null : readNovice(FILE);
-const dressed = () => { const m = createMonk(); m.dress(body.geometries, new THREE.MeshStandardMaterial(), body.extras.robeColor); return m; };
+// he wears it as the page would once taught its helper bones (tools/novice-rig.mjs): rigged first, then dressed
+const dressed = () => wear(createMonk(), body);
 const world = (mesh, i, v = new THREE.Vector3()) => mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld);
 const tris = (g) => PARTS.reduce((s, n) => s + g[n].index.count / 3, 0);
 
 test("made for this skeleton: four parts, joints numbered as monk.js's bones, two textures", { skip }, () => {
-  assert.deepEqual(body.extras.bones, createMonk().skeleton.bones.map((b) => b.name));
+  // monk.js's bones in its order, then the helpers the body was weighted to (#286), as rig() adds them
+  assert.deepEqual(body.extras.bones, rig(createMonk(), helpersOf(body.extras)).skeleton.bones.map((b) => b.name));
   assert.deepEqual(body.json.nodes.map((n) => n.name), PARTS);
   assert.ok(body.json.images.length <= 2 && body.json.images.every((i) => i.mimeType === "image/webp"), `${body.json.images.length} textures`);
 });
@@ -63,7 +66,8 @@ test("his hands go with his hands, both forearms with their forearms, his shoes 
     assert.ok(nh > 30 && wh > 0.95, `${side} hand: ${nh} vertices, ${wh.toFixed(2)} on hand and forearm`);
     assert.ok(nf > 20 && wf > 0.95, `${side} forearm: ${nf} vertices, ${wf.toFixed(2)} on the arm`);
   }
-  const [ns, ws] = share("shoes", () => true, (b) => /Foot$/.test(b)); assert.ok(ns > 100 && ws > 0.95, `shoes ${ws.toFixed(2)}`);
+  // below the collar: the ring the shoe shares with the leg wrap takes half the shin's weight on purpose (WRAP_RANK)
+  const [ns, ws] = share("shoes", (x, y) => y < 0.06, (b) => /Foot$/.test(b)); assert.ok(ns > 100 && ws > 0.95, `shoes below the collar ${ws.toFixed(2)}`);
 });
 
 // Copies of one point (a seam, or where two pieces meet) must take one weight and stay together. The sash's end is
@@ -120,4 +124,64 @@ test("no triangle of the trousers is half on the plain colour and half on the te
   for (let t = 0; t < idx.count; t += 3) { const n = [0, 1, 2].filter((k) => key(idx.getX(t + k)) === plain).length; if (n === 1 || n === 2) mixed++; }
   assert.ok(count.get(plain) > 100, `${count.get(plain)} corners on the plain colour`);
   assert.equal(mixed, 0, `${mixed} triangles stretch from the plain colour across the atlas`);
+});
+
+// #256 review: with the arms raised over the shoulders (the incense at the brow) the sleeves tore along the upper arm and
+// opened at the armpit, and walking, the back foot's leg wrap tore at its lower edge. Copies of one point must stay
+// together there too.
+test("copies stay within a millimetre with the arms raised to the brow, and on the back foot through a stride", { skip }, () => {
+  const m = dressed(), hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 });
+  const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };
+  for (let i = 0; i < 90; i++) {
+    m.group.updateMatrixWorld(true);
+    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; m.bones.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); }
+    m.update(1 / 30, 0, false, i / 30, () => 0, { act });
+    if (i >= 60 && i % 10 === 0) together(m, `arms raised to the brow, frame ${i}`);
+  }
+  const w = dressed();
+  for (let i = 0; i < 90; i++) { w.update(1 / 30, 2.1, false, i / 30, () => 0, {}); if (i >= 40 && i % 2 === 0) together(w, `walking, frame ${i}`); }
+});
+
+// #256 review, measured: what tore under the raised arms and at the back foot's leg wrap was not copies parting (the
+// test above held there) but edges drawn out many times their length. Edges stretched past 3× with the arms at the brow,
+// and edge-frames past 2× round the ankles through a stride, counted on the file before the sleeves, the shoulders and the
+// wraps took bone heat (629 and 1,896) and after (about 420 and 350).
+const stretched = (m, part, over, keep = () => true) => {
+  const g = body.geometries[part], p = g.attributes.position, idx = g.index, mesh = m.parts[part], a = new THREE.Vector3(), c = new THREE.Vector3(), A = new THREE.Vector3(), C = new THREE.Vector3(); let n = 0;
+  m.group.updateMatrixWorld(true);
+  for (let t = 0; t < idx.count; t += 3) for (let k = 0; k < 3; k++) { const i = idx.getX(t + k), j = idx.getX(t + (k + 1) % 3); a.fromBufferAttribute(p, i); c.fromBufferAttribute(p, j); const L0 = a.distanceTo(c); if (L0 < 1e-4 || !keep(a, i)) continue; mesh.getVertexPosition(i, A).applyMatrix4(mesh.matrixWorld); mesh.getVertexPosition(j, C).applyMatrix4(mesh.matrixWorld); if (A.distanceTo(C) / L0 > over) n++; }
+  return n;
+};
+test("the cloth is not drawn out under the raised arms, nor round the back foot's ankle", { skip }, () => {
+  const m = dressed(), hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 }), act = { hands: { left: hand(), right: hand() } };
+  for (let i = 0; i < 90; i++) { m.group.updateMatrixWorld(true); for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; m.bones.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); } m.update(1 / 30, 0, false, i / 30, () => 0, { act }); }
+  const arms = stretched(m, "robe", 3);
+  assert.ok(arms < 450, `arms at the brow: ${arms} robe edges stretched past 3×`);
+  // #286: the robe's body (upper robe, belt, skirt) is not drawn out at all; what must stretch (the foot of the deep
+  // armhole is 9 cm from the elbow hanging and 33 cm at the brow) is in the sleeves' undersides, behind the arms
+  const ranges = body.extras.ranges?.robe;
+  if (ranges) {
+    const sleeves = new Set(["tripo_part_1", "tripo_part_13"]), inBody = (v, i) => { const r = ranges.find(([, o, n]) => i >= o && i < o + n); return r && !sleeves.has(r[0]); };
+    const onBody = stretched(m, "robe", 3, inBody);
+    assert.equal(onBody, 0, `arms at the brow: ${onBody} edges of the robe's body stretched past 3×`);
+  }
+  const w = dressed(); let ankles = 0;
+  for (let i = 0; i < 90; i++) { w.update(1 / 30, 2.1, false, i / 30, () => 0, {}); if (i >= 40 && i % 2 === 0) ankles += stretched(w, "legs", 2, (v) => v.y < 0.22); }
+  assert.ok(ankles < 800, `walking: ${ankles} edge-frames round the ankles stretched past 2×`);
+});
+
+// #286: the helper bones under the arms (tools/novice-rig.mjs) turn through half the upper arm's swing and stay at the
+// shoulder's ball; in the bind pose they have not turned.
+test("the helper under each arm turns half as far as the arm swings, from the shoulder's ball", { skip: skip || !helpersOf(body.extras).length }, () => {
+  const m = dressed(), hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 }), act = { hands: { left: hand(), right: hand() } };
+  m.update(0, 0, "bind", 0); for (const h of m.helpers) assert.ok(h.bone.quaternion.angleTo(new THREE.Quaternion()) < 1e-6, `${h.name} turned in the bind pose`);
+  for (let i = 0; i < 90; i++) { m.group.updateMatrixWorld(true); for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; m.bones.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); } m.update(1 / 30, 0, false, i / 30, () => 0, { act }); }
+  m.group.updateMatrixWorld(true);
+  for (const h of m.helpers) {
+    const down = (b) => new THREE.Vector3(0, -1, 0).transformDirection(b.matrixWorld), arm = down(h.follow);
+    const swing = h.axis.clone().transformDirection(h.parent.matrixWorld).angleTo(arm), mine = h.axis.clone().transformDirection(h.parent.matrixWorld).angleTo(h.axis.clone().transformDirection(h.bone.matrixWorld));
+    assert.ok(swing > 1.5, `${h.name}: the arm swung only ${swing.toFixed(2)} rad`);
+    assert.ok(Math.abs(mine - swing / 2) < 0.05, `${h.name}: turned ${mine.toFixed(2)} rad for a swing of ${swing.toFixed(2)}`);
+    assert.ok(h.bone.getWorldPosition(new THREE.Vector3()).distanceTo(h.follow.getWorldPosition(new THREE.Vector3())) < 1e-6, `${h.name} left the shoulder`);
+  }
 });

@@ -19,11 +19,28 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
     steps:
       - name: Update release PR or publish a merged release
+        id: rp
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # The public site is built from the version tag and nothing else (#308). A tag made with the default token starts no workflow
+  # of its own, so the job that made it calls the deploy by name, once, when a version was in fact made on this push.
+  production:
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy-tag.yml
+    with:
+      ref: ${{ needs.release.outputs.tag_name }}
+      target: production
+    secrets: inherit

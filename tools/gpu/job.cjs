@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam }], seconds: 6 }
+// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, before, after }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
@@ -44,7 +44,7 @@ function fingerprint(dir) {
   });
   await new Promise((r) => srv.listen(0, "127.0.0.1", r)); const base = `http://127.0.0.1:${srv.address().port}/`;
 
-  let browser = null, how = null;
+  let browser = null, how = null, launchWith = null;
   pick: for (const [name, flags] of Object.entries(FLAGS)) for (const channel of ["chromium", undefined]) {
     const key = name + (channel ? "+new-headless" : "+headless-shell"); let b = null;
     try {
@@ -52,7 +52,7 @@ function fingerprint(dir) {
       const p = await b.newPage(); await p.goto(base + "favicon.svg");   // any same-origin page that is not the app will do. It must exist and be shown as a document (a script is, as text; a file this server sends as a download is not), or this flavour is passed over and the frame rates are no longer comparable
       const gl = await p.evaluate(() => { const c = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")   /* the probe page is an SVG document, where createElement makes an SVG element */, g = c.getContext("webgl2"); if (!g) return "no webgl2"; const e = g.getExtension("WEBGL_debug_renderer_info"); return String(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); });
       report.tried[key] = gl; await p.close();
-      if ((/NVIDIA|Tesla|GeForce|RTX|Quadro|AMD|Radeon/i.test(gl) && !/SwiftShader|llvmpipe/i.test(gl)) || name === "swiftshader") { browser = b; how = key; break pick; }
+      if ((/NVIDIA|Tesla|GeForce|RTX|Quadro|AMD|Radeon/i.test(gl) && !/SwiftShader|llvmpipe/i.test(gl)) || name === "swiftshader") { browser = b; how = key; launchWith = { channel, args: [...COMMON, ...flags] }; break pick; }
       await b.close();
     } catch (e) { report.tried[key] = "launch failed: " + String(e.message).split("\n")[0].slice(0, 160); if (b) await b.close().catch(() => {}); }
   }
@@ -62,15 +62,19 @@ function fingerprint(dir) {
   save();
   if (!browser) { console.log("no browser could be started"); process.exit(1); }
 
-  const open = async (query, [w, h], scale = 1, extra = {}) => {
-    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, ...extra }), page = await ctx.newPage();
+  // `fresh`: a browser of its own, started for this page and closed with it, so that nothing (compiled shaders, the GPU
+  // process's first uploads) is left warm by an earlier page: a visitor's first visit.
+  const open = async (query, [w, h], scale = 1, { fresh = false, path: at = "", ...extra } = {}) => {   // `path`: a page beside the site's own (another build staged under it, BASE_SITE)
+    const own = fresh ? await chromium.launch(launchWith) : null;
+    const ctx = await (own || browser).newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale, ...extra }), page = await ctx.newPage();
+    if (own) { const close = ctx.close.bind(ctx); ctx.close = async () => { await close().catch(() => {}); await own.close(); }; }
     // The hall's statue is deliberately not sent to the job, so its absence is not an error here.
     const ours = (t) => !/hall\.js|plate\.webp|\/m\/|404|Failed to load resource|Failed to fetch dynamically/.test(t);
     // An error printed by a library says what went wrong but not for which thing: keep where it was called from as well.
     await page.addInitScript(() => { const say = console.error; console.error = (...a) => say(...a, "\n  at " + (new Error().stack || "").split("\n").slice(2, 8).map((l) => l.trim().replace(/^at /, "").replace(/https?:\/\/[^/]+\//, "")).join(" < ")); });
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
     page.on("console", (m) => m.type() === "error" && ours(m.text()) && report.errors.push(m.text().slice(0, 900)));
-    const t0 = Date.now(); await page.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });
+    const t0 = Date.now(); await page.goto(base + at + "?" + query, { waitUntil: "commit", timeout: 120000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     return { ctx, page, loadMs: Date.now() - t0 };
   };
@@ -80,15 +84,17 @@ function fingerprint(dir) {
   for (const b of spec.bench || []) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
-      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter }), size, b.scale || 1);
-      await page.waitForTimeout(1500);
+      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync }), size, b.scale || 1, { path: b.path || "" });
+      await page.waitForTimeout(b.warm || 1500);   // `warm`: longer, for what is taken in its first seconds (the doorways, #218)
+      if (b.before) await page.evaluate(`(async () => { ${b.before} })()`);   // `before`: a script run before the frames are counted (the ground filled with what has fallen, #267)
       // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
       if (b.walk) await page.evaluate((pts) => { window.__walkerReset?.(); window.__walk(pts); }, b.walk);
       const a = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now() })); await page.waitForTimeout(secs * 1000);
-      const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height], walker: window.__walker ? window.__walker() : null }));
+      const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height], walker: window.__walker ? window.__walker() : null, doors: window.__doorways ? window.__doorways() : null }));
       if (z.walker) z.walker.msPerFrame = +(z.walker.ms / Math.max(1, z.f - a.f)).toFixed(4);
       const cost = await page.evaluate(() => (window.__cost ? window.__cost(40) : null));   // drawing alone, without the browser's presenting
-      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, at: [z.y.x, z.y.z] };
+      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, doors: z.doors, at: [z.y.x, z.y.z] };   // doors: the rooms seen through the doors (#218)
+      if (b.after) row.after = await page.evaluate(`(async () => { ${b.after} })()`).catch((e) => ({ error: String(e.message).slice(0, 200) }));   // `after`: a script run once the frames are counted, its answer kept (the doorways' retake on a change of hour, #218)
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }
     save();

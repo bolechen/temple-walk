@@ -1,0 +1,15 @@
+# __pick at the survey's two addresses, built from ec7e988 (960x540, high, summer day, first person)
+## 禅堂 ?cam=13.79,17.5,0,-0.16 — pixels of the dark wedge
+330 425 [{"part":"site","material":"steps","d":5.47,"at":[12.41,0.32,12.4]},{"part":"ground","material":"ShaderMaterial","d":6.71,"at":[12.1,0,11.25]},{"part":"backdrop","material":"earth","d":9.77,"at":[11.32,-0.8,8.39]}]
+380 430 [{"part":"site","material":"steps","d":4.75,"at":[12.98,0.45,13]},{"part":"site","material":"steps","d":4.97,"at":[12.94,0.39,12.79]},{"part":"site","material":"steps","d":5.28,"at":[12.89,0.3,12.5]}]
+350 445 [{"part":"site","material":"steps","d":4.42,"at":[12.82,0.45,13.39]},{"part":"site","material":"steps","d":4.93,"at":[12.71,0.3,12.91]},{"part":"site","material":"steps","d":5.13,"at":[12.67,0.24,12.72]}]
+## 药师殿 ?cam=-14.09,-43.5,6.25,-0.7 — pixels of the dark wedge
+600 410 [{"part":"site","material":"steps","d":5.33,"at":[-13.16,2.87,-48.59]},{"part":"ground","material":"ShaderMaterial","d":7.24,"at":[-12.83,2.41,-50.42]},{"part":"site","material":"stone","d":7.29,"at":[-12.82,2.4,-50.47]}]
+640 425 [{"part":"site","material":"steps","d":5.56,"at":[-12.77,2.71,-48.7]},{"part":"ground","material":"ShaderMaterial","d":6.69,"at":[-12.5,2.41,-49.76]},{"part":"site","material":"stone","d":6.74,"at":[-12.49,2.4,-49.81]}]
+660 435 [{"part":"site","material":"steps","d":5.56,"at":[-12.6,2.63,-48.64]},{"part":"ground","material":"ShaderMaterial","d":6.37,"at":[-12.39,2.41,-49.39]},{"part":"site","material":"stone","d":6.42,"at":[-12.38,2.4,-49.43]}]
+620 440 [{"part":"site","material":"steps","d":5.08,"at":[-13.05,2.7,-48.26]},{"part":"site","material":"steps","d":5.29,"at":[-13.01,2.64,-48.46]},{"part":"site","material":"steps","d":5.34,"at":[-13,2.63,-48.5]}]
+## 药师殿, eye placed nearer (-13.4,3.6,-46.2 looking at -12.6,2.5,-48.7) — the slot
+400 250 [{"part":"site","m":"steps","d":2.49,"at":[-13.04,2.73,-48.5]},{"part":"site","m":"steps","d":2.9,"at":[-12.98,2.59,-48.88]},{"part":"ground","m":"ShaderMaterial","d":3.4,"at":[-12.9,2.41,-49.35]}]
+440 258 [{"part":"site","m":"steps","d":2.46,"at":[-12.87,2.7,-48.43]},{"part":"site","m":"steps","d":2.54,"at":[-12.86,2.67,-48.5]},{"part":"ground","m":"ShaderMaterial","d":3.25,"at":[-12.7,2.41,-49.14]}]
+480 262 [{"part":"site","m":"steps","d":2.6,"at":[-12.66,2.63,-48.5]},{"part":"ground","m":"ShaderMaterial","d":3.18,"at":[-12.5,2.41,-49.01]},{"part":"site","m":"stone","d":3.22,"at":[-12.49,2.4,-49.04]}]
+420 240 [{"part":"site","m":"steps","d":2.49,"at":[-12.95,2.77,-48.5]},{"part":"ground","m":"ShaderMaterial","d":3.56,"at":[-12.75,2.41,-49.49]},{"part":"site","m":"stone","d":3.59,"at":[-12.74,2.4,-49.52]}]

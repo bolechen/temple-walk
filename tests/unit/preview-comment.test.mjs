@@ -32,6 +32,7 @@ test("a built commit's comment is short outside its fold, and the links are insi
   assert.match(text, /<details><summary>/); assert.equal((text.match(/\[CAM-0[1-6] /g) || []).length, 6, "six views");
   assert.equal((text.match(/\[(缺印结尾|七印圆满结尾|冬天结尾|撞钟|上香|吃茶|得句|观水|燃灯|静坐)\]/g) || []).length, 10, "ten moments");
   assert.ok(visible(text).includes(latest) && visible(text).includes(fixed), "the two addresses are not folded");
+  assert.ok(visible(text).includes("https://temple-walk-canary.bole-chen.workers.dev"), "the canary's address is named (#308)");
   assert.deepEqual(markers(text), { deployed: sha, fixed, latest });
 });
 

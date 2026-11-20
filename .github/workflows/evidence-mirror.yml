@@ -1,0 +1,58 @@
+name: Evidence mirror
+
+# Issue #247: the evidence's bytes are put on Hugging Face by whoever delivers a PR (tools/evidence.mjs push); this
+# copies what the manifests list into the owner's R2 bucket, which tools/evidence.config.json's `base` reads from.
+# Hugging Face is the original and R2 the copy. Nothing is deleted or replaced. A failed mirror does not hold a merge
+# (the store's reachability never decides that, AGENTS.md); the run summary says what is not in the bucket.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["docs/**/evidence/**/MANIFEST.json"]
+  # A same-repository branch is given the secrets; a fork's pull request is not, and is skipped (its evidence is read from
+  # Hugging Face by setting EVIDENCE_BASE to `fallback`, see AGENTS.md).
+  pull_request:
+    paths: ["docs/**/evidence/**/MANIFEST.json", ".github/workflows/evidence-mirror.yml", "tools/evidence.mjs"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    env:
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      PUBLIC: https://evidence.dev.rushiwowen.co/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Mirror what the manifests list and the bucket lacks
+        run: |
+          aws --version
+          node tools/evidence.mjs mirror
+      # The bucket's own word, over its S3 interface and the repository's four secrets (never the public domain).
+      - name: The bucket holds what the manifests say (S3, size and SHA-256)
+        if: always()
+        run: node tools/evidence.mjs verify-store
+      # On a pull request neither of the two reads that follow is made (#296): a read that times out says nothing of the
+      # branch, and the nightly run (e2e.yml) reads both stores in full. The public domain answers a datacenter address with Cloudflare's verification page for some files (Bot Fight Mode
+      # judges by IP reputation, which no hostname rule can skip). Such a read is counted as challenged, by extension, and
+      # hashed from the fallback; failing is neither store giving the manifest's bytes.
+      - name: Every listed file through the public domain (challenged reads via the fallback)
+        if: always() && github.event_name != 'pull_request'
+        run: EVIDENCE_BASE="$PUBLIC" node tools/evidence.mjs verify --all
+      - name: The original agrees
+        if: always() && github.event_name != 'pull_request'
+        run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all

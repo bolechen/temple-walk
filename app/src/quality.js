@@ -4,7 +4,7 @@
 // The film's finish (docs/t00/art-goal.md, first stage) is the desktop's: only the high tier keeps the scene's depth
 // (`depth`), lays ambient occlusion from it (`gtao`), softens the sun's shadows by how far they fall (`softShadow`,
 // shadows.js), draws them from a larger map (`shadow` across, `shadowLong` up the mountain: half again as fine as the other tiers)
-// and gives a fixed view or a photograph a shallow depth of field (`dof`). Leaves cast their dappled shadows
+// and gives a photograph (when 虚化 is on) a shallow depth of field (`dof`). Leaves cast their dappled shadows
 // (`leafShadow`) from the middle tier up. The colour table, the halation and the layered mist cost next to nothing
 // and are everyone's.
 const TIERS = {

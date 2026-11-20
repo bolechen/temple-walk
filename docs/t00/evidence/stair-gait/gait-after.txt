@@ -1,0 +1,6 @@
+up   1.25 m/s 60fps  cadence 3.67/s  lift 37.7 cm  clear 0.9 cm  knee stance 75° back-at-landing 142° swing 23°  pelvis ±2.0 cm (jump 1.35 cm/frame)  eye accel 0.16 / 0.02 m/s²
+down 1.25 m/s 60fps  cadence 3.67/s  lift 0.1 cm  clear 0.5 cm  knee stance 64° back-at-landing 79° swing 49°  pelvis ±2.5 cm (jump 1.75 cm/frame)  eye accel 0.16 / 0.02 m/s²
+up   0.71 m/s 60fps  cadence 2.10/s  lift 37.7 cm  clear 0.5 cm  knee stance 80° back-at-landing 159° swing 32°  pelvis ±2.0 cm (jump 0.87 cm/frame)  eye accel 0.01 / 0.00 m/s²
+down 0.71 m/s 60fps  cadence 2.10/s  lift 0.2 cm  clear 0.4 cm  knee stance 71° back-at-landing 74° swing 44°  pelvis ±1.7 cm (jump 0.93 cm/frame)  eye accel 0.01 / 0.00 m/s²
+up   0.95 m/s 60fps  cadence 2.80/s  lift 37.7 cm  clear 0.4 cm  knee stance 81° back-at-landing 154° swing 36°  pelvis ±3.3 cm (jump 1.45 cm/frame)  eye accel 0.04 / 0.00 m/s²
+down 0.95 m/s 60fps  cadence 2.80/s  lift -0.1 cm  clear 0.5 cm  knee stance 46° back-at-landing 81° swing 44°  pelvis ±3.1 cm (jump 2.35 cm/frame)  eye accel 0.04 / 0.00 m/s²

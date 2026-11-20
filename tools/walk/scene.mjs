@@ -14,6 +14,7 @@ const { createTrees } = await import("../../app/src/trees.js");
 const { createProps } = await import("../../app/src/props.js");
 const { createGround } = await import("../../app/src/ground.js");
 const { createBackdrop } = await import("../../app/src/backdrop.js");
+const { HALL_VIEWS } = await import("../../app/levels/t00/hall-views.js");
 
 export function namedMaterials() {
   const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
@@ -44,7 +45,7 @@ export function buildDrawn() {
 export function gridsOf({ site, scene, rooms }) {
   const out = [];
   const [x, z0, z1] = [SITE.x + 10, SITE.zN - 1, Math.ceil(APPROACH.end) + 2];
-  out.push({ id: "outdoors", kind: "outdoors", name: "院落与山路", box: { x0: -x, x1: x, z0, z1, top: 60, bottom: -30 }, base: 0, seeds: [[site.start[0], site.start[1], -1e9]], roots: [scene], enter: (w) => { w.setRoom(null); w.setLoft?.(null); } });
+  out.push({ id: "outdoors", kind: "outdoors", name: "院落与山路", box: { x0: -x, x1: x, z0, z1, top: 60, bottom: -30 }, base: 0, seeds: [[site.start[0], site.start[1], -1e9]], closed: [...site.halls.map((h) => h.stop).filter(Boolean), ...(site.closed || [])], roots: [scene], enter: (w) => { w.setRoom(null); w.setLoft?.(null); } });
   for (const [id, L] of Object.entries(site.lofts)) {
     const o = L.outer;
     out.push({ id: `loft:${id}`, kind: "loft", name: `${id} 顶层`, box: { x0: o.x0 - 0.6, x1: o.x1 + 0.6, z0: o.z0 - 0.6, z1: o.z1 + 0.6, top: L.ceil + 8, bottom: L.floor - 2 }, base: L.floor, seeds: [[L.door[0], L.door[1], L.floor]], roots: [scene], enter: (w) => { w.setRoom(null); w.setLoft(id); } });
@@ -70,6 +71,13 @@ export function targetsOf({ site, rooms }) {
   for (const h of site.halls) t.push({ kind: "door", id: h.id, grid: "outdoors", at: h.out, r: 0.5 });
   const up = new Set(Object.keys(site.viewUp || {}));
   for (const [id, v] of Object.entries(site.views)) if (Array.isArray(v)) t.push({ kind: "view", id, grid: up.has(id) ? `loft:${site.viewUp[id]}` : "outdoors", at: [v[0], v[1]], r: 0.5 });
+  // Since the rooms and the balcony are walked on the baked floor too (#274): what hangs or stands in a room to be read or
+  // used (each frame, the offering box: within its own ring), the foot of the stair up, where each indoor camera stands
+  // (on open floor, as tests/unit/hall-views.test.mjs has it), and the balcony's door.
+  for (const [id, p] of Object.entries(rooms.spots)) if (p.at && p.room) t.push({ kind: "spot", id, grid: gridFor(p.room), at: p.at, r: p.r ?? 1.0 });
+  for (const [id, r] of Object.entries(rooms.rooms)) if (r.room.stair) t.push({ kind: "stair", id, grid: gridFor(id), at: r.room.stair.at, r: r.room.stair.r ?? 0.9 });
+  for (const v of HALL_VIEWS) { const R = rooms.rooms[v.hall]?.room; if (R) t.push({ kind: "hallview", id: v.name, grid: gridFor(v.hall), at: [R.cx + v.abs[0], v.abs[1]], r: 0.08 }); }
+  for (const [id, L] of Object.entries(site.lofts)) t.push({ kind: "loftdoor", id, grid: `loft:${id}`, at: L.door, r: 0.5 });
   return t;
 }
 

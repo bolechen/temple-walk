@@ -1,0 +1,123 @@
+{
+ "out": "tools/out/t05/color-one",
+ "size": [
+  1600,
+  900
+ ],
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo/vipasyin-a.60k.glb",
+   "x": 0,
+   "h": 9.0,
+   "paint": "clay",
+   "turn": -1.5708,
+   "halo": {
+    "rings": 3,
+    "tips": 9
+   },
+   "colour": "vipasyin"
+  }
+ ],
+ "shots": [
+  {
+   "name": "door-winter-clay",
+   "view": "door",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "door-winter-paint",
+   "view": "door",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "front10-winter-clay",
+   "view": "front10",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "front10-winter-paint",
+   "view": "front10",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "side-winter-clay",
+   "view": "side",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "side-winter-paint",
+   "view": "side",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "front-winter-paint",
+   "view": "front",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "front-winter-clay",
+   "view": "front",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "face-close-winter-paint",
+   "view": "faceClose",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "face-from10-winter-paint",
+   "view": "faceFrom10",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "face-from10-winter-clay",
+   "view": "faceFrom10",
+   "mood": "winter",
+   "paint": false
+  },
+  {
+   "name": "hands-winter-paint",
+   "view": "handsClose",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "front10-winter-noprobe",
+   "view": "front10",
+   "mood": "winter",
+   "paint": {
+    "env": false
+   }
+  },
+  {
+   "name": "door-winter-noprobe",
+   "view": "door",
+   "mood": "winter",
+   "paint": {
+    "env": false
+   }
+  },
+  {
+   "name": "door-summer-paint",
+   "view": "door",
+   "mood": "summer",
+   "paint": true
+  },
+  {
+   "name": "front10-summer-paint",
+   "view": "front10",
+   "mood": "summer",
+   "paint": true
+  }
+ ]
+}

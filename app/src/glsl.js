@@ -2,6 +2,9 @@
 import * as THREE from "three";
 
 // What every shader needs to know about the hour and the season. One object each, shared by reference.
+// A texture of one empty point, so that a sampler always has something of its own kind to read (an integer sampler left
+// with three's default texture makes the whole draw invalid).
+function oneTexel(data, format, type, internal = null) { const t = new THREE.DataTexture(data, 1, 1, format, type); if (internal) t.internalFormat = /** @type {any} */ (internal); t.unpackAlignment = 1; t.needsUpdate = true; return t; }
 export const U = {
   uFogD: { value: 0.009 }, uSnow: { value: 0 }, uLamp: { value: 0 }, uWet: { value: 1 },
   // the breeze (wind.js): how it blows now, in m/s along x and z, and how far it has carried the air since the page opened
@@ -15,6 +18,8 @@ export const U = {
   // Where leaves and petals come from (fall.js, set by drift.js), and so where they lie on the paving: the map, where it
   // lies, how much lies there this season (0 when none), which channel of the map (leaf or petal) and the three colours.
   tFallMap: { value: null }, uFallBox: { value: new THREE.Vector4(0, 0, 0, 0) }, uLitter: { value: 0 }, uLitterCh: { value: new THREE.Vector3() }, uLitterCol: { value: [new THREE.Color(), new THREE.Color(), new THREE.Color(), new THREE.Color()] },
+  // The ground's record of the leaves and petals that came down while he was here (litter.js): the texture, its square, whether it is read.
+  tLitMem: { value: oneTexel(new Uint16Array(4), THREE.RGBAIntegerFormat, THREE.UnsignedShortType, "RGBA16UI") }, tLitCover: { value: oneTexel(new Uint8Array(2), THREE.RGFormat, THREE.UnsignedByteType) }, uLitMem: { value: new THREE.Vector4(0, 0, 4, 1) }, uLitOn: { value: 0 }, uLitBase: { value: 1 }, uLitMode: { value: 3 },
   // The colour of lamplight seen through paper (the lattice's glow after dusk), set by the hour (mood.js `win`).
   uWin: { value: new THREE.Color(0.8, 0.47, 0.18) },
   // The mist lies in layers (fog.js): how much of it follows the height (0: none, the air the same at every height),

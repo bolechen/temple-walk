@@ -35,7 +35,10 @@ export function mesh(geo, mat, { cast = true, receive = true, ao } = /** @type {
   return m;
 }
 // A flight of stone steps with sloped cheeks. Top edge at z = 0, descending toward +z, rising `rise` from y = 0.
-export const STAIR = Object.freeze({ rise: 0.18, tread: 0.34, nosing: 0.05 });
+// `steps` and `hurry`: how many steps a second he takes on a flight, walking and with Shift (issue #270). Grown men go up
+// and down at about 1.7–1.85 a second; the step rate of a leg scales with the root of its length, which gives a child with
+// 0.44 m legs about 2.4–2.6, and the rise is four tenths of his leg where an adult's is two, so he goes slower than that.
+export const STAIR = Object.freeze({ rise: 0.18, tread: 0.34, nosing: 0.05, steps: 2.1, hurry: 2.8 });
 // How far the novice reaches from the point he stands on: his sleeves, his hands when he walks, the hat on his back.
 // The walker moves a point; everything that stands in his way keeps that point this far off, so that no part of
 // him enters it. (tools/edges.mjs measures the model, a unit test holds this to it, and the sweep checks the whole plan.)
@@ -67,7 +70,9 @@ export function stairProfile(rise) {
 // closed: a pier against the platform, and between pier and stone a panel set back from their face.
 // All of it keeps within CHEEK of the treads and between the head of the flight and 6 cm past its foot, which is
 // the ground the plan's `walk.posts` close to the walker for every flight (a unit test holds it to that).
-const CHEEK_STONE = Object.freeze({ width: 0.42, over: 0.05, lip: 0.02, pier: 0.2, back: 0.035, band: 0.12 });
+// `base`: how far under the foot of the flight the pier, the panel and the stone's square foot go down into the ground;
+// `square`: how far the stone's foot stands square on it.
+const CHEEK_STONE = Object.freeze({ width: 0.42, over: 0.05, lip: 0.02, pier: 0.2, back: 0.035, band: 0.12, base: -0.4, square: 0.12 });
 export function cheekProfile(rise) {
   const { height: sh, tread: sd, run, nosing } = stairProfile(rise), k = sh / sd, C = CHEEK_STONE;
   const top = (z) => Math.min(rise + C.lip, rise + C.over + k * (sd + nosing - z));   // level at the head, then the line of the noses and a little over
@@ -99,16 +104,18 @@ export function stairGeo(w, rise, { sides = [-1, 1] } = {}) {
   // be read as steps from below, even on a day without shadows.
   for (let i = 0; i < N; i++) { const top = sh * (N - i); parts.push(box(w, top - 0.06, sd, 0, (top - 0.06) / 2, sd * (i + 0.5)), box(w, 0.06, sd + nosing, 0, top - 0.03, sd * (i + 0.5) + nosing / 2)); }
   if (N > 2 && sides.length) {
-    const c = cheekProfile(rise), flat = rise + c.lip, under = c.under(0), base = -0.1, end = c.foot - 0.01;
-    // The stone and the pier, one piece the full width.
-    const stone = [[0, base], [c.pier, base], [c.pier, under], [c.head, under], [c.foot, c.under(c.foot)], [c.foot, c.top(c.foot)], [c.head, flat], [0, flat]];
+    const c = cheekProfile(rise), flat = rise + c.lip, under = c.under(0), base = c.base, end = c.foot - 0.01, sq = c.foot - c.square;
+    // The stone and the pier, one piece the full width. At its foot the stone is cut square and stands a hand's length
+    // on the ground, carried down with the pier and the panel into it (#272): where the ground beside a flight lies a
+    // little lower than its foot, no slot of air shows under the stone.
+    const stone = [[0, base], [c.pier, base], [c.pier, under], [c.head, under], [sq, c.under(sq)], [sq, base], [c.foot, base], [c.foot, c.top(c.foot)], [c.head, flat], [0, flat]];
     // The panel under the stone, let a finger into the pier and the stone. On a flight tall enough to show it, it
     // is cut back twice more toward its middle, each cut a hand in from the pier and from the stone and running
     // down into the ground: what shows is a line of shadow along those two sides, and no ledge to catch the light.
     const panel = [[c.pier - 0.01, base], [end, base], [end, c.under(end) + 0.01], [c.head, under + 0.01], [c.pier - 0.01, under + 0.01]];
     const deep = [[c.pier, -50], [c.head + (under + 50) / c.slope, -50], [c.head, under], [c.pier, under]];   // the same field, carried far below the ground
     const cut = (m) => { if (rise < 0.85) return null;
-      const q = keep(inset(deep, m), [0, base], [1, 0]), i = q.findIndex(([z, y]) => y < base + 1e-6 && z < c.pier + m + 1e-6);
+      const q = keep(keep(inset(deep, m), [0, base], [1, 0]), [end, 0], [0, 1]), i = q.findIndex(([z, y]) => y < base + 1e-6 && z < c.pier + m + 1e-6);   // (in the ground it stops where the panel does)
       const seen = keep(q, [0, 0], [1, 0]), zs = seen.map(([z]) => z), ys = seen.map(([, y]) => y);   // what of it stands above the ground
       return i >= 0 && seen.length >= 3 && Math.max(...zs) - Math.min(...zs) > 0.3 && Math.max(...ys) > 0.2 ? [...q.slice(i), ...q.slice(0, i)] : null; };   // too small to read as a panel
     const cut1 = cut(c.band), cut2 = cut1 && cut(c.band * 2);

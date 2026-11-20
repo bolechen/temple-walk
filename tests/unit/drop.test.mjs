@@ -5,15 +5,19 @@ import { findDrop,dropPose } from '../../app/src/drop.js';
 const M=new Proxy({}, {get(t,k){return k==='plaster'||k==='interior'?()=>t[k]||=new THREE.MeshBasicMaterial():t[k]||=new THREE.MeshBasicMaterial();}});
 const site=buildSite(M),w=createWalker(site);
 test('reproduced 0.45m tea porch blocker has a deliberate drop route',()=>{
- // (The tea house's porch was deepened on 2026-11-15 so its tables can be walked round: its edge is at x = -12.6 now.)
- assert.equal(w.heightAt(-12.9,11),.45);assert.equal(w.blocked(-12.7,11),true);
- const plan=findDrop(w,site.walk.drops,-12.9,11,1,0);assert.ok(plan);assert.equal(plan.from[1],.45);assert.equal(plan.to[1],0);assert.equal(w.blocked(plan.to[0],plan.to[2]),false);
+ // The tea house's porch edge toward the court (the edge nearest where he comes out of its door), as this walker has it:
+ // written, or found in the baked grid (#265). Off the edge, at its foot, he is stopped; from the porch it is hopped down.
+ const tea=site.halls.find((h)=>h.id==='tea'),mid=(e)=>[(e.a[0]+e.b[0])/2,(e.a[1]+e.b[1])/2];
+ const edge=w.drops.filter((e)=>Math.abs(e.top-.45)<.02).sort((p,q)=>Math.hypot(...mid(p).map((v,i)=>v-tea.out[i]))-Math.hypot(...mid(q).map((v,i)=>v-tea.out[i])))[0];assert.ok(edge,'no porch edge by the tea house');
+ const [nx,nz]=edge.normal,[mx,mz]=[edge.a[0]+(edge.b[0]-edge.a[0])*.3,edge.a[1]+(edge.b[1]-edge.a[1])*.3],x=mx-nx*.3,z=mz-nz*.3;
+ assert.ok(Math.abs(w.heightAt(x,z)-.45)<.006);assert.equal(w.blocked(mx+nx*.1,mz+nz*.1),true);
+ const plan=findDrop(w,w.drops,x,z,nx,nz);assert.ok(plan);assert.ok(Math.abs(plan.from[1]-.45)<.006);assert.ok(Math.abs(plan.to[1])<.006);assert.equal(w.blocked(plan.to[0],plan.to[2]),false);
 });
 test('railed main hall, wrong facing, indoors and ordinary ground do not offer a jump',()=>{
- assert.equal(findDrop(w,site.walk.drops,5,-4.1,0,1),null);
- assert.equal(findDrop(w,site.walk.drops,-12.9,11,-1,0),null);
- assert.equal(findDrop(w,site.walk.drops,0,20,0,-1),null);
- w.setRoom({y:-100,x0:-10,x1:10,z0:-10,z1:10,solids:[]});assert.equal(findDrop(w,site.walk.drops,0,0,0,1),null);w.setRoom(null);
+ assert.equal(findDrop(w,w.drops,5,-4.1,0,1),null);
+ assert.equal(findDrop(w,w.drops,-12.9,11,-1,0),null);
+ assert.equal(findDrop(w,w.drops,0,20,0,-1),null);
+ w.setRoom({y:-100,x0:-10,x1:10,z0:-10,z1:10,solids:[]});assert.equal(findDrop(w,w.drops,0,0,0,1),null);w.setRoom(null);
 });
 test('obstructed or unstable landing is rejected',()=>{
  const edge=[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}];
@@ -32,7 +36,12 @@ test('large drops have no route',()=>{
 });
 test('landing body clearance includes diagonal corners',()=>{
  const walker={room:null,heightAt:(x,z)=>z<0?.45:0,blocked:(x,z)=>x>.15&&z>1.05};
- assert.equal(findDrop(walker,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1),null);
+ // 0.9 m out a corner of what blocks is within a quarter of a metre: he does not come down there, but nearer, where it is clear (#274).
+ const plan=findDrop(walker,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1);
+ assert.ok(plan&&plan.to[2]<0.9-1e-9&&!walker.blocked(plan.to[0],plan.to[2]));
+ // and where nowhere out to 0.6 m is clear, there is no hop
+ const shut={room:null,heightAt:(x,z)=>z<0?.45:0,blocked:(x,z)=>z>0.5};
+ assert.equal(findDrop(shut,[{a:[-2,0],b:[2,0],normal:[0,1],top:.45}],0,-.3,0,1),null);
 });
 
 test("too short to step onto a stool, he hops up onto it with his own jump and comes down on its top", async () => {

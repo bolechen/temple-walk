@@ -76,7 +76,7 @@ test('sideways and reverse stair flights agree with the visible treads', () => {
 // ---- The cheeks: the stones that stand along either side of a flight ----
 // Every level builds its stairs with stairGeo, at whatever height its platforms and terraces need, so these hold for
 // any rise and width and not only for the ones this temple happens to have.
-const STEP = { tread: .34, nosing: .05 }, CHEEK_REACH = .55;
+const STEP = { tread: .34, nosing: .05 }, CHEEK_REACH = .55, DEEP = -.4;   // (#272: the pier, the panel and the stone's square foot go 0.4 m into the ground)
 const shape = (rise) => { const n = Math.max(1, Math.round(rise / .18)); return { n, sh: rise / n, run: STEP.tread * n }; };
 const RISES = [.45, .5, .6, .9, 1.26, 1.5, 2.4, 2.8, 4, 6, 14.8], WIDTHS = [3, 5.2];
 const solid = (geo) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial()); m.updateMatrixWorld(true); return m; };
@@ -88,7 +88,7 @@ test('a flight stays inside the ground its collision is drawn for', () => {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i), at = `rise=${rise}, w=${w}: a point at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`;
       assert.ok(Math.abs(x) <= w / 2 + CHEEK_REACH + 1e-6, `${at} is wider than the cheek's keep`);
       assert.ok(z >= -1e-6 && z <= run + .06 + 1e-6, `${at} is past the head or the foot of the flight (run ${run.toFixed(2)})`);
-      assert.ok(y >= -.1 - 1e-6 && y <= rise + .03, `${at} is under the ground or over the platform (${rise})`);
+      assert.ok(y >= DEEP - 1e-6 && y <= rise + .03, `${at} is deeper in the ground than the cheek's foot goes, or over the platform (${rise})`);
     }
   }
 });

@@ -1,0 +1,831 @@
+{
+  "started": "2026-11-19T05:56:40.140Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 44.1,
+      "ms": 22.68,
+      "cost": 11.68,
+      "loadMs": 17651,
+      "tris": 1737068,
+      "calls": 327,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "court",
+        "bytes": 175020,
+        "inflated": 21517225,
+        "fetchMs": 1651,
+        "decodeMs": 565,
+        "prepareMs": 159,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "at": [
+        -4.81,
+        13.58
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "mode": "old",
+        "drops": 14,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 43.8,
+      "ms": 22.83,
+      "cost": 12.25,
+      "loadMs": 11455,
+      "tris": 1737068,
+      "calls": 327,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "at": [
+        -4.8,
+        13.61
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 45,
+      "ms": 22.22,
+      "cost": 12.02,
+      "loadMs": 11687,
+      "tris": 1737068,
+      "calls": 327,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "court",
+        "bytes": 175020,
+        "inflated": 21517225,
+        "fetchMs": 1792,
+        "decodeMs": 543,
+        "prepareMs": 164,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "at": [
+        -4.81,
+        13.58
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "mode": "old",
+        "drops": 14,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 44.4,
+      "ms": 22.52,
+      "cost": 12.9,
+      "loadMs": 11418,
+      "tris": 1737068,
+      "calls": 327,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "at": [
+        -4.81,
+        13.57
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 42.8,
+      "ms": 23.36,
+      "cost": 12.34,
+      "loadMs": 11594,
+      "tris": 1737068,
+      "calls": 327,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "court",
+        "bytes": 175020,
+        "inflated": 21517225,
+        "fetchMs": 1737,
+        "decodeMs": 588,
+        "prepareMs": 163,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "at": [
+        -4.8,
+        13.61
+      ]
+    },
+    {
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "mode": "old",
+        "drops": 14,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 44.9,
+      "ms": 22.27,
+      "cost": 12.02,
+      "loadMs": 11042,
+      "tris": 1737068,
+      "calls": 327,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "at": [
+        -4.8,
+        13.59
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 108.6,
+      "ms": 9.21,
+      "cost": 5.47,
+      "loadMs": 15303,
+      "tris": 760581,
+      "calls": 166,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 175020,
+        "inflated": 21517225,
+        "fetchMs": 1654,
+        "decodeMs": 534,
+        "prepareMs": 160,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "at": [
+        -4.71,
+        13.82
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "mode": "old",
+        "drops": 14,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 106.6,
+      "ms": 9.38,
+      "cost": 5.16,
+      "loadMs": 10529,
+      "tris": 760581,
+      "calls": 166,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "at": [
+        -4.78,
+        13.64
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 86,
+      "ms": 11.63,
+      "cost": 6.41,
+      "loadMs": 10928,
+      "tris": 760581,
+      "calls": 166,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 175020,
+        "inflated": 21517225,
+        "fetchMs": 1680,
+        "decodeMs": 550,
+        "prepareMs": 148,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "at": [
+        -4.79,
+        13.63
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "mode": "old",
+        "drops": 14,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 100.2,
+      "ms": 9.98,
+      "cost": 5.43,
+      "loadMs": 10811,
+      "tris": 760581,
+      "calls": 166,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "at": [
+        -4.78,
+        13.64
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 97.9,
+      "ms": 10.21,
+      "cost": 6.13,
+      "loadMs": 11278,
+      "tris": 760581,
+      "calls": 166,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "walker": {
+        "mode": "court",
+        "bytes": 175020,
+        "inflated": 21517225,
+        "fetchMs": 2084,
+        "decodeMs": 74,
+        "prepareMs": 182,
+        "memory": 5238480,
+        "ledges": 25,
+        "drops": 25,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "at": [
+        -4.78,
+        13.64
+      ]
+    },
+    {
+      "q": "low",
+      "size": [
+        390,
+        844
+      ],
+      "scale": 3,
+      "cam": "0,25,0,0",
+      "enter": 1,
+      "walker": {
+        "mode": "old",
+        "drops": 14,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "msPerFrame": null
+      },
+      "walk": [
+        [
+          -8,
+          6
+        ],
+        [
+          -9,
+          18
+        ],
+        [
+          -3,
+          24
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "fps": 102.6,
+      "ms": 9.75,
+      "cost": 5.57,
+      "loadMs": 10740,
+      "tris": 760581,
+      "calls": 166,
+      "buffer": [
+        585,
+        1266
+      ],
+      "tier": "low",
+      "at": [
+        -4.79,
+        13.63
+      ]
+    }
+  ],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "2ec2f0cd5d31a131fe6de6ff7a4b10cf5e1aedb9",
+    "entry": "assets/index-BrThieAT.js",
+    "files": 115,
+    "sha256": "64073a1296caf0639c5bda15dfef73aacc6e6f2b089863e8c4f88392b777cb0c"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-19T06:00:53.463Z"
+}
