@@ -165,9 +165,11 @@ PR 有构建预览和自动检查，合并统一用 squash，规则见 [CONTRIBU
 
 ## 自动部署与发布
 
-推送到 `main` 触发 [Pages 工作流](.github/workflows/pages.yml)：解析、类型检查、单元测试（旧、新两种 walker）、构建和 `boot` 场景都通过后才发布 `dist/` 到 Cloudflare Worker `temple-walk`，即 [正式站](https://temple.rushiwowen.co/)。只改文档（`docs/`、`*.md`、`skills/`）的推送只跑文档相关检查，不构建、不发布。较慢的场景（`stairs`、`drop`、`edges`）在 [e2e 工作流](.github/workflows/e2e.yml) 里与发布并行，每晚还跑一遍全部场景；实际结果以 [Actions](https://github.com/bolechen/temple-walk/actions) 中对应提交的记录为准，配置存在不等于每个提交都已跑过完整套件。
+推送到 `main` 触发 [Pages 工作流](.github/workflows/pages.yml)：解析、类型检查、单元测试（旧、新两种 walker）、建站与 `boot`，以及走路与镜头的快检（`stairs`、`drop`）都通过后，只部署到 **canary 内测地址** <https://temple-walk-canary.bole-chen.workers.dev>（不被搜索引擎收录，不统计）。只改文档（`docs/`、`*.md`、`skills/`）的推送只跑文档相关检查，不构建、不部署。
 
-版本号由 Release Please 按 Conventional Commits 维护，操作见 [docs/RELEASING.md](docs/RELEASING.md)。「`main` 对应 canary 内测地址、发版后再同步到生产」的改法正在做，跟踪在 [#308](https://github.com/bolechen/temple-walk/issues/308)；落地之前正式站仍跟随 `main`。
+**[正式站](https://temple.rushiwowen.co/)只从版本标签部署**：Release Please 发版时自动调用 [`deploy-tag.yml`](.github/workflows/deploy-tag.yml)。出了问题回滚，就在 Actions 里手动运行 `deploy-tag.yml`，选一个旧标签。每一步的细节以 [docs/RELEASING.md](docs/RELEASING.md) 为准。
+
+较慢的场景（`edges` 等）在 [e2e 工作流](.github/workflows/e2e.yml) 里并行跑，每晚还跑一遍全部场景；实际结果以 [Actions](https://github.com/bolechen/temple-walk/actions) 中对应提交的记录为准，配置存在不等于每个提交都已跑过完整套件。
 
 ## 安全与素材许可
 
