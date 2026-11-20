@@ -5,9 +5,9 @@
 export const SETTINGS_KEY = "yunjing.settings.v1";
 export const QUALITIES = ["auto", "low", "medium", "high"];
 export const LEVELS = ["volume", "music", "ambience", "effects"];
-/** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, autocam: boolean, fov: number, thirds: boolean, blur: boolean, qr: boolean, volume: number, music: number, ambience: number, effects: number }} Settings */
+/** @typedef {{ quality: string, sens: number, invertY: boolean, lock: boolean, autocam: boolean, follow: boolean, fov: number, thirds: boolean, blur: boolean, qr: boolean, volume: number, music: number, ambience: number, effects: number }} Settings */
 /** @type {Readonly<Settings>} */
-export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, autocam: true, fov: 0, thirds: true, blur: false, qr: true, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
+export const DEFAULTS = Object.freeze({ quality: "auto", sens: 1, invertY: false, lock: false, autocam: true, follow: true, fov: 0, thirds: true, blur: false, qr: true, volume: 0.8, music: 0.7, ambience: 0.8, effects: 1 });
 export const FOV_RANGE = [-6, 16];   // degrees taken from or added to the angle of view, which differs by view and screen
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -19,7 +19,8 @@ export function sanitize(saved) {
     if (Number.isFinite(saved.sens)) s.sens = clamp(saved.sens, 0.3, 2.5);
     if (typeof saved.invertY === "boolean") s.invertY = saved.invertY;
     if (typeof saved.lock === "boolean") s.lock = saved.lock;
-    if (typeof saved.autocam === "boolean") s.autocam = saved.autocam;   // the eye goes to a place's own shot while an observance is made
+    if (typeof saved.autocam === "boolean") s.autocam = saved.autocam;
+    if (typeof saved.follow === "boolean") s.follow = saved.follow;   // the view drifts round behind him as he walks a tapped way (#295)   // the eye goes to a place's own shot while an observance is made
     // The thirds drawn faintly in the viewfinder: on unless the visitor has put them away. Before the owner made them the
     // default (2026-11-17), every save carried `thirds: false` whether or not it was chosen, so only a save that knows the
     // new default (`rev` 2) may keep them off.

@@ -50,6 +50,8 @@ export function createHints({ off = false, ui = null } = {}) {
     // the way into his own eyes once the eye has first been drawn all the way in to him.
     dragged() { dragged = true; if (coarse && said.has("walk") && now !== "walk") tip("pinch", t("双指开合，拉远拉近"), 6); },
     nearest() { if (coarse) tip("eyes", t("再拉近，换成自己的眼睛"), 6); },
+    // Once the visitor has turned the view a good way by hand (a half turn), the way to have it turned back for them (#295).
+    turned() { tip("recenter", coarse ? t("上方的小圈，镜头转回身后") : t("{r}镜头转回身后", { r: K("R") }), 7); },
     held() { tip("held", t("{esc}松开鼠标　·　{wheel}远近　·　单击敲钟击鼓", { esc: K("Esc"), wheel: K(t("滚轮")) }), 7); },
     indoors() { if (!coarse) tip("view", t("{v}换成自己的眼睛看，可以举头看殿顶　·　画框前{e}细看", { v: K("V"), e: K("E") }), 8); else tip("view", t("走到画框前，可以细看；也可以举头看看殿顶"), 7); },
     // The summit pavilion's room has a stair up to its top storey; up there the view is his own eyes only.

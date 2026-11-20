@@ -28,6 +28,7 @@ import { createMonk } from "./src/monk.js";
 import { loadNovice } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
 import { createEyeSpace, eyeRadius } from "./src/eyespace.js";
+import { planRecenter, recenterYaw, createFollowTurn, yawBehind } from "./src/camturn.js";
 import { gatherEye } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
@@ -290,6 +291,19 @@ let yaw = pose[2], pitch = pose[3], target = null, route = [], running = true, f
 // his right, eased in to his back by every wall, kept for comparing.
 const FRAME_KEY = Q.get("frame") === "old" ? "old" : Q.get("frame") === "a" ? "a" : "b", FRAME = FRAME_KEY === "old" ? null : FRAMES[FRAME_KEY];
 let heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)), sideNow = 1.2, speedNow = 0;
+// Turning the view back behind him (#295, camturn.js): R, the middle mouse button or the small ring on a touch screen swings
+// it round to look the way he faces; and while he walks a tapped way with the hand off the view, it drifts round behind
+// the way he goes (镜头跟随, the pause menu). A hand on the view stops the drift and starts its wait again.
+let turning = null, turnedByHand = 0;
+// What the swings and the drift did, frame by frame (__probe().turn): the most the view turned in a second, tipped in a frame, and the eye moved in a frame.
+const turnStats = { swings: 0, rate: 0, pitch: 0, move: 0, drifted: 0, driftRate: 0, last: null };
+const driftTurn = createFollowTurn();
+function handTurn(d) { driftTurn.hand(); turnedByHand += Math.abs(d); if (turnedByHand > Math.PI) hints.say.turned(); }
+function recenter() {
+  if (view !== "third" || photo.on || cine || director.active() || opening.active() || ui.modal()) return false;
+  turning = { plan: planRecenter(yaw, yawBehind(heading)), t: 0 }; driftTurn.hand(); track("demo.recenter", {}); turnStats.swings++; turnStats.last = null;
+  return true;
+}
 const follow = createFollow();
 const LOOK_EASE = 0.06, look = { yaw, pitch, vy: 0, vp: 0 };   // the way the view looks this frame, coming round after yaw and pitch
 const WALK = { up: 7, down: 8 }, pace = { v: 0, dir: [0, -1] }, bob = { phase: 0, amp: 0 };   // how fast he gathers and loses speed (m/s²); his speed and the way he goes
@@ -382,9 +396,12 @@ document.addEventListener("mousemove", (e) => {
   const S = settings.get();   // in his own eyes and under a roof he may look up as far as the ceiling
   if (Math.abs(e.movementX) > LOOK.spike || Math.abs(e.movementY) > LOOK.spike) return;
   if (e.movementX || e.movementY) director.back();
+  if (turning) return;   // (while the view swings back behind him, the hand's turn is not taken: the two would pull against each other)
+  if (e.movementX) handTurn(e.movementX * LOOK.yaw * S.sens);
   yaw += e.movementX * LOOK.yaw * S.sens; pitch = THREE.MathUtils.clamp(pitch - e.movementY * LOOK.pitch * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);
 });
 canvas.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse" && e.button === 1) { e.preventDefault(); recenter(); return; }   // the middle button turns the view back behind him (#295)
   touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = "grabbing";
   if (touches.size === 2) { const [a, b] = [...touches.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); down = null; return; }
   down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false };
@@ -402,6 +419,8 @@ canvas.addEventListener("pointermove", (e) => {
   const k = dragRate(e.pointerType);
   director.back();   // a drag of the view: the visitor wants to look for themselves
   if (!down.moved) hints.say.dragged();
+  if (turning) { down.moved = true; down.x = e.clientX; down.y = e.clientY; return; }   // (as with the mouse held)
+  handTurn(dx * k * S.sens);
   down.moved = true; yaw += dx * k * S.sens; pitch = THREE.MathUtils.clamp(pitch - dy * k * S.sens * (S.invertY ? -1 : 1), orbit ? -1.0 : -0.75, orbit ? 0.45 : inside ? 0.9 : 0.5);   // a finger and a mouse look the same way
   down.x = e.clientX; down.y = e.clientY;
 });
@@ -496,6 +515,14 @@ if (jumpButton) {
   jumpButton.addEventListener("pointerdown", (e) => { e.preventDefault(); if (!startDrop()) startJump(); });
   jumpButton.addEventListener("contextmenu", (e) => e.preventDefault());
 }
+// Over it, a smaller ring that turns the view back behind him (#295): the touch screen's R.
+const turnButton = hints.coarse ? Object.assign(document.createElement("button"), { id: "turnBtn", type: "button", textContent: tr("回正") }) : null;
+if (turnButton) {
+  turnButton.setAttribute("aria-label", tr("镜头转回身后（鼠标中键亦可）"));
+  document.body.appendChild(turnButton);
+  turnButton.addEventListener("pointerdown", (e) => { e.preventDefault(); recenter(); });
+  turnButton.addEventListener("contextmenu", (e) => e.preventDefault());
+}
 function labelJump() {
   if (!jumpButton) return;
   const kind = availableDrop() ? "drop" : availableClimb() ? "climb" : "jump";
@@ -515,7 +542,8 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
-  else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
+  else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); }
+  else if (k === "r") { if (recenter()) e.preventDefault(); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
   else if (k === "h" || k === "?") hints.card();
   else if (k === "escape") { if (stage || director.holding()) { interrupt(); director.back(); } else if (document.body.classList.contains("entered")) openMenu(true); }   // Esc lets go of what he is doing (the rope, a seat); with nothing open or held, it is the pause menu
@@ -695,6 +723,14 @@ function frame(now) {
   // pass through anything solid, and it never sinks into the ground or the hillside.
   // From behind him the view comes round a moment after the hand (0.06 s, as a third-person camera's axis eases in
   // and out), so a jerk of the mouse is not a jerk of the whole place; from his own eyes it turns with the hand.
+  // The view swung back behind him, or drifting round behind the way he walks (camturn.js).
+  const yaw0 = yaw;
+  if (turning) { if (view !== "third" || photo.on || cine || director.active()) turning = null; else { turning.t += dt; yaw = recenterYaw(turning.plan, turning.t); if (turning.t >= turning.plan.dur) turning = null; } if (dt > 0) turnStats.rate = Math.max(turnStats.rate, (Math.abs(yaw - yaw0) / dt) * 180 / Math.PI); }
+  else if (view === "third" && settings.get().follow && !photo.on && !cine && !director.active() && !opening.active() && !stage) {
+    const going = speedNow > 0.3 ? Math.atan2(pace.dir[0], pace.dir[1]) : null;
+    yaw = driftTurn.step(dt, yaw, { going, by: target ? "route" : "keys" });
+    if (yaw !== yaw0) { turnStats.drifted += Math.abs(yaw - yaw0); if (dt > 0) turnStats.driftRate = Math.max(turnStats.driftRate, (Math.abs(yaw - yaw0) / dt) * 180 / Math.PI); }
+  }
   if (view === "first" || follow.fresh || cine) { look.yaw = yaw; look.pitch = pitch; look.vy = look.vp = 0; }
   else { [look.yaw, look.vy] = damp(look.yaw, yaw, look.vy, LOOK_EASE, dt); [look.pitch, look.vp] = damp(look.pitch, pitch, look.vp, LOOK_EASE, dt); }
   // From his own eyes the view dips a little with each step he takes, and only as much as he is walking (after
@@ -758,6 +794,13 @@ function frame(now) {
   }
   // A passage that is shown, not walked (the close of the chapter, rites.js), takes the eye from here and keeps him in the picture.
   if (cine) { cine(camera, dt); monk.group.visible = true; }
+  if (turning || (turnStats.last && turnStats.last.until > 0)) {
+    const L = turnStats.last, e = new THREE.Euler().setFromQuaternion(camera.quaternion, "YXZ");
+    // (what the eye moved of its own: beyond following him and turning round him with the view, as follow.test measures it)
+    if (L) { const dy = look.yaw - L.yaw, ox = L.p.x - L.x, oz = L.p.z - L.z, ex = pos.x + ox * Math.cos(dy) - oz * Math.sin(dy), ez = pos.z + ox * Math.sin(dy) + oz * Math.cos(dy);
+      turnStats.pitch = Math.max(turnStats.pitch, Math.abs(e.x - L.pitch) * 180 / Math.PI); turnStats.move = Math.max(turnStats.move, Math.hypot(camera.position.x - ex, camera.position.z - ez)); }
+    turnStats.last = { pitch: e.x, yaw: look.yaw, p: camera.position.clone(), x: pos.x, z: pos.z, until: turning ? 1 : (L ? L.until - 1 : 0) };
+  }
   camera.updateMatrixWorld();
   // Crossing the threshold hands over to the hall interior.
   const atDoor = inside ? null : site.halls.find((h) => h.inside(pos.x, pos.z)) || null;
@@ -798,7 +841,7 @@ const PUSH = { time: 0.6, move: 0.12, fov: 1.5 };
 let push = null;
 const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return; }   // up on a balcony he sees with his own eyes only (#101)
   const from = frames > 3 && v !== view && !FIXED_VIEW && !cine && !photo.on && !reducedMotion.matches ? { p: camera.position.clone(), q: camera.quaternion.clone(), fov: camera.fov, to: v } : null;
-  view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize();
+  view = v; follow.reset(); pitch = v === "third" ? Math.min(pitch, 0.06) : Math.max(pitch, 0); resize(); if (turnButton) turnButton.hidden = v !== "third"; turning = null;
   push = from ? { ...from, t: 0 } : null; if (push) { pushed = { to: v, frames: 0, fov: 0, move: 0, back: 0, last: null }; fade(v === "third" ? 0 : 1); } };   // (coming out of his eyes he begins unseen)
 let pushed = null;   // what the last push did, frame by frame (__probe().push): the most it turned the angle, moved the eye, and frames he faded back
 setView(view);
@@ -1136,7 +1179,7 @@ window.__probe = (points) => {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0, 32, 32);
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
-  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible, opacity: +faded.toFixed(3), pushing: !!push, push: pushed && { to: pushed.to, frames: pushed.frames, fov: +pushed.fov.toFixed(3), move: +pushed.move.toFixed(4), back: pushed.back }, cam: camera.position.toArray().map((v) => +v.toFixed(3)),
+  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible, opacity: +faded.toFixed(3), pushing: !!push, turn: { active: !!turning, swings: turnStats.swings, rate: +turnStats.rate.toFixed(2), pitch: +turnStats.pitch.toFixed(3), move: +turnStats.move.toFixed(4), drifted: +(turnStats.drifted * 180 / Math.PI).toFixed(2), driftRate: +turnStats.driftRate.toFixed(2), heading: +heading.toFixed(4), yaw: +yaw.toFixed(4) }, push: pushed && { to: pushed.to, frames: pushed.frames, fov: +pushed.fov.toFixed(3), move: +pushed.move.toFixed(4), back: pushed.back }, cam: camera.position.toArray().map((v) => +v.toFixed(3)),
     photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level, at };
 };
 // The censer before the great hall (#217): how much incense burns, whether it glows, the smoke and the breeze; and, for
@@ -1202,6 +1245,7 @@ function openMenu(open, quiet = false) {
   $("setSens").value = S.sens; $("setFov").value = S.fov; for (const [id, k] of SOUND) $(id).value = S[k]; $("setInvert").setAttribute("aria-pressed", String(S.invertY)); $("setInvert").textContent = S.invertY ? tr("开") : tr("关");
   $("setLock").setAttribute("aria-pressed", String(S.lock)); $("setLock").textContent = S.lock ? tr("开") : tr("关");
   $("setAutocam").setAttribute("aria-pressed", String(S.autocam)); $("setAutocam").textContent = S.autocam ? tr("开") : tr("关");
+  $("setFollow").setAttribute("aria-pressed", String(S.follow)); $("setFollow").textContent = S.follow ? tr("开") : tr("关");
   menuEl.querySelectorAll("input[type=range]").forEach(inked);
   $("qualityNote").hidden = S.quality === "auto" ? Q.has("q") || quality.fixed !== true : S.quality === quality.name;   // shown when what is chosen is not what is being drawn
 }
@@ -1213,6 +1257,7 @@ function openMenu(open, quiet = false) {
   for (const [id, k] of SOUND) $(id).addEventListener("input", (e) => { settings.set(k, +/** @type {HTMLInputElement} */ (e.target).value); setLevels({ [k]: settings.get()[k] }); });
   on("setInvert", () => set("invertY", !settings.get().invertY));
   on("setAutocam", () => { set("autocam", !settings.get().autocam); if (!settings.get().autocam) director.drop(); });
+  on("setFollow", () => set("follow", !settings.get().follow));
   on("setLock", () => { set("lock", !settings.get().lock); if (!settings.get().lock) document.exitPointerLock?.(); });
   on("menuResume", () => openMenu(false)); on("menuBtn", () => openMenu(!ui.isOpen("menu"))); on("menuKeys", () => { openMenu(false); hints.card(true); });
   // The three levels under the whole volume are folded away until asked for, and open by themselves when one of them
