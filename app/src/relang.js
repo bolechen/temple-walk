@@ -19,6 +19,7 @@ export function sanitizeRelang(o, { now = Date.now(), lang = null } = {}) {
   return {
     x: o.x, z: o.z, yaw: num(o.yaw, 100) ? o.yaw : 0, pitch: num(o.pitch, 2) ? o.pitch : 0,
     view: o.view === "first" ? "first" : "third", reach: num(o.reach, 20) && o.reach > 0 ? o.reach : null,
+    dist: num(o.dist, 20) && o.dist >= 0 ? o.dist : null,   // how far behind him the eye stood, as against how far it would like to (#368)
     hall: word(o.hall), up: word(o.up),
     season: SEASONS.includes(o.season) ? o.season : null, time: TIMES.includes(o.time) ? o.time : null, follow: o.follow === true,
     from: LANGS.includes(o.from) ? o.from : null, to: o.to, at: o.at,
