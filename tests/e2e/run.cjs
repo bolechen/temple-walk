@@ -547,11 +547,12 @@ const scenarios = {
   // The eye in a hall (27c9458: "很多地方走的时候都有穿模"; a visitor's picture from just inside the great hall's door showed the
   // dark under the courts with two lamps). The eye's space now holds the rooms and stops at each doorway; and gathered from
   // inside a hall it holds the courts too, as it does gathered from the courts.
-  eyeroom: { tier: 2, async run(b, base) {
+  eyeroom: { tier: 3, async run(b, base) {   // (the whole run only, as the nightly one is: the gathering and the walk round are long under software rendering)
     const ready = async (t) => { await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 240000, "the eye's space was never built"); return t.page.evaluate(() => window.__eyeSpace()); };
-    let t = await open(b, base, "q=low&cam=0,30,0,0&view=third&season=autumn&time=day", { viewport: { width: 900, height: 600 } });   // (the same season and hour: the season shows and hides the trees' crowns)
+    const V = { viewport: { width: 480, height: 320 } }, LIGHT = "&off=reflect,bloom";   // (a small picture, the mirror and the bloom off: neither is in the eye's space)
+    let t = await open(b, base, "q=low&cam=0,30,0,0&view=third&season=autumn&time=day" + LIGHT, V);   // (the same season and hour: the season shows and hides the trees' crowns)
     const fromCourts = await ready(t); await t.close();
-    t = await open(b, base, "q=low&cam=120,5,0.063,-0.07&view=third&season=autumn&time=day&in=main", { viewport: { width: 900, height: 600 } });
+    t = await open(b, base, "q=low&cam=120,5,0.063,-0.07&view=third&season=autumn&time=day&in=main&fast=1" + LIGHT, V);   // (fast: the walk round at 14 m/s, a seventh of the frames, the eye asked every frame)
     const fromHall = await ready(t); await t.frames(30);
     // part by part (the land and the trees are meshes at the top of the scene, hidden with the courts from a room); the rooms
     // may hold more gathered from a hall, whose statues have been stood by then
@@ -579,10 +580,10 @@ const scenarios = {
         const s2 = await t.page.evaluate(() => { const y = window.__yard(), e = window.__eyeSpace(); return { x: y.x, z: y.z, done: !y.target && !y.route, shut: e.shutNow, eye: window.__frame().eye }; });
         samples++; if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)) });
         if (s2.done && Math.hypot(s2.x - p[0], s2.z - p[1]) < 1.5) break;
-        await t.frames(3);
+        await t.frames(1);
       }
     }
-    expect(samples > 40, "too few looks at the eye on the way round: " + samples);
+    expect(samples > 30, "too few looks at the eye on the way round: " + samples);
     expect(shut.length === 0, `round the great hall the eye stood in something drawn ${shut.length} times of ${samples}: ` + JSON.stringify(shut.slice(0, 6)));
     console.log("    eyeroom", JSON.stringify({ tris: fromHall.tris, door: f.eye.map((v) => +v.toFixed(2)), wall: g.map((v) => +v.toFixed(2)), round: samples }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
