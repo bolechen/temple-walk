@@ -304,6 +304,7 @@ body.directing .rail, body.directing #jumpBtn, body.directing #bookBtn, body.dir
 @media (max-width: 400px) { #photoBar { column-gap: 30px; } #photoSettingsToggle, #photoClose { padding-inline: 6px; letter-spacing: .06em; text-indent: .06em; } }
 @media (max-height: 560px) { #photoBar { column-gap: 18px; } #photoSettingsToggle, #photoClose { padding-inline: 6px; letter-spacing: .06em; text-indent: .06em; } }
 #photoSettings { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(94px + env(safe-area-inset-bottom, 0px)); width: min(320px, calc(100vw - 32px)); max-height: calc(100dvh - 174px); overflow-y: auto; padding: 20px 22px; box-sizing: border-box; }
+@media (max-height: 560px) { #photoSettings { left: 16px; transform: none; bottom: 16px; width: 280px; max-height: calc(100dvh - 32px); } }   /* sideways on a phone the sheet stands at the left edge, clear of the lower bar */
 #photoSettings fieldset { margin: 0 0 12px; padding: 0; border: 0; }
 #photoSettings fieldset:last-of-type { margin-bottom: 0; }
 #photoSettings legend { margin-bottom: 4px; font: 400 13px/1.5 var(--kai); letter-spacing: .16em; color: var(--ink-3); }
