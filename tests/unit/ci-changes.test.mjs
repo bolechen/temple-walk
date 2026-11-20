@@ -155,6 +155,11 @@ test("deploy-tag.yml: only a version tag is put live, to a named place, by relea
   assert.match(build, /echo "VITE_COMMIT=\$sha" >> "\$GITHUB_ENV"/, "and which commit of the tag it is");
   assert.doesNotMatch(build, /\n\s+env:\n\s+VITE_DEPLOY:/, "a variable on one step alone is lost in the build that boot makes");
   assert.match(build, /run\.cjs boot/);
+  // `check` is declared for both ways in: GitHub reads an undeclared input as null, and `null != false` is false, so a
+  // condition written `!= false` skipped `boot` for every run called by release-please.
+  assert.match(p, /workflow_call:[\s\S]*?check:\n\s*description[^\n]*\n\s*required: false\n\s*type: boolean\n\s*default: true[\s\S]*?workflow_dispatch:/, "a call gets check too, true by default");
+  assert.doesNotMatch(p, /inputs\.check != false/, "no comparison of a possibly-undeclared input with false");
+  assert.match(build, /if: inputs\.check\n\s*env:|if: inputs\.check\n\s*run: node tests\/e2e\/run\.cjs boot/, "boot runs when check is on");
   assert.match(build, /X-Robots-Tag/, "the canary is kept out of search whatever the tag's age");
   const deploy = jobOf(p, "deploy");
   assert.match(deploy, /needs: build/);

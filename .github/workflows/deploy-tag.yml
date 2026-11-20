@@ -26,6 +26,11 @@ on:
         required: false
         type: boolean
         default: false
+      check:
+        description: "Drive the built page once in a browser before publishing (the boot scenario)"
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       ref:
@@ -98,14 +103,14 @@ jobs:
           key: doorways-t00-tag-${{ github.run_id }}
           restore-keys: doorways-t00-
       - name: Remember the browser between runs
-        if: inputs.check != false
+        if: inputs.check
         id: pw
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-tag-${{ hashFiles('pnpm-lock.yaml') }}
       - name: A browser to drive the page with
-        if: inputs.check != false
+        if: inputs.check
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
       # Only production carries the visitor counter and may be indexed (VITE_DEPLOY above). A tag older than this setting
       # ignores it and goes out as it was.
@@ -117,10 +122,10 @@ jobs:
         run: |
           grep -q "X-Robots-Tag" dist/_headers 2>/dev/null || printf '/*\n  X-Robots-Tag: noindex, nofollow\n' >> dist/_headers
       - name: End to end, startup and movement
-        if: inputs.check != false
+        if: inputs.check
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
-        if: always() && inputs.check != false
+        if: always() && inputs.check
         uses: actions/upload-artifact@v4
         with:
           name: tag-e2e-${{ github.run_id }}-${{ github.run_attempt }}
