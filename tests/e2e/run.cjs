@@ -732,6 +732,30 @@ const scenarios = {
     await t.page.evaluate(() => { localStorage.removeItem("yunjing.journey.v1"); localStorage.removeItem("yunjing.incense.v1"); });
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Incense in the halls that keep a Buddha (#146): the Guanyin hall's, then the Medicine hall's, then back in the first to find its
+  // sticks still burning and no 上香 offered; each hall's burn on their own clock (here thirty seconds, not five minutes), and
+  // out, each may be offered again. Neither earns the seal: it is the great hall's.
+  "incense-halls": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&burn=30&in=guanyin&cam=0,0,0,0" + BARE);
+    const R = () => t.page.evaluate(() => window.__rites().incense.halls), word = async () => ((await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null);
+    const stand = (hall) => t.page.evaluate((h) => { const p = window.__places["incense-" + h]; window.__pose(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); }, hall);
+    const offer = async (hall) => { await stand(hall); await t.until(async () => (await word()) === "上香", 60000, `上香 was not offered in ${hall}`); await t.page.click("#act");
+      await t.until(async () => (await R())[hall].planted, 120000, `the sticks were never set in ${hall}'s ash`); await t.until(async () => !(await t.journey()).rite, 60000, `he did not finish the offering in ${hall}`); };
+    await t.until(() => t.inHall(), 60000, "not in the Guanyin hall"); await offer("guanyin");
+    await t.page.evaluate(() => window.__inside("yaoshi")); await t.until(async () => (await t.page.evaluate(() => window.__yard().room)) === "yaoshi", 60000, "not in the Medicine hall");
+    await offer("yaoshi");
+    let r = await R(); expect(r.guanyin.planted && r.yaoshi.planted && !r.main.shown, "each hall has its own sticks: " + JSON.stringify(r));
+    expect(r.guanyin.left <= 30 && r.yaoshi.left <= 30 && r.yaoshi.left >= r.guanyin.left, "the later offering has the longer to burn: " + JSON.stringify(r));
+    await t.page.evaluate(() => window.__inside("guanyin")); await t.until(async () => (await t.page.evaluate(() => window.__yard().room)) === "guanyin", 60000, "not back in the Guanyin hall"); await stand("guanyin"); await t.frames(8);
+    r = await R(); expect(r.guanyin.planted && (await word()) !== "上香", "the Guanyin hall's sticks still burn, and 上香 is not offered over them: " + JSON.stringify(r) + await word());
+    const j = await t.journey(); expect(!j.seals.incense, "an offering in the small halls earned the great hall's seal");
+    expect(Object.keys(JSON.parse(await t.page.evaluate(() => localStorage.getItem("yunjing.incense.v1")))).sort().join() === "guanyin,yaoshi", "the store holds one time for each hall");
+    await t.until(async () => { const h = await R(); return h.guanyin.burnt && h.yaoshi.burnt; }, 90000, "the sticks never burnt out");
+    await stand("guanyin"); await t.until(async () => (await word()) === "上香", 60000, "上香 was not offered again once out"); await t.page.click("#act");
+    await t.until(async () => (await R()).guanyin.planted, 120000, "the second offering was never set in the ash");
+    await t.page.evaluate(() => { localStorage.removeItem("yunjing.journey.v1"); localStorage.removeItem("yunjing.incense.v1"); });
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   oldbook: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0");
     const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);
@@ -1716,6 +1740,11 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=first", { viewport: { width: 800, height: 500 } });
     expect(!(await t.page.isVisible("#menu")), "the menu should wait to be asked for");
     await t.page.keyboard.press("Escape"); expect(await t.page.isVisible("#menu") && (await t.page.textContent("#menu")).includes("环顾快慢"), "Esc with nothing open should bring the pause menu");
+    // Which build this is (#310): one line at the menu's foot, seen as it opens and the same as the page says it is.
+    { const v = await t.page.evaluate(() => { const el = document.getElementById("menuVersion"), r = el.getBoundingClientRect(), card = document.querySelector("#menu .card").getBoundingClientRect(); return { text: el.textContent, hook: window.__version(), seen: r.height > 0 && r.top >= card.top && r.bottom <= Math.min(card.bottom, innerHeight) + 0.5, px: parseFloat(getComputedStyle(el).fontSize) }; });
+      expect(v.text && v.text === v.hook.line && v.hook.version && v.hook.deploy, "the menu's foot should say which build this is, as __version() does: " + JSON.stringify(v));
+      expect(v.hook.deploy === "production" ? v.text.includes("v" + v.hook.version) : v.text.includes(v.hook.commit.slice(0, 7)), "the line should carry the version on the public page and the commit elsewhere: " + JSON.stringify(v));
+      expect(v.seen && v.px >= 12, "the version line should be seen without scrolling, at 12 px or more: " + JSON.stringify(v)); }
     const z0 = (await t.state()).z; await t.page.keyboard.down("w"); await t.frames(4); await t.page.keyboard.up("w"); expect(Math.abs((await t.state()).z - z0) < 0.01, "he should stand still while the menu is open");
     await t.page.keyboard.press("v"); await t.page.mouse.click(90, 420); await t.page.mouse.wheel(0, 300); await t.frames(3);
     { const p = await t.probe(), st0 = await t.state(); expect(p.view === "first" && st0.target === null && !(await t.page.evaluate(() => document.pointerLockElement)), "nothing behind the open menu should answer a key, a click or the wheel"); }
@@ -1724,6 +1753,7 @@ const scenarios = {
     let st = await t.page.evaluate(() => window.__settings()); expect(st.invertY === true && st.sens === 1.8 && st.volume === 0.3 && st.quality === "medium", "the menu did not set what it shows: " + JSON.stringify(st));
     // The page of thanks opens over the menu, lists the 14 ColBase pictures and links the licence summary the build carries; Esc puts away only it.
     await t.page.click("#menuCredits"); await t.until(() => t.page.isVisible("#credits"), 10000, "the menu has no way to the page of thanks");
+    expect(await t.page.evaluate(() => document.getElementById("creditsVersion").textContent === window.__version().line), "the thanks should end on the same version line as the menu");
     { const c = await t.page.evaluate(() => ({ text: document.getElementById("creditsBody").textContent, links: [...document.querySelectorAll("#creditsBody a")].map((a) => a.href), modal: window.__ui().modal }));
       expect(c.text.includes("ColBase") && c.text.includes("Poly Haven") && c.text.includes("Basis Universal") && c.text.includes("Yunjing Kai"), "the page of thanks lacks a source: " + c.text.slice(0, 120));
       expect(c.links.filter((h) => /colbase\.nich\.go\.jp\/collection_items\//.test(h)).length === 15, "the page should link 14 ColBase items and the plaque's: " + c.links.length);
@@ -1789,6 +1819,33 @@ const scenarios = {
         return { foot: Math.round(f.top), out }; });
       expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
       await u.close(); }
+  } },
+  // A page left open learns that a newer build has been put up (#310, src/version.js): coming back to the front it asks
+  // version.json, past the cache; the same commit says nothing, another one is said once at the foot, and nothing reloads.
+  update: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE);
+    const own = await t.page.evaluate(() => window.__version().commit);
+    let remote = own, asked = 0;
+    await t.page.route("**/version.json", (r) => { asked++; r.fulfill({ contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify({ version: "9.9.9", commit: remote, deploy: "preview" }) }); });
+    await t.page.evaluate(() => {
+      window.__updateSaid = 0; const line = document.getElementById("hint"), was = { text: "" };
+      new MutationObserver(() => { const s = line.classList.contains("on") ? line.textContent : ""; if (s && s !== was.text && /新的版本/.test(s)) window.__updateSaid++; was.text = s; }).observe(line, { childList: true, subtree: true, attributes: true, characterData: true });
+      // The tab sent behind and brought back, as a visitor does: the page's own visibility, told to it.
+      window.__flip = () => { for (const v of ["hidden", "visible"]) { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => v }); document.dispatchEvent(new Event("visibilitychange")); } };
+    });
+    await t.page.evaluate(() => window.__flip());
+    await t.until(async () => asked >= 1 && (await t.page.evaluate(() => window.__updates().asked)) >= 1, 30000, "coming back to the front did not ask version.json");
+    await t.frames(2);
+    let u = await t.page.evaluate(() => ({ ...window.__updates(), said: window.__updateSaid }));
+    expect(!u.found && !u.told && u.said === 0, "the same commit should say nothing: " + JSON.stringify(u));
+    remote = "f".repeat(40);
+    await t.page.evaluate(() => window.__flip());
+    await t.until(() => t.page.evaluate(() => window.__updates().told), 30000, "another commit was never said");
+    await t.page.evaluate(() => { window.__flip(); window.__flip(); }); await t.frames(3);
+    u = await t.page.evaluate(() => ({ ...window.__updates(), said: window.__updateSaid, hud: window.__hud().said }));
+    expect(u.found === remote && u.said === 1 && u.hud.includes("update"), "a newer build should be said once at the foot: " + JSON.stringify(u));
+    expect(await t.page.evaluate(() => document.body.dataset.ready === "1" && performance.getEntriesByType("navigation").length === 1), "the page should not have reloaded itself");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;

@@ -8,3 +8,7 @@ interface ParentNode { querySelectorAll(selectors: string): NodeListOf<HTMLEleme
 // The build's channel (src/channel.js), defined by vite.config.mjs; absent when the sources are run in Node.
 declare const __CHANNEL__: "web" | "steam" | "platform";
 declare const __DEPLOY__: "production" | "canary" | "preview";
+// Which version and commit the build is, and the pull request a preview is for (src/version.js, #310).
+declare const __VERSION__: string;
+declare const __COMMIT__: string;
+declare const __PR__: string;

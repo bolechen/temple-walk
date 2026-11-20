@@ -5,6 +5,7 @@
 import * as THREE from "three";
 import { asset } from "./assets.js";
 import { workIn } from "../levels/t00/works-local.js";
+import { incenseHall, readIncense, writeIncense } from "./incense.js";
 import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, bookFrom, visitLine } from "./journey.js";
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
@@ -82,9 +83,9 @@ export function createGame(y) {
   // A change of season lets it close there again, once in that season (journey.closedIn).
   const season = () => y.season(), closedHere = () => journey.closedIn(season());
   journey.adopt(season());   // a close kept before seasons were belongs to the season the visitor is in now
-  const owed = (id) => !journey.has(id) || (id === "sit" && !closedHere());
+  const owed = (id) => !!SEAL[id] && (!journey.has(id)) || (id === "sit" && !closedHere());
   // The bell and the tea may be gone back to after their seals: the bell rung again, another bowl drunk.
-  const offered = (id) => owed(id) || id === "bell" || id === "tea" || (id === "incense" && !rites.incenseLit());
+  const offered = (id) => owed(id) || id === "bell" || id === "tea" || (incenseHall(id) !== null && !rites.incenseLit(/** @type {string} */ (incenseHall(id))));
   const tex = ensoTexture(), rings = {};
   for (const id in places) {
     const p = places[id], w = id === "sutra" || id === "sit" ? 0.9 : 1.5;
@@ -143,13 +144,13 @@ export function createGame(y) {
   // The incense burns for five minutes by the wall clock (`?burn=` seconds for a test), and when it was set in the ash is
   // kept, so that a reload finds it as far burnt as it would be. Burnt out, it may be offered again.
   const INCENSE = "yunjing.incense.v1", burn = Q.has("burn") ? Math.max(5, +Q.get("burn") || 300) : 300;
-  const rites = createRites(y, fast, { enso: tex, burn, onPlant: (at) => { try { localStorage.setItem(INCENSE, String(at)); } catch {} } });
+  const rites = createRites(y, fast, { enso: tex, burn, onPlant: (at, hall) => { try { localStorage.setItem(INCENSE, writeIncense(localStorage.getItem(INCENSE), hall, at)); } catch {} } });
   const end = () => { if (rite?.t0) track("demo.rite", { id: rite.id, phase: "end", seconds: Math.round((performance.now() - rite.t0) / 1000), done: rite.done ? 1 : 0 }); rite = null; y.direct(null); y.stage(null); rites.rest(); hush(false); $("breathWord")?.setAttribute("hidden", ""); };
   // How one sits on the seat at a spot: on a stool as on a chair, on a cushion cross-legged (`kind` in site.seats).
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
     if (rite || !places[id]) return;
-    const p = places[id], d = SEAL[id]; $("act")?.setAttribute("hidden", "");
+    const p = places[id], d = SEAL[id] || SEAL.incense, hall = incenseHall(id); $("act")?.setAttribute("hidden", "");
     const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
     // What his hands do is rites.js's: it writes into `act`, and may move him a step (`seat`, `speed`).
@@ -175,7 +176,7 @@ export function createGame(y) {
       y.hints?.tip("linger", y.hints.coarse ? t("点「起身」或推圆盘，就站起来走　·　也可以一直坐着") : t("<kbd>E</kbd>起身　·　也可以一直坐着，看看院子"), 8);
       await rites.linger(on); lingering = false; return;
     }
-    else if (id === "incense") { await wait(1.2); if (!on()) return; if (!(await rites.offerIncense(on, st, () => say(t(d.line), 6)))) { if (!on()) return; say(t(d.line), 6); await wait(3); } }
+    else if (hall) { await wait(1.2); if (!on()) return; if (!(await rites.offerIncense(on, st, () => say(t(d.line), 6), hall))) { if (!on()) return; say(t(d.line), 6); await wait(3); } }
     else if (id === "well") { say(t(d.line), 6); if (!(await rites.watchWell(on, () => drop()))) return; }
     else if (id === "lamp") { if (!(await rites.lightLamp(on, () => { mine.visible = true; say(t(d.line), 5); }))) return; }
     else if (id === "sit") {
@@ -191,7 +192,7 @@ export function createGame(y) {
       if (journey.earn("sutra", { verse })) earned("sutra"); end(); return;
     }
     if (!on()) return;
-    const fresh = journey.earn(id); if (fresh) earned(id);
+    const fresh = SEAL[id] ? journey.earn(id) : false; if (fresh) earned(id);   // the seal for the incense is the great hall's; the other halls' offerings earn none (#146)
     // The prologue closes here the first time he has sat and breathed on the summit, whatever else is in the book.
     if (id === "sit" && !closedHere()) { await wait(fresh ? 4.6 : 1.5); if (on()) await finale(on); if (on()) rite = null; return; }
     if (p.sit) { rite = null; return; }   // he stays seated until he is sent somewhere
@@ -324,7 +325,7 @@ export function createGame(y) {
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
     const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
     if (held || near || look || seatHere || climb || rise) {
-      const w = held || (near ? SEAL[near].act : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
+      const w = held || (near ? (SEAL[near] || SEAL.incense).act : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
@@ -516,7 +517,7 @@ export function createGame(y) {
   window.__poseRite = (id) => pose(id);
   window.__coin = () => ({ ...coinsHeard(), ...rites.state().coin, directed: y.directed() });   // the coin's own state and when its sound was asked for (a test compares them)
   { const want = (Q.get("show") || "").replace(/^shot-/, ""); if (want && want !== Q.get("show") && (places[want] || y.gallery[want])) { const go = setInterval(() => { if (document.body.dataset.ready === "1") { clearInterval(go); pose(want); } }, 100); } }
-  refresh(); rites.restore({ incenseAt: (() => { try { return Number(localStorage.getItem(INCENSE)) || 0; } catch { return 0; } })() });
+  refresh(); rites.restore({ incense: (() => { try { return readIncense(localStorage.getItem(INCENSE)); } catch { return {}; } })() });
 
   // ---- The workbench: straight to a place, and straight into what happens there (see BENCH above) ----
   const goTo = BENCH ? Q.get("play") === "ending" ? "sit" : Q.get("at") || Q.get("play") : null;
@@ -530,7 +531,7 @@ export function createGame(y) {
     if (play === "ending") {   // he sits on the summit mat, and the close plays
       const s = y.site.seats.find((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3);
       if (s) await sitDown(s); await wait(1); finale();
-    } else if (play && SEAL[play]) begin(play);
+    } else if (play && (SEAL[play] || incenseHall(play))) begin(play);
   })();
 
   // For the tests.

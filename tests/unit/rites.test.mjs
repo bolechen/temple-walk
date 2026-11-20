@@ -68,13 +68,22 @@ test("every cushion and every stool is a seat, and he can come within a step or 
   }
   walker.setRoom(null);
 });
-test("the incense stand is before the cushion, within his reach from where he steps up to it", () => {
-  const p = rooms.places.incense; assert.ok(p && p.front && p.bowl, "the great hall has no stand for a visitor's incense");
-  walker.setRoom(rooms.rooms.main.room);
-  assert.ok(!walker.blocked(p.at[0], p.at[1]) && !walker.blocked(p.front[0], p.front[1]), "he cannot stand at the cushion or before the stand");
-  assert.ok(walker.blocked(p.bowl[0], p.bowl[2]), "the stand should be in the way, not walked through");
-  const d = Math.hypot(p.bowl[0] - p.front[0], p.bowl[2] - p.front[1]); assert.ok(d > BODY && d < 0.62, `the bowl is ${d.toFixed(2)} m from where he stands`);
-  assert.ok(p.bowl[1] - p.y > 0.5 && p.bowl[1] - p.y < 0.75, "the bowl should stand below his shoulders");
+test("every hall with a Buddha has an incense stand before its cushion, within his reach from where he steps up to it, its bowl in the way", async () => {
+  const { INCENSE_HALLS, incenseId } = await import("../../app/src/incense.js");
+  for (const hall of INCENSE_HALLS) {
+    const p = rooms.places[incenseId(hall)]; assert.ok(p && p.front && p.bowl, `${hall} has no stand for a visitor's incense`);
+    assert.equal(p.room, hall, `${hall}: the place says which room it is in`);
+    const room = rooms.rooms[hall].room; walker.setRoom(room);
+    assert.ok(!walker.blocked(p.at[0], p.at[1]) && !walker.blocked(p.front[0], p.front[1]), `${hall}: he cannot stand at the cushion or before the stand`);
+    assert.ok(walker.blocked(p.bowl[0], p.bowl[2]), `${hall}: the stand should be in the way, not walked through`);
+    const d = Math.hypot(p.bowl[0] - p.front[0], p.bowl[2] - p.front[1]); assert.ok(d > BODY && d < 0.62, `${hall}: the bowl is ${d.toFixed(2)} m from where he stands`);
+    assert.ok(p.bowl[1] - p.y > 0.5 && p.bowl[1] - p.y < 0.75, `${hall}: the bowl should stand below his shoulders`);
+    // The sticks go in at the ash's face: the stand's top 0.52 m above the floor and the ash 7 cm over it.
+    assert.ok(Math.abs(p.bowl[1] - (room.y + 0.52 + 0.07)) < 1e-6, `${hall}: the sticks go in at ${p.bowl[1]}, not on the ash`);
+    assert.ok(p.bowl[0] > room.x0 && p.bowl[0] < room.x1 && p.bowl[2] > room.z0 && p.bowl[2] < room.z1, `${hall}: the stand is outside its room`);
+    // And the cushion is come to from the door: at every step of the way a gap is open across the aisle.
+    for (let z = room.door[1]; z > p.at[1]; z -= 0.4) assert.ok(Array.from({ length: 31 }, (_, i) => room.cx - 1.5 + i * 0.1).some((x) => !walker.blocked(x, z)), `${hall}: the way from the door to the cushion is shut at z=${z.toFixed(1)}`);
+  }
   walker.setRoom(null);
 });
 test("a stroke begun while the log still swings draws it back from where it is, without a jump, and still stops at the bronze", () => {

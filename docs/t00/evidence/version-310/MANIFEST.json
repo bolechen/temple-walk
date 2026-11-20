@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 317460,
+   "sha256": "15d58587485ecfe02be1e65e2db3d1409820d2d8f87bcc149634ab812915d48e",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "credits-prod-desk.jpg",
+   "bytes": 431312,
+   "sha256": "a216d50893fa95d505640f6e05a7bbce72fcfc23257830b71dd312ec2ea46d03",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-before-desk.jpg",
+   "bytes": 410720,
+   "sha256": "7e597a9361812da57304da3843fbeca05e9f45fc534f68279128fabbdfaa3317",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-before-phone.jpg",
+   "bytes": 156540,
+   "sha256": "ecd3e7278d28e5fc6223043c2c4d1322a733573af724ea060350508c99bec4f4",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-canary-desk.jpg",
+   "bytes": 418246,
+   "sha256": "57d8e5f0f66c9de8a7d0c62263d3aef0c5b0a2cc45db679e091870f832fe7515",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-canary-phone.jpg",
+   "bytes": 157919,
+   "sha256": "573e2eaba2ca01b7a1160b8f3e30489ac85ee2a87d780cd5d95bb08f76b8daee",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-preview-desk.jpg",
+   "bytes": 418854,
+   "sha256": "01e29259a1fcbe6669131d2d40a5ad2763ea33071c74dc305046ac8f3d970408",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-preview-phone.jpg",
+   "bytes": 158566,
+   "sha256": "6f3e467c42a8f9820e93cf94368895015c0fed91f4da999b449d87e5391ba9b1",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-prod-commit-desk.jpg",
+   "bytes": 418179,
+   "sha256": "ceec616dd15c90a3ff2b272fbaa99e07303d778346635e00cc3938f4ff57b414",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-prod-commit-phone.jpg",
+   "bytes": 157768,
+   "sha256": "a5b12c45cfad241166d69839f231d22a617896fb5df2ef4eee4cf5ef5ddc61f3",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-prod-name-desk.jpg",
+   "bytes": 418169,
+   "sha256": "82a41e818f51b5b934fde21364a19b4865a13b7d8520424d218f9d476dde50bd",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  },
+  {
+   "path": "menu-prod-name-phone.jpg",
+   "bytes": 157699,
+   "sha256": "c13462b8002b8f53336c33737cccf854c9577785958c6ad9885cee9fc45d6a73",
+   "rev": "edd431fe405f6922df6b1a1e1a9827f58b1e4c66"
+  }
+ ]
+}
