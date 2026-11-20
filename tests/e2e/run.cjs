@@ -131,8 +131,8 @@ const scenarios = {
     await stand(t, "bell"); await t.until(() => t.page.evaluate(() => document.getElementById("hint").textContent.includes("当日已有12人在此敲钟")), 20000, "the bell's count was not said: " + await t.page.evaluate(() => document.getElementById("hint").textContent));
     await stand(t, "tea"); await t.until(() => t.page.evaluate(() => document.getElementById("hint").textContent.includes("当日已有约1500人在此吃茶")), 20000, "the tea's count was not said");
     await t.page.evaluate(() => { for (let i = 0; i < 3; i++) window.dispatchEvent(new CustomEvent("struck", { detail: "bell" })); window.dispatchEvent(new CustomEvent("struck", { detail: "drum" })); });
-    await t.until(() => posts.length >= 1, 20000, "the stroke was not reported"); await t.frames(4);
-    expect(posts.length === 1 && posts[0].place === "bell" && posts[0].kind === "rite", "three strokes and a drum are one report, of the bell: " + JSON.stringify(posts));
+    await t.until(() => posts.length >= 1, 20000, "the stroke was not reported"); await t.frames(8);
+    expect(posts.filter((x) => x.kind === "rite").length === 1 && posts.every((x) => x.place === "bell") && posts.length <= 2, "three strokes and a drum are one report of the bell (the third stroke also earns its seal, one more): " + JSON.stringify(posts));
     expect(await t.page.evaluate(() => window.__presence().traces.bell.rite) === 13, "the count the answer gave should be kept");
     expect(!JSON.stringify(posts).match(/[0-9]{3,}|ip|agent/i), "the report names a place and a kind and nothing else: " + JSON.stringify(posts));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
