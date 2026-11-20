@@ -112,4 +112,6 @@ test("#323: the summit scenario's legs, a leg that something shuts searched roun
   // a leg that is open is walked as it was: the way keeps exactly the points it was given there
   const open = wayThrough(walker, drops, { x: 19.5, z: 0 }, [{ x: 19.5, z: -10 }]);
   assert.deepEqual(open.map((p) => [p.x, p.z]), [[19.5, -10]]);
+  // and so is one that ends in something, walked into as far as it goes: the walk scenario's last leg, into the great hall's door
+  assert.deepEqual(wayThrough(walker, drops, { x: 0, z: 2 }, [{ x: 0, z: -6 }]).map((p) => [p.x, p.z]), [[0, -6]]);
 });

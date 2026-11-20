@@ -128,16 +128,25 @@ export function planRoute(walker, drops, from, to, opts) {
   for (;;) { const r = it.next(); if (r.done) return r.value; }
 }
 
-/** Is every tenth of a metre of the straight line between two points open (the floor may step: a flight is walked up). */
-function openLine(walker, a, b) {
+/**
+ * Does something stand across the straight line between two points: a tenth of a metre of it shut with open floor again
+ * beyond (a stair's cheek, a column)? The floor may step (a flight is walked up), and a line whose end lies in something
+ * (a door's threshold, a wall) is walked as far as it goes, as it always was.
+ */
+function across(walker, a, b) {
   const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.1));
-  for (let i = 1; i <= n; i++) if (walker.blocked(a.x + ((b.x - a.x) * i) / n, a.z + ((b.z - a.z) * i) / n)) return false;
-  return true;
+  let shut = false;
+  for (let i = 1; i <= n; i++) {
+    const s = walker.blocked(a.x + ((b.x - a.x) * i) / n, a.z + ((b.z - a.z) * i) / n);
+    if (s) shut = true; else if (shut) return true;
+  }
+  return false;
 }
 
 /**
  * A way laid out as points to be walked one after another (`__walk`, the scenarios' and tools' ways, #323): a leg whose
- * straight line is open is walked as it is, up a flight or down; a leg that something stands across (a stair's cheek, a
+ * straight line is open is walked as it is, up a flight or down, and so is one that ends in something (a door's threshold,
+ * walked into); a leg that something stands across (a stair's cheek, a
  * column, a table) is searched round as a tap is, and where no way round reaches its end he is taken as near as he can
  * go and then on toward it, as a tap takes him. Points the search puts in may carry a hop (`drop`), as a tap's way does.
  * @param {any} walker @param {any[]} drops @param {{ x: number, z: number }} from @param {{ x: number, z: number }[]} points
@@ -145,7 +154,7 @@ function openLine(walker, a, b) {
 export function wayThrough(walker, drops, from, points) {
   const out = []; let at = { x: from.x, z: from.z };
   for (const p of points) {
-    if (walker.blocked(at.x, at.z) || openLine(walker, at, p)) out.push({ x: p.x, z: p.z });
+    if (walker.blocked(at.x, at.z) || !across(walker, at, p)) out.push({ x: p.x, z: p.z });
     else {
       const r = planRoute(walker, drops, at, p);
       out.push(...r.points);
