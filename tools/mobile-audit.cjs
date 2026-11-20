@@ -32,6 +32,8 @@ const SURFACES = [
   ["slip", "window.__slip(8)", "window.__slip(null)"],
   // The 功德箱's sheet (#202, web build only): a coin dropped in the great hall, then the paper with its one link.
   ["offering", "(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); for (let i = 0; i < 100 && !window.__offeringSheet?.(); i++) await w(100); })()", "document.getElementById('offeringClose')?.click()"],
+  // A lamp lit for someone (#343): the sheet with its list of lines, and with the longest line chosen, the card, the link and the buttons.
+  ["bless", "(async () => { window.__bless(7); for (let i = 0; i < 200 && document.getElementById('blessActs').hidden; i++) await new Promise((r) => setTimeout(r, 120)); })()", "document.getElementById('blessClose').click()"],
   // Sitting on the summit (#156): the small word for the breath at the foot, then the line said after the three breaths; both whole on the screen.
   ["sit", "(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite('sit'); })()", null],
   ["sitsay", "(async () => { window.__riteClock(0); for (let i = 0; i < 80 && !document.getElementById('say').classList.contains('on'); i++) { window.__riteClock(500); await new Promise((r) => setTimeout(r, 120)); } })()", null],
