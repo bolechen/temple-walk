@@ -35,7 +35,7 @@ const NEAR = 2.0, NEAREST = 1.0, OFTEN = 0.9;
 /** Walk `path` as follow.test walks it, on the baked floor; for every frame, how far the eye stands from him and whether he is in the picture. */
 function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
   const follow = createFollow(), out = [], cam = new THREE.PerspectiveCamera(FOV, ASPECT, 0.1, 500);
-  let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z);
+  let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), prev = null, lastYaw = yaw;
   for (const [tx, tz] of path.slice(1)) {
     for (let n = 0; n < 20000; n++) {
       const vx = tx - x, vz = tz - z, l = Math.hypot(vx, vz); if (l < 0.02) break;
@@ -44,8 +44,13 @@ function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
       const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
       const foot = walker.heightAt(x, z);
       eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
-      const eye = followEye(walker, { x, z, foot, eyeY, yaw, pitch, side: 1, reach, arm, space });
-      const c = follow.step(dt, eye);
+      const at = { x, z, foot, eyeY, yaw, pitch, side: 1, reach, arm, space }, vy = (yaw - lastYaw) / dt; lastYaw = yaw;
+      const eye = followEye(walker, at);
+      const c = follow.step(dt, eye, Math.abs(vy) > 0.5 ? followEye(walker, { ...at, yaw: yaw + vy * 0.25 }) : null);   // (looking ahead while the view swings, as yard.js does)
+      // what the eye moved on its own, beyond following him and turning with the view (follow.test's measure)
+      let flat = 0, up = 0;
+      if (prev) { const dy = yaw - prev.yaw, ox = prev.c[0] - prev.x, oz = prev.c[2] - prev.z, ex = x + ox * Math.cos(dy) - oz * Math.sin(dy), ez = z + ox * Math.sin(dy) + oz * Math.cos(dy); flat = Math.hypot(c[0] - ex, c[2] - ez); up = Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)); }
+      prev = { c, x, z, yaw, eyeY };
       // him in the picture: his feet and the top of his head, seen from the eye as the page aims it
       const aim = aimAt(c, [x, foot, z], yaw, frame, FOV);
       let seen = false;
@@ -53,7 +58,7 @@ function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
         cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
         seen = [foot, foot + 1.22].every((y) => { const p = new THREE.Vector3(x, y, z).project(cam); return p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1; });
       }
-      out.push({ x, z, back: Math.hypot(c[0] - x, c[1] - (eyeY + arm.h), c[2] - z), seen });
+      out.push({ x, z, back: Math.hypot(c[0] - x, c[1] - (eyeY + arm.h), c[2] - z), seen, flat, up, forced: follow.forced });
     }
   }
   return out;
@@ -82,8 +87,30 @@ for (const [name, path] of Object.entries(routes)) {
     assert.ok(nearest.back >= NEAREST, `the eye came to ${nearest.back.toFixed(2)} m from him at (${nearest.x.toFixed(1)}, ${nearest.z.toFixed(1)})`);
     assert.ok(near <= n * (1 - OFTEN), `the eye stood nearer than ${NEAR} m in ${near} of ${n} frames`);
     assert.ok(!unseen.length, `he was out of the picture in ${unseen.length} of ${n} frames, first at (${unseen[0]?.x.toFixed(1)}, ${unseen[0]?.z.toFixed(1)})`);
+    holdsStill(frames);
   });
 }
+
+// follow.test's bounds on what the eye does of its own accord, held for the eye that asks what is drawn: no more than
+// 0.15 m across or 0.05 m up or down in a frame, coming in included; put straight out of something seldom, and by no more than a metre.
+const FLAT = 0.15, UP = 0.05, FORCED = 1.0;
+function holdsStill(frames) {
+  const free = frames.filter((f) => !f.forced), worst = (a, k) => a.reduce((b, f) => (f[k] > b[k] ? f : b), a[0]);
+  const f = worst(free, "flat"), u = worst(free, "up"), put = frames.filter((q) => q.forced > FLAT), most = put.length ? worst(put, "forced") : null;
+  assert.ok(f.flat <= FLAT, `the eye moved ${f.flat.toFixed(3)} m on its own in one frame at (${f.x.toFixed(1)}, ${f.z.toFixed(1)})`);
+  assert.ok(u.up <= UP, `the eye rose or fell ${u.up.toFixed(3)} m on its own in one frame at (${u.x.toFixed(1)}, ${u.z.toFixed(1)})`);
+  assert.ok(!most || most.forced <= FORCED, `the eye was put out of something by ${most?.forced.toFixed(2)} m at (${most?.x.toFixed(1)}, ${most?.z.toFixed(1)})`);
+  assert.ok(put.length <= frames.length / 200, `the eye was put out of something in ${put.length} of ${frames.length} frames`);
+}
+// and on follow.test's own routes
+const { ROUTE } = await import("../../app/src/tour.js");
+const { LEVELS: T } = await import("../../app/src/site.js?real");
+for (const [name, path] of Object.entries({
+  "the measured route, bamboo to the first court": ROUTE,
+  "round the first court, close past the bell and drum towers": [[-10.8, 19], [10.8, 19], [10.8, 6], [-10.8, 6], [-10.8, 19]],
+  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
+  "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]],
+})) test(`#295: asking what is drawn, the eye does not jump: ${name}`, () => holdsStill(walk(path)));
 
 // The lead's measures of the arm on a flight of steps and on a phone held upright (#295, from #271/#291 and #306), worked out
 // as tools/frame-routes.mjs works them, on the baked floor with the eye asking what is drawn: going down the flight by the

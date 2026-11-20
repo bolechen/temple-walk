@@ -146,6 +146,8 @@ export const FOLLOW = {
   postWait: 0.25,   // a column or a trunk may stand between him and the eye this long before it comes in
   inTime: 0.15,     // coming in, past something larger or after that wait
   inSpeed: 8,       // and never faster than this, in metres a second
+  inDrawn: 6,       // or this, asked of what is drawn (#295): its eaves, trunks and railings stand finer than the written plan's boxes and come between more often, by less
+  turnDrawn: 10,    // and this, ahead of a turn, asked of what is drawn
   turnSpeed: 20,    // or this, coming in ahead of a wall that the visitor is swinging the view towards (they are turning it)
   ahead: 0.25,      // how far ahead along a turn of the view the eye looks for what it is about to swing into, in seconds
   outTime: 0.4,     // backing out again once the way is clear
@@ -222,7 +224,7 @@ export function createFollow(T = FOLLOW) {
       if (want < dist - 1e-4) {
         waited += dt;
         // A column or a trunk crossing the line of sight is let pass; anything larger, or one that stays, is not.
-        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? T.turnSpeed : eye.ground ? T.liftSpeed : T.inSpeed);
+        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? (eye.solid ? T.turnDrawn : T.turnSpeed) : eye.ground ? T.liftSpeed : eye.solid ? T.inDrawn : T.inSpeed);
         else vd = 0;
       } else {
         waited = 0;
