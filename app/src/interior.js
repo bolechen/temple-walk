@@ -29,10 +29,13 @@ const FLOOR = -60;
 // beside him and the Buddha above; it draws a little nearer as he offers (our own draft). The great hall's room is wide enough
 // to hold its whole Buddha from there; a small hall's is not (the figure stands taller against its room), so its shot is
 // farther back and a little higher and wider, and takes the figure to its chest and shoulders: see docs/t00/incense-halls.md.
+// The Guanyin hall's two front columns stand either side of the aisle a step behind his cushion and would stand across the
+// figure from the others' camera: here it stands level with the stand, beside him, and looks across and up at her.
+const GUANYIN_CAM = { at: [-1.4, 1.2, -3.2], look: [0, 1.9, 2.8], fov: 56 };
 const INCENSE_SHOT = {
   buddha: { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, 4.55], [0, 4.9, 4.55]] },
   // `top`: the figure's head above the floor; `far`: how far before him it stands (the dais's middle, from his cushion).
-  figure: (top, far) => ({ at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, far], [0, top, far]] }),
+  figure: (top, far, cam = { at: [-3.2, 0.8, -2.4], look: [0, 1.69, 1.98], fov: 44 }) => ({ ...cam, in: 2.2, out: 1.0, drift: { side: 0.015, for: 10 }, keep: [[0, 0.1, 0], [0, 1.2, 0], [0, 0.6, 0.8], [0, 1.7, far], [0, top, far]] }),
 };
 export const KINDS = {
   buddha:    { w: 26.4, d: 16.8, h: 7.6 },
@@ -168,7 +171,7 @@ function buildRoom(M, hall, ox, figures) {
       add(merge([box(0.34, 0.035, 0.3, 0, Y + sh - 0.018, sz), box(0.3, 0.04, 0.26, 0, Y + sh - 0.06, sz), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, c]) => box(0.035, sh - 0.03, 0.035, a * 0.14, Y + (sh - 0.03) / 2, sz + c * 0.12)), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz - 0.12), box(0.28, 0.03, 0.03, 0, Y + 0.14, sz + 0.12)]), M.woodX);
       add(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.12, 0.05], [0.13, 0.085], [0.118, 0.085], [0.11, 0.07], [0, 0.07]], 24).translate(0, Y + sh, sz), M.bronze, () => 0.8);
       block(-0.17 - BODY, 0.17 + BODY, sz - 0.15 - BODY, sz + 0.15 + BODY);
-      places[incenseId(hall.id)] = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz], shot: big ? INCENSE_SHOT.buddha : INCENSE_SHOT.figure(ah + (stand.centre ? stand.centre[1] : 0.46 + 2.5) - 0.1, (tz + 1.75) - (az0 + az1) / 2) };
+      places[incenseId(hall.id)] = { at: [ox, tz + 1.75], r: 1.5, face: Math.PI, inside: true, y: Y + 0.03, room: hall.id, front: [ox, sz + 0.15 + BODY + 0.02], bowl: [ox, Y + sh + 0.07, sz], shot: big ? INCENSE_SHOT.buddha : INCENSE_SHOT.figure(ah + (stand.centre ? stand.centre[1] : 0.46 + 2.5) - 0.1, (tz + 1.75) - (az0 + az1) / 2, hall.id === "guanyin" ? GUANYIN_CAM : undefined) };
     }
     // The 功德箱 (offering box), a step east of the offering table beside the lamp: a lacquered chest on a low plinth under a
     // lid that overhangs it, a slot in the lid, and on its front a small board with the two characters. Shaped as such boxes
