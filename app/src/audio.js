@@ -7,6 +7,29 @@ import { createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePh
 import { stepSound, LEVEL } from "./steps.js";
 import { gust as windGust } from "./wind.js";
 let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
+// What the mountain's own sounds (wind, drips, eave bells, culms, birds, the well) pass through on their way to the place
+// bus: the air between them and the listener. Out of doors it is open. In a hall the walls and the shut leaves stand in
+// it (#331: the owner heard no difference between the court and the room): the whole level falls 16 dB and the top is
+// shaved, a 650 Hz low-pass at Butterworth's Q, which is a further 19 dB at 2 kHz, so what is left is the wind's low
+// breathing through the timber. Going in it settles to within 1 dB in 1.1 s and coming out in 0.9 s (time constants 0.3 and 0.45 s), inside the 0.7-1.5 s
+// a door takes to close. The leaf rustle, the culms and the birds are not turned down but not made at all (see `windGains`,
+// `knock`, `bird`).
+export const AIR = Object.freeze({ out: { gain: 1, cutoff: 20000 }, in: { gain: 0.16, cutoff: 650 }, q: Math.SQRT1_2, tc: { in: 0.3, out: 0.45 } });
+// How far the mountain's wind sits under what it was before #331, by where he stands: deep in the bamboo at the start
+// (grove 1) not at all, as the owner had it after the cut of 2026-11-16; in the courts and on the stair (grove 0.12, where
+// the wind had been left at its first level) WIND_CUT_DB, so that the place bus averages 4-8 dB under the music bus
+// there (measured: `node tools/mountain-sound.mjs`, docs/t00/MUSIC.md); in between by a straight line in decibels.
+export const WIND_CUT_DB = 10;
+export const windCut = (grove) => 10 ** (-WIND_CUT_DB * (1 - Math.min(1, Math.max(0, (grove - 0.12) / 0.88))) / 20);
+// The wind's two layers for a gust and the depth of the bamboo; none of the high rustle indoors.
+export const windGains = (gust, grove, inside = false) => { const k = windCut(grove); return { low: k * 0.5 * gust * (0.41 + 0.15 * grove), leaves: inside ? 0 : k * 0.16 * gust * gust * (0.21 + 0.353 * grove) }; };
+/** The air stage: one gain and a low-pass in front of a bus, for any context (the page's, or an offline one in a test). */
+export function createAir(c, to) {
+  const g = c.createGain(), f = c.createBiquadFilter(); f.type = "lowpass"; f.Q.value = AIR.q; f.frequency.value = AIR.out.cutoff; g.gain.value = AIR.out.gain;
+  g.connect(f); f.connect(to); return { in: g, filter: f };
+}
+export function setAir(a, inside, t, tc = inside ? AIR.tc.in : AIR.tc.out) { const k = inside ? AIR.in : AIR.out; a.in.gain.setTargetAtTime(k.gain, t, tc); a.filter.frequency.setTargetAtTime(k.cutoff, t, tc); }
+let air = null;
 const STEP_WET = { out: 0.07, in: 0.4 };   // how much of a step goes to the court's reverb outdoors, the hall's indoors
 const bus = {};   // music, ambience, effects: { in, level, duck, tap, dry, sendOut, sendIn }
 // How loud the visitor wants it, 0..1 (the pause menu); remembered if nothing has sounded yet.
@@ -47,6 +70,7 @@ function start() {
     b.dry.connect(comp); b.sendOut.connect(outVerb); b.sendIn.connect(inVerb);
     b.tap = ctx.createAnalyser(); b.tap.fftSize = 8192; b.tap.smoothingTimeConstant = 0; b.dry.connect(b.tap); b.wet = wet;
   }
+  air = createAir(ctx, bus.ambience.in);
   // His steps: on the effects slider, but nearly dry outdoors (a step in the bamboo is not a step in a walled court)
   // and in the timber hall's reverb indoors.
   steps = { level: ctx.createGain(), dry: ctx.createGain(), sendOut: ctx.createGain(), sendIn: ctx.createGain() };
@@ -68,6 +92,7 @@ function room(inside) {
   const t = ctx.currentTime;
   for (const k of ["music", "ambience", "effects"]) { const b = bus[k]; b.sendOut.gain.setTargetAtTime(inside ? 0 : b.wet, t, 0.7); b.sendIn.gain.setTargetAtTime(inside ? b.wet * 1.1 : 0, t, 0.7); }
   steps.sendOut.gain.setTargetAtTime(inside ? 0 : STEP_WET.out, t, 0.7); steps.sendIn.gain.setTargetAtTime(inside ? STEP_WET.in : 0, t, 0.7);
+  setAir(air, inside, t);
 }
 // The music steps back while the bell or the drum speaks, and comes back of itself.
 let ducked = { until: 0, depth: 1 }, rest = 1;
@@ -171,12 +196,12 @@ export function wellDrip(level = 1) {
   if (!niche) {
     const d = ctx.createDelay(1), fb = ctx.createGain(), lp = ctx.createBiquadFilter(), out = ctx.createGain();
     d.delayTime.value = 0.13; fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1400; out.gain.value = 0.6;
-    d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(out); out.connect(bus.ambience.in); niche = d;
+    d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(out); out.connect(air.in); niche = d;
   }
   const now = ctx.currentTime + 0.01, f = 430 + Math.random() * 120, o = ctx.createOscillator(), g = ctx.createGain();
   o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f * 2.1, now + 0.08);
   g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.11 * level, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-  o.connect(g); g.connect(bus.ambience.in); g.connect(niche); o.start(now); o.stop(now + 0.25);
+  o.connect(g); g.connect(air.in); g.connect(niche); o.start(now); o.stop(now + 0.25);
 }
 // A shoe coming down (steps.js makes the sound of each kind: "stone", "wet", "puddle", "snow"). It never wakes the
 // audio by itself: until the visitor's first touch has let the place be heard, his steps are silent like everything
@@ -206,12 +231,12 @@ export const stepState = () => ({ crunches: heard.snow, heard: { ...heard }, sta
 export const knockReady = (gust, grove) => gust > 0.66 && grove > 0.6;   // the bamboo at the start (grove 1), not the thinner stands higher up (0.55)
 let knocks = 0;
 export function knock(level = 1) {
-  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  if (!ctx || ctx.state !== "running" || level <= 0 || roomNow) return;   // not heard from within a hall
   const now = ctx.currentTime + 0.01, f = 300 + Math.random() * 140, twice = Math.random() < 0.6;
   for (const [dt, loud] of twice ? [[0, 1], [0.13 + Math.random() * 0.12, 0.45]] : [[0, 1]]) {
     const t = now + dt;
-    partial(f * (dt ? 1.07 : 1), 0.07 * level * loud, 0.09, t, "sine", bus.ambience.in);       // the hollow of the culm
-    partial(f * 2.71, 0.025 * level * loud, 0.04, t, "triangle", bus.ambience.in);              // the dry wood of its wall
+    partial(f * (dt ? 1.07 : 1), 0.07 * level * loud, 0.09, t, "sine", air.in);       // the hollow of the culm
+    partial(f * 2.71, 0.025 * level * loud, 0.04, t, "triangle", air.in);              // the dry wood of its wall
   }
   knocks++;
 }
@@ -230,9 +255,9 @@ let birds = 0;
 // One small bird some way off: two to five quick whistled notes, each a sweep up or down in the high register, softened
 // by distance.
 export function bird(level = 1) {
-  if (!ctx || ctx.state !== "running" || level <= 0) return;
+  if (!ctx || ctx.state !== "running" || level <= 0 || roomNow) return;   // not heard from within a hall
   const now = ctx.currentTime + 0.02, n = 2 + Math.floor(Math.random() * 4), base = 2600 + Math.random() * 1400, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-  const far = ctx.createBiquadFilter(); far.type = "lowpass"; far.frequency.value = 5200; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; far.connect(pan); pan.connect(bus.ambience.in); } else far.connect(bus.ambience.in);
+  const far = ctx.createBiquadFilter(); far.type = "lowpass"; far.frequency.value = 5200; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; far.connect(pan); pan.connect(air.in); } else far.connect(air.in);
   let t = now;
   for (let i = 0; i < n; i++) {
     const o = ctx.createOscillator(), g = ctx.createGain(), len = 0.05 + Math.random() * 0.09, f = base * (0.85 + Math.random() * 0.4), up = Math.random() < 0.6;
@@ -259,7 +284,7 @@ export function flutter(level = 1) {
   const now = ctx.currentTime + 0.02;
   for (let i = 0; i < 46; i++) {
     const t = now + Math.pow(i / 46, 1.6) * 2.2 + Math.random() * 0.05, far = 1 - i / 46;
-    crack(t, 900 + Math.random() * 1400, 0.7, 0.05 * level * far, 0.03, bus.ambience.in);
+    crack(t, 900 + Math.random() * 1400, 0.7, 0.05 * level * far, 0.03, air.in);
   }
   setTimeout(() => { for (let k = 0; k < 3; k++) setTimeout(() => bird(0.7 * level), k * 260); }, 120);
   cues.flutter++;
@@ -365,7 +390,7 @@ export function startAmbience(place) {
   const layer = (type, freq, q) => {
     const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
     s.buffer = buf; s.loop = true; s.playbackRate.value = 0.8 + Math.random() * 0.5; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = 0;
-    s.connect(f); f.connect(g); g.connect(bus.ambience.in); s.start();
+    s.connect(f); f.connect(g); g.connect(air.in); s.start();
     return g;
   };
   const low = layer("bandpass", 420, 0.5), leaves = layer("highpass", 2600, 0.3);
@@ -379,8 +404,9 @@ export function startAmbience(place) {
     const gust = gustHeard(p, a.t); a.gust = gust; a.gustT = Number.isFinite(p.t) ? p.t : a.t;
     // Deep in the bamboo the wind is the floor of the sound, not its loudest part: about 5 dB under what it was, so
     // that the music and his steps are heard over it there (2026-11-16); in the first court (g 0.12) it is unchanged.
-    low.gain.setTargetAtTime(0.5 * gust * (0.41 + 0.15 * g), now, 0.8);
-    leaves.gain.setTargetAtTime(0.16 * gust * gust * (0.21 + 0.353 * g), now, 0.6);
+    const w = windGains(gust, g, p.zone === "hall");
+    low.gain.setTargetAtTime(w.low, now, 0.8);
+    leaves.gain.setTargetAtTime(w.leaves, now, 0.6);
     // Water dripping from the eaves after rain: often in summer, less in spring; none once the stone has dried
     // (autumn) or the water has frozen (snow).
     const rain = p.snow > 0.01 ? 0 : p.wet ?? 1;
@@ -390,15 +416,15 @@ export function startAmbience(place) {
       const f = 700 + Math.random() * 900, o = ctx.createOscillator(), gg = ctx.createGain();
       o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f * 1.7, now + 0.06);
       gg.gain.setValueAtTime(0.0001, now); gg.gain.exponentialRampToValueAtTime(0.05 * (1 - 0.6 * g), now + 0.005); gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-      o.connect(gg); gg.connect(bus.ambience.in); o.start(now); o.stop(now + 0.15);
+      o.connect(gg); gg.connect(air.in); o.start(now); o.stop(now + 0.15);
     }
     const gap = birdGap(p.zone, p.time, p.season);
     if ((a.nextBird -= 0.25) <= 0) { a.nextBird = gap ? gap * (0.5 + Math.random()) : 4; if (gap) bird(0.6 + 0.4 * g); }
-    if ((a.nextKnock -= 0.25) <= 0 && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
+    if ((a.nextKnock -= 0.25) <= 0 && p.zone !== "hall" && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
     if ((a.nextChime -= 0.25) <= 0 && gust > 0.62) {   // an eave bell, only when the wind is up
       a.nextChime = 18 + Math.random() * 30;
       const f0 = [hz(86), hz(89), hz(91), hz(94)][Math.floor(Math.random() * 4)];   // D F G Bb: tuned to the music's mode
-      for (let k = 0; k < 2 + Math.floor(Math.random() * 2); k++) { partial(f0, 0.035, 2.6, now + k * 0.45, "sine", bus.ambience.in); partial(f0 * 2.76, 0.012, 1.2, now + k * 0.45, "sine", bus.ambience.in); }
+      for (let k = 0; k < 2 + Math.floor(Math.random() * 2); k++) { partial(f0, 0.035, 2.6, now + k * 0.45, "sine", air.in); partial(f0 * 2.76, 0.012, 1.2, now + k * 0.45, "sine", air.in); }
     }
   };
   setInterval(tick, 250);

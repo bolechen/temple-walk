@@ -1,0 +1,125 @@
+{
+ "offline": {
+  "gust": 0.4998178464832109,
+  "outdoors": {
+   "total_db": 40.4,
+   "above_2k_db": 19
+  },
+  "hall": {
+   "total_db": 24.1,
+   "above_2k_db": -21.6
+  },
+  "back_outdoors": {
+   "total_db": 39.4,
+   "above_2k_db": 18.1
+  },
+  "fall_db": 16.3,
+  "fall_above_2k_db": 40.5,
+  "seconds_to_settle_going_in": 1.13,
+  "seconds_to_settle_coming_out": 0.92,
+  "air": {
+   "in": {
+    "gain": 0.16,
+    "cutoff": 650
+   },
+   "out": {
+    "gain": 1,
+    "cutoff": 20000
+   },
+   "tc": {
+    "in": 0.3,
+    "out": 0.45
+   }
+  }
+ },
+ "live": [
+  {
+   "zone": "court",
+   "season": "summer",
+   "time": "day",
+   "snow": 0,
+   "music_mean_db": -46.5,
+   "music_p90_db": -37,
+   "music_max_db": -33.7,
+   "mountain_mean_db": -51.1,
+   "mountain_max_db": -50.2,
+   "mountain_minus_music_mean_db": -4.6,
+   "mountain_minus_music_p90_db": -14.1,
+   "n": 890
+  },
+  {
+   "zone": "stair",
+   "season": "summer",
+   "time": "day",
+   "snow": 0,
+   "music_mean_db": -44.7,
+   "music_p90_db": -35.9,
+   "music_max_db": -32.5,
+   "mountain_mean_db": -51.1,
+   "mountain_max_db": -49.6,
+   "mountain_minus_music_mean_db": -6.4,
+   "mountain_minus_music_p90_db": -15.2,
+   "n": 890
+  },
+  {
+   "zone": "court",
+   "season": "autumn",
+   "time": "dusk",
+   "snow": 0,
+   "music_mean_db": -48.1,
+   "music_p90_db": -39.1,
+   "music_max_db": -33.4,
+   "mountain_mean_db": -51.1,
+   "mountain_max_db": -50.2,
+   "mountain_minus_music_mean_db": -3,
+   "mountain_minus_music_p90_db": -12,
+   "n": 890
+  },
+  {
+   "zone": "court",
+   "season": "winter",
+   "time": "day",
+   "snow": 1,
+   "music_mean_db": -43.8,
+   "music_p90_db": -35.6,
+   "music_max_db": -32.8,
+   "mountain_mean_db": -51.1,
+   "mountain_max_db": -50.2,
+   "mountain_minus_music_mean_db": -7.3,
+   "mountain_minus_music_p90_db": -15.5,
+   "n": 890
+  },
+  {
+   "zone": "grove",
+   "season": "summer",
+   "time": "day",
+   "snow": 0,
+   "music_mean_db": -39.7,
+   "music_p90_db": -33,
+   "music_max_db": -30.8,
+   "mountain_mean_db": -38.7,
+   "mountain_max_db": -37.9,
+   "mountain_minus_music_mean_db": 0.9,
+   "mountain_minus_music_p90_db": -5.7,
+   "n": 594
+  }
+ ],
+ "render": {
+  "walk": [
+   [
+    "court",
+    40
+   ],
+   [
+    "hall",
+    40
+   ],
+   [
+    "court",
+    40
+   ]
+  ],
+  "gain_db": 14,
+  "seconds": 128
+ }
+}

@@ -16,5 +16,5 @@ export function bakedGrid() {
 }
 /** createGridWalker for this site, holding `old`. */
 export function gridWalkerFor(site, old) {
-  return createGridWalker(old, gridsByPlace(bakedGrid()));
+  return createGridWalker(old, gridsByPlace(bakedGrid()), { doors: site.halls });
 }

@@ -1,0 +1,6 @@
+# #331 山声：殿内隔声、殿外压低
+
+- [`court-hall-court.mp3`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/241e0fd89e632afdb26a2418c8c8e2a43b89178b/t00/331-mountain-sound/court-hall-court.mp3)（改后）、[`court-hall-court-before.mp3`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/241e0fd89e632afdb26a2418c8c8e2a43b89178b/t00/331-mountain-sound/court-hall-court-before.mp3)（改前的风声；CI 镜像到 R2 后也可从 https://evidence.dev.rushiwowen.co/241e0fd89e632afdb26a2418c8c8e2a43b89178b/t00/331-mountain-sound/ 取）：同一段走法，院子 40 秒 → 进大殿 40 秒（第 40 秒起，山门到殿的 2 秒稳定期后配乐换成殿内的低五度）→ 出殿回院子 40 秒；夏天白天，阵风取页面自己的风曲线（`wind.js`，从第 30 秒起）。**两个文件用同一个固定增益（都加 14 dB），没有做响度匹配**：它们的音量差就是要听的东西。音频在页面的真 `audio.js` 乐器、风声和空气一级上离线渲染（`node tools/mountain-sound.mjs <目录> --render`），配乐是 `score.js` 的院子和殿内乐句，风声是页面的两层（420 Hz 带通、2.6 kHz 高通）。没有鸟、竹竿、滴水（院子里本来就没有鸟和竹竿；夏昼没有雨）。
+- 听什么：改前，进殿前后风声一样响、一样亮；改后，院子里风声退到配乐之下，进殿约一秒内风声变成低低的闷响（竹叶的沙沙没有了），出殿约一秒内回来。
+- `report.json`：`offline`（离线渲染风声过空气一级：殿内比殿外低 16.3 dB，2 kHz 以上低 40.5 dB，进殿 1.13 秒、出殿 0.92 秒落到终值 1 dB 以内）；`live`（页面真 `audio.js` 里实时测的山声总线和配乐总线，阵风固定在 0.5：首院、台阶、秋暮、冬日有雪、竹林各一段 60–90 秒）；`render`（走法）。
+- 复现：`node tools/mountain-sound.mjs tools/out/mountain --render`（`MOUNTAIN_LIVE=0` 跳过实时那半，约 3 分钟）。
