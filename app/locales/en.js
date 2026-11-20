@@ -375,4 +375,11 @@ export default {
   "当日已有{n}人在此静坐": "Visitors to sit here today: {n}",
   // A change of language in the pause menu, while the page opens again in it (#140).
   "换字中": "Changing the language",
+  "拍一段": "Film a clip",
+  "停下": "Stop",
+  "影片": "Clip",
+  "落款": "Signature",
+  "刚拍下的影片": "The clip just filmed",
+  "长按影片，选「存入相册」或「下载」。": "Press and hold the video, then choose “Save video” or “Download”.",
+  "点「保存」，或在影片上点右键，选「另存为」。": "Press Save, or right-click the video and choose “Save video as”.",
 };

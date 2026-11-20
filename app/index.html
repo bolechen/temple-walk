@@ -117,12 +117,14 @@
     <button id="shutter" type="button" aria-label="按下快门"></button>
     <button class="chip" id="photoClose" type="button">收起<kbd>Esc</kbd></button>
   </div>
+  <button class="chip" id="clipBtn" type="button">拍一段</button>
+  <div id="clipRec" hidden><button class="chip" id="clipStop" type="button">停下<kbd>Esc</kbd></button><i id="clipBar"></i></div>
   <section id="photoSettings" class="paper scrolls" aria-label="拍照设置" hidden>
     <fieldset><legend>画幅</legend><div class="row">
       <button class="chip" data-aspect="screen" aria-pressed="true" type="button">全幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="tall" aria-pressed="false" type="button">竖幅</button>
     </div></fieldset>
     <fieldset><legend>取景</legend><div class="row">
-      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="qrToggle" aria-pressed="true" type="button">二维码</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button>
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="qrToggle" aria-pressed="true" type="button">二维码</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button><button class="chip" id="clipMarkToggle" aria-pressed="true" type="button">落款</button>
     </div></fieldset>
     <fieldset><legend>远近</legend><div class="row">
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
@@ -133,6 +135,11 @@
     </div></fieldset>
     <p>画面就是你眼前所见 · 单击即拍 · 滚轮远近</p>
   </section>
+  <dialog class="layer" id="clip" aria-label="影片" hidden>
+    <video id="clipVideo" controls playsinline loop aria-label="刚拍下的影片"></video>
+    <p id="clipHint" hidden></p>
+    <div class="row"><button class="chip" id="clipShare" type="button" hidden>分享</button><a class="chip" id="clipSave" href="#">保存</a><button class="chip" id="clipBack" type="button">返回</button></div>
+  </dialog>
   <dialog class="layer" id="print" aria-label="照片" hidden>
     <img id="printImg" alt="刚拍下的照片">
     <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
