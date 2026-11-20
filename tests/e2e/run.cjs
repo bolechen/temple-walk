@@ -548,12 +548,13 @@ const scenarios = {
   // dark under the courts with two lamps). The eye's space now holds the rooms and stops at each doorway; and gathered from
   // inside a hall it holds the courts too, as it does gathered from the courts.
   eyeroom: { tier: 3, async run(b, base) {   // (the whole run only, as the nightly one is: the gathering and the walk round are long under software rendering)
+    const T0 = Date.now(), lap = (what) => console.log(`    eyeroom ${what} at ${((Date.now() - T0) / 1000).toFixed(0)} s`);
     const ready = async (t) => { await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 240000, "the eye's space was never built"); return t.page.evaluate(() => window.__eyeSpace()); };
     const V = { viewport: { width: 480, height: 320 } }, LIGHT = "&off=reflect,bloom";   // (a small picture, the mirror and the bloom off: neither is in the eye's space)
     let t = await open(b, base, "q=low&cam=0,30,0,0&view=third&season=autumn&time=day" + LIGHT, V);   // (the same season and hour: the season shows and hides the trees' crowns)
-    const fromCourts = await ready(t); await t.close();
+    const fromCourts = await ready(t); await t.close(); lap("courts gathered");
     t = await open(b, base, "q=low&cam=120,5,0.063,-0.07&view=third&season=autumn&time=day&in=main&fast=1" + LIGHT, V);   // (fast: the walk round at 14 m/s, a seventh of the frames, the eye asked every frame)
-    const fromHall = await ready(t); await t.frames(30);
+    const fromHall = await ready(t); lap("hall gathered"); await t.frames(30);
     // part by part (the land and the trees are meshes at the top of the scene, hidden with the courts from a room); the rooms
     // may hold more gathered from a hall, whose statues have been stood by then
     for (const [part, n] of Object.entries(fromCourts.byPart)) expect(part === "interior" ? fromHall.byPart[part] >= n : fromHall.byPart[part] === n, `gathered from the hall, the eye's space should hold all of ${part}: ${fromHall.byPart[part]} against ${n} ` + JSON.stringify([fromHall.byPart, fromCourts.byPart]));
@@ -573,6 +574,7 @@ const scenarios = {
     { const o = await t.page.evaluate(() => { const h = window.__halls.find((x) => x.id === "main"), f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], e = window.__frame().eye; return { into: -((e[0] - h.door[0]) * f[0] + (e[2] - h.door[1]) * f[1]), eye: e, box: window.__frame().monkBox }; });
       // (it stands close behind him there, the leaves at his back: so near he fades, as he did before #354 on coming out)
       expect(o.into < 0.45, "coming out of the great hall the eye should stay in front of its door: " + JSON.stringify(o)); }
+    lap("out of the door");
     const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 1], [0, 1.5]], shut = []; let samples = 0;
     for (const p of round) {
       await t.page.evaluate((q) => window.__walk([q]), p);
@@ -583,6 +585,7 @@ const scenarios = {
         await t.page.waitForFunction((f) => window.__yard().frames > f, s2.f, { polling: 30, timeout: 120000 });   // (the next frame: t.frames looks only every 1.2 s)
       }
     }
+    lap(`round walked (${samples} looks)`);
     expect(samples > 30, "too few looks at the eye on the way round: " + samples);
     expect(shut.length === 0, `round the great hall the eye stood in something drawn ${shut.length} times of ${samples}: ` + JSON.stringify(shut.slice(0, 6)));
     console.log("    eyeroom", JSON.stringify({ tris: fromHall.tris, door: f.eye.map((v) => +v.toFixed(2)), wall: g.map((v) => +v.toFixed(2)), round: samples }));
