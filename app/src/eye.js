@@ -21,7 +21,7 @@ export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
   const tv = Math.tan((fov * Math.PI) / 360);
   return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h };
 }
-export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM }) {
+export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM, space = null }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
   // The picture's own up, square to the way it looks (the arm's `ky` is along it).
   const ux = -Math.sin(yaw) * Math.sin(pitch), uy = cp, uz = Math.cos(yaw) * Math.sin(pitch);
@@ -33,7 +33,12 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const rise = (px, y, pz) => { const under = walker.landAt(px, pz); return under + 0.35 + Math.max(0, under - foot) * 1.6 - y; };
   // (An arm, B's or A's, also keeps the near plane off a porch's railing, as the director's swings do: straight behind
   // him on a balcony it would otherwise come down to the rail's top.)
-  const shut = (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null) || (arm && walker.railNear?.(px, py, pz, 0.25) ? true : null);
+  // With `space` (#295, eyespace.js) what is in the way is asked of what is drawn, with a sphere as big as the near plane's
+  // corners (a railing is drawn, so it keeps off that too); without it, of the written plan.
+  const drawn = space ? (px, py, pz) => (space.shut(px, py, pz) ? true : null) : (px, py, pz) => walker.eyeShut(px, py, pz, foot);
+  const shut = space
+    ? (px, py, pz) => drawn(px, py, pz) || (rise(px, py, pz) > MAXRISE ? true : null)
+    : (px, py, pz) => walker.eyeShut(px, py, pz, foot) || (rise(px, py, pz) > MAXRISE ? true : null) || (arm && walker.railNear?.(px, py, pz, 0.25) ? true : null);
   // Where the eye stands `dist` behind and `sd` to his side (by default, the side found open below).
   const base = arm
     ? (dist, sd = s0) => { const o = (arm.kx ? arm.kx * sd : sd / reach) * dist; return [x + rx * o + (ux * arm.ky - lx) * dist, ty + (uy * arm.ky - ly) * dist, z + rz * o + (uz * arm.ky - lz) * dist]; }
@@ -47,9 +52,17 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const back = (sd) => {
     const ox = x + rx * sd, oz = z + rz * sd; let d = 0, stop = null;
     let thing = false;   // what stopped it was something built or set down, not the lie of the ground
+    if (space && arm) space.along(base(0, sd), base(reach, sd));   // (what lies along this arm, gathered once)
     for (let s = 0.25; s <= reach + 1e-3; s += 0.25) {
       const pts = arm ? [base(s - 0.125, sd), base(s, sd)] : [[ox - lx * s, ty - ly * s, oz - lz * s]], h = pts.map((p) => shut(...p)).find(Boolean);
-      if (h) { stop = h; thing = pts.some((p) => walker.eyeShut(p[0], p[1], p[2], foot)); break; } d = s;
+      if (h) {
+        stop = h; thing = pts.some((p) => drawn(p[0], p[1], p[2]));
+        // Asked of what is drawn, a column or a trunk is not told from a wall by name but by its thickness: what the arm
+        // is clear of again within half a metre beyond is let pass a moment, as a column was (`FOLLOW.postWait`).
+        if (space && arm && thing && s + 0.75 <= reach && !shut(...base(s + 0.5, sd)) && !shut(...base(s + 0.75, sd))) stop = "post";
+        break;
+      }
+      d = s;
     }
     return { d, stop, thing };
   };

@@ -14,12 +14,18 @@ const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalke
 const { decode } = await import("../../app/src/walkgrid.js");
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
 const { followEye, createFollow, FRAMES, frameArm, aimAt } = await import("../../app/src/eye.js");
+const { createEyeSpace, eyeRadius } = await import("../../app/src/eyespace.js");
+const { buildDrawn } = await import("../../tools/walk/scene.mjs");
+const { gather } = await import("../../tools/walk/bake.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M);
 const grids = gridsByPlace(decode(ensure(prepare()).bytes, (b) => inflateRawSync(b)));
 const walker = createGridWalker(createWalker(site), grids, { doors: site.halls });
 const dt = 1 / 60, FOV = 50, ASPECT = 16 / 9, frame = FRAMES.b, arm = frameArm(frame, FOV, ASPECT);
+// what is drawn, gathered as the floor is baked from it, for the eye to ask (#295)
+const space = createEyeSpace(gather([buildDrawn().scene], { x0: -60, x1: 60, z0: -140, z1: 100, bottom: -200, top: 200 }).bvh);
+space.radius = eyeRadius(FOV, ASPECT, 0.1);
 
 // How near the eye may come, from the point over his head it backs away from (`ty`, 1.3 m over the floor): a wall at his
 // back brings it in, but not into him. Two metres is the eye far enough back to see all of him and the floor round his
@@ -38,7 +44,7 @@ function walk(path, { reach = 6.2, pitch = 0.04 } = {}) {
       const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
       const foot = walker.heightAt(x, z);
       eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
-      const eye = followEye(walker, { x, z, foot, eyeY, yaw, pitch, side: 1, reach, arm });
+      const eye = followEye(walker, { x, z, foot, eyeY, yaw, pitch, side: 1, reach, arm, space });
       const c = follow.step(dt, eye);
       // him in the picture: his feet and the top of his head, seen from the eye as the page aims it
       const aim = aimAt(c, [x, foot, z], yaw, frame, FOV);
