@@ -567,7 +567,11 @@ const scenarios = {
     // few frames: it may not stand in a wall or a column (nearplane and eyeroom in tests/slow ask the written plan's eye,
     // which is how the gap in the hierarchy went unseen).
     await t.page.evaluate(() => window.__inside(null)); await t.until(() => t.page.evaluate(() => !window.__yard().inside), 60000, "he did not come out of the hall");
-    await t.frames(20);
+    await t.frames(40);
+    // just out of the door, facing the court: the eye behind him stays in front of the leaves, not in the hollow of the hall
+    // behind its painted dark (the preview of 574b14e: 5.7 m in, and him not in the picture)
+    { const o = await t.page.evaluate(() => { const h = window.__halls.find((x) => x.id === "main"), f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], e = window.__frame().eye; return { into: -((e[0] - h.door[0]) * f[0] + (e[2] - h.door[1]) * f[1]), eye: e, box: window.__frame().monkBox }; });
+      expect(o.into < 0.45 && o.box, "coming out of the great hall the eye should stay in front of its door, with him in the picture: " + JSON.stringify(o)); }
     const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 1], [0, 1.5]], shut = []; let samples = 0;
     for (const p of round) {
       await t.page.evaluate((q) => window.__walk([q]), p);
