@@ -2,7 +2,7 @@
 // The verse is written in a running hand, as a line is added to a picture; the name and the seal keep the brush.
 // Each in the visitor's language (src/i18n.js); the seal is cut in the temple's characters (`seal`, two of them).
 import { FONT, FACE } from "./i18n.js";
-import { qrMatrix, qrSide, paintQrLook, LOOKS } from "./qr.js";
+import { qrMatrix, qrSide, paintQrLook, SEAL_LOOK } from "./qr.js";
 const BRUSH = FONT.brush, SERIF = FONT.serif, XING = FONT.xing;
 
 /** `qr`: the address the code on the card says, or null for a card without one. */
@@ -28,7 +28,7 @@ export async function composeCard(shot, { line, label, temple, url, seal = templ
   let room = sx - u * 2 - (m + u);
   if (qr) {
     const n = mod.length, px = Math.max(4, Math.floor((foot * 0.84) / (n + 8))), side = qrSide(n, px), qx = sx - u * 1.6 - side;
-    paintQrLook(x, mod, qx, cy - side / 2, px, px >= 5 ? LOOKS.seal : { ...LOOKS.seal, round: 0 }, "#f3efe5");
+    paintQrLook(x, mod, qx, cy - side / 2, px, px >= 5 ? SEAL_LOOK : { ...SEAL_LOOK, round: 0 }, "#f3efe5");
     room = qx - u * 1.2 - (m + u);   // (modules under 5 px keep their corners: a rounded one that small is not read reliably from a JPEG)
   }
   const small = (size, text, face) => { x.font = `${size}px ${face}`; const w = x.measureText(text).width; return w > room ? Math.max(Math.floor(size * 0.5), Math.floor(size * room / w)) : size; };

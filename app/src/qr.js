@@ -18,14 +18,9 @@ export const QUIET = 4;
 export const qrSide = (n, px) => (n + 2 * QUIET) * px;
 
 
-/** How a code looks on the paper. `plain`: square black modules, as a decoder's test picture; `ink`: modules a little rounded, in the page's ink; `seal`: modules a little rounded in vermilion, with a seal's frame round the whole, as if one more seal had been pressed.
- * @typedef {{ ink: string, round: number, frame: string | null }} Look */
-/** @type {Record<"plain" | "ink" | "seal", Look>} */
-export const LOOKS = {
-  plain: { ink: "#1b1815", round: 0, frame: null },
-  ink: { ink: "#1b1815", round: 0.12, frame: null },
-  seal: { ink: "#7a160e", round: 0.12, frame: "#7a160e" },
-};
+/** How a code looks on the paper. @typedef {{ ink: string, round: number, frame: string | null }} Look */
+/** The code pressed as one more seal: deep vermilion, modules a little rounded (more than that and a JPEG no longer reads them reliably), and a seal's frame round the whole. The owner's choice of 2026-11-20 (#319). @type {Look} */
+export const SEAL_LOOK = { ink: "#7a160e", round: 0.12, frame: "#7a160e" };
 
 /** Paints the code in a look: paper under the whole square (quiet zone included), each dark module rounded by `look.round` of its side,
  * and for a framed look a thin rounded rule just inside the square's edge, four modules or more from the nearest module (so a decoder meets nothing like a finder pattern in it).

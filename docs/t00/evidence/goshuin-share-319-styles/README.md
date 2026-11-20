@@ -1,4 +1,4 @@
-# 朱印帐分享图：二维码三种放法（#319，供所有者选）
+# 朱印帐分享图：二维码三种放法（#319，所有者 2026-11-20 选了第一种 `seal`，另两种代码已删，这里留图为记）
 
 `node tools/goshuin-pages.cjs <dir> --styles=seal,colophon,inscribed --kinds=full`：七印圆满的一页，四种语言（中、日、英、韩）。
 
