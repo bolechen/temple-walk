@@ -38,17 +38,30 @@ const channelStub = () => ({
 
 // Where the build is served (app/src/deploy.js): VITE_DEPLOY=production|canary|preview, preview when unset. Only a
 // production page carries the visitor counter; any other says it is not to be indexed, in the page and, for the Worker
-// that serves it, as a header (`_headers`, a file Cloudflare's static assets read).
+// that serves it, as a header.
 const deploy = deployOf(process.env.VITE_DEPLOY);
+// The headers every Worker that serves this build sends, in one file Cloudflare's static assets read (`_headers`), the same
+// for production, canary and preview (#308). What the bundler names by its content (assets/*-<hash>.*) and what is named
+// by a fingerprint (the doorways' <hall>.<fp>.*) never changes under its name: a year, immutable. The page and the file that
+// says which version it is (version.json) are asked every time. Everything else, fetched by a plain name (shared/'s
+// textures, models and baked floor, the fonts, the gallery), keeps the platform's own revalidation with an ETag.
+const HEADERS = [
+  ["/assets/*", ["Cache-Control: public, max-age=31536000, immutable"]],
+  ["/shared/doorways/*.webp", ["Cache-Control: public, max-age=31536000, immutable"]],
+  ["/shared/doorways/*.png", ["Cache-Control: public, max-age=31536000, immutable"]],
+  ["/", ["Cache-Control: no-cache"]],
+  ["/index.html", ["Cache-Control: no-cache"]],
+  ["/version.json", ["Cache-Control: no-cache"]],
+];
+const headersFile = (/** @type {import("./app/src/deploy.js").Deploy} */ target) =>
+  [...HEADERS, ...(target === "production" ? [] : [["/*", ["X-Robots-Tag: noindex, nofollow"]]])].map(([p, h]) => `${p}\n${h.map((x) => `  ${x}\n`).join("")}`).join("");
 const deployPage = () => ({
   name: "temple-walk:deploy",
   transformIndexHtml(/** @type {string} */ html) {
     if (deploy === "production") return html.replace(/<!-- production-only -->|<!-- \/production-only -->/g, "");
     return html.replace(/<!-- production-only -->[\s\S]*?<!-- \/production-only -->\n?/g, "").replace(/(<html[^>]*>\n?)/, '$1<meta name="robots" content="noindex, nofollow">\n');
   },
-  writeBundle(/** @type {{ dir?: string }} */ o) {
-    if (deploy !== "production") fs.writeFileSync(path.join(o.dir || dist, "_headers"), "/*\n  X-Robots-Tag: noindex, nofollow\n");
-  },
+  writeBundle(/** @type {{ dir?: string }} */ o) { fs.writeFileSync(path.join(o.dir || dist, "_headers"), headersFile(deploy)); },
 });
 
 export default defineConfig({

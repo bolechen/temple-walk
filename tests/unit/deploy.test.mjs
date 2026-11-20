@@ -33,7 +33,7 @@ test("only the production build holds the counter's address and may be indexed; 
       const hits = withCounter(out), headers = path.join(out, "_headers");
       if (target === "production") {
         assert.ok(hits.includes("index.html"), "production: the counter is not in the page");
-        assert.ok(!/name="robots"/.test(html), "production: the page keeps itself out of search"); assert.ok(!fs.existsSync(headers), "production: _headers");
+        assert.ok(!/name="robots"/.test(html), "production: the page keeps itself out of search"); assert.ok(!/X-Robots-Tag/.test(fs.readFileSync(headers, "utf8")), "production: a noindex header");
         assert.ok(!/production-only/.test(html), "production: the markers stay in the page");
       } else {
         assert.deepEqual(hits, [], `${name}: the counter's address is in the build`);
@@ -61,4 +61,28 @@ test("the canary build opens no debug panel and no workbench address that produc
     for (const [name, s] of c) assert.ok(!s.includes("temple-walk-canary"), `${name} names the canary's own address: a gate that opens something there`);
     assert.deepEqual(c.map(([n]) => n).sort(), p.map(([n]) => n).sort(), "the canary's scripts are not the production's (a different build, not the same code)");
   } finally { fs.rmSync(prod, { recursive: true, force: true }); fs.rmSync(canary, { recursive: true, force: true }); }
+});
+
+// The cache headers (#308, `HEADERS` in vite.config.mjs): one file, the same cache rules for production, canary and preview, so that
+// what a tester is shown is cached as the public page is. What the bundler names by its content never changes under its name.
+test("the three builds send the same cache headers: hashed files for a year, the page and version.json always asked", () => {
+  const files = {};
+  for (const target of ["production", "canary", "preview"]) {
+    const out = build(target);
+    try {
+      const text = fs.readFileSync(path.join(out, "_headers"), "utf8");
+      files[target] = text.replace(/\/\*\n  X-Robots-Tag[^\n]*\n/, "");   // the one rule that differs, taken out
+      // every file under assets/ is named by its content: a rule for a year over a plain name would pin a stale file
+      for (const f of fs.readdirSync(path.join(out, "assets"))) assert.match(f, /-[A-Za-z0-9_-]{8}\.[a-z0-9]+$/, `${target}: assets/${f} has no content hash but the rule over assets/ makes it immutable`);
+    } finally { fs.rmSync(out, { recursive: true, force: true }); }
+  }
+  assert.equal(files.canary, files.production, "canary's cache rules differ from production's");
+  assert.equal(files.preview, files.production, "a preview's cache rules differ from production's");
+  const rules = Object.fromEntries(files.production.split(/\n(?=\S)/).map((b) => { const [p, ...h] = b.trim().split("\n"); return [p, h.map((x) => x.trim())]; }));
+  const year = ["Cache-Control: public, max-age=31536000, immutable"];
+  assert.deepEqual(rules["/assets/*"], year);
+  assert.deepEqual(rules["/shared/doorways/*.webp"], year); assert.deepEqual(rules["/shared/doorways/*.png"], year);
+  for (const p of ["/", "/index.html", "/version.json"]) assert.deepEqual(rules[p], ["Cache-Control: no-cache"], p);
+  // what is fetched by a plain name keeps the platform's revalidation: no rule of ours over shared/ as a whole, over the doorways' manifest, or over the floor
+  for (const p of Object.keys(rules)) assert.ok(!["/shared/*", "/shared/doorways/*"].includes(p) && !/^\/shared\/(walk|textures|models)\b/.test(p) && !/t00\.(json|bin)/.test(p), `a rule over ${p} would cache a plain name`);
 });

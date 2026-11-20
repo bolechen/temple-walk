@@ -45,6 +45,8 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 
 `pages.yml` 在站点改变时验证 `main`：`verify` 汇总 `unit`、`grid`、`site`（建站与 `boot`）和 `quick`（`stairs`、`drop`，各占一台机器，与 `site` 并行），`deploy`（canary）等 `verify` 和 `quick`。只改文档的推送什么都不建、不发。夜间全量仍测 `main`。
 
+**缓存头（#308）**：三种目标的 Worker 发同一份缓存规则，写在一处（`vite.config.mjs` 的 `HEADERS`，构建时写成 `dist/_headers`，Cloudflare 静态资源读它）。文件名由 Vite 按内容带哈希的（`assets/*`）和名字里带指纹的（`shared/doorways/<厅>.<指纹>.webp|png`）设 `public, max-age=31536000, immutable`；`/`、`index.html`、`version.json`（#310 写出）设 `no-cache`（每次确认）；其余按名字取的（`shared/` 的贴图、模型、`walk/t00.bin`，字体，画廊图片，`doorways/t00.json`）不加规则，保持平台默认的 `must-revalidate` 加 ETag。`deploy.test.mjs` 构建三种目标，断言规则相同、`assets/` 下每个文件都带哈希。
+
 **发版即上线。** 对外分享、或要让一个修复让玩家玩到，都靠发版：版本 PR 随时可合，看过 canary 觉得好就立刻合。合并后 `release-please.yml` 在打出标签的同一次运行里调用 `deploy-tag.yml`（`target: production`）（默认令牌打的标签不会触发别的 workflow，所以由它按 `release_created` 输出接着调用），从标签构建、跑一次 `boot`、部署到生产，并把线上首页与刚建好的首页比哈希。
 
 ## 出事先回滚，再修
