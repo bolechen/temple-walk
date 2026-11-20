@@ -9,7 +9,7 @@ const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
 
 export function createHints({ off = false, ui = null } = {}) {
   const coarse = matchMedia("(pointer: coarse)").matches, line = $("hint"), said = new Set(), timers = {};
-  let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0, dragged = false;
+  let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0, dragged = false, pinched = false;
 
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
   // A line is a few phrases between middle dots; each is kept whole, so that on a narrow screen the line breaks between
@@ -47,8 +47,12 @@ export function createHints({ off = false, ui = null } = {}) {
       tip("walk", coarse ? t("推左下的圆盘行走　·　拖动画面环顾") : t("{wasd}行走　·　按住拖动画面环顾，点地面走去　·　{v}换视角　·　{h}键位", { wasd: K("W", "A", "S", "D"), v: K("V"), h: K("H") }), 12);
     },
     // On a touch screen the rest is said as the hand comes to it: two fingers once the view has first been dragged, and
-    // the way into his own eyes once the eye has first been drawn all the way in to him.
-    dragged() { dragged = true; if (coarse && said.has("walk") && now !== "walk") tip("pinch", t("双指开合，拉远拉近"), 6); },
+    // the way into his own eyes once the eye has first been drawn all the way in to him. A drag made before the line about
+    // walking has been said and has gone (a drag that passes over the opening, or one while that line shows) is kept, and
+    // two fingers are told as soon as the line is free (`step`); a visitor whose two fingers have already moved the eye is
+    // not told what they know.
+    dragged() { dragged = true; if (coarse && !pinched && said.has("walk") && now !== "walk") tip("pinch", t("双指开合，拉远拉近"), 6); },
+    pinched() { pinched = true; },
     nearest() { if (coarse) tip("eyes", t("再拉近，换成自己的眼睛"), 6); },
     held() { tip("held", t("{esc}松开鼠标　·　{wheel}远近　·　单击敲钟击鼓", { esc: K("Esc"), wheel: K(t("滚轮")) }), 7); },
     indoors() { if (!coarse) tip("view", t("{v}换成自己的眼睛看，可以举头看殿顶　·　画框前{e}细看", { v: K("V"), e: K("E") }), 8); else tip("view", t("走到画框前，可以细看；也可以举头看看殿顶"), 7); },
@@ -74,6 +78,7 @@ export function createHints({ off = false, ui = null } = {}) {
     // A visitor who walks on and never drags the view would never be told about two fingers: after a good stretch
     // of the path (60 m, about half a minute at a walk) it is said anyway, once, when no other line is speaking.
     if (coarse && !dragged && !now && walked > 60) tip("pinch", t("双指开合，拉远拉近"), 6);
+    if (coarse && dragged && !pinched && !now && said.has("walk")) tip("pinch", t("双指开合，拉远拉近"), 6);   // a drag kept from before: told now the line is free
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }

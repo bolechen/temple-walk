@@ -267,6 +267,7 @@ const scenarios = {
       await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
       await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 30000, `${where}: the menu was not open again after the change of language`);
       const secs = (Date.now() - t0) / 1000;
+      await t.frames(3);   // the eye's first frames after the page is built settle it (as they did before the "before" was read)
       const after = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist, focus: document.activeElement?.dataset?.lang || document.activeElement?.id, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), kept: sessionStorage.getItem("yunjing.relang.v1"), from: sessionStorage.getItem("yunjing.lang.from"), lang: document.documentElement.lang, events: window.__eventLog().map((e) => e.name) }));
       const at = `${where} → ${to}: ` + JSON.stringify({ cover, before: [before.x, before.z, before.yaw, before.pitch, before.view, before.room, before.up, before.camDist], after: [after.x, after.z, after.yaw, after.pitch, after.view, after.room, after.up, after.camDist], focus: after.focus, title: after.title, events: after.events, secs });
       expect(cover.relang && cover.line && !cover.enter && !cover.h1, "the page should open again under the sheet, not the title: " + at);
@@ -1526,6 +1527,22 @@ const scenarios = {
     st = await k.state(); expect(Math.hypot(st.x - before.x, st.z - before.z) < 0.01 && !st.target, "the click that skipped should not walk him: " + JSON.stringify(st));
     await reach(k, "how to walk was never said after a skip", () => window.__hud().tip === "walk");
     expect(k.errors.length === 0, k.errors.join("\n")); await k.close();
+    // On a touch screen (#185, the Pixel 8a of 2026-11-19): a drag made while the line about walking shows is kept, and once
+    // that line has gone two fingers are told; the stick first, then two fingers. (A drag that passes over the opening is
+    // taken by the opening and is no drag of the view.)
+    const ph = await open(b, base, "q=low" + BARE, { enter: false, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const cdp = await ph.page.context().newCDPSession(ph.page);   // a finger as the browser has one: real touches, real pointer ids
+    const swipe = async () => { await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 150, y: 420 }] }); for (let i = 1; i <= 6; i++) await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 150 + i * 14, y: 420 }] }); await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
+    await stepIn(ph); await reach(ph, "the eye never started down on the phone", () => window.__opening().phase === "fly" && window.__opening().s > 1);
+    await swipe(); await reach(ph, "the swipe did not pass over the opening", () => window.__opening().phase === "done", null, 60000);
+    await reach(ph, "how to walk was never said after the opening", () => window.__hud().tip === "walk");
+    const yaw0 = (await ph.state()).yaw; await swipe(); await ph.frames(2);
+    expect(Math.abs((await ph.state()).yaw - yaw0) > 0.01 && (await ph.page.evaluate(() => window.__hud().tip)) === "walk", "a drag while the line about walking shows turns the view and leaves the line");
+    await ph.page.keyboard.down("w");
+    await reach(ph, "two fingers were never told after the line about walking went", () => window.__hud().said.includes("pinch"), null, 120000);
+    await ph.page.keyboard.up("w");
+    { const said = await ph.page.evaluate(() => window.__hud().said), st = await ph.state(); expect(said.indexOf("walk") === 0 && said.indexOf("pinch") > 0 && (await ph.page.textContent("#hint")).includes("双指"), "the stick first, then two fingers, a few steps on (not 60 m): " + JSON.stringify(said)); }
+    expect(ph.errors.length === 0, ph.errors.join("\n")); await ph.close();
     // Reduced motion: the summit held, then only the ink, the bell as ever.
     const r = await open(b, base, "q=low" + BARE, { enter: false, ...vp, reducedMotion: "reduce" });
     await stepIn(r); o = await O(r); expect(o.mode === "ink" && o.cues.mountainBell === 1, "with reduced motion: the ink, and the bell: " + JSON.stringify(o));
