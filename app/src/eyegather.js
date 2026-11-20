@@ -10,31 +10,48 @@ import * as THREE from "three";
 export const airy = (/** @type {any} */ m) => !m || m.type === "ShaderMaterial" || m.type === "RawShaderMaterial" || m.type === "PointsMaterial" || m.name === "flame" || m.transparent || m.alphaTest > 0;
 /** The scene's parts (yard.js `part`) the eye is kept out of. */
 export const EYE_PARTS = new Set(["site", "interior", "props", "trees", "backdrop"]);
+/** @typedef {{ x0: number, x1: number, y0: number, y1: number, z0: number, z1: number }} EyeBox */
+/**
+ * What the eye's space gathers from: the level's box round the courts, and wherever the rooms lie, which a level does not
+ * know (the engine builds them, side by side, under the courts).
+ * @param {EyeBox} box @param {THREE.Object3D | null | undefined} rooms @returns {EyeBox[]}
+ */
+export function eyeBoxes(box, rooms) {
+  if (!rooms) return [box];
+  rooms.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(rooms);
+  return b.isEmpty() ? [box] : [box, { x0: b.min.x - 1, x1: b.max.x + 1, y0: b.min.y - 1, y1: b.max.y + 1, z0: b.min.z - 1, z1: b.max.z + 1 }];
+}
 
 /**
- * @param {THREE.Object3D} scene @param {{ x0: number, x1: number, y0: number, y1: number, z0: number, z1: number }} box
- * @param {number} budget milliseconds a slice
+ * Whether a part is shown at the moment it is gathered says nothing: the rooms under the courts are hidden out of doors
+ * and the courts from inside a room (a visit begun in a hall, ?in=, a language changed there), and left out, the eye went
+ * through every wall of them (27c9458). Only what the address switches off (`?off=`, `off`) is not there.
+ * @param {THREE.Object3D} scene @param {EyeBox | EyeBox[]} boxes what is kept: whatever lies in any of them
+ * @param {number} budget milliseconds a slice @param {Set<string>} off the parts switched off
+ * @param {Record<string, number> | null} byPart if given, how many triangles were taken from each part
  * @returns {Generator<void, Float32Array, void>} the triangles, nine numbers each
  */
-export function* gatherEye(scene, box, budget = 4) {
-  const keep = new THREE.Box3(new THREE.Vector3(box.x0, box.y0, box.z0), new THREE.Vector3(box.x1, box.y1, box.z1));
+export function* gatherEye(scene, boxes, budget = 4, off = new Set(), byPart = null) {
+  const keeps = (Array.isArray(boxes) ? boxes : [boxes]).map((b) => new THREE.Box3(new THREE.Vector3(b.x0, b.y0, b.z0), new THREE.Vector3(b.x1, b.y1, b.z1)));
+  const kept = (/** @type {THREE.Box3} */ b) => keeps.some((k) => k.intersectsBox(b));
   // what to take: every mesh of the parts named, not airy, visible, in the box (an instanced mesh, each instance in it)
-  /** @type {{ geo: THREE.BufferGeometry, m: THREE.Matrix4 }[]} */
+  /** @type {{ geo: THREE.BufferGeometry, m: THREE.Matrix4, part: string }[]} */
   const jobs = [], tb = new THREE.Box3(), m4 = new THREE.Matrix4();
   for (const top of scene.children) {
-    // (a part switched off for a test or a measurement, `?off=site`, still stands there: the floor is baked from it, and the eye must be kept out of it as well, #354's hallexit)
-    if (!EYE_PARTS.has(top.userData.part)) continue;
+    if (!EYE_PARTS.has(top.userData.part) || off.has(top.userData.part)) continue;
     top.updateMatrixWorld(true);
     top.traverse((/** @type {any} */ o) => {
-      if (!o.isMesh || o.userData.walk === false || !o.visible) return;
-      // (a hall's dark box behind its open door is drawn with a shader that paints the room, so it counts as airy, but it is a box the eye must not go into: before, the eye backed out through the door into the hall, #354)
-      if (airy(Array.isArray(o.material) ? o.material[0] : o.material) && !o.userData.doorway) return;
+      if (!o.isMesh) return;
+      const stop = o.userData.eye === "stop";   // drawn nowhere, there only to stop the eye (a hall's doorway seen from inside)
+      // (a part's own top may be a mesh, as the land's and the trees' are: whether it is shown is the part's, said above)
+      if (!stop && (o.userData.walk === false || (o !== top && !o.visible) || airy(Array.isArray(o.material) ? o.material[0] : o.material))) return;
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-      if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); if (tb.copy(o.geometry.boundingBox).applyMatrix4(m4).intersectsBox(keep)) jobs.push({ geo: o.geometry, m: m4.clone() }); } return; }
-      if (tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld).intersectsBox(keep)) jobs.push({ geo: o.geometry, m: o.matrixWorld });
+      if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); if (kept(tb.copy(o.geometry.boundingBox).applyMatrix4(m4))) jobs.push({ geo: o.geometry, m: m4.clone(), part: top.userData.part }); } return; }
+      if (kept(tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld))) jobs.push({ geo: o.geometry, m: o.matrixWorld, part: top.userData.part });
     });
   }
-  let n = 0; for (const j of jobs) { const idx = j.geo.index; n += Math.floor((idx ? idx.count : j.geo.attributes.position.count) / 3); }
+  let n = 0; for (const j of jobs) { const idx = j.geo.index, c = Math.floor((idx ? idx.count : j.geo.attributes.position.count) / 3); n += c; if (byPart) byPart[j.part] = (byPart[j.part] || 0) + c; }
   const out = new Float32Array(n * 9), v = new THREE.Vector3();
   let k = 0, t0 = performance.now();
   for (const { geo, m } of jobs) {
