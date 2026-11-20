@@ -63,9 +63,19 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // the eye rising more than it may.
   // (Asked where the eye would stand once risen to see him: down a flight the arm itself runs into the treads behind him,
   // and the eye goes over them, not in to his back.)
-  const shutAt = (dist, sd = s0) => { const p = base(dist, sd), n = sightNeed(dist, sd, p[1]); return n > MAXRISE ? true : drawn(p[0], p[1] + Math.max(0, n), p[2]); };
+  // Something low and drawn where the eye would stand (a porch's railing, the balustrade round a platform's edge) the eye
+  // rises over, as it rises to see him over the edge, by as little as clears it and no more than it may rise at all;
+  // `riseAt` is that rise (null where there is none: a wall, an eave).
+  const rises = new Map();
+  const riseAt = (dist, sd = s0) => {
+    const key = sd + ":" + dist; if (rises.has(key)) return rises.get(key);
+    const p = base(dist, sd), n = sightNeed(dist, sd, p[1]); let r = null;
+    if (n <= MAXRISE) for (let k = Math.max(0, n); k <= MAXRISE + 1e-6; k += 0.15) if (!drawn(p[0], p[1] + k, p[2])) { r = k; break; }
+    rises.set(key, r); return r;
+  };
+  const shutAt = (dist, sd = s0) => (riseAt(dist, sd) === null ? true : null);
   // and whether the eye there, risen as far as it may, would be inside something drawn (not only too low to see him)
-  const solidAt = (dist, sd = s0) => { const p = base(dist, sd); return !!drawn(p[0], p[1] + Math.max(0, Math.min(MAXRISE, sightNeed(dist, sd, p[1]))), p[2]); };
+  const solidAt = (dist, sd = s0) => { const p = base(dist, sd), n = Math.max(0, Math.min(MAXRISE, sightNeed(dist, sd, p[1]))); return riseAt(dist, sd) === null && !!drawn(p[0], p[1] + n, p[2]); };
   // First to his side, only as far as is open: on a porch that side may be a column, the lattice or a roof's edge.
   let s0 = 0;
   if (!arm) for (let k = Math.min(0.2, side); k > 0 && s0 < side; k = Math.min(side, k + 0.2)) { if (shut(x + rx * k, ty, z + rz * k)) break; s0 = k; }
@@ -102,7 +112,10 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // it stands at its full length, either way; nearer in, proportionally less), and comes back
   // behind him on its spring once the way behind is clear (#271: never put straight out by metres in a frame).
   if (arm && !arm.kx && thing && d < reach - 1.5) {
-    for (const o of [0.3, -0.3, 0.6, -0.6, 0.9, -0.9, 1.2, -1.2, 1.5, -1.5]) { const b = back(o); if (b.d >= reach - 0.25) { s0 = o; d = b.d; stop = b.stop; break; } }   // (only past something it can clear entirely: a wall or the slope of a flight is not gone round, it is come in under)
+    // (asked of what is drawn, past a trunk or a column that stands right behind him it swings over as soon as that lets it
+    // stand two metres farther back, the court beyond may hold more of them)
+    const enough = space ? Math.min(reach - 0.25, d + 2) : reach - 0.25;
+    for (const o of [0.3, -0.3, 0.6, -0.6, 0.9, -0.9, 1.2, -1.2, 1.5, -1.5]) { const b = back(o); if (b.d >= enough) { s0 = o; d = b.d; stop = b.stop; break; } }   // (only past something it can clear entirely: a wall or the slope of a flight is not gone round, it is come in under)
     // and a little farther over, if that is open too, so that the eye passes the thing with room to spare
     if (s0) { const o = s0 + Math.sign(s0) * 0.3, b = back(o); if (b.d >= d) { s0 = o; d = b.d; stop = b.stop; } }
   }
@@ -110,7 +123,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   if (!arm) for (let k = s0 - 0.3; d < reach - 0.25 && k > -0.3; k -= 0.3) { const sd = Math.max(0, k), b = back(sd); if (b.d > d + 0.5) { s0 = sd; d = b.d; stop = b.stop; } }
   const ox = x + rx * (arm ? 0 : s0), oz = z + rz * (arm ? 0 : s0);   // (an arm turns about the point over his head; it is not set over beside him)
   // Over a platform or a stair higher than his feet it rises to see them over the edge. The rise needed at one spot.
-  const need = space && arm ? (dist, sd, y) => Math.max(0, sightNeed(dist, sd, y)) : (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
+  const need = space && arm ? (dist, sd, y) => Math.max(0, sightNeed(dist, sd, y), riseAt(dist, sd) ?? 0) : (dist, sd, y) => { const [cx, , cz] = base(dist, sd), under = walker.landAt(cx, cz); return Math.max(0, under + 0.35 + Math.max(0, under - foot) * 1.6 - y); };
   const liftAt = (dist, sd = s0) => {
     // Looking a little to either side of where the eye stands, so that it is already rising when it comes to the edge
     // of a platform, not climbing out of the stone after it has crossed into it. Only as far as it can ever stand: ground

@@ -135,3 +135,30 @@ test("#295: round the censer on a phone held upright, his head and feet are in t
   if (process.env.ARM_REPORT) console.log("censer phone", JSON.stringify(r));
   assert.ok(r.top >= 0 && r.bottom <= 100 && r.feetIn === 100 && r.hidden === 0, `head at ${r.top}%, feet at ${r.bottom}%, feet in ${r.feetIn}%, hidden ${r.hidden}%`);
 });
+
+// The floor the written plan never let him onto (#295, from the third step's review: 209 m² in the first court alone, the
+// platforms' sides and backs, the ground before the gate): from every metre of it, facing eight ways, once the eye has
+// settled it stands back at least a metre and he is in the picture, unless something drawn stands right behind him
+// (within 1.25 m of the point over his head), where no eye can stand that far behind him clear of it.
+test("#295: on every metre of the floor the written plan never reached, the eye sees him", () => {
+  const old = walker.old, pts = [];
+  for (let x = -40; x <= 40; x += 1) for (let z = -130; z <= 95; z += 1) if (walker.answers(x, z) && !walker.blocked(x, z) && old.blocked(x, z)) pts.push([x, z]);
+  const cam = new THREE.PerspectiveCamera(FOV, ASPECT, 0.1, 500), bad = [];
+  let looked = 0, walled = 0;
+  for (const [x, z] of pts) for (let k = 0; k < 8; k++) {
+    const yaw = (k * Math.PI) / 4, foot = walker.heightAt(x, z), eyeY = walker.eyeAt(x, z), follow = createFollow();
+    const bx = -Math.sin(yaw), bz = Math.cos(yaw);
+    if ([0.5, 0.9, 1.25].some((d) => space.shut(x + bx * d, eyeY + arm.h, z + bz * d))) { walled++; continue; }
+    let c; for (let i = 0; i < 40; i++) c = follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: 0.04, side: 1, reach: 6.2, arm, space }));
+    looked++;
+    const aim = aimAt(c, [x, foot, z], yaw, frame, FOV); let seen = false;
+    if (aim) { cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); seen = [foot + 0.61].every((y) => { const p = new THREE.Vector3(x, y, z).project(cam); return p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1; }); }   // (in the picture, as __probe().monkBox has it: his middle)
+    if (follow.dist < NEAREST || !seen) bad.push(`(${x}, ${z}) facing ${k * 45}°: eye ${follow.dist.toFixed(2)} m back, ${seen ? "seen" : "not seen"}`);
+  }
+  if (process.env.ARM_REPORT) console.log("new floor", { points: pts.length, looked, walled, bad: bad.length, first: bad.slice(0, 12) });
+  assert.ok(pts.length > 150, `only ${pts.length} metres of new floor found`);
+  // (what is left, under one in a hundred of the looks, is a lattice or a row of columns standing a little more than a
+  // metre behind him at a slant, where the eye comes to 0.5–0.75 m and he is still drawn: listed in the PR for the lead)
+  assert.ok(bad.length <= looked / 100, `the eye came nearer than ${NEAREST} m or lost him in ${bad.length} of ${looked} looks: ${bad.slice(0, 8).join("; ")}`);
+  assert.ok(!bad.some((b) => / 0\.[0-4]\d m back/.test(b)), `the eye came into him: ${bad.filter((b) => / 0\.[0-4]\d m back/.test(b)).join("; ")}`);
+});
