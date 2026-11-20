@@ -30,10 +30,13 @@ try {
   [s, b] = await post({ place: "nowhere", kind: "rite" }); check(s === 400, "an unknown place is 400", String(s));
   [s, b] = await post({ place: "bell", kind: "gift" }); check(s === 400, "an unknown kind is 400", String(s));
   // The page shows the count of the day: a fresh read may sit in the edge cache for 30 s, so read until it is there (it is not cached in `wrangler dev` today, but may be).
-  let seen = null; for (let i = 0; i < 40 && !seen; i++) { [s, b] = await j("/api/traces?day=today"); if (b?.traces?.bell?.rite === 2) seen = b; else await new Promise((r) => setTimeout(r, 1000)); }
+  // (the first read above sits in the edge cache for 30 s under "today"; the same day by its date is a key never read yet)
+  const today = new Date().toISOString().slice(0, 10);
+  let seen = null; for (let i = 0; i < 40 && !seen; i++) { [s, b] = await j("/api/traces?day=" + today); if (b?.traces?.bell?.rite === 2) seen = b; else await new Promise((r) => setTimeout(r, 1000)); }
   check(!!seen && seen.traces.tea.seal === 1, "the day reads back what was counted", JSON.stringify(b));
   const r = await fetch(base + "/"); check(r.status === 200 && (await r.text()).includes("asset"), "the page itself is still a static file");
-  const flood = []; for (let i = 0; i < 200; i++) flood.push(post({ place: "well", kind: "rite" }));
-  const codes = (await Promise.all(flood)).map((x) => x[0]); check(codes.includes(429) && codes.filter((c) => c === 200).length <= 125, "a flood is dropped past the bucket", `${codes.filter((c) => c === 200).length} passed`);
+  const t0 = Date.now(), flood = []; for (let i = 0; i < 300; i++) flood.push(post({ place: "well", kind: "rite" }));
+  const codes = (await Promise.all(flood)).map((x) => x[0]), took = (Date.now() - t0) / 1000, passed = codes.filter((c) => c === 200).length;
+  check(codes.includes(429) && passed <= 120 + 12 * (took + 1), "a flood is dropped past the bucket (the burst, and 12 a second while it lasts)", `${passed} passed in ${took.toFixed(1)} s`);
 } catch (e) { console.error(String(e.message || e)); bad++; }
 stop(); process.exit(bad ? 1 : 0);
