@@ -1,0 +1,92 @@
+// Incense in each of the three halls that keep a Buddha (#146), done as rites.js does it, on a fake clock: every hall's sticks
+// are set where its own bowl is, burn from the time set there and go out five minutes after, may be offered again only once
+// out, are kept per hall (and an older one-number save is the great hall's), and his hands and the sticks keep out of the
+// offering table, the censer and the dais on the way.
+import test from "node:test"; import assert from "node:assert/strict";
+import "./dom-stub.mjs";
+import * as THREE from "three";
+const { buildSite, createWalker } = await import("../../app/src/site.js");
+const { buildInteriors } = await import("../../app/src/interior.js");
+const { createMonk } = await import("../../app/src/monk.js");
+const { createRites } = await import("../../app/src/rites.js");
+const { INCENSE_HALLS, incenseId, readIncense, writeIncense } = await import("../../app/src/incense.js");
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+const site = buildSite(M), rooms = buildInteriors(M, site.halls);
+for (const h of INCENSE_HALLS) site.places[incenseId(h)] = rooms.places[incenseId(h)];
+
+let now = 0, wall = 1_800_000_000_000; performance.now = () => now; Date.now = () => wall + now;
+const BURN = 300;
+const monk = createMonk(), G = monk.group, scene = new THREE.Scene(), ticks = []; scene.add(G);
+const planted = [];
+const y = { monk, scene, site, M, onTick: (f) => ticks.push(f), strike: () => {}, direct: () => {}, directed: () => false, directArrived: () => false, directOut: () => 1, put: (x, z) => G.position.set(x, G.position.y, z) };
+const rites = createRites(y, 1, { burn: BURN, onPlant: (at, hall) => planted.push([hall, at]) });
+const frame = () => { now += 1000 / 30; for (const f of ticks) f(); G.updateMatrixWorld(true); monk.update(1 / 30, 0, "pray", now / 1000, () => G.position.y, { act: rites.act }); G.updateMatrixWorld(true); };
+const idle = (secs) => { now += secs * 1000; for (const f of ticks) f(); };
+
+/** Stand him at a hall's cushion and make the offering frame by frame; `each` after every frame. */
+async function offer(hall, each = () => {}) {
+  const p = rooms.places[incenseId(hall)], room = rooms.rooms[hall].room;
+  G.position.set(p.at[0], room.y, p.at[1]); G.rotation.y = p.face;
+  const st = { seat: null, speed: null }; let done = false, result;
+  const run = rites.offerIncense(() => true, st, () => {}, hall).then((r) => { done = true; result = r; });
+  for (let i = 0; i < 30 * 40 && !done; i++) { frame(); each(); await Promise.resolve(); await Promise.resolve(); }
+  await run; return result;
+}
+const left = (hall) => rites.state().incense.halls[hall];
+
+test("each hall's sticks are set in its own bowl and burn out five minutes after they were set there, whatever is done in the others", async () => {
+  assert.deepEqual(Object.keys(rites.state().incense.halls).sort(), [...INCENSE_HALLS].sort());
+  assert.equal(await offer("main"), true);
+  idle(60); assert.equal(await offer("yaoshi"), true);
+  idle(90); assert.equal(await offer("guanyin"), true);
+  assert.deepEqual(planted.map(([h]) => h), ["main", "yaoshi", "guanyin"]);
+  const t = Object.fromEntries(planted.map(([h, at]) => [h, at - wall]));   // the moments they were set, on the fake clock
+  for (const h of INCENSE_HALLS) {
+    const p = rooms.places[incenseId(h)], s = left(h);
+    assert.ok(s.planted && s.smoke && !s.burnt, `${h}: the sticks are in the ash, smoking`);
+    assert.ok(Math.hypot(s.at[0] - p.bowl[0], s.at[2] - p.bowl[2]) < 0.02 && Math.abs(s.at[1] - (p.bowl[1] - 0.035)) < 0.02, `${h}: the sticks are not in its own bowl: ${s.at}`);
+    assert.ok(Math.abs(s.left - (BURN - (now - t[h]) / 1000)) <= 1, `${h}: ${s.left} s left`);
+  }
+  // None of them may be offered again while it burns; each is out five minutes after its own time.
+  for (const h of INCENSE_HALLS) assert.equal(await offer(h), false, `${h}: offered again while it burns`);
+  assert.ok(INCENSE_HALLS.every((h) => rites.incenseLit(h)));
+  idle(BURN - (now - t.main) / 1000 + 1); frame();
+  assert.ok(!rites.incenseLit("main") && left("main").burnt && !left("main").smoke, "the great hall's are out, cold stubs");
+  assert.ok(rites.incenseLit("yaoshi") && rites.incenseLit("guanyin"), "the others, set later, are still burning");
+  idle(BURN - (now - t.yaoshi) / 1000 + 1); frame();
+  assert.ok(!rites.incenseLit("yaoshi") && rites.incenseLit("guanyin"), "the Medicine hall's are out on their own time; the Guanyin hall's still burn");
+  idle(BURN - (now - t.guanyin) / 1000 + 1); frame();
+  assert.ok(INCENSE_HALLS.every((h) => !rites.incenseLit(h) && left(h).burnt), "all three out");
+  // Out, each may be offered again, and the offering is the same one.
+  for (const h of INCENSE_HALLS) { assert.equal(await offer(h), true, `${h}: cannot be offered again once out`); assert.ok(rites.incenseLit(h), `${h}: lit again`); }
+});
+
+test("a reload finds each hall's sticks as far burnt as its own time says; an older one-number save is the great hall's", () => {
+  const at = Date.now(), store = writeIncense(String(at - 100_000), "guanyin", at - 400_000);   // main set 100 s ago (old save), guanyin 400 s ago (out); the first write migrates
+  const r2 = (() => {
+    const y2 = { ...y, onTick: () => {} }, r = createRites(y2, 1, { burn: BURN });
+    r.restore({ incense: readIncense(store) }); return r;
+  })();
+  const s = r2.state().incense.halls;
+  assert.ok(s.main.planted && Math.abs(s.main.left - 200) <= 1, `main: ${JSON.stringify(s.main)}`);
+  assert.ok(s.guanyin.burnt && !s.guanyin.planted, "guanyin: out");
+  assert.ok(!s.yaoshi.shown && !s.yaoshi.planted && !s.yaoshi.burnt, "yaoshi: never offered, nothing in its ash");
+});
+
+test("his hands and the sticks keep out of the offering table, the censer and the dais, in every hall", async () => {
+  idle(BURN + 10); frame();   // all out first
+  for (const hall of INCENSE_HALLS) {
+    const p = rooms.places[incenseId(hall)], room = rooms.rooms[hall].room, big = hall === "main", ox = room.cx, tz = -room.z1 + 0 - 0, Y = room.y;
+    const tzh = room.z0 + 5.4, tw = big ? 2.6 : 1.8;   // the offering table's centre and width (interior.js)
+    const table = new THREE.Box3(new THREE.Vector3(ox - tw / 2, Y + 0.0, tzh - 0.35), new THREE.Vector3(ox + tw / 2, Y + 0.93, tzh + 0.35));
+    const censer = new THREE.Box3(new THREE.Vector3(ox - 0.2, Y + 0.89, tzh - 0.2), new THREE.Vector3(ox + 0.2, Y + 1.15, tzh + 0.2));
+    const bowlBox = (x, yy, z) => Math.hypot(x - p.bowl[0], z - p.bowl[2]) < 0.13 && yy < p.bowl[1] - 0.07;   // the bronze bowl's belly under the ash
+    let least = Infinity; const bad = [];
+    await offer(hall, () => {
+      for (const n of ["leftHand", "rightHand"]) { const w = monk.bones[n].getWorldPosition(new THREE.Vector3()); for (const [name, b] of [["table", table], ["censer", censer]]) if (b.containsPoint(w)) bad.push(`${n} in the ${name} at ${w.toArray().map((v) => v.toFixed(2))}`); if (bowlBox(w.x, w.y, w.z)) bad.push(`${n} in the bowl`); least = Math.min(least, w.z); }
+    });
+    assert.deepEqual(bad.slice(0, 3), [], `${hall}: his hand went into something`);
+    assert.ok(least > room.z0, `${hall}: a hand left the room`);
+    idle(BURN + 10); frame();
+  }
+});

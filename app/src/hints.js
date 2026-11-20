@@ -58,6 +58,8 @@ export function createHints({ off = false, ui = null } = {}) {
     seal() { tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
     seasons() { return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
+    // A newer build has been put up since the page was opened (src/version.js): said once; nothing reloads by itself.
+    update() { return tip("update", t("新的版本已就绪，刷新即可"), 9); },
     photo() { drop(); },
     mood() { flash("moodTag", 6); },
     goal() { flash("goal", 8); },

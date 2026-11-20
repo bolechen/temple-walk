@@ -26,7 +26,8 @@
     "nearplane": "node --test tests/slow/*.test.mjs",
     "nearplane:grid": "node tools/bake-walk.mjs && WALKER=mesh node --import ./tools/walk/swap.mjs --test tests/slow/*.test.mjs",
     "bake-walk": "node tools/bake-walk.mjs",
-    "bake-doorways": "node tools/bake-doorways.mjs"
+    "bake-doorways": "node tools/bake-doorways.mjs",
+    "app": "node tools/app.mjs"
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {
