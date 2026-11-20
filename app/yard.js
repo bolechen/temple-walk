@@ -853,10 +853,11 @@ const dress = () => { U.uLamp.value = 1; U.uSnow.value = 0; U.uFogLayer.value.x 
 // near it or sees it, one face a frame, and taken again when the hour changes its lamps. `__doorways(true[, id])` takes them
 // all (or the one named) at once, for a picture.
 // `?doorway=hires,live` (#320's trial, off by default): the larger baked face into each room, and the near room drawn live
-// through its door on the middle and high tiers (doorway-live.js; `?warm=0` leaves out its warming ahead, to measure it).
+// through its door on the middle and high tiers (doorway-live.js; `?warm=0` leaves out its warming ahead, to measure it;
+// `?live=half` draws the room at half the frame's size).
 const DOORWAY = new Set((Q.get("doorway") || "").split(",").filter((m) => m === "hires" || m === "live"));
 const doors = rooms && !OFF.has("doorway") ? createDoorways({ renderer, scene, site, rooms, U, steps: quality.name === "low" ? 4 : 12, keep: quality.name === "low" ? 3 : 4, base: asset("shared/doorways/"), modes: DOORWAY }) : null;
-const live = doors && DOORWAY.has("live") && quality.name !== "low" ? createLive({ renderer, scene, U, rooms, halls: doors.halls, msaa: quality.msaa, warm: Q.get("warm") !== "0" }) : null;
+const live = doors && DOORWAY.has("live") && quality.name !== "low" ? createLive({ renderer, scene, U, rooms, halls: doors.halls, msaa: quality.msaa, warm: Q.get("warm") !== "0", scale: Q.get("live") === "half" ? 0.5 : 1 }) : null;
 live?.camera(camera);
 // A tool that draws the doorways in the page (or the bake) sets the hour for each drawing, and the visitor's is put back.
 doors?.moods({ set: (season, time) => setMood(season, time), keep: () => { const { season, time } = state; return () => setMood(season, time); } });   // `keep` remembers the hour before the drawing changes it

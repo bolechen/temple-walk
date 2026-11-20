@@ -12,7 +12,7 @@ const { serve, launch, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, doorway, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
+// picture (boot, doorway, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop), and the long walk that
 // samples his height as he climbs, draw all of it.
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
@@ -299,6 +299,45 @@ const scenarios = {
     // Drawing them in the page lights each room by a day and a night; the page's own hour must be the one it had.
     const after = await t.page.evaluate(() => { const p = window.__probe(); return `${p.season}-${p.time}`; });
     expect(after === hour, `drawing the rooms left the page at ${after}, not ${hour}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // #320's trial (`?doorway=live`, doorway-live.js): near the great hall its room is drawn live through the door. Along a
+  // line across the door at a man's height, nothing at the door's edges is brighter than the paving out under the sky
+  // (no light leaks past the room's jambs), two frames of a still view are the same there (nothing shimmers), the altar
+  // keeps its place going in, and coming out the room is drawn live again at once.
+  "doorway-live": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=high&view=first&season=summer&time=day&doorway=live&warm=0&cam=0,60,3.14,0");
+    await t.frames(4);
+    const h = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main"), inYaw = h.outYaw + Math.PI, f = [Math.sin(inYaw), -Math.cos(inYaw)];
+    const look = {};
+    for (const [d, turn] of [[6, 0], [6, 0.35], [3, -0.3], [11, 0]]) {
+      const a = inYaw + turn;
+      await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - Math.sin(a) * d, h.out[1] + Math.cos(a) * d, a]);
+      await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight > 0; }, 240000, `the great hall's room was never drawn live from ${d} m`);
+      await t.frames(2);
+      const rect = await t.page.evaluate(() => window.__doorRect("main")), y = Math.round((rect.door[1] * 2 + rect.door[3]) / 3), w = rect.door[2] - rect.door[0];
+      const xs = []; for (let x = Math.round(rect.door[0] - w * 0.25); x <= rect.door[2] + w * 0.25; x++) xs.push([x, y]);
+      const fl = rect.floor, floorAt = [[(fl[0] + fl[2]) / 2, (fl[1] + fl[3]) / 2]];
+      const one = await t.page.evaluate((pts) => window.__probe(pts).at, [...xs, ...floorAt]), two = await t.page.evaluate((pts) => window.__probe(pts).at, xs);
+      const lum = (c) => (c[0] + c[1] + c[2]) / 3, floor = lum(one[one.length - 1]), line = one.slice(0, xs.length).map(lum);
+      const brightest = Math.max(...line), shimmer = Math.max(...two.map((c, i) => Math.abs(lum(c) - line[i])));
+      look[`${d}m${turn}`] = { floor: +floor.toFixed(1), brightest: +brightest.toFixed(1), shimmer: +shimmer.toFixed(1) };
+      expect(brightest <= Math.max(floor, 40), `from ${d} m, turned ${turn}: something at the door is brighter (${brightest.toFixed(0)}) than the paving outside (${floor.toFixed(0)}): light leaks past the room`);
+      expect(shimmer <= 3, `from ${d} m, turned ${turn}: the door's edge changes between two still frames by ${shimmer.toFixed(1)}`);
+    }
+    console.log("     across the door:", JSON.stringify(look));
+    await t.shot("e2e-doorway-live");
+    // Going in and coming out at the door: the altar keeps its place, and the room is drawn live again on coming out.
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0], h.out[1], inYaw]); await t.frames(3);
+    const out = await t.page.evaluate(() => window.__doorAltar("main"));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+    await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(1);
+    const inn = await t.page.evaluate(() => window.__doorAltar("main")), moved = Math.abs(out.x - inn.x) / 2;
+    console.log("     the altar across the door:", JSON.stringify({ out: +out.x.toFixed(3), in: +inn.x.toFixed(3), moved: +moved.toFixed(3) }));
+    expect(moved <= 0.05, `the altar jumps across the door going in: ${moved.toFixed(3)} of the width`);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+    await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [h.out[0] - f[0] * 4, h.out[1] - f[1] * 4, inYaw]);
+    await t.until(async () => { const l = (await t.page.evaluate(() => window.__doorways())).live; return l && l.hall === "main" && l.weight === 1; }, 60000, "coming out, the room was not drawn live again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Without its baked pictures (none built, or the fetch failed) a doorway is the dark box it always was: nothing black,

@@ -21,7 +21,7 @@
 import * as THREE from "three";
 import { GAIN } from "./doorway-shape.js";
 
-export const LIVE = { full: 12, none: 16, warm: 40 };
+export const LIVE = { full: 12, none: 16, warm: 30 };
 
 const M = new THREE.Matrix4(), plane = new THREE.Plane(), v4 = new THREE.Vector4(), q4 = new THREE.Vector4(), p3 = new THREE.Vector3(), n3 = new THREE.Vector3(0, 0, -1);
 // The eye carried into a hall's room (`o`, one of doorway.js's halls) from the court's `camera`, into `cam`: the world taken
@@ -49,9 +49,8 @@ export function roomEye(o, camera, cam) {
   return cam;
 }
 
-export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = true }) {
+export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = true, scale = 1 }) {
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: msaa });
-  const small = new THREE.WebGLRenderTarget(32, 32, { type: THREE.HalfFloatType });
   const cam = new THREE.PerspectiveCamera(); cam.matrixAutoUpdate = false; cam.matrixWorldAutoUpdate = false;
   const look = new THREE.PerspectiveCamera(90, 1, 0.05, 80);
   const clear = new THREE.Color(), frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
@@ -67,6 +66,7 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
     rooms.group.visible = true;
     const outs = Object.values(rooms.rooms).map((x) => x.outlook).filter(Boolean), out = outs.map((x) => x.visible); outs.forEach((x) => { x.visible = false; });   // every room's view out of its door (44 m wide, they overlap their neighbours) is on the court's side
     const lit = o.r.lights.map((l) => l.visible); o.r.lights.forEach((l) => { l.visible = true; });
+    const others = Object.values(rooms.rooms).filter((x) => x !== o.r), shown = others.map((x) => x.group.visible); others.forEach((x) => { x.group.visible = false; });   // only this hall's room
     const was = { sun: sun?.intensity, hemi: hemi?.intensity, lamp: U.uLamp.value, snow: U.uSnow.value, layer: U.uFogLayer?.value.x };
     if (sun) sun.intensity = 0; if (hemi) hemi.intensity *= 0.3; U.uLamp.value = 1; U.uSnow.value = 0; if (U.uFogLayer) U.uFogLayer.value.x = 0;
     renderer.shadowMap.needsUpdate = false;   // the sun's shadow map is drawn only by the court's own frame
@@ -76,7 +76,7 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
     return () => {
       scene.background = bg; renderer.setClearColor(cc, ca);
       if (sun) sun.intensity = was.sun; if (hemi) hemi.intensity = was.hemi; U.uLamp.value = was.lamp; U.uSnow.value = was.snow; if (U.uFogLayer) U.uFogLayer.value.x = was.layer;
-      o.r.lights.forEach((l, j) => { l.visible = lit[j]; }); outs.forEach((x, j) => { x.visible = out[j]; });
+      o.r.lights.forEach((l, j) => { l.visible = lit[j]; }); others.forEach((x, j) => { x.group.visible = shown[j]; }); outs.forEach((x, j) => { x.visible = out[j]; });
       scene.children.forEach((c, j) => { c.visible = seen[j]; });
       renderer.shadowMap.needsUpdate = shadow;
     };
@@ -100,7 +100,7 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
     const t0 = performance.now(), m = o.live.todo.shift(), undress = dress(o), target = renderer.getRenderTarget();
     const R = o.r.room; look.position.set(R.cx, R.y + 1.6, 0); look.rotation.set(0, 0, 0); look.updateMatrixWorld();
     const root = /** @type {any} */ ({ traverse: (fn) => fn(m), traverseVisible: () => {} });
-    try { renderer.setRenderTarget(small); renderer.compile(root, look, scene); }
+    try { renderer.setRenderTarget(rt); renderer.compile(root, look, scene); }
     finally { renderer.setRenderTarget(target); undress(); }
     stats.worstWarmFrame = Math.max(stats.worstWarmFrame, performance.now() - t0);
     if (!o.live.todo.length) { o.live.stage = "settle"; o.live.wait = 0; }
@@ -108,8 +108,10 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
   const DIRS = [[0, 0], [Math.PI / 2, 0], [Math.PI, 0], [-Math.PI / 2, 0], [0, Math.PI / 2], [0, -Math.PI / 2]];
   const upload = (o) => {
     const t0 = performance.now(), undress = dress(o), target = renderer.getRenderTarget(), R = o.r.room, [yaw, pitch] = DIRS[o.live.up];
-    try { look.position.set(R.cx, R.y + 1.6, (R.z0 + R.z1) / 2); look.rotation.set(pitch, yaw, 0, "YXZ"); look.updateMatrixWorld(); renderer.setRenderTarget(small); renderer.render(scene, look); }
-    finally { renderer.setRenderTarget(target); undress(); }
+    // Into the live picture itself, through a corner of it: ANGLE on Vulkan builds a pipeline at the first draw for each
+    // kind of target (its format, its samples), so a look into any other target warms nothing (T4, #320's first run).
+    try { look.position.set(R.cx, R.y + 1.6, (R.z0 + R.z1) / 2); look.rotation.set(pitch, yaw, 0, "YXZ"); look.updateMatrixWorld(); rt.viewport.set(0, 0, 64, 64); renderer.setRenderTarget(rt); renderer.render(scene, look); }
+    finally { rt.viewport.set(0, 0, rt.width, rt.height); renderer.setRenderTarget(target); undress(); }
     stats.worstWarmFrame = Math.max(stats.worstWarmFrame, performance.now() - t0);
     if (++o.live.up === DIRS.length) { o.live.stage = "ready"; stats.warmed.push(o.hall.id); stats.compileMs[o.hall.id] = +(performance.now() - o.live.t0).toFixed(0); }
   };
@@ -125,23 +127,25 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
   // Each frame, before the court is drawn: warm what is near, and draw the nearest seen room into the frame-sized picture.
   // `size`: the composer's own target, [w, h] in pixels.
   const frame = (camera, eye, size) => {
+    { const W = Math.max(1, Math.round(size[0] * scale)), H = Math.max(1, Math.round(size[1] * scale)); if (rt.width !== W || rt.height !== H) rt.setSize(W, H); }
     camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
     let best = null, bestD = Infinity, uploaded = false;
     // Nearest first: the hall he is walking up to is warmed before the ones he only passes.
     for (const o of Object.values(halls).sort((x, y) => eye.distanceToSquared(x.door) - eye.distanceToSquared(y.door))) {
-      const d = eye.distanceTo(o.door);
-      if (d < LIVE.warm) begin(o);
+      const d = eye.distanceTo(o.door), seen = frustum.intersectsSphere(sphere.copy(o.d.mesh.geometry.boundingSphere).applyMatrix4(o.d.mesh.matrixWorld));
+      if (d < LIVE.full || (d < LIVE.warm && seen)) begin(o);   // a hall he walks toward, not one he passes with his back to it
       if (o.live && !uploaded && warmStep(o)) uploaded = true;
       o.mat.uniforms.uLive.value = 0;
       if (o.live?.stage !== "ready" || d >= LIVE.none || d >= bestD) continue;
-      if (!frustum.intersectsSphere(sphere.copy(o.d.mesh.geometry.boundingSphere).applyMatrix4(o.d.mesh.matrixWorld))) continue;
+      if (!seen) continue;
       best = o; bestD = d;
     }
     stats.hall = best ? best.hall.id : null; stats.weight = 0;
     if (!best) return;
     const t0 = performance.now(), o = best, w = 1 - THREE.MathUtils.smoothstep(bestD, LIVE.full, LIVE.none);
     roomEye(o, camera, cam);
-    if (rt.width !== size[0] || rt.height !== size[1]) rt.setSize(size[0], size[1]);
+    const W = Math.max(1, Math.round(size[0] * scale)), H = Math.max(1, Math.round(size[1] * scale));
+    if (rt.width !== W || rt.height !== H) rt.setSize(W, H);
     const lamp = U.uLamp.value, undress = dress(o), target = renderer.getRenderTarget();
     try { renderer.setRenderTarget(rt); renderer.render(scene, cam); }
     finally { renderer.setRenderTarget(target); undress(); }

@@ -18,7 +18,7 @@ exports.run = async ({ open, log, out, runs = RUNS, dist = 6 }) => {
   const rows = [];
   for (const r of runs) {
     const size = r.q === "low" ? [390, 844] : [1920, 1080], scale = r.q === "low" ? 3 : 1;
-    const doorway = r.mode === "live-cold" ? "live&warm=0" : r.mode;
+    const doorway = { "live-cold": "live&warm=0", "live-half": "live&live=half" }[r.mode] ?? r.mode;
     const query = `q=${r.q}&season=summer&time=day&view=third` + (doorway ? `&doorway=${doorway}` : "");
     const row = { ...r, size, query };
     try {
@@ -53,6 +53,8 @@ exports.run = async ({ open, log, out, runs = RUNS, dist = 6 }) => {
       row.live = (await page.evaluate(() => window.__doorways().live)) || null;
       const name = `main-${dist}m-${r.q}-${r.mode || "baked"}-${r.i}.png`;
       await page.screenshot({ path: path.join(out, name) }); row.shot = name;
+      // For the measure of what one room costs: the same frame drawn from inside the great hall, at its door looking in.
+      if (r.inside) { await page.evaluate(() => window.__inside("main")); await page.waitForFunction(() => window.__yard().room === "main" && !document.getElementById("veil").className, null, { timeout: 60000 }); await page.waitForTimeout(1500); row.inside = { cost: await page.evaluate(() => window.__cost(40)), ...(await page.evaluate(() => { const y = window.__yard(); return { tris: y.tris, calls: y.calls }; })) }; }
       await ctx.close();
     } catch (e) { row.error = String(e.message || e).slice(0, 300); }
     log("doorway-live", JSON.stringify(row));
