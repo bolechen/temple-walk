@@ -621,15 +621,15 @@ let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = fo
 // What the eye is kept out of (#295, eyespace.js): the place's own triangles, gathered a few milliseconds a frame once the
 // walk is the visitor's, sorted into a hierarchy by a worker, then asked with a sphere as big as the near plane's corners.
 // Until then (and with ?off=eyebvh) the eye asks the written plan, as it did.
-let eyeSpace = null, eyeGather = null;
+let eyeSpace = null, eyeGather = null, eyeHeld = null;
 const eyeInfo = { state: OFF.has("eyebvh") ? "off" : "waiting", tris: 0, gatherMs: 0, buildMs: 0, t0: 0 };
 function growEyeSpace() {
   if (eyeInfo.state === "waiting") {
-    if (frames < 30 || !document.body.classList.contains("entered") || opening.active()) return;
+    if (frames < 30 || opening.active()) return;   // (from the title on: by the time the walk is the visitor's it is mostly built, #368)
     eyeInfo.state = "gathering"; eyeInfo.t0 = performance.now();
     eyeGather = gatherEye(scene, L.eyeBox);
   }
-  if (eyeInfo.state !== "gathering") return;
+  if (eyeInfo.state !== "gathering" || opening.active()) return;   // (the opening waits for steady frames and has them: the gathering waits for it)
   const r = eyeGather.next(); if (!r.done) return;
   const positions = r.value; eyeGather = null; eyeInfo.tris = positions.length / 9; eyeInfo.gatherMs = Math.round(performance.now() - eyeInfo.t0); eyeInfo.state = "building";
   const w = new EyeWorker();
@@ -753,7 +753,9 @@ function frame(now) {
     const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null, space: FRAME ? eyeSpace : null };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
-    camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
+    if (eyeHeld && (eyeSpace || !/waiting|gathering|building/.test(eyeInfo.state) || Math.hypot(pos.x - eyeHeld.x, pos.z - eyeHeld.z) > 0.3)) eyeHeld = null;
+    if (eyeHeld) { follow.reset(eyeHeld.dist); camera.position.fromArray(followEye(walker, at).at(eyeHeld.dist)); }   // (held where it stood before the change of language, #368)
+    else camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
     monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
@@ -1170,12 +1172,17 @@ if (relang) {
   }
   pitch = relang.pitch; footY = eyeY = walker.heightAt(pos.x, pos.z); heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw));
   if (relang.reach) reachWant = THREE.MathUtils.clamp(relang.reach, 2.6, 11);
-  follow.reset();
+  follow.reset(relang.dist ?? null);
+  // (#368) Until the eye's hierarchy is built it would ask the written plan, which has solid stone where he walks now
+  // (round the great hall's platform, the forecourt by the gate) and would draw it in to his shoulder, then let it out
+  // again a second later. It stood where it was, clear of what is drawn, a moment ago: it stands there again, and is held
+  // there until the hierarchy can answer or he walks away from the spot.
+  if (relang.view === "third" && relang.dist !== null && !relang.hall && !relang.up) eyeHeld = { dist: relang.dist, x: pos.x, z: pos.z };
 }
 // Choosing another language in the pause menu hands the walk across the reload that follows (lang.js calls this first).
 window.templeRelang = (to) => {
   if (!document.body.classList.contains("entered") || Q.has("shot")) return false;
-  return keepRelang(sessionStorage, { x: +pos.x.toFixed(3), z: +pos.z.toFixed(3), yaw: +yaw.toFixed(4), pitch: +pitch.toFixed(4), view, reach: reachWant, hall: inside && lastHall ? lastHall.id : null, up: upIn ? upIn.id : null, season: state.season, time: state.time, follow: !!state.follow, from: lang, to });
+  return keepRelang(sessionStorage, { x: +pos.x.toFixed(3), z: +pos.z.toFixed(3), yaw: +yaw.toFixed(4), pitch: +pitch.toFixed(4), view, reach: reachWant, dist: follow.dist === null ? null : +follow.dist.toFixed(3), hall: inside && lastHall ? lastHall.id : null, up: upIn ? upIn.id : null, season: state.season, time: state.time, follow: !!state.follow, from: lang, to });
 };
 // For the test tools.
 window.__inside = (id) => pass(id ? site.halls.find((h) => h.id === (id === true ? "main" : id)) : null); window.__figures = () => rooms.state.figures; window.__statues = () => ({ ...rooms.state.stood }); window.__gallery = rooms.spots; window.__columns = (id) => (rooms?.rooms?.[id]?.room.frame.cols || []).map((c) => ({ x: c.x, z: c.z }));   // where a hall's free columns stand, for the scenarios that walk into one
