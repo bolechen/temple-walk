@@ -54,7 +54,7 @@
 
 | 事件 | 何时 | 数据 | 用途 |
 |---|---|---|---|
-| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` | 到达；加载质量与语言来源 |
+| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` `failed` | 到达；加载质量与语言来源；本轮起带失败贴图数（缺席表示旧数据，按未知处理，不当 0） |
 | `demo.enter` | 点「入山」后 | `resumed` `seals` `tier` | 从标题进入；新访/续走 |
 | `opening.played` | 开场开始 | `eye` `again` | 开场覆盖 |
 | `opening.skipped` | 开场被跳过 | `eye` `at`（走到几成） | 开场长度 |
@@ -63,7 +63,7 @@
 | `demo.complete` | 第七印、书满 | `count` `seconds` | 通关 |
 | `demo.ending` | 收尾看完/跳过 | `skipped` `count` `seconds` | 结尾 |
 | `demo.restart` | 从头走起 | `from` `seals` | 重开 |
-| `demo.load_error` | 加载失败 | `reason`（本轮补） | 失败原因 |
+| `demo.load_error` | 加载失败 | `reason`（`error`/`webgl`）`asset` `stage` | 失败原因、哪个资源、停在哪一步（本轮补 `asset`/`stage`） |
 
 ### 3.2 本轮新增
 
@@ -79,6 +79,10 @@
 | `demo.rite` | observance 开始/结束 | `id` `phase` `seconds` `done` | 哪个仪式被开始、多久、有没有做完（补上 `demo.seal` 看不到的放弃） |
 | `demo.share` | 系统分享成功（留影或朱印簿） | `from` | 分享出口 |
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
+| `demo.leave` | 入山后第一次页面隐藏（每次打开一次） | `seconds`（本次页面打开秒数）`seals` `metres`（这一趟）`place`（殿 id / 楼上 id / 地点名）`inside` `up` | 每次访问在哪儿结束、多久、走了多少、几枚印 |
+| `demo.setting` | 改设置（同一 key 800 ms 内合并，取最后值；值未变不发） | `key` `value`（布尔为 `1/0`） | 谁改了哪项：自动镜头、画质、锁定鼠标、音量、视野等 |
+
+`demo.leave` 的 `place` 与「接着走」保存的地点同源：殿内是殿 id（如 `main`），楼上是 `lingxiao`，其余是用 `labelOf` 得出的地点名（如 `钟楼`、`山路上`）。
 
 **为什么是这些，不是更多**：它们正好补上「ready → enter → 第一枚印 → 第一座殿 → 第一次留影/分享」这条运营主线，以及「仪式中途放弃」和「性能降级」两个质量信号。点击热区、每帧位置、滚动深度都不做——页面没有滚动，也不该把访客的每一步都记下来。
 

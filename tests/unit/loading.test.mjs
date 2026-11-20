@@ -8,7 +8,7 @@ function loader(hostname = "") {
   const document = { getElementById(id) { if (!elements.has(id)) elements.set(id, { hidden: false, disabled: true, textContent: '', addEventListener(name, fn) { handlers.set(id + ':' + name, fn); } }); return elements.get(id); } };
   const context = vm.createContext({ document, window: { umami: { track(name, data) { tracked.push(name); said.push(data); } } }, location: { hostname, reload() { reloads++; } }, addEventListener(name, fn) { handlers.set(name, fn); }, requestAnimationFrame(fn) { paints++; queueMicrotask(fn); } });
   vm.runInContext(fs.readFileSync(new URL('../../app/loading.js', import.meta.url), 'utf8'), context);
-  return { api: context.window.templeLoading, el: id => elements.get(id), event: name => handlers.get(name)(), reloads: () => reloads, paints: () => paints, tracked, said };
+  return { api: context.window.templeLoading, el: id => elements.get(id), event: (name, ...args) => handlers.get(name)(...args), reloads: () => reloads, paints: () => paints, tracked, said };
 }
 test('loading follows completed work, yields to paint and reserves 100 for readiness', async () => {
   const t = loader(); let previous = 0;
@@ -40,6 +40,21 @@ test('a failed public load is counted once and a local failure is not', () => {
   assert.deepEqual(live.tracked, ['demo.load_error']);
 });
 
+// The failure names what broke (#326): the file that failed, and the step the page had reached.
+test('a failed load names the asset and the step it stopped at', () => {
+  const live = loader('temple.rushiwowen.co');
+  live.api.step(' surfaces ');
+  live.api.fail({ reason: 'error', asset: 'https://example.test/tex/a.webp?x=1', stage: '大殿' });
+  assert.deepEqual(JSON.parse(JSON.stringify(live.said)), [{ reason: 'error', asset: 'a.webp', stage: '大殿' }]);
+  const viaEvent = loader('temple.rushiwowen.co');
+  viaEvent.api.step('大殿');
+  viaEvent.event('error', { target: { src: 'https://example.test/models/b.glb' } });
+  assert.deepEqual(JSON.parse(JSON.stringify(viaEvent.said)), [{ reason: 'error', asset: 'b.glb', stage: '大殿' }]);
+  const noName = loader('temple.rushiwowen.co');
+  noName.event('unhandledrejection');
+  assert.deepEqual(JSON.parse(JSON.stringify(noName.said)), [{ reason: 'error', asset: '', stage: '' }]);
+});
+
 // A browser that cannot draw the temple at all (#190): the title says why in words, offers no "try again" (it would fail the
 // same way), and the count says it was this and not a broken load.
 test('a browser without WebGL is told why, is offered no retry, and is counted apart', () => {
@@ -48,8 +63,8 @@ test('a browser without WebGL is told why, is offered no retry, and is counted a
   assert.equal(live.el('loadLabel').textContent, '浏览器不支持 WebGL 或未开启硬件加速');
   assert.equal(live.el('loadRetry').hidden, true, 'no retry for a browser that cannot draw');
   assert.equal(live.el('enterBtn').disabled, true);
-  assert.deepEqual(live.tracked, ['demo.load_error']); assert.deepEqual(JSON.parse(JSON.stringify(live.said)), [{ reason: 'webgl' }]);
+  assert.deepEqual(live.tracked, ['demo.load_error']); assert.deepEqual(JSON.parse(JSON.stringify(live.said)), [{ reason: 'webgl', asset: '', stage: '' }]);
   const broken = loader('temple.rushiwowen.co'); broken.event('error');
   assert.equal(broken.el('loadRetry').hidden, false, 'a load that broke may be tried again');
-  assert.deepEqual(JSON.parse(JSON.stringify(broken.said)), [{ reason: 'error' }]);
+  assert.deepEqual(JSON.parse(JSON.stringify(broken.said)), [{ reason: 'error', asset: '', stage: '' }]);
 });
