@@ -17,7 +17,7 @@ const { reach, BAKE } = await import("../../tools/walk/bake.mjs");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), rooms = buildInteriors(M, site.halls);
 const file = ensure(prepare()), decoded = decode(file.bytes, (b) => inflateRawSync(b));
-const grids = gridsByPlace(decoded), walker = createGridWalker(createWalker(site), grids), old = createWalker(site);
+const grids = gridsByPlace(decoded), walker = createGridWalker(createWalker(site), grids, { doors: site.halls }), old = createWalker(site);
 const G = grids.outdoors, xOf = (g, k) => g.x0 + ((k % g.nx) + 0.5) * g.step, zOf = (g, k) => g.z0 + (Math.floor(k / g.nx) + 0.5) * g.step;
 /** Run `fn` with him in a room, or up on a balcony, and put him back out of doors. */
 const within = (where, fn) => { try { if (where.room) walker.setRoom(where.room); if (where.loft) walker.setLoft(where.loft); return fn(); } finally { walker.setRoom(null); walker.setLoft(null); } };
@@ -377,4 +377,97 @@ test("#278: round each corner of the summit pavilion's gallery, along the railin
     if (went < 2.5 || !on(pos.x, pos.z)) stuck.push(`along ${from} then ${to}: from (${sx.toFixed(2)}, ${sz.toFixed(2)}) only ${went.toFixed(2)} m, to (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)})`);
   }
   assert.deepEqual(stuck, [], "he is held at a corner of the gallery");
+});
+
+// Into a hall by its door as a visitor walks it (#294; the owner: from 0.7 m off the door's middle, W stopped him on its
+// frame). From the porch before each hall's door, at 0.3, 0.5, 0.7 and 0.9 m either side of its middle, he holds the key
+// that walks him at the door, a step of the page (2.1 m/s at 60 frames a second) at a time, and comes in.
+test("#294: from as far as 0.9 m either side of the middle of every hall's door, holding on at it, he comes in", () => {
+  const step = 2.1 / 60, missed = [];
+  for (const h of site.halls) {
+    const ix = h.door[0] - h.out[0], iz = h.door[1] - h.out[1], d = Math.hypot(ix, iz), ux = ix / d, uz = iz / d, lx = -uz, lz = ux;   // in through the door, and across it
+    for (const off of [0.3, 0.5, 0.7, 0.9]) for (const side of [1, -1]) {
+      const pos = { x: h.out[0] + lx * off * side, z: h.out[1] + lz * off * side };
+      if (walker.blocked(pos.x, pos.z)) { missed.push(`${h.id} ${side * off}: the spot before the door is shut`); continue; }
+      let came = false;
+      for (let n = 0; n < 240 && !came; n++) { stride(walker, pos, ux * step, uz * step); came = h.inside(pos.x, pos.z); }
+      if (!came) missed.push(`${h.id} ${(side * off).toFixed(1)}: held at (${pos.x.toFixed(2)}, ${pos.z.toFixed(2)})`);
+    }
+  }
+  assert.deepEqual(missed, [], "held outside a hall's door");
+});
+
+// Off a low edge as a visitor walks it (#294; the owner, on the tea house's porch facing along its edge, could not get down):
+// at an unrailed edge no deeper than his leg (STEP_DOWN), walking out over it steps him down, at a walk; walking along it,
+// or across it at a slant, does not; a deeper edge still asks for the jump (Space), and a railed one has no way down.
+// (The path pavilions have no such edge: the half-way one stands on a podium over the slope, and the river-view one is
+// shut in on three sides and comes down to its landing by its steps. The gate's side platforms are 0.50 m, at the limit.)
+test("#294: off the tea house's porch, the gate's and a hall's low platform he steps down by walking out; along the edge he does not", async () => {
+  const { stepOff, stepPose, findDrop, STEP_DOWN } = await import("../../app/src/drop.js");
+  const near = (name) => { const b = site.buildings.find((q) => q.name === name); assert.ok(b, `no ${name}`); return walker.drops.filter((e) => [e.a, e.b].every(([x, z]) => x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)); };
+  // where he stands as near the edge's middle as the porch lets him
+  const at = (e) => { const ax = e.b[0] - e.a[0], az = e.b[1] - e.a[1], span = Math.hypot(ax, az), [nx, nz] = e.normal;
+    for (let back = 0; back < 0.65; back += 0.01) { const x = e.a[0] + ax / 2 - nx * back, z = e.a[1] + az / 2 - nz * back; if (!walker.blocked(x, z)) return { x, z, ux: ax / span, uz: az / span }; } return null; };
+  const fallOf = (e) => { const p = at(e); return p ? e.top - walker.heightAt(e.a[0] / 2 + e.b[0] / 2 + e.normal[0] * 0.9, e.a[1] / 2 + e.b[1] / 2 + e.normal[1] * 0.9) : Infinity; };
+  const bad = [];
+  for (const name of ["茶寮", "万年正续", "禅堂"]) {
+    const low = near(name).filter((e) => at(e) && fallOf(e) <= STEP_DOWN + 0.005 && fallOf(e) > 0.2);
+    if (!low.length) { bad.push(`${name}: no low unrailed edge found`); continue; }
+    const e = low[0], p = at(e), [nx, nz] = e.normal;
+    const plan = stepOff(walker, p.x, p.z, nx, nz);
+    if (!plan) { bad.push(`${name}: walking out over the edge at (${p.x.toFixed(2)}, ${p.z.toFixed(2)}) does not step him down`); continue; }
+    if (plan.fall > STEP_DOWN + 0.005 || walker.blocked(plan.to[0], plan.to[2])) bad.push(`${name}: the step comes down where he cannot stand`);
+    // along the edge, or out at 60° to it: no step (he goes on along the porch)
+    for (const [dx, dz, what] of [[p.ux, p.uz, "along it"], [-p.ux, -p.uz, "along it the other way"], [nx * 0.5 + p.ux * 0.866, nz * 0.5 + p.uz * 0.866, "out at 60°"]]) if (stepOff(walker, p.x, p.z, dx, dz)) bad.push(`${name}: walking ${what} steps him down`);
+    // a step, not a leap: level, then down, no faster than a walk, the body never jumping between frames
+    let last = stepPose(plan, 0), maxStep = 0, rose = false;
+    for (let t = 1 / 60; t <= plan.duration + 1e-9; t += 1 / 60) { const q = stepPose(plan, t); maxStep = Math.max(maxStep, Math.hypot(q.x - last.x, q.z - last.z), Math.abs(q.y - last.y)); if (q.y > last.y + 1e-9) rose = true; last = q; }
+    if (plan.duration < 0.45 || maxStep > 0.06 || rose) bad.push(`${name}: the step down is not a step (${plan.duration.toFixed(2)} s, ${maxStep.toFixed(3)} m a frame, rose ${rose})`);
+  }
+  // a deeper unrailed edge: no step, though the jump is offered there
+  const deep = walker.drops.filter((e) => at(e) && fallOf(e) > STEP_DOWN + 0.05 && fallOf(e) < 1.5);
+  for (const e of deep.slice(0, 3)) { const p = at(e); if (stepOff(walker, p.x, p.z, e.normal[0], e.normal[1])) bad.push(`an edge ${fallOf(e).toFixed(2)} m deep at (${p.x.toFixed(2)}, ${p.z.toFixed(2)}) is stepped down`); if (!findDrop(walker, walker.drops, p.x, p.z, e.normal[0], e.normal[1])) bad.push(`no jump offered off the edge ${fallOf(e).toFixed(2)} m deep at (${p.x.toFixed(2)}, ${p.z.toFixed(2)})`); }
+  // the great hall's railed porch: walking out at its railing, no way down
+  const main = site.halls.find((h) => h.id === "main"), mp = { x: main.out[0] + 2.0, z: main.out[1] + 0.4 };
+  if (!walker.blocked(mp.x, mp.z) && stepOff(walker, mp.x, mp.z, 0, 1)) bad.push("the great hall's railed porch is stepped off");
+  assert.deepEqual(bad, []);
+});
+
+// Held into a wall, a column or a door's frame (#294): at a slant he slides along it and does not stop; straight at it he
+// stands still rather than shuffling to and fro; before a door he is drawn in without going back and forth.
+test("#294: held at a slant into a wall or a column he slides along it, straight into a wall he stands, and before a door he never goes to and fro", () => {
+  const step = 2.1 / 60, bad = [], { z: wz } = { z: 55 };   // the screen wall before the gate (SCREEN in site.js: z 55, 11 m long)
+  const walk = (x, z, dx, dz, n) => { const pos = { x, z }, path = [{ ...pos }]; for (let k = 0; k < n; k++) { stride(walker, pos, dx * step, dz * step); path.push({ ...pos }); } return path; };
+  // its south face, from 2 m before it: at 30° to it he comes up to it and goes on along it, east, the whole way
+  const slant = walk(-3, wz + 2.0, Math.sin(Math.PI / 6), -Math.cos(Math.PI / 6), 180), east = slant.map((p) => p.x);
+  if (east[east.length - 1] - east[0] < 2.5) bad.push(`at a slant into the screen wall he went only ${(east[east.length - 1] - east[0]).toFixed(2)} m along it`);
+  if (east.some((x, k) => k && x < east[k - 1] - 1e-6)) bad.push("at a slant into the screen wall he went back along it");
+  // straight at it: he stops at it, and does not shuffle to and fro along it
+  const head = walk(0.3, wz + 2.0, 0, -1, 180).slice(90), xs = head.map((p) => p.x);
+  let turns = 0; for (let k = 2; k < xs.length; k++) if ((xs[k] - xs[k - 1]) * (xs[k - 1] - xs[k - 2]) < -1e-8) turns++;
+  if (turns > 1) bad.push(`straight into the screen wall he shuffled to and fro ${turns} times`);
+  // the columns standing free in the halls' rooms: held at one, 0.15 m off its middle, he goes round it and on
+  let tried = 0;
+  for (const [id, r] of Object.entries(rooms.rooms)) within({ room: r.room }, () => {
+    for (const c of r.room.frame?.cols || []) {
+      const cx = c.x ?? c[0], cz = c.z ?? c[1];
+      if (!(cx > r.room.x0 + 1.5 && cx < r.room.x1 - 1.5 && cz > r.room.z0 + 2.5 && cz < r.room.z1 - 2.5)) continue;
+      for (const off of [0.15, -0.15]) {
+        const x = cx + off, z = cz + 1.6; if (walker.blocked(x, z) || walker.blocked(x, cz - 1.0)) continue;   // (open floor before it and beyond)
+        tried++; const p = walk(x, z, 0, -1, 140), e = p[p.length - 1];
+        if (e.z > cz - 0.4) bad.push(`${id}: held at the column at (${cx.toFixed(2)}, ${cz.toFixed(2)}) from ${off > 0 ? "its right" : "its left"} he stopped at (${e.x.toFixed(2)}, ${e.z.toFixed(2)})`);
+      }
+    }
+  });
+  if (tried < 4) bad.push(`only ${tried} columns were walked at`);
+  // before each hall's door from 0.9 m off its middle: drawn in, never turning back across the door, nor backing off it more than once
+  for (const h of site.halls) {
+    const ix = h.door[0] - h.out[0], iz = h.door[1] - h.out[1], d = Math.hypot(ix, iz), ux = ix / d, uz = iz / d, lx = -uz, lz = ux;
+    const pos = { x: h.out[0] + lx * 0.9, z: h.out[1] + lz * 0.9 }; let across = 0.9, wider = 0, backs = 0, along = 0;
+    for (let n = 0; n < 240 && !h.inside(pos.x, pos.z); n++) { const x = pos.x, z = pos.z; stride(walker, pos, ux * step, uz * step);
+      const a = (pos.x - h.out[0]) * lx + (pos.z - h.out[1]) * lz, f = (pos.x - x) * ux + (pos.z - z) * uz; if (Math.abs(a) > across + 1e-6) wider++; across = Math.min(across, Math.abs(a)); if (f < -1e-6) backs++; along += f; }
+    if (wider) bad.push(`${h.id}: drawn to its door he went back across it ${wider} times`);
+    if (backs > 3) bad.push(`${h.id}: drawn to its door he backed off ${backs} times`);
+  }
+  assert.deepEqual(bad, []);
 });

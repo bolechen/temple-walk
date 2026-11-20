@@ -1,12 +1,13 @@
 // The way to a tapped spot when the straight line is not open (#154): a search over the floor he can stand on, pulled
 // taut, that goes round columns, tables and cushions, takes the stairs, and, where a porch has an unrailed edge a good
-// deal nearer than any stair, hops down it (drop.js `findDrop`, the same hop the Space key makes). It never hops up:
+// deal nearer than any stair, hops down it (drop.js `findDrop`, the same hop the Space key makes), or off a low one steps
+// down it (`findStep`, the same step walking out over it takes, #294). It never hops up:
 // a tap on a platform is walked there by its steps.
 //
 // The search is a generator, `planSteps`: it runs a few hundred cells at a time and gives the frame back, so that a
 // long way round costs the frame no more than `ROUTE.budget` milliseconds. The search itself is grid.js's, shared with
 // the eye's way round him in director.js; what is here is what a cell of floor is and which cells a step joins.
-import { findDrop } from "./drop.js";
+import { findDrop, findStep } from "./drop.js";
 import { gridSearch } from "./grid.js";
 
 export const ROUTE = Object.freeze({
@@ -14,6 +15,7 @@ export const ROUTE = Object.freeze({
   margin: 10,       // how far outside the box round the two ends the search may go
   step: 0.34,       // the most the floor may rise or fall between two neighbouring cells (a tread is under 0.2)
   hop: 3,           // metres of walking a hop down is worth: it is taken when it saves at least this much on the way round
+  stepDown: 0.5,    // and a step down off a low edge (drop.js findStep, #294), which is walked, not jumped: as walking out over it with the keys does
   cap: 120000,      // cells looked at before the search settles for the nearest it has seen
   slice: 400,       // cells between looks at the clock
   budget: 4,        // milliseconds of one frame
@@ -71,7 +73,8 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
       for (let back = 0.0; back <= 0.5; back += 0.05) {
         const px = e.a[0] + (ax * along) / span - nx * back, pz = e.a[1] + (az * along) / span - nz * back, i = ci(px), j = cj(pz), sx = cx(i), sz = cz(j);
         if (!isOpen(i, j)) continue;
-        const plan = findDrop(walker, [e], sx, sz, nx, nz); if (!plan) continue;
+        // off a low edge the same step down the keys take (findStep, on the baked floor only); off a deeper one the hop Space makes (findDrop)
+        const plan = (walker.kind === "grid" ? findStep(walker, [e], sx, sz, nx, nz) : null) || findDrop(walker, [e], sx, sz, nx, nz); if (!plan) continue;
         const k = id(i, j); if (!links.has(k)) { links.set(k, { plan, to: [plan.to[0], plan.to[2]] }); }
         break;
       }
@@ -94,7 +97,7 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
         link(id(ni, nj), (di && dj ? 1.4142 : 1) * C);
       }
       const hop = links.get(k);
-      if (hop) { const ti = ci(hop.to[0]), tj = cj(hop.to[1]); if (isOpen(ti, tj)) link(id(ti, tj), Math.hypot(hop.to[0] - cx(i), hop.to[1] - cz(j)), hop, o.hop); }
+      if (hop) { const ti = ci(hop.to[0]), tj = cj(hop.to[1]); if (isOpen(ti, tj)) link(id(ti, tj), Math.hypot(hop.to[0] - cx(i), hop.to[1] - cz(j)), hop, hop.plan.step ? o.stepDown : o.hop); }
     },
   });
   const { chain } = found, bestD = found.bestH;

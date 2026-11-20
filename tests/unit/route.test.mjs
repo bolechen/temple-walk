@@ -77,3 +77,25 @@ test("a way round costs a frame no more than its budget, and the search can be g
   assert.ok(slices >= 1, "a far tap is worked out over several frames"); assert.ok(r.value.points.length >= 2);
   const t0 = performance.now(); planRoute(walker, drops, { x: -13.2, z: 7 }, { x: -9, z: 6 }); assert.ok(performance.now() - t0 < 400, "a near tap is quick");
 });
+
+// A tap down off a porch takes the same way down as walking out over its edge (#294): off a low one (the tea house's,
+// 0.45 m) a step (drop.js findStep), off a deeper one (the Guanyin hall's, 0.9 m) the hop Space makes.
+test("a tapped way down off a low porch is the step walking out takes, off a deeper one the hop", async () => {
+  const { STEP_DOWN } = await import("../../app/src/drop.js");
+  // how squarely an edge faces the middle of the place (the axis, x = 0), and how long it is
+  const score = (d, b) => { const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, tx = -cx, tz = (Math.abs(cx) < 1 ? 1 : 0), l = Math.hypot(tx, tz) || 1; return (d.normal[0] * tx + d.normal[1] * tz) / l + Math.hypot(d.b[0] - d.a[0], d.b[1] - d.a[1]) / 100; };
+  const way = (name) => {
+    const b = site.buildings.find((q) => q.name === name), e = drops.filter((d) => [d.a, d.b].every(([x, z]) => x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)).sort((p, q) => score(q, b) - score(p, b))[0];   // (the edge that faces the court: its back may look onto a lane)
+    assert.ok(e, `no unrailed edge at ${name}`);
+    const mx = (e.a[0] + e.b[0]) / 2, mz = (e.a[1] + e.b[1]) / 2, [nx, nz] = e.normal;
+    let from = null; for (let back = 0.3; back < 1.6 && !from; back += 0.05) { const x = mx - nx * back, z = mz - nz * back; if (!walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - e.top) < 0.03) from = { x, z }; }
+    let to = null; for (let out = 1.5; out < 4 && !to; out += 0.25) { const x = mx + nx * out, z = mz + nz * out; if (!walker.blocked(x, z) && walker.heightAt(x, z) < e.top - 0.3) to = { x, z }; }
+    assert.ok(from && to, `no porch or court beside ${name}'s edge`);
+    const r = planRoute(walker, drops, from, to), down = r.points.find((p) => p.drop);
+    assert.ok(r.reached && down, `the tapped way off ${name}'s porch does not go down its edge`);
+    return { fall: e.top - walker.heightAt(to.x, to.z), plan: down.drop };
+  };
+  // (on the written plan's walker, which #294 leaves as it was, it is still the hop)
+  const low = way("茶寮"); assert.ok(low.fall <= STEP_DOWN + 0.005 && !!low.plan.step === isGrid(walker), `off the tea house's porch (${low.fall.toFixed(2)} m) the tapped way should ${isGrid(walker) ? "step down, not hop" : "hop, as before, on the written plan"}`);
+  const deep = way("观音殿"); assert.ok(deep.fall > STEP_DOWN && !deep.plan.step && deep.plan.lift > 0, `off the Guanyin hall's porch (${deep.fall.toFixed(2)} m) the tapped way should hop`);
+});

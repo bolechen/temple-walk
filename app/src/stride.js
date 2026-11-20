@@ -7,12 +7,33 @@
 
 /** @param {{ blocked(x: number, z: number): boolean }} walker @param {{ x: number, z: number }} pos @returns {boolean} whether he moved */
 export function stride(walker, pos, vx, vz) {
+  // Before a hall's door, heading in, the step is bent toward its middle (the grid walker's funnel, #294).
+  const bent = /** @type {any} */ (walker).funnel?.(pos.x, pos.z, vx, vz); if (bent) [vx, vz] = bent;
+  // and should the door's frame be in the way, he slides along it toward the middle
+  // (from a notch in the frame, backing out of it a little as he goes across)
+  if (bent && walker.blocked(pos.x + vx, pos.z + vz)) for (const back of [0, 0.5, 1]) {
+    const sx = bent[2] - vx * back, sz = bent[3] - vz * back;
+    if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; return true; }
+  }
   let moved = false;
   for (let k = 1; k > 0.1 && !moved; k /= 2) {
     const sx = vx * k, sz = vz * k;
     if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; }
     else if (Math.abs(sx) > 1e-4 && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
     else if (Math.abs(sz) > 1e-4 && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
+  }
+  // On the baked floor (#294): stopped by something (a column, a door's frame, the end of a wall), he slides along it toward
+  // the nearer side where his way opens again, as a game's character slides along what it meets (Unity's CharacterController,
+  // Rapier's controller): he looks across his way, a hand at a time to 0.6 m either side, for where the step ahead is open,
+  // and goes that way at most this much of a step at a time. Met square on, a wall with no end that near holds him, and he stands.
+  if (!moved && /** @type {any} */ (walker).kind === "grid") {
+    const v = Math.hypot(vx, vz), px = -vz / v, pz = vx / v;
+    let best = null;
+    for (let d = 0.05; d <= 0.6 + 1e-9 && !best; d += 0.05) for (const hand of [1, -1]) {
+      const ox = px * d * hand, oz = pz * d * hand;
+      if (!walker.blocked(pos.x + ox + vx, pos.z + oz + vz)) { best = hand; break; }
+    }
+    if (best) { const sx = px * best * v * 0.7, sz = pz * best * v * 0.7; if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; } }
   }
   for (const a of moved ? [] : [0.5, -0.5, 0.95, -0.95, 1.35, -1.35]) {
     const c = Math.cos(a), s = Math.sin(a), sx = (vx * c - vz * s) * 0.8, sz = (vx * s + vz * c) * 0.8;
