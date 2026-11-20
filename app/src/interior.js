@@ -277,11 +277,11 @@ function buildRoom(M, hall, ox, figures) {
   add(merge([box(0.22, 3.3, 0.42, -1.5, Y + 1.65, zs + 0.15), box(0.22, 3.3, 0.42, 1.5, Y + 1.65, zs + 0.15), box(3.3, 0.24, 0.42, 0, Y + 3.3, zs + 0.15),
     box(1.3, 3.0, 0.07, -2.3, Y + 1.56, zs - 0.06), box(1.3, 3.0, 0.07, 2.3, Y + 1.56, zs - 0.06)]), M.woodX);
   add(box(3.0, 0.12, 0.5, 0, Y + 0.06, zs + 0.15), M.stone, () => 0.7);
-  // What the opening is to the eye that follows him: a wall, from the jambs' inner face out. Beyond it there is no porch, only the picture of one, and
-  // the eye backing out through the door saw the dark under the courts with the two lamps (27c9458). Never drawn, not
-  // stood on; eyegather.js takes it as it takes the walls.
-  // (Sheets a hand apart through a metre and a half: one sheet is a thin thing, which the eye lets pass as it does a
-  // column, and inside a closed block its sphere touches no face at all.)
+  // What the opening is to the eye that follows him: a wall, from the jambs' inner face out. Beyond it there is no porch,
+  // only the picture of one, and the eye backing out through the door saw the dark under the courts with the two lamps
+  // (27c9458). Never drawn, not stood on; eyegather.js takes it as it takes the walls. Sheets a hand apart through more
+  // than a metre rather than one: eye.js lets pass for a moment anything the eye is clear of again half a metre and three
+  // quarters beyond (a column, `FOLLOW.postWait`), which one sheet with nothing behind it would be.
   const eyeStop = new THREE.Mesh(merge(Array.from({ length: 11 }, (_, k) => new THREE.PlaneGeometry(2.8, 3.3).translate(ox, Y + 1.65, zs - 0.06 + k * 0.12))), new THREE.MeshBasicMaterial());
   eyeStop.visible = false; eyeStop.userData.walk = false; eyeStop.userData.eye = "stop"; g.add(eyeStop);
   lightAt.push([0, 3.0, K.d / 2 - 1.6, 0xcfdcec, 14, 20]);

@@ -550,7 +550,7 @@ const scenarios = {
   // inside a hall it holds the courts too, as it does gathered from the courts.
   eyeroom: { tier: 2, async run(b, base) {
     const ready = async (t) => { await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 240000, "the eye's space was never built"); return t.page.evaluate(() => window.__eyeSpace()); };
-    let t = await open(b, base, "q=low&cam=0,30,0,0&view=third", { viewport: { width: 900, height: 600 } });
+    let t = await open(b, base, "q=low&cam=0,30,0,0&view=third&season=autumn&time=day", { viewport: { width: 900, height: 600 } });   // (the same season and hour: the season shows and hides the trees' crowns)
     const fromCourts = await ready(t); await t.close();
     t = await open(b, base, "q=low&cam=120,5,0.063,-0.07&view=third&season=autumn&time=day&in=main", { viewport: { width: 900, height: 600 } });
     const fromHall = await ready(t); await t.frames(30);
