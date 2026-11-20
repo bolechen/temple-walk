@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-20T01:50:52.425Z",
+  "generated_at": "2026-11-20T02:12:02.409Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "8eb7eef75b511fb6c5339e446a7538c7c282931a",
-    "url": "https://github.com/bolechen/temple-walk/commit/8eb7eef75b511fb6c5339e446a7538c7c282931a"
+    "sha": "9eaf6ff5a33a595a541a03db3b08e3560b139dd5",
+    "url": "https://github.com/bolechen/temple-walk/commit/9eaf6ff5a33a595a541a03db3b08e3560b139dd5"
   },
   "delivery": {
     "analytics": {
@@ -190,7 +190,8 @@
       "#156（PR #201）：静坐的呼吸圈从屏幕中央的固定圆改为地上的圆相（rites.js breathRing；与打卡点地面标记同一贴图），「吸」「呼」改为底部小字；结尾不画圈；tools/breath-views.cjs、mobile-audit 的 sit/sitsay 面",
       "#203：藏经楼纸条放进屏内（game.js fitSlip：缩字，再横排）；e2e slipfit（14 首×四语言×竖横屏）；mobile-audit 的 slip 面固定第 8 首",
       "#213：名匾挂在斗拱昂嘴之外（building.js BEAK）；tests/unit/plaques.test.mjs：18 块匾的每个字 3×3 点，从院落里走得到的点（站立眼与跟随眼）看，字面前 0.6 米内不得有别的构件；改前 12 个字（6 块匾）红",
-      "#265：首院这一层（前院、山门、首院、大殿台基）走路、被挡、点地、跳上跳下改问画出来的网格烘的格子（app/src/gridwalker.js）；?walker=old 回旧，?walker=mesh 全用格子；台沿从格子派生；已存位置与 ?cam 落进挡住处挪到半米内或回起点。T4 20261119-061017（41c5991）新旧交替四次：高档 −0.40 ms，低档 +0.03 ms"
+      "#265：首院这一层（前院、山门、首院、大殿台基）走路、被挡、点地、跳上跳下改问画出来的网格烘的格子（app/src/gridwalker.js）；?walker=old 回旧，?walker=mesh 全用格子；台沿从格子派生；已存位置与 ?cam 落进挡住处挪到半米内或回起点。T4 20261119-061017（41c5991）新旧交替四次：高档 −0.40 ms，低档 +0.03 ms",
+      "Issue #146（草稿 PR）：药师殿、观音殿也能上香，各殿的香各记插香时刻、各烧各的（app/src/incense.js 新增：殿的名单、地点 id、存档读写与旧存档迁移、燃烧进度；rites.js 每座殿各有一组香、烟与时钟；interior.js 三座有佛像的殿都有蒲团前的香几，places.incense / incense-yaoshi / incense-guanyin，机位写在各殿房间里；game.js 的 yunjing.incense.v1 改存各殿时刻，朱印仍只在大雄宝殿得）；新增单测 incense.test.mjs、rites-incense.test.mjs，改 rites.test.mjs、director.test.mjs，新增 e2e 场景 incense-halls"
     ],
     "known_issues": [
       "凌霄阁各层不同材（一层 0.205、二三层 0.186），评审方建议三层同材 0.205，交所有者取舍（decisions.md）；子角梁截面略小于卷五；攒尖顶没有按簇角梁分段折",
@@ -567,17 +568,17 @@
       "tests/slow/nearplane.test.mjs（pnpm run nearplane，约 80 秒，e2e.yml 里与 edges 同跑）：沿跟拍测试四条路线与八座殿前廊逐帧推第三人称镜头，加第一人称向前/左/右；真实 near 0.1 米与设置允许的最大视角（竖握手机、宽屏）；含自检",
       "docs：edge-coverage.md 重新生成（加两张逐构件表），edge-remediation.md「第二轮」，KNOWN-ISSUES、HANDOFF、SOURCES（三行）、CLAUDE.md 命令"
     ],
-    "record_commit": "7c8643237b5e3a9f96de828121aedaa149a9cce0",
+    "record_commit": "9eaf6ff5a33a595a541a03db3b08e3560b139dd5",
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 44656442517,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44656442517",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 44659026451,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44659026451",
     "checks": {
       "syntax": "pending",
-      "unit": "skipped",
+      "unit": "pending",
       "e2e": "pending"
     },
     "scope": [
