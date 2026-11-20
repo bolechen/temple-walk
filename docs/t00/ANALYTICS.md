@@ -91,7 +91,7 @@
 - **语言**：每个事件都带 `lang`，所以「日文访客走到哪一步」可以直接筛；不要用浏览器语言代替。
 - **性能降级**：`demo.quality` 的 `level` 是第几次降级（1…5），`tier` 是起始档；和 `demo.ready.tier` 对比。
 - **分享**：`demo.share.from` 只有 `print | book`；`t.co` 的 196 次进入是外部，不是站内分享。
-- **朱印帐上的二维码（#319）**：分享出去的朱印帐带一枚码，写 `https://temple.rushiwowen.co/?utm_source=goshuin&utm_medium=share&utm_content=<lang>`；扫码进来的访问在 Umami 里按 `utm_source=goshuin` 筛，`utm_content` 是图上的语言。`demo.share` 照旧只数「分享」按钮成功的次数，扫码进来的数不能拿它去对，二者可以相差很多（图可以被保存、转发、截屏）。
+- **朱印帐上的二维码（#319）**：分享出去的朱印帐带一枚码，写 `https://temple.rushiwowen.co/?utm_source=goshuin&utm_medium=share&utm_content=<lang>`；扫码进来的访问在 Umami 里按 `utm_source=goshuin` 筛，`utm_content` 是图上的语言。`demo.share` 照旧只数「分享」按钮成功的次数，扫码进来的数不能拿它去对，二者可以相差很多（图可以被保存、转发、截屏）。留影卡片上的码（默认开，可在留影设置里关）写 `utm_source=photo`，同样的筛法；`utm_content` 是卡片的语言。
 
 ---
 
