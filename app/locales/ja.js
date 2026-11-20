@@ -368,4 +368,8 @@ export default {
   "当日已有{n}人在此静坐": "今日ここで静かに座った人は{n}人",
   // A change of language in the pause menu, while the page opens again in it (#140).
   "换字中": "文字を切り替えています",
+  // Saving a picture where it cannot be shared (#344).
+  "长按图片保存，再发给朋友": "画像を長押しして保存し、友だちに送ってください",
+  "也可以点右上角，在浏览器里打开": "右上の「…」からブラウザで開くこともできます",
+  "下载": "ダウンロード",
 };

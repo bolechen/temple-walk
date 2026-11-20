@@ -26,6 +26,8 @@ const SURFACES = [
   ["menu", "document.body.classList.add('seasons'); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
+  // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
+  ["saveSheet", "(async () => { window.__book(); for (let i = 0; i < 100 && !document.getElementById('bookImg').src; i++) await new Promise((r) => setTimeout(r, 100)); document.getElementById('bookShare').click(); })()", "document.getElementById('saveClose').click(); document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],
   // (the longest of the library's lines, fixed: which one a visitor is given depends on the day, and the audit must not depend on luck; tests/e2e `slipfit` lays every line, in every language, on both screens)

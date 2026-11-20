@@ -10,6 +10,8 @@ import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, b
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
+import { shareOrSave, countDownload } from "./share.js";
+import { fromOf } from "./sharelink.js";
 import { createRites } from "./rites.js";
 import { createPresence, presenceOn } from "./presence.js";
 import { traceStubCount } from "./censer.js";
@@ -418,8 +420,9 @@ export function createGame(y) {
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
-    const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
-    $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 朱印") }); track("demo.share", { from: "book" }); } catch {} };
+    // Shared from wherever the page is open (src/share.js, #344): the system's sheet, or a sheet to press and hold the page on.
+    $("bookShare").onclick = () => shareOrSave({ blob, url, name: "yunjing-seals.jpg", title: t("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
+    $("bookSave").onclick = () => countDownload("book", "goshuin");
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
     const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
     if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
@@ -535,9 +538,13 @@ export function createGame(y) {
       const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
       const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
     };
-    if (o.eye === "none") { begin(); return; }
+    // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,
+    // and then taken to that place behind the veil; one who goes on from where they were is not moved.
+    const scene = !resumed ? fromOf(location.search) : null, land = scene && places[scene] ? places[scene] : null;
+    const arrive = async () => { if (land) await y.travel(land.at[0], land.at[1], Math.PI - land.face, land.room || null); begin(); };
+    if (o.eye === "none") { arrive(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
-    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); arrive(); });
   };
   // After a change of language the title's place is kept by the sheet that says the words are being changed, until
   // the page is ready; then it fades as the title does when he steps in (#140).

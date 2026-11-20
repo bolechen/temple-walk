@@ -22,6 +22,13 @@
 <meta property="og:image:width" content="1920">
 <meta property="og:image:height" content="1080">
 <meta property="og:image:alt" content="山门之外：小沙弥站在暮色中的云径禅寺大殿前。">
+<!-- A square one too, for the apps that show a link as a small square card (WeChat, QQ, LINE's chat list), #344 -->
+<meta property="og:image" content="https://temple.rushiwowen.co/shared/og/temple-walk-square.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1080">
+<meta property="og:image:height" content="1080">
+<meta property="og:image:alt" content="山门之外：小沙弥站在秋日暮色中的云径禅寺大殿前。">
+<meta itemprop="image" content="https://temple.rushiwowen.co/shared/og/temple-walk-square.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="山门之外 · 云径禅寺">
 <meta name="twitter:description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
@@ -135,15 +142,23 @@
   </section>
   <dialog class="layer" id="print" aria-label="照片" hidden>
     <img id="printImg" alt="刚拍下的照片">
-    <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
+    <div class="row"><button class="chip" id="shareBtn" type="button">分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
   </dialog>
 </div>
 <div id="toast" hidden><img id="toastSeal" alt=""><p id="toastName"></p><p id="toastLine"></p></div>
+<dialog class="layer" id="saveSheet" aria-labelledby="saveTitle" hidden>
+  <div class="save-card paper">
+    <p id="saveTitle">长按图片保存，再发给朋友</p>
+    <img id="saveImg" alt="">
+    <p class="note" id="saveWechat" hidden>也可以点右上角，在浏览器里打开</p>
+    <footer><a class="chip" id="saveDownload" href="#" download>下载</a><button class="stamp" id="saveClose" type="button">收下</button></footer>
+  </div>
+</dialog>
 <dialog class="layer" id="book" aria-label="朱印帐" hidden>
   <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
-  <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
 </dialog>
 <dialog class="layer" id="piece" aria-labelledby="pieceTitle" hidden>
   <figure><img id="pieceImg" alt=""></figure>

@@ -368,4 +368,8 @@ export default {
   "当日已有{n}人在此静坐": "Visitors to sit here today: {n}",
   // A change of language in the pause menu, while the page opens again in it (#140).
   "换字中": "Changing the language",
+  // Saving a picture where it cannot be shared (#344).
+  "长按图片保存，再发给朋友": "Press and hold the picture to save it, then send it to a friend",
+  "也可以点右上角，在浏览器里打开": "You can also open this page in your browser from the menu at the top right",
+  "下载": "Download",
 };
