@@ -26,7 +26,7 @@ export async function composeCard(shot, { line, label, temple, url, seal = templ
   let room = sx - u * 2 - (m + u);
   if (qr) {
     const mod = qrMatrix(qr), n = mod.length, px = Math.max(3, Math.floor((foot * 0.84) / (n + 8))), side = qrSide(n, px), qx = sx - u * 1.6 - side;
-    paintQrLook(x, mod, qx, cy - side / 2, px, LOOKS.seal, "#f3efe5"); room = qx - u * 1.2 - (m + u);
+    paintQrLook(x, mod, qx, cy - side / 2, px, px >= 5 ? LOOKS.seal : { ...LOOKS.seal, round: 0 }, "#f3efe5");   // modules under 5 px keep their corners: a rounded one that small is not read reliably from a JPEG room = qx - u * 1.2 - (m + u);
   }
   const small = (size, text, face) => { x.font = `${size}px ${face}`; const w = x.measureText(text).width; return w > room ? Math.max(Math.floor(size * 0.5), Math.floor(size * room / w)) : size; };
   x.fillStyle = "#26221e"; x.textBaseline = "middle"; x.textAlign = "left";
