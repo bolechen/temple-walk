@@ -71,6 +71,8 @@ const scenarios = {
     const node = createTrees(new THREE.Group(), M, buildSite(M).trees, {});
     expect(page.cedars > 10 && page.cedars === node.cedars.length, `the page grew ${page.cedars} cedars, Node ${node.cedars.length}`);
     expect(page.hash === geometryHash(node.cedars.map((c) => c.geometry)), `the page's cedars (${page.hash}) are not Node's (${geometryHash(node.cedars.map((c) => c.geometry))})`);
+    expect(page.ginkgos === 4 && page.ginkgos === node.ginkgos.length, `the page grew ${page.ginkgos} ginkgoes, Node ${node.ginkgos.length}`);
+    expect(page.ginkgoHash === geometryHash(node.ginkgos.map((g) => g.geometry)), `the page's ginkgoes (${page.ginkgoHash}) are not Node's (${geometryHash(node.ginkgos.map((g) => g.geometry))})`);
     await t.close();
   } },
   boot: { tier: 1, async run(b, base) {

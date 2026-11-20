@@ -8,11 +8,10 @@ const { createTrees } = await import("../../app/src/trees.js");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), spots = site.trees.filter((t) => t[3] === "ginkgo");
-const routes = (process.env.GINKGO_ROUTES || "gen").split(",");
 const deg = (r) => (r * 180) / Math.PI;
 
-for (const route of routes) {
-  const grown = createTrees(new THREE.Group(), M, spots, { ginkgo: route });
+{
+  const grown = createTrees(new THREE.Group(), M, spots);
   const trees = grown.ginkgos.map((g) => {
     const h = g.h, [ax, az] = g.at, bs = g.boughs.map((b) => {
       const dx = b.to[0] - b.from[0], dz = b.to[2] - b.from[2], dy = b.to[1] - b.from[1];
@@ -21,11 +20,11 @@ for (const route of routes) {
     const layers = []; for (const b of bs) { const L = layers[layers.length - 1]; if (L && b.y - L.top < 0.35) { L.boughs.push(b); L.top = b.y; } else layers.push({ boughs: [b], first: b.y, top: b.y }); }
     return { g, h, bs, layers };
   });
-  test(`[${route}] all four ginkgoes are grown, at the heights the plan gives`, () => {
+  test(`all four ginkgoes are grown, at the heights the plan gives`, () => {
     assert.deepEqual(trees.map((t) => t.h).sort((p, q) => p - q), [8, 9, 9.5, 11]);
     for (const t of trees) assert.ok(t.bs.length >= 15, `the ${t.h} m ginkgo has ${t.bs.length} boughs`);
   });
-  test(`[${route}] the crown is a cone: 0.45-0.65 as wide as the tree is tall, widest in its lower third`, () => {
+  test(`the crown is a cone: 0.45-0.65 as wide as the tree is tall, widest in its lower third`, () => {
     for (const t of trees) {
       const ratio = (2 * Math.max(...t.bs.map((b) => b.out))) / t.h; assert.ok(ratio >= 0.45 && ratio <= 0.65, `the ${t.h} m ginkgo is ${ratio.toFixed(2)} as wide as tall`);
       const lo = t.bs[0].y, hi = t.h, widest = t.bs.reduce((a, b) => (b.out > a.out ? b : a));
@@ -34,7 +33,7 @@ for (const route of routes) {
       const upper = Math.max(...t.bs.filter((b) => b.y > lo + (2 * (hi - lo)) / 3).map((b) => b.out)); assert.ok(upper < 0.5 * widest.out, `the ${t.h} m ginkgo's top third reaches ${upper.toFixed(2)} of ${widest.out.toFixed(2)}`);
     }
   });
-  test(`[${route}] the leader is upright to the top and does not fork`, () => {
+  test(`the leader is upright to the top and does not fork`, () => {
     for (const t of trees) {
       const tr = t.g.trunk, top = tr[tr.length - 1], foot = tr[0];
       assert.ok(top[1] - t.g.base >= t.h - 0.45, `the ${t.h} m ginkgo's leader ends at ${(top[1] - t.g.base).toFixed(2)} m`);
@@ -44,7 +43,7 @@ for (const route of routes) {
       for (const b of t.bs) assert.ok(b.tipY < t.h - 0.5, `a bough rises to ${b.tipY.toFixed(2)} m of ${t.h}`);
     }
   });
-  test(`[${route}] boughs come in whorls: 3-5 to a layer, a layer 0.6-1.2 m above the last, one layer's starts within 0.2 m`, () => {
+  test(`boughs come in whorls: 3-5 to a layer, a layer 0.6-1.2 m above the last, one layer's starts within 0.2 m`, () => {
     for (const t of trees) {
       assert.ok(t.layers.length >= 5, `the ${t.h} m ginkgo has ${t.layers.length} layers`);
       t.layers.forEach((L, i) => {
@@ -55,7 +54,7 @@ for (const route of routes) {
       assert.ok(t.layers[0].first >= 2.0 && t.layers[0].first <= 2.8 + 0.1, `the ${t.h} m ginkgo's lowest layer is at ${t.layers[0].first.toFixed(2)} m`);
     }
   });
-  test(`[${route}] boughs climb: 30-45 degrees off the leader in the upper half of the crown, 50-70 in the lower`, () => {
+  test(`boughs climb: 30-45 degrees off the leader in the upper half of the crown, 50-70 in the lower`, () => {
     for (const t of trees) {
       const lo = t.layers[0].first, hi = t.layers[t.layers.length - 1].top, mid = (lo + hi) / 2;
       for (const b of t.bs) { const [a, z] = b.y > mid ? [30, 45] : [50, 70]; assert.ok(b.angle >= a - 1 && b.angle <= z + 1, `the ${t.h} m ginkgo: a bough at ${b.y.toFixed(1)} m leaves at ${b.angle.toFixed(0)} degrees (wanted ${a}-${z})`); }
@@ -63,13 +62,13 @@ for (const route of routes) {
       assert.ok(mean(up) < mean(low) - 8, `the upper boughs (${mean(up).toFixed(0)}) should climb steeper than the lower (${mean(low).toFixed(0)})`);
     }
   });
-  test(`[${route}] a ginkgo bears no fruit and sheds none: nothing but wood and leaves is grown`, () => {
+  test(`a ginkgo bears no fruit and sheds none: nothing but wood and leaves is grown`, () => {
     // a male tree: the plan names no fruit anywhere, and the leaf sheet for a ginkgo is the only thing hung on it
     const kinds = new Set(grown.census.map((c) => c.kind)); assert.ok(kinds.has("ginkgo"));
     assert.ok(!("fruit" in grown) && !grown.census.some((c) => /fruit|nut/.test(c.kind)));
   });
-  test(`[${route}] a ginkgo grown twice is the same ginkgo, point for point`, () => {
-    const again = createTrees(new THREE.Group(), M, spots, { ginkgo: route });
+  test(`a ginkgo grown twice is the same ginkgo, point for point`, () => {
+    const again = createTrees(new THREE.Group(), M, spots);
     assert.deepEqual(again.ginkgos.map((g) => [g.trunk, g.boughs]), grown.ginkgos.map((g) => [g.trunk, g.boughs]));
     assert.deepEqual(again.census, grown.census);
   });
