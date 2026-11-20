@@ -353,6 +353,11 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 #againBtn[data-asked="1"] { color: #e5b9a4; letter-spacing: .12em; text-indent: .12em; }
 #titleSeals { font: 400 var(--t-s)/1 var(--kai); letter-spacing: .4em; text-indent: .4em; margin: 3vmin 0 0; min-height: 1.3em; color: #e5b9a4; text-shadow: var(--lift); }
 #loading { width: min(280px, 70vw); margin: 24px auto 0; text-align: left; }
+/* Opened by a change of language in the pause menu (#140): not the title, only a sheet that says the words are being
+   changed, in the new language, over the loading bar; the walk comes back as it was when the page is ready. */
+#relangLine { display: none; margin: 0 0 4px; font: 400 var(--t-l)/1.4 var(--kai); letter-spacing: .2em; text-indent: .2em; color: var(--paper); text-shadow: var(--lift); }
+html.relang #relangLine { display: block; }
+html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.relang #titleSeals, html.relang #enterBtn, html.relang #againBtn, html.relang #title .how, html.relang #title .title-links { display: none !important; }
 #loading[hidden], #loading [hidden] { display: none; }
 .load-copy { display: flex; justify-content: space-between; gap: 12px; color: var(--paper); opacity: .72; font: 12px/1.6 var(--kai); }
 #loadPercent { font-variant-numeric: tabular-nums; }
@@ -676,5 +681,10 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 @media (pointer: coarse) { #dropBtn { display: none !important; } }   /* the ring is that button on a touch screen */
 /* The ring and the slips at the edge share the lower right: upright, the slips stand above the ring; in a short window,
    where they lie in a row along the foot, they lie to the ring's left. Neither is ever drawn over the other. */
-@media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 14px + env(safe-area-inset-bottom, 0px)); } }
+/* Over the ring, a smaller one that turns the view back behind him (#295): upright the slips stand above both. */
+#turnBtn { position: absolute; right: calc(max(22px, env(safe-area-inset-right, 0px)) + 15px); bottom: calc(46px + 82px + 12px + env(safe-area-inset-bottom, 0px)); width: 52px; height: 52px; z-index: 4; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font: 400 12px/1 var(--kai); letter-spacing: .08em; color: var(--on); text-shadow: 0 1px 6px rgba(0,0,0,.7); background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .3; transition: opacity .4s var(--ease); touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
+#turnBtn:active { opacity: .9; transition-duration: .1s; }
+#turnBtn[hidden], body.photo #turnBtn, body.bare #turnBtn, body:not(.entered) #turnBtn { display: none; }
+body.directing #turnBtn, body.opening #turnBtn, body.ending #turnBtn, body:has(dialog.layer[open]) #turnBtn { opacity: 0 !important; pointer-events: none; }
+@media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 12px + 52px + 14px + env(safe-area-inset-bottom, 0px)); } }
 @media (pointer: coarse) and (max-height: 560px) { .rail { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: calc(max(22px, env(safe-area-inset-right, 0px)) + 82px + 12px); } }

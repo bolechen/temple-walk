@@ -103,6 +103,7 @@
 - **语言**：每个事件都带 `lang`，所以「日文访客走到哪一步」可以直接筛；不要用浏览器语言代替。
 - **性能降级**：`demo.quality` 的 `level` 是第几次降级（1…5），`tier` 是起始档；和 `demo.ready.tier` 对比。
 - **分享**：`demo.share.from` 只有 `print | book | clip`；`t.co` 的 196 次进入是外部，不是站内分享。
+- **朱印帐上的二维码（#319）**：分享出去的朱印帐带一枚码，写 `https://temple.rushiwowen.co/?utm_source=goshuin&utm_medium=share&utm_content=<lang>`；扫码进来的访问在 Umami 里按 `utm_source=goshuin` 筛，`utm_content` 是图上的语言。`demo.share` 照旧只数「分享」按钮成功的次数，扫码进来的数不能拿它去对，二者可以相差很多（图可以被保存、转发、截屏）。留影卡片上的码（默认开，可在留影设置里关）写 `utm_source=photo`，同样的筛法；`utm_content` 是卡片的语言。
 
 ---
 
@@ -112,6 +113,11 @@
 - 事件值截到 50 字符，避免把长文本带出去；`track()` 在非公开域名直接返回，不发送。
 - `__events()` 是测试与主控台用的内存记录（最后 200 条），不上传。
 - 这份数据是自建 Umami 的 Postgres 只读查询；查询日期 2026-11-19，之后会变。引用时写日期。
+
+**同修留痕（#340）不是统计，是游戏数据。** 站在钟楼前看到的「当日已有 N 人在此敲钟」来自 Worker 的 `/api/trace` 与 `/api/traces`（`worker/`，docs/RELEASING.md），不经 Umami，也不写进 Umami：
+- 只存「日期（UTC）× 地点 × 种类（`rite`/`seal`）× 计数」，没有 IP、UA、Cookie、访客号、语言、来源页；Worker 的代码只读请求的方法、路径、`day` 和那一小段体，`tests/unit/trace.test.mjs` 扫源码保证这点。
+- 它的数字不能拿来当访客数、转化率或留存：每处每页面只报一次，同一个人刷新、换设备都会再算一次；尝试刷数的被总量桶和日上限挡住，所以也不是精确的人数。要看人数，仍看 Umami。
+- 因此没有新增 Umami 事件。`demo.rite`、`demo.seal` 照旧；留痕的请求只在公开站和 canary 发（预览、测试、steam/平台版不发），遵守浏览器的 Do Not Track 和 Global Privacy Control（读，不报）。
 
 ---
 

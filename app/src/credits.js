@@ -65,7 +65,7 @@ export function creditSections() {
       t("LXGW WenKai（霞鹜文楷）与 Nanum Brush Script 的名称受保留，本项目的修改版在文件内以 Yunjing Kai、Yunjing Hand KO 为名。"),
     ], list: FONTS.map(([name, copyright, as]) => ({ text: name, note: as ? `${copyright} · ${as}` : copyright })) },
     { head: t("程序库"), paras: [
-      { text: t("three.js、meshoptimizer、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见"), href: asset(NOTICES), link: t("第三方许可声明") },
+      { text: t("three.js、meshoptimizer、qrcode-generator、lil-gui、stats.js（MIT）与 Basis Universal（Apache-2.0）。许可全文见"), href: asset(NOTICES), link: t("第三方许可声明") },
     ] },
   ];
 }

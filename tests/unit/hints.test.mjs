@@ -29,10 +29,27 @@ test("a visitor who never drags is told of two fingers after a good stretch of t
   rest(h); h.step(0.1, 1, false, true); assert.equal(h.state().tip, "pinch", "then, past 60 m without a drag, two fingers");
 });
 
-test("a visitor who has dragged is not told again on the path", () => {
+test("a drag made while the first line still shows is kept: two fingers are told once that line has gone", () => {
   const h = createHints();
-  h.say.entered(); h.say.dragged();   // dragged while the first line still showed: two fingers wait
-  rest(h); h.step(0.1, 80, false, true); assert.ok(!h.state().said.includes("pinch"), "a drag means the fallback is not needed");
+  h.say.entered(); h.say.dragged(); assert.equal(h.state().tip, "walk", "the first line is not cut short");
+  rest(h); h.step(0.1, 0.5, false, true); assert.equal(h.state().tip, "pinch", "told as soon as the line is free, not after 60 m");
+  assert.deepEqual(h.state().said, ["walk", "pinch"]);
+});
+
+// The real phone (Pixel 8a, #185, 2026-11-19): the first drag passed over the opening, before the line about walking had
+// been said, and two fingers were never told. Then the stick, then two fingers, then his own eyes, in that order.
+test("a drag made before the first line, as one that passes over the opening, still brings two fingers after it", () => {
+  const h = createHints();
+  h.say.dragged(); assert.equal(h.state().tip, null, "nothing is said before the walk is his");
+  h.say.entered(); assert.equal(h.state().tip, "walk");
+  rest(h); h.step(0.1, 0.2, false, true); assert.equal(h.state().tip, "pinch");
+  rest(h); h.say.nearest(); assert.deepEqual(h.state().said, ["walk", "pinch", "eyes"]);
+});
+
+test("a visitor whose two fingers have already moved the eye is not told of two fingers", () => {
+  const h = createHints();
+  h.say.dragged(); h.say.pinched(); h.say.entered(); rest(h); h.step(0.1, 80, false, true);
+  assert.ok(!h.state().said.includes("pinch"), "they know: " + JSON.stringify(h.state().said));
 });
 
 // The far view's line stays until it is released (#147): no other tip takes the line while it is held, and none is lost —

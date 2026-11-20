@@ -43,7 +43,7 @@
   <div id="keys" class="paper" hidden><h2>键位</h2><dl>
     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>行走</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
     <dt><kbd>鼠标</kbd></dt><dd>按住拖动环顾，点地面走去（「歇脚」里可改为锁定鼠标）</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
-    <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd>
+    <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd><dt><kbd>R</kbd></dt><dd>镜头转回身后（鼠标中键亦可）</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
     <dt><kbd>Space</kbd></dt><dd>跳，台沿处下台阶</dd>
     <dt class="need-seasons"><kbd>T</kbd></dt><dd class="need-seasons">时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上，歇脚</dd>
@@ -67,7 +67,7 @@
     <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
     <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
     <div class="set"><label for="setFov">视野</label><input id="setFov" type="range" min="-6" max="16" step="1"></div>
-    <div class="set"><span>自动镜头</span><button class="chip" id="setAutocam" type="button" aria-pressed="true">开</button></div>
+    <div class="set"><span>自动镜头</span><div class="opts"><button class="chip" id="setAutocam" type="button" aria-pressed="true">开</button><button class="chip" id="setFollow" type="button" aria-pressed="true" aria-label="镜头跟随" title="镜头跟随：点地走时，镜头慢慢转到身后">跟随</button></div></div>
     <div class="set need-seasons"><span>时节</span><div class="opts"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div></div>
     <div class="set need-seasons"><span>时辰</span><div class="opts"><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></div>
     </div>
@@ -124,7 +124,7 @@
       <button class="chip" data-aspect="screen" aria-pressed="true" type="button">全幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="tall" aria-pressed="false" type="button">竖幅</button>
     </div></fieldset>
     <fieldset><legend>取景</legend><div class="row">
-      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button><button class="chip" id="clipMarkToggle" aria-pressed="true" type="button">落款</button>
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="qrToggle" aria-pressed="true" type="button">二维码</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button><button class="chip" id="clipMarkToggle" aria-pressed="true" type="button">落款</button>
     </div></fieldset>
     <fieldset><legend>远近</legend><div class="row">
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
@@ -176,6 +176,7 @@
       <progress id="loadProgress" max="100" aria-label="山路正在铺开"></progress>
       <button id="loadRetry" type="button" hidden>再来一次</button>
     </div>
+    <p id="relangLine">换字中</p>
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>
     <button id="againBtn" type="button" hidden></button>
   </div>
