@@ -39,7 +39,8 @@ jobs:
     if: needs.release.outputs.release_created == 'true'
     permissions:
       contents: read
-    uses: ./.github/workflows/production.yml
+    uses: ./.github/workflows/deploy-tag.yml
     with:
       ref: ${{ needs.release.outputs.tag_name }}
+      target: production
     secrets: inherit

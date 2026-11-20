@@ -1,12 +1,14 @@
-name: Deploy production from a version tag
+name: Deploy a version tag
 
 # Issue #308: the public site is only ever built from a version tag (`vX.Y.Z`), never from main (main goes to the canary,
 # pages.yml). Two ways in, one path:
-#   - release-please.yml calls this when a version PR is merged and the tag is made (a tag made with the default token starts
-#     no workflow of its own, so the release job calls this one by name);
+#   - release-please.yml calls this (target production) when a version PR is merged and the tag is made (a tag made with the
+#     default token starts no workflow of its own, so the release job calls this one by name);
 #   - by hand, Actions → this workflow → Run workflow, `ref` a tag: the same build and the same deploy, which is how the live
 #     site is put back to an older version (a rollback, docs/RELEASING.md).
-# The tag's own code is built, so an older tag goes out as it was when it was good.
+# `target` says where it goes: `production` (the public site, the default) or `canary` (the internal Worker, where the
+# mechanism can be tried on any tag without touching a player). `dry_run` builds and checks everything and prints what would
+# be deployed and where, and deploys nothing. The tag's own code is built, so an older tag goes out as it was when it was good.
 on:
   workflow_call:
     inputs:
@@ -14,12 +16,33 @@ on:
         description: "Version tag to put live, e.g. v0.5.0"
         required: true
         type: string
+      target:
+        description: "production or canary"
+        required: false
+        type: string
+        default: production
+      dry_run:
+        description: "Build and check, print what would be deployed and where, deploy nothing"
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       ref:
         description: "Version tag to put live, e.g. v0.5.0 (a rollback is this with an older tag)"
         required: true
         type: string
+      target:
+        description: "Where it goes: production is the public site; canary is the internal Worker"
+        required: true
+        type: choice
+        options: [production, canary]
+        default: production
+      dry_run:
+        description: "Build and check, print what would be deployed and where, deploy nothing"
+        required: false
+        type: boolean
+        default: false
       check:
         description: "Drive the built page once in a browser before publishing (the boot scenario, about two minutes); untick only in a hurry"
         required: false
@@ -33,15 +56,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      REF: ${{ inputs.ref }}
+      TARGET: ${{ inputs.target }}
     outputs:
       sha: ${{ steps.at.outputs.sha }}
     steps:
-      # Only a version tag that exists is put live: not a branch, not a commit.
-      - name: The ref is a version tag
-        env:
-          REF: ${{ inputs.ref }}
+      # Only a version tag that exists is put live: not a branch, not a commit; and only to a place that is named.
+      - name: The ref is a version tag, the target is a place
         run: |
           echo "$REF" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::ref must be a version tag such as v0.5.0, not '$REF'"; exit 1; }
+          case "$TARGET" in production|canary) ;; *) echo "::error::target must be production or canary, not '$TARGET'"; exit 1;; esac
           git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/$REF" || { echo "::error::no tag $REF"; exit 1; }
       - uses: actions/checkout@v4
         with:
@@ -58,12 +83,12 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/walk
-          key: walk-t00-production-${{ github.run_id }}
+          key: walk-t00-tag-${{ github.run_id }}
           restore-keys: walk-t00-
       - uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-production-${{ github.run_id }}
+          key: doorways-t00-tag-${{ github.run_id }}
           restore-keys: doorways-t00-
       - name: Remember the browser between runs
         if: inputs.check != false
@@ -71,26 +96,31 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-production-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-tag-${{ hashFiles('pnpm-lock.yaml') }}
       - name: A browser to drive the page with
         if: inputs.check != false
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      # The only build that carries the visitor counter and may be indexed (app/src/deploy.js). A tag older than this setting
-      # ignores it and goes out as it was.
+      # The build says where it is going (app/src/deploy.js): only production carries the visitor counter and may be
+      # indexed. A tag older than this setting ignores it and goes out as it was.
       - name: Build the site
         env:
-          VITE_DEPLOY: production
+          VITE_DEPLOY: ${{ inputs.target }}
         run: pnpm run build
+      # Never indexable on the canary, whatever the age of the tag: the header is added if the tag's build did not write it.
+      - name: The canary is kept out of search
+        if: inputs.target == 'canary'
+        run: |
+          grep -q "X-Robots-Tag" dist/_headers 2>/dev/null || printf '/*\n  X-Robots-Tag: noindex, nofollow\n' >> dist/_headers
       - name: End to end, startup and movement
         if: inputs.check != false
         env:
-          VITE_DEPLOY: production
+          VITE_DEPLOY: ${{ inputs.target }}
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
         if: always() && inputs.check != false
         uses: actions/upload-artifact@v4
         with:
-          name: production-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tag-e2e-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
@@ -98,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: dist
-          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tag-site-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 1
           include-hidden-files: true
 
@@ -106,45 +136,61 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # One publication of the public site at a time. A run waiting for its turn is replaced by a newer waiting one (GitHub's
-    # rule): a run shown as cancelled is run again.
+    # One publication to each place at a time (the canary shares pages.yml's queue). A run waiting for its turn is replaced
+    # by a newer waiting one (GitHub's rule): a run shown as cancelled is run again.
     concurrency:
-      group: production-deploy
+      group: ${{ inputs.target == 'canary' && 'pages-canary' || 'production-deploy' }}
       cancel-in-progress: false
+    env:
+      REF: ${{ inputs.ref }}
+      TARGET: ${{ inputs.target }}
+      SHA: ${{ needs.build.outputs.sha }}
     steps:
       # The Worker's settings come from the workflow's own branch (main), never from the tag being put live.
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: wrangler.production.jsonc
+          sparse-checkout: |
+            wrangler.production.jsonc
+            wrangler.canary.jsonc
+          sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v4
         with:
-          name: production-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tag-site-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # What would be deployed and where, said before anything is: the tag, its commit, the Worker and its address.
+      - name: What goes where
+        run: |
+          if [ "$TARGET" = canary ]; then worker=temple-walk-canary; url=https://temple-walk-canary.bole-chen.workers.dev; else worker=temple-walk; url=https://temple.rushiwowen.co; fi
+          echo "WORKER=$worker" >> "$GITHUB_ENV"; echo "URL=$url" >> "$GITHUB_ENV"
+          {
+            echo "### ${DRY:+（演练，不部署）}$TARGET ← \`$REF\`"
+            echo "- 提交 \`$SHA\`"
+            echo "- Worker \`$worker\`，配置 \`wrangler.$TARGET.jsonc\`，地址 $url"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          DRY: ${{ inputs.dry_run && 'yes' || '' }}
       - name: Publish the demo
+        if: inputs.dry_run != true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: "false"
-        run: npx --yes wrangler@4.162.0 deploy -c wrangler.production.jsonc
+        run: npx --yes wrangler@4.162.0 deploy -c "wrangler.$TARGET.jsonc"
       # What is live is read back: the address's first page must be the very page just built.
       - name: The live page is the one built
-        env:
-          REF: ${{ inputs.ref }}
-          SHA: ${{ needs.build.outputs.sha }}
+        if: inputs.dry_run != true
         run: |
           want=$(sha256sum dist/index.html | cut -c1-64)
           got=none
           for i in 1 2 3 4 5 6; do
-            got=$(curl -fsS "https://temple.rushiwowen.co/?live=$GITHUB_RUN_ID" | sha256sum | cut -c1-64) || got=none
+            got=$(curl -fsS "$URL/?live=$GITHUB_RUN_ID" | sha256sum | cut -c1-64) || got=none
             [ "$got" = "$want" ] && break
             sleep 10
           done
           {
-            echo "### 线上已换成 \`$REF\`"
-            echo "- 提交 \`$SHA\`"
             echo "- index.html SHA-256：构建 \`$want\`，线上 \`$got\`"
           } >> "$GITHUB_STEP_SUMMARY"
           echo "live=$got"; echo "built=$want"

@@ -139,18 +139,25 @@ test("e2e.yml no longer repeats the scenarios that stop the publication", () => 
   assert.match(regression, /run\.cjs menufit/, "the menu in every language stays where it was");
 });
 
-test("production.yml: only a version tag is put live, by release-please and by hand, to the production Worker", () => {
-  const p = read("production.yml");
+test("deploy-tag.yml: only a version tag is put live, to a named place, by release-please and by hand, and a dry run deploys nothing", () => {
+  const p = read("deploy-tag.yml");
   assert.match(p, /workflow_call:\s*\n\s*inputs:\s*\n\s*ref:/, "release-please calls it with a ref");
   assert.match(p, /workflow_dispatch:\s*\n\s*inputs:\s*\n\s*ref:/, "a rollback is a run by hand with a ref");
+  assert.match(p, /target:\n\s*description: "Where it goes[^\n]*\n\s*required: true\n\s*type: choice\n\s*options: \[production, canary\]\n\s*default: production/, "the place is chosen, production by default");
+  assert.match(p, /dry_run:/, "a dry run is asked for by name");
   assert.match(p, /\^v\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$/, "the ref must be a version tag");
+  assert.match(p, /production\|canary\) ;; \*\) echo "::error::target must be/, "and the target one of two places");
   assert.match(p, /ref: refs\/tags\/\$\{\{ inputs\.ref \}\}/, "and it is the tag that is checked out");
-  assert.match(jobOf(p, "build"), /VITE_DEPLOY: production/);
-  assert.match(jobOf(p, "build"), /run\.cjs boot/);
-  assert.match(jobOf(p, "deploy"), /needs: build/);
-  assert.match(jobOf(p, "deploy"), /deploy -c wrangler\.production\.jsonc/);
-  assert.match(jobOf(p, "deploy"), /sparse-checkout: wrangler\.production\.jsonc/, "the Worker's settings come from the workflow's branch, not the tag");
-  assert.match(jobOf(p, "deploy"), /group: production-deploy\n\s*cancel-in-progress: false/, "one publication at a time");
+  const build = jobOf(p, "build");
+  assert.match(build, /VITE_DEPLOY: \$\{\{ inputs\.target \}\}/, "the build says where it goes");
+  assert.match(build, /run\.cjs boot/);
+  assert.match(build, /X-Robots-Tag/, "the canary is kept out of search whatever the tag's age");
+  const deploy = jobOf(p, "deploy");
+  assert.match(deploy, /needs: build/);
+  assert.match(deploy, /deploy -c "wrangler\.\$TARGET\.jsonc"/, "the Worker is the target's");
+  assert.match(deploy, /if: inputs\.dry_run != true\n[\s\S]*?wrangler@[\d.]+ deploy/, "a dry run does not publish");
+  assert.match(deploy, /sparse-checkout: \|\n\s*wrangler\.production\.jsonc\n\s*wrangler\.canary\.jsonc/, "the Workers' settings come from the workflow's branch, not the tag");
+  assert.match(deploy, /group: \$\{\{ inputs\.target == 'canary' && 'pages-canary' \|\| 'production-deploy' \}\}\n\s*cancel-in-progress: false/, "one publication to a place at a time; the canary shares pages.yml's queue");
   assert.equal(p.match(/wrangler@[\d.]+ deploy/)[0], read("pages.yml").match(/wrangler@[\d.]+ deploy/)[0], "the same wrangler as pages.yml");
   assert.doesNotMatch(p, /push:|branches:/, "nothing but a tag, asked for by name, starts it");
 });
@@ -162,7 +169,8 @@ test("release-please.yml deploys production when, and only when, a version was m
   const job = jobOf(r, "production");
   assert.match(job, /needs: release/);
   assert.match(job, /needs\.release\.outputs\.release_created == 'true'/);
-  assert.match(job, /uses: \.\/\.github\/workflows\/production\.yml/);
+  assert.match(job, /uses: \.\/\.github\/workflows\/deploy-tag\.yml/);
+  assert.match(job, /target: production/, "the release goes to production, nothing else");
   assert.match(job, /ref: \$\{\{ needs\.release\.outputs\.tag_name \}\}/);
   assert.match(job, /secrets: inherit/);
 });

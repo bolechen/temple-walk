@@ -163,7 +163,7 @@ jobs:
     timeout-minutes: 15
     env:
       # Where this build is going (app/src/deploy.js): a pull request's preview, or the canary. Never production: that is
-      # built from a version tag by production.yml. Neither carries the visitor counter.
+      # built from a version tag by deploy-tag.yml. Neither carries the visitor counter.
       VITE_DEPLOY: ${{ github.event_name == 'pull_request' && 'preview' || 'canary' }}
       # The pull request's number, for a preview build to say which it is (#310 reads it; empty on the canary).
       VITE_PR: ${{ github.event.pull_request.number }}
@@ -336,7 +336,7 @@ jobs:
           script: await require(`${process.env.GITHUB_WORKSPACE}/tools/preview/comment.cjs`)({ github, context, core })
 
   # The canary (#308): what main last deployed, on a Worker of its own with its own address, so that it can be played before
-  # a version is cut. The public site is deployed from a version tag (production.yml). Only after `verify`: both sets of unit
+  # a version is cut. The public site is deployed from a version tag (deploy-tag.yml). Only after `verify`: both sets of unit
   # tests, the build and `boot` have all passed, and after `quick` (the stairs and the low drop), by name; a skipped or
   # failed job fails the `success()` every `if` without a status function carries.
   deploy:
