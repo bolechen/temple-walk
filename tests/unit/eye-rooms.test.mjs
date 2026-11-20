@@ -26,6 +26,9 @@ const { gather } = await import("../../tools/walk/bake.mjs");
 const level = (await import("../../app/levels/t00/level.js")).default;
 
 const drawn = buildDrawn(), { site, rooms } = drawn;
+// What is drawn as the page draws it: the dark behind a hall's leaves is a shader (materials.js `interior`, doorway.js
+// paints the room on it), which the eye's gathering passes over as it does mist and glass.
+for (const root of [drawn.scene, rooms.group]) root.traverse((o) => { if (o.isMesh && o.material?.name === "interior") o.material = new THREE.ShaderMaterial(); });
 // The page's scene: the place's parts, each at the top of the scene as yard.js adds them (some a group, some a mesh of
 // its own: the land, the trees), and the rooms as their own part, hidden from the courts.
 const scene = new THREE.Scene(), place = [...drawn.scene.children];
@@ -89,4 +92,19 @@ test("the eye's space is the same gathered from a room as from the courts, less 
     assert.equal(count(new Set()), outdoors, "gathered from inside a room, the courts went missing");
     assert.ok(count(new Set(["site"])) < outdoors * 0.5, "?off=site should leave the courts out");
   } finally { for (const o of place) o.visible = true; rooms.group.visible = false; }
+});
+
+// Coming out of a hall (the canary's pictures for #391: out of the great hall's door, facing the court, the eye backed in
+// through the open door, past the dark box behind the leaves, into the hollow of the building, and him not in the picture).
+// From where each hall sets him down coming out, facing the way out, the eye stays in front of its leaves.
+test("coming out of every hall, the eye stays outside its door", () => {
+  walker.setRoom(null);
+  const bad = [];
+  for (const h of site.halls) {
+    const f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)];   // the way out
+    const { c } = settle(h.out[0], h.out[1], h.outYaw);
+    const into = -((c[0] - h.door[0]) * f[0] + (c[2] - h.door[1]) * f[1]);   // how far behind the point before the door the eye stands
+    if (into > 0.45) bad.push(`${h.id}: the eye is ${into.toFixed(2)} m in behind the door (eye ${c.map((v) => v.toFixed(2)).join(", ")})`);
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
 });
