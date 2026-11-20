@@ -13,7 +13,7 @@ import { createBackdrop } from "./src/backdrop.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
-import { strike, flutter, cueState, shutterSound, stampSound, photoSounds, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
+import { recordTap, strike, flutter, cueState, shutterSound, stampSound, photoSounds, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
 import { zoneOf, zoneBounds } from "./src/score.js";
@@ -31,6 +31,7 @@ import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.j
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
+import { createClip, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
 import { track } from "./src/analytics.js";
@@ -55,7 +56,7 @@ import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
-import { t as tr, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
+import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
 const moodWords = (m) => m.label.split(" · ").map((w) => tr(w)).join(" · ");
 
@@ -561,6 +562,7 @@ new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
 const load = { tris: 0, calls: 0, ms: 0 };
+/** @type {any} */ let clipRec = null;   // the short film being made (clip.js), if any
 let frozen = false;   // a photograph holds the picture still from the shutter until the print is put away
 /** @type {any} */ let walkViz = null;   // (the debug panel's drawing of what stops him; null until it is switched on)
 function frame(now) {
@@ -720,6 +722,7 @@ function frame(now) {
   if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
   post.focus(photo.on && settings.get().blur ? focusAt() : 0);   // depth of field only with the camera raised and 虚化 switched on: never walking, never ?shot (the picture a visitor sees is the picture a tool takes)
   post.render(t);
+  clipRec?.frame();   // a film being made takes its frame now, from the buffer just drawn (it is not kept past this task)
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
   if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length }); } }
@@ -743,7 +746,7 @@ setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if 
 // ---- Taking a photograph ------------------------------------------------------------
 // The raised camera is a mode on the stack of layers, its settings a panel over it, the print a sheet over both:
 // Esc folds the settings, then puts the print away, then lowers the camera.
-const folded = (open) => () => { $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
+const folded = (open) => () => { document.body.classList.toggle("photo-settings-open", open); $("photoSettings").hidden = !open; $("photoSettingsToggle").setAttribute("aria-expanded", String(open)); };
 ui.layer("photoSettings", { kind: "panel", show: folded(true), hide: folded(false), returnFocus: "photoSettingsToggle" });
 // On a touch screen the picture is taken with the round button and drawn nearer with two fingers: the line under the
 // camera's settings says so, rather than speaking of a click and a wheel the hand does not have.
@@ -752,6 +755,7 @@ ui.layer("photo", { kind: "mode", el: null, show: () => raise(true), hide: () =>
 function setPhotoSettings(open) { if (open) ui.open("photoSettings"); else ui.close("photoSettings"); }
 function setPhoto(open) { if (open) { ui.close("keys"); ui.close("moodPanel"); if (!ui.open("photo")) raise(true); } else if (!ui.close("photo")) raise(false); }
 function raise(open) {
+  if (!open) dropClip();
   ui.close("photoSettings");   // the settings start folded every time the camera is raised
   photo.on = open; document.body.classList.toggle("photo", open); if (open) hints.say.photo(); else hints.drop("photo");
   // Raised in the middle of a swing to a place's shot, it is the shot that is framed; raised on the way home, the eye is
@@ -832,6 +836,62 @@ on("printBack", () => ui.close("print"));
 on("shareBtn", async () => {
   try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "print" }); } catch {}
 });
+
+// ---- A short film (#342, clip.js) ----------------------------------------------------
+// 拍一段: the same view, held, filmed for twelve seconds (stopped whenever the visitor likes). Each frame the framed part
+// of the drawing is copied onto a canvas of the film's own size (1080 on the short side, 720 on the low tier), the sound
+// of the place is taken off the output, and, unless 落款 is off, a faint signature rises over the last second and a half.
+// The interface steps away (body.clipping) leaving a hair of progress and a way to stop; Esc stops, never leaves.
+const clipPick = typeof MediaRecorder !== "undefined" && HTMLCanvasElement.prototype.captureStream ? pickMime((m) => MediaRecorder.isTypeSupported(m)) : null;
+if (!clipPick) $("clipBtn").hidden = true;
+ui.layer("clip", { kind: "modal" });
+let clipUrl = null, clipTimer = 0, clipTap = null, clipLast = null;
+const clipEnded = () => { clearInterval(clipTimer); clipTimer = 0; clipTap?.release(); clipTap = null; document.body.classList.remove("clipping"); $("clipRec").hidden = true; $("clipBar").style.removeProperty("width"); $("shutter").disabled = false; clipRec = null; };
+async function startClip(secs) {
+  if (!clipPick || clipRec || frozen || !photo.on) return false;
+  const mark = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") + "/?" + CLIP.utm } : null;
+  if (mark) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, mark.seal), document.fonts.load(`30px ${FACE.serif}`, mark.temple + mark.label)]); } catch {} }
+  if (clipRec || !photo.on) return false;
+  const [aw, ah] = photo.aspect === "screen" ? [canvas.clientWidth, canvas.clientHeight] : ASPECT[photo.aspect];
+  const crop = () => { const f = frameRect(), kx = canvas.width / canvas.clientWidth, ky = canvas.height / canvas.clientHeight; return { x: f.x * kx, y: f.y * ky, w: f.w * kx, h: f.h * ky }; };
+  clipTap = recordTap();
+  try {
+    clipRec = createClip({ source: canvas, crop, size: clipSize(aw, ah, quality.name), audio: clipTap?.stream, pick: clipPick, mark, secs,
+      onEnd: (r) => { const early = r.early; clipEnded(); showClip(r); track("demo.clip.export", { fmt: r.ext, secs: Math.round(r.secs), early, tier: quality.name }); },
+      onFail: () => { clipEnded(); } });
+  } catch (e) { clipEnded(); return false; }
+  ui.close("photoSettings"); document.body.classList.add("clipping"); $("shutter").disabled = true;
+  $("clipRec").hidden = false; const rec = clipRec; rec.start();
+  clipTimer = setInterval(() => { $("clipRec").style.setProperty("--clip", rec.progress().k.toFixed(3)); }, 100);
+  track("demo.clip.start", { aspect: photo.aspect, tier: quality.name, fmt: clipPick.ext, mark: !!mark });
+  return true;
+}
+const stopClip = () => clipRec?.stop();
+function dropClip() { if (clipRec) { clipRec.cancel(); clipEnded(); } }
+function showClip(r) {
+  clipUrl && URL.revokeObjectURL(clipUrl); clipUrl = URL.createObjectURL(r.blob);
+  const file = new File([r.blob], clipName(r.ext, `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}`), { type: r.type });
+  clipLast = { file, type: r.type, ext: r.ext, size: r.blob.size, secs: r.secs };
+  const v = $("clipVideo"); v.src = clipUrl; v.play?.().catch(() => {});
+  $("clipSave").href = clipUrl; $("clipSave").download = file.name;
+  const can = !!(navigator.canShare && navigator.canShare({ files: [file] })); $("clipShare").hidden = !can;
+  const hint = saveHint({ canShare: can, coarse: hints.coarse }), h = $("clipHint"); h.hidden = !hint;
+  if (hint) h.textContent = hint === "hold" ? tr("长按影片，选「存入相册」或「下载」。") : tr("点「保存」，或在影片上点右键，选「另存为」。");
+  ui.open("clip", { onClose: () => { v.pause?.(); v.removeAttribute("src"); v.load?.(); clipUrl && URL.revokeObjectURL(clipUrl); clipUrl = null; clipLast = null; } });
+}
+on("clipBtn", () => { startClip(); });
+on("clipStop", stopClip);
+on("clipBack", () => ui.close("clip"));
+on("clipShare", async () => {
+  if (!clipLast) return;
+  try { await navigator.share({ files: [clipLast.file], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "clip" }); } catch {}
+});
+settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
+$("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));
+on("clipMarkToggle", () => settings.set("clipMark", !settings.get().clipMark));
+addEventListener("keydown", (e) => { if (e.key === "Escape" && clipRec) { e.stopImmediatePropagation(); e.preventDefault(); stopClip(); } }, true);
+document.addEventListener("visibilitychange", () => { if (document.hidden) dropClip(); });
+window.__clip = (o) => { if (o && o.start) return startClip(o.secs); if (o && o.stop) return stopClip(); return { supported: !!clipPick, mime: clipPick?.type ?? null, recording: !!clipRec, state: clipRec?.state ?? null, drawn: clipRec?.drawn ?? 0, last: clipLast && { type: clipLast.type, ext: clipLast.ext, size: clipLast.size, secs: clipLast.secs } }; };
 
 // ---- Through the door ----------------------------------------------------------------
 // Eyes close on the way in and daylight floods on the way out; behind the veil he is moved between the porch and the

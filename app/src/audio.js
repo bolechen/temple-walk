@@ -372,6 +372,13 @@ export function stampSound() {
   crack(t + 0.01, 3600, 0.5, 0.06, 0.22);        // the paper gives a little under it
   shots.stamp++;
 }
+// The place's whole sound, taken after the visitor's own volume (a film is heard as it was heard), for a recording
+// (clip.js, #342). Null where nothing has sounded yet or the browser has no stream destination: the film is silent then.
+export function recordTap() {
+  if (!ctx || !master || !ctx.createMediaStreamDestination) return null;
+  wake(); const d = ctx.createMediaStreamDestination(); master.connect(d);
+  return { stream: d.stream, release() { try { master.disconnect(d); } catch {} } };
+}
 export const photoSounds = () => ({ ...shots, state: ctx ? ctx.state : "off" });
 
 // ---- The sound of the place when nothing is happening ----
