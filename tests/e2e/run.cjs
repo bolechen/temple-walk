@@ -117,7 +117,10 @@ const scenarios = {
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {
-    const t = await open(b, base, "q=low" + BARE, { enter: false });
+    // One scanned surface is made to 404 (#326): the place still comes up and steps in, the count says one failed, and
+    // the load is not reported as broken.
+    const MISSING = "bark_n.jpg";
+    const t = await open(b, base, "q=low" + BARE, { enter: false, route: ["**/shared/textures/" + MISSING, (r) => r.fulfill({ status: 404, body: "" })] });
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
     await t.page.keyboard.press("Space");
     await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 30000, "the title never left");
@@ -146,7 +149,8 @@ const scenarios = {
     const e = await t.page.evaluate(() => window.__eventLog());
     expect(e.every((x) => "lang" in x.data), "every event should carry the language: " + JSON.stringify(e.filter((x) => !("lang" in x.data))));
     const ready = e.find((x) => x.name === "demo.ready");
-    expect(ready && ready.data.failed === 0, "ready should count the textures that failed: " + JSON.stringify(ready));
+    expect(ready && ready.data.failed === 1 && (await t.page.evaluate(() => window.__textures().failed)).includes(MISSING), "ready should count the texture that failed: " + JSON.stringify(ready));
+    expect(!e.some((x) => x.name === "demo.load_error") && (await t.page.isHidden("#loadRetry")) && (await t.page.isHidden("#loading")), "a missing texture should not be taken for the load failing");
     // Leaving is named once, the first time the page is hidden, with where he was and how far he got (#326).
     await t.page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
     await t.until(async () => (await names()).filter((n) => n === "demo.leave").length === 1, 10000, "leaving should be named once");
@@ -155,7 +159,8 @@ const scenarios = {
     expect(at.place === "main" && at.inside === 1 && at.up === 0 && at.seals === 0 && Number.isInteger(at.metres) && Number.isInteger(at.seconds), "leaving should say where and how far: " + JSON.stringify(at));
     await t.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     expect((await names()).filter((n) => n === "demo.leave").length === 1, "a second hide should not be named again");
-    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    const errors = t.errors.filter((x) => !x.includes(MISSING));   // the 404 asked for above, and the browser's own line about it
+    expect(errors.length === 0, errors.join("\n")); await t.close();
   } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.

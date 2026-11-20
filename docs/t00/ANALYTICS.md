@@ -63,7 +63,7 @@
 | `demo.complete` | 第七印、书满 | `count` `seconds` | 通关 |
 | `demo.ending` | 收尾看完/跳过 | `skipped` `count` `seconds` | 结尾 |
 | `demo.restart` | 从头走起 | `from` `seals` | 重开 |
-| `demo.load_error` | 加载失败 | `reason`（`error`/`webgl`）`asset` `stage` | 失败原因、哪个资源、停在哪一步（本轮补 `asset`/`stage`） |
+| `demo.load_error` | 加载失败 | `reason`（`error`/`webgl`）`asset` `stage` `where` | 失败原因、哪个资源、停在哪一步、哪里出的错（本轮补 `asset`/`stage`/`where`，见下） |
 
 ### 3.2 本轮新增
 
@@ -81,6 +81,12 @@
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
 | `demo.leave` | 入山后第一次页面隐藏（每次打开一次） | `seconds`（本次页面打开秒数）`seals` `metres`（这一趟）`place`（殿 id / 楼上 id / 地点名）`inside` `up` | 每次访问在哪儿结束、多久、走了多少、几枚印 |
 | `demo.setting` | 改设置（同一 key 800 ms 内合并，取最后值；值未变不发） | `key` `value`（布尔为 `1/0`） | 谁改了哪项：自动镜头、画质、锁定鼠标、音量、视野等 |
+
+`demo.load_error` 的三个新字段（`app/loading.js`）：
+
+- `asset`：失败资源的文件名（去掉网址、query 与 hash）。依次取：调用方传入的资源；这次错误信息里的第一个网址（如 three 的 `fetch for "…/buddha.glb" responded with 404`）；页面里最近一个加载失败的 `<img>`/`<script>`/`<link>`。资源加载失败不冒泡到 `window`，只有捕获阶段听得到；这个监听只记下文件名，**不判为加载失败**，一张图缺了不等于整页没加载好。three 用不进文档的图片取的扫描贴图，捕获阶段也听不到，它们只记在 `demo.ready.failed` 里。
+- `stage`：最后一次 `loading.step(name)` 的步骤名（不带「山路正在铺开」）。
+- `where`：代码抛错时是脚本文件名与行号（如 `yard-3f9a.js:722`）；未处理的 Promise 拒绝时是错误信息的前 50 字，其中网址只留文件名。
 
 `demo.leave` 的 `place` 与「接着走」保存的地点同源：殿内是殿 id（如 `main`），楼上是 `lingxiao`，其余是用 `labelOf` 得出的地点名（如 `钟楼`、`山路上`）。
 
