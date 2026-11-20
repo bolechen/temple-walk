@@ -53,10 +53,10 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: msaa });
   const cam = new THREE.PerspectiveCamera(); cam.matrixAutoUpdate = false; cam.matrixWorldAutoUpdate = false;
   const look = new THREE.PerspectiveCamera(90, 1, 0.05, 80);
-  const clear = new THREE.Color(), frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
+  const c3 = new THREE.Vector3(), clear = new THREE.Color(), frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
   let sun = null, hemi = null;
   scene.traverse((o) => { if (o.isDirectionalLight && !sun) sun = o; if (o.isHemisphereLight && !hemi) hemi = o; });
-  const stats = { drawn: 0, hall: null, weight: 0, warmed: [], compileMs: {}, worstWarmFrame: 0, liveMs: 0, warm }   // compileMs: from first near to warmed, wall clock;
+  const stats = { drawn: 0, hall: null, weight: 0, warmed: [], compileMs: {}, worstWarmFrame: 0, liveMs: 0, share: 1, warm }   // compileMs: from first near to warmed, wall clock;
 
   // The scene as it is inside that hall: only the rooms, that hall's own lamps (the rest are out), the sun put out and the
   // sky's light low, as the bake draws it (doorway-capture.js), with no mist layer and no snow (the room is under ground).
@@ -146,9 +146,22 @@ export function createLive({ renderer, scene, U, rooms, halls, msaa = 0, warm = 
     roomEye(o, camera, cam);
     const W = Math.max(1, Math.round(size[0] * scale)), H = Math.max(1, Math.round(size[1] * scale));
     if (rt.width !== W || rt.height !== H) rt.setSize(W, H);
+    // Only the door's own rectangle on the screen is drawn (the rest of the picture is never shown): the opening's four
+    // corners, from doorway.js's `uDoor`, carried out of the building into the world and onto the screen, a few pixels larger.
+    const D = o.mat.uniforms.uDoor.value, g = o.d.group.matrixWorld, ph = o.d.platH, Z = o.d.Z;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, behind = false;
+    for (const [x, y] of [[D.x, D.z], [D.y, D.z], [D.x, D.w], [D.y, D.w]]) {
+      c3.set(x, ph + y, Z).applyMatrix4(g).applyMatrix4(camera.matrixWorldInverse); if (c3.z > -camera.near) { behind = true; break; }
+      c3.applyMatrix4(camera.projectionMatrix); x0 = Math.min(x0, c3.x); x1 = Math.max(x1, c3.x); y0 = Math.min(y0, c3.y); y1 = Math.max(y1, c3.y);
+    }
+    const px = (v, n) => THREE.MathUtils.clamp(Math.round((v * 0.5 + 0.5) * n), 0, n);
+    if (behind) rt.scissor.set(0, 0, rt.width, rt.height);
+    else { const a = px(x0, rt.width) - 3, b = px(y0, rt.height) - 3; rt.scissor.set(Math.max(0, a), Math.max(0, b), Math.min(rt.width, px(x1, rt.width) + 3) - Math.max(0, a), Math.min(rt.height, px(y1, rt.height) + 3) - Math.max(0, b)); }
+    rt.scissorTest = true;
+    stats.share = +((rt.scissor.z * rt.scissor.w) / (rt.width * rt.height)).toFixed(3);   // how much of the picture is drawn
     const lamp = U.uLamp.value, undress = dress(o), target = renderer.getRenderTarget();
-    try { renderer.setRenderTarget(rt); renderer.render(scene, cam); }
-    finally { renderer.setRenderTarget(target); undress(); }
+    try { renderer.setRenderTarget(rt); if (rt.scissor.z > 0 && rt.scissor.w > 0) renderer.render(scene, cam); }
+    finally { rt.scissorTest = false; renderer.setRenderTarget(target); undress(); }
     const u = o.mat.uniforms;
     u.tLive.value = rt.texture; u.uLive.value = w; u.uRes.value.set(size[0], size[1]);
     u.uGain.value = THREE.MathUtils.lerp(GAIN[0], GAIN[1], THREE.MathUtils.clamp(lamp, 0, 1));

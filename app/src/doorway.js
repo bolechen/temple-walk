@@ -47,9 +47,10 @@ function doorMaterial(U, steps) {
       uniform samplerCube tDay, tNight, tDist; uniform float uHas, uLamp; uniform mat4 uW2R; uniform vec3 uMin, uMax, uC; uniform vec4 uDoor;
       uniform sampler2D tInDay, tInNight, tInDist, tLive; uniform float uHi, uLive, uLiveOn, uGain; uniform vec2 uRes;
       varying vec3 vWP;
-      // On the face into the room (-z, as the capture's sixth camera saw it: rows from the foot up).
+      // On the face into the room (-z, as the capture's sixth camera saw it). Its rows come to the card top first, as the
+      // cube's do (doorway-capture.js keeps them as read back), so up in the room is down the picture (T4, #320).
       bool inward(vec3 q){ return uHi>0. && q.z<0. && abs(q.x)< -q.z && abs(q.y)< -q.z; }
-      vec2 inUV(vec3 q){ return q.xy/max(-q.z,1e-3)*.5+.5; }
+      vec2 inUV(vec3 q){ return vec2(q.x,-q.y)/max(-q.z,1e-3)*.5+.5; }
       float far(vec3 q){ vec2 s=(inward(q)?texture(tInDist,inUV(q)).rg:texture(tDist,q).rg)*255.; return (s.x*256.+s.y)/65535.*${DIST.toFixed(1)}; }
       float gap(vec3 ro, vec3 rd, float t){ vec3 q=ro+rd*t-uC; return length(q)-far(q); }
       void main(){

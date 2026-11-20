@@ -46,7 +46,7 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
         if (/live/.test(arg("doorway", "")) && d < 16) await p.waitForFunction((i) => { const l = window.__doorways().live; return l && l.halls[i] === "ready" && l.hall === i; }, id, { timeout: 240000, polling: 500 }).then(() => p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))).catch(() => errs.push(id + ": the live room never came"));
         if (/hires/.test(arg("doorway", "")) && !before) await p.waitForFunction((i) => window.__doorways().halls[i].hi, id, { timeout: 120000, polling: 500 }).catch(() => errs.push(id + ": the larger face never came"));
         const name = `${id}-${d}m-${a}${moods.length > 1 ? `-${se}-${ti}` : ""}${before ? "-before" : ""}${arg("tag", "")}.png`;
-        await p.screenshot({ path: path.join(out, name) }); shots.push(name); rects[name] = await p.evaluate((id) => window.__doorRect(id), id);
+        await p.screenshot({ path: path.join(out, name), timeout: 240000 });   // a frame with a room drawn live can take a minute in software shots.push(name); rects[name] = await p.evaluate((id) => window.__doorRect(id), id);
       }
     }
   }
