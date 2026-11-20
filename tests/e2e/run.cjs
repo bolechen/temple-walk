@@ -62,8 +62,12 @@ const scenarios = {
     expect(c.kept + c.heap > a.kept + a.heap + 20, "three more minutes and no more leaves lie on the ground: " + JSON.stringify([a.kept, a.heap, c.kept, c.heap]));
     await t.close();
   } },
+  // The page grows the same cedars as Node from the same plan. It is opened at a level that does not exist (src/level.js,
+  // #369), which walks the prologue: so the prologue it then grows is the very plan Node grows, and it says what was asked.
   treeseed: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low" + BARE);
+    const t = await open(b, base, "level=nope&q=low" + BARE);
+    const lv = await t.page.evaluate(() => window.__level());
+    expect(lv.id === "t00" && lv.asked === "nope" && lv.known === false, "an unknown level should walk the prologue and say what was asked: " + JSON.stringify(lv));
     const page = await t.page.evaluate(() => window.__trees());
     await import(require("url").pathToFileURL(require("path").join(__dirname, "../unit/dom-stub.mjs")).href);
     const THREE = await import("three"), { buildSite } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/site.js")).href), { createTrees, geometryHash } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/src/trees.js")).href);
@@ -71,6 +75,7 @@ const scenarios = {
     const node = createTrees(new THREE.Group(), M, buildSite(M).trees, {});
     expect(page.cedars > 10 && page.cedars === node.cedars.length, `the page grew ${page.cedars} cedars, Node ${node.cedars.length}`);
     expect(page.hash === geometryHash(node.cedars.map((c) => c.geometry)), `the page's cedars (${page.hash}) are not Node's (${geometryHash(node.cedars.map((c) => c.geometry))})`);
+    expect(t.errors.length === 0, t.errors.join("\n"));
     await t.close();
   } },
   boot: { tier: 1, async run(b, base) {
