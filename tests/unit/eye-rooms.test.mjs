@@ -26,9 +26,10 @@ const { gather } = await import("../../tools/walk/bake.mjs");
 const level = (await import("../../app/levels/t00/level.js")).default;
 
 const drawn = buildDrawn(), { site, rooms } = drawn;
-// The page's scene: the place's parts, and the rooms as their own part, hidden from the courts.
-const scene = new THREE.Scene(), place = new THREE.Group();
-place.userData.part = "site"; for (const o of [...drawn.scene.children]) place.add(o); scene.add(place);
+// The page's scene: the place's parts, each at the top of the scene as yard.js adds them (some a group, some a mesh of
+// its own: the land, the trees), and the rooms as their own part, hidden from the courts.
+const scene = new THREE.Scene(), place = [...drawn.scene.children];
+for (const o of place) { o.userData.part = "site"; scene.add(o); }
 rooms.group.userData.part = "interior"; rooms.group.visible = false; scene.add(rooms.group);
 scene.updateMatrixWorld(true);
 const g = gatherEye(scene, eyeBoxes(level.eyeBox, rooms.group)); let r = g.next(); while (!r.done) r = g.next();
@@ -82,9 +83,10 @@ for (const [id, { room: R, group }] of Object.entries(rooms.rooms)) {
 test("the eye's space is the same gathered from a room as from the courts, less only what ?off= switches off", () => {
   const count = (off) => { const it = gatherEye(scene, eyeBoxes(level.eyeBox, rooms.group), 4, off); let s = it.next(); while (!s.done) s = it.next(); return s.value.length / 9; };
   const outdoors = r.value.length / 9;
-  place.visible = false; rooms.group.visible = true;
+  assert.ok(place.some((o) => o.isMesh), "some of the place's parts should be meshes at the top of the scene, as the land and the trees are in the page");
+  for (const o of place) o.visible = false; rooms.group.visible = true;
   try {
     assert.equal(count(new Set()), outdoors, "gathered from inside a room, the courts went missing");
     assert.ok(count(new Set(["site"])) < outdoors * 0.5, "?off=site should leave the courts out");
-  } finally { place.visible = true; rooms.group.visible = false; }
+  } finally { for (const o of place) o.visible = true; rooms.group.visible = false; }
 });

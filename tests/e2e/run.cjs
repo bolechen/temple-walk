@@ -554,7 +554,9 @@ const scenarios = {
     const fromCourts = await ready(t); await t.close();
     t = await open(b, base, "q=low&cam=120,5,0.063,-0.07&view=third&season=autumn&time=day&in=main", { viewport: { width: 900, height: 600 } });
     const fromHall = await ready(t); await t.frames(30);
-    expect(fromHall.tris === fromCourts.tris, `gathered from the hall, the eye's space should hold what it holds gathered from the courts: ${fromHall.tris} against ${fromCourts.tris}`);
+    // part by part (the land and the trees are meshes at the top of the scene, hidden with the courts from a room); the rooms
+    // may hold more gathered from a hall, whose statues have been stood by then
+    for (const [part, n] of Object.entries(fromCourts.byPart)) expect(part === "interior" ? fromHall.byPart[part] >= n : fromHall.byPart[part] === n, `gathered from the hall, the eye's space should hold all of ${part}: ${fromHall.byPart[part]} against ${n} ` + JSON.stringify([fromHall.byPart, fromCourts.byPart]));
     const f = await t.page.evaluate(() => ({ eye: window.__frame().eye, room: window.__yard().room }));
     expect(f.room === "main" && f.eye[2] < 8.4 + 0.4, "the eye should stay inside the great hall's room, not out through its door: " + JSON.stringify(f));
     // his back to the side wall, facing across the room
