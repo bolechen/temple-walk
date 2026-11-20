@@ -14,6 +14,7 @@ SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要
 | 知乎专栏文章 | https://zhuanlan.zhihu.com/p/2106692942509429068 | 3 张实机图 + 2 个链接（游戏站带 `utm_source=zhihu`） |
 | Reddit r/threejs | https://www.reddit.com/r/threejs/comments/1xzxzql/beyond_the_mountain_gate_a_quiet_temple_walk/ | markdown 正文，2 个链接（游戏站带 `utm_source=reddit`） |
 | X（@avenger） | https://x.com/avenger/status/2123242790184427601 | 2 图 + 正式站链接 |
+| X（@avenger，v0.6.0 引用转发） | https://x.com/avenger/status/2123686986984882573 | 引用 `2123242790184427601` + 3 张 v0.6.0 实机图 + 正式站链接（2026-11-20） |
 | 仓库 README 首屏「体验原型（正式站）」 | https://github.com/bolechen/temple-walk#readme | PR #257 已合并（2026-11-19），线上已核验 |
 | itch.io | https://bolechen.itch.io/beyond-the-mountain-gate | 免费预览版，cover + 2 截图 + 英文简介 + 正式站链接（页面 HTML 含 `<a href="https://temple.rushiwowen.co">`）；**已按所有者要求去掉源码地址**（可能闭源） |
 | Game Jolt | https://gamejolt.com/games/beyond-the-mountain-gate-preview/1120313 | Devlog-Only 页面，缩略图 + 英文简介 + 正式站链接；未托管包（不拆玩家）；已去掉源码地址 |
