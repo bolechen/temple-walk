@@ -67,6 +67,18 @@ async function open(browser, base, query, opts = {}) {
     inHall: () => page.evaluate(() => window.__yard().inside),
     // Poll until `fn` is true; throw with the walker's state if it never is.
     async until(fn, ms, what) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return; await page.waitForTimeout(1200); } throw new Error(what + " | " + JSON.stringify(await t.state()) + " | " + (await why().catch(() => ""))); },
+    // Poll until `fn` is true, giving up after `frames` more frames have been drawn, not after so many seconds: a page that takes a fixed number of frames to do something
+    // (the great hall's doorway: about fifty, #386) takes a minute on an idle machine and several on a loaded one. `secs` is only the stop for a page that has stopped drawing.
+    async untilFrames(fn, frames, what, secs = 1800) {
+      const f0 = (await t.state()).frames, t0 = Date.now();
+      for (;;) {
+        if (await fn()) return;
+        const s = await t.state();
+        if (s.frames - f0 > frames) throw new Error(`${what} (after ${s.frames - f0} frames) | ${JSON.stringify(s)}`);
+        if (Date.now() - t0 > secs * 1000) throw new Error(`${what} (the page drew ${s.frames - f0} frames in ${secs} s) | ${JSON.stringify(s)}`);
+        await page.waitForTimeout(1200);
+      }
+    },
     // Poll the probe until `pred` holds of it; what a click or a key changes is applied by the next frame of the page, which a card that draws sixty a second has not yet begun when the click returns.
     async probeUntil(pred, what, ms = 60000) { let p; await t.until(async () => pred(p = await t.probe()), ms, what); return p; },
     // Let the page draw `n` more frames: under software rendering a second may hold one frame or ten.
