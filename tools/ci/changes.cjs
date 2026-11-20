@@ -10,7 +10,7 @@ const DOC_TESTS = ["asset-register", "credits", "evidence", "evidence-mirror", "
 //
 // A build is wanted unless the files that differ are known and none of them is the site's. "Known" means: a list that is
 // not empty and shorter than LIMIT (the compare API stops listing at 300 files, so a longer one is taken as "everything").
-const SITE = [/^app\//, /^tests\/e2e\//, /^package\.json$/, /^pnpm-lock\.yaml$/, /^vite\.config\.mjs$/, /^wrangler\.production\.jsonc$/, /^tools\/(setup\.mjs|site\.cjs|bake-doorways\.mjs)$/, /^\.github\/workflows\/pages\.yml$/, /^\.github\/actions\//, /^tools\/ci\//];
+const SITE = [/^app\//, /^tests\/e2e\//, /^package\.json$/, /^pnpm-lock\.yaml$/, /^vite\.config\.mjs$/, /^wrangler\.(production|canary)\.jsonc$/, /^tools\/(setup\.mjs|site\.cjs|bake-doorways\.mjs)$/, /^\.github\/workflows\/pages\.yml$/, /^\.github\/actions\//, /^tools\/ci\//];
 // What changes the floor he may stand on besides the site itself: the bake and its outline, and the diff against the base.
 const WALK = [/^tools\/walk\//, /^tools\/bake-walk\.mjs$/, /^tools\/walk-diff\.mjs$/];
 const LIMIT = 300;
