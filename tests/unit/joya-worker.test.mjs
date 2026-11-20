@@ -64,3 +64,9 @@ test("the SQL the Durable Object runs: one row a year, raised atomically, held a
   assert.deepEqual(db.prepare("SELECT * FROM joya ORDER BY year").all().map((r) => ({ ...r })), [{ year: 2027, n: 9 }, { year: 2028, n: 1 }], "a year and a count, nothing else");
 });
 
+
+test("the night's clock is set only by the smoke test: no Worker config defines JOYA_TEST_NOW", async () => {
+  const fs = await import("node:fs");
+  for (const f of ["wrangler.production.jsonc", "wrangler.canary.jsonc", "wrangler.jsonc"]) assert.ok(!fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8").includes("JOYA_TEST_NOW"), f);
+  assert.match(fs.readFileSync(new URL("../../tools/worker-smoke.mjs", import.meta.url), "utf8"), /JOYA_TEST_NOW:/);
+});

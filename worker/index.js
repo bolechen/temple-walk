@@ -31,7 +31,10 @@ async function joya(request, env, ctx, cache) {
     if (cache) ctx.waitUntil(cache.put(key, new Response(String(n), { headers: { "cache-control": "public, max-age=10" } })));
     return n;
   };
-  return respondJoya(request, { shards: { all, pick: () => shard(Math.floor(Math.random() * SHARDS)) }, sum });
+  // JOYA_TEST_NOW (ms) sets the night's clock for tools/worker-smoke.mjs alone (`wrangler dev --var`); no wrangler config
+  // defines it (tests/unit/joya-worker.test.mjs holds that), so the published Workers always ask the real time.
+  const now = env.JOYA_TEST_NOW ? () => Number(env.JOYA_TEST_NOW) : Date.now;
+  return respondJoya(request, { shards: { all, pick: () => shard(Math.floor(Math.random() * SHARDS)) }, sum, now });
 }
 
 export default {
