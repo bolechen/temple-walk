@@ -12,6 +12,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 fail() { echo "t4-launch: $*" >&2; exit 1; }
+# Asked to send, it must have what it needs before it builds anything.
+if [ -z "${T4_PACK_ONLY:-}" ]; then [ -n "${HF_TOKEN:-}" ] || fail "HF_TOKEN is not set (the repository secret of that name; see docs/RELEASING.md)"; [ -n "$*" ] || fail "say which scenarios: --shard=i/N, or their names"; fi
 STAGE="$(mktemp -d)"; JOB=""
 cleanup() { [ -z "$JOB" ] || [ -n "${DONE:-}" ] || hf jobs cancel "$NS/$JOB" >/dev/null 2>&1 || true; rm -rf "$STAGE"; }   # a cancelled step must not leave a card running and billing
 trap cleanup EXIT; trap 'exit 130' INT TERM
