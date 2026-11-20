@@ -126,8 +126,13 @@ export function createTally(o) {
       let r = null; try { r = await o.send(n, tz); } catch { r = null; }
       s.busy = false;
       if (r === null) { s.failed++; return false; }
+      // The reply's total may be a cached sum a few seconds old; what was sent is in it all the same, so the count
+      // shown never goes back below what it was with these strokes added.
+      const floor = s.total != null ? s.total + n : null;
       s.pending -= n; s.sent += n;
-      if (!take(r) && s.total != null) o.onTotal?.(/** @type {number} */ (shown()), shown());
+      take(r);
+      if (floor != null && s.total != null && s.total < floor) s.total = floor;
+      if (s.total != null) o.onTotal?.(/** @type {number} */ (shown()), shown());
       return true;
     },
     /** Asks for the mountain's count. */

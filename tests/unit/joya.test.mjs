@@ -113,3 +113,11 @@ test("over the network: one address, its replies read, every failure null", asyn
   assert.equal(await httpCounter("https://x.example/", /** @type {any} */ (() => Promise.resolve({ ok: false, json: () => Promise.resolve({}) }))).send(1, 0), null);
   assert.equal(countText(12345, "zh"), "12,345");
 });
+
+test("a report answered with a stale sum keeps the strokes it carried", async () => {
+  let clock = Date.UTC(2026, 11, 31, 14, 0); const now = () => clock;
+  const t = createTally({ year: 2027, tz: -540, now, send: async () => ({ year: 2027, total: 500 }), ask: async () => ({ year: 2027, total: 500 }) });
+  await t.poll(); t.strike(); t.strike(); assert.equal(t.shown, 502);
+  await t.flush(true); assert.equal(t.shown, 502, "the cached 500 does not swallow the two just sent");
+  await t.poll(); assert.equal(t.shown, 502, "nor does the next stale read");
+});
