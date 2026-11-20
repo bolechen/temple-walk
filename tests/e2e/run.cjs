@@ -146,13 +146,13 @@ const scenarios = {
     const e = await t.page.evaluate(() => window.__eventLog());
     expect(e.every((x) => "lang" in x.data), "every event should carry the language: " + JSON.stringify(e.filter((x) => !("lang" in x.data))));
     const ready = e.find((x) => x.name === "demo.ready");
-    expect(ready && ready.data.failed === "0", "ready should count the textures that failed: " + JSON.stringify(ready));
+    expect(ready && ready.data.failed === 0, "ready should count the textures that failed: " + JSON.stringify(ready));
     // Leaving is named once, the first time the page is hidden, with where he was and how far he got (#326).
     await t.page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
     await t.until(async () => (await names()).filter((n) => n === "demo.leave").length === 1, 10000, "leaving should be named once");
     const leave = (await t.page.evaluate(() => window.__eventLog())).filter((x) => x.name === "demo.leave");
     const at = leave[0].data;
-    expect(at.place === "main" && at.inside === "1" && at.up === "0" && at.seals === "0" && typeof at.metres === "string" && typeof at.seconds === "string", "leaving should say where and how far: " + JSON.stringify(at));
+    expect(at.place === "main" && at.inside === 1 && at.up === 0 && at.seals === 0 && Number.isInteger(at.metres) && Number.isInteger(at.seconds), "leaving should say where and how far: " + JSON.stringify(at));
     await t.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     expect((await names()).filter((n) => n === "demo.leave").length === 1, "a second hide should not be named again");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
