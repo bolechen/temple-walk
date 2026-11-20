@@ -978,7 +978,7 @@ const clipEnded = () => {
 // frame (a drawImage from the WebGL canvas onto a 2D one cost 25 ms a frame on a T4). The canvas is shown at the frame's place, so what is seen is what is kept.
 async function startClip(secs, short = 0, layoutOnly = false) {
   if (!clipPick || clipRec || clipView || frozen || !photo.on) return false;
-  const info = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: location.host + location.pathname.replace(/\/$/, "") + "/?" + CLIP.utm } : null;
+  const info = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: MAIN.host + "/?" + CLIP.utm } : null;
   if (info) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, info.seal), document.fonts.load(`30px ${FACE.serif}`, info.temple + info.label)]); } catch {} }
   if (clipRec || clipView || !photo.on) return false;
   const cw = canvas.clientWidth, ch = canvas.clientHeight, f = frameRect(), [aw, ah] = photo.aspect === "screen" ? [cw, ch] : ASPECT[photo.aspect];

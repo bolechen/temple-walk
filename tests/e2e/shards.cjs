@@ -4,7 +4,7 @@
 // before, four machines ran 25, 38, 43 and 47 minutes of the same list. A scenario nobody has timed yet counts as the
 // median one; machine 1 also runs the quick checks and, when asked, the evidence reads, which `extra` says (seconds).
 //
-//   node tests/e2e/shards.cjs plan 12                      who would run what, and for how long
+//   node tests/e2e/shards.cjs plan 13                      who would run what, and for how long
 //   node tests/e2e/shards.cjs update <e2e-report.json>...  put the times of these runs into durations.json (a report is what a shard leaves in tools/out/)
 const fs = require("fs"), path = require("path");
 const FILE = path.join(__dirname, "durations.json");

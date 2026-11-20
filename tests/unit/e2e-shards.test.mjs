@@ -3,7 +3,7 @@
 // scenario on exactly one machine, the same answer everywhere, and none much longer than another.
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import { createRequire } from "node:module"; import { fileURLToPath } from "node:url";
 const { plan, parseShard, defined, read, secsOf } = createRequire(import.meta.url)("../../tests/e2e/shards.cjs");
-const ROOT = fileURLToPath(new URL("../..", import.meta.url)), N = 12, all = defined(), data = read();
+const ROOT = fileURLToPath(new URL("../..", import.meta.url)), N = 13, all = defined(), data = read();
 const e2e = fs.readFileSync(new URL("../../.github/workflows/e2e.yml", import.meta.url), "utf8");
 
 test("every scenario of the suite is on exactly one of the twelve machines", () => {
