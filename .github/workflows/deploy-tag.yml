@@ -71,8 +71,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ inputs.ref }}
+      # What the build says about itself (app/src/deploy.js): where it goes, and the tag's own commit (the commit the workflow
+      # runs from is main's, not the tag's). Written for every later step, because `boot` builds dist/ once more through
+      # tools/site.cjs and what is published is that second build: a variable set on the build step alone is lost there.
       - id: at
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "VITE_DEPLOY=$TARGET" >> "$GITHUB_ENV"
+          echo "VITE_COMMIT=$sha" >> "$GITHUB_ENV"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -100,11 +107,9 @@ jobs:
       - name: A browser to drive the page with
         if: inputs.check != false
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      # The build says where it is going (app/src/deploy.js): only production carries the visitor counter and may be
-      # indexed. A tag older than this setting ignores it and goes out as it was.
+      # Only production carries the visitor counter and may be indexed (VITE_DEPLOY above). A tag older than this setting
+      # ignores it and goes out as it was.
       - name: Build the site
-        env:
-          VITE_DEPLOY: ${{ inputs.target }}
         run: pnpm run build
       # Never indexable on the canary, whatever the age of the tag: the header is added if the tag's build did not write it.
       - name: The canary is kept out of search
@@ -113,8 +118,6 @@ jobs:
           grep -q "X-Robots-Tag" dist/_headers 2>/dev/null || printf '/*\n  X-Robots-Tag: noindex, nofollow\n' >> dist/_headers
       - name: End to end, startup and movement
         if: inputs.check != false
-        env:
-          VITE_DEPLOY: ${{ inputs.target }}
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
         if: always() && inputs.check != false

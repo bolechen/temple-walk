@@ -128,7 +128,9 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   assert.match(quick, /scenario: \[stairs, drop\]/);
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenario \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
-  assert.match(jobOf(y, "site"), /VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the build says where it goes");
+  const site = jobOf(y, "site");
+  assert.match(site, /\n    env:\n[\s\S]*?VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the build says where it goes, on the job: boot builds dist/ again");
+  assert.match(site, /VITE_COMMIT: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/, "and which commit");
   assert.equal(JSON.parse(fs.readFileSync(new URL("../../wrangler.canary.jsonc", import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "")).name, "temple-walk-canary");
 });
 
@@ -149,7 +151,9 @@ test("deploy-tag.yml: only a version tag is put live, to a named place, by relea
   assert.match(p, /production\|canary\) ;; \*\) echo "::error::target must be/, "and the target one of two places");
   assert.match(p, /ref: refs\/tags\/\$\{\{ inputs\.ref \}\}/, "and it is the tag that is checked out");
   const build = jobOf(p, "build");
-  assert.match(build, /VITE_DEPLOY: \$\{\{ inputs\.target \}\}/, "the build says where it goes");
+  assert.match(build, /echo "VITE_DEPLOY=\$TARGET" >> "\$GITHUB_ENV"/, "the build says where it goes, for every later step: boot builds dist/ again");
+  assert.match(build, /echo "VITE_COMMIT=\$sha" >> "\$GITHUB_ENV"/, "and which commit of the tag it is");
+  assert.doesNotMatch(build, /\n\s+env:\n\s+VITE_DEPLOY:/, "a variable on one step alone is lost in the build that boot makes");
   assert.match(build, /run\.cjs boot/);
   assert.match(build, /X-Robots-Tag/, "the canary is kept out of search whatever the tag's age");
   const deploy = jobOf(p, "deploy");
