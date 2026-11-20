@@ -22,20 +22,12 @@ const siteChanged = (files) => !known(files) || files.some((f) => SITE.some((r) 
 const walkChanged = (files) => siteChanged(files) || files.some((f) => WALK.some((r) => r.test(f)));
 /** Whether the plan, walker and generator tests must run: anything that is not a paper (null or unknown: yes). @param {string[] | null} files */
 const codeChanged = (files) => siteChanged(files) || files.some((f) => !PAPER.some((r) => r.test(f)));
-/**
- * The commit a push is compared with: the last one whose deploy succeeded (#296), never the commit before. The commit before
- * may be one whose run was cancelled by the next push (a queued run is replaced, GitHub's concurrency rule), and a papers-only
- * commit that replaced it would then compare against a commit with nothing published and skip the site change before it
- * (7c86432 → 39692ee, 2026-11-19). None found: null, which builds.
- * @param {{ id: number, head_sha: string }[]} runs successful runs of this workflow on main, newest first
- * @param {(id: number) => Promise<boolean>} deployed whether that run's deploy job succeeded
- * @param {number} [self] this run, never its own base
- */
-async function lastDeployed(runs, deployed, self) {
-  for (const r of runs) if (r.id !== self && (await deployed(r.id))) return r.head_sha;
-  return null;
-}
-module.exports = { SITE, WALK, PAPER, DOC_TESTS, LIMIT, siteChanged, walkChanged, codeChanged, lastDeployed };
+// The commit a push is compared with is the last one whose deploy succeeded, never the commit before (tools/ci/deployed.cjs, which
+// the status board asks too). The commit before may be one whose run was cancelled by the next push (a queued run is replaced,
+// GitHub's concurrency rule), and a papers-only commit that replaced it would then compare against a commit with nothing
+// published and skip the site change before it (7c86432 → 39692ee, 2026-11-19). None found: a build.
+const { lastDeployed, findLastDeploy } = require("./deployed.cjs");
+module.exports = { SITE, WALK, PAPER, DOC_TESTS, LIMIT, siteChanged, walkChanged, codeChanged, lastDeployed, findLastDeploy };
 
 if (require.main === module) (async () => {
   const { execFileSync } = require("child_process"), fs = require("fs");
@@ -50,9 +42,8 @@ if (require.main === module) (async () => {
   try {
     const repo = E.REPO;
     if (E.EVENT === "push" || E.EVENT === "workflow_dispatch") {
-      const runs = gh(`repos/${repo}/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=40`, '.workflow_runs[] | {id, head_sha} | @json').map((x) => JSON.parse(x));
-      const sync = (id) => gh(`repos/${repo}/actions/runs/${id}/jobs`, '.jobs[] | select(.name == "deploy" and .conclusion == "success") | .id').length > 0;
-      const base = await lastDeployed(runs, async (id) => sync(id), Number(E.GITHUB_RUN_ID));
+      const get = async (p) => JSON.parse(execFileSync("gh", ["api", `repos/${repo}/${p}`], { encoding: "utf8", maxBuffer: 1 << 26 }));
+      const last = await findLastDeploy(get, Number(E.GITHUB_RUN_ID)), base = last && last.head_sha;
       if (base) { files = gh(`repos/${repo}/compare/${base}...${E.SHA}`, ".files[].filename"); why = `${E.EVENT}, against the last deploy ${base.slice(0, 7)}`; }
       else why = `${E.EVENT} with no successful deploy in the last 40 runs`;
     }
