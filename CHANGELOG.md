@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.6.0](https://github.com/bolechen/temple-walk/compare/v0.5.0...v0.6.0) (2026-11-20)
+
+
+### Features
+
+* **analytics:** the visit's end, a changed setting and what a failed load broke are counted ([#330](https://github.com/bolechen/temple-walk/issues/330)) ([3842012](https://github.com/bolechen/temple-walk/commit/38420124220201119b6711913671a652edc6812f)), closes [#326](https://github.com/bolechen/temple-walk/issues/326)
+* **build:** the desktop shell is MyGo, the trial build by default and a store build by --channel ([#263](https://github.com/bolechen/temple-walk/issues/263)) ([b1ab530](https://github.com/bolechen/temple-walk/commit/b1ab53021da181940b247b882b7a43d3da170608)), closes [#261](https://github.com/bolechen/temple-walk/issues/261)
+* **incense:** incense may be offered in every hall with a Buddha, each burning on its own ([#316](https://github.com/bolechen/temple-walk/issues/316)) ([9eaf6ff](https://github.com/bolechen/temple-walk/commit/9eaf6ff5a33a595a541a03db3b08e3560b139dd5)), closes [#146](https://github.com/bolechen/temple-walk/issues/146)
+* **ui:** the pause menu and the thanks say which build this is, and a new version is offered ([#311](https://github.com/bolechen/temple-walk/issues/311)) ([cbdc2cc](https://github.com/bolechen/temple-walk/commit/cbdc2cc06e629939b02e2efe53b93d11107c1eab)), closes [#310](https://github.com/bolechen/temple-walk/issues/310)
+
+
+### Bug Fixes
+
+* **camera:** 上台阶时镜头不再随每级踏步点头 ([#306](https://github.com/bolechen/temple-walk/issues/306)) ([d756748](https://github.com/bolechen/temple-walk/commit/d75674845b3d4885292342eca4e09fe2a468d2ad))
+* **ui:** the build's line sits in the menu's foot without pushing the languages off a phone ([#329](https://github.com/bolechen/temple-walk/issues/329)) ([f0e5c86](https://github.com/bolechen/temple-walk/commit/f0e5c86196d72be62154acf9b5a1967242bd66fe))
+* **walk:** 凌霄阁底层回廊加宽到走得过；贴栏杆走时让开望柱 ([#305](https://github.com/bolechen/temple-walk/issues/305)) ([4577abd](https://github.com/bolechen/temple-walk/commit/4577abddbf42644771f41b87757050413d1be448))
+
 ## [0.5.0](https://github.com/bolechen/temple-walk/compare/v0.4.0...v0.5.0) (2026-11-19)
 
 

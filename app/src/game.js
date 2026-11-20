@@ -72,6 +72,8 @@ export function createGame(y) {
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let sat = 0, ended = 0, went = 0;
   let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter") || !!y.relang;   // (a page opened by a change of language goes on where it was, #140)
+  // How long this page has been open, for the leave event: not the visit, which is kept between sittings.
+  const openedAt = performance.now();
 
   // The visit so far: metres walked and time on the mountain, kept between sittings like the seals.
   const VISIT = "yunjing.visit.v1", visit = { metres: 0, seconds: 0, at: null, save: 0 };
@@ -473,8 +475,24 @@ export function createGame(y) {
   };
   if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
   const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
+  // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
+  // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.
+  let leftNamed = false;
+  const noteLeave = () => {
+    if (leftNamed || !entered) return;
+    leftNamed = true;
+    const w = y.where(), room = y.room();
+    track("demo.leave", {
+      seconds: Math.round((performance.now() - openedAt) / 1000),
+      seals: journey.count(),
+      metres: Math.round(visit.metres),
+      place: room || w.up || labelOf(w, y.inside() ? y.hallName() : null, named),
+      inside: y.inside() ? 1 : 0,
+      up: w.up ? 1 : 0,
+    });
+  };
   y.onTick((dt) => { if ((kept += dt) > 2) { kept = 0; keepPlace(); } });
-  window.addEventListener("pagehide", keepPlace); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") keepPlace(); });
+  window.addEventListener("pagehide", keepPlace); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { noteLeave(); keepPlace(); } });
   $("againBtn")?.addEventListener("click", (e) => {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }

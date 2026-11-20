@@ -7,12 +7,39 @@
 
 /** @param {{ blocked(x: number, z: number): boolean }} walker @param {{ x: number, z: number }} pos @returns {boolean} whether he moved */
 export function stride(walker, pos, vx, vz) {
+  // Before a hall's door, heading in, the step is bent toward its middle (the grid walker's funnel, #294).
+  const bent = /** @type {any} */ (walker).funnel?.(pos.x, pos.z, vx, vz); if (bent) [vx, vz] = bent;
+  // and should the door's frame be in the way, he slides along it toward the middle; from the pocket beside the doorway,
+  // just past the door's line, where the threshold shuts the way across, he comes back out of it as he goes across
+  // (at a slant, or straight back out where the pocket's inner side is square across: no step takes him farther from
+  // the middle, and once out he is drawn across and in, so he does not go to and fro)
+  if (bent && walker.blocked(pos.x + vx, pos.z + vz)) for (const a of [0, 0.5, 0.9, 1.2, Math.PI / 2]) {
+    const c = Math.cos(a), s = Math.sin(a), sx = bent[2] * c - bent[4] * s, sz = bent[3] * c - bent[5] * s;
+    if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; return true; }
+  }
   let moved = false;
+  // (On the baked floor a slide along one axis must be a fair part of the step, a fifth of it: held all but straight at
+  // a door's sill, the sliver of his step along it moved him a millimetre sideways each frame and never let the shorter
+  // steps bring him the last few centimetres up to the threshold, #294.)
+  const least = /** @type {any} */ (walker).kind === "grid" ? 0.2 * Math.hypot(vx, vz) : 0;
   for (let k = 1; k > 0.1 && !moved; k /= 2) {
-    const sx = vx * k, sz = vz * k;
+    const sx = vx * k, sz = vz * k, minor = Math.max(1e-4, least * k);
     if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; }
-    else if (Math.abs(sx) > 1e-4 && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
-    else if (Math.abs(sz) > 1e-4 && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
+    else if (Math.abs(sx) > minor && !walker.blocked(pos.x + sx, pos.z)) { pos.x += sx; moved = true; }
+    else if (Math.abs(sz) > minor && !walker.blocked(pos.x, pos.z + sz)) { pos.z += sz; moved = true; }
+  }
+  // On the baked floor (#294): stopped by something (a column, a door's frame, the end of a wall), he slides along it toward
+  // the nearer side where his way opens again, as a game's character slides along what it meets (Unity's CharacterController,
+  // Rapier's controller): he looks across his way, a hand at a time to 0.6 m either side, for where the step ahead is open,
+  // and goes that way at most this much of a step at a time. Met square on, a wall with no end that near holds him, and he stands.
+  if (!moved && /** @type {any} */ (walker).kind === "grid") {
+    const v = Math.hypot(vx, vz), px = -vz / v, pz = vx / v;
+    let best = null;
+    for (let d = 0.05; d <= 0.6 + 1e-9 && !best; d += 0.05) for (const hand of [1, -1]) {
+      const ox = px * d * hand, oz = pz * d * hand;
+      if (!walker.blocked(pos.x + ox + vx, pos.z + oz + vz)) { best = hand; break; }
+    }
+    if (best) { const sx = px * best * v * 0.7, sz = pz * best * v * 0.7; if (!walker.blocked(pos.x + sx, pos.z + sz)) { pos.x += sx; pos.z += sz; moved = true; } }
   }
   for (const a of moved ? [] : [0.5, -0.5, 0.95, -0.95, 1.35, -1.35]) {
     const c = Math.cos(a), s = Math.sin(a), sx = (vx * c - vz * s) * 0.8, sz = (vx * s + vz * c) * 0.8;

@@ -117,7 +117,10 @@ const scenarios = {
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {
-    const t = await open(b, base, "q=low" + BARE, { enter: false });
+    // One scanned surface is made to 404 (#326): the place still comes up and steps in, the count says one failed, and
+    // the load is not reported as broken.
+    const MISSING = "bark_n.jpg";
+    const t = await open(b, base, "q=low" + BARE, { enter: false, route: ["**/shared/textures/" + MISSING, (r) => r.fulfill({ status: 404, body: "" })] });
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 });
     await t.page.keyboard.press("Space");
     await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 30000, "the title never left");
@@ -135,10 +138,29 @@ const scenarios = {
     await t.page.click("#bookClose");
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
     expect((await names()).includes("demo.menu"), "opening the menu should be named");
+    // Settings are named once per change, merged over 800 ms (#326): a toggle, and a slider dragged five times.
+    await t.page.evaluate(() => document.getElementById("setAutocam").click());
+    await t.until(async () => (await t.page.evaluate(() => window.__eventLog().some((x) => x.name === "demo.setting" && x.data.key === "autocam" && x.data.value === "0"))), 8000, "turning autocam off should be named");
+    await t.page.evaluate(() => { const el = document.getElementById("setSens"); for (const v of ["0.6", "0.9", "1.2", "1.5", "1.8"]) { el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); } });
+    await t.until(async () => (await t.page.evaluate(() => window.__eventLog().some((x) => x.name === "demo.setting" && x.data.key === "sens"))), 8000, "moving the sensitivity should be named");
+    const sens = await t.page.evaluate(() => window.__eventLog().filter((x) => x.name === "demo.setting" && x.data.key === "sens"));
+    expect(sens.length === 1 && sens[0].data.value === "1.8", "five inputs within 800 ms should be one change, the last value: " + JSON.stringify(sens));
     await t.page.keyboard.press("Escape");
     const e = await t.page.evaluate(() => window.__eventLog());
     expect(e.every((x) => "lang" in x.data), "every event should carry the language: " + JSON.stringify(e.filter((x) => !("lang" in x.data))));
-    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    const ready = e.find((x) => x.name === "demo.ready");
+    expect(ready && ready.data.failed === 1 && (await t.page.evaluate(() => window.__textures().failed)).includes(MISSING), "ready should count the texture that failed: " + JSON.stringify(ready));
+    expect(!e.some((x) => x.name === "demo.load_error") && (await t.page.isHidden("#loadRetry")) && (await t.page.isHidden("#loading")), "a missing texture should not be taken for the load failing");
+    // Leaving is named once, the first time the page is hidden, with where he was and how far he got (#326).
+    await t.page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
+    await t.until(async () => (await names()).filter((n) => n === "demo.leave").length === 1, 10000, "leaving should be named once");
+    const leave = (await t.page.evaluate(() => window.__eventLog())).filter((x) => x.name === "demo.leave");
+    const at = leave[0].data;
+    expect(at.place === "main" && at.inside === 1 && at.up === 0 && at.seals === 0 && Number.isInteger(at.metres) && Number.isInteger(at.seconds), "leaving should say where and how far: " + JSON.stringify(at));
+    await t.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    expect((await names()).filter((n) => n === "demo.leave").length === 1, "a second hide should not be named again");
+    const errors = t.errors.filter((x) => !x.includes(MISSING));   // the 404 asked for above, and the browser's own line about it
+    expect(errors.length === 0, errors.join("\n")); await t.close();
   } },
   // The page in Japanese and in English (src/i18n.js): a browser that reads Japanese is met in Japanese, from the title to
   // the seal book, in faces of its own; the choice made in the menu is kept, and the address can always ask again.
@@ -178,10 +200,10 @@ const scenarios = {
       await t.until(() => t.page.evaluate(() => window.__ui().stack.includes("menu")), 30000, `${where}: the menu was not open again after the change of language`);
       const secs = (Date.now() - t0) / 1000;
       const after = await t.page.evaluate(() => ({ ...window.__yard(), camDist: window.__probe().camDist, focus: document.activeElement?.dataset?.lang || document.activeElement?.id, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), kept: sessionStorage.getItem("yunjing.relang.v1"), from: sessionStorage.getItem("yunjing.lang.from"), lang: document.documentElement.lang, events: window.__eventLog().map((e) => e.name) }));
-      const at = `${where} → ${to}: ` + JSON.stringify({ cover, before: [before.x, before.z, before.yaw, before.pitch, before.view, before.room, before.camDist], after: [after.x, after.z, after.yaw, after.pitch, after.view, after.room, after.camDist], focus: after.focus, title: after.title, events: after.events, secs });
+      const at = `${where} → ${to}: ` + JSON.stringify({ cover, before: [before.x, before.z, before.yaw, before.pitch, before.view, before.room, before.up, before.camDist], after: [after.x, after.z, after.yaw, after.pitch, after.view, after.room, after.up, after.camDist], focus: after.focus, title: after.title, events: after.events, secs });
       expect(cover.relang && cover.line && !cover.enter && !cover.h1, "the page should open again under the sheet, not the title: " + at);
       expect(after.lang === to && after.entered && !after.title && !after.opening.active && after.kept === null && after.from === null, "the walk should go on in the new language, the handover read and forgotten, no opening: " + at);
-      expect(Math.hypot(after.x - before.x, after.z - before.z) < 0.05 && Math.abs(after.yaw - before.yaw) < 0.0175 && Math.abs(after.pitch - before.pitch) < 0.0175 && after.view === before.view && after.room === before.room && Math.abs(after.camDist - before.camDist) < 0.3, "he should be where he was, looking where he looked: " + at);
+      expect(Math.hypot(after.x - before.x, after.z - before.z) < 0.05 && Math.abs(after.yaw - before.yaw) < 0.0175 && Math.abs(after.pitch - before.pitch) < 0.0175 && after.view === before.view && after.room === before.room && after.up === before.up && Math.abs(after.camDist - before.camDist) < 0.3, "he should be where he was, looking where he looked: " + at);
       expect(after.focus === to, "the menu should be open with the language just chosen in hand: " + at);
       expect(after.season === before.season && after.time === before.time, "the season and hour of this visit should be as they were: " + JSON.stringify([before.season, before.time, after.season, after.time]));
       expect(!after.events.includes("demo.enter") && !after.events.includes("demo.menu") && after.events.includes("demo.ready"), "the reload should not count as stepping in or opening the menu: " + at);
@@ -199,6 +221,12 @@ const scenarios = {
     await t.page.evaluate(() => { window.__view("first"); const y = window.__yard(); window.__pose(y.x + 0.6, y.z - 1.5, 0.3, 0.12); }); await t.frames(3);
     await switchTo("ko", "great hall");
     await t.page.keyboard.press("Escape");
+    // Up on the summit pavilion's balcony (#101), climbed to from the stair in its room: the same, and still up there.
+    await t.page.evaluate(() => window.__inside("lingxiao")); await t.until(async () => (await t.state()).room === "lingxiao", 60000, "never got into the summit pavilion");
+    await t.page.evaluate(() => window.__up(true)); await t.until(async () => (await t.state()).up === "lingxiao", 60000, "never got up onto the balcony");
+    await t.frames(3);
+    { const a = await switchTo("ja", "summit balcony"); expect(a.up === "lingxiao" && a.view === "first", "he should be up on the balcony still, seeing with his own eyes: " + JSON.stringify([a.up, a.view])); }
+    await t.page.keyboard.press("Escape"); await t.page.evaluate(() => window.__up(false)); await t.until(async () => !(await t.state()).up, 60000, "never came down");
     // A reload of any other kind is the title, as before (src/relang.js reads its handover once), in the language kept.
     await t.page.evaluate(() => window.__inside(null));
     await t.page.goto(base + "?q=low" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
@@ -1374,6 +1402,35 @@ const scenarios = {
     await t.until(async () => (await t.state()).h > 20.8, 300000, "never reached the summit porch");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The mountain's sound does not come through the walls of a hall (#331): the same place bus, the same gust, in the court
+  // and then in the great hall. The wind there is at least 12 dB lower, nothing of it above 2 kHz is left, and no culm
+  // knocks and no bird sings. Taken in the page's own audio, in two stretches a few seconds apart, so the gust of each
+  // (`__knock().gust`) is divided out: the low layer of the wind goes with the gust.
+  mountain: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&show=court&season=summer&time=day" + BARE);
+    await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(1500);
+    // the place bus averaged over about two seconds, with the gust the ambience last heard it by
+    const hear = () => t.page.evaluate(async () => { let sum = 0, n = 0, hi = false; const t0 = performance.now(); while (performance.now() - t0 < 2000) { const x = window.__listen("ambience"); sum += x.rms * x.rms; n++; if (x.peaks.some(([hz]) => hz >= 2000)) hi = true; await new Promise((k) => setTimeout(k, 40)); } return { rms: Math.sqrt(sum / n), gust: window.__knock().gust, high: hi, n }; });
+    const outside = await hear();
+    expect(outside.rms > 0.001 && outside.gust > 0.1, "the wind in the court made too little sound to compare: " + JSON.stringify(outside));
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 30000, "could not go into the great hall");
+    await t.page.waitForTimeout(3500);   // the air stage settles in about a second; the leaf layer's own fade takes three
+    const before = await t.page.evaluate(() => window.__knock());
+    const inside = await hear();
+    const db = (x) => 20 * Math.log10(x), fall = db(outside.rms / outside.gust) - db(inside.rms / inside.gust);
+    expect(fall >= 12, `in the hall the wind should be at least 12 dB lower (gust divided out), it is ${fall.toFixed(1)} dB: ` + JSON.stringify({ outside, inside }));
+    expect(!inside.high, "there is still something above 2 kHz in the wind heard in the hall: " + JSON.stringify(inside));
+    // a culm and a bird, asked for in the hall, are not made
+    await t.page.evaluate(() => { window.__knock(true); window.__bird(true); }); await t.page.waitForTimeout(300);
+    const after = await t.page.evaluate(() => window.__knock());
+    expect(after.knocks === before.knocks && after.birds === before.birds, "a culm knocked or a bird sang in the hall: " + JSON.stringify({ before, after }));
+    // and out again: the wind comes back
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not come out of the great hall");
+    await t.page.waitForTimeout(3500);
+    const again = await hear(), back = db(again.rms / again.gust) - db(inside.rms / inside.gust);
+    expect(back >= 12, `coming out the wind should be back, it is only ${back.toFixed(1)} dB over the hall's: ` + JSON.stringify({ inside, again }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // A tap on the bell reaches it; the bell and drum sound with the partials they were built from.
   sound: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&show=court" + BARE);
@@ -2247,25 +2304,47 @@ const scenarios = {
   drop: { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
       // (The meditation hall's porch: its neighbour the tea house has a deeper one now, with tables on it.)
+      const START = [13.65, 11, -Math.PI / 2, 0.22];
       const t = await open(b, base, "q=low&cam=13.65,11,-1.570796,0.22&view=third&season=summer&time=day", touch ? { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true } : { viewport: { width: 640, height: 360 } });
       await t.until(() => t.page.isVisible(touch ? "#jumpBtn" : "#dropBtn"), 30000, "the low unrailed porch offers no way down");
-      if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen"); }
-      if (!touch) {
-        await t.page.keyboard.down("w"); await t.frames(8); await t.page.keyboard.up("w");
-        // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
-        const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z).map((e) => e.a[0])[0]; });
-        const edge = await t.state(); expect(line !== undefined && edge.h === 0.45 && edge.x >= line - 0.01, `ordinary walking should still stop at the porch edge (${edge.x} by ${line})`);
-      } else {
-        const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen");
-      }
-      await t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      if (touch) { await t.until(async () => (await t.page.textContent("#jumpBtn")).trim() === "下台阶", 30000, "before the porch's edge the ring should say 下台阶"); expect(!(await t.page.isVisible("#dropBtn")), "the porch's own chip is the ring on a touch screen");
+        const r = await t.page.locator("#jumpBtn").boundingBox(); expect(r.width >= 44 && r.height >= 44 && r.x >= 0 && r.x + r.width <= 390, "touch drop control is too small or outside the screen"); }
+      // (Where the porch's edge is, from the walker that answers: written, or found in the baked floor, #265.)
+      // (the nearest such edge west of him: the tea house's back faces west too, across the court)
+      const line = await t.page.evaluate(() => { const s = window.__yard(); return window.__drops().filter((e) => e.normal[0] === -1 && Math.abs(e.top - 0.45) < 0.02 && Math.min(e.a[1], e.b[1]) < s.z && Math.max(e.a[1], e.b[1]) > s.z && e.a[0] < s.x).map((e) => e.a[0]).sort((p, q) => q - p)[0]; });
+      expect(line !== undefined && line > 12.5, `no porch edge found before him (${line})`);
+      const record = () => t.page.evaluate(() => { window.__dropSamples = []; window.__dropRecording = true; const read = () => { const s = window.__yard(); window.__dropSamples.push({ x: s.x, y: s.footY, h: s.h, dropping: s.dropping }); if (window.__dropRecording) requestAnimationFrame(read); }; requestAnimationFrame(read); });
+      const recorded = () => t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
+      // Holding the way he faces: W, or on a phone the stick pushed up with a real touch.
+      const cdp = touch ? await t.page.context().newCDPSession(t.page) : null, stick = touch ? await t.page.evaluate(() => { const r = document.getElementById("stick").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }) : null;
+      const hold = async (on) => { if (!touch) { if (on) await t.page.keyboard.down("w"); else await t.page.keyboard.up("w"); return; }
+        if (on) { await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: stick[0], y: stick[1] }] }); await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: stick[0], y: stick[1] - 40 }] }); }
+        else await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
+      // The hop: Space, or the ring. It rises and comes down, onto clear ground.
+      await record();
       if (touch) await t.page.tap("#jumpBtn"); else await t.page.keyboard.press("Space");
-      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < 12.7; }, 120000, "the low porch hop never reached its clear landing");
-      const samples = await t.page.evaluate(() => { window.__dropRecording = false; return window.__dropSamples; });
+      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < line; }, 120000, "the low porch hop never reached its clear landing");
+      let samples = await recorded();
       expect(samples.filter(s => s.dropping).length >= 3 && samples.some(s => s.y > 0.5) && samples.some(s => s.y > 0 && s.y < 0.4), "the hop must rise and descend continuously, not teleport");
       expect(samples.every(s => s.y >= -0.001), "the hop fell through its landing");
       await t.shot(touch ? "drop-touch" : "drop-space");
-      if (!touch) { const x = (await t.state()).x; await t.page.keyboard.press("Space"); await t.frames(3); expect(!(await t.state()).dropping && Math.abs((await t.state()).x - x) < 0.03, "Space on ordinary ground should not start an unrestricted jump"); }
+      // Walking out over the edge (#294): he steps down it, at a walk, never rising over the porch, and is on the court.
+      await t.page.evaluate((p) => window.__pose(...p), START); await t.frames(3);
+      await record(); await hold(true);
+      await t.until(async () => { const s = await t.state(); return !s.dropping && s.h === 0 && s.x < line - 0.3; }, 120000, `walking out over the porch's edge did not step him down (${touch ? "the stick" : "W"})`);
+      await hold(false);
+      samples = await recorded();
+      const down = samples.filter(s => s.dropping), top = Math.max(...samples.map(s => s.y));
+      expect(down.length >= 3, `the step down was not drawn over several frames (${down.length})`);
+      expect(top <= 0.46, `the step down rose like a hop (${top.toFixed(3)} m)`);
+      expect(down.every((s, i) => i === 0 || s.y <= down[i - 1].y + 0.001) && samples.every(s => s.y >= -0.001), "the step down went up again, or through the court");
+      await t.shot(touch ? "step-touch" : "step-walk");
+      // Along the edge he stays on the porch: only walking out over it takes him down.
+      await t.page.evaluate(([x, z]) => window.__pose(x, z, 0, 0.22), [line + 0.45, 11]); await t.frames(3);
+      await record(); await hold(true); await t.frames(20); await hold(false);
+      samples = await recorded();
+      expect(samples.every(s => s.h > 0.44 && !s.dropping), `walking along the porch's edge took him down: ${JSON.stringify(samples.filter(s => s.h <= 0.44 || s.dropping).slice(0, 3))}`);
+      if (!touch) { await t.page.evaluate(() => window.__pose(12.0, 11, -Math.PI / 2, 0.22)); await t.frames(3); const x = (await t.state()).x; await t.page.keyboard.press("Space"); await t.frames(3); expect(!(await t.state()).dropping && Math.abs((await t.state()).x - x) < 0.03, "Space on ordinary ground should not start an unrestricted jump"); }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },

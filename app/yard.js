@@ -48,8 +48,8 @@ import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { poseQuery } from "./src/link.js";
-import { findDrop, dropPose, findClimb, climbPose, seatHop } from "./src/drop.js";
-import { planSteps, clearLine } from "./src/route.js";
+import { findDrop, dropPose, findClimb, climbPose, seatHop, stepOff, stepPose } from "./src/drop.js";
+import { planSteps, clearLine, wayThrough } from "./src/route.js";
 import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
@@ -84,6 +84,21 @@ createCredits(ui);
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
+// What a visitor changes in the pause menu or the photograph's settings (#326): one event per key in 800 ms, the
+// last value winning, so that dragging a slider is a change and not a stream. A value that did not change is not sent.
+{
+  const text = (v) => (typeof v === "boolean" ? (v ? "1" : "0") : String(v));
+  const sent = new Map(Object.entries(settings.get()).map(([k, v]) => [k, text(v)]));
+  const pending = new Map(); let timer = 0;
+  settings.onChange((next, key) => {
+    pending.set(key, next[key]);
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      for (const [k, v] of pending) { const value = text(v); if (sent.get(k) === value) continue; sent.set(k, value); track("demo.setting", { key: k, value }); }
+      pending.clear();
+    }, 800);
+  });
+}
 const quality = pickQuality(Q.get("q") || (settings.get().quality !== "auto" ? settings.get().quality : null));
 const loading = window.templeLoading;
 
@@ -133,7 +148,7 @@ const walker = await (async () => {
     const f = await walkFile; walkFile = null;
     const mode = WALKER, t0 = performance.now();
     let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
-    const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids);
+    const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids, { doors: site.halls });
     walkBaked = { bake: d.header.bake || null, outline: d.header.outline || null };
     return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
   } catch (e) {
@@ -564,7 +579,7 @@ function frame(now) {
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
   const f = photo.on || menuUp ? 0 : (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - joy.y, s = photo.on || menuUp ? 0 : (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + joy.x;
-  const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight;
+  const x0 = pos.x, z0 = pos.z, flight = hop, airborne = !!flight, stepping = !!(flight && flight.plan.step);   // (a step down is walked, not hopped)
   let vx = 0, vz = 0;
   if (planning && (f || s)) planning = null;
   if (planning) { const r = planning.next(); if (r.done) { planning = null; const pts = r.value.points; if (!r.value.reached && planGoal) pts.push({ x: planGoal.x, z: planGoal.z });   // (a spot that cannot be stood on: on to it as far as he can go, as before; a door is walked into this way)
@@ -572,7 +587,7 @@ function frame(now) {
   if (f || s) { interrupt(); director.back(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { const reached = target; target = route.shift() || null; vx = vz = 0; if (reached.drop) { hop = { plan: reached.drop, elapsed: 0, then: [target, ...route].filter(Boolean) }; target = null; route = []; pace.v = 0; } else if (!target) { settle(true); pace.v = 0; } } }
   const len = Math.hypot(vx, vz);
-  if (menuUp || photo.on || airborne) pace.v = 0;   // a sheet over the walk, the camera raised, a hop: he stands, or the hop carries him
+  if (menuUp || photo.on || (airborne && !stepping)) pace.v = 0;   // a sheet over the walk, the camera raised, a hop: he stands, or the hop carries him (a step down he walks on from)
   // He gathers speed and loses it again over a few steps, as a child walks, rather than starting and stopping dead:
   // the picture lurching into motion is felt (《小王子》's PlayerController: 7 m/s² up, 8 m/s² down). Let go of the
   // keys and he slows along the way he was going; coming to a tapped spot he slows so as to stop on it.
@@ -584,13 +599,16 @@ function frame(now) {
     if (Q.has("fast")) pace.v = len === 0 ? 0 : 14;
     else pace.v += Math.max(-WALK.down * dt, Math.min(WALK.up * dt, want - pace.v));
     const step = Math.min(f || s || len === 0 ? 1e9 : len, pace.v * dt); vx = pace.dir[0] * step; vz = pace.dir[1] * step;
+    // Walking out over a low porch's edge (keys or the stick), he steps down it (#294, drop.js `stepOff`): on the baked floor only.
+    const down = (f || s) && walker.kind === "grid" ? stepOff(walker, pos.x, pos.z, pace.dir[0], pace.dir[1]) : null;
+    if (down) { interrupt(); target = null; route = []; hop = { plan: down, elapsed: 0 }; }
     // Take the step, sliding along what is in the way or going round it (stride.js).
     // (Put down in something that blocks, by a link or a tap's way out, he steps out of it by the first leg of the way.)
-    const moved = target && target.escape && walker.blocked(pos.x, pos.z) ? (pos.x += vx, pos.z += vz, true) : stride(walker, pos, vx, vz);
+    const moved = down ? true : target && target.escape && walker.blocked(pos.x, pos.z) ? (pos.x += vx, pos.z += vz, true) : stride(walker, pos, vx, vz);
     if (!moved) { target = null; route = []; settle(false); pace.v = 0; }
   }
   if (flight) {
-    flight.elapsed += dt; const p = (flight.plan.speed ? climbPose : dropPose)(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
+    flight.elapsed += dt; const p = (flight.plan.step ? stepPose : flight.plan.speed ? climbPose : dropPose)(flight.plan, flight.elapsed); pos.x = p.x; pos.z = p.z; footY = p.y;
     if (p.done) { hop = null; if (flight.then && flight.then.length) { target = flight.then.shift(); route = flight.then; } }
   } else if (leap) {
     const step = leapStep(leap, walker.heightAt(pos.x, pos.z), dt); footY = step.y; if (step.landed) leap = null;
@@ -622,7 +640,7 @@ function frame(now) {
   if (walkViz) walkViz.update(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   // (`posed`: a tool may have him walk, hurry, climb, hop or sit on the spot, to be looked at closely: `__act`.)
   if (posed) monk.update(dt || 1 / 30, posed.speed || 0, posed.pose || false, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: !!posed.stairs, act: posed.act || null });
-  else monk.update(dt, stage && stage.speed != null ? stage.speed : still || aloft ? 0 : speedNow, aloft || (climb && climb.t < climb.plan.duration * 0.5) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
+  else monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) ? 0 : speedNow, (aloft && !stepping) || (climb && climb.t < climb.plan.duration * 0.5) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
   // Where he steps outdoors in the snow he leaves his prints (a room's floor keeps none, and the square stays outside),
   // and every step is heard, as what it comes down on sounds: snow, dry stone, stone wet after rain, a puddle in the
   // paving, a hall's floor. A little to the side of the foot that made it (his left is the listener's left, from
@@ -711,7 +729,7 @@ function frame(now) {
   post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch() }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1236,7 +1254,8 @@ window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: 
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
-window.__walk = (pts) => { route = pts.map(([x, z]) => new THREE.Vector3(x, 0, z)); target = route.shift(); };
+// A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).
+window.__walk = (pts) => { planning = null; route = wayThrough(walker, walker.drops, { x: pos.x, z: pos.z }, pts.map(([x, z]) => ({ x, z }))); target = route.shift() || null; };
 // ?tour=120x3: the measured walk from the bamboo to the first court and back (src/tour.js).
 if (Q.has("tour")) setView("first");   // it is measured from his own eyes
 if (Q.has("tour")) tour = createTour(Q.get("tour"), {

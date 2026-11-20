@@ -183,7 +183,8 @@
     "#203：藏经楼纸条放进屏内（game.js fitSlip：缩字，再横排）；e2e slipfit（14 首×四语言×竖横屏）；mobile-audit 的 slip 面固定第 8 首",
     "#213：名匾挂在斗拱昂嘴之外（building.js BEAK）；tests/unit/plaques.test.mjs：18 块匾的每个字 3×3 点，从院落里走得到的点（站立眼与跟随眼）看，字面前 0.6 米内不得有别的构件；改前 12 个字（6 块匾）红",
     "#265：首院这一层（前院、山门、首院、大殿台基）走路、被挡、点地、跳上跳下改问画出来的网格烘的格子（app/src/gridwalker.js）；?walker=old 回旧，?walker=mesh 全用格子；台沿从格子派生；已存位置与 ?cam 落进挡住处挪到半米内或回起点。T4 20261119-061017（41c5991）新旧交替四次：高档 −0.40 ms，低档 +0.03 ms",
-    "Issue #146（草稿 PR）：药师殿、观音殿也能上香，各殿的香各记插香时刻、各烧各的（app/src/incense.js 新增：殿的名单、地点 id、存档读写与旧存档迁移、燃烧进度；rites.js 每座殿各有一组香、烟与时钟；interior.js 三座有佛像的殿都有蒲团前的香几，places.incense / incense-yaoshi / incense-guanyin，机位写在各殿房间里；game.js 的 yunjing.incense.v1 改存各殿时刻，朱印仍只在大雄宝殿得）；新增单测 incense.test.mjs、rites-incense.test.mjs，改 rites.test.mjs、director.test.mjs，新增 e2e 场景 incense-halls"
+    "Issue #146（草稿 PR）：药师殿、观音殿也能上香，各殿的香各记插香时刻、各烧各的（app/src/incense.js 新增：殿的名单、地点 id、存档读写与旧存档迁移、燃烧进度；rites.js 每座殿各有一组香、烟与时钟；interior.js 三座有佛像的殿都有蒲团前的香几，places.incense / incense-yaoshi / incense-guanyin，机位写在各殿房间里；game.js 的 yunjing.incense.v1 改存各殿时刻，朱印仍只在大雄宝殿得）；新增单测 incense.test.mjs、rites-incense.test.mjs，改 rites.test.mjs、director.test.mjs，新增 e2e 场景 incense-halls",
+    "Issue #331（草稿 PR）：山声进殿隔掉、殿外压低（app/src/audio.js：AIR 空气一级，风、滴水、檐铃、竹竿、鸟、龙井都过它；殿内整体 −16 dB、650 Hz 低通，竹叶层不出声，竹竿和鸟在殿内不响；windCut：首院和台阶风声降 10 dB，竹林起点不变；tools/mountain-sound.mjs 量与出样片；tests/unit/mountain-air.test.mjs；e2e 场景 mountain，修前失败 −1.8 dB）。开发方陈述，等所有者听样片"
   ],
   "known_issues": [
     "凌霄阁各层不同材（一层 0.205、二三层 0.186），评审方建议三层同材 0.205，交所有者取舍（decisions.md）；子角梁截面略小于卷五；攒尖顶没有按簇角梁分段折",
@@ -537,7 +538,8 @@
     "#156：英文/日文/韩文手机图未拍；mobile-audit 只跑了中文的 sit/sitsay 面；reduced-motion 只有单测；pilgrimage 场景与 T4 帧耗未跑；证据图是软件渲染",
     "#203：T4 未拍；殿内画框题字没有逐条测；证据是软件渲染",
     "#213：nearplane、edges、T4 并排图、六个锁定机位并排未做（见 PR）；匾的实物挂法没有查到出处",
-    "#265：格子 walker 在手机真机上的载入、内存（页面留 5.2 MB，打开时短暂 21.5 MB）未测，交 #188"
+    "#265：格子 walker 在手机真机上的载入、内存（页面留 5.2 MB，打开时短暂 21.5 MB）未测，交 #188",
+    "#331：山声在真机和耳机上没有人听过，只有离线和无头 Chromium 的数；殿外压低按 balance 的「平均 RMS」口径，配乐平均随句子运气每次差约 2 dB，各场景在 −3.0 到 −7.3 dB 之间，合并平均 −5.3 dB（见 docs/t00/MUSIC.md）；山声滑杆默认值没动"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",
