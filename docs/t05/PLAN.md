@@ -25,8 +25,8 @@
 | 2a | `fix(level): a level other than the prologue leaves T00's place, opening, title and music alone` | **2026-11-20 核过代码，第一阶段一进 `?level=t05` 就会带上 T00 的东西**（`LEVEL-PLAYBOOK.md` §四缺口 5）：①`game.js` 第 478 行的 `free` 不认 `?level=`，所以 T05 的页面会**读** T00 存的 `yunjing.place.v1`（标题页按 T00 的坐标给「接着走」），又每两秒把 T05 的坐标**写**进同一个键，T00 的老访客下次「接着走」就站到错处；②`opening.js` 的 `openingFor` 不认 `?level=`（`SILENT` 里没有），第一次来的访客在 T05 里会飞 T00 开场的那条路；③序章标题的 `atGate` 看的是 T00 山门前的坐标，在 T05 里走到同一坐标就会升起「序章 云径禅寺」；④配乐分区（`score.js` 的 `zoneOf`）只认 T00 的七个区名。本项让关卡对象说这一关有没有开场、序章标题、存不存位置（S3a、S3c、S4 之前的最小一步）：非 `t00` 的关卡不读不写 `yunjing.place.v1`、不播开场、不升标题；T05 的 `zones` 先全部落在 `court`（只有单音和留白），并在 `level.js` 里写明是占位。验收：e2e 在 `?level=t05`（或 S7 的 `?level=_probe`）里走一段、关掉、不带参数重开，`localStorage` 里 T00 的 `yunjing.place.v1` 与走之前逐字节相同，`__opening()` 与 `__prologue()` 都没起 | 2；与 4 一起验（`_probe` 上就能测） | 可以 |
 | 3 | `build(walk): bake and ship each level's floor and doorways`（S5） | `bake-walk --level`、`gridsOf` 读 `L.bounds`、`shared/walk/<id>.bin`、CI 缓存键带关卡名 | 2 | 可以 |
 | 3a | `chore(tools): every picture and check tool takes a level`（`LEVEL-SPLIT.md` S6，**单列，关键路径**） | `shots.js`、`cameras.mjs`、`edges`、`nearplane`、`around.mjs`、`gpu-render.sh`、`play-t00.cjs` 认 `--level`，默认 `t00` 时输出与改前相同；**`horizon.test` 认关卡**（「地平线以下不露天」能对 T05 跑，缺口 2）；`follow.test`、`spring-arm.test` 的路线表按关卡取（缺口 4 的前提）。PR 9 的 `nearplane:grid --level=t05`、PR 12 的 `edges:grid --level=t05`、PRD 第 2 条都靠它 | 3 | 可以 |
-| 4 | `test(level): a probe level with one pavilion`（S7） | `_probe` 关证明引擎不靠 T00；不进发布产物 | 2、3 | 可以 |
-| 5 | `feat(t05): the courtyard, the platform and the stair, walked from arrival`（T05-1） | `app/levels/t05/` 骨架：`level.js`、平地院子与围墙、3 米台基、月台、18 级踏道（`stairGeo`）、栏杆；**`site.start` 一开始就放在最终的到达点，外山门外 (0, +215)**，中轴未建之前用一段平地接到院子（缺口 8：洪水填充的种子、`views.arrive`、e2e 起点、`?fast=1` 的时长都建在它上面，中途搬家要全部重算）；烘出 `t05.bin`；`t05-plan.test.mjs` 洪水填充到 A、B；**向外看一圈**：从到达点、院子 A 站、月台 B 站各朝四个方向、朝墙顶出图（`horizon.test` 认关卡之前用 `shots.js`），地平线以下不露天 | 2a、3、3a | 可以：全是新文件 |
+| 4 | `test(level): a probe level with one pavilion`（S7） | `_probe` 关证明引擎不靠 T00；不进发布产物；**建立「只在工作台认」的关卡登记**（dev 与 PR 预览认，canary 与生产退回序章），T05 白盒照用（所有者 2026-11-20 定，见下文「已定」一节）；`level` 场景在 canary 构建上断言 `?level=_probe` 回落到 `t00` | 2、3 | 可以 |
+| 5 | `feat(t05): the courtyard, the platform and the stair, walked from arrival`（T05-1） | `app/levels/t05/` 骨架：`level.js`、平地院子与围墙、3 米台基、月台、18 级踏道（`stairGeo`）、栏杆；**`site.start` 一开始就放在最终的到达点，外山门外 (0, +215)**，中轴未建之前用一段平地接到院子（缺口 8：洪水填充的种子、`views.arrive`、e2e 起点、`?fast=1` 的时长都建在它上面，中途搬家要全部重算）；烘出 `t05.bin`；`t05-plan.test.mjs` 洪水填充到 A、B；**`t05` 登记为只在工作台认**，`level` 场景在 canary 构建上断言 `?level=t05` 回落到 `t00`、在预览构建上是 `t05`，构建扫描断言 canary 与生产的 `dist/` 里没有 T05 的关卡模块；**向外看一圈**：从到达点、院子 A 站、月台 B 站各朝四个方向、朝墙顶出图（`horizon.test` 认关卡之前用 `shots.js`），地平线以下不露天 | 2a、3、3a | 可以：全是新文件 |
 | 6 | `feat(t05): the nine-bay hall, its shell and its floor`（T05-2） | 大雄殿外壳：九间开间按 `ARCHITECTURE.md` §2.1、单檐庑殿（`buildHall` 的 `G` 取进深一半，按参数推断能出庑殿，**未出图验证**；出不来就在 `building.js` 加一个屋顶式样，单独一个 PR）、三门四窗、门槛按 `PRD.md` §2；殿内地面与外面同一张烘焙地面（不换场，`PRD.md` §2.1）。**若改了 `building.js`（缺口 7）**，验收加「T00 不变」三条：`t00.bin` 指纹不变、`docs/t00/camera-manifest.json` 逐字节相同、`shots.js` 改前改后 cam01–cam06 与 `court@autumn-dusk@third` 平均像素差 < 0.5/255、三角形与绘制次数相同（S2 #382 的做法），殿内十六个机位用 `inside.cjs` 同样比 | 5；§11 第 1 项已定（殿院连成一个空间，所有者 2026-11-20「1-10 都同意」） | 可以；若要改 `building.js`，与 #315、结构评审的改动对一下 |
 | 7 | `feat(t05): the altar, seven blocks and the aisles`（T05-3） | 佛坛 37.5×4.8×0.87 m、七个座位 x = 0、±5.80、±11.33、±16.45（`DECISIONS.md` §3）；七尊体块按白盒高度、释迦西偏 7°；十四胁侍与二天王的占位体块；内柱（减柱，柱位【提案】）；东西通道 ≥ 3 m；洪水填充到 C、D、E、F | 6 | 可以 |
 | 8 | `feat(t05): the axis from the outer gate, its terraces and walls`（T05-A1，范围 C 第一批） | 前奏：外山门外到院子北口的地形，无量殿一组的第二层高台（高差按 `SITE.md` §4.2 提案 +1.0 m）、甬道、围墙；到达点改到外山门外 (0, +215)；在月台西留碑亭的体块、殿内门侧留灯案的位置（只占位，不做互动，`SCOPE-OPTIONS.md` S-1）；`t05-plan.test.mjs` 洪水填充加外山门、内山门、牌坊、无量殿穿堂、院子北口 | 5 | 可以：全是新文件 |
@@ -60,20 +60,17 @@
 
 **第一个开发 PR 在 PRD 合并当天就能开工的**：第 1 项。它不等所有者的任何答复；§11 第 1 项已于 2026-11-20 定下，第 6 项也不再被卡。
 
-### 待所有者定：白盒阶段的 T05 进不进生产的 `dist/`
+### 已定：白盒阶段的 T05 只在工作台开放（2026-11-20）
 
-主创去问所有者（2026-11-20），这里先写成待定（`LEVEL-PLAYBOOK.md` §四缺口 6）。
+所有者 2026-11-20（主创转达）：「同意，白盒只在工作台开放」，即当时推荐的方案 A（`LEVEL-PLAYBOOK.md` §四缺口 6）。
 
-| 选项 | 是什么 |
-|---|---|
-| A 只在工作台认（推荐） | `?level=t05` 照 S7 `_probe` 的办法只在 dev 和 PR 预览上认；canary 与生产照旧装序章（不认识的名字退回序章，S2 已有）。到阶段 8 验收过了，再一行改为对所有人开放 |
-| B 合进 main 就对所有人开放 | canary 和生产上 `?level=t05` 都打得开白盒 |
+- `?level=t05` 只在工作台认：dev server 和 PR 预览，做法照 S7 的 `_probe`。canary 和生产都不认，不认识的名字照 S2 的规则退回序章。
+- 阶段 8 验收通过后再对所有人开放，届时改一行登记，并另开 PR。
+- **要有测试守住**，落在第 4 项（S7，工作台的认法由它建立）和第 5 项（T05 第一次登记）的验收里：
+  - `level` 场景在 **canary 构建**（`VITE_DEPLOY=canary`）上打开 `?level=t05`，断言 `__level()` 为 `{ id: "t00", asked: "t05", known: false }`、页面零错误；在预览构建上打开同一个地址，断言是 `t05`。
+  - `tests/unit/deploy.test.mjs` 一类构建扫描：canary 与生产的 `dist/` 里，入口和分块都不含 T05 的关卡模块（`_probe` 同样）。
 
-**推荐 A**，理由：
-
-1. canary 与生产行为一致、是给玩家看的地址（#308），白盒没有美术、没有声音，分享出去的链接（#344 直达场景）会让第一次看到第一章的人看到体块。
-2. 第 2a 项之前，T05 的页面会读写 T00 存的位置、可能播 T00 的开场（上表 2a 核过的代码）；即使 2a 合了，S3a、S4 之前书和印仍按 T00 写，白盒里出了问题会落到真实玩家的存档上。
-3. A 的代价只是一个常量；PRD §11 第 3 项「不设门槛」说的是做完的关卡，A 不违背它。
+当时的理由：canary 与生产都是给玩家看的地址，分享出去的链接会让人看到体块；第 2a 项之前，白盒会读写真实玩家的存档；S3a、S4 之前，朱印帐和印仍按 T00 写；代价只是一个常量。PRD §11 第 3 项的「不设门槛」说的是做完的关卡。
 
 ## 三、第一阶段做完是什么样
 
