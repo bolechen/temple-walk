@@ -476,6 +476,9 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #menu .row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 6px; margin: 4px calc(-1 * var(--px)) calc(-1 * var(--pb)); position: sticky; bottom: calc(-1 * var(--pb)); z-index: 1; padding: 14px var(--px) var(--pb); background: linear-gradient(to top, #e6dfcf calc(100% - 14px), rgba(230,223,207,0)); }
 #menu .row::before { content: ""; order: 1; flex-basis: 100%; height: 4px; }
 #menu .row .stamp { order: 2; }
+/* Which build this is (#310): one small line under the seal, as a printer's line at the foot of a page. */
+#menu .row .version { order: 3; flex-basis: 100%; margin: 6px 0 0; text-align: center; }
+.version { font: 400 12px/1.4 var(--kai); letter-spacing: .08em; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 #menu .row .chip { font-size: 15px; letter-spacing: .16em; text-indent: .16em; color: var(--ink-3); white-space: nowrap; }
 :root:lang(en) #menu .row .chip, :root:lang(ko) #menu .row .chip { letter-spacing: .04em; text-indent: 0; }
 #menu[hidden] { display: none; }
@@ -642,6 +645,7 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 .credits-card a { color: var(--ink-1); text-decoration: underline; text-decoration-color: #8a2a1e; text-underline-offset: 3px; }
 .credits-card a.tap { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 400 var(--t-s)/1.4 var(--kai); }
 .credits-card li a.tap { padding-right: 4px; }
+.credits-card p.version { margin: 20px 0 2px; text-align: center; font: 400 12px/1.4 var(--kai); letter-spacing: .08em; color: var(--ink-3); }
 .credits-card a:focus-visible { outline: 2px solid #8a2a1e; outline-offset: 2px; }
 .credits-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
 @media (max-width: 400px) { .credits-card { padding: 26px 22px 16px; } .credits-card h2 { font-size: 28px; } }
