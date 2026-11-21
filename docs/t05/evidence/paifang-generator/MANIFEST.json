@@ -3,6 +3,12 @@
  "dataset": "bolechen/temple-walk-evidence",
  "files": [
   {
+   "path": "collage-r2.jpg",
+   "bytes": 174392,
+   "sha256": "0bcda69538365f7d7b9d076bfb52e141aadad46acfc4bbdd76acb3b5c0216c14",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 165910,
    "sha256": "865d8f8794920706a1b0db1227e9a6db50ce271de303836c941647ba4257738c",
@@ -49,6 +55,48 @@
    "bytes": 465230,
    "sha256": "af777df4c9612930f2156e2b5aeef3ac078f02e04b97cb640451554d68ea276b",
    "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/r2-paifang-front.png",
+   "bytes": 289056,
+   "sha256": "b08df3666c204c8fcb5495c348ebb50cb8e4d7f22f657266e99b83e5982a1721",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-gate.png",
+   "bytes": 198656,
+   "sha256": "c9df374294113c76b3c2c1475287bebde253e353e628c813970fb8540ee4509f",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-iso.png",
+   "bytes": 260474,
+   "sha256": "7968db76a0ec4f7a6bf66016396db199844eaa6535ffaaf570d928142717f3ba",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-low.png",
+   "bytes": 530593,
+   "sha256": "4b341f406683260425323778d1a9603b88590be1acf7f6f2d64bbcf6c0e87ac0",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-side.png",
+   "bytes": 92311,
+   "sha256": "a9b23eaf7acf92c4c232e7f4ac15348f0cf2e6875273f15717fba15812144c38",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-top.png",
+   "bytes": 141724,
+   "sha256": "104cddaf43876e1777b071c886b2f2ee591f990deb4e73b609f56a57f19c3d98",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-under.png",
+   "bytes": 507242,
+   "sha256": "6762cc69744bb83d65aabac7e1ffd0bb045890c8b449cad11f8a886556bf17d9",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
   }
  ]
 }
