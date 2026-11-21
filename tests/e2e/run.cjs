@@ -571,11 +571,11 @@ const scenarios = {
     // which is how the gap in the hierarchy went unseen).
     await t.page.evaluate(() => window.__inside(null)); await t.until(() => t.page.evaluate(() => !window.__yard().inside), 60000, "he did not come out of the hall");
     await t.frames(40);
-    // just out of the door, facing the court: the eye behind him stays in front of the leaves, not in the hollow of the hall
-    // behind its painted dark (the preview of 574b14e: 5.7 m in, looking at the back of the dark)
+    // just out of the door, facing the court: the eye behind him stays within the dark behind the leaves, not in the hollow
+    // of the hall beyond it (the preview of 574b14e: 5.7 m in, looking at the back of the dark)
     { const o = await t.page.evaluate(() => { const h = window.__halls.find((x) => x.id === "main"), f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], e = window.__frame().eye; return { into: -((e[0] - h.door[0]) * f[0] + (e[2] - h.door[1]) * f[1]), eye: e, box: window.__frame().monkBox }; });
-      // (it stands close behind him there, the leaves at his back: so near he fades, as he did before #354 on coming out)
-      expect(o.into < 0.45, "coming out of the great hall the eye should stay in front of its door: " + JSON.stringify(o)); }
+      // (since #396 it may stand in the dark behind the leaves, as far as its back, and sees him framed in the door)
+      expect(o.into < 3.0 && o.box, "coming out of the great hall the eye should stay within the dark behind its door, with him in the picture: " + JSON.stringify(o)); }
     const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 1], [0, 1.5]], shut = []; let samples = 0;
     for (const p of round) {
       await t.page.evaluate((q) => window.__walk([q]), p);
@@ -589,6 +589,29 @@ const scenarios = {
     expect(samples > 40, "too few looks at the eye on the way round: " + samples);
     expect(shut.length === 0, `round the great hall the eye stood in something drawn ${shut.length} times of ${samples}: ` + JSON.stringify(shut.slice(0, 6)));
     console.log("    eyeroom", JSON.stringify({ tris: fromHall.tris, door: f.eye.map((v) => +v.toFixed(2)), wall: g.map((v) => +v.toFixed(2)), round: samples }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded.
+  // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
+  exitframe: { tier: 3, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom", { viewport: { width: 480, height: 320 } });
+    await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
+    const halls = await t.page.evaluate(() => window.__halls.map((h) => h.id)), log = {}, bad = [];
+    for (const id of halls) {
+      await t.page.evaluate((h) => window.__inside(h), id); await t.until(() => t.page.evaluate((h) => window.__yard().room === h, id), 120000, "could not go into " + id);
+      await t.frames(5);
+      await t.page.evaluate(() => window.__inside(null));
+      await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
+      const rows = [];
+      for (let i = 0; i < 60; i++) {
+        const r = await t.page.evaluate(() => { const f = window.__frame(); return { f: f.frames, box: !!f.monkBox, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) }; });
+        rows.push(r); if (!r.box || r.op < 0.6) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
+        await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
+      }
+      log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length };
+    }
+    console.log("    exitframe", JSON.stringify(log));
+    expect(bad.length === 0, `coming out of a door he left the picture or faded ${bad.length} times: ` + bad.slice(0, 6).join(" | "));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   halls: { tier: 2, async run(b, base) {
