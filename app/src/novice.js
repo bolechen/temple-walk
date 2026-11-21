@@ -43,8 +43,8 @@ export function bodyOf(scene, extras, monk) {
 // over the one texture (`CLOTH`, linear multipliers, by the pieces' names in the file's extras); the leg wraps, shoes and skin
 // are left as painted. A body without named pieces (Meshy's) is worn as it is.
 export const CLOTH = {
-  robe: { pieces: ["upper robe", "right sleeve", "left sleeve", "belt", "skirt", "sash end"], tint: [2.3, 2.0, 1.9] },
-  trousers: { pieces: ["trousers"], tint: [3.1, 2.65, 2.0] },
+  robe: { pieces: ["upper robe", "right sleeve", "left sleeve", "belt", "skirt", "sash end"], tint: [1.7, 1.35, 1.2] },
+  trousers: { pieces: ["trousers"], tint: [2.0, 1.71, 1.29] },
 };
 /**
  * Vertex colours for each part (white where nothing is tinted), from the file's `ranges` (part → [piece, first vertex,
