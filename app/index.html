@@ -100,6 +100,25 @@
     <div class="community-invite" id="menuCommunityInvite" hidden><button class="chip" id="menuCommunity" type="button">加入内测反馈群</button><p>遇到问题，或有什么想法，来群里聊聊。</p></div>
     <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuCredits" type="button">鸣谢</button><button class="stamp" id="menuResume" type="button">继续</button><p class="version" id="menuVersion" translate="no"></p></div>
   </div></dialog>
+  <dialog class="layer" id="carryOut" aria-labelledby="carryOutTitle" hidden>
+    <div class="carry-card paper">
+      <h2 id="carryOutTitle">带走朱印帐</h2>
+      <p>在另一个浏览器或另一台设备上打开这个链接，确认后就接着这一趟走。</p>
+      <div class="row" id="carryTo"></div>
+      <p class="carry-link" id="carryLinkShown"></p>
+      <textarea id="carryLink" class="carry-buffer" readonly tabindex="-1" aria-hidden="true" spellcheck="false"></textarea>
+      <p class="note" id="carryNote">链接里只有这一趟的进度和设置，不经过任何服务器。</p>
+      <footer><button class="chip" id="carryShare" type="button" hidden>分享</button><button class="chip" id="carryClose" type="button">合上</button><button class="stamp" id="carryCopy" type="button">复制链接</button></footer>
+    </div>
+  </dialog>
+  <dialog class="layer" id="carryIn" aria-labelledby="carryInTitle" tabindex="-1" hidden>
+    <div class="carry-card paper">
+      <h2 id="carryInTitle">带来的朱印帐</h2>
+      <p id="carryInText"></p>
+      <p id="carryInWarn" class="warn">会覆盖这个浏览器里现在的进度。</p>
+      <footer><button class="chip" id="carryInNo" type="button">不用了</button><button class="stamp" id="carryInYes" type="button">接着走</button></footer>
+    </div>
+  </dialog>
   <dialog class="layer" id="credits" aria-labelledby="creditsTitle" hidden>
     <div class="credits-card paper scrolls">
       <h2 id="creditsTitle">鸣谢与来源</h2>
@@ -178,6 +197,7 @@
   <div class="more-card paper">
     <button class="chip" id="bookReplay" type="button" hidden>山顶再坐一回</button>
     <button class="chip need-pilgrim" id="bookMap" type="button">行脚图</button>
+    <button class="chip" id="bookCarry" type="button">带走朱印帐</button>
     <button class="chip" id="bookReset" type="button">重新朝山</button>
     <button class="chip" id="bookMoreClose" type="button">收起</button>
   </div>
@@ -218,11 +238,14 @@
   <button class="ink-btn" id="slipTake" type="button">收下</button>
 </dialog>
 <div id="title">
-  <div>
-    <h1>山门之外</h1>
-    <p class="sub">序章 · 云径禅寺</p>
-    <div class="mark">朝<br>山</div>
-    <p id="titleSeals"></p>
+  <div class="title-top">
+    <div class="title-name">
+      <h1>山门之外</h1>
+      <p class="sub">序章 · 云径禅寺</p>
+      <div class="mark">朝<br>山</div>
+    </div>
+  </div>
+  <div class="title-low">
     <div id="loading" role="status" aria-live="polite" aria-atomic="true">
       <div class="load-copy"><span id="loadLabel">山路正在铺开</span><span id="loadPercent"></span></div>
       <progress id="loadProgress" max="100" aria-label="山路正在铺开"></progress>
@@ -230,7 +253,7 @@
     </div>
     <p id="relangLine">换字中</p>
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>
-    <button id="againBtn" type="button" hidden></button>
+    <div class="title-note"><p id="titleSeals"></p><button id="againBtn" type="button" hidden></button></div>
   </div>
   <p class="how" hidden><b></b><span></span></p>
   <div class="title-links"><button class="chip" id="titleCommunity" type="button" hidden>内测反馈群</button><button class="chip" id="titleSet" type="button">设置</button><span class="langs"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></span></div>

@@ -2,7 +2,7 @@
 // usage: node tools/window-lit.cjs [--size=WxH] [--out=dir] [--tag=-x] [--plan=<repo root whose app/ gives the windows>] <view@season-hour@first|third> ...
 // For each named view it takes the picture, projects every lattice bay of the plan (site.litWindows, worked out in Node
 // from the same code the page runs) through the camera the page used, and reads the pixels inside each bay's rectangle:
-// mean luminance in the picture as drawn (`luma`), and in the same picture with the lamps put out (`__lamp(0)`): the
+// mean luminance in the picture as drawn (`luma`), and in the same picture with the lamps put out (`__lampStrength(0)`): the
 // difference (`lamp`) is the light the lamp gives that bay, free of the sun on the wood round it. A bay is "lit" when
 // `lamp` passes LUMA.
 // It prints, per view, the lit area as a share of all the windows' area in the picture, and for each pair of lit
@@ -32,8 +32,8 @@ const LUMA = +arg("luma", 6);   // mean luminance (0..255) the lamp must add ove
     await p.waitForFunction(`(${require("./doorway-ready.cjs").doorwaysReady})(window.__doorways?.())`, null, { timeout: 600000, polling: 500 }).catch(() => {});
     await p.waitForTimeout(1200);
     const file = path.join(out, name.replace(/@/g, "_") + tag), shot = await p.screenshot({ path: file + ".png", timeout: 240000 });
-    const was = await p.evaluate(() => { const v = window.__lamp(); window.__lamp(0); window.__probe(); return v; });
-    const dark = await p.screenshot({ path: file + "-nolamp.png", timeout: 240000 }); await p.evaluate((v) => { window.__lamp(v); window.__probe(); }, was);
+    const was = await p.evaluate(() => { const v = window.__lampStrength(); window.__lampStrength(0); window.__probe(); return v; });
+    const dark = await p.screenshot({ path: file + "-nolamp.png", timeout: 240000 }); await p.evaluate((v) => { window.__lampStrength(v); window.__probe(); }, was);
     const res = await p.evaluate(async ({ url, url0, wins, LUMA, night }) => {
       const f = window.__frame(), fov = window.__probe().fov, eye = f.eye, [yaw, pitch] = f.look, w = innerWidth, h = innerHeight;
       const load = async (u) => { const im = new Image(); im.src = u; await im.decode(); const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(im, 0, 0); return [g, im]; };

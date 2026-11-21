@@ -1,0 +1,90 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "a-east-hills.png",
+   "bytes": 1019512,
+   "sha256": "5497365ef43775e0ed1129d99f9961710a19a64b40a9db735d741ab82335a3d8",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "a-east-town.png",
+   "bytes": 1088014,
+   "sha256": "1c53732f241ef4992c8536af2a0b0f3821d80aee45d4ae38cb04a3ed36ed7d02",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "a-east-trees.png",
+   "bytes": 1107040,
+   "sha256": "6a1a3a42280795a7476ef89f8d0e4ff10d8df6f8c10a9491a2fe3be5407d602f",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "arrive-west-hills.png",
+   "bytes": 1155636,
+   "sha256": "dbccbddc963fb1f393ff47d934929eda2c3a129007a3f40a3f31dc6d9a8fba00",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "arrive-west-town.png",
+   "bytes": 1185573,
+   "sha256": "c979f42606d946a96bfa3148df462e47b7b9ec714b4db4778314713ce3517185",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "arrive-west-trees.png",
+   "bytes": 1241245,
+   "sha256": "b61ed3568c1d10569f53704d1c7bb2ff7f2c8f653a3b4d82dfcb8d159eedd3f2",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "base-a-east.png",
+   "bytes": 1001714,
+   "sha256": "43712a97a0c8586e0149d70109a44508b22761ab76dfc08220d4f8af3756c094",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "base-arrive-west.png",
+   "bytes": 1132523,
+   "sha256": "5fca23d643be25187850065bc9f903f2dfdba13269b4bf5f4e0bf83ae4875404",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "base-terrace-wsw.png",
+   "bytes": 1127873,
+   "sha256": "3b8076511f874dc20c30697e601d621717f11cd6e7307dd14b37352522f8249b",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 717155,
+   "sha256": "938f1c56a25686e8a4bababb2f6eb434178b74bab388d4b0135f3bcaada9466f",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "terrace-town-pagoda-crop.jpg",
+   "bytes": 100192,
+   "sha256": "70e3813fb03f3e0241ede73cd92090b13bb41bd514db82601a13f88fbf2587b9",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "terrace-wsw-hills.png",
+   "bytes": 1170867,
+   "sha256": "23158385bf479004a71f74ea19891130b90578145db5b4bf012bad2456b586bd",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "terrace-wsw-town.png",
+   "bytes": 1244091,
+   "sha256": "0cd715fa8ad02cb109215c91f091d265a863e8d0992944548c6607d80f2543d6",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  },
+  {
+   "path": "terrace-wsw-trees.png",
+   "bytes": 1274466,
+   "sha256": "79fe733074bf5948638faf38db50ad6096ec28d7ae905549bb3ad74d655f61d3",
+   "rev": "47ac65313180601b4e48ae08b2d38b108e4e0055"
+  }
+ ]
+}

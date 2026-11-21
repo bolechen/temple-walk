@@ -1,168 +1,204 @@
 {
-  "scene_id": "T05",
-  "name": "奉明寺",
-  "real": "辽宁义县奉国寺",
-  "chapter": "七佛同堂",
-  "revision": "research draft, 2026-11-17",
-  "status": "draft; not implemented; positions to be fixed after the first whitebox",
-  "units": "metres; +x east; +z south; y up",
-  "origin": "the centre of the 大雄殿 front column line; hall floor y=0; courtyard y=-3.0",
-  "height_note": "ground_m is the local floor's approximate absolute elevation: courtyard 67.0 and hall/月台 70.0, derived from SRTM ~70 m (±5-10 m) and the documented 3 m platform; eye_m is above that floor. SRTM cannot resolve the platform. Do not treat either as survey data.",
-  "season_time": "whitebox neutral daylight first; then T05-J01 winter-clear with F01 entrance diffuse light; T05-J02 after snow as a separate variant; see ART.md",
-  "fov_deg": 50,
-  "cameras": [
-    {
-      "id": "cam01",
-      "name": "院落远望",
-      "station": "A",
-      "purpose": "first sight of the nine-bay hall; the platform and the roof read together; the interior is not yet visible",
-      "position": { "x": 0.0, "z": 55.0, "ground_m": 67.0, "eye_m": 1.60 },
-      "look": { "yaw_deg": 0.0, "pitch_deg": 11.0 },
-      "fov_deg": 50,
-      "must_show": [
-        "九间立面与三门四窗",
-        "3 米台基与月台",
-        "单檐五脊庑殿顶与青灰瓦",
-        "三块竖匾的剪影",
-        "月台东西的钟亭／碑亭"
-      ],
-      "must_not": [
-        "重檐／歇山／琉璃瓦",
-        "七间或五间的殿身",
-        "把 T00/T01 的殿式刷成赭红当 T05",
-        "屋脊被树／旗杆切断",
-        "塔／城市天际线抢主体"
-      ],
-      "notes": "The hall is 48.2 m wide and about 21 m to the ridge; from 55 m a 50° lens at +11° holds the platform base to the ridge. This is the 'big, but cannot see inside' beat."
-    },
-    {
-      "id": "cam02",
-      "name": "台基",
-      "station": "B",
-      "purpose": "the 3 m platform presses the visitor down; the door is a narrow dark band above",
-      "position": { "x": 0.0, "z": 17.0, "ground_m": 67.0, "eye_m": 1.60 },
-      "look": { "yaw_deg": 0.0, "pitch_deg": 18.0 },
-      "fov_deg": 50,
-      "must_show": [
-        "踏道的石级与垂带",
-        "3 米台基的侧面",
-        "月台边缘",
-        "檐柱与七铺作斗拱",
-        "门洞的暗"
-      ],
-      "must_not": [
-        "整座屋顶",
-        "悬空的台基",
-        "1 米以下的台明",
-        "把台基做成 T00 的薄台"
-      ],
-      "notes": "The ridge is deliberately out of frame; the visitor should feel the platform's height first. Steps are 18 risers, 0.16–0.17 m each, as a proposal."
-    },
-    {
-      "id": "cam03",
-      "name": "殿门中央",
-      "station": "C",
-      "purpose": "the threshold; the door frame crops the row; the first faces come out of the dark",
-      "position": { "x": 0.0, "z": 0.6, "ground_m": 70.0, "eye_m": 1.60 },
-      "look": { "yaw_deg": 0.0, "pitch_deg": 8.0 },
-      "fov_deg": 50,
-      "must_show": [
-        "门框在画面左右边缘",
-        "中央三尊佛",
-        "佛坛与背光",
-        "梁架",
-        "从门到佛坛的光梯度"
-      ],
-      "must_not": [
-        "一张看全七尊",
-        "平顶／藻井",
-        "七尊相同",
-        "舞台追光或满堂亮"
-      ],
-      "notes": "At about 19 m from the altar, a 50° lens covers about 18 m across: the central three, not the seven. This is the 'first face' beat; do not back out too far."
-    },
-    {
-      "id": "cam04",
-      "name": "侧向观看",
-      "station": "D",
-      "purpose": "walk the east aisle; the seven are seen in profile and are visibly different",
-      "position": { "x": 19.0, "z": -8.0, "ground_m": 70.0, "eye_m": 1.60 },
-      "look": { "yaw_deg": 305.0, "pitch_deg": 5.0 },
-      "fov_deg": 50,
-      "must_show": [
-        "七佛的侧面／半侧面",
-        "手印／袈裟／胸衣的差异",
-        "14 尊胁侍的前后节奏",
-        "至少一尊天王",
-        "侧壁十佛壁画",
-        "内柱列"
-      ],
-      "must_not": [
-        "佛像背面",
-        "把胁侍做成弟子／梵天／帝释",
-        "把壁画做成彩画",
-        "把七尊做成一样的侧影"
-      ],
-      "notes": "Yaw 305° looks north-west along the row; the east wall is behind the camera. This is the 'they are not the same' beat."
-    },
-    {
-      "id": "cam05",
-      "name": "仰视梁架",
-      "station": "E",
-      "purpose": "under the inner bay, look up: no ceiling, the whole frame is exposed",
-      "position": { "x": 0.0, "z": -12.0, "ground_m": 70.0, "eye_m": 1.60 },
-      "look": { "yaw_deg": 0.0, "pitch_deg": 58.0 },
-      "fov_deg": 55,
-      "must_show": [
-        "彻上明造",
-        "八缝梁架",
-        "四椽栿／六椽栿",
-        "驼峰与槫",
-        "七铺作斗拱",
-        "彩画飞天／网目纹／宝相花"
-      ],
-      "must_not": [
-        "平顶／藻井",
-        "清式彩画",
-        "裁掉梁头",
-        "把梁架做成一团黑"
-      ],
-      "notes": "Pitch 58°; keep the central Buddha's head at the bottom edge if possible. This is the 'from human scale to the roof' beat."
-    },
-    {
-      "id": "cam06",
-      "name": "回到中央",
-      "station": "F",
-      "purpose": "back on the axis; the order is understood, but the seven still cannot fit in one frame",
-      "position": { "x": 0.0, "z": -2.0, "ground_m": 70.0, "eye_m": 1.60 },
-      "look": { "yaw_deg": 0.0, "pitch_deg": 9.0 },
-      "fov_deg": 65,
-      "must_show": [
-        "中轴",
-        "中央四至五尊",
-        "佛坛与背光",
-        "两侧尽间各一尊的局部"
-      ],
-      "must_not": [
-        "声称一张看全七尊",
-        "裁掉中央佛头",
-        "把七尊做成复制品",
-        "把两端硬塞进画面"
-      ],
-      "notes": "Even at 65°, the 48.2 m hall is wider than the frame. If evidence needs the whole row, use a three-frame stitch or a pan, not an in-game ultra-wide."
-    }
-  ],
-  "route_note": "The hall is 48.2 m wide and the seven span about 38 m; no single 44–65° frame shows all seven. The whole is understood by walking, not by one camera. A three-frame panorama may be used in evidence, not as an in-game camera.",
-  "to_verify_after_whitebox": [
-    "every camera stands on walkable ground",
-    "cam01 holds the platform base to the ridge",
-    "cam02 keeps the ridge out of frame",
-    "cam03 shows the central three without cutting the central Buddha's head",
-    "cam04 has a clear side aisle of at least 3 m",
-    "cam05 does not clip the beams or the roof",
-    "cam06 does not claim to show all seven",
-    "the door light is a narrow band, not a wash",
-    "the hall reads as nine bays, not seven or five",
-    "the roof reads as a single-eave hip roof with grey tiles"
-  ]
+ "scene_id": "T05",
+ "status": "registered_from_project",
+ "units": "metres; +y up; north (uphill) is -z; the visitor arrives from +z",
+ "preset": "summer · day, the page's default for a fixed view; T05's own J01 (初冬晴冷, docs/t05/ART.md §4.2) is not built yet, and the pictures change with it, not the poses",
+ "source": "app/levels/t05/site.js `views.cam01..cam07`, written by tools/cameras.mjs",
+ "cameras": [
+  {
+   "id": "CAM-01",
+   "label": "院落远望",
+   "composition": "必看：九间立面与三门四窗；3 米台基与月台；单檐五脊庑殿顶与青灰瓦；三块竖匾的剪影。忌看：重檐、歇山、琉璃瓦；屋脊被树切断",
+   "view": "cam01",
+   "url": "?level=t05&show=cam01&season=summer&time=day&view=first&q=high",
+   "position": [
+    0,
+    1.3,
+    44
+   ],
+   "target": [
+    0,
+    2.3,
+    34.05
+   ],
+   "yaw_rad": 0,
+   "pitch_rad": 0.1,
+   "fov_degrees": 52,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  },
+  {
+   "id": "CAM-02",
+   "label": "台基",
+   "composition": "必看：踏道与垂带；台基侧面；檐柱与七铺作斗栱；门洞的暗。忌看：整座屋顶；薄台",
+   "view": "cam02",
+   "url": "?level=t05&show=cam02&season=summer&time=day&view=first&q=high",
+   "position": [
+    0,
+    1.3,
+    27
+   ],
+   "target": [
+    0,
+    3.72,
+    17.3
+   ],
+   "yaw_rad": 0,
+   "pitch_rad": 0.24,
+   "fov_degrees": 52,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  },
+  {
+   "id": "CAM-03",
+   "label": "殿门中央",
+   "composition": "必看：门框在左右边缘；中间三尊；佛坛与背光；梁架；门到佛坛的光梯度。忌看：一张看全七尊；平顶藻井；七尊相同；追光",
+   "view": "cam03",
+   "url": "?level=t05&show=cam03&season=summer&time=day&view=third&q=high",
+   "position": [
+    0,
+    3.66,
+    6.57
+   ],
+   "target": [
+    0,
+    4.22,
+    -3.41
+   ],
+   "yaw_rad": 0,
+   "pitch_rad": 0.14,
+   "stands_at": [
+    0,
+    3,
+    0.6
+   ],
+   "eye_pitch_rad": 0.06,
+   "fov_degrees": 44,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  },
+  {
+   "id": "CAM-04",
+   "label": "侧向观看",
+   "composition": "必看：七佛侧面与手印、衣式的差异；胁侍的前后节奏；至少一尊天王；侧壁壁画；内柱列。忌看：佛像背面；七尊同一侧影",
+   "view": "cam04",
+   "url": "?level=t05&show=cam04&season=summer&time=day&view=first&q=high",
+   "position": [
+    19,
+    4.3,
+    -8
+   ],
+   "target": [
+    10.84,
+    5.2,
+    -13.71
+   ],
+   "yaw_rad": -0.96,
+   "pitch_rad": 0.09,
+   "fov_degrees": 52,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  },
+  {
+   "id": "CAM-05",
+   "label": "仰视梁架",
+   "composition": "必看：八缝梁架、四椽栿、驼峰、斗栱、彩画色带。忌看：平顶；黑成一片",
+   "view": "cam05",
+   "url": "?level=t05&show=cam05&season=summer&time=day&view=first&q=high",
+   "position": [
+    0,
+    4.3,
+    -12
+   ],
+   "target": [
+    0,
+    12.77,
+    -17.32
+   ],
+   "yaw_rad": 0,
+   "pitch_rad": 1.01,
+   "fov_degrees": 52,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  },
+  {
+   "id": "CAM-06",
+   "label": "回到中央",
+   "composition": "必看：中间四五尊与两侧各一尊的局部。忌看：硬塞七尊进一张",
+   "view": "cam06",
+   "url": "?level=t05&show=cam06&season=summer&time=day&view=first&q=high",
+   "position": [
+    0,
+    4.3,
+    -2
+   ],
+   "target": [
+    0,
+    5.99,
+    -11.86
+   ],
+   "yaw_rad": 0,
+   "pitch_rad": 0.17,
+   "fov_degrees": 52,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  },
+  {
+   "id": "CAM-07",
+   "label": "内山门望殿",
+   "composition": "必看：门洞框住甬道、牌坊、高台上的无量殿和远处大殿的庑殿顶，大殿正脊全长与两端鸱吻露出（FOLLOW-UP.md，美术总监的三条判法）。忌看：牌坊门洞内有树；无量殿吻尖高过大殿鸱吻顶",
+   "view": "cam07",
+   "url": "?level=t05&show=cam07&season=summer&time=day&view=first&q=high",
+   "position": [
+    0,
+    2.3,
+    141
+   ],
+   "target": [
+    0,
+    3.79,
+    131.11
+   ],
+   "yaw_rad": 0,
+   "pitch_rad": 0.15,
+   "fov_degrees": 52,
+   "fov_axis": "vertical",
+   "eye_height_m": 1.3,
+   "resolution": [
+    1920,
+    1080
+   ],
+   "locked": true
+  }
+ ]
 }

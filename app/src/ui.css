@@ -366,22 +366,46 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 @media (prefers-reduced-motion: reduce) { #prologue { transition: opacity 1.3s ease; transform: none; } }
 
 /* ---- The title ---- */
-#title { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; text-align: center; transition: opacity 1.5s ease;
+/* The walk's own picture is the title's backdrop, and the novice always stands in the middle of it, a little low: from 46.7% to
+   69.9% of the screen's height, a body's width either side of the axis (measured at six sizes, #461). So the title is two
+   groups, one above his head and one below his feet, with the middle left open: the name, the line about the visit and the seal
+   above; going in below. The seal is the signature at the foot of the name, its right edge under the last stroke of 外. */
+#title { --h1: clamp(64px, 17vmin, 150px); --markW: clamp(46px, 9vmin, 76px); position: absolute; inset: 0; z-index: 30; text-align: center; transition: opacity 1.5s ease;
   background: radial-gradient(ellipse at 50% 42%, rgba(11,10,9,.12), rgba(11,10,9,.6) 75%), linear-gradient(rgba(11,10,9,.05), rgba(11,10,9,.55)); }
 #title.gone { opacity: 0; pointer-events: none; }
-#title h1 { font: 400 clamp(64px, 17vmin, 150px)/1.05 var(--brush); margin: 0; letter-spacing: .08em; text-indent: .08em; color: var(--paper); text-shadow: 0 2px 30px rgba(0,0,0,.6); }
+#title .title-top { position: absolute; left: 0; right: 0; bottom: calc(53.3% + 14px); display: flex; flex-direction: column; align-items: center; }
+#title .title-name { position: relative; display: inline-block; padding-bottom: calc(10px + var(--markW)); }
+#title h1 { font: 400 var(--h1)/1.05 var(--brush); margin: 0; letter-spacing: .08em; text-indent: .08em; color: var(--paper); text-shadow: 0 2px 30px rgba(0,0,0,.6); }
 #title .sub { font: 400 clamp(13px, 2.3vmin, 17px)/1 var(--kai); letter-spacing: .5em; text-indent: .5em; margin: 2.2vmin 0 0; color: var(--on-2); }
-#title .mark { width: clamp(46px, 9vmin, 76px); aspect-ratio: 1; margin: 5vmin auto 0; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; display: grid; place-items: center; font: clamp(15px, 3.1vmin, 26px)/1.08 var(--seal-face); color: #f3ead9; transform: rotate(-3deg); filter: drop-shadow(0 2px 12px rgba(0,0,0,.4)); }
-#enterBtn { position: relative; margin-top: 7vmin; padding: 10px 26px 18px; font: 400 clamp(22px, 4vmin, 32px)/1 var(--kai); letter-spacing: .6em; text-indent: .6em; color: var(--paper); background: none; border: 0; cursor: pointer; text-shadow: var(--lift); transition: opacity .6s; }
+#title .mark { position: absolute; right: calc(var(--h1) * .08); top: calc(100% - var(--markW)); width: var(--markW); aspect-ratio: 1; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; display: grid; place-items: center; font: clamp(15px, 3.1vmin, 26px)/1.08 var(--seal-face); color: #f3ead9; transform: rotate(-3deg); filter: drop-shadow(0 2px 12px rgba(0,0,0,.4)); }
+/* The line about the visit is a footnote under the way in, with beginning again after it. */
+#title .title-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 12px; margin-top: 4px; }
+#titleSeals { font: 400 var(--t-s)/1.4 var(--kai); letter-spacing: .2em; text-indent: .2em; margin: 0; color: #e5b9a4; text-shadow: var(--lift); }
+#titleSeals:empty { display: none; }
+#title .title-low { position: absolute; left: 0; right: 0; top: calc(70% + 12px); display: flex; flex-direction: column; align-items: center; }
+#enterBtn { position: relative; padding: 10px 26px 18px; font: 400 clamp(22px, 4vmin, 32px)/1 var(--kai); letter-spacing: .6em; text-indent: .6em; color: var(--paper); background: none; border: 0; cursor: pointer; text-shadow: var(--lift); transition: opacity .6s; }
 #enterBtn::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 10px; background: var(--brush-light, linear-gradient(var(--on-2), var(--on-2)) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .8; transition: opacity .3s var(--ease), transform .4s var(--ease); }
 #enterBtn:not(:disabled):hover::after { opacity: 1; transform: scaleX(1.06); }
 #enterBtn:disabled { opacity: .5; cursor: default; font-size: var(--t-s); letter-spacing: .4em; text-indent: .4em; }
 #enterBtn:disabled::after { content: none; }
 /* Beside going on, the quieter way: to begin the walk again. Small, under the stroke, and asked twice. */
-#againBtn { display: block; margin: 2.6vmin auto 0; padding: 8px 14px; font: 400 var(--t-s)/1.4 var(--kai); letter-spacing: .3em; text-indent: .3em; color: var(--on-2); background: none; border: 0; cursor: pointer; text-shadow: var(--lift); }
+#againBtn { display: block; margin: 0; padding: 8px 14px; font: 400 var(--t-s)/1.4 var(--kai); letter-spacing: .3em; text-indent: .3em; color: var(--on-2); background: none; border: 0; cursor: pointer; text-shadow: var(--lift); }
 #againBtn:hover, #againBtn:focus-visible { color: var(--paper); }
 #againBtn[data-asked="1"] { color: #e5b9a4; letter-spacing: .12em; text-indent: .12em; }
-#titleSeals { font: 400 var(--t-s)/1 var(--kai); letter-spacing: .4em; text-indent: .4em; margin: 3vmin 0 0; min-height: 1.3em; color: #e5b9a4; text-shadow: var(--lift); }
+/* A phone on its side has 118 px under his feet: going on and beginning again stand in one row, the loading bar above them. */
+@media (max-height: 460px) {
+  /* A phone on its side: the room above his head is short, and the row of links stands at the top right. The name keeps a size a hand can read
+     and the group stands just clear of his head (the links are well above it); the seal is at the end of the name's own line, centred on it;
+     under his feet the way in is a little tighter, so that the footnote and beginning again still clear the foot of the picture. */
+  #title { --h1: 12.5vmin; --markW: 38px; }
+  #title .title-top { bottom: calc(53.3% + 16px); }
+  #title .title-name { padding-bottom: 0; }
+  #title .mark { right: auto; left: calc(100% - var(--h1) * .08 + 10px); top: calc(var(--h1) * .525 - var(--markW) / 2); }
+  #title .title-low { top: calc(70% + 10px); }
+  #title .title-note { margin-top: 0; }
+  #enterBtn { padding: 7px 26px 15px; }   /* (44 px high: a thumb's size, which the phone audit holds) */
+  #againBtn { padding: 6px 14px; }
+}
 #loading { width: min(280px, 70vw); margin: 24px auto 0; text-align: left; }
 /* Opened by a change of language in the pause menu (#140): not the title, only a sheet that says the words are being
    changed, in the new language, over the loading bar; the walk comes back as it was when the page is ready. */
@@ -400,7 +424,7 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #title .how span { margin-top: .7em; letter-spacing: .2em; opacity: .85; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
 /* A phone on its side has no room under 入山: only the region and the road are kept, in the lower left corner, clear of the way in (#445). */
-@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } #title .how b { margin-inline: 0; } }
+@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; bottom: auto; top: calc(14px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } #title .how b { margin-inline: 0; } }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 .title-links .chip { white-space: nowrap; }
@@ -750,6 +774,23 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 #saveImg { display: block; width: 100%; height: auto; max-height: calc(100dvh - 210px); object-fit: contain; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; }
 .save-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 12px; }
 .save-card .chip { min-height: 44px; display: inline-flex; align-items: center; }
+/* A save carried from another place (#338): asked about over the title, a sheet like the thanks, its one button a seal. */
+#carryIn, #carryOut { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+#carryIn[hidden], #carryOut[hidden] { display: none; }
+.carry-card { width: min(92vw, 460px); box-sizing: border-box; padding: 30px 34px 18px; color: var(--ink-1); text-align: center; }
+.carry-card h2 { margin: 0 0 12px; font: 400 clamp(22px, 6.6vw, 30px)/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; text-wrap: balance; word-break: auto-phrase; }   /* (as #blessTitle: on a phone a long title breaks between words, not inside one) */
+.carry-card p { margin: 8px 0; font: 400 var(--t-m)/1.8 var(--kai); letter-spacing: .04em; color: var(--ink-2); }
+.carry-card p.note { font-size: var(--t-s); color: var(--ink-3); }
+.carry-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 14px; flex-wrap: wrap; }
+.carry-card .chip { min-height: 44px; }
+.carry-card .row { display: flex; justify-content: center; gap: 0 10px; margin: 6px 0; }
+/* The link is carried, not read: one faint line, cut short where it does not fit, as the lamp's link is (#blessLink); the
+   text the browser copies from when the clipboard cannot be written to lies out of sight. */
+.carry-card p.carry-link { margin: 6px 0 2px; font: 400 12px/1.5 var(--serif); color: var(--ink-3); text-wrap: nowrap; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* (text-wrap here as well: the sheet's balance rule below would otherwise wrap it) */
+.carry-buffer { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+/* What the page is about to replace is said as plainly as what it brings, and only when there is something to replace. */
+.carry-card p.warn { color: var(--ink-1); }
+.carry-card p { text-wrap: balance; word-break: auto-phrase; }   /* no row left with a character or two (a line broke before 殿 and before 何) */
 
 /* The jump, on a touch screen: a faint ring lower right, across from the stick, that is the jump and, before a porch's edge, the way down or up. */
 #jumpBtn { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(46px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; z-index: 4; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .12em; text-indent: .12em; color: var(--on); text-shadow: 0 1px 6px rgba(0,0,0,.7); background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .3; transition: opacity .4s var(--ease); touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
