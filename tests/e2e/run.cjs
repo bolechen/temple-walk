@@ -749,11 +749,22 @@ const scenarios = {
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
     const word = () => t.page.getAttribute("#act", "data-word"), offered = (w, what) => t.until(async () => (await t.page.isVisible("#act")) && (await word()) === w, 30000, `"${w}" was not offered ${what}`);
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
+    // #403: while a seal is being given, the same words must not stand on the page twice (the observance's line at the foot
+    // and the seal's own line under the stamp). Watched from inside the page on every class change, so no frame is missed.
+    await t.page.evaluate(() => {
+      const say = document.getElementById("say"), toast = document.getElementById("toast"), line = document.getElementById("toastLine");
+      window.__twice = [];
+      const look = () => { const a = say.textContent.trim(); if (a && say.classList.contains("on") && toast.classList.contains("on") && !toast.hidden && line.textContent.trim() === a) window.__twice.push(a); };
+      new MutationObserver(look).observe(say, { attributes: true, characterData: true, childList: true, subtree: true });
+      new MutationObserver(look).observe(toast, { attributes: true });
+      new MutationObserver(look).observe(line, { characterData: true, childList: true, subtree: true });
+    });
+    const once = async (what) => { const tw = await t.page.evaluate(() => window.__twice); expect(tw.length === 0, `${what}: the same words stood on the page twice: ${tw[0]}`); };
     // The summit first, with nothing else in the book: three breaths, its seal, and the prologue closes all the same,
     // with words about this walk only, then the book with what is still to be found.
     await t.page.evaluate(() => window.__music(true));   // the place heard, so that the close's music can be checked
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
-    await t.until(() => t.page.isVisible("#breathWord"), 60000, "no breath to follow"); await seal("sit", "sitting");
+    await t.until(() => t.page.isVisible("#breathWord"), 60000, "no breath to follow"); await seal("sit", "sitting"); await once("sitting");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
     { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
       expect(cu.farBell === 1, "the close should end on the far bell answering");
@@ -776,7 +787,7 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); await t.until(async () => (await t.journey()).rite === null, 20000, "Esc did not let the rope go");
     // Tea, the well, the lamp: walk into the ring, press, wait. After the tea he stays until he is stood up.
     for (const [id, w] of [["tea", "吃茶"], ["well", "观水"], ["lamp", "燃灯"]]) {
-      await at(id); await offered(w, `at ${id}`); await t.page.click("#act"); await seal(id, id);
+      await at(id); await offered(w, `at ${id}`); await t.page.click("#act"); await seal(id, id); await once(id);
       if (id === "tea") { await offered("起身", "after the tea"); await t.page.click("#act"); await t.until(async () => (await t.journey()).rite === null, 20000, "he did not get up from the tea"); }
     }
     expect((await t.journey()).lampLit, "the lamp should stay lit");
