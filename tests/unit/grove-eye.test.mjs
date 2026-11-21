@@ -33,41 +33,55 @@ function rest(x, z, yaw, pitch, aspect) {
   return c;
 }
 
-test("by the ink-stone pool, looking into the grove, the eye stays out of it (#515)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
-  const bad = [];
+// What the bamboo is drawn of (culms and sprays), grown as the page grows it, to look along the lines from the eye to him.
+const { createBamboo } = await import("../../app/src/bamboo.js"), { terrain } = await import("../../app/src/site.js"), { EYE_EDGE } = await import("../../app/levels/t00/level.js");
+const groveScene = new THREE.Scene(); createBamboo(groveScene, GROVE.areas, terrain, GROVE.keep, { fine: true }); groveScene.updateMatrixWorld(true);
+const [culms] = groveScene.children, rc = new THREE.Raycaster();
+const culmAcross = (c, p) => { const e = new THREE.Vector3(...c), d = new THREE.Vector3(...p).sub(e); rc.set(e, d.clone().normalize()); rc.far = d.length() - 0.05; return rc.intersectObject(culms, false).length > 0; };
+/** Where the box round him (the corners of 0.6 m round his feet and the top of his head, as `__probe().monkBox`) falls in the picture, [bottom, top] of its height, and how far down the view looks against the visitor's own. */
+function framed(c, x, z, yaw, pitch, aspect) {
+  const foot = walker.heightAt(x, z), aim = aimAt(c, [x, foot, z], yaw, FRAMES.b, FOV); if (!aim) return null;
+  const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 500); cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const ys = []; for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const y of [foot, foot + 1.22]) ys.push(new THREE.Vector3(x + dx, y, z + dz).project(cam).y);
+  return { bottom: Math.min(...ys), top: Math.max(...ys), tilt: ((pitch - aim[1]) * 180) / Math.PI };
+}
+
+// By the ink-stone pool (the tester's place), looking into the grove: the eye keeps out of the grove but for its edge, as
+// it did before #295, 1.99 m behind him (the art review's choice (b) for #518): no nearer than 1.9 m, his head inside the
+// picture (his feet may go out of it a little, to 110%), and no culm on the lines from the eye to his head, waist and feet.
+// How far the view looks down against the visitor's own the art reviewer judges from the pictures (#518: 0.6.0 beside it).
+const POOL = [23.636, 75.6, 2.422, 0.084];
+test("by the ink-stone pool the eye stands in the grove's edge, as before #295: 1.9 m or more back, his head in the picture, no culm across him (#515)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
+  const bad = [], [x, z, yaw, pitch] = POOL, foot = walker.heightAt(x, z);
   for (const [name, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) {
-    const c = rest(23.636, 75.6, 2.422, 0.084, aspect);
-    if (GROVE.grows(c[0], c[2])) bad.push(`${name}: the eye stands in the grove at (${c.map((v) => v.toFixed(2)).join(", ")}), ${Math.hypot(c[0] - 23.636, c[2] - 75.6).toFixed(2)} m from him`);
+    const c = rest(x, z, yaw, pitch, aspect), arm = Math.hypot(c[0] - x, c[2] - z), f = framed(c, x, z, yaw, pitch, aspect), at = `(eye ${c.map((v) => v.toFixed(2)).join(", ")}, ${arm.toFixed(2)} m back)`;
+    if (L.eyeKeepOut(c[0], c[1], c[2])) bad.push(`${name}: the eye stands deeper than ${EYE_EDGE} m in the grove ${at}`);
+    if (arm < 1.9) bad.push(`${name}: the eye came in to ${arm.toFixed(2)} m ${at}`);
+    if (!f || f.top > 0.9 || f.bottom < -1.2) bad.push(`${name}: his box runs ${f?.bottom.toFixed(2)} to ${f?.top.toFixed(2)} of the picture's height ${at}`);
+    for (const [part, h] of [["head", 1.1], ["waist", 0.6], ["feet", 0.1]]) if (culmAcross(c, [x, foot + h, z])) bad.push(`${name}: a culm stands across the line to his ${part} ${at}`);
   }
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
-// Kept out of the grove, by the ink-stone pool the arm comes in to 1.25 m, and from there, the view level, the whole of
-// him does not fit the picture: his feet are cut off (the T00 lead, #518). Where the keep-out holds the arm too short, the
-// eye rises along it and looks down at him until he does: the box round him (as `monkBox`) inside the picture with 5% to
-// spare on every side, on a phone held upright too (art-gate 13: he is wholly in the picture).
-function framed(c, x, z, aspect) {
-  const foot = walker.heightAt(x, z), aim = aimAt(c, [x, foot, z], 2.422, FRAMES.b, FOV); if (!aim) return null;
-  const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 500); cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
-  // (the corners of a box 0.6 m across round him, his feet to his head, as the page's `__probe().monkBox` is measured)
-  const ys = [], xs = []; for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const y of [foot, foot + 1.22]) { const q = new THREE.Vector3(x + dx, y, z + dz).project(cam); ys.push(q.y); xs.push(q.x); }
-  return [Math.min(...ys), Math.max(...ys), Math.min(...xs), Math.max(...xs)];
-}
-test("by the ink-stone pool the eye, held in by the grove, rises until the whole of him is in the picture (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
-  const bad = [];
-  for (const [name, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) {
-    const c = rest(23.636, 75.6, 2.422, 0.084, aspect), f = framed(c, 23.636, 75.6, aspect);
-    if (!f || f[0] < -0.9 || f[1] > 0.9 || f[2] < -0.9 || f[3] > 0.9) bad.push(`${name}: feet at ${f?.[0].toFixed(2)}, head at ${f?.[1].toFixed(2)} of the picture's height, sides at ${f?.[2].toFixed(2)} and ${f?.[3].toFixed(2)} of its width (eye ${c.map((v) => v.toFixed(2)).join(", ")}, ${Math.hypot(c[0] - 23.636, c[2] - 75.6).toFixed(2)} m off)`);
-    if (GROVE.grows(c[0], c[2])) bad.push(`${name}: risen, the eye stands in the grove`);
+// The start of the walk, where the title is shown, the first picture after 入山 is taken and the opening comes to rest: the
+// eye stands where it stood before the grove was kept out (six metres back in the strip the grove leaves open behind him),
+// to the centimetre, looking as the visitor looks to within 5° (the art review of #518: the title had been seen from over
+// his head, 1.5 m off).
+test("at the start of the walk the eye stands where it always stood: six metres back, to the centimetre, looking as he looks (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
+  const bad = [], [x, z, yaw] = site.start;
+  for (const pitch of [0.04, 0.3]) for (const [name, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5], ["4:3", 4 / 3]]) {
+    const before = (() => { const space = createEyeSpace(drawn); space.radius = eyeRadius(FOV, aspect, 0.1); const arm = frameArm(FRAMES.b, FOV, aspect), follow = createFollow(), foot = walker.heightAt(x, z); let c; for (let n = 0; n < 240; n++) c = follow.step(dt, followEye(walker, { x, z, foot, eyeY: walker.eyeAt(x, z), yaw, pitch, side: 1, reach: 6.2, arm, space })); return c; })();
+    const c = rest(x, z, yaw, pitch, aspect), arm = Math.hypot(c[0] - x, c[2] - z), f = framed(c, x, z, yaw, pitch, aspect), moved = Math.hypot(c[0] - before[0], c[1] - before[1], c[2] - before[2]);
+    if (moved >= 0.01) bad.push(`${name}, pitch ${pitch}: the eye stands ${moved.toFixed(3)} m from where it stood without the keep-out`);
+    if (arm < 4.5) bad.push(`${name}, pitch ${pitch}: the eye is ${arm.toFixed(2)} m back`);
+    if (!f || Math.abs(f.tilt) > 5 + Math.abs(((pitch - aimAt(before, [x, walker.heightAt(x, z), z], yaw, FRAMES.b, FOV)[1]) * 180) / Math.PI)) bad.push(`${name}, pitch ${pitch}: the view looks ${f?.tilt.toFixed(1)}° off the visitor's`);
   }
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
 // Along the old path, each route walked there and back at his pace, the view turning after him as spring-arm.test turns
-// it: in no frame may the eye stand in the grove, and in no more than 5% of them within 0.3 m of its edge (a route the
-// level names as narrower than the arm needs, a little more). The routes are
-// the level's own (app/levels/t00/checks.js, `grove`).
-const near = (x, z, m) => [[m, 0], [-m, 0], [0, m], [0, -m]].some(([dx, dz]) => GROVE.grows(x + dx, z + dz));
+// it: in no frame may the eye stand deeper in the grove than its edge (`EYE_EDGE`). The routes are the level's own
+// (app/levels/t00/checks.js, `grove`).
 function walk(path, aspect) {
   const space = createEyeSpace(drawn, L.eyeKeepOut); space.radius = eyeRadius(FOV, aspect, 0.1);
   const arm = frameArm(FRAMES.b, FOV, aspect), follow = createFollow(), out = [];
@@ -80,19 +94,17 @@ function walk(path, aspect) {
       const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
       const foot = walker.heightAt(x, z); eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
       const c = follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: 0.04, side: 1, reach: 6.2, arm, space }));
-      out.push({ at: [x, z], c, in: GROVE.grows(c[0], c[2]), edge: near(c[0], c[2], 0.3) });
+      out.push({ at: [x, z], c, in: L.eyeKeepOut(c[0], c[1], c[2]) });
     }
   }
   return out;
 }
-const groveRoutes = isPrologue ? need("grove").routes(site, walker) : {}, NARROW = isPrologue ? need("grove").narrow || {} : {};
+const groveRoutes = isPrologue ? need("grove").routes(site, walker) : {};
 for (const [name, path] of Object.entries(groveRoutes)) {
-  test(`${name}, there and back: the eye keeps out of the grove (#515)`, () => {
+  test(`${name}, there and back: the eye keeps out of the grove but for its edge (#515)`, () => {
     for (const [screen, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) for (const way of [path, [...path].reverse()]) {
-      const f = walk(way, aspect), inside = f.filter((r) => r.in), edge = f.filter((r) => r.edge).length / f.length;
-      assert.equal(inside.length, 0, `${screen}: in ${inside.length} of ${f.length} frames the eye stood in the grove, first with him at (${inside[0]?.at.map((v) => v.toFixed(2))}) and it at (${inside[0]?.c.map((v) => v.toFixed(2))})`);
-      const most = NARROW[name] ?? 0.05;   // (the T00 lead, #518: 5%; the routes too narrow for the arm are named in checks.js)
-      assert.ok(edge <= most, `${screen}: in ${(edge * 100).toFixed(1)}% of the frames the eye was within 0.3 m of the grove`);
+      const f = walk(way, aspect), inside = f.filter((r) => r.in);
+      assert.equal(inside.length, 0, `${screen}: in ${inside.length} of ${f.length} frames the eye stood deeper than ${EYE_EDGE} m in the grove, first with him at (${inside[0]?.at.map((v) => v.toFixed(2))}) and it at (${inside[0]?.c.map((v) => v.toFixed(2))})`);
     }
   });
 }
