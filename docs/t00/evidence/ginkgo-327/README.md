@@ -2,7 +2,7 @@
 
 ## 原图在哪里（#223）
 
-`pics/` 里的图不在仓库里（只留这份说明、`t4/report-20261121-135446.json`、一张不超过 1 MB 的拼图 `collage.jpg` 和 `MANIFEST.json`）：在 Hugging Face 数据集 `bolechen/temple-walk-evidence`，地址和哈希见 `MANIFEST.json`；`node tools/evidence.mjs pull docs/t00/evidence/ginkgo-327` 取回到 `tools/out/evidence/`。
+`pics/` 里的图不在仓库里（前 22 张固定在 `552721d`，T05 的 6 张固定在 `dbf9d29`）（只留这份说明、`t4/report-20261121-135446.json`、一张不超过 1 MB 的拼图 `collage.jpg` 和 `MANIFEST.json`）：在 Hugging Face 数据集 `bolechen/temple-walk-evidence`，地址和哈希见 `MANIFEST.json`；`node tools/evidence.mjs pull docs/t00/evidence/ginkgo-327` 取回到 `tools/out/evidence/`。
 
 ## 机位
 
@@ -42,3 +42,15 @@
 三角形（画面总数）：高档 1 994 492 对 2 004 204，低档 902 179 对 907 035；绘制数 368 / 185 两边相同。差值在 Job 内的波动之内，不说成变快。T4 为 Tesla T4（ANGLE Vulkan），报告 `t4/report-20261121-135446.json`，站点指纹在其 `site` 里。
 
 另有一次开冠之前（`519cdc1`）的 T4：高档配对差中位数 +0.4 毫秒，低档 −0.42；因叶片数已变，以上面这组为准。
+
+## T05 没有被波及
+
+共用代码（`three-tree.js`、`trees.js`、`materials.js`、`yard.js`）改了，所以在 `?level=t05`（`?shot=1&q=high&season=summer&time=day&show=<机位>`）上取改前（main `c3c45e7`）与改后（本 PR `ab60b98`）的对照：
+
+| 机位 | 文件 | 两张图的差 |
+|---|---|---|
+| `arrive` | `pics/t05-arrive-old.jpg`、`pics/t05-arrive-new.jpg` | 平均每通道差 0.07，差过 8 的像素 0 个 |
+| `a` | `pics/t05-a-old.jpg`、`pics/t05-a-new.jpg` | 0.05，0 个 |
+| `d` | `pics/t05-d-old.jpg`、`pics/t05-d-new.jpg` | 0.04，23 个 |
+
+`__trees()`：改前 `{cedars: 0, hash: "811c9dc5"}`，改后 `{cedars: 0, hash: "811c9dc5", ginkgos: 0, ginkgoHash: null}`。`811c9dc5` 是空集的指纹初值：T05 现在不长任何柳杉或银杏，所以这些共用代码的改动碰不到它的树；`__level()` 为 `{ id: "t05", known: true }`，页面无错误。
