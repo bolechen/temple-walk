@@ -2151,6 +2151,17 @@ const scenarios = {
       t = await open(b, base, "q=low&cam=0,30,0,0" + BARE); await t.frames(2);
       expect(await t.page.evaluate(() => typeof window.__walkviz === "undefined"), "the published site should not carry the collision drawing's switch");
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      // On another level (#434) the panel names the level the page walks, offers no room views of the prologue's and shows
+      // none of the prologue's seals.
+      t = await open(pb, host, "level=t05&q=low&cam=0,200,0,0" + BARE);
+      await t.until(() => t.page.evaluate(() => !!document.querySelector(".lil-gui")), 60000, "the preview did not open the debug panel on T05");
+      const panel = await t.page.evaluate(() => {
+        const rows = Object.fromEntries([...document.querySelectorAll(".lil-gui .controller")].map((c) => [c.querySelector(".name")?.textContent, c.querySelector("input")?.value ?? c.querySelector("select")?.value]));
+        return { title: document.querySelector(".lil-gui > .title")?.textContent, level: window.__level(), rows, rooms: [...document.querySelectorAll(".lil-gui .controller select")].map((s) => s.options.length) };
+      });
+      expect(panel.level.id === "t05" && /t05/.test(panel.title || "") && panel.rows["关卡"] === "t05", "the panel should name T05: " + JSON.stringify(panel));
+      expect(panel.rows["朱印"] === "不适用" && panel.rows["完成状态"] === "不适用", "T05 should show none of the prologue's seals: " + JSON.stringify(panel.rows));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
       t = await open(pb, host, "q=low&cam=0,30,0,0&debug=0" + BARE); await t.frames(6);
       expect(!(await t.page.evaluate(() => !!document.querySelector(".lil-gui"))), "?debug=0 should keep the panel shut on a preview");
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
