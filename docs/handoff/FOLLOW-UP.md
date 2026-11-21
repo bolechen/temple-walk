@@ -75,12 +75,7 @@
 
 ## 在等所有者
 
-- #361：在真机上验 App 内置浏览器分享（固定地址 https://8e860772-temple-walk-preview.bole-chen.workers.dev ）。
-- 在 claude.ai 的环境设置里，给 `buddhist-say` 加 `CLAUDE_CODE_SUBAGENT_EFFORT=medium`（会话自己设不了）。
-- 是否打开仓库设置「Require branches to be up to date before merging」。
-- 删分支：`fix/417-menu-phone-seasons`（已被 #423 取代；主创删分支被权限拒绝）。
-
-- 0.7.0：canary 上用 `&debug=1` 实测殿内、出殿门、换语言之后（夜间全量绿后）。
+（11-21 晚清空：#361 真机已确认；`CLAUDE_CODE_SUBAGENT_EFFORT=medium` 已加；`fix/417-menu-phone-seasons` 已删；「Require branches to be up to date」由主创定为不开，见 LATEST-GOALS 第 98 条。）
 
 ## 合入后待主创复验关闭的 issue
 
