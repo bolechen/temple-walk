@@ -199,7 +199,7 @@ export function createMaterials() {
       float damp=(1.-ck)*up*clamp(.75*side+.55*corner,0.,1.);
       float layer=${CHEEK_STONE.width}-st.x, stoneF=ck*step(0.,.012-min(layer,st.x));     // a cheek's outer stone, as against the panel set back under it
       col*=1.-.22*ck*(1.-stoneF);
-      col*=(1.-.11*(1.-up)*(1.-ck))*mix(1.,.88+.2*smoothstep(0.,1.,d),(1.-ck)*up);              // a riser is a little duller than the tread above it, and a tread is paler toward the nose than at the back
+      col*=1.25*(1.-.11*(1.-up)*(1.-ck))*mix(1.,.88+.2*smoothstep(0.,1.,d),(1.-ck)*up);              // a riser is a little duller than the tread above it, and a tread is paler toward the nose than at the back
       col*=1.+.07*ck*step(sid,.5);                                                        // the cap at the head stands a little paler
       float foot=1.-smoothstep(0.,.45,st.z), rr=(1.-ck)*(1.-up)*(1.-smoothstep(0.,.1,st.z));   // low on a cheek, low on a riser: where water stands
       float streak=0.; if(stoneF*(1.-up)>.5) streak=smoothstep(.5,.85,n2(vec2(zc*12.+sed*7.,st.z*.5)));
