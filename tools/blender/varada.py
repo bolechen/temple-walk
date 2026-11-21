@@ -245,7 +245,8 @@ if Kn.get("mode") == "surface":
     from scipy.ndimage import gaussian_filter, distance_transform_edt as _edt
     fin = np.isfinite(Dn); idxn = _edt(~fin, return_distances=False, return_indices=True); Df = Dn[tuple(idxn)]
     GB = gaussian_filter(Df, Kn["blur"] / gs, mode="nearest")
-    dd = np.minimum(np.minimum(GX - blo[0], bhi[0] - GX), np.minimum(GY - blo[1], bhi[1] - GY)); wv = np.clip(dd / Kn.get("ease", 0.12), 0, 1); wv = wv * wv * (3 - 2 * wv)
+    # not at the box's head: there the figure's front is the old wrist (carried with the arm and cut), not the knee
+    dd = np.minimum(np.minimum(GX - blo[0], bhi[0] - GX), GY - blo[1]); wv = np.clip(dd / Kn.get("ease", 0.12), 0, 1); wv = wv * wv * (3 - 2 * wv)
     De = gaussian_filter(Df, Kn.get("edgeBlur", 0.025) / gs, mode="nearest")   # the figure's front at the outline, its cell noise smoothed a little
     GZ = (1 - wv) * De + wv * (GB - Kn.get("inset", 0.12))   # the figure's own front at the outline, the blurred knee inside
   gy_, gx_ = np.gradient(GZ, gs); okS = np.hypot(gx_, gy_) < Kn.get("slope", 1.2)
