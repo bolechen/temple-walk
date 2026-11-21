@@ -21,12 +21,12 @@ const season = arg("season", "summer"), time = arg("time", "day");
     if (done.has(s.pavilion)) continue; done.add(s.pavilion);
     const name = s.pavilion === "半山亭" ? "banshan" : s.pavilion === "望江亭" ? "wangjiang" : "yubei";
     // From the path, before he sits: outside the pavilion on the side the bench is seen from, a few metres off, looking at it.
-    const from = [s.at[0] - Math.sin(s.face) * 5.5, s.at[1] - Math.cos(s.face) * 5.5];
-    await p.evaluate(([x, z, f]) => window.__pose(x, z, -f - Math.PI, 0.12), [from[0], from[1], s.face]); await frames(8);
+    const from = [s.at[0] + Math.sin(s.face) * 5.5, s.at[1] + Math.cos(s.face) * 5.5];
+    await p.evaluate(([x, z, f]) => window.__pose(x, z, -f, 0.12), [from[0], from[1], s.face]); await frames(8);
     await p.screenshot({ path: path.join(out, `${name}-1-from-outside.png`), timeout: 300000 });
     // Beside the bench on the pavilion's floor: the bench and its balustrade close.
-    const near = [s.at[0] + Math.sin(s.face) * 1.7, s.at[1] + Math.cos(s.face) * 1.7];
-    await p.evaluate(([x, z, f]) => { window.__pose(x, z, -f - Math.PI, 0.18); }, [near[0], near[1], s.face]); await frames(8);
+    const near = [s.at[0] + Math.sin(s.face) * 2.4, s.at[1] + Math.cos(s.face) * 2.4];
+    await p.evaluate(([x, z, f]) => { window.__pose(x, z, -f, 0.12); }, [near[0], near[1], s.face]); await frames(8);
     await p.screenshot({ path: path.join(out, `${name}-2-the-bench.png`), timeout: 300000 });
     // He sits: the eye as the visitor has it once he is down (and, in the half-way pavilion, once it has come round and rests).
     await p.evaluate(([x, z, f]) => window.__pose(x, z, -f, 0.05), [s.at[0] + Math.sin(s.face) * 1.2, s.at[1] + Math.cos(s.face) * 1.2, s.face]); await frames(4);
