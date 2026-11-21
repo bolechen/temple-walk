@@ -289,7 +289,7 @@
   },
   {
    "op": "scale",
-   "note": "the lips forward 0.047 m at the upper lip's foremost point, radii [1.0, 0.7, 1.0] w, nothing at the base of the nose (face-ops.py)",
+   "note": "the lips forward 0.033 m at the upper lip's foremost point, radii [1.0, 0.7, 1.0] w, nothing at the base of the nose (face-ops.py)",
    "c": [
     0.0,
     -0.03321,
@@ -305,7 +305,7 @@
     1,
     1
    ],
-   "back": -0.00539,
+   "back": -0.00378,
    "below": 0.79297,
    "fade": 0.00413
   },

@@ -106,6 +106,32 @@ for op in spec["ops"]:
     co[:, 1] = op["axis"] + (co[:, 1] - op["axis"]) * (1 + (op["k"] - 1) * g)
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "depthk", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "lidclamp":
+    # the outer end of a closed eye's upper lid, which stands off the temple like a fin seen from the side: in the outer
+    # part of the eye (from `x0` outward to `x1`, across; between `h0` and `h1` in height), the surface is kept within
+    # `cap` of a line drawn up the face from the cheek under the eye (`hb`) to the brow over it (`ht`), each read at the
+    # same place across as the foremost surface there; the clamp eases in over `ease` from x0, so the middle of the
+    # eye keeps its carving
+    before = co.copy(); x, dep, h = co[:, 0], -co[:, 1], co[:, 2]; sg = np.sign(op["x1"] - op["x0"])
+    t = (x - op["x0"]) * sg; span = abs(op["x1"] - op["x0"])
+    sel = np.nonzero((t >= 0) & (t <= span) & (h >= op["h0"]) & (h <= op["h1"]) & (dep > op["front"]))[0]
+    def surf(hh):   # the foremost depth in thin bins across at height hh
+      band = np.nonzero((np.abs(h - hh) < op["bin"]) & (dep > op["front"]) & ((x - op["x0"]) * sg >= -op["bin"]) & ((x - op["x0"]) * sg <= span + op["bin"]))[0]
+      edges = np.arange(min(op["x0"], op["x1"]) - op["bin"], max(op["x0"], op["x1"]) + 2 * op["bin"], op["bin"])
+      k = np.digitize(x[band], edges); best = np.full(len(edges) + 1, np.nan)
+      for i, d in zip(k, dep[band]):
+        if np.isnan(best[i]) or d > best[i]: best[i] = d
+      ok = ~np.isnan(best); xs = np.r_[edges[0] - op["bin"], edges][ok] + op["bin"] / 2
+      return lambda q: np.interp(q, xs, best[ok])
+    top, bot = surf(op["ht"]), surf(op["hb"])
+    xs_, hs_ = x[sel], h[sel]; f = np.clip((hs_ - op["hb"]) / (op["ht"] - op["hb"]), 0, 1)
+    ref = bot(xs_) + f * (top(xs_) - bot(xs_)) + op["cap"]
+    wgt = np.clip(t[sel] / op["ease"], 0, 1)
+    over = dep[sel] - ref; m_ = over > 0
+    newdep = dep[sel] - np.where(m_, over * wgt, 0)
+    co[sel, 1] = -newdep
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "lidclamp", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   if op["op"] == "scale":
     before = co.copy(); c = np.array(op["c"], float); r = np.array(op["r"], float); S = np.array(op["s"], float)
     d = (co - c) / [r[0], r[2], r[1]]; g = np.exp(-3 * (d * d).sum(1))

@@ -116,6 +116,18 @@ if R.get("chinFold"):
   for x in np.arange(-Cf["half"] * w, Cf["half"] * w + 1e-6, r_m):
     y = float(np.polyval(fit, x)); ops.append({"op": "attenuate", "note": f"the chin's lower crease at x {round(float(x), 3)} m, y {round(y, 3)}, kept to {Cf['k']} of itself in a band {Cf['band']} w wide (face-ops.py)",
                 "seed": B(float(x), y, z_at(float(x), y)), "r": round(r_m / s, 5), "sr": round(4 * r_m / s, 5), "k": Cf["k"], "iter": Cf.get("iter", 200)})
+# the outer end of each upper lid, a ledge up to 15 cm proud of the temple beside it and the cheek under it (seen from the
+# side, a fin: the 3D review's fifth round, the art director's r7 review), brought back to within a cap of the face's
+# surface drawn from the cheek under the eye to the brow over it
+if R.get("lidClamp"):
+  Lc = R["lidClamp"]
+  for e, side in (("eyeL", "left"), ("eyeR", "right")):
+    ex = pts["eyes"][e][0]; ey = (f["eyes"].get(e) or {}).get("y", pts["eyes"][e][1]); sg = 1 if ex > 0 else -1
+    x0, x1 = ex + sg * Lc["from"], ex + sg * Lc["to"]
+    ops.append({"op": "lidclamp", "note": f"the {side} upper lid's outer end kept within {Lc['cap']} m of the face from the cheek ({Lc['below']} m under the slit) to the brow ({Lc['above']} m over it), from {Lc['from']} m to {Lc['to']} m outward of the eye's middle (face-ops.py)",
+                "x0": round(x0 / s, 5), "x1": round(x1 / s, 5), "h0": round((ey - Lc["below"]) / s, 5), "h1": round((ey + Lc["above"]) / s, 5),
+                "hb": round((ey - Lc["below"]) / s, 5), "ht": round((ey + Lc["above"]) / s, 5), "cap": round(Lc["cap"] / s, 5), "ease": round(Lc["ease"] / s, 5),
+                "front": round(0.15 / s, 5), "bin": round(0.01 / s, 5)})
 # the lids' edges, which stand off the face like fins seen from the side, brought back to within a cap of the smoothed
 # surface (the 3D review's fifth round)
 if R.get("lids"):
