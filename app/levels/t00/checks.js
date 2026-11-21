@@ -69,7 +69,7 @@ export default {
   // tests/unit/grove-eye.test.mjs (#515): the old path through the bamboo, walked each way, where the eye from behind him
   // must keep out of the grove as it keeps out of a wall. Laid on the open floor of each: across the river-view pavilion's
   // platform, the first two flights from the start up to the half-way pavilion, round the open side of the ink-stone
-  // pool's platform (where the tester stood), and the first steps from the bamboo start.
+  // pool's platform (where the tester stood), the first steps from the bamboo start, and the forecourt's two sides.
   grove: {
     routes: () => {
       const A = APPROACH;
@@ -78,6 +78,9 @@ export default {
         "from the lower platform up to the half-way pavilion": [[A.xC, A.zC1 - 1.2], [A.xC, A.zA1 + 0.4], [A.xB0 - 0.4, A.zMid], [A.xTurn - 0.4, A.zMid]],
         "round the ink-stone pool's platform": [[A.xB0 - 2.0, A.zA1 - 1.3], [A.xB0 + 5.0, A.zA1 - 1.3], [A.xB0 + 5.0, A.zA0 + 1.0], [A.xB0 - 2.0, A.zA0 + 1.0]],
         "the first steps from the bamboo start": [[A.xC, A.zC1 - 1.2], [A.xC, A.zC1 - 3.2]],
+        // and the forecourt, where the bamboo closes in on both sides (SITE.GROVE_IN): across to each side and along it
+        "across the forecourt to its west side and along it": [[0, SITE.fore - 6], [-(SITE.GROVE_IN - 1), SITE.fore - 6], [-(SITE.GROVE_IN - 1), SITE.zS + 5]],
+        "across the forecourt to its east side and along it": [[0, SITE.fore - 6], [SITE.GROVE_IN - 1, SITE.fore - 6], [SITE.GROVE_IN - 1, SITE.zS + 5]],
       };
     },
   },

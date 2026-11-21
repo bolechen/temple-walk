@@ -351,7 +351,8 @@ const inkVeil = (k) => { const c = document.getElementById("curtain"); if (!c) r
 // What the director's swings and shots are kept out of (#295): once the eye's hierarchy is built, what is drawn, with the
 // sphere of this frame's lens (a railing is drawn, so `railNear` has nothing more to add); until then the written plan.
 const eyeWalker = Object.assign(Object.create(walker), {
-  eyeShut: (x, y, z, foot) => (eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
+  // (where the level keeps the eye out, the bamboo, it is shut whether or not the eye's space has been built yet: #515)
+  eyeShut: (x, y, z, foot) => (L.eyeKeepOut?.(x, y, z, eyeSpace ? eyeSpace.radius : 0.25) ? true : eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
   railNear: (x, y, z, m) => (eyeSpace ? false : walker.railNear(x, y, z, m)),
 });
 const director = createDirector({ walker: eyeWalker,

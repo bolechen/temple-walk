@@ -73,3 +73,27 @@ for (const [name, path] of Object.entries(groveRoutes)) {
     }
   });
 }
+
+// The keep-out is the level's to say (an engine module imports no level): a level that gives none, T05's white box and the
+// probe, keeps the eye exactly as it was, and its space is the space of what is drawn alone.
+test("a level without a keep-out keeps the eye as it was: T05 and the probe give none, and their space asks only what is drawn (#515)", async () => {
+  for (const id of ["t05", "_probe"]) {
+    const lv = (await import(`../../app/levels/${id}/level.js`)).default;
+    assert.equal(lv.eyeKeepOut, undefined, `${id} gives the eye a keep-out`);
+  }
+  const plain = createEyeSpace(drawn), none = createEyeSpace(drawn, undefined), kept = createEyeSpace(drawn, L.eyeKeepOut);
+  let differ = 0, keptMore = 0;
+  for (let i = 0; i < 400; i++) {
+    const x = -40 + (i % 20) * 4.1, z = -130 + Math.floor(i / 20) * 11.3, y = walker.landAt(x, z) + 1.5;
+    if (plain.shut(x, y, z) !== none.shut(x, y, z)) differ++;
+    if (kept.shut(x, y, z) && !plain.shut(x, y, z)) keptMore++;
+  }
+  assert.equal(differ, 0, "a space made without a keep-out answers differently from one made before it existed");
+  assert.ok(keptMore > 0, "the prologue's keep-out shut nothing more over the whole place: the comparison says nothing");
+  // and no engine module imports a level to get one
+  const fs = await import("node:fs"), src = new URL("../../app/src/", import.meta.url);
+  for (const f of ["eyespace.js", "eye.js", "director.js", "opening.js"]) {
+    const imports = fs.readFileSync(new URL(f, src), "utf8").split("\n").filter((l) => /^\s*import\b/.test(l)).join("\n");
+    assert.doesNotMatch(imports, /levels\/|GROVE/, `${f} imports a level or its grove`);
+  }
+});
