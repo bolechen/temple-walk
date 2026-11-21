@@ -184,7 +184,7 @@
    "r0": 0.7,
    "deg": [
     -48,
-    22
+    30
    ]
   },
   "front": 0.02,
@@ -196,7 +196,7 @@
   "ease": 0.06,
   "edgeBlur": 0.025,
   "note_inset": "the knee's front under the old hand set back to where the left knee's front stands mirrored (z about 1.42 at y 3.4, as the reviewed round 1 had it): the old hand's back blurred stands about 0.3 m before it there",
-  "note_edges": "inner edge at 22 degrees (about x -1.5) so its join lies behind the hand's little-finger side; foot at y 2.38 so the old fingertips on the lotus's rim go with the old hand"
+  "note_edges": "inner edge at 30 degrees (22 left the old hand's right strip standing and the hand was solved 0.47 m out); foot at y 2.38 so the old fingertips on the lotus's rim go with the old hand"
  },
  "knee_r1": {
   "box": [
