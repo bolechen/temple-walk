@@ -20,8 +20,8 @@ const file = ensure(prepare(level)), decoded = decode(file.bytes, (b) => inflate
 const old = createWalker(site), walker = createGridWalker(createWalker(site), gridsByPlace(decoded), { doors: site.halls });
 
 test("the platform, the terrace and the flight are SITE.md's sizes, the court's paving at 0 and the floors at +3", () => {
-  assert.deepEqual([PLATFORM.w, PLATFORM.d, PLATFORM.h, PLATFORM.zS], [55.8, 26.11, 3.0, 0.4]);      // SITE.md §1.1, §3.1 (S03, S10: 25.91 deep), 0.2 m deeper to hold the back wall (#493)
-  assert.deepEqual([TERRACE.w, TERRACE.d, TERRACE.zN, TERRACE.zS], [37, 15, 0.4, 15.4]);             // SITE.md §1.1, §3.1 (a summary)
+  assert.deepEqual([PLATFORM.w, PLATFORM.d, PLATFORM.h, PLATFORM.zS], [55.8, 26.21, 3.0, 0.5]);      // SITE.md §1.1, §3.1 (S03, S10: 25.91 deep, south edge +0.4), 0.2 m out behind to hold the back wall and 0.1 m out in front under the corner columns (#493)
+  assert.deepEqual([TERRACE.w, TERRACE.d, TERRACE.zN, TERRACE.zS], [37, 14.9, 0.5, 15.4]);           // SITE.md §1.1, §3.1 (a summary), its north edge on the platform's (#493)
   assert.equal(FLIGHT.rise, PLATFORM.h); assert.ok(FLIGHT.w >= 8 && FLIGHT.w <= 10, "SITE.md §8: 8–10 m wide");
   const { count, height } = stairProfile(FLIGHT.rise);
   // SITE.md §6 proposes about 18 steps of 0.16–0.17 m; every flight in the game is laid by the one profile (0.18 m), which gives 17 here.
@@ -79,7 +79,14 @@ test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, th
   assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
   assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
   assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
-  assert.ok(HALL.out - HALL.colR >= 0.05 - 1e-9 && HALL.wall >= 1.0, "the end and back walls wrap their columns, 0.05 m over them, and are 1.0 m thick at least (ARCHITECTURE.md §4.2)");
+  assert.ok(HALL.wall >= 1.0, "the walls 1.0 m thick at least (ARCHITECTURE.md §4.2)");
+  // Every column of the end and back walls has its outer face inside the wall's outer face, and every column stands on the
+  // platform, its outer face inside the platform's edges (the structural review of #493).
+  const h0 = buildHall(M), pX = PLATFORM.w / 2, pN = PLATFORM.zS - PLATFORM.d;
+  for (const [x, z] of h0.columns) {
+    if (z < -0.01) assert.ok(Math.abs(x) + HALL.colR <= OUTER.x + 1e-9 && z - HALL.colR >= OUTER.zB - 1e-9, `the column at (${x.toFixed(2)}, ${z.toFixed(2)}) is inside its wall`);   // (the front ones stand proud of the front wall, as #425 has them)
+    assert.ok(Math.abs(x) + HALL.colR <= pX && z - HALL.colR >= pN && z + HALL.colR <= PLATFORM.zS, `the column at (${x.toFixed(2)}, ${z.toFixed(2)}) stands on the platform`);
+  }
   // The front columns stand out of the front wall more than half round, so that the nine bays read (#425's review).
   assert.ok(HALL.front < 0 && HALL.front > -HALL.colR, "the front wall's face lies behind the column line");
   // The doors and windows share one head line, and the ridge is a narrow, tall course with its end ornaments.
@@ -131,9 +138,10 @@ test("he walks into the hall across the threshold, to stations C, D, E and F, al
   const targets = file.header.targets;
   for (const id of ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
   for (const k of ["C", "D", "E", "F"]) assert.ok(Math.abs(walker.heightAt(...STATION[k]) - 3) < 0.03, `${k} is on the hall's floor`);
-  const zWall = ZS[0] + HALL.front - HALL.wall / 2, mid = (i) => (XS[i] + XS[i + 1]) / 2;
+  // (the sill lies under the frame, in the wall's outer third: hall.js)
+  const zWall = ZS[0] + HALL.front - HALL.wall / 2, zSill = ZS[0] + HALL.front - HALL.wall / 6, mid = (i) => (XS[i] + XS[i + 1]) / 2;
   FRONT.forEach((kind, i) => {
-    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zWall) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
+    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zSill) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
     else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);
   });
   for (const [x, z] of [[XS[0] + HALL.out - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);

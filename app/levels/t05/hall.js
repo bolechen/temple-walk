@@ -78,23 +78,31 @@ export function buildHall(M) {
   const fz0 = zcF - H.wall / 2, fz1 = zcF + H.wall / 2;
   // The front, bay by bay: a door is an opening with a sill to step over; a window an opening over a sill wall, barred;
   // the end bays are wall. Each opening fills its bay between two wooden jambs, under a wooden head on the doors' line, so
-  // that the doors and windows read as one row and the opening's sides are timber, not the white of the wall's thickness.
-  const J = H.jamb, head = H.door.h;
+  // that the doors and windows read as one row. The frame stands in the outer third of the wall's thickness, as a door or
+  // window frame is set in a thick wall, with the wall's own reveal behind it on the inside: the opening is not as deep as
+  // the wall (the structural review of #493).
+  const J = H.jamb, head = H.door.h, FD = H.wall / 3, zFr = zcF + H.wall / 2 - FD / 2, zRv = zcF - FD / 2, RD = H.wall - FD;
   FRONT.forEach((kind, i) => {
     const a = XS[i], b = XS[i + 1], mid = (a + b) / 2;
     if (kind === "wall") { along(a, b, zcF, 0, H.column); solid(a, b, fz0, fz1); return; }
     const l = a + J, r = b - J, w = r - l;
-    for (const [x0, x1] of [[a, l], [r, b]]) { wood.push(box(x1 - x0, head + J, H.wall + 0.04, (x0 + x1) / 2, y0 + (head + J) / 2, zcF)); solid(x0, x1, fz0, fz1); }   // the jambs
-    wood.push(box(w, J, H.wall + 0.04, mid, y0 + head + J / 2, zcF));                                    // the head
-    along(a, b, zcF, head + J, H.column);                                                                 // the wall over it
+    for (const [x0, x1] of [[a, l], [r, b]]) {
+      wood.push(box(x1 - x0, head + J, FD + 0.04, (x0 + x1) / 2, y0 + (head + J) / 2, zFr));        // the jamb
+      plaster.push(box(x1 - x0, head + J, RD, (x0 + x1) / 2, y0 + (head + J) / 2, zRv));            // and the wall behind it
+      solid(x0, x1, fz0, fz1);
+    }
+    wood.push(box(w, J, FD + 0.04, mid, y0 + head + J / 2, zFr));                                      // the head
+    plaster.push(box(w, J, RD, mid, y0 + head + J / 2, zRv));                                          // and the wall's soffit behind it
+    along(a, b, zcF, head + J, H.column);                                                               // the wall over it
     if (kind === "door") {
-      wood.push(box(w, H.door.sill, H.wall, mid, y0 + H.door.sill / 2, zcF));                       // the sill
-      walk.decks.push({ x0: l, x1: r, z0: fz0, z1: fz1, h: y0 + H.door.sill, floor: "wood" });
+      wood.push(box(w, H.door.sill, FD, mid, y0 + H.door.sill / 2, zFr));                               // the sill, under the frame
+      walk.decks.push({ x0: l, x1: r, z0: zFr - FD / 2, z1: zFr + FD / 2, h: y0 + H.door.sill, floor: "wood" });
+      walk.decks.push({ x0: l, x1: r, z0: fz0, z1: zFr - FD / 2, h: y0, floor: "stone" });             // the reveal's floor inside it
     } else {
       const s = H.window.sill, wh = head - s, n = H.window.bars;
       along(l, r, zcF, 0, s); solid(l, r, fz0, fz1);
-      wood.push(box(w, 0.2, H.wall + 0.04, mid, y0 + s + 0.1, zcF));                                       // the window's sill board
-      for (let k = 0; k < n; k++) wood.push(box(0.1, wh, 0.1, l + ((k + 0.5) * w) / n, y0 + s + wh / 2, zcF));
+      wood.push(box(w, 0.2, FD + 0.04, mid, y0 + s + 0.1, zFr));                                        // the window's sill board
+      for (let k = 0; k < n; k++) wood.push(box(0.1, wh, 0.1, l + ((k + 0.5) * w) / n, y0 + s + wh / 2, zFr));
     }
   });
   // The back wall, its middle bay a door kept shut (the way round behind the altar is not opened, PRD.md §1.5); the two end walls.
@@ -103,7 +111,7 @@ export function buildHall(M) {
   for (const s of [-1, 1]) { across(zB - H.out, ZS[0] + H.front, s * xc, 0, H.column); solid(s * xc - H.wall / 2, s * xc + H.wall / 2, zB - H.out, ZS[0] + H.front); }
   for (const [x, z] of columns) walk.posts.push({ x0: x - H.colR - BODY, x1: x + H.colR + BODY, z0: z - H.colR - BODY, z1: z + H.colR + BODY });
 
-  // The roof: four slopes from the eave's edge to the ridge, the ends hipped at 45°, with the dark of its underside
+  // The roof: four slopes from the eave's edge to the ridge, the ends hipped at 45° (in a hipped hall of nine bays and ten rafters the hip rafters run straight on to the ridge purlin, not pushed out: Yingzao Fashi, chapter 5), with the dark of its underside
   // below them (from inside the hall that is what the eye meets looking up: the open roof, not the sky) and a fascia
   // round the edge. Between the column heads and that underside, all round, the band where the bracket sets stand.
   const EX = X + H.overhang, EF = ZS[0] + H.overhang, EB = zB - H.overhang, D = EF - EB, half = D / 2, zm = (EF + EB) / 2, rx = EX - half;
@@ -164,7 +172,7 @@ export function buildHall(M) {
         const o = BR.out[k], w = BR.w + 0.3 * k;
         put(list, w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face + out * (o / 2 - 0.3 + 0.3));
       }
-      BR.inn.forEach((o, k) => put(list, BR.w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face - out * (H.wall + o / 2)));   // and in over the floor
+      BR.inn.forEach((o, k) => put(list, BR.w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face - out * (T + o / 2)));   // and in over the floor
     }
     const eaveBeamOut = BR.out[BR.tiers - 1] + 0.15, yE = cap + BR.h * BR.tiers - 0.05;
     put(list, len + 2 * eaveBeamOut, 0.3, 0.35, mid, yE, face + out * eaveBeamOut);        // the eave purlin the outermost tier carries

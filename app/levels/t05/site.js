@@ -13,10 +13,12 @@ import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
-/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns; 0.2 m deeper here (26.11), so that its back edge holds the back wall now 1.0 m thick and wrapping its 0.81 m columns (#493). */
-export const PLATFORM = Object.freeze({ w: 55.8, d: 26.11, h: 3.0, zS: 0.4 });
+/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
+ * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
+ * round, stand on it (#493). */
+export const PLATFORM = Object.freeze({ w: 55.8, d: 26.21, h: 3.0, zS: 0.5 });
 /** The terrace before it (SITE.md §3.1, S10/S22, a summary: about 37 × 15 m), from the platform's south edge. */
-export const TERRACE = Object.freeze({ w: 37, d: 15, zN: 0.4, zS: 15.4 });
+export const TERRACE = Object.freeze({ w: 37, d: 14.9, zN: 0.5, zS: 15.4 });   // (its north edge on the platform's south edge, #493)
 /** The flight up the terrace's middle (SITE.md §6: proposed 8–10 m wide, about 18 steps; stairGeo lays 0.18 m steps, so 17). */
 export const FLIGHT = Object.freeze({ w: 9, rise: PLATFORM.h });
 /** The compound's walls (our proposal: OSM gives no outline for them, SITE.md §2); the south one stops at the Wuliang hall's platform, `gate` either side of the axis (./axis.js). */
