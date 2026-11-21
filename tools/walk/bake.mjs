@@ -111,7 +111,7 @@ export function gather(roots, box, base = 0) {
     }
   };
   for (const root of [roots].flat()) root.traverse((o) => {
-    if (!o.isMesh || o.userData.walk === false || !o.visible) return;
+    if (!o.isMesh || o.userData.walk === false || o.userData.bake === false || !o.visible) return;   // (`bake === false`: not in the floor, but still the eye's: an overhead ceiling, #288)
     const m = Array.isArray(o.material) ? o.material[0] : o.material;
     if (!o.userData.ground && airy(m)) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
