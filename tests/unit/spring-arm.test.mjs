@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { inflateRawSync } from "node:zlib";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-const { buildSite, createWalker } = await import("../../app/src/site.js?real");
+const { levelPlan, need, isPrologue } = await import("./level-plan.mjs");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
@@ -19,12 +19,12 @@ const { buildDrawn } = await import("../../tools/walk/scene.mjs");
 const { gather } = await import("../../tools/walk/bake.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
-const site = buildSite(M);
-const grids = gridsByPlace(decode(ensure(prepare()).bytes, (b) => inflateRawSync(b)));
-const walker = createGridWalker(createWalker(site), grids, { doors: site.halls });
+const { L, site, walker: written } = await levelPlan(M, { real: true }), springs = need("springArm");
+const grids = gridsByPlace(decode(ensure(prepare(L)).bytes, (b) => inflateRawSync(b)));
+const walker = createGridWalker(written, grids, { doors: site.halls });
 const dt = 1 / 60, FOV = 50, ASPECT = 16 / 9, frame = FRAMES.b, arm = frameArm(frame, FOV, ASPECT);
 // what is drawn, gathered as the floor is baked from it, for the eye to ask (#295)
-const space = createEyeSpace(gather([buildDrawn().scene], { x0: -60, x1: 60, z0: -140, z1: 100, bottom: -200, top: 200 }).bvh);
+const space = createEyeSpace(gather([buildDrawn(L).scene], springs.gather).bvh);
 space.radius = eyeRadius(FOV, ASPECT, 0.1);
 
 // How near the eye may come, from the point over his head it backs away from (`ty`, 1.3 m over the floor): a wall at his
@@ -64,20 +64,8 @@ function walk(path, { reach = 6.2, pitch = 0.04, clear = false } = {}) {
   return out;
 }
 
-const hall = site.buildings.find((b) => b.name === "大雄宝殿"), tea = site.buildings.find((b) => b.name === "茶寮"), [cx, , cz] = site.censer.toArray();
-const routes = {
-  // the walk round the great hall's platform, between its walls and its edge, both ways
-  "round the great hall's platform": [[hall.x0 + 1.0, hall.z1 - 1.4], [hall.x1 - 1.0, hall.z1 - 1.4], [hall.x1 - 0.95, hall.z0 + 1.4], [hall.x0 + 0.95, hall.z0 + 1.4], [hall.x0 + 1.0, hall.z1 - 1.4]],
-  "round the great hall's platform the other way": [[hall.x0 + 1.0, hall.z1 - 1.4], [hall.x0 + 0.95, hall.z0 + 1.4], [hall.x1 - 0.95, hall.z0 + 1.4], [hall.x1 - 1.0, hall.z1 - 1.4], [hall.x0 + 1.0, hall.z1 - 1.4]],
-  // the walk along the back of the tea house, on its platform between its wall and the lane's
-  "behind the tea house": [[tea.x0 + 0.3, tea.z0 + 0.8], [tea.x0 + 0.3, tea.z1 - 0.8]],
-  "behind the tea house the other way": [[tea.x0 + 0.3, tea.z1 - 0.8], [tea.x0 + 0.3, tea.z0 + 0.8]],
-  // through the gate's middle passage, in and out
-  "in through the gate": [[0, 48], [0, 33]],
-  "out through the gate": [[0, 33], [0, 48]],
-  // up the first court's axis, close past the censer's east side, so that it stands behind him
-  "past the censer, with it behind him": [[cx + 1.3, cz + 8], [cx + 1.3, cz - 0.5], [cx, cz - 3]],
-};
+// The routes walked are the level's own (app/levels/<id>/checks.js).
+const routes = springs.routes(site, walker);
 
 for (const [name, path] of Object.entries(routes)) {
   test(`#295: from behind him the eye stands back and sees him: ${name}`, () => {
@@ -103,14 +91,7 @@ function holdsStill(frames) {
   assert.ok(put.length <= frames.length / 200, `the eye was put out of something in ${put.length} of ${frames.length} frames`);
 }
 // and on follow.test's own routes
-const { ROUTE } = await import("../../app/src/tour.js");
-const { LEVELS: T } = await import("../../app/src/site.js?real");
-for (const [name, path] of Object.entries({
-  "the measured route, bamboo to the first court": ROUTE,
-  "round the first court, close past the bell and drum towers": [[-10.8, 19], [10.8, 19], [10.8, 6], [-10.8, 6], [-10.8, 19]],
-  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
-  "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]],
-})) test(`#295: asking what is drawn, the eye does not jump: ${name}`, () => holdsStill(walk(path)));
+for (const [name, path] of Object.entries(need("follow").routes(site, walker))) test(`#295: asking what is drawn, the eye does not jump: ${name}`, () => holdsStill(walk(path)));
 
 // The lead's measures of the arm on a flight of steps and on a phone held upright (#295, from #271/#291 and #306), worked out
 // as tools/frame-routes.mjs works them, on the baked floor with the eye asking what is drawn: going down the flight by the
@@ -118,7 +99,7 @@ for (const [name, path] of Object.entries({
 // tip by more than 0.3° from one frame to the next up the flight or down it, and round the censer on a phone held upright
 // (390 × 844) his head and feet are in the picture every frame.
 const { measure, WALKS } = await import("../../tools/frame-routes.mjs");
-test("#295: down the flight by the half-way pavilion the arm keeps 3 m and the view does not jump", () => {
+test("#295: down the flight by the half-way pavilion the arm keeps 3 m and the view does not jump", { skip: !isPrologue && "its walks and its floor are the prologue's" }, () => {
   for (const size of ["16x9", "phone"]) {
     const r = measure("b", size, WALKS["stair-down"], 0.06, { walker, space });
     if (process.env.ARM_REPORT) console.log("stair-down", size, JSON.stringify(r));
@@ -127,10 +108,10 @@ test("#295: down the flight by the half-way pavilion the arm keeps 3 m and the v
     assert.ok(r.pitchStep <= 0.3, `${size}: the view tipped ${r.pitchStep}° in one frame going down`);
   }
 });
-test("#295: up the flight the view does not tip more than 0.3° a frame either", () => {
+test("#295: up the flight the view does not tip more than 0.3° a frame either", { skip: !isPrologue && "its walks and its floor are the prologue's" }, () => {
   for (const size of ["16x9", "phone"]) { const r = measure("b", size, WALKS["stair-up"], 0.06, { walker, space }); assert.ok(r.pitchStep <= 0.3, `${size}: ${r.pitchStep}° in one frame going up`); }
 });
-test("#295: round the censer on a phone held upright, his head and feet are in the picture", () => {
+test("#295: round the censer on a phone held upright, his head and feet are in the picture", { skip: !isPrologue && "its walks and its floor are the prologue's" }, () => {
   const r = measure("b", "phone", WALKS.censer, 0.06, { walker, space });
   if (process.env.ARM_REPORT) console.log("censer phone", JSON.stringify(r));
   assert.ok(r.top >= 0 && r.bottom <= 100 && r.feetIn === 100 && r.hidden === 0, `head at ${r.top}%, feet at ${r.bottom}%, feet in ${r.feetIn}%, hidden ${r.hidden}%`);
@@ -140,7 +121,7 @@ test("#295: round the censer on a phone held upright, his head and feet are in t
 // platforms' sides and backs, the ground before the gate): from every metre of it, facing eight ways, once the eye has
 // settled it stands back at least a metre and he is in the picture, unless something drawn stands right behind him
 // (within 1.25 m of the point over his head), where no eye can stand that far behind him clear of it.
-test("#295: on every metre of the floor the written plan never reached, the eye sees him", () => {
+test("#295: on every metre of the floor the written plan never reached, the eye sees him", { skip: !isPrologue && "its walks and its floor are the prologue's" }, () => {
   const old = walker.old, pts = [];
   for (let x = -40; x <= 40; x += 1) for (let z = -130; z <= 95; z += 1) if (walker.answers(x, z) && !walker.blocked(x, z) && old.blocked(x, z)) pts.push([x, z]);
   const cam = new THREE.PerspectiveCamera(FOV, ASPECT, 0.1, 500), bad = [];
@@ -175,7 +156,7 @@ test("#295: the eye's sphere covers the near plane at the widest lenses the page
   try {
     for (const [name, fov, aspect] of lenses) {
       space.radius = eyeRadius(fov, aspect, 0.1);
-      for (const route of ["round the great hall's platform", "in through the gate"]) { const cut = walk(routes[route], { clear: true }).filter((f) => f.cut); if (cut.length) bad.push(`${name} (r ${space.radius.toFixed(3)} m), ${route}: ${cut.length} frames, first at (${cut[0].x.toFixed(1)}, ${cut[0].z.toFixed(1)})`); if (process.env.ARM_REPORT && cut.length) console.log(name, route, cut.map((f) => `${f.x.toFixed(1)},${f.z.toFixed(1)}`).join(' ')); }
+      for (const route of springs.lensRoutes) { const cut = walk(routes[route], { clear: true }).filter((f) => f.cut); if (cut.length) bad.push(`${name} (r ${space.radius.toFixed(3)} m), ${route}: ${cut.length} frames, first at (${cut[0].x.toFixed(1)}, ${cut[0].z.toFixed(1)})`); if (process.env.ARM_REPORT && cut.length) console.log(name, route, cut.map((f) => `${f.x.toFixed(1)},${f.z.toFixed(1)}`).join(' ')); }
     }
   } finally { space.radius = eyeRadius(FOV, ASPECT, 0.1); }
   assert.deepEqual(bad, []);
