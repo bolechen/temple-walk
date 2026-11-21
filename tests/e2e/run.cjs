@@ -1488,7 +1488,8 @@ const scenarios = {
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
-          expect(!(await t.inHall()), `${h.name}: he went back in`);
+          // (what the nightly run needs to tell a tap that went to the door from a step the funnel drew in: where he stood, what the tap set, where he is now and which grid answers, #349)
+          if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap (${fx}, ${fy}) from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
           await t.page.evaluate(() => window.__walk([]));
         }
         expect(set >= 1, `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
@@ -1507,7 +1508,8 @@ const scenarios = {
           for (let n = 0; n < 40 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (the way round from a porch is worked out over a few frames; wait on frames, not on a single read)
           expect(s1.target && s1.target[1] > -0.48, `main hall: a tap on the court from the porch should set a target past the foot of the steps (z > -0.48), got ${s1.target}`);
         }
-        await t.untilFrames(async () => { const s = await t.state(); return !s.target && s.z > -0.48; }, 400, "he did not walk down the steps");
+        // (Past the foot of the steps is what is asked, not the end of the way: the tap's target lies 16 m out, and on a card that draws sixty frames a second 400 of them are not enough to walk it, #349.)
+        await t.untilFrames(async () => (await t.state()).z > -0.48, 900, "he did not walk down the steps"); await t.page.evaluate(() => window.__walk([]));
         expect(!(await t.inHall()), "main hall: walked back in");
       }
       if (view === "first") {
@@ -1515,8 +1517,9 @@ const scenarios = {
         const vp = t.page.viewportSize(), at = async (x, z, yaw, pitch) => { await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), [x, z, yaw, pitch]); await t.frames(3); };
         await at(0.3, 2.2, 0, 0.05); await tap(vp.width / 2, vp.height * 0.375); await t.until(t.inHall, 300000, "from the court, a tap on the hall never led inside"); await settle();   // (a pass still under way drops __inside(null))
         await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, "never came out"); await settle();
-        await at(0, -3.5, 0, -0.45); await tap(vp.width / 2, vp.height * 0.85); await t.frames(1);
-        const f = await t.state(); expect(f.target && f.target[1] > -5.0 && f.target[1] < -1, `on the porch, a tap on the porch floor should walk there, got ${f.target}`);
+        await at(0, -3.5, 0, -0.45);
+        // (the first destination is caught frame by frame inside the page: a way worked out over a few frames is not there one frame after the tap, #349)
+        const f = { target: await t.tapTarget(() => tap(vp.width / 2, vp.height * 0.85), "a tap on the porch floor") }; expect(f.target && f.target[1] > -5.0 && f.target[1] < -1, `on the porch, a tap on the porch floor should walk there, got ${f.target}`);
         await t.until(async () => !(await t.state()).target, 120000, "never reached the spot on the porch"); expect(!(await t.inHall()), "a tap on the porch floor took him into the hall");
         await at(0, -3.5, 0, -0.35); await tap(vp.width / 2, vp.height * 0.5); await t.until(t.inHall, 300000, "on the porch, a tap on the door never led inside");
       }
@@ -2052,21 +2055,27 @@ const scenarios = {
     await press(); expect((await R()).closing === true, "a tap passed over a first watch");
     // holding and letting go half way carries on
     const ink = () => t.page.evaluate(() => +getComputedStyle(document.querySelector("#endingHold .mark")).opacity);
+    // A press held part of the way and read, all inside the page: a hold is 1.5 s of the page's own clock, and a round trip from here to
+    // a page drawing a frame in a second (software, a busy machine) may take longer than that, which passed the close over under the reading.
+    const halfHold = (read) => t.page.evaluate(async (src) => {
+      const el = document.getElementById("ending"), look = eval(src), P = () => window.__endingPass();
+      el.dispatchEvent(new PointerEvent("pointerdown", { pointerId: 7, bubbles: true }));
+      while (P().holding && P().progress <= 0.3) await new Promise((r) => requestAnimationFrame(r));
+      const out = look(); el.dispatchEvent(new PointerEvent("pointerup", { pointerId: 7, bubbles: true })); return out;
+    }, read.toString());
     expect(await ink() === 0, "a ring is drawn though nothing is held");
-    await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the ring did not fill while held");
-    expect(await ink() > 0, "no ring while held");
-    expect(await t.page.evaluate(() => document.getElementById("endingHold").getAttribute("aria-valuenow") !== null), "the ring says nothing to a screen reader");
-    await t.page.mouse.up(); p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
+    const mid = await halfHold(() => ({ o: +getComputedStyle(document.querySelector("#endingHold .mark")).opacity, now: document.getElementById("endingHold").getAttribute("aria-valuenow"), p: window.__endingPass() }));
+    expect(mid.o > 0 && mid.now !== null && mid.p.progress > 0.3, "no ring, or nothing for a screen reader, while held: " + JSON.stringify(mid));
+    p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
     await t.until(async () => await ink() === 0, 10000, "the ring did not go when the press ended");
     // with reduced motion nothing sweeps: the angle stays whole and only the ink comes up
     await t.page.emulateMedia({ reducedMotion: "reduce" });
-    await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the calm ring did not fill while held");
-    const calm = await t.page.evaluate(() => { const m = document.querySelector("#endingHold .mark"); return { k: m.style.getPropertyValue("--k"), o: +getComputedStyle(m).opacity }; });
+    const calm = await halfHold(() => { const m = document.querySelector("#endingHold .mark"); return { k: m.style.getPropertyValue("--k"), o: +getComputedStyle(m).opacity }; });
     expect(calm.k === "1" && calm.o > 0.2 && calm.o < 1, "with reduced motion the ring should keep its angle and only come up in ink: " + JSON.stringify(calm));
-    await t.page.mouse.up(); await t.page.emulateMedia({ reducedMotion: "no-preference" }); await t.until(async () => await ink() === 0, 10000, "the calm ring did not go");
+    await t.page.emulateMedia({ reducedMotion: "no-preference" }); await t.until(async () => await ink() === 0, 10000, "the calm ring did not go");
     // a press that is lost (the window loses focus while held) is let go, and the next press counts
-    await t.page.mouse.down(); await t.until(async () => (await P()).holding, 20000, "a press was not held"); await t.page.evaluate(() => window.dispatchEvent(new Event("blur")));
-    p = await P(); expect(!p.holding && p.progress === 0, "a press lost with the window's focus stayed held: " + JSON.stringify(p)); await t.page.mouse.up();
+    const lost = await halfHold(() => { window.dispatchEvent(new Event("blur")); return window.__endingPass(); });
+    expect(!lost.holding && lost.progress === 0, "a press lost with the window's focus stayed held: " + JSON.stringify(lost));
     // holding all the way passes it over
     await t.page.mouse.down(); await settle(); await t.page.mouse.up();
     const after = await book();
@@ -2560,7 +2569,7 @@ const scenarios = {
     await t.frames(10);
     const K = t.page.keyboard, held = new Set(), hold = async (k, on) => { if (on && !held.has(k)) { await K.down(k); held.add(k); } else if (!on && held.has(k)) { await K.up(k); held.delete(k); } };
     const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-    const way = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 1], [0, 1.5]];
+    const way = require("./keywalk-way.cjs");
     const log = { frames: 0, off: [], dist: [], turns: { a: 0, d: 0 }, keys: [] };
     let i = 0, best = Infinity, still = 0;
     await hold("Shift", true);
