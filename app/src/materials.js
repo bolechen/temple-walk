@@ -166,15 +166,19 @@ export function createMaterials() {
       bool cheek=st.y<0.; float ck=cheek?1.:0.;
       float ti=floor(max(st.y,0.)), tf=max(st.y,0.)-ti, zc=-1.-st.y, x=st.x;
       vec2 sg; if(cheek) sg=stCheek(zc,sed,Nn*STREAD+SNOSE); else sg=stTread(x,W,ti,sed);
-      float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y), joint=0.;
-      if(sg.y<.05){ float dj=sg.y+(n2(vWP.xz*13.+vWP.y*9.)-.5)*.005, jw=.0025+.003*h21(vec2(sid,sed+4.));
-        joint=(1.-smoothstep(jw,jw+.006+px,dj))*(1.-smoothstep(.03,.1,px)); }      // a joint is only drawn as long as it can be told apart
+      float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y), joint=0., jd=.4, rim=0.;
+      if(sg.y<.05){      // a joint: wide here and narrow there, dark here and less dark there, with the arris beside it rubbed bright
+        float dj=sg.y+(n2(vWP.xz*13.+vWP.y*9.)-.5)*.005, jn=n2(vWP.xz*8.+vWP.y*10.+sid*2.9);
+        float jw=(.0028+.0028*h21(vec2(sid,sed+4.)))*(.35+1.3*smoothstep(.3,.7,jn)); jd=.54+.24*smoothstep(.3,.7,n2(vWP.xz*3.1+vWP.y*4.3+sid*5.1));
+        float seen=1.-smoothstep(.03,.1,px);          // (only as long as it can be told apart)
+        joint=(1.-smoothstep(jw,jw+.006+px,dj))*seen;
+        rim=smoothstep(jw+.001,jw+.005,dj)*(1.-smoothstep(jw+.005,jw+.018,dj))*seen; }
       float up=smoothstep(.45,.65,vWN.y);
       float sr=h21(vec2(sid*1.37+ti*.61+ck*50.,sed+.3));
       vec3 tint=mix(vec3(.95,.98,1.03),vec3(1.05,1.01,.94),h21(vec2(sid+11.,ti+sed+ck*7.)));   // each stone a little cooler or warmer
       vec3 w3=triW(vWN), q=vWP*.75+vec3(h21(vec2(sid,ti+sed)),h21(vec2(ti+sed,sid+3.)),h21(vec2(sid+5.,sed)))*6.;   // and cut from another part of the scan
       vec3 A=triA(tStoneA,q,w3)/mStone; vec4 Nr=triN(tStoneN,q,w3);
-      col=mix(vec3(.21,.212,.2),vec3(.31,.31,.29),up)*mix(vec3(1.),A,.72)*tint*(.85+.3*sr);
+      col=mix(vec3(.21,.212,.2),vec3(.31,.31,.29),up)*mix(vec3(1.),A,.72)*tint*(.74+.52*sr);
       // Where on a tread: how near the cheek, how near the riser above (0) or the nose (1), how near the line feet follow.
       float side=1.-smoothstep(0.,.3,W*.5-abs(x)), d=clamp((tf-.13)/.85,0.,1.), corner=1.-smoothstep(0.,.4,d);
       float walk=exp(-pow(abs(x)/clamp(.22*W+.2,.42,.9),2.));
@@ -196,7 +200,10 @@ export function createMaterials() {
                  max(has*rr*smoothstep(.58,.8,mn*.9+.3*rr), ck*cs*smoothstep(.52,.76,mn+.4*foot+.25*joint)));
         if(moss>.002) col=mix(col,mix(vec3(.065,.085,.045),vec3(.11,.14,.065),n2(vWP.xz*31.))*mix(vec3(1.),A,.5),moss*.65);
       }
-      col*=1.-.42*joint; ao_=min(ao_,1.-.25*joint); bump_=-joint*.004;
+      // An edge worn round: the tread's nose and the two edges of a cheek's top fall away a little and take the light.
+      float dn=max(.97-tf,0.)*(STREAD+SNOSE)/.94, de=min(st.x,${CHEEK_STONE.width}-st.x);
+      float arr=(1.-ck)*up*(1.-smoothstep(0.,.018,dn)) + ck*up*stoneF*(1.-smoothstep(0.,.014,de));
+      col*=(1.-jd*joint)*(1.+.14*rim*(.4+.6*up)+.14*arr); ao_=min(ao_,1.-.12*joint); bump_=-joint*.003-.004*arr*arr;
       // A bamboo leaf lies here and there on a tread, nearest the edges, and none on the worn middle.
       float lfm=0.;
       if(uLeaves>.5&&ck<.5&&up>.5&&px<.04){
