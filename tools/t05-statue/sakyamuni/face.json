@@ -1,0 +1,45 @@
+{
+ "about": "sakyamuni's face before any face op (#463), in the stage frame (metres, y up from the seat, z toward the viewer), worked out from its r3 paint anchors by tools/t05-statue/face-init.py (placed as Vipasyin's face.json stands against its anchors); the neck's pivot and the head's width for the bow. face-build.py reads it.",
+ "height": 8.2,
+ "fileHeight": 1.0,
+ "source": "sakyamuni-mv-1.base_model.glb",
+ "dir": "tools/out/t05/tripo-370",
+ "neck": {
+  "c": [
+   6.278,
+   -0.575
+  ],
+  "z0": 6.365,
+  "fade": 0.305,
+  "rx": 0.95,
+  "fx": 0.175
+ },
+ "features": {
+  "knit": [
+   0,
+   7.263,
+   0.054
+  ],
+  "philtrum": [
+   0,
+   6.778,
+   0.102
+  ],
+  "cornerL": [
+   0.25,
+   6.718,
+   0.062
+  ],
+  "cornerR": [
+   -0.25,
+   6.718,
+   0.062
+  ],
+  "mouth": [
+   0,
+   6.718,
+   0.052
+  ],
+  "browY": 7.282
+ }
+}

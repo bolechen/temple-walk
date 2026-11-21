@@ -16,9 +16,11 @@
 
 | 场景 | 11-20 夜间（免费机） | 判断 | 归谁 | issue |
 |---|---|---|---|---|
-| hallexit | 红（禅堂：he went back in） | 真 bug，时灵时不灵 | `JrXu`（Sonnet 高档） | #349 |
+| hallexit | 红（禅堂：he went back in） | T4 上红：等待条件按帧把 16 m 外的目标也算了进去，已改（a0ae115）；夜间那条还没复现 | `JrXu`（Sonnet 高档） | #349 |
 | joya | 绿（76a4b08）；最新 main 软件渲染也红 | 场景自身的时序：页面每 5 s 自 flush 抢先发走，场景再 flush 返回 false | `FVQP`（#341 原会话），PR 要 T00 主创签字 | #341 / #347 |
-| lamp、eyeroom、recenter、keywalk | 绿（76a4b08，离 d1b618d 隔 112 个提交） | 待定：主创在本地最新 main 上用软件渲染重跑；镜头会话判断后三个不是 #518 同源，疑为按帧计的等待在 T4 上跑得太快 | 待定 | 待定 |
+| lamp | 绿（76a4b08） | 测试钩子重名：#509 在 yard.js 把窗灯亮度也叫 `window.__lamp`，盖掉了 game.js「为人点灯」的 `__lamp`；功能本身没坏，**不挡 0.7.0**。改名 `__lampStrength`，加单测「钩子只能定义一次」 | `EeJL`（fix/lamp-hook-collision） | PR 待开 |
+| keywalk | 绿（76a4b08） | #475 有意关了大殿前一对幼杉外 1.5 m 的方块（#288 第 3 项），场景路线直穿：**不挡 0.7.0**，改路线到 z=−1.5（fix/keywalk-cedars）；方块收成 1.0 m 的圆另开 #531 | `JrXu` | PR 待开；#531 |
+| recenter、eyeroom | 绿（76a4b08） | 本地最新 main 软件渲染都绿：T4 才红的时序（按帧计的等待） | #335 的对照表 | #335 |
 
 11-20 夜间另红的 doorway、loft、resume 在 T4 上是绿的，今晚夜间再核。
 
