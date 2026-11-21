@@ -30,6 +30,8 @@ export const ZONES = ["grove", "stair", "gate", "court", "hall", "upper", "summi
 export function zoneBounds(SITE, LEVELS, APPROACH, SCREEN) {
   return { grove: APPROACH.zA1, stair: SCREEN.z + 1.5, gate: SITE.zS, court: LEVELS[0].zS, summit: LEVELS[2].zS };
 }
+/** What a zone plays on the year-end bell's night (#341): the bell's court and the terraces above it take the drone. @param {string} zone */
+export const joyaZone = (zone) => (zone === "court" || zone === "upper" ? "joya" : zone);
 export function zoneOf(x, z, inside, B) {
   if (!B) return "none";                // a level with no music of its own yet (#409): the prologue's is not played there
   if (inside) return "hall";
@@ -73,7 +75,7 @@ export function moodMusic(season = "summer", time = "day") {
   return m;
 }
 // How loud each place keeps the music, before the visitor's own level (the bus fades to this over a few seconds).
-export const SECTION_LEVEL = { grove: 0.8, stair: 0.9, gate: 1, court: 0.75, hall: 0.55, upper: 0.9, summit: 1, complete: 1, ending: 1 };
+export const SECTION_LEVEL = { grove: 0.8, stair: 0.9, gate: 1, court: 0.75, hall: 0.55, joya: 0.55, upper: 0.9, summit: 1, complete: 1, ending: 1 };
 
 // ---- Phrases ----
 // A small seeded random, so a visit is varied but a test is repeatable.
@@ -131,6 +133,10 @@ const PHRASES = {
     if (r() < 0.5) out.push(ev(between(r, 8, 11), "low", pick(r, [MODE.tonic, MODE.tonic + 7]), 7, 0.35));
     return { events: out, beats: 18, rest: [4, 8] };
   },
+  // The year-end bell's night (#341), in the bell's court and above: no melody and no string, only the hall's held fifth
+  // (G-D, the bell's own G under it), so that the strokes everyone rings, and the far bell that answers each 108, are the
+  // music. The music reviewer's advice of 2026-11-20: a pad at the hall's level, ducked by the bell as ever, never silence.
+  joya() { return { events: [ev(0, "pad", MODE.tonic, 26, 0.7)], beats: 18, rest: [4, 8] }; },
   upper(r, s) {   // the theme turned round, or a rising figure somewhere in the mode; the flute begins to answer
     const kind = pick(r, ["back", "lift", "lift", "back"]), deg = pick(r, [0, 1, -1]), out = []; let t = 0;
     if (kind === "back") { for (const i of [2, 1, 0]) { out.push(ev(t, "qin", step(THEME[i].m, deg), THEME[i].b + 0.5, 0.6, i === 2 ? "up" : null, true)); t += THEME[i].b + 0.5; } }
