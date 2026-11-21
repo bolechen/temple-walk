@@ -69,6 +69,8 @@ import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
+import { takeCrossing } from "./src/pilgrimage.js";
+import { inkArrive, inkLift } from "./src/ink.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -88,6 +90,12 @@ const WALKER = walkerMode(Q.get("walker"));
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
+// Opened by a crossing from another temple (行脚图, #449, src/pilgrimage.js): the visit handed across, taken once, for this
+// level only; an address that names its own place drops it, as a change of language's is. The ink curtain index.html's
+// first script kept shut (`html.crossing`) is drawn back once this temple can be drawn (crossingBack below); a handover
+// that came to nothing lifts it at once.
+const crossing = (() => { let c = null; try { c = takeCrossing(sessionStorage, { level: LV.id }); } catch {} return c && !["cam", "show", "shot", "in", "up", "enter", "tour", "at", "play", "seals"].some((k) => Q.has(k)) ? c : null; })();
+if (!crossing) inkLift();
 let walkFile = WALKER === "old" ? null : (() => {
   const t0 = performance.now();
   return fetch(asset(`shared/walk/${L.id}.bin`)).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
@@ -272,7 +280,8 @@ const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-tem
 let beforeJoya = null;
 if (joyaNight()) { beforeJoya = { season: state.season, time: state.time, follow: state.follow }; state.season = "winter"; state.time = "night"; state.follow = false; }
 // Across a change of language the season and hour of this visit are as they were, a hand's choice of hour too (#140).
-if (relang && relang.season && relang.time && !Q.has("season") && !Q.has("time")) { state.season = relang.season; state.time = relang.time; state.follow = relang.follow && !prologueDay; }
+{ const carried = relang || crossing;   // (a crossing from another temple carries the visit's season and hour too, #449)
+  if (carried && carried.season && carried.time && !Q.has("season") && !Q.has("time")) { state.season = carried.season; state.time = carried.time; state.follow = carried.follow && !prologueDay; } }
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -879,7 +888,7 @@ function frame(now) {
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); if (crossing) crossingBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1415,6 +1424,12 @@ function relangBack() {
   const b = /** @type {HTMLElement | null} */ (menuEl.querySelector(`[data-lang="${lang}"]`)); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: "nearest" }); }
   for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
 }
+// Back after a crossing from another temple (#449): this temple can be drawn, so the ink curtain it came up behind is drawn back, and
+// how long the crossing took (from the press to the temple drawn, and to the walk his) is kept and named. Sound waits for the first touch or key.
+function crossingBack() {
+  inkArrive(crossing).then((a) => track("pilgrimage.arrive", { from: a.from, to: a.to, ms: a.ms, walk_ms: a.walkMs }));
+  for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
+}
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
@@ -1434,7 +1449,8 @@ function directShot(id, opts) {
 }
 window.__direct = (id) => directShot(id);
 createGame({
-  hints, ui, tier: quality.name, relang: !!relang,
+  hints, ui, tier: quality.name, relang: !!relang, crossing: !!crossing,
+  visit: () => ({ season: state.season, time: state.time, follow: !!state.follow }),   // what a crossing to another temple hands across (#449)
   level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
