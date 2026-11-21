@@ -57,6 +57,12 @@
    "rev": "9cf3474b9c4ff81a714b531f146883f76a6aa59f"
   },
   {
+   "path": "collage-final.jpg",
+   "bytes": 441844,
+   "sha256": "0cf695a24dcfe35c8d4e215fbf24f75af957bc2895cb962895dbf8b56dd72413",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 490030,
    "sha256": "c57cc95f6cfdb54cdc9b50c93dab9f45c0e6bffeed76e3dc8cff3b98cffeb20d",
@@ -109,6 +115,54 @@
    "bytes": 3037226,
    "sha256": "cd2cb2043a84ba34813762d205b350eca85aaafc1e292a4969fe2f8547833c64",
    "rev": "9cf3474b9c4ff81a714b531f146883f76a6aa59f"
+  },
+  {
+   "path": "soft-art3-autumn-dusk.png",
+   "bytes": 3037641,
+   "sha256": "76fc2c66d250cf306fd27802b71241ede4070f44b4ca2e86de6be9b850698ee0",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-cam06-summer-day.png",
+   "bytes": 2845370,
+   "sha256": "2088439efdfe103f4513b9ea320e42c51997c59648e62856e0012d35656cab51",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-court-autumn-dusk.png",
+   "bytes": 2996934,
+   "sha256": "723b79a253a64b2cba16aff9eb5ddb300736563de3315db05958390ad6bacc27",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-court-spring-dawn.png",
+   "bytes": 2894146,
+   "sha256": "65c4e97f673d3314838573e7c1ffb30f0bb8f46d38659c6feaeb027ea7092c6e",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-court-summer-dusk.png",
+   "bytes": 2803870,
+   "sha256": "1662b6cdce860503c8df64380f6bd237e46a33525eb7f339b76a317a8bbd8331",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-court-winter-day.png",
+   "bytes": 2943263,
+   "sha256": "de2cf01bc763b698c243912347cd7ee437b5bbecc3714899a7c2040cd1687b9b",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-court-winter-night.png",
+   "bytes": 2790221,
+   "sha256": "347e6d5183b4ee50dbf514bc5b7ba953ea02a14ca52de1b1426aacfcee9768d4",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
+  },
+  {
+   "path": "soft-top-summer-day.png",
+   "bytes": 2926123,
+   "sha256": "5d237939e4e8ca45d16bde4b8ba46513cf62229982ed41ec5ba305a06bafebad",
+   "rev": "8b1be18c4b20f4f84c9a4677fb0f42b245ac5bc6"
   }
  ]
 }
