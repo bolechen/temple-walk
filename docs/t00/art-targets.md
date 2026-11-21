@@ -50,7 +50,7 @@
 |---|---|---|---|---|---|---|
 | A1 | 01-bamboo | `art1` | 21.4, 78.7, −1.40, 0.20 | summer | dawn | 一 |
 | A2 | 02-gate | `art2` | 2.5, 53.8, −0.18, 0.30 | autumn | **day**（2026-11-17 由 dusk 改） | 一 |
-| A3 | 03-court | `art3`（与 `court` 相同） | 0, 29, 0, 0.10 | autumn | dusk | 三 |
+| A3 | 03-court | `art3`（2026-11-21 起不再与 `court`、`cam06` 相同，#467） | −5.2, 31, 0.16, 0.10 | autumn | dusk | 三 |
 | A4 | 04-tea | `art4` | −9.6, 25.0, −0.60, 0.08 | autumn | dusk | 一 |
 | A5 | 05-terrace | `art5`（与 `guanyin` 相同） | 0, T2.zS+5, 0, 0.22 | summer | dusk | 一 |
 | A6 | 06-summit | `art6`（与 `lookback` 相同） | 0, topZ+8.3, π, −0.2 | autumn | dawn | 一 |
