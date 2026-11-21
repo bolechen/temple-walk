@@ -109,7 +109,7 @@ export function buildSite(M) {
     arrive: [ARRIVE[0], ARRIVE[1], 0, 0.05],
     a: [STATION.A[0], STATION.A[1], 0, 0.19],          // SITE.md §5.1: a 50° lens raised 11° holds the platform to the ridge
     b: [STATION.B[0], STATION.B[1], 0, 0.3],
-    c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3)
+    c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3). Its still is taken in third person (&view=third): the following eye, a few steps behind him, has the door's jambs at the picture's edges; from his own eyes in the doorway they are beside him (DECISIONS.md, 2026-11-21)
     d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
     e: [STATION.E[0], STATION.E[1], 0, 1.01],          // under the roof, raised 58° (cam05)
     f: [STATION.F[0], STATION.F[1], 0, 0.17],
