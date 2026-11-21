@@ -136,14 +136,14 @@ const scenarios = {
   "title-clear": { tier: 2, async run(b, base) {
     const SCREENS = [[1280, 720], [1024, 768], [360, 640], [844, 390], [667, 375]];
     const RETURN = () => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: { bell: 2, tea: 3 }, strikes: 3, verse: null, done: null, opened: null, told: false })); localStorage.setItem("yunjing.place.v1", JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" })); };
-    const read = () => {
-      const mb = window.__probe().monkBox, vis = (e) => { const c = getComputedStyle(e), r = e.getBoundingClientRect(); return c.display !== "none" && c.visibility !== "hidden" && !e.hidden && !e.closest("[hidden]") && r.width > 0 && r.height > 0; };
+    const read = (given) => {
+      const mb = given !== undefined ? given : window.__probe().monkBox, vis = (e) => { const c = getComputedStyle(e), r = e.getBoundingClientRect(); return c.display !== "none" && c.visibility !== "hidden" && !e.hidden && !e.closest("[hidden]") && r.width > 0 && r.height > 0; };
       const hit = (r, q, m) => !(r.right <= q.left - m || q.right + m <= r.left || r.bottom <= q.top - m || q.bottom + m <= r.top);
       const els = [...document.querySelectorAll("#title h1, #title .sub, #title .mark, #titleSeals, #loading, #loading *, #relangLine, #enterBtn, #againBtn, #title .how, #title .how *, .title-links .chip")].filter(vis);
       const links = els.filter((e) => e.closest(".title-links")).map((e) => e.getBoundingClientRect());
-      const out = { box: mb, monk: [], links: [], again: null, n: els.length };
+      const out = { box: mb, monk: [], links: [], again: null, n: els.length, rects: {} };
       for (const e of els) {
-        const r = e.getBoundingClientRect(), name = e.id || e.className || e.tagName;
+        const r = e.getBoundingClientRect(), name = e.id || e.className || e.tagName; out.rects[name] = [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)];
         if (mb && !e.closest(".title-links")) { const [x, y, w, h] = mb; if (hit(r, { left: x, top: y, right: x + w, bottom: y + h }, 8)) out.monk.push(name); }
         if (!e.closest(".title-links") && links.some((l) => hit(r, l, 0))) out.links.push(name);
       }
@@ -163,10 +163,8 @@ const scenarios = {
     };
     const look = async (t, label, w, h, opts = {}) => {
       await t.page.setViewportSize({ width: w, height: h }); await t.frames(6);
-      if (opts.relang) await t.page.evaluate(() => { window.__wasHidden = document.getElementById("loading").hidden; document.documentElement.classList.add("relang"); document.getElementById("loading").hidden = false; });
       await t.frames(2);
-      const r = await t.page.evaluate(read);
-      if (opts.relang) await t.page.evaluate(() => { document.documentElement.classList.remove("relang"); document.getElementById("loading").hidden = window.__wasHidden; });
+      const r = await t.page.evaluate(read); (opts.keep || {})[`${w}x${h}`] = r.rects;
       expect(r.box && r.box[3] > h * 0.1, `${label} ${w}x${h}: the novice should be in the picture behind the title: ` + JSON.stringify(r));
       expect(r.n > 3 && r.monk.length === 0, `${label} ${w}x${h}: the title stands on him (${r.monk.join(", ")}): ` + JSON.stringify(r));
       expect(r.links.length === 0, `${label} ${w}x${h}: the title meets the row of links (${r.links.join(", ")}): ` + JSON.stringify(r));
@@ -176,14 +174,33 @@ const scenarios = {
       expect(r.sealsH <= 46, `${label} ${w}x${h}: the line about the visit is more than two lines (${r.sealsH} px): ` + JSON.stringify(r));
       if (h <= 460 && r.h1[1] > 0) expect(r.h1[1] >= 44 && r.h1[0] >= r.linksBottom + 16, `${label} ${w}x${h}: the name should be at least 44 px high and 16 px under the links: ` + JSON.stringify(r));
     };
-    for (const [name, init] of [["a first visitor", null], ["one coming back", RETURN]]) {
-      const t = await open(b, base, "q=low&debug=0", { enter: false, ...(init ? { init } : {}) });
+    const kept = { third: {}, first: {} };
+    for (const [name, init, view] of [["a first visitor", null, "third"], ["one coming back", RETURN, "third"], ["one coming back, seen from his own eyes", RETURN, "first"]]) {
+      const t = await open(b, base, "q=low&debug=0" + (view === "first" ? "&view=first" : ""), { enter: false, ...(init ? { init } : {}) });
       expect(await t.page.isVisible("#title"), `${name}: the title should be up`);
       for (const [w, h] of SCREENS) {
-        await look(t, name, w, h, { again: !!init });
-        if (init) await look(t, name + ", the page opened again in another language", w, h, { relang: true });
+        if (view === "first") {   // nobody is in the picture: the title is laid out as it is with him in it, and the same everywhere
+          await t.page.setViewportSize({ width: w, height: h }); await t.frames(6);
+          const r = await t.page.evaluate(read), third = kept.third[`${w}x${h}`];
+          expect(r.box === null && third, `${name} ${w}x${h}: nobody should stand in the picture: ` + JSON.stringify(r.box));
+          for (const [k, v] of Object.entries(r.rects)) expect(third[k] && v.every((x, i) => Math.abs(x - third[k][i]) <= 1), `${name} ${w}x${h}: ${k} stands at ${v}, with him in the picture at ${third[k]}`);
+        } else await look(t, name, w, h, { again: !!init, keep: init ? kept.third : null });
       }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    // A language chosen in the pause menu, for real (#140): the page opens again under one line and the loading bar, and puts him where
+    // he was. The title it shows then stands clear of where he stood in the picture just before (the follow camera puts him in the same place).
+    for (const [w, h] of [[390, 844], [844, 390]]) {
+      const t = await open(b, base, "q=low&debug=0", { viewport: { width: w, height: h }, init: RETURN });
+      const before = await t.page.evaluate(() => window.__probe().monkBox);
+      expect(before && before[3] > h * 0.1, `${w}x${h}: he should be in the picture before the language is changed`);
+      await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 10000, "no menu");
+      await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click('#menu [data-lang="en"]')]);
+      await t.page.waitForFunction(() => typeof window.templeT === "function", null, { timeout: 120000 });
+      const r = await t.page.evaluate(read, before);
+      expect(await t.page.evaluate(() => document.documentElement.classList.contains("relang")), `${w}x${h}: the page should open again as a change of language`);
+      expect(r.n >= 1 && r.monk.length === 0 && r.links.length === 0, `${w}x${h}: what the page shows while it opens again stands on him or on the links (${r.monk.concat(r.links).join(", ")}): ` + JSON.stringify(r));
+      await t.close();
     }
     for (const lang of ["en", "ja", "ko"]) {
       const t = await open(b, base, `q=low&debug=0&lang=${lang}`, { enter: false, init: RETURN, locale: lang === "ja" ? "ja-JP" : lang === "ko" ? "ko-KR" : "en-US" });
