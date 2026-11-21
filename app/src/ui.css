@@ -364,6 +364,10 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 #againBtn[data-asked="1"] { color: #e5b9a4; letter-spacing: .12em; text-indent: .12em; }
 /* A phone on its side has 118 px under his feet: going on and beginning again stand in one row, the loading bar above them. */
 @media (max-height: 460px) {
+  /* The room above his head is short too, and the row of links stands at the top right: the name is a little smaller, and the seal too, so that the group clears the links. */
+  #title { --h1: 11vmin; --markW: 38px; }
+  #title .title-top { bottom: calc(53.3% + 10px); }
+  #titleSeals { margin-top: 6px; }
   #title .title-low { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 16px; }
   #title .title-low #loading { flex-basis: 100%; margin: 0 auto 4px; }
   #title .title-low #relangLine { flex-basis: 100%; }
