@@ -14,7 +14,7 @@ export const EYE = 1.3;          // his eye above the floor (the walk bake's CLE
 export const HIGH = 4.0;         // the raised camera's eye above the floor, for the slanting look down
 
 /** The baked floor, ready to ask: which grid a spot belongs to, whether he may stand there, the height of the floor. */
-export function floor(bytes = readFileSync(FILE), { shipped = true } = {}) {
+export function floor(bytes = readFileSync(FILE), { shipped = true } = {}) {   // (`bytes`: another level's floor, read from walkFile(id), tools/around.mjs --level)
   const { header, grids } = decode(new Uint8Array(bytes), (b) => inflateRawSync(b));
   const by = new Map(grids.map((g) => [g.id, g]));
   const at = (grid, x, z) => { const g = by.get(grid); if (!g) return null; const k = g.cell(x, z); if (k < 0 || g.height[k] === NO_FLOOR || g.state[k] !== 0) return null;

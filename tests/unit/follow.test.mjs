@@ -7,13 +7,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
+import { levelPlan, need, isPrologue } from "./level-plan.mjs";
 import { followEye, createFollow, FOLLOW, FRAMES, frameArm, aimAt } from "../../app/src/eye.js";
-import { ROUTE } from "../../app/src/tour.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
-const site = buildSite(M), walker = createWalker(site);
+const { site, walker } = await levelPlan(M), follows = need("follow");
 const dt = 1 / 60;
 
 // Walk `path` at his pace, the view turning after the way he goes as the measured walk turns it (`tour.js`), the eye
@@ -44,14 +43,8 @@ function walk(path, { reach = 6.2, pitch = 0.04, arm = undefined } = {}) {   // 
   }
   return out;
 }
-const T = LEVELS;
-const routes = {
-  "the measured route, bamboo to the first court": ROUTE,
-  "round the first court, close past the bell and drum towers": [[-10.8, 19], [10.8, 19], [10.8, 6], [-10.8, 6], [-10.8, 19]],
-  // (round the censer, which stands on the axis, close by its east side: the eye behind him must not pass into it)
-  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
-  "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]],
-};
+// The routes walked are the level's own (app/levels/<id>/checks.js).
+const routes = follows.routes(site, walker);
 // A walking pace is 0.035 m a frame. The eye may add to that, turning and settling, but not leap: 0.15 m a frame is
 // nine metres a second, which it reaches only coming in behind a wall, gathering speed and losing it again. When the
 // view swings the eye into a trunk or a wall it is put straight out of it; that may happen, but seldom (turning hard by a
@@ -93,7 +86,7 @@ test("a column passing between him and the eye is let pass; a wall coming betwee
 // frames, by up to five metres at a time. It now looks a quarter of a second along the turn (`ahead`, as yard.js asks)
 // and comes in before it gets there, or lets something narrow sweep past.
 test("swinging the view round where he stands does not throw the eye about", () => {
-  const spots = []; for (let x = -12; x <= 12; x += 3) for (let z = -4; z <= 28; z += 3) if (!walker.blocked(x, z)) spots.push([x, z]);
+  const spots = [], S = follows.spots; for (let x = S.x[0]; x <= S.x[1]; x += S.step) for (let z = S.z[0]; z <= S.z[1]; z += S.step) if (!walker.blocked(x, z)) spots.push([x, z]);
   let frames = 0, put = 0, far = 0, worst = 0;
   for (const [x, z] of spots) for (const rate of [3, -3]) {
     const follow = createFollow(), foot = walker.heightAt(x, z), eyeY = walker.eyeAt(x, z);
@@ -145,7 +138,7 @@ for (const [key, F] of Object.entries(FRAMES)) for (const [w, h] of [[16, 9], [4
 // tools/frame-routes.mjs, the same plan and eye): on open ground his middle stays within 3% of the picture's width of
 // one place; by the columns and the wall it moves no faster than 2% of the width in a second; and on the stair by the
 // half-way pavilion, up and down, his knees (0.35 m) are always in the picture, his feet too.
-test("the default eye holds him in the middle, and on the stair his whole body is in the picture", async () => {
+test("the default eye holds him in the middle, and on the stair his whole body is in the picture", { skip: !isPrologue && "its walks are the prologue's (tools/frame-routes.mjs)" }, async () => {
   const { measure, WALKS } = await import("../../tools/frame-routes.mjs");
   for (const size of ["16x9", "4x3", "phone"]) for (const [name, path] of Object.entries(WALKS)) {
     const r = measure("b", size, path);
@@ -160,10 +153,7 @@ test("the default eye holds him in the middle, and on the stair his whole body i
 // in through the gate's middle bay from the forecourt, the eye was put straight out of the censer by 1.4 m in one
 // frame. The owner will not have the eye jump: on these two walks it may not move more than FLAT on its own in any
 // frame, put out of something or not.
-for (const [name, path] of Object.entries({
-  "from behind the censer north past it": [[0, 18], [1.3, 13], [0, 9], [0, 3]],
-  "in through the gate's middle bay": [[8.5, 52], [8.5, 49], [0, 46.5], [0, 34]],
-})) test(`the default eye never jumps: ${name}`, () => {
+for (const [name, path] of Object.entries(follows.neverJump || {})) test(`the default eye never jumps: ${name}`, () => {
   const frames = walk(path), worst = frames.reduce((b, f) => (Math.max(f.flat, f.forced) > Math.max(b.flat, b.forced) ? f : b), frames[0]);
   if (process.env.FOLLOW_REPORT) console.log(name, { frames: frames.length, flat: +worst.flat.toFixed(3), forced: +worst.forced.toFixed(3) });
   assert.ok(worst.flat <= FLAT && worst.forced <= FLAT, `the eye moved ${worst.flat.toFixed(3)} m on its own (put out ${worst.forced.toFixed(2)} m) in one frame at (${worst.x.toFixed(2)}, ${worst.z.toFixed(2)}), ${worst.dist.toFixed(2)} m behind`);
@@ -174,7 +164,7 @@ for (const [name, path] of Object.entries({
 // times on one flight). It is tilted at the height the eye itself rides at, eased over the steps: up the flight by the
 // half-way pavilion and on up the last flight, it tips no more than 0.3° from one frame to the next. (Coming down, the
 // eye is still put in by metres in one frame where the flight rises behind him, and the view turns with it: #295.)
-test("on a flight of steps the view does not nod with each tread", async () => {
+test("on a flight of steps the view does not nod with each tread", { skip: !isPrologue && "its flight is the prologue's (tools/frame-routes.mjs)" }, async () => {
   const { measure, WALKS } = await import("../../tools/frame-routes.mjs");
   for (const size of ["16x9", "phone"]) for (const name of ["stair-up"]) {
     const r = measure("b", size, WALKS[name]);

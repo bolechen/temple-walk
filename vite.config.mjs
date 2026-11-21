@@ -18,7 +18,7 @@ const keep = () => {
     name: "temple-walk:keep-fetched-files", apply: "build",
     configResolved(config) { out = path.resolve(config.root, config.build.outDir); },
     // A level's scripts are bundled into the page, not shipped as files beside it.
-    // A level only the workbench lists (app/src/bench.js, #409) leaves its floor and its doorway pictures out of a canary or
+    // A level only the testers' builds list (app/src/bench.js, #409) leaves its floor and its doorway pictures out of a
     // production build, as the bundler leaves out its code.
     closeBundle() {
       const away = new Set();

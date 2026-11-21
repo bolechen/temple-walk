@@ -50,27 +50,31 @@ test("only the production build holds the counter's address and may be indexed; 
   }
 });
 
-// The canary is shown to testers and is production in every way but three (noindex, no counter, the version line): the debug
+// The canary is shown to testers and is production in every way but four (noindex, no counter, the version line, and the
+// levels still being made, which it lists as a preview does: the owner, 2026-11-21, 「t05 改成 canary 可以测」): the debug
 // panel and the workbench addresses (?debug, ?seals, ?at, ?play, ?devpose) are a pull request preview's, found by the
 // preview's hostname in the page, never by the build target. So the canary's pages open no more than production's: the same
-// gate in the same code, no mention of the canary's own address, and nothing but the target's name between the two bundles.
+// gate, as many times, no mention of the canary's own address; and its code is a preview's, byte for byte but for the
+// target's name, so that what it holds beyond production's is what a preview holds (level-bench.test.mjs: T05).
 test("the canary build opens no debug panel and no workbench address that production does not", () => {
-  const prod = build("production"), canary = build("canary");
+  const prod = build("production"), canary = build("canary"), preview = build("preview");
   try {
     const scripts = (out) => walk(out).filter((f) => /\.js$/.test(f)).map((f) => [path.basename(f), fs.readFileSync(f, "utf8")]);
     const gate = /-temple-walk-preview/g, count = (list) => list.reduce((n, [, s]) => n + (s.match(gate) || []).length, 0);
-    const p = scripts(prod), c = scripts(canary);
+    const p = scripts(prod), c = scripts(canary), v = scripts(preview);
     assert.ok(count(p) > 0, "the preview gate is not in the production bundle: the test looks in the wrong place");
     assert.equal(count(c), count(p), "the canary's bundle has a different number of preview gates than production's");
     for (const [name, s] of c) assert.ok(!s.includes("temple-walk-canary"), `${name} names the canary's own address: a gate that opens something there`);
     // The same code: the same scripts, byte for byte, once the build's own name for its target is set aside. That one
     // word is folded in on purpose (#310: the pause menu says which build it is), and it changes the content hashes the
     // bundler names the files by and by which they import each other, so those are set aside too.
-    const bare = (n) => n.replace(/-[A-Za-z0-9_-]{8}\.js$/, ".js"), same = (src) => src.replace(/-[A-Za-z0-9_-]{8}\.js/g, ".js").replace(/(["'`])(production|canary)\1/g, "$1T$1");
-    assert.deepEqual(c.map(([n]) => bare(n)).sort(), p.map(([n]) => bare(n)).sort(), "the canary's scripts are not the production's (a different build, not the same code)");
-    const prodCode = new Set(p.map(([n, src]) => bare(n) + "\n" + same(src)));   // (two files may share a name once their hashes are set aside: shared/textures/index.js and assets/index-*.js)
-    for (const [n, src] of c) assert.ok(prodCode.has(bare(n) + "\n" + same(src)), `${n}: the canary's code differs from production's by more than the name of its target`);
-  } finally { fs.rmSync(prod, { recursive: true, force: true }); fs.rmSync(canary, { recursive: true, force: true }); }
+    const bare = (n) => n.replace(/-[A-Za-z0-9_-]{8}\.js$/, ".js"), same = (src) => src.replace(/-[A-Za-z0-9_-]{8}\.js/g, ".js").replace(/(["'`])(preview|canary)\1/g, "$1T$1");
+    assert.deepEqual(c.map(([n]) => bare(n)).sort(), v.map(([n]) => bare(n)).sort(), "the canary's scripts are not a preview's (a different build, not the same code)");
+    const previewCode = new Set(v.map(([n, src]) => bare(n) + "\n" + same(src)));   // (two files may share a name once their hashes are set aside: shared/textures/index.js and assets/index-*.js)
+    for (const [n, src] of c) assert.ok(previewCode.has(bare(n) + "\n" + same(src)), `${n}: the canary's code differs from a preview's by more than the name of its target`);
+    // And every script production has, the canary has too: what it holds beyond is only added.
+    const names = new Set(c.map(([n]) => bare(n))); for (const [n] of p) assert.ok(names.has(bare(n)), `${n}: in production's build but not the canary's`);
+  } finally { for (const o of [prod, canary, preview]) fs.rmSync(o, { recursive: true, force: true }); }
 });
 
 // The cache headers (#308, `HEADERS` in vite.config.mjs): one file, the same cache rules for production, canary and preview, so that

@@ -10,6 +10,8 @@ import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, b
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
+import { shareOrSave, countDownload } from "./share.js";
+import { fromOf } from "./sharelink.js";
 import { createRites } from "./rites.js";
 import { createPresence, presenceOn, readDay } from "./presence.js";
 import { traceStubCount } from "./censer.js";
@@ -23,6 +25,7 @@ import { WEB } from "./channel.js";
 import { WISHES, decodeLamp, lampLink } from "./wishes.js";
 import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
+import { createJoya } from "./joya-ui.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -49,8 +52,14 @@ export function createGame(y) {
   const BENCH = import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname);
   const seeded = BENCH ? bookFrom(Q.get("seals")) : null;
   const memoryStore = (v) => ({ get: () => v, set: (x) => { v = x; } });
-  const journey = createJourney(seeded ? memoryStore(seeded) : browserStore(), undefined, { closedBefore: seeded ? false : seenBefore });
-  if (seenBefore) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
+  // The book, the visit's metres and the close's old note under yunjing.* are the prologue's. Another level (T05, which
+  // testers walk on the canary since the owner's change of 2026-11-21) neither reads nor writes them: it holds an empty
+  // book in memory for the visit and keeps no metres, so that walking it neither shows the prologue's seals nor adds to
+  // its walk. A level says it is the prologue's by keeping the prologue's place (keepsPlace, #385), until each level
+  // keeps records of its own.
+  const ours = !y.level || !!y.level.keepsPlace;
+  const journey = createJourney(seeded ? memoryStore(seeded) : ours ? browserStore() : memoryStore(null), undefined, { closedBefore: seeded || !ours ? false : seenBefore });
+  if (seenBefore && ours) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
   const ui = y.ui;
@@ -82,8 +91,8 @@ export function createGame(y) {
 
   // The visit so far: metres walked and time on the mountain, kept between sittings like the seals.
   const VISIT = "yunjing.visit.v1", visit = { metres: 0, seconds: 0, at: null, save: 0 };
-  try { const v = JSON.parse(localStorage.getItem(VISIT) || "null"); if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
-  const keep = () => { try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
+  try { const v = ours ? JSON.parse(localStorage.getItem(VISIT) || "null") : null; if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
+  const keep = () => { if (!ours) return; try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
   const told = () => { const l = visitLine(visit.metres, visit.seconds); return !l ? "" : l.under ? t("这一趟走了 {m} 步，在山上不到一分钟。", { m: l.m }) : t("这一趟走了 {m} 步，在山上 {min} 分钟。", { m: l.m, min: l.min }); };
   // ---- On the ground: a ring at every place whose seal is still to be earned ----
   // The summit keeps its ring until the prologue has closed there, whatever else the book holds.
@@ -122,6 +131,8 @@ export function createGame(y) {
   // ---- Words on the page ----
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
+  // The year-end bell (#341): on the last night of the year every stroke of the bell tower's bell counts toward the mountain's.
+  createJoya({ y, ui, say, query: Q, bench: BENCH });
   function earned(id) {
     if (rite && rite.id === id) rite.done = true;
     track("demo.seal", { id, count: journey.count() });
@@ -492,8 +503,9 @@ export function createGame(y) {
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
-    const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
-    $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 朱印") }); track("demo.share", { from: "book" }); } catch {} };
+    // Shared from wherever the page is open (src/share.js, #344): the system's sheet, or a sheet to press and hold the page on.
+    $("bookShare").onclick = () => shareOrSave({ blob, url, name: "yunjing-seals.jpg", title: t("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
+    $("bookSave").onclick = () => countDownload("book", "goshuin");
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
     const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
     if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
@@ -592,7 +604,8 @@ export function createGame(y) {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); forgetTitle(); left = null; b.dataset.asked = "";
+    // Another level's start empties nothing of the prologue's.
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } left = null; b.dataset.asked = "";
     const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
   // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first
@@ -614,9 +627,13 @@ export function createGame(y) {
       const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
       const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
     };
-    if (o.eye === "none") { begin(); return; }
+    // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,
+    // and then taken to that place behind the veil; one who goes on from where they were is not moved.
+    const scene = !resumed ? fromOf(location.search) : null, land = scene && places[scene] ? places[scene] : null;
+    const arrive = async () => { if (land) await y.travel(land.at[0], land.at[1], Math.PI - land.face, land.room || null); begin(); };
+    if (o.eye === "none") { arrive(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
-    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); arrive(); });
   };
   // After a change of language the title's place is kept by the sheet that says the words are being changed, until
   // the page is ready; then it fades as the title does when he steps in (#140).
