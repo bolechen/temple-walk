@@ -17,8 +17,12 @@ on:
 permissions:
   contents: read
 
+# One group for each branch's pull request runs, and one for each commit on main: a queued run is replaced only by a newer
+# one of its own branch, never by another branch's push (a single group had a dozen branches cancel one another's mirrors on
+# 2026-11-21, which left pushed pictures out of the bucket), and no push to main is replaced by the next, since each of them
+# mirrors the whole tree. Two runs writing the same object write the same bytes: nothing is deleted or replaced.
 concurrency:
-  group: evidence-mirror
+  group: evidence-mirror-${{ github.event_name == 'push' && github.sha || github.ref }}
   cancel-in-progress: false
 
 jobs:
