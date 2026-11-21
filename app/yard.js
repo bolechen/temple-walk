@@ -71,6 +71,7 @@ import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
+import { walkIsHis } from "./src/walkgate.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -690,7 +691,9 @@ function frame(now) {
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
-  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
+  // Under the title, the opening, the line a change of language puts up and a crossing's ink the keys and the stick do nothing (#462, walkgate.js).
+  const walkOpen = walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
+  const held = photo.on || menuUp || !walkOpen ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
   // A and D turn him and the view with him (#295, keyturn.js; the side arrows step sideways), unless the visitor has asked
   // for the old way; a turn by the keys is a hand on the view: it sends the eye home from a shot and stops the drift.
   if (!cine && !stage && (held.turn || keyTurn.rate)) {

@@ -144,6 +144,14 @@ const scenarios = {
       const arrows = await at(); expect(Math.hypot(arrows.x - before.x, arrows.z - before.z) < 0.001, `${name}: he walked on the arrow under the title: ` + JSON.stringify([before, arrows]));
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
+    // Under the opening after 入山 a key held does not walk him either: while it is still playing (read before and after) he has not moved.
+    { const o = await open(b, base, "q=low&debug=0" + BARE, { enter: false });
+      await o.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await o.page.click("#enterBtn");
+      await o.page.waitForFunction(() => window.__opening().active, null, { timeout: 60000 });
+      const where = () => o.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, on: window.__opening().active }; });
+      const start = await where(); await o.page.keyboard.down("s");
+      for (let i = 0; i < 6; i++) { await o.frames(2); const p1 = await where(); if (!p1.on) break; const p2 = await where(); if (p2.on) expect(Math.hypot(p2.x - start.x, p2.z - start.z) < 0.001, "he walked while the opening was playing: " + JSON.stringify([start, p2])); }
+      await o.page.keyboard.up("s"); await o.close(); }
     // Stepped in, the same key walks him.
     const t = await open(b, base, "q=low&debug=0&fast=1" + BARE, { enter: false });
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
