@@ -201,6 +201,10 @@ export function createMaterials() {
     // A plain small-squared ceiling (ping'an): bare boards between the ribs.
     pingan: procMat("pingan", { roughness: 0.95, envMapIntensity: 0.1 }, `
       col=woodCol(vWP,vec3(9.,1.1,9.))*.62*(.9+.2*h21(floor(vWP.xz/.4))); rough_=.95; emit_=col*uAmb*.02;`, { snow: false }),
+    // The boards of a gate passage's ceiling (#288): out of doors under a roof, lit by the paving and the day coming in at both
+    // ends, which a hall's ceiling, lit by lamps, is not.
+    passage: procMat("passage", { roughness: 0.95, envMapIntensity: 0.1 }, `
+      col=woodCol(vWP,vec3(9.,1.1,9.))*.7*(.9+.2*h21(floor(vWP.xz/.4))); rough_=.95; emit_=col*uAmb*.2;`, { snow: false }),
     // Window paper on the inside of the south wall, the day coming through it; at night it is only paper.
     paper: procMat("paper", { roughness: 1, envMapIntensity: 0 }, `
       col=vec3(.66,.64,.58)*(.94+.06*n3(vWP*11.)); rough_=1.;
