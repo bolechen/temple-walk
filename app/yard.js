@@ -72,6 +72,8 @@ import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
 import { walkIsHis } from "./src/walkgate.js";
+/** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
+const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -495,7 +497,7 @@ canvas.addEventListener("pointerup", (e) => {
     }
     down = null; return;
   }
-  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on) {
+  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on && walkOpenNow()) {   // (a tap that reaches the picture under the title walks nobody: #462)
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     // The bell and the drum answer a tap from anywhere in their court.
@@ -692,8 +694,7 @@ function frame(now) {
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
   // Under the title, the opening, the line a change of language puts up and a crossing's ink the keys and the stick do nothing (#462, walkgate.js).
-  const walkOpen = walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
-  const held = photo.on || menuUp || !walkOpen ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
+  const held = photo.on || menuUp || !walkOpenNow() ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
   // A and D turn him and the view with him (#295, keyturn.js; the side arrows step sideways), unless the visitor has asked
   // for the old way; a turn by the keys is a hand on the view: it sends the eye home from a shot and stops the drift.
   if (!cine && !stage && (held.turn || keyTurn.rate)) {

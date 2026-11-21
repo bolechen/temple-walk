@@ -142,6 +142,13 @@ const scenarios = {
       expect(Math.hypot(during.x - before.x, during.z - before.z) < 0.001 && during.room === before.room, `${name}: he walked under the title: ` + JSON.stringify([before, during]));
       await t.page.keyboard.down("ArrowDown"); await t.frames(30); await t.page.keyboard.up("ArrowDown");
       const arrows = await at(); expect(Math.hypot(arrows.x - before.x, arrows.z - before.z) < 0.001, `${name}: he walked on the arrow under the title: ` + JSON.stringify([before, arrows]));
+      // A tap on the ground: the title covers the picture, so a real click lands on it; and one made to reach the picture all the same sets no way and walks nobody.
+      const w = await t.page.evaluate(() => innerWidth), h = await t.page.evaluate(() => innerHeight);
+      await t.page.mouse.click(w / 2, h * 0.8);
+      await t.page.evaluate(() => { const c = document.querySelector("canvas"), r = c.getBoundingClientRect(), o = { clientX: r.left + r.width / 2, clientY: r.top + r.height * 0.85, pointerId: 7, pointerType: "touch", button: 0, bubbles: true }; c.dispatchEvent(new PointerEvent("pointerdown", o)); c.dispatchEvent(new PointerEvent("pointerup", o)); });
+      await t.frames(30);
+      const tapped = await t.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, target: y.target, route: y.route }; });
+      expect(Math.hypot(tapped.x - before.x, tapped.z - before.z) < 0.001 && !tapped.target && !tapped.route, `${name}: a tap on the ground walked him under the title: ` + JSON.stringify([before, tapped]));
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
     // Under the opening after 入山 a key held does not walk him either: while it is still playing (read before and after) he has not moved.
