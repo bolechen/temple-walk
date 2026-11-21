@@ -143,11 +143,17 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         float tone=h21(id);
         // Each slab is cut from a different part of the scanned stone.
         vec2 su0=p*.75, suv=su0+vec2(h21(id+3.),h21(id+7.))*5., sgx=dFdx(su0), sgy=dFdy(su0); vec3 sA=textureGrad(tStoneA,suv,sgx,sgy).rgb/mStone, sN=textureGrad(tStoneN,suv,sgx,sgy).xyz;
-        vec3 alb=mix(vec3(.2,.205,.2),vec3(.315,.32,.305),tone)*mix(vec3(1.),sA,.9)*(.78+.4*fbm2(p*.7));
+        vec3 alb=mix(vec3(.17,.175,.17),vec3(.34,.345,.33),tone)*mix(vec3(1.),sA,.9)*(.78+.4*fbm2(p*.7));
+        // The stone's own grain at the scale of a hand (pits, flecks, damp patches), so that the middle distance reads as stone and
+        // not as a poured floor where the joints have thinned away. Each scale fades out where a pixel's footprint on the stone (the mean
+        // of its two sides: at a low eye one side is long) grows past the grain, which would shimmer.
+        float fpx=sqrt(max(length(dFdx(p))*length(dFdy(p)),0.));
+        float stoneGrain=(n2(p*24.+id*3.7)-.5)*(1.-smoothstep(.012,.035,fpx))*.6+(n2(p*55.+id.yx*1.9)-.5)*(1.-smoothstep(.006,.015,fpx))*.4;
+        alb*=1.+stoneGrain*0.95*mix(.2,1.,smoothstep(5.,10.,length(vWP-cameraPosition)));   // (calmer within a few metres of the eye, where the scan's own grain is plain to see)
         if(path) alb*=vec3(1.16,1.13,1.06); if(kerb) alb*=.78;
         float mossM=smoothstep(.42,.7,fbm2(p*.45+9.));
         alb=mix(alb,vec3(.085,.115,.06),joint*mossM*.55); alb*=1.-joint*.36*(1.-mossM);   // moss only in the joints that stay damp; the rest are a notch darker with dirt
-        alb*=mix(.88,1.,smoothstep(0.,.04,edge)*(1.-joint));   // a flag's arris is worn a little darker than its face
+        alb*=mix(.74,1.,smoothstep(0.,.06,edge)*(1.-joint));   // a flag's arris is worn and dirtied darker than its face, softly, over a hand's width: it is what outlines a flag at a distance once the joint has thinned away
         alb=mix(alb,vec3(.11,.14,.085),mossM*smoothstep(.12,.0,edge)*.25);
         // Water: one continuous ramp, standing water -> soaked -> damp.
         float low=fbm2(p*.17+3.)+(uWet-1.)*.34;   // one smooth field only, so that no puddle has a straight edge where a flag ends (and it is steps.js's puddleAt exactly)
