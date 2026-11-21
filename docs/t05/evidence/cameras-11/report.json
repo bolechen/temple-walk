@@ -1,0 +1,413 @@
+{
+ "site": {
+  "commit": "e8578b9a5ea9e4d26133f827380e88e9a411281d",
+  "entry": "assets/index-D3pYk1uV.js",
+  "files": 184,
+  "sha256": "cde180ee95e20659a7be91d190d24829f2898aa56a70c0bfae66595cd899bc54"
+ },
+ "host": "Tesla T4, 620.70.06, 15360 MiB",
+ "shots": [
+  {
+   "name": "cam01",
+   "file": "cam01.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "cam02",
+   "file": "cam02.png",
+   "tris": 37462,
+   "calls": 42
+  },
+  {
+   "name": "cam03@summer-day@third",
+   "file": "cam03_summer-day_third.png",
+   "tris": 55988,
+   "calls": 36
+  },
+  {
+   "name": "cam04",
+   "file": "cam04.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "cam05",
+   "file": "cam05.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "cam06",
+   "file": "cam06.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "cam07",
+   "file": "cam07.png",
+   "tris": 272018,
+   "calls": 103
+  },
+  {
+   "name": "arrive-N",
+   "file": "arrive-N.png",
+   "tris": 272022,
+   "calls": 105
+  },
+  {
+   "name": "arrive-E",
+   "file": "arrive-E.png",
+   "tris": 208370,
+   "calls": 69
+  },
+  {
+   "name": "arrive-S",
+   "file": "arrive-S.png",
+   "tris": 4196,
+   "calls": 30
+  },
+  {
+   "name": "arrive-W",
+   "file": "arrive-W.png",
+   "tris": 208370,
+   "calls": 69
+  },
+  {
+   "name": "arrive-Eup",
+   "file": "arrive-Eup.png",
+   "tris": 208370,
+   "calls": 69
+  },
+  {
+   "name": "arrive-Sup",
+   "file": "arrive-Sup.png",
+   "tris": 192678,
+   "calls": 60
+  },
+  {
+   "name": "outer-N",
+   "file": "outer-N.png",
+   "tris": 272022,
+   "calls": 105
+  },
+  {
+   "name": "outer-E",
+   "file": "outer-E.png",
+   "tris": 214642,
+   "calls": 71
+  },
+  {
+   "name": "outer-S",
+   "file": "outer-S.png",
+   "tris": 208368,
+   "calls": 68
+  },
+  {
+   "name": "outer-W",
+   "file": "outer-W.png",
+   "tris": 214642,
+   "calls": 71
+  },
+  {
+   "name": "outer-Eup",
+   "file": "outer-Eup.png",
+   "tris": 211954,
+   "calls": 71
+  },
+  {
+   "name": "outer-Sup",
+   "file": "outer-Sup.png",
+   "tris": 208368,
+   "calls": 68
+  },
+  {
+   "name": "inner-N",
+   "file": "inner-N.png",
+   "tris": 272018,
+   "calls": 103
+  },
+  {
+   "name": "inner-E",
+   "file": "inner-E.png",
+   "tris": 215542,
+   "calls": 75
+  },
+  {
+   "name": "inner-S",
+   "file": "inner-S.png",
+   "tris": 215538,
+   "calls": 73
+  },
+  {
+   "name": "inner-W",
+   "file": "inner-W.png",
+   "tris": 215542,
+   "calls": 75
+  },
+  {
+   "name": "inner-Eup",
+   "file": "inner-Eup.png",
+   "tris": 215542,
+   "calls": 75
+  },
+  {
+   "name": "inner-Sup",
+   "file": "inner-Sup.png",
+   "tris": 215538,
+   "calls": 73
+  },
+  {
+   "name": "wuliang-N",
+   "file": "wuliang-N.png",
+   "tris": 253934,
+   "calls": 80
+  },
+  {
+   "name": "wuliang-E",
+   "file": "wuliang-E.png",
+   "tris": 227762,
+   "calls": 70
+  },
+  {
+   "name": "wuliang-S",
+   "file": "wuliang-S.png",
+   "tris": 238438,
+   "calls": 88
+  },
+  {
+   "name": "wuliang-W",
+   "file": "wuliang-W.png",
+   "tris": 227762,
+   "calls": 70
+  },
+  {
+   "name": "wuliang-Eup",
+   "file": "wuliang-Eup.png",
+   "tris": 218042,
+   "calls": 69
+  },
+  {
+   "name": "wuliang-Sup",
+   "file": "wuliang-Sup.png",
+   "tris": 228718,
+   "calls": 87
+  },
+  {
+   "name": "stA-N",
+   "file": "stA-N.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "stA-E",
+   "file": "stA-E.png",
+   "tris": 200694,
+   "calls": 59
+  },
+  {
+   "name": "stA-S",
+   "file": "stA-S.png",
+   "tris": 238678,
+   "calls": 89
+  },
+  {
+   "name": "stA-W",
+   "file": "stA-W.png",
+   "tris": 200694,
+   "calls": 59
+  },
+  {
+   "name": "stA-Eup",
+   "file": "stA-Eup.png",
+   "tris": 200694,
+   "calls": 59
+  },
+  {
+   "name": "stA-Sup",
+   "file": "stA-Sup.png",
+   "tris": 238678,
+   "calls": 89
+  },
+  {
+   "name": "stB-N",
+   "file": "stB-N.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "stB-E",
+   "file": "stB-E.png",
+   "tris": 31330,
+   "calls": 37
+  },
+  {
+   "name": "stB-S",
+   "file": "stB-S.png",
+   "tris": 238678,
+   "calls": 89
+  },
+  {
+   "name": "stB-W",
+   "file": "stB-W.png",
+   "tris": 31330,
+   "calls": 37
+  },
+  {
+   "name": "stB-Eup",
+   "file": "stB-Eup.png",
+   "tris": 23576,
+   "calls": 35
+  },
+  {
+   "name": "stB-Sup",
+   "file": "stB-Sup.png",
+   "tris": 244426,
+   "calls": 90
+  },
+  {
+   "name": "stC-N",
+   "file": "stC-N.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "stC-E",
+   "file": "stC-E.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stC-S",
+   "file": "stC-S.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stC-W",
+   "file": "stC-W.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stC-Eup",
+   "file": "stC-Eup.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stC-Sup",
+   "file": "stC-Sup.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stD-N",
+   "file": "stD-N.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stD-E",
+   "file": "stD-E.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stD-S",
+   "file": "stD-S.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stD-W",
+   "file": "stD-W.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "stD-Eup",
+   "file": "stD-Eup.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stD-Sup",
+   "file": "stD-Sup.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stE-N",
+   "file": "stE-N.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stE-E",
+   "file": "stE-E.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stE-S",
+   "file": "stE-S.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stE-W",
+   "file": "stE-W.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stE-Eup",
+   "file": "stE-Eup.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stE-Sup",
+   "file": "stE-Sup.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stF-N",
+   "file": "stF-N.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "stF-E",
+   "file": "stF-E.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stF-S",
+   "file": "stF-S.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "stF-W",
+   "file": "stF-W.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stF-Eup",
+   "file": "stF-Eup.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "stF-Sup",
+   "file": "stF-Sup.png",
+   "tris": 135984,
+   "calls": 60
+  }
+ ]
+}
