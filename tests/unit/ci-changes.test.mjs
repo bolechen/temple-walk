@@ -86,15 +86,16 @@ const jobOf = (yml, name) => { const a = yml.indexOf(`\n  ${name}:\n`); assert.o
 
 test("pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, grid, site, quick, worker\]/);
+  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, tests, grid, site, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
-  assert.match(jobOf(y, "unit"), /pnpm test\b/);
-  assert.match(jobOf(y, "grid"), /swap\.mjs --test tests\/unit/);
+  assert.match(jobOf(y, "tests"), /node --test \$\(node tools\/ci\/unit-shard\.cjs \$\{\{ matrix\.shard \}\}\/5\)/);
+  assert.match(jobOf(y, "grid"), /swap\.mjs --test \$\(node tools\/ci\/unit-shard\.cjs/);
+  for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4, 5\]/, `${j}: five machines, as SHARDS says`);
   assert.ok(jobOf(y, "grid").indexOf("node tools/bake-walk.mjs") < jobOf(y, "grid").indexOf("swap.mjs"), "the grid job writes the floor before the swapped walker reads it");
   const site = jobOf(y, "site");
   assert.match(site, /pnpm run build/); assert.match(site, /run\.cjs boot/);
   // none waits for another (they are parallel); only `changes` comes first
-  for (const j of ["unit", "grid", "site"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
+  for (const j of ["unit", "tests", "grid", "site"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
   assert.doesNotMatch(jobOf(y, "deploy"), /if: always\(\)/, "deploy keeps the implicit success()");
   assert.match(jobOf(y, "verify"), /if: \$\{\{ !cancelled\(\) \}\}/);
 });
@@ -125,7 +126,7 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   const quick = jobOf(y, "quick");
   assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
-  assert.match(quick, /scenario: \[stairs, drop\]/);
+  assert.match(quick, /scenario: \[stairs, drop, drop-touch\]/);
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenario \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
   const site = jobOf(y, "site");
@@ -182,4 +183,14 @@ test("release-please.yml deploys production when, and only when, a version was m
   assert.match(job, /target: production/, "the release goes to production, nothing else");
   assert.match(job, /ref: \$\{\{ needs\.release\.outputs\.tag_name \}\}/);
   assert.match(job, /secrets: inherit/);
+});
+
+test("unit tests: every file runs on exactly one of the five machines, none over its budget, and `pnpm test` is the same set", async () => {
+  const { createRequire } = await import("node:module");
+  const sh = createRequire(import.meta.url)("../../tools/ci/unit-shard.cjs");
+  const all = sh.files(), { parts, loads } = sh.plan(all, sh.SHARDS), seen = parts.flat();
+  assert.equal(seen.length, all.length); assert.deepEqual([...seen].sort(), all);
+  for (const l of loads) assert.ok(l <= sh.BUDGET, `a machine's share is ${l.toFixed(0)} s, over ${sh.BUDGET}`);
+  for (const f of Object.keys(sh.durations())) assert.ok(all.includes(f), `durations.json names ${f}, which is not a test`);
+  assert.match(fs.readFileSync(new URL("../../.github/workflows/pages.yml", import.meta.url), "utf8"), new RegExp(`unit-shard\\.cjs \\$\\{\\{ matrix\\.shard \\}\\}/${sh.SHARDS}`));
 });
