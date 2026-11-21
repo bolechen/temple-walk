@@ -27,7 +27,7 @@ export const HALL = Object.freeze({
   overhang: 3.75,        // the eave beyond the column line (ARCHITECTURE.md §4.1: about 3.5–4 m)
   door: { w: 5.0, h: 5.0, sill: 0.24 },    // a square door filling its 5.8 m bay but for the jambs (the Yingzao Fashi's plank door is as wide as it is tall: SOURCES.md §14); the sill pressed to 0.24 m so he steps over it (PRD.md §2)
   window: { sill: 1.1, bars: 13 },   // upright bars over a sill wall 1.0–1.2 m (ARCHITECTURE.md §4.2, not measured); as wide as its bay less the jambs, and its head on the doors' line (the review of #425)
-  inside: 0.15,          // the share of the sky's light a surface inside the walls takes (white box, a proposal)
+  inside: 0.06,          // the share of the sky's light a surface inside the walls takes (white box, a proposal)
   jamb: 0.4,             // the wooden jambs each side of a door or window, and the head over it
   roof: 0.6,             // how thick the roof's mass is, from its tiles to the dark of its underside
   lintel: 0.55,          // the tie-beam between column heads, and the cap board on them 0.2 thick
@@ -200,9 +200,11 @@ export function buildHall(M) {
     // occlusion a closed hall has, which a mesh's own baked occlusion does not see); outside, all of it. Handed to
     // geo.mesh's `ao`, so that from the court the doorways read darker than the wall (the review of #425).
     shut: (x, y, z) => (Math.abs(x) < X + 0.3 - H.wall + 0.02 && z < ZS[0] + H.front - H.wall + 0.02 && z > zB - 0.3 + H.wall - 0.02 && y > y0 - 0.01 ? H.inside : 1),
+    // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.
+    fogShut: { x0: -(X + 0.3 - H.wall), x1: X + 0.3 - H.wall, z0: zB - 0.3 + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },
     // A neutral fill under the roof, so that the white box's frame and floor can be seen from the door and from below
     // (the hall's own light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance]
-    fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, 10, 26]),
+    fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, 0, 26]),
     roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge },
     box: { x0: -OUTER.x, x1: OUTER.x, z0: OUTER.zB, z1: OUTER.zF },
   };

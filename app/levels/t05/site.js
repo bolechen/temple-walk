@@ -133,7 +133,7 @@ export function buildSite(M) {
   };
   return {
     root, walk, shade, closed: [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
-    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10],
+    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut,
   };
 }
 
