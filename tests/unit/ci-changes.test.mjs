@@ -88,16 +88,24 @@ const jobOf = (yml, name) => { const a = yml.indexOf(`\n  ${name}:\n`); assert.o
 
 test("pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, tests, grid, site, quick, worker\]/);
+  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, floor, tests, grid, site, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
   assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5\n/);
   assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5 --import \.\/tools\/walk\/swap\.mjs/);
   for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4, 5\]/, `${j}: five machines, as SHARDS says`);
-  assert.ok(jobOf(y, "grid").indexOf("node tools/bake-walk.mjs") < jobOf(y, "grid").indexOf("swap.mjs"), "the grid job writes the floor before the swapped walker reads it");
+  // the floor is baked once, by `floor`, and handed to every shard as an artifact before any test reads it (#442)
+  assert.match(jobOf(y, "floor"), /node tools\/bake-walk\.mjs/); assert.doesNotMatch(y, /floor-[^\n]*run_attempt/, "the floor's name has no run_attempt: re-running only the failed jobs must find it"); assert.match(jobOf(y, "floor"), /overwrite: true/); assert.match(jobOf(y, "floor"), /upload-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n/);
+  for (const j of ["tests", "grid"]) {
+    const body = jobOf(y, j);
+    assert.match(body, /needs: \[changes, floor\]/, `${j} waits for the floor`);
+    assert.match(body, /download-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n[\s\S]*path: app\/shared\/walk/, `${j} takes the floor as it is`);
+    assert.ok(body.indexOf("download-artifact") < body.indexOf("unit-shard.cjs"), `${j} has the floor before its tests run`);
+    assert.doesNotMatch(body, /node tools\/bake-walk\.mjs/, `${j} does not bake it again`);
+  }
   const site = jobOf(y, "site");
   assert.match(site, /pnpm run build/); assert.match(site, /run\.cjs boot/);
   // none waits for another (they are parallel); only `changes` comes first
-  for (const j of ["unit", "tests", "grid", "site"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
+  for (const j of ["unit", "floor", "site"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
   assert.doesNotMatch(jobOf(y, "deploy"), /if: always\(\)/, "deploy keeps the implicit success()");
   assert.match(jobOf(y, "verify"), /if: \$\{\{ !cancelled\(\) \}\}/);
 });
