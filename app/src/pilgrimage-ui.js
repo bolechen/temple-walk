@@ -82,7 +82,8 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
     ui.open("pilgrim");
     track("pilgrimage.open", { via, closed: rec.count() });
     await render();
-    const first = /** @type {HTMLElement | null} */ ($("pilgrimList").querySelector(".go")) || $("pilgrimClose"); first?.focus({ preventScroll: true });
+    // The focus goes to a temple that can be gone to; with none, it stays on the sheet (ui.open put it there), so that no ring is drawn round 合上 (art review of #455, round two)
+    /** @type {HTMLElement | null} */ ($("pilgrimList").querySelector(".go"))?.focus({ preventScroll: true });
     return true;
   }
   $("pilgrimClose")?.addEventListener("click", () => ui.close("pilgrim"));

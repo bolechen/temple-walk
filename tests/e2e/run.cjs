@@ -980,6 +980,8 @@ const scenarios = {
     expect(dom.here.includes("江南") && dom.here.includes("此刻在此") && dom.here.includes("上回") && dom.here.includes("秋") && dom.current === "location", "the temple he is in should be marked, with its region and the season: " + dom.here);
     expect(dom.go === 0 && dom.fog === 1, "the other temple should be a fog, nothing to go to: " + JSON.stringify({ go: dom.go, fog: dom.fog }));
     expect(!/关外|奉明|t05/i.test(dom.fogHtml) && !dom.page.includes("关外") && !dom.page.includes("奉明"), "a temple not yet visited should not be named anywhere in the page: " + dom.fogHtml);
+    // (art review of #455, round two) with no temple to go to the focus stays on the sheet: no ring round 合上
+    { const f = await t.page.evaluate(() => ({ id: document.activeElement?.id || document.activeElement?.tagName, go: document.querySelectorAll("#pilgrimList .go").length })); expect(f.go === 0 && f.id === "pilgrim", "with no temple to go to, the focus should stay on the sheet, not on 合上: " + JSON.stringify(f)); }
     // (art review of #455) no box anywhere on the map, and no ring on the temple he is in: the ring is for what can be pressed
     { const look = await t.page.evaluate(() => { const L = document.getElementById("pilgrimList"), here = L.querySelector(".here");
         return { bordered: [...L.querySelectorAll("*")].filter((e) => { const c = getComputedStyle(e); return parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderLeftWidth) > 0; }).length, hereRing: getComputedStyle(here, "::before").content, hereAfter: getComputedStyle(here, "::after").content }; });
@@ -1056,7 +1058,7 @@ const scenarios = {
       { const tops = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList img")].map((i) => Math.round(i.getBoundingClientRect().top)));
         expect(tops.length === 2 && tops[0] === tops[1], `${label}: the two seals should stand on one line: ` + tops);
         await t.page.hover(sel);
-        await t.until(() => t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q), "::after"); return +c.opacity > 0.5 && parseFloat(c.width) >= 96; }, sel), 30000, `${label}: a ring should come out round the seal of a temple that can be gone to`);
+        await t.until(() => t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q), "::after"); return +c.opacity > 0.5 && parseFloat(c.width) >= 115; }, sel), 30000, `${label}: a ring 1.8 times the seal across (clear of its corners) should come out round the seal of a temple that can be gone to`);
         expect(await t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q)); return parseFloat(c.borderTopWidth) === 0 && c.backgroundColor === "rgba(0, 0, 0, 0)"; }, sel), `${label}: no box and no ground on it`); }
       if (reduced) await t.page.emulateMedia({ reducedMotion: "reduce" });
       await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click(sel)]);
