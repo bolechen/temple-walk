@@ -1,5 +1,5 @@
 {
- "out": "tools/out/t05/seven/art7",
+ "out": "tools/out/t05/art463",
  "size": [
   1600,
   900
@@ -55,7 +55,7 @@
    "colour": "sikhin-t05"
   },
   {
-   "url": "tools/out/t05/tripo-six/vipasyin-r3.60000.glb",
+   "url": "tools/out/t05/tripo-six/vipasyin-r4b.60000.glb",
    "x": 0,
    "h": 9.0,
    "base": false,
@@ -126,7 +126,8 @@
     "paint": true,
     "mood": "winter",
     "view": "cam03"
-   }
+   },
+   "zones": true
   },
   {
    "name": "cam04-winter",
@@ -164,7 +165,8 @@
      "fov": 11,
      "exp": 4.5
     }
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-krakucchanda",
@@ -186,7 +188,8 @@
      "fov": 11,
      "exp": 4.5
     }
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-sikhin",
@@ -208,7 +211,8 @@
      "fov": 11,
      "exp": 4.5
     }
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-vipasyin",
@@ -230,7 +234,8 @@
      "fov": 11,
      "exp": 4.5
     }
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-visvabhu",
@@ -252,7 +257,8 @@
      "fov": 11,
      "exp": 4.5
     }
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-kanakamuni",
@@ -274,7 +280,8 @@
      "fov": 11,
      "exp": 4.5
     }
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-sakyamuni",
@@ -287,6 +294,168 @@
       -16.45,
       4.6,
       -7.6
+     ],
+     "look": [
+      -16.45,
+      11.22,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true
+  },
+  {
+   "name": "level10-kasyapa",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      11.15,
+      -6.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "level10-krakucchanda",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      11.2,
+      -6.6
+     ],
+     "look": [
+      11.33,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "level10-sikhin",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      11.28,
+      -6.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "level10-vipasyin",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      11.48,
+      -6.6
+     ],
+     "look": [
+      0,
+      11.48,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "level10-visvabhu",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      11.38,
+      -6.6
+     ],
+     "look": [
+      -5.8,
+      11.38,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "level10-kanakamuni",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      11.17,
+      -6.6
+     ],
+     "look": [
+      -11.33,
+      11.17,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "level10-sakyamuni",
+   "zones": true,
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      11.22,
+      -6.6
      ],
      "look": [
       -16.45,

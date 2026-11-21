@@ -13,6 +13,13 @@
 #   squeeze  {"below", "k", "band"}: narrow everything under a height (the lotus throne) toward the axis by k
 #   headscale {"c", "s", "z0", "fade"}: scale the head about its centre, faded out below the chin (#370, faces of their own)
 #   laplace the Laplacian Smooth modifier instead (implicit, keeps volume): moved nothing on this mesh, kept for trying
+#   tilt    {"c", "deg", "z0", "fade", "rx", "fx"}: bow the head forward by `deg` about the neck point `c` (a turn about x: the face
+#           goes toward the viewer and down), whole above `z0` and easing to nothing over `fade` below it (#463: a figure
+#           seen from ten metres below reads frowning and pouting when its face is made for the level; real figures bow)
+#   attenuate {"seed", "r", "k", "sr", "iter"}: take down the detail near the seed without moving the face as a whole
+#           (#463, the 3D review): the surface within `sr` smoothed hard (`iter` passes of the Smooth modifier) is the
+#           broad shape v_s, and each point goes to v_s + k'·(v − v_s), k' easing from `k` at the seed to 1 at `r`: a knit
+#           brow kept to k of its depth, lips pushed out kept to k of their lift
 #   push    move what lies within r of the seed along `dir` by up to `d` (falloff as above): to straighten a finger or
 #           part a fingertip from the throne.
 # Each op prints how many points it moved and the largest move, so the edit is written down and can be redone.
@@ -48,7 +55,7 @@ def region(seed, r):
   w = np.where(keep, 0.5 - 0.5 * np.cos(np.pi * np.clip(1 - d / r, 0, 1)), 0.0)   # 1 at the seed, 0 at r
   return keep, w
 for op in spec["ops"]:
-  if op["op"] in ("squeeze", "headscale", "zband", "xband"):
+  if op["op"] in ("squeeze", "headscale", "zband", "xband", "tilt"):
     before = co.copy(); z = co[:, 2]
     if op["op"] == "squeeze":
       # narrow the throne under the figure: below `below` (file units of height) the points come in toward the axis by
@@ -65,6 +72,15 @@ for op in spec["ops"]:
       # widen or narrow across only (x), between z0 and z1, easing in and out over `fade` either side (the shoulders)
       z0, z1, k, f = op["z0"], op["z1"], op["k"], op.get("fade", 0.03)
       t = np.clip(np.minimum((z - (z0 - f)) / f, ((z1 + f) - z) / f), 0, 1); co[:, 0] *= 1 + (k - 1) * t
+    elif op["op"] == "tilt":
+      # the head bowed about the neck: the angle grows from nothing at z0 - fade to `deg` at z0 and above, so the neck
+      # bends over the band instead of shearing; the figure faces -y here, so forward is -y
+      c = np.array(op["c"], float); f = op.get("fade", 0.03)
+      a = np.radians(op["deg"]) * np.clip((z - (op["z0"] - f)) / f, 0, 1); dy, dz = co[:, 1] - c[1], co[:, 2] - c[2]
+      # only the head: across, the turn is whole within rx - fx of the middle and nothing at rx (a raised hand beside the
+      # head stays where it is)
+      if "rx" in op: a *= np.clip((op["rx"] - np.abs(co[:, 0] - c[0])) / op.get("fx", 0.02), 0, 1)
+      co[:, 1] = c[1] + dy * np.cos(a) - dz * np.sin(a); co[:, 2] = c[2] + dy * np.sin(a) + dz * np.cos(a)
     else:
       # give one figure's head its own proportions (a face of its own among seven of one family): scale about the head's
       # centre `c` by `s` (x across, y depth, z up), fading to nothing between the chin `z0` and `z0 - fade`
@@ -75,7 +91,18 @@ for op in spec["ops"]:
     log.append({"op": op["op"], "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   seed = np.array(op["seed"], float); r = op["r"]; keep, w = region(seed, r)
   before = co.copy()
-  if op["op"] in ("smooth", "laplace"):
+  if op["op"] == "attenuate":
+    ks, _ = region(seed, op.get("sr", 2 * r))
+    me.vertices.foreach_set("co", co.ravel()); me.update()
+    vg = ob.vertex_groups.new(name="fix"); vg.add([int(i) for i in np.nonzero(ks)[0]], 1.0, "REPLACE")
+    md = ob.modifiers.new("fix", "SMOOTH"); md.vertex_group = "fix"; md.factor = 1.0; md.iterations = op.get("iter", 400)
+    # the smoothed copy is read from the evaluated mesh; the mesh itself is left as it was
+    dg = bpy.context.evaluated_depsgraph_get(); ev = ob.evaluated_get(dg).data
+    cs = np.empty(len(ev.vertices) * 3); ev.vertices.foreach_get("co", cs); cs = cs.reshape(-1, 3)
+    ob.modifiers.remove(md); ob.vertex_groups.remove(vg)
+    kk = 1 - (1 - op["k"]) * w
+    co = np.where(keep[:, None], cs + kk[:, None] * (co - cs), co)
+  elif op["op"] in ("smooth", "laplace"):
     # Blender's Laplacian Smooth modifier (an implicit solve, so a broad ring goes in a few steps; volume kept),
     # weighted by the falloff over the joined region
     me.vertices.foreach_set("co", co.ravel()); me.update()

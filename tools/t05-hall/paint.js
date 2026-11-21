@@ -215,6 +215,8 @@ ${zoneCode}
   m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N;
   const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };
   upd(); m.userData.update = upd;
+  // a normal map baked from the repaired full-detail surface (tools/t05-statue/bake.py, #463) is worn by the paint too
+  if (opts.normalMap) { m.normalMap = opts.normalMap; m.normalScale.set(1, 1); }
   if (opts.envMap) { m.envMap = opts.envMap; m.envMapIntensity = opts.envIntensity ?? 1; }
   return m;
 }

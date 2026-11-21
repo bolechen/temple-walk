@@ -327,7 +327,8 @@ async function setStatues(list) {
     const pivot = new THREE.Group(); pivot.add(obj); obj.position.sub(new THREE.Vector3(c.x, bb2.min.y, c.z));
     pivot.position.set(x, AT + seatH, ALTAR.z + 0.3 + (s.dz ?? 0)); pivot.rotation.y = s.yaw ?? 0; group.add(pivot);
     obj.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
-      if (s.paint) o.material = M[s.paint];
+      o.userData.normalMap = o.material?.normalMap ?? null;   // a baked normal map in the file (#463) is kept under the clay and the paint
+      if (s.paint) { o.material = M[s.paint]; if (o.userData.normalMap) { o.material = o.material.clone(); o.material.normalMap = o.userData.normalMap; } }
       else if (o.material) { o.material.envMapIntensity = 0; if (o.geometry.attributes.color && !o.material.map) o.material.vertexColors = true; }
       if (s.tint && o.material) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(s.tint)); } } });
     const figH = size.y * k, top = AT + seatH + figH, headY = top - figH * (s.headAt ?? 0.14);
@@ -499,7 +500,7 @@ function paint(on = true) {
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
-    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f) } : { masks, fig: figures.indexOf(f), envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: f.meshes.find((m) => m.userData.normalMap)?.userData.normalMap } : { masks, fig: figures.indexOf(f), normalMap: f.meshes.find((m) => m.userData.normalMap)?.userData.normalMap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
     f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
     for (const m of f.meshes) m.material = f.painted[key];
   }
