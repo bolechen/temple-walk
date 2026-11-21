@@ -21,12 +21,13 @@ const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,d
 // and every tenth with nothing drawn between the eye and him; then the view turned aside, him still seen.
 // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
 // He does not walk here: he is set down outside the door behind the veil and stands, so `fast` only shortens the veil's
-// pauses. The halls go in four shares (`part`), two halls each: with the view dragged round four ways in each hall, half the
-// halls ran 29 minutes, over one machine's share of the night's run.
-async function exitFrames(b, base, part) {
+// pauses. Each hall is a scenario of its own (`only`): with the view dragged round four ways in each, half the halls ran 29
+// minutes and the Guanyin hall and the summit pavilion together 23, over one machine's share of the night's run.
+async function exitFrames(b, base, only) {
   const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom&fast=1", { viewport: { width: 480, height: 320 } });   // (fast: the veil through a door pauses a sixth as long)
   await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
-  const all = await t.page.evaluate(() => window.__halls.map((h) => h.id)), halls = all.slice(part * Math.ceil(all.length / 4), (part + 1) * Math.ceil(all.length / 4)), log = {}, bad = [];
+  const all = await t.page.evaluate(() => window.__halls.map((h) => h.id)), halls = all.filter((h) => h === only), log = {}, bad = [];
+  expect(halls.length === 1, `no hall ${only} to come out of: ${all}`);
   for (const id of halls) {
     await t.page.evaluate((h) => window.__inside(h), id); await t.page.waitForFunction((h) => window.__yard().room === h, id, { polling: 50, timeout: 120000 });   // (waited on directly: t.until looks only every 1.2 s)
     { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f + 5, f0, { polling: 20, timeout: 120000 }); }
@@ -799,10 +800,14 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Out of every hall's door, in two halves (#396): exitFrames above.
-  exitframe: { tier: 3, run: (b, base) => exitFrames(b, base, 0) },
-  "exitframe-b": { tier: 3, run: (b, base) => exitFrames(b, base, 1) },
-  "exitframe-c": { tier: 3, run: (b, base) => exitFrames(b, base, 2) },
-  "exitframe-d": { tier: 3, run: (b, base) => exitFrames(b, base, 3) },
+  "exitframe-chan": { tier: 3, run: (b, base) => exitFrames(b, base, "chan") },
+  "exitframe-tea": { tier: 3, run: (b, base) => exitFrames(b, base, "tea") },
+  "exitframe-main": { tier: 3, run: (b, base) => exitFrames(b, base, "main") },
+  "exitframe-library": { tier: 3, run: (b, base) => exitFrames(b, base, "library") },
+  "exitframe-yaoshi": { tier: 3, run: (b, base) => exitFrames(b, base, "yaoshi") },
+  "exitframe-dahui": { tier: 3, run: (b, base) => exitFrames(b, base, "dahui") },
+  "exitframe-guanyin": { tier: 3, run: (b, base) => exitFrames(b, base, "guanyin") },
+  "exitframe-lingxiao": { tier: 3, run: (b, base) => exitFrames(b, base, "lingxiao") },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));
