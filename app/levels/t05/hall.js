@@ -41,7 +41,7 @@ export const HALL = Object.freeze({
  * #481 had always on, so that station E's middle tone is over L* 10 in first person); over how many metres in from the front wall it comes up; and how fast the eye takes it (seconds to cover about
  * two thirds of a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
-export const FILL = Object.freeze({ lux: 16, out: 5.5, depth: 3, ease: 0.5 });
+export const FILL = Object.freeze({ lux: 16, out: 9, depth: 3, ease: 0.5 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
