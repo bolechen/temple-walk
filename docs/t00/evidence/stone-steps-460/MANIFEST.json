@@ -1,0 +1,180 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "closeup-sw/art5-treads-summer-day.png",
+   "bytes": 1083685,
+   "sha256": "88d6e4e614cedf52ccd0afb1f9a0a99fcdcf03c6d677c526b0534ea0b6e12b7a",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "closeup-sw/cam01-treads-summer-day.png",
+   "bytes": 1335323,
+   "sha256": "de57dcaf6e4126b24d5961bdfdf094517d86fd9d9604010814d8551cdb0bc632",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "closeup-sw/cam02-treads-winter-day.png",
+   "bytes": 1308071,
+   "sha256": "c9ddfe1e3aed2b3ea2f4764ec2d8348e2802dcfaa0838b18efd5baa40370ff1d",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "closeup-sw/main-hall-back-stair-shaded-from-above.png",
+   "bytes": 1119781,
+   "sha256": "3de2ed33fc54dbb15b0263b40fb1a32d8ad00f060a234a644cdcb7b3eecdd714",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "closeup-sw/main-hall-back-stair-shaded-from-below.png",
+   "bytes": 1170155,
+   "sha256": "5a8e55c9fc25e86e6bf4d1529cc495e2cde6a55b3556c2498240fbbb0c3e3db3",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "collage-final.jpg",
+   "bytes": 433993,
+   "sha256": "dece0db646e0818b10f66f2da074cb7ba666b2b2ea2b3956b74aeb47eb573c9c",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 405888,
+   "sha256": "2b238abf17137dc90416a34111a2a47fdacc2b8c1127795fb7d3e6e18772a1f8",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/art1_summer-dawn.png",
+   "bytes": 2997958,
+   "sha256": "ff4f7e3d63485615a83d6e328c149c1f0c22acf0ed192b08403d8da55f84623f",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/art1_summer-dawn_base.png",
+   "bytes": 3007523,
+   "sha256": "701bca8128ecdc5f3230f4d83f4ec9a9d9879ddfd2473fcf426a3f60fab83771",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/art5_summer-day.png",
+   "bytes": 2000343,
+   "sha256": "afcfeaba434c913d0b0bb4bb47d31371c2a5f283c1db92b7a57066693c742495",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/art5_summer-day_base.png",
+   "bytes": 2022490,
+   "sha256": "5a0fa7d9d6e172a93010e21e7adc25c8281c2c73a46d2e6afaf5ad407e215e2d",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/art5_summer-dusk.png",
+   "bytes": 2045200,
+   "sha256": "78067032a5f62555d413e7193217fd9ef9b28f14f13b2cab79ffe510cc8db91c",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/art5_summer-dusk_base.png",
+   "bytes": 2052885,
+   "sha256": "ede5e94f9c2e3bf07e198e72241d2d5ebb77e8fb7dc227defcba611cc1a0b83b",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/cam01_summer-day.png",
+   "bytes": 3387841,
+   "sha256": "04dbf85509c0b1c7d2706ae93ea1dfadbebf9bf4bb678b45c8801c520a11c078",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/cam01_summer-day_base.png",
+   "bytes": 3405879,
+   "sha256": "bb24e0f1c82dc4f4283068b496ef2e8afc0e48cdfc166d9874a109674c326108",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/cam02_summer-day.png",
+   "bytes": 3155090,
+   "sha256": "31954ae1cf37db6b708053f5aad3da062765b5ea5e51fd0e7026bdca6a8bee7e",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/cam02_summer-day_base.png",
+   "bytes": 3201133,
+   "sha256": "c3bff0d8bb1cf8485ca690716b5645f189e0d2f7d0de6c7bdea7ab2f9cbafb26",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/cam02_winter-day.png",
+   "bytes": 3292932,
+   "sha256": "c7838d8ba82e999d11c3709449b51d48e35279aa4c3b623537b6a7202f1e461d",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/cam02_winter-day_base.png",
+   "bytes": 3333681,
+   "sha256": "0c4dabd716260380dc1a4c018321886e4a82b6f93d4920cde18a36771cf92d1c",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/firstcourt-stair_autumn-dusk.png",
+   "bytes": 2255454,
+   "sha256": "fc673ce6ebd220acc761790ff949f907d04428363ebaf21d0044cc90c1e6b75a",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "t4/firstcourt-stair_autumn-dusk_base.png",
+   "bytes": 2277435,
+   "sha256": "c24f379b036365296b90e91ea41616a10fe3802302c6840b9aa7b01fd6defeac",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "t4/firstcourt-stair_summer-day.png",
+   "bytes": 2342228,
+   "sha256": "9c6b4e91c6668e938f5ff00236d19d56db1448f8867cb5417f477a4b31f3fbd1",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "t4/firstcourt-stair_summer-day_base.png",
+   "bytes": 2385721,
+   "sha256": "0a5636294109a264eec5633f8c912c1829cd96928f30ebd6645473601ee2288a",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "t4/hall-back-stair_summer-day.png",
+   "bytes": 2554181,
+   "sha256": "016c984a789566658b50bf347db243732720f8078ed0d41e4fc86dd2dbdb87c2",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "t4/hall-back-stair_summer-day_base.png",
+   "bytes": 2599817,
+   "sha256": "5b4ff033799dd851c19b936bc36b05476d934121bdea0b0a1b5816840918d924",
+   "rev": "e130c85de127fab13f6a2f800733986a7b6e095b"
+  },
+  {
+   "path": "t4/hall_summer-day.png",
+   "bytes": 2933308,
+   "sha256": "c819c4600d5745f8aeff13d49c560dd5816bcf5a536095539b6bcf34373dd4a9",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/hall_summer-day_base.png",
+   "bytes": 2935038,
+   "sha256": "84a6f868db6e35cd8dc1acdc1210ef8c1986f2027299496ea71250ad6a9a6805",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/terrace_summer-day.png",
+   "bytes": 2792780,
+   "sha256": "3c68e7b571a6cb8a14936755cbee775d7a8708931833e2aa5206e8293f528d57",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  },
+  {
+   "path": "t4/terrace_summer-day_base.png",
+   "bytes": 2831015,
+   "sha256": "33f0158a4a98fd60f5f157b4871d5b64bae29b03c46fdf0546672a851650a553",
+   "rev": "7f719cef3100ca7650b3df54ab1c22830c6efc2b"
+  }
+ ]
+}
