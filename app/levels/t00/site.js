@@ -10,6 +10,7 @@ import { PURLIN, PING, buildHall, DOOR } from "../../src/building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "../../src/plaque.js";
 import { CENSER } from "../../src/censer.js";
+import { LIT } from "./windows.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0, GROVE_IN: 20.5 };   // GROVE_IN: where the bamboo closes in on the forecourt
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
@@ -26,6 +27,8 @@ const [T1, T2, TOP] = LEVELS;
 // departure from the Yingzao Fashi (docs/t00/decisions.md, 登凌霄阁); the structure review prefers the balcony's edge
 // over the second storey's columns (2.0 m) under an eave of about 2.8 m, for the owner to decide. Change it here only.
 export const LOFT = Object.freeze({ out: 2.4, overhang: 3.2 });
+/** How far from a young evergreen's trunk the floor is shut, metres (#531): the eye at 1.6 m is in its boughs inside 0.95 m, and the following eye, drawn in by the sprays, fills the picture with them at 1.0 m and is clear of them at 1.25. */
+const CEDAR_SHUT = 1.25;
 const HILL = { zS: T2.zN, zN: TOP.zS };   // the slope below the summit, crossed only by the stair between the tea rows
 // The way in: the last of the old path up the mountain, a zigzag through the grove. You start at the
 // river-view pavilion, climb north past the ink-stone pool, turn west and climb to the half-way pavilion,
@@ -85,7 +88,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {}, benchSeats = [];
+  const litWindows = [], walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {}, benchSeats = [];
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. A pointed (tent) roof rises half its span.
@@ -93,7 +96,12 @@ export function buildSite(M) {
     if (tent) return (deep + (o.brackets === false ? 0 : (2 * PURLIN * (o.cai || 0.21)) / 0.21)) / 2;   // a pointed roof: half its span
     return (deep + (2 * PURLIN * (o.cai || 0.21)) / 0.21) * (o.lodge ? 0.27 : 1 / 3); };
   const put = (opts, at, q = 0, lvl = 0, base) => {
-    const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y });
+    const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, key = (opts.hall?.id ?? opts.plaque?.text ?? "?") + (opts.storey ? "#" + opts.storey : "");
+    const b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y, lit: LIT[key] });
+    for (const w of b.windows) {   // where each bay stands in the world, for the measuring tools and the tests
+      const [ax, az] = turn(w.x0, w.z, q), [bx, bz] = turn(w.x1, w.z, q);
+      litWindows.push({ ...w, building: key, n: turn(0, w.face === "front" ? 1 : -1, q), a: [ax + at[0], az + at[1]], b: [bx + at[0], bz + at[1]], y0: w.y0 + y, y1: w.y1 + y });
+    }
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
     for (const r of b.walk.solids) walk.solids.push(r.h === undefined ? place(r, at, q) : { ...place(r, at, q), top: r.h + y });
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
@@ -213,11 +221,12 @@ export function buildSite(M) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
     // The baked floor sees a young evergreen's wood only, and its boughs start at 1.35 m: it let him stand 0.9 m from the trunk with
-    // the eye inside the foliage (#288). Where the written plan kept him off by its boughs' reach, the floor is shut too, and half a metre more for the sprays that hang from the boughs.
-    if (h < 8) { const r = girth("cedar", h) + 0.5; closed.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, why: "a young evergreen is clothed to the knee: the eye stays out of its boughs" }); }
+    // the eye inside the foliage (#288). The floor is shut round the trunk as a circle of `CEDAR_SHUT` (#531: it was a square 1.5 m out from the written plan's post, 3 m across,
+    // which kept him a corner's width from a tree he could see round; the eye, 1.6 m up, is among the boughs at 0.95 m and clear of them at 1.0).
+    if (h < 8) closed.push({ x, z, r: CEDAR_SHUT, x0: x - CEDAR_SHUT, x1: x + CEDAR_SHUT, z0: z - CEDAR_SHUT, z1: z + CEDAR_SHUT, why: "a young evergreen is clothed to the knee: the eye stays out of its boughs" });
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
-  const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
+  const seasonal = [[14.5, 0, 60.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
     [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.8, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];   // (the summit ginkgo kept 0.6 m off the pavilion's platform as it widened, #278)
   for (const [x, , z, kind, h] of seasonal) walk.posts.push({ x, z, r: girth(kind, h) });
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
@@ -275,10 +284,17 @@ export function buildSite(M) {
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
   const sp = putStack([
-    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
+    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true },   // (three treads up from the path, #478: it had none, and 0.45 m is more than he steps; open floor like the path's other pavilions, #274)
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
   sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
+  // Open floor on the written plan (`walkAll`) leaves no solid round the platform, so that his shoes could come down on its lip from the
+  // ground beside it (`edges`): the platform's own solid is put back, as a hall's is; the floor laid over it, the stair, is unchanged.
+  walk.solids.push({ ...place({ x0: -3.3, x1: 3.3, z0: -3.3, z1: 3.3 }, [-12.5, 50.5], 1), own: true });
+  // The open floor reaches the platform's lip, where the stair's cheek stones stand level with it: a post along the lip on each side of the stair keeps his shoes off them.
+  for (const sx of [-1, 1]) walk.posts.push(place({ x0: sx > 0 ? 0.9 : -1.9, x1: sx > 0 ? 1.9 : -0.9, z0: 2.6, z1: 2.84 }, [-12.5, 50.5], 1));
+  // The written plan walks round the stele's foot (the baked floor takes it from the mesh): 1.5 by 0.9 m, turned a quarter, and his own width.
+  walk.posts.push({ x0: -12.5 - 0.45 - BODY, x1: -12.5 + 0.45 + BODY, z0: 50.5 - 0.75 - BODY, z1: 50.5 + 0.75 + BODY, eyeTop: 3.45 });   // (`eyeTop`: the stele stands 3.6 m, and the following eye stays out of it all the way up)
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
@@ -612,7 +628,7 @@ export function buildSite(M) {
   const censer = new THREE.Vector3(0, 0, 13);
   walk.posts.push({ x: censer.x, z: censer.z, r: CENSER.reach, eyeR: CENSER.ears + 0.1, top: censer.y + CENSER.height + 0.05 });   // the eye kept off its ears too
 
-  return { root, walk, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, restPlaces, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, litWindows, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, restPlaces, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
