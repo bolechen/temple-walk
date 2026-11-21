@@ -302,8 +302,9 @@
   "island": 50,
   "pad": 0.0,
   "weld": 1e-05,
-  "note": "only inside the knee box (seen from the front); the hand's bounds took real robe pieces beside it. The face-processed figure already has four two-face pieces there from the generator",
+  "note": "done on the exported file by tools/blender/varada-tidy.py, read as the measure reads it; the Blender pass took scraps of the hand's own surface (black specks in the views) and is off. The face-processed figure already has four two-face pieces in the knee box from the generator",
   "hand": false,
-  "zmin": 1.0
+  "zmin": 1.0,
+  "blender": false
  }
 }

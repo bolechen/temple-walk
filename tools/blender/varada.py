@@ -606,7 +606,7 @@ if PO and PO.get("cap_top"):
 bm.to_mesh(me); bm.free(); me.update()
 log["joined"] = {"hand_points": len(hand_co), "hand_faces": len(hand_faces), "how": "joined over the wrist, the hand's wrist sunk into the forearm (no boolean: the figure is many open shells)"}
 CL = cfg.get("cleanup")
-if CL:
+if CL and CL.get("blender", True):   # (round 2: off; it took scraps of the hand's own surface; varada-tidy.py does it on the file)
   # last: pieces of fewer than `cleanup.island` faces lying within `cleanup.pad` metres of the knee box (seen from the
   # front) or of the hand are taken out (scraps the cuts left; the 3D review: no isolated piece under 50 faces)
   bm = bmesh.new(); bm.from_mesh(me)
