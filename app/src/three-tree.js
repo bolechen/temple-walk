@@ -3,7 +3,8 @@
 // three's own, in shared/licenses/THIRD-PARTY-NOTICES.txt). Changed here (#162): the WebGPU/TSL material is left out
 // (it pulls in three/webgpu), the skeleton and each fork's radii are kept on the mesh, the trunk may start in a given
 // `direction`, every branch swells into a collar where it leaves its parent, a child's radius may be set as a share of
-// its parent's base (`childRadius`), lengths may be set per level, and every tube is closed at its end.
+// its parent's base (`childRadius`), lengths may be set per level, every tube is closed at its end, and the trunk may
+// carry its boughs in whorls (`whorls`: each at a given height, tilt, roll and length) instead of spread along it.
 import {
 	BufferAttribute,
 	BufferGeometry,
@@ -100,6 +101,7 @@ TreeGenerator.defaults = {
 	trunkClear: 0.25, // fraction of the trunk kept bare before the crown ( raise for a tall clean bole )
 	direction: null, // (added here) the way the trunk starts, [ x, y, z ]; null is straight up
 	collar: 0, // (added here) how much a branch swells where it leaves its parent
+	whorls: null, // (added here) the trunk's boughs, one by one, instead of `children`
 	childRadius: null // (added here) per level, a child's radius as a share of its parent's where it leaves; null keeps the pipe model
 };
 
@@ -184,7 +186,8 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 	// fork: children spread along the upper branch, each tilted off the local tangent,
 	// rolled by the golden angle, and much thinner than the parent ( pipe model )
 
-	const n = p.children[ Math.min( level, p.children.length - 1 ) ];
+	const whorls = level === 0 && p.whorls ? p.whorls : null; // (added here) boughs set one by one: { t, tilt, roll, length }
+	const n = whorls ? whorls.length : p.children[ Math.min( level, p.children.length - 1 ) ];
 	const angle = p.branchAngle[ Math.min( level, p.branchAngle.length - 1 ) ];
 	const pipeDrop = Math.pow( 1 / n, 1 / p.radiusExponent );
 	// (added here) with `childRadius`, each child is that share of this branch's base radius, so the children of a fork
@@ -195,25 +198,26 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 
 	for ( let i = 0; i < n; i ++ ) {
 
-		const t = start + ( i + 0.5 + ( random() - 0.5 ) * 0.6 ) / n * ( 1 - start );
+		const w = whorls ? whorls[ i ] : null;
+		const t = w ? w.t : start + ( i + 0.5 + ( random() - 0.5 ) * 0.6 ) / n * ( 1 - start );
 		const ring = ringAt( rings, t );
 
-		const tilt = ( angle + ( random() * 2 - 1 ) * p.angleVariance ) * DEG2RAD;
-		const roll = i * GOLDEN_ANGLE + ( random() * 2 - 1 ) * 0.4;
+		const tilt = w ? w.tilt * DEG2RAD : ( angle + ( random() * 2 - 1 ) * p.angleVariance ) * DEG2RAD;
+		const roll = w ? w.roll : i * GOLDEN_ANGLE + ( random() * 2 - 1 ) * 0.4;
 
 		// tilt off a perpendicular axis FIRST, then roll about the parent axis, then pull
 		// back toward the light ( else the roll sends half the children downward )
 		const childDir = ring.tangent.clone()
 			.applyAxisAngle( ring.normal, tilt )
 			.applyAxisAngle( ring.tangent, roll );
-		if ( p.upPull > 0 ) childDir.lerp( UP, p.upPull ).normalize();
+		if ( p.upPull > 0 && ! w ) childDir.lerp( UP, p.upPull ).normalize();
 
 		// the pipe-model drop, but never fatter than the wood it leaves nor below the floor
 		const childBase = Math.min( want, ring.radius ); // (changed here) a share of the parent's own base, never fatter than the wood it leaves
 		me.kids.push( childBase );
 
 		const lr = Array.isArray( p.lengthRatio ) ? p.lengthRatio[ Math.min( level, p.lengthRatio.length - 1 ) ] : p.lengthRatio; // (added here) per level
-		let childLength = length * lr * ( 1 - p.branchLengthFalloff * t );
+		let childLength = w ? w.length : length * lr * ( 1 - p.branchLengthFalloff * t );
 		if ( p.lengthVariance > 0 ) childLength *= 1 + ( random() * 2 - 1 ) * p.lengthVariance;
 
 		growBranch( tubes, ring.pos, childDir, childLength, childBase, level + 1, p, random );
