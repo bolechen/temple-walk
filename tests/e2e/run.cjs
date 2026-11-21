@@ -17,7 +17,8 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
-// Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded.
+// Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded,
+// and every tenth with nothing drawn between the eye and him.
 // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
 // He does not walk here: he is set down outside the door behind the veil and stands, so `fast` only shortens the veil's
 // pauses. The halls go in two halves (`half`), each well under one machine's share of the night's run.
@@ -32,8 +33,14 @@ async function exitFrames(b, base, half) {
     await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
     const rows = [];
     for (let i = 0; i < 60; i++) {
-      const r = await t.page.evaluate(() => { const f = window.__frame(); return { f: f.frames, box: !!f.monkBox, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) }; });
-      rows.push(r); if (!r.box || r.op < 0.6) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
+      // Drawn is not seen (#411's art review: the box and the opacity passed with the wall between him and the eye): every
+      // tenth frame, at three points down the middle of his box, the first solid thing under the point must be him, twice.
+      const r = await t.page.evaluate((look) => {
+        const f = window.__frame(), b = f.monkBox, r = { f: f.frames, box: !!b, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) };
+        if (look && b) r.seen = [0.3, 0.5, 0.7].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length;
+        return r;
+      }, i % 10 === 9);
+      rows.push(r); if (!r.box || r.op < 0.6 || (r.seen !== undefined && r.seen < 2)) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
       await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
     }
     log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length };
