@@ -218,7 +218,16 @@ test("the fill comes from the doors, from over the floor and from the floor: non
   assert.equal(bounce.length, 1); assert.equal(top.length, 1);
   assert.ok(h.fill.length <= 5, "no more lamps than the five the hall had before (#493: each is in every shader, outdoors too)");
   for (const [, y, z] of bounce) assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3, "the floor's bounce: under the floor, before the altar, so the floor itself takes none of it");
-  for (const [x, y, z] of top) assert.ok(z > ALTAR.zF + 3 && y > y0 + 10, "the one lamp overhead hangs high and well before the figures");
+  for (const [x, y, z] of top) {
+    assert.ok(z > ALTAR.zF + 3 && y > y0 + 6, "the one lamp overhead hangs over his head and well before the figures");
+    // From cam05's station a lamp close under the boards puts a bright spot on them straight overhead (#549: 2.4 m under them it read 30 L* over the boards
+    // 3 m off on a T4; the art director's line is 8): it hangs at least 6 m under whatever is first met above it.
+    const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });
+    const s2 = buildSite(new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) })); s2.root.updateMatrixWorld(true);
+    // (the hall's own coordinates are the site's: its floor is the platform's top, y0)
+    const over = new THREE.Raycaster(new THREE.Vector3(x, y, z), new THREE.Vector3(0, 1, 0)).intersectObject(s2.root, true)[0];
+    assert.ok(over && over.distance >= 6, `the boards over the lamp are ${over ? over.distance.toFixed(2) : "none"} m above it`);
+  }
   for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);
   assert.deepEqual([FILL.door, FILL.top, FILL.bounce].map((v) => v > 0), [true, true, true]);
 });
