@@ -270,6 +270,7 @@ export default {
   "愿所念之人，皆得安住。": "May everyone you hold in mind dwell in peace.",
   "灯不大，够照见你脚下的路。": "The lamp is small, but enough to see the road under your feet.",
   "为他人点灯": "Light a lamp for someone",
+  "为人点灯": "Share a lamp",
   "选一句话，点一盏灯，再把链接送给他。": "Choose a line, light a lamp, and send the link to them.",
   "心愿": "Wishes",
   "复制链接": "Copy link",

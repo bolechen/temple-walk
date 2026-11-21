@@ -242,7 +242,7 @@ const scenarios = {
       const wish = n * 2 + 1, book = bookFrom("lamp");
       const a = await open(b, base, `q=low&lang=${lang}` + BARE, { init: `localStorage.setItem("yunjing.journey.v1", ${JSON.stringify(book)}); localStorage.setItem("yunjing.lang.v1", "${lang}");` });
       await a.page.evaluate(() => { const p = window.__places.lamp; window.__pose(p.at[0], p.at[1], 0, 0); });
-      await a.until(async () => (await a.page.isVisible("#act")) && (await a.page.getAttribute("#act", "data-word")) === "为他人点灯", 60000, `${lang}: the lamp does not offer a lamp for someone once it is lit`);
+      await a.until(async () => (await a.page.isVisible("#act")) && (await a.page.getAttribute("#act", "data-word")) === "为人点灯", 60000, `${lang}: the lamp does not offer a lamp for someone once it is lit`);
       await a.page.click("#act"); await a.until(() => a.page.evaluate(() => window.__lamp().sheet), 30000, `${lang}: the sheet did not open`);
       expect((await a.page.locator("#blessList [data-wish]").count()) === WISHES.length, `${lang}: the list is not the preset lines`);
       expect((await a.page.locator("#blessList [data-wish]").nth(wish).textContent()) === say(lang, WISHES[wish]), `${lang}: the line is not the preset one in this language`);

@@ -200,6 +200,7 @@ body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
 #act {
   position: absolute; left: 50%; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 5;
   display: flex; align-items: center; gap: 14px; padding: 6px 12px; background: none; border: 0; cursor: pointer;
+  width: max-content; max-width: calc(100vw - 24px);   /* centred by left 50% it was given half the screen, and a label wider than 113 px on a phone wrapped */
   font: 400 var(--t-xl)/1 var(--kai); letter-spacing: var(--track-wide); color: #f2ede2; text-shadow: var(--lift);
 }
 #act .enso { position: relative; display: grid; place-items: center; width: 52px; height: 52px; flex: none; background: var(--enso-light, radial-gradient(closest-side, transparent 86%, var(--on) 88%, transparent 95%)) center / 100% 100% no-repeat; transition: transform .6s var(--ease); }

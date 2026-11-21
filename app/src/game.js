@@ -21,7 +21,7 @@ import { t, lang, glyphs, FONT } from "./i18n.js";
 import { moodOf } from "./mood.js";
 import { WEB } from "./channel.js";
 import { WISHES, decodeLamp, lampLink } from "./wishes.js";
-import { drawLampCard } from "./lampcard.js";
+import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
@@ -348,7 +348,7 @@ export function createGame(y) {
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
     const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
     if (held || near || look || seatHere || climb || rise) {
-      const w = held || (near ? (near === "lamp" && journey.has("lamp") ? "为他人点灯" : (SEAL[near] || SEAL.incense).act) : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
+      const w = held || (near ? (near === "lamp" && journey.has("lamp") ? "为人点灯" : (SEAL[near] || SEAL.incense).act) : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
@@ -441,7 +441,7 @@ export function createGame(y) {
   // cleared of it so that a reload does not do it twice. Another kind of fragment (a saved walk, #338) is left where it is.
   let arrival = decodeLamp(location.hash);
   if (/^#lamp=/.test(location.hash)) { try { history.replaceState(null, "", location.pathname + location.search); } catch {} }
-  /** The other lamp on the stand and the small slip leaning by it, with the line (from the list) and the hour it was lit in. */
+  /** The other lamp on the stand and the small slip leaning by it, with the line (from the list) and the hour it was lit in. The slip is part of the place, not the message: on a phone held upright it is a few pixels of writing (the line is also said at the foot of the picture, where it can be read), and a larger one would lie off the screen's edge. */
   let theirs = null;
   async function showTheirs(l) {
     if (theirs) return; const f = places.lamp.flame, m = moodOf(l.season, l.time);
@@ -450,8 +450,7 @@ export function createGame(y) {
     const cv = document.createElement("canvas"); cv.width = 320; cv.height = 200; const x = cv.getContext("2d");
     try { await document.fonts.load(`40px ${FONT.xing}`, t(WISHES[l.wish])); } catch {}
     x.fillStyle = "#f1ead9"; x.fillRect(0, 0, 320, 200); x.strokeStyle = "rgba(60,50,40,.45)"; x.lineWidth = 4; x.strokeRect(6, 6, 308, 188); x.fillStyle = "#26221e"; x.textAlign = "center"; x.textBaseline = "middle";
-    let fs = 38; x.font = `${fs}px ${FONT.xing}`; const text = t(WISHES[l.wish]), rows = []; { let row = ""; for (const ch of /\s/.test(text) ? text.split(/(\s+)/) : [...text]) { if (x.measureText(row + ch).width > 270 && row) { rows.push(row.trim()); row = ch.trimStart(); } else row += ch; } rows.push(row.trim()); }
-    while (fs > 18 && rows.length * fs * 1.3 > 130) { fs -= 2; x.font = `${fs}px ${FONT.xing}`; }
+    const text = t(WISHES[l.wish]), { size: fs, rows } = fitLines(x, text, 270, (n) => `${n}px ${FONT.xing}`, 38, 26); x.font = `${fs}px ${FONT.xing}`;
     rows.forEach((r, i) => x.fillText(r, 160, 78 - ((rows.length - 1) * fs * 1.3) / 2 + i * fs * 1.3));
     x.fillStyle = "#7a6f5e"; x.font = `22px ${FONT.serif}`; x.fillText(m.label.split(" · ").map((w) => t(w)).join(" · "), 160, 168);
     const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
