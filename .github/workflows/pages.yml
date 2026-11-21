@@ -217,8 +217,8 @@ jobs:
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
         run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3 --import ./tools/walk/swap.mjs
 
-  # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
-  # preview.
+  # The site as the browser gets it: built once, and the very same dist/ driven through by `quick` and handed on for publication
+  # or the preview.
   build:
     needs: changes
     if: needs.changes.outputs.site == 'true'
@@ -270,47 +270,10 @@ jobs:
           overwrite: true
           include-hidden-files: true
 
-  # `boot` on the site `build` made: the page comes up clean and draws (#442 step 3: no second build).
-  site:
-    needs: [changes, build]
-    if: needs.changes.outputs.site == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/prepare
-        with:
-          floor: ${{ needs.changes.outputs.walk }}
-      - uses: actions/download-artifact@v4
-        with:
-          name: built-site-${{ github.run_id }}
-          path: dist
-      # tools/site.cjs rebuilds a dist/ older than anything in app/; this checkout is newer than the build that made it, so say
-      # that the stamp is the site as it should be.
-      - name: The site is built, whatever the checkout's date
-        run: touch dist/.built
-      - name: Remember the browser between runs
-        id: pw
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-1.63.0-chromium
-      - name: A browser to drive the page with
-        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: End to end, startup and movement
-        run: node tests/e2e/run.cjs boot
-      - name: Keep the report and screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-quick-${{ github.run_id }}-${{ github.run_attempt }}
-          path: tools/out/
-          retention-days: 7
-          if-no-files-found: ignore
-
-  # What walking and the camera break most often, run before the site goes out and not beside it (#308): the stairs and the
-  # low drop, one machine each, side by side with `site` (each builds its own copy from the caches, so none waits for another).
-  # Only when the site is built at all. `e2e.yml`'s regression run no longer repeats them.
+  # What starting up, walking and the camera break most often, run before the site goes out and not beside it (#308) on the one
+  # site `build` made: `boot` (the page comes up clean and draws) and the stairs and the low drop, three machines side by side
+  # (#442: `boot` no longer waits for the others, nor each machine builds its own copy). Only when the site is built at all.
+  # `e2e.yml`'s regression run no longer repeats them.
   quick:
     needs: [changes, build]
     if: needs.changes.outputs.site == 'true'
@@ -320,6 +283,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { name: boot, scenarios: "boot" }
           - { name: a, scenarios: "drop-touch stairs-edge" }
           - { name: b, scenarios: "stairs drop" }
     steps:
@@ -378,7 +342,7 @@ jobs:
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, floor, build, tests, grid, site, quick, worker]
+    needs: [changes, unit, floor, build, tests, grid, quick, worker]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
