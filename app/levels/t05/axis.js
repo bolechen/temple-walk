@@ -58,7 +58,7 @@ export const PATH = Object.freeze({ hw: 3 });
 // ridge or its ornaments, nor in the archway's middle bay seen from there. Seeded, so that every build and every picture is the same.
 const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const CAM07 = Object.freeze({ x: 0, y: SECOND.y + 1.6, z: AXIS.innerZ + 1 });
-/** The lines cam07 must see along: to the Great Hall's ridge (every half metre, and the ornaments' fronts) and through the archway's middle bay (a grid of points in its opening, carried on to z = −20). */
+/** The lines cam07 must see along: to the Great Hall's ridge (every half metre, and the ornaments' fronts) and through the archway's middle bay (a grid of points in its opening, carried on to z = -20). */
 export const SIGHTS = (() => {
   const lines = [], { rx, zm, height, ornamentTop } = RIDGE, eye = [CAM07.x, CAM07.y, CAM07.z];
   for (let x = -rx; x <= rx + 1e-9; x += 0.5) lines.push({ kind: "ridge", to: [x, height + 0.4, zm] });
