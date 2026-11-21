@@ -416,14 +416,14 @@ export function createTrees(scene, M, spots, opts = {}) {
     } else if (kind === "ginkgo") {
       // A young male ginkgo (#162): see ginkgoLayout for its shape. Its wood is grown by three's TreeGenerator like the
       // cedars', the leader and its whorled boughs in one piece from the roots up, so there is no foot and no seam.
-      const back = own(x, z, 3), lay = ginkgoLayout(h, rnd), top = y + h, centre = V(x, y + h * 0.55, z), r0 = 0.06 + h * 0.012, sk = { at: [x, z], h, base: y, trunk: [], boughs: [], geometry: null };
+      const back = own(x, z, 3), lay = ginkgoLayout(h, rnd), top = y + h, centre = V(x, y + h * 0.55, z), r0 = 0.06 + h * 0.012, sk = { at: [x, z], h, base: y, trunk: [], boughs: [], tubes: null, geometry: null };
       {
         const seed = Math.abs(Math.round(x * 211 + z * 37)) + 29, whorls = [];
         for (const L of lay.layers) for (const b of L.boughs) whorls.push({ t: (L.y + b.dy + 0.2) / h, tilt: b.theta, roll: b.az, length: b.reach / Math.sin((b.theta * Math.PI) / 180) });
         const gen = /** @type {any} */ (new TreeGenerator(null));
-        for (const [k, v] of Object.entries({ seed, levels: 3, trunkLength: h, trunkRadius: r0, taper: [0.93, 0.93, 0.93], taperCurve: 0.85, rootFlare: 0.5, flareFrac: 0.07, radialSegments: [20, 6, 4], whorls, childRadius: [0.2, 0.55], children: [0, 3], branchAngle: [0, 50], angleVariance: 12, lengthRatio: [0, 0.22], branchLengthFalloff: 0.3, childStart: 0.35, minRadius: 0.006, minLength: 0.3, droop: 0.015, upPull: 0.12, gnarl: [0.004, 0.02, 0.05], sectionLength: 0.9, collar: 0.3, radiusExponent: 2.6 })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
+        for (const [k, v] of Object.entries({ seed, levels: 3, trunkLength: h, trunkRadius: r0, taper: [0.93, 0.93, 0.93], taperCurve: 0.85, rootFlare: 0.5, flareFrac: 0.07, radialSegments: [20, 6, 4], whorls, childRadius: [0.2, 0.55], children: [0, 3], branchAngle: [0, 50], angleVariance: 12, lengthRatio: [0, 0.22], branchLengthFalloff: 0.3, childStart: 0.35, minRadius: 0.006, minLength: 0.3, droop: 0.015, upPull: 0.12, gnarl: [0.004, 0.02, 0.05], sectionLength: 0.9, collar: 0.3, inside: 0.68, radiusExponent: 2.6 })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
         const m = gen.build(), tubes = m.userData.tubes; m.geometry.translate(x, y - 0.2, z); for (const t of tubes) for (const r of t.rings) r.pos.add(V(x, y - 0.2, z));
-        ginkgoWood.push(m.geometry); sk.geometry = m.geometry; info.tris += m.geometry.index.count / 3;
+        ginkgoWood.push(m.geometry); sk.geometry = m.geometry; sk.tubes = tubes; info.tris += m.geometry.index.count / 3;
         const at = (t, u) => { const f = u * (t.rings.length - 1), i = Math.min(t.rings.length - 2, Math.floor(f)); return t.rings[i].pos.clone().lerp(t.rings[i + 1].pos, f - i); };
         // The leaves hang on the outer part of each bough and at the ends of its twigs, not in the cone's inside: the layers
         // stay open to the sky between them, and the whorled boughs show through (the art director's review of #327).

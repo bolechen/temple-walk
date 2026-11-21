@@ -101,6 +101,7 @@ TreeGenerator.defaults = {
 	trunkClear: 0.25, // fraction of the trunk kept bare before the crown ( raise for a tall clean bole )
 	direction: null, // (added here) the way the trunk starts, [ x, y, z ]; null is straight up
 	collar: 0, // (added here) how much a branch swells where it leaves its parent
+	inside: 0, // (added here) with a share (0.68), a child's first ring, collar and all, lies within that share of its parent's radius
 	whorls: null, // (added here) the trunk's boughs, one by one, instead of `children`
 	childRadius: null // (added here) per level, a child's radius as a share of its parent's where it leaves; null keeps the pipe model
 };
@@ -213,7 +214,7 @@ function growBranch( tubes, base, dir, length, baseRadius, level, p, random ) {
 		if ( p.upPull > 0 && ! w ) childDir.lerp( UP, p.upPull ).normalize();
 
 		// the pipe-model drop, but never fatter than the wood it leaves nor below the floor
-		const childBase = Math.min( want, ring.radius ); // (changed here) a share of the parent's own base, never fatter than the wood it leaves
+		const childBase = Math.min( want, p.inside > 0 ? ring.radius * p.inside / ( 1 + p.collar ) : ring.radius ); // (changed here; and with `inside`, its collar-swollen first ring is kept within that share of the wood it leaves) a share of the parent's own base, never fatter than the wood it leaves
 		me.kids.push( childBase );
 
 		const lr = Array.isArray( p.lengthRatio ) ? p.lengthRatio[ Math.min( level, p.lengthRatio.length - 1 ) ] : p.lengthRatio; // (added here) per level
