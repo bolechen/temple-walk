@@ -51,7 +51,7 @@ async function open(browser, base, query, opts = {}) {
     }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
   });
   await page.goto(base + "?" + query, { waitUntil: "commit", timeout: 120000 });   // the page builds the whole temple before it reports itself loaded
-  await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+  await page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
   // A visitor arriving meets the title first and steps in from it; a scenario may ask to be left at the title.
   if (opts.enter !== false && (await page.isVisible("#title"))) { await page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await page.click("#enterBtn"); await page.waitForFunction(() => document.body.classList.contains("entered")); }
   // A first visitor is shown the mountain before the walk is theirs (src/opening.js); a scenario stepping in this way passes

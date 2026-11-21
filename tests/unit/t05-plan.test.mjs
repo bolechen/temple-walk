@@ -20,8 +20,8 @@ const file = ensure(prepare(level)), decoded = decode(file.bytes, (b) => inflate
 const old = createWalker(site), walker = createGridWalker(createWalker(site), gridsByPlace(decoded), { doors: site.halls });
 
 test("the platform, the terrace and the flight are SITE.md's sizes, the court's paving at 0 and the floors at +3", () => {
-  assert.deepEqual([PLATFORM.w, PLATFORM.d, PLATFORM.h, PLATFORM.zS], [55.8, 25.91, 3.0, 0.4]);      // SITE.md §1.1, §3.1 (S03, S10)
-  assert.deepEqual([TERRACE.w, TERRACE.d, TERRACE.zN, TERRACE.zS], [37, 15, 0.4, 15.4]);             // SITE.md §1.1, §3.1 (a summary)
+  assert.deepEqual([PLATFORM.w, PLATFORM.d, PLATFORM.h, PLATFORM.zS], [55.8, 26.21, 3.0, 0.5]);      // SITE.md §1.1, §3.1 (S03, S10: 25.91 deep, south edge +0.4), 0.2 m out behind to hold the back wall and 0.1 m out in front under the corner columns (#493)
+  assert.deepEqual([TERRACE.w, TERRACE.d, TERRACE.zN, TERRACE.zS], [37, 14.9, 0.5, 15.4]);           // SITE.md §1.1, §3.1 (a summary), its north edge on the platform's (#493)
   assert.equal(FLIGHT.rise, PLATFORM.h); assert.ok(FLIGHT.w >= 8 && FLIGHT.w <= 10, "SITE.md §8: 8–10 m wide");
   const { count, height } = stairProfile(FLIGHT.rise);
   // SITE.md §6 proposes about 18 steps of 0.16–0.17 m; every flight in the game is laid by the one profile (0.18 m), which gives 17 here.
@@ -79,6 +79,14 @@ test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, th
   assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
   assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
   assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
+  assert.ok(HALL.wall >= 1.0, "the walls 1.0 m thick at least (ARCHITECTURE.md §4.2)");
+  // Every column of the end and back walls has its outer face inside the wall's outer face, and every column stands on the
+  // platform, its outer face inside the platform's edges (the structural review of #493).
+  const h0 = buildHall(M), pX = PLATFORM.w / 2, pN = PLATFORM.zS - PLATFORM.d;
+  for (const [x, z] of h0.columns) {
+    if (z < -0.01) assert.ok(Math.abs(x) + HALL.colR <= OUTER.x + 1e-9 && z - HALL.colR >= OUTER.zB - 1e-9, `the column at (${x.toFixed(2)}, ${z.toFixed(2)}) is inside its wall`);   // (the front ones stand proud of the front wall, as #425 has them)
+    assert.ok(Math.abs(x) + HALL.colR <= pX && z - HALL.colR >= pN && z + HALL.colR <= PLATFORM.zS, `the column at (${x.toFixed(2)}, ${z.toFixed(2)}) stands on the platform`);
+  }
   // The front columns stand out of the front wall more than half round, so that the nine bays read (#425's review).
   assert.ok(HALL.front < 0 && HALL.front > -HALL.colR, "the front wall's face lies behind the column line");
   // The doors and windows share one head line, and the ridge is a narrow, tall course with its end ornaments.
@@ -96,6 +104,14 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
+  // The murals' ground stands off the wall's inner face, never on it: on it, the two faces fought for the same pixels and
+  // the lit plaster showed through the dark ground in stripes and slanting bands (the art review's "diagonal line").
+  const faces = h.parts.plaster.map((g) => (g.computeBoundingBox(), g.boundingBox));
+  for (const g of h.parts.mural) { const m = (g.computeBoundingBox(), g.boundingBox), alongX = m.max.x - m.min.x > m.max.z - m.min.z;
+    for (const w of faces) { const near = alongX ? [w.min.z, w.max.z].some((z) => Math.abs(z - m.min.z) < 0.01 || Math.abs(z - m.max.z) < 0.01) && w.max.x - w.min.x > 2 : [w.min.x, w.max.x].some((x) => Math.abs(x - m.min.x) < 0.01 || Math.abs(x - m.max.x) < 0.01) && w.max.z - w.min.z > 2;
+      assert.ok(!near, "a face of the murals' ground lies on a wall's face"); } }
+  // The hall's floor lies all within the walls, so the inside's shut-out sky reaches every corner of it.
+  for (const g of h.parts.floor) { const b = (g.computeBoundingBox(), g.boundingBox); for (const [x, z] of [[b.min.x, b.min.z], [b.max.x, b.max.z]]) assert.ok(h.shut(x * 0.999, HALL.floor, z + (z > -12 ? -0.001 : 0.001)) < 1, `the floor's corner (${x}, ${z}) is outside the shut inside`); }
   // Every wall closes up to the roof's underside over its inner face: no slit along a wall's top lets the sun in.
   for (const g of h.parts.plaster) { const b = (g.computeBoundingBox(), g.boundingBox); if (b.min.y < HALL.floor + HALL.column + 0.15) continue;
     const inX = b.max.x - b.min.x < 2, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
@@ -108,21 +124,7 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   zs.forEach((z, i) => assert.ok(Math.abs(z - (zm + HALL.rafter * (5 - i))) < 0.01, `purlin ${i} at ${z}`));
   // The inner columns rise to the lowest tier, under the beam they carry, as the eave columns' bracket sets do.
   for (const g of h.parts.columns.slice(28)) { g.computeBoundingBox(); assert.ok(Math.abs(g.boundingBox.max.y - HALL.beams[0]) < 0.01, "an inner column's head at the lowest tier"); }
-  // From the threshold the heads and faces of all seven are under the lowest beam (the lead's call on #425: PRD.md §9.1's
-  // faces come first). The eyes are cam03's as the page has them (third person 3.66 m up at z +6.57, upright 3.8, first
-  // person 4.3 at the threshold; __frame() on this commit), the figures DECISIONS.md §3's (9.0 the middle one, 8.9, 8.8 and
-  // 8.6 out to the ends, on the 0.87 m altar, centred 17.6 m in). Wherever the line from an eye to a head's top crosses a
-  // frame where its lowest beam runs, it passes under that beam with room to spare.
-  const SEATS = [[0, 9.0], [5.8, 8.9], [11.33, 8.8], [16.45, 8.6]], zFig = -17.6, altar = HALL.floor + 0.87;
-  for (const [ex, ey, ez] of [[0, 3.66, 6.57], [0, 3.8, 6.58], [0, 4.3, 0.6]]) for (const [sx, hgt] of SEATS) for (const side of [1, -1]) {
-    const hx = side * sx, hy = altar + hgt;
-    for (const fx of XS.slice(1, -1)) {
-      const t = (fx - ex) / (hx - ex); if (!(t > 0 && t < 1)) continue;
-      const y = ey + t * (hy - ey), z = ez + t * (zFig - ez);
-      const runs = h.parts.frame.some((g) => { const b = g.boundingBox; return Math.abs((b.min.x + b.max.x) / 2 - fx) < 0.01 && Math.abs(b.min.y - HALL.beams[0]) < 0.01 && z >= b.min.z && z <= b.max.z; });
-      if (runs) assert.ok(y < HALL.beams[0] - 0.3, `from (${ex}, ${ey}, ${ez}) to the head of the figure at x ${hx}: the line crosses the frame at x ${fx} at ${y.toFixed(2)}, too near the lowest beam at ${HALL.beams[0]}`);
-    }
-  }
+  // (From the threshold every head is under the lowest beam: t05-altar.test.mjs holds it with the figures as altar.js stands them.)
   // Nothing of the timber or the walls passes out through the roof, the hipped ends included (#425's review: two purlins did).
   for (const [part, list] of Object.entries({ wood: h.parts.wood, woodZ: h.parts.woodZ, frame: h.parts.frame, plaster: h.parts.plaster })) for (const g of list) {
     g.computeBoundingBox(); const b = g.boundingBox;
@@ -136,16 +138,77 @@ test("he walks into the hall across the threshold, to stations C, D, E and F, al
   const targets = file.header.targets;
   for (const id of ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
   for (const k of ["C", "D", "E", "F"]) assert.ok(Math.abs(walker.heightAt(...STATION[k]) - 3) < 0.03, `${k} is on the hall's floor`);
-  const zWall = ZS[0] + HALL.front - HALL.wall / 2, mid = (i) => (XS[i] + XS[i + 1]) / 2;
+  // (the sill lies under the frame, in the wall's outer third: hall.js)
+  const zWall = ZS[0] + HALL.front - HALL.wall / 2, zSill = ZS[0] + HALL.front - HALL.wall / 6, mid = (i) => (XS[i] + XS[i + 1]) / 2;
   FRONT.forEach((kind, i) => {
-    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zWall) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
+    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zSill) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
     else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);
   });
-  for (const [x, z] of [[XS[0] + 0.3 - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
+  for (const [x, z] of [[XS[0] + HALL.out - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
 });
 
 test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil", () => {
   assert.equal(site.censer, null); assert.deepEqual(site.trees, []); assert.deepEqual(site.halls, []); assert.deepEqual(site.strikers, []);
   assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
   assert.equal(level.backdrop, null); assert.equal(level.grove, null); assert.equal(level.zones, null);
+});
+
+test("the hall's fill is out while the eye is in the court and comes up as he walks in, over seconds, never at a jump (#481)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
+  for (const [x, z] of [STATION.A, STATION.B, [0, 9.5]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  for (const k of ["E", "D"]) assert.equal(h.within(STATION[k][0], 4.6, STATION[k][1]), 1, `the whole fill at ${k}`);
+  assert.ok(h.within(...[STATION.F[0], 4.6, STATION.F[1]]) > 0.9, "nearly all of it at F, 2 m in");
+  // from 9 m out to 3 m in it rises without a step: never more than 2% of it over 5 cm walked
+  for (let z = 9.1, prev = 0; z > -3.1; z -= 0.05) { const k = h.within(0, 4.6, z); assert.ok(k >= prev && k - prev <= 0.02, `at z ${z.toFixed(2)}`); prev = k; }
+  // the court's picture is drawn with the fill out, however long he stands there
+  for (let i = 0; i < 50; i++) assert.equal(s.tick(0.05, eye(0, 9.5), false), 0);
+  // walking in at his pace (2.1 m/s, 20 frames a second) from the threshold to E: it rises steadily, never more than 5% a frame
+  let last = 0, rise = 0, frames = 0;
+  for (let z = 9.5; z > STATION.E[1]; z -= 2.1 * 0.05) { const k = s.tick(0.05, eye(0, z), false); assert.ok(k >= last - 1e-9, "it only rises walking in"); rise = Math.max(rise, k - last); last = k; frames++; }
+  assert.ok(rise <= 0.05, `the most in one frame ${rise.toFixed(3)}`);
+  for (let i = 0; i < 80; i++) last = s.tick(0.05, eye(...STATION.E), false);
+  assert.equal(last, 1, "settled once he stands inside");
+  assert.equal(s.tick(0.05, eye(...STATION.A), false), 0, "a jump of the eye takes the light of where it lands");
+  assert.ok(FILL.door > 0 && FILL.top > 0 && FILL.bounce > 0 && FILL.depth > 0 && frames > 0);
+});
+
+test("the fill comes from the doors, from over the floor and from the floor: none of it hung before the front wall, none against the figures, the bounce under the floor (#493)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
+  const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
+  const spots = h.fill.filter((f) => f[6]), lamps = h.fill.filter((f) => !f[6]);
+  assert.equal(spots.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
+  for (const [x, y, z, , , , aim] of spots) {
+    assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
+    assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar and the back wall, so the front wall takes none of it");
+    assert.ok(y > y0 + 3 && y < y0 + 8, "at about the height of the doors' middle");
+  }
+  const bounce = lamps.filter((f) => f[1] < y0), top = lamps.filter((f) => f[1] > y0);
+  assert.equal(bounce.length, 1); assert.equal(top.length, 1);
+  assert.ok(h.fill.length <= 5, "no more lamps than the five the hall had before (#493: each is in every shader, outdoors too)");
+  for (const [, y, z] of bounce) assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3, "the floor's bounce: under the floor, before the altar, so the floor itself takes none of it");
+  for (const [x, y, z] of top) assert.ok(z > ALTAR.zF + 3 && y > y0 + 10, "the one lamp overhead hangs high and well before the figures");
+  for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);
+  assert.deepEqual([FILL.door, FILL.top, FILL.bounce].map((v) => v > 0), [true, true, true]);
+});
+
+test("the timber overhead takes more of the inside's light than the walls, from over the doors' middle up; the walls keep theirs (#493)", async () => {
+  const { TIMBER } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), y0 = HALL.floor;
+  assert.equal(h.timberShut(0, y0 + 1, -10), h.shut(0, y0 + 1, -10), "low in the hall, as the walls");
+  assert.ok(Math.abs(h.timberShut(0, y0 + 9, -10) - Math.min(1, HALL.inside * TIMBER.lift)) < 1e-9, "high up, TIMBER.lift times the walls'");
+  assert.equal(h.timberShut(0, y0 + 9, 30), 1, "outside the hall the sky is not shut out, timber or not");
+  for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.02, `no step at ${y.toFixed(2)}`); }
+});
+
+test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
+  const h = buildHall(M), X = XS[XS.length - 1], xi = X + HALL.out - HALL.wall, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall;
+  // the east end wall's inner face at its front corner, inside the front wall's thickness: looking in, so inside
+  assert.equal(h.shut(xi, 6, ZS[0] + HALL.front - 0.01, -1, 0, 0), HALL.inside);
+  assert.equal(h.shut(-xi, 6, zb - 0.2, 1, 0, 0), HALL.inside, "the west wall's inner face where it runs into the back wall");
+  assert.equal(h.shut(X - 1, 6, zf, 0, 0, -1), HALL.inside, "the front wall's inner face over the east end bay");
+  // the outer faces, and a face looking along the wall, are not
+  assert.equal(h.shut(X + HALL.out, 6, -10, 1, 0, 0), 1); assert.equal(h.shut(0, 6, ZS[0] + HALL.front, 0, 0, 1), 1);
+  assert.equal(h.shut(xi + 0.4, 6, -0.5, 0, 0, 1), 1, "the end of a wall seen from the court");
+  for (const g of h.parts.mural) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(Math.max(-b.min.x, b.max.x) <= xi + 1e-6 && b.max.z <= zf + 1e-6 && b.min.z >= zb - 1e-6, "a mural's ground within the inner faces"); }
 });

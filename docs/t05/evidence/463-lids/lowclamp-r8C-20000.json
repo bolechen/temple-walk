@@ -1,0 +1,26 @@
+{
+ "src": "tools/out/t05/tripo-six/vipasyin-r8C.20000.glb",
+ "dst": "tools/out/t05/tripo-six/vipasyin-r8C.20000.glb",
+ "half_m": 0.19,
+ "out_m": 0.12,
+ "below_m": 0.06,
+ "above_m": 0.08,
+ "cap_eye_m": 0.03,
+ "cap_temple_m": 0.005,
+ "sides": {
+  "eyeL": {
+   "eye_before_m": 0.136,
+   "eye_after_m": 0.03,
+   "temple_before_m": 0.0108,
+   "temple_after_m": 0.005,
+   "points_moved": 12
+  },
+  "eyeR": {
+   "eye_before_m": 0.1449,
+   "eye_after_m": 0.03,
+   "temple_before_m": 0.0094,
+   "temple_after_m": 0.005,
+   "points_moved": 11
+  }
+ }
+}

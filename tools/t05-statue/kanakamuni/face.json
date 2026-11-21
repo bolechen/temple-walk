@@ -1,0 +1,44 @@
+{
+ "about": "kanakamuni's face before any face op (#463), in the stage frame (metres, y up from the seat, z toward the viewer), worked out from its r3 paint anchors by tools/t05-statue/face-init.py (placed as Vipasyin's face.json stands against its anchors); the neck's pivot and the head's width for the bow. face-build.py reads it.",
+ "height": 8.35,
+ "fileHeight": 0.989,
+ "source": "06-kanakamuni.base_model.glb",
+ "neck": {
+  "c": [
+   6.009,
+   -0.592
+  ],
+  "z0": 6.096,
+  "fade": 0.305,
+  "rx": 1.017,
+  "fx": 0.175
+ },
+ "features": {
+  "knit": [
+   0,
+   7.236,
+   0.056
+  ],
+  "philtrum": [
+   0,
+   6.713,
+   0.103
+  ],
+  "cornerL": [
+   0.25,
+   6.653,
+   0.063
+  ],
+  "cornerR": [
+   -0.25,
+   6.653,
+   0.063
+  ],
+  "mouth": [
+   0,
+   6.653,
+   0.053
+  ],
+  "browY": 7.255
+ }
+}
