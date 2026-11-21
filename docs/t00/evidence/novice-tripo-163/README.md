@@ -13,10 +13,12 @@
 | `front-close.png` | 合掌、举香、坐着吃茶正面近景：r6｜新文件 |
 | `page-tea.png`、`page-incense.png` | 页面里（`shots.js shot-tea shot-incense`，夏昼）：左 `?body=code`，右默认（Tripo） |
 | `portrait-winter-night.png` | 冬夜（`node tools/portrait.js winter-night`），正、侧、背、合掌：背带是暗处的布色，不亮过雪、不发光（钉在数据集提交 `4ff21efe`） |
+| `winter-night-code-vs-tripo.png` | 冬夜同一帧同一光，上：`?body=code`，下：Tripo 加皮肤自发光（`SKIN_GLOW` 0.03，`novice.js` 的 `skinMaterial`）。脸部平均亮度（两张正面，线性亮度）Tripo／代码：加光前 0.66、0.59，加光后 1.17、1.05（3D 评审要 ≥ 0.7）（钉在 `3d678cb8`） |
+| `portrait-summer-day.png` | 夏昼，Tripo 加皮肤自发光后：白天的肤色没有发亮（钉在 `3d678cb8`） |
 | `pixels.txt` | `--sleeve` 的逐像素数 |
 | `collage.jpg` | 五姿、背带、吃茶机位、页面吃茶 |
 
-`--sleeve`（袖子比袍身亮 25% 以上的像素；前臂和手上的污迹）r6 → 新文件：举香导演机位 292 → 273 px（0.96% → 0.90%）；正面近景举香 19 → 20 px（都是 0.01%），合掌 0 → 2 px；污迹各机位都是 0。正面近景多出的 1–2 px 照实记在这里。
+`--sleeve`（袖子比袍身亮 25% 以上的像素；前臂和手上的污迹）r6 → 新文件：举香导演机位 292 → 273 px，占他轮廓 0.96% → 0.90%（阈值 2%）；正面近景举香 19 → 20 px（都是 0.01%），合掌 0 → 2 px；污迹各机位都是 0。正面近景多出的 1–2 px 照实记在这里。
 
 重出命令：
 

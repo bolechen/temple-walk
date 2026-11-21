@@ -45,6 +45,12 @@
    "rev": "0e1347f7f615b43997ebf059219b1fc1cf93e45f"
   },
   {
+   "path": "portrait-summer-day.png",
+   "bytes": 959428,
+   "sha256": "c9a3cdf86e297eeb885b66df7e414bec0e09694f6a20e356dab94716aba2460f",
+   "rev": "3d678cb89a58641127de2391ef825df717ebfed0"
+  },
+  {
    "path": "portrait-winter-night.png",
    "bytes": 952699,
    "sha256": "11f5f3508f684467e8fb7f896bdaf81ef897c7efcbc6d200356b45fa40914b93",
@@ -55,6 +61,12 @@
    "bytes": 4931169,
    "sha256": "e93f80042cff25cd687bf5379efc438a0144cbcc0b08c8b7a0b94c4b3281dd60",
    "rev": "0e1347f7f615b43997ebf059219b1fc1cf93e45f"
+  },
+  {
+   "path": "winter-night-code-vs-tripo.png",
+   "bytes": 1898826,
+   "sha256": "d0540dda8c6b2bffa358a6519e39999fcca04f5b40cad38b98e1fad4c7c36d96",
+   "rev": "3d678cb89a58641127de2391ef825df717ebfed0"
   }
  ]
 }
