@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 const T05 = await import("../../app/levels/t05/site.js");
 const AX = await import("../../app/levels/t05/axis.js");
 const { buildSite, createWalker, COMPOUND, WAY, ARRIVE, TERRACE, PLATFORM } = T05;
-const { AXIS, SECOND, LANE, HALL, GATE, FOOT, HALL_HALF, MONUMENT, LAMP } = AX;
+const { AXIS, SECOND, LANE, HALL, GATE, FOOT, HALL_HALF, MONUMENT, LAMP, PATH, TRUNKS } = AX;
 const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
@@ -127,4 +127,23 @@ test("what he walks round is the same on both floors: points just off each wall,
     probes.push([sx * (FOOT.hall.x1 + 0.9), 60.4], [sx * (FOOT.hall.x1 + 0.9), 64], [sx * (FOOT.inner.x1 + 0.9), 117.5], [sx * (FOOT.inner.x1 + 0.9), 123]);
   }
   for (const [x, z] of probes) assert.equal(old.blocked(x, z), grid.blocked(x, z), `(${x}, ${z}): the plan says ${old.blocked(x, z)}, the grid ${grid.blocked(x, z)}`);
+});
+
+test("only a path of about 6 m is paved down the way and the terrace; earth either side, with trunks standing in it", () => {
+  assert.equal(PATH.hw * 2, 6);
+  assert.deepEqual(site.paving.map((p) => p.x), [PATH.hw, PATH.hw], "two strips of paving, each 6 m across: the way's and the terrace's");
+  assert.ok(site.paving[0].y < 0.05 && near(site.paving[1].y, SECOND.y + 0.012, 1e-9));
+  // The path, the earth beside it and the gap between a trunk and the wall are all open floor; each trunk is in the way.
+  for (const [name, w] of both) {
+    for (const z of [140, 175, 215]) for (const x of [0, PATH.hw - 0.5, PATH.hw + 0.6, -PATH.hw - 0.6]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the way is open`);
+    for (const z of [85, 100, 112]) for (const x of [0, 2, 4.2, -4.2]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the terrace is open`);
+    for (const sx of [-1, 1]) for (const z of TRUNKS.lane) assert.ok(w.blocked(sx * TRUNKS.x, z), `${name}: a trunk at (${sx * TRUNKS.x}, ${z})`);
+    for (const sx of [-1, 1]) for (const z of TRUNKS.terrace) assert.ok(w.blocked(sx * TRUNKS.x, z), `${name}: a trunk on the terrace at (${sx * TRUNKS.x}, ${z})`);
+  }
+  // Heights: the earth beside the path is on the floor, 0 down the way and +1.0 on the terrace.
+  for (const [name, w] of both) { assert.ok(near(w.heightAt(6.8, 150), 0, 0.02), name); assert.ok(near(w.heightAt(6.8, 95), SECOND.y, 0.02), name); }
+  // Trunks keep clear of the archway's place (z = 100) and of both platforms.
+  const tz = TRUNKS.terrace; assert.ok(tz.every((z) => Math.abs(z - AXIS.paifangZ) >= 8 && z > FOOT.hall.z1 + 4 && z < FOOT.inner.z0 - 1), `${tz}`);
+  assert.ok(TRUNKS.lane.every((z) => z > FOOT.inner.z1 + 4 && z < FOOT.outer.z0 - 4));
+  assert.equal(new Set(TRUNKS.lane.slice(1).map((z, i) => z - TRUNKS.lane[i])).size, 1, "even spacing down the way");
 });

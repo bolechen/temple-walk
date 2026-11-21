@@ -37,7 +37,11 @@ const half = (xs, out) => xs[xs.length - 1] + out;
 export const FOOT = Object.freeze({
   hall: Object.freeze({ x0: -half(HALL.xs, HALL.platOut), x1: half(HALL.xs, HALL.platOut), z0: AXIS.hallZ - HALL.zs[0] - HALL.platOut, z1: AXIS.hallZ + HALL.zs[0] + HALL.platOut }),
   inner: Object.freeze({ x0: -half(GATE.xs, GATE.platOut), x1: half(GATE.xs, GATE.platOut), z0: AXIS.innerZ - GATE.zs[0] - GATE.platOut, z1: AXIS.innerZ + GATE.zs[0] + GATE.platOut }),
+  outer: Object.freeze({ x0: -half(GATE.xs, GATE.platOut), x1: half(GATE.xs, GATE.platOut), z0: AXIS.outerZ - GATE.zs[0] - GATE.platOut, z1: AXIS.outerZ + GATE.zs[0] + GATE.platOut }),
 });
+/** The paved way down the middle of the way and of the terrace (art director's review of #457: a path, not wall-to-wall slabs; the target picture's is about 6 m) and the tree trunks that stand beside it. A proposal. */
+export const PATH = Object.freeze({ hw: 3 });
+export const TRUNKS = Object.freeze({ x: 5.5, r: 0.4, h: 11, lane: Object.freeze([132, 141, 150, 159, 168, 177, 186, 195]), terrace: Object.freeze([81, 89, 109, 114]) });
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
@@ -87,6 +91,8 @@ export function buildAxis(M, { C, W }) {
       plaster.push(box(x1 - a, h, t, (a + x1) / 2, h / 2, cz));
     } else plaster.push(alongX ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
     stone.push(alongX ? box(len + 0.2, 0.35, t + 0.2, cx, 0.175, cz) : box(t + 0.2, 0.35, len + 0.2, cx, 0.175, cz));
+    // a coping on the wall's top (art director's review of #457: the wall takes a cap, not bays)
+    stone.push(alongX ? box(len + 0.1, 0.16, t + 0.24, cx, h + 0.08, cz) : box(t + 0.24, 0.16, len + 0.1, cx, h + 0.08, cz));
     const r = alongX ? { x0, x1, z0: cz - t / 2, z1: cz + t / 2 } : { x0: cx - t / 2, x1: cx + t / 2, z0, z1 };
     walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, eyeTop: h + 0.3 });
     shade[into].push(r);
@@ -113,7 +119,21 @@ export function buildAxis(M, { C, W }) {
   }
   wall(-LANE.hw, W.zS, LANE.hw, W.zS, W.wallH, W.t, 1);
   walk.decks.push({ x0: -LANE.hw, x1: LANE.hw, z0: AXIS.innerZ, z1: W.zS, h: 0, floor: "paving" });
-  const paving = [{ level: 1, y: 0.012, x: LANE.hw, zS: W.zS, zN: FOOT.inner.z1 }];
+  // Only the middle is paved, a path PATH.hw either side of the axis; either side of it the ground is earth (below).
+  const paving = [{ level: 1, y: 0.012, x: PATH.hw, zS: W.zS, zN: FOOT.inner.z1 }, { level: 1, y: top + 0.012, x: PATH.hw, zS: FOOT.inner.z0, zN: FOOT.hall.z1 }];
+  const earthSides = [], earthAt = (x0, x1, z0, z1, y) => { for (const [a, b] of [[x0, x1], [-x1, -x0]]) earthSides.push(new THREE.PlaneGeometry(b - a, z1 - z0).rotateX(-Math.PI / 2).translate((a + b) / 2, y, (z0 + z1) / 2)); };
+  {
+    const lx = LANE.hw - LANE.t / 2, tx = SECOND.hw - wt / 2;
+    earthAt(PATH.hw, lx, FOOT.inner.z1, FOOT.outer.z0, 0); earthAt(PATH.hw, lx, FOOT.outer.z1, W.zS, 0);
+    earthAt(PATH.hw, tx, FOOT.hall.z1, FOOT.inner.z0, top + 0.01);
+    earthAt(FOOT.hall.x1, tx, SECOND.zN, FOOT.hall.z1, top + 0.01); earthAt(FOOT.inner.x1, tx, FOOT.inner.z0, AXIS.innerZ - wt / 2, top + 0.01);
+  }
+  // Trunks stand in the earth either side of the path, for the trees to come: plain posts, in the way, with their written-plan rectangles.
+  const trunk = [];
+  for (const sx of [-1, 1]) for (const [zs, y] of [[TRUNKS.lane, 0], [TRUNKS.terrace, top]]) for (const z of zs) {
+    trunk.push(new THREE.CylinderGeometry(TRUNKS.r * 0.8, TRUNKS.r, TRUNKS.h, 8).translate(sx * TRUNKS.x, y + TRUNKS.h / 2, z));
+    walk.solids.push({ x0: sx * TRUNKS.x - TRUNKS.r - BODY, x1: sx * TRUNKS.x + TRUNKS.r + BODY, z0: z - TRUNKS.r - BODY, z1: z + TRUNKS.r + BODY, eyeTop: y + TRUNKS.h });
+  }
 
   // ---- The plain outside the walls (the county is flat, SITE.md §4.1): everything but what lies inside them ----
   const cx = C.x + C.t / 2, cn = C.zN - C.t / 2, cs = C.zS + C.t / 2, tx = SECOND.hw + wt / 2, lx = LANE.hw + LANE.t / 2, zT = AXIS.innerZ + wt / 2, ze = W.zS + W.t / 2;
@@ -122,7 +142,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
-  group.add(sh.group);
+  group.add(sh.group, mesh(merge(earthSides), M.earth, { cast: false }), mesh(merge(trunk), M.woodV));
   group.add(
     mesh(merge([box(mw, 0.45, mw, mx, M0.y + 0.225, mz)]), M.stone),
     mesh(merge([box(mw - 0.7, 3.4, mw - 0.7, mx, M0.y + 0.45 + 1.7, mz)]), M.plaster()),
