@@ -330,7 +330,10 @@ export function createGame(y) {
   y.onTick((dt) => {
     if (far && !y.directArrived()) farEnd();   // the eye has gone home (a step, a tap on the ground, Esc, or a door): the far view is over
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
-    { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
+    // A place made indoors (the great hall's incense, the first goal of an empty book, #436) is pointed at from outside by
+    // its hall's door; inside, by the place itself.
+    { const el = $("way"), g = $("goal"), next = journey.next(), q = next && places[next.id], door = q && q.room && y.room() === null && y.site.halls.find((h) => h.id === q.room),
+        p = door ? { at: door.out, room: null } : q;
       if (el) { const show = !!(p && g && g.classList.contains("on") && entered && (p.room || null) === y.room() && !rite);
         el.classList.toggle("on", show);
         if (show) { const w = y.where(), py = p.y ?? y.walker.heightAt(p.at[0], p.at[1]), sc = y.screenOf(p.at[0], py + 1.6, p.at[1]), m = 46;
