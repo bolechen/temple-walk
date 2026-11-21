@@ -1382,6 +1382,42 @@ const scenarios = {
     expect((await R()).sat >= seats.length, "not every seat was sat on");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The benches of the path's pavilions (#479): from outside the pavilion, by the keys alone, he walks up the steps to a seat, E sits him
+  // on it, a step stands him up. In the half-way pavilion the eye turns slowly to the valley while he sits, with no cut, and comes
+  // home when he rises; in the other the eye stays where it was.
+  rest: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&enter&view=third&season=summer&time=day&fast=1" + BARE);
+    const R = () => t.page.evaluate(() => window.__rites()), D = () => t.page.evaluate(() => window.__director());
+    const idx = await t.page.evaluate(() => window.__seats.map((s, i) => (s.pavilion ? i : -1)).filter((i) => i >= 0));
+    expect(idx.length >= 4, `the path pavilions' benches should register four or more seats: ${idx.length}`);
+    const seen = new Set();
+    for (const i of idx) {
+      const s = await t.page.evaluate((k) => { const q = window.__seats[k]; return { at: q.at, top: q.top, face: q.face, pavilion: q.pavilion, place: q.place || null }; }, i);
+      if (seen.has(s.pavilion)) continue; seen.add(s.pavilion);   // one seat in each pavilion, walked to by keys; the other seats are the unit tests'
+      // Outside the pavilion on its way-in side, facing the seat, at the walk's own pace.
+      const from = [s.at[0] + Math.sin(s.face) * 4.4, s.at[1] + Math.cos(s.face) * 4.4];
+      await t.page.evaluate(([x, z, f]) => window.__pose(x, z, -f, 0), [from[0], from[1], s.face]);
+      await t.frames(6);
+      await t.page.keyboard.down("w");
+      await t.until(async () => { const r = await R(); return Math.hypot(r.him[0] - s.at[0], r.him[2] - s.at[1]) < 1.3; }, 40000, `${s.pavilion}: the keys never brought him within a step or two of the bench`);
+      await t.page.keyboard.up("w");
+      const cuts0 = (await D()).cuts || 0;
+      await t.page.keyboard.press("e");
+      await t.until(async () => { const r = await R(); return Math.hypot(r.him[0] - s.at[0], r.him[2] - s.at[1]) < 0.05 && Math.abs(r.him[1] - s.top) < 0.03; }, 40000, `${s.pavilion}: he is not sitting on the bench`);
+      expect((await t.state()).pose === "chair", `${s.pavilion}: he sits ${(await t.state()).pose}`);
+      if (s.place) {
+        await t.until(async () => (await D()).phase === "hold", 60000, `${s.pavilion}: the eye never came round to the valley: ${JSON.stringify(await D())}`);
+        const d = await D(); expect(d.id === s.place && (d.cuts || 0) === cuts0, `${s.pavilion}: the eye went to ${d.id}, with ${(d.cuts || 0) - cuts0} cuts`);
+      } else {
+        await t.frames(30); expect((await D()).phase === "idle", `${s.pavilion}: the eye should stay behind him, it is ${(await D()).phase}`);
+      }
+      // A step stands him up; the eye, if it was away, comes home.
+      await t.page.keyboard.down("s"); await t.frames(20); await t.page.keyboard.up("s");
+      await t.until(async () => (await D()).phase === "idle", 60000, `${s.pavilion}: the eye did not come home when he rose`);
+    }
+    expect(seen.size >= 2, `the half-way and the river-view pavilions were both sat in: ${[...seen].join(", ")}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Which floor he walks on (#265, #274): the grid baked from the drawn meshes everywhere by default (a spot on every level
   // out of doors, inside a hall, up on the balcony), the written plan with ?walker=old; and a ?cam address that falls
   // where the grid shuts him out is moved to the nearest open spot within half a metre, or back to the start of the path
