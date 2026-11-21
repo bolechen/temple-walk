@@ -17,14 +17,14 @@ test("T05 has no say: its autumn dusk, and every other mood, is main's, to the l
   assert.equal(t05.moodFor, undefined, "T05 must not change the hours");
   for (const s of SEASONS) for (const t of TIMES) assert.deepEqual(plain(moodOf(s, t, t05.moodFor)), before[`${s}-${t}`], `${s} ${t}`);
 });
-test("the prologue changes autumn dusk's sun, its direction and strength, and nothing else, and no other season or hour at all", () => {
+test("the prologue changes autumn dusk's sun (direction, strength) and the glow round it, and nothing else, and no other season or hour at all", () => {
   assert.equal(typeof t00.moodFor, "function");
   for (const s of SEASONS) for (const t of TIMES) {
     const now = plain(moodOf(s, t, t00.moodFor)), was = before[`${s}-${t}`];
     if (s === "autumn" && t === "dusk") {
       const changed = Object.keys(now).filter((k) => JSON.stringify(now[k]) !== JSON.stringify(was[k]));
-      assert.deepEqual(changed, ["sun", "sunI"], "only the sun's direction and strength differ");
-      assert.ok(Math.abs(now.sunI / was.sunI - 1.3) < 1e-9, "a third brighter again, to part sun and shade by 1.4 to 2");
+      assert.deepEqual(changed.sort(), ["bloom", "disk", "glow", "sun", "sunI"], "only the sun and the sky's own glow differ");
+      assert.ok(Math.abs(now.sunI / was.sunI - 1.5) < 1e-9, "half as bright again, to part sun and shade by 1.4 to 2");
     } else assert.deepEqual(now, was, `${s} ${t} must not move (J01 is summer by day; the other dusks are prototype 05's and the rest)`);
   }
 });
