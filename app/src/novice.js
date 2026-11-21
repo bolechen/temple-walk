@@ -8,6 +8,7 @@
 // (tools/novice.mjs → app/shared/models/novice.glb), has no legs under its robe and tears sitting; it is kept for
 // ?body=sculpt. ?body=code keeps the figure built in code.
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { BufferAttribute } from "three";
 import { asset } from "./assets.js";
 
 export const PARTS = ["skin", "robe", "legs", "shoes"];
@@ -35,6 +36,32 @@ export function bodyOf(scene, extras, monk) {
   return { geometries, material, robeColor: extras.robeColor, helpers: extras.helpers || [] };
 }
 
+// The cloth's colour in the day's light. Tripo painted the robe and trousers darker and greyer than the drawing: under the
+// summer day the robe came out at a sixth of his forehead's brightness (the drawing and the figure built in code: a quarter)
+// and the trousers a cold dark grey where the drawing has a warm grey-brown as bright as the robe (#163, the third art
+// review, read at 1.9 m in the first court). Each piece of cloth is lifted by a colour of its own, laid on as vertex colours
+// over the one texture (`CLOTH`, linear multipliers, by the pieces' names in the file's extras); the leg wraps, shoes and skin
+// are left as painted. A body without named pieces (Meshy's) is worn as it is.
+export const CLOTH = {
+  robe: { pieces: ["upper robe", "right sleeve", "left sleeve", "belt", "skirt", "sash end"], tint: [2.3, 2.0, 1.9] },
+  trousers: { pieces: ["trousers"], tint: [3.1, 2.65, 2.0] },
+};
+/**
+ * Vertex colours for each part (white where nothing is tinted), from the file's `ranges` (part → [piece, first vertex,
+ * count]) and `pieces` (piece → name). Returns whether any were laid.
+ * @param {Record<string, import("three").BufferGeometry>} geometries @param {any} extras
+ */
+export function tintCloth(geometries, extras) {
+  if (!extras?.ranges || !extras?.pieces) return false;
+  const tintOf = {}; for (const { pieces, tint } of Object.values(CLOTH)) for (const n of pieces) tintOf[n] = tint;
+  for (const [part, g] of Object.entries(geometries)) {
+    const n = g.attributes.position.count, c = new Float32Array(n * 3).fill(1);
+    for (const [piece, from, count] of extras.ranges[part] || []) { const t = tintOf[extras.pieces[piece]]; if (!t) continue; for (let i = from; i < Math.min(n, from + count); i++) c.set(t, i * 3); }
+    g.setAttribute("color", new BufferAttribute(c, 3));
+  }
+  return true;
+}
+
 // The skin's own material. The figure built in code gives its skin a little warm light of its own (monk.js's skinM, a stand-in
 // for light coming through skin), without which a face goes nearly black on a winter night; the body's one material has none.
 // Its skin is drawn with a copy that glows by its own texture (dark irises stay dark), `SKIN_GLOW` of it: by day a few per
@@ -51,6 +78,7 @@ export async function loadNovice(monk, url = asset(BODY_FILE.tripo)) {
   const gltf = await new GLTFLoader().loadAsync(url);
   const { geometries, material, robeColor, helpers } = bodyOf(gltf.scene, gltf.parser.json.extras, monk);
   /** @type {any} */ (material).envMapIntensity = 0.45;
+  if (tintCloth(geometries, gltf.parser.json.extras)) /** @type {any} */ (material).vertexColors = true;
   monk.dress(geometries, material, robeColor, { helpers, skinMaterial: skinMaterial(material) });
   return monk;
 }
