@@ -159,9 +159,25 @@ test("below a hall's platform, his back to it, he is in the picture (#396)", () 
 // inside of its front wall. Since #396 the front of the dark behind the leaves is open so that the eye may stand in it;
 // turned aside, the arm ran on out of that dark through its painted sides (a shader, not gathered) into the hollow of the
 // building, 4.3 m from him with the wall between. Out of every hall, the view turned 40° and 65° either way, he is seen.
+// The view is turned as a hand drags it, from the eye at rest facing out (deep in the dark), a little each frame, and looked
+// at 16 frames after the hand stops, as the reviewer did: the eye stood at once where it would come to rest is not enough,
+// since it is the way round that took it into the hollow.
+function dragged(h, turn) {
+  const follow = createFollow(), [x, z] = h.out, foot = walker.heightAt(x, z), eyeY = walker.eyeAt(x, z), deg = Math.PI / 180;
+  const step = (yaw) => follow.step(dt, followEye(eyeWalker, { x, z, foot, eyeY, yaw, pitch: 0.04, side: 1, reach: 6.2, arm, space }));
+  for (let n = 0; n < 240; n++) step(h.outYaw);
+  const frames = Math.ceil(Math.abs(turn) / 2); let c = null;
+  for (let n = 1; n <= frames; n++) c = step(h.outYaw + (turn * deg * n) / frames);
+  for (let n = 0; n < 16; n++) c = step(h.outYaw + turn * deg);
+  return c;
+}
 test("out of every hall's door with the view turned aside, he is in the picture (#411's art review)", () => {
   walker.setRoom(null);
   const bad = [];
-  for (const h of site.halls) for (const turn of [-65, -40, 40, 65]) seen(h.out[0], h.out[1], h.outYaw + (turn * Math.PI) / 180, `out of ${h.id}, turned ${turn}°`, bad);
+  for (const h of site.halls) for (const turn of [-65, -40, 40, 65]) {
+    seen(h.out[0], h.out[1], h.outYaw + (turn * Math.PI) / 180, `out of ${h.id}, turned ${turn}°`, bad);
+    const c = dragged(h, turn), [x, z] = h.out, foot = walker.heightAt(x, z), back = Math.hypot(c[0] - x, c[2] - z);
+    if (!seesChest(c, x, foot, z)) bad.push(`out of ${h.id}, dragged round ${turn}°: the eye ${back.toFixed(2)} m off does not see him (eye ${c.map((v) => v.toFixed(2)).join(", ")})`);
+  }
   assert.deepEqual(bad, [], bad.join("\n"));
 });

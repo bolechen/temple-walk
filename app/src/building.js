@@ -283,6 +283,12 @@ export function buildHall(M, opts) {
     // drawn nor stood on, as in the rooms' doorways (interior.js): one sheet with nothing behind it the eye would let pass
     // for a moment, as it does a column.
     const W = X * 2 - 0.3, H = topY - p.platH - 0.03, back = Z - 0.1 - d + 0.15, stop = new THREE.Mesh(merge(Array.from({ length: 11 }, (_, k) => new THREE.PlaneGeometry(W, H).translate(0, p.platH + H / 2, back - k * 0.12))), new THREE.MeshBasicMaterial());
+    // The dark runs the whole width of the front, behind the shut bays as well as the open door: turned aside, the eye slid
+    // along it behind the leaves and the window bays, and the wall stood between it and him (#411's art review, the tea
+    // house dragged round 65°). Two more stacks, front to back, keep it to the dark straight behind the opening.
+    const open = [xs[mid] + 0.25 + 1.05, xs[mid + 1] - 0.25 - 1.05], side = [];
+    for (const [ex, out] of [[open[0], -1], [open[1], 1]]) for (let k = 0; k < 11; k++) side.push(new THREE.PlaneGeometry(d, H).rotateY(Math.PI / 2).translate(ex + out * k * 0.12, p.platH + H / 2, Z - 0.1 - d / 2));
+    stop.geometry = merge([stop.geometry, ...side]);
     stop.visible = false; stop.userData.walk = false; stop.userData.eye = "stop"; g.add(stop);
     if (p.lamps) for (const sx of [-1, 1]) {
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), M.flame);
