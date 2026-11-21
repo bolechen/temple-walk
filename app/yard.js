@@ -58,6 +58,7 @@ import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
 import { createShare, shareOrSave, countDownload } from "./src/share.js";
 import { FROM, fromOf } from "./src/sharelink.js";
+import { createCarryOut } from "./src/carry-page.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
@@ -69,6 +70,11 @@ import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
+import { takeCrossing } from "./src/pilgrimage.js";
+import { inkArrive, inkLift } from "./src/ink.js";
+import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
+/** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
+const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -84,10 +90,18 @@ if (!relang) document.documentElement.classList.remove("relang");
 // The floor baked from the drawn meshes (#265, #274): fetched while the place is built, and walked on everywhere (the
 // courts and the path, the summit pavilion's balcony, every room) unless `?walker=old` asks for the written plan.
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
-const WALKER = walkerMode(Q.get("walker"));
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
+// A level that does not keep its written plan up to what is drawn (T05) refuses `?walker=old`, and says so once.
+const WALKER = walkerMode(Q.get("walker"), L), WALKER_ASKED = Q.get("walker") === "old" && WALKER !== "old" ? "old" : undefined;
+if (WALKER_ASKED) console.info(`?walker=old: ${L.id} keeps no written plan to walk on; walking on the baked floor`);
+// Opened by a crossing from another temple (行脚图, #449, src/pilgrimage.js): the visit handed across, taken once, for this
+// level only; an address that names its own place drops it, as a change of language's is. The ink curtain index.html's
+// first script kept shut (`html.crossing`) is drawn back once this temple can be drawn (crossingBack below); a handover
+// that came to nothing lifts it at once.
+const crossing = (() => { let c = null; try { c = takeCrossing(sessionStorage, { level: LV.id }); } catch {} return c && !["cam", "show", "shot", "in", "up", "enter", "tour", "at", "play", "seals"].some((k) => Q.has(k)) ? c : null; })();
+if (!crossing) inkLift();
 let walkFile = WALKER === "old" ? null : (() => {
   const t0 = performance.now();
   return fetch(asset(`shared/walk/${L.id}.bin`)).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
@@ -99,6 +113,11 @@ const ui = createUI();   // what lies over the picture, in order: Esc puts away 
 createCommunity(ui);
 createCredits(ui);
 createShare(ui);   // the sheet a picture is saved from where the system cannot share it (#344)
+// 带走朱印帐 (#338): a link that takes this visit to another browser or device. Its way in is in the book of seals, the
+// record it carries, on the small sheet behind 更多 (#473: the book's row is four, 分享 保存 更多 合上; the pause menu
+// has no height to spare on a phone held upright, the lead's choice of 2026-11-20).
+const carryOut = createCarryOut(ui);
+document.getElementById("bookCarry")?.addEventListener("click", () => { ui.close("bookMore"); carryOut.open(); });   // (from the book's 更多 sheet, which it puts away first, #473)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
@@ -170,7 +189,7 @@ const walker = await (async () => {
     let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
     const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids, { doors: site.halls });
     walkBaked = { bake: d.header.bake || null, outline: d.header.outline || null };
-    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
+    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length, ...(WALKER_ASKED ? { asked: WALKER_ASKED } : {}) } });
   } catch (e) {
     console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
     return Object.assign(old, { stats: { mode: "old", failed: String(e) } });
@@ -272,7 +291,8 @@ const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-tem
 let beforeJoya = null;
 if (joyaNight()) { beforeJoya = { season: state.season, time: state.time, follow: state.follow }; state.season = "winter"; state.time = "night"; state.follow = false; }
 // Across a change of language the season and hour of this visit are as they were, a hand's choice of hour too (#140).
-if (relang && relang.season && relang.time && !Q.has("season") && !Q.has("time")) { state.season = relang.season; state.time = relang.time; state.follow = relang.follow && !prologueDay; }
+{ const carried = relang || crossing;   // (a crossing from another temple carries the visit's season and hour too, #449)
+  if (carried && carried.season && carried.time && !Q.has("season") && !Q.has("time")) { state.season = carried.season; state.time = carried.time; state.follow = carried.follow && !prologueDay; } }
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -485,7 +505,7 @@ canvas.addEventListener("pointerup", (e) => {
     }
     down = null; return;
   }
-  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on) {
+  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on && walkOpenNow()) {   // (a tap that reaches the picture under the title walks nobody: #462)
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     // The bell and the drum answer a tap from anywhere in their court.
@@ -576,6 +596,7 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
+  else if ((k === "v" || k === "r") && !viewKeyHeard(walkOpenNow(), k)) return;   // (the view is not turned or changed under the title either, #462)
   else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); }
   else if (k === "r") { if (recenter()) e.preventDefault(); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
@@ -681,7 +702,8 @@ function frame(now) {
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
-  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
+  // Under the title, the opening, the line a change of language puts up and a crossing's ink the keys and the stick do nothing (#462, walkgate.js).
+  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : heldUnder(walkOpenNow(), axes()), f = held.f, s = held.s;
   // A and D turn him and the view with him (#295, keyturn.js; the side arrows step sideways), unless the visitor has asked
   // for the old way; a turn by the keys is a hand on the view: it sends the eye home from a shot and stops the drift.
   if (!cine && !stage && (held.turn || keyTurn.rate)) {
@@ -879,7 +901,7 @@ function frame(now) {
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); if (crossing) crossingBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1415,6 +1437,12 @@ function relangBack() {
   const b = /** @type {HTMLElement | null} */ (menuEl.querySelector(`[data-lang="${lang}"]`)); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: "nearest" }); }
   for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
 }
+// Back after a crossing from another temple (#449): this temple can be drawn, so the ink curtain it came up behind is drawn back, and
+// how long the crossing took (from the press to the temple drawn, and to the walk his) is kept and named. Sound waits for the first touch or key.
+function crossingBack() {
+  inkArrive(crossing).then((a) => track("pilgrimage.arrive", { from: a.from, to: a.to, ms: a.ms, walk_ms: a.walkMs }));
+  for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
+}
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
@@ -1434,7 +1462,8 @@ function directShot(id, opts) {
 }
 window.__direct = (id) => directShot(id);
 createGame({
-  hints, ui, tier: quality.name, relang: !!relang,
+  hints, ui, tier: quality.name, relang: !!relang, crossing: !!crossing,
+  visit: () => ({ season: state.season, time: state.time, follow: !!state.follow }),   // what a crossing to another temple hands across (#449)
   level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
@@ -1520,7 +1549,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
-window.__lamp = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
+window.__lampStrength = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).

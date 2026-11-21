@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 26,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 29,     // raise when the method changes (27: a floor the flood did not reach still counts as floor beside it; 28: faces at one distance are all the first, #477; 29: and the downward ray takes faces at one height in a fixed order), so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -177,14 +177,34 @@ const LOWMAX = lowReach(0, BAKE.CLIMB);
 const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
 // Is (x, y, z) inside a closed solid: the first face met going east, west, north and south is in each case seen from behind.
-const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3());
-function inside(S, x, y, z) {
+// Faces that lie at the same distance are all "the first": a solid stood against another has its own face and the other's meeting
+// at one place (a platform's stone and the flight of steps against it), and which of the two a ray reports first was the hierarchy's
+// to say, its splits following every triangle of the place, so a tree a hundred metres off could turn the answer (#477). A ray that
+// meets a face seen from behind, whatever else lies there, is leaving a solid; only when every face there is seen from the front
+// does it come out of the open into one.
+// TIE, 1 mm: faces that are meant to meet are drawn from the same numbers, so they differ by float32 rounding only, a few micrometres
+// at a hundred metres from the origin (one unit in the last place there is about 8 micrometres); the smallest deliberate offset found in the generator's boxes
+// is 4 mm (the cap on a platform's edge, building.js), and a cell is 50 mm. 1 mm is over a hundred units of rounding and under every
+// offset that was drawn on purpose, so it joins what is one face and nothing that is two. (The height test below uses 2 mm, the same sort of number.)
+const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3()), tie = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3()), TIE = 0.001;
+export function inside(S, x, y, z) {
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     side.origin.set(x, y, z); side.direction.set(dx, 0, dz); const h = S.bvh.raycastFirst(side, THREE.DoubleSide);
-    if (!h || h.face.normal.x * dx + h.face.normal.z * dz < 0.2) return false;
+    if (!h) return false;
+    const back = (f) => f.normal.x * dx + f.normal.z * dz >= 0.2;
+    if (back(h.face)) continue;
+    // the first face is seen from the front: is there another at the same distance seen from behind?
+    const d = Math.max(0, h.distance - TIE); tie.origin.set(x + dx * d, y, z + dz * d); tie.direction.set(dx, 0, dz);
+    if (!S.bvh.raycast(tie, THREE.DoubleSide, 0, 2 * TIE).some((k) => back(k.face))) return false;
   }
   return true;
 }
+
+// The order of the faces a ray down a cell meets. Faces at one height (a column's foot on its base, a wall on a platform: the solid's
+// underside and the floor's top are the same plane) come back from the hierarchy in whatever order its splits give, which follow every
+// triangle of the place (#477). Taken in that order the floor under a solid that rests on it was a span or not by the luck of a tree
+// elsewhere. A fixed order, the downward faces first and then by material: the air over such a floor is the solid's, none, so it is no floor.
+export const hitOrder = (S) => (a, b) => a.distance - b.distance || a.face.normal.y - b.face.normal.y || S.mat[(a.face.a / 3) | 0] - S.mat[(b.face.a / 3) | 0];
 
 /**
  * One grid: `box` {x0, x1, z0, z1, top, bottom}, `seeds` [[x, z, y]] (each starts on the floor nearest its y).
@@ -204,7 +224,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     if (!S.bvh) continue;
     ray.origin.set(cx(i), box.top, cz(j));
     const hits = S.bvh.raycast(ray, THREE.DoubleSide, 0, far);
-    if (hits.length > 1) hits.sort((a, b) => a.distance - b.distance);
+    if (hits.length > 1) hits.sort(hitOrder(S));
     let above = box.top, aboveUp = false, land = -Infinity;
     for (const h of hits) {
       const id = S.mat[(h.face.a / 3) | 0];
@@ -247,6 +267,17 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   const h = new Float32Array(N).fill(NaN);
   for (let s = 0; s < S_N; s++) if (reached[s]) { const k = cellOfSpan[s]; if (!(Y[s] <= h[k])) h[k] = Y[s]; }
   T.push(performance.now());
+  // A floor the flood did not reach (a ledge too high to step onto, a table's top, a platform he has no stair to) is still a floor to
+  // everything looked at from here on: a cell beside it is beside a ledge, not beside a void (which would shut it over its whole height
+  // at the ledge's edge), and a cell on it can be a border. Whether a cell beside a wall's foot is open must come of the wall and the
+  // ground, not of whether some step a hundred metres off lets the flood onto the stone skirt (#477: the outer gate's 0.5 m platform did).
+  // `h` stays what the flood reached (it is what is kept and written); `hx` is what the borders, the erosion and the last flood see.
+  // (Which floor of such a cell: its highest, `Y[start[k]]`, since a cell's spans are listed highest first, and the first flood keeps the highest span it
+  // reached in a cell as `h` just so: the same rule for a floor reached and for one not. What is written stays `h`, NaN for a cell the first flood never
+  // reached. The last flood walks in eight ways to the first's four, so it could step diagonally into such a cell and leave it open with no height; none
+  // does, in either level (tests/unit/walk-bake-height.test.mjs asserts it); if one ever did, write `hx` for every cell the last flood has seen.)
+  const hx = Float32Array.from(h);
+  for (let k = 0; k < N; k++) if (Number.isNaN(hx[k]) && start[k] < start[k + 1]) hx[k] = Y[start[k]];
   // 4. Borders: what stands up in a cell from the lowest floor round it to CLEAR over its own; the foot of a ledge; the
   // edge of a cell that has no floor. Each border cell keeps the heights it takes up, as world heights.
   const border = new Int16Array(N).fill(-1), top = new Float32Array(N), bot = new Float32Array(N), post = new Uint8Array(N);
@@ -255,8 +286,8 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // Where his shoe can stand: a 15 cm square of floor level within FOOTHOLD (a tread, a sill, a porch; not the crown of a root).
   const foothold = new Uint8Array(N);
   for (let j = 1; j + 1 < nz; j++) for (let i = 1; i + 1 < nx; i++) {
-    const k = j * nx + i, y = h[k]; if (Number.isNaN(y)) continue; let ok = 1;
-    for (let b = -1; b <= 1 && ok; b++) for (let a = -1; a <= 1; a++) if (!(Math.abs(h[k + b * nx + a] - y) <= BAKE.FOOTHOLD)) { ok = 0; break; }
+    const k = j * nx + i, y = hx[k]; if (Number.isNaN(y)) continue; let ok = 1;
+    for (let b = -1; b <= 1 && ok; b++) for (let a = -1; a <= 1; a++) if (!(Math.abs(hx[k + b * nx + a] - y) <= BAKE.FOOTHOLD)) { ok = 0; break; }
     foothold[k] = ok;
   }
   // A low thing in a cell: a face that stands up from LOW to CLIMB over its floor, unless just across that face (behind it,
@@ -266,21 +297,21 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   const across = (x, z, t, y0, y1) => {
     t.getNormal(nrm); let ax = nrm.x, az = nrm.z; const l = Math.hypot(ax, az) || 1; ax /= l; az /= l;
     const mx = (t.a.x + t.b.x + t.c.x) / 3, mz = (t.a.z + t.b.z + t.c.z) / 3; if ((x - mx) * ax + (z - mz) * az > 0) { ax = -ax; az = -az; }   // pointing away from this cell, into the thing
-    for (const d of [0.05, 0.1, 0.15, 0.2]) { const ii = Math.floor((x + ax * d - box.x0) / step), jj = Math.floor((z + az * d - box.z0) / step); if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (foothold[kk] && h[kk] > y0 && h[kk] <= y1 + 0.02) return h[kk]; }
+    for (const d of [0.05, 0.1, 0.15, 0.2]) { const ii = Math.floor((x + ax * d - box.x0) / step), jj = Math.floor((z + az * d - box.z0) / step); if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (foothold[kk] && hx[kk] > y0 && hx[kk] <= y1 + 0.02) return hx[kk]; }
     return NaN;
   };
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
-    const k = j * nx + i; if (Number.isNaN(h[k])) continue;
-    let lo = h[k], up = 0, open = true;
+    const k = j * nx + i; if (Number.isNaN(hx[k])) continue;
+    let lo = hx[k], up = 0, open = true;
     for (const [a, b] of N8) {
       const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) { open = false; continue; }
-      const hn = h[jj * nx + ii]; if (Number.isNaN(hn)) { open = false; continue; }
-      lo = Math.min(lo, hn); up = Math.max(up, hn - h[k]);
+      const hn = hx[jj * nx + ii]; if (Number.isNaN(hn)) { open = false; continue; }
+      lo = Math.min(lo, hn); up = Math.max(up, hn - hx[k]);
     }
     // How high to look for what stands here: to CLEAR over this cell's own floor, and over the highest floor beside it. (#274:
     // under the walls and tables of the upper terraces a cell's floor is the ground far below, reached round the hill under the
     // terrace's stone; looked at only to CLEAR over that, the wall above went unseen, and nothing kept him off its plaster.)
-    const x = cx(i), z = cz(j), y = h[k], ceil = y + CLEAR + up;
+    const x = cx(i), z = cz(j), y = hx[k], ceil = y + CLEAR + up;
     qbox.min.set(x - r, lo + 0.02, z - r); qbox.max.set(x + r, ceil, z + r);
     let what = -1, wlo = Infinity, whi = -Infinity, wpost = 0, llo = NaN, lhi = -Infinity, lwhat = -1, sill = NaN;
     if (S.bvh) S.bvh.shapecast({
@@ -318,7 +349,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   T.push(performance.now());
   // Every cell within his reach of a border, at the heights the border takes up over that cell's floor, is shut.
   const state = new Uint8Array(N);
-  for (let k = 0; k < N; k++) if (Number.isNaN(h[k])) state[k] = 1 + NOFLOOR;
+  for (let k = 0; k < N; k++) if (Number.isNaN(hx[k])) state[k] = 1 + NOFLOOR;
   const disk = []; { const R = Math.ceil((MAXR + 0.01) / step); for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) { const d = Math.hypot(a, b) * step; if (d < MAXR + 0.01) disk.push([a, b, d]); } disk.sort((p, q) => p[2] - q[2]); }
   const B = OUTLINE.bin;
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
@@ -328,7 +359,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       const kk = jj * nx + ii; if (state[kk]) continue;
       // Over which floor are its heights taken: the border cell's own, if he could step up onto it from here (the next
       // tread up a flight), otherwise the one he would stand on.
-      const ref = h[k0] >= h[kk] && h[k0] - h[kk] <= CLIMB ? h[k0] : h[kk];
+      const ref = hx[k0] >= hx[kk] && hx[k0] - hx[kk] <= CLIMB ? hx[k0] : hx[kk];
       const lo = Math.max(post[k0] ? 0 : CLIMB, bot[k0] - ref), hi = Math.min(CLEAR, top[k0] - ref); if (hi < lo) continue;
       if (d < reachBins(Math.floor(lo / B), Math.floor(hi / B))) state[kk] = 1 + c;
     }
@@ -339,7 +370,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       if (d > LOWMAX) break;
       const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
       const kk = jj * nx + ii; if (state[kk]) continue;
-      const lo = Math.max(BAKE.LOW, lowBot[k0] - h[kk]), hi = Math.min(CLIMB, lowTop[k0] - h[kk]); if (hi < lo) continue;
+      const lo = Math.max(BAKE.LOW, lowBot[k0] - hx[kk]), hi = Math.min(CLIMB, lowTop[k0] - hx[kk]); if (hi < lo) continue;
       if (d < lowReach(lo, hi)) state[kk] = 1 + c;
     }
   }
@@ -347,18 +378,19 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // down from the floor): a floor cell with nowhere to stand at its height beside it and a fall of more than CLIMB next to
   // it. He does not stand there (#274: the library's platform; found when its edge was looked for and not found).
   for (let j = 1; j + 1 < nz; j++) for (let i = 1; i + 1 < nx; i++) {
-    const k = j * nx + i; if (state[k] || Number.isNaN(h[k])) continue;
+    const k = j * nx + i; if (state[k] || Number.isNaN(hx[k])) continue;
     let hold = false, fall = false;
-    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const kk = k + b * nx + a; if (foothold[kk] && Math.abs(h[kk] - h[k]) <= 0.02) hold = true; }
+    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const kk = k + b * nx + a; if (foothold[kk] && Math.abs(hx[kk] - hx[k]) <= 0.02) hold = true; }
     if (hold) continue;
-    for (let b = -3; b <= 3 && !fall; b++) for (let a = -3; a <= 3; a++) { const jj = j + b, ii = i + a; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; if (h[k] - h[jj * nx + ii] > CLIMB) { fall = true; break; } }
+    for (let b = -3; b <= 3 && !fall; b++) for (let a = -3; a <= 3; a++) { const jj = j + b, ii = i + a; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; if (hx[k] - hx[jj * nx + ii] > CLIMB) { fall = true; break; } }
     if (fall) state[k] = 1 + LEDGE;
   }
   T.push(performance.now());
   // What the plan closes though it is drawn as floor: a doorway he is taken in at, beyond that line (`hall.stop`: the door is
   // drawn open), and `site.closed` (the gate's shut side bays, the bamboo either side of the forecourt).
   for (const c of closed) for (let j = Math.max(0, Math.floor((c.z0 - box.z0) / step)); j < Math.min(nz, Math.ceil((c.z1 - box.z0) / step)); j++) for (let i = Math.max(0, Math.floor((c.x0 - box.x0) / step)); i < Math.min(nx, Math.ceil((c.x1 - box.x0) / step)); i++) {
-    const x = cx(i), z = cz(j), k = j * nx + i; if (x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1 && !state[k]) state[k] = 1 + DOOR;
+    const x = cx(i), z = cz(j), k = j * nx + i;   // (a round one says `x, z, r` as well as the box that holds it, #531)
+    if (c.r !== undefined ? Math.hypot(x - c.x, z - c.z) < c.r : x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1) { if (!state[k]) state[k] = 1 + DOOR; }
   }
   // 5. What cannot be walked to from the seeds.
   const seen = new Uint8Array(N); qh = qt = 0;
@@ -367,7 +399,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     const k = queue[qh++], i = k % nx, j = (k - i) / nx;
     for (const [a, b] of N8) {
       const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii;
-      if (seen[kk] || state[kk] || Math.abs(h[kk] - h[k]) > CLIMB || (a && b && (state[j * nx + ii] || state[jj * nx + i]))) continue;
+      if (seen[kk] || state[kk] || Math.abs(hx[kk] - hx[k]) > CLIMB || (a && b && (state[j * nx + ii] || state[jj * nx + i]))) continue;
       seen[kk] = 1; queue[qt++] = kk;
     }
   }
@@ -376,15 +408,16 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // its top, astride it, and no shoe sinks into it (the written plan widened the sill's deck by his width for the same end).
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const k0 = j * nx + i, top = sillTop[k0]; if (Number.isNaN(top)) continue;
-    const R = lowReach(0, top - h[k0]);
+    const R = lowReach(0, top - hx[k0]);
     for (const [a, b, d] of disk) {
       if (d > R) break;
       const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
-      const kk = jj * nx + ii; if (state[kk] || h[kk] >= top || top - h[kk] > (matTop[k0] ? CLIMB : BAKE.SILL)) continue;
-      h[kk] = top;
+      const kk = jj * nx + ii; if (state[kk] || hx[kk] >= top || top - hx[kk] > (matTop[k0] ? CLIMB : BAKE.SILL)) continue;
+      hx[kk] = top;
     }
   }
   T.push(performance.now());
+  for (let k = 0; k < N; k++) if (!Number.isNaN(h[k])) h[k] = hx[k];
   const ms = Object.fromEntries(["floors", "flood", "borders", "erode", "reach"].map((n, i) => [n, Math.round(T[i + 1] - T[i])]));
   return { x0: box.x0, z0: box.z0, nx, nz, step, h, state, names, ms };
 }
