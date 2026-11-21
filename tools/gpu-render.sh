@@ -5,6 +5,7 @@
 #
 #   tools/gpu-render.sh                         # the default measurements and pictures, on one T4
 #   tools/gpu-render.sh l4x1 '{"shots":["court@autumn-dusk@third"],"size":[3840,2160]}'
+#   LEVEL=t05 tools/gpu-render.sh t4-small '{"bench":[{"view":"cam03","q":"high","size":[1920,1080]}],"shots":["cam03"]}'   # another level's pages (?level=); its views are its own, so the spec is given
 #
 # Needs the `hf` command (pip install huggingface_hub) logged in to an account that may run Jobs. A T4 costs about
 # $0.40 an hour and a run takes a few minutes. The spec is JSON: see the top of tools/gpu/job.cjs.
@@ -12,6 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 FLAVOR="${1:-t4-small}"
 SPEC="${2:-}"
+if [ -n "${LEVEL:-}" ] && [ "$LEVEL" != "t00" ] && [ -z "$SPEC" ]; then echo "LEVEL=$LEVEL: the default measurements are the prologue's views; give a spec with this level's own" >&2; exit 2; fi
 if [ -z "$SPEC" ]; then SPEC='{
   "seconds": 6,
   "bench": [
@@ -26,6 +28,7 @@ if [ -z "$SPEC" ]; then SPEC='{
   "size": [1920,1080],
   "shots": ["court@autumn-dusk@third","arrive@spring-dawn@third","front@autumn-dusk","hall@summer-day","library@winter-day","lookback@autumn-dusk","teamat@autumn-dusk@third","lamps@winter-night"]
 }'; fi
+if [ -n "${LEVEL:-}" ]; then SPEC="$(printf %s "$SPEC" | LEVEL="$LEVEL" node -e 'let s="";process.stdin.on("data",(d)=>s+=d).on("end",()=>{const j=JSON.parse(s);j.level=process.env.LEVEL;process.stdout.write(JSON.stringify(j))})')"; fi
 NS="$(hf auth whoami --format json | node -e 'let s="";process.stdin.on("data",(d)=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log(j.name||j.user||j.username)})')"
 BUCKET="$NS/temple-walk-render"
 RUN="$(date -u +%Y%m%d-%H%M%S)"
