@@ -155,7 +155,7 @@ OFL 允许随软件（含收费软件）捆绑、嵌入、分发，不许单独�
 
 1. 生成 `novice.glb` 所用的那次导出（SHA-256 `5244a309…`）是哪天做的？当时 Meshy 账户是不是 Pro（或其他付费档）？能在 Meshy 后台的套餐与账单记录里看到吗？
 2. 这个模型有没有发布到 Meshy Community（公开）过？
-3. 输入图是 GPT Image 对 `refs/monk-apose-front.png` 的改图：你对它有没有完整的权利（见下面 OpenAI 的问题）？
+3. 输入图是 GPT Image 对 `refs/monk-apose-front-v1-eyes-closed.png`（2026-11-21 前叫 `monk-apose-front.png`） 的改图：你对它有没有完整的权利（见下面 OpenAI 的问题）？
 4. 是否愿意自己读一遍 Meshy 服务条款全文（`meshy.ai/terms-of-use`，我们这边打不开），看有没有帮助中心没写的限制？
 
 **OpenAI GPT Image（`REF-monk-apose`、可能也包括 `REF-art-prototype`）。** 条款页没读到，不下结论。

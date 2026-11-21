@@ -1003,7 +1003,7 @@ three.js，换了等于重写，测试和性能调校都得重来。值得接的
 
 用户的话：「小沙弥的身体先开始」，随后「我有 meshy 的会员，可以用」「我看了不在行，你用程序处理吧」。
 
-- **怎么来的**：业主用 GPT Image 出了 A-pose 三视图（`refs/monk-apose-sheet.png`）和正面图（`refs/monk-apose-front.png`），再让它去掉斗笠、念珠和背带，
+- **怎么来的**：业主用 GPT Image 出了 A-pose 三视图（`refs/monk-apose-sheet-v1-eyes-closed.png`）和正面图（`refs/monk-apose-front-v1-eyes-closed.png`；2026-11-21 前没有 `-v1-eyes-closed`），再让它去掉斗笠、念珠和背带，
   用这张去掉了的图在 Meshy（Pro 套餐）里做图生三维，导出带贴图的 GLB（568,434 面，24 MB，不进 git，SHA-256 见 `docs/t00/asset-register.csv`）。
 - **先试过 Hunyuan3D-2，没有用**：在 Hugging Face Jobs 上能跑出网格（`tencent/Hunyuan3D-2` 的 Space 代码加 `transformers==4.46.3`；PyPI 上的 `hy3dgen` 与新版 transformers 的
   DINOv2 键名对不上），质量也可用；但它的许可证写明「不适用于欧盟、英国和韩国」，只在这三地之外授权使用和分发输出，而页面是公开发布的，所以没有采用，仓库里也没有它的产物。
