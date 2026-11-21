@@ -1,0 +1,114 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-art3-autumn-dusk.png",
+   "bytes": 3035959,
+   "sha256": "0526fe85a6b2a1d7106f3024226e9559b9bfe8e03fcebfbec65d12db0e1098d0",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-cam06-summer-day.png",
+   "bytes": 2839722,
+   "sha256": "e23b79dc758aeccdec672f227cf6f4fc1aca1fdc2b4a95aaacbb1aa130c1bcb5",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-autumn-day.png",
+   "bytes": 3093273,
+   "sha256": "a38718a9ea8f19361733ef3b1ada4f92f91c6487b431f17997b46d184635827c",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-autumn-dusk.png",
+   "bytes": 2999344,
+   "sha256": "6767fb331866262b8d35fa28afeb477b459b42cc0ad916aeba98fa699593b41e",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-spring-dawn.png",
+   "bytes": 2894595,
+   "sha256": "13a512d161a5efd56ce36dd4559a9be31874dfb04fdec6633441c7cfbddda912",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-summer-day.png",
+   "bytes": 2808411,
+   "sha256": "dbdeee58956c5f7e4b412cfe9d3ffc083284affeb8ab9698e38184883df3f01c",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-summer-dusk.png",
+   "bytes": 2805939,
+   "sha256": "9ed04d90ffc2e113c4e5d33920c12b681488c8a4bdd5bab11cd760c951fea345",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-winter-day.png",
+   "bytes": 2942149,
+   "sha256": "a5c76e4cb7a6c473375e7d02a949c98ceaf7ae281d00c62a5c9ec59dbd57ae24",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "after-court-winter-night.png",
+   "bytes": 2788283,
+   "sha256": "8c78c88972cd82f7468e8b0007963894d2da4065f13fc64d135ac573dbd19bae",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-art3-old-pose-autumn-dusk.png",
+   "bytes": 2952859,
+   "sha256": "45e530b45319faa59d17c2fdf8f42d6c4f9e3a6edceed4de0b67d8694be0db4a",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-cam06-summer-day.png",
+   "bytes": 2851973,
+   "sha256": "166e569d0409b7f64fde73d9473c74caa240be0e44dab0d84c1f2d9f238b800a",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-court-autumn-day.png",
+   "bytes": 3094822,
+   "sha256": "0988ba15fe0a3ff4af02a93ebd1c429808deb556437819df78728d8f22fda126",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-court-spring-dawn.png",
+   "bytes": 2881458,
+   "sha256": "36ce76f334edefa0f9515ae6a25bf3e1436159a9e30e0f3c3de2687d35998d34",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-court-summer-day.png",
+   "bytes": 2810489,
+   "sha256": "2337c2c5b55db0891745db05164ac54c2644ba0e84341e5bb8f356eedd063e51",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-court-summer-dusk.png",
+   "bytes": 2801194,
+   "sha256": "5a9cf8fd1887dd47ad242061a1577560b8df5fc9607db58514e94c1eb9f1a1b3",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-court-winter-day.png",
+   "bytes": 2920760,
+   "sha256": "c48c8c9ce9ee46d0aa9f12af1582821dd2b980e2a2da53278e1d2f195ebfb8e9",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "before-court-winter-night.png",
+   "bytes": 2773091,
+   "sha256": "45eba8b7f8f8f5b16a10f5da49369e894413778b3755a356cb44ecc3482a6612",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 402214,
+   "sha256": "299cc0de6874a4554184f4a5d1df016219828544d4f4c3b328fd18ce064655c8",
+   "rev": "c799b0ca6b22455e8e357c3053ae5b1f45afeb2c"
+  }
+ ]
+}
