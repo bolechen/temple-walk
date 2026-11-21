@@ -40,7 +40,7 @@ test("a level's floor and its list of pictures are named by the level", () => {
 test("the bake's scene builds what the level says, and names no temple", () => {
   const src = read("tools/walk/scene.mjs");
   assert.doesNotMatch(src, /levels\/t00|SITE\.|APPROACH/);
-  assert.match(read("tools/check.cjs"), /const BAKE_ONLY = fs\.readdirSync\(path\.join\(root, "levels"\)\)\.map\(\(d\) => path\.join\(root, "levels", d, "bake\.js"\)\);/, "the font check spares a level's bake.js and nothing more");
+  assert.match(read("tools/check.cjs"), /const BAKE_ONLY = fs\.readdirSync\(path\.join\(root, "levels"\)\)\.flatMap\(\(d\) => \["bake\.js", "checks\.js"\]\.map\(\(n\) => path\.join\(root, "levels", d, n\)\)\);/, "the font check spares a level's bake.js and checks.js and nothing more");
   // The page never asks for a level's bake.js: only the Node tools read it, so its names stay out of a visitor's bundle.
   for (const f of ["app/yard.js", "app/src/level.js", "app/levels/t00/level.js"]) assert.doesNotMatch(read(f).replace(/^\s*(\/\/|\*).*$/gm, ""), /bake\.js/, f);
   for (const f of ["tools/bake-walk.mjs", "tools/bake-doorways.mjs", "tools/walk-diff.mjs", "tools/walk/grid-node.mjs", "tools/around/plan.mjs"])
