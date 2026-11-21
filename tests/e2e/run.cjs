@@ -356,7 +356,7 @@ const scenarios = {
       await u.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
       await u.until(() => u.page.evaluate(() => window.__ui().stack.includes("menu")), 60000, `the menu was not open again after ${from} → ${to}`);
       await u.frames(3);
-      const a = await u.page.evaluate(() => ({ ...window.__yard(), v: window.__probe().view, season: window.__probe().season, time: window.__probe().time, focus: document.activeElement?.dataset?.lang, url: location.search }));
+      const a = await u.page.evaluate(() => ({ ...window.__yard(), v: window.__probe().view, season: window.__probe().season, time: window.__probe().time, focus: document.activeElement?.dataset?.lang, lang: document.documentElement.lang, url: location.search }));
       const msg = `${from} → ${to}: ` + JSON.stringify({ before: [before.x, before.z, cam0.yaw, cam0.pitch, cam0.v, before.season, before.time], after: [a.x, a.z, a.yaw, a.pitch, a.v, a.season, a.time], focus: a.focus, url: a.url });
       expect(Math.hypot(a.x - before.x, a.z - before.z) < 0.05 && Math.abs(a.yaw - cam0.yaw) < 0.0175 && Math.abs(a.pitch - cam0.pitch) < 0.0175 && a.v === cam0.v, "he should be where he stood when the language was chosen, not where the link stood: " + msg);
       expect(a.season === "winter" && a.time === "night", "the season and hour chosen by hand should be as they were: " + msg);
