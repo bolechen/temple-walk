@@ -136,14 +136,19 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   // The path, the earth beside it and the gap between a trunk and the wall are all open floor; each trunk is in the way.
   for (const [name, w] of both) {
     for (const z of [140, 175, 215]) for (const x of [0, PATH.hw - 0.5, PATH.hw + 0.6, -PATH.hw - 0.6]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the way is open`);
-    for (const z of [85, 100, 112]) for (const x of [0, 2, 4.2, -4.2]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the terrace is open`);
-    for (const sx of [-1, 1]) for (const z of TRUNKS.lane) assert.ok(w.blocked(sx * TRUNKS.x, z), `${name}: a trunk at (${sx * TRUNKS.x}, ${z})`);
-    for (const sx of [-1, 1]) for (const z of TRUNKS.terrace) assert.ok(w.blocked(sx * TRUNKS.x, z), `${name}: a trunk on the terrace at (${sx * TRUNKS.x}, ${z})`);
+    for (const z of [85, 112]) for (const x of [0, 2, 4.2, -4.2]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the terrace is open`);
+    for (const x of [0, 4.2, -4.2]) assert.ok(!w.blocked(x, 100), `${name}: (${x}, 100) between the archway's posts is open`);
+    for (const t of TRUNKS.list) assert.ok(w.blocked(t.x, t.z), `${name}: a trunk at (${t.x}, ${t.z}), r ${t.r}`);
   }
   // Heights: the earth beside the path is on the floor, 0 down the way and +1.0 on the terrace.
   for (const [name, w] of both) { assert.ok(near(w.heightAt(6.8, 150), 0, 0.02), name); assert.ok(near(w.heightAt(6.8, 95), SECOND.y, 0.02), name); }
   // Trunks keep clear of the archway's place (z = 100) and of both platforms.
-  const tz = TRUNKS.terrace; assert.ok(tz.every((z) => Math.abs(z - AXIS.paifangZ) >= 8 && z > FOOT.hall.z1 + 4 && z < FOOT.inner.z0 - 1), `${tz}`);
-  assert.ok(TRUNKS.lane.every((z) => z > FOOT.inner.z1 + 4 && z < FOOT.outer.z0 - 4));
-  assert.equal(new Set(TRUNKS.lane.slice(1).map((z, i) => z - TRUNKS.lane[i])).size, 1, "even spacing down the way");
+  const onTerrace = TRUNKS.list.filter((t) => t.y > 0), onLane = TRUNKS.list.filter((t) => t.y === 0);
+  assert.ok(onTerrace.every((t) => Math.abs(t.z - AXIS.paifangZ) >= 8 && t.z > FOOT.hall.z1 + 4 && t.z < FOOT.inner.z0 - 1 - t.rx), `the terrace's trunks and their crowns keep to the stretch between the hall's steps and the gate's eave`);
+  assert.ok(onLane.every((t) => t.z > FOOT.inner.z1 + 4 && t.z < FOOT.outer.z0 - 4));
+  // Scattered, not a row of poles (the art director's review of #464): off the grid by up to 0.8 m along the way and 0.5 m across, radii 0.25–0.5 m, three left out, a crown on each.
+  assert.equal(TRUNKS.list.length, 2 * (8 + 3) - 3, "three of the paired places are left empty");
+  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && Math.abs(Math.abs(t.x) - 5.5) <= 0.5 + 1e-9));
+  assert.ok(new Set(TRUNKS.list.map((t) => t.r)).size > 6 && new Set(onLane.map((t) => Math.round(t.z * 10) % 9)).size > 3, "radii and places differ");
+  assert.ok(TRUNKS.list.every((t) => t.y + TRUNKS.canopyBase > 6), "a crown's underside is over six metres up, over his head and the eye's");
 });

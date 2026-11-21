@@ -12,6 +12,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, BODY } from "../../src/geo.js";
 import { buildHall, PURLIN } from "../../src/building.js";
+import { buildPaifang } from "../../src/paifang.js";
 
 // How high a ridge stands over the eave purlins on a hall (Yingzao Fashi, juan 5): a third of the distance between the front and back purlins.
 const ju = (o) => (o.zs[0] - o.zs[o.zs.length - 1] + (2 * PURLIN * (o.cai || 0.21)) / 0.21) / 3;
@@ -63,7 +64,7 @@ export function buildShells(M, P) {
   };
 
   // ---- The gates: three bays, planked, the middle bay a passage, a platform and steps each way (the inner one flush with the terrace behind) ----
-  const gate = { cai: 0.232, xs: [...GATE.xs], zs: [...GATE.zs], platOut: GATE.platOut, colTop: 4.3, overhang: 2.0, front: "pass", back: "pass", dark: false, timber: true };
+  const gate = { cai: 0.232, xs: [...GATE.xs], zs: [...GATE.zs], platOut: GATE.platOut, colTop: 4.3, overhang: 2.0, lift: GATE.lift, liftLen: GATE.liftLen, crest: GATE.crest, front: "pass", back: "pass", dark: false, timber: true };
   const outer = put(M, { ...gate, platH: 0.5, steps: GATE.steps, stepsBack: GATE.steps }, [0, AXIS.outerZ]);
   take("外山门", outer, 1, 0); sides([0, AXIS.outerZ], GATE.xs, GATE.zs, true);
   const inner = put(M, { ...gate, platH: HALL.platH, steps: GATE.steps, stepsBack: 0 }, [0, AXIS.innerZ]);
@@ -84,12 +85,21 @@ export function buildShells(M, P) {
   }
 
   // ---- The Wuliang hall: five bays, a passage through the middle one, the rooms either side walled off from it ----
-  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, lift: 0.3, liftLen: 2.7, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
+  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, lift: HALL.lift, liftLen: HALL.liftLen, crest: HALL.crest, rise: HALL.rise, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
   take("无量殿", hall, 0, 0);
   // Inside, two walls along the middle bay's columns close the side rooms (the exhibition of the third phase, SCOPE-OPTIONS.md (b)'s neighbours): the passage is the only floor.
   const wallH = HALL.platH + HALL.colTop, mid = Math.floor((HALL.xs.length - 1) / 2), ix = HALL.xs[mid + 1], t = 0.3, zN = HALL.zs[HALL.zs.length - 1], zS = HALL.zs[0];
   const room = merge([-1, 1].map((sx) => box(t, wallH - HALL.platH, zS - zN, sx * ix, (HALL.platH + wallH) / 2, (zS + zN) / 2 + AXIS.hallZ)));
   group.add(mesh(room, M.plaster()));
   sides([0, AXIS.hallZ], HALL.xs, HALL.zs, false);
+
+  // ---- The archway (docs/t05/PAIFANG.md): on the terrace between the inner gate and the hall, its posts' plane at AXIS.paifangZ, facing the way in ----
+  {
+    const y = SECOND.y, z = AXIS.paifangZ, pf = buildPaifang(M);
+    pf.group.position.set(0, y, z); group.add(pf.group);
+    for (const q of pf.walk.posts) walk.posts.push({ x0: q.x0, x1: q.x1, z0: q.z0 + z, z1: q.z1 + z, eyeTop: q.h + y });
+    for (const r of pf.walk.roofs) walk.roofs.push({ ...r, z0: r.z0 + z, z1: r.z1 + z, bottom: r.bottom + y, inner: r.inner + y, top: r.top + y, core: { ...r.core, z0: r.core.z0 + z, z1: r.core.z1 + z } });
+    buildings.push({ name: "牌坊", x0: pf.bounds.min.x, x1: pf.bounds.max.x, z0: pf.bounds.min.z + z, z1: pf.bounds.max.z + z, y });
+  }
   return { group, walk, closed, buildings, shade };
 }

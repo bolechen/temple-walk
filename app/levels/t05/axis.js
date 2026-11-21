@@ -22,13 +22,20 @@ export const SECOND = Object.freeze({ y: 1.0, hw: 14, zN: 62, wallT: 0.8, wallH:
 /** The way between the gates: the walls' centres, how thick and how high they are (a proposal: SITE.md has no outline for them). */
 export const LANE = Object.freeze({ hw: 8, t: 0.8, h: 3.2 });
 /** The Wuliang hall (S03: 16.14 × 12.22 m; S26: OSM 17.2 × 13.0 m, centre z = +67.2, x = +2.6, which is put on the axis): five bays, columns on a 16.14 × 12.22 m plan. Bays and platform are a proposal. */
+/**
+ * How high the Wuliang hall's ridge stands (#482: from cam07 in the inner gate, the Great Hall's ridge must show over it, which wants the hall's
+ * ridge under +8.5 m over the court). Plan A lowers the roof's rise (the ridge course at +8.47 m); plan B keeps the roof as it was, +10.77 m, and moves the
+ * camera back out of the gate instead. Both have the smaller ornaments. `RIDGE_PLAN` is the one the build uses; docs/t05/DECISIONS.md says which was chosen.
+ */
+export const HALL_PLANS = Object.freeze({ A: Object.freeze({ rise: 1.8, crest: 1.3, lift: 0.15 }), B: Object.freeze({ rise: undefined, crest: 1.7, lift: 0.15 }) });
+export const RIDGE_PLAN = "A";
 export const HALL = Object.freeze({
   xs: Object.freeze([-8.07, -5.57, -2.07, 2.07, 5.57, 8.07]),
   zs: Object.freeze([6.11, 2.04, -2.04, -6.11]),
-  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0,
+  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0, liftLen: 2.7, ...HALL_PLANS[RIDGE_PLAN],
 });
 /** One gate house, as the outer and the inner gate are laid out: three bays, the platform's flanks meet the walls of the way. A proposal. */
-export const GATE = Object.freeze({ xs: Object.freeze([-6.4, -2.2, 2.2, 6.4]), zs: Object.freeze([3, -3]), platOut: 1.2, steps: 3.8 });
+export const GATE = Object.freeze({ xs: Object.freeze([-6.4, -2.2, 2.2, 6.4]), zs: Object.freeze([3, -3]), platOut: 1.2, steps: 3.8, lift: 0.2, liftLen: 2.7, crest: 1.5 });
 
 /** The inner gate's wickets: a door leaf set in a niche in the terrace's south wall, between jambs and under a lintel. A proposal. */
 export const WICKET = Object.freeze({ w: 1.5, h: 2.4, jamb: 0.2, lintel: 0.22, depth: 0.25 });
@@ -41,7 +48,23 @@ export const FOOT = Object.freeze({
 });
 /** The paved way down the middle of the way and of the terrace (art director's review of #457: a path, not wall-to-wall slabs; the target picture's is about 6 m) and the tree trunks that stand beside it. A proposal. */
 export const PATH = Object.freeze({ hw: 3 });
-export const TRUNKS = Object.freeze({ x: 5.5, r: 0.4, h: 11, lane: Object.freeze([132, 141, 150, 159, 168, 177, 186, 195]), terrace: Object.freeze([81, 89, 109, 114]) });
+/** Where the trunks would stand in even pairs: x either side of the path, z along the way (and, on the terrace, clear of the archway's place by 8 m and of the gate's eave). */
+const GRID = Object.freeze({ x: 5.5, lane: Object.freeze([132, 141, 150, 159, 168, 177, 186, 195]), terrace: Object.freeze([81, 89, 109]) });
+// A trunk is moved off its grid place by up to 0.8 m along the way and 0.5 m across, takes a radius of 0.25 to 0.5 m, and carries a canopy
+// (an ellipsoid, a placeholder for the trees to come); three of them are left out, so that they do not read as a row of telegraph poles
+// (art director's review of #464). Seeded, so that every build and every picture is the same.
+const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const OMIT = new Set(["lane|1|150", "lane|-1|177", "terrace|-1|89"]);
+const grow = () => {
+  const rnd = seeded(482), out = [];
+  for (const [kind, y] of [["lane", 0], ["terrace", SECOND.y]]) for (const z of GRID[kind]) for (const sx of [-1, 1]) {
+    const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = 0.25 + rnd() * 0.25, rx = 2.7 + rnd() * 0.9, ry = 2.1 + rnd() * 0.7;
+    if (OMIT.has(`${kind}|${sx}|${z}`)) continue;
+    out.push(Object.freeze({ x: +(sx * (GRID.x + dx)).toFixed(2), z: +(z + dz).toFixed(2), y, r: +r.toFixed(2), rx: +rx.toFixed(2), ry: +ry.toFixed(2) }));
+  }
+  return Object.freeze(out);
+};
+export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
@@ -128,11 +151,13 @@ export function buildAxis(M, { C, W }) {
     earthAt(PATH.hw, tx, FOOT.hall.z1, FOOT.inner.z0, top + 0.01);
     earthAt(FOOT.hall.x1, tx, SECOND.zN, FOOT.hall.z1, top + 0.01); earthAt(FOOT.inner.x1, tx, FOOT.inner.z0, AXIS.innerZ - wt / 2, top + 0.01);
   }
-  // Trunks stand in the earth either side of the path, for the trees to come: plain posts, in the way, with their written-plan rectangles.
-  const trunk = [];
-  for (const sx of [-1, 1]) for (const { zs, y } of [{ zs: TRUNKS.lane, y: 0 }, { zs: TRUNKS.terrace, y: top }]) for (const z of zs) {
-    trunk.push(new THREE.CylinderGeometry(TRUNKS.r * 0.8, TRUNKS.r, TRUNKS.h, 8).translate(sx * TRUNKS.x, y + TRUNKS.h / 2, z));
-    walk.solids.push({ x0: sx * TRUNKS.x - TRUNKS.r - BODY, x1: sx * TRUNKS.x + TRUNKS.r + BODY, z0: z - TRUNKS.r - BODY, z1: z + TRUNKS.r + BODY, eyeTop: y + TRUNKS.h });
+  // Trunks stand in the earth either side of the path, for the trees to come: plain posts, in the way, with their written-plan rectangles, and an
+  // ellipsoid for each to say how big the tree will be (not in the way: its underside is over six metres up, well above the eye).
+  const trunk = [], crown = [];
+  for (const t of TRUNKS.list) {
+    trunk.push(new THREE.CylinderGeometry(t.r * 0.8, t.r, TRUNKS.h, 8).translate(t.x, t.y + TRUNKS.h / 2, t.z));
+    crown.push(new THREE.SphereGeometry(1, 14, 9).scale(t.rx, t.ry, t.rx).translate(t.x, t.y + TRUNKS.canopyBase + t.ry, t.z));
+    walk.solids.push({ x0: t.x - t.r - BODY, x1: t.x + t.r + BODY, z0: t.z - t.r - BODY, z1: t.z + t.r + BODY, eyeTop: t.y + TRUNKS.h });
   }
 
   // ---- The plain outside the walls (the county is flat, SITE.md §4.1): everything but what lies inside them ----
@@ -142,7 +167,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
-  group.add(sh.group, mesh(merge(earthSides), M.earth, { cast: false }), mesh(merge(trunk), M.woodV));
+  group.add(sh.group, mesh(merge(earthSides), M.earth, { cast: false }), mesh(merge(trunk), M.bark), mesh(merge(crown), M.cedar, { cast: false }));
   group.add(
     mesh(merge([box(mw, 0.45, mw, mx, M0.y + 0.225, mz)]), M.stone),
     mesh(merge([box(mw - 0.7, 3.4, mw - 0.7, mx, M0.y + 0.45 + 1.7, mz)]), M.plaster()),
@@ -157,6 +182,9 @@ export function buildAxis(M, { C, W }) {
   const views = {
     outer: [0, AXIS.outerZ, 0, 0.05],
     inner: [0, AXIS.innerZ, 0, 0.06],
+    // cam07, 内山门望殿 (docs/t05/PRD.md §3): in the inner gate's passage, four metres behind its north face (the opening then fills about seven tenths of a wide picture, as the target's does), looking up the axis: the gate's frame round the picture,
+    // the archway, the Wuliang hall and over its ridge the Great Hall's roof (the target is refs/t05-concept-2026-11-20/03-axis-from-inner-gate.webp)
+    cam07: [0, AXIS.innerZ + 1, 0, 0.15],
     paifang: [0, AXIS.paifangZ, 0, 0.1],
     passage: [0, AXIS.hallZ, 0, 0.08],
     // (mouth: just beyond the foot of the hall's back steps, where its north door lets out on the court)

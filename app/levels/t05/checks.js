@@ -19,6 +19,9 @@ export default {
         "through the Wuliang hall's passage and down its back steps, then up again": [[0, hall.z1 + 4], [0, hall.z0 - 5], [0, hall.z1 + 4]],
         "up the inner gate's steps and across its platform onto the second terrace": [[0, inner.z1 + 4], [0, inner.z1 - 0.5], [0, inner.z0 - 3]],
         "the second terrace, from the inner gate to the Wuliang hall's platform": [[0, inner.z0 - 3], [0, AXIS.paifangZ], [0, hall.z1 + 3]],
+        // (the archway's three bays: the middle one is the second terrace's route above; each side bay, there and back, is held by the eye's own space)
+        "through the archway's east side bay, there and back": [[4.2, AXIS.paifangZ + 9], [4.2, AXIS.paifangZ - 9], [4.2, AXIS.paifangZ + 9]],
+        "through the archway's west side bay, there and back": [[-4.2, AXIS.paifangZ + 9], [-4.2, AXIS.paifangZ - 9], [-4.2, AXIS.paifangZ + 9]],
         "close along the terrace's east wall and back along its west": [[tedge, hall.z1 + 3], [tedge, inner.z0 - 3], [-tedge, inner.z0 - 3], [-tedge, hall.z1 + 3]],
         "over the Wuliang hall's platform and down its back steps into the court": [[0, hall.z1 + 3], [0, AXIS.hallZ], [0, hall.z0 + 0.5], [0, hall.z0 - 5]],
         "round the Wuliang hall's platform on the terrace's side": [[hall.x1 + 1.2, hall.z1 + 1.2], [hall.x1 + 1.2, 62.8], [hall.x1 + 3.5, 62.8], [hall.x1 + 3.5, hall.z1 + 1.2]],
