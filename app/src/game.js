@@ -115,7 +115,7 @@ export function createGame(y) {
   const refresh = () => {
     for (const id in rings) rings[id].userData.want = owed(id) && (places[id].room || null) === y.room();   // shown unless the eye is on a shot (below)
     mine.visible = journey.has("lamp");
-    const n = journey.count(), next = journey.next(); setSeals(n);   // the music knows how much of its theme has been earned
+    const n = journey.count(), next = journey.next(); setSeals(n); if (n > 0) y.hints?.say.stamped();   // the music knows how much of its theme has been earned
     // The book is the small seal at the top left: the first character of the next place, or 圆 once the book is full;
     // how many seals are held is said to a screen reader, and to the tests.
     // In Japanese the seal is cut in Japanese forms; in English it stays the temple's own character.

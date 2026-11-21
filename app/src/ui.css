@@ -371,6 +371,8 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #title .how b, #title .how span { display: block; font-weight: 400; }
 #title .how span { margin-top: .7em; letter-spacing: .2em; opacity: .85; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
+/* A phone on its side has no room under 入山: only the region and the road are kept, in the lower left corner, clear of the way in (#445). */
+@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 .title-links .chip { white-space: nowrap; }
