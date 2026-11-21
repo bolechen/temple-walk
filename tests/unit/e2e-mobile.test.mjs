@@ -5,10 +5,10 @@ test("e2e.yml has a mobile job on every push that runs the audit in Chinese and 
   const job = /^  mobile:\n([\s\S]*?)(?=^  [a-z-]+:\n|^  #)/m.exec(y)?.[1] || "";
   assert.match(job, /if: github\.event_name == 'push' \|\| github\.event\.inputs\.mobile == 'true'/);
   assert.match(y, /mobile:\n\s+description:[^\n]*\n\s+type: boolean\n\s+default: false/, "asked for by hand with the `mobile` input");
-  assert.match(job, /run: node tools\/mobile-audit\.cjs\n/);
-  assert.match(job, /run: node tools\/mobile-audit\.cjs --lang=en\n/);
+  assert.match(job, /lang: \[zh, en\]/, "Chinese and English, a machine each");
+  assert.match(job, /run: node tools\/mobile-audit\.cjs \$\{\{ matrix\.lang != 'zh' && format\('--lang=\{0\}', matrix\.lang\) \|\| '' \}\}\n/);
   assert.match(job, /if: failure\(\)\n\s+uses: actions\/upload-artifact@v4/);
-  assert.match(job, /tools\/out\/mobile\/\n\s+tools\/out\/mobile-en\//);
+  assert.match(job, /path: tools\/out\/mobile\*\//);
   assert.match(job, /retention-days: 14/);
 });
 test("what the audit writes lies where the job uploads from", () => {

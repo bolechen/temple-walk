@@ -96,11 +96,15 @@ jobs:
 
   # What a phone sees (tools/mobile-audit.cjs, #400): every surface of the interface at three phone sizes, a control under 44 px, text under 12 px,
   # anything off the screen, a page that scrolls; it exits 1 if it lists anything. Beside every publication, not in its way: until now only a person
-  # who remembered to run it saw it (#129 stood red for days). Chinese, and English, the longest words; the pictures are kept for a failing run.
+  # who remembered to run it saw it (#129 stood red for days). Chinese, and English, the longest words, one machine each; the pictures are kept for a failing run.
   mobile:
     if: github.event_name == 'push' || github.event.inputs.mobile == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [zh, en]   # (about seventeen minutes each in software drawing: two machines side by side, not one after the other)
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -127,17 +131,13 @@ jobs:
           key: doorways-${{ steps.doorways.outputs.key }}
           restore-keys: doorways-
       - name: Every surface of the interface as a phone sees it
-        run: node tools/mobile-audit.cjs
-      - name: ... and in English
-        run: node tools/mobile-audit.cjs --lang=en
+        run: node tools/mobile-audit.cjs ${{ matrix.lang != 'zh' && format('--lang={0}', matrix.lang) || '' }}
       - name: Keep the pictures
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-mobile-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            tools/out/mobile/
-            tools/out/mobile-en/
+          name: e2e-mobile-${{ matrix.lang }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/mobile*/
           retention-days: 14
           if-no-files-found: ignore
 
