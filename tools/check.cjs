@@ -32,6 +32,9 @@ for (const m of mats.matchAll(/`([^`]*)`/g)) { const last = m[1].trimEnd().split
 // Every character the page writes must be in the typefaces cut for it (tools/fonts.py). The debug panel (src/debug.js)
 // is left out: it exists only on the dev server and is drawn by lil-gui in the system's own font, not in the cut faces.
 const DEV_ONLY = [path.join(root, "src", "debug.js")];
+// Nor is each level's bake.js (#405): the floor's bake reads it in Node, the page never imports it (tests/unit/level-bake.test.mjs),
+// and its names of the place's parts are written only into the floor's report on GitHub.
+const BAKE_ONLY = fs.readdirSync(path.join(root, "levels")).map((d) => path.join(root, "levels", d, "bake.js"));
 // The Japanese, English and Korean tables (app/locales/*.js, app/levels/*/locales/*.js) are written in faces of their own, cut by
 // `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
 // So is the name of each language on its button in index.html, which is written in that language.
@@ -42,7 +45,7 @@ const wide = (c) => c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 &&
 const have = cut("chars.txt"), missing = new Set();
 const own = { ja: "", en: "", ko: "" };
 const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en|ko)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
-for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
+for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !BAKE_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
 if (missing.size) { bad++; console.error("characters used but not in app/shared/fonts (run tools/fonts.py): " + [...missing].join("")); }
 for (const [l, f] of Object.entries(TABLES)) {
   const theirs = cut(`chars-${l}.txt`), lacking = new Set();

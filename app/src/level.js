@@ -27,6 +27,9 @@ import t00 from "../levels/t00/level.js";
  * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
  * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
  * @property {boolean} [title] raises the prologue's title at its gate
+ *
+ * What the floor's bake needs beyond what a level builds is in app/levels/<id>/bake.js, which only the Node tools read
+ * (tools/walk/scene.mjs; #405), so that the page's bundle does not carry it.
  */
 
 /** @type {Record<string, () => Promise<Level>>} */
