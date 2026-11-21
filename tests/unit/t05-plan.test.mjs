@@ -161,8 +161,11 @@ test("T05 builds no censer, no trees, no bell and no seat of its own yet, and it
 test("the hall's fill is out while the eye is in the court and comes up as he walks in, over seconds, never at a jump (#481)", async () => {
   const { FILL } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
-  for (const [x, z] of [STATION.A, STATION.B, [0, 6.57], [0, 0.6], [0, -0.04]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
-  for (const k of ["E", "F", "D"]) assert.ok(h.within(STATION[k][0], 4.6, STATION[k][1]) > 0.97, `the whole fill at ${k}`);
+  for (const [x, z] of [STATION.A, STATION.B, [0, 6.57], [0, 3.1]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  for (const k of ["E", "D"]) assert.equal(h.within(STATION[k][0], 4.6, STATION[k][1]), 1, `the whole fill at ${k}`);
+  assert.ok(h.within(...[STATION.F[0], 4.6, STATION.F[1]]) > 0.9, "nearly all of it at F, 2 m in");
+  // from 3 m out to 3 m in it rises without a step: never more than 2% of it over 5 cm walked
+  for (let z = 3.1, prev = 0; z > -3.1; z -= 0.05) { const k = h.within(0, 4.6, z); assert.ok(k >= prev && k - prev <= 0.02, `at z ${z.toFixed(2)}`); prev = k; }
   // the court's picture is drawn with the fill out, however long he stands there
   for (let i = 0; i < 50; i++) assert.equal(s.tick(0.05, eye(0, 6.57), false), 0);
   // walking in at his pace (2.1 m/s, 20 frames a second) from the threshold to E: it rises steadily, never more than 5% a frame
