@@ -16,7 +16,7 @@ export default {
   land: terrain,
   // The far hills are laid round the walls and follow the first and the top terrace.
   backdrop: { site: SITE, terraces: [LEVELS[0], LEVELS[2]] },
-  grove: { areas: GROVE.areas, keep: GROVE.keep },
+  grove: { areas: GROVE.areas, keep: GROVE.keep, clearUnder: GROVE.underClear },
   // The eye from behind him does not go into the bamboo, as it does not go into a wall (#515): where the grove grows more
   // than `EYE_EDGE` deep, from a metre under the land to the tops of the culms. The grove is drawn as culms and cut-out
   // sprays, which the eye's gathering passes over, so it is said here instead. Into its edge the eye may go that far, as

@@ -16,7 +16,7 @@ const { followEye, createFollow, FRAMES, frameArm, aimAt } = await import("../..
 const { createEyeSpace, eyeRadius } = await import("../../app/src/eyespace.js");
 const { buildDrawn } = await import("../../tools/walk/scene.mjs");
 const { gather } = await import("../../tools/walk/bake.mjs");
-const { GROVE } = await import("../../app/src/site.js");
+const { GROVE, APPROACH } = await import("../../app/src/site.js");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const { L, site, walker: written } = await levelPlan(M, { real: true }), springs = need("springArm");
@@ -35,8 +35,8 @@ function rest(x, z, yaw, pitch, aspect) {
 
 // What the bamboo is drawn of (culms and sprays), grown as the page grows it, to look along the lines from the eye to him.
 const { createBamboo } = await import("../../app/src/bamboo.js"), { terrain } = await import("../../app/src/site.js"), { EYE_EDGE } = await import("../../app/levels/t00/level.js");
-const groveScene = new THREE.Scene(); createBamboo(groveScene, GROVE.areas, terrain, GROVE.keep, { fine: true }); groveScene.updateMatrixWorld(true);
-const [culms] = groveScene.children, rc = new THREE.Raycaster();
+const grow = (clearUnder) => { const g = new THREE.Scene(); createBamboo(g, GROVE.areas, terrain, GROVE.keep, { fine: true, clearUnder }); g.updateMatrixWorld(true); return g.children; };
+const [culms, leaves] = grow(L.grove.clearUnder), rc = new THREE.Raycaster();
 const culmAcross = (c, p) => { const e = new THREE.Vector3(...c), d = new THREE.Vector3(...p).sub(e); rc.set(e, d.clone().normalize()); rc.far = d.length() - 0.05; return rc.intersectObject(culms, false).length > 0; };
 /** Where the box round him (the corners of 0.6 m round his feet and the top of his head, as `__probe().monkBox`) falls in the picture, [bottom, top] of its height, and how far down the view looks against the visitor's own. */
 function framed(c, x, z, yaw, pitch, aspect) {
@@ -61,6 +61,42 @@ test("by the ink-stone pool the eye stands in the grove's edge, as before #295: 
     for (const [part, h] of [["head", 1.1], ["waist", 0.6], ["feet", 0.1]]) if (culmAcross(c, [x, foot + h, z])) bad.push(`${name}: a culm stands across the line to his ${part} ${at}`);
   }
   assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+// Round the pool the undergrowth at the grove's edge is cleared (`GROVE.underClear`, the level's `grove.clearUnder`): its
+// clumps stood between the eye in the edge and him, and across the pool and its stele (#518's art review: no leaf within his
+// box, leaves at most at the corners). Every leaf card is counted whole, holes and all, so this is stricter than the
+// picture: over a grid of the frame, no line of sight meets a leaf before it has come as far out as he stands. Without the
+// clearing it did, so the test can tell.
+const POOL_SCREENS = [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]];
+function nearLeaves(cards, aspect) {
+  const [x, z, yaw, pitch] = POOL, foot = walker.heightAt(x, z), c = rest(x, z, yaw, pitch, aspect), aim = aimAt(c, [x, foot, z], yaw, FRAMES.b, FOV), him = Math.hypot(c[0] - x, c[2] - z);
+  const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 500); cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const hits = []; rc.far = 40;
+  for (let i = 0; i < 48; i++) for (let j = 0; j < 27; j++) {
+    rc.setFromCamera(new THREE.Vector2(-1 + (i + 0.5) / 24, -1 + (j + 0.5) / 13.5), cam);
+    const h = rc.intersectObject(cards, false)[0]; if (h && h.distance * Math.hypot(rc.ray.direction.x, rc.ray.direction.z) < him) hits.push(h.point.toArray().map((v) => +v.toFixed(2)));
+  }
+  return hits;
+}
+test("round the ink-stone pool no leaf stands between the eye and him, at 16:9 or upright: the edge's undergrowth is cleared there (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
+  for (const [name, aspect] of POOL_SCREENS) { const hits = nearLeaves(leaves, aspect); assert.deepEqual(hits.slice(0, 5), [], `${name}: ${hits.length} lines of sight meet a leaf before him`); }
+  const [, uncleared] = grow(null);
+  assert.ok(POOL_SCREENS.some(([, aspect]) => nearLeaves(uncleared, aspect).length > 0), "without the clearing no leaf stood before him either: the test cannot tell the fix from nothing");
+});
+test("the clearing takes out only the pool edge's undergrowth: every other clump and every culm stands where it stood (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
+  const [c0, l0] = grow(null), key = (P, i) => `${P.getX(i).toFixed(3)},${P.getY(i).toFixed(3)},${P.getZ(i).toFixed(3)}`;
+  assert.equal(culms.geometry.attributes.position.count, c0.geometry.attributes.position.count, "the culms changed");
+  const a = l0.geometry.attributes.position, b = leaves.geometry.attributes.position, before = new Map(), kept = new Set();
+  for (let i = 0; i < a.count; i++) before.set(key(a, i), [a.getX(i), a.getZ(i)]);
+  for (let i = 0; i < b.count; i++) kept.add(key(b, i));
+  let moved = 0; for (const k of kept) if (!before.has(k)) moved++;
+  assert.equal(moved, 0, `${moved} points of the leaves stand where none stood`);
+  // what went is within the stretch by the pool (a clump's card reaches 0.9 m from its middle), and only there
+  const A = APPROACH, far = []; for (const [k, [x, z]] of before) if (!kept.has(k) && (x < A.xB1 - 8.1 || x > A.xB1 + 6.9 || z < A.zMid - 10.5 || z > A.zMid + 5.5)) far.push([x, z].map((v) => +v.toFixed(2)));
+  assert.deepEqual(far.slice(0, 5), [], `${far.length} points of leaves went far from the pool`);
+  assert.ok(b.count < a.count && b.count > 0.98 * a.count, `the clearing took ${a.count - b.count} of ${a.count} points of leaves: more than the pool's edge`);
+  assert.ok(!L.grove.clearUnder(...site.start.slice(0, 2)), "the clearing reaches the start");
 });
 
 // The start of the walk, where the title is shown, the first picture after 入山 is taken and the opening comes to rest: the
