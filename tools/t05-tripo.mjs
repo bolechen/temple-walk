@@ -8,6 +8,9 @@
 //   node tools/t05-tripo.mjs upload <image> [dir]                   upload an image for image_to_model / multiview_to_model,
 //                                                                   print its token and keep it in <dir>/uploads.json (#370)
 //
+// A multiview request's `files` are [front, left, back, right] as seen FROM that side: the picture of the figure's own right
+// side (the figure facing the picture's left) goes in the `left` slot; put in `right`, it grew a second face on the back of
+// the head (#370, tasks bb474101… and 572a5ee0…). An empty {} leaves a slot out.
 // The request is Tripo's v2 task body ({"type":"text_to_model", …}); api.tripo3d.ai is reached through the sandbox's
 // proxy, which adds the key (Node reaches it only with NODE_USE_ENV_PROXY=1), so the Authorization header here is a placeholder and no real key is ever read or written.
 // Default dir: tools/out/t05/tripo (git-ignored; the models go to the evidence store, not to git).

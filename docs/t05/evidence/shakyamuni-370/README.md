@@ -13,10 +13,26 @@ T4 Job `6b00defe4fdc5ab3c55c269d`（运行号 `t05-20261120-235953`），`ANGLE 
 | `hand-left.png` | 左手（掌心向上）近照，斜上方 |
 | `half-warm.png` | 半身，在白盒殿里：初冬晴冷的门光，加佛坛前一盏暖灯，佛前约 7.5 m 仰看 |
 
-`review-collage.jpg` 是这八张拼成的一张（仓库里）。
+`review-collage.jpg` 是这八张拼成的一张（证据库）。仓库里只放总拼图 `collage.jpg`（AGENTS.md：每个证据目录最多一张拼图）。
 
 怎么重出：`SETS=lod370 tools/t05-gpu.sh <近> <中> <远>`（模型取法见下），review 一套在同一个 Job 里先出；软件渲染同样的图：`node tools/t05-hall.cjs tools/t05-hall/specs/sakyamuni-370-review.json`。
 
+## 其余
+
+| 路径 | 是什么 |
+| --- | --- |
+| `collage.jpg` | 总拼图（仓库里） |
+| `compare/`、`compare-collage.jpg`（证据库） | 三次生成的素模对比（Blender workbench，同一套机位）：mv1 主线、mv2 槽位放错（两张脸）、mv3 放对；各七张：四面、右手正侧、左手 |
+| `one/` | 样件居中的软件渲染：正投影（素/彩）、侧面、手部、佛前 10 m、长焦看脸、殿门；`report.json` |
+| `group/` | 样件在本位（最西），另六位素泥：殿门 24 m 两季、cam03、殿门内、全素泥 |
+| `group-centre/` | 样件在中位：殿门 24 m 两季、cam03 |
+| `walk/` | 礼佛带、侧廊实走各取六帧的拼条，和带逐点遮挡统计的 `*-report.json`；录像和逐帧遮挡在私有桶 `films/` |
+| `views/forearm-*.png` | 右前臂修前、修后（Blender，同一机位） |
+| `gpu-report.json` | T4 Job `6b00defe4fdc5ab3c55c269d` 的完整报告 |
+| `tripo-ledger.json`、`tripo-balance.json`、`tripo/` | Tripo 账本：任务号、点数、文件 SHA-256；每次前后的余额；上传和请求 |
+
+除 `review/` 外的场景图是软件渲染（SwiftShader）；`compare/`、`views/` 是 Blender workbench。
+
 ## 模型在哪里
 
-Tripo 原件、修过的、三档 LOD、两张输入图、账本放在私有桶 `hf://buckets/bolechen/temple-walk-render/keep/t05-shakyamuni-370/`，不进 git，也不进公开证据库（项目付费生成的资产）。SHA-256 见 `docs/t05/asset-register.csv` 和 `tripo-ledger.json`。
+Tripo 原件（三次）、修过的、三档 LOD、输入图（`input-*.png`、`inputs-v2/`）、录像（`films/`）、账本放在私有桶 `hf://buckets/bolechen/temple-walk-render/keep/t05-shakyamuni-370/`，不进 git，也不进公开证据库（项目付费生成的资产）。SHA-256 见 `docs/t05/asset-register.csv` 和 `tripo-ledger.json`。
