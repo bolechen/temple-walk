@@ -88,7 +88,7 @@ const jobOf = (yml, name) => { const a = yml.indexOf(`\n  ${name}:\n`); assert.o
 
 test("pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, floor, tests, grid, site, quick, worker\]/);
+  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, floor, build, tests, grid, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
   assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/3\n/);
   assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/3 --import \.\/tools\/walk\/swap\.mjs/);
@@ -102,10 +102,10 @@ test("pages.yml: the publication waits for both sets of unit tests, the build an
     assert.ok(body.indexOf("download-artifact") < body.indexOf("unit-shard.cjs"), `${j} has the floor before its tests run`);
     assert.doesNotMatch(body, /node tools\/bake-walk\.mjs/, `${j} does not bake it again`);
   }
-  const site = jobOf(y, "site");
-  assert.match(site, /pnpm run build/); assert.match(site, /run\.cjs boot/);
+  assert.match(jobOf(y, "build"), /pnpm run build/); assert.match(jobOf(y, "quick"), /scenarios: "boot"/, "boot is one of the quick machines");
+  assert.ok(!/\n  site:\n/.test(y), "no job of its own for boot: it runs beside the other scenarios");
   // none waits for another (they are parallel); only `changes` comes first
-  for (const j of ["unit", "floor", "site"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
+  for (const j of ["unit", "floor", "build"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
   assert.doesNotMatch(jobOf(y, "deploy"), /if: always\(\)/, "deploy keeps the implicit success()");
   assert.match(jobOf(y, "verify"), /if: \$\{\{ !cancelled\(\) \}\}/);
 });
@@ -134,15 +134,22 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   assert.match(deploy, /shell: bash\n\s*run: npx[^\n]*wrangler\.canary\.jsonc \| tee/, "a pipe to tee runs under pipefail (shell: bash), or a failed deploy shows green");
   assert.doesNotMatch(y, /wrangler\.production\.jsonc|CLOUDFLARE_PREVIEW_TOKEN.*deploy/, "pages.yml no longer touches the production Worker");
   const quick = jobOf(y, "quick");
-  assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
+  assert.match(quick, /needs: \[changes, build\]\n/, "quick waits for the one build and for nothing else");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
+  assert.match(quick, /scenarios: "boot"/);
   assert.match(quick, /scenarios: "drop-touch stairs-edge"/);
   assert.match(quick, /scenarios: "stairs drop"/);
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenarios \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
-  const site = jobOf(y, "site");
-  assert.match(site, /\n    env:\n[\s\S]*?VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the build says where it goes, on the job: boot builds dist/ again");
+  const site = jobOf(y, "build");
+  assert.match(site, /\n    env:\n[\s\S]*?VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the one build says where it goes, on the job");
   assert.match(site, /VITE_COMMIT: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/, "and which commit");
+  // the site is built once (#442 step 3) and every job that drives or publishes it takes that artifact, named by the run only
+  assert.match(site, /upload-artifact@v4[\s\S]*name: built-site-\$\{\{ github\.run_id \}\}\n[\s\S]*overwrite: true[\s\S]*include-hidden-files: true/, "the build hands dist/ on, hidden stamp and all");
+  assert.doesNotMatch(y, /built-site-[^\n]*run_attempt/, "re-running only the failed jobs must find the built site");
+  for (const j of ["quick", "preview", "deploy"]) assert.match(jobOf(y, j), /download-artifact@v4[\s\S]*name: built-site-\$\{\{ github\.run_id \}\}\n\s*path: dist/, `${j} takes the site that was built`);
+  for (const j of ["quick"]) assert.match(jobOf(y, j), /touch dist\/\.built/, `${j} tells site.cjs the downloaded dist/ is current`);
+  for (const j of ["quick"]) assert.doesNotMatch(jobOf(y, j), /pnpm run build|bake-doorways/, `${j} does not build the site again`);
   assert.equal(JSON.parse(fs.readFileSync(new URL("../../wrangler.canary.jsonc", import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "")).name, "temple-walk-canary");
 });
 
