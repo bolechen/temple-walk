@@ -729,6 +729,23 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 #saveImg { display: block; width: 100%; height: auto; max-height: calc(100dvh - 210px); object-fit: contain; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; }
 .save-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 12px; }
 .save-card .chip { min-height: 44px; display: inline-flex; align-items: center; }
+/* A save carried from another place (#338): asked about over the title, a sheet like the thanks, its one button a seal. */
+#carryIn, #carryOut { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+#carryIn[hidden], #carryOut[hidden] { display: none; }
+.carry-card { width: min(92vw, 460px); box-sizing: border-box; padding: 30px 34px 18px; color: var(--ink-1); text-align: center; }
+.carry-card h2 { margin: 0 0 12px; font: 400 clamp(22px, 6.6vw, 30px)/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; text-wrap: balance; word-break: auto-phrase; }   /* (as #blessTitle: on a phone a long title breaks between words, not inside one) */
+.carry-card p { margin: 8px 0; font: 400 var(--t-m)/1.8 var(--kai); letter-spacing: .04em; color: var(--ink-2); }
+.carry-card p.note { font-size: var(--t-s); color: var(--ink-3); }
+.carry-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 14px; flex-wrap: wrap; }
+.carry-card .chip { min-height: 44px; }
+.carry-card .row { display: flex; justify-content: center; gap: 0 10px; margin: 6px 0; }
+/* The link is carried, not read: one faint line, cut short where it does not fit, as the lamp's link is (#blessLink); the
+   text the browser copies from when the clipboard cannot be written to lies out of sight. */
+.carry-card p.carry-link { margin: 6px 0 2px; font: 400 12px/1.5 var(--serif); color: var(--ink-3); text-wrap: nowrap; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* (text-wrap here as well: the sheet's balance rule below would otherwise wrap it) */
+.carry-buffer { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+/* What the page is about to replace is said as plainly as what it brings, and only when there is something to replace. */
+.carry-card p.warn { color: var(--ink-1); }
+.carry-card p { text-wrap: balance; word-break: auto-phrase; }   /* no row left with a character or two (a line broke before 殿 and before 何) */
 
 /* The jump, on a touch screen: a faint ring lower right, across from the stick, that is the jump and, before a porch's edge, the way down or up. */
 #jumpBtn { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(46px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; z-index: 4; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .12em; text-indent: .12em; color: var(--on); text-shadow: 0 1px 6px rgba(0,0,0,.7); background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .3; transition: opacity .4s var(--ease); touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }

@@ -2879,6 +2879,71 @@ const scenarios = {
     expect((await v.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "", "an unknown scene is not named");
     expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
   } },
+  // Taking the save to another place (#338, src/carry.js): two seals earned and a walk into the great hall, a link made
+  // in the book, and the link opened in a clean browser, which asks, writes and begins again from it; the save is gone
+  // from the address. A damaged link is refused and writes nothing.
+  carry: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE, { enter: false });
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 }); await t.page.click("#enterBtn");
+    if (await t.page.evaluate(() => window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening"); }
+    for (const id of ["well", "tea"]) {
+      await t.page.evaluate((id) => { const p = window.__places[id]; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite(id); }, id);
+      await t.until(async () => (await t.journey()).seals[id] > 0, 180000, `the ${id}'s seal was not earned`);
+      await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    }
+    // Inside the great hall, a little way in from its door (#375: a place kept in a hall carries the hall, and is carried with it).
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the great hall");
+    { const s0 = await t.state(); await t.page.evaluate((s) => window.__pose(s.x + 0.8, s.z - 2.5, 0.3, 0), s0); await t.frames(3); }
+    const stood = await t.state();
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.hall === "main" && Math.hypot(p.x - stood.x, p.z - stood.z) < 0.2; }, 60000, "where he stood in the hall was never kept");
+    const label = (await t.page.evaluate(() => window.__left())).place.label;
+    // Made in the book, from the small sheet behind 更多 (#473).
+    await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 30000, "the book did not open");
+    await t.page.click("#bookMoreBtn"); await t.until(() => t.page.isVisible("#bookCarry"), 20000, "the book's 更多 sheet did not open");
+    await t.page.click("#bookCarry"); await t.until(() => t.page.evaluate(() => window.__carry().open && window.__carry().link.includes("#save=")), 30000, "no link was made");
+    const made = await t.page.evaluate(() => window.__carry());
+    expect(made.places.join() === "here" && made.link.startsWith(base.replace(/\/$/, "") + "/#save="), "a preview offers only this site, and the link is its address with the save after the hash: " + made.link);
+    expect(new URL(made.link).search === "" && made.link.length < 2000, "nothing of the save in the query, and short: " + made.link.length);
+    // The sheet as the art review asked (#476): its one stamp is 复制链接, the link one faint line, and copied, nothing is left selected.
+    const look = await t.page.evaluate(() => { const shown = document.getElementById("carryLinkShown"), cs = getComputedStyle(shown); return { stamps: [...document.querySelectorAll("#carryOut .stamp")].map((e) => e.id), lines: Math.round(shown.getBoundingClientRect().height / parseFloat(cs.lineHeight)), border: cs.borderTopWidth, bufferShown: document.getElementById("carryLink").getBoundingClientRect().left > -1000 }; });
+    expect(look.stamps.join() === "carryCopy" && look.lines === 1 && look.border === "0px" && !look.bufferShown, "the carry sheet's stamp, link and buffer: " + JSON.stringify(look));
+    await t.page.click("#carryCopy");   // counted, nothing else
+    expect(await t.page.evaluate(() => String(getSelection()) === "" && document.getElementById("carryCopy").textContent === "已复制"), "after copying nothing should be selected, and the button says 已复制");
+    expect((await t.page.evaluate(() => window.__eventLog().filter((e) => e.name === "save.export").map((e) => Object.keys(e.data).sort().join())))[0] === "lang,to", "the count carries no part of the save");
+    const hash = made.link.slice(made.link.indexOf("#"));
+    // The book's row is the four #473 fixes, 合上 among them on one line on a phone held upright; 带走朱印帐 is not on it.
+    await t.page.click("#carryClose");
+    expect(await t.page.evaluate(() => !!document.getElementById("bookCarry").closest("#bookMore") && !document.querySelector("#book .row #bookCarry")), "带走朱印帐 should be on the 更多 sheet, not the book's row");
+    for (const [w, h] of [[360, 640], [390, 844]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      const row = await t.page.evaluate(() => ["bookShare", "bookClose"].map((id) => Math.round(document.getElementById(id).getBoundingClientRect().top)));
+      expect(row[0] === row[1], `${w}×${h}: 合上 should be on the first row with 分享: ` + JSON.stringify(row));
+    }
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A clean browser: no book, no place. It asks first, saying how many seals and where.
+    const u = await open(b, base, "q=low" + BARE + hash, { enter: false });
+    await u.until(() => u.page.isVisible("#carryIn"), 60000, "the link was not asked about");
+    expect(await u.page.evaluate(() => location.hash === ""), "the save should be out of the address at once");
+    const said = await u.page.textContent("#carryInText");
+    // (a clean browser has nothing to lose: the line about replacing what is kept is not shown; the count is written 两, as one counts seals in Chinese)
+    const asked = await u.page.evaluate(() => ({ focus: document.activeElement?.id, title: document.getElementById("carryInTitle").textContent, out: document.getElementById("carryOutTitle").textContent }));
+    expect(asked.focus === "carryIn" && asked.title !== asked.out, "the asking sheet opens with the focus on itself and a title of its own: " + JSON.stringify(asked));
+    expect(said.includes("两枚印") && said.includes(label) && !(await u.page.isVisible("#carryInWarn")), "the sheet should say two seals and where he was, and nothing about replacing in a clean browser: " + JSON.stringify([said, label]));
+    expect(await u.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")) === null, "nothing is written before it is confirmed");
+    await Promise.all([u.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), u.page.click("#carryInYes")]);
+    await u.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
+    const back = await u.page.evaluate(() => ({ hash: location.hash, seals: window.__journey().count, line: document.getElementById("titleSeals").textContent, enter: document.getElementById("enterBtn").textContent, asked: !document.getElementById("carryIn").hidden }));
+    expect(back.hash === "" && back.seals === 2 && back.line.includes("二印") && back.line.includes(label) && back.enter === "接着走" && !back.asked, "the seals and the place should be here, the address clean, and nothing asked again: " + JSON.stringify(back));
+    await u.page.click("#enterBtn"); await u.frames(3);
+    { const st = await u.state(); expect(st.room === "main" && Math.hypot(st.x - stood.x, st.z - stood.z) < 0.5, "接着走 should stand him in the great hall where he stood on the other browser: " + JSON.stringify({ was: [stood.x, stood.z, stood.room], now: [st.x, st.z, st.room] })); }
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A link cut short: refused, and nothing written.
+    const v = await open(b, base, "q=low" + BARE + hash.slice(0, Math.floor(hash.length / 2)), { enter: false });
+    await v.until(() => v.page.isVisible("#carryIn"), 60000, "a cut link was not answered");
+    expect((await v.page.textContent("#carryInText")).includes("损坏") && !(await v.page.isVisible("#carryInYes")) && (await v.page.evaluate(() => localStorage.getItem("yunjing.journey.v1"))) === null, "a cut link should be refused, with nothing written");
+    await v.page.click("#carryInNo"); expect(!(await v.page.isVisible("#carryIn")), "the refusal is put away");
+    expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
+  } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
   // on a phone all three in the lower half, each a thumb's size; and 三分线 and 虚化 seen as the settings open, with no
