@@ -159,11 +159,12 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         float low=fbm2(p*.17+3.)+(uWet-1.)*.34;   // one smooth field only, so that no puddle has a straight edge where a flag ends (and it is steps.js's puddleAt exactly)
         // Water stands only in the hollows. The edge of a puddle is as wide as the field makes it close by (the ramp is .04 of it, some
         // forty centimetres of stone) but a far puddle is seen at a graze, where one pixel of the picture is a third of a metre of
-        // stone, so that ramp shrank to a pixel or two and the water ended in a line. The ramp is stretched to a few pixels' worth
-        // of ground (the field changes about .1 a metre), inward and never outward: no puddle appears where there was none, and
-        // steps.js's puddleAt still marks where the water stands.
+        // stone, so that ramp shrank to a pixel or two and the water ended in a line. The ramp is stretched, about the same edge, to a
+        // few pixels' worth of ground (the field changes about .1 a metre), so that the puddle keeps its size and loses its line.
+        // Before the rain (uWet 0: winter) there is no water at all, whatever the field says.
         float reach=max(length(dFdx(p)),length(dFdy(p)));   // the most ground one pixel covers, along the line of sight
-        float puddle=smoothstep(.57,.57+clamp(.8*reach,.04,.2),low), damp=smoothstep(.3,.58,low);
+        float edgeW=clamp(.8*reach,.04,.2);
+        float puddle=smoothstep(.59-.5*edgeW,.59+.5*edgeW,low)*step(.001,uWet), damp=smoothstep(.3,.58,low);
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
         vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; bool inLm=lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.; vec3 lmv=inLm?texture2D(tShade,lmUv).rgb:vec3(1.,0.,0.); float dB=inLm?lmv.r*${SPAN}.-.5:2.5;
