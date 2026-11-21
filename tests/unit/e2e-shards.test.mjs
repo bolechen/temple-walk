@@ -27,9 +27,11 @@ test("no machine runs much longer than another, and none runs longer than the ta
   // 29.1, run 44675254911): so the count has to leave a third and more of room.
   assert.ok(max <= BUDGET, `the longest machine is counted at ${(max / 60).toFixed(1)} min over ${N} machines: refresh durations.json (machines() already adds machines up to its limit, so a single scenario is too long)`);
   assert.ok(max - min <= 0.1 * max, `the machines are counted at ${(min / 60).toFixed(1)} to ${(max / 60).toFixed(1)} min`);
-  // what it replaced: taken in turn, the same times give the 25-to-48-minute spread of 2026-11-20
-  const secs = secsOf(data.scenarios), turn = Array.from({ length: 4 }, (_, k) => all.filter((_, i) => i % 4 === k).reduce((n, x) => n + secs(x), 0));
-  assert.ok(Math.max(...turn) > 1.2 * Math.min(...turn), "the old way was not uneven on these times: the comparison says nothing");
+  // what it replaced: taken in turn (in alphabetical order, so that where a scenario stands in run.cjs decides nothing), the same
+  // times leave a wider gap between the longest and the shortest machine than the plan does (the 25-to-48-minute spread of 2026-11-20)
+  const secs = secsOf(data.scenarios), names = [...all].sort(), turn = Array.from({ length: 4 }, (_, k) => names.filter((_, i) => i % 4 === k).reduce((n, x) => n + secs(x), 0));
+  const four = plan(all, 4).loads;
+  assert.ok(Math.max(...turn) - Math.min(...turn) > Math.max(...four) - Math.min(...four), "taking them in turn was not more uneven than the plan on these times: the comparison says nothing");
 });
 
 test("the first machine, which also runs the quick checks, is given less of the list", () => {
