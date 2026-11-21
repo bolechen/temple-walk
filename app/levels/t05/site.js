@@ -172,6 +172,10 @@ export function buildSite(M) {
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
+    // Shakyamuni at the west end, from the worship band 9.9 m before him and a little east of his middle, raised to his lap: his left hand
+    // and his lotus seat are in view, which from the west aisle within 4.4 m of his middle his own right knee and arm hide (#370, #547).
+    // Nothing (an attendant, a king, a column) stands between the eye and his seat or his lap (t05-plan.test).
+    sakya: [-14.5, -7, -0.181, 0.4],
   };
   // The seven fixed views of the handoff (docs/t05/PRD.md §3, docs/t05/camera-manifest.json written by tools/cameras.mjs): cam01–cam06 are the six
   // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.

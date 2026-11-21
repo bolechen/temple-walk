@@ -52,6 +52,22 @@ test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the
   }
 });
 
+test("from views.sakya nothing stands between his eye and Shakyamuni's lotus seat or his lap (#547: the west aisle hides them)", async () => {
+  const { FIGURES, ALTAR, SEAT } = await import("../../app/levels/t05/altar.js");
+  const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });
+  const M2 = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+  const s2 = buildSite(M2); s2.root.updateMatrixWorld(true);
+  const f = FIGURES.find((x) => x.id === "sakyamuni"), top = PLATFORM.h + ALTAR.h, [x, z] = site.views.sakya;
+  const eye = new THREE.Vector3(x, walker.heightAt(x, z) + 1.3, z), ray = new THREE.Raycaster();
+  // (the lotus's front face at its middle, and a point in his lap: what the first thing met along the line must be is the figure's own seat or body)
+  for (const [name, p] of [["lotus", [f.x, top + SEAT.sumeru + SEAT.lotus / 2, SEAT.z + SEAT.d / 2]], ["lap", [f.x + 0.3, top + SEAT.sumeru + SEAT.lotus + 1.3, SEAT.z + 0.9]]]) {
+    const t = new THREE.Vector3(...p), d = t.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L + 1;
+    const hit = ray.intersectObject(s2.root, true)[0];
+    assert.ok(hit && hit.distance > L - 0.8, `${name}: the first thing met is ${hit ? `${(L - hit.distance).toFixed(2)} m short of it` : "nothing"}`);
+  }
+  assert.ok(x > f.x, "east of his middle, so that his left side is turned to the eye");
+});
+
 test("from where he arrives he can walk to station A in the court and to station B at the foot of the flight", () => {
   const targets = file.header.targets;
   for (const id of ["arrive", "a", "b"]) {
