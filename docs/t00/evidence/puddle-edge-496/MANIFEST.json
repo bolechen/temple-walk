@@ -51,6 +51,12 @@
    "rev": "8266be5b6700c1751e33ece004d5c1deba6802da"
   },
   {
+   "path": "collage-2.jpg",
+   "bytes": 522148,
+   "sha256": "4727e8d195bf38252ec89e2ee677a63648551aa6477f2faf1d261d73d49646f4",
+   "rev": "1603d59bfcf6762c2f43db85d7d84a800592462b"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 279760,
    "sha256": "b542d6ec857d05671639ad67e5ebc8b63b7a38329657f3bb2f3ff0e7d9ebaed4",

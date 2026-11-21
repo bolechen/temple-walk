@@ -7,7 +7,7 @@
  },
  "cost_ms_T4_court_summer_day_high_1920x1080": { "run": "20261121-134852", "site": "e6f3dd9", "main": [13.1, 12.34, 13.12], "now": [12.46, 12.89, 12.95], "main_mean": 12.85, "now_mean": 12.77 },
  "winter_pixel_comparison": {
-  "note": "the page is not deterministic from one frame to the next (falling snow, dither): the same build drawn twice differs as much as the two builds do, so a frame cannot show 'identical'; winter's shader output is identical by construction (uWet 0 -> puddle * step(.001, uWet) = 0, as the old smoothstep(.57,.61) was 0 there: the field never passes .543)",
+  "note": "the page is not deterministic from one frame to the next (falling snow, dither): the same build drawn twice differs as much as the two builds do, so a frame cannot show 'identical'; winter's shader output is identical by construction (uWet 0 -> puddle * step(.001, uWet) = 0, as the old smoothstep(.57,.61) was 0 there: the field never passes .563 anywhere in the place (tests/unit/puddle-edge.test.mjs))",
   "base_vs_base2": "28.92% of pixels differ, 3.154% by more than 2 levels",
   "new_vs_new2": "33.69%, 3.083%",
   "new_vs_base": "31.97%, 3.407%"
