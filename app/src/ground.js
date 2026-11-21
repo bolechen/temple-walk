@@ -163,7 +163,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         // few pixels' worth of ground (the field changes about .1 a metre), so that the puddle keeps its size and loses its line.
         // Before the rain (uWet 0: winter) there is no water at all, whatever the field says.
         float reach=max(length(dFdx(p)),length(dFdy(p)));   // the most ground one pixel covers, along the line of sight
-        float edgeW=clamp(.8*reach,.04,.2);
+        float edgeW=clamp(1.4*reach,.04,.3);
         float puddle=smoothstep(.59-.5*edgeW,.59+.5*edgeW,low)*step(.001,uWet), damp=smoothstep(.3,.58,low);
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
