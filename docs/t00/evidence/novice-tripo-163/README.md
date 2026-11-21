@@ -12,6 +12,7 @@
 | `director-incense.png` | 举香导演机位：r6｜新文件 |
 | `front-close.png` | 合掌、举香、坐着吃茶正面近景：r6｜新文件 |
 | `page-tea.png`、`page-incense.png` | 页面里（`shots.js shot-tea shot-incense`，夏昼）：左 `?body=code`，右默认（Tripo） |
+| `portrait-winter-night.png` | 冬夜（`node tools/portrait.js winter-night`），正、侧、背、合掌：背带是暗处的布色，不亮过雪、不发光（钉在数据集提交 `4ff21efe`） |
 | `pixels.txt` | `--sleeve` 的逐像素数 |
 | `collage.jpg` | 五姿、背带、吃茶机位、页面吃茶 |
 

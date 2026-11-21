@@ -45,6 +45,12 @@
    "rev": "0e1347f7f615b43997ebf059219b1fc1cf93e45f"
   },
   {
+   "path": "portrait-winter-night.png",
+   "bytes": 952699,
+   "sha256": "11f5f3508f684467e8fb7f896bdaf81ef897c7efcbc6d200356b45fa40914b93",
+   "rev": "4ff21efe73fd94cde2048175c79a8369a8377c63"
+  },
+  {
    "path": "straps-vs-sheet.png",
    "bytes": 4931169,
    "sha256": "e93f80042cff25cd687bf5379efc438a0144cbcc0b08c8b7a0b94c4b3281dd60",
