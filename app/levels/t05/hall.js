@@ -39,18 +39,22 @@ export const HALL = Object.freeze({
   rafter: 2.88,          // a rafter's run, between purlins: ten rafters front to back (the structural review of #425, from the depth between the eave purlins)
 });
 /**
- * The fill under the roof while he is inside (white box), in three kinds, each the level it reaches once he is well in:
- * `door`, the light the doors and windows let in, four spots just inside the front wall turned to the altar and the back
+ * The fill under the roof while he is inside (white box), in two kinds, each the level it reaches once he is well in:
+ * `door`, the light the doors and windows let in, two wide spots just inside the front wall turned to the altar and the back
  * wall, so that the front wall's inner face, which the light comes through, is the darkest in the hall (with lamps hung
- * overhead before it, the band over the doors' heads read 2.4 times the back wall, #493); `top`, one lamp high over the
- * middle of the floor for the timber; `bounce`, what the floor before the altar gives back, three lamps half a metre under
- * the floor, which reach what looks down and leave the floor itself, looking up, unlit. Then over how many metres before
+ * overhead before it, the band over the doors' heads read 2.4 times the back wall, #493); `up`, the timber's light, as the
+ * light the doors lay on the floor goes up into the frame: three narrow spots half a metre under the floor over the
+ * worship band, turned up into the roof (`upAim`, the z each is turned to at `upY` over the floor: the side two lean only a
+ * metre north, so that the edge of their light reaches the front wall's inner face over the doors, the middle one three
+ * metres, to the figures). A lamp hung in the air under this roof is close to something wherever it hangs, the beams' undersides 9–10 m
+ * up and the boards 15–19: at 13 m it laid a spot on the boards over station E, at 9 m on the beams and the figures (#549,
+ * the art director's review of #554). Under the floor the nearest lit face is the beams', more than 9 m off. Then over how many metres before
  * the threshold it starts and how far in it is whole, and how fast the eye takes it (seconds to cover about two thirds of
  * a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
 export const TIMBER = Object.freeze({ lift: 2.2, from: 3.0, to: 4.5 });
-export const FILL = Object.freeze({ door: 25, up: 64, upX: [-14, 0, 14], upZ: -8, upAt: [16, -11], upAngle: 0.85, out: 9, depth: 3, ease: 0.5 });
+export const FILL = Object.freeze({ door: 45, up: 64, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-9, -11, -9], upAngle: 0.85, out: 9, depth: 3, ease: 0.5 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
@@ -275,7 +279,7 @@ export function buildHall(M) {
     fill: [
       ...[-10, 10].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.9, y0 + 4, zB + 1]]),
       // (the timber's light, from under the floor: three narrow spots turned up into the frame over the worship band, as the light the doors lay on the floor goes up into it)
-      ...FILL.upX.map((x) => [x, y0 - 0.5, FILL.upZ, FILL.up, 30, 0xfff4e8, [x, y0 + FILL.upAt[0], FILL.upAt[1]], FILL.upAngle]),
+      ...FILL.upX.map((x, i) => [x, y0 - 0.5, FILL.upZ, FILL.up, 30, 0xfff4e8, [x, y0 + FILL.upY, FILL.upAim[i]], FILL.upAngle]),
     ],
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.out metres before the
     // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
