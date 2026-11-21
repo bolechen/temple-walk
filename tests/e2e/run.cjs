@@ -2734,14 +2734,15 @@ const scenarios = {
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 }); await t.page.click("#enterBtn");
     if (await t.page.evaluate(() => window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening"); }
     for (const id of ["well", "tea"]) {
-      await t.page.evaluate((id) => { const p = window.__places[id]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite(id); }, id);
+      await t.page.evaluate((id) => { const p = window.__places[id]; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite(id); }, id);
       await t.until(async () => (await t.journey()).seals[id] > 0, 180000, `the ${id}'s seal was not earned`);
       await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     }
-    // Before the great hall, out on its platform's steps (a place kept inside a hall is not offered on the title even
-    // after an ordinary reload: its room's floor is not the courts', a matter of its own).
-    await t.page.evaluate(() => { const h = window.__halls.find((x) => x.id === "main"); window.__pose(h.out[0], h.out[1], h.outYaw, 0); });
-    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && Math.abs(p.z - (await t.page.evaluate(() => window.__halls.find((x) => x.id === "main").out[1]))) < 0.5; }, 30000, "where he stood before the hall was never kept");
+    // Inside the great hall, a little way in from its door (#375: a place kept in a hall carries the hall, and is carried with it).
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the great hall");
+    { const s0 = await t.state(); await t.page.evaluate((s) => window.__pose(s.x + 0.8, s.z - 2.5, 0.3, 0), s0); await t.frames(3); }
+    const stood = await t.state();
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.hall === "main" && Math.hypot(p.x - stood.x, p.z - stood.z) < 0.2; }, 60000, "where he stood in the hall was never kept");
     const label = (await t.page.evaluate(() => window.__left())).place.label;
     // Made in the book, beside saving and sharing its page.
     await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 30000, "the book did not open");
@@ -2764,6 +2765,8 @@ const scenarios = {
     await u.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
     const back = await u.page.evaluate(() => ({ hash: location.hash, seals: window.__journey().count, line: document.getElementById("titleSeals").textContent, enter: document.getElementById("enterBtn").textContent, asked: !document.getElementById("carryIn").hidden }));
     expect(back.hash === "" && back.seals === 2 && back.line.includes("二印") && back.line.includes(label) && back.enter === "接着走" && !back.asked, "the seals and the place should be here, the address clean, and nothing asked again: " + JSON.stringify(back));
+    await u.page.click("#enterBtn"); await u.frames(3);
+    { const st = await u.state(); expect(st.room === "main" && Math.hypot(st.x - stood.x, st.z - stood.z) < 0.5, "接着走 should stand him in the great hall where he stood on the other browser: " + JSON.stringify({ was: [stood.x, stood.z, stood.room], now: [st.x, st.z, st.room] })); }
     expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
     // A link cut short: refused, and nothing written.
     const v = await open(b, base, "q=low" + BARE + hash.slice(0, Math.floor(hash.length / 2)), { enter: false });

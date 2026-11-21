@@ -439,5 +439,4 @@ export default {
   "存档链接": "Save link",
   "链接里只有这一趟的进度和设置，不经过任何服务器。": "The link holds only this visit's progress and settings, and goes through no server.",
   "复制": "Copy",
-  "已复制": "Copied",
 };

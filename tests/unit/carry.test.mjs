@@ -1,7 +1,11 @@
 // Taking the save to another place (#338, src/carry.js): the link carries every key the game keeps, comes back the same,
 // and refuses whole anything damaged, cut short or written by a newer format.
 import test from "node:test"; import assert from "node:assert/strict";
-import { gather, check, apply, summary, encode, decode, linkFor, saveIn, SAVE_KEYS, SAVE_VERSION, HASH, Refused } from "../../app/src/carry.js";
+import { gather, check, apply, summary, encode, decode, linkFor, saveIn, SAVE_KEYS, SAVE_VERSION, SAVE_MOST, KIND, HASH, Refused } from "../../app/src/carry.js";
+import { pack, deflate, MOST, ENVELOPE, b64u, crc8 } from "../../app/src/fragment.js";
+import { DEFAULTS } from "../../app/src/settings.js";
+import { SEALS } from "../../app/src/journey.js";
+import { INCENSE_HALLS } from "../../app/src/incense.js";
 
 const store = (init = {}) => { const m = new Map(Object.entries(init)); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; };
 const T = 1_790_000_000_000;
@@ -24,8 +28,8 @@ test("every key the game keeps for the visitor is carried, and comes back the sa
   apply(to, back);
   for (const k of Object.values(SAVE_KEYS)) assert.deepEqual(JSON.parse(JSON.stringify(to.getItem(k))), from.getItem(k), k);
   assert.equal(to.getItem("yunjing.debug.v1"), null, "only the visitor's keys");
-  assert.match(text, /^[A-Za-z0-9_-]+$/, "a link's letters only");
-  console.log(`  a save of two seals: ${text.length} characters after ${HASH}`);
+  assert.match(text, /^save=[A-Za-z0-9_-]+$/, "the shared envelope, a link's letters only");
+  console.log(`  a save of two seals: ${text.length} characters after #`);
   assert.ok(text.length < 1200, "short enough for a chat message or a QR code: " + text.length);
 });
 
@@ -74,5 +78,44 @@ test("a save written by a newer format is refused, and says so; keys this versio
 test("the link: a site's address with the save after the hash, never in the query", async () => {
   const link = await linkFor(kept(), "https://temple-walk-canary.bole-chen.workers.dev/#old");
   assert.ok(link.startsWith("https://temple-walk-canary.bole-chen.workers.dev/#save="));
-  assert.equal(new URL(link).search, ""); assert.equal(saveIn(new URL(link).hash), link.split(HASH)[1]); assert.equal(saveIn("#other"), null);
+  assert.equal(new URL(link).search, ""); assert.equal(saveIn(new URL(link).hash), link.split("#")[1]); assert.equal(saveIn("#other"), null); assert.equal(saveIn("#lamp=AQMJaw"), null);
+});
+
+// The largest save the checks let through: every seal, the longest verse and source, every setting, all three halls'
+// incense, a hall's place with the longest name. Its JSON must stay well inside what decode inflates (SAVE_MOST), and
+// its link inside what any fragment may be (fragment.js MOST), with room for keys a later version adds.
+const largest = () => store({
+  "yunjing.journey.v1": JSON.stringify({ v: 1, born: T, seals: Object.fromEntries(SEALS.map((s, i) => [s.id, T + i * 1000 + 0.123456789])), strikes: 3, verse: { text: "云".repeat(200), from: "径".repeat(200) }, done: T + 1e7 + 0.5, opened: T + 2e7 + 0.5, told: true, closed: T + 3e7 + 0.5, closedSeason: "winter", stamped: T + 4e7 + 0.5 }),
+  "yunjing.place.v1": JSON.stringify({ x: -4999.99, z: 4999.99, yaw: -3.141592653589793, label: "凌霄阁上凌霄阁上凌霄阁上", at: T + 0.123456789, hall: "a".repeat(24) }),
+  "yunjing.settings.v1": JSON.stringify({ ...DEFAULTS, rev: 9 }),
+  "yunjing.lang.v1": "ko",
+  "yunjing.visit.v1": JSON.stringify({ metres: 999999999, seconds: 999999999 }),
+  "yunjing.prologue.v1": "1",
+  "yunjing.incense.v1": JSON.stringify(Object.fromEntries(INCENSE_HALLS.map((h, i) => [h, T + i + 0.123456789]))),
+});
+test("the largest save the checks allow fits inside its own limit four times over, and its link inside a fragment's", async () => {
+  const save = gather(largest()); assert.deepEqual(Object.keys(save.keys).sort(), Object.keys(SAVE_KEYS).sort(), "every key passed its check");
+  const bytes = new TextEncoder().encode(JSON.stringify(save)).length, text = await encode(save);
+  console.log(`  the largest save: ${bytes} bytes of JSON, ${text.length} characters after # (limits ${SAVE_MOST} and ${MOST})`);
+  assert.ok(bytes * 4 <= SAVE_MOST, `${bytes} bytes leaves less than four times room under ${SAVE_MOST}`);
+  assert.ok(text.length * 2 <= MOST, `the link's fragment, ${text.length}, should be half of ${MOST} at most`);
+  assert.deepEqual(check(await decode(text)), check(save), "and it comes back whole");
+});
+
+test("a save rides in the envelope every link fragment shares: a newer envelope is newer, another kind or a small link that unpacks to a great deal is damaged (#357's fragment.js)", async () => {
+  const s = gather(kept()), deflated = await deflate(new TextEncoder().encode(JSON.stringify(s)));
+  const body = new Uint8Array(deflated.length + 2); body[0] = ENVELOPE + 1; body.set(deflated, 1); body[body.length - 1] = crc8(body.subarray(0, body.length - 1));
+  await refusal(() => decode(`${KIND}=${b64u(body)}`), "newer");
+  await refusal(() => decode(pack("lamp", deflated)), "damaged");
+  const bomb = await deflate(new TextEncoder().encode(JSON.stringify({ ...s, pad: " ".repeat(SAVE_MOST * 4) })));
+  assert.ok(pack(KIND, bomb).length < MOST, "the bomb itself is a short link");
+  await refusal(() => decode(pack(KIND, bomb)), "damaged");
+  await refusal(() => decode(pack(KIND, new Uint8Array([1, 2, 3]))), "damaged");
+});
+
+test("a place kept in a hall (#375) is carried with its hall, and a bad hall refuses the save", async () => {
+  const from = kept(); from.setItem("yunjing.place.v1", JSON.stringify({ x: 120.8, z: 4.3, yaw: 0.3, label: "大雄宝殿", at: T, hall: "main" }));
+  const back = check(await decode(await encode(gather(from))));
+  assert.equal(JSON.parse(back["yunjing.place.v1"]).hall, "main");
+  const s = gather(from); s.keys.place.hall = "../x"; assert.throws(() => check(s), (e) => e.reason === "damaged");
 });

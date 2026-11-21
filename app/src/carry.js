@@ -13,6 +13,7 @@ import { SETTINGS_KEY, sanitize as sanitizeSettings, DEFAULTS } from "./settings
 import { LANG_KEY, LANGS } from "./i18n.js";
 import { INCENSE_HALLS } from "./incense.js";
 import { SEASONS } from "./mood.js";
+import { pack, unpack, deflate, inflate } from "./fragment.js";
 
 /** The format of the link's contents. Raised when a key's shape changes in a way an older page cannot read. */
 export const SAVE_VERSION = 1;
@@ -53,7 +54,8 @@ const KEYS = {
     if (v.yaw != null && !(typeof v.yaw === "number" && Number.isFinite(v.yaw))) fail("place.yaw");
     const label = v.label == null ? "" : str(v.label, 12, "place.label");
     if (v.up != null && !(typeof v.up === "string" && /^[a-z]{1,24}$/.test(v.up))) fail("place.up");
-    return JSON.stringify({ x: v.x, z: v.z, yaw: v.yaw ?? 0, label, at: posOrNull(v.at, "place.at") ?? 0, ...(v.up ? { up: v.up } : {}) });
+    if (v.hall != null && !(typeof v.hall === "string" && /^[a-z][a-z0-9-]{0,23}$/.test(v.hall))) fail("place.hall");   // in a hall's room (#375)
+    return JSON.stringify({ x: v.x, z: v.z, yaw: v.yaw ?? 0, label, at: posOrNull(v.at, "place.at") ?? 0, ...(v.up ? { up: v.up } : {}), ...(v.hall ? { hall: v.hall } : {}) });
   } },
   // What the visitor set in the pause menu (settings.js): each field must be what settings.js would keep as it is.
   settings: { key: SETTINGS_KEY, json: true, check(v) {
@@ -122,21 +124,27 @@ export function summary(writes) {
   return { seals, of: SEALS.length, label };
 }
 
-// ---- The link: JSON, deflated, in base64url ----
-const b64url = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
-const unb64url = (text) => { if (!/^[A-Za-z0-9_-]*$/.test(text)) throw new Refused("damaged", "letters"); const s = atob(text.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((text.length + 3) % 4)); return Uint8Array.from(s, (c) => c.charCodeAt(0)); };
-async function pipe(bytes, stream) { const out = new Response(new Blob([bytes]).stream().pipeThrough(stream)); return new Uint8Array(await out.arrayBuffer()); }
-/** The save written for a link. */
-export async function encode(save) { return b64url(await pipe(new TextEncoder().encode(JSON.stringify(save)), new CompressionStream("deflate-raw"))); }
-/** The save read back from a link's text (what follows `#save=`), not yet checked. A cut or garbled link is refused. */
+// ---- The link: JSON, deflated, in the envelope every link fragment shares (src/fragment.js, docs/t00/LINK-FRAGMENT.md) ----
+/** The kind a save is carried under: `#save=<base64url>`. */
+export const KIND = "save";
+/** The most bytes a save may inflate to. The largest save the checks above let through is about 2.2 KB of JSON (every seal,
+ *  the longest verse and source, every setting, all three halls' incense: tests/unit/carry.test.mjs builds it); four times
+ *  that leaves room for keys a later version adds, and a small link that would unpack to more is refused. */
+export const SAVE_MOST = 16384;
+/** The text to put after `#` for a save. */
+export async function encode(save) { return pack(KIND, await deflate(new TextEncoder().encode(JSON.stringify(save)))); }
+/** The save read back from a link's fragment (with or without its `#`), not yet checked. A cut, mistyped or garbled link
+ *  is refused as damaged; one written in a newer envelope as newer. */
 export async function decode(text) {
-  if (!text || text.length > 20000) throw new Refused("damaged", "length");
-  let json;
-  try { json = new TextDecoder().decode(await pipe(unb64url(text), new DecompressionStream("deflate-raw"))); } catch (e) { if (e instanceof Refused) throw e; throw new Refused("damaged", "inflate"); }
-  try { return JSON.parse(json); } catch { throw new Refused("damaged", "json"); }
+  const u = unpack(text);
+  if (!u.ok) { const why = /** @type {{ why: string }} */ (u).why; throw new Refused(why === "version" ? "newer" : "damaged", why); }
+  if (u.kind !== KIND) throw new Refused("damaged", "kind");
+  const raw = await inflate(u.bytes, SAVE_MOST);
+  if (!raw) throw new Refused("damaged", "inflate");
+  try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw)); } catch { throw new Refused("damaged", "json"); }
 }
 /** The whole link for a site (its base address). */
-export async function linkFor(storage, base) { return base.replace(/#.*$/, "") + HASH + (await encode(gather(storage))); }
-/** The save's text in an address's hash, or null. */
-export const saveIn = (hash) => (typeof hash === "string" && hash.startsWith(HASH) ? hash.slice(HASH.length) : null);
+export async function linkFor(storage, base) { return base.replace(/#.*$/, "") + "#" + (await encode(gather(storage))); }
+/** The save's fragment in an address's hash (`save=…`), or null when the hash carries no save. */
+export const saveIn = (hash) => (typeof hash === "string" && hash.startsWith(HASH) ? hash.slice(1) : null);
 export { Refused };
