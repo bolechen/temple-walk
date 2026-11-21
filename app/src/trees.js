@@ -210,7 +210,7 @@ function bed(x, y, z, r, seed) {
 // a finger over the paving, thickest at the trunk and fading to nothing at its edge (the alpha in each vertex's colour), so
 // that no hard line shows where it ends.
 function softBed(x, y, z, r, seed) {
-  const R = 36, rings = [[0, 0.85], [0.35, 0.8], [0.65, 0.45], [0.85, 0.15], [1, 0]], pos = [x, y + 0.02, z], col = [1, 1, 1, rings[0][1]], idx = [];
+  const R = 36, rings = [[0, 0.5], [0.35, 0.46], [0.65, 0.26], [0.85, 0.09], [1, 0]], pos = [x, y + 0.02, z], col = [1, 1, 1, rings[0][1]], idx = [];
   for (let i = 1; i < rings.length; i++) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r * rings[i][0] * (1 + 0.1 * Math.sin(a * 3 + seed) + 0.07 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y + 0.02 - 0.004 * i, z + Math.sin(a) * rr); col.push(1, 1, 1, rings[i][1]); }
   for (let k = 0; k < R; k++) { const n = (k + 1) % R; idx.push(0, 1 + n, 1 + k); }
   for (let i = 1; i < rings.length - 1; i++) for (let k = 0; k < R; k++) { const n = (k + 1) % R, a = 1 + (i - 1) * R, b = 1 + i * R; idx.push(a + k, a + n, b + k, a + n, b + n, b + k); }
@@ -500,7 +500,7 @@ export function createTrees(scene, M, spots, opts = {}) {
       }
       if (soil) soil.visible = !(m.snow > 0.5);
       // the leaves under a ginkgo are the season's own, and are not there when it is bare
-      if (gbed) { const c = COLOURS.ginkgo[m.season]; gbed.visible = !!c && !(m.snow > 0.5); if (c) gbed.material.color.setRGB(c[0] * 0.6, c[1] * 0.6, c[2] * 0.6); }
+      if (gbed) { const c = COLOURS.ginkgo[m.season]; gbed.visible = !!c && !(m.snow > 0.5); if (c) gbed.material.color.setRGB(c[0] * 0.45, c[1] * 0.45, c[2] * 0.45); }
       // Bare twigs show only when the leaves are down.
       if (crowns.twig) { crowns.twig.mesh.visible = m.season === "winter"; crowns.twig.mat.color.setRGB(0.2, 0.16, 0.13); }
     },

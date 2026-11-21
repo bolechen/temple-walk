@@ -93,9 +93,9 @@ const deg = (r) => (r * 180) / Math.PI;
   });
   test("the leaves under a ginkgo are the season's own, gone when it is bare, and fade to nothing at their edge", () => {
     const scene = new THREE.Group(), g = createTrees(scene, M, spots), bed = g.ginkgoBeds, col = bed.geometry.attributes.color;
-    assert.equal(col.itemSize, 4); let edge = 0, centre = 0; for (let i = 0; i < col.count; i++) { if (col.getW(i) === 0) edge++; if (col.getW(i) > 0.8) centre++; } assert.ok(edge >= 36 * 4 && centre >= 4, `${edge} edge points at 0 alpha, ${centre} thick ones`);
+    assert.equal(col.itemSize, 4); let edge = 0, centre = 0; for (let i = 0; i < col.count; i++) { if (col.getW(i) === 0) edge++; if (col.getW(i) > 0.45) centre++; } assert.ok(edge >= 36 * 4 && centre >= 4, `${edge} edge points at 0 alpha, ${centre} thick ones`);
     const want = { summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1] };
-    for (const [season, c] of Object.entries(want)) { g.setMood({ season, snow: 0 }); assert.ok(bed.visible, season); const k = bed.material.color; assert.ok(Math.abs(k.r - c[0] * 0.6) < 1e-6 && Math.abs(k.g - c[1] * 0.6) < 1e-6, `${season}: ${k.r}, ${k.g}`); }
+    for (const [season, c] of Object.entries(want)) { g.setMood({ season, snow: 0 }); assert.ok(bed.visible, season); const k = bed.material.color; assert.ok(Math.abs(k.r - c[0] * 0.45) < 1e-6 && Math.abs(k.g - c[1] * 0.45) < 1e-6, `${season}: ${k.r}, ${k.g}`); }
     g.setMood({ season: "winter", snow: 0 }); assert.ok(!bed.visible, "winter"); g.setMood({ season: "summer", snow: 0.9 }); assert.ok(!bed.visible, "under snow");
   });
 }
