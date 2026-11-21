@@ -1,0 +1,18 @@
+{
+ "tools": ["node tools/ground-metrics.cjs <png>  (the lowest third of a 1920x1080 picture)", "node tools/joint-rows.cjs --joint=0.9,5.4 --out=joint-rows.json  (joint width on the screen, row by row, from the page's own ground hits)"],
+ "art3_autumn_dusk": {
+  "before_old_pose": { "lumaStd": 13.36, "edge": 0.2571, "rowStd": 4.23 },
+  "after":           { "lumaStd": 10.17, "edge": 0.2444, "rowStd": 3.37 }
+ },
+ "cam06_summer_day": {
+  "before": { "lumaStd": 27.07, "edge": 0.2986, "rowStd": 11.88 },
+  "after":  { "lumaStd": 26.6,  "edge": 0.2752, "rowStd": 11.68 }
+ },
+ "whole_picture_luma_cam06": { "before": { "L05": 28.0, "L50": 72.1, "L95": 194.9 }, "after": { "L05": 28.0, "L50": 76.4, "L95": 194.9 } },
+ "joint_on_screen_1080p": {
+  "note": "mean width in pixels of a joint of the given width over the rows where the paving shows down the middle column; rows 720-1062 of 1080 (the lowest third) in both views; the paving begins at about row 700, so the middle third (360-720) holds one sampled row. Same geometry for both widths (art3's new pose: eye 0.81 m, fov 44; cam06: eye 1.32 m, fov 52).",
+  "cam06_first":  { "ground_metres": [3.9, 21.3], "joint_0.9cm": { "meanPx": 1.34, "maxPx": 1.86 }, "joint_5.4cm_before": { "meanPx": 6.01, "maxPx": 10.77 } },
+  "art3_third":   { "ground_metres": [2.4, 7.1],  "joint_0.9cm": { "meanPx": 2.36, "maxPx": 3.59 }, "joint_5.4cm_before": { "meanPx": 13.34, "maxPx": 21.55 } },
+  "correction": "an earlier version of this note and of the PR body gave 1.64 px (art3) and 2.38 px (cam06) from a formula that assumed the eye's height and the pitch's sign; those were wrong, these come from the page"
+ }
+}
