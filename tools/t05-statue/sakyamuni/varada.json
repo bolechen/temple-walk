@@ -303,6 +303,7 @@
   "pad": 0.0,
   "weld": 1e-05,
   "note": "only inside the knee box (seen from the front); the hand's bounds took real robe pieces beside it. The face-processed figure already has four two-face pieces there from the generator",
-  "hand": false
+  "hand": false,
+  "zmin": 1.0
  }
 }
