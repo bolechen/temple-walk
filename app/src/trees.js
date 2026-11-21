@@ -476,7 +476,8 @@ export function createTrees(scene, M, spots, opts = {}) {
       grown.forEach((stem, i) => { const m = settle(stem, thick * (1 - 0.12 * i)), l = paint(stem, m, { ...info, startY: y + footTop(thick) }); root(x, y, z, thick, false, { curve: l.curve, rad: l.rad, sides: 12, kind, h, stem: i }, i === 0 ? 0.13 + h * 0.019 : 0); });
       back();
     }
-    let tris = 0; for (let i = w0; i < wood.length; i++) tris += wood[i].index ? wood[i].index.count / 3 : wood[i].attributes.position.count / 3;
+    let tris = kind === "ginkgo" ? info.tris : 0;   // (a ginkgo's wood is grown on its own, counted as it was made)
+    for (let i = w0; i < wood.length; i++) tris += wood[i].index ? wood[i].index.count / 3 : wood[i].attributes.position.count / 3;
     census.push({ kind, h, at: [x, z], tris, far: !!far0 });
   }
   if (wood.length) scene.add(mesh(merge(wood), M.bark));
