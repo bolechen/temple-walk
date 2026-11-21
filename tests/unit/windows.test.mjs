@@ -8,6 +8,10 @@ const { buildSite } = await import("../../app/src/site.js");
 const { LIT, BUDGET } = await import("../../app/levels/t00/windows.js");
 const { moodOf, SEASONS, TIMES } = await import("../../app/src/mood.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+// The one hall the plan lights in every bay at dusk: prototype 05 shows the Guanyin hall's whole row of paper lit, deep
+// and pale by turns, and ART-REVIEW A2 says "only 05's windows show a lamp". The art director kept it so (#509); the
+// limit of a third of the windows is there to stop a courtyard full of lamps, which is the other halls' case.
+const LIT_THROUGHOUT = new Set(["guanyin"]);
 const windows = () => buildSite(M).litWindows;
 const lit = (ws, col) => ws.filter((w) => w[col] > 0);
 
@@ -20,8 +24,13 @@ test("a few bays are lit at dusk, more at night, and never all of them", () => {
 test("the great hall and the Guanyin hall are lit at dusk, and every other building is dark in some of its bays", () => {
   const ws = windows();
   for (const id of ["main", "guanyin"]) assert.ok(lit(ws, "dusk").some((w) => w.building === id), `${id} is dark at dusk`);
-  for (const id of new Set(ws.map((w) => w.building))) { if (id === "guanyin") continue;   // prototype 05 lights it throughout
+  for (const id of new Set(ws.map((w) => w.building))) { if (LIT_THROUGHOUT.has(id)) continue;
     const mine = ws.filter((w) => w.building === id); assert.ok(lit(mine, "dusk").length < mine.length, `${id}: every bay lit at dusk`); }
+});
+test("no building but the Guanyin hall is lit in every bay at dusk, and it is lit in all five", () => {
+  const ws = windows(), by = (id) => ws.filter((w) => w.building === id);
+  assert.deepEqual([...LIT_THROUGHOUT], ["guanyin"]); assert.equal(lit(by("guanyin"), "dusk").length, by("guanyin").length);
+  for (const id of new Set(ws.map((w) => w.building))) if (!LIT_THROUGHOUT.has(id)) assert.ok(lit(by(id), "dusk").length < by(id).length, id);
 });
 test("what is lit is the data: every key names a building and every bay it names exists", () => {
   const ws = windows(), have = new Set(ws.map((w) => `${w.building}|${w.face}|${w.bay}`));
