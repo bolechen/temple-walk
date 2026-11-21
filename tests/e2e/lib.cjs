@@ -31,6 +31,13 @@ async function open(browser, base, query, opts = {}) {
   // browser speaks Chinese unless one asks otherwise (`locale`, or ?lang=).
   const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, deviceScaleFactor: 1, locale: "zh-CN", ...ctxOpts });
   const page = await ctx.newPage(), errors = [];
+  // `window.__poseNear(x, z, yaw, pitch)`: __pose, but into a cell he may stand in. A place's ring has shut cells in it (the bell's railing, the tea table's stools), and a visitor is never put in one: he steps through
+  // the floor's open cells a stride at a time, so put down in a shut one he cannot take the first step on a card that draws sixty frames a second (software rendering's longer strides jump out of it, which hid it).
+  await page.addInitScript(() => { window.__poseNear = (x, z, yaw, pitch) => {
+    const tries = [[0, 0]]; for (let r = 1; r <= 12; r++) for (let k = 0; k < 16; k++) tries.push([Math.cos((k * Math.PI) / 8) * r * 0.1, Math.sin((k * Math.PI) / 8) * r * 0.1]);
+    for (const [dx, dz] of tries) { window.__pose(x + dx, z + dz, yaw, pitch); if (!window.__walker().blockedHere) return [dx, dz]; }
+    window.__pose(x, z, yaw, pitch); return null;
+  }; });
   if (opts.init) await page.addInitScript(opts.init);   // before the page's own scripts: a stub for an API, a way to hide it
   if (route) await page.route(route[0], route[1]);   // before the page asks: a file made to fail, as on a bad network
   page.on("pageerror", (e) => errors.push("page error: " + String(e.stack || e).slice(0, 400)));

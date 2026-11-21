@@ -123,7 +123,7 @@ const scenarios = {
       if (q.method() === "POST") { const body = JSON.parse(q.postData()); posts.push(body); const c = (fake[body.place] ||= { rite: 0, seal: 0 }); c[body.kind]++; return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ day, ...body, n: c[body.kind] }) }); }
       return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ day, traces: fake }) });
     }];
-    const stand = async (t, id) => { await t.page.evaluate((i) => { const p = window.__places[i]; window.__pose(p.at[0], p.at[1], p.face + Math.PI, 0); }, id); await t.until(() => t.page.evaluate((i) => window.__presence().near === i, id), 30000, "the place was not offered: " + id); };
+    const stand = async (t, id) => { await t.page.evaluate((i) => { const p = window.__places[i]; window.__poseNear(p.at[0], p.at[1], p.face + Math.PI, 0); }, id); await t.until(() => t.page.evaluate((i) => window.__presence().near === i, id), 30000, "the place was not offered: " + id); };
     const t = await open(b, base, "q=low&presence=1" + BARE, { route: api });
     await t.until(() => t.page.evaluate(() => window.__presence().read >= 1), 30000, "the day was never read");
     const stubs = await t.page.evaluate(() => window.__censer());
@@ -252,7 +252,7 @@ const scenarios = {
     await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 30000, "the title never left");
     if (await t.page.evaluate(() => window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening"); }   // a first visit: the mountain first (src/opening.js)
     expect((await words("#goal")).includes("鐘楼") && (await words("#goal")).includes("次は"), "the next place should be named in Japanese: " + (await words("#goal")));
-    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); });
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); });
     await t.until(async () => (await t.page.isVisible("#act")) && (await words("#act")).includes("鐘を撞く"), 30000, "the bell should be offered in Japanese");
     await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 20000, "the book did not open");
     // (the walk so far is told only after twenty steps, #185: here he has been posed, not walked)
@@ -299,7 +299,7 @@ const scenarios = {
       return after;
     };
     await t.page.evaluate(() => window.__mood("autumn", "dusk"));   // a hand's choice, for this visit only
-    await t.page.evaluate(() => { window.__view("third"); const p = window.__places.bell; window.__pose(p.at[0] + 0.6, p.at[1] - 0.6, 0.7, -0.08); }); await t.frames(3);
+    await t.page.evaluate(() => { window.__view("third"); const p = window.__places.bell; window.__poseNear(p.at[0] + 0.6, p.at[1] - 0.6, 0.7, -0.08); }); await t.frames(3);
     await switchTo("en", "first court");
     // Esc puts the menu away and he walks on at once.
     await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.evaluate(() => window.__ui().stack.length)), 10000, "Esc did not put the menu away");
@@ -672,7 +672,8 @@ const scenarios = {
     await t.page.evaluate(() => window.__view("first"));
     const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
       return t.page.evaluate(() => { const seen = window.__probe().lum; window.__trail(false); return window.__probe().lum - seen; }); };   // in one go: the next frame shows them again
-    const dark = await look(); await t.shot("e2e-snow-prints"); expect(dark > 0.6, `his prints should show in the snow: they darken the picture by ${dark.toFixed(2)} ` + JSON.stringify(walked));
+    // (without them the same view differs by 0; the picture drawn in software gave over 0.6, a T4 0.56: the line is between nothing and clearly something)
+    const dark = await look(); await t.shot("e2e-snow-prints"); expect(dark > 0.3, `his prints should show in the snow: they darken the picture by ${dark.toFixed(2)} ` + JSON.stringify(walked));
     await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.state()).room === "chan", 60000, "could not go into the meditation hall");
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(2);
     let p = await t.probe(); expect(p.snow === 0 && !p.drift, `indoors no snow should lie or fall: snow ${p.snow}, falling ${p.drift}`);
@@ -720,7 +721,7 @@ const scenarios = {
   // The whole pilgrimage: seven observances, a seal for each, the book filling, and all of it remembered.
   pilgrimage: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&seed=4" + BARE);
-    const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
+    const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
     const word = () => t.page.getAttribute("#act", "data-word"), offered = (w, what) => t.until(async () => (await t.page.isVisible("#act")) && (await word()) === w, 30000, `"${w}" was not offered ${what}`);
     let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
@@ -799,7 +800,7 @@ const scenarios = {
     // on the turn of one frame would measure the machine: the swing turns at a steady rate, so a frame that took 135 ms turns it 3.75°.
     const TURN_HOME = 190;
     const t = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
-    await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+    await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
     await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered");
     await t.page.click("#act");
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended");
@@ -840,7 +841,7 @@ const scenarios = {
     // On a phone there is no B: the line at the foot is the way to the book, pressed with a thumb; the stick brings the eye home.
     {
       const m = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
-      await m.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await m.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
       await m.until(async () => (await m.page.isVisible("#act")) && (await m.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered on the phone");
       await m.page.tap("#act");
       await m.until(async () => (await m.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended on the phone");
@@ -867,7 +868,7 @@ const scenarios = {
     {
       const k = await open(b, base, "q=low&fast=1&seed=4&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
       await k.page.evaluate(() => window.__music(true));
-      await k.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await k.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
       await k.until(async () => (await k.page.isVisible("#act")) && (await k.page.getAttribute("#act", "data-word")) === "静坐", 60000, "静坐 was not offered for the music");
       await k.page.click("#act");
       await k.until(async () => (await k.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended for the music");
@@ -911,7 +912,7 @@ const scenarios = {
     const cases = [["third", true], ["third", false], ["first", true]];
     for (const [view, autocam] of cases) {
       const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day&seed=4` + BARE, { viewport: { width: 960, height: 540 }, init: `try{localStorage.setItem("yunjing.settings.v1",JSON.stringify({autocam:${autocam}}))}catch{}` });
-      await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
       await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 40000, "静坐 was not offered");
       await t.page.click("#act");
       await t.until(() => t.page.isVisible("#breathWord"), 90000, "no word for the breath");
@@ -986,7 +987,7 @@ const scenarios = {
     const all = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"];
     await t.page.evaluate((ids) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(ids.map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: 20, opened: 20, told: true, closed: 30, closedSeason: "summer" })); }, all);
     await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
-    const summit = async () => { await t.page.evaluate(() => { const p = window.__places.sit; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }); await t.frames(3); await t.page.waitForTimeout(800); return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
+    const summit = async () => { await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }); await t.frames(3); await t.page.waitForTimeout(800); return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
     expect((await summit()) !== "静坐", "the close was offered again in the season it was seen in");
     await t.page.evaluate(() => window.__mood("winter", "day"));
     await t.until(async () => (await summit()) === "静坐", 30000, "a change of season did not offer the close again");
@@ -1005,7 +1006,7 @@ const scenarios = {
   incense: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&burn=12&in=main&cam=0,0,0,0" + BARE);
     const R = () => t.page.evaluate(() => window.__rites().incense), word = async () => ((await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null);
-    const at = () => t.page.evaluate(() => { const p = window.__places.incense; window.__pose(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); });
+    const at = () => t.page.evaluate(() => { const p = window.__places.incense; window.__poseNear(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); });
     await t.until(() => t.inHall(), 60000, "not in the great hall"); await at();
     await t.until(async () => (await word()) === "上香", 40000, "上香 was not offered"); await t.page.click("#act");
     await t.until(async () => (await R()).planted, 120000, "the sticks were never set in the ash");
@@ -1032,7 +1033,7 @@ const scenarios = {
   "incense-halls": { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&burn=30&in=guanyin&cam=0,0,0,0" + BARE);
     const R = () => t.page.evaluate(() => window.__rites().incense.halls), word = async () => ((await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null);
-    const stand = (hall) => t.page.evaluate((h) => { const p = window.__places["incense-" + h]; window.__pose(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); }, hall);
+    const stand = (hall) => t.page.evaluate((h) => { const p = window.__places["incense-" + h]; window.__poseNear(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); }, hall);
     const offer = async (hall) => { await stand(hall); await t.until(async () => (await word()) === "上香", 60000, `上香 was not offered in ${hall}`); await t.page.click("#act");
       await t.until(async () => (await R())[hall].planted, 120000, `the sticks were never set in ${hall}'s ash`); await t.until(async () => !(await t.journey()).rite, 60000, `he did not finish the offering in ${hall}`); };
     await t.until(() => t.inHall(), 60000, "not in the Guanyin hall"); await offer("guanyin");
@@ -1052,7 +1053,7 @@ const scenarios = {
   } },
   oldbook: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0");
-    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);
+    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); }, id);
     const summit = async () => { await at("sit"); await t.frames(6);   /* the button is looked at every 180 ms, and a frame here is longer than that */ return (await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null; };
     const load = async (book, ended) => { await t.page.evaluate(([bk, e]) => { localStorage.setItem("yunjing.journey.v1", JSON.stringify(bk)); if (e) localStorage.setItem("yunjing.ending.v1", "1"); else localStorage.removeItem("yunjing.ending.v1"); }, [book, ended]);
       await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 }); };
@@ -1246,7 +1247,7 @@ const scenarios = {
     expect((await t.page.textContent("#enterBtn")) === "入山" && !L.again && !L.offer.going, "a first visit should be offered only the way in: " + JSON.stringify(L.offer));
     await t.page.click("#enterBtn"); const start = await t.state();
     // He goes up to the bell, earns nothing, and the page is left.
-    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] - 1.5, p.at[1] - 2, 0.4, 0); });
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0] - 1.5, p.at[1] - 2, 0.4, 0); });
     await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && Math.abs(p.x - 14) < 0.2 && p.label === "钟楼"; }, 60000, "where he stands was never kept");
     await t.page.reload(); await ready(); L = await t.page.evaluate(() => window.__left());
     expect((await t.page.textContent("#enterBtn")) === "接着走" && L.again && (await t.page.textContent("#againBtn")) === "从头走起", "coming back should offer to go on or begin again: " + JSON.stringify(L.offer));
@@ -1255,7 +1256,7 @@ const scenarios = {
     expect(Math.abs(st.x - 14) < 0.3 && Math.abs(st.yaw - 0.4) < 0.05, "he is not where he was left: " + JSON.stringify([st.x, st.z, st.yaw]));
     // (The observance is started without handing its promise back: the page would wait for the whole of it.)
     // With a seal in the book, beginning again is asked twice, empties the book and starts at the foot of the path.
-    await t.page.evaluate(() => { const p = window.__places.well; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to lose");
+    await t.page.evaluate(() => { const p = window.__places.well; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to lose");
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture"); await t.page.waitForTimeout(2600);
     await t.page.reload(); await ready();
     expect((await t.page.textContent("#titleSeals")).includes("已得一印"), "the seal was not remembered: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify((await t.journey()).seals));
@@ -1266,7 +1267,7 @@ const scenarios = {
     st = await t.state(); const j = await t.journey();
     expect(j.count === 0 && Math.abs(st.x - start.x) < 0.3 && Math.abs(st.z - start.z) < 0.6, "beginning again should empty the book and stand him at the start: " + JSON.stringify([j.count, st.x, st.z, start.x, start.z]));
     // A seal that has been earned is the way back to its place: earn the well's again, walk off, open the book, press the seal.
-    await t.page.evaluate(() => { const p = window.__places.well; window.__pose(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to go back to");
+    await t.page.evaluate(() => { const p = window.__places.well; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to go back to");
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
     await t.page.evaluate(() => window.__pose(0, 30, 0, 0)); await t.page.evaluate(() => window.__book());
     await t.until(() => t.page.isVisible("#book"), 30000, "the book did not open");
@@ -1342,7 +1343,7 @@ const scenarios = {
   // and drunk from, a stool and a cushion sat on, the incense bowed with and set in the ash.
   rites: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&enter&view=third&season=summer&time=day");
-    const at = (id, dx = 0.3, dz = 0.3) => t.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__pose(p.at[0] + d, p.at[1] + e, 0, 0); }, [id, dx, dz]);
+    const at = (id, dx = 0.3, dz = 0.3) => t.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__poseNear(p.at[0] + d, p.at[1] + e, 0, 0); }, [id, dx, dz]);
     const offered = (word) => t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 40000, `"${word}" was not offered`);
     const seen = (what, fn, ms = 120000) => t.page.waitForFunction(fn, null, { timeout: ms, polling: 100 }).catch(() => { throw new Error(what); });
     const R = () => t.page.evaluate(() => window.__rites());
@@ -1409,7 +1410,7 @@ const scenarios = {
   // raised in the middle of a swing frames the shot.
   director: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&enter&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
-    const at = (id, dx = 0.3, dz = 0.3) => t.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__pose(p.at[0] + d, p.at[1] + e, Math.PI - p.face, 0.05); }, [id, dx, dz]);
+    const at = (id, dx = 0.3, dz = 0.3) => t.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__poseNear(p.at[0] + d, p.at[1] + e, Math.PI - p.face, 0.05); }, [id, dx, dz]);
     const offered = (word) => t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === word, 40000, `"${word}" was not offered`);
     const D = () => t.page.evaluate(() => window.__director());
     const reach = (what, fn, ms = 90000) => t.page.waitForFunction(fn, null, { timeout: ms, polling: 50 }).catch(async () => { throw new Error(what + " | " + JSON.stringify(await D())); });
@@ -1494,7 +1495,7 @@ const scenarios = {
     // comes home), the lamp from his own eyes (and back into them), and the summit, where the close takes the eye from
     // the shot and the director lets go.
     const f = await open(b, base, "q=low&enter&fast=1&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 } });
-    const fat = (id, dx = 0.1, dz = 0.1) => f.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__pose(p.at[0] + d, p.at[1] + e, Math.PI - p.face, 0.05); }, [id, dx, dz]);
+    const fat = (id, dx = 0.1, dz = 0.1) => f.page.evaluate(([k, d, e]) => { const p = window.__places[k]; window.__poseNear(p.at[0] + d, p.at[1] + e, Math.PI - p.face, 0.05); }, [id, dx, dz]);
     const fword = (w) => f.until(async () => (await f.page.isVisible("#act")) && (await f.page.getAttribute("#act", "data-word")) === w, 40000, `"${w}" was not offered`);
     const fsee = (what, fn, ms = 90000) => f.page.waitForFunction(fn, null, { timeout: ms, polling: 50 }).catch(async () => { throw new Error(what + " | " + JSON.stringify(await f.page.evaluate(() => window.__director()))); });
     await f.page.evaluate(() => window.__inside("main")); await f.until(() => f.inHall(), 30000, "could not go into the great hall");
@@ -1522,7 +1523,7 @@ const scenarios = {
     expect(f.errors.length === 0, f.errors.join("\n")); await f.close();
     // Reduced motion: never a swing, only the ink, there and back.
     const r = await open(b, base, "q=low&enter&view=third&season=summer&time=day" + BARE, { viewport: { width: 960, height: 540 }, reducedMotion: "reduce" });
-    await r.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, Math.PI, 0.05); });
+    await r.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0] + 0.3, p.at[1] - 0.3, Math.PI, 0.05); });
     await r.until(async () => (await r.page.isVisible("#act")) && (await r.page.getAttribute("#act", "data-word")) === "撞钟", 40000, "撞钟 was not offered");
     await r.page.click("#act");
     let saw = 0; await r.page.waitForFunction(() => window.__director().phase === "hold", null, { timeout: 90000, polling: 50 });
@@ -1605,7 +1606,7 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__prologue())).shown === 1, "the title should rise once in a pilgrimage");
     // Coming back: 接着走, no opening, no bell, no title.
     await t.page.waitForTimeout(2600); await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
-    expect((await t.page.textContent("#enterBtn")) === "接着走", "a returning visitor should be offered to go on");
+    await t.until(async () => (await t.page.textContent("#enterBtn")) === "接着走", 30000, "a returning visitor should be offered to go on");   // (the title is lettered a few frames after the page says it is ready)
     await stepIn(t); await t.frames(3); o = await O(t);
     expect(!o.active && o.phase === "idle" && o.cues.mountainBell === 0, "a returning visitor should step straight in: " + JSON.stringify(o));
     expect((await t.page.evaluate(() => window.__prologue())).titled, "the title is kept for the pilgrimage");
@@ -2240,7 +2241,7 @@ const scenarios = {
     // One seal to a sheet: the book closes with one, and saving or sharing are written in ink.
     expect(await t.page.evaluate(() => [...document.querySelectorAll("#book .stamp")].filter((e) => e.offsetParent).map((e) => e.id).join()) === "bookClose", "the book should carry exactly one seal, 合上");
     await t.page.keyboard.press("Escape"); expect(!(await t.page.isVisible("#book")), "Esc should close it");
-    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.journey()).strikes === 1, 30000, "E should strike the bell");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
@@ -2596,6 +2597,8 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });
     const sample = () => t.page.evaluate(() => { window.__jump = []; const read = () => { const s = window.__yard(); window.__jump.push([s.footY, s.jumping, s.z]); if (window.__jump.length < 400 && (s.jumping || window.__jump.length < 3)) requestAnimationFrame(read); }; requestAnimationFrame(read); });
     // #141: the patch that stands for his shadow keeps to the ground under him all through the jump, fainter at the top.
+    // (It eases in over the first moments after the walk is his, and on a card that draws sixty frames a second the jump could begin inside that: wait for it to be as it will stay.)
+    { let was = -1; await t.untilFrames(async () => { const op = (await t.state()).shadowOp; const still = Math.abs(op - was) < 1e-3 && op > 0.1; was = op; if (!still) await t.frames(3); return still; }, 600, "his shadow never settled"); }   // (it still eases the last few hundredths over the next second: the check below allows 0.03 for that, the jump's own dip being 0.15)
     await t.page.evaluate(() => { window.__sh = []; const read = () => { const s = window.__yard(); window.__sh.push([s.footY, s.h, s.shadowY, s.shadowOp]); if (window.__shOn) requestAnimationFrame(read); }; window.__shOn = true;; requestAnimationFrame(read); });
     const z0 = (await t.state()).z; await sample(); await t.page.keyboard.press("Space");
     await t.until(async () => (await t.page.evaluate(() => window.__jump.some((j) => j[1]))) && !(await t.state()).jumping, 120000, "Space did not send him up and bring him down");
@@ -2603,7 +2606,7 @@ const scenarios = {
     expect(top > 0.2 && top < 0.7, `a child's jump should be a hand or two high, not ${top}`); expect(Math.abs((await t.state()).footY) < 0.001 && Math.abs((await t.state()).z - z0) < 0.02, "he should land where he stood");
     const sh = await t.page.evaluate(() => { window.__shOn = false; return window.__sh; }), shTop = Math.max(...sh.map((q) => q[0]));
     expect(shTop > 0.2 && sh.every((q) => Math.abs(q[2] - (q[1] + 0.03)) < 0.02), "his shadow should stay on the ground in every frame of the jump: " + JSON.stringify(sh.filter((q) => Math.abs(q[2] - (q[1] + 0.03)) >= 0.02).slice(0, 3)));
-    expect(sh.find((q) => q[0] === shTop)[3] < sh[0][3] - 0.05 && Math.abs(sh[sh.length - 1][3] - sh[0][3]) < 0.01, "his shadow should be fainter at the top and as before when down: " + JSON.stringify({ first: sh[0], top: sh.find((q) => q[0] === shTop), last: sh[sh.length - 1], frames: sh.length }));
+    expect(sh.find((q) => q[0] === shTop)[3] < sh[0][3] - 0.05 && Math.abs(sh[sh.length - 1][3] - sh[0][3]) < 0.03, "his shadow should be fainter at the top and as before when down: " + JSON.stringify({ first: sh[0], top: sh.find((q) => q[0] === shTop), last: sh[sh.length - 1], frames: sh.length }));
     expect(!(await t.page.isVisible("#book")) && !(await t.page.isVisible("#slip")), "a jump should open nothing");
     await t.page.keyboard.down("w"); await t.frames(2); await sample(); await t.page.keyboard.press("Space");
     await t.until(async () => (await t.page.evaluate(() => window.__jump.some((j) => j[1]))) && !(await t.state()).jumping, 120000, "he never came down from a running jump");
@@ -2623,7 +2626,7 @@ const scenarios = {
     expect(Math.abs((await t.state()).footY - 0.45) < 0.001, "he should stand on the porch");
     await t.shot("jump-up");
     // Where something is offered, Space still jumps and E still does it.
-    await t.page.evaluate(() => { const p = window.__places.bell; window.__pose(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
+    await t.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("Space"); await t.frames(3); expect((await t.journey()).strikes === 0, "Space should not strike the bell any more");
     // At the tea house's tables (issue 16): held W, then Shift with W, and Space each time he is down, straight at a
     // table from the porch beside it. Every frame he is outside the table and his width, and he lands on the porch.
@@ -2884,7 +2887,7 @@ const scenarios = {
     expect(far > 0.5 && near < far - 0.3, `a pinch should move the eye: drawn together to ${far}, apart to ${near}`);
     // At the bell and over tea the stick is how a thumb lets go: pushed, he lets go of the rope, or stands up from his stool.
     const push = async () => { await cdp0.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: sb[0], y: sb[1], id: 8 }] }); await cdp0.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: sb[0], y: sb[1] - 44, id: 8 }] }); await t.frames(4); await cdp0.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); };
-    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__pose(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); }, id);
+    const at = (id) => t.page.evaluate((k) => { const p = window.__places[k]; window.__poseNear(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); }, id);
     const word = () => t.page.getAttribute("#act", "data-word");
     await at("bell"); await t.until(async () => (await t.page.isVisible("#act")) && (await word()) === "撞钟", 30000, "撞钟 was not offered to a thumb");
     await t.page.tap("#act"); await t.until(async () => (await t.page.evaluate(() => window.__rites().bell.grip)) > 0.9, 60000, "a tap did not take the rope");
