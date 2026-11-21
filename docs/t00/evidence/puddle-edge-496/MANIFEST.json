@@ -33,6 +33,36 @@
    "rev": "8266be5b6700c1751e33ece004d5c1deba6802da"
   },
   {
+   "path": "base-t05-a-summer-day.png",
+   "bytes": 2424029,
+   "sha256": "dc1f2896d6778daeee71b2a45748a0aa9ac14361d8bc87e1797c1ecbbfe7ac95",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "base-t05-a-winter-day.png",
+   "bytes": 2331217,
+   "sha256": "857a5e0e58b3ea21b8ffe12ba1279f956196fba80f2ba08044eb60f4c71e8b73",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "base-t05-c-summer-day.png",
+   "bytes": 2451079,
+   "sha256": "278d095f65add38648917e6dd6ef2d829b687cf5dab3dea83f430db799a9dff7",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "base-t05-gateway-summer-day.png",
+   "bytes": 2669447,
+   "sha256": "4700757d562efa74c85e05192c23b99520c1766b0657dd09aebdcc9f4b58505b",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "base-t05-gateway-winter-day.png",
+   "bytes": 2687613,
+   "sha256": "ad7d0e8f0560fef7ed37785a6c273134da0c9ebfd29a8e41f6c70a88d4a0ba88",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
    "path": "base-top-summer-day.png",
    "bytes": 1318313,
    "sha256": "a8820589a6d158a323e0ecd3cc489fef28af73cb2eef76babfd120ebf4c3dec4",
@@ -55,6 +85,12 @@
    "bytes": 522148,
    "sha256": "4727e8d195bf38252ec89e2ee677a63648551aa6477f2faf1d261d73d49646f4",
    "rev": "1603d59bfcf6762c2f43db85d7d84a800592462b"
+  },
+  {
+   "path": "collage-3.jpg",
+   "bytes": 713779,
+   "sha256": "17fab08b8252488525a74979978d826668a84b98db06e700510d9839eb9d4cac",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
   },
   {
    "path": "collage.jpg",
@@ -91,6 +127,36 @@
    "bytes": 2789082,
    "sha256": "3f7080b28406b3d515b5f80e228746e4f6079645db59089c10bb750c0b839af6",
    "rev": "8266be5b6700c1751e33ece004d5c1deba6802da"
+  },
+  {
+   "path": "new-t05-a-summer-day.png",
+   "bytes": 2421402,
+   "sha256": "54775ca637e234d03bda03218f2e9b1038f7144bb2e098636c8b43a8e41d165a",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "new-t05-a-winter-day.png",
+   "bytes": 2330837,
+   "sha256": "85e69266295f0b219b47c86e9791e8203f22c7bdfd76a640aea97047e35e5850",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "new-t05-c-summer-day.png",
+   "bytes": 2451784,
+   "sha256": "c7329f498df93cc0335f101d6ca578eb8684cdd30664a49861f48b6309ea2490",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "new-t05-gateway-summer-day.png",
+   "bytes": 2671105,
+   "sha256": "3c7b15e7aedecf49fde0a1f24be8b25002035212a35f2accccd7eb64edc5b45b",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
+  },
+  {
+   "path": "new-t05-gateway-winter-day.png",
+   "bytes": 2689231,
+   "sha256": "5ffd634658938c910a64b7c9e6cba11b5ba3816b39a7dda252a816a2996b8386",
+   "rev": "f2d01265df1b03f42eef0da684b3d3b6a065c129"
   },
   {
    "path": "new-top-summer-day.png",
