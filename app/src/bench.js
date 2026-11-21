@@ -11,3 +11,12 @@ export const BENCH_LEVELS = Object.freeze(["t05"]);
 
 /** Whether a build for this target (app/src/deploy.js) is one testers see, and lists them: a preview or the canary. @param {string} deploy */
 export const benchBuild = (deploy) => deploy === "preview" || deploy === "canary";
+
+/** The levels only the workbench lists: the dev server and a pull request's preview, never the canary nor the public page. The probe level that shows the engine stands without the prologue (app/levels/_probe, docs/t05/LEVEL-SPLIT.md S7) is one: it is not for testers to walk. */
+export const WORKBENCH_LEVELS = Object.freeze(["_probe"]);
+
+/** Whether a build for this target is the workbench's: a preview. @param {string} deploy */
+export const workbenchBuild = (deploy) => deploy === "preview";
+
+/** Whether a build for this target carries level `id` (its code is bundled, its floor and doorway pictures are copied): the prologue always. @param {string} id @param {string} deploy */
+export const levelShipped = (id, deploy) => (BENCH_LEVELS.includes(id) ? benchBuild(deploy) : WORKBENCH_LEVELS.includes(id) ? workbenchBuild(deploy) : true);
