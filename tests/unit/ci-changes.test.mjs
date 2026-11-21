@@ -38,11 +38,13 @@ test("the floor is baked when the site changes and when what the bake is made of
 
 test("every path that starts the nightly regression run on a push is one that builds the site", () => {
   // e2e.yml keeps its own `paths:` (a workflow cannot read a file for it); each of them must be a site change here.
-  const yml = fs.readFileSync(new URL("../../.github/workflows/e2e.yml", import.meta.url), "utf8");
-  const line = yml.match(/paths:\s*\[(.*)\]/)[1];
-  const globs = [...line.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(globs.length >= 5, "e2e.yml's paths were not found");
-  for (const g of globs) assert.equal(siteChanged([g.replace("**", "x")]), true, `e2e.yml runs on ${g}, which pages.yml would not build for`);
+  for (const f of ["e2e.yml", "mobile.yml"]) {   // (the phone audit's own workflow, #400, keeps the same list)
+    const yml = fs.readFileSync(new URL(`../../.github/workflows/${f}`, import.meta.url), "utf8");
+    const line = yml.match(/paths:\s*\[(.*)\]/)[1];
+    const globs = [...line.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    assert.ok(globs.length >= 5, `${f}'s paths were not found`);
+    for (const g of globs) assert.equal(siteChanged([g.replace("**", "x")]), true, `${f} runs on ${g}, which pages.yml would not build for`);
+  }
 });
 
 // #296: a push to main is compared with the last commit whose deploy succeeded, so a site change whose run was cancelled
