@@ -115,8 +115,11 @@ const cut = async (bitmap) => {
 // bytes are a number that averaging would make wrong).
 const picture = async (url, side = 0) => createImageBitmap(await (await fetch(url)).blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none", ...(side ? { resizeWidth: side, resizeHeight: side, resizeQuality: "high" } : {}) });
 
+/** Where a level's list of baked pictures lies: tools/bake-doorways.mjs writes <id>.json beside every level's pictures (#405). */
+export const manifestURL = (base, level) => `${base}${level}.json`;
+
 // `site.doorways` (the dark box of each hall and how its building stands), `rooms` (buildInteriors), the scene and the
-// renderer. `base`: where the baked pictures lie (`<base>t00.json` names them by hall); `steps`: see doorMaterial.
+// renderer. `base`: where the baked pictures lie (`<base><level>.json` names them by hall, `level` the walk's level, #405); `steps`: see doorMaterial.
 //
 // Nothing is fetched when the page opens. When the visitor first comes within `NEAR` of a hall's door, or sees it within
 // `SEEN`, its three pictures are fetched and decoded off the page's thread, sent to the card one a frame, and the room
@@ -128,7 +131,7 @@ export const NEAR = 40, SEEN = 90, FADE = 0.8;
 // left behind `?doorway=live` (doorway-live.js), the near room itself drawn through its door on the middle and high tiers.
 // `inward`: the side the larger face's colour is held at on the card (0: as baked, 1024). On the low tier it is 512: a hall
 // then holds 6.3 MB of the card's memory instead of 14.3, and three halls stay under 20 MB (#332).
-export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, keep = 4, base = null, modes = new Set(), inward = 0 }) {
+export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, keep = 4, base = null, level = "t00", modes = new Set(), inward = 0 }) {
   const halls = {}, frustum = new THREE.Frustum(), m4 = new THREE.Matrix4(), sphere = new THREE.Sphere();
   let manifest = null, asked = null, failed = 0, lastTick = 0, worstFrame = 0, busyFor = 0; const spikes = [];
   // The first picture a page ever sends to the card as a cube takes the browser's slow road once (a cold T4 held a frame
@@ -159,7 +162,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     const inv = new THREE.Matrix4().copy(o.d.group.matrixWorld).invert();
     o.mat.uniforms.uW2R.value.makeTranslation(0, -o.d.platH, o.zs - o.d.Z).multiply(inv);
   }
-  const list = () => (asked ||= (base && typeof fetch !== "undefined" ? fetch(base + "t00.json").then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null)).then((m) => { manifest = m; return m; }));
+  const list = () => (asked ||= (base && typeof fetch !== "undefined" ? fetch(manifestURL(base, level)).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null)).then((m) => { manifest = m; return m; }));
   // The three pictures of one hall, fetched and cut into faces; the cubes are made but not yet sent to the card.
   const fetchHall = async (o) => {
     const m = await list(), e = m?.halls?.[o.hall.id]; if (!e) return null;

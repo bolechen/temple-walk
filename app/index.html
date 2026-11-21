@@ -41,7 +41,7 @@
   <p id="goal" class="fade"></p>
   <div id="way" class="fade" aria-hidden="true"><i></i><span></span></div>
   <div id="keys" class="paper" hidden><h2>键位</h2><dl>
-    <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>行走</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
+    <dt><kbd>W</kbd><kbd>S</kbd></dt><dd>前后行走</dd><dt><kbd>A</kbd><kbd>D</kbd></dt><dd id="keysAD">转身</dd><dt><kbd>方向键</kbd></dt><dd>左右平移，上下同 W S</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
     <dt><kbd>鼠标</kbd></dt><dd>按住拖动环顾，点地面走去（「歇脚」里可改为锁定鼠标）</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
     <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd><dt><kbd>R</kbd></dt><dd>镜头转回身后（鼠标中键亦可）</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
@@ -76,6 +76,7 @@
     <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
     <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
     <div class="set"><span>锁定鼠标</span><button class="chip" id="setLock" type="button" aria-pressed="false">关</button></div>
+    <div class="set keys-only"><span>A/D 平移（旧）</span><button class="chip" id="setStrafe" type="button" aria-pressed="false">关</button></div>
     <div class="grp-name"><h3 aria-label="声音" title="声音">耳</h3><button class="chip" id="menuMix" type="button" aria-expanded="false" aria-controls="setMusic setAmbience setEffects">分开调</button></div>
     <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
     <div class="set sub"><label for="setMusic">乐声</label><input id="setMusic" type="range" min="0" max="1" step="0.05"></div>
@@ -117,12 +118,14 @@
     <button id="shutter" type="button" aria-label="按下快门"></button>
     <button class="chip" id="photoClose" type="button">收起<kbd>Esc</kbd></button>
   </div>
+  <button class="chip" id="clipBtn" type="button">拍一段</button>
+  <div id="clipRec" hidden><button class="chip" id="clipStop" type="button">停下<kbd>Esc</kbd></button><i id="clipBar"></i></div>
   <section id="photoSettings" class="paper scrolls" aria-label="拍照设置" hidden>
     <fieldset><legend>画幅</legend><div class="row">
       <button class="chip" data-aspect="screen" aria-pressed="true" type="button">全幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="tall" aria-pressed="false" type="button">竖幅</button>
     </div></fieldset>
     <fieldset><legend>取景</legend><div class="row">
-      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="qrToggle" aria-pressed="true" type="button">二维码</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button>
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="qrToggle" aria-pressed="true" type="button">二维码</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button><button class="chip" id="clipMarkToggle" aria-pressed="true" type="button">落款</button>
     </div></fieldset>
     <fieldset><legend>远近</legend><div class="row">
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
@@ -133,6 +136,11 @@
     </div></fieldset>
     <p>画面就是你眼前所见 · 单击即拍 · 滚轮远近</p>
   </section>
+  <dialog class="layer" id="clip" aria-label="影片" hidden>
+    <video id="clipVideo" controls playsinline loop aria-label="刚拍下的影片"></video>
+    <p id="clipHint" hidden></p>
+    <div class="row"><button class="chip" id="clipShare" type="button" hidden>分享</button><a class="chip" id="clipSave" href="#">保存</a><button class="chip" id="clipBack" type="button">返回</button></div>
+  </dialog>
   <dialog class="layer" id="print" aria-label="照片" hidden>
     <img id="printImg" alt="刚拍下的照片">
     <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
