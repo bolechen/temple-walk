@@ -1,0 +1,282 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 321386,
+   "sha256": "b2fe09d41983b6d0b1740b22f7a7c2eaf749f4a9ed55896b60e8640c27f5677f",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/half-warm.png",
+   "bytes": 879974,
+   "sha256": "f6fb25b41b7519ca39ae35107ff35fc55de23f4e6db6d63bfd3599eaf9dd8cf2",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/hand-left.png",
+   "bytes": 806871,
+   "sha256": "6aba0c4dafdcc9e8389a5dbef4518d63eeea4dcad2b24c7b8854396c7f2dbcca",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/hand-right.png",
+   "bytes": 770865,
+   "sha256": "fd53e06278c7ea579725769e10bf518a4663305af55ca1ee90919061713ab61b",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/turn-back.png",
+   "bytes": 540896,
+   "sha256": "9e6e59bcad40ba686c6fde78ad6cf6eb61ccf1532dc677117d90a243ee56efe4",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/turn-front.png",
+   "bytes": 546193,
+   "sha256": "e3a073dfd629d1303c9a4ace193cd36ea68441f50aaba72a0c0c1b82848c71bb",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/turn-left.png",
+   "bytes": 461570,
+   "sha256": "435d9644d4164765ae5553fc8efb8e8a5792f34a0d40fa2c324fb662c4b288c6",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kanakamuni/turn-right.png",
+   "bytes": 479254,
+   "sha256": "f19639460c7ebb9b296ff82e88c1be0aa1ac982b90eb05b0609757ae61ef23ec",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kasyapa/half-warm.png",
+   "bytes": 875951,
+   "sha256": "551b0e5edb38237de64f05b698edf46ccbf9df03a3159362b984879814458cb3",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kasyapa/hand-left.png",
+   "bytes": 915277,
+   "sha256": "bdac3a82b85e44f5cae06634b3a638fc3e40a53ab2e4f0f0c49c7bb94a3f4629",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kasyapa/turn-back.png",
+   "bytes": 533827,
+   "sha256": "7a5c7017aa94596912d3f090d47162c0eff41d97b3e1d14d24e189b8d70cff06",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kasyapa/turn-front.png",
+   "bytes": 542249,
+   "sha256": "16f4ce978ecbd6c96452945f2b0caf26495ce19045417de490b3e1e044076870",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kasyapa/turn-left.png",
+   "bytes": 433113,
+   "sha256": "1e09a04b80b6747b630a00a6b04ccd7f73f119646d0f34dc02c942997fb7e849",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "kasyapa/turn-right.png",
+   "bytes": 444229,
+   "sha256": "82ecb2814afe13e864a2b3ca3186df09c420360b1f0a5f9004e5c9169b62437c",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/half-warm.png",
+   "bytes": 876251,
+   "sha256": "e35c012d506c41ac99caeff4281f11899e3853728b5201321c79194d2401306b",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/hand-left.png",
+   "bytes": 902135,
+   "sha256": "e2e14ad534f6bf62eb3782ef1dc735e3f0d679914c256d921d54bc2e0650bb00",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/hand-right.png",
+   "bytes": 657264,
+   "sha256": "8ed47b5427cf7ebf2e92b3b622ffc2d99807bb716a3ea2f3b5e2b0fd287106ba",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/turn-back.png",
+   "bytes": 528420,
+   "sha256": "e69131380ac0038e776a05155be149e32f4d2273f5c9e913b9270114f66670da",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/turn-front.png",
+   "bytes": 537832,
+   "sha256": "55dccd3f4a6dc0376d0d0545a242df206754cc1fe3cc86ee6bafd208773e3b09",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/turn-left.png",
+   "bytes": 450707,
+   "sha256": "e448f9f3002d855953c9461ecc868e928458355f7aa0f85d1522de16938454d1",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "krakucchanda/turn-right.png",
+   "bytes": 468247,
+   "sha256": "7fc9ff71882901e1084661cf710824d34f8a5bb8a084bd8c4cc582eff8b495ce",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "lineup/cam06-winter.png",
+   "bytes": 1164672,
+   "sha256": "b6a6c3a204a470b73771b9fb88aa0e92d055408d4bbbb778a3f8d8aeec9c54dd",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "lineup/door-winter.png",
+   "bytes": 700759,
+   "sha256": "b22da5ccb77ee66d3b19d23fa7e48ac4915654df135f998ff9f9b2a914b418ef",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "lineup/door3-winter.png",
+   "bytes": 1251727,
+   "sha256": "0d8970ea58bb0da47c6dca9cab53a640ac433530d00e22f3d3ebd368ce2cfeea",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "lineup/row-winter.png",
+   "bytes": 1156640,
+   "sha256": "111e06e6fd159c677fda1d8f15485368c7b4e04facd36a215f19eb1d8473f7b9",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/half-warm.png",
+   "bytes": 932082,
+   "sha256": "aa143558d18c669cee5b5f604c41d9c91859cef585d32f5b5887880845f5df89",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/hand-left.png",
+   "bytes": 543954,
+   "sha256": "739d16f1cb4448cdc1a5f25dad508f944c09824a4e8954a73191a6c9ac6e9694",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/hand-right.png",
+   "bytes": 802753,
+   "sha256": "8a6f893cd115e5a5c634fa39cc9d693deb3adc6333fd73b0caaa7d1672a21dfc",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/turn-back.png",
+   "bytes": 546604,
+   "sha256": "6f0521a2a473649e54d14a24579996c9c24a76a98bc69f9dda48206722933c05",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/turn-front.png",
+   "bytes": 570047,
+   "sha256": "b30cd244c743bacff90fd98794e5d8ed06d5d770016b423a920a10eb76e0af3e",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/turn-left.png",
+   "bytes": 433975,
+   "sha256": "a535e20aff1b73a78ae2d13a5cbaf96709e98f72d7e50a356242d662bca9f03c",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "sikhin/turn-right.png",
+   "bytes": 457292,
+   "sha256": "c541b655d72510febaf0640760a6a2e31e87c18861ccff0834caeea5d604ad34",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/half-warm.png",
+   "bytes": 912480,
+   "sha256": "8a4ff1e1834dc271c19b4d061a834db3a360fa13b1c176addfaa8d8752f53549",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/hand-left.png",
+   "bytes": 796139,
+   "sha256": "2b5a4858a1260fb238ee60239e65963d786765b24923234edc2c3305af8c31f8",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/hand-right.png",
+   "bytes": 608484,
+   "sha256": "aa53596e04790a22d4716334c6ef350c47d040e56f7f388b820519740e016d14",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/turn-back.png",
+   "bytes": 504106,
+   "sha256": "7bb4547d6058ed59bf0d4653d9781e4e2780d06aa9eff1fbba6d9cc6b0d482f6",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/turn-front.png",
+   "bytes": 548655,
+   "sha256": "e34b994bbf70e8e667756c868ac745df3e916ece1f6f41b2580d849900d7090b",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/turn-left.png",
+   "bytes": 427602,
+   "sha256": "51db9f23e37ced8b8b61be14c77f1ed6868082578f454ea5f9b742ac58ab662b",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "vipasyin/turn-right.png",
+   "bytes": 451253,
+   "sha256": "4525c55ec66609cc4ccedfd3268251f5b85734a9e735da0efc4c727a7807a439",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/half-warm.png",
+   "bytes": 896574,
+   "sha256": "8ea7eb3233eaed398fb6cece736e18fc33d4fb12786b1f1f217ca7ab513735d4",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/hand-left.png",
+   "bytes": 915642,
+   "sha256": "7b74b2d85ce7bc251dfbbfc41b45f522ab7f5c37b95b48c8a2160e524bbed0b2",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/hand-right.png",
+   "bytes": 728787,
+   "sha256": "a798fc04d18ac6765dac6df92e89370451f52f67eb3b067edd14c5aa3e53156b",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/turn-back.png",
+   "bytes": 541226,
+   "sha256": "9b70183303159ab0690d33f1fbf17dc07de59ce701f3aaaa54a8dfee8ea3386d",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/turn-front.png",
+   "bytes": 533939,
+   "sha256": "b0394a7f690d1fc899fb85dea6ca962519a2386bbc0f7632d63f0a326091534b",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/turn-left.png",
+   "bytes": 435779,
+   "sha256": "dcf6597f1b69d87c6bceaaee2cf69a0a1787d75214af754cfb1bab178cbe492c",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  },
+  {
+   "path": "visvabhu/turn-right.png",
+   "bytes": 456706,
+   "sha256": "fc223ea59171122e8b8d77199bac045b170681c4e324e07053a43b8b7c5c739e",
+   "rev": "0d70cae55ec2db19820340959323b96891c863aa"
+  }
+ ]
+}

@@ -27,6 +27,7 @@ import t00 from "../levels/t00/level.js";
  * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
  * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
  * @property {boolean} [title] raises the prologue's title at its gate
+ * @property {{ place: string, line: string }} [how] the line at the foot of the title page: "region · road" (a region's name, never a real city's) and one sentence of this temple's own (#445); none, none shown
  * @property {[number, number]} [skyAt] where the sky's dome stands (x, z), so that its far side stays within the eye's 800 m from everywhere walked (#409; the origin by default)
  *
  * What the floor's bake needs beyond what a level builds is in app/levels/<id>/bake.js, which only the Node tools read

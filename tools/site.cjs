@@ -21,7 +21,7 @@ function site() {
 
 // The one static server for the tools and the tests: the site's files as they are published, nothing added, and a Worker's
 // empty answers for /api/ (a canary's or production's page asks it for the day's traces, #340; a scenario that wants counts
-// stubs /api/ itself with `route`). A path never leaves `root`; a directory or a missing file is a 404.
+// stubs /api/ itself with `route`). A path never leaves `root`; a directory (unless the path ends in /, then its index.html) or a missing file is a 404.
 //   const srv = await serve(root[, { api: true, handler }]);  srv.base is "http://127.0.0.1:<port>/", srv.close() stops it.
 // `handler(req, res, rel)` is asked first (rel: the decoded path without its query) and answers true when it has answered the
 // request itself: the pages some audio tools write in code, a model file served from outside root (#399).
@@ -39,7 +39,7 @@ function serve(root, { api = true, handler = null } = {}) {
       if (req.url.startsWith("/api/traces")) { res.writeHead(200, { "content-type": "application/json" }); return res.end('{"day":null,"traces":{}}'); }
       res.writeHead(204); return res.end();
     }
-    const p = under(root, rel === "/" ? "/index.html" : rel);
+    const p = under(root, rel.endsWith("/") ? rel + "index.html" : rel);   // a path ending in / is that folder's page (the other build staged at base/ for a turn-about measure, tools/gpu-render.sh BASE_SITE)
     if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { "content-type": TYPES[path.extname(p)] || "application/octet-stream" });
     fs.createReadStream(p).pipe(res);

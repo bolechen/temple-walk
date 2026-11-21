@@ -121,7 +121,7 @@
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
     <div><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
   </div>
-  <div id="pilgrimHold" role="progressbar" aria-label="按住 Q，行脚图" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i></i><span>行脚图</span></div>
+  <div id="pilgrimHold" aria-label="按住 Q，行脚图"><span class="mark"></span><small>行脚图</small></div>
   <canvas id="still" aria-hidden="true"></canvas>
   <div id="finder" aria-hidden="true"></div>
   <div id="frame"><i class="third"></i></div>
@@ -172,7 +172,15 @@
   <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
-  <div class="row"><button class="chip need-pilgrim" id="bookMap" type="button">行脚图</button><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookMoreBtn" type="button" aria-haspopup="dialog">更多</button><button class="stamp" id="bookClose" type="button">合上</button></div>
+</dialog>
+<dialog class="layer" id="bookMore" aria-label="更多" hidden>
+  <div class="more-card paper">
+    <button class="chip" id="bookReplay" type="button" hidden>山顶再坐一回</button>
+    <button class="chip need-pilgrim" id="bookMap" type="button">行脚图</button>
+    <button class="chip" id="bookReset" type="button">重新朝山</button>
+    <button class="chip" id="bookMoreClose" type="button">收起</button>
+  </div>
 </dialog>
 <dialog class="layer" id="pilgrim" aria-labelledby="pilgrimTitle" hidden>
   <div class="pilgrim-card paper scrolls">
@@ -224,11 +232,11 @@
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>
     <button id="againBtn" type="button" hidden></button>
   </div>
-  <p class="how">七处小事 · 七枚朱印</p>
+  <p class="how" hidden><b></b><span></span></p>
   <div class="title-links"><button class="chip" id="titleCommunity" type="button" hidden>内测反馈群</button><button class="chip" id="titleSet" type="button">设置</button><span class="langs"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></span></div>
 </div>
 <!-- The close of the chapter: the closing words, one at a time, then the title of what has ended. -->
-<div id="ending" hidden><p id="endingLine"></p><div id="endingTitle"><b>山门之外</b><span>序章　云径禅寺　完</span><em>下一章，还在路上</em></div><small>轻点略过</small></div>
+<div id="ending" hidden><p id="endingLine"></p><div id="endingTitle"><b>山门之外</b><span>序章　云径禅寺　完</span><em>下一章，还在路上</em></div><div id="endingHold" aria-label="按住略过"><small id="endingHoldWord">按住略过</small><span class="mark"></span></div></div>
 <div id="veil"></div>
 
 <script type="module" src="lang.js"></script>

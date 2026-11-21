@@ -5,3 +5,5 @@
 重做：`node tools/stair-strip.cjs`、`node tools/gait-stairs.mjs`。
 
 第二版（`*-2.*`，骨盆跟脚阻尼 30→12、守卫测试改量真实步速）取代上一版的数与图；上一版文件按规矩不删。
+
+> 其余图片（本目录 `MANIFEST.json` 列着的）在证据库，不在 git：`node tools/evidence.mjs pull <本目录>` 取回到 `tools/out/evidence/`，每张的地址是 `base + rev + 路径`（见 `MANIFEST.json`、`tools/evidence.config.json`）。每个证据目录在 git 里只留一张拼图。

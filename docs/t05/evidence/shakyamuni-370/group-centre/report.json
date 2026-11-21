@@ -1,0 +1,72 @@
+{
+  "spec": "tools/t05-hall/specs/sakyamuni-370-group-centre.json",
+  "shots": [
+    {
+      "name": "door-winter",
+      "view": "door",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group-centre/door-winter.png",
+      "tris": 437612,
+      "calls": 195,
+      "ms": 15531
+    },
+    {
+      "name": "door-summer",
+      "view": "door",
+      "mood": "summer",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group-centre/door-summer.png",
+      "tris": 437612,
+      "calls": 195,
+      "ms": 11068
+    },
+    {
+      "name": "cam03-winter",
+      "view": "cam03",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group-centre/cam03-winter.png",
+      "tris": 436992,
+      "calls": 166,
+      "ms": 10842
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}

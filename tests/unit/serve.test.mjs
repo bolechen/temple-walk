@@ -17,6 +17,11 @@ test("files are served with their types, / is the index", async () => {
     for (const [ext, type] of [[".webp", "image/webp"], [".png", "image/png"], [".jpg", "image/jpeg"], [".json", "application/json"], [".mp3", "audio/mpeg"], [".wasm", "application/wasm"], [".ktx2", "image/ktx2"], [".woff2", "font/woff2"], [".bin", "application/octet-stream"], [".svg", "image/svg+xml"], [".css", "text/css"]]) fs.writeFileSync(path.join(root, "t" + ext), "x"), assert.equal((await get(srv.base, "/t" + ext)).type, type, ext);
   } finally { srv.close(); }
 });
+test("a path ending in / is that folder's page: the other build a turn-about measure stages at base/ (#460)", async () => {
+  fs.mkdirSync(path.join(root, "base")); fs.writeFileSync(path.join(root, "base", "index.html"), "<p>old</p>");
+  const srv = await serve(root);
+  try { assert.equal((await get(srv.base, "/base/?q=high&show=cam02")).body, "<p>old</p>"); assert.equal((await get(srv.base, "/base")).status, 404, "without the slash it is still a folder"); } finally { srv.close(); fs.rmSync(path.join(root, "base"), { recursive: true }); }
+});
 test("a path never leaves the root, a directory or a missing file is a 404", async () => {
   const srv = await serve(root), port = srv.address().port;
   try {
@@ -24,6 +29,7 @@ test("a path never leaves the root, a directory or a missing file is a 404", asy
     assert.equal((await rawGet(port, "/%2e%2e/outside-" + path.basename(root) + ".txt")).status, 404);
     assert.equal((await rawGet(port, "/sub/../../outside-" + path.basename(root) + ".txt")).status, 404);
     assert.equal((await get(srv.base, "/sub")).status, 404); assert.equal((await get(srv.base, "/nope.js")).status, 404);
+    assert.equal((await get(srv.base, "/sub/")).status, 404, "a folder without a page of its own");
     assert.equal((await rawGet(port, "/%E0%A4%A")).status, 400);
   } finally { srv.close(); }
   assert.equal(under(root, "/../x"), path.join(root, "x")); assert.equal(under(root, "/"), root);

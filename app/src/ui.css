@@ -165,7 +165,7 @@ body.entered:not(.photo):not(.bare) #yardView::before { opacity: 1; }
 }
 .caption::before { content: ""; display: block; width: 46px; height: 7px; margin: 0 auto 8px; background: var(--brush-light, linear-gradient(90deg, transparent, rgba(237,232,220,.7), transparent) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .7; }
 /* Each phrase of the line is kept whole on one line where it fits (hints.js wraps them); a longer one still wraps. */
-.caption .phrase { display: inline-block; max-width: 100%; text-indent: 0; }
+.caption .phrase { display: inline-block; max-width: 100%; text-indent: 0; text-wrap: balance; }   /* a phrase that must wrap breaks near its middle, not after one orphan syllable (#445) */
 /* The far view at the close (#147): the line at the foot is the way to the book, and a thumb may press it (a hit area taller than the line). */
 body.far #act { opacity: 0 !important; pointer-events: none; }   /* (起身 is the first step: any step, a tap or Esc stands him up and brings the eye home) */
 body.far #hint.on { pointer-events: auto; cursor: pointer; }
@@ -342,6 +342,13 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 #print { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
 #print img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #print .row, #book .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+#book .row { flex-wrap: nowrap; }   /* always four: 分享 保存 更多 合上, the seal last and on the first line (#473) */
+/* 更多: a small paper of what is seldom wanted, one to a line, no seal on it. */
+#bookMore { position: absolute; inset: 0; z-index: 36; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+.more-card { width: min(78vw, 280px); box-sizing: border-box; padding: 14px 12px; display: grid; justify-items: center; gap: 4px; color: var(--ink-1); }
+.more-card .chip { width: 100%; min-height: 44px; color: var(--ink-1); text-shadow: none; }
+.more-card #bookReset { color: var(--ink-3); }
+.more-card .chip[hidden] { display: none; }
 
 /* ---- The opening (src/opening.js): nothing over the picture while the eye comes down the mountain ---- */
 body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #goal, body.opening #way, body.opening #act, body.opening #hint, body.opening #say, body.opening #moodTag, body.opening #breathWord, body.opening #stick, body.opening #cross, body.opening #dropBtn, body.opening #prologue { opacity: 0 !important; pointer-events: none; }
@@ -389,7 +396,11 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #loadProgress::-webkit-progress-value { background: var(--ember); border-radius: 2px; transition: width .2s ease; }
 #loadProgress::-moz-progress-bar { background: var(--ember); border-radius: 2px; }
 #loadRetry { margin-top: 12px; color: var(--paper); background: transparent; border: 1px solid rgba(237,232,220,.4); padding: 8px 14px; cursor: pointer; font: 14px var(--kai); }
+#title .how b, #title .how span { display: block; width: fit-content; margin-inline: auto; font-weight: 400; }   /* each line is as wide as its words, so that the audit and a screen reader see the text and not the full-width paper */
+#title .how span { margin-top: .7em; letter-spacing: .2em; opacity: .85; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
+/* A phone on its side has no room under 入山: only the region and the road are kept, in the lower left corner, clear of the way in (#445). */
+@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } #title .how b { margin-inline: 0; } }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 .title-links .chip { white-space: nowrap; }
@@ -677,7 +688,17 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 #endingTitle b { font: 400 clamp(54px, 11vmin, 112px)/1.1 "Yunjing Brush", var(--kai, serif); letter-spacing: .14em; }
 #endingTitle span { font: 400 clamp(17px, 2.6vmin, 24px)/1.4 var(--kai, serif); letter-spacing: .5em; text-indent: .5em; }
 #endingTitle em { margin-top: 14px; font: 400 clamp(14px, 2vmin, 18px)/1.4 var(--kai, serif); font-style: normal; letter-spacing: .4em; text-indent: .4em; opacity: .72; }
-#ending small { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font: 400 13px/1 var(--kai, serif); letter-spacing: .2em; color: rgba(243,236,220,.55); }
+#ending { overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+/* The ring drawn while something is held (src/holdring.js): the one-breath ring of paper.js over a conic gradient that uncovers it clockwise from twelve; at rest there is none. */
+.holdring { display: flex; align-items: center; gap: 10px; min-height: 52px; pointer-events: none; }
+.holdring .mark { width: 52px; height: 52px; flex: none; --k: 0; opacity: 0; transition: opacity .2s ease;
+  background: conic-gradient(from 0deg, var(--on, #f2ede2) calc(var(--k) * 360deg), rgba(242,237,226,.2) 0);
+  -webkit-mask: var(--enso-light, radial-gradient(closest-side, transparent 86%, #000 88%, transparent 95%)) center / 100% 100% no-repeat; mask: var(--enso-light, radial-gradient(closest-side, transparent 86%, #000 88%, transparent 95%)) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
+.holdring.held .mark { opacity: 1; transition: opacity .12s ease; }
+.holdring.calm.held .mark { transition: none; }
+.holdring small { font: 400 13px/1 var(--kai, serif); letter-spacing: .2em; color: rgba(243,236,220,.7); text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+#endingHold { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 @media (prefers-reduced-motion: reduce) { #endingLine, #endingTitle { transition: none; } }
 
 /* ---- In English ----
@@ -786,9 +807,8 @@ body.directing #joya { opacity: .45; }
 .pilgrim-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
 @media (max-width: 400px) { .pilgrim-card { padding: 26px 20px 16px; } .pilgrim-card h2 { font-size: 28px; } #pilgrimList li { width: 100px; } #pilgrimList .fog i { width: 88px; } }
 @media (prefers-reduced-motion: reduce) { #pilgrimList .go::after { transition: none; } }
-/* The ring a held Q fills (a second): outside the book's small seal at the top left, because the map is what the book turns to, and because the middle of the picture is where he stands. The same stroke as every ring of this interface (paper.js's, --enso-light as the mask), 52 px like the button's, drawn from twelve o'clock clockwise as it fills, what is not yet drawn the same stroke at two parts in ten; the word beside it, not in it. Let go, it fades in a fifth of a second. */
-#pilgrimHold { position: absolute; z-index: 7; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 22px - 26px); top: calc(50px + env(safe-area-inset-top, 0px) + 22px - 26px); width: 52px; height: 52px; display: block; pointer-events: none; opacity: 0; transition: opacity .2s linear; --p: 0; }
-#pilgrimHold.on { opacity: 1; }
-#pilgrimHold i { position: absolute; inset: 0; background: conic-gradient(from 0deg, rgba(237,232,220,.95) calc(var(--p) * 1turn), rgba(237,232,220,.2) 0); -webkit-mask: var(--enso-light, radial-gradient(closest-side, transparent 80%, #000 82%)) center / 100% 100% no-repeat; mask: var(--enso-light, radial-gradient(closest-side, transparent 80%, #000 82%)) center / 100% 100% no-repeat; filter: drop-shadow(0 0 5px rgba(0,0,0,.55)); }
-#pilgrimHold span { position: absolute; left: 0; top: 56px; white-space: nowrap; font: 400 var(--t-xs)/1.2 var(--kai); letter-spacing: .16em; color: var(--on); text-shadow: var(--lift); }
-@media (prefers-reduced-motion: reduce) { #pilgrimHold { transition: none; } }
+/* The ring a held Q fills is the shared one (.holdring, src/holdring.js). It is laid so that its centre is the centre of the book's small seal at the top left, because the map is what the book turns to and the middle of the picture is where he stands; the word is on its right, and shows only while the key is held, like the ring. */
+#pilgrimHold { position: absolute; z-index: 7; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 22px - 26px); top: calc(50px + env(safe-area-inset-top, 0px) + 22px - 26px); }
+#pilgrimHold small { opacity: 0; transition: opacity .2s ease; }
+#pilgrimHold.held small { opacity: 1; transition: opacity .12s ease; }
+body:not(.entered) #pilgrimHold, body.photo #pilgrimHold { display: none; }

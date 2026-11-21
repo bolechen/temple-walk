@@ -1,6 +1,6 @@
 // 行脚图 on the page (#449, phase one). The map of temples walked, the three ways to it, and the crossing it makes:
 //  - the pause menu's row (a press, which is also the way for anyone who cannot hold a key: Xbox's XAG 107 and 115 ask
-//    that a hold have another way), the book's chip, and a hold on Q for a second, shown as a ring of ink that fills;
+//    that a hold have another way), the book's 更多 paper, and a hold on Q for a second, shown as the shared ring of ink that fills (src/holdring.js);
 //  - none of them is there until a temple has been closed, and the build lists another to go to (src/pilgrimage.js);
 //  - a place on the map that has been closed is one press away: the ink curtain closes, the page opens again for that
 //    temple with the visit handed across (src/pilgrimage.js, src/ink.js; yard.js takes it, as it takes a change of
@@ -12,6 +12,7 @@ import { LEVELS, PLACES, DEFAULT_LEVEL } from "./level.js";
 import { browserStore } from "./journey.js";
 import { createPilgrimage, entriesOpen, mapEntries, createHold, keepCrossing, crossingURL, PILGRIMAGE_KEY } from "./pilgrimage.js";
 import { inkClose, inkState } from "./ink.js";
+import { createHoldRing } from "./holdring.js";
 import { track } from "./analytics.js";
 
 const $ = (id) => document.getElementById(id);
@@ -88,7 +89,8 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
   }
   $("pilgrimClose")?.addEventListener("click", () => ui.close("pilgrim"));
   $("menuPilgrim")?.addEventListener("click", () => open("menu"));
-  $("bookMap")?.addEventListener("click", () => open("book"));
+  // (the line lives on the book's 更多 paper: that small sheet is put away first, and the map lies over the book)
+  $("bookMap")?.addEventListener("click", () => { ui.close("bookMore"); open("book"); });
 
   // ---- the crossing ----
   /** Go to a temple that has been closed: the ink curtain closes, and the page opens again as that temple's. */
@@ -106,16 +108,14 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
   }
 
   // ---- a hold on Q ----
-  const ring = $("pilgrimHold");
-  let fade = 0;
+  const host = $("pilgrimHold"), ring = host ? createHoldRing(host) : null;
   let clock = null;   // a test holds the clock still (`__pilgrimage({ clock })`); null is the page's own
   let raf = 0;
   const hold = createHold({
     now: () => (clock === null ? performance.now() : clock),
-    onProgress(p) { if (!ring) return; clearTimeout(fade); ring.hidden = false; ring.classList.add("on"); ring.style.setProperty("--p", p.toFixed(3)); ring.setAttribute("aria-valuenow", String(Math.round(p * 100))); },
-    onFull() { if (ring) { clearTimeout(fade); ring.classList.remove("on"); ring.hidden = true; } open("hold"); },
-    // let go on the way: the ring fades in a fifth of a second (the stylesheet's), and is put away when it has
-    onCancel() { if (!ring) return; ring.classList.remove("on"); ring.setAttribute("aria-valuenow", "0"); clearTimeout(fade); fade = setTimeout(() => { ring.hidden = true; ring.style.setProperty("--p", "0"); }, 220); },
+    onProgress(p) { if (!ring) return; if (!ring.held) ring.press(); ring.progress(p); },
+    onFull() { ring?.release(); open("hold"); },
+    onCancel() { ring?.release(); },
   });
   const loop = () => { raf = 0; if (!hold.state().active) return; if (!canHold()) { hold.up(); return; } hold.tick(); if (hold.state().active) raf = requestAnimationFrame(loop); };
   addEventListener("keydown", (e) => {
@@ -131,7 +131,7 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
 
   const state = () => ({
     level: level.id, listed, record: rec.read(), visible: visible(), body: document.body.classList.contains("pilgrim"), open: ui.isOpen("pilgrim"), going,
-    entries: mapEntries(rec.read(), listed, level.id, PLACES), hold: { ...hold.state(), shown: !!ring && !ring.hidden && ring.classList.contains("on"), valuenow: ring ? Number(ring.getAttribute("aria-valuenow")) : null, clock },
+    entries: mapEntries(rec.read(), listed, level.id, PLACES), hold: { ...hold.state(), shown: !!ring && ring.held, valuenow: ring ? Number(host.getAttribute("aria-valuenow")) : null, clock },
     ink: inkState(),
   });
   // For the tests and the debug panel: close a temple (or wipe the record), set the hold's clock, open the map, go.

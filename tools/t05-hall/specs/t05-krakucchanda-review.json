@@ -1,0 +1,194 @@
+{
+ "out": "tools/out/t05/seven/krakucchanda",
+ "size": [
+  1000,
+  1000
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
+   "x": 0,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  }
+ ],
+ "shots": [
+  {
+   "name": "turn-front",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 0,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "turn-right",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 90,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "turn-back",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 180,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "turn-left",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 270,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "hand-right",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 15,
+     "el": 12,
+     "dist": 4.6,
+     "at": [
+      -1.161,
+      5.504,
+      0.724
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "hand-left",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": -15,
+     "el": 12,
+     "dist": 4.6,
+     "at": [
+      0.04299999999999998,
+      4.0120000000000005,
+      1.117
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "half-warm",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "front10",
+    "over": {
+     "at": [
+      1.2,
+      8.47,
+      -10.100000000000001
+     ],
+     "look": [
+      0,
+      10.170000000000002,
+      -17.6
+     ],
+     "fov": 32,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     0.8,
+     7.07,
+     -14.000000000000002
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "chest-warm",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "front10",
+    "over": {
+     "at": [
+      1.0,
+      8.82,
+      -11.8
+     ],
+     "look": [
+      0,
+      9.42,
+      -17.6
+     ],
+     "fov": 22,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     0.8,
+     8.42,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  }
+ ]
+}
