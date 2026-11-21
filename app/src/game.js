@@ -566,9 +566,10 @@ export function createGame(y) {
   awaitTitle(titleOn && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
   let left = free ? readPlace(localStorage) : null, kept = 0;
   if (left && left.up && !y.lofts[left.up]) left = null;
+  if (left && left.hall && !y.hallIds?.includes(left.hall)) left = null;   // a hall this level does not have
   // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
   // steps out to the nearest free point a few centimetres off. A place kept up on a balcony is tested on its floor.
-  if (left) {
+  if (left && !left.hall) {   // (a place in a hall's room is tested on the room's floor when he is stood there: y.place)
     y.walker.setLoft(left.up);
     if (y.walker.blocked(left.x, left.z)) { let got = null; out: for (let r = 0.01; r <= 0.06; r += 0.01) for (let k = 0; k < 16; k++) { const x = left.x + r * Math.cos((k * Math.PI) / 8), z = left.z + r * Math.sin((k * Math.PI) / 8); if (!y.walker.blocked(x, z)) { got = { x, z }; break out; } } left = got ? { ...left, ...got } : null; }
     y.walker.setLoft(null);
@@ -580,7 +581,7 @@ export function createGame(y) {
     if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
     return o;
   };
-  if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
+  if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up, left.hall);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
   const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
   // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.
