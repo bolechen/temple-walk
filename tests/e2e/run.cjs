@@ -127,6 +127,55 @@ const scenarios = {
   } },
   // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
   // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  // The title stands clear of the novice (#461). The walk's own picture is the title's backdrop and he stands in the middle of it,
+  // a little low; the name, the line about the visit and the seal are above his head, going in below his feet. At the four shapes
+  // of a screen (16:9, 4:3, 9:16, 19.5:9) and a small phone on its side, for a first visitor, one coming back (with seals and a
+  // kept place, so the picture is the first court's) and, with the title as a change of language leaves it, in each language:
+  // the box of every visible thing in #title, 8 px wider on every side, does not meet his (`__probe().monkBox`), and none of them
+  // meets the row of links at the top. The screen is changed under one page, so that the room is not built again for each.
+  "title-clear": { tier: 2, async run(b, base) {
+    const SCREENS = [[1280, 720], [1024, 768], [360, 640], [844, 390], [667, 375]];
+    const RETURN = () => { localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: { bell: 2, tea: 3 }, strikes: 3, verse: null, done: null, opened: null, told: false })); localStorage.setItem("yunjing.place.v1", JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" })); };
+    const read = () => {
+      const mb = window.__probe().monkBox, vis = (e) => { const c = getComputedStyle(e), r = e.getBoundingClientRect(); return c.display !== "none" && c.visibility !== "hidden" && !e.hidden && !e.closest("[hidden]") && r.width > 0 && r.height > 0; };
+      const hit = (r, q, m) => !(r.right <= q.left - m || q.right + m <= r.left || r.bottom <= q.top - m || q.bottom + m <= r.top);
+      const els = [...document.querySelectorAll("#title h1, #title .sub, #title .mark, #titleSeals, #loading, #loading *, #relangLine, #enterBtn, #againBtn, #title .how, #title .how *, .title-links .chip")].filter(vis);
+      const links = els.filter((e) => e.closest(".title-links")).map((e) => e.getBoundingClientRect());
+      const out = { box: mb, monk: [], links: [], again: null, n: els.length };
+      for (const e of els) {
+        const r = e.getBoundingClientRect(), name = e.id || e.className || e.tagName;
+        if (mb && !e.closest(".title-links")) { const [x, y, w, h] = mb; if (hit(r, { left: x, top: y, right: x + w, bottom: y + h }, 8)) out.monk.push(name); }
+        if (!e.closest(".title-links") && links.some((l) => hit(r, l, 0))) out.links.push(name);
+      }
+      const again = document.getElementById("againBtn"); if (again && vis(again)) out.again = Math.round(innerHeight - again.getBoundingClientRect().bottom);
+      return out;
+    };
+    const look = async (t, label, w, h, opts = {}) => {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(6);
+      if (opts.relang) await t.page.evaluate(() => { document.documentElement.classList.add("relang"); document.getElementById("loading").hidden = false; });
+      await t.frames(2);
+      const r = await t.page.evaluate(read);
+      if (opts.relang) await t.page.evaluate(() => document.documentElement.classList.remove("relang"));
+      expect(r.box && r.box[3] > h * 0.1, `${label} ${w}x${h}: the novice should be in the picture behind the title: ` + JSON.stringify(r));
+      expect(r.n > 3 && r.monk.length === 0, `${label} ${w}x${h}: the title stands on him (${r.monk.join(", ")}): ` + JSON.stringify(r));
+      expect(r.links.length === 0, `${label} ${w}x${h}: the title meets the row of links (${r.links.join(", ")}): ` + JSON.stringify(r));
+      if (opts.again) expect(r.again === null || h > 460 || r.again >= 24, `${label} ${w}x${h}: beginning again is ${r.again} px from the foot of the picture`);
+    };
+    for (const [name, init] of [["a first visitor", null], ["one coming back", RETURN]]) {
+      const t = await open(b, base, "q=low&debug=0", { enter: false, ...(init ? { init } : {}) });
+      expect(await t.page.isVisible("#title"), `${name}: the title should be up`);
+      for (const [w, h] of SCREENS) {
+        await look(t, name, w, h, { again: !!init });
+        if (init) await look(t, name + ", the page opened again in another language", w, h, { relang: true });
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    for (const lang of ["en", "ja", "ko"]) {
+      const t = await open(b, base, `q=low&debug=0&lang=${lang}`, { enter: false, init: RETURN, locale: lang === "ja" ? "ja-JP" : lang === "ko" ? "ko-KR" : "en-US" });
+      for (const [w, h] of [[360, 640], [844, 390]]) await look(t, `coming back, ${lang}`, w, h, { again: true });
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   // The ground keeps what comes down on it (#267): in the real page, leaves that touch the paving under the first
   // court's maple are handed to the ground's record as the frames go, and on an autumn night (a breeze below every leaf's
   // grip) none of them goes in the next minute; run on three minutes, more lie there than before.
