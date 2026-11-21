@@ -525,7 +525,9 @@
   "depth": 0.35,
   "browColor": "#4A3F33",
   "browAlpha": 0.45,
-  "soft": 0.015
+  "soft": 0.015,
+  "eyeWhite": "#9E9282",
+  "pupil": "#231C17"
  },
  "dust": {
   "color": "#8A7A66",

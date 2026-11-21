@@ -54,7 +54,7 @@
   ],
   "mouth": [
    -0.002,
-   6.816,
+   6.826,
    0.31
   ],
   "urna": [
@@ -102,7 +102,7 @@
   ],
   "jawMin": [
    -0.879,
-   6.766,
+   6.776,
    -1.613
   ],
   "neckA": [
@@ -118,7 +118,7 @@
   "neckR": 0.58,
   "chinMin": [
    -0.582,
-   6.476,
+   6.486,
    -1.613
   ],
   "chinMax": [
@@ -179,11 +179,10 @@
    0.238
   ],
   "lipHalf": 0.144,
-  "lipH": 0.036,
+  "lipH": 0.04,
   "eyeOpen": [
-   0.035,
-   0.02
+   0.025,
+   0.024
   ]
- },
- "about": " The art director's trial (#480, r7 B): a half-open eye drawn under the lid line, eyeOpen = [white's height, pupil's radius] in metres; the carving unchanged."
+ }
 }

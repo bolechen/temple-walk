@@ -74,8 +74,10 @@ if "anchors-from" in opt:
   # r7: the lips are thin, told by the groove and the colour; the paint is the concept's lip, 0.28 of the mouth's width
   # tall (vermilion over width, concept-points.json), centred a little under the slit, no wider than the corners, its
   # soft edge 2 mm (paint.js); nothing more round it (the 3D review's fourth round: a pink halo outside the lip)
-  wv = abs(c["L"]) + abs(c["R"]); a["lipH"] = round(0.14 * wv, 3); a["lipHalf"] = round(wv / 2, 3)
-  a["mouth"] = [a["mouth"][0], round(r["slit"] - 0.15 * a["lipH"], 3), a["mouth"][2]]
+  # the width is the concept's: 0.30 of the face (the art director's r6 review; measured corners read short once the lips
+  # are softened); the height 0.14 of that width each way, centred on the slit so that the carved upper lip is painted too
+  wv = 0.30 * r["faceW_m"]; a["lipH"] = round(0.14 * wv, 3); a["lipHalf"] = round(wv / 2, 3)
+  a["mouth"] = [a["mouth"][0], round(r["slit"] + 0.005, 3), a["mouth"][2]]
   for k in ("jawMin", "chinMin"): a[k][1] = round(a[k][1] + (a["mouth"][1] - (mouth0[1] + drop)), 3)   # and with the mouth's own move from the bow to the measured slit
   colour = opt.get("colour", f"{name}-t05")
   json.dump(src, open(os.path.join(root, "tools/t05-hall/paint", colour + ".json"), "w"), ensure_ascii=False, indent=1)

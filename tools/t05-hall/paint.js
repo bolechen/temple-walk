@@ -85,13 +85,16 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
     if (uFace[5].z > 0.) {
       float ex = (ql.x - le.x) / (uFace[2].w * .8), below = lc.y - ql.y, hw = uFace[5].z * (1. - ex * ex);
       float white = step(abs(ex), 1.) * smoothstep(-aa, aa, below) * (1. - smoothstep(hw - aa, hw + aa, below));
-      float pupil = white * (1. - smoothstep(uFace[5].w - aa, uFace[5].w + aa, length(vec2(ql.x - le.x, below - uFace[5].z * .55))));
+      float pupil = white * (1. - smoothstep(uFace[5].w - aa, uFace[5].w + aa, length(vec2(ql.x - le.x, below - uFace[5].z * .7))));
       eyeW = max(eyeW, white); eyeP = max(eyeP, pupil);
     }
     ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(ql, lc, uFace[2].w, -uFace[3].y)));
     if (uFace[3].z > 0.) { vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
       ink.y = max(ink.y, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9); }
   }
+  // the lines fade out where the surface turns away from the front: projected straight on, they would lie along the
+  // temples as dark blades seen from the side (#480 r7, the 3 m side view)
+  float face = smoothstep(.35, .65, n.z); ink *= face; eyeW *= face; eyeP *= face;
   vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
   float le = aa * 2. + .002 / max(uFace[4].x, .01);   // the lip's edge soft over about 2 mm (#463, the 3D review's third round)
   lip = 1. - smoothstep(1. - le, 1. + le, length(m));
