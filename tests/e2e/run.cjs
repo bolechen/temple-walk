@@ -3147,6 +3147,20 @@ const scenarios = {
     expect(up.filter((q) => q[2]).length >= 3 && up.some((q) => q[1] > 0.2 && q[1] < 0.44) && Math.max(...up.map((q) => q[1])) < 0.47, "the way up should be a rise and a fall, not a teleport, and no higher than his jump: " + JSON.stringify(up.filter((q) => q[2]).map((q) => [q[0], q[1]]).slice(0, 8)));
     expect(Math.abs((await t.state()).footY - 0.45) < 0.001, "he should stand on the porch");
     await t.shot("jump-up");
+    // #478: the stele pavilion's platform (0.45 m, the same height as that porch) has a stair on its front and none on the other three sides:
+    // from the ground there, facing the edge, Space takes him up onto the floor, by his own jump (the baked floor offers these edges; the
+    // written plan, `?walker=old`, never wrote them).
+    if ((await t.page.evaluate(() => window.__walker().mode)) !== "old") {
+      for (const [side, x, z, yaw] of [["west", -16.1, 50.5, Math.PI / 2], ["north", -12.5, 46.95, Math.PI], ["south", -12.0, 54.3, 0]]) {
+        await t.page.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.1), [x, z, yaw]); await t.frames(3);
+        expect(Math.abs((await t.state()).footY) < 0.1, `on the ground ${side} of the stele pavilion before the jump: ${JSON.stringify(await t.state())}`);
+        await t.page.keyboard.press("Space");
+        await t.until(async () => { const s = await t.state(); return !s.dropping && !s.jumping && Math.abs(s.h - 0.45) < 0.01; }, 120000, `Space did not take him up onto the stele pavilion's platform from its ${side} side`);
+        const s = await t.state();
+        expect(s.x > -15.35 && s.x < -9.65 && s.z > 47.65 && s.z < 53.35, `up from the ${side} side he should be on the platform, not beside it: ${JSON.stringify([s.x, s.z])}`);
+      }
+      await t.shot("jump-stele");
+    }
     // Where something is offered, Space still jumps and E still does it.
     await t.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0], p.at[1], 0, 0); }); await t.until(() => t.page.isVisible("#act"), 30000, "nothing offered before the bell");
     await t.page.keyboard.press("Space"); await t.frames(3); expect((await t.journey()).strikes === 0, "Space should not strike the bell any more");
