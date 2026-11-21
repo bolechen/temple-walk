@@ -42,7 +42,7 @@ export const EAVE_EYES = Object.freeze([Object.freeze({ id: "cam01", x: 0, z: 44
  * The tallest a thing may be at (x, z) so that, seen from either of those eyes, its top is no higher in the picture than the eave line (the front eave's line
  * carried across the picture): the elevation of its top no more than the eave's at the same bearing. Only where it is in front of the eye and inside the picture.
  */
-export const eaveCap = (x, z, margin = 0.3) => {
+export const eaveCap = (x, z, margin = 0.1) => {
   let cap = Infinity;
   for (const e of EAVE_EYES) {
     const ahead = e.z - z; if (ahead < 2 || Math.abs(Math.atan2(x - e.x, ahead)) > (44 * Math.PI) / 180) continue;
@@ -74,7 +74,7 @@ function plan(C) {
     if (Math.abs(x) > cx && z < LIMITS.nearHallZ + 1 && z > C.zN - 8) h = Math.min(h, LIMITS.nearHall - 0.5 * rnd());
     if (onTowerLine(x, z, 2)) h = Math.min(h, LIMITS.tower.max - 0.2 - 0.3 * rnd());
     h = Math.min(h, LIMITS.eave - 0.8, eaveCap(x, z));
-    if (opts.full) h *= 0.92 + 0.08 * rnd();   // (the cypresses of the rows kept low stand at 92-100% of what is allowed, not along a ruled line)
+    if (opts.full) h *= 0.95 + 0.05 * rnd();   // (the cypresses of the rows kept low stand at 95-100% of what is allowed, not along a ruled line)
     trees.push(Object.freeze({ kind, x: +x.toFixed(2), z: +z.toFixed(2), h: +h.toFixed(2), r: +(h * pick(0.032, 0.042)).toFixed(2), row, yaw: +(rnd() * Math.PI * 2).toFixed(2), full: !!opts.full }));
   };
   // a house: eaves at 3 m, a gable roof, the ridge along x or along z
@@ -135,8 +135,8 @@ function pine(t, trunk, crown) {
   if (t.full) {
     // a columnar cypress (the old cypresses of a temple court): one long narrowing drum with a tip, not the pine's stacked cones. It stays low (the great hall's eave
     // line is the ceiling in the pictures that keep the roof clean) and it fills the band that a pine would leave to its thin tip; seen against the sky it is a dark pencil.
-    const R = h * (0.25 + 0.04 * ((Math.abs(Math.round(x * 7 + z * 3)) % 7) / 6)), hd = h * 0.76;   // (the girth changes a little from tree to tree, from where it stands)
-    crown.push(new THREE.CylinderGeometry(R * 0.72, R, hd, 8).translate(x, y0 + h * 0.12 + hd / 2, z), cone(R * 0.72, h * 0.12, y0 + h * 0.12 + hd, x, z, 8));
+    const R = h * (0.28 + 0.04 * ((Math.abs(Math.round(x * 7 + z * 3)) % 7) / 6)), hd = h * 0.8;   // (the girth changes a little from tree to tree, from where it stands)
+    crown.push(new THREE.CylinderGeometry(R * 0.72, R, hd, 8).translate(x, y0 + h * 0.12 + hd / 2, z), cone(R * 0.72, h * 0.08, y0 + h * 0.12 + hd, x, z, 8));
     return;
   }
   const layers = 4, R = h * 0.2;

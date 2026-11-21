@@ -37,6 +37,37 @@ test("he arrives at the outer gate's place, and every named view stands where he
   for (const [id, v] of Object.entries(site.views)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
 });
 
+test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the baked floor, are reached from where he arrives, and the manifest says what the plan says", async () => {
+  const fs = await import("node:fs"), targets = file.header.targets;
+  const manifest = JSON.parse(fs.readFileSync(new URL("../../docs/t05/camera-manifest.json", import.meta.url), "utf8"));
+  const { default: checks } = await import("../../app/levels/t05/checks.js");
+  assert.deepEqual(Object.keys(checks.cameras.what), ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"]);
+  for (const [i, id] of ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"].entries()) {
+    const v = site.views[id]; assert.ok(v, id);
+    assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open on the baked floor`);
+    const t = targets.find((x) => x.kind === "view" && x.id === id);
+    assert.ok(t && t.new, `${id}: reached from the arrival on the floor baked from what is drawn`);
+    const c = manifest.cameras[i], at = c.stands_at || c.position; assert.equal(c.view, id);   // (cam03's still is taken from the following eye behind him: stands_at is where he stands)
+    assert.deepEqual([at[0], at[2], c.yaw_rad, c.pitch_rad], [+v[0].toFixed(2), +v[1].toFixed(2), +v[2].toFixed(2), +v[3].toFixed(2)], `${id}: the manifest is the plan's`);
+  }
+});
+
+test("from views.sakya nothing stands between his eye and Shakyamuni's lotus seat or his lap (#547: the west aisle hides them)", async () => {
+  const { FIGURES, ALTAR, SEAT } = await import("../../app/levels/t05/altar.js");
+  const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });
+  const M2 = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+  const s2 = buildSite(M2); s2.root.updateMatrixWorld(true);
+  const f = FIGURES.find((x) => x.id === "sakyamuni"), top = PLATFORM.h + ALTAR.h, [x, z] = site.views.sakya;
+  const eye = new THREE.Vector3(x, walker.heightAt(x, z) + 1.3, z), ray = new THREE.Raycaster();
+  // (the lotus's front face at its middle, and a point in his lap: what the first thing met along the line must be is the figure's own seat or body)
+  for (const [name, p] of [["lotus", [f.x, top + SEAT.sumeru + SEAT.lotus / 2, SEAT.z + SEAT.d / 2]], ["lap", [f.x + 0.3, top + SEAT.sumeru + SEAT.lotus + 1.3, SEAT.z + 0.9]]]) {
+    const t = new THREE.Vector3(...p), d = t.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L + 1;
+    const hit = ray.intersectObject(s2.root, true)[0];
+    assert.ok(hit && hit.distance > L - 0.8, `${name}: the first thing met is ${hit ? `${(L - hit.distance).toFixed(2)} m short of it` : "nothing"}`);
+  }
+  assert.ok(x > f.x, "east of his middle, so that his left side is turned to the eye");
+});
+
 test("from where he arrives he can walk to station A in the court and to station B at the foot of the flight", () => {
   const targets = file.header.targets;
   for (const id of ["arrive", "a", "b"]) {

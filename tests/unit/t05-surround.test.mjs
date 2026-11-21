@@ -52,7 +52,7 @@ function share(place, bearing, span = 30) {
   }
   const n = out + sky + own; return { out, sky, own, free: (out + sky) / n, fill: out / Math.max(1, out + sky) };
 }
-const PLACES = Object.fromEntries(checks.horizon.places.map((p) => [p[0], p]));
+const PLACES = Object.fromEntries(checks.horizon.places.map((p) => [p[0].replace(/^station /, ""), p]));   // (the table is the level's own, from PLAN.md item 11: the arrival, the axis's three passages and the six stations, each 1.6 m over its floor)
 const JUDGED = { arrival: ["east", "south", "west"], A: ["east", "west"], B: ["east", "west"], C: ["east", "south", "west"], F: ["south"] };   // (what the issue asks for: the arrival east, south and west, A and B east and west, C and F south)
 const BEARING = { east: 90, south: 180, west: 270 };
 

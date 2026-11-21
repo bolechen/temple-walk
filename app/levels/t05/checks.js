@@ -2,13 +2,34 @@
 // and the tools, never by the page, as bake.js is). So far: the routes the near plane is walked along (tests/slow/nearplane.test.mjs).
 // Each route is a run of [x, z] points, walked at his pace with the following eye behind him and from his own eyes.
 import { AXIS, FOOT, LANE, SECOND } from "./axis.js";
+import { ARRIVE, PLATFORM, STATION } from "./site.js";
 
 /** @type {Record<string, any>} */
 export default {
-  // Where the horizon is looked at from (tests/unit/t05-surround.test.mjs, #548; tests/unit/horizon.test.mjs reads the same table where a level has far hills, and T05 has none): name,
-  // x, z and the eye's height over the court's paving (the arrival, the stations A and B in the court, C and F on the platform and in the hall's door).
+  // The seven fixed views of the handoff, with what each must and must not show (docs/t05/PRD.md §3; tools/cameras.mjs writes docs/t05/camera-manifest.json from them and the plan's
+  // views). A fourth entry says what differs from a still taken from his own eyes: cam03's is taken in third person (DECISIONS.md, 2026-11-21),
+  // from the following eye a few steps behind him, measured in the page at (0, 3.66, 6.57), pitched 0.056 (the same DECISIONS.md, 2026-11-21).
+  cameras: {
+    sceneId: "T05", preset: "summer · day, the page's default for a fixed view; T05's own J01 (初冬晴冷, docs/t05/ART.md §4.2) is not built yet, and the pictures change with it, not the poses",
+    what: {
+      cam01: ["CAM-01", "院落远望", "必看：九间立面与三门四窗；3 米台基与月台；单檐五脊庑殿顶与青灰瓦；三块竖匾的剪影。忌看：重檐、歇山、琉璃瓦；屋脊被树切断"],
+      cam02: ["CAM-02", "台基", "必看：踏道与垂带；台基侧面；檐柱与七铺作斗栱；门洞的暗。忌看：整座屋顶；薄台"],
+      cam03: ["CAM-03", "殿门中央", "必看：门框在左右边缘；中间三尊；佛坛与背光；梁架；门到佛坛的光梯度。忌看：一张看全七尊；平顶藻井；七尊相同；追光", { view: "third", eye: [0, 3.66, 6.57], pitch: 0.056 }],
+      cam04: ["CAM-04", "侧向观看", "必看：七佛侧面与手印、衣式的差异；胁侍的前后节奏；至少一尊天王；侧壁壁画；内柱列。忌看：佛像背面；七尊同一侧影"],
+      cam05: ["CAM-05", "仰视梁架", "必看：八缝梁架、四椽栿、驼峰、斗栱、彩画色带。忌看：平顶；黑成一片"],
+      cam06: ["CAM-06", "回到中央", "必看：中间四五尊与两侧各一尊的局部。忌看：硬塞七尊进一张"],
+      cam07: ["CAM-07", "内山门望殿", "必看：门洞框住甬道、牌坊、高台上的无量殿和远处大殿的庑殿顶，大殿正脊全长与两端鸱吻露出（FOLLOW-UP.md，美术总监的三条判法）。忌看：牌坊门洞内有树；无量殿吻尖高过大殿鸱吻顶"],
+    },
+  },
+  // Where the horizon is held from (tests/unit/horizon.test.mjs): name, x, z, the eye's height. The county is flat and there are no far hills
+  // (SITE.md §4.1), so what must lie below the horizon is the plain outside the walls, the walls and the buildings: the six stations, the arrival
+  // and the axis's three passages (PLAN.md item 11, gap 2), each at 1.6 m over its own floor (the outer gate's platform 0.5, the second terrace 1.0, the court 0, the hall 3: t05-plan.test).
   horizon: {
-    places: [["arrival", 0, 215, 1.3], ["A", 0, 44, 1.3], ["B", 0, 27, 1.3], ["C", 0, 0.6, 4.3], ["F", 0, -2, 4.3]],
+    places: [
+      ["arrival", ARRIVE[0], ARRIVE[1], 1.6], ["outer gate's passage", 0, AXIS.outerZ, 0.5 + 1.6], ["inner gate's passage (cam07)", 0, AXIS.innerZ + 1, SECOND.y + 1.6],
+      ["Wuliang hall's passage", 0, AXIS.hallZ, SECOND.y + 1.6],
+      ...Object.entries(STATION).map(([k, [x, z]]) => [`station ${k}`, x, z, (k === "A" || k === "B" ? 0 : PLATFORM.h) + 1.6]),
+    ],
   },
   nearplane: {
     routes: () => {
