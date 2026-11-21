@@ -714,3 +714,15 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 body.directing #turnBtn, body.opening #turnBtn, body.ending #turnBtn, body:has(dialog.layer[open]) #turnBtn { opacity: 0 !important; pointer-events: none; }
 @media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 12px + 52px + 14px + env(safe-area-inset-bottom, 0px)); } }
 @media (pointer: coarse) and (max-height: 560px) { .rail { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: calc(max(22px, env(safe-area-inset-right, 0px)) + 82px + 12px); } }
+
+/* ---- The year-end bell (#341, src/joya-ui.js): one quiet line at the top of the picture on that night, and its card ---- */
+#joya { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(22px + env(safe-area-inset-top, 0px)); margin: 0; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 200px); font: 400 var(--t-s)/1.2 var(--kai); letter-spacing: .2em; color: var(--on-2); text-shadow: var(--lift); white-space: nowrap; transition: opacity .8s ease; }
+#joya > span { pointer-events: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .6em; }
+#joya > span > span { white-space: nowrap; }
+#joya .chip { min-height: 44px; font-size: var(--t-xs); letter-spacing: .2em; }
+body.photo #joya, body.opening #joya, body:not(.entered) #joya { display: none; }
+body.directing #joya { opacity: .45; }
+@media (max-width: 520px) { #joya { top: calc(14px + env(safe-area-inset-top, 0px)); max-width: calc(100% - 140px); flex-direction: column; gap: 0; white-space: normal; text-align: center; } #joya > span > span:nth-child(2) { display: none; } }
+#joyaCard { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
+#joyaCard img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+#joyaCard .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
