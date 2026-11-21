@@ -49,16 +49,33 @@ const here = __dirname, root = path.join(here, "..");
     return p;
   }
   const [W, H] = spec.size || [1600, 900];
-  if (spec.shots?.length) {
-    const p = await page(W, H);
-    for (const s of spec.shots) {
+  // A shot may name its own size (issue #370's faces at the door: 16:9, 4:3 and a phone held upright); shots of one size
+  // share a page. With `faces`, each picture also reports, for every listed figure, how tall its face stands on the
+  // screen in pixels (hairline to chin, both read from the figure's paint anchors) and whether its eyes and mouth are
+  // in the picture and not hidden (window.hall.occlusion).
+  const faceList = (spec.faces || []).map((f) => {
+    const A = JSON.parse(fs.readFileSync(path.join(here, "t05-hall", "paint", `${f.colour}.json`), "utf8")).anchors;
+    const eyeY = (A.eyeL[1] + A.eyeR[1]) / 2, chin = [A.mouth[0], A.mouth[1] - 0.6 * (eyeY - A.mouth[1]), A.mouth[2]];
+    return { i: f.i, name: f.name, pts: { hairline: A.hairFront, chin, eyeL: A.eyeL, eyeR: A.eyeR, mouth: A.mouth } };
+  });
+  const sizes = [...new Set((spec.shots || []).map((s) => (s.size || [W, H]).join("x")))];
+  for (const sz of sizes) {
+    const [sw, sh] = sz.split("x").map(Number), p = await page(sw, sh);
+    for (const s of spec.shots.filter((s) => (s.size || [W, H]).join("x") === sz)) {
       const t0 = Date.now();
       const r = s.shoot ? await p.evaluate((sh) => window.hall.shoot(sh), s.shoot) : s.ortho ? await p.evaluate(([o, paint]) => { if (paint !== undefined) window.hall.paint(paint); window.hall.ortho(o.i ?? 0, o.side || "front", o); return {}; }, [s.ortho, s.paint])
         : await p.evaluate(({ v, m, over, paint }) => { window.hall.setMood(m); if (paint !== undefined) window.hall.paint(paint); window.hall.view(v, over || {}); const r = window.hall.stats(); window.hall.render(); return r; }, { v: s.view, m: s.mood || "summer", over: s.over, paint: s.paint });
       const file = path.join(out, `${s.name}.png`); await p.locator("canvas").screenshot({ path: file });
+      if (faceList.length) r.faces = await p.evaluate(([fl, w, h]) => fl.map((f) => {
+        const px = (v) => { const q = window.hall.figurePoint(f.i, v).project(window.hall.camera); return [(q.x + 1) / 2 * w, (1 - q.y) / 2 * h]; };
+        const a = px(f.pts.hairline), b = px(f.pts.chin), e = px(f.pts.eyeL), m = px(f.pts.mouth);
+        const occ = window.hall.occlusion(f.i, { eyeL: f.pts.eyeL, eyeR: f.pts.eyeR, mouth: f.pts.mouth }, 0.3);
+        return { name: f.name, facePx: +Math.hypot(a[0] - b[0], a[1] - b[1]).toFixed(1), eyeToMouthPx: +Math.hypot(e[0] - m[0], e[1] - m[1]).toFixed(1),
+          at: b.map((v) => Math.round(v)), seen: Object.fromEntries(Object.entries(occ).map(([k, o]) => [k, o.seen ? "yes" : o.onScreen ? "hidden by " + o.by : "off screen"])) };
+      }), [faceList, sw, sh]);
       report.shots.push({ ...s, file: path.relative(root, file), ...r, ms: Date.now() - t0 }); console.log(`${s.name}: ${r.tris} tris, ${r.calls} calls, ${Date.now() - t0} ms`);
     }
-    if (spec.cost) { report.cost = { view: spec.costView || "door3", ms: await p.evaluate(([n, v]) => { window.hall.view(v); return window.hall.cost(n); }, [spec.cost, spec.costView || "door3"]) }; console.log("cost", report.cost); }
+    if (spec.cost && sz === sizes[0]) { report.cost = { view: spec.costView || "door3", ms: await p.evaluate(([n, v]) => { window.hall.view(v); return window.hall.cost(n); }, [spec.cost, spec.costView || "door3"]) }; console.log("cost", report.cost); }
     await p.close();
   }
   if (spec.film) {

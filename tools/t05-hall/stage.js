@@ -324,7 +324,8 @@ function walk(t) {
   const z = t < tWalk ? z0 - v * t : z1, k = Math.max(0, Math.min(1, (t - tWalk) / 6)), e = k * k * (3 - 2 * k);
   const inside = Math.max(0, Math.min(1, (2 - z) / 6));
   camera.fov = 55; camera.position.set(0, F + 1.6 + Math.sin(t * 2 * Math.PI * 1.75) * 0.012 * (t < tWalk ? 1 : 0), z);
-  const level = F + 2.8 + inside * 1.2; camera.lookAt(0, level + e * (F + 9.0 - level), SZ);   // the eye ends on the face (about 9 m up) camera.updateProjectionMatrix();
+  // The eye ends on the face (about 9 m up).
+  const level = F + 2.8 + inside * 1.2; camera.lookAt(0, level + e * (F + 9.0 - level), SZ); camera.updateProjectionMatrix();
   renderer.toneMappingExposure = (1.4 + inside * 3.6) * exposureScale;
   return tWalk + 7;
 }
