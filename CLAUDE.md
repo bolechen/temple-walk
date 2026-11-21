@@ -46,6 +46,8 @@ A resource that can be had again from where it came from, by the machines that p
 person (a library from the registry), is fetched by `tools/setup.mjs` rather than committed; one that was worked on here (a packed texture, a cut
 typeface, a cropped picture) is committed with the tool that made it. The page's documents live in `docs/<level>/`.
 
+**Every picture and check tool takes a level** (docs/t05/LEVEL-SPLIT.md S6): `shots.js`, `cameras.mjs`, `edges.mjs`, `around.mjs`, `play.cjs` and `gpu-render.sh` (as `LEVEL=<id>`) take `--level=<id>`, the prologue when it is left out, and then do exactly what they did. The unit tests and slow checks that walk a level (`horizon`, `follow`, `spring-arm`, `nearplane`) take it as `WALK_LEVEL=<id>`, the variable the baked floor's walker reads, through `tests/unit/level-plan.mjs`. What they need that the plan cannot say (the routes walked, the places the horizon is held from, the views' labels, what `edges` names) is the level's `app/levels/<id>/checks.js`, read only in Node, as `bake.js` is; a level that has no table for a check is refused by name, not walked blind.
+
 **The built site is what is tested and published.** The end-to-end tests, `shots.js`, `portrait.js`, `inside.cjs` and the GPU job open `dist/`, not
 `app/`: `tools/site.cjs` rebuilds it first whenever anything in `app/` is newer than the last build. What the page fetches by name
 (textures, models, gallery pictures, board hands, the Basis transcoder) is found from the page's own address through `asset()` in
@@ -66,7 +68,7 @@ pnpm run e2e:smoke                   # tiers 1–2, ~9 min: + a tap walks him th
 pnpm run e2e                        # everything, ~20 min: + the walk in and the offering, the summit climb, the photograph
 node tests/e2e/run.cjs moods photo  # only the scenarios named
 pnpm run verify                     # check + unit + smoke: run this before pushing anything that touches app/
-node tools/shots.js court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
+node tools/shots.js [--level=<id>] court@autumn-dusk@third gate   # named views → tools/out/*.png (view@season-hour@first|third), prints tris/calls
 node tools/inside.cjs tools/out '[{"hall":"main","name":"caisson","abs":[120,-2,0,1.05]}]'   # views inside a hall (pose in the room), which shots.js cannot reach
 node tools/inside.cjs tools/out/hall-views --views [level]   # every indoor view a level registers in app/levels/<level>/hall-views.js (default t00)
 node tools/portrait.js autumn-dusk  # five close views of the novice, found by __probe().monkBox → tools/out/portrait.png (add `bind` for his A-pose, `sculpt` for the sculpted body)
@@ -82,9 +84,9 @@ node tests/e2e/run.cjs rites        # the bell, tea, a stool, incense and a cush
 node tests/e2e/run.cjs seats        # every cushion and stool sat on, hurrying, the place not drawn
 node tests/e2e/run.cjs loft         # up the summit pavilion: the stair, round the balcony, a photograph, a reload, down and out (~5 min)
 node tools/opening-views.cjs [outdir] [--only=frames|moods]   # the opening after 入山: 起/承/落 and the gate's title at 16:9, 4:3 and a phone; the first frame in four moods
-node tools/play-t00.cjs [outdir] [summit bell tea phone director opening opening-phone]   # play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic); `director` films the eye going to each place's shot and back
+node tools/play.cjs [--level=<id>] [outdir] [summit bell tea phone director opening opening-phone]   # (play-t00.cjs is its old name) play-throughs at a visitor's pace by real keys and taps, filmed, every press logged (__pose to get there is marked diagnostic); `director` films the eye going to each place's shot and back
 node tools/mobile-audit.cjs         # every surface of the interface as a phone sees it → tools/out/mobile/*.png; exits 1 on a control under 44 px, text under 12 px, anything off screen
-node tools/cameras.mjs              # write docs/t00/camera-manifest.json from the plan's cam01..cam06
+node tools/cameras.mjs [--level=<id>]   # write docs/<level>/camera-manifest.json (t00: cam01..cam06) from the plan, with the labels in app/levels/<id>/checks.js
 node tools/music.mjs [summer-day]   # the score along a ten-minute walk → tools/out/music/*.mp3 + report.json (peak, silences, phrase log, tuning)
 node tools/steps.mjs                # his steps (steps.js): dry stone, after rain with puddles, snow, a hall's floor → tools/out/steps/*.mp3
 tools/gpu-render.sh [flavor] ['<json spec>']   # the same pictures, and real frame rates, on a GPU (see below)

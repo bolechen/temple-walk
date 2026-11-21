@@ -33,8 +33,9 @@ for (const m of mats.matchAll(/`([^`]*)`/g)) { const last = m[1].trimEnd().split
 // is left out: it exists only on the dev server and is drawn by lil-gui in the system's own font, not in the cut faces.
 const DEV_ONLY = [path.join(root, "src", "debug.js")];
 // Nor is each level's bake.js (#405): the floor's bake reads it in Node, the page never imports it (tests/unit/level-bake.test.mjs),
-// and its names of the place's parts are written only into the floor's report on GitHub.
-const BAKE_ONLY = fs.readdirSync(path.join(root, "levels")).map((d) => path.join(root, "levels", d, "bake.js"));
+// and its names of the place's parts are written only into the floor's report on GitHub. Nor is its checks.js (S6): the unit
+// tests and tools read it in Node (tests/unit/level-checks.test.mjs holds that), and what it names is written into manifests and reports.
+const BAKE_ONLY = fs.readdirSync(path.join(root, "levels")).flatMap((d) => ["bake.js", "checks.js"].map((n) => path.join(root, "levels", d, n)));
 // The Japanese, English and Korean tables (app/locales/*.js, app/levels/*/locales/*.js) are written in faces of their own, cut by
 // `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
 // So is the name of each language on its button in index.html, which is written in that language.

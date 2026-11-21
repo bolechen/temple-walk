@@ -19,7 +19,10 @@
 import "../tests/unit/dom-stub.mjs";
 import * as THREE from "three";
 import fs from "node:fs";
-const { buildSite, createWalker, SITE, APPROACH, LEVELS } = await import("../app/src/site.js");
+// Which level (docs/t05/LEVEL-SPLIT.md S6): --level=<id>, the prologue by default; the plan and the walker are the level's own
+// (tests/unit/level-plan.mjs, which reads WALK_LEVEL as the baked floor's walker does), and what its table names and sweeps is app/levels/<id>/checks.js.
+{ const a = process.argv.find((q) => q.startsWith("--level=")); if (a) process.env.WALK_LEVEL = a.slice(8); }
+const { levelPlan, L: LEVEL, LEVEL_ID, checks } = await import("../tests/unit/level-plan.mjs");
 const { CHEEK, stairProfile } = await import("../app/src/geo.js");
 const { createMonk } = await import("../app/src/monk.js");
 const { dressed } = await import("../tests/unit/novice-glb.mjs");   // the sculpted body he wears in the page, read from the file
@@ -57,16 +60,18 @@ export function outline() {
   return Object.assign(bins, { low });
 }
 
-export function sweep({ tol = TOL } = {}) {
+export async function sweep({ tol = TOL } = {}) {
   const M = new Proxy({}, { get: (t, k) => { const mk = () => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) }); return k === "plaster" || k === "interior" ? () => (t["__" + k] ||= mk()) : (t[k] ||= mk()); } });
   const T0 = Date.now(), lap = (m) => process.env.EDGE_LAPS && console.error(((Date.now() - T0) / 1000).toFixed(1), m);
-  const site = buildSite(M), walker = createWalker(site); site.root.updateMatrixWorld(true); lap("built");
+  const { site, walker } = await levelPlan(M); site.root.updateMatrixWorld(true); lap("built");
+  // What this level says of itself to the sweep: its own table where it has one, else the box its floor is baked over and nothing else named.
+  const E = checks?.edges || {}, BOX = E.box ? E.box() : { ...(await import("./walk/scene.mjs")).bakeOf(LEVEL_ID).outdoors };
   const prof = outline(), top = (() => { let t = 0; prof.forEach((r, i) => { if (r > 0) t = (i + 1) * BIN; }); return t; })();
   const RMAX = Math.max(...prof.slice(Math.floor(KNEE / BIN)));
 
   lap("outline");
   // ---- Everywhere his centre can be ----
-  const X0 = -36, X1 = 36, Z0 = SITE.zN - 3, Z1 = APPROACH.end + 3, nx = Math.ceil((X1 - X0) / G), nz = Math.ceil((Z1 - Z0) / G);
+  const X0 = BOX.x0, X1 = BOX.x1, Z0 = BOX.z0, Z1 = BOX.z1, nx = Math.ceil((X1 - X0) / G), nz = Math.ceil((Z1 - Z0) / G);
   const reach = new Uint8Array(nx * nz), foot = new Float32Array(nx * nz), cx = (i) => X0 + (i + 0.5) * G, cz = (j) => Z0 + (j + 0.5) * G;
   const at = (x, z) => { const i = Math.floor((x - X0) / G), j = Math.floor((z - Z0) / G); return i < 0 || j < 0 || i >= nx || j >= nz ? -1 : j * nx + i; };
   const todo = [at(site.start[0], site.start[1])]; reach[todo[0]] = 1; foot[todo[0]] = walker.heightAt(site.start[0], site.start[1]);
@@ -98,20 +103,14 @@ export function sweep({ tol = TOL } = {}) {
   };
 
   // ---- Building by building, side by side: where he can come up to each thing, and what he meets there ----
-  const NAME = { "万年正续": "山门", "云径禅寺": "山门", "释迦宝殿": "大雄宝殿" }, groups = new Map();
+  const NAME = E.names || {}, groups = new Map();
   for (const b of site.buildings) {   // storeys of one building are one thing; an unnamed storey belongs to the named one it stands in
     let name = NAME[b.name] || b.name;
     if (!name) { const host = site.buildings.find((o) => o.name && o !== b && o.x0 <= b.x1 && o.x1 >= b.x0 && o.z0 <= b.z1 && o.z1 >= b.z0); name = host ? NAME[host.name] || host.name : "?"; }
     const g = groups.get(name) || groups.set(name, { name, x0: 1e9, x1: -1e9, z0: 1e9, z1: -1e9 }).get(name);
     g.x0 = Math.min(g.x0, b.x0); g.x1 = Math.max(g.x1, b.x1); g.z0 = Math.min(g.z0, b.z0); g.z1 = Math.max(g.z1, b.z1);
   }
-  const Ap = APPROACH, items = [...groups.values(),
-    { name: "照壁", x0: -5.75, x1: 5.75, z0: 54.5, z1: 55.5 }, { name: "龙井", x0: 11.6, x1: 14.8, z0: LEVELS[1].zS - 0.5, z1: LEVELS[1].zS + 1.4 },
-    { name: "古道转折（上：正对前院的一段与平台）", x0: -Ap.w / 2 - CHEEK, x1: Ap.xTurn, z0: Ap.zA0, z1: Ap.zA1 },
-    { name: "古道转折（中：洗砚池旁平台）", x0: Ap.xB0, x1: Ap.xB1, z0: Ap.zA0, z1: Ap.zA1 }, { name: "古道转折（下：起步平台）", x0: Ap.xB0, x1: Ap.xB1 + 2.6, z0: Ap.zC0, z1: Ap.zC1 },
-    ...LEVELS.map((L, i) => ({ name: `第${"一二三"[i]}层台地的大台阶`, x0: -L.stair / 2 - CHEEK, x1: L.stair / 2 + CHEEK, z0: L.zS, z1: L.zS + stairProfile(L.y - (i ? LEVELS[i - 1].y : 0)).run })),
-    ...LEVELS.map((L, i) => ({ name: `第${"一二三"[i]}层台地南缘护墙`, x0: -L.x, x1: L.x, z0: L.zS - 0.26, z1: L.zS })),
-  ];
+  const items = [...groups.values(), ...(E.items ? E.items() : [])];
   // Where each point lies: the thing in the table whose ground it is on, the smallest where two overlap.
   let itemAt = (x, z) => -1;
   { const GI = 0.5, ix = Math.ceil((X1 - X0) / GI), iz = Math.ceil((Z1 - Z0) / GI), grid = new Int8Array(ix * iz).fill(-1), area = new Float32Array(ix * iz).fill(Infinity);
@@ -237,10 +236,9 @@ export function sweep({ tol = TOL } = {}) {
     const r = (v) => +v.toFixed(2); spots.push({ place: where(sp.at[0], sp.at[2]), thing: sp.thing, worst: +sp.worst.toFixed(3), cells: sp.cells, at: sp.at.map(r), into: sp.into.map(r), box: [sp.x0, sp.x1, sp.z0, sp.z1].map(r) }); }
   spots.sort((a, b) => b.worst - a.worst);
   const why = (x, z) => {   // what keeps him from standing there
-    if (Math.abs(x) > SITE.x - 0.6 || z < SITE.zN + 0.6) return "围墙之外";
+    { const w = E.why?.(walker, x, z); if (w) return w; }
     const other = site.buildings.find((b) => b.name && x > b.x0 - 0.6 && x < b.x1 + 0.6 && z > b.z0 - 0.6 && z < b.z1 + 0.6); if (other) return `是${NAME[other.name] || other.name}的台基或屋身`;
-    if (z > SITE.fore + 0.3 && walker.onGround(x, z)) return "路外的竹林与山坡，没有可走的地面";
-    for (const L of LEVELS) if (Math.abs(z - L.zS) < 1.2) return "台地边缘的挡土墙与护墙";
+    { const w = E.whyAfter?.(walker, x, z); if (w) return w; }
     return "实体（墙、坡或台基），没有可走的地面";
   };
   const band = (x0, x1, z0, z1) => { let n = 0, d = 0, touch = 0; const i0 = Math.max(0, Math.floor((x0 - X0) / G)), i1 = Math.min(nx - 1, Math.floor((x1 - X0) / G)), j0 = Math.max(0, Math.floor((z0 - Z0) / G)), j1 = Math.min(nz - 1, Math.floor((z1 - Z0) / G));
@@ -289,7 +287,7 @@ export function partTables(r) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const t0 = Date.now(), r = sweep(), { site, walker, ...report } = r;
+  const t0 = Date.now(), r = await sweep(), { site, walker, ...report } = r;
   console.log(`he reaches ${r.reach.toFixed(3)} m from his centre above the knee; ${r.cells} places to stand, ${r.samples} points of what is built, ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   for (const p of r.places.sort((a, b) => b.worst - a.worst)) {
     console.log(`${p.worst > r.tolerance ? "✗" : "✓"} ${p.place.padEnd(8, "　")} ${String(p.cells).padStart(7)} places  ${String(p.over).padStart(6)} over  deepest ${(p.worst * 100).toFixed(1)} cm${p.at && p.worst > r.tolerance ? ` standing at (${p.at[0]}, ${p.at[2]})` : ""}`);
