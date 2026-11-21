@@ -189,17 +189,30 @@ function sumeru(x, lotusOn = true) {
 
 // A mandorla (背光) and head halo behind each figure: a pointed body halo and a disc, in dark gold, whose ring count and
 // flame tips are the per-figure differences (the pack: 七尊各有背光).
+// The body halo (身光): one form for all seven (ART.md §3.1). The art director's call of 2026-11-21 (#407): widest, 4.2 m,
+// at the height of the shoulders, which it frames with the head, narrowing below behind the knees and rising above to a
+// point (舟形), the top where it was; 4.2 m keeps every halo clear of the beams of the frames between the seats (the
+// narrowest pair of seats stands 5.12 m apart, a beam 0.6 m wide between them).
+function haloShape(w, h, ys, inset = 0) {
+  // w the widest, h the height, ys the height of the widest; inset draws the band just inside the edge
+  const s = new THREE.Shape(), half = w / 2 - inset, foot = half * 0.82, top = h - inset * 1.2;
+  s.moveTo(-foot, 0);
+  s.bezierCurveTo(-half, ys * 0.35, -half, ys * 0.75, -half, ys);
+  s.bezierCurveTo(-half, ys + (top - ys) * 0.45, -half * 0.35, top * 0.9, 0, top);
+  s.bezierCurveTo(half * 0.35, top * 0.9, half, ys + (top - ys) * 0.45, half, ys);
+  s.bezierCurveTo(half, ys * 0.75, half, ys * 0.35, foot, 0);
+  s.lineTo(-foot, 0);
+  return s;
+}
 function mandorla(x, topY, headY, v = {}) {
   const g = new THREE.Group();
-  const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 5.6, z = ALTAR.z - 2.25;
-  const s = new THREE.Shape(); const h = topY - AT - BASE_H, b = AT + BASE_H;
-  s.moveTo(-wB / 2, 0); s.bezierCurveTo(-wB / 2, h * 0.55, -wB * 0.32, h * 0.82, 0, h); s.bezierCurveTo(wB * 0.32, h * 0.82, wB / 2, h * 0.55, wB / 2, 0); s.lineTo(-wB / 2, 0);
-  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
-  for (let r = 0; r < rings; r++) {   // concentric bands in relief
-    const k = 0.9 - r * 0.14, s2 = new THREE.Shape(); const ww = wB * k, hh = h * (0.55 + 0.45 * k);
-    s2.moveTo(-ww / 2, 0); s2.bezierCurveTo(-ww / 2, hh * 0.55, -ww * 0.32, hh * 0.82, 0, hh); s2.bezierCurveTo(ww * 0.32, hh * 0.82, ww / 2, hh * 0.55, ww / 2, 0); s2.lineTo(ww / 2 - 0.18, 0);
-    s2.bezierCurveTo(ww / 2 - 0.18, hh * 0.55 - 0.1, ww * 0.32 - 0.12, hh * 0.82 - 0.18, 0, hh - 0.22); s2.bezierCurveTo(-ww * 0.32 + 0.12, hh * 0.82 - 0.18, -ww / 2 + 0.18, hh * 0.55 - 0.1, -ww / 2 + 0.18, 0); s2.lineTo(-ww / 2, 0);
-    const o = new THREE.Mesh(new THREE.ExtrudeGeometry(s2, { depth: 0.08, bevelEnabled: false, curveSegments: 24 }), M.gold); o.position.set(x, b, z + 0.18); g.add(o);
+  const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 4.2, z = ALTAR.z - 2.25;
+  const h = topY - AT - BASE_H, b = AT + BASE_H, ys = Math.max(0.5, Math.min(h * 0.85, (v.shoulderY ?? headY - 1.6) - b));
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(haloShape(wB, h, ys), { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
+  for (let r = 0; r < rings; r++) {   // concentric bands in relief: the outline drawn smaller, less its own inset
+    const k = 0.9 - r * 0.14, outer = haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k);
+    outer.holes.push(new THREE.Path(haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k, 0.18).getPoints(48)));
+    const o = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: 0.08, bevelEnabled: false, curveSegments: 24 }), M.gold); o.position.set(x, b, z + 0.18); g.add(o);
   }
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(v.head ?? 1.9, v.head ?? 1.9, 0.12, 48), M.gold); disc.rotation.x = Math.PI / 2; disc.position.set(x, headY, z + 0.3); g.add(disc);
   const inner = new THREE.Mesh(new THREE.CylinderGeometry((v.head ?? 1.9) * 0.7, (v.head ?? 1.9) * 0.7, 0.14, 48), M.halo); inner.rotation.x = Math.PI / 2; inner.position.set(x, headY, z + 0.31); g.add(inner);
