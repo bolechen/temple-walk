@@ -57,6 +57,7 @@ export function createSky(renderer, scene, quality, focus) {
   const hemi = new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15);
   sun.position.copy(SUN_DIR).multiplyScalar(170).add(at);
   scene.add(sun, sun.target, hemi);
+  let sunI = sun.intensity, sunK = 1;   // the hour's strength, and a tool's multiplier on it (`scaleSun`)
 
   return {
     // The dome is finite. A door-view cube camera on the summit porch is more than a hundred metres from the
@@ -67,6 +68,8 @@ export function createSky(renderer, scene, quality, focus) {
     update: (t) => { u.uT.value = t; },
     // Indoors neither the sun nor much of the sky reaches: the lamps do the work. The next setMood restores them.
     indoors() { sun.intensity = 0; hemi.intensity *= 0.3; },
+    // For measuring tools only (tools/sun-lit.cjs): the sun's light times `k`, 0 for none, with the sky and the lamps as they are.
+    scaleSun(k) { sunK = k; sun.intensity = sunI * sunK; },
     // The soft shadows (shadows.js) on or off while walking: a negative radius sends the shader back to plain PCF.
     soft(on) { sun.shadow.radius = on ? Math.abs(sun.shadow.radius) : -Math.abs(sun.shadow.radius); },
     get softOn() { return sun.shadow.radius > 0; },
@@ -75,7 +78,7 @@ export function createSky(renderer, scene, quality, focus) {
       SUN_DIR.fromArray(m.sun).normalize(); FOG.fromArray(m.fog);
       u.uZen.value.fromArray(m.zen); u.uHor.value.fromArray(m.hor); u.uSunCol.value.fromArray(m.sunCol);
       u.uCloud.value = m.cloud; u.uStars.value = m.stars; u.uGlow.value = m.glow; u.uDisk.value = m.disk;
-      sun.position.copy(SUN_DIR).multiplyScalar(190).add(at); sun.color.fromArray(m.sunCol); sun.intensity = m.sunI;
+      sun.position.copy(SUN_DIR).multiplyScalar(190).add(at); sun.color.fromArray(m.sunCol); sunI = m.sunI; sun.intensity = sunI * sunK;
       hemi.color.fromArray(m.hemiS); hemi.groundColor.fromArray(m.hemiG); hemi.intensity = m.hemiI;
       U.uAmb.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.82); U.uSunC.value.fromArray(m.sunCol).multiplyScalar(m.sunI * 0.2);
       const l = U.uLight.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.6); l.r += m.sunCol[0] * m.sunI * 0.14; l.g += m.sunCol[1] * m.sunI * 0.14; l.b += m.sunCol[2] * m.sunI * 0.14;
