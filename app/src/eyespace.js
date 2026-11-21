@@ -56,6 +56,8 @@ export function createEyeSpace(bvh, keepOut = null) {
       return near.length;
     },
     /** Does the sphere at (x, y, z) touch anything drawn? Near the segment last gathered, only those triangles are asked. */
+    /** Is the sphere at (x, y, z) only kept out by the level (the bamboo), not by anything drawn? */
+    kept(x, y, z) { return !!keepOut && keepOut(x, y, z, r); },
     shut(x, y, z) {
       if (keepOut && keepOut(x, y, z, r)) return true;
       if (have) { p.set(x, y, z); seg.closestPointToPoint(p, true, q); if (q.distanceTo(p) < 1e-3) return touches(x, y, z); }

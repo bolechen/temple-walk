@@ -49,7 +49,9 @@ test("by the ink-stone pool, looking into the grove, the eye stays out of it (#5
 function framed(c, x, z, aspect) {
   const foot = walker.heightAt(x, z), aim = aimAt(c, [x, foot, z], 2.422, FRAMES.b, FOV); if (!aim) return null;
   const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 500); cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
-  return [foot, foot + 1.22].map((y) => new THREE.Vector3(x, y, z).project(cam).y);
+  // (the corners of a box 0.6 m across round him, his feet to his head, as the page's `__probe().monkBox` is measured)
+  const ys = []; for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const y of [foot, foot + 1.22]) ys.push(new THREE.Vector3(x + dx, y, z + dz).project(cam).y);
+  return [Math.min(...ys), Math.max(...ys)];
 }
 test("by the ink-stone pool the eye, held in by the grove, rises until the whole of him is in the picture (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
   const bad = [];

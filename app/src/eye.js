@@ -134,15 +134,24 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     const y = base(dist, sd)[1]; let L = 0;
     for (let s = Math.max(0, dist - 0.5); s <= Math.min(dist + 1.0, Math.max(d, dist)) + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
     L = Math.min(L, MAXRISE);
-    return stop && dist <= d + 1e-6 ? Math.max(L, fitRise(dist, sd, L)) : L;
+    return keptIn && dist <= d + 1e-6 ? Math.max(L, fitRise(dist, sd, L)) : L;
   };
+  // Whether what holds the arm in is the level's keep-out (the bamboo) rather than anything drawn: only then does the eye
+  // rise to hold him (under a terrace's wall it must not climb the stair above to look at his feet: eye.test).
+  const keptIn = !!(stop && space?.kept && arm && (() => { const b = base(Math.min(reach, d + 0.25)); return space.kept(b[0], b[1], b[2]); })());
   // Held in so near him that the whole of him no longer fits the picture (#515: by the ink-stone pool the bamboo holds the arm
   // at 1.25 m, and his feet fell out of the frame), the eye rises where it stands and looks down at him until his feet and
   // the top of his head are inside it with 5% to spare, as a person stepping back against a hedge lifts the camera over
   // their head. At most `FIT_RISE` over where it would stand, and never up into anything drawn or kept out.
+  // (Judged as the page's `monkBox` is drawn: the corners of a box 0.6 m across round him, his feet to the top of his head;
+  // the near corners stand a step closer than his middle, and near him they are what spill out of the picture first.)
   const fits = (b, y) => {
-    const h = Math.hypot(b[0] - x, b[2] - z) || 1e-3, a = (py) => Math.atan2(py - y, h), pitch = a(foot + arm.hold) - Math.atan(arm.ny * arm.tv);
-    return Math.tan(a(foot + 1.22) - pitch) / arm.tv <= 0.9 && Math.tan(a(foot) - pitch) / arm.tv >= -0.9;
+    const dx = x - b[0], dz = z - b[2], h = Math.hypot(dx, dz) || 1e-3, fx = dx / h, fz = dz / h, pitch = Math.atan2(foot + arm.hold - y, h) - Math.atan(arm.ny * arm.tv);
+    for (const ox of [-0.3, 0.3]) for (const oz of [-0.3, 0.3]) {
+      const along = h + ox * fx + oz * fz; if (along < 0.05) return false;   // (a corner at or behind the eye: not in the picture)
+      for (const py of [foot, foot + 1.22]) { const v = Math.tan(Math.atan2(py - y, along) - pitch) / arm.tv; if (v > 0.9 || v < -0.9) return false; }
+    }
+    return true;
   };
   const fitRise = (dist, sd, from) => {
     if (!arm?.tv) return 0;
