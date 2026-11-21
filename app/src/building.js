@@ -269,9 +269,10 @@ export function buildHall(M, opts) {
     for (let i = 0; i <= nx; i++) ribs.push(box(0.22, 0.16, w, xs[i], y - 0.1, (Z + ZB) / 2));
     for (let x = xs[0]; x < X - 0.01; x += 0.9) ribs.push(box(0.07, 0.1, w, x + 0.45, y - 0.07, (Z + ZB) / 2));
     for (const z of [Z, ZB, (Z + ZB) / 2]) ribs.push(box(2 * X, 0.2, 0.2, 0, y - 0.12, z));
-    // (Overhead, 4.9 m up: nothing to stand on, and nothing he reaches. Left out of the baked floor, whose cells it moved at the library's stair heads by a
-    // centimetre, ninety metres away, a thing the bake bisected to this panel and I did not run to ground (#288).)
-    add(panel, M.passage, { ao: () => 0.85 }).userData.walk = false; add(merge(ribs), M.beamX, { ao: () => 0.5, cast: false }).userData.walk = false;
+    // (Overhead, 4.9 m up: nothing to stand on, and nothing he reaches, so it is left out of the baked floor (`bake: false`; the eye still keeps
+    // out of it, as it must, or the camera backing out of the doorway would go through the boards and see the roof's bare underside again). In the
+    // floor it moved the cells at the library's stair heads by a centimetre, ninety metres away: the bake bisected it to this panel and I did not run that to ground, #288.)
+    add(panel, M.passage, { ao: () => 0.85 }).userData.bake = false; add(merge(ribs), M.beamX, { ao: () => 0.5, cast: false }).userData.bake = false;
   }
   if (p.brackets) {   // the white band between the bracket sets, all the way round
     const bandH = underside(p.overhang) - PLATE_TOP + 0.12, y = PLATE_TOP + bandH / 2;

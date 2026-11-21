@@ -139,6 +139,18 @@
    "bytes": 572180,
    "sha256": "3d037a1226cae4ddb1356b18142303fcca4c9a03f7d7e261b9f2b7adfb6980d3",
    "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/passage-back-n-after.png",
+   "bytes": 562295,
+   "sha256": "a8d8bdbf2411cf117aeb2c9e281813ea8a9ac2046d528986212d0a059575ab06",
+   "rev": "1d378f0631849c4ab117703d22bcb9dd0a8a995d"
+  },
+  {
+   "path": "shots/passage-back-s-after.png",
+   "bytes": 572205,
+   "sha256": "85207b618aeb31da3d380dcb4dd1ea8ff8c9e19d384d8ee9504c7fb87475c6df",
+   "rev": "1d378f0631849c4ab117703d22bcb9dd0a8a995d"
   }
  ]
 }

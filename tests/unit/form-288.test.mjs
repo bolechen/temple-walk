@@ -101,3 +101,16 @@ test("the picture-cards of the grove stand 10 m or more beyond the courts' walls
   });
   assert.deepEqual(near, [], "bands nearer than 10 m beyond the wall");
 });
+
+test("the gate's ceiling is out of the baked floor but in the eye's space, so the camera cannot back out of the doorway through it", async () => {
+  // It moved the library's cells in the floor (not run to ground), and it is overhead; but the eye must keep out of it.
+  const { gatherEye } = await import("../../app/src/eyegather.js"), { gather } = await import("../../tools/walk/bake.mjs");
+  const box = { x0: -10, x1: 10, z0: SITE.zS - 4, z1: SITE.zS + 4 };
+  const names = new Set(gather([site.root], { ...box, bottom: -1, top: 12 }).names);
+  assert.ok(!names.has("passage"), "the floor's bake takes the ceiling");
+  const scene = new THREE.Group(); site.root.userData.part = "site"; scene.add(site.root); scene.updateMatrixWorld(true);
+  const it = gatherEye(scene, { ...box, y0: -1, y1: 12 }); let r = it.next(); while (!r.done) r = it.next();
+  const t = r.value; let ceiling = 0;
+  for (let i = 0; i < t.length; i += 9) if (Math.abs(t[i + 1] - 4.88) < 0.04 && Math.abs(t[i + 4] - 4.88) < 0.04 && Math.abs(t[i + 7] - 4.88) < 0.04 && Math.abs(t[i]) < 9.7) ceiling++;
+  assert.ok(ceiling >= 20, `the eye's space holds the ceiling's boards: ${ceiling} triangles at 4.88 m under the gate`);
+});

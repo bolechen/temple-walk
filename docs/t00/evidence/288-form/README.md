@@ -20,3 +20,8 @@
 - T4 帧耗：没加几何（竹屏只是挪位置，山门天花几百个三角面），未在 T4 上量；软件渲染读不出 0.2 ms。
 - 竹屏画片的其他墙外：北面（藏经楼后、山顶后）的横带 `L2.zN−3−o` 没动，山顶朝北看到的片边没有逐处查（`gable-front` 左下角仍可见侧带末端的碎边）。
 - 手机尺寸、其他季节时辰未拍。
+
+## 天花只出烘焙、不出眼睛（审后补，`tools/walk/bake.mjs` 的 `userData.bake === false`）
+
+先前把天花和梁格标成 `walk = false`，眼睛的层次（`eyegather`）也跳过了它，镜头退出门洞可能穿过天花。改成只对地面烘焙生效的新标记 `bake = false`；`form-288.test.mjs` 第 7 条：烘焙里没有 `passage`，眼睛的空间里有天花板的 20 个以上三角面。`spring-arm`（16）、`nearplane:grid`（20）、`edges:grid`、`pnpm test`、`test:grid`（882）过；地面烘焙的指纹与 `walk=false` 那版相同（`7b7d6f97`），藏经楼不变。
+图：`shots/passage-back-n-after.png`、`passage-back-s-after.png`：`view=third`，`?cam=0,38.4,0,-0.55` 和 `?cam=0,41.6,π,-0.55`（俯着看，镜头被抬到他身后上方，仍在天花板之下，画面里没有屋顶内侧）。没有「改前」对照图。
