@@ -53,7 +53,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, uLeaf: { value: 1 }, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, uCrownLeaf: { value: 1 }, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -76,7 +76,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
       #include <shadowmask_pars_fragment>
       ` + NOISE + FOGLAYER + declare(["stone", "snow"]) + TRAIL + /* glsl */`
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
-      uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform float uLeaf; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
+      uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform float uCrownLeaf; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
       // Leaves and petals lie where the trees let them fall (fall.js's map, the same one the falling ones read): two layers of
       // small leaves, each one to a cell of a rotated grid, each laid its own way, more of them at the foot of a wall or a
@@ -157,8 +157,8 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; bool inLm=lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.; vec3 lmv=inLm?texture2D(tShade,lmUv).rgb:vec3(1.,0.,0.); float dB=inLm?lmv.r*${SPAN}.-.5:2.5;
         // The sky a crown hides: the stone under a tree lies in its own soft shade (the sun's shadow of the crown is in the shadow
         // map as well, but at dusk the court is already in the halls' shadow and under cloud it casts none), broken by the flecks of
-        // light that come through the leaves, which are fewer where the crown is thick. Leaved trees thin out with the season (uLeaf).
-        float crownK=clamp(lmv.g*uLeaf+lmv.b,0.,1.), fleck=smoothstep(.5,.72,fbm2(p*2.1+13.)*.7+n2(p*7.)*.3);
+        // light that come through the leaves, which are fewer where the crown is thick. Leaved trees thin out with the season (uCrownLeaf).
+        float crownK=clamp(lmv.g*uCrownLeaf+lmv.b,0.,1.), fleck=smoothstep(.5,.72,fbm2(p*2.1+13.)*.7+n2(p*7.)*.3);
         float crownAo=1.-.52*crownK*(1.-fleck*(1.-.55*crownK));
         float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*crownAo*mix(.42,1.,smoothstep(0.,1.1,length(p-uCenser)-.3));   // under the censer's belly (feet 0.48 m out, belly 0.56: censer.js), and a little sky kept off by its height round it
         // Leaves and petals on the stone (autumn and spring; none under a roof or on the swept lane). They lie in drifts: where the
@@ -261,7 +261,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
     update(dt) { for (const v of rip.value) if (v.z < 99) v.z = v.z + dt > RIPPLE.life + RIPPLE.lag ? 99 : v.z + dt; },
     ripples: () => ({ made: ripMade, live: rip.value.filter((v) => v.z < 99).length }),
     // How much of its leaf each season leaves the leaved trees' crowns: they hide the sky from the stone under them accordingly.
-    setMood(m) { const k = { spring: 0.85, summer: 1, autumn: 0.8, winter: 0.1 }[m.season] ?? 1; for (const L of levels) L.mat.uniforms.uLeaf.value = k; },
+    setMood(m) { const k = { spring: 0.85, summer: 1, autumn: 0.8, winter: 0.1 }[m.season] ?? 1; for (const L of levels) L.mat.uniforms.uCrownLeaf.value = k; },
     resize(w, h, on) { if (on) rt.setSize(Math.max(64, w), Math.max(64, h)); has = !!on; mat.uniforms.uReflOn.value = on ? 1 : 0; },
     // Whether the mirror is being drawn this frame. When it is not, the paving falls back to the sky's sheen
     // instead of showing whatever the mirror last held.
