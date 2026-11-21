@@ -24,6 +24,8 @@ export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
 // Whether the eye at `e` sees him standing at (x, foot, z): a fan of lines to his body, three heights across his shoulders'
 // width, seven of the nine clear. One line to his waist found the gap between two balusters and called him seen with
 // only the top of his head over the rail (#411's art review, below the great hall's platform looking down).
+// How much farther down than the visitor's own view the eye may come to look at him for having risen (#411's art review).
+export const TILT = (15 * Math.PI) / 180;
 const FAN = [0.25, 0.6, 0.95].flatMap((h) => [-0.15, 0, 0.15].map((s) => [h, s]));
 export function seesHim(space, e, x, foot, z) {
   const dx = x - e[0], dz = z - e[2], l = Math.hypot(dx, dz) || 1, sx = -dz / l, sz = dx / l;
@@ -154,6 +156,13 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   if (space?.sees && arm) {
     const seen = (dd) => { const b = base(dd); return !(groundAt(b[0], b[2]) > foot + 0.3) || seesHim(space, [b[0], b[1] + liftAt(dd), b[2]], x, foot, z); };
     while (d > 0.25 && !seen(d)) { d -= 0.25; stop = stop || true; }
+  }
+  // Nor may rising tip the view down far past what the visitor asked: below the great hall's platform, the view level, the
+  // risen eye looked down 34° to 44° and the picture was ground and the foot of a wall (#411's art review). Past `TILT`
+  // more than the same arm unrisen would look down at his middle, it comes in a quarter-metre at a time.
+  if (arm && !walker.onStairs?.(x, z)) {   // (down a flight the treads behind him rise as a slope, and the eye rides over them: #295)
+    const extra = (dd) => { const b = base(dd), h = Math.hypot(b[0] - x, b[2] - z) || 1e-3, mid = foot + 0.61, up = Math.max(liftAt(dd), need(dd, s0, b[1])); return Math.atan2(b[1] + up - mid, h) - Math.atan2(b[1] - mid, h); };
+    while (d > 0.25 && extra(d) > TILT) { d -= 0.25; stop = stop || true; }
   }
   const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.

@@ -121,8 +121,14 @@ const tallness = (c, x, foot, z, yaw) => {
   const a = new THREE.Vector3(x, foot, z).project(cam), b = new THREE.Vector3(x, foot + 1.22, z).project(cam);
   return a.z < 1 && b.z < 1 ? Math.abs(b.y - a.y) / 2 : 0;
 };
-function seen(x, z, yaw, what, bad, pitch = 0.04) {
+// (and, below a platform, not from so high that the picture is the ground at his feet: the art review of #411 measured the
+// risen eye there looking down 34° to 44° with the view level, and 53° looking down 0.2 before the eye's TILT; `tilt` is the
+// most it may look down at his middle: 42°, since 0.8 m from the platform's edge the arm can be only 1.25 m long, and from
+// that near an eye 1.3 m over his feet looks down 40° at him without having risen at all)
+function seen(x, z, yaw, what, bad, pitch = 0.04, tilt = Infinity) {
   const { c, head } = settle(x, z, yaw, pitch), foot = walker.heightAt(x, z), back = Math.hypot(c[0] - head[0], c[2] - head[2]), tall = tallness(c, x, foot, z, yaw);
+  const down = (Math.atan2(c[1] - foot - 0.61, back) * 180) / Math.PI;
+  if (down > tilt) bad.push(`${what} at (${x.toFixed(2)}, ${z.toFixed(2)}): the eye looks down ${down.toFixed(1)}° at him, over ${tilt}° (eye ${c.map((v) => v.toFixed(2)).join(", ")})`);
   if (back < 0.9 || !seesChest(c, x, foot, z) || tall < 0.15) bad.push(`${what} at (${x.toFixed(2)}, ${z.toFixed(2)}): eye ${back.toFixed(2)} m back, ${seesChest(c, x, foot, z) ? "sees" : "does not see"} his chest, ${(tall * 100).toFixed(0)}% of the picture tall (eye ${c.map((v) => v.toFixed(2)).join(", ")})`);
 }
 
@@ -146,12 +152,12 @@ test("below a hall's platform, his back to it, he is in the picture (#396)", () 
         if (!walker.blocked(px, pz) && walker.heightAt(px, pz) < h0 - 0.3) { const qx = px + r[0] * 0.8, qz = pz + r[1] * 0.8; if (!walker.blocked(qx, qz)) spot = [qx, qz]; }
       }
       if (!spot) continue;   // (that side may run into a wall of the court)
-      found++; for (const pitch of [0.04, -0.07, -0.2]) seen(spot[0], spot[1], Math.atan2(r[0], -r[1]), `below ${id}'s platform, looking ${pitch}`, bad, pitch);   // facing away from it, along r, the view level or looking down a little
+      found++; for (const pitch of [0.04, -0.07, -0.2]) seen(spot[0], spot[1], Math.atan2(r[0], -r[1]), `below ${id}'s platform, looking ${pitch}`, bad, pitch, 42);   // facing away from it, along r, the view level or looking down a little
     }
     assert.ok(found, `${id}: found no ground beside the platform on either side`);
   }
   // and where the preview showed only the top of his head over the great hall's balustrade (0c66cfe, after-west-wall)
-  for (const pitch of [0.04, -0.07, -0.2]) seen(-18.8, -12, -Math.PI / 2, `below main's platform at the preview's spot, looking ${pitch}`, bad, pitch);
+  for (const pitch of [0.04, -0.07, -0.2]) seen(-18.8, -12, -Math.PI / 2, `below main's platform at the preview's spot, looking ${pitch}`, bad, pitch, 42);
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
@@ -166,6 +172,14 @@ test("below a hall's platform, his back to it, he is in the picture (#396)", () 
 // (A column may stand between them: the eye lets a thin thing cross its view, as it always has out of doors.)
 const column = (q) => (site.walk.posts || []).some((o) => o.r && Math.hypot(q.x - o.x, q.z - o.z) < o.r + 0.06);
 const clear = (c, p) => { const to = new THREE.Vector3(...p).sub(new THREE.Vector3(...c)), len = to.length(); ray.origin.set(...c); ray.direction.copy(to).normalize(); const h = bvh.raycastFirst(ray, THREE.DoubleSide); return !h || h.distance > len - 0.05 || column(h.point); };
+// Whether the eye stands within a building's walls, between its floor and its ridge (the lead, #411: "眼睛不在任何建筑的空壳里"),
+// other than in the dark straight behind the door it is coming out of (3 m deep, the opening's width and a little).
+const inShell = (c, h) => {
+  const f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], back = -((c[0] - h.door[0]) * f[0] + (c[2] - h.door[1]) * f[1]), across = Math.abs((c[0] - h.door[0]) * f[1] - (c[2] - h.door[1]) * f[0]);
+  if (back > -0.5 && back < 3.0 && across < 1.15) return null;
+  for (const r of site.walk.roofs) { const k = r.core, m = 0.5; if (c[0] > k.x0 + m && c[0] < k.x1 - m && c[2] > k.z0 + m && c[2] < k.z1 - m && c[1] > r.floor && c[1] < r.top) return r.id || `the building at (${((k.x0 + k.x1) / 2).toFixed(1)}, ${((k.z0 + k.z1) / 2).toFixed(1)})`; }
+  return null;
+};
 test("out of every hall's door, the view swept round from -90° to 90° and back, he is seen at every 10° (#411's art review)", () => {
   walker.setRoom(null);
   const bad = [], deg = Math.PI / 180;
@@ -174,7 +188,7 @@ test("out of every hall's door, the view swept round from -90° to 90° and back
     const step = (t) => follow.step(dt, followEye(eyeWalker, { x, z, foot, eyeY, yaw: h.outYaw + t * deg, pitch: 0.04, side: 1, reach: 6.2, arm, space }));
     for (let n = 0; n < 240; n++) step(0);
     let t = 0;
-    const go = (to) => { while (t !== to) { t += Math.sign(to - t) * 2; let c = step(t); if (t % 10 === 0) { for (let n = 0; n < 16; n++) c = step(t); const w = clear(c, [x, foot + 0.5, z]), hd = clear(c, [x, foot + 1.1, z]); if (!w || !hd) bad.push(`out of ${h.id}, swept to ${t}°: ${w ? "" : "waist "}${hd ? "" : "head "}hidden (eye ${c.map((v) => v.toFixed(2)).join(", ")}, ${Math.hypot(c[0] - x, c[2] - z).toFixed(2)} m off)`); } } };
+    const go = (to) => { while (t !== to) { t += Math.sign(to - t) * 2; let c = step(t); if (t % 10 === 0) { for (let n = 0; n < 16; n++) c = step(t); const w = clear(c, [x, foot + 0.5, z]), hd = clear(c, [x, foot + 1.1, z]); if (!w || !hd) bad.push(`out of ${h.id}, swept to ${t}°: ${w ? "" : "waist "}${hd ? "" : "head "}hidden (eye ${c.map((v) => v.toFixed(2)).join(", ")}, ${Math.hypot(c[0] - x, c[2] - z).toFixed(2)} m off)`); const shell = inShell(c, h); if (shell) bad.push(`out of ${h.id}, swept to ${t}°: the eye is inside ${shell}'s walls (eye ${c.map((v) => v.toFixed(2)).join(", ")})`); } } };
     go(-90); go(90); go(0);
   }
   // One view is short of this, and is named so that it is not forgotten: out of the library looked at from 80° aside, the
