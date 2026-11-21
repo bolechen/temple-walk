@@ -50,12 +50,13 @@ test("the middle one is not lower than his neighbours, the six within 8.6–8.9 
 // #432's second criterion as the art director set it on #493: at cam03 (third person, 1080 lines) the middle one's head
 // stands 25–38 px over his neighbours' (2.3% to 3.5% of the picture's height): read as the tallest, not towering.
 test("the middle one reads tallest from the threshold, and no more: 25–38 px over his neighbours at cam03", () => {
-  const cam = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 400);
-  for (const pitch of [0.1, 0.14, 0.2]) {
-    cam.position.set(...EYES[0]); cam.rotation.set(pitch, 0, 0, "YXZ"); cam.updateMatrixWorld();
-    const y = (id) => { const t = altar.tops.find((q) => q.id === id); return ((1 - new THREE.Vector3(t.x, t.top, t.z).project(cam).y) / 2) * 1080; };
-    for (const n of ["sikhin", "visvabhu"]) { const d = y(n) - y("vipasyin"); assert.ok(d >= 1080 * 0.023 && d <= 1080 * 0.035, `pitch ${pitch}: ${d.toFixed(1)} px over ${n}`); }
-  }
+  // cam03 in third person as the page draws it at 1920 × 1080 (__frame() on #493's commit): eye (0, 3.66, 6.57), a fixed
+  // view's 44° lens, pitched up 0.056. At 9.3 m the middle one stood 38.3 px over his neighbours, 0.3 px over the band, and
+  // came down to 9.28 (the T05 lead, 2026-11-21): 37.2 px, 0.8 px under it, so a camera moved later turns this red first.
+  const cam = new THREE.PerspectiveCamera(44, 16 / 9, 0.1, 400);
+  cam.position.set(0, 3.66, 6.57); cam.rotation.set(0.056, 0, 0, "YXZ"); cam.updateMatrixWorld();
+  const y = (id) => { const t = altar.tops.find((q) => q.id === id); return ((1 - new THREE.Vector3(t.x, t.top, t.z).project(cam).y) / 2) * 1080; };
+  for (const n of ["sikhin", "visvabhu"]) { const d = y(n) - y("vipasyin"); assert.ok(d >= 25 && d <= 38, `cam03 third person: ${d.toFixed(1)} px over ${n} (25–38)`); }
 });
 
 test("every halo keeps 0.15 m from the frames' beams either side of it, Shakyamuni's turned too (#493)", () => {

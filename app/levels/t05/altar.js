@@ -19,7 +19,7 @@ export const ALTAR = Object.freeze({ w: 37.5, d: 4.8, h: 0.87, zF: -14.5, zB: -1
 /**
  * The seven, east to west as the visitor sees them from the door, right to left (DECISIONS.md: Kasyapa, Krakucchanda, Sikhin,
  * Vipashyin, Visvabhu, Kanakamuni, Shakyamuni), each on the middle of its bay. `h` is the whole from the altar's top, base and halo-less
- * figure together. The middle one is 9.3 m and the six 8.6 (DECISIONS.md, 2026-11-21: the art director and the structural
+ * figure together. The middle one is 9.28 m and the six 8.6 (DECISIONS.md, 2026-11-21: the art director and the structural
  * review on #493), so that from cam03 his head stands 25–38 px over his neighbours' at 1080 lines; the six are alike, as no
  * figure-by-figure heights are known.
  * Shakyamuni at the west end is turned 7° to the west (yaw in radians, +z the way the hall faces).
@@ -28,7 +28,7 @@ export const FIGURES = Object.freeze([
   { id: "kasyapa", x: 16.45, h: 8.6 },
   { id: "krakucchanda", x: 11.33, h: 8.6 },
   { id: "sikhin", x: 5.8, h: 8.6 },
-  { id: "vipasyin", x: 0, h: 9.3 },
+  { id: "vipasyin", x: 0, h: 9.28 },
   { id: "visvabhu", x: -5.8, h: 8.6 },
   { id: "kanakamuni", x: -11.33, h: 8.6 },
   { id: "sakyamuni", x: -16.45, h: 8.6, yaw: (-7 * Math.PI) / 180 },
