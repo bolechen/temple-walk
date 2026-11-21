@@ -166,7 +166,7 @@
   <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
-  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReplay" type="button" hidden>再看一回</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
 </dialog>
 <dialog class="layer" id="bless" aria-labelledby="blessTitle" hidden>
   <article class="paper scrolls">
@@ -213,7 +213,7 @@
   <div class="title-links"><button class="chip" id="titleCommunity" type="button" hidden>内测反馈群</button><button class="chip" id="titleSet" type="button">设置</button><span class="langs"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></span></div>
 </div>
 <!-- The close of the chapter: the closing words, one at a time, then the title of what has ended. -->
-<div id="ending" hidden><p id="endingLine"></p><div id="endingTitle"><b>山门之外</b><span>序章　云径禅寺　完</span><em>下一章，还在路上</em></div><small>轻点略过</small></div>
+<div id="ending" hidden><p id="endingLine"></p><div id="endingTitle"><b>山门之外</b><span>序章　云径禅寺　完</span><em>下一章，还在路上</em></div><div id="endingHold" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="按住略过"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="18" /><circle class="fill" cx="22" cy="22" r="18" pathLength="1" /></svg><small id="endingHoldWord">按住略过</small></div></div>
 <div id="veil"></div>
 
 <script type="module" src="lang.js"></script>

@@ -61,7 +61,8 @@
 | `opening.title` | 山门前序章标题升起 | — | 序章标题到达率 |
 | `demo.seal` | 每得一枚印 | `id` `count` | 核心进度 |
 | `demo.complete` | 第七印、书满 | `count` `seconds` | 通关 |
-| `demo.ending` | 收尾看完/跳过 | `skipped` `count` `seconds` | 结尾 |
+| `demo.ending` | 收尾看完/跳过 | `skipped` `how`（`hold`/`tap`/`wake-ignored`/`played`）`ignored`（被当作唤醒而不算的按下）`count` `seconds` | 结尾；`wake-ignored` 是没略过、但防护拦过至少一次 |
+| `demo.ending.replay` | 朱印帐「再看一回」点下（`phase: start`），重播结束时再发一次（`skipped` `how` `ignored`） | — | 回看；不是新的一季 |
 | `demo.restart` | 从头走起 | `from` `seals` | 重开 |
 | `demo.load_error` | 加载失败 | `reason`（`error`/`webgl`）`asset` `stage` `where` | 失败原因、哪个资源、停在哪一步、哪里出的错（本轮补 `asset`/`stage`/`where`，见下） |
 

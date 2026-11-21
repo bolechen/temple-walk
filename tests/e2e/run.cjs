@@ -1774,12 +1774,72 @@ const scenarios = {
     const u0 = (await R()).close.u; await t.frames(3); await t.page.waitForTimeout(700);
     const u1 = (await R()).close.u;
     expect(u1 - u0 < 0.01, "the close kept time behind a dark screen: " + JSON.stringify([u0, u1]));
-    await t.page.evaluate(() => { window.__setHidden(false); document.getElementById("ending").click(); });   // the wake tap, at once
+    await t.page.evaluate(() => { window.__setHidden(false); });
+    await t.page.mouse.move(120, 120); await t.page.mouse.down(); await t.page.mouse.up();   // the wake tap, at once
     expect((await R()).closing === true, "the tap that brought the page back skipped the close");
-    await t.page.waitForTimeout(1000);
-    await t.page.evaluate(() => document.getElementById("ending").click());
-    await t.until(async () => (await R()).ended >= 1, 30000, "a later tap did not pass over the close");
+    await t.until(async () => (await t.page.evaluate(() => window.__endingPass())).ignored === 1, 10000, "the wake press was not counted as ignored");
+    // A first watch is not passed over by a tap, whenever it comes; only by holding.
+    await t.page.mouse.down(); await t.until(async () => (await t.page.evaluate(() => window.__endingPass())).how === "hold" || (await R()).ended >= 1, 30000, "holding did not pass over the close"); await t.page.mouse.up();
+    await t.until(async () => (await R()).ended >= 1, 30000, "the held press did not pass over the close");
     await t.until(async () => (await wake()).includes("release"), 15000, "the wake lock was not let go after the close");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // 收尾的略过 (#473): a tap that wakes a dark screen never passes the close over, however late after the page is back it lands
+  // (hidden, or only a gap in the frames: some in-app browsers send no visibilitychange); the first watch is passed over only by
+  // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 再看一回 plays it again
+  // and writes nothing in the book.
+  "ending-skip": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
+      // six seals and the close not yet seen (once the page is opened again the book is left as it was)
+      if (!localStorage.getItem("test.seeded")) { localStorage.setItem("test.seeded", "1"); localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(["bell", "incense", "tea", "sutra", "well", "lamp"].map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: null, opened: null, told: false, closed: null, closedSeason: null, stamped: null })); }
+      let hidden = false, skew = 0; const now = performance.now.bind(performance); performance.now = () => now() + skew;
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (hidden ? "hidden" : "visible") });
+      // A frozen page: the clock jumps by `ms` with no frame drawn in between (and, if asked, the page is hidden meanwhile).
+      window.__freeze = (ms, event) => { if (event) { hidden = true; document.dispatchEvent(new Event("visibilitychange")); } skew += ms; if (event) { hidden = false; document.dispatchEvent(new Event("visibilitychange")); } window.__thawAt = performance.now(); };
+    } });
+    const R = () => t.page.evaluate(() => window.__rites()), P = () => t.page.evaluate(() => window.__endingPass());
+    const begin = async () => { await t.page.evaluate(() => { window.__riteClock(null); void window.__ending(); }); await t.until(async () => (await R()).closing === true, 60000, "the close never began"); await t.page.evaluate(() => window.__riteClock(0)); };   // the close is held where it is: what is tried here is the press, not the clock
+    // 1.5 s after the page is back, and a frame has been drawn since: late enough that the old 900 ms guard would have let it through.
+    const late = async () => { await t.until(async () => t.page.evaluate(() => performance.now() - window.__thawAt >= 1500), 30000, "waiting 1.5 s after the thaw"); await t.frames(2); };
+    const press = async () => { await t.page.mouse.move(120, 120); await t.page.mouse.down(); await t.page.mouse.up(); };
+    const settle = async () => { await t.until(async () => (await R()).closing === false, 30000, "the close did not end"); };
+    const book = () => t.page.evaluate(() => { const j = window.__journey(); return JSON.stringify([j.count, j.closed, j.closedSeason, j.stamped]); });
+    // --- the first watch, a freeze with the page hidden
+    await begin(); let p = await P();
+    expect(p.seenBefore === false, "the first watch should be a first: " + JSON.stringify(p));
+    await t.page.evaluate(() => window.__freeze(5000, true)); await late(); await press();
+    p = await P(); expect((await R()).closing === true && p.ignored === 1, "the press after the wake skipped the close, or was not counted: " + JSON.stringify([p, await R(), await t.page.evaluate(() => { const e = document.elementFromPoint(120, 120); const n = document.getElementById("ending"), c = getComputedStyle(n), r = n.getBoundingClientRect(); return [e && (e.id || e.tagName), n.hidden, c.display, c.zIndex, c.pointerEvents, c.position, [r.x, r.y, r.width, r.height], n.parentElement.id || n.parentElement.tagName, innerWidth, innerHeight]; })]));
+    await press(); expect((await R()).closing === true, "a tap passed over a first watch");
+    // holding and letting go half way carries on
+    await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the ring did not fill while held");
+    expect(await t.page.evaluate(() => document.getElementById("endingHold").getAttribute("aria-valuenow") !== null), "the ring says nothing to a screen reader");
+    await t.page.mouse.up(); p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
+    // holding all the way passes it over
+    await t.page.mouse.down(); await settle(); await t.page.mouse.up();
+    const after = await book();
+    expect(JSON.parse(after)[1], "the first watch did not count as seen");
+    // --- the second watch: a tap passes it over, but not the wake, here a gap in the frames and no visibilitychange
+    await begin(); p = await P(); expect(p.seenBefore === true, "the second watch should know it has been seen: " + JSON.stringify(p));
+    await t.page.evaluate(() => window.__freeze(5000, false)); await t.frames(2); await late(); await press();
+    p = await P(); expect((await R()).closing === true && p.ignored === 1, "a frame gap alone did not make the first press a wake: " + JSON.stringify(p));
+    await press(); await settle();
+    expect(await book() === after, "passing over a second watch changed the book");
+    // --- 再看一回
+    const events = () => t.page.evaluate(() => window.__eventLog().map((e) => e.name || e.event || e[0]));
+    // the book is filled and the close has been seen: it is kept so, and the page is opened again as a visitor coming back
+    await t.page.evaluate(() => { const j = JSON.parse(localStorage.getItem("yunjing.journey.v1")); j.seals.sit = 30; j.done = 31; j.opened = 31; j.stamped = 32; j.closed = j.closed || 30; j.closedSeason = j.closedSeason || "summer"; localStorage.setItem("yunjing.journey.v1", JSON.stringify(j)); });
+    await t.page.reload(); await t.until(async () => t.page.evaluate(() => document.body.dataset.ready === "1"), 120000, "the page after a reload");
+    await t.page.evaluate(() => { try { window.__enter?.(); } catch {} });
+    const kept = await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1"));
+    await t.page.evaluate(() => window.__book()); await t.until(async () => t.page.evaluate(() => !document.getElementById("bookReplay").hidden || !window.__ui().stack.includes("book")), 30000, "the book");
+    expect(!(await t.page.evaluate(() => document.getElementById("bookReplay").hidden)), "a full book that has seen the close offers no way to watch it again");
+    await t.page.evaluate(() => document.getElementById("bookReplay").click());
+    await t.until(async () => (await R()).closing === true, 120000, "再看一回 did not play the close");
+    await t.page.mouse.down(); await settle(); await t.page.mouse.up();
+    const now = await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")); const bare = (x) => JSON.stringify({ ...JSON.parse(x), told: 0 });   // (the line about the seasons being open is said once when the book is first seen full: not the close's doing)
+    expect(bare(now) === bare(kept), "watching again changed the book: " + kept + " -> " + now);
+    const ev = JSON.stringify(await events()); expect(!/demo\.complete/.test(ev.split("demo.ending.replay").slice(1).join("")), "watching again sent demo.complete");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain

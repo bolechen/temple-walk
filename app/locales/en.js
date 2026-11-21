@@ -31,6 +31,8 @@ export default {
   "序章　云径禅寺　完": "Prologue · Yunjing Temple · The End",
   "下一章，还在路上": "The next chapter is still on its way",
   "轻点略过": "Tap to skip",
+  "按住略过": "Hold to skip",
+  "再看一回": "Watch again",
   "印": "印",
   "朱印": "Seals",
   "朱印帐": "Seal book",
