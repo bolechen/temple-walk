@@ -1273,7 +1273,7 @@ window.__cost = (n = 40) => {
   return +((performance.now() - t0) / n).toFixed(2);
 };
 // What each part of the scene weighs: meshes, and triangles as drawn (instances counted).
-window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null });   // the cedars' grown wood, for the Node/browser check
+window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null, ginkgos: trees.ginkgos ? trees.ginkgos.length : 0, ginkgoHash: trees.ginkgos ? geometryHash(trees.ginkgos.map((g) => g.geometry)) : null });   // (the cedars' and the ginkgoes' grown wood)   // the cedars' grown wood, for the Node/browser check
 window.__census = () => {
   const out = {};
   for (const top of scene.children) {
