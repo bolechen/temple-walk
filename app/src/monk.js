@@ -46,6 +46,9 @@ const SKULL = V3(0, 1.04, -0.004), R = 0.14;
 const FOOT_X = 0.088, FOOT_Z = 0.012, TOE_OUT = 0.12;
 /** @type {[string, number][]} */
 const SIDES = [["left", 1], ["right", -1]];   // he faces +z, so his left hand is on +x
+// How far the skirt's bones follow a raised knee (radians of bone turn): freely up to SKIRT_FREE, easing to SKIRT_REACH for
+// the front and to SKIRT_SIDE for the side bones, which lie over the knees. Level walking never gets past SKIRT_FREE.
+const SKIRT_FREE = 0.5, SKIRT_REACH = 0.7, SKIRT_SIDE = 0.8;
 const SKIRT = ["robeFront", "robeLeft", "robeBack", "robeRight"];
 // Under each sole, the points that must clear the ground (in the foot's own frame, on the floor).
 const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.114], [0, 0.117], [0, -0.056]].map(([x, z]) => V3(x, 0, z));
@@ -734,13 +737,17 @@ export function createMonk() {
       // ends and the hat lag on their springs.
       const tr = springs.trail.step(clamp(0.05 * speed + 0.03 * accel, -0.15, 0.25) * (1 - seat), dt);
       const sd = springs.side.step(clamp(-0.07 * turn * Math.min(1, speed + 0.3), -0.2, 0.2) + 0.02 * Math.sin(phase) * gait, dt);
-      const fwd = Math.max(0, thigh[0], thigh[1]), back = Math.max(0, -thigh[0], -thigh[1]);
+      // A thigh comes up a long way on a stair; cloth does not follow it into a board. The skirt follows the knee as it
+      // always did up to SKIRT_FREE and eases to SKIRT_REACH, past which no bone turns on the knee's account.
+      const reachOf = (x, to = SKIRT_REACH) => x <= SKIRT_FREE ? x : SKIRT_FREE + (to - SKIRT_FREE) * Math.tanh((x - SKIRT_FREE) / (to - SKIRT_FREE));
+      const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, swingBack = (k) => reachOf(0.7 * Math.max(0, -k)) / 0.7;
+      const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = swingBack(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt lies over his thighs, the sides open over his knees, the back falls behind.
       B.robeFront.rotation.set(tr - 0.9 * fwd - 0.85 * seat - 1.22 * perch, 0, sd);
       B.robeBack.rotation.set(tr + 0.7 * back + 0.35 * seat + 0.9 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
-      B.robeLeft.rotation.set(tr - 0.9 * Math.max(0, thigh[0]) + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd + 0.015 + 0.2 * Math.max(0, thigh[0]) + 0.5 * seat + 0.16 * perch);
-      B.robeRight.rotation.set(tr - 0.9 * Math.max(0, thigh[1]) + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd - 0.015 - 0.2 * Math.max(0, thigh[1]) - 0.5 * seat - 0.16 * perch);
+      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
+      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);
       B.robeFront.scale.y = 1 - 0.25 * seat - 0.38 * perch; B.robeBack.scale.y = 1 - 0.35 * seat - 0.7 * perch;   // on a stool the back of the skirt is gathered on the seat
       B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.2 * seat - 0.15 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
