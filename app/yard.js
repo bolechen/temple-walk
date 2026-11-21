@@ -58,6 +58,7 @@ import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
 import { createShare, shareOrSave, countDownload } from "./src/share.js";
 import { FROM, fromOf } from "./src/sharelink.js";
+import { createCarryOut } from "./src/carry-page.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
@@ -107,6 +108,11 @@ const ui = createUI();   // what lies over the picture, in order: Esc puts away 
 createCommunity(ui);
 createCredits(ui);
 createShare(ui);   // the sheet a picture is saved from where the system cannot share it (#344)
+// 带走朱印帐 (#338): a link that takes this visit to another browser or device. Its way in is in the book of seals, the
+// record it carries, on the small sheet behind 更多 (#473: the book's row is four, 分享 保存 更多 合上; the pause menu
+// has no height to spare on a phone held upright, the lead's choice of 2026-11-20).
+const carryOut = createCarryOut(ui);
+document.getElementById("bookCarry")?.addEventListener("click", () => { ui.close("bookMore"); carryOut.open(); });   // (from the book's 更多 sheet, which it puts away first, #473)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
@@ -1536,7 +1542,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
-window.__lamp = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
+window.__lampStrength = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).
