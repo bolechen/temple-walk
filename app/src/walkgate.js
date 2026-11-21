@@ -9,3 +9,13 @@
 export function walkIsHis({ body, html, openingActive }) {
   return body.contains("entered") && !openingActive && !html.contains("relang") && !html.contains("crossing");
 }
+
+/**
+ * What the keys and the stick hand the walk while a layer may cover the picture: nothing, not even a turn (A and D turn him and the
+ * view, keyturn.js), so he neither walks nor turns under it.
+ * @template {{ f: number, s: number, turn: number }} A @param {boolean} open @param {A} axes @returns {A | { f: 0, s: 0, turn: 0 }}
+ */
+export const heldUnder = (open, axes) => (open ? axes : { f: 0, s: 0, turn: 0 });
+
+/** The keys that change the view (R turns it back behind him, V changes it) are not heard under a layer either. @param {boolean} open @param {string} key */
+export const viewKeyHeard = (open, key) => open || (key !== "r" && key !== "v");

@@ -29,3 +29,18 @@ test("each layer holds it alone, and none of them lets go of the others", () => 
   assert.equal(his([], ["relang", "crossing"], true), false);
   assert.equal(his(["entered"], ["relang", "crossing"], true), false);
 });
+
+test("under a layer the keys and the stick hand the walk nothing, not even a turn (A and D)", async () => {
+  const { heldUnder } = await import("../../app/src/walkgate.js");
+  const keys = { f: 1, s: -1, turn: 1 };
+  assert.deepEqual(heldUnder(false, keys), { f: 0, s: 0, turn: 0 });
+  assert.equal(heldUnder(true, keys), keys, "open, it is the keys' own");
+});
+
+test("under a layer R and V are not heard, and every other key is the page's own business", async () => {
+  const { viewKeyHeard } = await import("../../app/src/walkgate.js");
+  assert.equal(viewKeyHeard(false, "r"), false);
+  assert.equal(viewKeyHeard(false, "v"), false);
+  assert.equal(viewKeyHeard(false, "h"), true);
+  assert.equal(viewKeyHeard(true, "r"), true);
+});

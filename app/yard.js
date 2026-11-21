@@ -71,7 +71,7 @@ import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
-import { walkIsHis } from "./src/walkgate.js";
+import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
 /** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
 const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
 import { stride, JUMP, leapStep } from "./src/stride.js";
@@ -588,6 +588,7 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
+  else if ((k === "v" || k === "r") && !viewKeyHeard(walkOpenNow(), k)) return;   // (the view is not turned or changed under the title either, #462)
   else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); }
   else if (k === "r") { if (recenter()) e.preventDefault(); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
@@ -694,7 +695,7 @@ function frame(now) {
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
   // Under the title, the opening, the line a change of language puts up and a crossing's ink the keys and the stick do nothing (#462, walkgate.js).
-  const held = photo.on || menuUp || !walkOpenNow() ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
+  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : heldUnder(walkOpenNow(), axes()), f = held.f, s = held.s;
   // A and D turn him and the view with him (#295, keyturn.js; the side arrows step sideways), unless the visitor has asked
   // for the old way; a turn by the keys is a hand on the view: it sends the eye home from a shot and stops the drift.
   if (!cine && !stage && (held.turn || keyTurn.rate)) {

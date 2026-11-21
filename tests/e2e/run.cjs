@@ -142,6 +142,12 @@ const scenarios = {
       expect(Math.hypot(during.x - before.x, during.z - before.z) < 0.001 && during.room === before.room, `${name}: he walked under the title: ` + JSON.stringify([before, during]));
       await t.page.keyboard.down("ArrowDown"); await t.frames(30); await t.page.keyboard.up("ArrowDown");
       const arrows = await at(); expect(Math.hypot(arrows.x - before.x, arrows.z - before.z) < 0.001, `${name}: he walked on the arrow under the title: ` + JSON.stringify([before, arrows]));
+      // Nor does he turn: A and D turn him and the view with him, R turns the view back behind him (#462); under the title the view stays as it is.
+      const yawBefore = await t.page.evaluate(() => window.__yard().yaw);
+      await t.page.keyboard.down("a"); await t.frames(30); await t.page.keyboard.up("a");
+      await t.page.keyboard.down("d"); await t.frames(30); await t.page.keyboard.up("d"); await t.page.keyboard.press("r"); await t.frames(10);
+      const yawAfter = await t.page.evaluate(() => window.__yard().yaw);
+      expect(Math.abs(yawAfter - yawBefore) < 1e-6, `${name}: the view turned under the title (A, D or R): ` + JSON.stringify([yawBefore, yawAfter]));
       // A tap on the ground: the title covers the picture, so a real click lands on it; and one made to reach the picture all the same sets no way and walks nobody.
       const w = await t.page.evaluate(() => innerWidth), h = await t.page.evaluate(() => innerHeight);
       await t.page.mouse.click(w / 2, h * 0.8);
