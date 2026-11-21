@@ -35,11 +35,14 @@ export function createJoya({ y, ui, say, query, bench }) {
     onTotal: () => paint(),
     onRound: () => answer(),
   });
+  // For the phone audit only (tools/mobile-audit.cjs, as __offeringSheet is): the line and its card laid out with given
+  // numbers on a page whose night is not open. Nothing is counted or sent.
+  let preview = /** @type {{ total: number, mine: number } | null} */ (null);
   function paint() {
-    const n = tally.shown, on = ev.open && n != null;
+    const n = preview ? preview.total : tally.shown, on = !!preview || (ev.open && n != null);
     line.hidden = !on; if (!on) return;
     words.replaceChildren(...[t("除夕撞钟"), "·", t("今夜已撞 {n} 声", { n: countText(n, lang) })].map((w) => Object.assign(document.createElement("span"), { textContent: w })));
-    take.hidden = tally.snapshot().mine < 1; take.textContent = t("留一张");
+    take.hidden = (preview ? preview.mine : tally.snapshot().mine) < 1; take.textContent = t("留一张");
   }
   // Every round of 108 the far hills answer, once in a while however fast the mountain rings; a line says so at the foot.
   // Not over his own bell: the answer waits until three seconds after his last stroke, and is let go after a minute
@@ -65,7 +68,7 @@ export function createJoya({ y, ui, say, query, bench }) {
   });
   async function makeCard() {
     const snap = tally.snapshot();
-    const c = await drawJoyaCard({ when: Date.now(), mine: snap.mine, total: tally.shown });
+    const c = await drawJoyaCard({ when: Date.now(), mine: preview ? preview.mine : snap.mine, total: preview ? preview.total : tally.shown });
     const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     S.cards++; S.card = c.toDataURL("image/png");
     return { blob, url };
@@ -99,6 +102,7 @@ export function createJoya({ y, ui, say, query, bench }) {
 
   // The tests' hooks: the count as the page keeps it; the card as a picture (made now, for the code to be read back).
   window.__joya = () => ({ ...tally.snapshot(), count: tally.shown, open: ev.open, forced: ev.forced, year: ev.year, window: windowOf().open, fake: !!fake, shown: !line.hidden, line: line.hidden ? "" : [...words.children].map((e) => e.textContent).join(" "), take: !take.hidden, heard: S.heard, missed: S.missed, owed: !!owed, cards: S.cards });
+  window.__joyaPreview = (on = true, o = {}) => { preview = on ? { total: 12345, mine: 3, ...o } : null; paint(); return !line.hidden; };
   window.__joyaEnd = () => { ended = true; tick(); return window.__joya(); };
   window.__joyaCard = async () => { await makeCard(); return S.card; };
   window.__joyaPoll = () => tally.poll().then(() => (paint(), tally.snapshot()));
