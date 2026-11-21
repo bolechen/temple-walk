@@ -248,6 +248,7 @@ export function createGame(y) {
     if (to && Math.hypot(to[0] - w.x, to[1] - w.z) > 0.08) { await Promise.race([new Promise((r) => y.walkTo([to], r)), wait(4)]); if (!on()) return; }
     rite = null; const here = y.where();
     y.stage({ face: s.face, pose: s.kind === "stool" ? "chair" : "sit", lift: Math.max(0.02, s.top - y.walker.heightAt(here.x, here.z)), seat: s.at, act: rites.act, leave() { rites.rest(); } }); sat++;
+    if (s.place) y.direct(s.place);   // the half-way pavilion's bench: the eye turns slowly to the valley (#479)
   }
   // ---- The close of the chapter: shown once, when the last seal is earned on the summit ----
   // The eye leaves him and the closing words are said one at a time (rites.close moves the eye); then the title of what
