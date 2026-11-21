@@ -180,10 +180,10 @@ const squash = (rx, ry, rz, x, y, z) => new THREE.SphereGeometry(1, 8, 5).scale(
  * a flat-topped crown with sky between its layers, not a stack of cones (the art director, 2nd round: cones read as spruce and Christmas trees).
  */
 function pine(t, trunk, crown) {
-  const { x, z, h, r } = t, y0 = ground, tr = h * 0.52, n = 2 + (Math.abs(Math.round(x * 3 + z)) % 3);   // 2, 3 or 4 layers, by where it stands
-  trunk.push(new THREE.CylinderGeometry(r * 0.7, r, tr, 7).translate(x, y0 + tr / 2, z));
+  const { x, z, h, r } = t, y0 = ground, tr = h * 0.9, n = 2 + (Math.abs(Math.round(x * 3 + z)) % 3);   // 2, 3 or 4 layers, by where it stands; the trunk goes up through them, so that from far off the layers do not float
+  trunk.push(new THREE.CylinderGeometry(r * 0.4, r * 1.15, tr, 7).translate(x, y0 + tr / 2, z));
   for (let i = 0; i < n; i++) {
-    const f = n === 1 ? 1 : i / (n - 1), y = y0 + h * (0.56 + 0.4 * f), rx = h * (0.3 - 0.13 * f) * (0.9 + 0.2 * (((i * 5 + Math.round(z)) % 3) / 2)), ry = h * (0.075 - 0.02 * f);
+    const f = n === 1 ? 1 : i / (n - 1), y = y0 + h * (0.5 + 0.43 * f), rx = h * (0.3 - 0.13 * f) * (0.9 + 0.2 * (((i * 5 + Math.round(z)) % 3) / 2)), ry = h * (0.1 - 0.03 * f);
     crown.push(squash(rx, ry, rx * 0.92, x + (i % 2 ? 0.5 : -0.4) * (h / 10), y, z + (i % 2 ? -0.4 : 0.5) * (h / 10)));
   }
 }
