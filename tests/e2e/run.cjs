@@ -18,7 +18,7 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
 // Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded,
-// and every tenth with nothing drawn between the eye and him.
+// and every tenth with nothing drawn between the eye and him; then the view turned aside, him still seen.
 // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
 // He does not walk here: he is set down outside the door behind the veil and stands, so `fast` only shortens the veil's
 // pauses. The halls go in two halves (`half`), each well under one machine's share of the night's run.
@@ -43,7 +43,21 @@ async function exitFrames(b, base, half) {
       rows.push(r); if (!r.box || r.op < 0.6 || (r.seen !== undefined && r.seen < 2)) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
       await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
     }
-    log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length };
+    // Then the view dragged round with the mouse as a hand does it, 40° and 65° either way (0.455 of the width for 65°, the
+    // art review of #411, which found the picture black there with the box and the opacity both passing), and back.
+    const seenAt = {}, fr = async (n) => { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f, f0 + n, { polling: 20, timeout: 120000 }); };
+    for (const turn of [40, -40, 65, -65]) {
+      const px = Math.round((0.455 * 480 * turn) / 65);
+      await t.page.mouse.move(240, 140); await t.page.mouse.down();
+      for (let k = 1; k <= 8; k++) { await t.page.mouse.move(240 + (px * k) / 8, 140); await fr(1); }
+      await t.page.mouse.up(); await fr(16);
+      const r = await t.page.evaluate(() => { const f = window.__frame(), b = f.monkBox; return { dist: +f.dist.toFixed(2), seen: b ? [0.3, 0.5, 0.7].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length : 0 }; });
+      seenAt[turn] = r; if (r.seen < 2) bad.push(`${id} turned ${turn}°: ` + JSON.stringify(r));
+      await t.page.mouse.move(240 + px, 140); await t.page.mouse.down();
+      for (let k = 1; k <= 8; k++) { await t.page.mouse.move(240 + px - (px * k) / 8, 140); await fr(1); }
+      await t.page.mouse.up(); await fr(4);
+    }
+    log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length, turned: seenAt };
   }
   console.log("    exitframe", JSON.stringify(log));
   expect(bad.length === 0, `coming out of a door he left the picture or faded ${bad.length} times: ` + bad.slice(0, 6).join(" | "));
