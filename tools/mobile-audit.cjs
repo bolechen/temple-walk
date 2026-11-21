@@ -7,16 +7,12 @@
 //   (--only=title,menu audits only those surfaces, the others being opened on the way but not measured;
 //   --lang audits the page in Japanese or English, into tools/out/mobile-ja/ or mobile-en/ unless an out dir is named)
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
 const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
 const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);   // the file as it is published: nothing is added to it here
-});
+const { serve } = require("./site.cjs");
+let srv;
 // Each surface: how to bring it up, and how to put it away again.
 const SURFACES = [
   ["title", null, null],
@@ -36,6 +32,8 @@ const SURFACES = [
   ["slip", "window.__slip(8)", "window.__slip(null)"],
   // The 功德箱's sheet (#202, web build only): a coin dropped in the great hall, then the paper with its one link.
   ["offering", "(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); for (let i = 0; i < 100 && !window.__offeringSheet?.(); i++) await w(100); })()", "document.getElementById('offeringClose')?.click()"],
+  // A lamp lit for someone (#343): the sheet with its list of lines, and with the longest line chosen, the card, the link and the buttons.
+  ["bless", "(async () => { window.__bless(7); for (let i = 0; i < 200 && document.getElementById('blessActs').hidden; i++) await new Promise((r) => setTimeout(r, 120)); })()", "document.getElementById('blessClose').click()"],
   // Sitting on the summit (#156): the small word for the breath at the foot, then the line said after the three breaths; both whole on the screen.
   ["sit", "(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite('sit'); })()", null],
   ["sitsay", "(async () => { window.__riteClock(0); for (let i = 0; i < 80 && !document.getElementById('say').classList.contains('on'); i++) { window.__riteClock(500); await new Promise((r) => setTimeout(r, 120)); } })()", null],
@@ -109,10 +107,14 @@ const measure = () => {
   // A sheet that scrolls must carry its paper itself (class `scrolls`): paper drawn behind the words is only as tall as
   // the part in sight and is drawn away with them, leaving the rest of the sheet bare.
   const bare = [...document.querySelectorAll(".paper:not(.scrolls)")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY)).map((el) => el.id || el.parentElement.id + " ." + el.className);
-  return { small, tiny, off, bare, broken, tight, wrapped, overlap, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
+  // The paper of a sheet laid over the walk lies inside the screen and in the middle of it, with 16 px or more to either side (the lamp sheet,
+  // #343: a screen that measures every control and none of the paper let it run edge to edge once).
+  const placed = [], card = document.querySelector("#bless[open] article");
+  if (card) { const r = card.getBoundingClientRect(); if (r.left < 15.5 || W - r.right < 15.5) placed.push(`paper has ${Math.round(r.left)} px to its left and ${Math.round(W - r.right)} to its right`); if (Math.abs((r.left + r.right) / 2 - W / 2) > 2) placed.push("paper is not in the middle"); if (r.top < -0.5 || r.bottom > H + 0.5) placed.push(`paper runs off the top or foot [${Math.round(r.top)}, ${Math.round(r.bottom)}] of ${H}`); }
+  return { small, tiny, off, bare, broken, tight, wrapped, overlap, placed, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
 };
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] }), report = {}; let bad = 0;
   for (const [shape, vw, vh] of [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]]) {
     const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
@@ -125,8 +127,8 @@ const measure = () => {
       // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
       if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => p.waitForTimeout(1200)).catch(() => {});
       const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
-      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
-      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
+      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
+      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(' | ')}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
       if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); }
     }
     if (errs.length) { console.log("page errors:", errs); bad += errs.length; }

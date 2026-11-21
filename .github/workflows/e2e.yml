@@ -32,9 +32,11 @@ permissions:
   contents: read
 
 concurrency:
-  # A full run on a branch keeps to its own branch: it must not cancel the nightly run of main (#335).
-  group: e2e-${{ github.event_name == 'push' && 'regression' || format('full-{0}', github.ref) }}
-  cancel-in-progress: true
+  # A full run on a branch keeps to its own branch: it must not cancel the nightly run of main (#335). A run somebody started by hand
+  # is its own group and is never cancelled (two started by hand on one branch had cancelled each other); the nightly and a push
+  # still replace what they themselves started.
+  group: e2e-${{ github.event_name == 'push' && 'regression' || github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || format('full-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
   # Beside every publication: what a push most often breaks and the publication's own checks do not walk. The parse,
@@ -231,8 +233,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-t00-
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
       - name: Build the site and pack it with the checkout
         run: T4_PACK_ONLY="$RUNNER_TEMP/t4-pack.tgz" tools/ci/t4-launch.sh pack
       - uses: actions/upload-artifact@v4

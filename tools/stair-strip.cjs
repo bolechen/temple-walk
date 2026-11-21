@@ -2,7 +2,7 @@
 // the front, the side and behind, eight frames across one stride, the monk.js on main above and the present one below.
 //   node tools/stair-strip.cjs [--base=origin/main] [--out=tools/out/stair-strip.png] [--sides=正,侧,背] [--dirs=up,down]
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
+const fs = require("fs"), path = require("path"), { execSync } = require("child_process");
 const here = __dirname, root = path.join(here, ".."), out = path.join(here, "out");
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const base = arg("base", "origin/main"), dest = path.resolve(arg("out", path.join(out, "stair-strip.png")));
@@ -13,9 +13,8 @@ const onlySides = arg("sides", null)?.split(","), onlyDirs = arg("dirs", null)?.
   const { build } = await import("vite"); const stageOut = path.join(out, "stair-stage");
   try { await build({ configFile: false, logLevel: "error", root: path.join(here, "stair-stage"), base: "./", publicDir: false, build: { outDir: stageOut, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 4000 } }); }
   finally { fs.rmSync(old, { force: true }); }
-  const types = { ".html": "text/html", ".js": "text/javascript" };
-  const srv = http.createServer((req, res) => { const rel = decodeURIComponent(req.url.split("?")[0]); const p = path.join(stageOut, path.posix.normalize("/" + (rel === "/" ? "index.html" : rel))); if (!fs.existsSync(p)) { res.writeHead(404); return res.end(); } res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res); });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(path.dirname(dest), { recursive: true });
+  const { serve } = require("./site.cjs"); let srv;
+  srv = await serve(stageOut, { api: false }); fs.mkdirSync(path.dirname(dest), { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 400, height: 500 } }); const errs = [];
   p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));

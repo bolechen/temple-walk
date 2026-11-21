@@ -157,6 +157,21 @@ const scenarios = {
     expect(w.mode !== "old" && w.bytes > 0, "the prologue's baked floor should be fetched: " + JSON.stringify(w));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05's white box (#409), on the workbench: ?level=t05 walks its own place on its own baked floor. He arrives at the
+  // outer gate's place, walks the way into the court, past station A and up the flight to station B on the terrace, 3 m
+  // up, and nothing complains. Built, not drawn.
+  t05: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "level=t05&q=low&fast=1" + BARE), lv = await t.page.evaluate(() => window.__level());
+    expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
+    const w = await t.page.evaluate(() => window.__walker());
+    expect(w.mode !== "old" && w.bytes > 0, "T05's own baked floor should be fetched: " + JSON.stringify(w));
+    let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 55], [0, 20], [0, 14.4]]));
+    let lo = 9, hi = -9;
+    await t.until(async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return Math.hypot(s.x, s.z - 14.4) < 0.6; }, 300000, "he never reached station B on the terrace");
+    expect(Math.abs(lo) < 0.1 && Math.abs(s.h - 3) < 0.1, `from the court's paving up to the terrace, 3 m: went ${lo} to ${hi}, stands at ${s.h}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {
@@ -240,6 +255,47 @@ const scenarios = {
     expect((await card()) === null, "the card still has a code after it was put away");
     await t.page.evaluate(() => document.getElementById("qrToggle").click()); const back = await card(); expect(back && back.data === photoUrl("en"), "the code did not come back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // A lamp lit for someone (#343): at the lamp, once it is lit, a line chosen from the list makes a link and a card; the link opened
+  // in another browser shows the lamp and the line; a link that names nothing on the list shows nothing of it. Four languages.
+  lamp: { tier: 2, async run(b, base) {
+    const sharp = require("sharp"), jsQR = require("jsqr"), { bookFrom } = await import("../../app/src/journey.js"), { WISHES, decodeLamp } = await import("../../app/src/wishes.js"), { pack } = await import("../../app/src/fragment.js");
+    const DICT = { zh: {}, ja: (await import("../../app/locales/ja.js")).default, en: (await import("../../app/locales/en.js")).default, ko: (await import("../../app/locales/ko.js")).default };
+    const say = (lang, zh) => DICT[lang][zh] ?? zh, LINE = "有人在此为你点了一盏灯。";
+    for (const [n, lang] of ["zh", "ja", "en", "ko"].entries()) {
+      const wish = n * 2 + 1, book = bookFrom("lamp");
+      const a = await open(b, base, `q=low&lang=${lang}` + BARE, { init: `localStorage.setItem("yunjing.journey.v1", ${JSON.stringify(book)}); localStorage.setItem("yunjing.lang.v1", "${lang}");` });
+      await a.page.evaluate(() => { const p = window.__places.lamp; window.__pose(p.at[0], p.at[1], 0, 0); });
+      await a.until(async () => (await a.page.isVisible("#act")) && (await a.page.getAttribute("#act", "data-word")) === "为人点灯", 60000, `${lang}: the lamp does not offer a lamp for someone once it is lit`);
+      await a.page.click("#act"); await a.until(() => a.page.evaluate(() => window.__lamp().sheet), 30000, `${lang}: the sheet did not open`);
+      expect((await a.page.locator("#blessList [data-wish]").count()) === WISHES.length, `${lang}: the list is not the preset lines`);
+      expect((await a.page.locator("#blessList [data-wish]").nth(wish).textContent()) === say(lang, WISHES[wish]), `${lang}: the line is not the preset one in this language`);
+      await a.page.locator("#blessList [data-wish]").nth(wish).click();
+      await a.until(() => a.page.isVisible("#blessLink"), 120000, `${lang}: no link after a line was chosen`);
+      const link = await a.page.textContent("#blessLink"), u = new URL(link);
+      expect(u.origin === "https://temple.rushiwowen.co" && u.searchParams.get("utm_source") === "lamp" && u.searchParams.get("utm_content") === lang, `${lang}: the link is ${link}`);
+      expect(decodeLamp(u.hash) && decodeLamp(u.hash).wish === wish && u.hash.length < 20, `${lang}: the fragment is ${u.hash}`);
+      await a.page.waitForFunction(() => { const i = document.getElementById("blessImg"); return i.complete && i.naturalWidth === 1080; }, null, { timeout: 60000 });
+      const b64 = await a.page.evaluate(async () => { const r = await (await fetch(document.getElementById("blessSave").href)).blob(), u8 = new Uint8Array(await r.arrayBuffer()); let s = ""; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode(...u8.subarray(i, i + 8192)); return btoa(s); });
+      const { data, info } = await sharp(Buffer.from(b64, "base64")).ensureAlpha().raw().toBuffer({ resolveWithObject: true }), code = jsQR(new Uint8ClampedArray(data), info.width, info.height);
+      expect(code && code.data === link, `${lang}: the code on the card reads ${code && code.data}, not the link`);
+      expect(a.errors.length === 0, a.errors.join("\n")); await a.close();
+      // Another browser: a first visitor, who opens the link.
+      const r = await open(b, base, `q=low&lang=${lang}&fast=1` + BARE + u.hash, { init: `window.__said = []; new MutationObserver(() => { const e = document.getElementById("say"); const x = e && e.textContent; if (x && window.__said[window.__said.length - 1] !== x) window.__said.push(x); }).observe(document, { subtree: true, childList: true, characterData: true });` });
+      await r.until(() => r.page.evaluate(() => window.__lamp().shown), 120000, `${lang}: the lamp was not shown to whoever opened the link`);
+      expect((await r.page.evaluate(() => window.__lamp().wish)) === wish && (await r.page.evaluate(() => location.hash)) === "", `${lang}: wrong line, or the link is still in the address`);
+      await r.until(async () => (await r.page.evaluate(() => window.__said)).includes(say(lang, WISHES[wish])), 60000, `${lang}: the chosen line was not shown`);
+      const said = await r.page.evaluate(() => window.__said), i1 = said.indexOf(say(lang, LINE)), i2 = said.indexOf(say(lang, WISHES[wish]));
+      expect(i1 >= 0 && i2 > i1, `${lang}: "someone lit a lamp for you" then the line should be said, got ${JSON.stringify(said)}`);
+      if (lang === "zh") await r.shot("lamp-arrival");
+      expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
+    }
+    // Links that name nothing on the list: nothing is shown, nothing of theirs is written on the page.
+    for (const hash of ["#lamp=AAAA", "#lamp=<img src=x onerror=alert(1)>", "#" + pack("lamp", [WISHES.length + 5, 0]), "#" + pack("lamp", [0, 200]), "#lamp=" + "A".repeat(5000), "#nonsense"]) {
+      const r = await open(b, base, "q=low&fast=1" + BARE + hash); await r.frames(2);
+      const st = await r.page.evaluate(() => ({ ...window.__lamp(), text: document.body.innerText })); expect(st.arrival === null && !st.shown && !/onerror|nonsense/.test(st.text), `a link that names nothing was taken: ${hash.slice(0, 40)} ${JSON.stringify({ ...st, text: "" })}`);
+      expect(r.errors.length === 0, r.errors.join("\n")); await r.close();
+    }
   } },
   lang: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low" + BARE, { enter: false, locale: "ja-JP" });
@@ -1170,6 +1226,11 @@ const scenarios = {
     const R = () => t.page.evaluate(() => window.__rites());
     // Every seat there is, indoors and out: put beside it, he goes over and is on it, at its height, turned the way it faces.
     const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room, kind: k.kind })));
+    // The halls' cushions and stools are seats too (yard.js hands the rooms' seats to the walk's list; #414's review found a
+    // comment that swallowed that line, and this scenario, sitting on whatever the list held, passed without them).
+    // Every hall of the prologue has a cushion or a stool (interior.js), so every hall offers a seat.
+    const halls = new Set(seats.filter((s) => s.room).map((s) => s.room)), all = await t.page.evaluate(() => window.__halls.map((h) => h.id));
+    expect(all.every((h) => halls.has(h)), `every hall's cushions and stools should be seats: seats in ${[...halls].join(", ") || "no hall"} of ${all.join(", ")}`);
     let room = null;
     for (let i = 0; i < seats.length; i++) {
       const s = seats[i];
