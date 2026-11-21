@@ -12,7 +12,7 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
 // opened with the place built but not drawn (`BARE`: ?off= hides parts, it does not unbuild them, so the walker, the
 // plan and every hook are as they are for a visitor); it then runs several times faster. The scenarios that look at the
-// picture (boot, doorway, doorway-hires, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, drop, drop-touch), and the long walk that
+// picture (boot, doorway, doorway-hires, doorway-live, halls, snow, moods, views, photo, photo-ui, menu, parts, finish, rites, stairs, stairs-edge, drop, drop-touch), and the long walk that
 // samples his height as he climbs, draw all of it.
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
@@ -3114,8 +3114,11 @@ const scenarios = {
     expect(Number.isFinite(bodyDelta) && bodyDelta < 0.08, `the torso still pops a whole step: ${bodyDelta} metres/frame`);
     fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "stairs-grounding.json"), JSON.stringify(samples, null, 2));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
-    // An address from an older ?devpose, cut to centimetres at the edge of the Guanyin terrace's stair: it falls just inside
-    // the stop by the cheek. He must come back standing on the treads, not sunk to the terrace below them.
+  } },
+  // An address from an older ?devpose, cut to centimetres at the edge of the Guanyin terrace's stair: it falls just inside
+  // the stop by the cheek. He must come back standing on the treads, not sunk to the terrace below them. (Split from `stairs`
+  // so that the quick checks of a pull request run it on a machine of its own, #442.)
+  "stairs-edge": { tier: 2, async run(b, base) {
     const edge = await open(b, base, "q=low&cam=2.1,-63.37,-0.582,-0.204&view=third&season=autumn&time=night", { viewport: { width: 640, height: 360 } });
     const at = await edge.state(); expect(at.h > 2.8 && at.footY > 2.8, "he came back sunk into the stair: " + JSON.stringify({ x: at.x, z: at.z, h: at.h, footY: at.footY }));
     expect(edge.errors.length === 0, edge.errors.join("\n")); await edge.close();

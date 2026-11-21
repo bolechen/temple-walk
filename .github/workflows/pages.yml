@@ -267,7 +267,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [stairs, drop, drop-touch]
+        scenario: [stairs, stairs-edge, drop, drop-touch]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare

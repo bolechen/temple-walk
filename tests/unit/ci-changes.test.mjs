@@ -128,7 +128,7 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   const quick = jobOf(y, "quick");
   assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
-  assert.match(quick, /scenario: \[stairs, drop, drop-touch\]/);
+  assert.match(quick, /scenario: \[stairs, stairs-edge, drop, drop-touch\]/);
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenario \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
   const site = jobOf(y, "site");
