@@ -18,7 +18,7 @@ const cols = arg("cols", "").split(",").filter(Boolean).map(Number), rows = arg(
 // VARIANTS='[{"name":"…","r0":2.4,"r1":3.4,"k":1.2,"w":0.22}]' also counts other settings of `rise` and `edgeW`, for choosing them.
 const variants = JSON.parse(process.env.VARIANTS || "[]");
 const sweep = arg("sweep", "");
-const sweepViews = () => { const [a, z, d] = sweep.split(",").map(Number), out = []; for (let p = a; (d < 0 ? p >= z - 1e-9 : p <= z + 1e-9); p += d) out.push({ name: `pitch ${p.toFixed(2)}`, eye: "auto", rows: [100, 719], q: `cam=0,22,0,${p.toFixed(3)}&season=summer&time=day&view=third&show=court` }); return out; };
+const sweepViews = () => { const [a, z, d] = sweep.split(",").map(Number), out = []; for (let p = a; (d < 0 ? p >= z - 1e-9 : p <= z + 1e-9); p += d) out.push({ name: `pitch ${p.toFixed(2)}`, eye: "auto", rows: [150, 719], q: `cam=0,22,0,${p.toFixed(3)}&season=summer&time=day&view=third&show=court` }); return out; };
 const views = sweep ? sweepViews() : JSON.parse(process.argv.find((x) => x.startsWith("[")) || JSON.stringify([
   { name: "under the maple", eye: 3.5, q: "cam=-6.5,30,0.9,-0.3&season=summer&time=day&view=third&show=court" },
   { name: "from above", eye: 5, q: "cam=0,22,0,-0.4&season=summer&time=day&view=third&show=court" },
