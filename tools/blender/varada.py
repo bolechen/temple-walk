@@ -518,6 +518,10 @@ if AR:
   dsp = np.zeros_like(st)
   ui = np.nonzero(upper)[0]; dsp[ui] = ((rot(st[ui], ph) - st[ui]) * (1 - w_t[ui, None]) + trans * w_t[ui, None]) * (w_in[ui] * w_sh[ui])[:, None]
   fi = np.nonzero(fore)[0]; dsp[fi] = ((rot(st[fi], ph) - st[fi]) * (1 - w_t[fi, None]) + trans * w_t[fi, None])
+  if AR.get("ylock"):
+    # near the shoulder the turn moves the front of the arm up as well as forward, which lifts the shoulder's line in
+    # the front outline; there the move is kept level (no rise), fully above ylock[0], fading out by ylock[1]
+    y0_, y1_ = AR["ylock"]; dsp[:, 1] *= sm((y0_ - y_) / (y0_ - y1_))
   st = st + dsp
   mv = np.linalg.norm(dsp, axis=1); band = (upper & ((w_sh < 0.999) | (w_in < 0.999)) & (mv > 0))
   # what is left of the old hand past the new wrist, and the forearm's own end cap there
@@ -538,7 +542,7 @@ if AR:
         e0 = max(np.linalg.norm(st0[ids[i]] - st0[ids[i - 1]]) for i in range(len(ids))); e1 = max(np.linalg.norm(st[ids[i]] - st[ids[i - 1]]) for i in range(len(ids)))
         # only under the forearm (its seam on the thigh); round the shoulder and the chest a stretched face is kept, a
         # hole there showed as black slits along the inner arm
-        if e1 > 0.02 and e1 > AR.get("stretch", 3.0) * max(e0, 1e-4) and st[ids, 1].mean() < AR.get("stretch_below_y", 9.0): dead.append(f); stretched += 1
+        if e1 > 0.02 and e1 > AR.get("stretch", 3.0) * max(e0, 1e-4) and (st[ids, 1].mean() < AR.get("stretch_below_y", 9.0) or st[ids, 2].mean() > tw[2] - AR.get("stretch_near_wrist", -9.0)): dead.append(f); stretched += 1
     dead = list(set(dead)); n_dead = len(dead)
     bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"); dead = []
     if AR.get("cap"):
