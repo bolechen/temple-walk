@@ -1,3 +1,8 @@
+// Two lists of levels that are not the prologue, apart on purpose. BENCH_LEVELS are levels still being made that testers are meant to
+// see: a preview and the canary list them, the public page does not. WORKBENCH_LEVELS are for the people building the game alone, the
+// dev server and a preview, and not even the canary (the probe level proves the engine stands without the prologue; nobody is sent to it).
+// To open a level to everyone, take its id out of its list; to give testers a level, move it from the second to the first.
+//
 // Levels still being made, which the testers' builds list and the public page does not (#409). The owner's rule of
 // 2026-11-20 opened T05's white box on the dev server and a pull request's preview only; on 2026-11-21 the owner changed
 // it: 「t05 改成 canary 可以测」, so the canary lists it too, and only production leaves it out. app/src/level.js lists

@@ -58,7 +58,9 @@ test("only the production build holds the counter's address and may be indexed; 
 // gate, as many times, no mention of the canary's own address; and its code is a preview's, byte for byte but for the
 // target's name, so that what it holds beyond production's is what a preview holds (level-bench.test.mjs: T05).
 test("the canary build opens no debug panel and no workbench address that production does not", () => {
-  // (A preview also lists the probe level, which no published build does; with it set aside a preview is the canary and nothing else.)
+  // (The canary is compared with a preview built without the workbench's levels, not with a plain preview: a preview also lists the probe level,
+  // which no published build does, and with two levels sharing the building and the walker the bundler cuts different chunks. With the workbench's
+  // levels set aside, VITE_NO_WORKBENCH=1, a preview is the canary and nothing else, which is what this holds.)
   const prod = build("production"), canary = build("canary"), preview = build("preview", { workbench: false });
   try {
     const scripts = (out) => walk(out).filter((f) => /\.js$/.test(f)).map((f) => [path.basename(f), fs.readFileSync(f, "utf8")]);
