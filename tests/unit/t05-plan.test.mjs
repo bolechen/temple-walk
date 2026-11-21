@@ -36,15 +36,16 @@ test("he arrives at the outer gate's place, and every named view stands where he
   for (const [id, v] of Object.entries(site.views)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
 });
 
-test("from where he arrives he can walk to station A in the court and up the flight to station B on the terrace", () => {
+test("from where he arrives he can walk to station A in the court and to station B at the foot of the flight", () => {
   const targets = file.header.targets;
   for (const id of ["arrive", "a", "b"]) {
     const t = targets.find((x) => x.kind === "view" && x.id === id);
     assert.ok(t, id); assert.ok(t.new, `${id}: reached on the floor baked from what is drawn`); assert.ok(t.old, `${id}: reached by the written plan's walker`);
   }
   assert.ok(Math.abs(walker.heightAt(...STATION.A)) < 0.02, "A is on the court's paving");
-  assert.ok(Math.abs(walker.heightAt(...STATION.B) - 3) < 0.02, "B is on the terrace, 3 m up");
-  assert.ok(TERRACE.zS - STATION.B[1] >= 1, "B stands at least a metre inside the terrace's edge");
+  assert.ok(Math.abs(walker.heightAt(...STATION.B)) < 0.02, "B is on the court's paving, the platform over his head");
+  const { count, tread } = stairProfile(FLIGHT.rise);
+  assert.ok(STATION.B[1] - (TERRACE.zS + count * tread) >= 1, "B stands at least a metre out from the flight's foot");
 });
 
 test("up the flight every tread is the same height, on the baked floor as on the written plan", () => {
@@ -77,6 +78,12 @@ test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, th
   assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
   assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
   assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
+  // The front columns stand out of the front wall more than half round, so that the nine bays read (#425's review).
+  assert.ok(HALL.front < 0 && HALL.front > -HALL.colR, "the front wall's face lies behind the column line");
+  // The doors and windows share one head line, and the ridge is a narrow, tall course with its end ornaments.
+  const heads = h.parts.wood.map((g) => (g.computeBoundingBox(), g.boundingBox)).filter((b) => Math.abs(b.min.y - (HALL.floor + HALL.door.h)) < 0.01 && b.max.z > ZS[0] + HALL.front - HALL.wall - 0.1 && b.min.z < ZS[0]);
+  assert.equal(heads.length, 7, "a wooden head over each of the three doors and four windows, all at the doors' height");
+  const r = h.parts.ridge[0]; r.computeBoundingBox(); assert.ok(r.boundingBox.max.z - r.boundingBox.min.z < 0.6 && r.boundingBox.max.y - r.boundingBox.min.y >= 0.9, "a narrow, tall ridge");
 });
 
 test("inside, the open roof: eight frames on the inner column lines, each tier under the roof's slopes, and inner columns behind the altar's place (#422)", () => {
@@ -88,13 +95,29 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
+  // The structural review of #425: eleven purlins, one at each rafter's joint, 2.88 m apart about the ridge.
+  const zm = (EF + EB) / 2, along = h.parts.wood.map((g) => (g.computeBoundingBox(), g.boundingBox)).filter((b) => b.max.x - b.min.x > 10 && Math.abs(b.max.y - b.min.y - 0.36) < 0.01 && Math.abs(b.max.z - b.min.z - 0.36) < 0.01);
+  const zs = [...new Set(along.map((b) => ((b.min.z + b.max.z) / 2).toFixed(2)))].map(Number).sort((a, b) => b - a);
+  assert.equal(zs.length, 11, `eleven purlins: ${zs.join(", ")}`);
+  zs.forEach((z, i) => assert.ok(Math.abs(z - (zm + HALL.rafter * (5 - i))) < 0.01, `purlin ${i} at ${z}`));
+  // The inner columns rise to the second tier, under the beam they carry.
+  for (const g of h.parts.columns.slice(28)) { g.computeBoundingBox(); assert.ok(Math.abs(g.boundingBox.max.y - HALL.beams[1]) < 0.01, "an inner column's head at the second tier"); }
+  // The frames stand on the column lines and the figures in the middle of the bays: in each of the seven bays a figure
+  // sits in, at least 3.4 m is clear between its two frames' beams, the width the review gives a figure's body and halo
+  // above its base, so that no beam meets a figure (the figures themselves are item 7, #432).
+  for (let i = 1; i <= 7; i++) assert.ok(XS[i + 1] - XS[i] - HALL.beam.w >= 3.4 + 0.5, `bay ${i}: ${(XS[i + 1] - XS[i] - HALL.beam.w).toFixed(2)} m between the beams, room for 3.4 m and a margin`);
+  // Nothing of the timber or the walls passes out through the roof, the hipped ends included (#425's review: two purlins did).
+  for (const [part, list] of Object.entries({ wood: h.parts.wood, woodZ: h.parts.woodZ, frame: h.parts.frame, plaster: h.parts.plaster })) for (const g of list) {
+    g.computeBoundingBox(); const b = g.boundingBox;
+    for (const x of [b.min.x, b.max.x]) for (const z of [b.min.z, b.max.z]) if (Math.abs(x) <= EX && z <= EF && z >= EB) assert.ok(b.max.y <= under(x, z) + 0.05, `${part}: a piece up to ${b.max.y.toFixed(2)} passes out through the roof at (${x.toFixed(2)}, ${z.toFixed(2)}), under ${under(x, z).toFixed(2)}`);
+  }
 });
 
 test("he walks into the hall across the threshold, to stations C, D, E and F, all on the hall's floor, and nowhere through its walls (#422)", () => {
   const targets = file.header.targets;
   for (const id of ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
   for (const k of ["C", "D", "E", "F"]) assert.ok(Math.abs(walker.heightAt(...STATION[k]) - 3) < 0.03, `${k} is on the hall's floor`);
-  const zWall = ZS[0] + 0.3 - HALL.wall / 2, mid = (i) => (XS[i] + XS[i + 1]) / 2;
+  const zWall = ZS[0] + HALL.front - HALL.wall / 2, mid = (i) => (XS[i] + XS[i + 1]) / 2;
   FRONT.forEach((kind, i) => {
     if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zWall) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
     else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);

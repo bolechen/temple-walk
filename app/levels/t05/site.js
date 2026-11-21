@@ -23,7 +23,10 @@ export const COMPOUND = Object.freeze({ x: 42, zN: -40, zS: 62, h: 3.2, t: 0.8, 
 export const WAY = Object.freeze({ x: 6, zS: 221, wallH: 1.2, t: 0.5 });
 /** Where he arrives, and the six stations of SITE.md §5: A in the court, B on the terrace, C before the middle door, D down the east side, E under the roof, F back on the axis. */
 export const ARRIVE = [0, 215];
-export const STATION = Object.freeze({ A: [0, 55], B: [0, TERRACE.zS - 1], C: [0, 0.6], D: [19, -8], E: [0, -12], F: [0, -2] });   // SITE.md puts B at z = +17, past the terrace's 15 m; it stands 1 m inside the edge
+// Where each station stands. A (cam01) is 44 m out, where the nine bays fill about four fifths of a wide picture with the
+// ridge whole, as the reference picture has them, and B (cam02) on the court's paving at the foot of the flight, the
+// platform over his head (the lead's call of 2026-11-21 on the art review of #425; DECISIONS.md, ART.md §5).
+export const STATION = Object.freeze({ A: [0, 44], B: [0, 22.5], C: [0, 0.6], D: [19, -8], E: [0, -12], F: [0, -2] });
 /** The parapet round the platform and the terrace (SITE.md §6: a railing or a low wall; a low wall here). */
 const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
 
@@ -95,9 +98,13 @@ export function buildSite(M) {
   const hall = buildHall(M), hp = hall.parts;
   plaster.push(...hp.plaster);
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
-  root.add(mesh(merge(hp.wood), M.woodX), mesh(merge(hp.woodZ), M.woodZ), mesh(merge(hp.frame), M.woodZ), mesh(merge(hp.columns), M.woodV), mesh(merge(hp.dark), M.woodX),
-    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX), mesh(merge(hp.ridge), M.ridge));
+  const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
+  root.add(mesh(merge(hp.wood), M.woodX, sh), mesh(merge(hp.woodZ), M.woodZ, sh), mesh(merge(hp.frame), M.woodZ, sh), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
+    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, sh), mesh(merge(hp.ridge), M.ridge));
   shade[0].push(hall.box);
+  // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
+  // walls are painted (ART.md, phase two).
+  root.add(mesh(merge(hp.mural), M.plaster(), sh));
   for (const [x, y, z, i, d] of hall.fill) { const l = new THREE.PointLight(0xfff4e8, i, d, 1.6); l.position.set(x, y, z); root.add(l); }
 
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
@@ -107,8 +114,9 @@ export function buildSite(M) {
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
   const views = {
     arrive: [ARRIVE[0], ARRIVE[1], 0, 0.05],
-    a: [STATION.A[0], STATION.A[1], 0, 0.19],          // SITE.md §5.1: a 50° lens raised 11° holds the platform to the ridge
-    b: [STATION.B[0], STATION.B[1], 0, 0.3],
+    a: [STATION.A[0], STATION.A[1], 0, 0.1],           // cam01: the whole front with its ridge, raised 6°
+    "a-tall": [0, 30, 0, 0.17],                        // cam01 for a picture held upright: nearer, the middle bays from the platform's foot to the ridge, raised 10° (ART-SPEC.md: an upright picture has its own camera, not a crop)
+    b: [STATION.B[0], STATION.B[1], 0, 0.314],         // cam02: the foot of the flight, raised 18°, the platform over his head
     c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3). Its still is taken in third person (&view=third): the following eye, a few steps behind him, has the door's jambs at the picture's edges; from his own eyes in the doorway they are beside him (DECISIONS.md, 2026-11-21)
     d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
     e: [STATION.E[0], STATION.E[1], 0, 1.01],          // under the roof, raised 58° (cam05)
