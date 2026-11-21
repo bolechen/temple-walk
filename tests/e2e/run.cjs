@@ -6,7 +6,7 @@
 //   node tests/e2e/run.cjs walk photo   only those named
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
-const { serve, launch, open, expect, out } = require("./lib.cjs");
+const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 
 // Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
@@ -2994,6 +2994,10 @@ const scenarios = {
   const names = part(named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most));
   for (const n of names) if (!scenarios[n]) { console.error(`no scenario "${n}"; there are: ${Object.keys(scenarios).join(", ")}`); process.exit(2); }
   const srv = await serve(), browser = await launch(), report = [];
+  if (process.env.E2E_GPU) {   // the T4 run (#335): say what drew it, and refuse to go on if it was software
+    const gl = await renderer(browser); fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "e2e-renderer.txt"), gl + "\n"); console.log("renderer:", gl);
+    if (/SwiftShader|llvmpipe|no webgl2/i.test(gl)) { console.error("E2E_GPU is set but the browser draws in software: not a T4 run"); process.exit(3); }
+  }
   for (const n of names) {
     const t0 = Date.now(); let error = null;
     try { await scenarios[n].run(browser, srv.base); } catch (e) { error = String(e.message || e).slice(0, 1500); }
