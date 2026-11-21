@@ -342,6 +342,31 @@ const scenarios = {
     await t.page.goto(base + "?q=low&lang=zh" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     expect((await t.page.evaluate(() => document.documentElement.lang)).startsWith("zh") && (await words("#title .sub")).includes("云径禅寺"), "?lang=zh should bring the Chinese back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // (#402) Opened from a link that names its place, walked on, then another language chosen in the menu: he goes on where he
+    // is now, not where the link stood, in the season and hour set by hand since, and a link opened afresh still stands where it says.
+    for (const [from, to, locale] of [["zh", "en", "zh-CN"], ["en", "zh", "en-US"]]) {
+      const u = await open(b, base, `q=low&cam=21.3,87.37,0,0.04&view=third&season=autumn&time=day&lang=${from}` + BARE, { locale });
+      const at0 = await u.state(); expect(Math.hypot(at0.x - 21.3, at0.z - 87.37) < 0.2, "the link should stand him where it says: " + JSON.stringify([at0.x, at0.z]));
+      await u.page.keyboard.down("s"); await u.until(async () => Math.hypot((await u.state()).x - 21.3, (await u.state()).z - 87.37) > 1.2, 60000, "S did not walk him back"); await u.page.keyboard.up("s");
+      await u.page.evaluate(() => window.__mood("winter", "night")); await u.frames(3);
+      await u.until(() => u.page.evaluate(() => !window.__probe().pushing), 60000, "the eye was still moving");
+      const before = await u.state(), cam0 = await u.page.evaluate(() => ({ ...window.__yard(), d: window.__probe().camDist, v: window.__probe().view }));
+      await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu");
+      await Promise.all([u.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), u.page.click(`#menu [data-lang="${to}"]`)]);
+      await u.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await u.until(() => u.page.evaluate(() => window.__ui().stack.includes("menu")), 60000, `the menu was not open again after ${from} → ${to}`);
+      await u.frames(3);
+      const a = await u.page.evaluate(() => ({ ...window.__yard(), v: window.__probe().view, season: window.__probe().season, time: window.__probe().time, focus: document.activeElement?.dataset?.lang, url: location.search }));
+      const msg = `${from} → ${to}: ` + JSON.stringify({ before: [before.x, before.z, cam0.yaw, cam0.pitch, cam0.v, before.season, before.time], after: [a.x, a.z, a.yaw, a.pitch, a.v, a.season, a.time], focus: a.focus, url: a.url });
+      expect(Math.hypot(a.x - before.x, a.z - before.z) < 0.05 && Math.abs(a.yaw - cam0.yaw) < 0.0175 && Math.abs(a.pitch - cam0.pitch) < 0.0175 && a.v === cam0.v, "he should be where he stood when the language was chosen, not where the link stood: " + msg);
+      expect(a.season === "winter" && a.time === "night", "the season and hour chosen by hand should be as they were: " + msg);
+      expect(a.focus === to && a.lang === to, "the menu should be open with the language chosen: " + msg);
+      expect(!/[?&](cam|view|season|time|devpose)=/.test(a.url), "the link's place should have left the address, so that the page that opened is not taken for a link to it: " + a.url);
+      // The same address opened afresh is still the link's own place.
+      await u.page.goto(base + `?q=low&cam=21.3,87.37,0,0.04&view=third&season=autumn&time=day&lang=${to}` + BARE, { waitUntil: "commit" }); await u.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      const link = await u.state(); expect(Math.hypot(link.x - 21.3, link.z - 87.37) < 0.2 && link.season === "autumn" && link.time === "day", "a link opened afresh should stand where it says: " + JSON.stringify([link.x, link.z, link.season, link.time]));
+      expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    }
   } },
   // Up the old path, round the screen wall, through the gate, across the court, in at the door; incense; out again.
   walk: { tier: 3, async run(b, base) {
