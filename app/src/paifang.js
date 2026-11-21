@@ -20,23 +20,23 @@ export const PAIFANG = Object.freeze({
   mid: 4.8, end: 3.6,
   colR: 0.25,
   // The clamp stones (jiaganshi): a plinth, and on it a collar of four slabs that hold the post on all four sides, wider at the foot
-  // than at the head (outer size at the foot and at the head, square), and a cap. A third of the height under the lower beam.
-  stone: Object.freeze({ plinth: [1.4, 0.12, 1.4], collar: [1.24, 1.0], capOver: 0.05, cap: 0.1, top: 1.6 }),
+  // than at the head (outer size at the foot and at the head, square, a half-tenth of lean), and a cap. A quarter of the height under the lower beam.
+  stone: Object.freeze({ plinth: [1.4, 0.12, 1.4], collar: [1.10, 1.04], capOver: 0.05, cap: 0.1, top: 1.25 }),
   // The two bands of beams (efang): small beam, filling board, great beam, and the flat plate on top that carries the sets.
   // `y` is the underside of the small beam; the thicknesses are across the archway (z).
-  band: Object.freeze({ lower: 4.7, upper: 6.5, xiao: [0.24, 0.2], dian: [0.16, 0.1], da: [0.38, 0.26], plate: [0.12, 0.4], stub: 0.35 }),
+  band: Object.freeze({ lower: 5.0, upper: 6.1, xiao: [0.24, 0.26], dian: [0.16, 0.14], da: [0.38, 0.26], plate: [0.12, 0.4], stub: 0.35 }),
   // The bracket sets are drawn at the scale of a standard timber (cai) of 0.16 m: three quarters of buildHall's 0.21 grade.
   cai: 0.16,
   // The roofs: depth front to back (the eave's edge stands out half of it from the post plane), rise from the eave's edge to
   // the ridge, and how far the eaves reach past an outer post (`out`) and past a middle one (`midOut`). The eave purlin lies
   // out from the post plane as in building.js, scaled to this cai.
-  roof: Object.freeze({ side: { depth: 3.2, rise: 0.75 }, mid: { depth: 3.4, rise: 0.9 }, out: 1.6, midOut: 1.4, tileOver: 0.12, under: 0.3 }),
-  quezi: [0.7, 0.24, 0.14],
+  roof: Object.freeze({ side: { depth: 3.2, rise: 0.75 }, mid: { depth: 3.4, rise: 0.8 }, out: 1.6, midOut: 1.4, tileOver: 0.12, under: 0.3 }),
+  quezi: [0.7, 0.24, 0.2],
 });
 
 const COL_EMBED = 0.02;
-// The sets are drawn a third taller than building.js's, so that their rows of arms show under a deep eave.
-const LIFT = 1.35;
+// The sets are drawn as tall as building.js's (a taller set lifted the roofs off the beams: the art review wants the three roofs close together).
+const LIFT = 1.0;
 // How far out from the post plane the eave purlin lies on a hall cut to the 0.21 grade (building.js's PURLIN).
 const PURLIN = 0.88;
 
@@ -108,8 +108,8 @@ function hipRoof(s) {
   const fp = [], fi = []; path.forEach(([x, z], i) => { const y = yAt(x, z); fp.push(x, y + 0.04, z, x, y - under - 0.06, z); if (i) { const k = (i - 1) * 2; fi.push(k, k + 1, k + 2, k + 2, k + 1, k + 3); } });
   const fascia = new THREE.BufferGeometry(); fascia.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3)); fascia.setAttribute("uv", new THREE.Float32BufferAttribute(new Array((fp.length / 3) * 2).fill(0), 2)); fascia.setIndex(fi); fascia.computeVertexNormals();
   // The ridge ornaments: a low wall of tile courses along the ridge, a curled end at each hipped end, a tube down each hip.
-  const ridgeY = eaveY + rise, rh = 0.3, /** @type {THREE.BufferGeometry[]} */ parts = [box(xb - xa + (hipL ? 0.3 : 0), rh + 0.12, 0.3, (xa + xb) / 2, ridgeY - 0.1 + (rh + 0.12) / 2, 0)];
-  const k = 0.34, curl = new THREE.Shape([[0, 0], [0.95, 0], [1.0, 0.55], [0.74, 1.1], [0.34, 1.36], [0.1, 1.18], [0.36, 0.98], [0.46, 0.66], [0.22, 0.5], [0, 0.56]].map(([a, b]) => new THREE.Vector2(a * k, b * k)));
+  const ridgeY = eaveY + rise, rh = 0.28, /** @type {THREE.BufferGeometry[]} */ parts = [box(xb - xa + (hipL ? 0.3 : 0), rh + 0.12, 0.22, (xa + xb) / 2, ridgeY - 0.1 + (rh + 0.12) / 2, 0)];
+  const k = 0.26, curl = new THREE.Shape([[0, 0], [0.95, 0], [1.0, 0.55], [0.74, 1.1], [0.34, 1.36], [0.1, 1.18], [0.36, 0.98], [0.46, 0.66], [0.22, 0.5], [0, 0.56]].map(([a, b]) => new THREE.Vector2(a * k, b * k)));
   const ends = [];
   for (const [on, sx, x] of [[hipL, -1, xa], [hipR, 1, xb]]) if (on) {
     const c = plain(new THREE.ExtrudeGeometry(curl, { depth: 0.24, bevelEnabled: false }).translate(-k, 0, -0.12));
@@ -127,7 +127,7 @@ function hipRoof(s) {
     cut.push(plain(new THREE.ShapeGeometry(sh).rotateY(sx * Math.PI / 2).translate(x + sx * 0.005, 0, 0)));
   }
   // The round end tiles (wadang) closing each row of cover tiles along the eave, seen face-on from below.
-  const discs = [], cap = new THREE.CircleGeometry(0.095, 8);
+  const discs = [], cap = new THREE.CircleGeometry(0.055, 8);
   for (let x = x0 + 0.3; x < x1 - 0.3; x += 0.27) for (const sz of [-1, 1]) discs.push(cap.clone().rotateY(sz > 0 ? 0 : Math.PI).translate(x, yAt(x, sz * Dm) + 0.06, sz * (Dm + 0.05)));
   for (const [on, sx, xe] of [[hipL, -1, x0], [hipR, 1, x1]]) if (on) for (let z = -Dm + 0.3; z < Dm - 0.3; z += 0.27) discs.push(cap.clone().rotateY(sx * Math.PI / 2).translate(xe + sx * 0.05, yAt(xe, z) + 0.06, z));
   // The rafters under the boards, from the eave purlin out to the edge: one every third of a metre along the long sides, and round a hipped end.
@@ -186,10 +186,16 @@ export function buildPaifang(M, opts = {}) {
   const add = (id, on, geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); g.add(m); parts.push({ id, on, box: boxOf(geo), tris: (geo.index ? geo.index.count : geo.attributes.position.count) / 3, material: names.get(mat) ?? "?" }); return m; };
 
   // ---- Clamp stones and posts ----
+  // The stones are a bluish grey, a little darker than the dressed stone of the halls' steps, and have no coursing: the shader
+  // of the cut-stone material, its colour pulled toward grey-blue.
+  const stoneMat = M.monolith.clone(), was = M.monolith.onBeforeCompile;
+  stoneMat.onBeforeCompile = (sh, rr) => { was.call(M.monolith, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", "diffuseColor.rgb=col*vec3(.62,.68,.76);"); };
+  stoneMat.customProgramCacheKey = () => "paifang-stone";
+  names.set(stoneMat, "stone");
   const stones = [];
   cx.forEach((x, i) => {
     const [pw, ph, pd] = S.plinth, [cb, ct] = S.collar, sTop = S.top, hc = sTop - S.cap - ph;
-    add(`plinth-${i}`, ["ground"], box(pw, ph, pd, x, ph / 2, 0), M.steps, { ao: null });
+    add(`plinth-${i}`, ["ground"], box(pw, ph, pd, x, ph / 2, 0), stoneMat, { ao: null });
     // The collar: a square frustum, leaning in as it rises, closed round the post on all four sides (the post stands in it, so
     // its hole is not drawn).
     const collar = new THREE.CylinderGeometry(0.5, 0.5, hc, 4, 1, false).rotateY(Math.PI / 4), pos = collar.attributes.position;
@@ -197,7 +203,10 @@ export function buildPaifang(M, opts = {}) {
     collar.computeVertexNormals(); collar.translate(x, ph + hc / 2, 0);
     const slabs = [collar];
     const caps = [box(ct + S.capOver * 2, S.cap, ct + S.capOver * 2, x, sTop - S.cap / 2, 0)];
-    add(`slabs-${i}`, [`plinth-${i}`], merge(slabs), M.steps, { ao: null }); add(`caps-${i}`, [`slabs-${i}`], merge(caps), M.steps, { ao: null });
+    add(`slabs-${i}`, [`plinth-${i}`], merge(slabs), stoneMat, { ao: null }); add(`caps-${i}`, [`slabs-${i}`], merge(caps), stoneMat, { ao: null });
+    // the one upright joint between the two stones that hold the post, front and back (the iron bands round it are left out)
+    const lean = Math.atan((cb - ct) / 2 / hc), zf = (cb + ct) / 4 - 0.004;
+    add(`seam-${i}`, [`slabs-${i}`], merge([-1, 1].map((sz) => new THREE.BoxGeometry(0.03, hc, 0.02).rotateX(-sz * lean).translate(x, ph + hc / 2, sz * zf))), M.iron, { ao: null, cast: false });
     stones.push({ x, z: 0, x0: x - pw / 2, x1: x + pw / 2, z0: -pd / 2, z1: pd / 2, top: sTop });
   });
   {
@@ -263,7 +272,7 @@ export function buildPaifang(M, opts = {}) {
     const on = [`purlin-${t.id}`];
     add(`roof-${t.id}`, on, rf.tile, M.tile, { ao: null }); add(`boards-${t.id}`, [`roof-${t.id}`], rf.boards, M.rafters, { ao: null, cast: false });
     add(`fascia-${t.id}`, [`roof-${t.id}`], rf.fascia, M.fascia, { ao: null });
-    if (rf.discs) add(`wadang-${t.id}`, [`roof-${t.id}`], rf.discs, M.ridge, { ao: () => 0.7, cast: false });
+    if (rf.discs) add(`wadang-${t.id}`, [`roof-${t.id}`], rf.discs, M.tile, { ao: () => 0.7, cast: false });
     if (rf.rafters) add(`rafters-${t.id}`, [`purlin-${t.id}`], rf.rafters, M.woodZ, { ao, cast: false }); add(`ridge-${t.id}`, [`roof-${t.id}`], rf.ridge, M.ridge, { ao: null });
     if (rf.cut) add(`cut-${t.id}`, [`roof-${t.id}`, t.id === "side-e" ? "post-2" : "post-1"], rf.cut, M.gable, { ao: null });
     // a great beam out to each roof corner, from the end set's head

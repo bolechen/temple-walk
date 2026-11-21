@@ -19,7 +19,7 @@ test("it is a four-post, three-bay, three-tier archway: the middle bay and its r
   assert.ok(A.mid > A.end, "the middle bay is the wide one");
   assert.deepEqual(pf.tiers.map((t) => t.id).sort(), ["mid", "side-e", "side-w"], "three roofs");
   const ridge = Object.fromEntries(pf.tiers.map((t) => [t.id, t.ridgeY]));
-  assert.ok(ridge.mid > ridge["side-e"] + 0.8 && ridge.mid > ridge["side-w"] + 0.8, `the middle roof's ridge ${ridge.mid.toFixed(2)} is over the side roofs' ${ridge["side-e"].toFixed(2)}`);
+  assert.ok(ridge.mid > ridge["side-e"] + 0.8 && ridge.mid > ridge["side-w"] + 0.8 && ridge.mid < ridge["side-e"] + 1.4, `the middle roof's ridge ${ridge.mid.toFixed(2)} is over the side roofs' ${ridge["side-e"].toFixed(2)}`);
   assert.ok(byId.get("post-1").box.max.y > byId.get("post-0").box.max.y + 1.0 && byId.get("post-2").box.max.y > byId.get("post-3").box.max.y + 1.0, "the middle posts run up to the middle roof, the outer ones stop under the side roofs");
   // two bands of beams in the middle bay, one at the sides; the sets under every roof; a hip roof's ridge and hip ridges
   for (const id of ["xiao-lower", "dian-lower", "da-lower", "xiao-upper", "dian-upper", "da-upper", "sets-e", "sets-w", "sets-mid", "ridge-mid", "ridge-side-e", "ridge-side-w"]) assert.ok(byId.has(id), `${id} is missing`);
@@ -31,7 +31,9 @@ test("it is a four-post, three-bay, three-tier archway: the middle bay and its r
   assert.ok(roofE.min.x >= post2.min.x && roofE.min.x <= post2.max.x, "the side roof runs into the middle post: its inner end stops inside the post, not beside it");
   // (the ridge's own tile wall stands a third of a metre over it; the curled ends are out at the corners, not under the middle roof)
   const sideRidge = pf.tiers.find((t) => t.id === "side-e").ridgeY;
-  assert.ok(byId.get("boards-mid").box.min.y > sideRidge + 0.32 + 0.1, "the middle roof's underside clears the side roof's ridge");
+  // the art review (#438): the middle roof's eave edge stands a hand or two over the side roofs' ridge, the three roofs close together
+  const gap = byId.get("roof-mid").box.min.y - sideRidge;
+  assert.ok(gap > 0.1 && gap <= 0.35, `the middle roof's eave edge is ${gap.toFixed(2)} m over the side roofs' ridge`);
   assert.ok(mid.max.x > post2.max.x && mid.min.x < byId.get("post-1").box.min.x, "and it spreads over both middle posts");
 });
 
@@ -65,8 +67,8 @@ test("every post stands in its clamp stones: its foot is in them, they close rou
     assert.ok(Math.abs(st.top - S.top) < 1e-9 && Math.abs(caps.max.y - S.top) < 1e-5, "the stones are as tall as the table says");
     for (const b of [plinth, slabs]) assert.ok(b.min.x <= x - r && b.max.x >= x + r && b.min.z <= z - r && b.max.z >= z + r, `stone ${i} holds post ${i}'s whole round`);
     assert.ok(slabs.min.z < -r && slabs.max.z > r && slabs.min.x < x - r && slabs.max.x > x + r, `the collar holds post ${i} front, back and both sides`);
-    assert.ok(slabs.max.y > 1.4 && Math.abs(S.top - 0.34 * 4.7) < 0.1, "the stones reach a third of the way to the beams (1.4 m and more)");
-    assert.ok(slabs.max.x - slabs.min.x > 1.1 && slabs.max.z - slabs.min.z > 1.1, "and close round the post on all four sides");
+    assert.ok(slabs.max.y > 1.0 && Math.abs(S.top / byId.get("xiao-lower").box.min.y - 0.25) < 0.03, "the stones reach a quarter of the way to the beams: a block, not a stake");
+    assert.ok(slabs.max.x - slabs.min.x > 1.0 && slabs.max.z - slabs.min.z > 1.0, "and close round the post on all four sides");
     assert.ok(Math.abs(st.x - x) < 1e-9 && st.x0 <= x - r && st.x1 >= x + r && st.z0 <= -r && st.z1 >= r, "the footprint the walker reads covers the post");
   });
   assert.equal(pf.stones.length, 4);
@@ -111,7 +113,7 @@ test("the walkers' data covers every stone and every roof", () => {
     assert.ok(w.inner >= 3.5 && w.inner <= w.bottom, "the eye may be under the beams but not in the roof");
   }
   for (const k of ["solids", "decks", "ramps", "drops", "rails"]) assert.deepEqual(pf.walk[k], [], `${k}: the archway has no floor of its own`);
-  assert.ok(pf.board.w > 3 && pf.board.h > 0.5 && Math.abs(pf.board.x) < 1e-9, "a place for the name board in the middle bay");
+  assert.ok(pf.board.w > 3 && pf.board.h > 0.25 && Math.abs(pf.board.x) < 1e-9, "a place for the name board in the middle bay");
 });
 
 test("what it costs: triangles and meshes held to a budget", () => {

@@ -12,8 +12,8 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadow
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x9fb4c8);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.55;
-scene.add(new THREE.HemisphereLight(0xdfe9f2, 0x6b6257, 0.9));
-const sun = new THREE.DirectionalLight(0xfff0dc, 2.2); sun.position.set(-16, 22, 26); sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
+scene.add(new THREE.HemisphereLight(0xdfe9f2, 0x6b6257, 1.25));
+const sun = new THREE.DirectionalLight(0xfff0dc, 1.1); sun.position.set(-16, 22, 26); sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
 Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 90 }); sun.shadow.bias = -0.0004; scene.add(sun, sun.target);
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: 0x6f6a62, roughness: 0.95 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
