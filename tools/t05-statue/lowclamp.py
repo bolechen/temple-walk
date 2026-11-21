@@ -32,6 +32,7 @@ for e, (ex, ey) in pts["eyes"].items():
   ok = ~np.isnan(zt) & ~np.isnan(zb); xs_, zt, zb = xs[ok], zt[ok], zb[ok]; order = np.argsort(xs_); xs_, zt, zb = xs_[order], zt[order], zb[order]
   t = (x - ex) * sg
   sel = np.nonzero((t >= -HALF) & (t <= HALF + OUT) & (y >= lo) & (y <= hi) & (z > FRONT))[0]
+  if not len(sel) or not (t[sel] <= HALF).any(): report[e] = {"eye_before_m": 0, "eye_after_m": 0, "temple_before_m": 0, "temple_after_m": 0, "points_moved": 0, "note": "no point of this level in the eye's box"}; continue
   f = (y[sel] - lo) / (hi - lo); ref = np.interp(x[sel], xs_, zb) + f * (np.interp(x[sel], xs_, zt) - np.interp(x[sel], xs_, zb))
   cap = np.where(t[sel] <= HALF, CAP_EYE, CAP_OUT); over = z[sel] - ref
   before = {"eye": float(over[t[sel] <= HALF].max()), "temple": float(over[t[sel] > HALF].max()) if (t[sel] > HALF).any() else 0.0}

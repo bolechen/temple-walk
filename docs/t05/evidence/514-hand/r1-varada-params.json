@@ -1,0 +1,94 @@
+{
+ "about": "Sakyamuni's right hand turned to the boon-granting gesture (与愿印) by grafting Sikhin's left hand, mirrored (issue #514; the 3D review's comment of 2026-11-21 and the T05 lead's four conditions). Stage frame of each figure: metres, x across (the figure's left at +x), y up from its seat, z toward the viewer; each figure stood at its height on its seat. tools/blender/varada.py reads this.",
+ "donor": {
+  "file": "tools/out/t05/tripo-six/sikhin-r3.glb",
+  "sha256": "a1224ee73752a4c36eb75f1fc6b4cd932443a2a0293ee903293471281494f057",
+  "height": 8.5,
+  "cut": {
+   "point": [
+    1.8,
+    4.45,
+    1.0
+   ],
+   "normal": [
+    0,
+    -1,
+    0
+   ],
+   "note": "just under the sleeve's edge, on the bare wrist (the sleeve is not carried over: Sakyamuni's right arm is bare)"
+  },
+  "keep": {
+   "min": [
+    1.63,
+    3.4,
+    0.4
+   ],
+   "max": [
+    2.55,
+    4.8,
+    1.42
+   ],
+   "whole": 0.8,
+   "part": 0.25,
+   "drop": [
+    [
+     [
+      1.6,
+      3.45,
+      0.3
+     ],
+     [
+      1.74,
+      3.85,
+      1.5
+     ]
+    ]
+   ],
+   "note": "drop: a scrap of the sleeve's lower edge beside the little finger (a scrap of the knee's robe under the fingertips is still on: it shares its place and a shell with the fingers)"
+  },
+  "weld": 0.002
+ },
+ "target": {
+  "file": "tools/out/t05/tripo-370/sakyamuni-r1.glb",
+  "sha256": "02817edd0bfaa280b8ea53c46fd9d3f6398d9e93cabc83ced3739225da350d44",
+  "height": 8.2,
+  "wrist": [
+   -1.72,
+   3.92,
+   1.38
+  ],
+  "fingertips": [
+   -1.77,
+   3.02,
+   1.99
+  ],
+  "palm": [
+   0,
+   0,
+   1
+  ],
+  "scale": 0.97,
+  "turn_deg": 5,
+  "lift": 0.0,
+  "overlap": 0.06,
+  "note": "the forearm lies almost level along the thigh to the wrist at about (−1.72, 3.93, 1.2); the hand hangs from it over the knee, angled forward as Sikhin's is"
+ },
+ "knee": {
+  "box": [
+   [
+    -2.25,
+    2.5,
+    1.25
+   ],
+   [
+    -1.25,
+    3.98,
+    2.4
+   ]
+  ],
+  "ease": 0.08,
+  "margin": 0.1,
+  "note": "the old hand's place on the right knee: from the wrist down to the lotus, in front of the knee",
+  "relax": 40
+ }
+}
