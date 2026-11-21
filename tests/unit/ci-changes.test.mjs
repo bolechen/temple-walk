@@ -212,3 +212,12 @@ test("unit tests: a share with no file runs nothing, because `node --test` with 
   const none = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "200/200"], { encoding: "utf8" });
   assert.equal(none.status, 0); assert.match(none.stdout, /holds no test file/);
 });
+
+test("evidence-mirror: runs of different branches never queue in one group; each commit on main has its own", () => {
+  const y = read("evidence-mirror.yml");
+  const group = /concurrency:\n\s+group: (.+)\n\s+cancel-in-progress: false/.exec(y);
+  assert.ok(group, "a concurrency group that does not cancel a run in progress");
+  assert.match(group[1], /github\.ref/, "pull request runs are grouped by their own branch");
+  assert.match(group[1], /github\.event_name == 'push' && github\.sha/, "a push to main is its own group, so the next push cannot replace it");
+  assert.doesNotMatch(group[1].trim(), /^evidence-mirror$/, "not one group for everything");
+});

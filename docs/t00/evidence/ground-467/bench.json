@@ -1,0 +1,89 @@
+{
+ "base:court:high": {
+  "cost_ms": [
+   12.06,
+   13.4,
+   13.35
+  ],
+  "mean_cost_ms": 12.94,
+  "fps": [
+   42.1,
+   38.3,
+   39.4
+  ],
+  "tris": 2002064,
+  "calls": 386
+ },
+ "base:cam06:high": {
+  "cost_ms": [
+   11.8,
+   11.72,
+   10.72
+  ],
+  "mean_cost_ms": 11.41,
+  "fps": [
+   41.9,
+   43.3,
+   46.1
+  ],
+  "tris": 1925312,
+  "calls": 345
+ },
+ "base:court:low": {
+  "cost_ms": [
+   5.17
+  ],
+  "mean_cost_ms": 5.17,
+  "fps": [
+   109.2
+  ],
+  "tris": 905965,
+  "calls": 194
+ },
+ "new:court:high": {
+  "cost_ms": [
+   12.81,
+   12.4,
+   15.77
+  ],
+  "mean_cost_ms": 13.66,
+  "fps": [
+   40.1,
+   39,
+   36.9
+  ],
+  "tris": 2002064,
+  "calls": 386
+ },
+ "new:cam06:high": {
+  "cost_ms": [
+   10.28,
+   10.96,
+   11.69
+  ],
+  "mean_cost_ms": 10.98,
+  "fps": [
+   42.8,
+   43.8,
+   42.6
+  ],
+  "tris": 1925312,
+  "calls": 345
+ },
+ "new:court:low": {
+  "cost_ms": [
+   5.51
+  ],
+  "mean_cost_ms": 5.51,
+  "fps": [
+   98.8
+  ],
+  "tris": 905965,
+  "calls": 194
+ },
+ "_run": {
+  "report": "hf job 20261121-080207 (T4, ANGLE/Vulkan)",
+  "site_commit": "4c57335d1c45041abba6196fde09cb03c305bc49",
+  "note": "base = parent of c926d20 (origin/main dabfc33) staged at base/index.html, new = this branch at 4c57335 (joint half-width .0065, before the .0045 change); alternated three times in one job; `cost` is ms to draw one frame with the card made to finish it"
+ }
+}

@@ -1,0 +1,142 @@
+{
+ "tool": "16x16 blocks of luminance (0-255) in a 1920x1080 T4 picture, median of their standard deviations over the rows and columns 300..1620 (the art reviewer's measure)",
+ "cam06_summer_day": {
+  "before_474": {
+   "705-850": 17.3,
+   "705-770": 18.4,
+   "770-850": 16.5,
+   "near_900-1070": 6.8,
+   "edge_705-770(>8)": 0.071,
+   "L05_L50_L95": [
+    28.0,
+    72.1,
+    194.9
+   ]
+  },
+  "e8c59ec_main": {
+   "705-850": 9.0,
+   "705-770": 10.1,
+   "770-850": 8.3,
+   "near_900-1070": 6.4,
+   "edge_705-770(>8)": 0.029,
+   "L05_L50_L95": [
+    28.0,
+    76.3,
+    194.9
+   ]
+  },
+  "pr503_first_version": {
+   "705-850": 12.5,
+   "705-770": 13.7,
+   "770-850": 12.0,
+   "near_900-1070": 8.4,
+   "edge_705-770(>8)": 0.039,
+   "L05_L50_L95": [
+    28.0,
+    75.3,
+    194.9
+   ]
+  },
+  "soft_final": {
+   "705-850": 12.4,
+   "705-770": 13.7,
+   "770-850": 11.2,
+   "near_900-1070": 7.1,
+   "L05_L50_L95": [
+    28.0,
+    75.4,
+    194.9
+   ]
+  },
+  "main_now_job2": {
+   "705-850": 9.0,
+   "705-770": 10.1,
+   "770-850": 8.3,
+   "near_900-1070": 6.4,
+   "L05_L50_L95": [
+    28.0,
+    76.4,
+    194.9
+   ]
+  }
+ },
+ "T4_run": "20261121-111356 (site baf5f36 for this PR, e8c59ec's build as base)",
+ "cost_ms": {
+  "base:court:high": {
+   "runs": [
+    13.7,
+    13.89,
+    13.26
+   ],
+   "mean": 13.62
+  },
+  "base:cam06:high": {
+   "runs": [
+    12.02,
+    11.18,
+    11.77
+   ],
+   "mean": 11.66
+  },
+  "new:court:high": {
+   "runs": [
+    13.5,
+    13.65,
+    13.3
+   ],
+   "mean": 13.48
+  },
+  "new:cam06:high": {
+   "runs": [
+    12.55,
+    11.37,
+    11.3
+   ],
+   "mean": 11.74
+  }
+ },
+ "cost_ms_soft_job": {
+  "base:court": {
+   "runs": [
+    13.87,
+    13.6,
+    13.14
+   ],
+   "mean": 13.54
+  },
+  "base:cam06": {
+   "runs": [
+    13.41,
+    11.72,
+    12.01
+   ],
+   "mean": 12.38
+  },
+  "new:court": {
+   "runs": [
+    15.84,
+    13.54,
+    13.49
+   ],
+   "mean": 14.29
+  },
+  "new:cam06": {
+   "runs": [
+    12.23,
+    12.16,
+    11.55
+   ],
+   "mean": 11.98
+  }
+ },
+ "T4_run_soft": "20261121-113059 (site 0067dcd, main at 418615f as base)",
+ "slab_tone": {
+  "tool": "tools/slab-contrast.py: 24x6 px block medians over rows 705-850, cols 300-1620 of a 1920x1080 T4 picture, less the mean of the surrounding 7x7 blocks, then MAD x 1.4826 (the art reviewer's measure from 2026-11-21; pass line >= 14.0; replaces the 16x16 block deviation)",
+  "cam06_summer_day": {
+   "before_474": 14.66,
+   "e8c59ec_main": 12.46,
+   "pr503_first_version": 14.53,
+   "soft_final": 14.52
+  }
+ }
+}

@@ -1,0 +1,122 @@
+{
+ "cam06-first-summer-day": {
+  "fov": 52,
+  "eyeHeight": 1.32,
+  "joint_0.9cm": {
+   "lowestThird": {
+    "rows": [
+     720,
+     1062
+    ],
+    "rowsSampled": 20,
+    "metres": [
+     3.9,
+     21.3
+    ],
+    "meanPx": 1.34,
+    "maxPx": 1.86
+   },
+   "middleThird": {
+    "rows": [
+     702,
+     702
+    ],
+    "rowsSampled": 1,
+    "metres": [
+     28.7,
+     28.7
+    ],
+    "meanPx": 1,
+    "maxPx": 1
+   }
+  },
+  "joint_5.4cm": {
+   "lowestThird": {
+    "rows": [
+     720,
+     1062
+    ],
+    "rowsSampled": 20,
+    "metres": [
+     3.9,
+     21.3
+    ],
+    "meanPx": 6.01,
+    "maxPx": 10.77
+   },
+   "middleThird": {
+    "rows": [
+     702,
+     702
+    ],
+    "rowsSampled": 1,
+    "metres": [
+     28.7,
+     28.7
+    ],
+    "meanPx": 1.54,
+    "maxPx": 1.54
+   }
+  }
+ },
+ "art3-third-autumn-dusk": {
+  "fov": 44,
+  "eyeHeight": 0.81,
+  "joint_0.9cm": {
+   "lowestThird": {
+    "rows": [
+     720,
+     1062
+    ],
+    "rowsSampled": 20,
+    "metres": [
+     2.4,
+     7.1
+    ],
+    "meanPx": 2.36,
+    "maxPx": 3.59
+   },
+   "middleThird": {
+    "rows": [
+     702,
+     702
+    ],
+    "rowsSampled": 1,
+    "metres": [
+     8,
+     8
+    ],
+    "meanPx": 1.26,
+    "maxPx": 1.26
+   }
+  },
+  "joint_5.4cm": {
+   "lowestThird": {
+    "rows": [
+     720,
+     1062
+    ],
+    "rowsSampled": 20,
+    "metres": [
+     2.4,
+     7.1
+    ],
+    "meanPx": 13.34,
+    "maxPx": 21.55
+   },
+   "middleThird": {
+    "rows": [
+     702,
+     702
+    ],
+    "rowsSampled": 1,
+    "metres": [
+     8,
+     8
+    ],
+    "meanPx": 5.05,
+    "maxPx": 5.05
+   }
+  }
+ }
+}
