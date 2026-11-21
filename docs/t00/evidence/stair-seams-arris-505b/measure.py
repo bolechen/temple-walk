@@ -43,10 +43,11 @@ def width(L, y, x, r0, lo):
     return w
 
 def main():
-    base, new = lum(sys.argv[1]), lum(sys.argv[2]); y0, y1 = 432, 632
+    base, new = lum(sys.argv[1]), lum(sys.argv[2]); y0, y1, d0 = 432, 632, 130
     for i, a in enumerate(sys.argv):
         if a == '--y0': y0 = int(sys.argv[i + 1])
         if a == '--y1': y1 = int(sys.argv[i + 1])
+        if a == '--d0': d0 = int(sys.argv[i + 1])   # first row of the stairs, for the mean difference
     runs = seams(base, y0, y1); out = {'seam_runs': len(runs)}
     rows = {'tread': [], 'riser': []}; widths = {'tread': [], 'riser': []}; rat = {'tread': [], 'riser': []}
     for r in runs:
@@ -95,6 +96,6 @@ def main():
             out['band_px_ends_mean'] = round(float(np.mean([r['band_px'] for r in ends])), 2)
     # how heavy: mean absolute difference over the stairs, 0..255 (the review's floor is 8)
     a = np.asarray(Image.open(sys.argv[1]).convert('RGB')).astype(float); b = np.asarray(Image.open(sys.argv[2]).convert('RGB')).astype(float)
-    out['mean_abs_diff_stairs'] = round(float(np.abs(a - b)[130:y1 + 3].mean()), 2)
+    out['mean_abs_diff_stairs'] = round(float(np.abs(a - b)[d0:y1 + 3].mean()), 2)
     print(json.dumps(out, indent=1))
 main()
