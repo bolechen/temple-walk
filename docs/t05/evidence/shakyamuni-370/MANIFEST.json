@@ -249,6 +249,60 @@
    "rev": "5a432b669f1a5f9e1554d67a6c0bcaec4b4ed676"
   },
   {
+   "path": "review-v2-collage.jpg",
+   "bytes": 216636,
+   "sha256": "6f40be584c8a411736020daea8eaf5a5250a9a696ff09983c600ca46b20cb75e",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/half-warm.png",
+   "bytes": 1146012,
+   "sha256": "3dd8ddbae8ad0690317acd68be85471a6f1eaefde1d536f123e1812bea29663b",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/hand-front.png",
+   "bytes": 828773,
+   "sha256": "a52d8cb54fa831d6615e4018f4edb22d36a8ed8699b6685a8f2781b88bcaf786",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/hand-left.png",
+   "bytes": 1069767,
+   "sha256": "6cc8cc6580430e07ca8c8d4bf3b1c25216cb483069dd9d369945c5a054a2e2f5",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/hand-side.png",
+   "bytes": 631181,
+   "sha256": "82bf1e335c817a5f1d92e487142f878409500e503a61600146555b140d9c01f4",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/turn-back.png",
+   "bytes": 659611,
+   "sha256": "98a6b6869018d09e320a3dc702d94081be545eee709f282b927e2021cd354d7f",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/turn-front.png",
+   "bytes": 687789,
+   "sha256": "f7f4e1e2603b674aad2cc94bd47afd38fa16ac9155ee938d2d10f77c4de0567a",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/turn-left.png",
+   "bytes": 534381,
+   "sha256": "7587915a6e73b8c1442aa07e6ba6e62aa02012e9b4d8feeba4c71092a3b6f3fc",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
+   "path": "review-v2/turn-right.png",
+   "bytes": 559596,
+   "sha256": "19a31509de4892e56417cdcfaefb462585d7a481b65bbb78bf8a639d5c2a0f2d",
+   "rev": "fcad44cdfb8e9f2765d840f534391f010e8e9d37"
+  },
+  {
    "path": "review/half-warm.png",
    "bytes": 1144543,
    "sha256": "cf4d67472dd10a3df85742c7cd5064d96bb1933722b216386934f94c4888f7d1",

@@ -17,6 +17,10 @@ T4 Job `6b00defe4fdc5ab3c55c269d`（运行号 `t05-20261120-235953`），`ANGLE 
 
 怎么重出：`SETS=lod370 tools/t05-gpu.sh <近> <中> <远>`（模型取法见下），review 一套在同一个 Job 里先出；软件渲染同样的图：`node tools/t05-hall.cjs tools/t05-hall/specs/sakyamuni-370-review.json`。
 
+## review-v2/：定稿后的同一组（T4）
+
+主创 2026-11-21 看图提了五条，改完重出，机位、光和文件名同 `review/`：Job `6b00e5614fdc5ab3c55c3034`（运行号 `t05-20261121-002709`），`site.commit` = `7d2d4b3ebcad2fee6b476096a3254afd06c72616`（干净）。`review-v2-collage.jpg` 是拼图（证据库），`gpu-report-v2.json` 是这次 Job 的完整报告（仓库里）。
+
 ## 其余
 
 | 路径 | 是什么 |
