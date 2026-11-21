@@ -24,7 +24,10 @@ def stood(p, H):
   t.merge_vertices(merge_tex=True, merge_norm=True); return t   # the glTF file splits points along its seams
 res = stood(os.path.join(out, "sakyamuni-varada.glb"), T["height"])
 hand = trimesh.load(os.path.join(out, "hand.glb"), force="mesh", process=False); hand.merge_vertices(merge_tex=True, merge_norm=True)
-H = hand.vertices; tw = np.array(json.load(open(os.path.join(out, "hand.json")))["placed"]["wrist"])
+if os.path.exists(os.path.join(out, "hand-final.npy")):   # the hand where the solve put it (same points, same order)
+  hand = trimesh.load(os.path.join(out, "hand.glb"), force="mesh", process=False); hand.vertices = np.load(os.path.join(out, "hand-final.npy")); hand.merge_vertices(merge_tex=True, merge_norm=True)
+vj = json.load(open(os.path.join(out, "varada.json"))) if os.path.exists(os.path.join(out, "varada.json")) else {}
+H = hand.vertices; tw = np.array(vj.get("pose", {}).get("wrist") or json.load(open(os.path.join(out, "hand.json")))["placed"]["wrist"])
 tip = H[np.argmin(H[:, 1])]; ax = (tip - tw) / np.linalg.norm(tip - tw); al = (H - tw) @ ax; L = float(al.max())
 rep = {}
 # the figure without the hand: the result's points farther than 1 cm from any point of the placed hand
