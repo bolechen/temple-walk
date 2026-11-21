@@ -53,7 +53,7 @@ const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.11
 const PAL = {
   skin: col(0xf0c6a4), crown: col(0xf3d0b2), blush: col(0xe9958a), lip: col(0x9a5244), brow: col(0x5e3b29), lash: col(0x3a271d), earIn: col(0xe4a58c),
   robe: col(0xb2633f), robeIn: col(0x6c3720), band: col(0x9c5232), sash: col(0xa2583a), collar: col(0xdcd1bb),
-  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0x523a2a), tie: col(0x7a5c38),
+  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0xcdbba0), tie: col(0x7a5c38),
 };
 
 // ---- Cloth and straw, painted once ----
@@ -355,12 +355,12 @@ export function createMonk() {
   }
   // The straps that hold the hat: over each shoulder and down his front, tucked under the sash. They are part of this
   // robe, and are also kept on their own: the sculpted body (`dress`) has no straps, and the hat needs them.
-  const strapParts = [];
+  const strapParts = [], strapLine = [];   // strapLine: each strap's centre line on the robe built here, and which way is out there
   for (const s of [1, -1]) {
     const c = [s * 0.05, 0.78, 0];
     const g = [Bk(s * 0.05, 0.74), Bk(s * 0.058, 0.8), [s * 0.064, 0.95, -0.2, ...c], [s * 0.068, 1.0, 0, ...c], [s * 0.074, 0.95, 0.2, ...c], F(s * 0.082, 0.79), F(s * 0.086, 0.72), F(s * 0.088, 0.655)];
-    const strap = band(onBody(g, 40, 0.0042), flat(0.0075, 0.0028), PAL.strap);
-    robeParts.push(strap); strapParts.push(strap.clone());
+    const line = onBody(g, 40, 0.0042), strap = band(line, flat(0.0075, 0.0028), PAL.strap);
+    robeParts.push(strap); strapParts.push(strap.clone()); strapLine.push(line.map(({ p, n }) => ({ p: p.clone(), n: n.clone() })));
   }
 
   // ---- Trousers and leg wraps: full below the hem, slim where the robe always covers them ----
@@ -410,6 +410,7 @@ export function createMonk() {
   const rigid = (geo, mat, parent) => { const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; parent.add(m); return m; };
 
   // The beads: thirty-two turned beads on a loop that lies over his shoulders and hangs to his chest.
+  let beadMesh; const beadAt = [];
   {
     const F = (x, y) => [x, y, 0.3, x, y, 0], Bk = (x, y) => [x, y, -0.3, x, y, 0];
     const guess = [Bk(0, 0.872), Bk(0.035, 0.869), [0.062, 0.95, -0.12, 0.05, 0.8, 0], [0.072, 1.0, 0.02, 0.05, 0.8, 0], [0.08, 0.95, 0.15, 0.05, 0.8, 0], F(0.08, 0.8), F(0.072, 0.745), F(0.045, 0.705), F(0, 0.69)];
@@ -417,7 +418,9 @@ export function createMonk() {
     const pts = onBody(loop, 32, 0.0152, true), chest = at("chest"), beads = [];
     pts.forEach(({ p }, i) => { const nx = pts[(i + 1) % pts.length].p.clone().sub(pts[(i - 1 + pts.length) % pts.length].p).normalize(), r = 0.0122 * (0.96 + 0.08 * Math.abs(Math.sin(i * 7.3)));
       beads.push(new THREE.SphereGeometry(r, 9, 6).scale(1, 0.84, 1).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UPV, nx)).translate(p.x - chest.x, p.y - chest.y, p.z - chest.z)); });
-    rigid(mergeGeometries(beads), beadM, B.chest);
+    beadMesh = rigid(mergeGeometries(beads), beadM, B.chest);
+    // where each bead sits in the bind pose (his own frame) and how big it is, so that a body worn later can lay them again
+    for (const [i, { p }] of pts.entries()) beadAt.push({ c: p.clone(), r: 0.0122 * (0.96 + 0.08 * Math.abs(Math.sin(i * 7.3))) });
   }
   // The hat: a shallow cone of plaited bamboo with a bound rim and a small finial, carried on his back, hollow to him.
   let hat;
@@ -507,6 +510,94 @@ export function createMonk() {
     B.hips.updateMatrixWorld(true);
   }
 
+  // ---- Helper bones and the beads, for a body that asks for them (#163, #286) ----
+  // Under a raised arm: a body made from a sculpted or generated model (tools/novice-tripo.mjs) may weigh the cloth of the
+  // armpit against a helper bone of its own on each side, carried by the chest at the shoulder's ball and turned each
+  // frame through a share (`k`) of the way the upper arm has swung from where it hangs (its swing, not its twist about
+  // its own length): the corrective or "half" joint game rigs use there, so that holding incense at the brow the cloth
+  // goes a third of the way, then two thirds, rather than all at once from the chest to the arm. The figure built here
+  // has sleeves of their own and needs none; the bones are added after his own, so their numbers follow his bones'.
+  const helpers = [];
+  function addHelpers(list) {
+    if (!list.length || helpers.length) return;
+    bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
+    group.updateMatrixWorld(true);
+    const toGroup = group.matrixWorld.clone().invert(), m = new THREE.Matrix4();
+    for (const h of list) {
+      const parent = B[h.parent], follow = B[h.follow]; if (!parent || !follow || B[h.name]) throw new Error(`the helper bone ${h.name} cannot be put on this skeleton`);
+      const bone = new THREE.Bone(); bone.name = h.name; parent.add(bone);
+      bone.position.copy(parent.worldToLocal(follow.getWorldPosition(V3()))); bone.updateMatrixWorld(true);
+      // the arm's way in the parent's frame at rest, and the direction it hangs (its own -y)
+      const restQ = parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(follow.getWorldQuaternion(new THREE.Quaternion()));
+      // bound as his own bones were, with him standing at the origin
+      skeleton.bones.push(bone); skeleton.boneInverses.push(m.multiplyMatrices(toGroup, bone.matrixWorld).clone().invert()); B[h.name] = bone;
+      helpers.push({ name: h.name, k: h.k, bone, parent, follow, restInv: restQ.clone().invert(), axis: V3(0, -1, 0).applyQuaternion(restQ).normalize() });
+    }
+    skeleton.boneMatrices = new Float32Array(skeleton.bones.length * 16);
+    if (skeleton.boneTexture) { skeleton.boneTexture.dispose(); skeleton.boneTexture = null; }
+  }
+  const hq = new THREE.Quaternion(), ha = new THREE.Quaternion(), hd = new THREE.Quaternion(), ht = new THREE.Quaternion(), hs = new THREE.Quaternion(), hI = new THREE.Quaternion(), hv = V3();
+  function driveHelpers(bind) {
+    for (const h of helpers) {
+      h.parent.updateWorldMatrix(true, false); h.follow.updateWorldMatrix(true, false);
+      if (bind) h.bone.quaternion.identity();
+      else {
+        // how the arm has turned since the bind pose, in the chest's frame; its swing is what is left once the turn about
+        // the way it hung (its twist) is taken out
+        hq.copy(h.parent.getWorldQuaternion(hq)).invert(); ha.copy(h.follow.getWorldQuaternion(ha));
+        hd.copy(hq).multiply(ha).multiply(h.restInv);
+        const p = hv.set(hd.x, hd.y, hd.z).projectOnVector(h.axis); ht.set(p.x, p.y, p.z, hd.w).normalize();
+        hs.copy(hd).multiply(ht.invert());
+        h.bone.quaternion.slerpQuaternions(hI, hs, h.k);
+      }
+      h.bone.position.copy(h.parent.worldToLocal(h.follow.getWorldPosition(hv)));
+      h.bone.updateMatrixWorld(true);
+    }
+  }
+  // The beads are laid 1.5 cm proud of the robe built here (onBody). A worn body's robe may stand further out (Tripo's,
+  // some 3 cm on the chest and 2 cm on the back), and they would sink into it. So once a body is worn, each bead is
+  // moved out along the line from his middle (the upright axis at its own height) through its centre until it sits `gap`
+  // off the outermost cloth there, in the pose he is bound in; a bead already clear by more than that stays where it is.
+  function layBeads(gap = 0.004) {
+    const P = beadMesh.geometry.attributes.position, per = P.count / beadAt.length;
+    const cloth = [robe, skin].map((s) => { const m = new THREE.Mesh(s.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); m.updateMatrixWorld(true); return m; });
+    const ray = new THREE.Raycaster(), o = V3(), d = V3();
+    let moved = 0, most = 0;
+    beadAt.forEach(({ c, r }, b) => {
+      o.set(0, c.y, 0); d.set(c.x, 0, c.z); const len = d.length(); if (len < 0.02) return; d.normalize();
+      ray.set(o, d); const hits = ray.intersectObjects(cloth, false); if (!hits.length) return;
+      const want = hits[hits.length - 1].distance + r + gap; if (want <= len) return;
+      // the chest bone is not turned in the bind pose, so a shift in his frame is the same in the beads' own
+      const sx = d.x * (want - len), sz = d.z * (want - len);
+      for (let k = b * per; k < (b + 1) * per; k++) P.setXYZ(k, P.getX(k) + sx, P.getY(k), P.getZ(k) + sz);
+      c.x += sx; c.z += sz; moved++; most = Math.max(most, want - len);
+    });
+    P.needsUpdate = true; beadMesh.geometry.computeBoundingSphere();
+    return { beads: beadAt.length, moved, most };
+  }
+
+  // The hat's straps are laid on the robe built here too; a worn body's robe stands further out at the shoulders and over
+  // the chest, and they sank out of sight in it (#163, the three-column sheet). Each point of a strap's centre line is
+  // looked at along its own way out, from 15 cm inside: if the worn cloth there lies further out than `gap` under the
+  // strap, that cross-section of the strap is moved out until it is `gap` off (smoothed along the strap, so that it
+  // lies as a ribbon and does not kink).
+  function layStraps(gap = 0.003) {
+    const g = straps.geometry, P = g.attributes.position, cloth = [robe, skin].map((m) => { const c = new THREE.Mesh(m.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); c.updateMatrixWorld(true); return c; });
+    const ray = new THREE.Raycaster(), o = V3(), IN = 0.15;
+    const shifts = strapLine.map((line) => {
+      const raw = line.map(({ p, n }) => { ray.set(o.copy(p).addScaledVector(n, -IN), n); ray.far = IN + 0.08; const hits = ray.intersectObjects(cloth, false); const d = hits.length ? hits[hits.length - 1].distance - IN : -Infinity; return Math.max(0, d + gap); });
+      return raw.map((_, i) => { let m = 0; for (let k = -3; k <= 3; k++) m = Math.max(m, raw[Math.min(raw.length - 1, Math.max(0, i + k))] * (1 - Math.abs(k) / 4)); return m; });
+    });
+    const v = V3(); let most = 0;
+    for (let i = 0; i < P.count; i++) {
+      v.fromBufferAttribute(P, i); let best = Infinity, at = null, sh = 0;
+      strapLine.forEach((line, L) => line.forEach((q, k) => { const d = q.p.distanceToSquared(v); if (d < best) { best = d; at = q; sh = shifts[L][k]; } }));
+      if (sh > 0) { v.addScaledVector(at.n, sh); P.setXYZ(i, v.x, v.y, v.z); most = Math.max(most, sh); }
+    }
+    P.needsUpdate = true; g.computeBoundingSphere();
+    return most;
+  }
+
   let dressed = false;
   return {
     group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat, straps }, steps,
@@ -515,14 +606,30 @@ export function createMonk() {
     // `geometries` holds a skinned geometry for each of skin, robe, legs and shoes, its joints numbered as `skeleton.bones`
     // are, `material` is what they are drawn with, `robeColor` the robe's own colour (no longer used: it coloured a lap of cloth that seated legs have replaced). The skeleton,
     // its bind pose and everything `update` does are unchanged; what was built here is let go.
-    dress(geometries, material, robeColor) {
-      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) {
-        const g = geometries[name]; if (!g?.attributes.skinIndex || !g.attributes.skinWeight) throw new Error(`the sculpted ${name} is not skinned`);
-        mesh.geometry.dispose(); mesh.geometry = g; mesh.material = material;
+    // `o.helpers`: the helper bones the body is weighted to besides these (its glTF's extras.helpers: name, the bone that
+    // carries it, the arm it follows and the share of that arm's swing it takes), added before it is put on; `o.beads`
+    // or `o.straps` false leaves the beads or the hat's straps where they were laid for the robe built here; `o.skinMaterial`
+    // draws the skin with a material of its own.
+    get helpers() { return helpers.map((h) => h.name); },
+    get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
+    dress(geometries, material, robeColor, o = {}) {
+      for (const name of ["skin", "robe", "legs", "shoes"]) { const g = geometries[name]; if (!g?.attributes.skinIndex || !g.attributes.skinWeight) throw new Error(`the sculpted ${name} is not skinned`); }
+      const joints = skeleton.bones.length + (helpers.length ? 0 : (o.helpers?.length || 0));
+      for (const name of ["skin", "robe", "legs", "shoes"]) { const si = geometries[name].attributes.skinIndex, sw = geometries[name].attributes.skinWeight; for (let i = 0; i < si.count; i++) for (let k = 0; k < si.itemSize; k++) if (si.getComponent(i, k) >= joints && sw.getComponent(i, k) > 0) throw new Error(`the sculpted ${name} is weighted to a bone this skeleton has not got (joint ${si.getComponent(i, k)} of ${joints})`); }
+      addHelpers(o.helpers || []);
+      // A glTF's vertices come interleaved (position, normal, uv, joints and weights side by side in one buffer), and the
+      // hem's lifting reads the robe's arrays three and four to a vertex: each attribute is laid out on its own first.
+      for (const g of Object.values(geometries)) for (const [k, a] of Object.entries(g.attributes)) if (/** @type {any} */ (a).isInterleavedBufferAttribute) {
+        const flat = new /** @type {any} */ (a.array.constructor)(a.count * a.itemSize);
+        for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) flat[i * a.itemSize + c] = a.getComponent(i, c);
+        g.setAttribute(k, new THREE.BufferAttribute(flat, a.itemSize, a.normalized));
       }
+      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
       setupHem(robe.geometry.attributes.position.count);
       straps.visible = true;
       dressed = true;
+      const laid = o.beads === false ? { beads: beadAt.length, moved: 0, most: 0 } : layBeads();
+      laid.straps = o.straps === false ? 0 : layStraps(); return laid;
     },
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
@@ -537,7 +644,7 @@ export function createMonk() {
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
-      if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); return; }
+      if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); driveHelpers(true); return; }
       const pray = pose === true || pose === "pray", sit = pose === "sit", chair = pose === "chair", hop = pose === "hop", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
@@ -757,6 +864,7 @@ export function createMonk() {
       const up = free > 0 && Number.isFinite(under) ? Math.max(0, group.position.y - under) * free : 0, jumpAir = Math.min(1, up / 0.46);
       patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
       group.updateMatrixWorld(true);
+      if (helpers.length) driveHelpers(false);
     },
   };
 }

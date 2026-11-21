@@ -23,6 +23,14 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 2026-11-21：小沙弥默认穿 Tripo 分层身体（Issue #163 接入第一个 PR，分支 feat/novice-tripo-163）
+
+- **做了**：页面默认穿 `app/shared/models/novice-tripo.glb`（第六轮 r6 加收臂展 0.8 cm 重出，`tools/novice-tripo.mjs` 两次 SHA-256 一致；不花 Tripo 点数）；建场景时取，到了或失败才算载入完成，所以截图不会时而代码身体时而新身体；`?body=code` 回代码身体，`?body=sculpt` 穿 Meshy 身体；`__yard().body` 报穿的是哪个。`monk.dress()` 按文件的 `extras.helpers` 加两根腋下修正骨、穿上后把念珠推到布外 4 mm，并先把 glTF 的交错属性展平（**老 bug**：袍摆抬升 `setupHem/liftHem` 按平铺数组读，穿任何 glb 身体上台阶都读错位，单测用的是平铺数组所以没测出）。
+- **外廓与格子**：`outline.json` 取代码、Tripo、Meshy 三种身体的最大值；鞋宽了 2.4–2.8 cm。walk-diff：命名地点都走得到，只有观音殿少 1.41 m²。为让 `edges` 两套都过：旧数据里大柱（`colTop > 3.6`）的圆柱位按柱础加鞋放大（`building.js`）；烘焙在殿门旁「对面落脚处被封住」的台阶立面按低物收边（`BAKE.version` 29，`tools/walk/bake.mjs` 的 `risers`），原先这里靠鞋小 0.6 cm 才过。
+- **茶碗**：页面里的碗本来就是封闭的；所有者看到的空底是离线舞台上的开口圆筒。碗抽成 `rites.js` 的 `teaBowl()`，舞台改用同一只，`tests/unit/tea-bowl.test.mjs` 从 600 个方向看没有背面先露出（拿开口圆筒试，测试会红）。
+- **数**（T4 运行 `20261121-064902`，提交 1dae173，站点 sha256 `592217ed…`，court 夏昼，新旧交替三对，`body` 由页面自报）：高档 1080p `__cost` 中位 11.50 / 11.58 ms（Tripo / 代码），低档 390×844@3 4.89 / 5.11 ms，都在波动内；三角形少 1.8 万（高档 198 万 / 200 万）。载入到 ready（除冷启动）Tripo 多约 0.3–0.5 s。包体：JS +3.7 KB（gzip +0.9 KB），模型 +1.43 MB。**手机真机未测。**
+- **没做**：弹簧骨与碰撞体换 VRM（#163 第 5 条）、盘坐袍前角、坐着时腰带上 67 条拉伸边，都留后续。
+
 ## 2026-11-20：镜头改问画出来的网格（Issue #295 PR-A，#161 迁移第 5 步，分支 feat/spring-arm-295）
 
 - **做了**：跟拍的眼睛问画出来的网格（`eyespace.js` 球加 BVH；页面分片收集 `eyegather.js`，Worker 建树 `eyebvh.worker.js`），球半径按当时镜头现算；下台阶抬高越过踏步，不缩臂；栏杆从上面越过；director 的摇镜改问同一套；滚轮进出第一人称改成连续推近（#102）。方案与测量见 `docs/t00/refactor/spring-arm-295.md`。

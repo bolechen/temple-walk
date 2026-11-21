@@ -55,7 +55,7 @@ test("every cushion and every stool is a seat, and he can come within a step or 
   for (const s of all) {
     assert.ok(s.kind === "stool" || s.kind === "cushion", `a seat in ${s.room || "the open"} of no kind (${s.kind})`);
     walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
-    const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0] + 0.45, s.at[1]), h = s.top - floor;   // beside it: the summit mat is itself a floor, walked onto
+    const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0] + 0.6, s.at[1]), h = s.top - floor;   // beside it: the summit mat is itself a floor, walked onto, and on the baked floor he stands at its top within his shoes' reach of it (0.5 m from its middle with the Tripo body's shoes, #163)
     const onBench = s.room === "chan" && Math.abs(h - 0.104 - 0.42) < 0.02;   // the meditation hall's cushions lie on its long platforms
     assert.ok(s.kind === "stool" ? h > 0.4 && h < 0.5 : (h > 0.08 && h < 0.13) || onBench, `a ${s.kind} ${h.toFixed(2)} m high in ${s.room || "the open"}`);
   }
@@ -63,7 +63,7 @@ test("every cushion and every stool is a seat, and he can come within a step or 
     walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
     let near = false; for (let a = 0; a < 24 && !near; a++) for (const r of [0.5, 0.9, 1.3]) { const x = s.at[0] + Math.sin((a / 24) * 6.283) * r, z = s.at[1] + Math.cos((a / 24) * 6.283) * r; if (!walker.blocked(x, z)) { near = true; break; } }
     assert.ok(near, `the seat at ${s.at.map((v) => v.toFixed(1))} in ${s.room || "the open"} cannot be come to`);
-    const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0] + 0.45, s.at[1]);   // beside it: the summit mat is itself a floor, walked onto
+    const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0] + 0.6, s.at[1]);   // beside it, beyond the mat and his shoes' reach of it
     assert.ok(Number.isFinite(s.face) && s.top - floor > 0.05 && s.top - floor < 1.0, `a seat ${(s.top - floor).toFixed(2)} m above the floor in ${s.room || "the open"}`);
   }
   walker.setRoom(null);

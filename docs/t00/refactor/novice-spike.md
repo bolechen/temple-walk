@@ -565,3 +565,23 @@ Tripo 的条款：「Terms of User Agreement」，**Last updated: July 11, 2025*
 - **袖底的灰白扇形**：主创定，不加第三张环境光遮蔽贴图。接入时若仍看得出，先试只压袖筒里层那一组顶点的环境反射强度，不动全身。
 - **站立、合掌时袖子拉伸数上升**（第四轮 4 / 16 → 第五、六轮 106 / 372）：图上看不出，主创接受，照实记在这里。
 - **坐着时腰带上 67 条**：归 #163 第 5 条。
+
+## 接入（#163 第一个 PR，2026-11-21，分支 `feat/novice-tripo-163`）
+
+离线这一段的产物上线了，页面默认穿它。按「接入线上还差什么」逐项：
+
+| # | 项 | 结果 |
+| --- | --- | --- |
+| 1 | 模型进库 | `app/shared/models/novice-tripo.glb`，1,429,980 字节，21,014 面，SHA-256 `6a8fcca1…`（`asset-register.csv` TRIPO-novice）。是 r6 加 `ARMS_IN=0.008` 重出的（3D 评审在第六轮前定的收臂展；r6 当时没收）；`ARMS_IN` 默认改成 0.008，`ARMS_IN=0` 仍出 r6 原样（字节一致，本机验过） |
+| 2 | 用哪个身体 | 默认 Tripo；`?body=code` 代码身体；`?body=sculpt` Meshy。页面在建场景时取，载入完成要等它到或失败 |
+| 3 | 身宽 | 不改 `BODY`。收臂展后最宽 0.378 m。`outline.json` 改为三种身体取大，鞋那两档 +2.8 / +2.6 cm，格子重烘 |
+| 4 | 念珠 | `relayBeads` 搬进 `monk.js` 的 `dress()`（`layBeads`，在他自己的坐标里算，页面里他不在原点也对） |
+| 5 | 手指骨 | 不做：第五轮并拢手指后吃茶已不遮眼（`rites-tea.test.mjs` 两种身体都量，Tripo 全程在眼下沿以下 2.5 cm） |
+| 6 | 吃茶握法 | 已在线上（`hold()` 0.068, -0.025, -0.025） |
+| 7 | 腋下修正骨 | 搬进 `monk.js`：`dress(…, { helpers })` 按文件的 `extras.helpers` 加骨，`update` 末尾驱动；代码身体不加。加骨时的绑定逆矩阵按「他站在原点」算（离线的 `rig()` 用的是世界矩阵，页面里会错） |
+| 8 | 弹簧骨 | 不在本 PR |
+| 9 | 测试在 CI 上真跑 | `novice-tripo.test.mjs` 改读 `app/` 里的文件，不再跳过；`edges.test.mjs` 三种身体都量 |
+| 10 | 重出环境 | `pip install bpy==5.3.0`（Python 3.13，进 venv），`NOVICE_BPY=<venv>/bin/python`，输入在 `keep/tripo-2026-11-19/monk2/` |
+| 11 | 颜色 | 夏昼茶寮和大殿里看过（`shot-tea`、`shot-incense`），交美术总监 |
+
+另外查出并修的：GLTFLoader 给的顶点属性是交错的，`monk.js` 的袍摆抬升按平铺数组读（Meshy 身体上线以来就是这样，单测读的是平铺数组，测不出）。`dress()` 现在先展平；新单测修前红、修后绿。
