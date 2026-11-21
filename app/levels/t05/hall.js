@@ -37,11 +37,11 @@ export const HALL = Object.freeze({
   rafter: 2.88,          // a rafter's run, between purlins: ten rafters front to back (the structural review of #425, from the depth between the eave purlins)
 });
 /**
- * The fill under the roof while he is inside (white box): the level it reaches, as the round before #481 had it always
- * on; over how many metres in from the front wall it comes up; and how fast the eye takes it (seconds to cover about
+ * The fill under the roof while he is inside (white box): the level it reaches (a little over the 10 the round before
+ * #481 had always on, so that station E's middle tone is over L* 10 in first person); over how many metres in from the front wall it comes up; and how fast the eye takes it (seconds to cover about
  * two thirds of a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
-export const FILL = Object.freeze({ lux: 10, depth: 2, ease: 0.8 });
+export const FILL = Object.freeze({ lux: 16, depth: 2, ease: 0.8 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
