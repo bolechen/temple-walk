@@ -83,10 +83,10 @@ export function buildAxis(M, { C, W }) {
   };
   // A flight of steps from a platform's edge at z = zEdge, going down south (dir +1) or north (-1), `rise` high; with his written plan.
   const flight = (w, rise, zEdge, dir) => {
-    const g = stairGeo(w, rise), run = g.run ?? stairProfile(rise).run;
     const m = new THREE.Matrix4().makeTranslation(0, 0, zEdge);
     if (dir < 0) m.multiply(new THREE.Matrix4().makeRotationY(Math.PI));
-    steps.push(g.geo.applyMatrix4(m)); flights.push({ w, rise, sides: [-1, 1], m });
+    const g = stairGeo(w, rise, { place: m }), run = g.run ?? stairProfile(rise).run;
+    steps.push(g.geo); flights.push({ w, rise, sides: [-1, 1], m });
     const foot = zEdge + dir * run, [a, b] = dir > 0 ? [zEdge, foot] : [foot, zEdge];
     walk.ramps.push({ x0: -w / 2 + pad, x1: w / 2 - pad, z0: a - (dir > 0 ? 0.8 : 0.3), z1: b + (dir > 0 ? 0.3 : 0.8), base: 0, h: rise, low: [0, foot], high: [0, zEdge], floor: "stone" });
     for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: dir > 0 ? zEdge + 0.02 : foot - BODY - 0.06, z1: dir > 0 ? foot + BODY + 0.06 : zEdge - 0.02, h: rise });
