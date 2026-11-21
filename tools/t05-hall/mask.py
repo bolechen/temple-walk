@@ -38,6 +38,11 @@ for ci, z in enumerate(spec["channels"]):
     ro = z["ring_of"] if isinstance(z["ring_of"], list) else [z["ring_of"]]   # one channel, or the union of several
     base = np.any([regs[i] for i in ro], axis=0); w = max(1, int(round(z["width"] / mpp)))
     reg = ndi.binary_dilation(base, structure=ndi.generate_binary_structure(2, 1), iterations=w) & ~base & allow
+    if z.get("open") == "below":
+      # the gilt only along the collar and the lapels, its sides and top, not along its lower edge (issue #463): in each
+      # column of the picture, none below the lowest pixel of the region it rings
+      rows = np.arange(H)[:, None]; low = np.where(base.any(axis=0), (base * rows).max(axis=0), -1)[None, :]
+      reg &= ~((low >= 0) & (rows > low))
     regs.append(reg)
     m = ndi.gaussian_filter(reg.astype(np.float32), sigma=z.get("blur", 0.008) / mpp)
     out[..., ch] = np.clip(m * 255, 0, 255).astype(np.uint8)
