@@ -74,6 +74,17 @@ for v in bm.verts:
   if len(comp) > len(best): best = comp
 bs = set(x.index for x in best); bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index not in bs], context="VERTS")
 bm.to_mesh(me); bm.free(); me.update()
+# a scrap of robe that shares a shell and a place with the fingers is a single open sheet, where a finger is a closed
+# tube: a face whose inward line (against its normal) meets nothing of the hand within `donor.sheet` metres is dropped
+if D.get("sheet"):
+  from mathutils.bvhtree import BVHTree as _B
+  bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table(); tree_h = _B.FromBMesh(bm); lone = []
+  for f in bm.faces:
+    c0 = f.calc_center_median(); nrm_ = f.normal
+    # both ways along the normal (the generated shells' faces do not all face out): a tube is met one way or the other
+    if tree_h.ray_cast(c0 - nrm_ * 1e-4, -nrm_, D["sheet"])[0] is None and tree_h.ray_cast(c0 + nrm_ * 1e-4, nrm_, D["sheet"])[0] is None: lone.append(f)
+  bmesh.ops.delete(bm, geom=lone, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+  bm.to_mesh(me); bm.free(); me.update(); log["donor"]["sheet_faces_dropped"] = len(lone)
 for o in bpy.context.scene.objects: o.select_set(o == ob)
 bpy.ops.export_scene.gltf(filepath=os.path.join(out, "hand-donor.glb"), export_format="GLB", use_selection=True)   # as cut, in Sikhin's own place
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
@@ -162,6 +173,35 @@ for f in fpatch:
 bm.to_mesh(me); bm.free(); me.update()
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
 log["knee"].update({"faces_taken_out": len(dead), "faces_put_in": int(len(fpatch))})
+# the seam: points within the band at the box's edge welded to `knee.weld` metres, islands of fewer than `knee.island`
+# faces inside the box dropped, and the band smoothed (`knee.seamSmooth` passes) so the two surfaces meet without a step
+if Kn.get("weld"):
+  bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+  stv = np.array([[v.co.x, v.co.z, -v.co.y] for v in bm.verts]); dist2 = np.minimum((stv - blo).min(1), (bhi - stv).min(1))
+  band = [v for v in bm.verts if -Kn["ease"] < dist2[v.index] < Kn["ease"] * 1.5]
+  n0 = len(bm.verts); bmesh.ops.remove_doubles(bm, verts=band, dist=Kn["weld"]); welded = n0 - len(bm.verts)
+  bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table(); seen = set(); small = []
+  for f in bm.faces:
+    if f.index in seen: continue
+    comp, stack = [], [f]; seen.add(f.index)
+    while stack:
+      g = stack.pop(); comp.append(g)
+      for e in g.edges:
+        for h in e.link_faces:
+          if h.index not in seen: seen.add(h.index); stack.append(h)
+    if len(comp) < Kn.get("island", 50):
+      cc = np.mean([[v.co.x, v.co.z, -v.co.y] for g in comp for v in g.verts], axis=0)
+      if np.all((cc > blo - Kn["ease"]) & (cc < bhi + Kn["ease"])): small += comp
+  bmesh.ops.delete(bm, geom=list(set(small)), context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+  bm.to_mesh(me); bm.free(); me.update()
+  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+  dist2 = np.minimum((st - blo).min(1), (bhi - st).min(1)); bandw = np.clip(1 - np.abs(dist2) / Kn["ease"], 0, 1)
+  vg = ob.vertex_groups.new(name="seam")
+  for i in np.nonzero(bandw > 0)[0]: vg.add([int(i)], float(bandw[i]), "REPLACE")
+  md = ob.modifiers.new("seam", "SMOOTH"); md.vertex_group = "seam"; md.factor = 0.8; md.iterations = Kn.get("seamSmooth", 20)
+  bpy.context.view_layer.objects.active = ob; bpy.ops.object.modifier_apply(modifier="seam"); ob.vertex_groups.remove(ob.vertex_groups["seam"])
+  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+  log["knee"].update({"welded_points": int(welded), "islands_dropped_faces": len(set(small)), "seam_smooth": Kn.get("seamSmooth", 20)})
 # the new hand, joined
 nb = len(st); allco = np.r_[st, hand_co]
 me = ob.data; bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()

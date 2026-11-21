@@ -46,7 +46,8 @@
    ],
    "note": "drop: a scrap of the sleeve's lower edge beside the little finger (a scrap of the knee's robe under the fingertips is still on: it shares its place and a shell with the fingers)"
   },
-  "weld": 0.002
+  "weld": 0.002,
+  "note_sheet": "a test for single open sheets (to drop the robe scrap at the fingertips) was tried and left out: the palm itself is an open sheet on these shells, and went with it"
  },
  "target": {
   "file": "tools/out/t05/tripo-370/sakyamuni-r1.glb",
@@ -77,18 +78,21 @@
   "box": [
    [
     -2.25,
-    2.5,
+    2.42,
     1.25
    ],
    [
-    -1.25,
+    -1.38,
     3.98,
     2.4
    ]
   ],
-  "ease": 0.08,
+  "ease": 0.12,
   "margin": 0.1,
   "note": "the old hand's place on the right knee: from the wrist down to the lotus, in front of the knee",
-  "relax": 40
+  "relax": 40,
+  "weld": 0.002,
+  "island": 50,
+  "seamSmooth": 20
  }
 }
