@@ -39,10 +39,10 @@ function put(M, opts, [x, z], y0 = 0) {
  * The shells. `P` is axis.js's table of where and how big (AXIS, GATE, HALL, FOOT), handed in so that this file imports no
  * level file: x = 0 on the axis, z south.
  * @param {*} M the level's materials
- * @param {{ AXIS: any, GATE: any, HALL: any, FOOT: any, SECOND: any }} P
+ * @param {{ AXIS: any, GATE: any, HALL: any, FOOT: any, SECOND: any, WICKET: any }} P
  */
 export function buildShells(M, P) {
-  const { AXIS, GATE, HALL, FOOT, SECOND } = P;
+  const { AXIS, GATE, HALL, FOOT, SECOND, WICKET } = P;
   const group = new THREE.Group(), walk = { solids: [], decks: [], ramps: [], posts: [], roofs: [] }, closed = [], buildings = [], shade = [[], []];
   const take = (name, built, level, y) => {
     group.add(built.b.group);
@@ -69,23 +69,25 @@ export function buildShells(M, P) {
   const inner = put(M, { ...gate, platH: HALL.platH, steps: GATE.steps, stepsBack: 0 }, [0, AXIS.innerZ]);
   take("内山门", inner, 1, 0); sides([0, AXIS.innerZ], GATE.xs, GATE.zs, true);
 
-  // The wickets either side of the inner gate (SCOPE-OPTIONS.md §二 B: three bays "带两侧便门"): a small planked door kept shut in the wall that
-  // closes the terrace's south end, on the side he sees it from. Outside that wall is the town, which is not built: there is nowhere for it to open on.
+  // The wickets either side of the inner gate (SCOPE-OPTIONS.md §二 B: three bays "带两侧便门"): a small planked door kept shut, set in a niche
+  // in the wall that closes the terrace's south end (axis.js cuts the niche): between two jambs, under a lintel, over a low stone sill, on the
+  // side he sees it from. Outside that wall is the town, which is not built: there is nowhere for it to open on.
   {
-    const y = SECOND.y, z = AXIS.innerZ - SECOND.wallT / 2, wx = (GATE.xs[GATE.xs.length - 1] + GATE.platOut + SECOND.hw) / 2, leaf = [], frame = [];
+    const W = WICKET, y = SECOND.y, zf = AXIS.innerZ - SECOND.wallT / 2, zb = zf + W.depth, wx = (GATE.xs[GATE.xs.length - 1] + GATE.platOut + SECOND.hw) / 2, leaf = [], frame = [], sill = [];
     for (const sx of [-1, 1]) {
-      const x = sx * wx;
-      leaf.push(box(1.5, 2.4, 0.1, x, y + 1.2, z - 0.05), box(1.5, 0.12, 0.14, x, y + 0.9, z - 0.07), box(1.5, 0.12, 0.14, x, y + 1.7, z - 0.07));
-      frame.push(box(1.86, 0.22, 0.2, x, y + 2.52, z - 0.1), box(0.18, 2.5, 0.18, x - 0.84, y + 1.25, z - 0.09), box(0.18, 2.5, 0.18, x + 0.84, y + 1.25, z - 0.09));
+      const x = sx * wx, mw = W.w + 2 * W.jamb;
+      leaf.push(box(W.w, W.h, 0.1, x, y + W.h / 2, zb - 0.07), box(W.w, 0.12, 0.14, x, y + 0.9, zb - 0.1), box(W.w, 0.12, 0.14, x, y + 1.7, zb - 0.1));
+      frame.push(box(mw, W.lintel, W.depth + 0.04, x, y + W.h + W.lintel / 2, zf + W.depth / 2 - 0.02), box(W.jamb, W.h, W.depth + 0.04, x - (W.w + W.jamb) / 2, y + W.h / 2, zf + W.depth / 2 - 0.02), box(W.jamb, W.h, W.depth + 0.04, x + (W.w + W.jamb) / 2, y + W.h / 2, zf + W.depth / 2 - 0.02));
+      sill.push(box(mw, 0.12, W.depth, x, y + 0.06, zf + W.depth / 2));
     }
-    group.add(mesh(merge(leaf), M.woodV), mesh(merge(frame), M.woodX));
+    group.add(mesh(merge(leaf), M.woodV), mesh(merge(frame), M.woodX), mesh(merge(sill), M.monolith));
   }
 
   // ---- The Wuliang hall: five bays, a passage through the middle one, the rooms either side walled off from it ----
-  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: 4.3, overhang: 2.2, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
+  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, lift: 0.3, liftLen: 2.7, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
   take("无量殿", hall, 0, 0);
   // Inside, two walls along the middle bay's columns close the side rooms (the exhibition of the third phase, SCOPE-OPTIONS.md (b)'s neighbours): the passage is the only floor.
-  const wallH = HALL.platH + 4.3, mid = Math.floor((HALL.xs.length - 1) / 2), ix = HALL.xs[mid + 1], t = 0.3, zN = HALL.zs[HALL.zs.length - 1], zS = HALL.zs[0];
+  const wallH = HALL.platH + HALL.colTop, mid = Math.floor((HALL.xs.length - 1) / 2), ix = HALL.xs[mid + 1], t = 0.3, zN = HALL.zs[HALL.zs.length - 1], zS = HALL.zs[0];
   const room = merge([-1, 1].map((sx) => box(t, wallH - HALL.platH, zS - zN, sx * ix, (HALL.platH + wallH) / 2, (zS + zN) / 2 + AXIS.hallZ)));
   group.add(mesh(room, M.plaster()));
   sides([0, AXIS.hallZ], HALL.xs, HALL.zs, false);

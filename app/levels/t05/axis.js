@@ -25,11 +25,13 @@ export const LANE = Object.freeze({ hw: 8, t: 0.8, h: 3.2 });
 export const HALL = Object.freeze({
   xs: Object.freeze([-8.07, -5.57, -2.07, 2.07, 5.57, 8.07]),
   zs: Object.freeze([6.11, 2.04, -2.04, -6.11]),
-  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0,
+  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0,
 });
 /** One gate house, as the outer and the inner gate are laid out: three bays, the platform's flanks meet the walls of the way. A proposal. */
 export const GATE = Object.freeze({ xs: Object.freeze([-6.4, -2.2, 2.2, 6.4]), zs: Object.freeze([3, -3]), platOut: 1.2, steps: 3.8 });
 
+/** The inner gate's wickets: a door leaf set in a niche in the terrace's south wall, between jambs and under a lintel. A proposal. */
+export const WICKET = Object.freeze({ w: 1.5, h: 2.4, jamb: 0.2, lintel: 0.22, depth: 0.25 });
 const half = (xs, out) => xs[xs.length - 1] + out;
 /** The platforms' footprints, from the numbers above. */
 export const FOOT = Object.freeze({
@@ -73,9 +75,17 @@ export function buildAxis(M, { C, W }) {
   const top = SECOND.y;
 
   // A wall between two points, from the ground to h. Plaster on a stone plinth, with the written plan's rectangle (drawn wider by his width).
-  const wall = (x0, z0, x1, z1, h, t, into) => {
+  const wall = (x0, z0, x1, z1, h, t, into, niches = []) => {
     const alongX = z0 === z1, len = alongX ? x1 - x0 : z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    plaster.push(alongX ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
+    if (alongX && niches.length) {
+      // A recess in the north face (the terrace's side) for each niche: the wall in full thickness either side and over it, the back part below.
+      let a = x0;
+      for (const n of [...niches].sort((p, q) => p.x - q.x)) {
+        plaster.push(box(n.x - n.w / 2 - a, h, t, (a + n.x - n.w / 2) / 2, h / 2, cz), box(n.w, h - n.top, t, n.x, (n.top + h) / 2, cz), box(n.w, n.top, t - n.depth, n.x, n.top / 2, cz + n.depth / 2));
+        a = n.x + n.w / 2;
+      }
+      plaster.push(box(x1 - a, h, t, (a + x1) / 2, h / 2, cz));
+    } else plaster.push(alongX ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
     stone.push(alongX ? box(len + 0.2, 0.35, t + 0.2, cx, 0.175, cz) : box(t + 0.2, 0.35, len + 0.2, cx, 0.175, cz));
     const r = alongX ? { x0, x1, z0: cz - t / 2, z1: cz + t / 2 } : { x0: cx - t / 2, x1: cx + t / 2, z0, z1 };
     walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, eyeTop: h + 0.3 });
@@ -87,14 +97,16 @@ export function buildAxis(M, { C, W }) {
   walk.decks.push({ ...T, h: top, floor: "stone" });
   // The three buildings (./gates.js): each on its own platform, which the slab is cut round; the hall's back steps lead down into
   // the court, the inner gate's front steps down into the way.
-  const sh = buildShells(M, { AXIS, GATE, HALL, FOOT, SECOND });
+  const sh = buildShells(M, { AXIS, GATE, HALL, FOOT, SECOND, WICKET });
   for (const k of Object.keys(walk)) walk[k].push(...sh.walk[k]);
   shade[0].push(...sh.shade[0]); shade[1].push(...sh.shade[1]);
 
   // ---- Walls: the terrace's two sides and the stub either side of the gate; the way's two sides; the forecourt's, low, and the wall that closes it ----
   const wt = SECOND.wallT, wh = top + SECOND.wallH, gx = FOOT.inner.x1;
   wall(-SECOND.hw, SECOND.zN, -SECOND.hw, AXIS.innerZ, wh, wt, 0); wall(SECOND.hw, SECOND.zN, SECOND.hw, AXIS.innerZ, wh, wt, 0);
-  wall(-SECOND.hw - wt / 2, AXIS.innerZ, -gx, AXIS.innerZ, wh, wt, 0); wall(gx, AXIS.innerZ, SECOND.hw + wt / 2, AXIS.innerZ, wh, wt, 0);
+  // (the wickets of the inner gate are niches in these two stubs, ./gates.js fits their doors)
+  const wx = (gx + SECOND.hw) / 2, niche = (x) => ({ x, w: WICKET.w + 2 * WICKET.jamb, top: SECOND.y + WICKET.h + WICKET.lintel, depth: WICKET.depth });
+  wall(-SECOND.hw - wt / 2, AXIS.innerZ, -gx, AXIS.innerZ, wh, wt, 0, [niche(-wx)]); wall(gx, AXIS.innerZ, SECOND.hw + wt / 2, AXIS.innerZ, wh, wt, 0, [niche(wx)]);
   for (const sx of [-1, 1]) {
     wall(sx * LANE.hw, AXIS.innerZ + wt / 2, sx * LANE.hw, AXIS.outerZ, LANE.h, LANE.t, 1);
     wall(sx * LANE.hw, AXIS.outerZ, sx * LANE.hw, W.zS, W.wallH, W.t, 1);
