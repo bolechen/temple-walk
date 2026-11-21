@@ -335,3 +335,7 @@ node --import ./tools/spike/swap.mjs --test $(cat tools/spike/walker-tests.txt) 
 node --import ./tools/spike/swap.mjs tools/edges.mjs       # edges 跑在新 walker 上
 HF_TOKEN=… tools/gpu-render.sh t4-small "$(cat docs/t00/refactor/collision-spike/t4-spec.json)"   # T4：旧、新交替各三次
 ```
+
+## 十三、补记：并列面让 `inside()` 随远处的树改变（#477，2026-11-21）
+
+#533 之后，把远处银杏换成别的，大雄宝殿月台脚下仍差 6 格。根在 `bake.mjs` 的 `inside()`：它看四条水平射线的**第一个**交点是不是背面，而石座的背面与踏步的正面在踏步头重合，同距的两个面谁先返回由 BVH 排布决定，BVH 又取决于场景里的全部三角形。现在同距（1 mm 内）的面全算作「第一个」，有背面就算在里面（`BAKE.version` 28）。T00 关 191 格（0.478 m²）、T05 关 188 格（0.470 m²），一格没开，命名地点都在，`edges:grid`、`nearplane:grid` 干净；逐处原因、图与「远景变了月台脚不变」的单测见 `docs/t00/evidence/477-inside-ties/README.md`。
