@@ -111,6 +111,42 @@ Rt = np.array([[ca + a[0]**2*(1-ca), a[0]*a[1]*(1-ca) - a[2]*sa, a[0]*a[2]*(1-ca
                [a[2]*a[0]*(1-ca) - a[1]*sa, a[2]*a[1]*(1-ca) + a[0]*sa, ca + a[2]**2*(1-ca)]])
 sc = np.linalg.norm(tf - tw) / np.linalg.norm(far - wr) * T.get("scale", 1.0)
 Q = ((P - wr) * sc) @ R.T @ Rt.T + tw - tax * T.get("overlap", 0) + np.array([0, T.get("lift", 0), 0])
+PO = T.get("pose")
+if PO:
+  # Round 2 (the art director and the 3D review; the T05 lead's ruling of 2026-11-21): the hand bent and laid with its
+  # back on the knee. Along the hand (u, 0 at the wrist's cut, 1 at the middle fingertip) the first `u0` is left
+  # straight and the fingers bend toward the palm by `bend_deg`, reached by `u1` on a smooth step, the bend laid on
+  # the hand's middle line so its length is kept; the hand is then stood at `wrist`, its straight part pointing down
+  # and tipped forward by `pitch_deg` (the palm's normal raised as much), turned `turn_deg` about it, at `scale`.
+  P0, wr0, ax0, n0 = P @ M, wr @ M, ax @ M, nrm @ M   # the donor's own (left-hand) frame; the mirror is the lateral sign below
+  L0 = float(np.linalg.norm(far - wr)); lat0 = np.cross(ax0, n0)
+  u = (P0 - wr0) @ ax0 / L0; v = (P0 - wr0) @ lat0; w = (P0 - wr0) @ n0
+  sc = PO.get("scale", T.get("scale", 0.97)); u0, u1, bd = PO.get("u0", 0.4), PO.get("u1", 0.6), math.radians(PO["bend_deg"])
+  stp = lambda x: np.clip((x - u0) / (u1 - u0), 0, 1) ** 2 * (3 - 2 * np.clip((x - u0) / (u1 - u0), 0, 1))
+  grid = np.linspace(0, 1.05, 400); tg = bd * stp(grid); ds = np.diff(grid, prepend=0) * L0 * sc
+  cx_, cz_ = np.cumsum(np.cos(tg) * ds), np.cumsum(np.sin(tg) * ds); th_ = bd * stp(u)
+  du = np.interp(u, grid, cx_) - w * sc * np.sin(th_); dn = np.interp(u, grid, cz_) + w * sc * np.cos(th_)
+  a_ = math.radians(PO["pitch_deg"]); D = np.array([0, -math.cos(a_), math.sin(a_)]); N = np.array([0, math.sin(a_), math.cos(a_)])
+  t_ = math.radians(PO.get("turn_deg", 5)); N = math.cos(t_) * N + math.sin(t_) * np.cross(D, N); X = np.cross(D, N)
+  TP = T.get("taper")
+  def place(W):
+    Q = W + np.outer(du, D) + np.outer(dn, N) + np.outer(-v * sc, X)
+    if TP:   # the wrist's last `taper.length` metres drawn in toward the hand's axis (see below)
+      s_ = (Q - W) @ D; k_ = np.clip(s_ / TP["length"], 0, 1); f_ = TP["to"] + (1 - TP["to"]) * k_ * k_ * (3 - 2 * k_)
+      axial = W + np.outer(s_, D); Q = axial + (Q - axial) * f_[:, None]
+    return Q
+  W = np.array(PO["wrist"], float); Q = place(W)
+  tw, tax, tn = W, D, N; T = dict(T); T["overlap"] = 0; T.pop("taper", None)
+  log["pose"] = {"wrist": W.tolist(), "pitch_deg": PO["pitch_deg"], "bend_deg": PO["bend_deg"], "u0": u0, "u1": u1, "turn_deg": PO.get("turn_deg", 5), "scale": sc,
+                 "palm_bend_deg": 0.0, "finger_length_change": "none (the bend is laid along the middle line)"}
+# the wrist's open edge stood out of the forearm as a broken ring (the 3D review, round 2): the hand's last
+# `taper.length` metres toward the wrist are drawn in toward the hand's own axis, to `taper.to` of their width at the
+# very end, so the whole ring sinks under the forearm's surface
+if T.get("taper"):
+  tl, tt = T["taper"]["length"], T["taper"]["to"]; base = tw - tax * T.get("overlap", 0)
+  s_ = (Q - base) @ tax; k_ = np.clip(s_ / tl, 0, 1); f_ = tt + (1 - tt) * k_ * k_ * (3 - 2 * k_)
+  axial = base + np.outer(s_, tax); Q = axial + (Q - axial) * f_[:, None]
+  log["taper"] = {"length_m": tl, "to": tt, "points": int((s_ < tl).sum())}
 me.vertices.foreach_set("co", to_blender(Q).ravel()); me.update()
 bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(me); bm.free(); me.update()   # the mirror turned the faces inside out
 log["placed"] = {"scale": round(float(sc), 4), "turn_deg": T.get("turn_deg", 0), "wrist": tw.tolist(), "axis": tax.round(3).tolist(), "palm": tn.round(3).tolist()}
@@ -127,60 +163,81 @@ hand_co = Q.copy(); hand_faces = np.array([list(p.vertices) for p in me.polygons
 ob, st, (k, off) = load(T["file"], T["height"])
 Kn = cfg["knee"]; blo, bhi = np.array(Kn["box"][0]), np.array(Kn["box"][1])
 inb = np.all((st > blo) & (st < bhi), axis=1)
-# how far inside the box each point is (to its nearest face), eased to a weight
-dist_in = np.minimum((st - blo).min(1), (bhi - st).min(1)); wgt = np.clip(dist_in / Kn["ease"], 0, 1) * inb
-# the mirror of the left knee: the figure's points in the mirrored box, their faces, as a BVH to find the nearest point
-from mathutils.bvhtree import BVHTree
-mlo, mhi = blo * [-1, 1, 1], bhi * [-1, 1, 1]; mlo, mhi = np.minimum(mlo, mhi) - [Kn["margin"], 0, 0], np.maximum(mlo, mhi) + [Kn["margin"], 0, 0]
-fv = np.empty(len(ob.data.polygons) * 3, dtype=np.int64); ob.data.polygons.foreach_get("vertices", fv); F = fv.reshape(-1, 3)
-inm = np.all((st > mlo - Kn["margin"]) & (st < mhi + Kn["margin"]), axis=1); fm = F[np.all(inm[F], axis=1)]
-mir = st * [-1, 1, 1]
-tree = BVHTree.FromPolygons([Vector(p) for p in mir], [tuple(f[::-1]) for f in fm])   # the mirror turns the faces round
-idx = np.nonzero(wgt > 0)[0]; moved = 0; far_ = 0.0
-for i in idx:
-  hit = tree.find_nearest(Vector(st[i]))
-  if hit[0] is None: continue
-  tgt = np.array(hit[0]); d = tgt - st[i]; st[i] = st[i] + wgt[i] * d; moved += 1; far_ = max(far_, float(np.linalg.norm(d)))
-log["knee"] = {"box": Kn["box"], "ease": Kn["ease"], "points_in_box": int(inb.sum()), "points_moved": moved, "largest_move_m": round(far_, 3),
-               "from": "Sakyamuni's own left knee, mirrored across x"}
-# the old hand's sides and back, laid onto the knee, leave folded slivers: relax them in place (Blender's Smooth,
-# weighted by the same easing, `knee.relax` passes), then lay them back onto the mirrored knee
-me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
-if Kn.get("relax"):
-  vg = ob.vertex_groups.new(name="knee")
-  for i in idx: vg.add([int(i)], float(wgt[i]), "REPLACE")
-  md = ob.modifiers.new("relax", "SMOOTH"); md.vertex_group = "knee"; md.factor = 1.0; md.iterations = Kn["relax"]
-  bpy.context.view_layer.objects.active = ob; bpy.ops.object.modifier_apply(modifier="relax"); ob.vertex_groups.remove(ob.vertex_groups["knee"])
-  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
-  for i in idx:
-    hit = tree.find_nearest(Vector(st[i]))
-    if hit[0] is not None: st[i] = st[i] + wgt[i] * (np.array(hit[0]) - st[i])
-  log["knee"]["relaxed"] = Kn["relax"]
-# where the old hand lay fully inside the box (weight 1), its faces are taken out and the mirrored left knee's own
-# faces put in their place (laid onto it, the hand's sides and back folded over and showed inside out); the band at the
-# box's edge keeps the figure's own points, laid onto the same surface, so the two meet on it
-full = wgt >= 0.999
-bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
-for i, v in enumerate(bm.verts): v.co = Vector(to_blender(st[i][None])[0])
-dead = [f for f in bm.faces if all(full[v.index] for v in f.verts)]
-bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
-mdist = np.minimum((mir - blo).min(1), (bhi - mir).min(1)); takem = np.all((mir > blo) & (mir < bhi), axis=1) & (mdist > Kn["ease"] * 0.8)
-fpatch = fm[np.all(takem[fm], axis=1)]; used = np.unique(fpatch); remap = {}
-for j in used: remap[int(j)] = bm.verts.new(Vector(to_blender(mir[j][None])[0]))
-for f in fpatch:
-  try: bm.faces.new([remap[int(j)] for j in f[::-1]])
-  except ValueError: pass
-bm.to_mesh(me); bm.free(); me.update()
-co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
-log["knee"].update({"faces_taken_out": len(dead), "faces_put_in": int(len(fpatch))})
-# the seam: points within the band at the box's edge welded to `knee.weld` metres, islands of fewer than `knee.island`
-# faces inside the box dropped, and the band smoothed (`knee.seamSmooth` passes) so the two surfaces meet without a step
-if Kn.get("weld"):
-  bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
-  stv = np.array([[v.co.x, v.co.z, -v.co.y] for v in bm.verts]); dist2 = np.minimum((stv - blo).min(1), (bhi - stv).min(1))
-  band = [v for v in bm.verts if -Kn["ease"] < dist2[v.index] < Kn["ease"] * 1.5]
-  n0 = len(bm.verts); bmesh.ops.remove_doubles(bm, verts=band, dist=Kn["weld"]); welded = n0 - len(bm.verts)
-  bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table(); seen = set(); small = []
+if Kn.get("mode") == "surface":
+  # Round 2 (the 3D review: the patch's seam was a hard edge with debris). The right knee is not the left one mirrored
+  # (the legs are crossed, the right on top: over most of the knee the two lie 5 cm or more apart), so a patch cut
+  # from the left never meets the right without a seam. Instead the old hand is pressed into the knee it lies on, and
+  # the mesh stays one piece: over the hand's place (the box seen from the front, x and y), the knee's front is
+  # taken as the left knee's mirrored front, corrected by a smooth surface so that it meets the right knee's own front
+  # round the box's sides and foot; every point of the figure standing in front of it there is laid back onto it,
+  # fully `ease` metres inside the box's outline and less toward it. The hand's faces that faced away from the viewer
+  # (its sides, its palm on the knee) are taken out, and the pressed sheet is relaxed on the surface.
+  from scipy.interpolate import RBFInterpolator
+  # The knee is described as a surface over a sheet: by default its depth (z) over the front (x, y); with
+  # `knee.cylinder` its distance from an upright line through the knee (x, z) over the angle round that line (as arc
+  # length at `r0`) and the height, which follows the knee round to its outer side where the old fingers lay
+  sblo, sbhi = blo.copy(), bhi.copy(); cyl = Kn.get("cylinder")
+  if cyl:
+    xc, zc, r0 = cyl["x"], cyl["z"], cyl["r0"]
+    fwd = lambda P: np.c_[r0 * np.arctan2(P[:, 0] - xc, P[:, 2] - zc), P[:, 1], np.hypot(P[:, 0] - xc, P[:, 2] - zc)]
+    inv = lambda C: np.c_[xc + C[:, 2] * np.sin(C[:, 0] / r0), C[:, 1], zc + C[:, 2] * np.cos(C[:, 0] / r0)]
+    blo = np.array([r0 * math.radians(cyl["deg"][0]), blo[1], 0.0]); bhi = np.array([r0 * math.radians(cyl["deg"][1]), bhi[1], 9.0])
+  else:
+    fwd = inv = lambda P: P
+  stS = st; st = fwd(stS)
+  cell = Kn.get("cell", 0.02)
+  def front(P, sel):
+    ij = np.floor(P[sel][:, :2] / cell).astype(int); z = P[sel][:, 2]; dct = {}
+    for (a, b), zz in zip(map(tuple, ij), z):
+      if zz > dct.get((a, b), -9): dct[(a, b)] = zz
+    return dct
+  pad = 0.25; lo2, hi2 = blo[:2] - pad, bhi[:2] + pad
+  mirp = fwd(stS * [-1, 1, 1]); near2 = lambda P: np.all((P[:, :2] > lo2) & (P[:, :2] < hi2), axis=1) & (P[:, 2] > Kn.get("zmin", 0.8))
+  Bm = front(mirp, near2(mirp)); Dm = front(st, near2(st))
+  # the correction is fitted on a ring of cells just outside the box's sides and foot (not its head, where the forearm lies)
+  ring = []
+  for (a, b), z in Dm.items():
+    c = (np.array([a, b]) + 0.5) * cell; dx = max(blo[0] - c[0], c[0] - bhi[0]); dy = blo[1] - c[1]
+    if c[1] > bhi[1] - Kn.get("head", 0.35): continue
+    out_ = max(dx, dy)
+    if 0.02 < out_ < Kn.get("ringW", 0.12) and (a, b) in Bm: ring.append((c[0], c[1], z - Bm[(a, b)]))
+  ring = np.array(ring)
+  # one smooth surface (a thin-plate spline with smoothing `smooth`) through the right knee's own front round the box
+  # and the left knee's mirrored front inside it (cells of `cell` metres, the foremost point of each)
+  inner = [((a + 0.5) * cell, (b + 0.5) * cell, z) for (a, b), z in Bm.items()
+           if blo[0] < (a + 0.5) * cell < bhi[0] and blo[1] < (b + 0.5) * cell < bhi[1]]
+  fitp = np.r_[np.array([(x, y, z + Bm[(int(np.floor(x / cell)), int(np.floor(y / cell)))]) for x, y, z in ring]), np.array(inner)]
+  surf = RBFInterpolator(fitp[:, :2], fitp[:, 2], kernel="thin_plate_spline", smoothing=Kn.get("smooth", 5.0), neighbors=Kn.get("neighbors", 200))
+  Ssurf = lambda xy: surf(np.atleast_2d(xy))
+  # every face of the figure whose middle lies over the box (seen from the front) and in front of the knee's surface
+  # (or within `behind` metres of it) is taken out: the old hand and the torn robe under it
+  me = ob.data; me.vertices.foreach_set("co", to_blender(stS).ravel()); me.update()   # the mesh into the stage frame first
+  bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table()
+  F0 = np.array([[v.index for v in f.verts] for f in bm.faces]); fc0 = fwd(stS[F0].mean(1))
+  din_f = np.minimum((fc0[:, :2] - blo[:2]).min(1), (bhi[:2] - fc0[:, :2]).min(1)); cand = np.nonzero(din_f > 0)[0]
+  # the sheet's nodes, and where it may lie: where the surface faces the viewer (its slope under `slope`) and the figure
+  # has a front there; old faces go only where the sheet lies `skirt` metres or more inside its own edge
+  from scipy.ndimage import distance_transform_edt
+  sk, tk, gs = Kn.get("skirt", 0.04), Kn.get("tuck", 0.005), Kn.get("grid", 0.015)
+  xs = np.arange(blo[0] - sk, bhi[0] + sk + 1e-9, gs); ys = np.arange(blo[1] - sk, bhi[1] + sk + 1e-9, gs)
+  GX, GY = np.meshgrid(xs, ys); GZ = Ssurf(np.c_[GX.ravel(), GY.ravel()]).reshape(GX.shape)
+  gy_, gx_ = np.gradient(GZ, gs); okS = np.hypot(gx_, gy_) < Kn.get("slope", 1.2)
+  dkeys = set(Dm.keys()); hasF = np.array([[(int(np.floor(x / cell)), int(np.floor(y / cell))) in dkeys for x in xs] for y in ys])
+  inbox_ = (GX > blo[0]) & (GX < bhi[0]) & (GY > blo[1]) & (GY < bhi[1])
+  lay = okS & hasF
+  from scipy.ndimage import binary_opening, label as _lab
+  lay = binary_opening(lay, iterations=2); lab_, nl_ = _lab(lay)
+  if nl_ > 1: sizes = np.bincount(lab_.ravel()); sizes[0] = 0; lay = lab_ == sizes.argmax()
+  core = lay & inbox_ & (distance_transform_edt(lay) * gs > sk)
+  dcore = distance_transform_edt(~core) * gs; tt_ = np.clip(dcore / sk, 0, 1); GZ = GZ - tk * tt_ * tt_ * (3 - 2 * tt_)
+  lay &= dcore <= sk
+  ci = np.clip(np.round((fc0[cand, 0] - xs[0]) / gs).astype(int), 0, len(xs) - 1); cj = np.clip(np.round((fc0[cand, 1] - ys[0]) / gs).astype(int), 0, len(ys) - 1)
+  incore = core[cj, ci]
+  gone_f = cand[incore & (fc0[cand, 2] > GZ[cj, ci] - Kn.get("behind", 0.08))]
+  bmesh.ops.delete(bm, geom=[bm.faces[i] for i in gone_f], context="FACES")
+  bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+  # scraps left round the box (pieces of fewer than `island` faces within `skirt` of it) go too
+  bm.faces.ensure_lookup_table(); seen = set(); small = []
   for f in bm.faces:
     if f.index in seen: continue
     comp, stack = [], [f]; seen.add(f.index)
@@ -190,18 +247,194 @@ if Kn.get("weld"):
         for h in e.link_faces:
           if h.index not in seen: seen.add(h.index); stack.append(h)
     if len(comp) < Kn.get("island", 50):
-      cc = np.mean([[v.co.x, v.co.z, -v.co.y] for g in comp for v in g.verts], axis=0)
-      if np.all((cc > blo - Kn["ease"]) & (cc < bhi + Kn["ease"])): small += comp
+      cc = np.mean([[v.co.x, v.co.z] for g in comp for v in g.verts], axis=0)
+      if np.all((cc > sblo[:2] - 0.15) & (cc < sbhi[:2] + 0.15)): small += comp
   bmesh.ops.delete(bm, geom=list(set(small)), context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+  # the knee's front laid in as a regular sheet over the box and `skirt` metres past it, its border sunk `tuck` metres
+  # behind the surface so the figure's own faces round the box lie over it and no edge shows
+  nx = len(xs); gv = {}
+  def node(j, i):
+    if (j, i) not in gv: gv[(j, i)] = bm.verts.new(Vector(to_blender(inv(np.array([[xs[i], ys[j], GZ[j, i]]])))[0]))
+    return gv[(j, i)]
+  nf = 0
+  for j in range(len(ys) - 1):
+    for i in range(nx - 1):
+      if lay[j, i] and lay[j, i + 1] and lay[j + 1, i + 1]: bm.faces.new([node(j, i), node(j, i + 1), node(j + 1, i + 1)]); nf += 1
+      if lay[j, i] and lay[j + 1, i + 1] and lay[j + 1, i]: bm.faces.new([node(j, i), node(j + 1, i + 1), node(j + 1, i)]); nf += 1
+  bm.normal_update(); bm.to_mesh(me); bm.free(); me.update()
+  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+  log["knee"] = {"mode": "surface", "box": Kn["box"], "ring_cells": int(len(ring)), "faces_taken_out": int(len(gone_f)), "scrap_faces_taken_out": len(set(small)),
+                 "sheet_faces": nf, "sheet_spacing_m": gs, "skirt_m": sk, "tuck_m": tk,
+                 "sheet_area_m2": round(float(lay.sum() * gs * gs), 3), "replaced_area_m2": round(float(core.sum() * gs * gs), 3),
+                 "from": "Sakyamuni's own left knee mirrored across x, corrected (thin-plate spline) to meet the right knee round the box's sides and foot",
+                 "cylinder": cyl}
+  blo, bhi = sblo, sbhi
+  inb = np.zeros(len(st), bool); Kn = dict(Kn); Kn["relax"] = 0; Kn["weld"] = 0; Kn["skip"] = True
+if not Kn.get("skip"):   # round 1's mirrored patch (knee.mode absent)
+  # how far inside the box each point is (to its nearest face), eased to a weight
+  dist_in = np.minimum((st - blo).min(1), (bhi - st).min(1)); wgt = np.clip(dist_in / Kn["ease"], 0, 1) * inb
+  # the mirror of the left knee: the figure's points in the mirrored box, their faces, as a BVH to find the nearest point
+  from mathutils.bvhtree import BVHTree
+  mlo, mhi = blo * [-1, 1, 1], bhi * [-1, 1, 1]; mlo, mhi = np.minimum(mlo, mhi) - [Kn["margin"], 0, 0], np.maximum(mlo, mhi) + [Kn["margin"], 0, 0]
+  fv = np.empty(len(ob.data.polygons) * 3, dtype=np.int64); ob.data.polygons.foreach_get("vertices", fv); F = fv.reshape(-1, 3)
+  inm = np.all((st > mlo - Kn["margin"]) & (st < mhi + Kn["margin"]), axis=1); fm = F[np.all(inm[F], axis=1)]
+  mir = st * [-1, 1, 1]
+  tree = BVHTree.FromPolygons([Vector(p) for p in mir], [tuple(f[::-1]) for f in fm])   # the mirror turns the faces round
+  idx = np.nonzero(wgt > 0)[0]; moved = 0; far_ = 0.0
+  for i in idx:
+    hit = tree.find_nearest(Vector(st[i]))
+    if hit[0] is None: continue
+    tgt = np.array(hit[0]); d = tgt - st[i]; st[i] = st[i] + wgt[i] * d; moved += 1; far_ = max(far_, float(np.linalg.norm(d)))
+  log["knee"] = {"box": Kn["box"], "ease": Kn["ease"], "points_in_box": int(inb.sum()), "points_moved": moved, "largest_move_m": round(far_, 3),
+                 "from": "Sakyamuni's own left knee, mirrored across x"}
+  # the old hand's sides and back, laid onto the knee, leave folded slivers: relax them in place (Blender's Smooth,
+  # weighted by the same easing, `knee.relax` passes), then lay them back onto the mirrored knee
+  me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
+  if Kn.get("relax"):
+    vg = ob.vertex_groups.new(name="knee")
+    for i in idx: vg.add([int(i)], float(wgt[i]), "REPLACE")
+    md = ob.modifiers.new("relax", "SMOOTH"); md.vertex_group = "knee"; md.factor = 1.0; md.iterations = Kn["relax"]
+    bpy.context.view_layer.objects.active = ob; bpy.ops.object.modifier_apply(modifier="relax"); ob.vertex_groups.remove(ob.vertex_groups["knee"])
+    co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+    for i in idx:
+      hit = tree.find_nearest(Vector(st[i]))
+      if hit[0] is not None: st[i] = st[i] + wgt[i] * (np.array(hit[0]) - st[i])
+    log["knee"]["relaxed"] = Kn["relax"]
+  # where the old hand lay fully inside the box (weight 1), its faces are taken out and the mirrored left knee's own
+  # faces put in their place (laid onto it, the hand's sides and back folded over and showed inside out); the band at the
+  # box's edge keeps the figure's own points, laid onto the same surface, so the two meet on it
+  full = wgt >= 0.999
+  bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+  for i, v in enumerate(bm.verts): v.co = Vector(to_blender(st[i][None])[0])
+  dead = [f for f in bm.faces if all(full[v.index] for v in f.verts)]
+  bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+  mdist = np.minimum((mir - blo).min(1), (bhi - mir).min(1)); takem = np.all((mir > blo) & (mir < bhi), axis=1) & (mdist > Kn["ease"] * 0.8)
+  fpatch = fm[np.all(takem[fm], axis=1)]; used = np.unique(fpatch); remap = {}
+  for j in used: remap[int(j)] = bm.verts.new(Vector(to_blender(mir[j][None])[0]))
+  for f in fpatch:
+    try: bm.faces.new([remap[int(j)] for j in f[::-1]])
+    except ValueError: pass
   bm.to_mesh(me); bm.free(); me.update()
   co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
-  dist2 = np.minimum((st - blo).min(1), (bhi - st).min(1)); bandw = np.clip(1 - np.abs(dist2) / Kn["ease"], 0, 1)
-  vg = ob.vertex_groups.new(name="seam")
-  for i in np.nonzero(bandw > 0)[0]: vg.add([int(i)], float(bandw[i]), "REPLACE")
-  md = ob.modifiers.new("seam", "SMOOTH"); md.vertex_group = "seam"; md.factor = 0.8; md.iterations = Kn.get("seamSmooth", 20)
-  bpy.context.view_layer.objects.active = ob; bpy.ops.object.modifier_apply(modifier="seam"); ob.vertex_groups.remove(ob.vertex_groups["seam"])
-  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
-  log["knee"].update({"welded_points": int(welded), "islands_dropped_faces": len(set(small)), "seam_smooth": Kn.get("seamSmooth", 20)})
+  log["knee"].update({"faces_taken_out": len(dead), "faces_put_in": int(len(fpatch))})
+  # the seam: points within the band at the box's edge welded to `knee.weld` metres, islands of fewer than `knee.island`
+  # faces inside the box dropped, and the band smoothed (`knee.seamSmooth` passes) so the two surfaces meet without a step
+  if Kn.get("weld"):
+    bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+    stv = np.array([[v.co.x, v.co.z, -v.co.y] for v in bm.verts]); dist2 = np.minimum((stv - blo).min(1), (bhi - stv).min(1))
+    band = [v for v in bm.verts if -Kn["ease"] < dist2[v.index] < Kn["ease"] * 1.5]
+    n0 = len(bm.verts); bmesh.ops.remove_doubles(bm, verts=band, dist=Kn["weld"]); welded = n0 - len(bm.verts)
+    bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table(); seen = set(); small = []
+    for f in bm.faces:
+      if f.index in seen: continue
+      comp, stack = [], [f]; seen.add(f.index)
+      while stack:
+        g = stack.pop(); comp.append(g)
+        for e in g.edges:
+          for h in e.link_faces:
+            if h.index not in seen: seen.add(h.index); stack.append(h)
+      if len(comp) < Kn.get("island", 50):
+        cc = np.mean([[v.co.x, v.co.z, -v.co.y] for g in comp for v in g.verts], axis=0)
+        if np.all((cc > blo - Kn["ease"]) & (cc < bhi + Kn["ease"])): small += comp
+    bmesh.ops.delete(bm, geom=list(set(small)), context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.to_mesh(me); bm.free(); me.update()
+    co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+    dist2 = np.minimum((st - blo).min(1), (bhi - st).min(1)); bandw = np.clip(1 - np.abs(dist2) / Kn["ease"], 0, 1)
+    vg = ob.vertex_groups.new(name="seam")
+    for i in np.nonzero(bandw > 0)[0]: vg.add([int(i)], float(bandw[i]), "REPLACE")
+    md = ob.modifiers.new("seam", "SMOOTH"); md.vertex_group = "seam"; md.factor = 0.8; md.iterations = Kn.get("seamSmooth", 20)
+    bpy.context.view_layer.objects.active = ob; bpy.ops.object.modifier_apply(modifier="seam"); ob.vertex_groups.remove(ob.vertex_groups["seam"])
+    co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+    log["knee"].update({"welded_points": int(welded), "islands_dropped_faces": len(set(small)), "seam_smooth": Kn.get("seamSmooth", 20)})
+AR = cfg.get("arm")
+if PO and PO.get("solve"):
+  # how far forward the wrist must come for the back of the hand to lie `solve.gap` metres off the knee as it now is:
+  # the knee's front as cells of 2 cm (the foremost point of each, below the forearm), the hand's points against it
+  sel = (st[:, 2] > 0.8) & (st[:, 1] < PO["solve"].get("below", 3.68)) & (st[:, 0] > -2.6) & (st[:, 0] < -0.9)
+  cf = {}
+  for (a, b), zz in zip(map(tuple, np.floor(st[sel][:, :2] / 0.02).astype(int)), st[sel][:, 2]):
+    if zz > cf.get((a, b), -9): cf[(a, b)] = zz
+  W0 = np.array(PO["wrist0"], float)
+  def gap(d):
+    Qd = place(W0 + [0, 0, d]); kk = np.floor(Qd[:, :2] / 0.02).astype(int)
+    g = np.array([q[2] - cf[(a, b)] for q, (a, b) in zip(Qd, map(tuple, kk)) if (a, b) in cf])
+    return g.min() if len(g) else 9.0
+  lo_, hi_ = 0.0, 0.8
+  for _ in range(30):
+    mid = (lo_ + hi_) / 2
+    if gap(mid) < PO["solve"]["gap"]: lo_ = mid
+    else: hi_ = mid
+  dsol = hi_; W = W0 + [0, 0, dsol]; AR = dict(AR); AR["shift"] = float(dsol)
+  hand_co = place(W); tw = W
+  log["pose"].update({"wrist0": W0.tolist(), "solved_shift_m": round(float(dsol), 4), "wrist": W.round(4).tolist(), "gap_m": round(float(gap(dsol)), 4)})
+if AR:
+  # Round 2 (the T05 lead's ruling; the 3D review's measures, issue #514 items 3 and 4): the whole right arm brought
+  # forward so the hand can lie on the knee with its palm no more than 10° up. The upper arm turns about the shoulder
+  # (`pivot`) by the angle that carries the elbow `shift` metres forward, faded out over the shoulder (`shoulder`: from
+  # full at the lower height to nothing at the upper) and toward the side of the chest (`inner_x`, `inner_band`), so the
+  # robe's edge and the chest do not move; the forearm, a tube round the line `axis_pts` lying on the thigh, is carried
+  # the same `shift` straight forward (its shape, length and lie on the thigh kept), the two blended across the elbow
+  # (`elbow_blend`, in z). What is left of the old hand past the new wrist (`cut`) is taken out.
+  st0 = st.copy(); Pv, Ev = np.array(AR["pivot"]), np.array(AR["elbow"]); dl = AR["shift"]
+  def rot(p, ph):
+    r = p - Pv; c_, s_ = math.cos(ph), math.sin(ph)
+    return Pv + np.c_[r[:, 0], r[:, 1] * c_ + r[:, 2] * s_, -r[:, 1] * s_ + r[:, 2] * c_]
+  lo_, hi_ = 0.0, 0.5
+  for _ in range(60):
+    mid = (lo_ + hi_) / 2
+    if rot(Ev[None], mid)[0, 2] - Ev[2] < dl: lo_ = mid
+    else: hi_ = mid
+  ph = (lo_ + hi_) / 2; Edisp = rot(Ev[None], ph)[0] - Ev
+  sm = lambda x: np.clip(x, 0, 1) ** 2 * (3 - 2 * np.clip(x, 0, 1))
+  x_, y_, z_ = st[:, 0], st[:, 1], st[:, 2]
+  # which points are the arm's: inside a generous tube round the arm's own line (`upper_axis` from the shoulder to the
+  # elbow, `axis_pts` along the forearm; radii `upper_tube`, `tube` times `slack`) and on a surface facing out from that
+  # line (normal against the line's outward direction above `facing`): the thigh's top under the forearm, the robe at
+  # the hip and the chest beside the arm face the other way, so they stay where they are
+  nrm_ = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("normal", nrm_); nrm_ = nrm_.reshape(-1, 3); nrm_ = np.c_[nrm_[:, 0], nrm_[:, 2], -nrm_[:, 1]]
+  def tube(pts, radii, plane):
+    bestE, bestR = np.full(len(st), np.inf), np.zeros_like(st)
+    for a0, a1 in zip(pts[:-1], pts[1:]):
+      dvec = a1 - a0; tpar = np.clip((st - a0) @ dvec / (dvec @ dvec), 0, 1); foot = a0 + np.outer(tpar, dvec); off_ = st - foot
+      e = ((off_[:, plane[0]] / radii[0]) ** 2 + (off_[:, plane[1]] / radii[1]) ** 2) ** 0.5
+      better = e < bestE; bestE[better] = e[better]; bestR[better] = off_[better]
+    return bestE, bestR / np.maximum(np.linalg.norm(bestR, axis=1), 1e-9)[:, None]
+  ap = np.array(AR["axis_pts"]); slack = AR.get("slack", 1.4); fac = AR.get("facing", 0.2)
+  eF, rF = tube(ap, AR["tube"], (0, 1)); eU, rU = tube(np.array(AR["upper_axis"]), AR["upper_tube"], (0, 2))
+  fore = (eF < slack) & (np.einsum("ij,ij->i", nrm_, rF) > fac) & (z_ > ap[0][2] - 0.3)
+  upper = (eU < slack) & (np.einsum("ij,ij->i", nrm_, rU) > fac) & (y_ < AR["shoulder"][0]) & ~fore
+  w_in = sm((AR["inner_x"] - x_) / AR["inner_band"]); w_sh = sm((AR["shoulder"][0] - y_) / (AR["shoulder"][0] - AR["shoulder"][1]))
+  w_t = sm((z_ - AR["elbow_blend"][0]) / (AR["elbow_blend"][1] - AR["elbow_blend"][0]))
+  trans = np.array([0, 0, dl])
+  dsp = np.zeros_like(st)
+  ui = np.nonzero(upper)[0]; dsp[ui] = ((rot(st[ui], ph) - st[ui]) * (1 - w_t[ui, None]) + trans * w_t[ui, None]) * (w_in[ui] * w_sh[ui])[:, None]
+  fi = np.nonzero(fore)[0]; dsp[fi] = ((rot(st[fi], ph) - st[fi]) * (1 - w_t[fi, None]) + trans * w_t[fi, None])
+  st = st + dsp
+  mv = np.linalg.norm(dsp, axis=1); band = (upper & ((w_sh < 0.999) | (w_in < 0.999)) & (mv > 0))
+  # what is left of the old hand past the new wrist, and the forearm's own end cap there
+  cutz = AR.get("cut_z"); gone_n = 0
+  me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
+  if cutz is not None:
+    bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
+    moved = mv > 0.5 * dl
+    dead = [f for f in bm.faces if all(moved[v.index] and st[v.index, 2] > cutz and st[v.index, 1] < AR.get("cut_ymax", 4.1) for v in f.verts)]
+    # faces between a moved point and one left (the forearm's welded seam on the thigh) drawn out past `stretch` times
+    # their length and over 2 cm are taken out rather than left as slivers
+    stretched = 0
+    for f in bm.faces:
+      ids = [v.index for v in f.verts]
+      if len(set(np.round(mv[ids], 4))) > 1:
+        e0 = max(np.linalg.norm(st0[ids[i]] - st0[ids[i - 1]]) for i in range(len(ids))); e1 = max(np.linalg.norm(st[ids[i]] - st[ids[i - 1]]) for i in range(len(ids)))
+        if e1 > 0.02 and e1 > AR.get("stretch", 3.0) * max(e0, 1e-4): dead.append(f); stretched += 1
+    dead = list(set(dead))
+    gone_n = len(dead); bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.to_mesh(me); bm.free(); me.update()
+    co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+  log["arm"] = {"pivot": Pv.tolist(), "elbow": Ev.tolist(), "angle_deg": round(math.degrees(ph), 2), "elbow_moves_m": Edisp.round(3).tolist(), "forearm_shift_m": trans.tolist(),
+                "upper_points": int(upper.sum()), "forearm_points": int(len(fi)), "largest_move_m": round(float(mv.max()), 3),
+                "band": {"points": int(band.sum()), "largest_move_m": round(float(mv[band].max()) if band.any() else 0.0, 3), "shoulder_band_y": AR["shoulder"], "inner_band_m": AR["inner_band"], "inner_x": AR["inner_x"]},
+                "range": {"min": st0[mv > 0].min(0).round(3).tolist(), "max": st0[mv > 0].max(0).round(3).tolist()}, "old_hand_faces_cut": gone_n - stretched, "stretched_faces_cut": stretched}
+  np.save(os.path.join(out, "arm-moved.npy"), np.c_[st0[mv > 0], mv[mv > 0]])
 # the new hand, joined
 nb = len(st); allco = np.r_[st, hand_co]
 me = ob.data; bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
