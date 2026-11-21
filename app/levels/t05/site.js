@@ -30,7 +30,7 @@ export const ARRIVE = [0, 215];
 // ridge whole, as the reference picture has them, and B (cam02) on the court's paving 12 m out from the flight's foot,
 // the platform over his head and the eave columns and doors still in sight over the terrace's parapet (the lead's calls
 // of 2026-11-21 on the art reviews of #425; DECISIONS.md, ART.md §5).
-export const STATION = Object.freeze({ A: [0, 44], B: [0, 27], C: [0, 0.6], D: [19, -8], E: [0, -12], F: [0, -2] });
+export const STATION = Object.freeze({ A: [0, 44], B: [0, 27], C: [0, 0.6], D: [19, -8], E: [0, -9], F: [0, -2] });
 /** The parapet round the platform and the terrace (SITE.md §6: a railing or a low wall; a low wall here). */
 const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
 
@@ -135,7 +135,7 @@ export function buildSite(M) {
   if (!offAltar) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
-    const l = aim ? new THREE.SpotLight(c, 0, d, 1.2, 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
+    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
     l.position.set(x, y, z); l.userData.full = i; root.add(l);
     if (l instanceof THREE.SpotLight && aim) { l.target.position.set(aim[0], aim[1], aim[2]); root.add(l.target); }
     return l;
@@ -166,13 +166,20 @@ export function buildSite(M) {
     b: [STATION.B[0], STATION.B[1], 0, 0.244],         // cam02: out from the flight's foot, raised 14°: the steps, the platform over his head, the eave columns and the doors' dark
     c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3). Its still is taken in third person (&view=third): the following eye, a few steps behind him, has the door's jambs at the picture's edges; from his own eyes in the doorway they are beside him (DECISIONS.md, 2026-11-21)
     d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
-    e: [STATION.E[0], STATION.E[1], 0, 1.01],          // under the roof, raised 58° (cam05)
+    e: [STATION.E[0], STATION.E[1], 0, 1.15],          // under the roof, raised 66° (cam05; the art director, #549: from 3 m further south the heads of the three keep to the picture's lowest 18%)
     f: [STATION.F[0], STATION.F[1], 0, 0.17],
     ...ax.views,
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
+    // Shakyamuni at the west end, from the worship band 9.9 m before him and a little east of his middle, raised to his lap: his left hand
+    // and his lotus seat are in view, which from the west aisle within 4.4 m of his middle his own right knee and arm hide (#370, #547).
+    // Nothing (an attendant, a king, a column) stands between the eye and his seat or his lap (t05-plan.test).
+    sakya: [-14.5, -7, -0.181, 0.4],
   };
+  // The seven fixed views of the handoff (docs/t05/PRD.md §3, docs/t05/camera-manifest.json written by tools/cameras.mjs): cam01–cam06 are the six
+  // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
+  Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
     root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,

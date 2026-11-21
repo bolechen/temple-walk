@@ -1,0 +1,565 @@
+{
+ "site": {
+  "commit": "37c14399ef1a8482c9100b98c8113a5c50db6ee6",
+  "entry": "assets/index-l34q47TX.js",
+  "files": 367,
+  "sha256": "3649453be77adf89d18e993c3afcc92fd40da4243ec03ee5fc4fa8e9ac194535"
+ },
+ "host": "Tesla T4, 620.70.06, 15360 MiB",
+ "bench": [
+  {
+   "label": "E-high-pr-0",
+   "cost": 6.19,
+   "fps": 73.9,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "E-high-main-0",
+   "cost": 5.94,
+   "fps": 70.2,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "cam03-high-pr-0",
+   "cost": 7.72,
+   "fps": 67.3,
+   "tris": 55988,
+   "calls": 36,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "cam03-high-main-0",
+   "cost": 7.49,
+   "fps": 67.2,
+   "tris": 55988,
+   "calls": 36,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "out6-high-pr-0",
+   "cost": 7.24,
+   "fps": 66.5,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "out6-high-main-0",
+   "cost": 7.19,
+   "fps": 69.5,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "E-low-pr-0",
+   "cost": 2.53,
+   "fps": 179.7,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "E-low-main-0",
+   "cost": 2.38,
+   "fps": 185.6,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "cam03-low-pr-0",
+   "cost": 2.74,
+   "fps": 164.8,
+   "tris": 55986,
+   "calls": 34,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "cam03-low-main-0",
+   "cost": 2.75,
+   "fps": 178.5,
+   "tris": 55986,
+   "calls": 34,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "out6-low-pr-0",
+   "cost": 2.33,
+   "fps": 197.1,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "out6-low-main-0",
+   "cost": 2.37,
+   "fps": 197.1,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "E-high-main-1",
+   "cost": 5.96,
+   "fps": 73.3,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "E-high-pr-1",
+   "cost": 6.03,
+   "fps": 73.9,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "cam03-high-main-1",
+   "cost": 7.59,
+   "fps": 71.2,
+   "tris": 55988,
+   "calls": 36,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "cam03-high-pr-1",
+   "cost": 7.56,
+   "fps": 69.4,
+   "tris": 55988,
+   "calls": 36,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "out6-high-main-1",
+   "cost": 6.93,
+   "fps": 72.5,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "out6-high-pr-1",
+   "cost": 7.22,
+   "fps": 72.8,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "E-low-main-1",
+   "cost": 2.56,
+   "fps": 192.7,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "E-low-pr-1",
+   "cost": 2.55,
+   "fps": 195.2,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "cam03-low-main-1",
+   "cost": 2.83,
+   "fps": 172.6,
+   "tris": 55986,
+   "calls": 34,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "cam03-low-pr-1",
+   "cost": 2.91,
+   "fps": 160.8,
+   "tris": 55986,
+   "calls": 34,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "out6-low-main-1",
+   "cost": 2.43,
+   "fps": 188,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "out6-low-pr-1",
+   "cost": 2.42,
+   "fps": 190.5,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "E-high-pr-2",
+   "cost": 6.1,
+   "fps": 73.4,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "E-high-main-2",
+   "cost": 5.89,
+   "fps": 72.6,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "cam03-high-pr-2",
+   "cost": 7.59,
+   "fps": 69.7,
+   "tris": 55988,
+   "calls": 36,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "cam03-high-main-2",
+   "cost": 7.41,
+   "fps": 70.8,
+   "tris": 55988,
+   "calls": 36,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "out6-high-pr-2",
+   "cost": 7.29,
+   "fps": 72.4,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "out6-high-main-2",
+   "cost": 7.16,
+   "fps": 71.8,
+   "tris": 18142,
+   "calls": 29,
+   "tier": "high",
+   "size": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "label": "E-low-pr-2",
+   "cost": 2.38,
+   "fps": 177.4,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "E-low-main-2",
+   "cost": 2.38,
+   "fps": 194.4,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "cam03-low-pr-2",
+   "cost": 2.93,
+   "fps": 173.7,
+   "tris": 55986,
+   "calls": 34,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "cam03-low-main-2",
+   "cost": 2.64,
+   "fps": 178.6,
+   "tris": 55986,
+   "calls": 34,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "out6-low-pr-2",
+   "cost": 2.48,
+   "fps": 193,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  },
+  {
+   "label": "out6-low-main-2",
+   "cost": 2.39,
+   "fps": 195.4,
+   "tris": 18140,
+   "calls": 27,
+   "tier": "low",
+   "size": [
+    390,
+    844
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "after-e",
+   "file": "after-e.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "before-e",
+   "file": "before-e.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "after-f",
+   "file": "after-f.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "before-f",
+   "file": "before-f.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "after-front",
+   "file": "after-front.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "before-front",
+   "file": "before-front.png",
+   "tris": 135984,
+   "calls": 60
+  },
+  {
+   "name": "after-ne",
+   "file": "after-ne.png",
+   "tris": 123800,
+   "calls": 52
+  },
+  {
+   "name": "before-ne",
+   "file": "before-ne.png",
+   "tris": 123800,
+   "calls": 52
+  },
+  {
+   "name": "after-chest",
+   "file": "after-chest.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "before-chest",
+   "file": "before-chest.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "after-fig",
+   "file": "after-fig.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "before-fig",
+   "file": "before-fig.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "after-near",
+   "file": "after-near.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "before-near",
+   "file": "before-near.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "after-endwall",
+   "file": "after-endwall.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "before-endwall",
+   "file": "before-endwall.png",
+   "tris": 18106,
+   "calls": 28
+  },
+  {
+   "name": "after-a",
+   "file": "after-a.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "before-a",
+   "file": "before-a.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "after-east",
+   "file": "after-east.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "before-east",
+   "file": "before-east.png",
+   "tris": 18142,
+   "calls": 29
+  }
+ ]
+}
