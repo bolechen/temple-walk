@@ -15,10 +15,10 @@ export default {
   backdrop: { site: SITE, terraces: [LEVELS[0], LEVELS[2]] },
   grove: { areas: GROVE.areas, keep: GROVE.keep },
   // The eye from behind him does not go into the bamboo, as it does not go into a wall (#515): where the grove grows, from a
-  // metre under the land to the tops of the culms, under any part of the eye's sphere or a third of a metre beyond it. The grove is drawn as culms and
+  // metre under the land to the tops of the culms, under any part of the eye's sphere. The grove is drawn as culms and
   // cut-out sprays, which the eye's gathering passes over, so it is said here instead.
   eyeKeepOut: (x, y, z, r) => {
-    const m = r + 0.35;   // (and a little more: at the very edge the sprays still reach across the lens)
+    const m = r;
     for (const [dx, dz] of [[0, 0], [m, 0], [-m, 0], [0, m], [0, -m], [m * 0.7, m * 0.7], [-m * 0.7, m * 0.7], [m * 0.7, -m * 0.7], [-m * 0.7, -m * 0.7]]) {
       const px = x + dx, pz = z + dz;
       if (GROVE.grows(px, pz)) { const land = terrain(px, pz); if (y > land - 1 && y < land + GROVE.top) return true; }

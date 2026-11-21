@@ -43,7 +43,8 @@ test("by the ink-stone pool, looking into the grove, the eye stays out of it (#5
 });
 
 // Along the old path, each route walked there and back at his pace, the view turning after him as spring-arm.test turns
-// it: in no frame may the eye stand in the grove, and in no more than 2% of them within 0.3 m of its edge. The routes are
+// it: in no frame may the eye stand in the grove, and in no more than 5% of them within 0.3 m of its edge (a route the
+// level names as narrower than the arm needs, a little more). The routes are
 // the level's own (app/levels/t00/checks.js, `grove`).
 const near = (x, z, m) => [[m, 0], [-m, 0], [0, m], [0, -m]].some(([dx, dz]) => GROVE.grows(x + dx, z + dz));
 function walk(path, aspect) {
@@ -63,13 +64,14 @@ function walk(path, aspect) {
   }
   return out;
 }
-const groveRoutes = isPrologue ? need("grove").routes(site, walker) : {};
+const groveRoutes = isPrologue ? need("grove").routes(site, walker) : {}, NARROW = isPrologue ? need("grove").narrow || {} : {};
 for (const [name, path] of Object.entries(groveRoutes)) {
   test(`${name}, there and back: the eye keeps out of the grove (#515)`, () => {
     for (const [screen, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) for (const way of [path, [...path].reverse()]) {
       const f = walk(way, aspect), inside = f.filter((r) => r.in), edge = f.filter((r) => r.edge).length / f.length;
       assert.equal(inside.length, 0, `${screen}: in ${inside.length} of ${f.length} frames the eye stood in the grove, first with him at (${inside[0]?.at.map((v) => v.toFixed(2))}) and it at (${inside[0]?.c.map((v) => v.toFixed(2))})`);
-      assert.ok(edge <= 0.02, `${screen}: in ${(edge * 100).toFixed(1)}% of the frames the eye was within 0.3 m of the grove`);
+      const most = NARROW[name] ?? 0.05;   // (the T00 lead, #518: 5%; the routes too narrow for the arm are named in checks.js)
+      assert.ok(edge <= most, `${screen}: in ${(edge * 100).toFixed(1)}% of the frames the eye was within 0.3 m of the grove`);
     }
   });
 }

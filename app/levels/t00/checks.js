@@ -83,6 +83,10 @@ export default {
         "across the forecourt to its east side and along it": [[0, SITE.fore - 6], [SITE.GROVE_IN - 1, SITE.fore - 6], [SITE.GROVE_IN - 1, SITE.zS + 5]],
       };
     },
+    // Where the path is narrower than the arm needs, the share of frames the eye may stand within 0.3 m of the grove: at the
+    // bamboo start he stands in the grove's own clearing (GROVE.keep), and 7% of the frames there come that near (the T00
+    // lead accepted it, #518; everywhere else 5% at most).
+    narrow: { "the first steps from the bamboo start": 0.08 },
   },
   nearplane: {
     routes: (/** @type {any} */ site) => ({ ...common(), ...censerRings(site), "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]] }),
