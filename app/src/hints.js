@@ -61,7 +61,9 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     // The summit pavilion's room has a stair up to its top storey; up there the view is his own eyes only.
     stair() { tip("stair", t("西北角可以登楼。"), 7); },
     upView() { tip("upView", t("楼上用自己的眼睛看，下楼再换视角。"), 6); },
-    seal() { tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
+    // The visitor has a seal already: the line that says a walk can earn one is not for them (#445).
+    stamped() { said.add("stamp"); },
+    seal() { said.add("stamp"); tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
     seasons() { return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
     // A newer build has been put up since the page was opened (src/version.js): said once; nothing reloads by itself.
@@ -81,6 +83,8 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     // of the path (60 m, about half a minute at a walk) it is said anyway, once, when no other line is speaking.
     if (coarse && !dragged && !now && walked > 60) tip("pinch", t("双指开合，拉远拉近"), 6);
     if (coarse && dragged && !pinched && !now && said.has("walk")) tip("pinch", t("双指开合，拉远拉近"), 6);   // a drag kept from before: told now the line is free
+    // Once the line about walking has gone, a first visitor is told once that a small thing done at a place is stamped (#445).
+    if (!now && said.has("walk") && !said.has("stamp") && walked > 4) tip("stamp", t("每到一处，做一件小事，可以盖一枚朱印"), 7);
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
