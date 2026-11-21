@@ -178,7 +178,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -191,7 +191,7 @@ jobs:
           name: floor-${{ github.run_id }}
           path: app/shared/walk
       - name: Unit tests, this machine's share
-        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5
+        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3
 
   # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
@@ -202,7 +202,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -215,7 +215,7 @@ jobs:
           name: floor-${{ github.run_id }}
           path: app/shared/walk
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
-        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5 --import ./tools/walk/swap.mjs
+        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3 --import ./tools/walk/swap.mjs
 
   # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
   # preview.
@@ -299,7 +299,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [stairs, stairs-edge, drop, drop-touch]
+        include:
+          - { name: a, scenarios: "drop stairs-edge" }
+          - { name: b, scenarios: "drop-touch stairs" }
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -323,12 +325,12 @@ jobs:
           key: doorways-${{ steps.doorways.outputs.key }}
           restore-keys: doorways-
       - name: The scenario, on the built site
-        run: node tests/e2e/run.cjs ${{ matrix.scenario }}
+        run: node tests/e2e/run.cjs ${{ matrix.scenarios }}
       - name: Keep the report and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: e2e-quick-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore

@@ -10,9 +10,9 @@
 //                                           `node --test` given no files would run the whole suite.
 const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
-const SHARDS = 5;
+const SHARDS = 3;
 /** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. */
-const BUDGET = 110;
+const BUDGET = 160;
 
 const files = () => fs.readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
 const durations = () => JSON.parse(fs.readFileSync(path.join(DIR, "durations.json"), "utf8")).files;
