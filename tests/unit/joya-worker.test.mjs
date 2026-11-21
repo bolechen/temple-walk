@@ -70,3 +70,14 @@ test("the night's clock is set only by the smoke test: no Worker config defines 
   for (const f of ["wrangler.production.jsonc", "wrangler.canary.jsonc", "wrangler.jsonc"]) assert.ok(!fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8").includes("JOYA_TEST_NOW"), f);
   assert.match(fs.readFileSync(new URL("../../tools/worker-smoke.mjs", import.meta.url), "utf8"), /JOYA_TEST_NOW:/);
 });
+
+// `wrangler dev` is a tree of processes and the smoke test started two of them one after the other on ports picked at random from ninety: when the
+// two met on one port, or the first was still running, the second night's check answered from the first (a refused stroke came back 200 with the first night's count).
+test("the smoke test takes a free port from the system and ends the whole tree of every Worker it starts", async () => {
+  const fs = await import("node:fs"), src = fs.readFileSync(new URL("../../tools/worker-smoke.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(src, /Math\.random\(\) \* \d+\)/, "a port is not picked at random from a few hundred");
+  assert.match(src, /listen\(0, "127\.0\.0\.1"/, "the system hands the port out");
+  assert.equal([...src.matchAll(/spawn\("npx"/g)].length, 2);
+  assert.equal([...src.matchAll(/detached: true/g)].length, 2, "each Worker starts as the head of its own process group");
+  assert.ok([...src.matchAll(/process\.kill\(-/g)].length >= 2, "and its whole group is killed, not only the npx that started it");
+});
