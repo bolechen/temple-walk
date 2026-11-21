@@ -90,6 +90,20 @@ bpy.ops.export_scene.gltf(filepath=os.path.join(out, "hand-donor.glb"), export_f
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
 log["donor"]["welded_verts"] = len(P)
 bm = bmesh.new(); bm.from_mesh(me); log["donor"]["open_edges"] = sum(1 for e in bm.edges if e.is_boundary); log["donor"]["nonmanifold_edges"] = sum(1 for e in bm.edges if not e.is_manifold and not e.is_boundary); bm.free()
+if D.get("scrap"):
+  # the scrap of Sikhin's knee robe that came with the fingertips (round 2: "删掉中指尖那块衣角"): in the hand's own frame
+  # (u along it from the wrist's cut to the middle fingertip, v across, w out of the palm) it is a fan on the palm side
+  # and one past the little finger's edge; each box `scrap` is [[u0, u1], [v0, v1], [w0, w1]] and its faces are taken out
+  wr_ = P[(P - cp) @ cn < np.percentile((P - cp) @ cn, 3)].mean(0); far_ = P[np.argmax((P - cp) @ cn)]; ax_ = (far_ - wr_) / np.linalg.norm(far_ - wr_)
+  _, _, vt_ = np.linalg.svd(P - P.mean(0), full_matrices=False); n_ = vt_[2] - (vt_[2] @ ax_) * ax_; n_ /= np.linalg.norm(n_); n_ = n_ if n_[2] > 0 else -n_
+  L_ = np.linalg.norm(far_ - wr_); uu = (P - wr_) @ ax_ / L_; vv = (P - wr_) @ np.cross(ax_, n_); ww = (P - wr_) @ n_
+  inscrap = np.zeros(len(P), bool)
+  for (u0_, u1_), (v0_, v1_), (w0_, w1_) in D["scrap"]: inscrap |= (uu > u0_) & (uu < u1_) & (vv > v0_) & (vv < v1_) & (ww > w0_) & (ww < w1_)
+  bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+  bmesh.ops.delete(bm, geom=[f for f in bm.faces if any(inscrap[v.index] for v in f.verts)], context="FACES")
+  bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"); bm.to_mesh(me); bm.free(); me.update()
+  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
+  log["donor"]["scrap_points"] = int(inscrap.sum())
 # the donor hand's own frame: the wrist is the middle of what lies nearest the cut; the long axis runs from it to
 # the point farthest past the cut (the middle finger's tip); the palm's normal is the thinnest direction, turned toward +z
 wr = P[(P - cp) @ cn < np.percentile((P - cp) @ cn, 3)].mean(0)   # the wrist: the middle of the 3% of points nearest the cut
