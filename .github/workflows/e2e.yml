@@ -1,7 +1,7 @@
 name: End to end, every scenario
 
 # The whole suite takes the better part of an hour on one machine without a GPU, so it does not run on every push:
-# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among as many machines as the list needs (twelve at present, `shards` below) by each scenario's measured time (tests/e2e/shards.cjs, #335, #376).
+# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among as many machines as the list needs (twelve at present, `shards` below) by each scenario's measured time (tests/e2e/shards.cjs, #335, #376), or, asked for by hand with `runner: t4`, among four Hugging Face Jobs on a T4 (the `t4` jobs below).
 on:
   # Beside every publication, and not in its way: his body and the camera's near plane against everything built, and the
   # pause menu in every language. (The stairs and the low drop, which change most often, stop the publication itself since
@@ -20,6 +20,11 @@ on:
         description: "Also read the evidence over the network and compare hashes (always done by the nightly run)"
         type: boolean
         default: false
+      runner:
+        description: "Where the scenarios are walked: github (twelve free machines, software drawing) or t4 (four Hugging Face Jobs on a T4 card; needs the HF_TOKEN secret, #335)"
+        type: choice
+        options: [github, t4]
+        default: github
   schedule:
     - cron: "17 19 * * *"
 
@@ -90,7 +95,7 @@ jobs:
   # How many machines the list needs is worked out here, by the same plan the machines use (tests/e2e/shards.cjs, #376): the fewest, twelve at
   # least, that keep the longest share within its budget, so a new scenario adds a machine instead of stopping the unit tests.
   shards:
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && github.event.inputs.runner != 't4'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -106,7 +111,7 @@ jobs:
 
   full:
     needs: shards
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && github.event.inputs.runner != 't4'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -188,6 +193,118 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-full-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # The same suite on a graphics card (#335, docs/RELEASING.md): only when asked for by hand with `runner: t4`, never by a push,
+  # a pull request (this workflow has no pull_request trigger, so a fork cannot reach the token) or the nightly run until the
+  # owner says so. The site and the checkout are built and packed once, each of four shards sends the archive to a private
+  # Hugging Face bucket and starts a Job on a T4 that walks its share (tools/ci/t4-launch.sh, t4-job.sh, drawing through Vulkan:
+  # a browser that fell back to software fails the run, so a T4 run is never a free-machine run under another name). The Job's
+  # address is in the log; a Job that fails to start, errors, times out or is cancelled, or comes back with no report, makes the
+  # shard red. Cancelling the run cancels the Jobs. The token is the repository secret HF_TOKEN and is read by the launch step only.
+  t4-pack:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.runner == 't4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to bake the doorways with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-t00-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-t00-
+      - name: Build the site and pack it with the checkout
+        run: T4_PACK_ONLY="$RUNNER_TEMP/t4-pack.tgz" tools/ci/t4-launch.sh pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t4-pack-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/t4-pack.tgz
+          retention-days: 1
+
+  # What shard 1 of `full` does before its scenarios, on a free machine beside the Jobs.
+  t4-checks:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.runner == 't4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Parse, types, unit tests, and his body against everything built
+        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run test:grid && pnpm run edges && pnpm run edges:grid
+      - name: The evidence in the stores is what the manifests say
+        if: ${{ !cancelled() && github.event.inputs.evidence == 'true' }}
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: node tools/evidence.mjs verify-store && node tools/evidence.mjs verify --all && EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all
+
+  t4:
+    needs: t4-pack
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.runner == 't4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: t4-pack-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}
+      - name: The hf command
+        run: pip install --quiet huggingface_hub
+      - name: Walk this shard's scenarios on a T4
+        # Scenarios named by hand go to the first shard alone, as on the free machines.
+        if: ${{ github.event.inputs.scenarios == '' || github.event.inputs.scenarios == null || matrix.shard == 1 }}
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          T4_PACK: ${{ runner.temp }}/t4-pack.tgz
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          set -o pipefail
+          if [ -n "$SCENARIOS" ]; then tools/ci/t4-launch.sh $SCENARIOS; else tools/ci/t4-launch.sh --shard=${{ matrix.shard }}/4; fi 2>&1 | tee "$RUNNER_TEMP/t4.log"
+      - name: What it took
+        if: always()
+        shell: bash
+        run: node tools/ci/t4-summary.cjs tools/out >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Keep the report, the screenshots and the Job's log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-t4-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 14
           if-no-files-found: ignore
