@@ -62,6 +62,17 @@ export const LEVELS = {
 export const DEFAULT_LEVEL = "t00";
 
 /**
+ * How the map of temples walked (行脚图, #449) names a temple: the region and nothing finer, never a town (the owner's rule
+ * of 2026-11-21, as the title's line says where in #445), and the two characters its seal is cut with. Behind the same test
+ * of the build as LEVELS, so that the public page neither names nor carries a temple it does not list.
+ * @type {Record<string, { region: string, seal: string }>}
+ */
+export const PLACES = {
+  t00: { region: "江南", seal: "云径" },
+  ...(TESTING ? { t05: { region: "关外", seal: "奉明" } } : {}),
+};
+
+/**
  * The level an address asks for. A name not in the list falls back to the prologue, saying what was asked.
  * @param {string} [search] @returns {{ id: string, asked: string | null, known: boolean }}
  */
