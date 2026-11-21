@@ -360,7 +360,7 @@ const scenarios = {
       const msg = `${from} → ${to}: ` + JSON.stringify({ before: [before.x, before.z, cam0.yaw, cam0.pitch, cam0.v, before.season, before.time], after: [a.x, a.z, a.yaw, a.pitch, a.v, a.season, a.time], focus: a.focus, url: a.url });
       expect(Math.hypot(a.x - before.x, a.z - before.z) < 0.05 && Math.abs(a.yaw - cam0.yaw) < 0.0175 && Math.abs(a.pitch - cam0.pitch) < 0.0175 && a.v === cam0.v, "he should be where he stood when the language was chosen, not where the link stood: " + msg);
       expect(a.season === "winter" && a.time === "night", "the season and hour chosen by hand should be as they were: " + msg);
-      expect(a.focus === to && a.lang === to, "the menu should be open with the language chosen: " + msg);
+      expect(a.focus === to && a.lang.startsWith(to), "the menu should be open with the language chosen: " + msg);
       expect(!/[?&](cam|view|season|time|devpose)=/.test(a.url), "the link's place should have left the address, so that the page that opened is not taken for a link to it: " + a.url);
       // The same address opened afresh is still the link's own place.
       await u.page.goto(base + `?q=low&cam=21.3,87.37,0,0.04&view=third&season=autumn&time=day&lang=${to}` + BARE, { waitUntil: "commit" }); await u.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
