@@ -970,8 +970,10 @@ const scenarios = {
     //    first script shuts it for anything waiting for this level; yard.js reads the handover and lifts it again).
     await t.page.addInitScript(() => {
       window.__ink = [];
-      const root = document.documentElement, look = () => {
-        requestAnimationFrame(look);   // (first: the page asked half-built may throw, and the record must not stop with it)
+      const look = () => {
+        requestAnimationFrame(look);
+        const root = document.documentElement;   // (read each frame: an init script runs before the document has an element)
+        if (!root) return;   // (first: the page asked half-built may throw, and the record must not stop with it)
         let frames = 0; try { frames = window.__yard ? window.__yard().frames : 0; } catch {}
         const w = innerWidth, h = innerHeight;
         if (window.__ink.length < 20000) window.__ink.push({ frames, ready: !!document.body && document.body.dataset.ready === "1", shut: root.classList.contains("crossing") && !root.classList.contains("crossing-open"), opening: root.classList.contains("crossing-open"), over: document.elementFromPoint(w / 2, h / 2) === root });
