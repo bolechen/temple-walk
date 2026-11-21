@@ -32,7 +32,7 @@ export const HALL = Object.freeze({
   roof: 0.6,             // how thick the roof's mass is, from its tiles to the dark of its underside
   lintel: 0.55,          // the tie-beam between column heads, and the cap board on them 0.2 thick
   bracket: { tiers: 3, h: 0.7, w: 1.0, out: [0.9, 1.7, 2.5], inn: [0.7, 1.3] },   // a bracket set as three stepped blocks out under the eave and two in (white box)
-  beams: [10.2, 12.6, 15.0, 17.4],   // the bottoms of the four tiers of each frame above the court (the roof left open to the timber, ARCHITECTURE.md §2.2: eight frames)
+  beams: [11.8, 13.6, 15.4, 17.2],   // the bottoms of the four tiers of each frame above the court (the roof left open to the timber, ARCHITECTURE.md §2.2: eight frames). The lowest lies on the bracket sets' heads (3 + 6.06 + 2.75), so that from the threshold the figures' heads and faces are all under it (the lead's call and the structural review of #425; DECISIONS.md)
   beam: { w: 0.6, d: 0.9 },
   rafter: 2.88,          // a rafter's run, between purlins: ten rafters front to back (the structural review of #425, from the depth between the eave purlins)
 });
@@ -150,12 +150,13 @@ export function buildHall(M) {
   // Inside, the roof open to its timber: the inner columns, and on each of the eight inner column lines a frame of four
   // tiers of beams, each shorter than the one below, up to a post under the ridge; and the purlins along the hall, one at
   // each rafter's joint (ten rafters: eleven purlins, 2.88 m apart about the ridge), each standing on a tier's end on a
-  // short post. The structural review of #425 set the purlins so; the tiers' heights stay, as they pass beside the figures,
-  // not over them (the frames stand on the column lines, the figures in the middle of the bays). The inner columns rise to
-  // the second tier, as a hall's inner columns rise with the roof. Positions and heights are the white box's (the review's
-  // own proposals) until the survey's section is read (ARCHITECTURE.md §2.2).
+  // short post. The structural review of #425 set the purlins so. The frames stand on the column lines and the figures in
+  // the middle of the bays, so the beams pass beside them; but from the threshold the line of sight to the outer figures'
+  // heads crosses the frames, and the lowest tier lies on the bracket sets' heads, over it. The inner columns rise to that
+  // tier, as the eave columns' brackets do. Positions and heights are the white box's (the review's own proposals) until
+  // the survey's section is read (ARCHITECTURE.md §2.2).
   const inner = [...XS.slice(1, -1).map((x) => [x, ZS[INNER.back]]), ...INNER.frontAt.map((i) => [XS[i], ZS[INNER.front]])];
-  const yb = H.beams, bw = H.beam.w, bd = H.beam.d, innerTop = yb[1];
+  const yb = H.beams, bw = H.beam.w, bd = H.beam.d, innerTop = yb[0];
   const innerGeo = inner.map(([x, z]) => new THREE.CylinderGeometry(H.colR * 1.1, H.colR * 1.15, innerTop - y0, 16).translate(x, (y0 + innerTop) / 2, z));
   for (const [x, z] of inner) walk.posts.push({ x0: x - H.colR * 1.1 - BODY, x1: x + H.colR * 1.1 + BODY, z0: z - H.colR * 1.1 - BODY, z1: z + H.colR * 1.1 + BODY });
   const frame = [], PT = 0.36;
