@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 26,     // raise when the method changes, so that every grid baked by the old one is stale
+  version: 29,     // raise when the method changes, so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -266,9 +266,15 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   const across = (x, z, t, y0, y1) => {
     t.getNormal(nrm); let ax = nrm.x, az = nrm.z; const l = Math.hypot(ax, az) || 1; ax /= l; az /= l;
     const mx = (t.a.x + t.b.x + t.c.x) / 3, mz = (t.a.z + t.b.z + t.c.z) / 3; if ((x - mx) * ax + (z - mz) * az > 0) { ax = -ax; az = -az; }   // pointing away from this cell, into the thing
-    for (const d of [0.05, 0.1, 0.15, 0.2]) { const ii = Math.floor((x + ax * d - box.x0) / step), jj = Math.floor((z + az * d - box.z0) / step); if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (foothold[kk] && h[kk] > y0 && h[kk] <= y1 + 0.02) return h[kk]; }
+    for (const d of [0.05, 0.1, 0.15, 0.2]) { const ii = Math.floor((x + ax * d - box.x0) / step), jj = Math.floor((z + az * d - box.z0) / step); if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const kk = jj * nx + ii; if (foothold[kk] && h[kk] > y0 && h[kk] <= y1 + 0.02) { acrossAt = kk; return h[kk]; } }
     return NaN;
   };
+  // Which cell `across` found its foothold in. A riser is only a step he takes if he may stand in that cell: that is
+  // known once every cell's border is and what it shuts (#163: beside a hall's doorway, the sill's face had the hall's floor across
+  // it, under the door's jamb, and was let pass as a step; his shoes went 3 cm into the sill). The faces found with a
+  // foothold across are kept as they are met (`risers`: cell, foothold cell, the foothold's height, the face's bottom and
+  // top, what it is) and settled once the borders have shut what they shut.
+  let acrossAt = -1; const risers = [];
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const k = j * nx + i; if (Number.isNaN(h[k])) continue;
     let lo = h[k], up = 0, open = true;
@@ -302,7 +308,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
         if (!p && slabDistance(t.a, t.b, t.c, y + BAKE.LOW, y + CLIMB, x, z) < r) {
           const y0 = slabY[0], y1 = slabY[1], stepTop = across(x, z, t, y + BAKE.LOW - 0.02, y1);
           if (Number.isNaN(stepTop)) { if (!(llo <= y0)) llo = y0; lhi = Math.max(lhi, y1); lwhat = id; }
-          else if (stepTop - y <= BAKE.SILL && !(sill >= stepTop)) sill = stepTop;
+          else risers.push(k, acrossAt, stepTop, y0, y1, id);
         }
         return false;
       },
@@ -332,6 +338,19 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
       const lo = Math.max(post[k0] ? 0 : CLIMB, bot[k0] - ref), hi = Math.min(CLEAR, top[k0] - ref); if (hi < lo) continue;
       if (d < reachBins(Math.floor(lo / B), Math.floor(hi / B))) state[kk] = 1 + c;
     }
+  }
+  // The risers: at a shut doorway, where his shoe would come down across a face is somewhere he may not stand (something
+  // stands there or near enough to shut it, beside the shut doorway, or the doorway itself), the face is a low thing like a
+  // root; else it is a step, and one no higher than SILL is a sill he stands astride. Only by a doorway: along a flight the
+  // tread beside a cheek stone is shut by his reach of the cheek too, and he does step up there.
+  const shut = (kk) => {
+    const x = cx(kk % nx), z = cz((kk / nx) | 0), near = (c, m) => x > c.x0 - m && x < c.x1 + m && z > c.z0 - m && z < c.z1 + m;
+    return closed.some((c) => near(c, 0)) || ((border[kk] >= 0 || state[kk] > 0) && closed.some((c) => near(c, 0.5)));
+  };
+  for (let n = 0; n < risers.length; n += 6) {
+    const k = risers[n], kk = risers[n + 1], stepTop = risers[n + 2], y0 = risers[n + 3], y1 = risers[n + 4], id = risers[n + 5];
+    if (shut(kk)) { if (lowWhat[k] < 0) { lowBot[k] = y0; lowTop[k] = y1; } else { lowBot[k] = Math.min(lowBot[k], y0); lowTop[k] = Math.max(lowTop[k], y1); } lowWhat[k] = id; }
+    else if (stepTop - h[k] <= BAKE.SILL && !(sillTop[k] >= stepTop)) sillTop[k] = stepTop;
   }
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
     const k0 = j * nx + i, c = lowWhat[k0]; if (c < 0) continue;
