@@ -119,7 +119,7 @@
     "palm_only": true,
     "bend_range": [
      -25,
-     0
+     35
     ],
     "tip_gap": 0.01
    },

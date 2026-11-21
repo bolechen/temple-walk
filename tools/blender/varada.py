@@ -433,10 +433,11 @@ if PO and PO.get("solve"):
   if PO["solve"].get("bend_range"):
     # the fingers then bent from the knuckles toward the back of the hand as far as the knee lets them (within
     # `bend_range` degrees), their tips kept `solve.tip_gap` metres off it
-    fingers = u >= u0; b_best = 0.0
-    for bdeg in np.arange(0, PO["solve"]["bend_range"][0] - 0.01, -1.0):
-      if gap(dsol, bendgeo(math.radians(bdeg)), fingers) >= PO["solve"].get("tip_gap", 0.01): b_best = bdeg
-      else: break
+    # (toward the back is negative; if even straight they run into the knee, the least bend toward the palm that clears it)
+    fingers = u >= u0; b_best = None
+    for bdeg in np.arange(PO["solve"]["bend_range"][0], PO["solve"]["bend_range"][1] + 0.01, 1.0):
+      if gap(dsol, bendgeo(math.radians(bdeg)), fingers) >= PO["solve"].get("tip_gap", 0.01): b_best = float(bdeg); break
+    if b_best is None: b_best = float(PO["solve"]["bend_range"][1])
     du, dn = bendgeo(math.radians(b_best)); log["pose"]["bend_deg"] = float(b_best)
     log["pose"]["tip_gap_m"] = round(float(gap(dsol, None, fingers)), 4)
   hand_co = place(W); tw = W
