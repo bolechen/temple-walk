@@ -1013,7 +1013,7 @@ const scenarios = {
       expect(a.level.id === to, `${label}: the page should walk ${to}: ` + JSON.stringify(a.level));
       expect(Math.hypot(a.y.x - a.start[0], a.y.z - a.start[1]) < 0.3, `${label}: he should stand at the start (${a.start}), he stood at ${a.y.x}, ${a.y.z}`);
       expect(a.entered && !a.title && !a.opening.active && !a.events.includes("opening.played") && !a.events.includes("demo.enter"), `${label}: the title and the opening should be skipped: ` + JSON.stringify({ entered: a.entered, title: a.title, opening: a.opening.active, events: a.events }));
-      expect(a.key === null && /level=|^$/.test(a.search) && !/enter|seals|cam=/.test(a.search), `${label}: the handover should be read once, and the address hold no place: ` + JSON.stringify([a.key, a.search]));
+      expect(a.key === null && (to === "t00" ? !/level=/.test(a.search) : a.search.includes(`level=${to}`)) && !/enter|seals|cam=/.test(a.search), `${label}: the handover should be read once, and the address hold no place: ` + JSON.stringify([a.key, a.search]));
       expect(a.season === "autumn" && a.time === "dusk", `${label}: the visit's season and hour should be handed across: ` + [a.season, a.time]);
       expect(a.events.includes("pilgrimage.arrive") && a.events.includes("demo.ready") && !/crossing/.test(a.cls), `${label}: the arrival should be named and the curtain gone: ` + JSON.stringify([a.events, a.cls]));
       // The curtain is shut at the first frame and stays shut, over the page, until the temple can be drawn (body.dataset.ready); only then does it draw back.
