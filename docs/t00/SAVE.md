@@ -1,6 +1,6 @@
 # 存档
 
-游戏把访客的进度存在浏览器的 localStorage 里。浏览器按来源（origin）隔离存储，所以正式站 `temple.rushiwowen.co`、内测 `temple-walk-canary.bole-chen.workers.dev`、另一台设备，彼此读不到。「带走存档」（#338）把整份存档写进一个链接，带到另一处。
+游戏把访客的进度存在浏览器的 localStorage 里。浏览器按来源（origin）隔离存储，所以正式站 `temple.rushiwowen.co`、内测 `temple-walk-canary.bole-chen.workers.dev`、另一台设备，彼此读不到。「带走朱印帐」（#338）把整份存档写进一个链接，带到另一处。
 
 ## 有哪些键
 
@@ -53,7 +53,7 @@
 
 ## 方向
 
-只有人点了才会搬，没有任何自动回写：内测版的进度不会自己回到正式版，要回去也只能再用一次「带走存档」，并且要确认。
+只有人点了才会搬，没有任何自动回写：内测版的进度不会自己回到正式版，要回去也只能再用一次「带走朱印帐」，并且要确认。
 
 正式版上可以选「本站」或「带去内测版」，内测版上可以选「本站」或「带回正式版」；PR 预览与本机只有「本站」（`carry-page.js` 的 `destinations`，按 `src/deploy.js` 的 `DEPLOY`）。
 

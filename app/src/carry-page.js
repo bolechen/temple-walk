@@ -3,16 +3,16 @@
 // that it will replace what this browser keeps, and only then writes it; either way the save is taken out of the
 // address at once (history.replaceState), so a reload never asks again. Nothing is sent anywhere but the two counts
 // (save.export, save.import), which carry no part of the save (docs/t00/ANALYTICS.md).
-import { t } from "./i18n.js";
+import { t, lang } from "./i18n.js";
 import { track } from "./analytics.js";
-import { decode, check, apply, summary, saveIn, linkFor, encode, gather, SITES } from "./carry.js";
+import { decode, check, apply, summary, saveIn, linkFor, encode, gather, SITES, SAVE_KEYS } from "./carry.js";
 import { DEPLOY } from "./deploy.js";
 
 const $ = (id) => /** @type {any} */ (document.getElementById(id));
 const strip = () => { try { history.replaceState(history.state, "", location.pathname + location.search); } catch {} };
 
 /** What a refusal says, in the visitor's language. @param {string} reason */
-export const refusalLine = (reason) => (reason === "newer" ? t("这份存档来自更新的版本，这里还读不了。请先在这里刷新到最新版本再试。") : reason === "empty" ? t("这份存档里没有朱印帐，也没有走到的地方。") : t("这份存档不完整或已损坏，没有写入。"));
+export const refusalLine = (reason) => (reason === "newer" ? t("这本朱印帐来自更新的版本，这里还读不了。请先在这里刷新到最新版本再试。") : reason === "empty" ? t("这条链接里没有朱印帐，也没有走到的地方。") : t("这条链接不完整或已损坏，什么也没有写入。"));
 
 /** A page opened by a carried save's link: ask, then write and begin again from it. */
 export async function carryIn(given = null) {
@@ -25,16 +25,29 @@ export async function carryIn(given = null) {
   const body = $("carryInText"), yes = $("carryInYes"), no = $("carryInNo"), warn = $("carryInWarn");
   if (writes) {
     const s = summary(writes);
-    body.textContent = (s.seals ? t("这份存档有 {n} 枚印", { n: s.seals }) : t("这份存档还没有印")) + (s.label ? t("，上回走到{place}。", { place: t(s.label) }) : "。");
-    warn.hidden = false; yes.hidden = false; no.textContent = t("不用了");
+    // (the count in words where the page writes it so: 两枚 in Chinese, as one counts things, 二つ in Japanese; digits elsewhere)
+    const n = lang === "zh" ? "〇一两三四五六七"[s.seals] : lang === "ja" ? "〇一二三四五六七"[s.seals] : String(s.seals);
+    body.textContent = (s.seals ? t("这本朱印帐有{n}枚印", { n, k: s.seals }) : t("这本朱印帐还没有印")) + (s.label ? t("，上回走到{place}。", { place: t(s.label) }) : "。");
+    // What it replaces is said only when there is something here to replace: a book with a seal, or a place he reached.
+    warn.hidden = !keepsSomething(); yes.hidden = false; no.textContent = t("不用了");
   } else { body.textContent = refusalLine(reason); warn.hidden = true; yes.hidden = true; no.textContent = t("知道了"); }
-  sheet.hidden = false; try { sheet.showModal(); } catch {}
+  // Opened as every other sheet is (ui.js): the focus on the sheet itself, so that no button is ringed until Tab is pressed.
+  sheet.hidden = false; try { sheet.showModal(); sheet.focus({ preventScroll: true }); } catch {}
   return new Promise((done) => {
     const close = (ok) => { try { sheet.close(); } catch {} sheet.hidden = true; done(ok); };
     yes.onclick = () => { try { apply(localStorage, writes); } catch { body.textContent = refusalLine("damaged"); yes.hidden = true; return; } track("save.import", { result: "ok" }); close(true); setTimeout(() => location.reload(), 250); };
     no.onclick = () => { track("save.import", { result: writes ? "declined" : reason }); close(false); };
     sheet.addEventListener("cancel", () => no.onclick(), { once: true });
   });
+}
+
+/** Whether this browser keeps a pilgrimage a carried save would replace: a seal in the book, or a place he reached. */
+function keepsSomething() {
+  try {
+    const j = JSON.parse(localStorage.getItem(SAVE_KEYS.journey) || "null");
+    if (j && j.seals && Object.values(j.seals).some((v) => v > 0)) return true;
+    return localStorage.getItem(SAVE_KEYS.place) != null;
+  } catch { return false; }
 }
 
 /** The addresses a save may be taken to from this build: this page, and from the public page the testers' canary, or back. */
@@ -57,14 +70,21 @@ export function createCarryOut(ui) {
   const draw = async () => {
     $("carryTo").replaceChildren(...(places.length > 1 ? places.map((p) => { const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.textContent = p.label; b.setAttribute("aria-pressed", String(p === to)); b.onclick = () => { to = p; draw(); }; return b; }) : []));
     $("carryTo").hidden = places.length < 2;
-    $("carryLink").value = await linkTo(to.base);
+    const link = await linkTo(to.base);
+    $("carryLink").value = link; $("carryLinkShown").textContent = link.replace(/^https?:\/\//, "");
     $("carryShare").hidden = !navigator.share;
   };
-  $("carryCopy").onclick = async () => { const el = $("carryLink"); el.select(); try { await navigator.clipboard.writeText(el.value); $("carryCopy").textContent = t("已复制"); } catch { document.execCommand?.("copy"); } counted(to.id); };
+  // Copied, nothing is left selected or ringed on the sheet: the button says so, and that is all.
+  $("carryCopy").onclick = async () => {
+    const el = $("carryLink");
+    try { await navigator.clipboard.writeText(el.value); } catch { el.select(); document.execCommand?.("copy"); }
+    try { getSelection()?.removeAllRanges(); } catch {} el.blur();
+    $("carryCopy").textContent = t("已复制"); counted(to.id);
+  };
   $("carryShare").onclick = async () => { try { await navigator.share({ title: t("云径禅寺"), url: $("carryLink").value }); counted(to.id); } catch {} };
   $("carryClose").onclick = () => ui.close("carryOut");
   window.__carry = () => ({ open: ui.isOpen("carryOut"), to: to.id, places: places.map((p) => p.id), link: $("carryLink").value });
-  return { async open() { $("carryCopy").textContent = t("复制"); await draw(); ui.open("carryOut"); } };
+  return { async open() { $("carryCopy").textContent = t("复制链接"); await draw(); ui.open("carryOut"); } };
 }
 
 // For the phone audit (tools/mobile-audit.cjs): the sheet a link brings, raised from what this browser keeps now.

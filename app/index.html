@@ -97,19 +97,20 @@
   </div></dialog>
   <dialog class="layer" id="carryOut" aria-labelledby="carryOutTitle" hidden>
     <div class="carry-card paper">
-      <h2 id="carryOutTitle">带走存档</h2>
+      <h2 id="carryOutTitle">带走朱印帐</h2>
       <p>在另一个浏览器或另一台设备上打开这个链接，确认后就接着这一趟走。</p>
       <div class="row" id="carryTo"></div>
-      <textarea id="carryLink" readonly rows="3" aria-label="存档链接" spellcheck="false"></textarea>
+      <p class="carry-link" id="carryLinkShown"></p>
+      <textarea id="carryLink" class="carry-buffer" readonly tabindex="-1" aria-hidden="true" spellcheck="false"></textarea>
       <p class="note" id="carryNote">链接里只有这一趟的进度和设置，不经过任何服务器。</p>
-      <footer><button class="chip" id="carryCopy" type="button">复制</button><button class="chip" id="carryShare" type="button" hidden>分享</button><button class="stamp" id="carryClose" type="button">合上</button></footer>
+      <footer><button class="chip" id="carryShare" type="button" hidden>分享</button><button class="chip" id="carryClose" type="button">合上</button><button class="stamp" id="carryCopy" type="button">复制链接</button></footer>
     </div>
   </dialog>
-  <dialog class="layer" id="carryIn" aria-labelledby="carryInTitle" hidden>
+  <dialog class="layer" id="carryIn" aria-labelledby="carryInTitle" tabindex="-1" hidden>
     <div class="carry-card paper">
-      <h2 id="carryInTitle">带走存档</h2>
+      <h2 id="carryInTitle">带来的朱印帐</h2>
       <p id="carryInText"></p>
-      <p id="carryInWarn" class="note">会覆盖这个浏览器里现在的进度。</p>
+      <p id="carryInWarn" class="warn">会覆盖这个浏览器里现在的进度。</p>
       <footer><button class="chip" id="carryInNo" type="button">不用了</button><button class="stamp" id="carryInYes" type="button">接着走</button></footer>
     </div>
   </dialog>
@@ -184,7 +185,7 @@
   <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
-  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="chip" id="bookCarry" type="button">带走存档</button><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookCarry" type="button">带走朱印帐</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
 </dialog>
 <dialog class="layer" id="bless" aria-labelledby="blessTitle" hidden>
   <article class="paper scrolls">

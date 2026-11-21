@@ -99,7 +99,7 @@ const ui = createUI();   // what lies over the picture, in order: Esc puts away 
 createCommunity(ui);
 createCredits(ui);
 createShare(ui);   // the sheet a picture is saved from where the system cannot share it (#344)
-// 带走存档 (#338): a link that takes this visit to another browser or device. Its way in is in the book of seals, beside
+// 带走朱印帐 (#338): a link that takes this visit to another browser or device. Its way in is in the book of seals, beside
 // saving and sharing the page, which is the record it carries: the pause menu has no height to spare on a phone held
 // upright (the lead's choice, 2026-11-20).
 const carryOut = createCarryOut(ui);

@@ -718,7 +718,13 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 .carry-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 14px; flex-wrap: wrap; }
 .carry-card .chip { min-height: 44px; }
 .carry-card .row { display: flex; justify-content: center; gap: 0 10px; margin: 6px 0; }
-#carryLink { display: block; width: 100%; box-sizing: border-box; margin: 8px 0 4px; padding: 8px 10px; resize: none; border: 1px solid rgba(60,45,30,.25); border-radius: 2px; background: rgba(255,252,244,.55); color: var(--ink-2); font: 400 12px/1.5 var(--serif); word-break: break-all; }
+/* The link is carried, not read: one faint line, cut short where it does not fit, as the lamp's link is (#blessLink); the
+   text the browser copies from when the clipboard cannot be written to lies out of sight. */
+.carry-card p.carry-link { margin: 6px 0 2px; font: 400 12px/1.5 var(--serif); color: var(--ink-3); text-wrap: nowrap; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* (text-wrap here as well: the sheet's balance rule below would otherwise wrap it) */
+.carry-buffer { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+/* What the page is about to replace is said as plainly as what it brings, and only when there is something to replace. */
+.carry-card p.warn { color: var(--ink-1); }
+.carry-card p { text-wrap: balance; word-break: auto-phrase; }   /* no row left with a character or two (a line broke before 殿 and before 何) */
 
 /* The jump, on a touch screen: a faint ring lower right, across from the stick, that is the jump and, before a porch's edge, the way down or up. */
 #jumpBtn { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(46px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; z-index: 4; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .12em; text-indent: .12em; color: var(--on); text-shadow: 0 1px 6px rgba(0,0,0,.7); background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .3; transition: opacity .4s var(--ease); touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }

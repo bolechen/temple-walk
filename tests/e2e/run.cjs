@@ -2750,16 +2750,30 @@ const scenarios = {
     const made = await t.page.evaluate(() => window.__carry());
     expect(made.places.join() === "here" && made.link.startsWith(base.replace(/\/$/, "") + "/#save="), "a preview offers only this site, and the link is its address with the save after the hash: " + made.link);
     expect(new URL(made.link).search === "" && made.link.length < 2000, "nothing of the save in the query, and short: " + made.link.length);
+    // The sheet as the art review asked (#476): its one stamp is 复制链接, the link one faint line, and copied, nothing is left selected.
+    const look = await t.page.evaluate(() => { const shown = document.getElementById("carryLinkShown"), cs = getComputedStyle(shown); return { stamps: [...document.querySelectorAll("#carryOut .stamp")].map((e) => e.id), lines: Math.round(shown.getBoundingClientRect().height / parseFloat(cs.lineHeight)), border: cs.borderTopWidth, bufferShown: document.getElementById("carryLink").getBoundingClientRect().left > -1000 }; });
+    expect(look.stamps.join() === "carryCopy" && look.lines === 1 && look.border === "0px" && !look.bufferShown, "the carry sheet's stamp, link and buffer: " + JSON.stringify(look));
     await t.page.click("#carryCopy");   // counted, nothing else
+    expect(await t.page.evaluate(() => String(getSelection()) === "" && document.getElementById("carryCopy").textContent === "已复制"), "after copying nothing should be selected, and the button says 已复制");
     expect((await t.page.evaluate(() => window.__eventLog().filter((e) => e.name === "save.export").map((e) => Object.keys(e.data).sort().join())))[0] === "lang,to", "the count carries no part of the save");
     const hash = made.link.slice(made.link.indexOf("#"));
+    // The book's row: 合上, its stamp, stays on the first row beside 分享 on a phone held upright, 带走朱印帐 going to the second.
+    await t.page.click("#carryClose");
+    for (const [w, h] of [[360, 640], [390, 844]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      const row = await t.page.evaluate(() => ["bookShare", "bookClose"].map((id) => Math.round(document.getElementById(id).getBoundingClientRect().top)));
+      expect(row[0] === row[1], `${w}×${h}: 合上 should be on the first row with 分享: ` + JSON.stringify(row));
+    }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     // A clean browser: no book, no place. It asks first, saying how many seals and where.
     const u = await open(b, base, "q=low" + BARE + hash, { enter: false });
     await u.until(() => u.page.isVisible("#carryIn"), 60000, "the link was not asked about");
     expect(await u.page.evaluate(() => location.hash === ""), "the save should be out of the address at once");
     const said = await u.page.textContent("#carryInText");
-    expect(said.includes("2 枚印") && said.includes(label) && (await u.page.isVisible("#carryInWarn")), "the sheet should say two seals and where he was, and that it replaces what is kept: " + JSON.stringify([said, label]));
+    // (a clean browser has nothing to lose: the line about replacing what is kept is not shown; the count is written 两, as one counts seals in Chinese)
+    const asked = await u.page.evaluate(() => ({ focus: document.activeElement?.id, title: document.getElementById("carryInTitle").textContent, out: document.getElementById("carryOutTitle").textContent }));
+    expect(asked.focus === "carryIn" && asked.title !== asked.out, "the asking sheet opens with the focus on itself and a title of its own: " + JSON.stringify(asked));
+    expect(said.includes("两枚印") && said.includes(label) && !(await u.page.isVisible("#carryInWarn")), "the sheet should say two seals and where he was, and nothing about replacing in a clean browser: " + JSON.stringify([said, label]));
     expect(await u.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")) === null, "nothing is written before it is confirmed");
     await Promise.all([u.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), u.page.click("#carryInYes")]);
     await u.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });

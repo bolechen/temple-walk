@@ -28,7 +28,7 @@ const SURFACES = [
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
   ["saveSheet", "(async () => { window.__book(); for (let i = 0; i < 100 && !document.getElementById('bookImg').src; i++) await new Promise((r) => setTimeout(r, 100)); document.getElementById('bookShare').click(); })()", "document.getElementById('saveClose').click(); document.getElementById('bookClose').click()"],
-  // 带走存档 (#338): the link made in the book, and the sheet such a link brings (raised from this page's own save).
+  // 带走朱印帐 (#338): the link made in the book, and the sheet such a link brings (raised from this page's own save).
   ["carryOut", "(async () => { window.__book(); await new Promise((r) => setTimeout(r, 800)); document.getElementById('bookCarry').click(); })()", "document.getElementById('carryClose').click(); document.getElementById('bookClose').click()"],
   ["carryIn", "void window.__carryAsk()", "document.getElementById('carryInNo').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
