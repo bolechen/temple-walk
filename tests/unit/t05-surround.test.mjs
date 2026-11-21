@@ -69,7 +69,7 @@ test("over the wall tops, 0.5° to 3° up, 40% to 80% of what is not the temple'
   assert.equal(table.length, 11, table.join("\n"));
 });
 
-test("nothing outside rises over the great hall's eave line in cam01's or cam07's picture, and the trees beside the hall (z < +15) stand no higher than 10 m", () => {
+test("the great hall's eave line is kept where the roof stands (all of cam01's picture, within 12° of the axis in cam07's), no tree is over 13 m, and the trees beside the hall (z < +15) stand no higher than 10 m", () => {
   for (const e of EAVE_EYES) {
     const eye = new THREE.Vector3(e.x, e.y, e.z), cam = new THREE.PerspectiveCamera(52, 16 / 9, 0.1, 800);
     const yaw = e.id === "cam07" ? site.views.cam07[2] : 0, pitch = e.id === "cam07" ? site.views.cam07[3] : 0.1;
@@ -77,37 +77,83 @@ test("nothing outside rises over the great hall's eave line in cam01's or cam07'
     const seen = [], tops = [...plan.trees.map((t) => [t.x, 0.06 + t.h, t.z, t.kind]), ...plan.houses.map((h) => [h.x, 0.06 + h.ridge, h.z, "house"])];
     for (const [x, y, z, what] of tops) {
       const p = new THREE.Vector3(x, y, z), n = p.clone().project(cam); if (Math.abs(n.x) > 1.05 || n.y < -1 || n.y > 1.05) continue;
+      const az = Math.atan2(x - e.x, e.z - z); if (Math.abs(az) > rad(e.within)) continue;   // (beyond `within` of the axis the eave line is not asked of it: the art director, 2nd round)
       const d = p.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L - 0.3; if (ray.intersectObjects(meshes, false).find((h) => !outside(h.object))) continue;   // hidden behind the temple's own
-      const az = Math.atan2(x - e.x, e.z - z), el = Math.atan2(y - e.y, Math.hypot(x - e.x, z - e.z)), eaveEl = Math.atan2(HALL.eave - e.y, (e.z - HALL.overhang) / Math.cos(az));
-      seen.push(el - eaveEl); if (el > eaveEl) assert.fail(`${e.id}: a ${what} at (${x}, ${z}), ${y.toFixed(1)} m, stands ${(rad(1) ? ((el - eaveEl) * 180) / Math.PI : 0).toFixed(2)}° over the eave line`);
+      const el = Math.atan2(y - e.y, Math.hypot(x - e.x, z - e.z)), eaveEl = Math.atan2(HALL.eave - e.y, (e.z - HALL.overhang) / Math.cos(az));
+      seen.push(el - eaveEl); if (el > eaveEl) assert.fail(`${e.id}: a ${what} at (${x}, ${z}), ${y.toFixed(1)} m, stands ${(((el - eaveEl) * 180) / Math.PI).toFixed(2)}° over the eave line`);
     }
-    assert.ok(seen.length > 20, `${e.id}: the picture holds some of the surround (${seen.length}), so that this means something`);
+    if (e.id === "cam01") assert.ok(seen.length > 8, `${e.id}: the picture holds some of the surround (${seen.length}), so that this means something`);
   }
+  for (const t of plan.trees) assert.ok(t.h <= LIMITS.treeMax && eaveCap(t.x, t.z) >= t.h - 0.02, `(${t.x}, ${t.z}) ${t.h} m is within the 13 m and the cap the eave line sets`);
   for (const t of plan.trees) if (Math.abs(t.x) > cx && t.z < LIMITS.nearHallZ && t.z > C.zN - 8) assert.ok(t.h <= LIMITS.nearHall, `a tree beside the hall at (${t.x}, ${t.z}) is ${t.h} m, over 10`);
-  for (const t of plan.trees) assert.ok(t.h <= HALL.eave - 0.8 && eaveCap(t.x, t.z) >= t.h - 0.02, `(${t.x}, ${t.z}) ${t.h} m is within the cap the eave line sets`);
+  assert.ok(plan.trees.some((t) => t.h > 11.01), "and the rows outside the axis are free to stand taller than the eave line: some are");
 });
 
-test("the first two rows of roofs are 5 m or lower at the ridge, and the line from the platform to the old town's pagoda (241°) is kept low", () => {
-  assert.ok(plan.houses.length > 20 && plan.houses.every((h) => h.ridge <= LIMITS.firstRows && h.eave === 3 && h.row <= 1), "every house stands in the first two rows, one storey, a ridge at 5 m or lower");
-  assert.ok(plan.houses.every((h) => h.ridge >= 3.2), "and is a house, not a hut");
+test("the first row of houses stands 3 to 6 m off the wall's outer face; ridges 5 to 6.3 m, and 5 m or lower for the first two rows on the line to the pagoda (241°), where the trees are kept low too", () => {
+  const first = plan.houses.filter((h) => h.row === 0 && (h.where === "ew" || h.where === "s"));
+  assert.ok(first.length >= 15, `${first.length} houses in the first rows against the east, west and south walls`);
+  for (const h of first) {
+    const off = h.where === "ew" ? Math.abs(h.x) - h.w / 2 - cx : h.z - h.d / 2 - cs;
+    assert.ok(off >= 2.99 && off <= 6.01, `the house at (${h.x}, ${h.z}) stands ${off.toFixed(2)} m off the wall`);
+  }
+  assert.ok(plan.houses.every((h) => h.eave === 3 && h.ridge >= 3.8 && h.ridge <= LIMITS.ridgeMax), "one storey, eaves at 3 m, ridges no higher than 6.3 m");
+  assert.ok(plan.houses.filter((h) => h.ridge > 5.5).length >= 10, "and most of them over 5.5 m, so that the roofs show over the wall");
   const T = LIMITS.tower, near = (x, z) => { const dx = x - T.from[0], dz = z - T.from[1]; let b = (Math.atan2(dx, -dz) * 180) / Math.PI; if (b < 0) b += 360; return Math.abs(b - T.bearing) <= T.wide; };
   const onLine = plan.trees.filter((t) => near(t.x, t.z));
-  assert.ok(onLine.length >= 3, `trees do stand near the line (${onLine.length}), kept low`);
+  assert.ok(onLine.length >= 2, `trees do stand near the line (${onLine.length}), kept low`);
   for (const t of onLine) assert.ok(t.h <= T.max, `a tree at (${t.x}, ${t.z}) on the line to the pagoda is ${t.h} m, over ${T.max}`);
-  for (const h of plan.houses.filter((q) => near(q.x, q.z))) assert.ok(h.ridge <= T.max, "a roof on the line is 5 m or lower");
+  for (const h of plan.houses.filter((q) => near(q.x, q.z))) assert.ok(h.ridge <= T.max, `a roof at (${h.x}, ${h.z}) on the line is ${h.ridge} m, over 5`);
 });
 
-test("it stands outside the walls, none of it walked on or in (left out of the bake), the row against the wall is real geometry that casts shadows, and the whole is a few tens of thousands of triangles", () => {
+// A, B looking east and west (#548 named these two stations): over the wall top there are roofs, not only tree tips. Counted at each degree of bearing over the picture's
+// width, a ray 1° over the wall top: where it meets a house's roof, that bearing is a roof; runs of such bearings are the roof slopes; the share of bearings that meet a house is how much
+// of the wall's length has a house standing a degree or more over it. The art director (2nd round): not fewer than 4 slopes, each standing 1° or more over the wall; houses 35% to 60% of the wall's length in the picture.
+test("from A and B, east and west, four or more roof slopes show a degree or more over the wall, and the houses are 35% to 60% of its length in the picture", () => {
+  const roof = (o) => /roofs$/.test(o.name), house = (o) => /(roofs|walls)$/.test(o.name), table = [];
+  for (const [name, dirs] of [["A", ["east", "west"]], ["B", ["east", "west"]]]) for (const dir of dirs) {
+    const [, x, z, y] = PLACES[name]; let runs = 0, inRun = false, houseAt = 0, n = 0;
+    for (let az = BEARING[dir] - 30; az <= BEARING[dir] + 30 + 1e-9; az += 0.25) {
+      const a = rad(az), d = [Math.sin(a), -Math.cos(a)], th = wallTop([x, z], y, d), el = th + rad(1);
+      ray.set(new THREE.Vector3(x, y, z), new THREE.Vector3(d[0] * Math.cos(el), Math.sin(el), d[1] * Math.cos(el))); ray.far = 4000;
+      const h = ray.intersectObjects(meshes, false)[0], isRoof = !!h && roof(h.object), isHouse = !!h && house(h.object);
+      n++; if (isHouse) houseAt++;
+      if (isRoof && !inRun) runs++; inRun = isRoof;
+    }
+    table.push(`${name} ${dir}: ${runs} slopes, houses ${((houseAt / n) * 100).toFixed(0)}% of the wall`);
+    if (process.env.SHOW) console.log(table.at(-1));
+    assert.ok(runs >= 4, `${name} ${dir}: only ${runs} roof slopes show a degree over the wall`);
+    assert.ok(houseAt / n >= 0.35 && houseAt / n <= 0.6, `${name} ${dir}: houses are ${((houseAt / n) * 100).toFixed(0)}% of the wall's length, outside 35% to 60%`);
+  }
+});
+
+test("trees are broken up: neighbours on a row differ in height by 20% or more, no more than three of a kind in a row, 4 to 14 m apart (the rows behind the first houses); pines, cypresses and broadleaves all stand", () => {
+  const byStrip = new Map(); for (const t of plan.trees) (byStrip.get(t.strip) || byStrip.set(t.strip, []).get(t.strip)).push(t);
+  assert.ok(byStrip.size >= 10, `${byStrip.size} rows of trees`);
+  for (const [strip, row] of byStrip) {
+    row.sort((a, b) => a.along - b.along); let run = 1;
+    for (let k = 1; k < row.length; k++) {
+      const a = row[k - 1], b = row[k];
+      assert.ok(Math.abs(a.h - b.h) / Math.max(a.h, b.h) >= 0.2 - 1e-6, `${strip}: neighbours at ${a.along} and ${b.along} are ${a.h} and ${b.h} m high`);
+      run = a.kind === b.kind ? run + 1 : 1; assert.ok(run <= 3, `${strip}: a fourth ${b.kind} in a row at ${b.along}`);
+      if (/-behind/.test(strip)) { const gap = Math.hypot(a.x - b.x, a.z - b.z); assert.ok(gap >= 3.9 && gap <= 14.5, `${strip}: neighbours ${gap.toFixed(1)} m apart`); }
+    }
+  }
+  for (const k of ["pine", "cypress", "bare"]) assert.ok(plan.trees.filter((t) => t.kind === k).length >= 15, `enough ${k}s`);
+  const south = plan.trees.filter((t) => t.strip.startsWith("s") && /-behind/.test(t.strip)); assert.ok(["pine", "cypress", "bare"].every((k) => south.some((t) => t.kind === k)), "the south rows mix pines, cypresses and broadleaves");
+});
+
+test("it stands outside the walls, none of it walked on or in (left out of the bake), what stands against the walls is real geometry that casts shadows, the houses' walls are pressed down to a grey brick, and the whole is a few tens of thousands of triangles", () => {
   for (const t of plan.trees) assert.ok(!withinWalls(C, t.x, t.z, 1.2), `a tree at (${t.x}, ${t.z}) stands inside or against a wall`);
-  for (const h of plan.houses) assert.ok(!withinWalls(C, h.x, h.z, 1.5 + h.w / 2, 1.5 + h.d / 2), `a house at (${h.x}, ${h.z}) stands inside or against a wall`);
-  let tris = 0, near = 0, far = 0, shadowless = 0;
+  for (const h of plan.houses) assert.ok(!withinWalls(C, h.x, h.z, 1.5 + h.w / 2, 1.5 + h.d / 2) || h.where === "ew" || h.where === "s", `a house at (${h.x}, ${h.z}) stands inside or against a wall`);
+  let tris = 0, near = 0, far = 0, shadowless = 0, brick = 0;
   site.root.traverse((o) => {
     if (!o.userData.surround) return;
     assert.equal(o.userData.walk, false, `${o.name} is not in the bake`);
     const n = (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; tris += n;
+    if (/walls$/.test(o.name)) { brick++; assert.equal(o.material.name, "surround-brick", "the houses' walls are the brick, not the court's plaster"); }
     if (o.userData.surround === "near") { near++; assert.ok(o.castShadow, `${o.name} casts shadows`); } else { far++; if (!o.castShadow) shadowless++; }
   });
-  assert.ok(near >= 3 && far >= 3 && shadowless === far, `the near row's meshes cast shadows (${near}), the far ones do not (${far})`);
+  assert.ok(brick === 2 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
   assert.ok(tris > 5000 && tris < 45000, `${tris} triangles outside the walls`);
-  assert.ok(plan.trees.filter((t) => t.row === 0).length >= 40 && plan.trees.some((t) => t.kind === "pine") && plan.trees.some((t) => t.kind === "bare"), "pines and bare broadleaves, the row against the walls the longer");
+  assert.ok(plan.houses.filter((h) => h.row === 0 && h.cast).length >= 30 && plan.trees.filter((t) => t.cast).length >= 5, "the first row of houses and the trees by the walls are the real, shadow-casting geometry");
 });

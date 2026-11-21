@@ -22,37 +22,44 @@ import { box, merge, mesh } from "../../src/geo.js";
 import { SECOND, LANE, AXIS } from "./axis.js";
 import { HALL } from "./hall.js";
 
-/** The eave line of the great hall (above the court's paving) and the ceilings the art director set (#548, her comment on the plan). */
+/** The ceilings the art director set (#548: her comments 7068262688 and 7069444907) and the great hall's eave line. */
 export const LIMITS = Object.freeze({
-  eave: HALL.eave,          // nothing outside rises over the great hall's eaves
+  eave: HALL.eave,          // the great hall's eave line: kept in cam01's picture, and in cam07's within `axisBearing` of the axis
+  axisBearing: 12,          // degrees: in cam07 the hall's roof stands within this either side of the axis; outside it the trees are free of the eave line (the art director, 2nd round)
+  treeMax: 13,              // and no tree is higher than this
   nearHall: 10,             // outside the east and west walls south of z = +15 ... the whole stretch beside the hall, the trees stand no higher than this
   nearHallZ: 15,
-  firstRows: 5,             // the ridges of the first two rows of houses
-  tower: { bearing: 241, from: [0, 8], wide: 4, max: 5 },   // on the line from the platform to the pagoda of the old town, nothing over 5 m (the tower is the second step; the gap is kept for it)
+  ridgeMax: 6.3,            // a house's ridge (5 to 6.3 m; eaves at 3 m)
+  firstRows: 5,             // but on the line to the pagoda the ridges of the first two rows stand no higher than this
+  houseGap: [3, 6],         // the first row of houses stands 3 to 6 m outside the wall's outer face (the art director: at 4 m a 3 m eave is just at the wall top, 2.2° up, and the roof's slope shows over it)
+  tower: { bearing: 241, from: [0, 8], wide: 4, max: 5 },   // on the line from the platform to the pagoda of the old town, trees and ridges stay at 5 m or lower (the tower is the second step; the gap is kept for it)
+  spacing: [4, 14],         // between neighbouring trees of a row, metres; heights differ by 20% or more; no more than three of a kind in a row
 });
 
+/** One number for the whole layout: a different one lays out the same rules differently (picked once, by trying, until every limit in tests/unit/t05-surround.test.mjs held with room to spare). */
+const SEED = 0;
 const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-const ground = 0.06;
+const ground = 0.06;   // the plain is laid a little above y = 0 (site.js `lift`)
 /**
- * The two pictures the great hall's roof is kept clean in (cam01 and cam07, #548: nothing outside rises over its eave line): where the eye stands, how high it is over the
- * court's paving, and how wide the picture is (the page's first-person lens, 52° over 16:9, is 41° each side).
+ * The two pictures the great hall's roof is kept clean in: where the eye stands, how high it is over the court's paving. In cam01 nothing seen rises over the eave line; in
+ * cam07 the same within `within` degrees of the axis (the hall's roof stands inside 11° there; the rows beside the terrace and the south wall are outside it and free).
  */
-export const EAVE_EYES = Object.freeze([Object.freeze({ id: "cam01", x: 0, z: 44, y: 1.3 }), Object.freeze({ id: "cam07", x: 0, z: AXIS.innerZ + 1, y: SECOND.y + 1.6 })]);
+export const EAVE_EYES = Object.freeze([Object.freeze({ id: "cam01", x: 0, z: 44, y: 1.3, within: 44 }), Object.freeze({ id: "cam07", x: 0, z: AXIS.innerZ + 1, y: SECOND.y + 1.6, within: LIMITS.axisBearing })]);
 /**
- * The tallest a thing may be at (x, z) so that, seen from either of those eyes, its top is no higher in the picture than the eave line (the front eave's line
- * carried across the picture): the elevation of its top no more than the eave's at the same bearing. Only where it is in front of the eye and inside the picture.
+ * The tallest a thing may be at (x, z) so that, seen from either of those eyes, its top is no higher in the picture than the eave line (the front eave's line carried across
+ * the picture): the elevation of its top no more than the eave's at the same bearing. Only where it is in front of the eye and within that eye's `within`.
  */
 export const eaveCap = (x, z, margin = 0.1) => {
   let cap = Infinity;
   for (const e of EAVE_EYES) {
-    const ahead = e.z - z; if (ahead < 2 || Math.abs(Math.atan2(x - e.x, ahead)) > (44 * Math.PI) / 180) continue;
+    const ahead = e.z - z; if (ahead < 2 || Math.abs(Math.atan2(x - e.x, ahead)) > (e.within * Math.PI) / 180) continue;
     cap = Math.min(cap, e.y + (ahead * (HALL.eave - e.y)) / (e.z - HALL.overhang) - margin - ground);
   }
   return cap;
-};   // the plain is laid a little above y = 0 (site.js `lift`)
+};
 
 /** Is the line from the platform to the old town's pagoda (bearing 241°, west-south-west) through here? */
-const onTowerLine = (x, z, pad = 0) => {
+export const onTowerLine = (x, z, pad = 0) => {
   const T = LIMITS.tower, dx = x - T.from[0], dz = z - T.from[1], d = Math.hypot(dx, dz);
   if (d < 1) return false;
   let b = (Math.atan2(dx, -dz) * 180) / Math.PI; if (b < 0) b += 360;   // a bearing from north, clockwise (north is -z)
@@ -60,58 +67,98 @@ const onTowerLine = (x, z, pad = 0) => {
 };
 
 /**
- * The trees and houses, as data: { kind: "pine" | "bare", x, z, h, r, row } and { x, z, w, d, alongX, eave, ridge, row }.
- * Each zone is a strip outside a wall laid out as a few rows at uneven spacing, not a line of poles (#464, #482: a row of the same
- * thing is read as a fence). `row` 0 is the one against the wall: real, shadow-casting geometry.
+ * The trees and houses, as data: { kind: "pine" | "cypress" | "bare", x, z, h, r, row, cast, strip, along } and { x, z, w, d, alongX, eave, ridge, row, cast }.
+ * `strip` names the row of trees a tree belongs to and `along` where on it (what the tests of its spacing, heights and kinds sort by). Seeded per strip from where it lies, so that tuning one does not move the others.
+ * Trees of a kind: the pine (油松) has a bare lower trunk and two to four flat layers with a flat top; the cypress is a narrow flame; the broadleaf is bare in winter.
  */
 function plan(C) {
-  let rnd = seeded(548), side = 0; const trees = [], houses = [], cx = C.x + C.t / 2, cs = C.zS + C.t / 2, lx = LANE.hw + LANE.t / 2;
-  const pick = (a, b) => a + rnd() * (b - a);
-  // a tree's height by kind and by where it stands (the stretch beside the hall is capped, the line to the pagoda kept low)
-  const tree = (x, z, row, opts = {}) => {
-    const kind = opts.kind || (rnd() < (opts.pine ?? 0.55) ? "pine" : "bare");
-    let h = opts.h ?? (kind === "pine" ? pick(8, 11) : pick(7, 10));
-    if (Math.abs(x) > cx && z < LIMITS.nearHallZ + 1 && z > C.zN - 8) h = Math.min(h, LIMITS.nearHall - 0.5 * rnd());
-    if (onTowerLine(x, z, 2)) h = Math.min(h, LIMITS.tower.max - 0.2 - 0.3 * rnd());
-    h = Math.min(h, LIMITS.eave - 0.8, eaveCap(x, z));
-    if (opts.full) h *= 0.95 + 0.05 * rnd();   // (the cypresses of the rows kept low stand at 95-100% of what is allowed, not along a ruled line)
-    trees.push(Object.freeze({ kind, x: +x.toFixed(2), z: +z.toFixed(2), h: +h.toFixed(2), r: +(h * pick(0.032, 0.042)).toFixed(2), row, yaw: +(rnd() * Math.PI * 2).toFixed(2), full: !!opts.full }));
+  let rnd = seeded(548), side = 0, id = ""; const trees = [], houses = [], cx = C.x + C.t / 2, cs = C.zS + C.t / 2, lx = LANE.hw + LANE.t / 2, L = LIMITS;
+  const pick = (a, b) => a + rnd() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const state = new Map();   // per strip: the last height, the last kind and how many of it in a row
+  const nearWall = (x, z) => Math.min(Math.abs(x) - cx > -1 && z < cs + 1 ? Math.abs(x) - cx : Infinity, z - cs > -1 && Math.abs(x) < cx + 14 ? z - cs : Infinity);   // how far outside the court's walls
+  const overlapsHouse = (x, z, pad) => houses.some((h) => Math.abs(x - h.x) < h.w / 2 + pad && Math.abs(z - h.z) < h.d / 2 + pad);
+  /** One tree: its kind and height are chosen so that it differs from the one before it on its strip (by 20% in height; never a fourth of a kind in a row). */
+  const tree = (x, z, along, mix = [0.45, 0.25], row = 1) => {
+    const st = state.get(id) || state.set(id, { h: 0, kind: "", n: 0 }).get(id), r0 = rnd();
+    let kind = r0 < mix[0] ? "pine" : r0 < mix[0] + mix[1] ? "cypress" : "bare";
+    if (kind === st.kind && st.n >= 3) kind = ["pine", "cypress", "bare"].find((k) => k !== st.kind && (k !== "cypress" || mix[1] > 0)) || "bare";
+    let cap = /** @type {number} */ (L.treeMax);
+    if (Math.abs(x) > cx && z < L.nearHallZ + 1 && z > C.zN - 8) cap = Math.min(cap, L.nearHall - 0.4 * rnd());
+    if (onTowerLine(x, z, 2)) cap = Math.min(cap, L.tower.max - 0.2 - 0.3 * rnd());
+    cap = Math.min(cap, eaveCap(x, z));
+    let h = Math.min(cap, kind === "pine" ? pick(8.5, 12.5) : kind === "cypress" ? pick(9, 13) : pick(7, 10.5));
+    if (st.h && Math.abs(h - st.h) / Math.max(h, st.h) < 0.2) {   // too like its neighbour: lower or raise it, as the ceiling allows
+      const down = st.h * 0.76, up = st.h * 1.3;
+      h = up <= cap ? up : down >= 3.2 ? down : h;
+    }
+    h = clamp(h, 3.2, cap);
+    st.n = kind === st.kind ? st.n + 1 : 1; st.kind = kind; st.h = h;
+    trees.push(Object.freeze({ kind, x: +x.toFixed(2), z: +z.toFixed(2), h: +h.toFixed(2), r: +(h * pick(0.032, 0.042)).toFixed(2), row, cast: nearWall(x, z) <= 14, strip: id, along: +along.toFixed(2), yaw: +(rnd() * Math.PI * 2).toFixed(2) }));
   };
-  // a house: eaves at 3 m, a gable roof, the ridge along x or along z
-  const house = (x, z, row) => {
-    const w = pick(6, 10), d = pick(5, 7.5), ridge = Math.min(pick(4.2, LIMITS.firstRows), eaveCap(x, z)), alongX = rnd() < 0.5;
-    const hw = alongX ? w : d, hd = alongX ? d : w;
-    for (let k = 0; k < 30 && withinWalls(C, x, z, 2 + hw / 2, 2 + hd / 2); k++) x += Math.sign(x || 1) * 0.5;   // (moved out until its eaves are two metres clear of every wall)
-    houses.push(Object.freeze({ x: +x.toFixed(2), z: +z.toFixed(2), w: +(alongX ? w : d).toFixed(2), d: +(alongX ? d : w).toFixed(2), alongX, eave: 3, ridge: +ridge.toFixed(2), row }));
+  /** A house of one storey: eaves at 3 m, a gable roof, ridge 5 to 6.3 m (5 or lower in the first two rows on the line to the pagoda), the ridge along x or along z. Its centre is given. */
+  const makeHouse = (cxh, czh, alongX, w, d, row, ridgeTo, where) => {
+    const onLine = onTowerLine(cxh, czh, Math.max(w, d) / 2), top = onLine ? L.firstRows : ridgeTo;
+    houses.push(Object.freeze({ x: +cxh.toFixed(2), z: +czh.toFixed(2), w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge: +clamp(pick(5, ridgeTo), 3.8, top).toFixed(2), row, cast: row === 0, where }));
   };
-  const run = (from, to, gap, place) => { rnd = seeded(548 + Math.round(from * 13 + to * 7 + gap * 101 + side * 977));   // (each strip has its own stream, from where it lies, so that tuning one does not move the others)
-    for (let s = from + rnd() * gap * 0.5; s < to; s += gap * (0.7 + rnd() * 0.6)) place(s); };
+  const dims = () => { const long = pick(6.5, 10.5), short = pick(5, 7.5), alongX = rnd() < 0.5; return { alongX, w: alongX ? long : short, d: alongX ? short : long }; };
+  /** A house along a wall: 6 to 9 m deep from it, 6 to 8.5 m along it (narrow enough that four or five show in a picture), the ridge running either way. `acrossX`: the wall runs along z. */
+  const wallDims = (acrossX) => { const deep = pick(6, 9), along = pick(6, 8.5), alongX = rnd() < 0.5; return acrossX ? { alongX, w: deep, d: along } : { alongX, w: along, d: deep }; };
+  /** A row of houses along a wall, each its own distance (3 to 6 m) from the wall's outer face, with a gap of 2 to 8 m between: `across(g, hx, hz)` and `along(cursor, ext)` give the centre. */
+  const houseRow = (from, to, place, row, gapRange, ridgeTo, where, dim = dims) => {
+    const made = []; let cur = from + rnd() * 2;
+    while (cur < to) {
+      const { alongX, w, d } = dim(), g = pick(...L.houseGap);
+      const [px, pz, ext] = place(cur, g, w, d);
+      if (overlapsHouse(px, pz, 1) || (row === 0 && withinWalls(C, px, pz, 0.6 + w / 2, 0.6 + d / 2))) { cur += 3; continue; }
+      makeHouse(px, pz, alongX, w, d, row, ridgeTo, where); made.push(houses.at(-1));
+      cur += ext + pick(...gapRange);
+    }
+    return made;
+  };
+  const stripRun = (name, from, to, step, place) => {   // trees along a strip, 4 to 14 m apart: each next one a step on from the last, moved on along the strip (up to 8 m) where a house is in the way
+    id = name; rnd = seeded(548 + SEED + Math.round(from * 13 + to * 7 + step[0] * 101 + side * 977 + name.length * 31));
+    for (let s = from + rnd() * step[0]; s < to;) {
+      let at = s, ok = false;
+      for (let k = 0; k <= 16 && !ok; k++) { at = s + k * 0.5; const [px, pz] = place(at); ok = !overlapsHouse(px, pz, 1.2); }
+      if (!ok) { s += step[1]; continue; }
+      const [qx, qz] = place(at); tree(qx, qz, at, undefined, 1);
+      s = at + clamp(pick(...step), L.spacing[0], 6.5);
+    }
+  };
   for (const sx of [-1, 1]) {
     side = sx;
-    // east and west of the court, along its whole side
-    run(C.zN - 2, cs + 2, sx < 0 ? 4.0 : 4.8, (z) => tree(sx * (cx + 1.6 + rnd() * 3), z, 0, { pine: 0.8 }));
-    run(C.zN, cs + 4, sx < 0 ? 4.8 : 6.2, (z) => tree(sx * (cx + 8 + rnd() * 5), z, 1, { pine: 0.7 }));
-    run(C.zN, cs, 9, (z) => house(sx * (cx + 20 + rnd() * 4), z, 0));
-    run(C.zN, cs, 13, (z) => house(sx * (cx + 32 + rnd() * 6), z, 1));
-    // south of the court's south wall, beside the terrace
-    run(SECOND.hw + 2.5, cx + 18, 2.9, (a) => tree(sx * a, cs + 1.6 + rnd() * 3, 0, { pine: 0.9, full: true }));
-    run(SECOND.hw + 4, cx + 22, 3.3, (a) => tree(sx * a, cs + 8 + rnd() * 5, 1, { pine: 0.9, full: true }));
-    run(SECOND.hw + 6, cx + 26, 3.7, (a) => tree(sx * a, cs + 15 + rnd() * 5, 1, { pine: 0.9, full: true }));
-    run(SECOND.hw + 4, cx + 18, 11, (a) => house(sx * a, cs + 16 + rnd() * 4, 0));
-    // beside the terrace and the way (the arrival looks east and west along these)
-    run(cs + 12, 224, sx > 0 ? 13 : 9, (z) => tree(sx * (Math.max(SECOND.hw, lx) + 1.8 + rnd() * 3), z, z < 140 ? 1 : 0, { pine: 0.5 }));
-    run(cs + 22, 224, sx > 0 ? 17 : 12, (z) => tree(sx * (lx + 8 + rnd() * 6), z, 1, { pine: 0.4 }));
-    run(cs + 24, 222, sx > 0 ? 16 : 12, (z) => house(sx * (lx + 14 + rnd() * 5), z, 0));
-    run(cs + 30, 222, 14, (z) => house(sx * (lx + 27 + rnd() * 6), z, 1));
+    // ---- east and west of the court: the first row of houses 3 to 6 m off the wall, a second row far out, then the trees: between the houses and behind them ----
+    rnd = seeded(5480 + SEED + sx * 17);
+    const ew0 = houseRow(C.zN - 3, cs + 3, (cur, g, hx, hz) => [sx * (cx + g + hx / 2), cur + hz / 2, hz], 0, [7, 12], L.ridgeMax, "ew", () => wallDims(true));
+    rnd = seeded(5482 + SEED + sx * 17);
+    houseRow(C.zN, cs + 4, (cur, g, hx, hz) => [sx * (cx + 34 + pick(0, 6) + hx / 2), cur + hz / 2, hz], 1, [14, 30], L.ridgeMax, "ew");
+    // ---- south of the court's south wall, beside the terrace ----
+    rnd = seeded(5483 + SEED + sx * 17);
+    const s0 = houseRow(SECOND.hw + 3.2, cx + 24, (cur, g, hx, hz) => [sx * (cur + hx / 2), cs + g + hz / 2, hx], 0, [7, 12], L.ridgeMax, "s", () => wallDims(false));
+    rnd = seeded(5485 + SEED + sx * 17);
+    houseRow(SECOND.hw + 5, cx + 26, (cur, g, hx, hz) => [sx * (cur + hx / 2), cs + 34 + pick(0, 6) + hz / 2, hx], 1, [14, 30], L.ridgeMax, "s");
+    // ---- beside the terrace and the way: the arrival looks east and west along these (kept as the art director passed them) ----
+    const laneHouses = (from, to, gap, off, row) => { rnd = seeded(548 + Math.round(from * 13 + to * 7 + gap * 101 + sx * 977 + 3)); for (let z = from + rnd() * gap * 0.5; z < to; z += gap * (0.7 + rnd() * 0.6)) { const { alongX, w, d } = dims(); let x = sx * (lx + off + rnd() * 5); for (let k = 0; k < 30 && withinWalls(C, x, z, 2 + (alongX ? w : d) / 2, 2 + (alongX ? d : w) / 2); k++) x += sx * 0.5; makeHouse(x, z, alongX, w, d, row, 5, "lane"); } };
+    laneHouses(cs + 24, 222, sx > 0 ? 16 : 15, 14, 0); laneHouses(cs + 30, 222, 14, 27, 1);
+    // the trees between the houses, where there is room for a trunk (the front of the row, against the wall)
+    id = `ew${sx}-between`; rnd = seeded(5481 + SEED + sx * 17);
+    for (let k = 0; k + 1 < ew0.length; k++) { const a = ew0[k], b = ew0[k + 1], z0 = a.z + a.d / 2, z1 = b.z - b.d / 2; if (z1 - z0 >= 3.5 && rnd() < 0.7) tree(sx * (cx + pick(3.2, 5.2)), (z0 + z1) / 2, (z0 + z1) / 2, [0.4, 0.35], 0); }
+    stripRun(`ew${sx}-behind1`, C.zN - 2, cs + 4, [5, 9], (z) => [sx * (cx + 17.5 + ((z * 7) % 3) * 1.2), z]);
+    stripRun(`ew${sx}-behind2`, C.zN, cs + 6, [4.5, 8], (z) => [sx * (cx + 25.5 + ((z * 5) % 4) * 1.4), z]);
+    id = `s${sx}-between`; rnd = seeded(5484 + SEED + sx * 17);
+    for (let k = 0; k + 1 < s0.length; k++) { const a = s0[k], b = s0[k + 1], x0 = Math.abs(a.x) + a.w / 2, x1 = Math.abs(b.x) - b.w / 2; if (x1 - x0 >= 3.5 && rnd() < 0.7) tree(sx * (x0 + x1) / 2, cs + pick(3.2, 5.2), (x0 + x1) / 2, [0.4, 0.35], 0); }
+    stripRun(`s${sx}-behind1`, SECOND.hw + 2.5, cx + 26, [5, 9], (a) => [sx * a, cs + 17.5 + ((a * 7) % 3) * 1.2]);
+    stripRun(`s${sx}-behind2`, SECOND.hw + 4, cx + 28, [5, 10], (a) => [sx * a, cs + 25.5 + ((a * 5) % 4) * 1.4]);
+    const lane = (name, from, to, gap, place, mix) => { id = name; rnd = seeded(548 + Math.round(from * 13 + to * 7 + gap * 101 + sx * 977)); for (let s = from + rnd() * gap * 0.5; s < to; s += gap * (0.7 + rnd() * 0.6)) { const [px, pz, row] = place(s); if (!overlapsHouse(px, pz, 1.2)) tree(px, pz, s, mix, row); } };
+    lane(`lane${sx}-a`, cs + 12, 224, sx > 0 ? 13 : 11, (z) => [sx * (Math.max(SECOND.hw, lx) + 1.8 + rnd() * 3), z, z < 140 ? 1 : 0], [0.5, 0.2]);
+    lane(`lane${sx}-b`, cs + 22, 224, sx > 0 ? 17 : 15, (z) => [sx * (lx + 8 + rnd() * 6), z, 1], [0.4, 0.2]);
   }
-  // beyond the way's end, to the south of the arrival
-  run(-40, 40, 26, (x) => tree(x, 226 + rnd() * 4, 0, { pine: 0.4 }));
-  run(-44, 44, 28, (x) => tree(x, 236 + rnd() * 6, 1, { pine: 0.3 }));
-  run(-40, 40, 26, (x) => house(x, 246 + rnd() * 4, 0));
-  run(-46, 46, 22, (x) => house(x, 258 + rnd() * 6, 1));
-  // no tree grows through a house: those within a metre and a half of a footprint are dropped
-  const free = trees.filter((t) => !houses.some((h) => Math.abs(t.x - h.x) < h.w / 2 + 1.5 && Math.abs(t.z - h.z) < h.d / 2 + 1.5));
-  return { trees: free, houses };
+  // ---- beyond the way's end, to the south of the arrival ----
+  side = 0;
+  for (const [from, to, gap, z0, zr, row] of [[-40, 40, 26, 246, 4, 0], [-46, 46, 22, 258, 6, 1]]) { rnd = seeded(548 + Math.round(from * 13 + to * 7 + gap * 101 + 3)); for (let x = from + rnd() * gap * 0.5; x < to; x += gap * (0.7 + rnd() * 0.6)) { const { alongX, w, d } = dims(); makeHouse(x, z0 + rnd() * zr, alongX, w, d, row, 5, "end"); } }
+  { id = "end-a"; rnd = seeded(548 + Math.round(-40 * 13 + 40 * 7 + 26 * 101)); for (let x = -40 + rnd() * 13; x < 40; x += 26 * (0.7 + rnd() * 0.6)) { const z = 226 + rnd() * 4; if (!overlapsHouse(x, z, 1.2)) tree(x, z, x, [0.4, 0.2], 0); } }
+  { id = "end-b"; rnd = seeded(548 + Math.round(-44 * 13 + 44 * 7 + 28 * 101)); for (let x = -44 + rnd() * 14; x < 44; x += 28 * (0.7 + rnd() * 0.6)) { const z = 236 + rnd() * 6; if (!overlapsHouse(x, z, 1.2)) tree(x, z, x, [0.3, 0.2], 1); } }
+  return { trees, houses };
 }
 /**
  * Is (x, z), with room `pad` across and `pz` along, inside the walls or against them: the court's, the terrace's (to the inner gate), the way's (to its end)?
@@ -127,23 +174,25 @@ const memo = new WeakMap();
 export const planSurround = (C) => memo.get(C) || memo.set(C, (() => { const p = plan(C); return Object.freeze({ trees: Object.freeze(p.trees), houses: Object.freeze(p.houses) }); })()).get(C);
 
 // ---- geometry ----
-const cone = (r, h, y, x, z, seg = 9) => new THREE.ConeGeometry(r, h, seg).translate(x, y + h / 2, z);
-/** A pine or cypress: a trunk and four layers of needles with sky between them (the layers overlap little, so that a ray through a crown meets two or three of them, not a solid). */
+const squash = (rx, ry, rz, x, y, z) => new THREE.SphereGeometry(1, 8, 5).scale(rx, ry, rz).translate(x, y, z);
+/**
+ * A Chinese pine (油松): a bare trunk for the lower half, and above it two to four flat layers of needles, each a pressed ellipsoid a little off the last, the top one the flattest:
+ * a flat-topped crown with sky between its layers, not a stack of cones (the art director, 2nd round: cones read as spruce and Christmas trees).
+ */
 function pine(t, trunk, crown) {
-  const { x, z, h, r } = t, y0 = ground, tr = h * 0.6;
+  const { x, z, h, r } = t, y0 = ground, tr = h * 0.52, n = 2 + (Math.abs(Math.round(x * 3 + z)) % 3);   // 2, 3 or 4 layers, by where it stands
   trunk.push(new THREE.CylinderGeometry(r * 0.7, r, tr, 7).translate(x, y0 + tr / 2, z));
-  if (t.full) {
-    // a columnar cypress (the old cypresses of a temple court): one long narrowing drum with a tip, not the pine's stacked cones. It stays low (the great hall's eave
-    // line is the ceiling in the pictures that keep the roof clean) and it fills the band that a pine would leave to its thin tip; seen against the sky it is a dark pencil.
-    const R = h * (0.28 + 0.04 * ((Math.abs(Math.round(x * 7 + z * 3)) % 7) / 6)), hd = h * 0.8;   // (the girth changes a little from tree to tree, from where it stands)
-    crown.push(new THREE.CylinderGeometry(R * 0.72, R, hd, 8).translate(x, y0 + h * 0.12 + hd / 2, z), cone(R * 0.72, h * 0.08, y0 + h * 0.12 + hd, x, z, 8));
-    return;
+  for (let i = 0; i < n; i++) {
+    const f = n === 1 ? 1 : i / (n - 1), y = y0 + h * (0.56 + 0.4 * f), rx = h * (0.3 - 0.13 * f) * (0.9 + 0.2 * (((i * 5 + Math.round(z)) % 3) / 2)), ry = h * (0.075 - 0.02 * f);
+    crown.push(squash(rx, ry, rx * 0.92, x + (i % 2 ? 0.5 : -0.4) * (h / 10), y, z + (i % 2 ? -0.4 : 0.5) * (h / 10)));
   }
-  const layers = 4, R = h * 0.2;
-  for (let i = 0; i < layers; i++) {
-    const y = y0 + h * (0.28 + 0.2 * i), hl = h * 0.27 * (1 - 0.1 * i), rl = R * (1 - 0.22 * i) * (0.9 + 0.2 * ((i * 7 + Math.round(x)) % 3) / 3);
-    crown.push(cone(rl, hl, y, x, z));
-  }
+}
+/** A cypress: a narrow flame, a little fuller below the middle and tapering to a tip. */
+function cypress(t, trunk, crown) {
+  const { x, z, h, r } = t, y0 = ground, R = h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3));
+  trunk.push(new THREE.CylinderGeometry(r * 0.5, r * 0.7, h * 0.16, 6).translate(x, y0 + h * 0.08, z));
+  const prof = [[R * 0.7, 0], [R, 0.22], [R * 1.05, 0.4], [R * 0.78, 0.66], [R * 0.36, 0.86], [0.001, 1]].map(([rr, f]) => new THREE.Vector2(rr, h * 0.12 + f * h * 0.88));
+  crown.push(new THREE.LatheGeometry(prof, 8).translate(x, y0, z));
 }
 /** A bare broadleaf, in winter: a trunk, a crown of branches that fork twice, no leaves. Rays between the branches meet nothing. */
 function bare(t, trunk) {
@@ -156,10 +205,10 @@ function bare(t, trunk) {
     g.rotateZ(-ax); g.rotateY(-ay); g.translate(px, py, pz); trunk.push(g);
     if (depth > 0) for (let j = 0; j < 2; j++) limb(ex, ey, ez, len * 0.68, ax + spread(0.25, 0.7, k + j), ay + (j ? 1 : -1) * spread(0.6, 1.5, k * 3 + j), rr * 0.62, depth - 1, k + 7 + j);
   };
-  const top = y0 + tr, n = 5;   // (the row against the wall forks twice, the rest once)
-  for (let i = 0; i < n; i++) limb(x, top - (i % 2) * 0.6, z, h * 0.3, spread(0.35, 0.7, i), yaw + (i / n) * Math.PI * 2, r * 0.55, t.row === 0 ? 2 : 1, i * 11);
+  const top = y0 + tr, n = 5;   // (the trees against the walls fork twice, the rest once)
+  for (let i = 0; i < n; i++) limb(x, top - (i % 2) * 0.6, z, h * 0.3, spread(0.35, 0.7, i), yaw + (i / n) * Math.PI * 2, r * 0.55, t.cast ? 2 : 1, i * 11);
 }
-/** A house of one storey: plaster walls to the eaves, a gable roof of grey tile with its ridge along x or z; the eaves stand 0.5 m out. */
+/** A house of one storey: grey-brick walls to the eaves, a gable roof of grey tile with its ridge along x or z; the eaves stand 0.5 m out. */
 function house(hs, walls, roofs) {
   const { x, z, w, d, eave, ridge, alongX } = hs, y0 = ground, over = 0.5;
   walls.push(box(w - 0.4, eave, d - 0.4, x, y0 + eave / 2, z));
@@ -169,20 +218,29 @@ function house(hs, walls, roofs) {
   if (alongX) g.rotateY(Math.PI / 2);   // the extrusion's length now along x, the gable's section across z
   g.translate(x, y0 + eave, z); roofs.push(g);
 }
+/** The court wall's plaster with its colour pressed down to a grey brick (the art director, 2nd round: the houses' walls were the brightest thing at the arrival, 10 L* under the court's wall at least). */
+export const BRICK_TONE = 0.4;
+function brick(M) {
+  const base = M.plaster(), m = base.clone(), was = base.onBeforeCompile;
+  m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", `diffuseColor.rgb=col*vec3(${BRICK_TONE});`); };
+  m.customProgramCacheKey = () => "surround-brick"; m.name = "surround-brick";
+  return m;
+}
 
 /**
- * The surround as a group for the site's root. Every mesh carries `userData.surround` ("near": the row drawn as real, shadow-casting trees and houses;
- * "far": the rest) and `userData.walk = false`.
+ * The surround as a group for the site's root. Every mesh carries `userData.surround` ("near": what stands against the walls, real geometry that casts shadows into the sun's map, the first row of
+ * houses and the trees within 14 m of a wall; "far": the rest) and `userData.walk = false`.
  * @param {*} M the level's materials @param {{ x: number, zN: number, zS: number, t: number }} C the compound's walls
  */
 export function buildSurround(M, C) {
   const PLAN = planSurround(C), group = new THREE.Group(), near = { trunk: [], crown: [], walls: [], roofs: [] }, far = { trunk: [], crown: [], walls: [], roofs: [] };
-  for (const t of PLAN.trees) { const into = t.row === 0 ? near : far; t.kind === "pine" ? pine(t, into.trunk, into.crown) : bare(t, into.trunk); }
-  for (const h of PLAN.houses) house(h, (h.row === 0 ? near : far).walls, (h.row === 0 ? near : far).roofs);
+  for (const t of PLAN.trees) { const into = t.cast ? near : far; (t.kind === "pine" ? pine : t.kind === "cypress" ? cypress : bare)(t, into.trunk, into.crown); }
+  for (const h of PLAN.houses) house(h, (h.cast ? near : far).walls, (h.cast ? near : far).roofs);
+  const wall = brick(M);
   const add = (set, name, cast) => {
-    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar], ["walls", M.plaster()], ["roofs", M.tile]]) {
+    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar], ["walls", wall], ["roofs", M.tile]]) {
       if (!set[key].length) continue;
-      const m = mesh(merge(set[key]), material, { cast: cast && key !== "walls" ? true : cast }); m.userData.surround = name; m.userData.walk = false; m.name = `surround-${name}-${key}`; group.add(m);
+      const m = mesh(merge(set[key]), material, { cast }); m.userData.surround = name; m.userData.walk = false; m.name = `surround-${name}-${key}`; group.add(m);
     }
   };
   add(near, "near", true); add(far, "far", false);
