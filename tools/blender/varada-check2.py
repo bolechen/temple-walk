@@ -83,7 +83,7 @@ def ratio(pts, axis):
 fa_dir = ax  # the forearm's own axis at the joint: from the points of the body within 0.4 m above the wrist
 fd = np.array(cfg["target"].get("forearm_dir", [0, 0.06, -1.0])); fd = fd / np.linalg.norm(fd)   # from the wrist back toward the elbow
 rel = body.vertices - tw; t_ = rel @ fd; radial = np.linalg.norm(rel - np.outer(t_, fd), axis=1)
-up = body.vertices[(t_ > 0.1) & (t_ < 0.5) & (radial < 0.3)]
+up = body.vertices[(t_ > 0.1) & (t_ < 0.5) & (radial < 0.3) & (body.vertices[:, 1] > cfg["target"].get("forearm_floor", 3.68))]   # above the thigh it lies on
 if len(up) > 50:
   fdir = -fd; sl = up[np.abs((up - tw) @ fd - 0.2) < 0.02]
   rep["sections"] = {"forearm_long_short": ratio(sl, fdir) if len(sl) > 10 else None, "hand_wrist_long_short": ratio(H[(al > 0.05 * L) & (al < 0.1 * L)], ax), "limit": 1.25}

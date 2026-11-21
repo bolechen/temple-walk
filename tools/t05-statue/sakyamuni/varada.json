@@ -116,6 +116,10 @@
    "solve": {
     "gap": 0.002,
     "below": 3.6
+   },
+   "round": {
+    "length": 0.12,
+    "ratio": 1.2
    }
   }
  },
@@ -255,6 +259,6 @@
   "slack": 1.4,
   "facing": 0.2,
   "stretch": 3.0,
-  "cut_dz": 0.02
+  "cut_dz": 0.14
  }
 }

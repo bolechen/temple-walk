@@ -145,14 +145,23 @@ if PO:
   TP = T.get("taper")
   def place(W):
     Q = W + np.outer(du, D) + np.outer(dn, N) + np.outer(-v * sc, X)
+    RD = PO.get("round")
+    if RD:   # the wrist's section rounded (the 3D review: long / short ≤ 1.25 so the turned hand meets the forearm unseen):
+      # over its last `round.length` metres its width across (X) is drawn in toward `round.ratio` times its thickness
+      s_ = (Q - W) @ D; k_ = 1 - np.clip(s_ / RD["length"], 0, 1); k_ = k_ * k_ * (3 - 2 * k_)
+      sec = (Q - W) - np.outer(s_, D); xw = sec @ X; nw = sec @ N; band_ = s_ < RD["length"]
+      wid = np.percentile(xw[band_], 98) - np.percentile(xw[band_], 2); thk = np.percentile(nw[band_], 98) - np.percentile(nw[band_], 2)
+      f_ = min(1.0, RD["ratio"] * thk / max(wid, 1e-6)); xm = np.median(xw[band_])
+      Q = Q + np.outer((xw - xm) * (f_ - 1) * k_, X)
+      log.setdefault("pose", {})["round"] = {"width_m": round(float(wid), 3), "thickness_m": round(float(thk), 3), "ratio_before": round(float(wid / thk), 3), "factor": round(float(f_), 3)}
     if TP:   # the wrist's last `taper.length` metres drawn in toward the hand's axis (see below)
       s_ = (Q - W) @ D; k_ = np.clip(s_ / TP["length"], 0, 1); f_ = TP["to"] + (1 - TP["to"]) * k_ * k_ * (3 - 2 * k_)
       axial = W + np.outer(s_, D); Q = axial + (Q - axial) * f_[:, None]
     return Q
   W = np.array(PO["wrist"], float); Q = place(W)
   tw, tax, tn = W, D, N; T = dict(T); T["overlap"] = 0; T.pop("taper", None)
-  log["pose"] = {"wrist": W.tolist(), "pitch_deg": PO["pitch_deg"], "bend_deg": PO["bend_deg"], "u0": u0, "u1": u1, "turn_deg": PO.get("turn_deg", 5), "scale": sc,
-                 "palm_bend_deg": 0.0, "finger_length_change": "none (the bend is laid along the middle line)"}
+  log.setdefault("pose", {}).update({"wrist": W.tolist(), "pitch_deg": PO["pitch_deg"], "bend_deg": PO["bend_deg"], "u0": u0, "u1": u1, "turn_deg": PO.get("turn_deg", 5), "scale": sc,
+                 "palm_bend_deg": 0.0, "finger_length_change": "none (the bend is laid along the middle line)"})
 # the wrist's open edge stood out of the forearm as a broken ring (the 3D review, round 2): the hand's last
 # `taper.length` metres toward the wrist are drawn in toward the hand's own axis, to `taper.to` of their width at the
 # very end, so the whole ring sinks under the forearm's surface
