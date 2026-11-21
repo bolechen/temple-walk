@@ -201,7 +201,7 @@ grade, snow, wetness, lamp light, leaf colours, what drifts in the air, the vers
 (`U`), `FOG` and `SUN_DIR` are shared by reference and must be mutated in place.
 
 **The novice and the two views (`app/src/monk.js`, the camera block in `yard.js`).** He is modelled after the owner's
-A-pose turnaround (front, side, back; the drawing he is held to is `refs/monk-sheet-v5-2026-11-18.webp`, the owner's fifth four-view, eyes open; the first, eyes-closed sheet is `refs/monk-apose-sheet-v1-eyes-closed.png`, see `refs/README.md`) and bound to a humanoid skeleton in that same pose: a `root` bone that carries his
+A-pose turnaround (front, side, back; the current design sheet is `refs/monk-sheet-v5-2026-11-18.webp`, the owner's fifth four-view, eyes open, from which the Tripo body of #469 is made; the body built in code was modelled on the first, eyes-closed sheet, `refs/monk-apose-sheet-v1-eyes-closed.png`; see `refs/README.md`) and bound to a humanoid skeleton in that same pose: a `root` bone that carries his
 height above the step (`group.children[0]`), then `hips`, `spine`, `chest`, `neck`, `head` and, for each side,
 `leftShoulder`/`UpperArm`/`LowerArm`/`Hand`/`UpperLeg`/`LowerLeg`/`Foot` (VRM-style names; he faces +z, so his left
 is on +x), plus `robeFront/Back/Left/Right`, `sashTail` and `hat` for what hangs off him. Skin, robe, trousers and shoes are
