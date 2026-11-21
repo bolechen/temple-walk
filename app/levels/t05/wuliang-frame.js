@@ -4,14 +4,14 @@
 // Great Hall has its own frames (hall.js); this hall, drawn by the generator, gets the same kind of thing here, as a white
 // box: on each of the four inner column lines a frame of two tiers of tie beam with posts up to the purlins, the
 // purlins along the hall at each joint of the roof's falls, and the rafters under the boards. Positions and sections are
-// proposals (docs/t05/SOURCES.md §13.2); the roof's own numbers are read from the built hall, so the frame follows the
+// proposals except the sections of the beams and rafters, which are the Yingzao Fashi's (docs/t05/SOURCES.md §13.2, read by the structure review); the roof's own numbers are read from the built hall, so the frame follows the
 // roof wherever the roof is changed.
 import * as THREE from "three";
 import { box, merge, mesh } from "../../src/geo.js";
 
 const PT = 0.3;            // a purlin's section, square (a round purlin is not drawn; the white box has none)
-const RT = 0.12;           // a rafter's depth; its width a fifth less
-const BW = 0.3, BD = 0.5;  // a tie beam's width and depth
+const RT = 0.15;           // a rafter's diameter: 9-10 fen in a hall's size (Yingzao Fashi, juan 5), the fen at this hall's cai; drawn square, its width a fifth less
+const BD1 = 0.78, BD2 = 0.65, BW = 0.45;   // the lower beam's and the upper's depth (a four-rafter beam is 50 fen deep, a three-rafter one 42: juan 5), and their width, two thirds of the greater
 const RAFTER_GAP = 0.5;    // the rafters' spacing across the hall
 
 /**
@@ -43,14 +43,14 @@ export function frameParts(b, H) {
   const top1 = purlinBottom(zk(1)), top2 = purlinBottom(zk(k2));
   const post = (x, z, from, to, w, d) => { if (to - from > 0.12) woodZ.push(box(w, to - from, d, x, (from + to) / 2, z)); };
   for (const x of H.xs.slice(1, -1)) {
-    woodZ.push(box(BW, BD, 2 * zc, x, top1 - BD / 2, 0));
-    woodZ.push(box(BW, BD, 2 * zk(k2), x, top2 - BD / 2, 0));
+    woodZ.push(box(BW, BD1, 2 * zc, x, top1 - BD1 / 2, 0));
+    woodZ.push(box(BW, BD2, 2 * zk(k2), x, top2 - BD2 / 2, 0));
     for (const s of [1, -1]) {
       for (let k = 2; k <= n; k++) {
         const z = s * zk(k);
         if (k === n && s < 0) continue;   // one post under the ridge
         if (k < k2) post(x, z, top1, purlinBottom(z), BW * 0.7, 0.3);
-        else if (k === k2) post(x, z, top1, top2 - BD, BW * 0.8, 0.35);   // the post carrying the upper beam's end
+        else if (k === k2) post(x, z, top1, top2 - BD2, BW * 0.8, 0.35);   // the post carrying the upper beam's end
         else post(x, z, top2, purlinBottom(z), BW * 0.7, 0.3);
       }
     }
