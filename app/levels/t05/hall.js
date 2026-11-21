@@ -42,16 +42,15 @@ export const HALL = Object.freeze({
  * The fill under the roof while he is inside (white box), in three kinds, each the level it reaches once he is well in:
  * `door`, the light the doors and windows let in, four spots just inside the front wall turned to the altar and the back
  * wall, so that the front wall's inner face, which the light comes through, is the darkest in the hall (with lamps hung
- * overhead before it, the band over the doors' heads read 2.4 times the back wall, #493); `top`, one lamp over the middle of
- * the floor for the timber, 9 m up and so more than 6 m under the boards straight over it (hung 2.4 m under them, it laid a bright
- * spot on them overhead that cam05's station, moved 3 m south, looks straight at: #549); `bounce`, what the floor before the altar gives back, three lamps half a metre under
+ * overhead before it, the band over the doors' heads read 2.4 times the back wall, #493); `top`, one lamp high over the
+ * middle of the floor for the timber; `bounce`, what the floor before the altar gives back, three lamps half a metre under
  * the floor, which reach what looks down and leave the floor itself, looking up, unlit. Then over how many metres before
  * the threshold it starts and how far in it is whole, and how fast the eye takes it (seconds to cover about two thirds of
  * a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
 export const TIMBER = Object.freeze({ lift: 2.2, from: 3.0, to: 4.5 });
-export const FILL = Object.freeze({ door: 25, top: 24, bounce: 1.3, out: 9, depth: 3, ease: 0.5 });
+export const FILL = Object.freeze({ door: 25, top: 18, bounce: 1.3, out: 9, depth: 3, ease: 0.5 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
@@ -275,7 +274,7 @@ export function buildHall(M) {
     // inside; from the court it is out, so that the doorway reads dark (`within` below, and the site's tick, raise it).
     fill: [
       ...[-10, 10].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.9, y0 + 4, zB + 1]]),
-      [0, y0 + 9, -9, FILL.top, 26, 0xfff4e8],
+      [0, y0 + 13, -9, FILL.top, 26, 0xfff4e8],
       [0, y0 - 0.5, -9, FILL.bounce, 26, 0xe8dccb],
     ],
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.out metres before the
