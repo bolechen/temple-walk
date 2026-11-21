@@ -1,15 +1,16 @@
 # The head's outline seen from the side, two builds laid over each other (issue #463, the 3D review's fifth round: "add an
 # r7/r8 overlay of the 3 m side view's outline").
 #
-#   python3 tools/t05-statue/profile-overlay.py <a.glb> <b.glb> <out.png> [--labels=r7,r8] [--height=8.6]
+#   python3 tools/t05-statue/profile-overlay.py <a.glb> <b.glb> [<c.glb> ...] <out.png> [--labels=r7,r8A,r8B] [--height=8.6]
 #
 # Each figure is stood 8.6 m tall (its own frame: y up from the seat, z toward the viewer). For every height over the
 # head and neck the outline is the foremost point of the surface within a slab across the face (|x| < 0.55 m) and, as a
 # second line, at the cheek (|x| between 0.2 and 0.45 m), so the lips' depth against the cheeks reads at a glance.
 import sys, numpy as np, trimesh
 from PIL import Image, ImageDraw
-a, b, out = sys.argv[1:4]; opt = dict(x[2:].split("=", 1) for x in sys.argv[4:] if x.startswith("--"))
-labels = opt.get("labels", "a,b").split(","); H = float(opt.get("height", 8.6))
+args = [x for x in sys.argv[1:] if not x.startswith("--")]; files, out = args[:-1], args[-1]
+opt = dict(x[2:].split("=", 1) for x in sys.argv[1:] if x.startswith("--"))
+labels = opt.get("labels", ",".join("abcdef"[:len(files)])).split(","); H = float(opt.get("height", 8.6))
 def outline(p):
   m = trimesh.load(p, force="mesh"); v = m.vertices; mn, mx = v.min(0), v.max(0); s = H / (mx[1] - mn[1])
   v = (v - [(mn[0] + mx[0]) / 2, mn[1], (mn[2] + mx[2]) / 2]) * s
@@ -24,7 +25,7 @@ W, Hh = 900, 1600; img = Image.new("RGB", (W, Hh + 60), "white"); d = ImageDraw.
 X = lambda z: (z + 0.2) * 1000; Y = lambda y: (7.9 - y) * 1000
 for z in np.arange(-0.2, 0.71, 0.1): d.line([(X(z), 0), (X(z), Hh)], fill="#E6E6E6")
 for y in np.arange(6.3, 7.91, 0.1): d.line([(0, Y(y)), (W, Y(y))], fill="#E6E6E6")
-for k, (p, lab, col) in enumerate(((a, labels[0], "#888888"), (b, labels[1], "#B03A2E"))):
+for k, (p, lab, col) in enumerate(zip(files, labels, ("#888888", "#B03A2E", "#2E6DB0", "#3A8A3A"))):
   ys, mid, cheek = outline(p)
   for line, wd in ((mid, 3), (cheek, 1)):
     pts = [(X(z), Y(y)) for y, z in zip(ys, line) if not np.isnan(z)]
