@@ -300,8 +300,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: a, scenarios: "drop stairs-edge" }
-          - { name: b, scenarios: "drop-touch stairs" }
+          - { name: a, scenarios: "drop-touch stairs-edge" }
+          - { name: b, scenarios: "stairs drop" }
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
