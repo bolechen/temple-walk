@@ -391,7 +391,7 @@ not taken for a skip; `__ending()` plays it again. It comes once in each season 
 change of season, sitting there plays it again, without the full book's seal a second time.
 
 **Coming back, and going back (`resume.js`, `game.js`).** Where he stands is kept every two seconds and when the page is
-left (`yunjing.place.v1`: place, facing, what to call it). A first visit is offered only 入山; a visitor with a seal, or
+left (`yunjing.place.v1`: place, facing, what to call it, and the balcony (`up`) or the hall (`hall`, #375) it was in: a place in a hall is the room's, under the courts, so `y.place` steps indoors first and settles him on the room's floor, as a change of language does; a place kept before #375 has no `hall` and is read as on the ground). A first visit is offered only 入山; a visitor with a seal, or
 who left from up the mountain, finds the title over where they were, with 接着走 and, smaller, 从头走起 (asked twice: it
 empties the book and starts at the foot of the path). A test or tool that names its own place (`?cam`, `?show`, `?shot`,
 `?in`, `?enter`, `?tour`) is neither moved nor kept. In the book, a button lies over each seal that has been earned
