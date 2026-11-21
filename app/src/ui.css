@@ -462,6 +462,16 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #keys dl { display: grid; grid-template-columns: auto auto auto auto; gap: 15px 14px; margin: 0; align-items: center; }
 #keys dt { justify-self: end; white-space: nowrap; color: var(--ink-1); } #keys dt kbd:last-child { margin-right: 0; } #keys dd { margin: 0 26px 0 0; white-space: nowrap; color: var(--ink-3); } #keys dd:nth-of-type(even) { margin-right: 0; }
 #keys p { margin: 20px 0 0; text-align: center; font-size: var(--t-xs); letter-spacing: .3em; color: var(--ink-4); }
+/* A narrow window (a half screen, a small laptop): never wider than the window less a gutter either side (#401); the pairs
+   of key and word stand two to a row on wide windows and one to a row where they would not fit, the words wrapping. (No overflow on the
+   paper itself: its torn-edge mask would be drawn away with the scroll, which mobile-audit rejects.) */
+#keys { max-width: calc(100vw - 32px); box-sizing: border-box; }
+@media (max-width: 1040px) {
+  #keys { padding: 26px 24px 20px; }
+  #keys dl { grid-template-columns: auto minmax(0, 1fr); gap: 13px 14px; }
+  #keys dd, #keys dd:nth-of-type(even) { margin: 0; white-space: normal; letter-spacing: .08em; line-height: 1.5; }
+  #keys dt { white-space: normal; text-align: right; }
+}
 
 /* ---- The pause menu: a sheet of paper with the few things a visitor may set ---- */
 #menu { position: absolute; inset: 0; z-index: 45; display: grid; place-items: center; background: var(--veil); touch-action: none; }   /* covers the view: nothing behind it is touched while it is open */
@@ -582,7 +592,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 .community-card footer .chip { color: var(--ink-3); font-size: var(--t-s); }
 @media (pointer: coarse) { .community-desktop { display: none; } .community-mobile { display: block; } }
 @media (max-width: 400px) { .community-card { padding: 26px 24px 20px; } .community-card h2 { font-size: 30px; } }
-@media (pointer: coarse) { #menuKeys, .keys-only { display: none; } }   /* (a keyboard's settings are not a touch screen's: #295's A/D row) */
+@media (pointer: coarse) { #menuKeys, #menu .keys-only { display: none; } }   /* (a keyboard's settings are not a touch screen's: #295's A/D row) */
 @media (max-width: 400px) { #menu .card { --pb: 20px; --px: 20px; width: min(94vw, 440px); padding-top: 28px; } }
 /* A small phone held upright: the rows close up (each still a thumb's height) so that the whole sheet, 自动镜头 included, is in sight. */
 @media (max-width: 620px) and (max-height: 700px) { #menu .row .version { position: static; order: 3; flex-basis: 100%; margin: 4px 0 0; } #menu .card { --pb: 12px; gap: 4px; padding-top: 14px; } #menu h2 { margin-bottom: 0; font-size: 30px; } #menu .row { margin-top: 2px; } #menu .set { gap: 6px; } }
@@ -689,6 +699,15 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 .credits-card a:focus-visible { outline: 2px solid #8a2a1e; outline-offset: 2px; }
 .credits-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
 @media (max-width: 400px) { .credits-card { padding: 26px 22px 16px; } .credits-card h2 { font-size: 28px; } }
+/* Where the system cannot take a picture to share (an app's own browser, #344): the picture as an <img> to press and hold, the one line that says so. */
+#saveSheet { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--veil); }
+#saveSheet[hidden] { display: none; }
+.save-card { width: min(92vw, 520px); box-sizing: border-box; padding: 22px 22px 14px; text-align: center; color: var(--ink-1); max-height: calc(100dvh - 24px); overflow-y: auto; }
+.save-card p { margin: 4px 0 10px; font: 400 var(--t-m)/1.6 var(--kai); letter-spacing: .06em; color: var(--ink-2); }
+.save-card p.note { font-size: var(--t-s); color: var(--ink-3); margin: 8px 0 0; }
+#saveImg { display: block; width: 100%; height: auto; max-height: calc(100dvh - 210px); object-fit: contain; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; }
+.save-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 12px; }
+.save-card .chip { min-height: 44px; display: inline-flex; align-items: center; }
 
 /* The jump, on a touch screen: a faint ring lower right, across from the stick, that is the jump and, before a porch's edge, the way down or up. */
 #jumpBtn { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(46px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; z-index: 4; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .12em; text-indent: .12em; color: var(--on); text-shadow: 0 1px 6px rgba(0,0,0,.7); background: var(--enso-light, radial-gradient(closest-side, transparent 96%, rgba(237,232,220,.4) 97%, transparent 99%)) center / 100% 100% no-repeat, radial-gradient(closest-side, rgba(11,10,9,.22), rgba(11,10,9,0)); opacity: .3; transition: opacity .4s var(--ease); touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -704,3 +723,15 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 body.directing #turnBtn, body.opening #turnBtn, body.ending #turnBtn, body:has(dialog.layer[open]) #turnBtn { opacity: 0 !important; pointer-events: none; }
 @media (pointer: coarse) { .rail { bottom: calc(46px + 82px + 12px + 52px + 14px + env(safe-area-inset-bottom, 0px)); } }
 @media (pointer: coarse) and (max-height: 560px) { .rail { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: calc(max(22px, env(safe-area-inset-right, 0px)) + 82px + 12px); } }
+
+/* ---- The year-end bell (#341, src/joya-ui.js): one quiet line at the top of the picture on that night, and its card ---- */
+#joya { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(22px + env(safe-area-inset-top, 0px)); margin: 0; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 200px); font: 400 var(--t-s)/1.2 var(--kai); letter-spacing: .2em; color: var(--on-2); text-shadow: var(--lift); white-space: nowrap; transition: opacity .8s ease; }
+#joya > span { pointer-events: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .6em; }
+#joya > span > span { white-space: nowrap; }
+#joya .chip { min-height: 44px; font-size: var(--t-xs); letter-spacing: .2em; }
+body.photo #joya, body.opening #joya, body:not(.entered) #joya { display: none; }
+body.directing #joya { opacity: .45; }
+@media (max-width: 520px) { #joya { top: calc(14px + env(safe-area-inset-top, 0px)); max-width: calc(100% - 140px); flex-direction: column; gap: 0; white-space: normal; text-align: center; } #joya > span > span:nth-child(2) { display: none; } }
+#joyaCard { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
+#joyaCard img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+#joyaCard .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }

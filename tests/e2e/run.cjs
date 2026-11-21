@@ -6,7 +6,7 @@
 //   node tests/e2e/run.cjs walk photo   only those named
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
-const { serve, launch, open, expect, out } = require("./lib.cjs");
+const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 
 // Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
@@ -171,6 +171,41 @@ const scenarios = {
     await t.until(async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return Math.hypot(s.x, s.z - 14.4) < 0.6; }, 300000, "he never reached station B on the terrace");
     expect(Math.abs(lo) < 0.1 && Math.abs(s.h - 3) < 0.1, `from the court's paving up to the terrace, 3 m: went ${lo} to ${hi}, stands at ${s.h}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
+  // production not at all, where ?level=t05 walks the prologue and says what was asked. Each is built here as it is
+  // published (VITE_DEPLOY), with nothing fetched from outside. On the canary he walks T05 a little with the prologue's
+  // book, visit and kept place already in the browser, and none of them is read or written: T05 keeps nothing of the
+  // prologue's, and the prologue's records stay the prologue's.
+  "level-targets": { tier: 2, async run(b) {
+    const { execFileSync } = require("child_process"), os = require("os"), { serve } = require("../../tools/site.cjs");
+    const top = path.join(__dirname, "..", ".."), local = (u) => /^https?:\/\/127\.0\.0\.1[:/]/.test(u) || u.startsWith("data:") || u.startsWith("blob:");
+    const route = ["**/*", (r) => (local(r.request().url()) ? r.continue() : r.fulfill({ status: 204, body: "" }))];
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.visit.v1": JSON.stringify({ metres: 123, seconds: 456 }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" }) };
+    for (const target of ["canary", "production"]) {
+      const out = fs.mkdtempSync(path.join(os.tmpdir(), `temple-${target}-`));
+      try {
+        execFileSync(process.execPath, [path.join(top, "node_modules/vite/bin/vite.js"), "build", "--logLevel", "warn", "--outDir", out, "--emptyOutDir"], { cwd: top, env: { ...process.env, VITE_DEPLOY: target }, stdio: ["ignore", "inherit", "inherit"] });
+        const srv = await serve(out);
+        try {
+          const t = await open(b, srv.base, "level=t05&q=low&fast=1" + BARE, { route, init: target === "canary" ? `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) localStorage.setItem(k, p[k]); })()` : undefined });
+          const lv = await t.page.evaluate(() => window.__level());
+          if (target === "production") expect(lv.id === "t00" && lv.asked === "t05" && lv.known === false, "production should not know T05: " + JSON.stringify(lv));
+          else {
+            expect(lv.id === "t05" && lv.known === true, "the canary should walk T05: " + JSON.stringify(lv));
+            const w = await t.page.evaluate(() => window.__walker()); expect(w.mode !== "old" && w.bytes > 0, "T05's own floor on the canary: " + JSON.stringify(w));
+            const s0 = await t.state(); expect(Math.hypot(s0.x, s0.z - 215) < 1, "on the canary he arrives at T05's gate, not where the prologue kept him: " + JSON.stringify(s0));
+            await t.page.evaluate(() => window.__walk([[0, 200]]));
+            await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 200) < 0.6; }, 120000, "he did not walk on the canary's T05");
+            await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
+            const book = await t.page.evaluate(() => window.__journey()); expect(!book.seals?.bell, "T05 should not show the prologue's seals: " + JSON.stringify(book));
+            const kept = await t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+            for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} as it was: ${kept[k]}`);
+          }
+          expect(t.errors.length === 0, `${target}: ` + t.errors.join("\n")); await t.close();
+        } finally { srv.close(); }
+      } finally { fs.rmSync(out, { recursive: true, force: true }); }
+    }
   } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
@@ -1363,6 +1398,17 @@ const scenarios = {
     expect((await t.page.textContent("#titleSeals")).includes("上回走到钟楼"), "the title should say where he was: " + (await t.page.textContent("#titleSeals")));
     await t.shot("e2e-resume"); await t.page.click("#enterBtn"); let st = await t.state();
     expect(Math.abs(st.x - 14) < 0.3 && Math.abs(st.yaw - 0.4) < 0.05, "he is not where he was left: " + JSON.stringify([st.x, st.z, st.yaw]));
+    // Left inside a hall (#375): the place kept is the room's own, and coming back he is in that room where he stood, not
+    // dropped (the room lies under the courts, where the ground's floor is solid) or sent back down the path.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the great hall");
+    const inRoom = await t.state(); await t.page.evaluate((s) => window.__pose(s.x + 0.8, s.z - 2.5, 0.3, 0), inRoom); await t.frames(3);
+    const stood = await t.state(), hallName = await t.page.evaluate(() => window.__halls.find((h) => h.id === "main").name);
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.hall === "main" && Math.hypot(p.x - stood.x, p.z - stood.z) < 0.2; }, 60000, "where he stood in the hall was never kept: " + JSON.stringify(await t.page.evaluate(() => localStorage.getItem("yunjing.place.v1"))));
+    await t.page.reload(); await ready();
+    expect((await t.page.textContent("#titleSeals")).includes("上回走到" + hallName), "the title should say he was in the great hall: " + (await t.page.textContent("#titleSeals")));
+    await t.page.click("#enterBtn"); await t.frames(3); st = await t.state();
+    expect(st.room === "main" && Math.hypot(st.x - stood.x, st.z - stood.z) < 0.5 && Math.abs(st.yaw - stood.yaw) < 0.05, "coming back he should be in the great hall where he stood: " + JSON.stringify({ was: [stood.x, stood.z, stood.yaw, stood.room], now: [st.x, st.z, st.yaw, st.room] }));
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the hall");
     // (The observance is started without handing its promise back: the page would wait for the whole of it.)
     // With a seal in the book, beginning again is asked twice, empties the book and starts at the foot of the path.
     await t.page.evaluate(() => { const p = window.__places.well; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to lose");
@@ -1986,6 +2032,83 @@ const scenarios = {
     await t.shot("e2e-censer-winter");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The year-end bell (#341), on a preview where ?event=joya opens the night at any hour, against a counter made in the
+  // test (the Worker's address answered by page.route): a stroke of the rope counts one and shows at once, the report
+  // carries it, the mountain passing 108 brings the far bell once, the card is 1200 × 1600 and its code reads the main
+  // site marked joya, in two languages; a counter that fails leaves nothing on the picture and no error; the published
+  // page ignores ?event=, and on the night itself the mountain is a winter night.
+  joya: { tier: 2, async run(b, base) {
+    const { chromium } = require("playwright"), sharp = require("sharp"), jsQR = require("jsqr"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
+    const { joyaUrl, joyaLayout } = await import("../../app/src/joya-card.js");
+    const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
+    const api = { total: 105, posts: [], gets: 0, fail: false };
+    const counter = async (route) => {
+      const req = route.request();
+      if (api.fail) return route.fulfill({ status: 503, body: "" });
+      if (req.method() === "POST") { const body = JSON.parse(req.postData() || "{}"); api.posts.push(body); api.total += body.n; }
+      else api.gets++;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ year: 2027, total: api.total, rounds: Math.floor(api.total / 108), at: Date.now() }) });
+    };
+    const read = async (dataUrl, lang) => {
+      const buf = Buffer.from(dataUrl.split(",")[1], "base64"), meta = await sharp(buf).metadata(), q = joyaLayout(lang).qr;
+      const { data, info } = await sharp(buf).extract({ left: Math.floor(q.x), top: Math.floor(q.y), width: Math.ceil(q.w) + 1, height: Math.ceil(q.h) + 1 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      return { size: [meta.width, meta.height], code: jsQR(new Uint8ClampedArray(data), info.width, info.height) };
+    };
+    try {
+      let t = await open(pb, host, "q=low&fast=1&debug=0&event=joya&at=bell" + BARE, { enter: false, route: ["**/api/joya*", counter] });
+      await t.until(async () => (await t.journey()).near === "bell", 120000, "?at=bell did not stand him at the bell");
+      await t.until(async () => (await t.page.evaluate(() => window.__joya())).shown, 30000, "the night's line never showed");
+      let j = await t.page.evaluate(() => window.__joya());
+      expect(j.open && j.forced && j.line.includes("105") && !j.take, "the line should say 105 and offer no card yet: " + JSON.stringify(j));
+      const p = await t.probe(); expect(p.season === "winter" && p.time === "night", `the night should be a winter night, not ${p.season} ${p.time}`);
+      expect(j.line.startsWith("除夕撞钟"), "the line should name the night: " + j.line);
+      await t.page.keyboard.press("e");
+      await t.until(async () => (await t.page.evaluate(() => window.__joya())).mine >= 1, 60000, "pulling the rope did not count a stroke");
+      j = await t.page.evaluate(() => window.__joya());
+      expect(j.line.includes("106") && j.take, "the stroke should show at once and offer the card: " + JSON.stringify(j));
+      expect(await t.page.evaluate(() => window.__joyaFlush()), "the report did not go");
+      expect(api.posts.length === 1 && api.posts[0].n === 1 && Number.isInteger(api.posts[0].tz), "one report of one stroke with the clock's offset: " + JSON.stringify(api.posts));
+      // Others ring: the mountain passes 108 (and 216) between two answers; the far hills answer once.
+      // It waits for a gap of three seconds after his own stroke, and is counted apart from the close's far bell.
+      const c0 = await t.page.evaluate(() => window.__cues());
+      api.total = 230; await t.page.evaluate(() => window.__joyaPoll());
+      await t.until(async () => (await t.page.evaluate(() => window.__joya())).heard === 1, 30000, "the far bell never answered the round");
+      j = await t.page.evaluate(() => window.__joya()); const c1 = await t.page.evaluate(() => window.__cues());
+      expect(c1.farAnswer === c0.farAnswer + 1 && c1.farBell === c0.farBell, "the answer should be counted as an answer, once: " + JSON.stringify({ c0, c1, j }));
+      const m = await t.page.evaluate(() => window.__music()); expect(m.zone === "joya" || m.candidate === "joya", "the bell's court should play only the drone on the night: " + JSON.stringify({ zone: m.zone, candidate: m.candidate, section: m.section }));
+      expect(j.line.includes("230"), "the line should follow the mountain: " + j.line);
+      api.total = 240; await t.page.evaluate(() => window.__joyaPoll());
+      expect((await t.page.evaluate(() => window.__joya())).heard === 1, "no far bell without a round");
+      // The card, from its button, and its code read back.
+      await t.page.click("#joyaTake"); await t.until(() => t.page.isVisible("#joyaCard"), 20000, "the card did not open");
+      expect(await t.page.evaluate(() => /^blob:/.test(document.getElementById("joyaImg").src)), "the card should be shown");
+      const zh = await read(await t.page.evaluate(() => window.__joyaCard()), "zh");
+      expect(zh.size[0] === 1200 && zh.size[1] === 1600, "the card should be 3:4, 1200 × 1600: " + zh.size);
+      expect(zh.code && zh.code.data === joyaUrl("zh") && zh.code.data.includes("utm_source=joya"), "the card's code reads " + (zh.code && zh.code.data));
+      await t.page.keyboard.press("Escape"); await t.until(() => t.page.isHidden("#joyaCard"), 10000, "Esc did not put the card away");
+      // The counter fails: what is shown stays, a stroke is kept, nothing is said.
+      api.fail = true; expect(!(await t.page.evaluate(() => window.__joyaFlush())), "a failed report should say so to the hook");
+      // The window closes: the line goes, and the mountain is what it was before the night (not winter night).
+      j = await t.page.evaluate(() => window.__joyaEnd()); await t.frames(2);
+      const after = await t.probe();
+      expect(!j.open && !j.shown && !(after.season === "winter" && after.time === "night"), "after the window the night should give back the visitor's own: " + JSON.stringify({ j: j.open, season: after.season, time: after.time }));
+      const errs = t.errors.filter((e) => !/api\/joya/.test(e)); expect(errs.length === 0, errs.join("\n")); await t.close();
+      // A counter that never answers: no line at all, no error but the request itself; in English the card still reads.
+      api.fail = true;
+      t = await open(pb, host, "q=low&debug=0&event=joya&lang=en&cam=0.3,2.2,0,0.05" + BARE, { route: ["**/api/joya*", counter] });
+      await t.frames(6); await t.page.evaluate(() => window.__joyaPoll());
+      j = await t.page.evaluate(() => window.__joya());
+      expect(j.open && !j.shown && j.total === null, "with no counter the line should not be there: " + JSON.stringify(j));
+      const en = await read(await t.page.evaluate(() => window.__joyaCard()), "en");
+      expect(en.code && en.code.data === joyaUrl("en"), "the English card's code reads " + (en.code && en.code.data));
+      const errs2 = t.errors.filter((e) => !/api\/joya/.test(e)); expect(errs2.length === 0, errs2.join("\n")); await t.close();
+    } finally { await pb.close(); }
+    // The published page (the plain test host) ignores ?event=: the night opens only on the visitor's clock.
+    const t = await open(b, base, "q=low&event=joya&cam=0.3,2.2,0,0.05" + BARE);
+    const j = await t.page.evaluate(() => window.__joya());
+    expect(j.open === j.window && !j.forced, "the published page should ignore ?event=joya: " + JSON.stringify(j));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   bench: { tier: 2, async run(b, base) {
     const { chromium } = require("playwright"), port = new URL(base).port, host = `http://pr-1-temple-walk-preview.test:${port}/`;
     const pb = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP pr-1-temple-walk-preview.test 127.0.0.1`] });
@@ -2414,21 +2537,54 @@ const scenarios = {
   } },
   // The pause menu laid across a wide screen, in every language at three sizes: nothing to scroll and no row wider than its box.
   // Apart from `menu` so that it can run beside every push: the place is built and not drawn, a minute or two (#177).
+  // The list of keys (#401): whole inside the window at a narrow desktop width as at a wide one, every key and every word of it
+  // in sight, opened from the pause menu as from H, in Chinese and in English; a touch screen still has no such card.
+  "keys-responsive": { tier: 2, async run(b, base) {
+    for (const [lg, locale] of [["zh", "zh-CN"], ["en", "en-US"]]) {
+      const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&lang=" + lg + BARE, { viewport: { width: 663, height: 852 }, locale });
+      for (const [w, h] of [[663, 852], [900, 700], [1280, 800], [663, 852]]) {
+        await t.page.setViewportSize({ width: w, height: h }); await t.frames(2);
+        for (const via of ["h", "menu"]) {
+          if (via === "h") await t.page.keyboard.press("h");
+          else { await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 20000, "no menu"); await t.page.click("#menuKeys"); }
+          await t.until(async () => (await t.page.isVisible("#keys")) && !(await t.page.isVisible("#menu")), 20000, `the keys did not open by ${via} in ${lg} at ${w}`);
+          await t.frames(2);
+          const m = await t.page.evaluate(() => {
+            const k = document.getElementById("keys"), r = k.getBoundingClientRect(), W = innerWidth, H = innerHeight, bad = [];
+            for (const e of k.querySelectorAll("h2, kbd, dd, p")) { const q = e.getBoundingClientRect(); if (!q.width) continue; if (q.left < r.left - 1 || q.right > r.right + 1 || q.left < 0 || q.right > W) bad.push((e.textContent || "").slice(0, 12)); }
+            return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), W, H, wide: k.scrollWidth > k.clientWidth + 1, bad };
+          });
+          expect(m.left >= 0 && m.right <= m.W && m.top >= 0 && m.bottom <= m.H && !m.wide && m.bad.length === 0, `the keys should lie whole in the window by ${via} in ${lg} at ${w}x${h}: ` + JSON.stringify(m));
+          await t.page.keyboard.press("h"); await t.until(async () => !(await t.page.isVisible("#keys")), 20000, `H did not put the keys away in ${lg} at ${w}`);
+        }
+      }
+      await t.close();
+    }
+    // a touch screen keeps its stick and has no list of keys
+    const c = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    await c.page.keyboard.press("h"); await c.frames(2); expect(!(await c.page.isVisible("#keys")), "a touch screen should have no list of keys"); await c.close();
+  } },
   menufit: { tier: 2, async run(b, base) {
     // (English's Follow the hour is the longest hour row.)
-    for (const lg of ["zh", "ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+    for (const lg of ["zh", "ja", "en", "ko"]) { let u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
       await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
       for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
         const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
         expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
-      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185)
+      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185).
+      // A phone is a touch screen: its pointer is coarse, which is what hides the keyboard's own rows (`.keys-only`, the A/D row of #295's C) and the key card's button;
+      // a context with a fine pointer made 390 px wide is a narrow desktop window, which the menu scrolls for, and is not what this holds to (#129).
+      await u.close(); u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu on the phone in " + lg); await u.frames(2);
       await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
+      // (#417: the seasons' two rows, once the book has been filled, make the sheet taller than a phone: both states are held to it)
+      for (const on of [true, false]) { await u.page.evaluate((o) => document.body.classList.toggle("seasons", o), on); await u.frames(2); const lg2 = lg + (on ? "" : " (seasons not yet opened)");
       const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")]; return { names: hs.length, ear: hs[2] ? Math.round(hs[2].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
-      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
+      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg2} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
       // and the four ways to another language are all there at first sight: each the thing a thumb lands on at its middle,
       // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
       const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
-      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
+      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg2} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
       // and nothing written on the sheet lies half under the foot at first sight: any block of words that shows within the
       // sheet keeps clear of the foot's box, whatever is added to the menu later (#195: the group's invitation, half hidden)
       const under = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const cr = c.getBoundingClientRect(), foot = document.querySelector("#menu .row"), f = foot.getBoundingClientRect(), out = [];
@@ -2436,7 +2592,8 @@ const scenarios = {
           const st = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width || !r.height || st.visibility === "hidden" || el.closest("[hidden]")) continue;
           const shows = r.bottom > cr.top && r.top < cr.bottom; if (shows && r.bottom > f.top + 0.5 && r.top < f.bottom - 0.5) out.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 8)}" ${Math.round(r.top)}-${Math.round(r.bottom)}`); }
         return { foot: Math.round(f.top), out }; });
-      expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
+      expect(!under.out.length, `on a 390x844 phone in ${lg2} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
+      }
       await u.close(); }
   } },
   // A page left open learns that a newer build has been put up (#310, src/version.js): coming back to the front it asks
@@ -2465,6 +2622,34 @@ const scenarios = {
     expect(u.found === remote && u.said === 1 && u.hud.includes("update"), "a newer build should be said once at the foot: " + JSON.stringify(u));
     expect(await t.page.evaluate(() => document.body.dataset.ready === "1" && performance.getEntriesByType("navigation").length === 1), "the page should not have reloaded itself");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Sharing from an app's own browser (#344, src/share.js): in WeChat the system cannot take the book's page, so a sheet
+  // shows it as an <img> to press and hold, says so, and adds that the page opens in the browser from the corner; and a
+  // shared link naming a scene brings a first visit there once the opening has shown the mountain.
+  share: { tier: 2, async run(b, base) {
+    const WECHAT = "Mozilla/5.0 (Linux; Android 14; Pixel 8a Build/AP2A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.6478.188 Mobile Safari/537.36 XWEB/1260117 MicroMessenger/8.0.50.2701(0x28003253) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN";
+    const t = await open(b, base, "q=low&cam=0,30,0,0" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, userAgent: WECHAT });
+    await t.page.evaluate(() => window.__book()); await t.until(async () => (await t.page.evaluate(() => !!document.getElementById("bookImg").src)), 60000, "the book's page was never drawn");
+    expect(await t.page.isVisible("#bookShare"), "the book should offer 分享 in WeChat too");
+    await t.page.click("#bookShare"); await t.until(() => t.page.evaluate(() => window.__saveSheet().open), 20000, "the sheet to save from never opened");
+    const sh = await t.page.evaluate(() => ({ ...window.__saveSheet(), line: document.getElementById("saveTitle").textContent, w: document.getElementById("saveImg").getBoundingClientRect().width, events: window.__eventLog().filter((e) => e.name === "demo.share").map((e) => e.data) }));
+    expect(sh.app === "wechat" && sh.img === "IMG" && sh.src && sh.w > 200 && sh.wechat && !sh.download && sh.line.includes("长按"), "in WeChat: the page as an <img> to press and hold, the line about opening in the browser, no download: " + JSON.stringify(sh));
+    expect(sh.events.some((d) => d.method === "save" && d.from === "book" && d.scene === "goshuin"), "the share should be counted as saved: " + JSON.stringify(sh.events));
+    await t.page.click("#saveClose"); expect(!(await t.page.evaluate(() => window.__saveSheet().open)), "收下 puts the sheet away");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A friend's link to the bell, opened for the first time: the opening as ever, then he stands at the bell.
+    const u = await open(b, base, "q=low&from=bell&utm_source=share&utm_content=book" + BARE, { enter: false });
+    await u.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 }); await u.page.click("#enterBtn");
+    await u.until(() => u.page.evaluate(() => window.__opening().active), 30000, "a first visit should still be shown the mountain");
+    await u.page.keyboard.press("Escape");
+    await u.until(async () => { const s = await u.state(), p = await u.page.evaluate(() => window.__places.bell.at); return Math.hypot(s.x - p[0], s.z - p[1]) < 2.5; }, 120000, "the link to the bell did not bring him to the bell");
+    expect((await u.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "bell", "demo.ready should say the link named the bell");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A name the list does not hold is no scene: he starts at the foot of the path.
+    const v = await open(b, base, "q=low&from=../../evil" + BARE, { enter: false });
+    await v.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 });
+    expect((await v.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "", "an unknown scene is not named");
+    expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
   } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
@@ -3017,6 +3202,10 @@ const scenarios = {
   const names = part(named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most));
   for (const n of names) if (!scenarios[n]) { console.error(`no scenario "${n}"; there are: ${Object.keys(scenarios).join(", ")}`); process.exit(2); }
   const srv = await serve(), browser = await launch(), report = [];
+  if (process.env.E2E_GPU) {   // the T4 run (#335): say what drew it, and refuse to go on if it was software
+    const gl = await renderer(browser); fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "e2e-renderer.txt"), gl + "\n"); console.log("renderer:", gl);
+    if (/SwiftShader|llvmpipe|no webgl2/i.test(gl)) { console.error("E2E_GPU is set but the browser draws in software: not a T4 run"); process.exit(3); }
+  }
   for (const n of names) {
     const t0 = Date.now(); let error = null;
     try { await scenarios[n].run(browser, srv.base); } catch (e) { error = String(e.message || e).slice(0, 1500); }
