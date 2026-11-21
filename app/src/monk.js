@@ -608,7 +608,8 @@ export function createMonk() {
     // its bind pose and everything `update` does are unchanged; what was built here is let go.
     // `o.helpers`: the helper bones the body is weighted to besides these (its glTF's extras.helpers: name, the bone that
     // carries it, the arm it follows and the share of that arm's swing it takes), added before it is put on; `o.beads`
-    // or `o.straps` false leaves the beads or the hat's straps where they were laid for the robe built here.
+    // or `o.straps` false leaves the beads or the hat's straps where they were laid for the robe built here; `o.skinMaterial`
+    // draws the skin with a material of its own.
     get helpers() { return helpers.map((h) => h.name); },
     get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
     dress(geometries, material, robeColor, o = {}) {
@@ -623,7 +624,7 @@ export function createMonk() {
         for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) flat[i * a.itemSize + c] = a.getComponent(i, c);
         g.setAttribute(k, new THREE.BufferAttribute(flat, a.itemSize, a.normalized));
       }
-      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = material; }
+      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
       setupHem(robe.geometry.attributes.position.count);
       straps.visible = true;
       dressed = true;

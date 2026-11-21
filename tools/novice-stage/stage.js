@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createMonk } from "../../app/src/monk.js";
-import { bodyOf } from "../../app/src/novice.js";
+import { bodyOf, skinMaterial } from "../../app/src/novice.js";
 import { helpersOf, relayBeads } from "../novice-rig.mjs";
 import { teaBowl } from "../../app/src/rites.js";
 
@@ -66,7 +66,7 @@ function showFaces(m) {
     mat.customProgramCacheKey = () => 'faces'; o.material = mat; });
 }
 function dress(m) { if (!body) return; const extras = body.gltf.parser.json.extras;   // a body weighted to helper bones (#286) has monk.js add them
-  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor, { helpers: helpersOf(extras) }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }   // dressed as the page dresses him: beads and straps laid on the worn robe
+  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor, { helpers: helpersOf(extras), skinMaterial: skinMaterial(material) }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }   // dressed as the page dresses him: beads and straps laid on the worn robe
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {

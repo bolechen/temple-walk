@@ -35,11 +35,22 @@ export function bodyOf(scene, extras, monk) {
   return { geometries, material, robeColor: extras.robeColor, helpers: extras.helpers || [] };
 }
 
+// The skin's own material. The figure built in code gives its skin a little warm light of its own (monk.js's skinM, a stand-in
+// for light coming through skin), without which a face goes nearly black on a winter night; the body's one material has none.
+// Its skin is drawn with a copy that glows by its own texture (dark irises stay dark), `SKIN_GLOW` of it: by day a few per
+// cent, at night enough to keep the face at 0.7 of the built figure's or more (#163, the 3D review; tools/portrait.js winter-night).
+export const SKIN_GLOW = 0.03;
+/** @param {any} material */
+export function skinMaterial(material) {
+  const m = material.clone(); m.emissive.setRGB(1, 0.86, 0.76); m.emissiveMap = material.map; m.emissiveIntensity = SKIN_GLOW;
+  return m;
+}
+
 /** Dress `monk` in a body. Resolves with `monk`; rejects (and leaves him as he was) if the file is missing or does not fit. */
 export async function loadNovice(monk, url = asset(BODY_FILE.tripo)) {
   const gltf = await new GLTFLoader().loadAsync(url);
   const { geometries, material, robeColor, helpers } = bodyOf(gltf.scene, gltf.parser.json.extras, monk);
   /** @type {any} */ (material).envMapIntensity = 0.45;
-  monk.dress(geometries, material, robeColor, { helpers });
+  monk.dress(geometries, material, robeColor, { helpers, skinMaterial: skinMaterial(material) });
   return monk;
 }
