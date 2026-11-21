@@ -368,6 +368,8 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #loadProgress::-webkit-progress-value { background: var(--ember); border-radius: 2px; transition: width .2s ease; }
 #loadProgress::-moz-progress-bar { background: var(--ember); border-radius: 2px; }
 #loadRetry { margin-top: 12px; color: var(--paper); background: transparent; border: 1px solid rgba(237,232,220,.4); padding: 8px 14px; cursor: pointer; font: 14px var(--kai); }
+#title .how b, #title .how span { display: block; font-weight: 400; }
+#title .how span { margin-top: .7em; letter-spacing: .2em; opacity: .85; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }

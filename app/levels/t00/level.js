@@ -27,4 +27,6 @@ export default {
   keepsPlace: true,
   opening: true,
   title: true,
+  // Provisional until the art director has chosen among the candidates in the pull request (#445).
+  how: { place: "江南 · 径山古道", line: "雨后的石径，通向云里的寺。" },
 };

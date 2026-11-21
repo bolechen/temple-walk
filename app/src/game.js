@@ -19,6 +19,7 @@ import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
 import { track } from "./analytics.js";
+import { titleHow } from "./titlehow.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
 import { moodOf } from "./mood.js";
 import { WEB } from "./channel.js";
@@ -574,6 +575,9 @@ export function createGame(y) {
     if (y.walker.blocked(left.x, left.z)) { let got = null; out: for (let r = 0.01; r <= 0.06; r += 0.01) for (let k = 0; k < 16; k++) { const x = left.x + r * Math.cos((k * Math.PI) / 8), z = left.z + r * Math.sin((k * Math.PI) / 8); if (!y.walker.blocked(x, z)) { got = { x, z }; break out; } } left = got ? { ...left, ...got } : null; }
     y.walker.setLoft(null);
   }
+  // The line at the foot of the title is this level's own, or nothing (#445).
+  const how = /** @type {HTMLElement | null} */ (document.querySelector("#title .how")), says = titleHow(y.level);
+  if (how && says) { how.querySelector("b").textContent = t(says.place); how.querySelector("span").textContent = t(says.line); how.hidden = false; }
   const offer = () => {
     const o = titleOffer(journey.count(), SEALS.length, left, y.start), b = $("enterBtn"), again = $("againBtn");
     $("titleSeals").textContent = o.line || (journey.count() === SEALS.length ? t("七印圆满 · 山门常开") : "");
