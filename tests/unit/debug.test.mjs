@@ -44,11 +44,11 @@ test("a room's view is stood at its room's centre line, which is the door he ent
   }
 });
 
-test("the room views are the level's own: ?level when it has a table, else the prologue", () => {
-  assert.equal(levelOf("?debug", ["t00"]), "t00");
-  assert.equal(levelOf("?debug&level=t01", ["t00", "t01"]), "t01");
-  assert.equal(levelOf("?debug&level=../t00", ["t00"]), "t00");
-  assert.equal(levelOf("", []), null);
+test("the room views are the walked level's own table, and none when it has none (#434: T05 borrowed the prologue's)", () => {
+  assert.equal(levelOf("t00", ["t00"]), "t00");
+  assert.equal(levelOf("t01", ["t00", "t01"]), "t01");
+  assert.equal(levelOf("t05", ["t00"]), null, "a level with no table of room views offers none, not the prologue's");
+  assert.equal(levelOf("t00", []), null);
 });
 
 test("every switch the page offers has a name on the panel", () => {
@@ -87,4 +87,7 @@ test("the level's completion is its seals, the next observance and the visit so 
   const full = levelState({ count: 7, total: 7, done: true, next: null, seals: { bell: 1, incense: 1, tea: 1, sutra: 1, well: 1, lamp: 1, sit: 1 }, earned: ["闻钟", "上香", "吃茶", "得句", "观水", "燃灯", "静坐"] }, {});
   assert.deepEqual(full, { state: "已完成", progress: "7 / 7 枚朱印", next: "—", seals: "闻钟 · 上香 · 吃茶 · 得句 · 观水 · 燃灯 · 静坐", visit: "0 步 · 1 分钟" });
   assert.equal(levelState({ count: 0, done: false, next: "bell" }).progress, "0 / 0 枚朱印", "a hook without a total still gives a number");
+  // A level that keeps nothing of the prologue's (#426, #434) has no seals or visit of the prologue's to show.
+  const none = levelState({ count: 0, total: 7, done: false, next: "bell" }, { metres: 50, seconds: 60 }, false);
+  assert.deepEqual(none, { state: "不适用", progress: "不适用", next: "不适用", seals: "不适用", visit: "不适用" });
 });
