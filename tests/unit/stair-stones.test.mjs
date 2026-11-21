@@ -68,3 +68,29 @@ test('merging flights and batching them with mergeStatic keep the numbers', () =
   assert.ok(out.attributes.stair, 'mergeStatic keeps them');
   assert.equal(out.attributes.stair.count, out.attributes.position.count);
 });
+
+// A level may lay its stones otherwise (STAIR_STYLE in materials.js): what it sets on the material while its site is built
+// reaches the shader as uniforms when the program is first compiled, and what it leaves alone stays as the prologue has it.
+const { createMaterials, STAIR_STYLE } = await import('../../app/src/materials.js');
+const compiled = (steps) => { const sh = { uniforms: {}, vertexShader: '#include <common>\n#include <begin_vertex>', fragmentShader: '#include <common>\n#include <color_fragment>' }; steps.onBeforeCompile(sh); return sh; };
+const uniformsOf = (sh) => Object.fromEntries(['uStoneW', 'uCheekL', 'uLeaves', 'uMoss'].map((k) => [k, sh.uniforms[k].value]));
+
+test('the stone style starts as the prologue has it, and a level changes only what it names', () => {
+  assert.deepEqual(STAIR_STYLE, { stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true });
+  const plain = compiled(createMaterials().steps);
+  assert.deepEqual(uniformsOf(plain), { uStoneW: 0.8, uCheekL: 0.95, uLeaves: 1, uMoss: 1 });
+  assert.match(plain.fragmentShader, /uniform float uStoneW, uCheekL, uLeaves, uMoss;/);
+  const M = createMaterials(); M.steps.userData.stairStyle = { leaves: false, stoneW: 1.2 };
+  assert.deepEqual(uniformsOf(compiled(M.steps)), { uStoneW: 1.2, uCheekL: 0.95, uLeaves: 0, uMoss: 1 });
+  const again = compiled(createMaterials().steps);
+  assert.equal(again.uniforms.uLeaves.value, 1, 'one material\'s style is not another\'s');
+});
+
+test('T05 has no bamboo, so no bamboo leaf lies on its treads; the prologue\'s default is not touched', async () => {
+  const T05 = await import('../../app/levels/t05/site.js');
+  assert.deepEqual({ ...T05.STAIR_STYLE }, { leaves: false });
+  const M = createMaterials(); T05.buildSite(M);
+  assert.equal(compiled(M.steps).uniforms.uLeaves.value, 0, 'T05 built its site: leaves off');
+  assert.equal(compiled(M.steps).uniforms.uMoss.value, 1, 'moss stays as the prologue has it');
+  assert.equal(compiled(createMaterials().steps).uniforms.uLeaves.value, 1, 'a page that never built T05 keeps its leaves');
+});

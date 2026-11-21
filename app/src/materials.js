@@ -15,11 +15,11 @@ import { SHELTER } from "./shelter.js";
 // which is how a scanned surface (textures.js) gives its relief. `tex` names the scans the body samples.
 // Snow settles on whatever faces the sky unless `snow` is false or a roof is over it (shelter.js), and takes his
 // footprints (trail.js).
-export function procMat(key, params, body, { snow = true, tex = [], stair = false, glsl = "" } = {}) {
+export function procMat(key, params, body, { snow = true, tex = [], stair = false, glsl = "", uniforms = null } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? "\nattribute vec4 stair; varying vec4 vSt;" : ""))
@@ -51,6 +51,12 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
   return m;
 }
 
+// How a flight's stones are laid (the `steps` material below). A level that wants them otherwise sets what it changes on
+// `M.steps.userData.stairStyle` while its site is built (before the first frame; the page walks one level): `stoneW`
+// the slab's width across a tread, in metres, which sets how many slabs a flight has (two to five, one more or fewer now and
+// then); `cheekL` how long a stone down a cheek runs, in metres (a cap of 0.46 m stands at the head whatever this is); `leaves`
+// whether bamboo leaves lie on the treads; `moss` whether moss grows on the shaded flights. These are the prologue's own.
+export const STAIR_STYLE = Object.freeze({ stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true });
 export function createMaterials() {
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
   const wood = (key, grain, turn, base = ".125,.07,.05") => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
@@ -184,7 +190,7 @@ export function createMaterials() {
       // Moss: which treads carry it, by the sun the flight sees; where on them, by the damp.
       float tr=h21(vec2(ti*2.3+sed*5.1,sed+.9)), has=step(tr,shd<.5?.06:shd<1.5?.24:.55), cs=shd>1.5?.7:shd>.5?.35:.12;
       float moss=0.;
-      if(has+ck>.5){      // (the noise is only worked out where moss may be: a few treads, and the cheeks)
+      if((has+ck)*uMoss>.5){      // (the noise is only worked out where moss may be: a few treads, and the cheeks)
         float mn=fbm2(vWP.xz*2.4+sed*3.1+vWP.y*1.3);
         moss=max(has*up*(1.-ck)*smoothstep(.52,.78,mn*.85+.5*max(side,corner)-.5*walk)*(1.-clamp(wear,0.,1.)),
                  max(has*rr*smoothstep(.58,.8,mn*.9+.3*rr), ck*cs*smoothstep(.52,.76,mn+.4*foot+.25*joint)));
@@ -193,7 +199,7 @@ export function createMaterials() {
       col*=1.-.42*joint; ao_=min(ao_,1.-.25*joint); bump_=-joint*.004;
       // A bamboo leaf lies here and there on a tread, nearest the edges, and none on the worn middle.
       float lfm=0.;
-      if(ck<.5&&up>.5&&px<.04){
+      if(uLeaves>.5&&ck<.5&&up>.5&&px<.04){
         float cx=floor((x+W*.5)/.5), hc=h21(vec2(cx*1.3+sed,ti*.7+2.));
         if(hc<mix(.1,.34,max(side,corner))*(1.-.85*walk)){
           vec2 c=vec2((cx+.2+.6*h21(vec2(cx,ti+9.)))*.5-W*.5,.08+.28*h21(vec2(ti+1.,cx+5.)));
@@ -205,11 +211,12 @@ export function createMaterials() {
         }
       }
       rough_=mix(Nr.w,.45,.3*up); rough_=mix(rough_,.5,clamp(wear,0.,1.)*.7); rough_=mix(rough_,.38,damp*.4); rough_=mix(rough_,.95,moss); rough_=mix(rough_,.9,lfm);
-      nd_=Nr.xyz*.65+vec3(h21(vec2(sid+1.,ti+sed))-.5,0.,h21(vec2(ti+2.,sid+sed))-.5)*.05*up;`, { tex: ["stone"], stair: true, glsl: `
+      nd_=Nr.xyz*.65+vec3(h21(vec2(sid+1.,ti+sed))-.5,0.,h21(vec2(ti+2.,sid+sed))-.5)*.05*up;`, { tex: ["stone"], stair: true, uniforms: (m) => { const st = { ...STAIR_STYLE, ...(m.userData.stairStyle || {}) }; return { uStoneW: { value: st.stoneW }, uCheekL: { value: st.cheekL }, uLeaves: { value: st.leaves ? 1 : 0 }, uMoss: { value: st.moss ? 1 : 0 } }; }, glsl: `
       const float STREAD=${STAIR.tread.toFixed(3)}, SNOSE=${STAIR.nosing.toFixed(3)};
+      uniform float uStoneW, uCheekL, uLeaves, uMoss;   // the level's own way with stone (STAIR_STYLE)
       // How many slabs cut a tread across (two to five by its width, one more or fewer now and then), and where their joints fall.
       float stCount(float W,float i,float sed){
-        float nb=W<1.35?max(2.,floor(W/.45)):clamp(floor(W/.8+.5),3.,5.), r=h21(vec2(i+.5,sed+3.));
+        float nb=W<1.35?max(2.,floor(W/(.5625*uStoneW))):clamp(floor(W/uStoneW+.5),3.,5.), r=h21(vec2(i+.5,sed+3.));
         return clamp(nb+(r>.72?1.:0.)-(r<.22?1.:0.),2.,5.);
       }
       float stBreak(float k,float n,float W,float i,float sed){ return W*(-.5+(k+(h21(vec2(i*3.7+k,sed*1.3+9.))-.5)*.55)/n); }
@@ -222,7 +229,7 @@ export function createMaterials() {
       // (the stone's number down a cheek, the distance to the nearest joint): a cap at the head, then stones a metre long or more, none shorter than a third of a metre at the foot.
       vec2 stCheek(float z,float sed,float foot){
         float id=step(.46,z), dj=abs(z-.46), b=.46;
-        for(int j=0;j<5;j++){ b+=.95+.6*h21(vec2(float(j)+sed*1.7,sed+2.)); if(b>foot-.35) break; id+=step(b,z); dj=min(dj,abs(z-b)); }
+        for(int j=0;j<5;j++){ b+=uCheekL+.6*h21(vec2(float(j)+sed*1.7,sed+2.)); if(b>foot-.35) break; id+=step(b,z); dj=min(dj,abs(z-b)); }
         return vec2(id,dj);
       }` }),
 

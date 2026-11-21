@@ -31,7 +31,16 @@ export const STATION = Object.freeze({ A: [0, 44], B: [0, 27], C: [0, 0.6], D: [
 /** The parapet round the platform and the terrace (SITE.md §6: a railing or a low wall; a low wall here). */
 const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
 
+/**
+ * How this level's stairs are laid (STAIR_STYLE in src/materials.js lists what can be changed and what it starts as). T05 has
+ * no bamboo (docs/t05/ART.md §4.2: the court's trees drop leaves, there is "no T00 bamboo or cedar"), so no bamboo leaf lies on
+ * a tread; moss stays as the prologue has it (only on a flight that comes down toward the north), and the stones' size and the
+ * cheek's run stay the prologue's until the structure review has checked the Liao numbers.
+ */
+export const STAIR_STYLE = Object.freeze({ leaves: false });
+
 export function buildSite(M) {
+  Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
   const root = new THREE.Group();
   const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], []];
   const stone = [], plaster = [], steps = [], earth = [];
