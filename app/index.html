@@ -153,6 +153,19 @@
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
   <div class="row"><button class="chip" id="bookShare" type="button" hidden>分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
 </dialog>
+<dialog class="layer" id="bless" aria-labelledby="blessTitle" hidden>
+  <article class="paper scrolls">
+    <h2 id="blessTitle">为他人点灯</h2>
+    <p id="blessHint">选一句话，点一盏灯，再把链接送给他。</p>
+    <div class="row" id="blessList" role="group" aria-label="心愿" data-wraps></div>
+    <figure id="blessCard" hidden><img id="blessImg" alt=""></figure>
+    <p id="blessLink" hidden></p>
+    <div class="row" id="blessActs" hidden>
+      <button class="ink-btn" id="blessCopy" type="button">复制链接</button><button class="ink-btn" id="blessShare" type="button" hidden>分享</button><a class="ink-btn" id="blessSave" hidden>存下卡片</a>
+    </div>
+    <button class="ink-btn" id="blessClose" type="button">合上</button>
+  </article>
+</dialog>
 <dialog class="layer" id="piece" aria-labelledby="pieceTitle" hidden>
   <figure><img id="pieceImg" alt=""></figure>
   <article class="paper scrolls">

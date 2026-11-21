@@ -312,6 +312,7 @@ export function censerReach(y) {
 // (For this censer alone, until the following eye itself puts itself out of whatever it has come into the same frame.)
 /** @param {number[]} eye @param {number[]} head @param {{x:number,y:number,z:number}} at */
 export function clearOfCenser(eye, head, at, margin = 0.1) {
+  if (!at) return eye;   // a level with no censer (#409)
   const inside = (/** @type {number[]} */ [x, y, z]) => Math.hypot(x - at.x, z - at.z) < censerReach(y - at.y) + margin;
   if (!inside(eye)) return eye;
   const d = [head[0] - eye[0], head[1] - eye[1], head[2] - eye[2]], l = Math.hypot(d[0], d[1], d[2]);

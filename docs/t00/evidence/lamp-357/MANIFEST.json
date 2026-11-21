@@ -1,0 +1,282 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "final-arrival-en-phone.jpg",
+   "bytes": 62630,
+   "sha256": "a2a0d9b99ac4536c8b3f6a9e26956dedda1a6d5bb6483f2910f52520dc40ec30",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-arrival-ja-phone.jpg",
+   "bytes": 60900,
+   "sha256": "991ef18073b11babce3a6e107bea76fffa914e01a5715a1dd9c96bb2632ee99e",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-arrival-ko-phone.jpg",
+   "bytes": 63226,
+   "sha256": "b37caaefc5708d2c62473f97881c93fac906154ba76492462d9a7eaa46131fe1",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-arrival-zh-phone.jpg",
+   "bytes": 60566,
+   "sha256": "341ce23c0b0471b05afc33e5a7b0728d291776ba238e6e0cdecf34e26a470a0b",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-en.jpg",
+   "bytes": 124637,
+   "sha256": "e75b4e0946eb66c386d09dfbdec5f8ba26f4af2567266f538697147ea96bbb4a",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-ja.jpg",
+   "bytes": 118755,
+   "sha256": "97ef7ddcaac70d9b853c2c304a5e69b6d68bdf2c1271c0fc844da6c3b45f80e4",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-ko.jpg",
+   "bytes": 112379,
+   "sha256": "3af71b1a1aca30839ee220eb77ca8288af6badd31d489e0d47f4c44be5fed9ba",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-zh.jpg",
+   "bytes": 110377,
+   "sha256": "6dbbb7ff08aef3d576ad5a384859afa8e9600080b57d132569eae65c9537641c",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-sheet.jpg",
+   "bytes": 299696,
+   "sha256": "c33a1c9a72a18d65f66bb7fff9c61cd2d40c255e446c17f8138a57ed71a469a6",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "lamp-arrival-en-desktop.jpg",
+   "bytes": 145525,
+   "sha256": "d389f6da3890a69cb7aa48fb5c1b1490ad98e895747cfcb8e1be94398dd24811",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-en-phone.jpg",
+   "bytes": 64300,
+   "sha256": "8092e874f5e3b6c695d425b498983da4e9501e15e62a083521ef2242f6ba3439",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-ja-desktop.jpg",
+   "bytes": 143706,
+   "sha256": "6b2c822787993ebf120def7866c4c68cde599003fc609096e3ee067e38572d4f",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-ja-phone.jpg",
+   "bytes": 60939,
+   "sha256": "b66bc805b96b5b7f02c377ee58e3b7d4cb3141c3b05a28fa8b70d41ae78d2f0a",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-ko-desktop.jpg",
+   "bytes": 144384,
+   "sha256": "1450d5ef3515440f2b3cf6a25c1cb682d274ac2c90cb4c9360603fde40a37e3c",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-ko-phone.jpg",
+   "bytes": 63277,
+   "sha256": "a7c00a1baf989b034a30a16f6e9d5d398a4ede8266402a54ad235e4cf5ae310c",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-zh-desktop.jpg",
+   "bytes": 143015,
+   "sha256": "d2978a435bc0d36c08a49408b3c0a0de1526d89168b6a6360ab45e63d4575fdc",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-arrival-zh-phone.jpg",
+   "bytes": 60716,
+   "sha256": "302c1e28a5e5a9448b622ae2b00d7418b5473ce1611d3feafe0276aae1ef37e6",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-card-en.jpg",
+   "bytes": 124637,
+   "sha256": "e75b4e0946eb66c386d09dfbdec5f8ba26f4af2567266f538697147ea96bbb4a",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-card-ja.jpg",
+   "bytes": 122194,
+   "sha256": "0521666864d516a5257cf1aa40ffe5db9df40e9bdbc001502c155cbb075fdedf",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-card-ko.jpg",
+   "bytes": 112254,
+   "sha256": "e1bc0472439faa2f8f21e3b5d223143c14924dd17e93afb428f6baddadcff6f3",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "lamp-card-zh.jpg",
+   "bytes": 110377,
+   "sha256": "6dbbb7ff08aef3d576ad5a384859afa8e9600080b57d132569eae65c9537641c",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-en-desktop-card.jpg",
+   "bytes": 110016,
+   "sha256": "5aa2ecc00deee81ed94bd2fdd89710c107e1558beb2ab4c9409d226ca7f5f34f",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-en-desktop-list.jpg",
+   "bytes": 109540,
+   "sha256": "ed5fd9f0a27209297e10b2a0b3a8d2c049e5696fe6c8ab9563477c56f48c36a1",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-en-side-card.jpg",
+   "bytes": 55480,
+   "sha256": "c9538108ca67489dbf7f3bb3ddc004d869302f67b6291f6e89252f7189f7eb6f",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-en-side-list.jpg",
+   "bytes": 57155,
+   "sha256": "e243f68916c00b7d9a0f247958c69e039320cfd4e6939e55e3e2951a611932cf",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-en-upright-card.jpg",
+   "bytes": 82321,
+   "sha256": "1e5a1a4b465094223e82cb125b026d3c553bbefb902ce6a875a385fafb95e3ed",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-en-upright-list.jpg",
+   "bytes": 80872,
+   "sha256": "e923961570cc89600e49427e0abbdec6377c7f34648700bd11180f603eeca44e",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ja-desktop-card.jpg",
+   "bytes": 115136,
+   "sha256": "19298f988b8401f4c9a60581fe009d0b1116678ff1c4458e4fbd721373d7acd3",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ja-desktop-list.jpg",
+   "bytes": 115693,
+   "sha256": "edc7b48b2ae9a9c8e5d10af11e69ea77c25813c7e7b95bcf4303891b7cb005a5",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ja-side-card.jpg",
+   "bytes": 56486,
+   "sha256": "47a27a12040b48ef24c947e80eb1b02dddb0feb2b378fa8e5080834baa193700",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ja-side-list.jpg",
+   "bytes": 57797,
+   "sha256": "41424db9171184c11ddd78aed53308f11a680cac1e135f7ea52f45023b8acbf6",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ja-upright-card.jpg",
+   "bytes": 85745,
+   "sha256": "6cecdc54573c0211c846f61d35f1d429666b3b4bdcdd6f2c825bf45fcea41156",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ja-upright-list.jpg",
+   "bytes": 84770,
+   "sha256": "d7d9b179c58f66eebbd367d2e71c578c477320e4e17d5acc987f260b29ce8b55",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ko-desktop-card.jpg",
+   "bytes": 111903,
+   "sha256": "04dbbdb7ac3ab70f7c3065861767dd06409c2995669447ea62b7d0bbc6752f93",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ko-desktop-list.jpg",
+   "bytes": 109238,
+   "sha256": "af28b45f261c7cf51043c80e3e39087c555402d8c16838b808eda97600a74c89",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ko-side-card.jpg",
+   "bytes": 58248,
+   "sha256": "3ef50306e0e948c4cc8dedd7c3c30a7b0d2c42543102fd8136a9a2cfb05d4192",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ko-side-list.jpg",
+   "bytes": 58581,
+   "sha256": "1fdfa279f3717da2a4362b22e1e6c3e48eff13c8b8acf2f1e8e58fd6d076233b",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ko-upright-card.jpg",
+   "bytes": 81284,
+   "sha256": "51a19d67c2beeb9fa8a23914f9216e07e50d47ab5a0a4334f25cf01548f7b92d",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-ko-upright-list.jpg",
+   "bytes": 80898,
+   "sha256": "b47f54b7b867d4dd998ad71cd8fa535b9ee3da4be039e8db03304cdbd49f0717",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-zh-desktop-card.jpg",
+   "bytes": 105370,
+   "sha256": "10867e3448fecceb66850b05a632d4d1f0ad47b4086698867bca5bb2f57df04f",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-zh-desktop-list.jpg",
+   "bytes": 103385,
+   "sha256": "3653f00b5cac6df9ef332c0d904d2db48f7152598d0e1e5eb8428cecb9b508f7",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-zh-side-card.jpg",
+   "bytes": 55297,
+   "sha256": "37a1a0e8dc56c5df3efcc1c2ecdedeed8ea8795e4f13c1150aa419fd5735e6d6",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-zh-side-list.jpg",
+   "bytes": 55010,
+   "sha256": "b131a453f869d0b9e969b435771fbda0a9a0dd14a30a7996a6eead6481d90db6",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-zh-upright-card.jpg",
+   "bytes": 76581,
+   "sha256": "5d8c6defb4caa757a4d65eb30b1fe231058d252f41d598439bcb7f7bf9bed9d0",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet-zh-upright-list.jpg",
+   "bytes": 69442,
+   "sha256": "ed527f4e6c2cda406ca3eb3014e8838a6b66c9e8797d847b74b066045845128c",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  },
+  {
+   "path": "sheet.jpg",
+   "bytes": 106537,
+   "sha256": "9368e87a9b93f2b541e7a28f4bf0d42593b912a6e4e99e88de58daf45ad50758",
+   "rev": "ea0ff416d306c198566580f822a61c50470728c9"
+  }
+ ]
+}
