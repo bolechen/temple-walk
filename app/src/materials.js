@@ -169,7 +169,7 @@ export function createMaterials() {
       float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y), joint=0., jd=.4, rim=0.;
       if(sg.y<.05){      // a joint: wide here and narrow there, dark here and less dark there, with the arris beside it rubbed bright
         float dj=sg.y+(n2(vWP.xz*13.+vWP.y*9.)-.5)*.005, jn=n2(vWP.xz*8.+vWP.y*10.+sid*2.9);
-        float jw=(.0022+.0024*h21(vec2(sid,sed+4.)))*(.35+1.3*smoothstep(.3,.7,jn)); jd=.42+.26*smoothstep(.3,.7,n2(vWP.xz*3.1+vWP.y*4.3+sid*5.1));
+        float jw=(.0028+.0028*h21(vec2(sid,sed+4.)))*(.35+1.3*smoothstep(.3,.7,jn)); jd=.54+.24*smoothstep(.3,.7,n2(vWP.xz*3.1+vWP.y*4.3+sid*5.1));
         float seen=1.-smoothstep(.03,.1,px);          // (only as long as it can be told apart)
         joint=(1.-smoothstep(jw,jw+.006+px,dj))*seen;
         rim=smoothstep(jw+.001,jw+.005,dj)*(1.-smoothstep(jw+.005,jw+.018,dj))*seen; }
