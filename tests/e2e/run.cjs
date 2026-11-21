@@ -1351,8 +1351,9 @@ const scenarios = {
         const vp = t.page.viewportSize(), at = async (x, z, yaw, pitch) => { await t.page.evaluate(([x, z, yaw, pitch]) => window.__pose(x, z, yaw, pitch), [x, z, yaw, pitch]); await t.frames(3); };
         await at(0.3, 2.2, 0, 0.05); await tap(vp.width / 2, vp.height * 0.375); await t.until(t.inHall, 300000, "from the court, a tap on the hall never led inside"); await settle();   // (a pass still under way drops __inside(null))
         await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, "never came out"); await settle();
-        await at(0, -3.5, 0, -0.45); await tap(vp.width / 2, vp.height * 0.85); await t.frames(1);
-        const f = await t.state(); expect(f.target && f.target[1] > -5.0 && f.target[1] < -1, `on the porch, a tap on the porch floor should walk there, got ${f.target}`);
+        await at(0, -3.5, 0, -0.45);
+        // (the first destination is caught frame by frame inside the page: a way worked out over a few frames is not there one frame after the tap, #349)
+        const f = { target: await t.tapTarget(() => tap(vp.width / 2, vp.height * 0.85), "a tap on the porch floor") }; expect(f.target && f.target[1] > -5.0 && f.target[1] < -1, `on the porch, a tap on the porch floor should walk there, got ${f.target}`);
         await t.until(async () => !(await t.state()).target, 120000, "never reached the spot on the porch"); expect(!(await t.inHall()), "a tap on the porch floor took him into the hall");
         await at(0, -3.5, 0, -0.35); await tap(vp.width / 2, vp.height * 0.5); await t.until(t.inHall, 300000, "on the porch, a tap on the door never led inside");
       }
