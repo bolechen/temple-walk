@@ -130,7 +130,7 @@ export function buildAxis(M, { C, W }) {
   }
   // Trunks stand in the earth either side of the path, for the trees to come: plain posts, in the way, with their written-plan rectangles.
   const trunk = [];
-  for (const sx of [-1, 1]) for (const [zs, y] of [[TRUNKS.lane, 0], [TRUNKS.terrace, top]]) for (const z of zs) {
+  for (const sx of [-1, 1]) for (const { zs, y } of [{ zs: TRUNKS.lane, y: 0 }, { zs: TRUNKS.terrace, y: top }]) for (const z of zs) {
     trunk.push(new THREE.CylinderGeometry(TRUNKS.r * 0.8, TRUNKS.r, TRUNKS.h, 8).translate(sx * TRUNKS.x, y + TRUNKS.h / 2, z));
     walk.solids.push({ x0: sx * TRUNKS.x - TRUNKS.r - BODY, x1: sx * TRUNKS.x + TRUNKS.r + BODY, z0: z - TRUNKS.r - BODY, z1: z + TRUNKS.r + BODY, eyeTop: y + TRUNKS.h });
   }
