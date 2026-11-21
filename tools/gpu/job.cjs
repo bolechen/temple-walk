@@ -244,10 +244,10 @@ function fingerprint(dir) {
     const free = typeof shot === "object" && !!shot.file, named = typeof shot === "object" && !free, name = free ? shot.file : named ? shot.name : shot;
     const [view, when = "", as = ""] = free ? [] : name.split("@"), [season, time] = when.split("-"), size = (typeof shot === "object" && shot.size) || spec.size || [1920, 1080], tier = (named && shot.q) || spec.q || "high";
     try {
-      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1, { path: (free && shot.path) || "" });   // `path` (a free shot's): the same page of the build staged beside the site's own (BASE_SITE), to draw a picture before and after in one job
+      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1, { path: (typeof shot === "object" && shot.path) || "" });   // `path` (a free shot's or a named one's): the same page of the build staged beside the site's own (BASE_SITE), to draw a picture before and after in one job; a named shot's file then carries `_base`
       await page.waitForTimeout(free && shot.wait ? shot.wait : 800);
       if (free && shot.js) await page.evaluate(shot.js);
-      const file = free ? name + ".png" : name.replace(/@/g, "_") + (named && shot.q ? "_" + shot.q : "") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
+      const file = (free ? name : name.replace(/@/g, "_") + (named && shot.q ? "_" + shot.q : "") + (named && shot.path ? "_base" : "")) + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
       const y = await page.evaluate(() => window.__yard()); report.shots.push({ name, file, tris: y.tris, calls: y.calls }); console.log("shot", file); await ctx.close();
     } catch (e) { report.shots.push({ name, error: String(e.message).slice(0, 200) }); console.log("shot failed", name, String(e.message).slice(0, 200)); }
     save();
