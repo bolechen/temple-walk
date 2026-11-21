@@ -7,6 +7,12 @@
 #   SETS=paint tools/t05-gpu.sh <vipasyin> <kasyapa> <sakyamuni>   the three in clay and painted (issue #287), taken in
 #                                                       turn twice over in the same job, so the card's warming up and
 #                                                       any drift fall on both alike
+#   SEVEN="<7 near files, east to west>" SETS=seven370 tools/t05-gpu.sh <a> <b> <c>   the seven as made, each with its anchors,
+#                                                       in clay and painted twice over, and four pictures of the line-up
+#   SEVEN=… SETS=masks370 tools/t05-gpu.sh <a> <b> <c>   the seven painted with and without their masks, high and low tier
+#   SETS=lod370 tools/t05-gpu.sh <near.glb> <mid.glb> <far.glb>    issue #370's Śākyamuni sample: its three levels of
+#                                                       detail, each repeated on all seven seats, in clay and painted,
+#                                                       with the empty hall, all taken in turn twice over in one job
 #
 # The report's site.commit is HEAD, with "+dirty" if anything the page is built from has changes not committed: run it
 # on a clean commit, after building the page from that commit.
@@ -21,12 +27,48 @@ BUCKET="$NS/temple-walk-render"; RUN="t05-$(date -u +%Y%m%d-%H%M%S)"
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/app/s"; cp -R tools/out/t05-hall-page/. "$STAGE/app/"
 cp "$A" "$STAGE/app/s/0.glb"; cp "$B" "$STAGE/app/s/1.glb"; cp "$C" "$STAGE/app/s/2.glb"
+# SETS=seven370 also takes the seven figures, east to west, in SEVEN (space-separated near-level files) as s/10..16.glb
+if [ -n "${SEVEN:-}" ]; then i=10; for f in $SEVEN; do cp "$f" "$STAGE/app/s/$i.glb"; i=$((i+1)); done; fi
 cp app/favicon.svg "$STAGE/app/favicon.svg"                       # job.cjs probes the card on a same-origin page
-cp tools/gpu/job.cjs tools/gpu/t05-hall-gpu.cjs "$STAGE/"
+cp tools/gpu/job.cjs tools/gpu/t05-hall-gpu.cjs tools/site.cjs "$STAGE/"   # job.cjs serves the page with site.cjs (#418)
 SPEC="$(SETS="${SETS:-}" node -e '
 const S = (u, x, turn, extra = {}) => ({ url: "s/" + u + ".glb", x, h: x ? 8.8 : 9.0, turn, paint: "clay", ...extra });
 const T = -Math.PI / 2, three = [S(0, 0, T), S(1, 5.8, T), S(2, -5.8, T)];
 const seven = [S(0, 0, T), S(1, 5.8, T), S(2, -5.8, T), S(1, 11.33, T), S(2, -11.33, T), S(1, 16.45, T), S(2, -16.45, T)];
+if (process.env.SETS === "seven370") {
+  // the seven Buddhas as made (#370 and after): each its own near-level file and its own anchors, east to west, in clay and painted, twice over; and the line-up pictures
+  const N = ["kasyapa-t05", "krakucchanda-t05", "sikhin-t05", "vipasyin-t05", "visvabhu-t05", "kanakamuni-t05", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
+  // heights with the throne: DECISIONS.md §3 (middle 9.0, the sides lower step by step), the outer two pairs brought down until each pair of neighbours keeps 0.2 m apart (docs/t05/SHAKYAMUNI-SAMPLE.md, 七尊第二轮)
+  const HT = [8.6, 8.75, 8.9, 9.0, 8.9, 8.75, 8.6];
+  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0 }, paint: "clay", colour: c }));
+  const V = ["door", "door3", "front10"], sets = [];
+  sets.push({ name: "lineup", size: [1920, 1080], statues: L, shots: [
+    { name: "door3-winter", shoot: { paint: true, mood: "winter", view: "door3" } }, { name: "door-winter", shoot: { paint: true, mood: "winter", view: "door" } },
+    { name: "cam06-winter", shoot: { paint: true, mood: "winter", view: "cam06" } }, { name: "row-winter", shoot: { paint: true, mood: "winter", view: "front10", over: { at: [0, 7.0, -1.0], look: [0, 8.8, -17.6], fov: 72, exp: 3.8 } } } ] });
+  for (const k of [1, 2]) { sets.push({ name: "none-" + k, statues: [], views: V }, { name: "seven-clay-" + k, statues: L, paint: false, views: V }, { name: "seven-paint-" + k, statues: L, paint: true, views: V }); }
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
+}
+if (process.env.SETS === "masks370") {
+  // what the masks cost (#370 round 6): the seven painted with and without their masks, inside the hall, at the high tier
+  // (1920×1080, GTAO) and the low (960×540, no AO), each pair taken in turn twice over in one job
+  const N = ["kasyapa-t05", "krakucchanda-t05", "sikhin-t05", "vipasyin-t05", "visvabhu-t05", "kanakamuni-t05", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
+  const HT = [8.6, 8.75, 8.9, 9.0, 8.9, 8.75, 8.6];
+  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0 }, paint: "clay", colour: c }));
+  const V = ["door3", "cam06", "front10"], sets = [];
+  for (const k of [1, 2]) for (const [t, size, ao] of [["high", [1920, 1080], true], ["low", [960, 540], false]])
+    sets.push({ name: `nomask-${t}-${k}`, statues: L, size, ao, paint: { masks: false }, views: V }, { name: `mask-${t}-${k}`, statues: L, size, ao, paint: true, views: V });
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
+}
+if (process.env.SETS === "lod370") {
+  const L = (u, paint) => [-16.45, -11.33, -5.8, 0, 5.8, 11.33, 16.45].map((x) => ({ url: "s/" + u + ".glb", x, h: 8.6, base: false, plinth: 0.4, turn: 0, headAt: 0.13, halo: { rings: 0, tips: 0 }, paint: "clay", colour: "sakyamuni-370" }));
+  const V = ["door", "door3", "front10"], sets = [];
+  for (const k of [1, 2]) { sets.push({ name: "none-" + k, statues: [], views: V });
+    for (const [u, n] of [[0, "near"], [1, "mid"], [2, "far"]]) sets.push({ name: n + "-clay-" + k, statues: L(u), paint: false, views: V }, { name: n + "-paint-" + k, statues: L(u), paint: true, views: V }); }
+  // the review pictures (the owner asked to see the hands and the paint, #370): the shots of tools/t05-hall/specs/sakyamuni-370-review.json on the near level
+  const R = require("./tools/t05-hall/specs/sakyamuni-370-review.json");
+  sets.unshift({ name: "review", size: R.size, statues: [{ ...L(0)[3] }], shots: R.shots });
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
+}
 if (process.env.SETS === "paint") {
   const C = ["vipasyin", "kasyapa", "sakyamuni"], P = three.map((s, i) => ({ ...s, colour: C[i], ...(i === 2 ? { yaw: 0.12 } : {}) })), V = ["door3", "side3", "front10"];
   const sets = []; for (const k of [1, 2]) sets.push({ name: "three-clay-" + k, statues: P, paint: false, views: V }, { name: "three-paint-" + k, statues: P, paint: true, views: V });
