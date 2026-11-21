@@ -19,8 +19,9 @@ export const ALTAR = Object.freeze({ w: 37.5, d: 4.8, h: 0.87, zF: -14.5, zB: -1
 /**
  * The seven, east to west as the visitor sees them from the door, right to left (DECISIONS.md: Kasyapa, Krakucchanda, Sikhin,
  * Vipashyin, Visvabhu, Kanakamuni, Shakyamuni), each on the middle of its bay. `h` is the whole from the altar's top, base and halo-less
- * figure together. The middle one is 0.7 m over the six (9.3 against 8.6): DECISIONS.md §3 had 9.0 and 8.6–8.9, which
- * left Vipashyin 5 px over his neighbours at cam03; #432 asks for 25 px at 1080 lines; 0.7 m gives about 31 there (9.3 is still within the 8.6–9.5 m the public figures give).
+ * figure together. The middle one is 9.3 m and the six 8.6 (DECISIONS.md, 2026-11-21: the art director and the structural
+ * review on #493), so that from cam03 his head stands 25–38 px over his neighbours' at 1080 lines; the six are alike, as no
+ * figure-by-figure heights are known.
  * Shakyamuni at the west end is turned 7° to the west (yaw in radians, +z the way the hall faces).
  */
 export const FIGURES = Object.freeze([
@@ -32,8 +33,8 @@ export const FIGURES = Object.freeze([
   { id: "kanakamuni", x: -11.33, h: 8.6 },
   { id: "sakyamuni", x: -16.45, h: 8.6, yaw: (-7 * Math.PI) / 180 },
 ].map((f) => Object.freeze(f)));
-/** A figure's base (a Sumeru base 2.0 m and a lotus 1.0 m, as the statue session's stage has it), its outline on the altar, and the halo behind it (4.2 m at its widest, the art director's call on #407). */
-export const SEAT = Object.freeze({ sumeru: 2.0, lotus: 1.0, w: 4.4, d: 3.2, z: -16.9, halo: { w: 4.2, over: 1.6, z: -19.05, t: 0.18 } });
+/** A figure's base (a Sumeru base 2.0 m and a lotus 1.0 m, as the statue session's stage has it), its outline on the altar, and the halo behind it (4.0 m at its widest: the art director's 4.2 of #407, narrowed on #493 so that every halo keeps 0.15 m from the frames' beams beside it). */
+export const SEAT = Object.freeze({ sumeru: 2.0, lotus: 1.0, w: 4.4, d: 3.2, z: -16.9, halo: { w: 4.0, over: 1.6, z: -19.05, t: 0.18 } });
 /** The attendants: two to each Buddha, standing on the altar's front strip either side of his base, 2.6 m with their lotus (DECISIONS.md §3: 2.5–2.7). */
 export const ATTEND = Object.freeze({ dx: 1.6, z: -14.95, w: 0.6, h: 2.6 });
 /** The two guardian kings on the floor at the altar's ends (ARCHITECTURE.md §2.3: x about ±19.5–20.5), 3.7 m on a 0.35 m plinth (DECISIONS.md §3: 3.5–4.0). */

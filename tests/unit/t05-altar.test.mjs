@@ -47,18 +47,18 @@ test("the middle one is not lower than his neighbours, the six within 8.6–8.9 
   assert.ok(Math.sin(sak.yaw) < 0, "facing turned toward -x, the west");
 });
 
-// #432's second criterion, 25 px over his neighbours at cam03 (third person, 1080 lines; 2.3% of the picture's height),
-// waits on the art director's call (the T05 lead, 2026-11-21): it is worked out and reported, not yet held.
-test("the middle one reads tallest from the threshold: 25 px over his neighbours at cam03", { todo: "awaiting the art director's call on the 25 px line (#432)" }, () => {
+// #432's second criterion as the art director set it on #493: at cam03 (third person, 1080 lines) the middle one's head
+// stands 25–38 px over his neighbours' (2.3% to 3.5% of the picture's height): read as the tallest, not towering.
+test("the middle one reads tallest from the threshold, and no more: 25–38 px over his neighbours at cam03", () => {
   const cam = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 400);
   for (const pitch of [0.1, 0.14, 0.2]) {
     cam.position.set(...EYES[0]); cam.rotation.set(pitch, 0, 0, "YXZ"); cam.updateMatrixWorld();
     const y = (id) => { const t = altar.tops.find((q) => q.id === id); return ((1 - new THREE.Vector3(t.x, t.top, t.z).project(cam).y) / 2) * 1080; };
-    for (const n of ["sikhin", "visvabhu"]) assert.ok(y(n) - y("vipasyin") >= 1080 * 0.023, `pitch ${pitch}: ${(y(n) - y("vipasyin")).toFixed(1)} px over ${n}`);
+    for (const n of ["sikhin", "visvabhu"]) { const d = y(n) - y("vipasyin"); assert.ok(d >= 1080 * 0.023 && d <= 1080 * 0.035, `pitch ${pitch}: ${d.toFixed(1)} px over ${n}`); }
   }
 });
 
-test("every halo keeps clear of the frames' beams either side of it (the structural review of #493)", () => {
+test("every halo keeps 0.15 m from the frames' beams either side of it, Shakyamuni's turned too (#493)", () => {
   const beams = hall.parts.frame.map((g) => (g.computeBoundingBox(), g.boundingBox));
   let least = Infinity;
   for (const g of altar.parts.halo) {
@@ -67,7 +67,7 @@ test("every halo keeps clear of the frames' beams either side of it (the structu
       if (b.max.y <= h.min.y || b.min.y >= h.max.y || b.max.z <= h.min.z || b.min.z >= h.max.z) continue;   // not beside it
       const gap = Math.max(b.min.x - h.max.x, h.min.x - b.max.x);
       least = Math.min(least, gap);
-      assert.ok(gap > 0, `a halo (x ${h.min.x.toFixed(2)} to ${h.max.x.toFixed(2)}) runs into a beam (x ${b.min.x.toFixed(2)} to ${b.max.x.toFixed(2)})`);
+      assert.ok(gap >= 0.15, `a halo (x ${h.min.x.toFixed(2)} to ${h.max.x.toFixed(2)}) runs into a beam (x ${b.min.x.toFixed(2)} to ${b.max.x.toFixed(2)})`);
     }
   }
   assert.ok(least < Infinity, "the halos stand beside the frames");
