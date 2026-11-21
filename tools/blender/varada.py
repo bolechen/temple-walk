@@ -629,6 +629,31 @@ if CL:
     if not big: small += comp
   bmesh.ops.delete(bm, geom=list(set(small)), context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
   bm.to_mesh(me); bm.free(); me.update(); log["cleanup"] = {"island": CL.get("island", 50), "pad_m": pad, "faces_taken_out": len(set(small))}
+  # then once more as the measure sees it: points merged only where they coincide exactly (to 1e-7 m), pieces joined
+  # through shared edges; a piece of fewer than `island` faces whose middle lies in the knee box (with the measure's
+  # margin, before the knee's front) goes
+  from scipy.sparse import coo_matrix as _coo
+  from scipy.sparse.csgraph import connected_components as _cc
+  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); S_ = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+  tri = [list(p_.vertices) for p_ in me.polygons]; nf_ = len(tri)
+  _, vid = np.unique(np.round(S_ / 1e-7).astype(np.int64), axis=0, return_inverse=True); vid = vid.ravel()
+  rows, cols = [], []; emap = {}
+  for fi_, t_ in enumerate(tri):
+    m_ = [vid[i] for i in t_]
+    for a_, b_ in zip(m_, m_[1:] + m_[:1]):
+      k_ = (a_, b_) if a_ < b_ else (b_, a_)
+      if k_ in emap: rows.append(emap[k_]); cols.append(fi_)
+      else: emap[k_] = fi_
+  nc_, lab_ = _cc(_coo((np.ones(len(rows)), (rows, cols)), shape=(nf_, nf_)), directed=False)
+  cnt_ = np.bincount(lab_, minlength=nc_)
+  fcen = np.array([S_[t_].mean(0) for t_ in tri]); e2 = CL.get("margin", 0.12)
+  inb_ = np.all((fcen > blo - e2) & (fcen < bhi + e2), axis=1) & (fcen[:, 2] > CL.get("zmin", 0.5))
+  kill = np.nonzero((cnt_[lab_] < CL.get("island", 50)) & inb_)[0]
+  if len(kill):
+    bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[bm.faces[int(i)] for i in kill], context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.to_mesh(me); bm.free(); me.update()
+  log["cleanup"]["exact_faces_taken_out"] = int(len(kill))
 # back to the file's own frame and units, so the rest of the pipeline (thinning, baking) takes it as it took r1
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
 S3 = np.c_[co[:, 0], co[:, 2], -co[:, 1]]; B3 = S3 / k; B3 = np.c_[B3[:, 0], -B3[:, 2], B3[:, 1]] + off
