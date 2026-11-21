@@ -225,7 +225,7 @@ export function createMaterials() {
       float de=min(st.x,${CHEEK_STONE.width}-st.x), arrC=ck*up*stoneF*(1.-smoothstep(0.,.02,de));
       float lip=(1.-ck)*(1.-up)*step(.93,tf);                       // the front of the nosing slab, under the lip
       col*=(1.-jd*joint)*(1.+.14*rim*(.4+.6*up)+.62*crest+.16*arrC)*(1.-.5*edge_-.32*lip-.55*chip)*(1.+.1*chipRim);
-      ao_=min(ao_,1.-mix(.6,.1,up)*joint*(1.-fillw));   // (a deep riser joint takes no sky or sun at all) bump_=-joint*(1.-fillw)*.004-.005*edge_-.005*chip+.002*crest;
+      ao_=min(ao_,1.-mix(.6,.1,up)*joint*(1.-fillw)); bump_=-joint*(1.-fillw)*.004-.005*edge_-.005*chip+.002*crest;   // (a deep riser joint takes no sky or sun at all)
       // A bamboo leaf lies here and there on a tread, nearest the edges, and none on the worn middle.
       float lfm=0.;
       if(uLeaves>.5&&ck<.5&&up>.5&&px<.04){
