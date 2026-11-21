@@ -44,20 +44,20 @@ test("by the ink-stone pool, looking into the grove, the eye stays out of it (#5
 
 // Kept out of the grove, by the ink-stone pool the arm comes in to 1.25 m, and from there, the view level, the whole of
 // him does not fit the picture: his feet are cut off (the T00 lead, #518). Where the keep-out holds the arm too short, the
-// eye rises along it and looks down at him until he does: his feet and the top of his head inside the picture with 5% to
-// spare top and bottom (art-gate 13: he is wholly in the picture).
+// eye rises along it and looks down at him until he does: the box round him (as `monkBox`) inside the picture with 5% to
+// spare on every side, on a phone held upright too (art-gate 13: he is wholly in the picture).
 function framed(c, x, z, aspect) {
   const foot = walker.heightAt(x, z), aim = aimAt(c, [x, foot, z], 2.422, FRAMES.b, FOV); if (!aim) return null;
   const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 500); cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
   // (the corners of a box 0.6 m across round him, his feet to his head, as the page's `__probe().monkBox` is measured)
-  const ys = []; for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const y of [foot, foot + 1.22]) ys.push(new THREE.Vector3(x + dx, y, z + dz).project(cam).y);
-  return [Math.min(...ys), Math.max(...ys)];
+  const ys = [], xs = []; for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const y of [foot, foot + 1.22]) { const q = new THREE.Vector3(x + dx, y, z + dz).project(cam); ys.push(q.y); xs.push(q.x); }
+  return [Math.min(...ys), Math.max(...ys), Math.min(...xs), Math.max(...xs)];
 }
 test("by the ink-stone pool the eye, held in by the grove, rises until the whole of him is in the picture (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
   const bad = [];
   for (const [name, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) {
     const c = rest(23.636, 75.6, 2.422, 0.084, aspect), f = framed(c, 23.636, 75.6, aspect);
-    if (!f || f[0] < -0.9 || f[1] > 0.9) bad.push(`${name}: feet at ${f?.[0].toFixed(2)}, head at ${f?.[1].toFixed(2)} of the picture's height (eye ${c.map((v) => v.toFixed(2)).join(", ")}, ${Math.hypot(c[0] - 23.636, c[2] - 75.6).toFixed(2)} m off)`);
+    if (!f || f[0] < -0.9 || f[1] > 0.9 || f[2] < -0.9 || f[3] > 0.9) bad.push(`${name}: feet at ${f?.[0].toFixed(2)}, head at ${f?.[1].toFixed(2)} of the picture's height, sides at ${f?.[2].toFixed(2)} and ${f?.[3].toFixed(2)} of its width (eye ${c.map((v) => v.toFixed(2)).join(", ")}, ${Math.hypot(c[0] - 23.636, c[2] - 75.6).toFixed(2)} m off)`);
     if (GROVE.grows(c[0], c[2])) bad.push(`${name}: risen, the eye stands in the grove`);
   }
   assert.deepEqual(bad, [], bad.join("\n"));

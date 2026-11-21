@@ -19,7 +19,7 @@
 // middle would hold that too, but it would bring the eye down to his hip by every wall, under a stair's cheek).
 export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
   const tv = Math.tan((fov * Math.PI) / 360);
-  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h, tv, ny: frame.ny, hold: frame.hold };   // (tv, ny, hold: to tell whether all of him fits the picture, `fitRise`)
+  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h, tv, aspect, ny: frame.ny, hold: frame.hold };   // (tv, aspect, ny, hold: to tell whether all of him fits the picture, `fitRise`)
 }
 export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM, space = null }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
@@ -31,8 +31,9 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // sent up it stands metres over his head and loses him below the frame. Such a point is closed to the eye, as a wall is.
   const MAXRISE = 1.5;
   // How much higher still it may go to hold all of him in the picture when it is held in near him (`fitRise`): as far again
-  // as a grown person lifts a camera over their head, 1.8 m (#515; the T00 lead asked for 1.5 to 2 m on MAXRISE's lines).
-  const FIT_RISE = 1.8;
+  // as a grown person lifts a camera over their head and a little more, 2 m: on a phone held upright 1.8 m left his sides
+  // 3% short of the margin (#515; the T00 lead asked for 1.5 to 2 m on MAXRISE's lines).
+  const FIT_RISE = 2.0;
   const rise = (px, y, pz) => { const under = walker.landAt(px, pz); return under + 0.35 + Math.max(0, under - foot) * 1.6 - y; };
   // (An arm, B's or A's, also keeps the near plane off a porch's railing, as the director's swings do: straight behind
   // him on a balcony it would otherwise come down to the rail's top.)
@@ -148,8 +149,12 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const fits = (b, y) => {
     const dx = x - b[0], dz = z - b[2], h = Math.hypot(dx, dz) || 1e-3, fx = dx / h, fz = dz / h, pitch = Math.atan2(foot + arm.hold - y, h) - Math.atan(arm.ny * arm.tv);
     for (const ox of [-0.3, 0.3]) for (const oz of [-0.3, 0.3]) {
-      const along = h + ox * fx + oz * fz; if (along < 0.05) return false;   // (a corner at or behind the eye: not in the picture)
-      for (const py of [foot, foot + 1.22]) { const v = Math.tan(Math.atan2(py - y, along) - pitch) / arm.tv; if (v > 0.9 || v < -0.9) return false; }
+      const along = h + ox * fx + oz * fz, across = ox * fz - oz * fx; if (along < 0.05) return false;   // (a corner at or behind the eye: not in the picture)
+      for (const py of [foot, foot + 1.22]) {
+        const v = Math.tan(Math.atan2(py - y, along) - pitch) / arm.tv; if (v > 0.9 || v < -0.9) return false;
+        // and across, on a narrow screen held upright (the view looks at him across, frame B: his middle in the middle)
+        const depth = along * Math.cos(pitch) + (py - y) * Math.sin(pitch); if (arm.aspect && Math.abs(across / (depth * arm.tv * arm.aspect)) > 0.9) return false;
+      }
     }
     return true;
   };
