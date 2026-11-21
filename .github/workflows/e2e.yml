@@ -69,8 +69,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-t00-
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
       # The stairs and the low drop are `quick` in pages.yml since #308 and stop the publication; not repeated here.
       - name: The pause menu whole in every language
         run: node tests/e2e/run.cjs menufit
@@ -151,8 +151,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-t00-
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
       - name: Walk the whole temple
         if: steps.mine.outputs.run == 'true'
         env:

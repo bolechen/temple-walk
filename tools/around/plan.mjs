@@ -1,14 +1,15 @@
 // The walk-round survey's list and its camera stations (#252), read from the plan's own data: nothing here says where a
 // thing stands. `inventory()` names every kind of thing set out in the place and each one's position, with the data it came
-// from; `stationsFor()` finds, from the baked floor (app/shared/walk/t00.bin), the spots a visitor can stand round it.
+// from; `stationsFor()` finds, from the baked floor (app/shared/walk/<level>.bin, the prologue's), the spots a visitor can stand round it.
 import "../../tests/unit/dom-stub.mjs";
 import * as THREE from "three";
 import { readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { decode, oldReached, NO_FLOOR } from "../../app/src/walkgrid.js";
 import { buildDrawn } from "../walk/scene.mjs";
+import { walkFile, DEFAULT_LEVEL } from "../walk/level-arg.mjs";
 
-export const FILE = new URL("../../app/shared/walk/t00.bin", import.meta.url);
+export const FILE = walkFile(DEFAULT_LEVEL);
 export const EYE = 1.3;          // his eye above the floor (the walk bake's CLEAR note: a child, his eye at 1.3)
 export const HIGH = 4.0;         // the raised camera's eye above the floor, for the slanting look down
 

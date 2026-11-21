@@ -129,6 +129,10 @@ export function createGame(y) {
     chime(1, journey.count()); refresh();
     const el = $("toast"), d = SEAL[id]; if (!el) return;
     $("toastSeal").src = sealStamp(glyphs(d.seal), 220, { seed: SEALS.indexOf(d) + 11 }).toDataURL(); $("toastLine").textContent = id === "sutra" && journey.verse ? t(journey.verse.text) : t(d.line); $("toastName").textContent = `${t(d.place)} · ${t(d.seal)}`;
+    // The seal's own line is the observance's line (d.line), which the foot of the picture has been saying while it was made:
+    // the same words are not shown twice, so the foot lets go of them and the seal keeps them (#403). A revisit earns no
+    // seal and so keeps its line at the foot.
+    const said = $("say"); if (said && said.classList.contains("on") && said.textContent === $("toastLine").textContent) { clearTimeout(sayTimer); said.classList.remove("on"); }
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
     // The seventh seal: the book is full. On the summit, when the prologue is about to close, that comes first and
     // the full book after it (finale); anywhere else, it is marked at once.

@@ -95,13 +95,13 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/walk
-          key: walk-t00-tag-${{ github.run_id }}
-          restore-keys: walk-t00-
+          key: walk-tag-${{ github.run_id }}
+          restore-keys: walk-
       - uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-tag-${{ github.run_id }}
-          restore-keys: doorways-t00-
+          key: doorways-tag-${{ github.run_id }}
+          restore-keys: doorways-
       - name: Remember the browser between runs
         if: inputs.check
         id: pw

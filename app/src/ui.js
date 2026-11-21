@@ -25,7 +25,9 @@ export function createUI() {
     if (el && kind === "modal" && el.tagName === "DIALOG") {
       if (!el.hasAttribute("tabindex")) el.tabIndex = -1;   // the sheet itself takes the focus, so no button is ringed on opening
       el.addEventListener("cancel", (e) => e.preventDefault());   // Esc is ours: it is heard on keydown and closes the top layer only
-      el.addEventListener("close", () => { if (stack.some((s) => s.layer === L)) close(id); });   // shut by the browser some other way
+      // shut by the browser some other way. A dialog tells of its shutting a task after close(), so Esc and an opening a few milliseconds later
+      // (B after Esc) would find the event arriving at the new opening: only a sheet that is shut now is put away.
+      el.addEventListener("close", () => { if (!(/** @type {HTMLDialogElement} */ (el)).open && stack.some((s) => s.layer === L)) close(id); });
     }
     layers.set(id, L); return api;
   }
