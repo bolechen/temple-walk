@@ -426,4 +426,18 @@ export default {
   "刚拍下的影片": "The clip just filmed",
   "长按影片，选「存入相册」或「下载」。": "Press and hold the video, then choose “Save video” or “Download”.",
   "点「保存」，或在影片上点右键，选「另存为」。": "Press Save, or right-click the video and choose “Save video as”.",
+  // ---- The map of temples walked (#449) ----
+  "行脚图": "Pilgrim's map",
+  "翻开": "Open",
+  "走过的寺，随时可以回去。": "A temple you have walked can be returned to at any time.",
+  "长按，行脚图": "Hold — the pilgrim's map",
+  "按住 Q，行脚图": "Hold Q for the pilgrim's map",
+  "远处，雾里，还看不清": "Far off, in the fog, not yet in sight",
+  "上回 · {season}": "Last: {season}",
+  "前往{region}，{when}": "Go to {region}, {when}",
+  "前往{region}": "Go to {region}",
+  "此刻在此": "You are here",
+  "正在前往{region}": "Going to {region}",
+  "江南": "Jiangnan",
+  "关外": "Beyond the Pass",
 };
