@@ -2,9 +2,64 @@
 // and the tools, never by the page, as bake.js is). So far: the routes the near plane is walked along (tests/slow/nearplane.test.mjs).
 // Each route is a run of [x, z] points, walked at his pace with the following eye behind him and from his own eyes.
 import { AXIS, FOOT, LANE, SECOND } from "./axis.js";
+import { ARRIVE, PLATFORM, STATION } from "./site.js";
+
+const FLIGHT = "up the flight to the terrace and down again", SILL = "over the middle door's sill into the hall";
+// The camera is walked up the flight and down again and over the middle door's sill. The worship band's aisles are not walked yet: turned out of
+// either aisle's end round the side wall, the eye moves 0.155-0.157 m on its own in a frame against the tests' 0.15 and for some frames stands
+// outside the hall's 1 m side wall. The two sides are drawn alike (the east aisle walked alone jumps as the west does, at the mirrored frame), so
+// it is the camera's and not these routes' (#562); the route below comes in when it is mended:
+// [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]].
+const HALL_ROUTES = Object.freeze({
+  [FLIGHT]: [[0, 26], [0, 12], [0, 26]],
+  [SILL]: [[0, 6], [0, -4]],
+});
 
 /** @type {Record<string, any>} */
 export default {
+  // The seven fixed views of the handoff, with what each must and must not show (docs/t05/PRD.md §3; tools/cameras.mjs writes docs/t05/camera-manifest.json from them and the plan's
+  // views). A fourth entry says what differs from a still taken from his own eyes: cam03's is taken in third person (DECISIONS.md, 2026-11-21),
+  // from the following eye a few steps behind him, measured in the page at (0, 3.66, 6.57), pitched 0.056 (the same DECISIONS.md, 2026-11-21).
+  cameras: {
+    sceneId: "T05", preset: "summer · day, the page's default for a fixed view; T05's own J01 (初冬晴冷, docs/t05/ART.md §4.2) is not built yet, and the pictures change with it, not the poses",
+    what: {
+      cam01: ["CAM-01", "院落远望", "必看：九间立面与三门四窗；3 米台基与月台；单檐五脊庑殿顶与青灰瓦；三块竖匾的剪影。忌看：重檐、歇山、琉璃瓦；屋脊被树切断"],
+      cam02: ["CAM-02", "台基", "必看：踏道与垂带；台基侧面；檐柱与七铺作斗栱；门洞的暗。忌看：整座屋顶；薄台"],
+      cam03: ["CAM-03", "殿门中央", "必看：门框在左右边缘；中间三尊；佛坛与背光；梁架；门到佛坛的光梯度。忌看：一张看全七尊；平顶藻井；七尊相同；追光", { view: "third", eye: [0, 3.66, 6.57], pitch: 0.056 }],
+      cam04: ["CAM-04", "侧向观看", "必看：七佛侧面与手印、衣式的差异；胁侍的前后节奏；至少一尊天王；侧壁壁画；内柱列。忌看：佛像背面；七尊同一侧影"],
+      cam05: ["CAM-05", "仰视梁架", "必看：八缝梁架、四椽栿、驼峰、斗栱、彩画色带。忌看：平顶；黑成一片"],
+      cam06: ["CAM-06", "回到中央", "必看：中间四五尊与两侧各一尊的局部。忌看：硬塞七尊进一张"],
+      cam07: ["CAM-07", "内山门望殿", "必看：门洞框住甬道、牌坊、高台上的无量殿和远处大殿的庑殿顶，大殿正脊全长与两端鸱吻露出（FOLLOW-UP.md，美术总监的三条判法）。忌看：牌坊门洞内有树；无量殿吻尖高过大殿鸱吻顶"],
+    },
+  },
+  // Where the horizon is held from (tests/unit/horizon.test.mjs): name, x, z, the eye's height. The county is flat and there are no far hills
+  // (SITE.md §4.1), so what must lie below the horizon is the plain outside the walls, the walls and the buildings: the six stations, the arrival
+  // and the axis's three passages (PLAN.md item 11, gap 2), each at 1.6 m over its own floor (the outer gate's platform 0.5, the second terrace 1.0, the court 0, the hall 3: t05-plan.test).
+  horizon: {
+    places: [
+      ["arrival", ARRIVE[0], ARRIVE[1], 1.6], ["outer gate's passage", 0, AXIS.outerZ, 0.5 + 1.6], ["inner gate's passage (cam07)", 0, AXIS.innerZ + 1, SECOND.y + 1.6],
+      ["Wuliang hall's passage", 0, AXIS.hallZ, SECOND.y + 1.6],
+      ...Object.entries(STATION).map(([k, [x, z]]) => [`station ${k}`, x, z, (k === "A" || k === "B" ? 0 : PLATFORM.h) + 1.6]),
+    ],
+  },
+  // The camera's routes inside and up to the great hall (PLAN.md item 12, gap 4): up the flight to the terrace and down again, over the middle door's
+  // sill into the hall (the worship band's aisles, PRD.md §1.4 route 3, wait on the camera: above). tests/unit/follow.test.mjs and
+  // spring-arm.test.mjs walk them with WALK_LEVEL=t05.
+  // follow.test walks only the sill and the flight going up: it asks the written plan, which in T05 is only the eye's fallback for the half
+  // second before the drawn geometry's hierarchy is built (step 6 deletes it), and T00's follow has no flight to come down either; going
+  // down the flight that plan pushes the eye 3 m in 8 frames and the aisles force it in 18 frames of 2973 (DECISIONS.md, 2026-11-21).
+  // spring-arm.test, which asks what is drawn, walks both whole.
+  follow: {
+    routes: () => ({ [SILL]: HALL_ROUTES[SILL], "up the flight to the terrace": [[0, 26], [0, 12]] }),
+    // Where he stands still and the view is swung right round: a grid over the terrace, the flight's foot and the hall's front half.
+    spots: { x: [-12, 12], z: [-12, 24], step: 3 },
+  },
+  springArm: {
+    routes: () => HALL_ROUTES,
+    lensRoutes: [SILL],
+    // What the walks of the eye's space are gathered over: the hall, its platform and terrace, and the court before them.
+    gather: { x0: -40, x1: 40, z0: -40, z1: 45, bottom: -10, top: 40 },
+  },
   nearplane: {
     routes: () => {
       const inner = FOOT.inner, hall = FOOT.hall, edge = LANE.hw - LANE.t / 2 - 0.9, tedge = SECOND.hw - SECOND.wallT / 2 - 0.9;

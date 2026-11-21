@@ -37,6 +37,37 @@ test("he arrives at the outer gate's place, and every named view stands where he
   for (const [id, v] of Object.entries(site.views)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
 });
 
+test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the baked floor, are reached from where he arrives, and the manifest says what the plan says", async () => {
+  const fs = await import("node:fs"), targets = file.header.targets;
+  const manifest = JSON.parse(fs.readFileSync(new URL("../../docs/t05/camera-manifest.json", import.meta.url), "utf8"));
+  const { default: checks } = await import("../../app/levels/t05/checks.js");
+  assert.deepEqual(Object.keys(checks.cameras.what), ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"]);
+  for (const [i, id] of ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"].entries()) {
+    const v = site.views[id]; assert.ok(v, id);
+    assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open on the baked floor`);
+    const t = targets.find((x) => x.kind === "view" && x.id === id);
+    assert.ok(t && t.new, `${id}: reached from the arrival on the floor baked from what is drawn`);
+    const c = manifest.cameras[i], at = c.stands_at || c.position; assert.equal(c.view, id);   // (cam03's still is taken from the following eye behind him: stands_at is where he stands)
+    assert.deepEqual([at[0], at[2], c.yaw_rad, c.pitch_rad], [+v[0].toFixed(2), +v[1].toFixed(2), +v[2].toFixed(2), +v[3].toFixed(2)], `${id}: the manifest is the plan's`);
+  }
+});
+
+test("from views.sakya nothing stands between his eye and Shakyamuni's lotus seat or his lap (#547: the west aisle hides them)", async () => {
+  const { FIGURES, ALTAR, SEAT } = await import("../../app/levels/t05/altar.js");
+  const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });
+  const M2 = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+  const s2 = buildSite(M2); s2.root.updateMatrixWorld(true);
+  const f = FIGURES.find((x) => x.id === "sakyamuni"), top = PLATFORM.h + ALTAR.h, [x, z] = site.views.sakya;
+  const eye = new THREE.Vector3(x, walker.heightAt(x, z) + 1.3, z), ray = new THREE.Raycaster();
+  // (the lotus's front face at its middle, and a point in his lap: what the first thing met along the line must be is the figure's own seat or body)
+  for (const [name, p] of [["lotus", [f.x, top + SEAT.sumeru + SEAT.lotus / 2, SEAT.z + SEAT.d / 2]], ["lap", [f.x + 0.3, top + SEAT.sumeru + SEAT.lotus + 1.3, SEAT.z + 0.9]]]) {
+    const t = new THREE.Vector3(...p), d = t.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L + 1;
+    const hit = ray.intersectObject(s2.root, true)[0];
+    assert.ok(hit && hit.distance > L - 0.8, `${name}: the first thing met is ${hit ? `${(L - hit.distance).toFixed(2)} m short of it` : "nothing"}`);
+  }
+  assert.ok(x > f.x, "east of his middle, so that his left side is turned to the eye");
+});
+
 test("from where he arrives he can walk to station A in the court and to station B at the foot of the flight", () => {
   const targets = file.header.targets;
   for (const id of ["arrive", "a", "b"]) {
@@ -170,26 +201,31 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   for (let i = 0; i < 80; i++) last = s.tick(0.05, eye(...STATION.E), false);
   assert.equal(last, 1, "settled once he stands inside");
   assert.equal(s.tick(0.05, eye(...STATION.A), false), 0, "a jump of the eye takes the light of where it lands");
-  assert.ok(FILL.door > 0 && FILL.top > 0 && FILL.bounce > 0 && FILL.depth > 0 && frames > 0);
+  assert.ok(FILL.door > 0 && FILL.up > 0 && FILL.depth > 0 && frames > 0);
 });
 
-test("the fill comes from the doors, from over the floor and from the floor: none of it hung before the front wall, none against the figures, the bounce under the floor (#493)", async () => {
+test("the fill comes from the doors and from under the floor: none of it hung before the front wall, none in the air under the roof (#493, #549)", async () => {
   const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
   const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
-  const spots = h.fill.filter((f) => f[6]), lamps = h.fill.filter((f) => !f[6]);
-  assert.equal(spots.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
-  for (const [x, y, z, , , , aim] of spots) {
+  assert.ok(h.fill.length <= 5, "no more lights than the five the hall had at #481 (each is in every shader, outdoors too)");
+  assert.ok(h.fill.every((f) => f[6]), "every one a spot, turned somewhere: no lamp lights the whole room");
+  const doors = h.fill.filter((f) => f[1] > y0), up = h.fill.filter((f) => f[1] < y0);
+  assert.equal(doors.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
+  for (const [x, y, z, , , , aim] of doors) {
     assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
     assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar and the back wall, so the front wall takes none of it");
     assert.ok(y > y0 + 3 && y < y0 + 8, "at about the height of the doors' middle");
   }
-  const bounce = lamps.filter((f) => f[1] < y0), top = lamps.filter((f) => f[1] > y0);
-  assert.equal(bounce.length, 1); assert.equal(top.length, 1);
-  assert.ok(h.fill.length <= 5, "no more lamps than the five the hall had before (#493: each is in every shader, outdoors too)");
-  for (const [, y, z] of bounce) assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3, "the floor's bounce: under the floor, before the altar, so the floor itself takes none of it");
-  for (const [x, y, z] of top) assert.ok(z > ALTAR.zF + 3 && y > y0 + 10, "the one lamp overhead hangs high and well before the figures");
+  // The timber's light comes from under the floor over the worship band, narrow and turned up: a light hung in the air under this roof is close to
+  // the beams (9–10 m) or the boards (15–19 m) wherever it hangs, and laid a bright spot on one of them (#549: 30 L* at 13 m, the beams at 9 m).
+  assert.equal(up.length, 3);
+  for (const [x, y, z, , , , aim, angle] of up) {
+    assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3 && z < zf - 3 && Math.abs(x) < X - 3, `under the floor, over the worship band (${x}, ${z})`);
+    assert.ok(aim[1] > y0 + 10 && Math.hypot(aim[0] - x, aim[2] - z) < 0.3 * (aim[1] - y), "turned up into the roof, leaning no more than a few degrees");
+    assert.ok(angle <= 1, "a narrow spot, so that the walls stand outside it");
+  }
   for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);
-  assert.deepEqual([FILL.door, FILL.top, FILL.bounce].map((v) => v > 0), [true, true, true]);
+  assert.ok(FILL.door > 0 && FILL.up > 0);
 });
 
 test("the timber overhead takes more of the inside's light than the walls, from over the doors' middle up; the walls keep theirs (#493)", async () => {
