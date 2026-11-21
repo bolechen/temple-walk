@@ -7,13 +7,19 @@ import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 import { L, LEVEL_ID, need } from "./level-plan.mjs";
+import fs from "node:fs";
 import { createBackdrop } from "../../app/src/backdrop.js";
+import { parseHeightmap } from "../../app/src/terrain-far.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (t[k] ||= named(k)) });
 const scene = new THREE.Scene();
 // A level with no far hills has no horizon to hold: its `backdrop` is null, and these tests have nothing to look at.
-if (L.backdrop) createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land);
+// #183's spike: TERRAIN=dem|made holds the same horizon over the far land drawn from that heightmap instead of the rings.
+const TERRAIN = process.env.TERRAIN || "";
+const file = (ext) => new URL(`../../app/shared/terrain/${TERRAIN}.${ext}`, import.meta.url);
+const far = TERRAIN ? parseHeightmap(JSON.parse(fs.readFileSync(file("json"), "utf8")), new Uint8Array(fs.readFileSync(file("bin"))).buffer) : null;
+if (L.backdrop) createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land, far);
 scene.updateMatrixWorld(true);
 // The bamboo bands are the only ShaderMaterials with a transparent-by-discard fragment: they carry uSeed.
 const solid = []; scene.traverse((o) => { if (o.isMesh && !(o.material.uniforms && o.material.uniforms.uSeed)) solid.push(o); });
@@ -38,7 +44,7 @@ test("below the horizon, from every sampled place, the first opaque thing is lan
   assert.deepEqual(bad, []);
 });
 
-test("the hills have no seam: height and colour inputs are continuous where the angle wraps", { skip }, () => {
+test("the hills have no seam: height and colour inputs are continuous where the angle wraps", { skip: skip || (TERRAIN ? "no rings over a heightmap" : false) }, () => {
   // Every range is a cylinder whose shader reads the angle atan(z, x); a noise sampled on that raw angle jumps at -x.
   // The shader must therefore wrap it (the `ang` helper), or the nearest range shows a vertical hard edge.
   const src = scene.children.filter((o) => o.isMesh && o.material.fragmentShader && o.material.fragmentShader.includes("uTop")).map((o) => o.material.fragmentShader);

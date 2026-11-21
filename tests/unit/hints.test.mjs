@@ -64,3 +64,18 @@ test("the line held at the foot of the far view is not taken by another tip, and
   assert.ok(["book", "held", "upView", "eyes", "pinch", "jump"].every((id) => !h.state().said.includes(id)), "a tip refused was counted as said: " + h.state().said);
   h.release(); h.say.seal(); assert.equal(h.state().tip, "book", "after the line is released the tip is told");
 });
+
+test("a first visitor is told once, after the line about walking has gone, that a small thing done at a place is stamped (#445)", () => {
+  const h = createHints();
+  h.say.entered(); h.step(0.1, 3, false, true); assert.equal(h.state().tip, "walk", "the line about walking is up first");
+  h.step(0.1, 4, false, true); assert.equal(h.state().tip, "stamp", "once it has gone, the line about the seals");
+  assert.ok(/朱印/.test(page.hint.innerHTML) && !/七/.test(page.hint.innerHTML), "it names the seal and no number: " + page.hint.innerHTML);
+  rest(h); h.step(0.1, 1, false, true); assert.notEqual(h.state().tip, "stamp", "said once");
+});
+
+test("a visitor who already holds a seal is not told what they know", () => {
+  const h = createHints();
+  h.say.stamped(); h.say.entered(); rest(h); h.step(0.1, 10, false, true);
+  assert.ok(!h.state().said.includes("stamp") || h.state().tip !== "stamp", "no line about stamps");
+  assert.notEqual(h.state().tip, "stamp");
+});
