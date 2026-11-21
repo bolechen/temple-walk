@@ -1,0 +1,336 @@
+{
+ "turn": -90,
+ "source": "vipasyin.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.916,
+   "band": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.902,
+   "band": 0.05
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10.0° about the neck (#463, the 3D review: the face seen from 10 m below reads frowning and pouting when made for the level)",
+   "c": [
+    0,
+    0.05,
+    0.725
+   ],
+   "deg": 10.0,
+   "z0": 0.735,
+   "fade": 0.035,
+   "rx": 0.1151,
+   "fx": 0.0201
+  },
+  {
+   "op": "attenuate",
+   "note": "the knit between the brows kept to 30% of its depth (#463, the 3D review)",
+   "seed": [
+    0.0,
+    -0.05405,
+    0.849
+   ],
+   "r": 0.0344,
+   "sr": 0.0688,
+   "k": 0.3,
+   "iter": 500
+  },
+  {
+   "op": "attenuate",
+   "note": "the philtrum shallower, k 0.5 (#463)",
+   "seed": [
+    0.0,
+    -0.04031,
+    0.79091
+   ],
+   "r": 0.0138,
+   "sr": 0.0344,
+   "k": 0.5,
+   "iter": 300
+  },
+  {
+   "op": "push",
+   "note": "left corner of the mouth up 5 cm (#463)",
+   "seed": [
+    0.02865,
+    -0.03461,
+    0.78494
+   ],
+   "r": 0.0172,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.0057
+  },
+  {
+   "op": "push",
+   "note": "right corner of the mouth up 5 cm (#463)",
+   "seed": [
+    -0.02865,
+    -0.03461,
+    0.78494
+   ],
+   "r": 0.0172,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.0057
+  },
+  {
+   "op": "scale",
+   "note": "mouth: across ×1.0, height ×0.8, depth ×0.8 about the slit's middle, back 0.015 of the face's width; radii [1.3, 0.6, 1.3] mouth widths; nothing above the base of the nose (face-ops.py: w 0.355 m, face 1.03 m, slit y 6.845, nose base y 6.92)",
+   "c": [
+    0.0,
+    -0.03321,
+    0.78437
+   ],
+   "r": [
+    0.05288,
+    0.02441,
+    0.05288
+   ],
+   "rd": [
+    0.09356,
+    0.09356,
+    0.09356
+   ],
+   "s": [
+    1.0,
+    0.8,
+    0.8
+   ],
+   "back": 0.00177,
+   "below": 0.79297,
+   "fade": 0.00413
+  },
+  {
+   "op": "scale",
+   "note": "chin's pad: depth ×0.68 about the hollow under the lip (y 6.758), radius 1.0 mouth widths, centred 0.45 w below the slit; nothing above the slit",
+   "c": [
+    0.0,
+    -0.02677,
+    0.76607
+   ],
+   "r": [
+    0.04068,
+    0.03661,
+    0.04068
+   ],
+   "s": [
+    0.9,
+    1.0,
+    0.68
+   ],
+   "below": 0.78208,
+   "fade": 0.00344
+  },
+  {
+   "op": "push",
+   "note": "the jaw's line lifted 0.01 of the face's width on the left, 1.1 w out and 0.9 w below the slit (face-ops.py)",
+   "seed": [
+    0.04475,
+    0.04753,
+    0.74776
+   ],
+   "r": 0.03254,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.00118
+  },
+  {
+   "op": "push",
+   "note": "the jaw's line lifted 0.01 of the face's width on the right, 1.1 w out and 0.9 w below the slit (face-ops.py)",
+   "seed": [
+    -0.04475,
+    0.04788,
+    0.74776
+   ],
+   "r": 0.03254,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.00118
+  },
+  {
+   "op": "push",
+   "note": "the hollow under the lip filled by 0.5 of its depth (0.064 m), radius 0.5 mouth widths (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.02677,
+    0.7744
+   ],
+   "r": 0.02034,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00364
+  },
+  {
+   "op": "push",
+   "note": "the trench beside the upper lip on the left, 0.05 w over the slit, 0.047 m below its chord, filled by 0.8 of it (face-ops.py)",
+   "seed": [
+    0.01729,
+    -0.02374,
+    0.78641
+   ],
+   "r": 0.00895,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00427
+  },
+  {
+   "op": "push",
+   "note": "the trench beside the upper lip on the left, 0.2 w over the slit, 0.018 m below its chord, filled by 0.8 of it (face-ops.py)",
+   "seed": [
+    0.01831,
+    -0.03225,
+    0.79251
+   ],
+   "r": 0.00895,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00162
+  },
+  {
+   "op": "push",
+   "note": "the trench beside the upper lip on the left, 0.35 w over the slit, 0.074 m below its chord, filled by 0.8 of it (face-ops.py)",
+   "seed": [
+    0.0122,
+    -0.03721,
+    0.79861
+   ],
+   "r": 0.00895,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00676
+  },
+  {
+   "op": "push",
+   "note": "the trench beside the upper lip on the right, 0.05 w over the slit, 0.053 m below its chord, filled by 0.8 of it (face-ops.py)",
+   "seed": [
+    -0.01831,
+    -0.02316,
+    0.78641
+   ],
+   "r": 0.00895,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00488
+  },
+  {
+   "op": "push",
+   "note": "the trench beside the upper lip on the right, 0.2 w over the slit, 0.02 m below its chord, filled by 0.8 of it (face-ops.py)",
+   "seed": [
+    -0.01932,
+    -0.03193,
+    0.79251
+   ],
+   "r": 0.00895,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00187
+  },
+  {
+   "op": "push",
+   "note": "the trench beside the upper lip on the right, 0.35 w over the slit, 0.068 m below its chord, filled by 0.8 of it (face-ops.py)",
+   "seed": [
+    -0.0122,
+    -0.03787,
+    0.79861
+   ],
+   "r": 0.00895,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00622
+  },
+  {
+   "op": "attenuate",
+   "note": "the lips' volume kept to 0.6 of itself, radius 1.1 w, smoothed over 1.6 w (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.03321,
+    0.78437
+   ],
+   "r": 0.04475,
+   "sr": 0.06509,
+   "k": 0.6,
+   "iter": 800
+  },
+  {
+   "op": "attenuate",
+   "note": "the philtrum's pad kept to 0.2 of itself (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.0397,
+    0.79091
+   ],
+   "r": 0.01831,
+   "sr": 0.03254,
+   "k": 0.2,
+   "iter": 500
+  },
+  {
+   "op": "facex",
+   "note": "the lower face narrowed ×0.95 across below the cheekbones (y 7.166), easing over 0.35 of the brow-to-mouth span, and out again down the neck (face-ops.py)",
+   "y0": 0.82118,
+   "fade": 0.02342,
+   "k": 0.95,
+   "rx": 0.11459,
+   "front": 0.05157,
+   "ymin": 0.72414,
+   "fadeLow": 0.01673
+  }
+ ]
+}

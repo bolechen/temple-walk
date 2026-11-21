@@ -67,6 +67,12 @@ const here = __dirname, root = path.join(here, "..");
         return { name: f.name, facePx: +Math.hypot(a[0] - b[0], a[1] - b[1]).toFixed(1), eyeToMouthPx: +Math.hypot(e[0] - m[0], e[1] - m[1]).toFixed(1),
           at: b.map((v) => Math.round(v)), seen: Object.fromEntries(Object.entries(occ).map(([k, o]) => [k, o.seen ? "yes" : o.onScreen ? "hidden by " + o.by : "off screen"])) };
       }), [faceList, sw, sh]);
+      // with `zones: true`, the mean colour on screen of each zone of each figure, its halo and its lips (stage.js zoneIds,
+      // issue #463), and each one's brightness against its face's (Rec. 709 luma of the mean colour)
+      if (s.zones) r.zones = await p.evaluate(() => window.hall.zoneIds().map((z) => {
+        const luma = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b, face = z["面与手（肤色）"] && luma(z["面与手（肤色）"].rgb);
+        return Object.fromEntries(Object.entries(z).map(([k, v]) => [k, { ...v, luma: +luma(v.rgb).toFixed(1), ofFace: face ? +(luma(v.rgb) / face).toFixed(2) : null }]));
+      }));
       report.shots.push({ ...s, file: path.relative(root, file), ...r, ms: Date.now() - t0 }); console.log(`${s.name}: ${r.tris} tris, ${r.calls} calls, ${Date.now() - t0} ms`);
     }
     if (spec.cost && sz === sizes[0]) { report.cost = { view: spec.costView || "door3", ms: await p.evaluate(([n, v]) => { window.hall.view(v); return window.hall.cost(n); }, [spec.cost, spec.costView || "door3"]) }; console.log("cost", report.cost); }

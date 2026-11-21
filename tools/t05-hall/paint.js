@@ -65,21 +65,43 @@ float flowers(vec2 q, float cell) { vec2 g = q / cell; vec2 id = floor(g); vec2 
 float arcDist(vec2 q, vec2 c, float w, float sag) { float x = clamp((q.x - c.x) / w, -1., 1.); float y = c.y - sag * x * x; return abs(q.y - y) + max(abs(q.x - c.x) - w, 0.); }
 // the face's ink: x the brows, y the upper lids (and the eye beneath, when its radius is above zero), drawn in two colours
 // (#370 round 7: a brow is a soft shadow under the brow ridge, not a hard line; a lid is one soft line along the eye's slit)
+float eyeW = 0., eyeP = 0.;   // the half-open eye's white and pupil, set by faceInk
 vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
-  vec2 ink = vec2(0); lip = 0.; urna = 0.;
+  vec2 ink = vec2(0); lip = 0.; urna = 0.; eyeW = 0.; eyeP = 0.;
   if (uFace[4].w < .5 || p.z < uFace[4].z || n.z < .15) return ink;
   vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002, soft = uFace[5].y;
   for (int s = 0; s < 2; s++) {
     vec2 e = s == 0 ? uFace[0].xy : uFace[0].zw;
     float bw = uFace[2].y, tt = clamp(abs(q.x - e.x) / bw, 0., 1.), bt = uFace[2].z * (1. - .8 * pow(tt, 1.5));   // a brow thins to points at its ends
     ink.x = max(ink.x, 1. - smoothstep(bt - aa - soft, bt + aa + soft, arcDist(q, e + vec2(0., uFace[2].x), bw, uFace[2].x * .35)));
-    float lt = uFace[3].x * (1. - .5 * pow(clamp(abs(q.x - e.x) / uFace[2].w, 0., 1.), 2.)); vec2 lc = e + vec2(0., uFace[5].x);
-    ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(q, lc, uFace[2].w, -uFace[3].y)));
+    // the lid: on the carved slit when it was measured (uFace[6], tilted by its rise outward, uFace[7]); its line thins
+    // to nothing at both ends, so the outer corner does not flick up like eyeliner (#463)
+    vec2 le = uFace[7].z > .5 ? (s == 0 ? uFace[6].xy : uFace[6].zw) : e;
+    float rise = uFace[7].z > .5 ? (s == 0 ? uFace[7].x : uFace[7].y) : 0.;
+    vec2 ql = q - vec2(0., rise * (q.x - le.x) * sign(le.x));
+    // and, toward the outer corner, it is gone before the corner (#480 r7, the art director: a line on the edge, not a band)
+    float outer = clamp((ql.x - le.x) * sign(le.x) / uFace[2].w, 0., 1.);
+    float lt = uFace[3].x * (1. - .9 * pow(clamp(abs(ql.x - le.x) / uFace[2].w, 0., 1.), 2.)) * (1. - smoothstep(.45, .8, outer)); vec2 lc = le + vec2(0., uFace[5].x);
+    // a half-open eye under the lid line (only drawn, the carving unchanged): a narrow lens of white, widest in the middle,
+    // and a dark pupil in it, looking down at whoever stands below (#480, the art director's trial for r7)
+    if (uFace[5].z > 0.) {
+      float ex = (ql.x - le.x) / (uFace[2].w * .8), below = lc.y - ql.y, hw = uFace[5].z * (1. - ex * ex);
+      // no white at the inner corner (seen level it read as a sidelong glance); the pupil a band about four tenths of the
+      // slit's width, reaching from lid to lid, in the slit's middle (#480 r7, the art director)
+      float white = step(abs(ex), 1.) * step(-.55, ex * sign(le.x)) * smoothstep(-aa, aa, below) * (1. - smoothstep(hw - aa, hw + aa, below));
+      float pupil = white * (1. - smoothstep(.32 * uFace[2].w - aa, .32 * uFace[2].w + aa, abs(ql.x - le.x)));
+      eyeW = max(eyeW, white); eyeP = max(eyeP, pupil);
+    }
+    ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(ql, lc, uFace[2].w, -uFace[3].y)));
     if (uFace[3].z > 0.) { vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
       ink.y = max(ink.y, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9); }
   }
+  // the lines fade out where the surface turns away from the front: projected straight on, they would lie along the
+  // temples as dark blades seen from the side (#480 r7, the 3 m side view)
+  float face = smoothstep(.35, .65, n.z); ink *= face; eyeW *= face; eyeP *= face;
   vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
-  lip = 1. - smoothstep(1. - aa * 8., 1. + aa * 8., length(m));
+  float le = aa * 2. + .002 / max(uFace[4].x, .01);   // the lip's edge soft over about 2 mm (#463, the 3D review's third round)
+  lip = 1. - smoothstep(1. - le, 1. + le, length(m));
   urna = 1. - smoothstep(uFace[4].y - aa, uFace[4].y + aa, length(q - uFace[1].zw));
   return ink;
 }
@@ -144,7 +166,10 @@ function faceUniforms(face, A) {
   out.splice(8, 4, k(face.browUp), k(face.browHalf), k(face.browT), k(face.lidHalf));
   out.splice(12, 4, k(face.lidT), k(face.lidSag), k(face.iris), A.lipHalf ?? k(face.lipHalf));
   out.splice(16, 4, A.lipH ?? k(face.lipH), k(face.urna), (A.faceZ ?? A.eyeL[2]) - face.depth, 1);
-  out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, 0, 0);
+  out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, A.eyeOpen ? A.eyeOpen[0] : 0, A.eyeOpen ? A.eyeOpen[1] : 0);   // eyeOpen: a half-open eye drawn under the lid line (white's height, pupil's radius, metres; #480 the art director's trial)
+  // the lids laid on the carved eye's slit where it was measured (lidL/lidR: x, y and the rise per metre outward,
+  // tools/t05-statue/face-ratios.py; #463), else on the eye anchors as before
+  if (A.lidL && A.lidR) { out.splice(24, 4, A.lidL[0], A.lidL[1], A.lidR[0], A.lidR[1]); out.splice(28, 4, A.lidL[2] ?? 0, A.lidR[2] ?? 0, 1, 0); }
   return out;
 }
 
@@ -163,7 +188,8 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) } };
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) },
+    uIdMode: { value: 0 }, uFig: { value: opts.fig ?? 0 } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
     const c = lin(z.color);
@@ -171,20 +197,35 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
     if (z.pattern === "flowers") { const c2 = lin(z.pattern2 ?? "#9A7A3E"); col = `mix(${v3(c)}, ${v3(c2)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))`; }
     const metal = z.pattern === "flowers" ? `mix(${(z.metal ?? 0).toFixed(3)}, ${(z.metal2 ?? 0.6).toFixed(3)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))` : (z.metal ?? 0).toFixed(3);
     const wear = (z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "") + (z.tint ? " * uTint" : "");
-    return `  { float k = ${z.glsl}; pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
+    // a zone may tint what stands out of it (the tips and rims of a lotus's petals, issue #463): toward `edgeTint.color`
+    // by its amount where the surface is convex (cvEdge, below)
+    if (z.edgeTint) col = `mix(${col}, ${v3(lin(z.edgeTint.color))}, ${(z.edgeTint.amount ?? 0.5).toFixed(3)} * cvEdge)`;
+    // `folds: false` keeps a zone out of the fold shading (curls, the face: their small forms are lit triangle by
+    // triangle by a curvature taken from screen-space derivatives, #463 round two)
+    return `  { float k = ${z.glsl}; foldW = mix(foldW, ${z.folds === false ? "0." : "1."}, k); pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
   }).join("\n");
+  const fo = recipe.folds ?? {}, fk0 = (fo.k0 ?? 3).toFixed(2), fk1 = (fo.k1 ?? 18).toFixed(2), fh = (fo.hollow ?? 0).toFixed(3), fe = (fo.edge ?? 0).toFixed(3);
   const fc = recipe.face, ink = lin(fc.ink), browC = lin(fc.browColor ?? fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform mat4 uToFig;\nvarying vec3 vFig;\nvarying vec3 vFigN;")
       .replace("#include <project_vertex>", "#include <project_vertex>\n  vFig = (uToFig * modelMatrix * vec4(transformed, 1.)).xyz;\n  vFigN = normalize(mat3(uToFig * modelMatrix) * objectNormal);");
-    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\n" + GLSL.replace(/LEAVES/g, String(N * 2)))
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform float uIdMode;\nuniform float uFig;\n" + GLSL.replace(/LEAVES/g, String(N * 2)))
       .replace("#include <color_fragment>", `#include <color_fragment>
   vec3 p = vFig; vec3 pCol = diffuseColor.rgb; float pRough = roughness; float pMetal = metalness; float zone = 0.;
+  // how the surface bends here, from the change of its normal across the pixel against the change of its place: the
+  // mean curvature in 1/m, more than zero where it stands out (a fold's ridge, a petal's rim) and less where it goes in
+  // (a fold's hollow); a fold's ridge some 5–30 cm round reads 3–18 (issue #463: hollows darkened, ridges worn)
+  vec3 cvN = normalize(vFigN), cvPx = dFdx(vFig), cvPy = dFdy(vFig);
+  float cv = (dot(dFdx(cvN), cvPx) + dot(dFdy(cvN), cvPy)) / max(dot(cvPx, cvPx) + dot(cvPy, cvPy), 1e-10);
+  float cvEdge = smoothstep(${fk0}, ${fk1}, cv), cvHollow = smoothstep(${fk0}, ${fk1}, -cv), foldW = 1.;
 ${zoneCode}
   float lip_, urna_; vec2 ink2 = faceInk(p, normalize(vFigN), lip_, urna_);
   float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
-  pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
+  // the folds: their hollows darker, their ridges rubbed toward the dust's colour; not on the face, whose lines are drawn
+  pCol *= 1. - ${fh} * cvHollow * foldW * (1. - onFace); pCol = mix(pCol, ${v3(lin(recipe.folds?.edgeColor ?? "#8A7A66"))}, ${fe} * cvEdge * foldW * (1. - onFace));
+  pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace);
+  pCol = mix(pCol, ${v3(lin(fc.eyeWhite ?? "#C9C0B0"))}, eyeW * onFace); pCol = mix(pCol, ${v3(lin(fc.pupil ?? "#2A221C"))}, eyeP * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
   // the brow: the skin darkened, at most half covered; the lid: one line of the deep beam colour
   pCol = mix(pCol, ${v3(browC)}, ink2.x * onFace * ${(fc.browAlpha ?? 1).toFixed(3)}); pCol = mix(pCol, ${v3(ink)}, ink2.y * onFace);
   pRough = mix(pRough, ${fc.inkRough.toFixed(3)}, max(ink2.x, ink2.y) * onFace); pMetal = mix(pMetal, 0., max(ink2.x, ink2.y) * onFace);
@@ -194,11 +235,16 @@ ${zoneCode}
   pCol = mix(pCol, ${v3(lin(recipe.dust?.color ?? "#8A7A66"))}, ${(recipe.dust?.amount ?? 0).toFixed(3)} * smoothstep(.55, .95, normalize(vFigN).y) * (1. - max(ink2.x, ink2.y) * onFace));
   diffuseColor.rgb = pCol;`)
       .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = clamp(pRough, .04, 1.);")
-      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);");
+      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);")
+      // a picture of which zone each pixel is, for measuring the colours on screen zone by zone (stage.js zoneIds): red
+      // the zone's number (the lips 14) over 16, green the figure's
+      .replace("#include <dithering_fragment>", "#include <dithering_fragment>\n  if (uIdMode > .5) gl_FragColor = vec4(mix(zone, 14., step(.5, lip_ * onFace)) / 16., (uFig + 1.) / 16., 0., 1.);");
   };
   m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N;
   const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };
   upd(); m.userData.update = upd;
+  // a normal map baked from the repaired full-detail surface (tools/t05-statue/bake.py, #463) is worn by the paint too
+  if (opts.normalMap) { m.normalMap = opts.normalMap; m.normalScale.set(1, 1); }
   if (opts.envMap) { m.envMap = opts.envMap; m.envMapIntensity = opts.envIntensity ?? 1; }
   return m;
 }

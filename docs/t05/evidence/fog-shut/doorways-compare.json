@@ -1,0 +1,26 @@
+{
+ "what": "T00 doorway pictures, old fingerprint (before fog.js/glsl.js changed) against new, from node_modules/.cache/doorways",
+ "old": {
+  "chan": "f8b8e7b6a6132315",
+  "tea": "c9f2851bb131f92d",
+  "main": "1b85c6dfb0e38cba",
+  "library": "446d8561e921d45a",
+  "yaoshi": "123cb568cc41e516",
+  "dahui": "cbdf6b6d3a2db7fe",
+  "guanyin": "5d8dc13099f04602",
+  "lingxiao": "8d300ac1ef7c9910"
+ },
+ "new": {
+  "chan": "3d9263d91e276d36",
+  "tea": "7f86b70638c58801",
+  "main": "91df626986007b7b",
+  "library": "7b22aa364fd9f8d5",
+  "yaoshi": "0f2791663866991c",
+  "dahui": "1a5be6fd28075c48",
+  "guanyin": "bf2b013b9cd86a1c",
+  "lingxiao": "7f04d2cbacc98108"
+ },
+ "compared": 48,
+ "identical": 48,
+ "different": []
+}
