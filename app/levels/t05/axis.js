@@ -37,7 +37,7 @@ export const HALL = Object.freeze({
   zs: Object.freeze([6.11, 2.04, -2.04, -6.11]),
   // The roof's rise is a quarter of the distance between the front and back eave purlins (`juzhe`, the Yingzao Fashi's lowest ratio, for a two-rafter house, which
   // the Liao halls come near: Fengguosi's 0.245; the structure review of #482), not a third as for a hall; the ornaments and the corners are smaller (the art director).
-  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0, liftLen: 2.7, lift: 0.15, crest: 1.7, juzhe: 0.25,
+  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0, G: 3.3, liftLen: 2.7, lift: 0.15, crest: 1.7, juzhe: 0.25,
 });
 /** One gate house, as the outer and the inner gate are laid out: three bays, the platform's flanks meet the walls of the way. A proposal. */
 export const GATE = Object.freeze({ xs: Object.freeze([-6.4, -2.2, 2.2, 6.4]), zs: Object.freeze([3, -3]), platOut: 1.2, steps: 3.8, lift: 0.2, liftLen: 2.7, crest: 1.5 });
