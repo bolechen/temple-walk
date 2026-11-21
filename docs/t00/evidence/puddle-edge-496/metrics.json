@@ -1,0 +1,81 @@
+{
+ "tool": "node tools/puddle-edge.cjs: the shader's own water mask (steps.js fbm2 field, smoothstep(.57,.61) on main; now rise = smoothstep(2.4,3.4,eye height over the paving), edgeW = mix(.04, clamp(1.2*reach,.04,.22), rise) about .59) counted in pixels from a tenth to nine tenths, 1280x720, summer day, lowest tier",
+ "mask_width_px": {
+  "the two puddles the reviewer named (under the maple, eye 3.5 m, columns 260-410 and 650-870, rows 190-270)": {
+   "main": {
+    "n": 67,
+    "median": 3,
+    "smallest": 1,
+    "largest": 6
+   },
+   "now": {
+    "n": 46,
+    "median": 7,
+    "smallest": 4,
+    "largest": 14
+   }
+  },
+  "whole picture under the maple (?cam=-6.5,30,0.9,-0.3, eye 3.5, rows 100-400)": {
+   "main": {
+    "n": 107,
+    "median": 2
+   },
+   "now": {
+    "n": 51,
+    "median": 5
+   }
+  },
+  "from above (?cam=0,22,0,-0.4, eye 5, rows 100-400)": {
+   "main": {
+    "n": 78,
+    "median": 3
+   },
+   "now": {
+    "n": 42,
+    "median": 7,
+    "smallest": 4
+   }
+  },
+  "cam06, his own eyes (eye 1.6, rows 380-700): unchanged": {
+   "main": {
+    "n": 116,
+    "median": 2,
+    "largest": 28
+   },
+   "now": {
+    "n": 116,
+    "median": 2,
+    "largest": 28
+   }
+  }
+ },
+ "cost_ms_T4_court_summer_day_high_1920x1080": {
+  "run": "20261121-162321",
+  "site": "0ecfc9b",
+  "main": [
+   14.07,
+   11.73,
+   11.93
+  ],
+  "now": [
+   12.28,
+   13.03,
+   11.94
+  ],
+  "main_mean": 12.58,
+  "now_mean": 12.42
+ },
+ "winter_pixel_comparison": {
+  "note": "the page is not deterministic from one frame to the next (falling snow, dither): the same build drawn twice differs as much as the two builds do, so a frame cannot show 'identical'; winter's shader output is identical by construction (uWet 0 -> puddle * step(.001, uWet) = 0, as the old smoothstep(.57,.61) was 0 there: the field never passes .563 anywhere in the place (tests/unit/puddle-edge.test.mjs))",
+  "base_vs_base2": "28.92% of pixels differ, 3.154% by more than 2 levels",
+  "new_vs_new2": "33.69%, 3.083%",
+  "new_vs_base": "31.97%, 3.407%"
+ },
+ "t05": {
+  "run": "20261121-142418",
+  "site": "e6f3dd9",
+  "views": "?level=t05, 1920x1080 high: a, gateway, c (third) in summer day; a, gateway in winter day",
+  "note": "the diff of the two builds lies only along puddle edges in a and gateway (summer); c has no water in the paving (max difference 8 levels, dither); winter shows falling snow and dither only"
+ },
+ "cam06_first_eye_difference": "the difference of the two builds lies in the side halls' windows (the rooms seen through the doors fade in frame by frame) and their reflections in the water; in the paving band (rows 450-720) 0.236% of pixels differ by more than 12 levels, at most 51"
+}
