@@ -86,11 +86,13 @@ test('the stone style starts as the prologue has it, and a level changes only wh
   assert.equal(again.uniforms.uLeaves.value, 1, 'one material\'s style is not another\'s');
 });
 
-test('T05 has no bamboo, so no bamboo leaf lies on its treads; the prologue\'s default is not touched', async () => {
+test('T05 has no bamboo and no moss on its stairs; the prologue\'s default is not touched', async () => {
   const T05 = await import('../../app/levels/t05/site.js');
-  assert.deepEqual({ ...T05.STAIR_STYLE }, { leaves: false });
+  assert.deepEqual({ ...T05.STAIR_STYLE }, { leaves: false, moss: false });
   const M = createMaterials(); T05.buildSite(M);
   assert.equal(compiled(M.steps).uniforms.uLeaves.value, 0, 'T05 built its site: leaves off');
-  assert.equal(compiled(M.steps).uniforms.uMoss.value, 1, 'moss stays as the prologue has it');
+  assert.equal(compiled(M.steps).uniforms.uMoss.value, 0, 'and no moss: a clear cold early-winter day, the flight faces south and is dry');
+  assert.equal(compiled(M.steps).uniforms.uStoneW.value, 0.8, 'its stones keep the size the art director passed (about 1.8 m a slab on the 9 m flight)');
+  assert.equal(compiled(createMaterials().steps).uniforms.uMoss.value, 1, 'a page that never built T05 keeps its moss');
   assert.equal(compiled(createMaterials().steps).uniforms.uLeaves.value, 1, 'a page that never built T05 keeps its leaves');
 });

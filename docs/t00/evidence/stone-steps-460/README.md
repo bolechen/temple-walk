@@ -58,7 +58,7 @@ Job `20261121-093102`（十六种时辰、手机、T05 的 `b`）和 `20261121-1
 
 ## 关卡可配（T05 主创的要求，2026-11-21）
 
-石块怎么排，一个关卡可以自己定：`M.steps.userData.stairStyle`，在关卡建场时设，第一次编译着色器时当 uniform 读（`stoneW` 踏面一块石的宽，决定每级几块；`cheekL` 垂带一段石的长；`leaves` 有没有竹叶；`moss` 有没有苔）。默认值是 `materials.js` 的 `STAIR_STYLE`，也就是 T00 现在的样子；没有说话的关卡一点没变（T00 的 cam02 默认值前后只差 66 个像素，是风吹的叶影）。T05 在 `app/levels/t05/site.js` 的 `STAIR_STYLE` 里只把竹叶关了（`docs/t05/ART.md` §4.2：没有竹、没有柳杉），苔照 T00 的规则（只给朝北下去的台阶），石块和垂带分段的数先沿用，等结构评审核了辽构的数再改。单测：`stair-stones.test.mjs` 末两条。
+石块怎么排，一个关卡可以自己定：`M.steps.userData.stairStyle`，在关卡建场时设，第一次编译着色器时当 uniform 读（`stoneW` 踏面一块石的宽，决定每级几块；`cheekL` 垂带一段石的长；`leaves` 有没有竹叶；`moss` 有没有苔）。默认值是 `materials.js` 的 `STAIR_STYLE`，也就是 T00 现在的样子；没有说话的关卡一点没变（T00 的 cam02 默认值前后只差 66 个像素，是风吹的叶影）。T05 在 `app/levels/t05/site.js` 的 `STAIR_STYLE` 里把竹叶和苔都关了（竹叶：`docs/t05/ART.md` §4.2，没有竹、没有柳杉；苔：美术总监在 #486 定，初冬晴冷、朝南是干的），石块和垂带分段的数沿用（结构评审说尺度可以，只要求标自拟，见 `docs/t05/SOURCES.md` §11 的一行；美术总监要求石块不小于 1.5 米，要变往大里变）。单测：`stair-stones.test.mjs` 末两条。
 
 T05 台阶近景，改前｜改后（T4，`?level=t05&cam=0,21.5,0,0.12`，夏昼）：[main](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/39647d4c8d54/t00/stone-steps-460/t4-final/t05-flight-close_summer-day_main.png)｜[#460](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/39647d4c8d54/t00/stone-steps-460/t4-final/t05-flight-close_summer-day_460.png)。T00 的 cam02 和首院踏道在最终代码上再出了一次：[cam02](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/d91b4ec969ea/t00/stone-steps-460/t4-final/final_cam02_summer-day.png)、[首院踏道](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/d91b4ec969ea/t00/stone-steps-460/t4-final/final_firstcourt-stair_summer-day.png)（T4 运行 `20261121-111621`，art5 帧耗改前改后 −0.19 ms，在波动内）。
 
