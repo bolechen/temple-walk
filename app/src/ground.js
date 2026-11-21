@@ -158,12 +158,15 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         // Water: one continuous ramp, standing water -> soaked -> damp.
         float low=fbm2(p*.17+3.)+(uWet-1.)*.34;   // one smooth field only, so that no puddle has a straight edge where a flag ends (and it is steps.js's puddleAt exactly)
         // Water stands only in the hollows. The edge of a puddle is as wide as the field makes it close by (the ramp is .04 of it, some
-        // forty centimetres of stone) but a far puddle is seen at a graze, where one pixel of the picture is a third of a metre of
-        // stone, so that ramp shrank to a pixel or two and the water ended in a line. The ramp is stretched, about the same edge, to a
-        // few pixels' worth of ground (the field changes about .1 a metre), so that the puddle keeps its size and loses its line.
+        // forty centimetres of stone). Seen from a raised eye (the following eye behind him, a raised camera: three metres up and more)
+        // a far puddle lies at a graze all the same, one pixel of the picture a third of a metre of stone, and that ramp shrank to a
+        // pixel or two so that the water ended in a line: there the ramp is stretched, about the same edge, to a few pixels' worth of
+        // ground (the field changes about .1 a metre), and the mirror begins a little way in from it, leaving a rim of wet stone. From
+        // his own eyes (1.6 m) nothing changes: standing water at a graze is a mirror with a sharp edge, as wet stone should be (J01).
         // Before the rain (uWet 0: winter) there is no water at all, whatever the field says.
         float reach=max(length(dFdx(p)),length(dFdy(p)));   // the most ground one pixel covers, along the line of sight
-        float edgeW=clamp(1.4*reach,.04,.3);
+        float rise=smoothstep(2.4,3.4,cameraPosition.y-vWP.y);
+        float edgeW=mix(.04,clamp(1.2*reach,.04,.22),rise);
         float puddle=smoothstep(.59-.5*edgeW,.59+.5*edgeW,low)*step(.001,uWet), damp=smoothstep(.3,.58,low);
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
@@ -234,7 +237,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         // After dark every lamp lays a warm pool on the stone round its foot.
         if(uLamp>.01){ float pool=0.; for(int i=0;i<${MAX_LAMPS};i++){ vec4 L=uLamps[i]; if(L.w<=0.) break; vec2 dl=p-L.xy; pool+=L.w*exp(-dot(dl,dl)/(L.z*L.z)); } lit+=(alb*.55+.03)*vec3(1.,.56,.25)*min(pool,1.2)*uLamp*.85; }
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.
-        float deepW=puddle*puddle;   // the rim of a puddle is wet stone with a soft sheen; its mirror begins a little way in
+        float deepW=pow(max(puddle,0.),1.+.5*rise);   // the rim of a puddle is wet stone with a soft sheen; seen from a raised eye its mirror begins a little way in
         vec4 rc=uTexM*vec4(vWP,1.); vec2 ruv=rc.xy/rc.w+g*mix(.5,.06,deepW)+rp*.03;
         // Standing water mirrors; stone that is only damp gives back a soft, pale light with no shapes in it.
         vec3 sky=uFog*mix(.9,1.06,ndv), refl=sky;

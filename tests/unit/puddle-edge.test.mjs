@@ -13,12 +13,18 @@ const line = src.split("\n").find((l) => /float puddle=smoothstep\(/.test(l));
 test("the mask is written once, about the old edge, and is zero when it has not rained", () => {
   assert.ok(line, "the line that defines `puddle` is there");
   assert.match(line, /float puddle=smoothstep\(\.59-\.5\*edgeW,\.59\+\.5\*edgeW,low\)\*step\(\.001,uWet\)/, "the ramp is centred on .59 and is multiplied by step(.001, uWet)");
-  assert.match(src, /float edgeW=clamp\(1\.4\*reach,\.04,\.3\)/, "the ramp is at least the old .04 and at most .3");
+  assert.match(src, /float rise=smoothstep\(2\.4,3\.4,cameraPosition\.y-vWP\.y\)/, "the widening follows how high the eye is above the paving");
+  assert.match(src, /float edgeW=mix\(\.04,clamp\(1\.2\*reach,\.04,\.22\),rise\)/, "the ramp is the old .04 at the lowest eye and at most .22 at a raised one");
+  assert.match(src, /float deepW=pow\(max\(puddle,0\.\),1\.\+\.5\*rise\)/, "the mirror's weight is the mask itself at the lowest eye");
 });
 
-test("close up the ramp is the old one exactly: .57 to .61", () => {
-  const W = 0.04;
+test("from his own eyes (1.6 m) the mask and the mirror are the old ones exactly: .57 to .61, weight = mask", () => {
+  const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const rise = smooth(2.4, 3.4, 1.6), W = 0.04 + (Math.min(0.22, Math.max(0.04, 1.2 * 0.35)) - 0.04) * rise;   // a far puddle: a pixel is .35 m of stone
+  assert.equal(rise, 0);
   assert.ok(Math.abs(0.59 - 0.5 * W - 0.57) < 1e-12 && Math.abs(0.59 + 0.5 * W - 0.61) < 1e-12);
+  assert.equal(1 + 0.5 * rise, 1, "pow(puddle, 1) is the mask");
+  assert.ok(smooth(2.4, 3.4, 3.5) === 1 && smooth(2.4, 3.4, 5) === 1, "the following eye (about 3.5 m) and a raised camera are fully 'raised'");
 });
 
 test("every winter hour has uWet 0, and with it the mask is zero (step(.001, 0) = 0)", () => {
