@@ -217,11 +217,13 @@ export function createMaterials() {
       // The tread's nose is worn into a rounded band three to five centimetres wide, widest and palest in the middle third and
       // narrowing toward its ends, a little different slab to slab; it stands a tenth or more above the tread, with a dark line along
       // the edge where it turns under. A cheek's top has its two edges worn the same way, narrower.
-      float uu=abs(x)/(.5*max(W,.1)), prof=1.-.7*smoothstep(.33,1.,uu);
-      float bw=(.04+.022*prof)*(.8+.4*n2(vec2(x*8.+sed*3.,ti*5.1+1.)))*(.9+.2*h21(vec2(sid+ti,sed+5.)));
-      float fwn=max(fwidth(dn),1e-4);   // (the worn band and the line under it only while they are wide enough to be seen: far off the nose is just a little older)
-      float crest=(1.-ck)*up*smoothstep(.003,bw*.35,dn)*(1.-smoothstep(bw*.35,bw,dn))*(1.-chip)*(.8+.4*n2(vec2(x*5.+ti*2.,sed)))*smoothstep(1.,3.,bw/fwn);
-      float edge_=(1.-ck)*up*(1.-smoothstep(0.,.009,dn))*smoothstep(.4,1.5,.014/fwn);
+      float fwn=max(fwidth(dn),1e-4), crest=0., edge_=0.;   // (the worn band and the line under it only while they are wide enough to be seen: far off the nose is just a little older)
+      if(ck<.5&&up>.5&&dn<.085){      // (and only within a hand of the nose: the rest of the tread never asks)
+        float uu=abs(x)/(.5*max(W,.1)), prof=1.-.7*smoothstep(.33,1.,uu);
+        float bw=(.04+.022*prof)*(.8+.4*n2(vec2(x*8.+sed*3.,ti*5.1+1.)))*(.9+.2*h21(vec2(sid+ti,sed+5.)));
+        crest=smoothstep(.003,bw*.35,dn)*(1.-smoothstep(bw*.35,bw,dn))*(1.-chip)*(.8+.4*n2(vec2(x*5.+ti*2.,sed)))*smoothstep(1.,3.,bw/fwn);
+        edge_=(1.-smoothstep(0.,.009,dn))*smoothstep(.4,1.5,.014/fwn);
+      }
       float de=min(st.x,${CHEEK_STONE.width}-st.x), arrC=ck*up*stoneF*(1.-smoothstep(0.,.02,de));
       float lip=(1.-ck)*(1.-up)*step(.93,tf);                       // the front of the nosing slab, under the lip
       col*=(1.-jd*joint)*(1.+.14*rim*(.4+.6*up)+.62*crest+.16*arrC)*(1.-.5*edge_-.32*lip-.55*chip)*(1.+.1*chipRim);
