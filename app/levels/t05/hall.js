@@ -42,7 +42,7 @@ export const HALL = Object.freeze({
  * #481 had always on, so that station E's middle tone is over L* 10 in first person); over how many metres in from the front wall it comes up; and how fast the eye takes it (seconds to cover about
  * two thirds of a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
-export const FILL = Object.freeze({ lux: 16, depth: 2, ease: 0.8 });
+export const FILL = Object.freeze({ lux: 16, depth: 3, ease: 0.5 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
@@ -220,12 +220,12 @@ export function buildHall(M) {
     // the intensity is what it reaches once he is well inside; from the court it is out, so that the doorway reads dark
     // (`within` below, and the site's tick, raise it as he goes in).
     fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, FILL.lux, 26]),
-    // How far inside the hall an eye is, 0 to 1: nothing outside the walls, then rising over
-    // FILL.depth metres in from the threshold (PRD.md §2.1's "how far inside", its cheapest form), whole by station F.
+    // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.depth metres before the
+    // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
     within: (x, y, z) => {
       const zF = ZS[0] + H.front, xIn = X + 0.3 - H.wall, zIn = zB - 0.3 + H.wall;
-      if (Math.abs(x) > xIn || z < zIn || y < y0 - 0.5 || y > H.ridge) return 0;
-      const t = Math.min(1, Math.max(0, (zF - z) / FILL.depth));
+      if (Math.abs(x) > xIn || z < zIn || z > zF + FILL.depth || y < y0 - 0.5 || y > H.ridge) return 0;
+      const t = Math.min(1, Math.max(0, (zF + FILL.depth - z) / (2 * FILL.depth)));
       return t * t * (3 - 2 * t);
     },
     roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge },
