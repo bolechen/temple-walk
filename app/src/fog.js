@@ -13,18 +13,22 @@
 import * as THREE from "three";
 import { U, FOGLAYER, FOGSHUT } from "./glsl.js";
 
-let done = false;
-export function layerFog() {
-  if (done) return; done = true;
-  const C = THREE.ShaderChunk;
-  C.fog_pars_vertex = "#ifdef USE_FOG\n varying float vFogDepth; varying float vFogY; varying vec3 vFogW;\n#endif\n";
+// The shut hall's sums are written into the chunks only when the level names a hall (`layerFog({ shut: true })`, called by
+// yard.js once the level is built and before anything is drawn, since three reads the chunks as each material is first
+// compiled). A level that names none compiles exactly the shaders it compiled before the shut hall existed.
+let done = false, shutIn = false;
+export function layerFog({ shut = false } = {}) {
+  if (done && (shutIn || !shut)) return;
+  const first = !done; done = true; shutIn = shut;
+  const C = THREE.ShaderChunk, W = shut ? " varying vec3 vFogW;" : "", D = shut ? "fogDepth" : "vFogDepth";
+  C.fog_pars_vertex = `#ifdef USE_FOG\n varying float vFogDepth; varying float vFogY;${W}\n#endif\n`;
   // The height of the point in the world, from its place before the eye: the view's rotation turned back and the eye's
   // own position added (a view matrix has no scale), so no model matrix is needed and instancing changes nothing.
-  C.fog_vertex = "#ifdef USE_FOG\n vFogDepth = - mvPosition.z; vFogY = cameraPosition.y + dot( viewMatrix[ 1 ].xyz, mvPosition.xyz );\n vFogW = cameraPosition + vec3( dot( viewMatrix[ 0 ].xyz, mvPosition.xyz ), dot( viewMatrix[ 1 ].xyz, mvPosition.xyz ), dot( viewMatrix[ 2 ].xyz, mvPosition.xyz ) );\n#endif\n";
+  C.fog_vertex = "#ifdef USE_FOG\n vFogDepth = - mvPosition.z; vFogY = cameraPosition.y + dot( viewMatrix[ 1 ].xyz, mvPosition.xyz );\n" +
+    (shut ? " vFogW = cameraPosition + vec3( dot( viewMatrix[ 0 ].xyz, mvPosition.xyz ), dot( viewMatrix[ 1 ].xyz, mvPosition.xyz ), dot( viewMatrix[ 2 ].xyz, mvPosition.xyz ) );\n" : "") + "#endif\n";
   C.fog_pars_fragment = `#ifdef USE_FOG
-  uniform vec3 fogColor; varying float vFogDepth; varying float vFogY; varying vec3 vFogW; uniform vec4 uFogLayer;
-  ${FOGLAYER}
-  ${FOGSHUT}
+  uniform vec3 fogColor; varying float vFogDepth; varying float vFogY;${W} uniform vec4 uFogLayer;
+  ${FOGLAYER}${shut ? "\n  " + FOGSHUT : ""}
   #ifdef FOG_EXP2
     uniform float fogDensity;
   #else
@@ -34,10 +38,9 @@ export function layerFog() {
 `;
   C.fog_fragment = `#ifdef USE_FOG
   #ifdef FOG_EXP2
-    float fogDepth = vFogDepth * ( 1.0 - fogShut( cameraPosition, vFogW ) );
-    float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth * fogLayer( cameraPosition.y, vFogY, uFogLayer ) );
+    ${shut ? "float fogDepth = vFogDepth * ( 1.0 - fogShut( cameraPosition, vFogW ) );\n    " : ""}float fogFactor = 1.0 - exp( - fogDensity * fogDensity * ${D} * ${D} * fogLayer( cameraPosition.y, vFogY, uFogLayer ) );
   #else
-    float fogFactor = smoothstep( fogNear, fogFar, vFogDepth * ( 1.0 - fogShut( cameraPosition, vFogW ) ) );
+    float fogFactor = smoothstep( fogNear, fogFar, ${shut ? "vFogDepth * ( 1.0 - fogShut( cameraPosition, vFogW ) )" : "vFogDepth"} );
   #endif
   gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
 #endif
@@ -47,6 +50,7 @@ export function layerFog() {
   // becomes an accessor that wraps each assigned function. The wrapper prints as the function it wraps, because three
   // tells programs apart by that text (customProgramCacheKey). A material compiled without the uniform reads it as
   // zero, which is no layer at all.
+  if (!first) return;   // the hook below is laid once
   const proto = THREE.Material.prototype, base = proto.onBeforeCompile, OWN = Symbol("onBeforeCompile");
   const give = (sh) => { if (!sh.uniforms) return; if (!sh.uniforms.uFogLayer) sh.uniforms.uFogLayer = U.uFogLayer; if (!sh.uniforms.uFogShut) { sh.uniforms.uFogShut = U.uFogShut; sh.uniforms.uFogShutY = U.uFogShutY; } };
   const plain = function (sh) { give(sh); }; plain.toString = () => base.toString();

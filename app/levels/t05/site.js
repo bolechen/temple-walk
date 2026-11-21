@@ -34,7 +34,17 @@ export const STATION = Object.freeze({ A: [0, 44], B: [0, 27], C: [0, 0.6], D: [
 /** The parapet round the platform and the terrace (SITE.md §6: a railing or a low wall; a low wall here). */
 const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
 
+/**
+ * How this level's stairs are laid (STAIR_STYLE in src/materials.js lists what can be changed and what it starts as). T05 has
+ * no bamboo (docs/t05/ART.md §4.2: the court's trees drop leaves, there is "no T00 bamboo or cedar"), so no bamboo leaf lies on
+ * a tread, and no moss grows (the art director, #486: an early-winter clear cold day, the south-facing flight is dry); the
+ * stones' size (about 1.8 m a slab on the 9 m flight, none to be made smaller) and the cheek's run stay the prologue's until the
+ * structure review has checked the Liao numbers.
+ */
+export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false });
+
 export function buildSite(M) {
+  Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
   const root = new THREE.Group();
   const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], []];
   const stone = [], plaster = [], steps = [], earth = [];
@@ -47,9 +57,9 @@ export function buildSite(M) {
   shade[0].push({ x0: -pX, x1: pX, z0: pN, z1: P.zS }, { x0: -tX, x1: tX, z0: T.zN, z1: T.zS });
 
   // The flight down the terrace's south face, its head at the terrace's edge.
-  const flight = stairGeo(F.w, F.rise), run = flight.run ?? stairProfile(F.rise).run;
   const at = new THREE.Matrix4().makeTranslation(0, 0, T.zS);
-  steps.push(flight.geo.applyMatrix4(at)); (root.userData.flights ||= []).push({ w: F.w, rise: F.rise, sides: [-1, 1], m: at });
+  const flight = stairGeo(F.w, F.rise, { place: at }), run = flight.run ?? stairProfile(F.rise).run;
+  steps.push(flight.geo); (root.userData.flights ||= []).push({ w: F.w, rise: F.rise, sides: [-1, 1], m: at });
   const pad = BODY + 0.02;   // the treads are walked clear of the cheek stones by his own width
   walk.ramps.push({ x0: -F.w / 2 + pad, x1: F.w / 2 - pad, z0: T.zS - 0.8, z1: T.zS + run + 0.3, base: 0, h: F.rise, low: [0, T.zS + run], high: [0, T.zS], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? F.w / 2 - BODY - 0.021 : -F.w / 2 - CHEEK - BODY, x1: sx > 0 ? F.w / 2 + CHEEK + BODY : -F.w / 2 + BODY + 0.021, z0: T.zS + 0.02, z1: T.zS + run + BODY + 0.06, h: top });
@@ -103,7 +113,6 @@ export function buildSite(M) {
 
   // The great hall's shell (./hall.js): its walls, timber, columns and roof, and what the written plan's walker is told of it.
   const hall = buildHall(M), hp = hall.parts;
-  plaster.push(...hp.plaster);
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
   root.add(mesh(merge(hp.wood), M.woodX, sh), mesh(merge(hp.woodZ), M.woodZ, sh), mesh(merge(hp.frame), M.woodZ, sh), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
@@ -112,6 +121,10 @@ export function buildSite(M) {
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
+  // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
+  // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
+  root.add(mesh(merge(hp.plaster), M.plaster(), sh));
   // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
   const altar = buildAltar(), ap = altar.parts;
   walk.posts.push(...altar.walk.posts);

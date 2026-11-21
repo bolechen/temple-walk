@@ -28,3 +28,27 @@ test("outside the box the mist is as before; inside it, the part of the line wit
   // A line straight along an axis (a zero component in its direction) is handled.
   assert.ok(Math.abs(fogShut([0, 10, -5], [0, 10, -20], box) - 1) < 1e-9);
 });
+
+test("a level that names no hall compiles three's fog chunks without the box's sums; naming one adds them, and they stay", async () => {
+  const THREE = await import("three"), { layerFog } = await import("../../app/src/fog.js"), C = THREE.ShaderChunk;
+  layerFog();
+  const none = [C.fog_pars_vertex, C.fog_vertex, C.fog_pars_fragment, C.fog_fragment].join("\n");
+  assert.ok(!/fogShut|vFogW|uFogShut/.test(none), "no box: not a word of it in the chunks (T00 draws the shaders it drew before #481)");
+  assert.ok(C.fog_fragment.includes("vFogDepth * vFogDepth"), "the mist's depth is the plain distance");
+  layerFog({ shut: true });
+  assert.ok(C.fog_fragment.includes("fogShut( cameraPosition, vFogW )") && C.fog_vertex.includes("vFogW =") && C.fog_pars_fragment.includes("uniform vec4 uFogShut"));
+  layerFog();
+  assert.ok(C.fog_fragment.includes("fogShut("), "asked again without one, the box's sums stay (a page names its level once)");
+});
+
+test("the paving's own shader leaves the box's sums out unless the level has named a hall before it is laid", async () => {
+  const THREE = await import("three"), { createGround } = await import("../../app/src/ground.js"), T00 = await import("../../app/src/site.js?real");
+  const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+  const site = T00.buildSite(M);
+  const frag = () => { const sc = new THREE.Scene(); createGround(sc, site.shade, site.censer, site.paving); const out = []; sc.traverse((o) => { const m = /** @type {any} */ (o).material; if (m && m.fragmentShader) out.push(m.fragmentShader); }); return out.join("\n"); };
+  const none = frag();
+  assert.ok(none.length > 0 && !/fogShut|uFogShut|vFogW/.test(none), "no box: the paving's mist is the plain distance");
+  const was = U.uFogShut.value.clone();
+  U.uFogShut.value.set(box.x0, box.z0, box.x1, box.z1);
+  try { assert.ok(frag().includes("fogShut(cameraPosition,vWP)"), "a box named first: the paving takes it"); } finally { U.uFogShut.value.copy(was); }
+});
