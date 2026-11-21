@@ -1925,7 +1925,7 @@ const scenarios = {
     expect(new Set(foot.map((f) => f.top)).size === 1 && foot.every((f) => f.h >= 44 && f.w >= 44) && foot.filter((f) => f.stamp).map((f) => f.id).join() === "bookClose" && foot[foot.length - 1].right <= (await t.page.evaluate(() => innerWidth)) - 16, "the foot of the book is not one line of four, the seal alone: " + JSON.stringify(foot));
     await t.page.click("#bookMoreBtn"); await t.until(async () => t.page.isVisible("#bookMore"), 10000, "更多 did not open");
     const more = await t.page.evaluate(() => [...document.querySelectorAll("#bookMore .chip, #bookMore .stamp")].filter((e) => e.offsetParent !== null).map((e) => { const r = e.getBoundingClientRect(); return { id: e.id, top: Math.round(r.top), h: Math.round(r.height), stamp: e.classList.contains("stamp") }; }));
-    expect(more.map((m) => m.id).join() === "bookReplay,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper is not one thing to a line, none a seal: " + JSON.stringify(more));
+    expect(more.map((m) => m.id).join() === "bookReplay,bookCarry,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper is not one thing to a line, none a seal: " + JSON.stringify(more));
     await t.page.click("#bookReplay");
     await t.until(async () => !(await t.page.isVisible("#bookMore")) && !(await t.page.isVisible("#book")), 20000, "the book and its paper did not go before the close");
     await t.until(async () => (await R()).closing === true, 120000, "山顶再坐一回 did not play the close");
