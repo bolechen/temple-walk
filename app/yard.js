@@ -173,7 +173,9 @@ await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
-for (const hall of INCENSE_HALLS) if (rooms.places[incenseId(hall)]) site.places[incenseId(hall)] = rooms.places[incenseId(hall)];   // (a level without that hall has no place for it, #409) site.seats.push(...rooms.seats);
+// (A level without one of these halls has no place for its incense, #409.)
+for (const hall of INCENSE_HALLS) if (rooms.places[incenseId(hall)]) site.places[incenseId(hall)] = rooms.places[incenseId(hall)];
+site.seats.push(...rooms.seats);
 for (const [id, p] of [...INCENSE_HALLS.map((h) => [incenseId(h), site.places[incenseId(h)]]), ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)

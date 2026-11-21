@@ -1160,6 +1160,11 @@ const scenarios = {
     const R = () => t.page.evaluate(() => window.__rites());
     // Every seat there is, indoors and out: put beside it, he goes over and is on it, at its height, turned the way it faces.
     const seats = await t.page.evaluate(() => window.__seats.map((k) => ({ at: k.at, top: k.top, room: k.room, kind: k.kind })));
+    // The halls' cushions and stools are seats too (yard.js hands the rooms' seats to the walk's list; #414's review found a
+    // comment that swallowed that line, and this scenario, sitting on whatever the list held, passed without them).
+    // Every hall of the prologue has a cushion or a stool (interior.js), so every hall offers a seat.
+    const halls = new Set(seats.filter((s) => s.room).map((s) => s.room)), all = await t.page.evaluate(() => window.__halls.map((h) => h.id));
+    expect(all.every((h) => halls.has(h)), `every hall's cushions and stools should be seats: seats in ${[...halls].join(", ") || "no hall"} of ${all.join(", ")}`);
     let room = null;
     for (let i = 0; i < seats.length; i++) {
       const s = seats[i];
