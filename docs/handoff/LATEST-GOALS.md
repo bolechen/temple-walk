@@ -220,6 +220,8 @@
 
 97. **七尊的眼睛：暂时闭目，目标是半开垂目。** 毗婆尸做到 r8，美术总监和 3D 评审都同意先按闭目定稿。但 T05 主创核了 Commons 上的一手照片，真像的眼睛是半开、往下看的，所以闭目不符合史实；这一版网格的眼睑是按闭目雕的，画不出睁眼。主创给了三个选项：A 先闭目铺开七尊；B 现在花点数重出头；C 先闭目铺开，等 #514 证明 Blender 可行，再用 Blender 把眼睑重雕成半开垂目，不花点数，试点不成再回到 B。所有者回：「选c」。同日 #514 修订两处：一是 Blender 改用 PyPI 上的 bpy==5.3.0，不用加下载地址；二是释迦的右手和膝长在一起转不过来，改为移植尸弃的左手镜像过去，先过 3D 评审。
 
+98. **所有者清掉四件待办；仓库分支保护不开。** 所有者 2026-11-21 晚说：「361 已确认，CLAUDE_CODE_SUBAGENT_EFFORT=medium 加过了，仓库要不要打开你定，你之前和我说不用打开的，分支已删」。主创定：「Require branches to be up to date before merging」不开。理由：文档现在直推 main，一天几十次；开了以后，每个 PR 不管 main 多出来的是不是只有文档，都得重跑一遍 CI。`tools/ci/stillgreen.cjs` 会分辨「main 只多了文档或互不相干的文件，旧绿灯照算」和「要重跑」两种情况，主创合并前每次都跑它（`skills/merge-green`）。如果哪天出现因为没合最新 main 而把 main 弄红的事，再重新考虑。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。
