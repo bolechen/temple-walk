@@ -4,11 +4,11 @@
 // following camera and, from his right, a side view are saved. TEMPLE_SITE names the built site: main's for `before`.
 //
 //   TEMPLE_SITE=<main dist> node tools/stair-film.cjs --label=before --out=tools/out/stair-film
-//   node tools/stair-film.cjs --label=after --out=tools/out/stair-film [--places=hill,hall,summit] [--secs=6]
+//   node tools/stair-film.cjs --label=after --out=tools/out/stair-film [--places=hill,hall,summit] [--secs=6] [--body=code|sculpt]   (the default body is Tripo's, #163)
 const { serve, launch } = require("../tests/e2e/lib.cjs");
 const fs = require("fs"), path = require("path");
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const label = arg("label", "after"), out = path.resolve(arg("out", "tools/out/stair-film")), secs = +arg("secs", 6), only = arg("places", "hill,hall,summit").split(",");
+const body = arg("body", ""), label = arg("label", "after"), out = path.resolve(arg("out", "tools/out/stair-film")), secs = +arg("secs", 6), only = arg("places", "hill,hall,summit").split(",");
 // The three flights, from the plan's ramps (tools/…: low and high ends, north is -z): the first of the mountain path,
 // the steps before the great hall, the long flight under the summit pavilion.
 const PLACES = {
@@ -27,7 +27,7 @@ const STEP = 1000 / 30, EVERY = 4;
     window.__step = (ms) => { now += ms; const c = cbs; cbs = []; for (const f of c) f(now); };
     window.__auto = setInterval(() => window.__step(33.3), 40);   // until the place is up; then the script steps it
   });
-  await p.goto(`${base}?enter&q=low&season=summer&time=day&view=third&debug=0`, { waitUntil: "commit", timeout: 120000 });
+  await p.goto(`${base}?enter&q=low&season=summer&time=day&view=third&debug=0${body ? "&body=" + body : ""}`, { waitUntil: "commit", timeout: 120000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
   await p.evaluate(() => clearInterval(window.__auto));
   const step = (n = 1, ms = STEP) => p.evaluate(([n, ms]) => { for (let i = 0; i < n; i++) window.__step(ms); }, [n, ms]);
