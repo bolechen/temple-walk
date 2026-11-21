@@ -533,6 +533,23 @@ if PO and PO.get("trim"):
   remap = -np.ones(len(hand_co), int); remap[used] = np.arange(len(used)); hand_co = hand_co[used]; hand_faces = remap[hand_faces]
   log.setdefault("pose", {})["trim_m"] = PO["trim"]
   np.savez(os.path.join(out, "hand-final.npz"), points=hand_co, faces=hand_faces)
+if PO and PO.get("wrap"):
+  # the wrist: the hand's top `wrap.length` metres are drawn onto the forearm as it now lies, each point that stands
+  # outside it laid back to `wrap.sink` metres under its surface (along the nearest face's normal), fully at the top
+  # and less going down, so the hand's open end lies inside the forearm and the two read as one wrist
+  from mathutils.bvhtree import BVHTree as _BV
+  WP = PO["wrap"]; near_w = np.linalg.norm(st - tw, axis=1) < WP.get("reach", 0.6)
+  fv_ = np.empty(len(ob.data.polygons) * 3, dtype=np.int64); ob.data.polygons.foreach_get("vertices", fv_); F_ = fv_.reshape(-1, 3)
+  Fw = F_[np.all(near_w[F_], axis=1)]
+  tree_w = _BV.FromPolygons([Vector(p) for p in st], [tuple(int(i) for i in f) for f in Fw])
+  s_h = (hand_co - tw) @ tax; ww_ = 1 - np.clip(s_h / WP["length"], 0, 1); ww_ = ww_ * ww_ * (3 - 2 * ww_); moved_w = 0
+  for i in np.nonzero(ww_ > 0)[0]:
+    loc, nrm_w, _, _ = tree_w.find_nearest(Vector(hand_co[i]))
+    if loc is None: continue
+    loc = np.array(loc); nrm_w = np.array(nrm_w); sd = (hand_co[i] - loc) @ nrm_w
+    if sd > -WP["sink"]: hand_co[i] = hand_co[i] - nrm_w * (sd + WP["sink"]) * ww_[i]; moved_w += 1
+  log.setdefault("pose", {})["wrap"] = {"length_m": WP["length"], "sink_m": WP["sink"], "points_moved": moved_w}
+  np.savez(os.path.join(out, "hand-final.npz"), points=hand_co, faces=hand_faces)
 nb = len(st); allco = np.r_[st, hand_co]
 me = ob.data; bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
 for p in hand_co: bm.verts.new(Vector(to_blender(p[None])[0]))
