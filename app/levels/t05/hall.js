@@ -24,10 +24,16 @@ export const HALL = Object.freeze({
   eave: 11.81,           // the eave's edge above the court: platform 3 + column 6.06 + bracket sets 2.75 (SITE.md §4.2)
   ridge: 21.0,           // the ridge above the court (SITE.md §1, about +21)
   overhang: 3.75,        // the eave beyond the column line (ARCHITECTURE.md §4.1: about 3.5–4 m)
-  door: { w: 4.0, h: 4.2, sill: 0.24 },    // SITE.md: a 4 m doorway (proposal); the sill pressed to 0.24 m so he steps over it (PRD.md §2)
+  door: { w: 5.0, h: 5.0, sill: 0.24 },    // a square door filling its 5.8 m bay but for the jambs (the Yingzao Fashi's plank door is as wide as it is tall: SOURCES.md §12); the sill pressed to 0.24 m so he steps over it (PRD.md §2)
   window: { w: 3.0, sill: 1.1, h: 2.4, bars: 11 },   // upright bars over a sill wall 1.0–1.2 m (ARCHITECTURE.md §4.2, not measured)
   roof: 0.6,             // how thick the roof's mass is, from its tiles to the dark of its underside
+  lintel: 0.55,          // the tie-beam between column heads, and the cap board on them 0.2 thick
+  bracket: { tiers: 3, h: 0.7, w: 1.0, out: [0.9, 1.7, 2.5], inn: [0.7, 1.3] },   // a bracket set as three stepped blocks out under the eave and two in (white box)
+  beams: [10.2, 12.6, 15.0, 17.4],   // the bottoms of the four tiers of each frame above the court (the roof left open to the timber, ARCHITECTURE.md §2.2: eight frames)
+  beam: { w: 0.6, d: 0.9 },
 });
+/** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
+export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
 export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
 
@@ -98,15 +104,73 @@ export function buildHall(M) {
   for (let i = 0; i < 4; i++) { const p = edge[i], q = edge[i + 1]; tri(fascia, p, low(p), low(q)); tri(fascia, p, low(q), q); }
   const geoOf = (arr) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(arr, 3)); g.computeVertexNormals(); return g; };
   const ridgeBox = box(2 * rx + 0.8, 0.7, 0.8, 0, H.ridge + 0.2, zm);
-  // The band of bracket sets: from the column heads up to the underside where it passes over the wall's outer face.
-  const bandTop = under(H.eave + slope * (H.overhang - 0.3)), bandH = bandTop - top, bw = H.wall + 0.7;
-  wood.push(box(2 * X + 0.6 + 1.4, bandH, bw, 0, top + bandH / 2, ZS[0] + 0.3 + 0.7 - bw / 2), box(2 * X + 0.6 + 1.4, bandH, bw, 0, top + bandH / 2, zB - 0.3 - 0.7 + bw / 2));
-  for (const s of [-1, 1]) woodZ.push(box(bw, bandH, zB - ZS[0] - 2, s * (X + 0.3 + 0.7 - bw / 2), top + bandH / 2, (ZS[0] + zB) / 2));
+  // The underside's height above a point (x, z) under the roof: the lowest of its four slopes there.
+  const underAt = (x, z) => under(Math.min(H.ridge, H.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))));
+
+  // Over the walls, all round: the tie-beams between the column heads and the cap board on them; above, up to the
+  // underside, the wall between the bracket sets; and the bracket sets themselves, one on each column and one in the
+  // middle of each bay, stepping out under the eave and in over the floor, so that from the terrace the eave reads as
+  // columns, beam and brackets, not one dark band.
+  const BR = H.bracket, lt = H.lintel, cap = top + 0.2, wallUp = underAt(0, ZS[0] + 0.3);
+  /** @type {[boolean, number, number, readonly number[]][]} */
+  const sides = [   // [along x?, the column line's z or x, outward sign, the column positions along it]
+    [true, ZS[0], 1, XS], [true, zB, -1, XS], [false, XS[0], -1, ZS], [false, X, 1, ZS],
+  ];
+  for (const [ax, at, out, pos] of sides) {
+    const a = pos[0], b = pos[pos.length - 1], len = Math.abs(b - a), mid = (a + b) / 2, face = at + out * 0.3;
+    const put = (list, w, h, d, u, y, v) => list.push(ax ? box(w, h, d, u, y, v) : box(d, h, w, v, y, u));
+    const list = ax ? wood : woodZ;
+    put(list, len, lt, 0.4, mid, top - lt / 2, face + out * 0.1);                       // the tie-beam, proud of the wall
+    put(list, len + 0.8, 0.2, H.wall + 0.3, mid, top + 0.1, at + out * (0.3 - H.wall / 2 + 0.15));   // the cap board
+    put(plaster, len, wallUp - cap, H.wall, mid, (cap + wallUp) / 2, at + out * (0.3 - H.wall / 2));  // the wall between the brackets, up to the roof
+    const sets = []; pos.forEach((p, i) => { sets.push(p); if (i < pos.length - 1) sets.push((p + pos[i + 1]) / 2); });
+    for (const u of sets) {
+      for (let k = 0; k < BR.tiers; k++) {                                               // out under the eave
+        const o = BR.out[k], w = BR.w + 0.3 * k;
+        put(list, w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face + out * (o / 2 - 0.3 + 0.3));
+      }
+      BR.inn.forEach((o, k) => put(list, BR.w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face - out * (H.wall + o / 2)));   // and in over the floor
+    }
+    const eaveBeamOut = BR.out[BR.tiers - 1] + 0.15, yE = cap + BR.h * BR.tiers + 0.15;
+    put(list, len + 2 * eaveBeamOut, 0.3, 0.35, mid, yE, face + out * eaveBeamOut);        // the eave purlin the outermost tier carries
+  }
+
+  // Inside, the roof open to its timber: the inner columns, and on each of the eight inner column lines a frame of four
+  // tiers of beams, each shorter than the one below and standing on it on short posts, up to a post under the ridge; and
+  // the purlins along the hall at each tier's ends. The white box's frame: its spans and heights follow the roof's slopes,
+  // not a measured section (ARCHITECTURE.md §2.2: positions to be measured).
+  const inner = [...XS.slice(1, -1).map((x) => [x, ZS[INNER.back]]), ...INNER.frontAt.map((i) => [XS[i], ZS[INNER.front]])];
+  const yb = H.beams, bw = H.beam.w, bd = H.beam.d, innerTop = yb[0];
+  const innerGeo = inner.map(([x, z]) => new THREE.CylinderGeometry(H.colR * 1.1, H.colR * 1.15, innerTop - y0, 16).translate(x, (y0 + innerTop) / 2, z));
+  for (const [x, z] of inner) walk.posts.push({ x0: x - H.colR * 1.1 - BODY, x1: x + H.colR * 1.1 + BODY, z0: z - H.colR * 1.1 - BODY, z1: z + H.colR * 1.1 + BODY });
+  const frame = [], purlins = [];
+  // How far a tier on the frame at x may run, front and back, before it meets the slopes (the hipped ends lower them).
+  const reach = (x, yTop) => { let f = null, k = null; for (let z = ZS[0]; z >= zB; z -= 0.05) if (underAt(x, z) >= yTop) { f ??= z; k = z; } return [f ?? zm, k ?? zm]; };
+  for (const x of XS.slice(1, -1)) {
+    let prev = null;
+    yb.forEach((y, j) => {
+      const [z1, z0] = reach(x + Math.sign(x) * bw / 2, y + bd + 0.35);
+      if (z1 - z0 < 1.5) return;
+      frame.push(box(bw, bd, z1 - z0, x, y + bd / 2, (z0 + z1) / 2));
+      if (prev) for (const z of [z0 + 0.4, z1 - 0.4]) frame.push(box(bw * 0.9, y - prev, 0.7, x, (prev + y) / 2, z));   // the short posts on the tier below
+      prev = y + bd;
+      for (const z of [z0 + 0.2, z1 - 0.2]) purlins.push([z, y + bd + 0.18]);
+    });
+    const crown = underAt(x + Math.sign(x) * bw / 2, zm + 0.3) - 0.4;   // up to the ridge purlin
+    if (prev && crown - prev > 0.3) frame.push(box(bw * 0.8, crown - prev, 0.6, x, (prev + crown) / 2, zm));   // the post up to the roof
+  }
+  const seen = new Set();
+  for (const [z, y] of purlins) { const k = z.toFixed(2); if (seen.has(k)) continue; seen.add(k); wood.push(box(XS[XS.length - 2] - XS[1] + 1.2, 0.36, 0.36, 0, y, z)); }
+  wood.push(box(XS[XS.length - 2] - XS[1] + 1.2, 0.4, 0.4, 0, underAt(0, zm) - 0.2, zm));   // the ridge purlin
 
   return {
-    parts: { plaster, wood, woodZ, dark, columns: columnGeo, tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: [ridgeBox] },
+    parts: { plaster, wood, woodZ, dark, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: [ridgeBox] },
     walk,
     columns,
+    inner,
+    // A neutral fill under the roof, so that the white box's frame and floor can be seen from the door and from below
+    // (the hall's own light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance]
+    fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, 45, 30]),
     roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge },
     box: { x0: -OUTER.x, x1: OUTER.x, z0: OUTER.zB, z1: OUTER.zF },
   };

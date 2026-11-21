@@ -95,9 +95,10 @@ export function buildSite(M) {
   const hall = buildHall(M), hp = hall.parts;
   plaster.push(...hp.plaster);
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
-  root.add(mesh(merge(hp.wood), M.woodX), mesh(merge(hp.woodZ), M.woodZ), mesh(merge(hp.columns), M.woodV), mesh(merge(hp.dark), M.woodX),
+  root.add(mesh(merge(hp.wood), M.woodX), mesh(merge(hp.woodZ), M.woodZ), mesh(merge(hp.frame), M.woodZ), mesh(merge(hp.columns), M.woodV), mesh(merge(hp.dark), M.woodX),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX), mesh(merge(hp.ridge), M.ridge));
   shade[0].push(hall.box);
+  for (const [x, y, z, i, d] of hall.fill) { const l = new THREE.PointLight(0xfff4e8, i, d, 1.6); l.position.set(x, y, z); root.add(l); }
 
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);

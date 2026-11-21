@@ -70,12 +70,24 @@ test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, th
   assert.deepEqual([...FRONT], ["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
   const h = buildHall(M);
   assert.equal(h.columns.length, 28, "ten across the front and the back, four more up each end");
-  assert.equal(HALL.door.w, 4); assert.equal(HALL.door.sill, 0.24);
+  assert.equal(HALL.door.w, HALL.door.h, "a square door: 《营造法式》 版门「廣與高方」"); assert.equal(HALL.door.sill, 0.24);
+  for (const i of [3, 4, 5]) assert.ok(BAYS[i] - HALL.door.w >= 0.6 && HALL.door.h < HALL.column - HALL.lintel, "the door fills its bay but for the jambs, and stands under the tie-beam");
   const back = h.parts.dark.map((g) => (g.computeBoundingBox(), g.boundingBox));
   assert.ok(back.some((bb) => Math.abs(bb.max.x - bb.min.x - HALL.door.w) < 0.01 && bb.min.z < OUTER.zB + 1 && Math.abs(bb.min.x + bb.max.x) < 0.01), "a shut door in the back wall's middle bay");
   assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
   assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
   assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
+});
+
+test("inside, the open roof: eight frames on the inner column lines, each tier under the roof's slopes, and inner columns behind the altar's place (#422)", () => {
+  const h = buildHall(M);
+  assert.equal(h.inner.length, 10, "eight in the back row, one under each frame, and the two end bays' front inner columns");
+  for (const [, z] of h.inner.filter(([x]) => Math.abs(x) < 15)) assert.equal(z, ZS[4], "in front of the altar the inner columns are left out");
+  const xs = new Set(h.parts.frame.map((g) => (g.computeBoundingBox(), g.boundingBox.getCenter(new THREE.Vector3()).x.toFixed(2))));
+  assert.deepEqual([...xs].sort((a, b) => a - b), XS.slice(1, -1).map((x) => x.toFixed(2)).sort((a, b) => a - b), "a frame on each of the eight inner column lines");
+  const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
+  for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
+  assert.ok(h.fill.length > 0, "a neutral fill under the roof");
 });
 
 test("he walks into the hall across the threshold, to stations C, D, E and F, all on the hall's floor, and nowhere through its walls (#422)", () => {
