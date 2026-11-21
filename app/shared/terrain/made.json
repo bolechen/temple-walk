@@ -1,0 +1,10 @@
+{
+ "n": 512,
+ "extent": 9000,
+ "centre": [
+  0,
+  -45
+ ],
+ "unit": 0.1,
+ "source": "made here (tools/terrain/heightmap.mjs made, seed 183)"
+}

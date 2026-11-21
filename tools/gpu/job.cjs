@@ -18,7 +18,10 @@ const FLAGS = {
   "egl": ["--use-gl=egl"],
   "swiftshader": ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"],
 };
-const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required", "--enable-webgl", "--disable-gpu-driver-bug-workarounds"];
+// #183: the workbench's addresses (?terrain=) are read only on a preview's hostname, so such a page is opened at this
+// name, mapped to the local server, with the debug panel kept shut so that it costs nothing (src/debuggate.js).
+const BENCH_HOST = "pr-0-temple-walk-preview.test";
+const COMMON = [`--host-resolver-rules=MAP ${BENCH_HOST} 127.0.0.1`, "--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required", "--enable-webgl", "--disable-gpu-driver-bug-workarounds"];
 
 // The site the job was handed, in a form a report can be checked against later: the commit it was built from (as the
 // launcher says, with "+dirty" if app/ had changes not committed), the bundled entry the page loads (its name carries
@@ -69,7 +72,8 @@ function fingerprint(dir) {
     await page.addInitScript(() => { const say = console.error; console.error = (...a) => say(...a, "\n  at " + (new Error().stack || "").split("\n").slice(2, 8).map((l) => l.trim().replace(/^at /, "").replace(/https?:\/\/[^/]+\//, "")).join(" < ")); });
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
     page.on("console", (m) => m.type() === "error" && ours(m.text()) && report.errors.push(m.text().slice(0, 900)));
-    const t0 = Date.now(); await page.goto(base + at + "?" + query + (spec.level && spec.level !== "t00" && !/(^|&)level=/.test(query) ? "&level=" + encodeURIComponent(spec.level) : ""), { waitUntil: "commit", timeout: 120000 });
+    const bench = /(^|&)terrain=/.test(query), home = bench ? base.replace("127.0.0.1", BENCH_HOST) : base; if (bench && !/(^|&)debug=/.test(query)) query += "&debug=0";
+    const t0 = Date.now(); await page.goto(home + at + "?" + query + (spec.level && spec.level !== "t00" && !/(^|&)level=/.test(query) ? "&level=" + encodeURIComponent(spec.level) : ""), { waitUntil: "commit", timeout: 120000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     return { ctx, page, loadMs: Date.now() - t0 };
   };
@@ -79,7 +83,7 @@ function fingerprint(dir) {
   for (const b of spec.bench || []) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
-      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync }), size, b.scale || 1, { path: b.path || "" });
+      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync, terrain: b.terrain }), size, b.scale || 1, { path: b.path || "" });
       await page.waitForTimeout(b.warm || 1500);   // `warm`: longer, for what is taken in its first seconds (the doorways, #218)
       if (b.before) await page.evaluate(`(async () => { ${b.before} })()`);   // `before`: a script run before the frames are counted (the ground filled with what has fallen, #267)
       // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
@@ -240,7 +244,7 @@ function fingerprint(dir) {
     const free = typeof shot === "object" && !!shot.file, named = typeof shot === "object" && !free, name = free ? shot.file : named ? shot.name : shot;
     const [view, when = "", as = ""] = free ? [] : name.split("@"), [season, time] = when.split("-"), size = (typeof shot === "object" && shot.size) || spec.size || [1920, 1080], tier = (named && shot.q) || spec.q || "high";
     try {
-      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1);
+      const { ctx, page } = await open(free ? shot.query : q({ shot: 1, q: tier, show: view, season, time, view: as }), size, spec.scale || 1, { path: (free && shot.path) || "" });   // `path` (a free shot's): the same page of the build staged beside the site's own (BASE_SITE), to draw a picture before and after in one job
       await page.waitForTimeout(free && shot.wait ? shot.wait : 800);
       if (free && shot.js) await page.evaluate(shot.js);
       const file = free ? name + ".png" : name.replace(/@/g, "_") + (named && shot.q ? "_" + shot.q : "") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });

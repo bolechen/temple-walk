@@ -12,6 +12,7 @@ import { layerFog } from "./src/fog.js";
 import { softShadows } from "./src/shadows.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
+import { loadHeightmap, terrainAsked } from "./src/terrain-far.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
@@ -187,10 +188,14 @@ const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus)
 // The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
 // its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
 const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
-const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
+const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving, site.trees));
 // A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
 const NONE = { setMood() {}, update() {} };
-const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land)) : NONE;
+// #183's spike: on the workbench (the dev server, a preview) ?terrain=dem|made draws the far land from a heightmap instead
+// of the hill rings; the canary and the public page never read it (terrainAsked, src/debuggate.js).
+const TERRAIN_ASKED = L.backdrop ? terrainAsked({ dev: !!import.meta.env.DEV, hostname: location.hostname, search: location.search }) : null;
+const TERRAIN = TERRAIN_ASKED ? await loadHeightmap(asset, TERRAIN_ASKED).catch((e) => { console.warn("terrain:", e.message); return null; }) : null;
+const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land, TERRAIN)) : NONE;
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
@@ -276,7 +281,7 @@ function setMood(season, time) {
   sky.setMood(mood);
   U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
-  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
+  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); ground.setMood?.(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
   renderer.toneMappingExposure = mood.exp;
