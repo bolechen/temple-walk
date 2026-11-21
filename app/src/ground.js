@@ -149,7 +149,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         // of its two sides: at a low eye one side is long) grows past the grain, which would shimmer.
         float fpx=sqrt(max(length(dFdx(p))*length(dFdy(p)),0.));
         float stoneGrain=(n2(p*24.+id*3.7)-.5)*(1.-smoothstep(.012,.035,fpx))*.6+(n2(p*55.+id.yx*1.9)-.5)*(1.-smoothstep(.006,.015,fpx))*.4;
-        alb*=1.+stoneGrain*1.4*mix(.3,1.,smoothstep(4.,9.,length(vWP-cameraPosition)));   // (calmer within a few metres of the eye, where the scan's own grain is plain to see)
+        alb*=1.+stoneGrain*0.95*mix(.2,1.,smoothstep(5.,10.,length(vWP-cameraPosition)));   // (calmer within a few metres of the eye, where the scan's own grain is plain to see)
         if(path) alb*=vec3(1.16,1.13,1.06); if(kerb) alb*=.78;
         float mossM=smoothstep(.42,.7,fbm2(p*.45+9.));
         alb=mix(alb,vec3(.085,.115,.06),joint*mossM*.55); alb*=1.-joint*.36*(1.-mossM);   // moss only in the joints that stay damp; the rest are a notch darker with dirt
