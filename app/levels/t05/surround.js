@@ -180,11 +180,13 @@ const squash = (rx, ry, rz, x, y, z) => new THREE.SphereGeometry(1, 8, 5).scale(
  * a flat-topped crown with sky between its layers, not a stack of cones (the art director, 2nd round: cones read as spruce and Christmas trees).
  */
 function pine(t, trunk, crown) {
-  const { x, z, h, r } = t, y0 = ground, tr = h * 0.9, n = 2 + (Math.abs(Math.round(x * 3 + z)) % 3);   // 2, 3 or 4 layers, by where it stands; the trunk goes up through them, so that from far off the layers do not float
-  trunk.push(new THREE.CylinderGeometry(r * 0.4, r * 1.15, tr, 7).translate(x, y0 + tr / 2, z));
+  const { x, z, h, r, yaw } = t, y0 = ground, n = 2 + (Math.abs(Math.round(x * 3 + z)) % 3);   // 2, 3 or 4 layers, by where it stands
+  // The layers sit one on the next from the top down, the second the widest (an old 油松 is an umbrella with a flat top, not a tower), each pushed to one side so that the outline is not even; a bare trunk below them.
+  const ry = h * 0.075, step = h * 0.105, top = h * 0.93 - ry, wide = [0.3, 0.36, 0.27, 0.2];
+  trunk.push(new THREE.CylinderGeometry(r * 0.55, r * 1.3, top, 7).translate(x, y0 + top / 2, z));
   for (let i = 0; i < n; i++) {
-    const f = n === 1 ? 1 : i / (n - 1), y = y0 + h * (0.5 + 0.43 * f), rx = h * (0.3 - 0.13 * f) * (0.9 + 0.2 * (((i * 5 + Math.round(z)) % 3) / 2)), ry = h * (0.1 - 0.03 * f);
-    crown.push(squash(rx, ry, rx * 0.92, x + (i % 2 ? 0.5 : -0.4) * (h / 10), y, z + (i % 2 ? -0.4 : 0.5) * (h / 10)));
+    const y = y0 + top - i * step, rx = h * wide[i] * (0.9 + 0.2 * (((i * 5 + Math.round(z)) % 3) / 2)), a = (yaw || 0) + i * 2.4, off = i ? rx * 0.45 : rx * 0.15;
+    crown.push(squash(rx, ry * (i ? 1 : 0.8), rx * 0.8, x + Math.cos(a) * off, y, z + Math.sin(a) * off));
   }
 }
 /** A cypress: a narrow flame, a little fuller below the middle and tapering to a tip. */
