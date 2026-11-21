@@ -18,6 +18,10 @@ const SURFACES = [
   ["title", null, null],
   // (a first visit is shown the mountain first, src/opening.js: passed over with Esc as a visitor may, as the eye comes down to him)
   ["walk", "document.getElementById('enterBtn').click(); setTimeout(() => window.__opening().active && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })), 300)", null],
+  // The year-end bell's night (#341): its one line at the top of the picture, then its card's sheet (laid out by
+  // __joyaPreview, since the night is open only on the visitor's clock or the workbench, and this server is neither).
+  ["joya", "window.__joyaPreview(true)", "window.__joyaPreview(false)"],
+  ["joyaCard", "(async () => { window.__joyaPreview(true); await new Promise((r) => setTimeout(r, 200)); document.getElementById('joyaTake').click(); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
   ["prologue", "(() => { window.__pose(6.6, 53.4, Math.atan2(-6.6, 13.4), 0.05); window.__prologue(true); })()", null],
   ["menu", "document.body.classList.add('seasons'); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
