@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
-import { buildHall, OUTER } from "./hall.js";
+import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
@@ -90,8 +90,8 @@ export function buildSite(M) {
   // The axis before the court (./axis.js): the way from the outer gate's place, the second terrace that the inner gate, the
   // archway and the Wuliang hall stand on, the walls round both, and the places held for the monument pavilion and the lamp.
   const ax = buildAxis(M, { C, W });
-  stone.push(...ax.stone); plaster.push(...ax.plaster); steps.push(...ax.steps); (root.userData.flights ||= []).push(...ax.flights);
-  for (const k of ["solids", "decks", "ramps", "posts"]) walk[k].push(...ax.walk[k]);
+  stone.push(...ax.stone); plaster.push(...ax.plaster);
+  for (const k of ["solids", "decks", "ramps", "posts", "roofs"]) walk[k].push(...ax.walk[k]);
   shade[0].push(...ax.shade[0]); shade[1].push(...ax.shade[1]);
   const paving = ax.paving;
 
@@ -114,7 +114,19 @@ export function buildSite(M) {
   const altar = buildAltar(), ap = altar.parts;
   walk.posts.push(...altar.walk.posts);
   root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
-  for (const [x, y, z, i, d] of hall.fill) { const l = new THREE.PointLight(0xfff4e8, i, d, 1.6); l.position.set(x, y, z); root.add(l); }
+  const fills = hall.fill.map(([x, y, z, i, d]) => { const l = new THREE.PointLight(0xfff4e8, 0, d, 1.6); l.position.set(x, y, z); l.userData.full = i; root.add(l); return l; });
+  // Each frame (yard.js): the fill follows how far inside the eye is, eased, so that from the court the doorway stays dark
+  // and walking in the hall's timber comes up out of the dark over two or three seconds. A still picture takes it settled.
+  // (A jump of the eye, a door or a tool's pose, is a cut: it takes the light of where it lands at once.)
+  const lit = { k: 0, at: /** @type {number[] | null} */ (null) };
+  const tick = (dt, eye, still) => {
+    const want = hall.within(eye.x, eye.y, eye.z), cut = !lit.at || Math.hypot(eye.x - lit.at[0], eye.y - lit.at[1], eye.z - lit.at[2]) > 1.5;
+    lit.at = [eye.x, eye.y, eye.z];
+    lit.k = still || cut ? want : lit.k + (want - lit.k) * (1 - Math.exp(-dt / FILL.ease));
+    if (Math.abs(lit.k - want) < 1e-3) lit.k = want;
+    for (const l of fills) l.intensity = l.userData.full * lit.k;
+    return lit.k;
+  };
 
   root.add(ax.group);
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
@@ -137,8 +149,8 @@ export function buildSite(M) {
     back: [0, 6, Math.PI, -0.08],
   };
   return {
-    root, walk, shade, closed: [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
-    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut,
+    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
+    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
 
