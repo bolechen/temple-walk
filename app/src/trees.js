@@ -216,6 +216,8 @@ export function geometryHash(geos) {
 }
 
 export function createTrees(scene, M, spots, opts = {}) {
+  // A place with no trees of its own (#409: T05's white box) grows none, and has nothing to merge.
+  if (!spots.length) return { joints: [], branches: [], forks: [], census: [], limbs: [], cedars: [], beds: null, setMood() {} };
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
   let draw = seeded(311); const rnd = () => draw();

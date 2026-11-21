@@ -58,5 +58,8 @@ for (const [l, f] of Object.entries(TABLES)) {
 // every statement after it, and the scenario then passes without having waited for anything.
 { const e2e = path.join(__dirname, "..", "tests", "e2e", "run.cjs");
   fs.readFileSync(e2e, "utf8").split("\n").forEach((line, i) => { if (/;\s+\/\/ .*(\bawait |\bexpect\()/.test(line)) { bad++; console.error(`tests/e2e/run.cjs:${i + 1}: a // comment in the middle of the line cuts off the statements after it`); } }); }
+// Likewise in app/: a comment added at the end of a line of code that went on with another statement swallows it
+// (tools/swallowed.cjs; twice in #414, the court's lamplit paving and every seat in the halls).
+for (const h of require("./swallowed.cjs").swallowedIn(root)) { bad++; console.error(`${path.relative(path.join(__dirname, ".."), h.file)}:${h.line}: a // comment swallows a statement written after it on the same line: ${h.comment.slice(-80)}`); }
 console.log(`${files.length} files checked, ${bad} problems`);
 process.exit(bad ? 1 : 0);
