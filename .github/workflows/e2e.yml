@@ -9,7 +9,7 @@ on:
   # photograph is changed; it waits for the nightly run or a run asked for by hand.
   push:
     branches: [main]
-    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs", "tools/bake-doorways.mjs", "tools/mobile-audit.cjs"]
+    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs", "tools/bake-doorways.mjs"]
   workflow_dispatch:
     inputs:
       scenarios:
