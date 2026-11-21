@@ -58,3 +58,19 @@ test("every level the page lists has a name on the map: a region, never a town, 
     assert.match(p.seal, /^[\u4e00-\u9fff]{2}$/, `${id}: a seal of two characters`);
   }
 });
+
+// T05's written plan is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): edges on it finds the novice up to 38 cm inside
+// the gate's iron and the Wuliang passage's jambs, which the baked floor keeps him clear of. So that plan is no floor to walk on.
+test("T05 says it keeps no written plan to walk on; the prologue keeps its own", async () => {
+  assert.equal((await loadLevel("t05")).writtenPlan, false);
+  assert.notEqual((await loadLevel(DEFAULT_LEVEL)).writtenPlan, false);
+});
+
+test("?walker=old is refused for a level that keeps no written plan, and still taken for one that does", async () => {
+  const { walkerMode } = await import("../../app/src/gridwalker.js");
+  const t05 = await loadLevel("t05"), t00 = await loadLevel(DEFAULT_LEVEL);
+  assert.equal(walkerMode("old", t05), "mesh");
+  assert.equal(walkerMode(null, t05), "mesh");
+  assert.equal(walkerMode("old", t00), "old");
+  assert.equal(walkerMode("old"), "old");
+});

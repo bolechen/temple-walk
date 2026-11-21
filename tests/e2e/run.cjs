@@ -1725,7 +1725,7 @@ const scenarios = {
   // Which floor he walks on (#265, #274): the grid baked from the drawn meshes everywhere by default (a spot on every level
   // out of doors, inside a hall, up on the balcony), the written plan with ?walker=old; and a ?cam address that falls
   // where the grid shuts him out is moved to the nearest open spot within half a metre, or back to the start of the path
-  // (in a room: left at its door; on the balcony: at its door).
+  // (in a room: left at its door; on the balcony: at its door). A level that keeps no written plan (T05) is walked on the grid whatever the address asks.
   walkgrid: { tier: 2, async run(b, base) {
     let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
     const w = await t.page.evaluate(() => window.__walker());
@@ -1778,6 +1778,11 @@ const scenarios = {
     expect(o.mode === "old" && o.grid === null && !o.bytes, "?walker=old should walk the written plan, and fetch no grid: " + JSON.stringify(o));
     await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall on the written plan");
     expect((await t.page.evaluate(() => window.__walker())).grid === null, "?walker=old is the written plan indoors too");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A level that keeps no written plan to walk on (T05, writtenPlan: false) refuses ?walker=old: the baked floor, and the refusal reported.
+    t = await open(b, base, "level=t05&q=low&view=first&walker=old" + BARE);
+    const n = await t.page.evaluate(() => window.__walker());
+    expect(n.mode === "mesh" && n.asked === "old" && n.bytes > 0 && n.grid === "outdoors", "?level=t05&walker=old should walk T05's baked floor and say what was asked: " + JSON.stringify(n));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great
