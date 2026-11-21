@@ -87,7 +87,7 @@
   - Tripo 的生成 API 没有姿势参数，文档也没说不接受 A-pose（据官方文档；Tripo Studio 网页版据说有「T-Pose」选项，只见于搜索摘要，未验证）。
   - Auto-Rig Pro 的 Remap 文档说它能处理 A-pose 和 T-pose 之间的差别（「Redefine Rest Pose」，<https://www.lucky3d.fr/auto-rig-pro/doc/remap_doc.html>）。
   - 用 A-pose 生成，绑骨和重定向反而少一步。
-- **建议补一张正侧之外的右视图**（四视图里的 `right`），由所有者用出设定图的同一个工具出图，和上次出 `monk-apose-front.png` 的编辑一样。
+- **建议补一张正侧之外的右视图**（四视图里的 `right`），由所有者用出设定图的同一个工具出图，和上次出 `monk-apose-front-v1-eyes-closed.png` 的编辑一样。
   - 同时要**去掉斗笠和念珠**（它们由代码建），并把**下摆画短或画成能看见裤腿的样子**。这是推断：生成器只会建出它看得见的东西。
   - 补图是所有者的事：出图工具和账号在所有者那里。
 - 本次试验也验证了**另一个方向**：如果最后拿到的是 T-pose 模型，在 Blender 命令行里把它摆回我们的 A-pose 并设为静止姿势，是可行的（见 B.6）。
