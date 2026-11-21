@@ -15,6 +15,12 @@
    "rev": "14858aeac1445fde012189bd56caa4d60048f338"
   },
   {
+   "path": "compare-r3.jpg",
+   "bytes": 225588,
+   "sha256": "48984e805879e935a97bab9284c5e6f262a440b9e1ccca743dd7cb3d029f7063",
+   "rev": "d7821e38670d2e5881846082c4651fc5c9b97fb3"
+  },
+  {
    "path": "views/paifang-front.png",
    "bytes": 256269,
    "sha256": "506fb30a90eaa2599fc201c82aa0184187b122ae0ff51b82cd5092fded0d64dc",
@@ -97,6 +103,18 @@
    "bytes": 507242,
    "sha256": "6762cc69744bb83d65aabac7e1ffd0bb045890c8b449cad11f8a886556bf17d9",
    "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r3-paifang-front.png",
+   "bytes": 267605,
+   "sha256": "9a00f5fc73c92ca61eecd92985e3b1b75f9c726012f5ae9227df666266982bd6",
+   "rev": "d7821e38670d2e5881846082c4651fc5c9b97fb3"
+  },
+  {
+   "path": "views/r3-paifang-gate.png",
+   "bytes": 177632,
+   "sha256": "55f4edb5c6e839bcd163a959254926d28d43dcc7d4bd406a27ae86216fa722c0",
+   "rev": "d7821e38670d2e5881846082c4651fc5c9b97fb3"
   }
  ]
 }
