@@ -12,7 +12,7 @@ const { frameParts } = await import("../../app/levels/t05/wuliang-frame.js");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const opts = hallOptions(HALL), b = buildHall(M, { ...opts, rise: opts.rise ?? 1, ground: 0 });
-const parts = frameParts(b, HALL), all = [...parts.wood, ...parts.woodZ];
+const parts = frameParts(b, HALL), all = [...parts.wood, ...parts.woodZ, ...parts.rafters];
 const box3 = (g) => { g.computeBoundingBox(); return g.boundingBox.clone(); };
 const boxes = all.map(box3);
 const ix = HALL.xs[Math.floor((HALL.xs.length - 1) / 2) + 1];   // the passage's half width: the middle bay's column line
@@ -22,7 +22,7 @@ test("over the passage there is timber to see: beams along it on the inner colum
   assert.ok(across.length >= 5, `purlins run across the passage (${across.length})`);
   const alongBeams = parts.woodZ.map(box3).filter((x) => x.max.z - x.min.z > 6 && x.max.x - x.min.x < 0.5);
   assert.ok(alongBeams.length >= 8, `two tiers of tie beam on each of the four inner column lines (${alongBeams.length})`);
-  const rafters = parts.woodZ.map(box3).filter((x) => x.max.x - x.min.x < 0.2 && x.max.z - x.min.z < 1 && Math.abs((x.min.x + x.max.x) / 2) < ix - 0.2);
+  const rafters = parts.rafters.map(box3).filter((x) => x.max.x - x.min.x < 0.2 && x.max.z - x.min.z < 1 && Math.abs((x.min.x + x.max.x) / 2) < ix - 0.2);
   const lines = new Set(rafters.map((x) => ((x.min.x + x.max.x) / 2).toFixed(2)));
   assert.ok(lines.size >= 6, `a rafter every half metre across the passage (${lines.size} lines)`);
 });

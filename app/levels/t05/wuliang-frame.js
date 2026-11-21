@@ -12,7 +12,8 @@ import { box, merge, mesh } from "../../src/geo.js";
 const PT = 0.3;            // a purlin's section, square (a round purlin is not drawn; the white box has none)
 const RT = 0.15;           // a rafter's diameter: 9-10 fen in a hall's size (Yingzao Fashi, juan 5), the fen at this hall's cai; drawn square, its width a fifth less
 const BD1 = 0.78, BD2 = 0.65, BW = 0.45;   // the lower beam's and the upper's depth (a four-rafter beam is 50 fen deep, a three-rafter one 42: juan 5), and their width, two thirds of the greater
-const RAFTER_GAP = 0.5;    // the rafters' spacing across the hall
+const RAFTER_GAP = 0.5;
+const TONE = { beam: 1.9, purlin: 1.45, rafter: 0.3 };   // what the generator's timber colour is multiplied by: the beams and posts; the purlins (which the generator's wood already draws lighter); the rafters    // the rafters' spacing across the hall
 
 /**
  * The frame's boxes, in the hall's own frame (x across, z along, y from the ground the hall stands on).
@@ -67,13 +68,24 @@ export function frameParts(b, H) {
       rafters.push(g);
     }
   }
-  return { wood, woodZ: [...woodZ, ...rafters] };
+  return { wood, woodZ, rafters };
 }
 
-/** The frame as a group, placed where the hall stands. @param {*} M @param {*} b @param {*} H @param {number} z0 @param {number} y0 */
+/**
+ * The frame as a group, placed where the hall stands. The beams, posts and purlins are drawn a little lighter than the generator's timber
+ * and the rafters a little darker, so that they stand off the rafters and the boards behind them (the art director's note on #511: five or
+ * six L* apart, to be eight or more, the whole no lighter than before).
+ * @param {*} M @param {*} b @param {*} H @param {number} z0 @param {number} y0
+ */
 export function buildWuliangFrame(M, b, H, z0, y0 = 0) {
-  const { wood, woodZ } = frameParts(b, H), g = new THREE.Group();
-  g.add(mesh(merge(wood), M.woodX), mesh(merge(woodZ), M.woodZ));
+  const { wood, woodZ, rafters } = frameParts(b, H), g = new THREE.Group();
+  const toned = (base, name, mul) => {
+    const m = base.clone(), was = base.onBeforeCompile;
+    m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", `diffuseColor.rgb=col*vec3(${mul});`); };
+    m.customProgramCacheKey = () => name;
+    return m;
+  };
+  g.add(mesh(merge(wood), toned(M.woodX, "wuliang-purlin", TONE.purlin)), mesh(merge(woodZ), toned(M.woodZ, "wuliang-beam", TONE.beam)), mesh(merge(rafters), toned(M.woodZ, "wuliang-rafter", TONE.rafter)));
   g.position.set(0, y0, z0);
   return g;
 }
