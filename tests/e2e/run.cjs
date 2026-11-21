@@ -1795,6 +1795,33 @@ const scenarios = {
   } },
   // The pause menu laid across a wide screen, in every language at three sizes: nothing to scroll and no row wider than its box.
   // Apart from `menu` so that it can run beside every push: the place is built and not drawn, a minute or two (#177).
+  // The list of keys (#401): whole inside the window at a narrow desktop width as at a wide one, every key and every word of it
+  // in sight, opened from the pause menu as from H, in Chinese and in English; a touch screen still has no such card.
+  "keys-responsive": { tier: 2, async run(b, base) {
+    for (const [lg, locale] of [["zh", "zh-CN"], ["en", "en-US"]]) {
+      const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&lang=" + lg + BARE, { viewport: { width: 663, height: 852 }, locale });
+      for (const [w, h] of [[663, 852], [900, 700], [1280, 800], [663, 852]]) {
+        await t.page.setViewportSize({ width: w, height: h }); await t.frames(2);
+        for (const via of ["h", "menu"]) {
+          if (via === "h") await t.page.keyboard.press("h");
+          else { await t.page.keyboard.press("Escape"); await t.until(() => t.page.isVisible("#menu"), 20000, "no menu"); await t.page.click("#menuKeys"); }
+          await t.until(async () => (await t.page.isVisible("#keys")) && !(await t.page.isVisible("#menu")), 20000, `the keys did not open by ${via} in ${lg} at ${w}`);
+          await t.frames(2);
+          const m = await t.page.evaluate(() => {
+            const k = document.getElementById("keys"), r = k.getBoundingClientRect(), W = innerWidth, H = innerHeight, bad = [];
+            for (const e of k.querySelectorAll("h2, kbd, dd, p")) { const q = e.getBoundingClientRect(); if (!q.width) continue; if (q.left < r.left - 1 || q.right > r.right + 1 || q.left < 0 || q.right > W) bad.push((e.textContent || "").slice(0, 12)); }
+            return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), W, H, wide: k.scrollWidth > k.clientWidth + 1, bad };
+          });
+          expect(m.left >= 0 && m.right <= m.W && m.top >= 0 && m.bottom <= m.H && !m.wide && m.bad.length === 0, `the keys should lie whole in the window by ${via} in ${lg} at ${w}x${h}: ` + JSON.stringify(m));
+          await t.page.keyboard.press("h"); await t.until(async () => !(await t.page.isVisible("#keys")), 20000, `H did not put the keys away in ${lg} at ${w}`);
+        }
+      }
+      await t.close();
+    }
+    // a touch screen keeps its stick and has no list of keys
+    const c = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    await c.page.keyboard.press("h"); await c.frames(2); expect(!(await c.page.isVisible("#keys")), "a touch screen should have no list of keys"); await c.close();
+  } },
   menufit: { tier: 2, async run(b, base) {
     // (English's Follow the hour is the longest hour row.)
     for (const lg of ["zh", "ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
