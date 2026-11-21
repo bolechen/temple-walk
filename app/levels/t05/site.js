@@ -100,7 +100,6 @@ export function buildSite(M) {
 
   // The great hall's shell (./hall.js): its walls, timber, columns and roof, and what the written plan's walker is told of it.
   const hall = buildHall(M), hp = hall.parts;
-  plaster.push(...hp.plaster);
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
   root.add(mesh(merge(hp.wood), M.woodX, sh), mesh(merge(hp.woodZ), M.woodZ, sh), mesh(merge(hp.frame), M.woodZ, sh), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
@@ -109,6 +108,10 @@ export function buildSite(M) {
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
+  // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
+  // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
+  root.add(mesh(merge(hp.plaster), M.plaster(), sh));
   const fills = hall.fill.map(([x, y, z, i, d]) => { const l = new THREE.PointLight(0xfff4e8, 0, d, 1.6); l.position.set(x, y, z); l.userData.full = i; root.add(l); return l; });
   // Each frame (yard.js): the fill follows how far inside the eye is, eased, so that from the court the doorway stays dark
   // and walking in the hall's timber comes up out of the dark over two or three seconds. A still picture takes it settled.
