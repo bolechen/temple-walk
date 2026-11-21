@@ -51,6 +51,18 @@ if R.get("fill"):
   d_m = f["sulcus"] * w * R["fill"]["k"]
   ops.append({"op": "push", "note": f"the hollow under the lip filled by {R['fill']['k']} of its depth ({round(f['sulcus'] * w, 3)} m), radius {R['fill']['r']} mouth widths (face-ops.py)",
               "seed": B(0.0, sm_y, z_at(0, sm_y)), "r": round(R["fill"]["r"] * w / s, 5), "dir": [0, -1, 0], "d": round(d_m / s, 5)})
+# the trench down either side of the upper lip, which drew a frame round the mouth (r7 brief: "remove the frame round the
+# lips"): at a few heights over the slit, the deepest point below the chord across it is found out from the corner and
+# pushed toward the viewer by a share of that depth
+if R.get("frame"):
+  Fr = R["frame"]
+  for sg, side in ((1, "left"), (-1, "right")):
+    for dy in Fr["ys"]:
+      y = slit + dy * w; xs = np.linspace(0.3 * w, 0.9 * w, 25) * sg; h = 0.04
+      dep = [((z_at(x - h, y) + z_at(x + h, y)) / 2 - z_at(x, y)) for x in xs]; k = int(np.argmax(dep)); x = float(xs[k])
+      if dep[k] < 0.003: continue
+      ops.append({"op": "push", "note": f"the trench beside the upper lip on the {side}, {round(dy, 2)} w over the slit, {round(dep[k], 3)} m below its chord, filled by {Fr['k']} of it (face-ops.py)",
+                  "seed": B(x, y, z_at(x, y)), "r": round(Fr["r"] * w / s, 5), "dir": [0, -1, 0], "d": round(Fr["k"] * dep[k] / s, 5)})
 # r7 (the 3D review's fourth round: "a thin lip, told by its slit and its colour, not by its volume"): the lips' volume and
 # the philtrum's pad taken down, the lower face narrowed below the cheekbones, then a shallow groove carved back along the
 # slit as it was before (measured here, on the bowed mesh before these ops) with a small dimple at each corner

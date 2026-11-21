@@ -76,8 +76,11 @@ if "anchors-from" in opt:
   # soft edge 2 mm (paint.js); nothing more round it (the 3D review's fourth round: a pink halo outside the lip)
   # the width is the concept's: 0.30 of the face (the art director's r6 review; measured corners read short once the lips
   # are softened); the height 0.14 of that width each way, centred on the slit so that the carved upper lip is painted too
-  wv = 0.30 * r["faceW_m"]; a["lipH"] = round(0.14 * wv, 3); a["lipHalf"] = round(wv / 2, 3)
-  a["mouth"] = [a["mouth"][0], round(r["slit"] + 0.005, 3), a["mouth"][2]]
+  # the height is the carved lips' own: from 1.2 cm under the lower lip's foremost point to 3.5 cm over the slit, which is
+  # as deep as the upper lip's red goes on the concept (the rest of the carved upper lip, up to the nose, is the philtrum's)
+  wv = 0.30 * r["faceW_m"]; a["lipHalf"] = round(wv / 2, 3)
+  top = r["slit"] + 0.035; bot = r["slit"] - (r["points"]["slit"][0] - r["points"]["lowerLip"][0]) - 0.012
+  a["mouth"] = [a["mouth"][0], round((top + bot) / 2 + 0.015, 3), a["mouth"][2]]; a["lipH"] = round((top - bot) / 2, 3)   # +1.5 cm: the stage's frame stands the mesh's slit that much higher than this measure (read off the r7 close-ups)
   for k in ("jawMin", "chinMin"): a[k][1] = round(a[k][1] + (a["mouth"][1] - (mouth0[1] + drop)), 3)   # and with the mouth's own move from the bow to the measured slit
   colour = opt.get("colour", f"{name}-t05")
   json.dump(src, open(os.path.join(root, "tools/t05-hall/paint", colour + ".json"), "w"), ensure_ascii=False, indent=1)
