@@ -18,7 +18,10 @@ const FLAGS = {
   "egl": ["--use-gl=egl"],
   "swiftshader": ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"],
 };
-const COMMON = ["--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required", "--enable-webgl", "--disable-gpu-driver-bug-workarounds"];
+// #183: the workbench's addresses (?terrain=) are read only on a preview's hostname, so such a page is opened at this
+// name, mapped to the local server, with the debug panel kept shut so that it costs nothing (src/debuggate.js).
+const BENCH_HOST = "pr-0-temple-walk-preview.test";
+const COMMON = [`--host-resolver-rules=MAP ${BENCH_HOST} 127.0.0.1`, "--no-sandbox", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required", "--enable-webgl", "--disable-gpu-driver-bug-workarounds"];
 
 // The site the job was handed, in a form a report can be checked against later: the commit it was built from (as the
 // launcher says, with "+dirty" if app/ had changes not committed), the bundled entry the page loads (its name carries
@@ -69,7 +72,8 @@ function fingerprint(dir) {
     await page.addInitScript(() => { const say = console.error; console.error = (...a) => say(...a, "\n  at " + (new Error().stack || "").split("\n").slice(2, 8).map((l) => l.trim().replace(/^at /, "").replace(/https?:\/\/[^/]+\//, "")).join(" < ")); });
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
     page.on("console", (m) => m.type() === "error" && ours(m.text()) && report.errors.push(m.text().slice(0, 900)));
-    const t0 = Date.now(); await page.goto(base + at + "?" + query + (spec.level && spec.level !== "t00" && !/(^|&)level=/.test(query) ? "&level=" + encodeURIComponent(spec.level) : ""), { waitUntil: "commit", timeout: 120000 });
+    const bench = /(^|&)terrain=/.test(query), home = bench ? base.replace("127.0.0.1", BENCH_HOST) : base; if (bench && !/(^|&)debug=/.test(query)) query += "&debug=0";
+    const t0 = Date.now(); await page.goto(home + at + "?" + query + (spec.level && spec.level !== "t00" && !/(^|&)level=/.test(query) ? "&level=" + encodeURIComponent(spec.level) : ""), { waitUntil: "commit", timeout: 120000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     return { ctx, page, loadMs: Date.now() - t0 };
   };

@@ -2,6 +2,8 @@
 
 日期：2026-11-21。分支：`spike/183-terrain`（基于 main `6246673`）。这是试验，不要求合入：只有地址里加了 `?terrain=made` 或 `?terrain=dem`，远景才换成高度图；不带参数的页面和 main 一模一样（山环照旧，`tests/unit/horizon.test.mjs` 照旧两条都过）。
 
+**开关只在工作台认（T00 主创和总主创 2026-11-21 定，合并条件）：** `?terrain=` 和 `?seals=`、`?at=` 一样，只在 dev 服务器和 PR 预览上认（`terrainAsked`，经 `src/debuggate.js` 的 `onBench`）；canary 和正式站一律不认，照旧画山环，也不取高度图（`tests/unit/terrain-gate.test.mjs`）。本机工具（`tools/shots.js --query=terrain=…`、T4 的 `tools/gpu/job.cjs`）把页面开在映射到本机的预览域名 `pr-0-temple-walk-preview.test` 上，并带 `debug=0`，和 e2e 的 `bench` 场景同一个办法。
+
 ## 结论
 
 **换成「一张高度图 + 一张环形网格」这条管线，但不用真实高程数据发布；高度图用我们自己做的，形参考真实山地。真正换之前，要先把山环的两样笔触搬过来：林冠锯齿、山脚雾。开场第一格还要给北面的山定一个高度上限。**

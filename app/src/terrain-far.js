@@ -1,4 +1,4 @@
-// The far land from a heightmap (#183, a spike behind ?terrain=dem|made; the page's default is still the hill rings).
+// The far land from a heightmap (#183, a spike behind ?terrain=dem|made on the workbench only; the page's default is still the hill rings).
 // One mesh laid out in rings round the hill rings' centre, close together near the temple and wider apart as the land
 // goes away, out to 4.4 km. Near the walls it is the plan's own land and sinks under the drawn earth; over the next
 // 220 m it bends into the heightmap; its last kilometre rises into a far range (made up, for both maps) so that no
@@ -9,6 +9,16 @@
 import * as THREE from "three";
 import { NOISE, U } from "./glsl.js";
 import { SUN_DIR } from "./sky.js";
+import { onBench } from "./debuggate.js";
+
+/** Which heightmap the address asks for (#183's spike): on the workbench only, as ?seals and ?at are; the canary and the
+ *  public page never read it and always draw the hill rings. @param {{ dev: boolean, hostname: string, search: string }} o
+ *  @returns {"dem" | "made" | null} */
+export function terrainAsked({ dev, hostname, search }) {
+  if (!onBench({ dev, hostname })) return null;
+  const t = new URLSearchParams(search).get("terrain");
+  return t === "dem" || t === "made" ? t : null;
+}
 
 /** @typedef {{ n: number, extent: number, centre: [number, number], unit: number, h: Int16Array }} Heightmap */
 
