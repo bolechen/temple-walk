@@ -127,8 +127,9 @@ export function buildHall(M, opts) {
     // The platform's edge: a course of long slabs, cut from single stones, standing a hand proud of the wall below.
     if (p.platBase <= 0 && p.platH >= 0.4) {
       const t = 0.19, o = 0.07, y = p.platH - t / 2 + 0.004, half = p.steps ? p.steps / 2 : 0, cap = [box(0.6, t, zF - zB + o * 2, -PX - o + 0.3, y, (zF + zB) / 2), box(0.6, t, zF - zB + o * 2, PX + o - 0.3, y, (zF + zB) / 2)];
-      // Along the back, broken where a stair placed off the middle comes up (the gate's middle one still runs under it, as it always has).
-      for (const [a, b] of p.stepsBackAt ? besideBack(-PX - o, PX + o, 0) : [[-PX - o, PX + o]]) cap.push(box(b - a, t, 0.6, (a + b) / 2, y, zB + 0.3 - o));
+      // Along the back, broken wherever a stair comes up, the middle one too: the slab used to run on over its head and stand
+      // 7 cm out over the top step (#288), as the front course has always stopped at the flight.
+      for (const [a, b] of besideBack(-PX - o, PX + o, 0)) cap.push(box(b - a, t, 0.6, (a + b) / 2, y, zB + 0.3 - o));
       for (const sx of [-1, 1]) cap.push(box(PX + o - half, t, 0.6, sx * (PX + o + half) / 2, y, zF - 0.3 + o));
       add(merge(cap), M.monolith, { ao: null });
       // A tall platform is a sumeru base: a foot and a head that stand proud, a waist drawn in between them, and
@@ -271,6 +272,20 @@ export function buildHall(M, opts) {
     bz.push(box(0.2, 0.16, zs[i] - zs[i + 1] - 0.5, x, p.platH + 1.5, (zs[i] + zs[i + 1]) / 2));
   }
   const underside = (d) => EAVE_Y + profile(d) - 0.17;
+  // A gate's way through has a ceiling (#288): without one the eye, looking up from the passage, meets the roof boards from
+  // below with no light on them, a single flat black. A plain small-squared ceiling on the plate, with a tie beam across
+  // every bay and a long beam either side, is what a gate's passage shows.
+  if (p.timber && p.front === "pass" && p.back === "pass") {
+    const y = COL_TOP + 0.12, cell = 0.4, w = Z - ZB, ribs = [], panel = new THREE.PlaneGeometry(2 * X, w, Math.max(1, Math.round(2 * X)), Math.max(1, Math.round(w))).rotateX(Math.PI / 2).translate(0, y - 0.02, (Z + ZB) / 2);
+    const uv = panel.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, panel.attributes.position.getX(i) / cell, 2000);   // a v of 1000 or more is the plain ground (unused by the `passage` material, which is plain boards)
+    for (let i = 0; i <= nx; i++) ribs.push(box(0.22, 0.16, w, xs[i], y - 0.1, (Z + ZB) / 2));
+    for (let x = xs[0]; x < X - 0.01; x += 0.9) ribs.push(box(0.07, 0.1, w, x + 0.45, y - 0.07, (Z + ZB) / 2));
+    for (const z of [Z, ZB, (Z + ZB) / 2]) ribs.push(box(2 * X, 0.2, 0.2, 0, y - 0.12, z));
+    // (Overhead, 4.9 m up: nothing to stand on, and nothing he reaches, so it is left out of the baked floor (`bake: false`; the eye still keeps
+    // out of it, as it must, or the camera backing out of the doorway would go through the boards and see the roof's bare underside again). In the
+    // floor it moved the cells at the library's stair heads by a centimetre, ninety metres away: the bake bisected it to this panel and I did not run that to ground, #288.)
+    add(panel, M.passage, { ao: () => 0.85 }).userData.bake = false; add(merge(ribs), M.beamX, { ao: () => 0.2, cast: false }).userData.bake = false;
+  }
   if (p.brackets) {   // the white band between the bracket sets, all the way round
     const bandH = underside(p.overhang) - PLATE_TOP + 0.12, y = PLATE_TOP + bandH / 2;
     walls.push(box(X * 2, bandH, 0.1, 0, y, Z), box(X * 2, bandH, 0.1, 0, y, ZB), box(0.1, bandH, Z - ZB, xs[0], y, (Z + ZB) / 2), box(0.1, bandH, Z - ZB, X, y, (Z + ZB) / 2));
