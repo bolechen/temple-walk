@@ -96,6 +96,14 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
+  // The murals' ground stands off the wall's inner face, never on it: on it, the two faces fought for the same pixels and
+  // the lit plaster showed through the dark ground in stripes and slanting bands (the art review's "diagonal line").
+  const faces = h.parts.plaster.map((g) => (g.computeBoundingBox(), g.boundingBox));
+  for (const g of h.parts.mural) { const m = (g.computeBoundingBox(), g.boundingBox), alongX = m.max.x - m.min.x > m.max.z - m.min.z;
+    for (const w of faces) { const near = alongX ? [w.min.z, w.max.z].some((z) => Math.abs(z - m.min.z) < 0.01 || Math.abs(z - m.max.z) < 0.01) && w.max.x - w.min.x > 2 : [w.min.x, w.max.x].some((x) => Math.abs(x - m.min.x) < 0.01 || Math.abs(x - m.max.x) < 0.01) && w.max.z - w.min.z > 2;
+      assert.ok(!near, "a face of the murals' ground lies on a wall's face"); } }
+  // The hall's floor lies all within the walls, so the inside's shut-out sky reaches every corner of it.
+  for (const g of h.parts.floor) { const b = (g.computeBoundingBox(), g.boundingBox); for (const [x, z] of [[b.min.x, b.min.z], [b.max.x, b.max.z]]) assert.ok(h.shut(x * 0.999, HALL.floor, z + (z > -12 ? -0.001 : 0.001)) < 1, `the floor's corner (${x}, ${z}) is outside the shut inside`); }
   // Every wall closes up to the roof's underside over its inner face: no slit along a wall's top lets the sun in.
   for (const g of h.parts.plaster) { const b = (g.computeBoundingBox(), g.boundingBox); if (b.min.y < HALL.floor + HALL.column + 0.15) continue;
     const inX = b.max.x - b.min.x < 2, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;

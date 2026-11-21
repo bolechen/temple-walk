@@ -9,7 +9,7 @@
 // Heights are from the court's paving: the hall's floor is the platform's top, +3.0. x east, z south, the front column
 // line at z = 0 (docs/t05/SITE.md §1). Sizes and how far each is sourced: docs/t05/SOURCES.md §11.
 import * as THREE from "three";
-import { box, BODY } from "../../src/geo.js";
+import { box, BODY, footAt } from "../../src/geo.js";
 
 /** The nine bays across, west to east (ARCHITECTURE.md §2.1, S04, read): 4.98, 4.98, 5.26, the three middle ones 5.80, 5.26, 4.98, 4.98 m. */
 export const BAYS = Object.freeze([4.98, 4.98, 5.26, 5.8, 5.8, 5.8, 5.26, 4.98, 4.98]);
@@ -27,7 +27,7 @@ export const HALL = Object.freeze({
   overhang: 3.75,        // the eave beyond the column line (ARCHITECTURE.md §4.1: about 3.5–4 m)
   door: { w: 5.0, h: 5.0, sill: 0.24 },    // a square door filling its 5.8 m bay but for the jambs (the Yingzao Fashi's plank door is as wide as it is tall: SOURCES.md §14); the sill pressed to 0.24 m so he steps over it (PRD.md §2)
   window: { sill: 1.1, bars: 13 },   // upright bars over a sill wall 1.0–1.2 m (ARCHITECTURE.md §4.2, not measured); as wide as its bay less the jambs, and its head on the doors' line (the review of #425)
-  inside: 0.06,          // the share of the sky's light a surface inside the walls takes (white box, a proposal)
+  inside: 0.2,          // the share of the sky's light a surface inside the walls takes (white box, a proposal)
   jamb: 0.4,             // the wooden jambs each side of a door or window, and the head over it
   roof: 0.6,             // how thick the roof's mass is, from its tiles to the dark of its underside
   lintel: 0.55,          // the tie-beam between column heads, and the cap board on them 0.2 thick
@@ -52,6 +52,10 @@ export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];
   const wallIn = H.wall - 0.3;   // how far the wall's inner face lies inside the column line
   const plaster = [], wood = [], woodZ = [], dark = [], mural = [], walk = { solids: [], decks: [], posts: [] };
+  // The hall's own floor, a thin course laid over the platform's top within the walls: the platform's top is one face from
+  // edge to edge, which the inside's shut-out sky (`shut` below) cannot reach at its corners; this one lies all inside.
+  const inZ0 = ZS[ZS.length - 1] - 0.3 + H.wall, inZ1 = ZS[0] + H.front - H.wall, inX = XS[XS.length - 1] + 0.3 - H.wall;
+  const floor = [box(2 * inX, 0.02, inZ1 - inZ0, 0, y0 + 0.01, (inZ0 + inZ1) / 2)];
   // Columns: every crossing of the outer lines, ten across the front and the back and four more up each end.
   const columns = [];
   for (const x of XS) for (const z of [ZS[0], zB]) columns.push([x, z]);
@@ -138,7 +142,7 @@ export function buildHall(M) {
     put(plaster, len, wallUp - cap, H.wall, mid, (cap + wallUp) / 2, at + out * (off - H.wall / 2));  // the wall between the brackets, up to the roof
     // Inside the back and end walls, their whole height, the dark ground the murals are painted on (ARCHITECTURE.md §7.2:
     // darker and greyer than the timber's colours), so that seen from the court through the doors the hall is dark.
-    if (off > 0) put(mural, len - 2 * (H.wall - 0.3), wallUp - y0, 0.04, mid, (y0 + wallUp) / 2, at - out * (H.wall - off - 0.02));
+    if (off > 0) put(mural, len - 2 * (H.wall - 0.3), wallUp - y0, 0.04, mid, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
     const sets = []; pos.forEach((p, i) => { sets.push(p); if (i < pos.length - 1) sets.push((p + pos[i + 1]) / 2); });
     for (const u of sets) {
       for (let k = 0; k < BR.tiers; k++) {                                               // out under the eave
@@ -192,7 +196,9 @@ export function buildHall(M) {
   for (const z of purlinAt) purlin(z, purlinY(z), PT);
 
   return {
-    parts: { plaster, wood, woodZ, dark, mural, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
+    // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
+    // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
+    parts: { plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
     walk,
     columns,
     inner,
