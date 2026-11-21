@@ -49,7 +49,7 @@ if "anchors-from" in opt:   # the eyes, turned with the head, for the face ops t
 pj = os.path.join(here, name, f"points-{tag}.json"); json.dump(pts, open(pj, "w"))
 final = os.path.join(D, f"{name}-{tag}.glb"); j = os.path.join(here, name, f"repair-{tag}.json")
 if not only:
-  fops = json.loads(run(os.path.join(here, "face-ops.py"), pre, pj, f"--recipe={os.path.join(here, 'face/recipe.json')}"))
+  fops = json.loads(run(os.path.join(here, "face-ops.py"), pre, pj, f"--recipe={opt.get('recipe', os.path.join(here, 'face/recipe.json'))}"))
   j = repair(base_ops + [tilt_op] + small + fops, final)
   for t, e in (("60000", "0.02"), ("20000", "0.05"), ("6000", "0.1")):
     subprocess.run(["node", os.path.join(root, "tools/t05-statue.mjs"), final, os.path.join(D, f"{name}-{tag}.{t}.glb"), f"--tris={t}", f"--error={e}"], check=True, capture_output=True)
