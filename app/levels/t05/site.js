@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
-import { buildHall, OUTER } from "./hall.js";
+import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
@@ -110,7 +110,6 @@ export function buildSite(M) {
 
   // The great hall's shell (./hall.js): its walls, timber, columns and roof, and what the written plan's walker is told of it.
   const hall = buildHall(M), hp = hall.parts;
-  plaster.push(...hp.plaster);
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
   root.add(mesh(merge(hp.wood), M.woodX, sh), mesh(merge(hp.woodZ), M.woodZ, sh), mesh(merge(hp.frame), M.woodZ, sh), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
@@ -118,8 +117,24 @@ export function buildSite(M) {
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
-  root.add(mesh(merge(hp.mural), M.plaster(), sh));
-  for (const [x, y, z, i, d] of hall.fill) { const l = new THREE.PointLight(0xfff4e8, i, d, 1.6); l.position.set(x, y, z); root.add(l); }
+  root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
+  // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
+  // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
+  root.add(mesh(merge(hp.plaster), M.plaster(), sh));
+  const fills = hall.fill.map(([x, y, z, i, d]) => { const l = new THREE.PointLight(0xfff4e8, 0, d, 1.6); l.position.set(x, y, z); l.userData.full = i; root.add(l); return l; });
+  // Each frame (yard.js): the fill follows how far inside the eye is, eased, so that from the court the doorway stays dark
+  // and walking in the hall's timber comes up out of the dark over two or three seconds. A still picture takes it settled.
+  // (A jump of the eye, a door or a tool's pose, is a cut: it takes the light of where it lands at once.)
+  const lit = { k: 0, at: /** @type {number[] | null} */ (null) };
+  const tick = (dt, eye, still) => {
+    const want = hall.within(eye.x, eye.y, eye.z), cut = !lit.at || Math.hypot(eye.x - lit.at[0], eye.y - lit.at[1], eye.z - lit.at[2]) > 1.5;
+    lit.at = [eye.x, eye.y, eye.z];
+    lit.k = still || cut ? want : lit.k + (want - lit.k) * (1 - Math.exp(-dt / FILL.ease));
+    if (Math.abs(lit.k - want) < 1e-3) lit.k = want;
+    for (const l of fills) l.intensity = l.userData.full * lit.k;
+    return lit.k;
+  };
 
   root.add(ax.group);
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
@@ -143,7 +158,7 @@ export function buildSite(M) {
   };
   return {
     root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
-    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10],
+    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
 

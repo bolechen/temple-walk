@@ -1,0 +1,44 @@
+{
+ "about": "sikhin's face before any face op (#463), in the stage frame (metres, y up from the seat, z toward the viewer), worked out from its r3 paint anchors by tools/t05-statue/face-init.py (placed as Vipasyin's face.json stands against its anchors); the neck's pivot and the head's width for the bow. face-build.py reads it.",
+ "height": 8.5,
+ "fileHeight": 0.9846,
+ "source": "03-sikhin.base_model.glb",
+ "neck": {
+  "c": [
+   6.138,
+   -0.381
+  ],
+  "z0": 6.225,
+  "fade": 0.305,
+  "rx": 1.02,
+  "fx": 0.175
+ },
+ "features": {
+  "knit": [
+   0,
+   7.347,
+   0.299
+  ],
+  "philtrum": [
+   0,
+   6.834,
+   0.343
+  ],
+  "cornerL": [
+   0.25,
+   6.774,
+   0.303
+  ],
+  "cornerR": [
+   -0.25,
+   6.774,
+   0.303
+  ],
+  "mouth": [
+   0,
+   6.774,
+   0.293
+  ],
+  "browY": 7.367
+ }
+}
