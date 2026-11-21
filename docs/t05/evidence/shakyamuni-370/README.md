@@ -21,6 +21,10 @@ T4 Job `6b00defe4fdc5ab3c55c269d`（运行号 `t05-20261120-235953`），`ANGLE 
 
 主创 2026-11-21 看图提了五条，改完重出，机位、光和文件名同 `review/`：Job `6b00e5614fdc5ab3c55c3034`（运行号 `t05-20261121-002709`），`site.commit` = `7d2d4b3ebcad2fee6b476096a3254afd06c72616`（干净）。`review-v2-collage.jpg` 是拼图（证据库），`gpu-report-v2.json` 是这次 Job 的完整报告（仓库里）。
 
+## review-v3/：改色后的同一组（T4）
+
+按 `ART.md` §3.1 把肤色从金身改为温哑的浅赭、贴金只点在衣缘以后重出：Job `6b00f388efaf5e14f4b43f90`（运行号 `t05-20261121-012732`），`site.commit` = `057f6c69cd6f0d63b303fce22d1b8723c8f280cc`（干净）。棚拍的四面曝光从 1.0 降到 0.8。`review-v3-collage.jpg`（证据库），`gpu-report-v3.json`（仓库里）。
+
 ## 其余
 
 | 路径 | 是什么 |
