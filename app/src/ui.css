@@ -165,7 +165,7 @@ body.entered:not(.photo):not(.bare) #yardView::before { opacity: 1; }
 }
 .caption::before { content: ""; display: block; width: 46px; height: 7px; margin: 0 auto 8px; background: var(--brush-light, linear-gradient(90deg, transparent, rgba(237,232,220,.7), transparent) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .7; }
 /* Each phrase of the line is kept whole on one line where it fits (hints.js wraps them); a longer one still wraps. */
-.caption .phrase { display: inline-block; max-width: 100%; text-indent: 0; }
+.caption .phrase { display: inline-block; max-width: 100%; text-indent: 0; text-wrap: balance; }   /* a phrase that must wrap breaks near its middle, not after one orphan syllable (#445) */
 /* The far view at the close (#147): the line at the foot is the way to the book, and a thumb may press it (a hit area taller than the line). */
 body.far #act { opacity: 0 !important; pointer-events: none; }   /* (起身 is the first step: any step, a tap or Esc stands him up and brings the eye home) */
 body.far #hint.on { pointer-events: auto; cursor: pointer; }
@@ -383,7 +383,11 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #loadProgress::-webkit-progress-value { background: var(--ember); border-radius: 2px; transition: width .2s ease; }
 #loadProgress::-moz-progress-bar { background: var(--ember); border-radius: 2px; }
 #loadRetry { margin-top: 12px; color: var(--paper); background: transparent; border: 1px solid rgba(237,232,220,.4); padding: 8px 14px; cursor: pointer; font: 14px var(--kai); }
+#title .how b, #title .how span { display: block; width: fit-content; margin-inline: auto; font-weight: 400; }   /* each line is as wide as its words, so that the audit and a screen reader see the text and not the full-width paper */
+#title .how span { margin-top: .7em; letter-spacing: .2em; opacity: .85; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
+/* A phone on its side has no room under 入山: only the region and the road are kept, in the lower left corner, clear of the way in (#445). */
+@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } #title .how b { margin-inline: 0; } }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 .title-links .chip { white-space: nowrap; }
