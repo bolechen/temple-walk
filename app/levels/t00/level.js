@@ -27,4 +27,6 @@ export default {
   keepsPlace: true,
   opening: true,
   title: true,
+  // The title page's foot: a region, never a real city, and one sentence that holds in every season (#445).
+  how: { place: "江南 · 古道", line: "路在竹林里，寺在云里。" },
 };
