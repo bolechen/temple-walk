@@ -172,6 +172,41 @@ const scenarios = {
     expect(Math.abs(lo) < 0.1 && Math.abs(s.h - 3) < 0.1, `from the court's paving up to the terrace, 3 m: went ${lo} to ${hi}, stands at ${s.h}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
+  // production not at all, where ?level=t05 walks the prologue and says what was asked. Each is built here as it is
+  // published (VITE_DEPLOY), with nothing fetched from outside. On the canary he walks T05 a little with the prologue's
+  // book, visit and kept place already in the browser, and none of them is read or written: T05 keeps nothing of the
+  // prologue's, and the prologue's records stay the prologue's.
+  "level-targets": { tier: 2, async run(b) {
+    const { execFileSync } = require("child_process"), os = require("os"), { serve } = require("../../tools/site.cjs");
+    const top = path.join(__dirname, "..", ".."), local = (u) => /^https?:\/\/127\.0\.0\.1[:/]/.test(u) || u.startsWith("data:") || u.startsWith("blob:");
+    const route = ["**/*", (r) => (local(r.request().url()) ? r.continue() : r.fulfill({ status: 204, body: "" }))];
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.visit.v1": JSON.stringify({ metres: 123, seconds: 456 }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" }) };
+    for (const target of ["canary", "production"]) {
+      const out = fs.mkdtempSync(path.join(os.tmpdir(), `temple-${target}-`));
+      try {
+        execFileSync(process.execPath, [path.join(top, "node_modules/vite/bin/vite.js"), "build", "--logLevel", "warn", "--outDir", out, "--emptyOutDir"], { cwd: top, env: { ...process.env, VITE_DEPLOY: target }, stdio: ["ignore", "inherit", "inherit"] });
+        const srv = await serve(out);
+        try {
+          const t = await open(b, srv.base, "level=t05&q=low&fast=1" + BARE, { route, init: target === "canary" ? `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) localStorage.setItem(k, p[k]); })()` : undefined });
+          const lv = await t.page.evaluate(() => window.__level());
+          if (target === "production") expect(lv.id === "t00" && lv.asked === "t05" && lv.known === false, "production should not know T05: " + JSON.stringify(lv));
+          else {
+            expect(lv.id === "t05" && lv.known === true, "the canary should walk T05: " + JSON.stringify(lv));
+            const w = await t.page.evaluate(() => window.__walker()); expect(w.mode !== "old" && w.bytes > 0, "T05's own floor on the canary: " + JSON.stringify(w));
+            const s0 = await t.state(); expect(Math.hypot(s0.x, s0.z - 215) < 1, "on the canary he arrives at T05's gate, not where the prologue kept him: " + JSON.stringify(s0));
+            await t.page.evaluate(() => window.__walk([[0, 200]]));
+            await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 200) < 0.6; }, 120000, "he did not walk on the canary's T05");
+            await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
+            const book = await t.page.evaluate(() => window.__journey()); expect(!book.seals?.bell, "T05 should not show the prologue's seals: " + JSON.stringify(book));
+            const kept = await t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+            for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} as it was: ${kept[k]}`);
+          }
+          expect(t.errors.length === 0, `${target}: ` + t.errors.join("\n")); await t.close();
+        } finally { srv.close(); }
+      } finally { fs.rmSync(out, { recursive: true, force: true }); }
+    }
+  } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {
