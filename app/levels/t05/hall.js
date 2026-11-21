@@ -19,7 +19,7 @@ export const HALL = Object.freeze({
   rows: 5,               // five bays deep; laid out equal here, which the sources do not give (proposal)
   floor: 3.0,            // the platform's top
   column: 6.06,          // column height (S04, 234 small cun, converted)
-  colR: 0.39,            // an eave column's radius at its foot, 0.78 m across, a little less at its head (the structural review of #432: the Yingzao Fashi's 殿阁 columns are two cai two zhi to three cai across, chapter 5, read; 42 fen at a 28 cm cai)
+  colR: 0.405,           // an eave column's radius at its foot, 0.81 m across, a little less at its head (the structural review of #432: the Yingzao Fashi's hall columns are two cai two zhi to three cai across, chapter 5, read; a first-grade cai, chapter 4, is 28 or 29 cm by two second-hand readings, and 0.81 sits in the band at either: the T05 lead's choice)
   innerR: 0.42,          // an inner column's, 0.84 m (three cai, 45 fen: it is 2.7 m taller than the eave columns; the review's choice)
   wall: 0.9,             // the walls' thickness, their outer face 0.3 m outside the column line (ARCHITECTURE.md §4.2: 1.0–1.5 m, a proposal; thinner here so the platform's back edge holds it)
   front: -0.05,          // but the front wall's outer face lies just behind its column line, so that the ten front columns stand out of it more than half round and the nine bays read (the review of #425); the end and back walls keep the columns in, as this hall's thick walls do
