@@ -1,4 +1,4 @@
-// The three buildings of the axis before the court, as shells (docs/t05/PLAN.md item 9, issue #436): the outer gate, the
+// The three buildings of the axis before the court, as shells (docs/t05/PLAN.md item 9, issue #446): the outer gate, the
 // inner gate and the Wuliang hall, each one `buildHall` (app/src/building.js) with its parameters: three bays of columns,
 // bracket sets, a hip-and-gable roof, a passage through the middle bay front and back, and the bays either side shut.
 // Nothing here is a Liao vocabulary (docs/t05/ARCHITECTURE.md §0 is about the great hall): these are Qing gate houses and a

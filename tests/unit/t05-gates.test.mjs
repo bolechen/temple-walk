@@ -1,4 +1,4 @@
-// T05's three buildings on the axis, as shells (docs/t05/PLAN.md item 9, issue #436): the outer gate, the inner gate and the Wuliang
+// T05's three buildings on the axis, as shells (docs/t05/PLAN.md item 9, issue #446): the outer gate, the inner gate and the Wuliang
 // hall, each `buildHall` with its parameters. What is asked: that each stands on its platform where axis.js says, that he walks
 // through each by its passage (on the floor baked from what is drawn and on the written plan, to the same heights, over steps with
 // even treads), that the rooms either side of a passage are shut, that the passage is wide enough for his body and the eye behind him, and
