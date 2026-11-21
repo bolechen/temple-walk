@@ -1,4 +1,5 @@
-# The corner where the grafted wrist meets the knee rebuilt as one closed surface (issue #514, round 2, the T05 lead's
+# Tried once and kept for the record: the opening's shell did not come out closed, so this is not part of the build
+# (docs/t05/evidence/514-r2-d/). The corner where the grafted wrist meets the knee rebuilt as one closed surface (issue #514, round 2, the T05 lead's
 # ruling after the 3D review: "局部重新网格化", one attempt). The patches of the earlier builds sealed each gap that a
 # view had found (linings, fans, small fills) and left the next view's gap open; here the surfaces of that corner are
 # turned into a volume, the gaps narrower than the closing are filled, and what faces the air is laid back onto the
