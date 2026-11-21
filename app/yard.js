@@ -281,7 +281,7 @@ const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("l
 function setMood(season, time) {
   state.season = season; state.time = time; mood = moodOf(season, time);
   sky.setMood(mood);
-  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
+  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uWinNight.value = mood.winNight; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
   backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); ground.setMood?.(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
@@ -1427,7 +1427,7 @@ window.__pick = (px, py, n = 6) => {
 function directShot(id, opts) {
   if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
   if (upIn) return false;   // up on a balcony he sees with his own eyes only: no place's shot is taken there
-  const p = site.places[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
+  const p = site.places[id] || site.restPlaces?.[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
   const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
   if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
   return going;
@@ -1520,6 +1520,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
+window.__lamp = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).

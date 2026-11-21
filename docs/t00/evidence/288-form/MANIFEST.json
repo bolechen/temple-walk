@@ -1,0 +1,180 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage-288.jpg",
+   "bytes": 269892,
+   "sha256": "daf86fc6cb35a53d540918a90d63a4cb1ae4f914e4caad38d2539c8452e4f6e1",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cam05-after.png",
+   "bytes": 529428,
+   "sha256": "47fff1b090efd84efd94e5a88706d094320601b8de0ad18df65abf0fd4051076",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cam05-before.png",
+   "bytes": 529290,
+   "sha256": "3145e29bea0ff0ed83d7133f66d9d845f3d2d4189142016766dbd377c9a41e2f",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cedar-after.png",
+   "bytes": 638949,
+   "sha256": "262591ae986a32b0ace0ab45d3c1576458db87ebfaa63fd793ce00bf02e3c190",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cedar-before.png",
+   "bytes": 608121,
+   "sha256": "404debe4a1e0e071aa22b7f0b21573050805b2fb88a58b1b823ec7efdf559cd3",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/ceil-n-after.png",
+   "bytes": 438650,
+   "sha256": "4058796f7f7101605785b73eda3f51e0c9ed25ec3c70feab3e4825765ca7a0db",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/ceil-n-before.png",
+   "bytes": 463271,
+   "sha256": "4699099b68961858bc2ff1b00ac02ebf0c86f956806ed28e9d38a4ada22fdbaa",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/ceil-s-after.png",
+   "bytes": 424856,
+   "sha256": "20f750f96a07f7d712bcea30466bd6a548d9d5af1575cac7b2b96c891882ed2f",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/ceil-s-before.png",
+   "bytes": 451540,
+   "sha256": "abd413cc9da48342eb7a9b5efeb67c57dcbbaab5b7f700897c18d0a9f812b699",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cope-front-after.png",
+   "bytes": 498456,
+   "sha256": "c9c164e502cb6e1d29ce30aaf1bd02c2a28ada50e26bda8e652f28138cebc1f8",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cope-front-before.png",
+   "bytes": 505281,
+   "sha256": "01b7b1741637eccd3c0e86b2fc5f1077aabdcd3df937f607e1b6ec1e76f606cb",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cope-side-after.png",
+   "bytes": 579086,
+   "sha256": "f4b43b9617d2ea639c989418b38f80f4a898b2f42646df3fcaff9f9ec84150b6",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cope-side-before.png",
+   "bytes": 576756,
+   "sha256": "706896c6ed7f516f6f241aee0dbfcb08c9120d85e42c0d07f4c58b9b8576f1ee",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cope-top-after.png",
+   "bytes": 481666,
+   "sha256": "015e3f47d1e277390d3623efebb96f7f2042683931fb37bbbfbd6ac7b85f3e33",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/cope-top-before.png",
+   "bytes": 491349,
+   "sha256": "52f0eb87aaa7c8bc417c940d611c9dfe0803e84ad905a29dc68fee05ca4b142b",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/gable-front-after.png",
+   "bytes": 510499,
+   "sha256": "785e9657b265df116dbd113d833005652d0fe6952cf8f4037723feca4ee508d0",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/gable-front-before.png",
+   "bytes": 505369,
+   "sha256": "a1aaf8bf416c6dc81eee2f17821c66a14c65d68cdb1e5765bd2f2462b998c941",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/gable-side-after.png",
+   "bytes": 644328,
+   "sha256": "1a2cbff2c8aec365003694d7026cc37ed2182aadbda26e962fbf61906661a1c5",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/gable-side-before.png",
+   "bytes": 641917,
+   "sha256": "1b147091c9c2ad2c78d6f12f5f784f4df88a99b7eb26c89a65a5727d886c65cc",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/gable-top-after.png",
+   "bytes": 527987,
+   "sha256": "408db83df85314ab18c9265b89ccfde5c37b795176cb763746bece741cc96ab5",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/gable-top-before.png",
+   "bytes": 527987,
+   "sha256": "408db83df85314ab18c9265b89ccfde5c37b795176cb763746bece741cc96ab5",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/owner-after.png",
+   "bytes": 571519,
+   "sha256": "421b1ad48f03a9c93fe8f40bab73c51aaeb64ddc4b67f7feefdfd69c20824b61",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/owner-before.png",
+   "bytes": 572180,
+   "sha256": "3d037a1226cae4ddb1356b18142303fcca4c9a03f7d7e261b9f2b7adfb6980d3",
+   "rev": "3bc7a9d7328a00db27fdb0a187c872b5ef0785f6"
+  },
+  {
+   "path": "shots/passage-back-n-after.png",
+   "bytes": 562295,
+   "sha256": "a8d8bdbf2411cf117aeb2c9e281813ea8a9ac2046d528986212d0a059575ab06",
+   "rev": "1d378f0631849c4ab117703d22bcb9dd0a8a995d"
+  },
+  {
+   "path": "shots/passage-back-s-after.png",
+   "bytes": 572205,
+   "sha256": "85207b618aeb31da3d380dcb4dd1ea8ff8c9e19d384d8ee9504c7fb87475c6df",
+   "rev": "1d378f0631849c4ab117703d22bcb9dd0a8a995d"
+  },
+  {
+   "path": "shots/t4-cam05-bright.png",
+   "bytes": 1144142,
+   "sha256": "0941793d7ed7162ce9ec5a2077dcecde3138cf8df8f3091c182e8bc808b31b6f",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  },
+  {
+   "path": "shots/t4-ceil-n-bright.png",
+   "bytes": 985446,
+   "sha256": "13ba4b82c7c56a40a08b46c9374187a63c9c23b4e2d601781bd88c873370a35e",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  },
+  {
+   "path": "shots/t4-ceil-s-bright.png",
+   "bytes": 946762,
+   "sha256": "678e2db7386ebc88e1896e174e949986b084e4a3e0b7a67be0ef597622be6d4c",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  },
+  {
+   "path": "shots/t4-passage-back-n.png",
+   "bytes": 1207737,
+   "sha256": "8663b525f15070f62674b681a7e8287bfefeab8d2239b5a562e83d91cc78d643",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  }
+ ]
+}
