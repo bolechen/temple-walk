@@ -40,3 +40,15 @@ test("a level that names no hall compiles three's fog chunks without the box's s
   layerFog();
   assert.ok(C.fog_fragment.includes("fogShut("), "asked again without one, the box's sums stay (a page names its level once)");
 });
+
+test("the paving's own shader leaves the box's sums out unless the level has named a hall before it is laid", async () => {
+  const THREE = await import("three"), { createGround } = await import("../../app/src/ground.js"), T00 = await import("../../app/src/site.js?real");
+  const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+  const site = T00.buildSite(M);
+  const frag = () => { const sc = new THREE.Scene(); createGround(sc, site.shade, site.censer, site.paving); const out = []; sc.traverse((o) => { const m = /** @type {any} */ (o).material; if (m && m.fragmentShader) out.push(m.fragmentShader); }); return out.join("\n"); };
+  const none = frag();
+  assert.ok(none.length > 0 && !/fogShut|uFogShut|vFogW/.test(none), "no box: the paving's mist is the plain distance");
+  const was = U.uFogShut.value.clone();
+  U.uFogShut.value.set(box.x0, box.z0, box.x1, box.z1);
+  try { assert.ok(frag().includes("fogShut(cameraPosition,vWP)"), "a box named first: the paving takes it"); } finally { U.uFogShut.value.copy(was); }
+});
