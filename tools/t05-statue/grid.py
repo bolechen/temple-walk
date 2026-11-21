@@ -5,8 +5,9 @@
 import sys
 from PIL import Image, ImageDraw
 src, dst, cx, cz, half, step = sys.argv[1], sys.argv[2], *map(float, sys.argv[3:7])
+flip = len(sys.argv) > 7 and sys.argv[7] == "back"   # a back picture: x grows to the left
 im = Image.open(src).convert("RGB"); W, H = im.size; d = ImageDraw.Draw(im)
-px = lambda v: (v - (cx - half)) / (2 * half) * W
+px = (lambda v: ((cx + half) - v) / (2 * half) * W) if flip else (lambda v: (v - (cx - half)) / (2 * half) * W)
 py = lambda v: ((cz + half) - v) / (2 * half) * H
 k = int((cx - half) / step) - 1
 while k * step <= cx + half:

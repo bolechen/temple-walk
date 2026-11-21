@@ -67,6 +67,7 @@ shoot("chest", P(0.0, -3.0, 0.7), P(0.0, -0.2, 0.66), None, 60)
 if opt.get("zoom"):
   zx, zz, hh, *sd = opt["zoom"].split(","); zx, zz, hh = float(zx), float(zz), float(hh)
   if sd and sd[0] == "right": shoot("zoom", (-10 * H, zx, zz), (0, zx, zz), 2 * hh)
+  elif sd and sd[0] == "back": shoot("zoom", (zx, 10 * H, zz), (zx, 0, zz), 2 * hh)   # x of the frame grows to the picture's LEFT
   else: shoot("zoom", (zx, -10 * H, zz), (zx, 0, zz), 2 * hh)
   info["zoom"] = {"x": zx, "z": zz, "half": hh, "side": sd[0] if sd else "front"}
 # --probe=x,z;x,z: where a line straight in from the front meets the surface (the depth y of the nearest hit)
