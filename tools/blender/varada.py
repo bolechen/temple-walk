@@ -74,6 +74,12 @@ for v in bm.verts:
   if len(comp) > len(best): best = comp
 bs = set(x.index for x in best); bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index not in bs], context="VERTS")
 bm.to_mesh(me); bm.free(); me.update()
+if D.get("fill_holes"):
+  # the donor's own small openings (the fingertips' ends are open on the generated shells and read black from below)
+  # closed: every hole of at most `fill_holes` edges
+  bm = bmesh.new(); bm.from_mesh(me); f0 = len(bm.faces); bmesh.ops.holes_fill(bm, edges=bm.edges, sides=D["fill_holes"])
+  bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3]); log["donor"]["holes_filled_faces"] = len(bm.faces) - f0
+  bm.to_mesh(me); bm.free(); me.update()
 # a scrap of robe that shares a shell and a place with the fingers is a single open sheet, where a finger is a closed
 # tube: a face whose inward line (against its normal) meets nothing of the hand within `donor.sheet` metres is dropped
 if D.get("sheet"):
@@ -513,7 +519,9 @@ if AR:
       ids = [v.index for v in f.verts]
       if len(set(np.round(mv[ids], 4))) > 1:
         e0 = max(np.linalg.norm(st0[ids[i]] - st0[ids[i - 1]]) for i in range(len(ids))); e1 = max(np.linalg.norm(st[ids[i]] - st[ids[i - 1]]) for i in range(len(ids)))
-        if e1 > 0.02 and e1 > AR.get("stretch", 3.0) * max(e0, 1e-4): dead.append(f); stretched += 1
+        # only under the forearm (its seam on the thigh); round the shoulder and the chest a stretched face is kept, a
+        # hole there showed as black slits along the inner arm
+        if e1 > 0.02 and e1 > AR.get("stretch", 3.0) * max(e0, 1e-4) and st[ids, 1].mean() < AR.get("stretch_below_y", 9.0): dead.append(f); stretched += 1
     dead = list(set(dead)); n_dead = len(dead)
     bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"); dead = []
     if AR.get("cap"):

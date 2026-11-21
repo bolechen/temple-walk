@@ -64,7 +64,8 @@
     ]
    ]
   ],
-  "note_scrap": "the robe scrap at the fingertips, read off the donor hand in its own frame (u 0.66-0.88 of its length, 0.13-0.30 m out on the palm side; and past the little finger's edge, v over 0.2)"
+  "note_scrap": "the robe scrap at the fingertips, read off the donor hand in its own frame (u 0.66-0.88 of its length, 0.13-0.30 m out on the palm side; and past the little finger's edge, v over 0.2)",
+  "fill_holes": 60
  },
  "target": {
   "file": "tools/out/t05/tripo-370/sakyamuni-f1.glb",
@@ -172,7 +173,7 @@
     35
    ]
   },
-  "front": 0.003,
+  "front": 0.02,
   "useLeft": false,
   "poly": 2,
   "clamp": false,
@@ -274,6 +275,7 @@
   "stretch": 3.0,
   "cut_dz": 0.18,
   "cut_below_y": 3.64,
-  "cap": false
+  "cap": false,
+  "stretch_below_y": 3.9
  }
 }
