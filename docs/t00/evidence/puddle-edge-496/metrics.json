@@ -1,0 +1,15 @@
+{
+ "tool": "node tools/puddle-edge.cjs: the shader's own water mask (steps.js fbm2 field, smoothstep(.57,.61) on main; edgeW = clamp(1.4*reach,.04,.3) about .59 now) counted in pixels from a tenth to nine tenths, 1280x720, summer day, lowest tier (the geometry is the same on every tier)",
+ "mask_width_px": {
+  "the two puddles the reviewer named (under the maple, columns 260-410 and 650-870, rows 190-270)": { "main": { "n": 67, "median": 3, "smallest": 1, "largest": 6 }, "now": { "n": 44, "median": 8, "smallest": 5, "largest": 15 } },
+  "whole picture under the maple (?cam=-6.5,30,0.9,-0.3, rows 100-400)": { "main_median": 2, "now_median": 6 },
+  "from above (?cam=0,22,0,-0.4, rows 100-400)": { "main_median": 3, "now_median": 8 }
+ },
+ "cost_ms_T4_court_summer_day_high_1920x1080": { "run": "20261121-134852", "site": "e6f3dd9", "main": [13.1, 12.34, 13.12], "now": [12.46, 12.89, 12.95], "main_mean": 12.85, "now_mean": 12.77 },
+ "winter_pixel_comparison": {
+  "note": "the page is not deterministic from one frame to the next (falling snow, dither): the same build drawn twice differs as much as the two builds do, so a frame cannot show 'identical'; winter's shader output is identical by construction (uWet 0 -> puddle * step(.001, uWet) = 0, as the old smoothstep(.57,.61) was 0 there: the field never passes .543)",
+  "base_vs_base2": "28.92% of pixels differ, 3.154% by more than 2 levels",
+  "new_vs_new2": "33.69%, 3.083%",
+  "new_vs_base": "31.97%, 3.407%"
+ }
+}
