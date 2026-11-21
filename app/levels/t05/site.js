@@ -10,12 +10,15 @@ import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL } from "./hall.js";
+import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
-/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
-export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
+/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
+ * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
+ * round, stand on it (#493). */
+export const PLATFORM = Object.freeze({ w: 55.8, d: 26.21, h: 3.0, zS: 0.5 });
 /** The terrace before it (SITE.md §3.1, S10/S22, a summary: about 37 × 15 m), from the platform's south edge. */
-export const TERRACE = Object.freeze({ w: 37, d: 15, zN: 0.4, zS: 15.4 });
+export const TERRACE = Object.freeze({ w: 37, d: 14.9, zN: 0.5, zS: 15.4 });   // (its north edge on the platform's south edge, #493)
 /** The flight up the terrace's middle (SITE.md §6: proposed 8–10 m wide, about 18 steps; stairGeo lays 0.18 m steps, so 17). */
 export const FLIGHT = Object.freeze({ w: 9, rise: PLATFORM.h });
 /** The compound's walls (our proposal: OSM gives no outline for them, SITE.md §2); the south one stops at the Wuliang hall's platform, `gate` either side of the axis (./axis.js). */
@@ -122,6 +125,10 @@ export function buildSite(M) {
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
   // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
   root.add(mesh(merge(hp.plaster), M.plaster(), sh));
+  // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
+  const altar = buildAltar(), ap = altar.parts;
+  walk.posts.push(...altar.walk.posts);
+  root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
   const fills = hall.fill.map(([x, y, z, i, d]) => { const l = new THREE.PointLight(0xfff4e8, 0, d, 1.6); l.position.set(x, y, z); l.userData.full = i; root.add(l); return l; });
   // Each frame (yard.js): the fill follows how far inside the eye is, eased, so that from the court the doorway stays dark
   // and walking in the hall's timber comes up out of the dark over two or three seconds. A still picture takes it settled.
