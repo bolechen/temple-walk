@@ -673,7 +673,9 @@ if AR:
           a, b = e.verts[0], e.verts[1]
           ps = np.array([[q.co.x, q.co.z, -q.co.y] for q in (a, b)] + [ccs]); nn = np.cross(ps[1] - ps[0], ps[2] - ps[0])
           out_ab = nn @ rad > 0
-          try: bm.faces.new([a, b, cO] if out_ab else [b, a, cO]); bm.faces.new([b, a, cI] if out_ab else [a, b, cI]); capped_u += 2
+          try:
+            bm.faces.new([a, b, cO] if out_ab else [b, a, cO]); capped_u += 1
+            if AR.get("cap_under_two_sided", True): bm.faces.new([b, a, cI] if out_ab else [a, b, cI]); capped_u += 1
           except ValueError: pass
       log.setdefault("arm_cap", {})["under_edges"] = len(edge_u); log["arm_cap"]["under_runs"] = sum(len(es) >= 3 for es in runs.values()); log["arm_cap"]["under_faces"] = int(capped_u)
     gone_n = n_dead; bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
