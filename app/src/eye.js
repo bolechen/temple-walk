@@ -21,6 +21,16 @@ export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
   const tv = Math.tan((fov * Math.PI) / 360);
   return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h };
 }
+// Whether the eye at `e` sees him standing at (x, foot, z): a fan of lines to his body, three heights across his shoulders'
+// width, seven of the nine clear. One line to his waist found the gap between two balusters and called him seen with
+// only the top of his head over the rail (#411's art review, below the great hall's platform looking down).
+const FAN = [0.25, 0.6, 0.95].flatMap((h) => [-0.15, 0, 0.15].map((s) => [h, s]));
+export function seesHim(space, e, x, foot, z) {
+  const dx = x - e[0], dz = z - e[2], l = Math.hypot(dx, dz) || 1, sx = -dz / l, sz = dx / l;
+  let n = 0;
+  for (const [h, s] of FAN) if (space.sees(e, [x + sx * s, foot + h, z + sz * s])) n++;
+  return n >= 7;
+}
 export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM, space = null }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
   // The picture's own up, square to the way it looks (the arm's `ky` is along it).
@@ -75,7 +85,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     // head): from on a platform behind him its balustrade hid him, #396; where no rise it may take sees him, that point is
     // closed to it)
     const over = groundAt(p[0], p[2]) > foot + 0.3;
-    const sees = (k) => (k < 0.01 && !over) || !space?.sees || space.sees([p[0], p[1] + k, p[2]], [x, foot + 0.5, z]);
+    const sees = (k) => (k < 0.01 && !over) || !space?.sees || seesHim(space, [p[0], p[1] + k, p[2]], x, foot, z);
     if (n <= MAXRISE) for (let k = Math.max(0, n); k <= MAXRISE + 1e-6; k += 0.15) if (!drawn(p[0], p[1] + k, p[2]) && sees(k)) { r = k; break; }
     rises.set(key, r); return r;
   };
@@ -142,7 +152,7 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // over ground higher than his feet, it must still see him past what it rose over: else it comes in a quarter-metre at a
   // time until it does (#396: on the platform behind him, risen, the balustrade hid all but the top of his head).
   if (space?.sees && arm) {
-    const seen = (dd) => { const b = base(dd); return !(groundAt(b[0], b[2]) > foot + 0.3) || space.sees([b[0], b[1] + liftAt(dd), b[2]], [x, foot + 0.5, z]); };
+    const seen = (dd) => { const b = base(dd); return !(groundAt(b[0], b[2]) > foot + 0.3) || seesHim(space, [b[0], b[1] + liftAt(dd), b[2]], x, foot, z); };
     while (d > 0.25 && !seen(d)) { d -= 0.25; stop = stop || true; }
   }
   const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };

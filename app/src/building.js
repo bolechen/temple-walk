@@ -283,11 +283,14 @@ export function buildHall(M, opts) {
     // drawn nor stood on, as in the rooms' doorways (interior.js): one sheet with nothing behind it the eye would let pass
     // for a moment, as it does a column.
     const W = X * 2 - 0.3, H = topY - p.platH - 0.03, back = Z - 0.1 - d + 0.15, stop = new THREE.Mesh(merge(Array.from({ length: 11 }, (_, k) => new THREE.PlaneGeometry(W, H).translate(0, p.platH + H / 2, back - k * 0.12))), new THREE.MeshBasicMaterial());
-    // The dark runs the whole width of the front, behind the shut bays as well as the open door: turned aside, the eye slid
-    // along it behind the leaves and the window bays, and the wall stood between it and him (#411's art review, the tea
-    // house dragged round 65°). Two more stacks, front to back, keep it to the dark straight behind the opening.
+    // The dark runs the whole width of the front, behind the shut bays as well as the open door: turned aside, the eye went
+    // in through a shut leaf (a thin panel, which it lets pass as it does a column) and stood behind the leaves and the
+    // window bays with the wall between it and him (#411's art review, the tea house dragged round 65°). Behind the shut
+    // part of the front the dark is filled with sheets, and two stacks run front to back at the opening's edges, so the
+    // eye keeps to the dark straight behind the door.
     const open = [xs[mid] + 0.25 + 1.05, xs[mid + 1] - 0.25 - 1.05], side = [];
     for (const [ex, out] of [[open[0], -1], [open[1], 1]]) for (let k = 0; k < 11; k++) side.push(new THREE.PlaneGeometry(d, H).rotateY(Math.PI / 2).translate(ex + out * k * 0.12, p.platH + H / 2, Z - 0.1 - d / 2));
+    for (const [a, b] of [[-W / 2, open[0]], [open[1], W / 2]]) if (b - a > 0.05) for (let z = Z - 0.12; z > Z - 0.1 - d + 0.1; z -= 0.12) side.push(new THREE.PlaneGeometry(b - a, H).translate((a + b) / 2, p.platH + H / 2, z));
     stop.geometry = merge([stop.geometry, ...side]);
     stop.visible = false; stop.userData.walk = false; stop.userData.eye = "stop"; g.add(stop);
     if (p.lamps) for (const sx of [-1, 1]) {
