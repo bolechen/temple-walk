@@ -66,6 +66,28 @@ export default {
     gather: { x0: -60, x1: 60, z0: -140, z1: 100, bottom: -200, top: 200 },
   },
   // tests/slow/nearplane.test.mjs
+  // tests/unit/grove-eye.test.mjs (#515): the old path through the bamboo, walked each way, where the eye from behind him
+  // must keep out of the grove as it keeps out of a wall. Laid on the open floor of each: across the river-view pavilion's
+  // platform, the first two flights from the start up to the half-way pavilion, round the open side of the ink-stone
+  // pool's platform (where the tester stood), the first steps from the bamboo start, and the forecourt's two sides.
+  grove: {
+    routes: () => {
+      const A = APPROACH;
+      return {
+        "across the river-view pavilion's platform": [[A.xB0 + 1.0, A.zC1 - 2.2], [A.xB1 + 3.4, A.zC1 - 2.2]],
+        "from the lower platform up to the half-way pavilion": [[A.xC, A.zC1 - 1.2], [A.xC, A.zA1 + 0.4], [A.xB0 - 0.4, A.zMid], [A.xTurn - 0.4, A.zMid]],
+        "round the ink-stone pool's platform": [[A.xB0 - 2.0, A.zA1 - 1.3], [A.xB0 + 5.0, A.zA1 - 1.3], [A.xB0 + 5.0, A.zA0 + 1.0], [A.xB0 - 2.0, A.zA0 + 1.0]],
+        "the first steps from the bamboo start": [[A.xC, A.zC1 - 1.2], [A.xC, A.zC1 - 3.2]],
+        // and the forecourt, where the bamboo closes in on both sides (SITE.GROVE_IN): across to each side and along it
+        "across the forecourt to its west side and along it": [[0, SITE.fore - 6], [-(SITE.GROVE_IN - 1), SITE.fore - 6], [-(SITE.GROVE_IN - 1), SITE.zS + 5]],
+        "across the forecourt to its east side and along it": [[0, SITE.fore - 6], [SITE.GROVE_IN - 1, SITE.fore - 6], [SITE.GROVE_IN - 1, SITE.zS + 5]],
+      };
+    },
+    // Where the path is narrower than the arm needs, the share of frames the eye may stand within 0.3 m of the grove: at the
+    // bamboo start he stands in the grove's own clearing (GROVE.keep), and 7% of the frames there come that near (the T00
+    // lead accepted it, #518; everywhere else 5% at most).
+    narrow: { "the first steps from the bamboo start": 0.08 },
+  },
   nearplane: {
     routes: (/** @type {any} */ site) => ({ ...common(), ...censerRings(site), "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]] }),
   },

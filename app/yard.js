@@ -353,7 +353,8 @@ const inkVeil = (k) => { const c = document.getElementById("curtain"); if (!c) r
 // What the director's swings and shots are kept out of (#295): once the eye's hierarchy is built, what is drawn, with the
 // sphere of this frame's lens (a railing is drawn, so `railNear` has nothing more to add); until then the written plan.
 const eyeWalker = Object.assign(Object.create(walker), {
-  eyeShut: (x, y, z, foot) => (eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
+  // (where the level keeps the eye out, the bamboo, it is shut whether or not the eye's space has been built yet: #515)
+  eyeShut: (x, y, z, foot) => (L.eyeKeepOut?.(x, y, z, eyeSpace ? eyeSpace.radius : 0.25) ? true : eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
   railNear: (x, y, z, m) => (eyeSpace ? false : walker.railNear(x, y, z, m)),
 });
 const director = createDirector({ walker: eyeWalker,
@@ -664,7 +665,7 @@ function growEyeSpace() {
   const w = new EyeWorker();
   w.onmessage = (e) => {
     const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(e.data.positions, 3));
-    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true })); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
+    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true }), L.eyeKeepOut || null); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
   };
   w.onerror = () => { eyeInfo.state = "failed"; w.terminate(); console.warn("the eye's hierarchy could not be built: it asks the written plan"); };
   w.postMessage({ positions }, [positions.buffer]);
