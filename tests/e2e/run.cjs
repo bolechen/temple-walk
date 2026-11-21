@@ -152,10 +152,10 @@ const scenarios = {
     };
     const look = async (t, label, w, h, opts = {}) => {
       await t.page.setViewportSize({ width: w, height: h }); await t.frames(6);
-      if (opts.relang) await t.page.evaluate(() => { document.documentElement.classList.add("relang"); document.getElementById("loading").hidden = false; });
+      if (opts.relang) await t.page.evaluate(() => { window.__wasHidden = document.getElementById("loading").hidden; document.documentElement.classList.add("relang"); document.getElementById("loading").hidden = false; });
       await t.frames(2);
       const r = await t.page.evaluate(read);
-      if (opts.relang) await t.page.evaluate(() => document.documentElement.classList.remove("relang"));
+      if (opts.relang) await t.page.evaluate(() => { document.documentElement.classList.remove("relang"); document.getElementById("loading").hidden = window.__wasHidden; });
       expect(r.box && r.box[3] > h * 0.1, `${label} ${w}x${h}: the novice should be in the picture behind the title: ` + JSON.stringify(r));
       expect(r.n > 3 && r.monk.length === 0, `${label} ${w}x${h}: the title stands on him (${r.monk.join(", ")}): ` + JSON.stringify(r));
       expect(r.links.length === 0, `${label} ${w}x${h}: the title meets the row of links (${r.links.join(", ")}): ` + JSON.stringify(r));
