@@ -5,6 +5,9 @@
 //
 //   node tools/ci/unit-shard.cjs i/N        the files machine i of N runs
 //   node tools/ci/unit-shard.cjs plan N     who runs what, for how long
+//   node tools/ci/unit-shard.cjs run i/N [node options…]   runs machine i's files with `node --test` (the grid job adds
+//                                           `--import ./tools/walk/swap.mjs`); a share with no file says so and exits 0, because
+//                                           `node --test` given no files would run the whole suite.
 const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
 const SHARDS = 5;
@@ -25,12 +28,24 @@ function plan(names, n, d = durations()) {
   }
   return { parts: parts.map((p) => names.filter((x) => p.includes(x))), loads };
 }
-module.exports = { plan, files, durations, SHARDS, BUDGET };
+/** The arguments of `node` for a share, or null when the share is empty. @param {string[]} share @param {string[]} extra */
+const testArgs = (share, extra = []) => (share.length ? [...extra, "--test", ...share.map((f) => `tests/unit/${f}`)] : null);
+const shareOf = (/** @type {string} */ spec) => {
+  const m = /^(\d+)\/(\d+)$/.exec(spec || ""); if (!m || +m[1] < 1 || +m[1] > +m[2]) return null;
+  return plan(files(), +m[2]).parts[+m[1] - 1];
+};
+module.exports = { plan, files, durations, testArgs, shareOf, SHARDS, BUDGET };
 
 if (require.main === module) {
   const [a, b] = process.argv.slice(2);
   if (a === "plan") { const n = Number(b || SHARDS), { parts, loads } = plan(files(), n); parts.forEach((p, i) => console.log(`shard ${i + 1}/${n}: ${loads[i].toFixed(1)} s  ${p.length} files  ${p.slice(0, 4).join(" ")}…`)); }
-  else {
+  else if (a === "run") {
+    const share = shareOf(b); if (!share) { console.error("usage: unit-shard.cjs run i/N [node options…]"); process.exit(2); }
+    const args = testArgs(share, process.argv.slice(4));
+    if (!args) { console.log(`share ${b} holds no test file: nothing to run here`); process.exit(0); }
+    const r = require("child_process").spawnSync(process.execPath, args, { stdio: "inherit" });
+    process.exit(r.status === null ? 1 : r.status);
+  } else {
     const m = /^(\d+)\/(\d+)$/.exec(a || ""); if (!m || +m[1] < 1 || +m[1] > +m[2]) { console.error("usage: unit-shard.cjs i/N"); process.exit(2); }
     console.log(plan(files(), +m[2]).parts[+m[1] - 1].map((f) => `tests/unit/${f}`).join("\n"));
   }
