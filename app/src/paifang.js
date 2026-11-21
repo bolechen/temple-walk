@@ -19,21 +19,24 @@ export const PAIFANG = Object.freeze({
   // Between post axes: the middle bay, and each side bay.
   mid: 4.8, end: 3.6,
   colR: 0.25,
-  // The clamp stones (jiaganshi): a plinth, two upright slabs a post's width apart that hold the post between them, a cap on each.
-  stone: Object.freeze({ plinth: [1.12, 0.12, 1.3], slab: [0.96, 0.34], capOver: 0.04, cap: 0.08, top: 1.4 }),
+  // The clamp stones (jiaganshi): a plinth, and on it a collar of four slabs that hold the post on all four sides, wider at the foot
+  // than at the head (outer size at the foot and at the head, square), and a cap. A third of the height under the lower beam.
+  stone: Object.freeze({ plinth: [1.4, 0.12, 1.4], collar: [1.24, 1.0], capOver: 0.05, cap: 0.1, top: 1.6 }),
   // The two bands of beams (efang): small beam, filling board, great beam, and the flat plate on top that carries the sets.
   // `y` is the underside of the small beam; the thicknesses are across the archway (z).
-  band: Object.freeze({ lower: 4.7, upper: 6.3, xiao: [0.24, 0.2], dian: [0.16, 0.1], da: [0.38, 0.26], plate: [0.12, 0.4], stub: 0.35 }),
-  // The bracket sets are drawn at the scale of a standard timber (cai) of 0.14 m: two thirds of buildHall's 0.21 grade.
-  cai: 0.14,
+  band: Object.freeze({ lower: 4.7, upper: 6.5, xiao: [0.24, 0.2], dian: [0.16, 0.1], da: [0.38, 0.26], plate: [0.12, 0.4], stub: 0.35 }),
+  // The bracket sets are drawn at the scale of a standard timber (cai) of 0.16 m: three quarters of buildHall's 0.21 grade.
+  cai: 0.16,
   // The roofs: depth front to back (the eave's edge stands out half of it from the post plane), rise from the eave's edge to
   // the ridge, and how far the eaves reach past an outer post (`out`) and past a middle one (`midOut`). The eave purlin lies
   // out from the post plane as in building.js, scaled to this cai.
-  roof: Object.freeze({ side: { depth: 2.6, rise: 0.7 }, mid: { depth: 2.8, rise: 0.85 }, out: 1.3, midOut: 1.0, tileOver: 0.12, under: 0.17 }),
+  roof: Object.freeze({ side: { depth: 3.2, rise: 0.75 }, mid: { depth: 3.4, rise: 0.9 }, out: 1.6, midOut: 1.4, tileOver: 0.12, under: 0.3 }),
   quezi: [0.7, 0.24, 0.14],
 });
 
 const COL_EMBED = 0.02;
+// The sets are drawn a third taller than building.js's, so that their rows of arms show under a deep eave.
+const LIFT = 1.35;
 // How far out from the post plane the eave purlin lies on a hall cut to the 0.21 grade (building.js's PURLIN).
 const PURLIN = 0.88;
 
@@ -65,7 +68,7 @@ function bracketSet(K) {
 // ornaments, the four hip ridges. `hipL`/`hipR`: whether that end slopes down; an end without one is cut square, against
 // the post it butts onto. The surface is a heightfield on a grid laid so that its diagonals follow the hip creases.
 function hipRoof(s) {
-  const { x0, x1, depth, rise, eaveY, hipL, hipR, under } = s, Dm = depth / 2, N = 7, st = Dm / N;
+  const { x0, x1, depth, rise, eaveY, hipL, hipR, under, pu } = s, Dm = depth / 2, N = 7, st = Dm / N;
   const xa = hipL ? x0 + Dm : x0, xb = hipR ? x1 - Dm : x1;
   const dxOf = (x) => Math.min(hipL ? x - x0 : Infinity, hipR ? x1 - x : Infinity);
   const yAt = (x, z) => {
@@ -102,7 +105,7 @@ function hipRoof(s) {
   if (hipR) for (const z of zs) path.push([x1, z]);
   for (const x of [...xs].reverse()) path.push([x, Dm]);
   if (hipL) for (const z of [...zs].reverse()) path.push([x0, z]);
-  const fp = [], fi = []; path.forEach(([x, z], i) => { const y = yAt(x, z); fp.push(x, y + 0.02, z, x, y - 0.2, z); if (i) { const k = (i - 1) * 2; fi.push(k, k + 1, k + 2, k + 2, k + 1, k + 3); } });
+  const fp = [], fi = []; path.forEach(([x, z], i) => { const y = yAt(x, z); fp.push(x, y + 0.04, z, x, y - under - 0.06, z); if (i) { const k = (i - 1) * 2; fi.push(k, k + 1, k + 2, k + 2, k + 1, k + 3); } });
   const fascia = new THREE.BufferGeometry(); fascia.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3)); fascia.setAttribute("uv", new THREE.Float32BufferAttribute(new Array((fp.length / 3) * 2).fill(0), 2)); fascia.setIndex(fi); fascia.computeVertexNormals();
   // The ridge ornaments: a low wall of tile courses along the ridge, a curled end at each hipped end, a tube down each hip.
   const ridgeY = eaveY + rise, rh = 0.3, /** @type {THREE.BufferGeometry[]} */ parts = [box(xb - xa + (hipL ? 0.3 : 0), rh + 0.12, 0.3, (xa + xb) / 2, ridgeY - 0.1 + (rh + 0.12) / 2, 0)];
@@ -123,7 +126,18 @@ function hipRoof(s) {
     const sh = new THREE.Shape(); sh.moveTo(-Dm, eaveY - 0.2); for (let z = -Dm; z <= Dm + 1e-6; z += 0.2) sh.lineTo(z, yAt(x, z) - 0.05); sh.lineTo(Dm, eaveY - 0.2);
     cut.push(plain(new THREE.ShapeGeometry(sh).rotateY(sx * Math.PI / 2).translate(x + sx * 0.005, 0, 0)));
   }
-  return { tile, boards, fascia, ridge: merge(parts), cut: cut.length ? merge(cut) : null, yAt, ridgeY, Dm, xa, xb, ends };
+  // The round end tiles (wadang) closing each row of cover tiles along the eave, seen face-on from below.
+  const discs = [], cap = new THREE.CircleGeometry(0.095, 8);
+  for (let x = x0 + 0.3; x < x1 - 0.3; x += 0.27) for (const sz of [-1, 1]) discs.push(cap.clone().rotateY(sz > 0 ? 0 : Math.PI).translate(x, yAt(x, sz * Dm) + 0.06, sz * (Dm + 0.05)));
+  for (const [on, sx, xe] of [[hipL, -1, x0], [hipR, 1, x1]]) if (on) for (let z = -Dm + 0.3; z < Dm - 0.3; z += 0.27) discs.push(cap.clone().rotateY(sx * Math.PI / 2).translate(xe + sx * 0.05, yAt(xe, z) + 0.06, z));
+  // The rafters under the boards, from the eave purlin out to the edge: one every third of a metre along the long sides, and round a hipped end.
+  const raf = [], stick = (xa2, za, xb2, zb) => {
+    const ya = yAt(xa2, za) - under + 0.03, yb = yAt(xb2, zb) - under + 0.03, d = new THREE.Vector3(xb2 - xa2, yb - ya, zb - za), L = d.length();
+    raf.push(new THREE.BoxGeometry(0.1, 0.13, L).applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3((xa2 + xb2) / 2, (ya + yb) / 2 - 0.02, (za + zb) / 2), new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), d.normalize()), new THREE.Vector3(1, 1, 1))));
+  };
+  for (let x = Math.max(xa, x0 + 0.2); x <= Math.min(xb, x1 - 0.2) + 1e-6; x += 0.34) for (const sz of [-1, 1]) stick(x, sz * pu, x, sz * (Dm - 0.05));
+  for (const [on, sx, xe] of [[hipL, -1, x0], [hipR, 1, x1]]) if (on) for (let z = -pu + 0.1; z <= pu - 0.1 + 1e-6; z += 0.34) stick(xe - sx * (Dm - pu), z, xe - sx * 0.05, z);
+  return { tile, boards, fascia, discs: discs.length ? merge(discs) : null, rafters: raf.length ? merge(raf) : null, ridge: merge(parts), cut: cut.length ? merge(cut) : null, yAt, ridgeY, Dm, xa, xb, ends };
 }
 
 // The parts that do not rest on what they say they rest on, and so would hang in the air. `parts` are the records
@@ -157,14 +171,14 @@ export function buildPaifang(M, opts = {}) {
   const postTop = { mid: up.da[1] + COL_EMBED, end: lo.plate[0] + COL_EMBED };
   // The tiers: where each roof stands, and the height of its eave purlin.
   const tiers = [];
-  const purlinY = (plateTop) => plateTop + 1.0 * K, tileY = (py) => py + 0.1 + R.tileOver;
+  const purlinY = (plateTop) => plateTop + LIFT * K, tileY = (py) => py + 0.1 + R.tileOver;
   const mk = (id, spec, plate) => {
     const py = purlinY(plate[1]), Dm = spec.depth / 2, dp = Dm - PU, eaveY = tileY(py) - spec.rise * Math.pow(dp / Dm, 1.3);
     tiers.push({ id, ...spec, py, eaveY, ridgeY: eaveY + spec.rise, plateTop: plate[1] });
   };
-  const sideIn = cx[2] + r + 0.0, sideOut = cx[3] + R.out;
-  mk("side-e", { ...R.side, x0: sideIn, x1: sideOut, hipL: false, hipR: true }, lo.plate);
-  mk("side-w", { ...R.side, x0: -sideOut, x1: -sideIn, hipL: true, hipR: false }, lo.plate);
+  const sideIn = cx[2] + r, sideOut = cx[3] + R.out;
+  mk("side-e", { ...R.side, x0: cx[2], x1: sideOut, hipL: false, hipR: true }, lo.plate);
+  mk("side-w", { ...R.side, x0: -sideOut, x1: -cx[2], hipL: true, hipR: false }, lo.plate);
   mk("mid", { ...R.mid, x0: -(cx[2] + R.midOut), x1: cx[2] + R.midOut, hipL: true, hipR: true }, up.plate);
   const ao = (x, y, z) => { let a = 1; for (const t of tiers) { const dx = Math.min(x - t.x0, t.x1 - x), dz = t.depth / 2 - Math.abs(z); if (dx > -0.3 && dz > -0.3 && y < t.eaveY + 0.4) a = Math.min(a, 1 - 0.38 * smooth(-0.3, 0.8, Math.min(dx, dz)) * smooth(t.eaveY - 2.4, t.eaveY, y)); } return a; };
   // (a stand-in M in a test may have no names to give)
@@ -174,11 +188,16 @@ export function buildPaifang(M, opts = {}) {
   // ---- Clamp stones and posts ----
   const stones = [];
   cx.forEach((x, i) => {
-    const [pw, ph, pd] = S.plinth, [sw, st] = S.slab, off = (r - 0.01) + st / 2, capW = sw + S.capOver * 2, sTop = S.top;
-    add(`plinth-${i}`, ["ground"], box(pw, ph, pd, x, ph / 2, 0), M.monolith, { ao: null });
-    const slabs = [], caps = [];
-    for (const sz of [-1, 1]) { slabs.push(box(sw, sTop - S.cap - ph, st, x, (ph + sTop - S.cap) / 2, sz * off)); caps.push(box(capW, S.cap, st + S.capOver * 2, x, sTop - S.cap / 2, sz * off)); }
-    add(`slabs-${i}`, [`plinth-${i}`], merge(slabs), M.monolith, { ao: null }); add(`caps-${i}`, [`slabs-${i}`], merge(caps), M.monolith, { ao: null });
+    const [pw, ph, pd] = S.plinth, [cb, ct] = S.collar, sTop = S.top, hc = sTop - S.cap - ph;
+    add(`plinth-${i}`, ["ground"], box(pw, ph, pd, x, ph / 2, 0), M.steps, { ao: null });
+    // The collar: a square frustum, leaning in as it rises, closed round the post on all four sides (the post stands in it, so
+    // its hole is not drawn).
+    const collar = new THREE.CylinderGeometry(0.5, 0.5, hc, 4, 1, false).rotateY(Math.PI / 4), pos = collar.attributes.position;
+    for (let k = 0; k < pos.count; k++) { const w = pos.getY(k) > 0 ? ct : cb; pos.setXYZ(k, Math.sign(pos.getX(k)) * w / 2, pos.getY(k), Math.sign(pos.getZ(k)) * w / 2); }
+    collar.computeVertexNormals(); collar.translate(x, ph + hc / 2, 0);
+    const slabs = [collar];
+    const caps = [box(ct + S.capOver * 2, S.cap, ct + S.capOver * 2, x, sTop - S.cap / 2, 0)];
+    add(`slabs-${i}`, [`plinth-${i}`], merge(slabs), M.steps, { ao: null }); add(`caps-${i}`, [`slabs-${i}`], merge(caps), M.steps, { ao: null });
     stones.push({ x, z: 0, x0: x - pw / 2, x1: x + pw / 2, z0: -pd / 2, z1: pd / 2, top: sTop });
   });
   {
@@ -220,7 +239,7 @@ export function buildPaifang(M, opts = {}) {
   add("plate-mid", ["da-upper"], box(midX * 2, B.plate[0], B.plate[1], 0, (up.plate[0] + up.plate[1]) / 2, 0), M.woodX, { ao });
 
   // ---- Bracket sets and eave purlins ----
-  const set = bracketSet(K);
+  const set = bracketSet(K).scale(1, LIFT, 1);
   // list: { x, z, a }: where each set stands and the way it faces
   const sets = (id, on, plateTop, list) => {
     add(id, [on], merge(list.map((s) => set.clone().rotateY(s.a).translate(s.x, plateTop, s.z))), M.woodX, { ao });
@@ -230,7 +249,7 @@ export function buildPaifang(M, opts = {}) {
   const sideX = [cx[2] + A.end / 3, cx[2] + (2 * A.end) / 3, cx[3]];
   sets("sets-e", "plate-e", lo.plate[1], [...faces(sideX), { x: cx[3], z: 0, a: Math.PI / 2 }]);
   sets("sets-w", "plate-w", lo.plate[1], [...faces(sideX.map((x) => -x)), { x: -cx[3], z: 0, a: -Math.PI / 2 }]);
-  sets("sets-mid", "plate-mid", up.plate[1], [...faces([-cx[2], -A.mid / 6, A.mid / 6, cx[2]]), { x: cx[2], z: 0, a: Math.PI / 2 }, { x: -cx[2], z: 0, a: -Math.PI / 2 }]);
+  sets("sets-mid", "plate-mid", up.plate[1], [...faces([-cx[2], -cx[2] / 2, 0, cx[2] / 2, cx[2]]), { x: cx[2], z: 0, a: Math.PI / 2 }, { x: -cx[2], z: 0, a: -Math.PI / 2 }]);
   for (const t of tiers) {
     const Dm = t.depth / 2, xe = t.hipR ? t.x1 - (Dm - PU) : t.x1, xw = t.hipL ? t.x0 + (Dm - PU) : t.x0;
     const pl = [box(xe - xw, 0.2, 0.17, (xe + xw) / 2, t.py, PU), box(xe - xw, 0.2, 0.17, (xe + xw) / 2, t.py, -PU)];
@@ -240,15 +259,17 @@ export function buildPaifang(M, opts = {}) {
 
   // ---- Roofs ----
   const roofs = tiers.map((t) => {
-    const rf = hipRoof({ x0: t.x0, x1: t.x1, depth: t.depth, rise: t.rise, eaveY: t.eaveY, hipL: t.hipL, hipR: t.hipR, under: R.under });
+    const rf = hipRoof({ x0: t.x0, x1: t.x1, depth: t.depth, rise: t.rise, eaveY: t.eaveY, hipL: t.hipL, hipR: t.hipR, under: R.under, pu: PU });
     const on = [`purlin-${t.id}`];
     add(`roof-${t.id}`, on, rf.tile, M.tile, { ao: null }); add(`boards-${t.id}`, [`roof-${t.id}`], rf.boards, M.rafters, { ao: null, cast: false });
-    add(`fascia-${t.id}`, [`roof-${t.id}`], rf.fascia, M.fascia, { ao: null }); add(`ridge-${t.id}`, [`roof-${t.id}`], rf.ridge, M.ridge, { ao: null });
+    add(`fascia-${t.id}`, [`roof-${t.id}`], rf.fascia, M.fascia, { ao: null });
+    if (rf.discs) add(`wadang-${t.id}`, [`roof-${t.id}`], rf.discs, M.ridge, { ao: () => 0.7, cast: false });
+    if (rf.rafters) add(`rafters-${t.id}`, [`purlin-${t.id}`], rf.rafters, M.woodZ, { ao, cast: false }); add(`ridge-${t.id}`, [`roof-${t.id}`], rf.ridge, M.ridge, { ao: null });
     if (rf.cut) add(`cut-${t.id}`, [`roof-${t.id}`, t.id === "side-e" ? "post-2" : "post-1"], rf.cut, M.gable, { ao: null });
     // a great beam out to each roof corner, from the end set's head
     const cb = [], Dm = t.depth / 2;
     for (const [on2, sx, xs0] of [[t.hipL, -1, t.x0], [t.hipR, 1, t.x1]]) if (on2) for (const sz of [-1, 1]) {
-      const sx0 = sx * cx[t.id === "mid" ? 2 : 3], p0 = new THREE.Vector3(sx0, t.py - 0.1, 0), p1 = new THREE.Vector3(xs0 - sx * 0.14, rf.yAt(xs0 - sx * 0.14, sz * (Dm - 0.14)) - 0.3, sz * (Dm - 0.14));
+      const sx0 = sx * cx[t.id === "mid" ? 2 : 3], p0 = new THREE.Vector3(sx0, t.py - 0.1, 0), p1 = new THREE.Vector3(xs0 - sx * 0.14, rf.yAt(xs0 - sx * 0.14, sz * (Dm - 0.14)) - R.under - 0.12, sz * (Dm - 0.14));
       const d = p1.clone().sub(p0), L = d.length(), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), d.clone().normalize());
       cb.push(new THREE.BoxGeometry(0.16, 0.22, L).applyMatrix4(new THREE.Matrix4().compose(p0.clone().add(p1).multiplyScalar(0.5), q, new THREE.Vector3(1, 1, 1))));
     }
