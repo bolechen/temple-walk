@@ -1050,6 +1050,8 @@ const scenarios = {
     { const look = await t.page.evaluate(() => { const L = document.getElementById("pilgrimList"), here = L.querySelector(".here");
         return { bordered: [...L.querySelectorAll("*")].filter((e) => { const c = getComputedStyle(e); return parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderLeftWidth) > 0; }).length, hereRing: getComputedStyle(here, "::before").content, hereAfter: getComputedStyle(here, "::after").content }; });
       expect(look.bordered === 0 && look.hereRing === "none" && look.hereAfter === "none", "the map should have no box, and the temple he is in no ring: " + JSON.stringify(look)); }
+    { const gap = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList .go, #pilgrimList .here")].map((c) => Math.round(c.querySelector(".region").getBoundingClientRect().top - c.querySelector("img").getBoundingClientRect().bottom)));
+      expect(gap.length >= 1 && gap.every((g) => g >= 24), "the name should lie 24 px or more under its seal, clear of the ring's lower edge: " + JSON.stringify(gap)); }
     await t.page.click("#pilgrimList .fog", { force: true }); await t.frames(2); expect(!(await P()).going && (await t.page.evaluate((k) => sessionStorage.getItem(k), CROSS)) === null, "a fog should not be a place to go");
     await mapShut(); expect((await stack()).includes("menu") && !(await stack()).includes("pilgrim"), "Esc should put the map away and leave the menu: " + (await stack())); await menu(false);
 
