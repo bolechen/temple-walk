@@ -48,7 +48,7 @@
 
 ## 3. 事件表
 
-事件名一律 `demo.*` / `opening.*`；每个事件自动带 `lang`（`zh|ja|en|ko`），字符串值截到 50 字符，布尔转 `1/0`。只在 `temple.rushiwowen.co` 发送；预览、测试、本机不发送（`__events()` 仍可在本机读到内存里的最后 200 条）。
+事件名一律 `demo.*` / `opening.*`（带走朱印帐的两个是 `save.*`）；每个事件自动带 `lang`（`zh|ja|en|ko`），字符串值截到 50 字符，布尔转 `1/0`。只在 `temple.rushiwowen.co` 发送；预览、测试、本机不发送（`__events()` 仍可在本机读到内存里的最后 200 条）。
 
 ### 3.1 已有（本轮不改）
 
@@ -91,6 +91,15 @@
 | `pilgrimage.open` | 打开行脚图（#449） | `via`（`menu`/`book`/`hold`/`hook`）`closed`（已打卡几座） | 三处入口各有多少人用；长按是否被发现 |
 | `pilgrimage.go` | 在图上点「去」 | `from` `to` | 换寺的去向 |
 | `pilgrimage.arrive` | 新寺画得出来、墨帘拉开 | `from` `to` `ms`（从点「去」到寺画得出来）`walk_ms`（到墨帘全开、能走） | 换寺要等多久，二期长卷时长的依据 |
+
+### 3.3 带走朱印帐（#338）
+
+| 事件 | 何时 | 数据 | 回答什么 |
+|---|---|---|---|
+| `save.export` | 在朱印帐的「带走朱印帐」里复制或分享了链接 | `to`（`here` / `canary` / `production`） | 有没有人搬存档；搬去哪里 |
+| `save.import` | 打开带 `#save=` 的链接后的结果 | `result`（`ok` / `declined` / `damaged` / `newer` / `empty`） | 搬成了没有；坏链接、旧版本拒绝的比例 |
+
+两个事件都不带存档的任何内容（没有印、地点、设置），见 `docs/t00/SAVE.md`。
 
 `demo.load_error` 的三个新字段（`app/loading.js`）：
 

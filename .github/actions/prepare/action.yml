@@ -26,7 +26,11 @@ runs:
     - uses: actions/cache/restore@v4
       with:
         path: node_modules/.cache/walk
-        key: walk-t00-wanted-${{ github.run_id }}-${{ github.job }}
+        key: walk-wanted-${{ github.run_id }}-${{ github.job }}
+        # The entry `unit` keeps is named walk-<every level's fingerprint joined>-<the base's> (since #405, not walk-t00-…):
+        # the prefix of this commit's own fingerprint finds it, and failing that the newest one, whose floor is the same when
+        # nothing it is made of has changed. Looked for under the old `walk-t00-` prefix it was never found, and `floor` and
+        # `build` each baked the floor cold, about two minutes, every run (#442).
         restore-keys: |
-          walk-t00-${{ steps.key.outputs.key || 'none' }}-
-          walk-t00-
+          walk-${{ steps.key.outputs.key || 'none' }}-
+          walk-
