@@ -5,12 +5,14 @@
 # points.json, in the figure's stage frame (metres, x to the viewer's right, y up from the seat, z toward the viewer;
 # the frame the paint anchors are written in) with `height`, the figure's height in metres on its seat:
 #   { "height": 8.6, "mouth": [x, y], "cornerL": [x, y], "cornerR": [x, y], "noseBase": y, "chinFront": y,
-#     "browKnit": [x, y], "w": mouth width m, "faceW": face width m }
+#     "browKnit": [x, y], "w": mouth width m, "faceW": face width m, "tilt": deg (repair.py's bow, if any),
+#     "brow": { "eyeY": y just above the eyes, "head": x of the brow's head, "tail": x of its tail } }
 # The surface is read by casting from the front (+z) through each (x, y). Prints:
 #   lip      the upper lip's foremost point against the line from the base of the nose to the foremost point of the
 #            chin, in the plane x = 0, signed (+ is out past the line), as a share of the mouth's width w
 #   knit     the deepest hollow between the brows: in a window 0.25 w wide, the face's depth less its own blur over
 #            0.15 w, as a share of the face's width
+#   brow     each brow's slope from its tail up to its head, degrees (≥ 0: the head not lower than the tail)
 #   corners  the height of the two corners over the middle of the lower lip, as a share of w (≥ 0: not turned down)
 # and, with --profile, draws the x = 0 profile with the line.
 import sys, json, numpy as np, trimesh
@@ -33,7 +35,11 @@ my = pts["mouth"][1]
 ys = np.arange(my - 0.45, my + 0.45, 0.003); zs = front(np.c_[np.zeros_like(ys), ys])
 # a head bowed by repair.py's tilt is measured in its own frame: the profile turned back by `tilt` degrees about the slit's
 # height first (the line measure itself does not care, but finding the lip by where the profile turns does)
-tl = np.radians(pts.get("tilt", 0))
+tl = np.radians(pts.get("tilt", 0)); zs_raw = zs.copy()
+def unturn(y, z):   # a point of the turned-back profile, in the figure's frame again
+  if not tl: return [round(float(y), 3), round(float(z), 3)]
+  dy, dz = y - yc0, z - zc0
+  return [round(float(yc0 + dy * np.cos(tl) - dz * np.sin(tl)), 3), round(float(zc0 + dy * np.sin(tl) + dz * np.cos(tl)), 3)]
 if tl:
   yc0, zc0 = my, float(np.nanmedian(zs)); dy, dz = ys - yc0, zs - zc0
   yr, zr = yc0 + dy * np.cos(tl) + dz * np.sin(tl), zc0 - dy * np.sin(tl) + dz * np.cos(tl)
@@ -59,6 +65,23 @@ X, Y = np.meshgrid(gx, gy); Z = front(np.c_[X.ravel(), Y.ravel()]).reshape(X.sha
 Zf = np.where(np.isnan(Z), np.nanmean(Z), Z); low = Zf - ndi.gaussian_filter(Zf, 0.15 * w / step)
 inner = (np.abs(X - bx) <= 0.125 * w) & (np.abs(Y - by) <= 0.125 * w)
 knit = float(-low[inner].min()) / fw
+# the brows: on each side the ridge's height (the foremost point of a vertical run above the eye, the slope of the brow
+# taken out) at the brow's head and at its tail; the head must not sit lower than the tail (a level or lifted brow).
+# Turned back by the tilt like the profile, about the slit's height, so a bowed head is judged as made.
+def ridge(x, y0):
+  yy = np.arange(y0, y0 + 0.25, 0.003); zz = front(np.c_[np.full_like(yy, x), yy]); ok = ~np.isnan(zz)
+  k = np.polyfit(yy[ok], zz[ok], 1); i = np.argmax(zz[ok] - np.polyval(k, yy[ok])); return float(yy[ok][i]), float(zz[ok][i])
+brow = {}
+if "brow" in pts:
+  b = pts["brow"]; zc0b = float(np.nanmedian(zs_raw)) if tl else 0
+  for side, sg in (("L", 1), ("R", -1)):
+    hy, hz = ridge(sg * b["head"], b["eyeY"]); ty, tz = ridge(sg * b["tail"], b["eyeY"])
+    brow3 = {f"browHead{side}": [round(sg * b["head"], 3), round(hy, 3), round(hz, 3)], f"browTail{side}": [round(sg * b["tail"], 3), round(ty, 3), round(tz, 3)]}
+    pts.setdefault("_anchors", {}).update(brow3)
+    if tl:   # the two points turned back about (my, median z), as the profile was
+      hy, ty = [my + (y - my) * np.cos(tl) + (z - zc0b) * np.sin(tl) for y, z in ((hy, hz), (ty, tz))]
+    brow[side] = {"head": [round(sg * b["head"], 3), round(float(hy), 3)], "tail": [round(sg * b["tail"], 3), round(float(ty), 3)],
+                  "deg": round(float(np.degrees(np.arctan2(hy - ty, b["tail"] - b["head"]))), 1)}
 # the corners (the slit's height at each, against the slit's middle)
 def surf_y(x, y0):   # the corner's own height: the deepest crease across a vertical run at x, the slope of the cheek taken out
   yy = np.arange(y0 - 0.04, y0 + 0.04, 0.002); zz = front(np.c_[np.full_like(yy, x), yy]); ok = ~np.isnan(zz)
@@ -67,7 +90,12 @@ mid_low = float(ys[islit])   # the slit's middle
 # (the corners are measured in the picture's frame: a bow of 10° moves a corner 25 cm off the middle by under 1 mm)
 cL, cR = surf_y(*pts["cornerL"]), surf_y(*pts["cornerR"])
 out = {"lip": round(lip, 3), "knit": round(knit, 4), "cornerL": round((cL - mid_low) / w, 3), "cornerR": round((cR - mid_low) / w, 3),
-       "slit": round(float(ys[islit]), 3), "chin": [round(float(Bp[0]), 3), round(float(Bp[1]), 3)], "upperLip": [round(float(L[0]), 3), round(float(L[1]), 3)], "noseBase": [round(float(A[0]), 3), round(float(A[1]), 3)]}
+       "slit": round(float(ys[islit]), 3), "chin": [round(float(Bp[0]), 3), round(float(Bp[1]), 3)], "upperLip": [round(float(L[0]), 3), round(float(L[1]), 3)], "noseBase": [round(float(A[0]), 3), round(float(A[1]), 3)],
+       "brow": brow, "anchors": {"noseBase": unturn(*A), "chinFront": unturn(*Bp), "upperLip": unturn(*L), "cornerL": [pts["cornerL"][0], round(float(cL), 3)], "cornerR": [pts["cornerR"][0], round(float(cR), 3)]}}
+# the eight landmarks as the paint anchors write points (x, y, z in the figure's frame, on the surface), for paint/<尊>.json
+def on(x, y): return [round(float(x), 3), round(float(y), 3), round(float(front([[x, y]])[0]), 3)]
+out["anchors3"] = {**pts.get("_anchors", {}), "mouthCornerL": on(pts["cornerL"][0], cL), "mouthCornerR": on(pts["cornerR"][0], cR),
+                   "noseBase": on(0, out["anchors"]["noseBase"][0]), "chinFront": on(0, out["anchors"]["chinFront"][0])}
 print(json.dumps(out))
 if prof:
   from PIL import Image, ImageDraw

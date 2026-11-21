@@ -159,6 +159,12 @@
    "rev": "9f0694ef020619d04af31f9985f4f89a5d871811"
   },
   {
+   "path": "vipasyin-face-measures-2.jsonl",
+   "bytes": 1486,
+   "sha256": "017ce2291e07ecfc4ef1b74002b39bed37eaac13f7cb654f92847d930495b565",
+   "rev": "ae99c517707166cc5440ff24bcf07a8454f59d15"
+  },
+  {
    "path": "vipasyin-face-measures.jsonl",
    "bytes": 324,
    "sha256": "a113a9875746c18f6f0392037df4167c838f1ed8a3ba5db05c0183c15cb25df3",
