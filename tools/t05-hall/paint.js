@@ -73,8 +73,13 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
     vec2 e = s == 0 ? uFace[0].xy : uFace[0].zw;
     float bw = uFace[2].y, tt = clamp(abs(q.x - e.x) / bw, 0., 1.), bt = uFace[2].z * (1. - .8 * pow(tt, 1.5));   // a brow thins to points at its ends
     ink.x = max(ink.x, 1. - smoothstep(bt - aa - soft, bt + aa + soft, arcDist(q, e + vec2(0., uFace[2].x), bw, uFace[2].x * .35)));
-    float lt = uFace[3].x * (1. - .5 * pow(clamp(abs(q.x - e.x) / uFace[2].w, 0., 1.), 2.)); vec2 lc = e + vec2(0., uFace[5].x);
-    ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(q, lc, uFace[2].w, -uFace[3].y)));
+    // the lid: on the carved slit when it was measured (uFace[6], tilted by its rise outward, uFace[7]); its line thins
+    // to nothing at both ends, so the outer corner does not flick up like eyeliner (#463)
+    vec2 le = uFace[7].z > .5 ? (s == 0 ? uFace[6].xy : uFace[6].zw) : e;
+    float rise = uFace[7].z > .5 ? (s == 0 ? uFace[7].x : uFace[7].y) : 0.;
+    vec2 ql = q - vec2(0., rise * (q.x - le.x) * sign(le.x));
+    float lt = uFace[3].x * (1. - .9 * pow(clamp(abs(ql.x - le.x) / uFace[2].w, 0., 1.), 2.)); vec2 lc = le + vec2(0., uFace[5].x);
+    ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(ql, lc, uFace[2].w, -uFace[3].y)));
     if (uFace[3].z > 0.) { vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
       ink.y = max(ink.y, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9); }
   }
@@ -145,6 +150,9 @@ function faceUniforms(face, A) {
   out.splice(12, 4, k(face.lidT), k(face.lidSag), k(face.iris), A.lipHalf ?? k(face.lipHalf));
   out.splice(16, 4, A.lipH ?? k(face.lipH), k(face.urna), (A.faceZ ?? A.eyeL[2]) - face.depth, 1);
   out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, 0, 0);
+  // the lids laid on the carved eye's slit where it was measured (lidL/lidR: x, y and the rise per metre outward,
+  // tools/t05-statue/face-ratios.py; #463), else on the eye anchors as before
+  if (A.lidL && A.lidR) { out.splice(24, 4, A.lidL[0], A.lidL[1], A.lidR[0], A.lidR[1]); out.splice(28, 4, A.lidL[2] ?? 0, A.lidR[2] ?? 0, 1, 0); }
   return out;
 }
 

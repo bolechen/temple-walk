@@ -20,6 +20,11 @@
 #           (#463, the 3D review): the surface within `sr` smoothed hard (`iter` passes of the Smooth modifier) is the
 #           broad shape v_s, and each point goes to v_s + k'·(v − v_s), k' easing from `k` at the seed to 1 at `r`: a knit
 #           brow kept to k of its depth, lips pushed out kept to k of their lift
+#   scale   {"c", "r": [across, up, depth], "s": [across, up, depth], "back", "below", "fade"}: reshape the mouth or the
+#           chin's pad in proportion (#463, the 3D review's second round): each point goes toward c + S·(v − c), weighted
+#           by a Gaussian of its distance from c measured in the radii r (0.05 at one radius), then back by `back`; and
+#           nothing above `below` (eased over `fade`), so the nose over a mouth is left as it is. File units; the figure's
+#           frame here (x across, −y toward the viewer, z up).
 #   push    move what lies within r of the seed along `dir` by up to `d` (falloff as above): to straighten a finger or
 #           part a fingertip from the throne.
 # Each op prints how many points it moved and the largest move, so the edit is written down and can be redone.
@@ -55,6 +60,14 @@ def region(seed, r):
   w = np.where(keep, 0.5 - 0.5 * np.cos(np.pi * np.clip(1 - d / r, 0, 1)), 0.0)   # 1 at the seed, 0 at r
   return keep, w
 for op in spec["ops"]:
+  if op["op"] == "scale":
+    before = co.copy(); c = np.array(op["c"], float); r = np.array(op["r"], float); S = np.array(op["s"], float)
+    d = (co - c) / [r[0], r[2], r[1]]; g = np.exp(-3 * (d * d).sum(1))
+    if "below" in op: g *= np.clip((op["below"] - co[:, 2]) / op.get("fade", 0.003), 0, 1)
+    target = c + (co - c) * [S[0], S[2], S[1]]; target[:, 1] += op.get("back", 0)
+    co = co + g[:, None] * (target - co)
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "scale", "note": op.get("note", ""), "points": int((mv > 1e-6).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   if op["op"] in ("squeeze", "headscale", "zband", "xband", "tilt"):
     before = co.copy(); z = co[:, 2]
     if op["op"] == "squeeze":

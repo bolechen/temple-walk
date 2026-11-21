@@ -500,9 +500,13 @@ function paint(on = true) {
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
-    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: f.meshes.find((m) => m.userData.normalMap)?.userData.normalMap } : { masks, fig: figures.indexOf(f), normalMap: f.meshes.find((m) => m.userData.normalMap)?.userData.normalMap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
-    f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
-    for (const m of f.meshes) m.material = f.painted[key];
+    // one material for each normal map the file carries (a head baked on a map of its own is its own primitive, #463)
+    for (const mesh of f.meshes) {
+      const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
+      f.painted[k2] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2].userData.update(); if (o.envIntensity) f.painted[k2].envMapIntensity = o.envIntensity;
+      mesh.material = f.painted[k2];
+    }
   }
   painted = o.on; return figures.map((f) => ({ colour: f.s.colour || null, painted: o.on && !!(f.s.colour && ANCHORS[f.s.colour]) }));
 }
