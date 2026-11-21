@@ -971,9 +971,10 @@ const scenarios = {
     await t.page.addInitScript(() => {
       window.__ink = [];
       const root = document.documentElement, look = () => {
+        requestAnimationFrame(look);   // (first: the page asked half-built may throw, and the record must not stop with it)
+        let frames = 0; try { frames = window.__yard ? window.__yard().frames : 0; } catch {}
         const w = innerWidth, h = innerHeight;
-        if (window.__ink.length < 20000) window.__ink.push({ frames: window.__yard ? window.__yard().frames : 0, ready: !!document.body && document.body.dataset.ready === "1", shut: root.classList.contains("crossing") && !root.classList.contains("crossing-open"), opening: root.classList.contains("crossing-open"), over: document.elementFromPoint(w / 2, h / 2) === root });
-        requestAnimationFrame(look);
+        if (window.__ink.length < 20000) window.__ink.push({ frames, ready: !!document.body && document.body.dataset.ready === "1", shut: root.classList.contains("crossing") && !root.classList.contains("crossing-open"), opening: root.classList.contains("crossing-open"), over: document.elementFromPoint(w / 2, h / 2) === root });
       };
       requestAnimationFrame(look);
     });
