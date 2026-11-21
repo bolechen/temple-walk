@@ -31,6 +31,7 @@ export function zoneBounds(SITE, LEVELS, APPROACH, SCREEN) {
   return { grove: APPROACH.zA1, stair: SCREEN.z + 1.5, gate: SITE.zS, court: LEVELS[0].zS, summit: LEVELS[2].zS };
 }
 export function zoneOf(x, z, inside, B) {
+  if (!B) return "none";                // a level with no music of its own yet (#409): the prologue's is not played there
   if (inside) return "hall";
   if (z > B.grove) return "grove";      // the bamboo and the first flight, below the half-way pavilion
   if (z > B.stair) return "stair";      // the turning stair and the forecourt before the screen wall

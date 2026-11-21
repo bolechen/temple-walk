@@ -199,7 +199,8 @@ export function createGround(scene, shade, censer, paving) {
       }`,
   });
   const levels = [];   // each stretch of paving, with the height it lies at
-  const mat = pave(shade[0], true, new THREE.Vector2(censer.x, censer.z)); levels.push({ mat, y: 0 });
+  // (A level with no censer has none marked, as on the terraces.)
+  const mat = pave(shade[0], true, censer ? new THREE.Vector2(censer.x, censer.z) : new THREE.Vector2(0, 999)); levels.push({ mat, y: 0 });
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(460, 300).rotateX(-Math.PI / 2).translate(0, 0, -86), mat);   // ends at the head of the approach stair
   ground.receiveShadow = true; scene.add(ground);
   // The same wet paving on the terraces above: no mirror pass up there, only the sky's sheen.
@@ -225,6 +226,8 @@ export function createGround(scene, shade, censer, paving) {
     resize(w, h, on) { if (on) rt.setSize(Math.max(64, w), Math.max(64, h)); has = !!on; mat.uniforms.uReflOn.value = on ? 1 : 0; },
     // Whether the mirror is being drawn this frame. When it is not, the paving falls back to the sky's sheen
     // instead of showing whatever the mirror last held.
+    /** The heights of the stretches of paving, the court's (with the mirror) first: what setLamps lights, layer by layer. */
+    layers: () => levels.map((l) => l.y),
     mirror(on) { mat.uniforms.uReflOn.value = has && on ? 1 : 0; },
     // The camera's mirror image below the ground looks back up at the real scene.
     render(renderer, camera) {
