@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "stair-film-collage.jpg",
+   "bytes": 560090,
+   "sha256": "32b7d8b9d41814edaf570b9b3e29d43cb7f28ae88f955885c1c1b975c6fd7956",
+   "rev": "fd69fb24476ecbdc35a7238997e695f94db39357"
+  }
+ ]
+}
