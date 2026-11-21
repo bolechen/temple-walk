@@ -11,15 +11,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "../unit/dom-stub.mjs";
 import * as THREE from "three";
-import { buildSite, createWalker, LEVELS } from "../../app/src/site.js";
+import { levelPlan, need, isPrologue } from "../unit/level-plan.mjs";
 import { followEye, createFollow } from "../../app/src/eye.js";
 import { FOV_RANGE } from "../../app/src/settings.js";
-import { ROUTE } from "../../app/src/tour.js";
 import { censerGeometry } from "../../app/src/censer.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });   // both faces: from inside a wall its back faces are what would show
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
-const site = buildSite(M), walker = createWalker(site);
+const { site, walker } = await levelPlan(M);
 // The censer on the axis of the first court is drawn by props.js (censer.js), not by the plan: stood in with the rest.
 site.root.add(new THREE.Mesh(censerGeometry().translate(site.censer.x, site.censer.y, site.censer.z), named("censer")));
 site.root.updateMatrixWorld(true);
@@ -55,18 +54,8 @@ function walk(path, look, { pitch = 0.04, reach = 6.2 } = {}) {
     if (n++ % 6 === 0) look({ x, z, yaw, pitch, third, first: [x, eyeY + EYE, z], dist: follow.dist });   // every sixth frame: a tenth of a second, a fifth of a metre at his pace
   }
 }
-const T = LEVELS;
-const routes = {
-  "the measured route, bamboo to the first court": ROUTE,
-  "round the first court, close past the bell and drum towers": [[-10.8, 19], [10.8, 19], [10.8, 6], [-10.8, 6], [-10.8, 19]],
-  "up the axis of the first court to the main hall's stair": [[0, 29], [0, 15.4], [1.3, 13], [0, 10.6], [0, -4.5]],
-  // close round the censer, a step off its belly, all the way round
-  "round the censer": [...Array(17)].map((_, i) => [site.censer.x + Math.sin(i * Math.PI / 4) * 1.05, site.censer.z + Math.cos(i * Math.PI / 4) * 1.05]),
-  "round the censer the other way, it on his right": [...Array(17)].map((_, i) => [site.censer.x - Math.sin(i * Math.PI / 4) * 1.05, site.censer.z + Math.cos(i * Math.PI / 4) * 1.05]),
-  // and walking away from it, the eye that follows him backing toward it
-  "away from the censer, north and then south": [[site.censer.x, site.censer.z - 1.0], [site.censer.x, site.censer.z - 5], [site.censer.x + 1.2, site.censer.z], [site.censer.x, site.censer.z + 1.0], [site.censer.x, site.censer.z + 6]],
-  "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]],
-};
+// The routes walked are the level's own (app/levels/<id>/checks.js).
+const routes = need("nearplane").routes(site, walker);
 // Along each hall's porch from end to end, at the depth nearest its columns that still lets him by (edges.test.mjs finds the same run).
 for (const h of site.halls) {
   const [ox, oz] = h.out, f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], s = [-f[1], f[0]]; let best = null;

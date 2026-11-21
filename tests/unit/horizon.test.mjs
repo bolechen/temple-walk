@@ -6,27 +6,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { SITE, LEVELS, APPROACH, terrain } from "../../app/src/site.js";
+import { L, LEVEL_ID, need } from "./level-plan.mjs";
 import { createBackdrop } from "../../app/src/backdrop.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (t[k] ||= named(k)) });
 const scene = new THREE.Scene();
-createBackdrop(scene, M, SITE, [LEVELS[0], LEVELS[2]], terrain);
+// A level with no far hills has no horizon to hold: its `backdrop` is null, and these tests have nothing to look at.
+if (L.backdrop) createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land);
 scene.updateMatrixWorld(true);
 // The bamboo bands are the only ShaderMaterials with a transparent-by-discard fragment: they carry uSeed.
 const solid = []; scene.traverse((o) => { if (o.isMesh && !(o.material.uniforms && o.material.uniforms.uSeed)) solid.push(o); });
 
-const places = [
-  ["bamboo start", 21.3, 91.6], ["start, west", -6, 100], ["river pavilion", 0, 100], ["half-way pavilion", 10.2, 77.4],
-  ["forecourt", 0, 58.5], ["first court", 0, 29], ...LEVELS.map((L, i) => [`terrace ${i}`, 0, (L.zS + L.zN) / 2]), ["summit", 0, -125],
-];
+// Where the horizon is held from is the level's own list (app/levels/<id>/checks.js): name, x, z, and the eye's height where it is not the land's plus 1.6.
+const places = L.backdrop ? need("horizon").places : [];
 
-test("below the horizon, from every sampled place, the first opaque thing is land or hill", () => {
+const skip = !L.backdrop && `${LEVEL_ID} draws no far hills`;
+test("below the horizon, from every sampled place, the first opaque thing is land or hill", { skip }, () => {
   const ray = new THREE.Raycaster(), bad = [];
-  for (const [name, x, z] of places) {
-    const eye = new THREE.Vector3(x, terrain(x, z) + 1.6, z);
-    if (name.startsWith("terrace") || name === "summit") eye.y = (LEVELS.find((L) => z < L.zS && z > L.zN) || LEVELS[2]).y + 1.6;
+  for (const [name, x, z, eyeY] of places) {
+    const eye = new THREE.Vector3(x, eyeY ?? L.land(x, z) + 1.6, z);
     let miss = 0, first = null;
     for (let k = 0; k < 72; k++) for (const deg of [0.5, 2, 4, 6, 8, 10]) {
       const yaw = (k / 72) * Math.PI * 2, p = (deg * Math.PI) / 180;
@@ -39,7 +38,7 @@ test("below the horizon, from every sampled place, the first opaque thing is lan
   assert.deepEqual(bad, []);
 });
 
-test("the hills have no seam: height and colour inputs are continuous where the angle wraps", () => {
+test("the hills have no seam: height and colour inputs are continuous where the angle wraps", { skip }, () => {
   // Every range is a cylinder whose shader reads the angle atan(z, x); a noise sampled on that raw angle jumps at -x.
   // The shader must therefore wrap it (the `ang` helper), or the nearest range shows a vertical hard edge.
   const src = scene.children.filter((o) => o.isMesh && o.material.fragmentShader && o.material.fragmentShader.includes("uTop")).map((o) => o.material.fragmentShader);

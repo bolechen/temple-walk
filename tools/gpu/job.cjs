@@ -2,6 +2,7 @@
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
 // spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, before, after }], seconds: 6 }
+// `level` names the level every page is opened on (?level=, docs/t05/LEVEL-SPLIT.md S6; the prologue when it is left out).
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
 const { serve } = require(require("fs").existsSync(require("path").join(__dirname, "site.cjs")) ? "./site.cjs" : "../site.cjs");   // staged beside it by gpu-render.sh, or in the checkout
@@ -68,7 +69,7 @@ function fingerprint(dir) {
     await page.addInitScript(() => { const say = console.error; console.error = (...a) => say(...a, "\n  at " + (new Error().stack || "").split("\n").slice(2, 8).map((l) => l.trim().replace(/^at /, "").replace(/https?:\/\/[^/]+\//, "")).join(" < ")); });
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
     page.on("console", (m) => m.type() === "error" && ours(m.text()) && report.errors.push(m.text().slice(0, 900)));
-    const t0 = Date.now(); await page.goto(base + at + "?" + query, { waitUntil: "commit", timeout: 120000 });
+    const t0 = Date.now(); await page.goto(base + at + "?" + query + (spec.level && spec.level !== "t00" && !/(^|&)level=/.test(query) ? "&level=" + encodeURIComponent(spec.level) : ""), { waitUntil: "commit", timeout: 120000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     return { ctx, page, loadMs: Date.now() - t0 };
   };

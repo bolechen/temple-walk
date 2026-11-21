@@ -54,7 +54,7 @@
 
 | 事件 | 何时 | 数据 | 用途 |
 |---|---|---|---|
-| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` `failed` | 到达；加载质量与语言来源；本轮起带失败贴图数（缺席表示旧数据，按未知处理，不当 0） |
+| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` `failed` `from`（分享链接带的场景，白名单外为空，#344） | 到达；加载质量与语言来源；本轮起带失败贴图数（缺席表示旧数据，按未知处理，不当 0） |
 | `demo.enter` | 点「入山」后 | `resumed` `seals` `tier` | 从标题进入；新访/续走 |
 | `opening.played` | 开场开始 | `eye` `again` | 开场覆盖 |
 | `opening.skipped` | 开场被跳过 | `eye` `at`（走到几成） | 开场长度 |
@@ -77,9 +77,11 @@
 | `demo.mood` | 手动换季/换时辰/回到随时辰 | `season` `time` `follow` | 赛季权限用得多不多；偏好 |
 | `demo.view` | 按 V 或滚轮/双指切换第一/第三人称 | `to` | 视角偏好 |
 | `demo.rite` | observance 开始/结束 | `id` `phase` `seconds` `done` | 哪个仪式被开始、多久、有没有做完（补上 `demo.seal` 看不到的放弃） |
-| `demo.share` | 系统分享成功（留影、朱印簿或短片） | `from`（`print` `book` `clip`） | 分享出口 |
+| `demo.share` | 分享了一张图或一段短片：系统分享成功、打开了「长按保存」那张纸，或点了下载（#344；短片 #342、除夕撞钟卡片 #341 只走系统分享） | `from`（`print` / `book` / `clip` / `joya`）`method`（`share` / `save` / `download`）`scene`（链接里带的场景） | 分享出口；在 App 内置浏览器里走的是哪条路 |
 | `demo.clip.start` | 按「拍一段」，录制开始（#342） | `aspect` `tier` `fmt`（`mp4`/`webm`）`mark`（带不带落款） | 短片使用率、画幅、各浏览器出什么格式、落款有没有被关 |
 | `demo.clip.export` | 一段录完、文件出来（自然结束或中途停下） | `fmt` `secs`（取整）`early`（中途停）`tier` | 录得完不完整、平均多长；`start` 与 `export` 之差是录到一半被放弃（收起相机、切到后台）的 |
+| `joya.ring` | 除夕撞钟窗口内，这一页第一次撞钟计入（#341） | `year`, `forced`（工作台 `?event=joya` 提前打开为 1） | 参与活动的人数 |
+| `joya.card` | 生成除夕撞钟卡片（#341） | `year`, `mine`（自己计入的下数） | 卡片生成次数 |
 | `lamp.link` | 在供灯处选了一句祝语、生成了链接和卡片（#343） | `wish`（预设祝语的编号）`season` `time` | 为他人点灯做了多少次、选的哪句；不记链接，不记任何文字 |
 | `lamp.open` | 经「为他人点灯」的链接打开，灯被带到眼前 | `wish` `season` `time` | 链接有没有被打开；与 `lamp.link` 对比，再加 `utm_source=lamp` 的访问数 |
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
@@ -104,7 +106,7 @@
 - **事件数据**：Umami 的 Events 表按事件名筛，再按 `id`、`lang`、`from` 分组；`demo.rite` 先筛 `phase=start` 和 `phase=end`，`done=0` 是放弃。
 - **语言**：每个事件都带 `lang`，所以「日文访客走到哪一步」可以直接筛；不要用浏览器语言代替。
 - **性能降级**：`demo.quality` 的 `level` 是第几次降级（1…5），`tier` 是起始档；和 `demo.ready.tier` 对比。
-- **分享**：`demo.share.from` 只有 `print | book | clip`；`t.co` 的 196 次进入是外部，不是站内分享。
+| `demo.share` | 系统分享成功（留影、朱印簿、短片或除夕撞钟卡片） | `from`（`print` `book` `clip` `joya`） | 分享出口 |
 - **朱印帐上的二维码（#319）**：分享出去的朱印帐带一枚码，写 `https://temple.rushiwowen.co/?utm_source=goshuin&utm_medium=share&utm_content=<lang>`；扫码进来的访问在 Umami 里按 `utm_source=goshuin` 筛，`utm_content` 是图上的语言。`demo.share` 照旧只数「分享」按钮成功的次数，扫码进来的数不能拿它去对，二者可以相差很多（图可以被保存、转发、截屏）。留影卡片上的码（默认开，可在留影设置里关）写 `utm_source=photo`，同样的筛法；`utm_content` 是卡片的语言。
 
 ---
@@ -129,3 +131,5 @@
 - 不做 session replay、热图、逐帧位置。
 - 不改 Umami 的采样与保留策略；站点流量还小。
 - 不把 `offering.*` 旧事件接回来；若主创要「供养」玩法，另立 issue。
+
+- **除夕撞钟（#341）**：卡片上的码写 `https://temple.rushiwowen.co/?utm_source=joya&utm_medium=share&utm_content=<lang>`，扫码进来的访问在 Umami 里按 `utm_source=joya` 筛。全山的撞钟总数是游戏数据，存在 #340 的计数服务里（只有「年份 × 计数」，不存任何标识），不是统计，不进 Umami。

@@ -13,8 +13,8 @@
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   },
-  "durable_objects": { "bindings": [{ "name": "TRACES", "class_name": "TraceCounter" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TraceCounter"] }],
+  "durable_objects": { "bindings": [{ "name": "TRACES", "class_name": "TraceCounter" }, { "name": "JOYA", "class_name": "JoyaShard" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TraceCounter"] }, { "tag": "v2", "new_sqlite_classes": ["JoyaShard"] }],
   "routes": [
     { "pattern": "temple.rushiwowen.co", "custom_domain": true }
   ]
