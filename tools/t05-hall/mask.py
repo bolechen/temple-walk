@@ -35,7 +35,8 @@ for ci, z in enumerate(spec["channels"]):
   if "ring_of" in z:
     # a band of `width` metres just outside another channel's region, inside this channel's box (the gilt along a
     # robe's edge, lying on the robe beside the bare skin)
-    base = regs[z["ring_of"]]; w = max(1, int(round(z["width"] / mpp)))
+    ro = z["ring_of"] if isinstance(z["ring_of"], list) else [z["ring_of"]]   # one channel, or the union of several
+    base = np.any([regs[i] for i in ro], axis=0); w = max(1, int(round(z["width"] / mpp)))
     reg = ndi.binary_dilation(base, structure=ndi.generate_binary_structure(2, 1), iterations=w) & ~base & allow
     regs.append(reg)
     m = ndi.gaussian_filter(reg.astype(np.float32), sigma=z.get("blur", 0.008) / mpp)

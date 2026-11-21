@@ -21,6 +21,7 @@ uniform float uEdge;
 uniform sampler2D uMaskF;
 uniform sampler2D uMaskB;
 uniform sampler2D uMaskS;
+uniform vec3 uTint;
 varying vec3 vFig;
 varying vec3 vFigN;
 float pEll(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 q = (p - a.xyz) / b.xyz; float k = min(b.x, min(b.y, b.z));
@@ -62,24 +63,25 @@ float flowers(vec2 q, float cell) { vec2 g = q / cell; vec2 id = floor(g); vec2 
 // brow thickness, lid half-width; [3] = lid thickness, lid sag, iris radius, lip half-width; [4] = lip half-height,
 // urna radius, front of the face (z below which nothing is drawn), on (0/1); [5] = lid lift above the eye's centre, -, -, -
 float arcDist(vec2 q, vec2 c, float w, float sag) { float x = clamp((q.x - c.x) / w, -1., 1.); float y = c.y - sag * x * x; return abs(q.y - y) + max(abs(q.x - c.x) - w, 0.); }
-vec3 faceDecal(vec3 p, vec3 n, out float ink, out float lip, out float urna) {
-  ink = 0.; lip = 0.; urna = 0.;
-  if (uFace[4].w < .5 || p.z < uFace[4].z || n.z < .15) return vec3(0);
-  vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002;
+// the face's ink: x the brows, y the upper lids (and the eye beneath, when its radius is above zero), drawn in two colours
+// (#370 round 7: a brow is a soft shadow under the brow ridge, not a hard line; a lid is one soft line along the eye's slit)
+vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
+  vec2 ink = vec2(0); lip = 0.; urna = 0.;
+  if (uFace[4].w < .5 || p.z < uFace[4].z || n.z < .15) return ink;
+  vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002, soft = uFace[5].y;
   for (int s = 0; s < 2; s++) {
     vec2 e = s == 0 ? uFace[0].xy : uFace[0].zw;
-    float bw = uFace[2].y, bt = uFace[2].z * (1. - .55 * pow(clamp(abs(q.x - e.x) / bw, 0., 1.), 2.));   // a brow thins to its ends
-    ink = max(ink, 1. - smoothstep(bt - aa, bt + aa, arcDist(q, e + vec2(0., uFace[2].x), bw, uFace[2].x * .35)));
-    float lt = uFace[3].x; vec2 lc = e + vec2(0., uFace[5].x);
-    ink = max(ink, 1. - smoothstep(lt - aa, lt + aa, arcDist(q, lc, uFace[2].w, -uFace[3].y)));
-    // the eye under the lid: a half disc hanging from the lid's line, downcast
-    vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
-    ink = max(ink, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9);
+    float bw = uFace[2].y, tt = clamp(abs(q.x - e.x) / bw, 0., 1.), bt = uFace[2].z * (1. - .8 * pow(tt, 1.5));   // a brow thins to points at its ends
+    ink.x = max(ink.x, 1. - smoothstep(bt - aa - soft, bt + aa + soft, arcDist(q, e + vec2(0., uFace[2].x), bw, uFace[2].x * .35)));
+    float lt = uFace[3].x * (1. - .5 * pow(clamp(abs(q.x - e.x) / uFace[2].w, 0., 1.), 2.)); vec2 lc = e + vec2(0., uFace[5].x);
+    ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(q, lc, uFace[2].w, -uFace[3].y)));
+    if (uFace[3].z > 0.) { vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
+      ink.y = max(ink.y, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9); }
   }
   vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
   lip = 1. - smoothstep(1. - aa * 8., 1. + aa * 8., length(m));
   urna = 1. - smoothstep(uFace[4].y - aa, uFace[4].y + aa, length(q - uFace[1].zw));
-  return vec3(0);
+  return ink;
 }
 `;
 
@@ -142,7 +144,7 @@ function faceUniforms(face, A) {
   out.splice(8, 4, k(face.browUp), k(face.browHalf), k(face.browT), k(face.lidHalf));
   out.splice(12, 4, k(face.lidT), k(face.lidSag), k(face.iris), A.lipHalf ?? k(face.lipHalf));
   out.splice(16, 4, A.lipH ?? k(face.lipH), k(face.urna), (A.faceZ ?? A.eyeL[2]) - face.depth, 1);
-  out.splice(20, 4, k(face.lidLift ?? 0), 0, 0, 0);
+  out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, 0, 0);
   return out;
 }
 
@@ -161,17 +163,17 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none } };
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
     const c = lin(z.color);
     let col = v3(c);
     if (z.pattern === "flowers") { const c2 = lin(z.pattern2 ?? "#9A7A3E"); col = `mix(${v3(c)}, ${v3(c2)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))`; }
     const metal = z.pattern === "flowers" ? `mix(${(z.metal ?? 0).toFixed(3)}, ${(z.metal2 ?? 0.6).toFixed(3)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))` : (z.metal ?? 0).toFixed(3);
-    const wear = z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "";
+    const wear = (z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "") + (z.tint ? " * uTint" : "");
     return `  { float k = ${z.glsl}; pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
   }).join("\n");
-  const fc = recipe.face, ink = lin(fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
+  const fc = recipe.face, ink = lin(fc.ink), browC = lin(fc.browColor ?? fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform mat4 uToFig;\nvarying vec3 vFig;\nvarying vec3 vFigN;")
@@ -180,11 +182,16 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
       .replace("#include <color_fragment>", `#include <color_fragment>
   vec3 p = vFig; vec3 pCol = diffuseColor.rgb; float pRough = roughness; float pMetal = metalness; float zone = 0.;
 ${zoneCode}
-  float ink_, lip_, urna_; faceDecal(p, normalize(vFigN), ink_, lip_, urna_);
+  float lip_, urna_; vec2 ink2 = faceInk(p, normalize(vFigN), lip_, urna_);
   float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
   pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
-  pCol = mix(pCol, ${v3(ink)}, ink_ * onFace); pRough = mix(pRough, ${fc.inkRough.toFixed(3)}, ink_ * onFace); pMetal = mix(pMetal, 0., ink_ * onFace);
+  // the brow: the skin darkened, at most half covered; the lid: one line of the deep beam colour
+  pCol = mix(pCol, ${v3(browC)}, ink2.x * onFace * ${(fc.browAlpha ?? 1).toFixed(3)}); pCol = mix(pCol, ${v3(ink)}, ink2.y * onFace);
+  pRough = mix(pRough, ${fc.inkRough.toFixed(3)}, max(ink2.x, ink2.y) * onFace); pMetal = mix(pMetal, 0., max(ink2.x, ink2.y) * onFace);
   pCol = mix(pCol, ${v3(urnaC)}, urna_ * onFace); pMetal = mix(pMetal, .2, urna_ * onFace);
+  // dust on what faces up (shoulders, forearms, knees, palms, the tops of the petals): a figure nine metres high and
+  // nearly a thousand years old (#370 round 7); not on the face's lines
+  pCol = mix(pCol, ${v3(lin(recipe.dust?.color ?? "#8A7A66"))}, ${(recipe.dust?.amount ?? 0).toFixed(3)} * smoothstep(.55, .95, normalize(vFigN).y) * (1. - max(ink2.x, ink2.y) * onFace));
   diffuseColor.rgb = pCol;`)
       .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = clamp(pRough, .04, 1.);")
       .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);");

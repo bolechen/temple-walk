@@ -1,11 +1,27 @@
 {
  "out": "tools/out/t05/seven/chest",
  "size": [
-  1200,
-  1200
+  1400,
+  1400
  ],
  "ao": false,
  "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/kasyapa-r3.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05"
+  },
   {
    "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
    "x": 11.33,
@@ -23,6 +39,22 @@
    "colour": "krakucchanda-t05"
   },
   {
+   "url": "tools/out/t05/tripo-six/sikhin-r3.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
    "url": "tools/out/t05/tripo-six/vipasyin-r3.60000.glb",
    "x": 0,
    "h": 9.0,
@@ -37,6 +69,22 @@
    },
    "paint": "clay",
    "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/visvabhu-r3.60000.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-t05"
   },
   {
    "url": "tools/out/t05/tripo-six/kanakamuni-r3.60000.glb",
@@ -57,37 +105,49 @@
  ],
  "shots": [
   {
-   "name": "krakucchanda-normals",
+   "name": "kasyapa-normals",
    "ortho": {
     "i": 0,
     "side": "front",
     "cx": 0,
-    "cy": 5.4,
-    "half": 1.2,
+    "cy": 5.2,
+    "half": 1.5,
     "square": true,
     "grid": false
    }
   },
   {
-   "name": "vipasyin-normals",
+   "name": "kasyapa-depth",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "kasyapa-grid",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true
+   }
+  },
+  {
+   "name": "krakucchanda-normals",
    "ortho": {
     "i": 1,
     "side": "front",
     "cx": 0,
-    "cy": 5.4,
-    "half": 1.2,
-    "square": true,
-    "grid": false
-   }
-  },
-  {
-   "name": "kanakamuni-normals",
-   "ortho": {
-    "i": 2,
-    "side": "front",
-    "cx": 0,
-    "cy": 5.4,
-    "half": 1.2,
+    "cy": 5.2,
+    "half": 1.5,
     "square": true,
     "grid": false
    }
@@ -95,40 +155,169 @@
   {
    "name": "krakucchanda-depth",
    "ortho": {
-    "i": 0,
+    "i": 1,
     "side": "front",
     "cx": 0,
-    "cy": 5.4,
-    "half": 1.2,
+    "cy": 5.2,
+    "half": 1.5,
     "square": true,
     "grid": false,
     "depth": true
+   }
+  },
+  {
+   "name": "krakucchanda-grid",
+   "ortho": {
+    "i": 1,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true
+   }
+  },
+  {
+   "name": "sikhin-normals",
+   "ortho": {
+    "i": 2,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "sikhin-depth",
+   "ortho": {
+    "i": 2,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "sikhin-grid",
+   "ortho": {
+    "i": 2,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true
+   }
+  },
+  {
+   "name": "vipasyin-normals",
+   "ortho": {
+    "i": 3,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false
    }
   },
   {
    "name": "vipasyin-depth",
    "ortho": {
-    "i": 1,
+    "i": 3,
     "side": "front",
     "cx": 0,
-    "cy": 5.4,
-    "half": 1.2,
+    "cy": 5.2,
+    "half": 1.5,
     "square": true,
     "grid": false,
     "depth": true
    }
   },
   {
-   "name": "kanakamuni-depth",
+   "name": "vipasyin-grid",
    "ortho": {
-    "i": 2,
+    "i": 3,
     "side": "front",
     "cx": 0,
-    "cy": 5.4,
-    "half": 1.2,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true
+   }
+  },
+  {
+   "name": "visvabhu-normals",
+   "ortho": {
+    "i": 4,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "visvabhu-depth",
+   "ortho": {
+    "i": 4,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
     "square": true,
     "grid": false,
     "depth": true
+   }
+  },
+  {
+   "name": "visvabhu-grid",
+   "ortho": {
+    "i": 4,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true
+   }
+  },
+  {
+   "name": "kanakamuni-normals",
+   "ortho": {
+    "i": 5,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "kanakamuni-depth",
+   "ortho": {
+    "i": 5,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "kanakamuni-grid",
+   "ortho": {
+    "i": 5,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 1.5,
+    "square": true
    }
   }
  ]
