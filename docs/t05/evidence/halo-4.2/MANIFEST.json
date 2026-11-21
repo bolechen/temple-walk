@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam03-winter.png",
+   "bytes": 781353,
+   "sha256": "a96893805cc013b63f62b0de813677d0f60b24bfd6ee141be0e685d3539346e2",
+   "rev": "fe3f01cfd3090b9015b2815a0935028179e25eeb"
+  },
+  {
+   "path": "cam04-winter.png",
+   "bytes": 881854,
+   "sha256": "98a5f20b7ae86b4ce449e4557026b227a1e9320b925535fbd37319b6d8ca750c",
+   "rev": "fe3f01cfd3090b9015b2815a0935028179e25eeb"
+  },
+  {
+   "path": "cam06-winter.png",
+   "bytes": 756981,
+   "sha256": "848141f987582abde56700f589a2f44e305549460a61515927433959f3344edf",
+   "rev": "fe3f01cfd3090b9015b2815a0935028179e25eeb"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 142319,
+   "sha256": "4da172e5fa49e2d9b3b8a2b90a96199413d2bb481102ea925d60cc8836b87a3c",
+   "rev": "fe3f01cfd3090b9015b2815a0935028179e25eeb"
+  }
+ ]
+}

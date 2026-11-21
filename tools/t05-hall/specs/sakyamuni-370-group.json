@@ -1,0 +1,148 @@
+{
+ "out": "tools/out/t05/sakyamuni-370/group",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -11.33,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -5.8,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": 0,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": 5.8,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": 11.33,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": 16.45,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  }
+ ],
+ "shots": [
+  {
+   "name": "door-winter",
+   "view": "door",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "door-summer",
+   "view": "door",
+   "mood": "summer",
+   "paint": true
+  },
+  {
+   "name": "cam03-winter",
+   "view": "cam03",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "door3-winter",
+   "view": "door3",
+   "mood": "winter",
+   "paint": true
+  },
+  {
+   "name": "door-winter-clay",
+   "view": "door",
+   "mood": "winter",
+   "paint": false
+  }
+ ]
+}
