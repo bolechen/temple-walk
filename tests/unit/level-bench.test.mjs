@@ -4,7 +4,7 @@
 // target and look in what comes out, as deploy.test.mjs does for the visitor counter.
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import os from "node:os"; import path from "node:path";
 import { execFileSync } from "node:child_process"; import { fileURLToPath } from "node:url";
-import { BENCH_LEVELS, benchBuild } from "../../app/src/bench.js";
+import { BENCH_LEVELS, benchBuild, WORKBENCH_LEVELS, workbenchBuild, levelShipped } from "../../app/src/bench.js";
 import { LEVELS } from "../../app/src/level.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -59,5 +59,36 @@ test("a preview and the canary ship T05; the public page carries none of it", ()
     // line of a table, not a place on the map, and nothing in the page's markup.
     assert.ok(!scripts(outs.production).some((s) => /奉明|region\s*:\s*["'`]关外/.test(s)), "nor its seal or its entry on the map (#449)");
     assert.ok(scripts(outs.preview).some((s) => /region\s*:\s*["'`]关外/.test(s)) && scripts(outs.canary).some((s) => /region\s*:\s*["'`]关外/.test(s)), "the testers' builds name it on the map");
+  } finally { for (const o of Object.values(outs)) fs.rmSync(o, { recursive: true, force: true }); }
+});
+
+// The probe level (app/levels/_probe, docs/t05/LEVEL-SPLIT.md S7) is the workbench's alone: the dev server and a preview list it; the
+// canary, which testers are sent to, and the public page do not, and carry none of it.
+const PROBE_SIGN = /["'`]_probe["'`]/, PROBE_KEY = /\b_probe\s*:\s*\(\)\s*=>/;   // (a quote, one underscore, the name, a quote: not the page's own `__probe` hook)
+const ofProbe = (out) => ({
+  module: scripts(out).some((s) => PROBE_SIGN.test(s)), listed: scripts(out).some((s) => PROBE_KEY.test(s)),
+  floor: fs.existsSync(path.join(out, "shared/walk/_probe.bin")), doorways: fs.existsSync(path.join(out, "shared/doorways/_probe.json")),
+});
+
+test("the workbench's levels are the ones the registry lists behind its own, narrower test of the build", () => {
+  assert.deepEqual(WORKBENCH_LEVELS, ["_probe"]);
+  for (const id of WORKBENCH_LEVELS) assert.ok(Object.hasOwn(LEVELS, id), id);   // (in Node, listed as on the dev server)
+  assert.equal(workbenchBuild("preview"), true); assert.equal(workbenchBuild("canary"), false); assert.equal(workbenchBuild("production"), false);
+  for (const [id, want] of [["t00", { preview: true, canary: true, production: true }], ["t05", { preview: true, canary: true, production: false }], ["_probe", { preview: true, canary: false, production: false }]])
+    for (const d of ["preview", "canary", "production"]) assert.equal(levelShipped(id, d), want[d], `${id} in a ${d} build`);
+  const src = fs.readFileSync(path.join(ROOT, "app/src/level.js"), "utf8");
+  assert.match(src, /const WORKBENCH = typeof __WORKBENCH__ === "undefined" \|\| __WORKBENCH__;/);
+  const behind = [...(src.match(/\.\.\.\(WORKBENCH \? \{([^}]*)\} : \{\}\)/)?.[1] || "").matchAll(/\b(\w+)\s*:/g)].map((m) => m[1]);
+  assert.deepEqual(behind, [...WORKBENCH_LEVELS]);
+});
+
+test("a preview ships the probe level; the canary and the public page carry none of it", () => {
+  const baked = { floor: fs.existsSync(path.join(ROOT, "app/shared/walk/_probe.bin")), doorways: fs.existsSync(path.join(ROOT, "app/shared/doorways/_probe.json")) };
+  const outs = { preview: build("preview"), canary: build("canary"), production: build("production") };
+  try {
+    const p = ofProbe(outs.preview);
+    assert.ok(p.module, "the preview holds the probe's level module"); assert.ok(p.listed, "and lists it");
+    if (baked.floor) assert.ok(p.floor, "and its baked floor"); if (baked.doorways) assert.ok(p.doorways, "and its doorway list");
+    for (const t of ["canary", "production"]) assert.deepEqual(ofProbe(outs[t]), { module: false, listed: false, floor: false, doorways: false }, `${t} carries nothing of the probe`);
   } finally { for (const o of Object.values(outs)) fs.rmSync(o, { recursive: true, force: true }); }
 });

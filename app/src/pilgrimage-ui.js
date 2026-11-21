@@ -27,10 +27,12 @@ const SEASON_WORD = { spring: "春", summer: "夏", autumn: "秋", winter: "冬"
  * @param {() => boolean} o.canHold whether a hold on Q may begin: the walk is his, nothing lies over it
  */
 export function createPilgrimageUI({ ui, level, memory = false, visit, stand, canHold }) {
-  const listed = Object.keys(LEVELS);
+  // The temples of the map: the levels this build lists that have a name on it (PLACES). The probe level (S7: the workbench's alone) has
+  // none, and is neither on the map nor a place the map is shown from.
+  const listed = Object.keys(PLACES).filter((id) => Object.hasOwn(LEVELS, id)), onMap = listed.includes(level.id);
   let mem = null; const store = memory ? { get: () => mem, set: (v) => { mem = v; } } : browserStore(PILGRIMAGE_KEY);
   const rec = createPilgrimage(store, { known: listed });
-  const visible = () => entriesOpen(rec.read(), listed);
+  const visible = () => onMap && entriesOpen(rec.read(), listed);
   let going = false;
 
   // ---- what is there, once a temple has been closed ----

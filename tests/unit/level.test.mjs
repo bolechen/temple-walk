@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { LEVELS as KNOWN, DEFAULT_LEVEL, PLACES, levelOf, loadLevel } from "../../app/src/level.js";
+import { WORKBENCH_LEVELS } from "../../app/src/bench.js";
 import { SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain, buildSite, createWalker } from "../../app/src/site.js";
 import { zoneBounds } from "../../app/src/score.js";
 
@@ -49,7 +50,8 @@ test("the prologue's level says what its plan says", async () => {
 
 // 行脚图 (#449): the map names a level by its region only, and cuts its seal with two characters.
 test("every level the page lists has a name on the map: a region, never a town, and a seal of two characters", () => {
-  assert.deepEqual(Object.keys(PLACES).sort(), Object.keys(KNOWN).sort());
+  // (every level but the workbench's own: the probe level, S7, is no temple and has no name on the map)
+  assert.deepEqual(Object.keys(PLACES).sort(), Object.keys(KNOWN).filter((id) => !WORKBENCH_LEVELS.includes(id)).sort());
   for (const [id, p] of Object.entries(PLACES)) {
     assert.match(p.region, /^[\u4e00-\u9fff]{2,4}$/, `${id}: a region in a few characters`);
     assert.doesNotMatch(p.region, /杭州|余杭|径山|径山镇|义县|锦州|[市县区镇乡村寺]/, `${id}: a region, not a town or a temple: ${p.region}`);

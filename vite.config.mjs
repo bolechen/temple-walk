@@ -3,7 +3,7 @@
 import { defineConfig } from "vite";
 import { channelOf } from "./app/src/channel.js";
 import { deployOf } from "./app/src/deploy.js";
-import { BENCH_LEVELS, benchBuild } from "./app/src/bench.js";
+import { BENCH_LEVELS, WORKBENCH_LEVELS, levelShipped, workbenchBuild } from "./app/src/bench.js";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url";
 
@@ -22,7 +22,7 @@ const keep = () => {
     // production build, as the bundler leaves out its code.
     closeBundle() {
       const away = new Set();
-      if (!benchBuild(deploy)) for (const id of BENCH_LEVELS) {
+      for (const id of [...BENCH_LEVELS, ...WORKBENCH_LEVELS]) if (!levelShipped(id, deploy)) {
         away.add(path.join(app, "shared", "walk", `${id}.bin`)); const list = path.join(app, "shared", "doorways", `${id}.json`); away.add(list);
         if (fs.existsSync(list)) for (const e of Object.values(JSON.parse(fs.readFileSync(list, "utf8")).halls || {})) for (const f of [e.day, e.night, e.dist, e.in?.day, e.in?.night, e.in?.dist]) if (f) away.add(path.join(app, "shared", "doorways", f));
       }
@@ -102,7 +102,7 @@ const versionFile = () => ({
 });
 
 export default defineConfig({
-  define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy), __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(commit), __PR__: JSON.stringify(pr) },
+  define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy), __WORKBENCH__: JSON.stringify(workbenchBuild(deploy) && process.env.VITE_NO_WORKBENCH !== "1"), __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(commit), __PR__: JSON.stringify(pr) },
   root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), deployPage(), scriptFirst(), versionFile(), keep()],
   server: { host: "127.0.0.1", port: 8000 }, preview: { host: "127.0.0.1", port: 8000 },
   build: { outDir: dist, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 2000 },

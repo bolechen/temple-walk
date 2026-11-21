@@ -1,0 +1,15 @@
+page.screenshot: Timeout 30000ms exceeded.
+Call log:
+[2m  - taking page screenshot[22m
+[2m  - waiting for fonts to load...[22m
+[2m  - fonts loaded[22m
+
+    at /tmp/claude-0/-home-user-temple-walk/fa9289be-e2a4-54d2-96a0-63262cfa5405/scratchpad/tools/art11.cjs:29:13 {
+  log: [
+    '  - taking page screenshot',
+    '  - waiting for fonts to load...',
+    '  - fonts loaded'
+  ],
+  name: 'TimeoutError'
+}
+art11 1
