@@ -159,10 +159,10 @@ export function createMaterials() {
       float sed=mod(r1,16.), W=floor(r1/16.)/20.;
       bool cheek=st.y<0.; float ck=cheek?1.:0.;
       float ti=floor(max(st.y,0.)), tf=max(st.y,0.)-ti, zc=-1.-st.y, x=st.x;
-      vec2 sg=cheek?stCheek(zc,sed,Nn*STREAD+SNOSE):stTread(x,W,ti,sed);
-      float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y);
-      float dj=sg.y+(n2(vWP.xz*13.+vWP.y*9.)-.5)*.005, jw=.0025+.003*h21(vec2(sid,sed+4.));
-      float joint=(1.-smoothstep(jw,jw+.006+px,dj))*(1.-smoothstep(.03,.1,px));      // a joint is only drawn as long as it can be told apart
+      vec2 sg; if(cheek) sg=stCheek(zc,sed,Nn*STREAD+SNOSE); else sg=stTread(x,W,ti,sed);
+      float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y), joint=0.;
+      if(sg.y<.05){ float dj=sg.y+(n2(vWP.xz*13.+vWP.y*9.)-.5)*.005, jw=.0025+.003*h21(vec2(sid,sed+4.));
+        joint=(1.-smoothstep(jw,jw+.006+px,dj))*(1.-smoothstep(.03,.1,px)); }      // a joint is only drawn as long as it can be told apart
       float up=smoothstep(.45,.65,vWN.y);
       float sr=h21(vec2(sid*1.37+ti*.61+ck*50.,sed+.3));
       vec3 tint=mix(vec3(.95,.98,1.03),vec3(1.05,1.01,.94),h21(vec2(sid+11.,ti+sed+ck*7.)));   // each stone a little cooler or warmer
@@ -178,15 +178,18 @@ export function createMaterials() {
       col*=1.-.22*ck*(1.-stoneF);
       col*=1.+.07*ck*step(sid,.5);                                                        // the cap at the head stands a little paler
       float foot=1.-smoothstep(0.,.45,st.z), rr=(1.-ck)*(1.-up)*(1.-smoothstep(0.,.1,st.z));   // low on a cheek, low on a riser: where water stands
-      float streak=ck*stoneF*(1.-up)*smoothstep(.5,.85,n2(vec2(zc*12.+sed*7.,st.z*.5)));
+      float streak=0.; if(stoneF*(1.-up)>.5) streak=smoothstep(.5,.85,n2(vec2(zc*12.+sed*7.,st.z*.5)));
       col*=1.-.4*damp-.25*streak-.22*ck*foot-.25*rr;
       col=mix(col,col*vec3(1.5,1.47,1.32)+.03,clamp(wear,0.,1.));
       // Moss: which treads carry it, by the sun the flight sees; where on them, by the damp.
       float tr=h21(vec2(ti*2.3+sed*5.1,sed+.9)), has=step(tr,shd<.5?.06:shd<1.5?.24:.55), cs=shd>1.5?.7:shd>.5?.35:.12;
-      float mn=fbm2(vWP.xz*2.4+sed*3.1+vWP.y*1.3);
-      float moss=max(has*up*(1.-ck)*smoothstep(.52,.78,mn*.85+.5*max(side,corner)-.5*walk)*(1.-clamp(wear,0.,1.)),
+      float moss=0.;
+      if(has+ck>.5){      // (the noise is only worked out where moss may be: a few treads, and the cheeks)
+        float mn=fbm2(vWP.xz*2.4+sed*3.1+vWP.y*1.3);
+        moss=max(has*up*(1.-ck)*smoothstep(.52,.78,mn*.85+.5*max(side,corner)-.5*walk)*(1.-clamp(wear,0.,1.)),
                  max(has*rr*smoothstep(.58,.8,mn*.9+.3*rr), ck*cs*smoothstep(.52,.76,mn+.4*foot+.25*joint)));
-      col=mix(col,mix(vec3(.065,.085,.045),vec3(.11,.14,.065),n2(vWP.xz*31.))*mix(vec3(1.),A,.5),moss*.65);
+        if(moss>.002) col=mix(col,mix(vec3(.065,.085,.045),vec3(.11,.14,.065),n2(vWP.xz*31.))*mix(vec3(1.),A,.5),moss*.65);
+      }
       col*=1.-.42*joint; ao_=min(ao_,1.-.25*joint); bump_=-joint*.004;
       // A bamboo leaf lies here and there on a tread, nearest the edges, and none on the worn middle.
       float lfm=0.;
