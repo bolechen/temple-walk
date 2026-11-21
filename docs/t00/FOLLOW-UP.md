@@ -16,9 +16,11 @@
 
 | 场景 | 11-20 夜间（免费机） | 判断 | 归谁 | issue |
 |---|---|---|---|---|
-| hallexit | 红（禅堂：he went back in） | 真 bug，时灵时不灵 | `JrXu`（Sonnet 高档） | #349 |
+| hallexit | 红（禅堂：he went back in） | T4 上红：等待条件按帧把 16 m 外的目标也算了进去，已改（a0ae115）；夜间那条还没复现 | `JrXu`（Sonnet 高档） | #349 |
 | joya | 绿（76a4b08）；最新 main 软件渲染也红 | 场景自身的时序：页面每 5 s 自 flush 抢先发走，场景再 flush 返回 false | `FVQP`（#341 原会话），PR 要 T00 主创签字 | #341 / #347 |
-| lamp、eyeroom、recenter、keywalk | 绿（76a4b08，离 d1b618d 隔 112 个提交） | 待定：主创在本地最新 main 上用软件渲染重跑；镜头会话判断后三个不是 #518 同源，疑为按帧计的等待在 T4 上跑得太快 | 待定 | 待定 |
+| lamp | 绿（76a4b08） | 本地最新 main 软件渲染也红（sheet 没打开）：真问题；唤醒门的猜测被 JrXu 读代码否了，从头查 | `EeJL`（Sonnet 高档） | 待开 |
+| keywalk | 绿（76a4b08） | 本地也红（1235 s，大殿前 z≈1 横向走不动）：真问题 | `JrXu`（#349 之后） | 待开 |
+| recenter、eyeroom | 绿（76a4b08） | 本地最新 main 软件渲染都绿：T4 才红的时序（按帧计的等待） | #335 的对照表 | #335 |
 
 11-20 夜间另红的 doorway、loft、resume 在 T4 上是绿的，今晚夜间再核。
 
