@@ -1323,7 +1323,8 @@ const scenarios = {
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
-          expect(!(await t.inHall()), `${h.name}: he went back in`);
+          // (what the nightly run needs to tell a tap that went to the door from a step the funnel drew in: where he stood, what the tap set, where he is now and which grid answers, #349)
+          if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap (${fx}, ${fy}) from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
           await t.page.evaluate(() => window.__walk([]));
         }
         expect(set >= 1, `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
