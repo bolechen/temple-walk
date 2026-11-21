@@ -56,6 +56,16 @@ Job `20261121-093102`（十六种时辰、手机、T05 的 `b`）和 `20261121-1
 - **手机低档**（`?q=low`，390×844，cam02 夏昼，改前｜改后）：[`sheets/phone-low-cam02-main-vs-460.jpg`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/169f75ef01404b439e19e7424e0a8b9567413f52/t00/stone-steps-460/sheets/phone-low-cam02-main-vs-460.jpg)。缝在低档上仍是细线、不闪；原图 `t4-moods/phone-low_cam02_summer-day{,_base}.png`。
 - **T05**（`?level=t05&show=b|a|a-tall`，夏昼、冬昼，改前｜改后四行）：[`sheets/t05-main-vs-460.jpg`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/169f75ef01404b439e19e7424e0a8b9567413f52/t00/stone-steps-460/sheets/t05-main-vs-460.jpg)；原图 `t4-t05/`。T05 的台阶只有这一段（场前月台上殿的 9 米宽、17 级的一段），其余画面逐像素相同；换的只是台阶自己的石纹：每级五块、垂带分段。石块大小（约 1.8 米宽一块）和错缝是否合辽构，交 T05 关卡主创和美术总监判；要把石块参数做成关卡可配，默认值保持现在 T00 的样子，等他们看过图再定，现在没做。
 
+## 关卡可配（T05 主创的要求，2026-11-21）
+
+石块怎么排，一个关卡可以自己定：`M.steps.userData.stairStyle`，在关卡建场时设，第一次编译着色器时当 uniform 读（`stoneW` 踏面一块石的宽，决定每级几块；`cheekL` 垂带一段石的长；`leaves` 有没有竹叶；`moss` 有没有苔）。默认值是 `materials.js` 的 `STAIR_STYLE`，也就是 T00 现在的样子；没有说话的关卡一点没变（T00 的 cam02 默认值前后只差 66 个像素，是风吹的叶影）。T05 在 `app/levels/t05/site.js` 的 `STAIR_STYLE` 里只把竹叶关了（`docs/t05/ART.md` §4.2：没有竹、没有柳杉），苔照 T00 的规则（只给朝北下去的台阶），石块和垂带分段的数先沿用，等结构评审核了辽构的数再改。单测：`stair-stones.test.mjs` 末两条。
+
+T05 台阶近景，改前｜改后（T4，`?level=t05&cam=0,21.5,0,0.12`，夏昼）：[main](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/39647d4c8d54/t00/stone-steps-460/t4-final/t05-flight-close_summer-day_main.png)｜[#460](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/39647d4c8d54/t00/stone-steps-460/t4-final/t05-flight-close_summer-day_460.png)。T00 的 cam02 和首院踏道在最终代码上再出了一次：[cam02](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/d91b4ec969ea/t00/stone-steps-460/t4-final/final_cam02_summer-day.png)、[首院踏道](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/d91b4ec969ea/t00/stone-steps-460/t4-final/final_firstcourt-stair_summer-day.png)（T4 运行 `20261121-111621`，art5 帧耗改前改后 −0.19 ms，在波动内）。
+
+## 冬天台阶上的雪（T00 主创问：是 main 本来如此，还是新材质盖掉的）
+
+main 本来如此。同机位同一个 Job：雪白像素 main 766,884，本分支 766,776；放大对照 [`sheets/winter-cam02-main-vs-460-crop.jpg`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0a96fdbd77bb/t00/stone-steps-460/sheets/winter-cam02-main-vs-460-crop.jpg)。踏面前面那条白带就是踏面（斜着看只剩一条），垂带顶通白。
+
 ## 共用代码改动
 
 - `app/src/geo.js` 的 `stairGeo`：每一关所有台阶共用，多写一个顶点属性、可选参数 `place`，几何（位置、法线、索引）一点没变。`building.js`、`levels/t00/site.js`、`levels/t05/site.js` 把台阶摆到哪里告诉它。

@@ -63,6 +63,36 @@
    "rev": "169f75ef01404b439e19e7424e0a8b9567413f52"
   },
   {
+   "path": "sheets/winter-cam02-main-vs-460-crop.jpg",
+   "bytes": 203546,
+   "sha256": "b6571fc752a4f9f48896badaad02b8907d1f819e822a19d7461aa4a530eecedc",
+   "rev": "0a96fdbd77bb7988a1af097ae1e5c8760d61a926"
+  },
+  {
+   "path": "t4-final/final_cam02_summer-day.png",
+   "bytes": 3155939,
+   "sha256": "3ef1debdc2de1c2eb3478b2c1694d09f6876e37a72c38e2622a174eb4fbba2b6",
+   "rev": "d91b4ec969ead577a1d96b02402162b6a4b344c9"
+  },
+  {
+   "path": "t4-final/final_firstcourt-stair_summer-day.png",
+   "bytes": 2342149,
+   "sha256": "485388ce93aa3236194695ed79c4135d87d0e976231bf1cef1add14554a8c917",
+   "rev": "d91b4ec969ead577a1d96b02402162b6a4b344c9"
+  },
+  {
+   "path": "t4-final/t05-flight-close_summer-day_460.png",
+   "bytes": 2418737,
+   "sha256": "fa382acb109af75602f1709308b85cb3c25975c7eee94ff870cc7f8ac5c4356e",
+   "rev": "39647d4c8d54164aa08836325dd785b639885e8d"
+  },
+  {
+   "path": "t4-final/t05-flight-close_summer-day_main.png",
+   "bytes": 2467893,
+   "sha256": "d792f150da5bf45810523c746e2c4033565bf7ec5df71f85d0abf602be3d9152",
+   "rev": "39647d4c8d54164aa08836325dd785b639885e8d"
+  },
+  {
    "path": "t4-moods/mood_cam02_autumn-dawn.png",
    "bytes": 1600033,
    "sha256": "749bd283cf82d534b9422f2806259e84c21dda47896c0532d4003cc63302dea1",
