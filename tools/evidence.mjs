@@ -282,6 +282,9 @@ export async function verify({ all = false, root = ROOT, log = console.log } = {
   return fails;
 }
 
+/** Where verify-store puts one object while it reads it back: named by its key, not by its content, since two objects of the same bytes (two pictures that came out alike) are read at the same time and a shared name made one read the other's file after it had been removed (#288's gable-top pair, which turned every mirror run red). */
+export const verifyTmp = (e) => path.join(os.tmpdir(), `verify-${process.pid}-${sha256(Buffer.from(e.key)).slice(0, 16)}`);
+
 /** The bucket's own word: every manifest entry read over its S3 interface (never the public domain), size and SHA-256. */
 export async function verifyStore({ log = console.log } = {}) {
   const missing = SECRETS.filter((n) => !process.env[n]);
@@ -290,7 +293,7 @@ export async function verifyStore({ log = console.log } = {}) {
   const fails = [];
   let ok = 0;
   await pool(entries, 8, async (e) => {
-    const tmp = path.join(os.tmpdir(), `verify-${process.pid}-${e.sha256.slice(0, 16)}`);
+    const tmp = verifyTmp(e);
     try {
       await aws("get-object", ["--key", e.key, tmp, "--output", "json"]);
       const buf = fs.readFileSync(tmp);
