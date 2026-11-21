@@ -11,12 +11,13 @@ import * as THREE from "three";
 import fs from "fs";
 import { buildSite, createWalker } from "../app/src/site.js";
 import * as EYE from "../app/src/eye.js";
+const eyeRadiusOf = (fov, aspect) => { const t = Math.tan((fov * Math.PI) / 360); return 0.05 * Math.sqrt(1 + t * t * (1 + aspect * aspect)) + 0.02; };   // (eyespace.js, at this tool's near plane of 5 cm)
 // (read as a whole, so that the same file measures a checkout from before #271, which has only the old eye)
 const { followEye, createFollow } = EYE, FRAMES = EYE.FRAMES || {}, frameArm = EYE.frameArm, aimAt = EYE.aimAt;
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
-const site = buildSite(M), walker = createWalker(site), dt = 1 / 60;
+const site = buildSite(M), plainWalker = createWalker(site), dt = 1 / 60;
 // The page tilts the view at the height the eye itself rides at (eased over the steps, yard.js), as it should; `AIM_AT_FOOT`
 // measures it as it was from #271 to the fix of the nod on stairs (aimed at his feet, which go up a tread at a time).
 const AIM_AT_FOOT = process.env.AIM_AT_FOOT === "1";
@@ -37,20 +38,27 @@ const stats = (xs) => {
   for (let i = 60; i < xs.length; i++) rate = Math.max(rate, Math.abs(xs[i] - xs[i - 60]));
   return { mean: +mean.toFixed(1), min: +Math.min(...xs).toFixed(1), max: +Math.max(...xs).toFixed(1), range: +(Math.max(...xs) - Math.min(...xs)).toFixed(1), perSec: +rate.toFixed(1) };
 };
-export function measure(fr, size, path, pitch0 = 0.06) {
+// `opts.walker` (the baked floor's, say) and `opts.space` (#295: what is drawn, eyespace.js) measure the eye as the page
+// has it once its hierarchy is built; by default the written plan's walker and eye.
+export function measure(fr, size, path, pitch0 = 0.06, opts = {}) {
+  const walker = opts.walker || plainWalker, space = opts.space || null, dists = [], where = [];
+  if (space) space.radius = eyeRadiusOf(FOV[size], ASPECT[size]);
   const cam = new THREE.PerspectiveCamera(FOV[size], ASPECT[size], 0.05, 500), v = new THREE.Vector3(), F = FRAMES[fr] || null;
   const arm = F ? frameArm(F, FOV[size], ASPECT[size]) : null, follow = createFollow(), xs = [], ys = [], tops = [], bots = [], pitches = [];
-  let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), side = 1.2, frames = 0, feet = 0, knees = 0, hidden = 0;
+  let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), side = 1.2, frames = 0, feet = 0, knees = 0, hidden = 0, lastYaw = yaw;
   const frame = (count) => {
     const foot = walker.heightAt(x, z);
     eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
     const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((arm ? 0 : walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
-    const c = follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: pitch0, side, reach: 6.2, arm: arm ?? null }));
+    // and, while the view swings round, the eye looking where it swings to, as yard.js has it (eye.js `ahead`; FOLLOW.ahead)
+    const vy = (yaw - lastYaw) / dt; lastYaw = yaw;
+    const at = { x, z, foot, eyeY, yaw, pitch: pitch0, side, reach: 6.2, arm: arm ?? null, space };
+    const c = follow.step(dt, followEye(walker, at), opts.ahead !== false && Math.abs(vy) > 0.5 ? followEye(walker, { ...at, yaw: yaw + vy * 0.25 }) : null);
     if (!count) return;
-    frames++;
+    frames++; dists.push(follow.dist);
     if (follow.dist < 0.85) { hidden++; return; }   // so near that he is hidden (yard.js)
     const aim = F ? aimAt(c, [x, AIM_AT_FOOT ? foot : eyeY, z], yaw, F, FOV[size]) : null;
-    pitches.push(aim ? aim[1] : pitch0);
+    pitches.push(aim ? aim[1] : pitch0); where.push([+x.toFixed(2), +z.toFixed(2), +follow.dist.toFixed(2), +c[1].toFixed(2)]);
     cam.position.fromArray(c); cam.rotation.set(aim ? aim[1] : pitch0, -(aim ? aim[0] : yaw), 0, "YXZ"); cam.updateMatrixWorld();
     const down = (h) => { v.set(x, foot + h, z).project(cam); return [(v.x + 1) * 50, (1 - v.y) * 50]; };
     const [mx, my] = down(0.61); xs.push(mx); ys.push(my); tops.push(down(1.22)[1]); const bot = down(0)[1]; bots.push(bot);
@@ -65,8 +73,8 @@ export function measure(fr, size, path, pitch0 = 0.06) {
   }
   const pc = (n) => +((n / Math.max(1, frames)) * 100).toFixed(1);
   // How far the view tips up or down from one frame to the next, in degrees: on a flight of steps it must not nod with each tread.
-  let pitchStep = 0; for (let i = 1; i < pitches.length; i++) pitchStep = Math.max(pitchStep, Math.abs(pitches[i] - pitches[i - 1]) * 180 / Math.PI);
-  return { across: stats(xs), down: stats(ys), pitchStep: +pitchStep.toFixed(2), top: +Math.min(...tops).toFixed(1), bottom: +Math.max(...bots).toFixed(1), feetIn: pc(feet), kneesIn: pc(knees), hidden: pc(hidden) };
+  let pitchStep = 0, pitchAt = null; for (let i = 1; i < pitches.length; i++) { const d = Math.abs(pitches[i] - pitches[i - 1]) * 180 / Math.PI; if (d > pitchStep) { pitchStep = d; pitchAt = [where[i - 1], where[i]]; } }
+  return { across: stats(xs), down: stats(ys), pitchStep: +pitchStep.toFixed(2), pitchAt, armMin: +Math.min(...dists).toFixed(2), armMean: +(dists.reduce((a, b) => a + b, 0) / dists.length).toFixed(2), top: +Math.min(...tops).toFixed(1), bottom: +Math.max(...bots).toFixed(1), feetIn: pc(feet), kneesIn: pc(knees), hidden: pc(hidden) };
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   const report = {};

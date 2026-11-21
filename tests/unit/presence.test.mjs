@@ -70,3 +70,24 @@ test("the censer's stubs: none for none, a few for the first, never over the cei
   for (let i = 0; i < a.length; i++) assert.equal(a[i], b[i], "the first stubs did not move when more were added");
   const g = traceStubsGeometry(TRACE_STUBS); g.computeBoundingSphere(); assert.ok(g.boundingSphere.radius < 0.36, "all of them within the ash");
 });
+
+test("a day that is read too late is asked for again, and the stubs are set when it comes (#367)", async () => {
+  const { readDay } = await import("../../app/src/presence.js");
+  const answers = [false, false, true], timers = []; let told = 0, asked = 0;
+  const fake = { load: async () => answers[asked++] };
+  const first = await readDay(fake, () => told++, { gap: 5, later: (fn, ms) => timers.push([fn, ms]) });
+  assert.equal(first, false); assert.equal(told, 0); assert.equal(timers.length, 1, "one more try is booked");
+  timers.shift()[0](); await new Promise((r) => setImmediate(r)); await new Promise((r) => setImmediate(r));
+  assert.equal(asked, 2); assert.equal(timers.length, 1);
+  timers.shift()[0](); await new Promise((r) => setImmediate(r)); await new Promise((r) => setImmediate(r));
+  assert.equal(asked, 3); assert.equal(told, 1, "told once, when the read at last succeeded"); assert.equal(timers.length, 0, "and no more tries after that");
+});
+
+test("a day that never comes back is tried a few times and then left alone", async () => {
+  const { readDay } = await import("../../app/src/presence.js");
+  let asked = 0, told = 0; const timers = [];
+  const fake = { load: async () => { asked++; return false; } };
+  await readDay(fake, () => told++, { tries: 3, later: (fn) => timers.push(fn) });
+  while (timers.length) { timers.shift()(); await new Promise((r) => setImmediate(r)); await new Promise((r) => setImmediate(r)); }
+  assert.equal(asked, 3); assert.equal(told, 0);
+});

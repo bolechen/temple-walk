@@ -116,6 +116,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
     g.uDof.value.z = on.dof && dof > 0 ? 1 : 0;
   };
   return {
+    size: () => [composer.renderTarget1.width, composer.renderTarget1.height],   // the frame as the scene is drawn into it (doorway-live.js draws a room the same size)
     resize(w, h, k) { composer.setPixelRatio(k); composer.setSize(w, h); g.uRes.value.set(w * k, h * k); g.uDof.value.y = 2.2 * (h * k) / 1080; bloom.enabled = quality.bloom; },
     render(t) {
       // The scene is always drawn into the first buffer, whose depth the occlusion and the depth of field read.

@@ -1,0 +1,881 @@
+{
+  "started": "2026-11-20T01:58:01.401Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "c599f3ca3d9962f1c1b5f80c42c51b6f43577807",
+    "entry": "assets/index-CqgflOE5.js",
+    "files": 180,
+    "sha256": "c7108bb060e0f7742b8b221381ee8e027c50c30a47585572a038f64a36db4a7d"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "script": {
+    "name": "doorway-live.cjs",
+    "timeline": [
+      {
+        "q": "high",
+        "mode": "live",
+        "i": 2,
+        "inside": {
+          "cost": 6.68,
+          "tris": 563171,
+          "calls": 71
+        },
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third&doorway=live",
+        "loadMs": 18999,
+        "walkS": 102.3,
+        "frames": 4170,
+        "maxMs": 4385.5,
+        "over50": 44,
+        "over100": 11,
+        "worst5": [
+          4385.5,
+          4146.6,
+          1583.6,
+          1177.1,
+          487.5
+        ],
+        "slow": [
+          {
+            "ms": 68.3,
+            "at": 2350,
+            "live": "{\"chan\":null,\"tea\":null,\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 70.3,
+            "at": 3422,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 87.6,
+            "at": 3423,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 95.5,
+            "at": 3424,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 98.8,
+            "at": 3425,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 103.9,
+            "at": 3426,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 80.1,
+            "at": 3427,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 86.1,
+            "at": 3429,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 94.4,
+            "at": 3431,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 83.5,
+            "at": 3433,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 68.2,
+            "at": 3434,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 83.1,
+            "at": 3435,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 79.8,
+            "at": 3437,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 102.5,
+            "at": 3438,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 4385.5,
+            "at": 3456,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload2\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 1177.1,
+            "at": 3457,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload3\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 322.7,
+            "at": 3458,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload4\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 89,
+            "at": 3459,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload5\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 487.5,
+            "at": 3460,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 94,
+            "at": 3461,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 87.5,
+            "at": 3462,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 98.1,
+            "at": 3463,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 110.9,
+            "at": 3464,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 52.3,
+            "at": 3466,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 75.4,
+            "at": 3469,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 71.4,
+            "at": 3471,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 62.8,
+            "at": 3475,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 50.6,
+            "at": 3476,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 99.1,
+            "at": 3477,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 84.1,
+            "at": 3478,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 94.4,
+            "at": 3479,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 80.3,
+            "at": 3481,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 4146.6,
+            "at": 3498,
+            "live": "{\"chan\":\"upload2\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 137.1,
+            "at": 3499,
+            "live": "{\"chan\":\"upload3\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 294.8,
+            "at": 3500,
+            "live": "{\"chan\":\"upload4\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 88.9,
+            "at": 3501,
+            "live": "{\"chan\":\"upload5\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 1583.6,
+            "at": 3502,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 51.6,
+          "spikes": [],
+          "mb": 13.5,
+          "live": {
+            "drawn": 361,
+            "hall": "main",
+            "weight": 0.82,
+            "warmed": [
+              "tea",
+              "chan",
+              "main"
+            ],
+            "compileMs": {
+              "tea": 8271,
+              "chan": 16214,
+              "main": 3693
+            },
+            "worstWarmFrame": 4285.199999999953,
+            "liveMs": 3.1,
+            "warm": true,
+            "halls": {
+              "chan": "ready",
+              "tea": "ready",
+              "main": "ready",
+              "library": null,
+              "yaoshi": null,
+              "dahui": null,
+              "guanyin": null,
+              "lingxiao": null
+            }
+          }
+        },
+        "fps": 37.2,
+        "tris": 2744406,
+        "calls": 424,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 17.18,
+        "live": {
+          "drawn": 598,
+          "hall": "main",
+          "weight": 0.82,
+          "warmed": [
+            "tea",
+            "chan",
+            "main"
+          ],
+          "compileMs": {
+            "tea": 8271,
+            "chan": 16214,
+            "main": 3693
+          },
+          "worstWarmFrame": 4285.199999999953,
+          "liveMs": 3.9,
+          "warm": true,
+          "halls": {
+            "chan": "ready",
+            "tea": "ready",
+            "main": "ready",
+            "library": null,
+            "yaoshi": null,
+            "dahui": null,
+            "guanyin": null,
+            "lingxiao": null
+          }
+        },
+        "shot": "main-6m-high-live-2.png"
+      },
+      {
+        "q": "high",
+        "mode": "live-cold",
+        "i": 1,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third&doorway=live&warm=0",
+        "loadMs": 12705,
+        "walkS": 90.2,
+        "frames": 4313,
+        "maxMs": 1014.8,
+        "over50": 5,
+        "over100": 2,
+        "worst5": [
+          1014.8,
+          536.7,
+          88.6,
+          75.7,
+          60.1
+        ],
+        "slow": [
+          {
+            "ms": 536.7,
+            "at": 3835,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 75.7,
+            "at": 3837,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 1014.8,
+            "at": 4161,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":\"ready\",\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 60.1,
+            "at": 4162,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":\"ready\",\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 88.6,
+            "at": 4163,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":\"ready\",\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 32.8,
+          "spikes": [],
+          "mb": 13.5,
+          "live": {
+            "drawn": 354,
+            "hall": "main",
+            "weight": 0.82,
+            "warmed": [],
+            "compileMs": {},
+            "worstWarmFrame": 0,
+            "liveMs": 2.9,
+            "warm": false,
+            "halls": {
+              "chan": "ready",
+              "tea": "ready",
+              "main": "ready",
+              "library": null,
+              "yaoshi": null,
+              "dahui": null,
+              "guanyin": null,
+              "lingxiao": null
+            }
+          }
+        },
+        "fps": 38.4,
+        "tris": 2744406,
+        "calls": 424,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 16.63,
+        "live": {
+          "drawn": 597,
+          "hall": "main",
+          "weight": 0.82,
+          "warmed": [],
+          "compileMs": {},
+          "worstWarmFrame": 0,
+          "liveMs": 2.3,
+          "warm": false,
+          "halls": {
+            "chan": "ready",
+            "tea": "ready",
+            "main": "ready",
+            "library": null,
+            "yaoshi": null,
+            "dahui": null,
+            "guanyin": null,
+            "lingxiao": null
+          }
+        },
+        "shot": "main-6m-high-live-cold-1.png"
+      },
+      {
+        "q": "high",
+        "mode": "live-half",
+        "i": 0,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third&doorway=live&live=half",
+        "loadMs": 12773,
+        "walkS": 90.4,
+        "frames": 4251,
+        "maxMs": 691.1,
+        "over50": 10,
+        "over100": 5,
+        "worst5": [
+          691.1,
+          633.9,
+          249.8,
+          225.1,
+          110.4
+        ],
+        "slow": [
+          {
+            "ms": 691.1,
+            "at": 3512,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload2\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 225.1,
+            "at": 3513,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload3\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 86.5,
+            "at": 3514,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload4\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 98.5,
+            "at": 3516,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 633.9,
+            "at": 3554,
+            "live": "{\"chan\":\"upload2\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 59.2,
+            "at": 3555,
+            "live": "{\"chan\":\"upload3\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 82.7,
+            "at": 3556,
+            "live": "{\"chan\":\"upload4\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 249.8,
+            "at": 3558,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 51.1,
+            "at": 3851,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":\"compile\",\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 110.4,
+            "at": 3878,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":\"upload2\",\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 37.9,
+          "spikes": [],
+          "mb": 13.5,
+          "live": {
+            "drawn": 356,
+            "hall": "main",
+            "weight": 0.82,
+            "warmed": [
+              "tea",
+              "chan",
+              "main"
+            ],
+            "compileMs": {
+              "tea": 2192,
+              "chan": 4355,
+              "main": 2010
+            },
+            "worstWarmFrame": 652.6000000000931,
+            "liveMs": 2.9,
+            "warm": true,
+            "halls": {
+              "chan": "ready",
+              "tea": "ready",
+              "main": "ready",
+              "library": null,
+              "yaoshi": null,
+              "dahui": null,
+              "guanyin": null,
+              "lingxiao": null
+            }
+          }
+        },
+        "fps": 36.8,
+        "tris": 2744406,
+        "calls": 424,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 14.26,
+        "live": {
+          "drawn": 591,
+          "hall": "main",
+          "weight": 0.82,
+          "warmed": [
+            "tea",
+            "chan",
+            "main"
+          ],
+          "compileMs": {
+            "tea": 2192,
+            "chan": 4355,
+            "main": 2010
+          },
+          "worstWarmFrame": 652.6000000000931,
+          "liveMs": 2.3,
+          "warm": true,
+          "halls": {
+            "chan": "ready",
+            "tea": "ready",
+            "main": "ready",
+            "library": null,
+            "yaoshi": null,
+            "dahui": null,
+            "guanyin": null,
+            "lingxiao": null
+          }
+        },
+        "shot": "main-6m-high-live-half-0.png"
+      },
+      {
+        "q": "medium",
+        "mode": "",
+        "i": 0,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=medium&season=summer&time=day&view=third",
+        "loadMs": 16692,
+        "walkS": 88.8,
+        "frames": 5182,
+        "maxMs": 50.1,
+        "over50": 1,
+        "over100": 0,
+        "worst5": [
+          50.1,
+          41.5,
+          40.2,
+          39.4,
+          36.9
+        ],
+        "slow": [
+          {
+            "ms": 50.1,
+            "at": 2565,
+            "live": null
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 45.1,
+          "spikes": [],
+          "mb": 13.5,
+          "live": null
+        },
+        "fps": 60.1,
+        "tris": 1705916,
+        "calls": 306,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 8.13,
+        "live": null,
+        "shot": "main-6m-medium-baked-0.png"
+      },
+      {
+        "q": "medium",
+        "mode": "live",
+        "i": 0,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=medium&season=summer&time=day&view=third&doorway=live",
+        "loadMs": 12614,
+        "walkS": 100,
+        "frames": 4917,
+        "maxMs": 3820.4,
+        "over50": 40,
+        "over100": 12,
+        "worst5": [
+          3820.4,
+          3548.1,
+          1353.4,
+          1000.8,
+          384.3
+        ],
+        "slow": [
+          {
+            "ms": 54.9,
+            "at": 4085,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 91.1,
+            "at": 4086,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 100.1,
+            "at": 4087,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 90.5,
+            "at": 4088,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 99.5,
+            "at": 4089,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 98.2,
+            "at": 4090,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 65.3,
+            "at": 4095,
+            "live": "{\"chan\":\"compile\",\"tea\":\"compile\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 62,
+            "at": 4097,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 102,
+            "at": 4098,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 101,
+            "at": 4100,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 76.9,
+            "at": 4101,
+            "live": "{\"chan\":\"compile\",\"tea\":\"settle\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 3820.4,
+            "at": 4119,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload2\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 1000.8,
+            "at": 4120,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload3\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 266.7,
+            "at": 4121,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload4\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 78.1,
+            "at": 4122,
+            "live": "{\"chan\":\"compile\",\"tea\":\"upload5\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 384.3,
+            "at": 4123,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 59.1,
+            "at": 4124,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 77.8,
+            "at": 4125,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 55.1,
+            "at": 4126,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 85.3,
+            "at": 4127,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 63.9,
+            "at": 4128,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 86.5,
+            "at": 4129,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 61.1,
+            "at": 4132,
+            "live": "{\"chan\":\"compile\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 59.5,
+            "at": 4140,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 82.6,
+            "at": 4141,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 58.5,
+            "at": 4143,
+            "live": "{\"chan\":\"settle\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 3548.1,
+            "at": 4161,
+            "live": "{\"chan\":\"upload2\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 120.3,
+            "at": 4162,
+            "live": "{\"chan\":\"upload3\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 242.3,
+            "at": 4163,
+            "live": "{\"chan\":\"upload4\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 71.5,
+            "at": 4164,
+            "live": "{\"chan\":\"upload5\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 1353.4,
+            "at": 4165,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 68.3,
+            "at": 4166,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 68.3,
+            "at": 4167,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 53.8,
+            "at": 4168,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          },
+          {
+            "ms": 54.3,
+            "at": 4169,
+            "live": "{\"chan\":\"ready\",\"tea\":\"ready\",\"main\":null,\"library\":null,\"yaoshi\":null,\"dahui\":null,\"guanyin\":null,\"lingxiao\":null}"
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 36.4,
+          "spikes": [],
+          "mb": 13.5,
+          "live": {
+            "drawn": 393,
+            "hall": "main",
+            "weight": 0.82,
+            "warmed": [
+              "tea",
+              "chan",
+              "main"
+            ],
+            "compileMs": {
+              "tea": 7238,
+              "chan": 13993,
+              "main": 1990
+            },
+            "worstWarmFrame": 3747.3000000000466,
+            "liveMs": 3,
+            "warm": true,
+            "halls": {
+              "chan": "ready",
+              "tea": "ready",
+              "main": "ready",
+              "library": null,
+              "yaoshi": null,
+              "dahui": null,
+              "guanyin": null,
+              "lingxiao": null
+            }
+          }
+        },
+        "fps": 42.6,
+        "tris": 2744404,
+        "calls": 422,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 13.64,
+        "live": {
+          "drawn": 657,
+          "hall": "main",
+          "weight": 0.82,
+          "warmed": [
+            "tea",
+            "chan",
+            "main"
+          ],
+          "compileMs": {
+            "tea": 7238,
+            "chan": 13993,
+            "main": 1990
+          },
+          "worstWarmFrame": 3747.3000000000466,
+          "liveMs": 2.7,
+          "warm": true,
+          "halls": {
+            "chan": "ready",
+            "tea": "ready",
+            "main": "ready",
+            "library": null,
+            "yaoshi": null,
+            "dahui": null,
+            "guanyin": null,
+            "lingxiao": null
+          }
+        },
+        "shot": "main-6m-medium-live-0.png"
+      }
+    ]
+  },
+  "finished": "2026-11-20T02:08:32.553Z"
+}

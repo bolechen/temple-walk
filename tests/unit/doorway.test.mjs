@@ -47,3 +47,31 @@ test("a room is taken only when he comes near its hall, not when the page opens"
   assert.ok(want.main.want, "coming near the great hall did not ask for its room");
   assert.ok(Object.entries(want).filter(([, x]) => x.want).length < site.halls.length, "every room was asked for at once");
 });
+
+// #320's trial (`?doorway=live`, doorway-live.js): the room drawn live through the door from the eye carried into it.
+const { roomEye } = await import("../../app/src/doorway-live.js");
+test("drawn live, every point of a room falls on the pixel where the door shows it, and nothing on the court's side of the door is drawn", () => {
+  for (const h of site.halls) {
+    const o = doors.halls[h.id], r = rooms.rooms[h.id], R = r.room, zs = o.mat.uniforms.uMax.value.z;
+    for (const [dist, turn] of [[6, 0], [12, 0.5], [2, -0.5]]) {
+      // The eye `dist` metres out from the door, turned a little, looking in at the door at a man's height.
+      const a = h.outYaw + turn, door = new THREE.Vector3(h.door[0], site.doorways[h.id].group.position.y + site.doorways[h.id].platH + 1.5, h.door[1]);
+      const eye = new THREE.Vector3(door.x + Math.sin(a) * dist, door.y + 0.2, door.z - Math.cos(a) * dist);   // out of the door is (sin, -cos) of outYaw, as tools/doorway-views.cjs stands its views
+      const camera = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 700); camera.position.copy(eye); camera.lookAt(door); camera.updateMatrixWorld();
+      const cam = roomEye(o, camera, new THREE.PerspectiveCamera());
+      const ndc = (p, c) => p.clone().applyMatrix4(c.matrixWorldInverse).applyMatrix4(c.projectionMatrix);
+      for (const [what, p] of [["the altar", r.altar.getWorldPosition(new THREE.Vector3())], ["the back wall", new THREE.Vector3(R.cx + 0.7, R.y + 2.2, R.z0 + 0.05)], ["just inside the door", new THREE.Vector3(R.cx - 0.4, R.y + 1.2, zs - 0.3)]]) {
+        const live = ndc(p, cam), court = ndc(doors.seenAt(h.id, p), camera);
+        assert.ok(Math.abs(live.x - court.x) < 1e-4 && Math.abs(live.y - court.y) < 1e-4, `${h.name} from ${dist} m: ${what} is drawn at (${live.x.toFixed(4)}, ${live.y.toFixed(4)}), the door shows it at (${court.x.toFixed(4)}, ${court.y.toFixed(4)})`);
+        assert.ok(live.z > -1 && live.z < 1, `${h.name} from ${dist} m: ${what} is cut away (depth ${live.z.toFixed(3)})`);
+      }
+      // What stands beyond the door's plane, on the court's side (the room's outlook, the outer face of its front wall).
+      const out = ndc(new THREE.Vector3(R.cx, R.y + 1.5, zs + 0.3), cam);
+      assert.ok(out.z < -1, `${h.name} from ${dist} m: a point on the court's side of the door is drawn (depth ${out.z.toFixed(3)})`);
+    }
+  }
+});
+test("the room drawn live is off unless the address asks for it; the larger face waits for its pictures", () => {
+  assert.deepEqual(doors.report().modes, []);
+  for (const o of Object.values(doors.halls)) { assert.equal(o.mat.uniforms.uLive.value, 0); assert.equal(o.mat.uniforms.uHi.value, 0); }
+});

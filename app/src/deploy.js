@@ -2,8 +2,8 @@
 // last deployed, an internal address nobody is sent to) or `preview` (one pull request's). The value is set once, by the
 // build (vite.config.mjs reads VITE_DEPLOY through `deployOf` and defines `__DEPLOY__`), and read here and nowhere else.
 // Only production carries the visitor counter, and only production is let into a search engine. Canary is shown to
-// testers and behaves as production does in every other way: no debug panel, no workbench addresses (those are a pull
-// request preview's, `PREVIEW` in yard.js, by hostname). Unset is `preview`: a build nobody named a target for counts nobody and is
+// testers and behaves as production does in every other way: no workbench addresses (those are a pull
+// request preview's, `PREVIEW` in yard.js, by hostname), and the debug panel only with ?debug=1 (src/debuggate.js, by hostname). Unset is `preview`: a build nobody named a target for counts nobody and is
 // kept out of search, so that forgetting to name production costs a number and never the other way round
 // (tests/unit/deploy.test.mjs builds each target and scans dist/; the workflows that publish name theirs).
 export const DEPLOYS = /** @type {const} */ (["production", "canary", "preview"]);

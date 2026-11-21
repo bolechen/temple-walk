@@ -94,12 +94,17 @@ function room(inside) {
   steps.sendOut.gain.setTargetAtTime(inside ? 0 : STEP_WET.out, t, 0.7); steps.sendIn.gain.setTargetAtTime(inside ? STEP_WET.in : 0, t, 0.7);
   setAir(air, inside, t);
 }
-// The music steps back while the bell or the drum speaks, and comes back of itself.
+// The music steps back while the bell or the drum speaks, and comes back of itself. A lighter step back that comes inside a
+// deeper one (the far bell's 0.3 or the drum's 0.5 while the near bell's 0.18 still holds) leaves the deeper in place and
+// the return where the later of the two puts it: it must not lift the music back up in the middle of the bell. `plan` is
+// that rule alone, so that Node can test it.
+/** @param {{ until: number, depth: number }} prev @param {number} depth @param {number} secs @param {number} t */
+export const duckPlan = (prev, depth, secs, t) => (t < prev.until ? { depth: Math.min(depth, prev.depth), until: Math.max(prev.until, t + secs) } : { depth, until: t + secs });
 let ducked = { until: 0, depth: 1 }, rest = 1;
 function duck(depth, secs) {
-  if (!bus.music) return; const t = ctx.currentTime, g = bus.music.duck.gain;
-  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(Math.min(depth, rest), t, 0.15); g.setTargetAtTime(rest, t + secs, 2.2);
-  ducked = { until: t + secs, depth };
+  if (!bus.music) return; const t = ctx.currentTime, g = bus.music.duck.gain, p = duckPlan(ducked, depth, secs, t);
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(Math.min(p.depth, rest), t, 0.15); g.setTargetAtTime(rest, p.until, 2.2);
+  ducked = p;
 }
 // While he sits on after his tea the music stays back, so that the place itself is what is heard: the wind in the
 // court, the kettle's steam, a bell if someone strikes it. It comes back slowly when he stands.
@@ -372,6 +377,13 @@ export function stampSound() {
   thud(t, 0.09, 190, 0.7);                       // the seal comes down on the paper
   crack(t + 0.01, 3600, 0.5, 0.06, 0.22);        // the paper gives a little under it
   shots.stamp++;
+}
+// The place's whole sound, taken after the visitor's own volume (a film is heard as it was heard), for a recording
+// (clip.js, #342). Null where nothing has sounded yet or the browser has no stream destination: the film is silent then.
+export function recordTap() {
+  if (!ctx || !master || !ctx.createMediaStreamDestination) return null;
+  wake(); const d = ctx.createMediaStreamDestination(); master.connect(d);
+  return { stream: d.stream, release() { try { master.disconnect(d); } catch {} } };
 }
 export const photoSounds = () => ({ ...shots, state: ctx ? ctx.state : "off" });
 
