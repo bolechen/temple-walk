@@ -64,10 +64,10 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
         if (e.go) {
           const b = el("button", "go"); b.type = "button"; b.dataset.to = e.id;
           b.setAttribute("aria-label", when ? t("前往{region}，{when}", { region, when }) : t("前往{region}", { region }));
-          b.append(img, el("span", "region", region)); if (when) b.append(el("span", "when", when));
+          b.append(img, el("span", "region", region)); if (when) b.append(" ", el("span", "when", when));   // (a space between the two lines: they are two words, not one broken)
           b.addEventListener("click", () => go(e.id)); li.append(b);
         } else {
-          const h = el("div", "here"); h.setAttribute("aria-current", "location"); h.append(img, el("span", "region", region), el("span", "mark", t("此刻在此"))); if (when) h.append(el("span", "when", when)); li.append(h);
+          const h = el("div", "here"); h.setAttribute("aria-current", "location"); h.append(img, el("span", "region", region), " ", el("span", "mark", t("此刻在此"))); if (when) h.append(" ", el("span", "when", when)); li.append(h);
         }
       }
       list.append(li);
