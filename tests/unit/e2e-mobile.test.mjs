@@ -3,7 +3,8 @@ import test from "node:test"; import assert from "node:assert/strict"; import fs
 const y = fs.readFileSync(new URL("../../.github/workflows/e2e.yml", import.meta.url), "utf8");
 test("e2e.yml has a mobile job on every push that runs the audit in Chinese and English and uploads the pictures of a failing run", () => {
   const job = /^  mobile:\n([\s\S]*?)(?=^  [a-z-]+:\n|^  #)/m.exec(y)?.[1] || "";
-  assert.match(job, /if: github\.event_name == 'push'/);
+  assert.match(job, /if: github\.event_name == 'push' \|\| github\.event\.inputs\.mobile == 'true'/);
+  assert.match(y, /mobile:\n\s+description:[^\n]*\n\s+type: boolean\n\s+default: false/, "asked for by hand with the `mobile` input");
   assert.match(job, /run: node tools\/mobile-audit\.cjs\n/);
   assert.match(job, /run: node tools\/mobile-audit\.cjs --lang=en\n/);
   assert.match(job, /if: failure\(\)\n\s+uses: actions\/upload-artifact@v4/);
