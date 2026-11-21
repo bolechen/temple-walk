@@ -13,7 +13,7 @@ const PT = 0.3;            // a purlin's section, square (a round purlin is not 
 const RT = 0.15;           // a rafter's diameter: 9-10 fen in a hall's size (Yingzao Fashi, juan 5), the fen at this hall's cai; drawn square, its width a fifth less
 const BD1 = 0.78, BD2 = 0.65, BW = 0.45;   // the lower beam's and the upper's depth (a four-rafter beam is 50 fen deep, a three-rafter one 42: juan 5), and their width, two thirds of the greater
 const RAFTER_GAP = 0.5;
-const TONE = { beam: 1.9, purlin: 1.45, rafter: 0.3 };   // what the generator's timber colour is multiplied by: the beams and posts; the purlins (which the generator's wood already draws lighter); the rafters    // the rafters' spacing across the hall
+const TONE = { beam: 1.9, purlin: 1.65, rafter: 1.6 };   // what the generator's timber colour is multiplied by: the beams and posts; the purlins (which the generator's wood already draws lighter); the rafters    // the rafters' spacing across the hall
 
 /**
  * The frame's boxes, in the hall's own frame (x across, z along, y from the ground the hall stands on).
