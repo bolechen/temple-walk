@@ -94,6 +94,14 @@ for key in ("cheeks", "underJaw"):
   if "bottom" in C: op["bottom"] = round((slit + C["bottom"] * span) / s, 5)
   if "xmax" in C: op["xmax"] = round(C["xmax"] * faceW / 2 / s, 5)
   ops.append(op)
+# the lips brought forward on their own, last, so nothing after smooths it away (the 3D review's fifth round: the upper lip
+# stood 0.23 w behind the base of the nose, the concept's is 0.043 w): nothing at the base of the nose, the whole move by
+# the upper lip's foremost point
+if R.get("lipsFwd"):
+  Lf = R["lipsFwd"]; ul = slit + (P["upperLip"][0] - P["slit"][0])
+  ops.append({"op": "scale", "note": f"the lips forward {Lf['d']} m at the upper lip's foremost point, radii {Lf['r']} w, nothing at the base of the nose (face-ops.py)",
+              "c": B(*c_m), "r": [round(k * w / s, 5) for k in Lf["r"]], "s": [1, 1, 1], "back": round(-Lf["d"] / s, 5),
+              "below": round(sn_y / s, 5), "fade": round(max(sn_y - ul, 0.02) / s, 5)})
 # the lids' edges, which stand off the face like fins seen from the side, brought back to within a cap of the smoothed
 # surface (the 3D review's fifth round)
 if R.get("lids"):
