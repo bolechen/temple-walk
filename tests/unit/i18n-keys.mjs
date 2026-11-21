@@ -63,6 +63,8 @@ export async function dataKeys() {
   // Each level's plan names its own halls (app/levels/<level>/site.js, #362).
   for (const lv of fs.readdirSync(path.join(ROOT, "levels")).filter((d) => fs.existsSync(path.join(ROOT, "levels", d, "site.js"))))
     for (const m of read(`levels/${lv}/site.js`).matchAll(/hall: \{[^}]*name: "([^"]+)"/g)) keys.add(m[1]);
+  // The map of temples walked (#449) names each level by its region, kept as data in the level registry and shown through t().
+  for (const m of read("src/level.js").matchAll(/region: "([^"]+)"/g)) keys.add(m[1]);
   // Each level's own line at the foot of the title page (Level.how, #445).
   const { LEVELS: levels } = await import("../../app/src/level.js");
   for (const load of Object.values(levels)) { const how = (await load()).how; if (how) { keys.add(how.place); keys.add(how.line); } }
