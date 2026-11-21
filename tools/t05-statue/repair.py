@@ -20,7 +20,7 @@
 #           (#463, the 3D review): the surface within `sr` smoothed hard (`iter` passes of the Smooth modifier) is the
 #           broad shape v_s, and each point goes to v_s + k'·(v − v_s), k' easing from `k` at the seed to 1 at `r`: a knit
 #           brow kept to k of its depth, lips pushed out kept to k of their lift
-#   scale   {"c", "r": [across, up, depth], "s": [across, up, depth], "back", "below", "fade"}: reshape the mouth or the
+#   scale   {"c", "r": [across, up, depth], "rd", "s": [across, up, depth], "back", "below", "fade"}: reshape the mouth or the
 #           chin's pad in proportion (#463, the 3D review's second round): each point goes toward c + S·(v − c), weighted
 #           by a Gaussian of its distance from c measured in the radii r (0.05 at one radius), then back by `back`; and
 #           nothing above `below` (eased over `fade`), so the nose over a mouth is left as it is. File units; the figure's
@@ -63,9 +63,12 @@ for op in spec["ops"]:
   if op["op"] == "scale":
     before = co.copy(); c = np.array(op["c"], float); r = np.array(op["r"], float); S = np.array(op["s"], float)
     d = (co - c) / [r[0], r[2], r[1]]; g = np.exp(-3 * (d * d).sum(1))
-    if "below" in op: g *= np.clip((op["below"] - co[:, 2]) / op.get("fade", 0.003), 0, 1)
+    # "rd": the depth's own radii, wider than the shape's, so the whole mouth recedes and not only its foremost points
+    # (a narrow depth weight left a rim round the lips: the 3D review's third round)
+    rd = np.array(op.get("rd", op["r"]), float); dd = (co - c) / [rd[0], rd[2], rd[1]]; gd = np.exp(-3 * (dd * dd).sum(1))
+    if "below" in op: fz = np.clip((op["below"] - co[:, 2]) / op.get("fade", 0.003), 0, 1); g *= fz; gd *= fz
     target = c + (co - c) * [S[0], S[2], S[1]]; target[:, 1] += op.get("back", 0)
-    co = co + g[:, None] * (target - co)
+    co = co + g[:, None] * (target - co) * [1, 0, 1] + gd[:, None] * (target - co) * [0, 1, 0]
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "scale", "note": op.get("note", ""), "points": int((mv > 1e-6).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   if op["op"] in ("squeeze", "headscale", "zband", "xband", "tilt"):

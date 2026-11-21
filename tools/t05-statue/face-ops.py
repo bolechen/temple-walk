@@ -32,11 +32,20 @@ B = lambda x, y, z: [round(x / s, 5), round(-z / s, 5), round(y / s, 5)]   # the
 c_m = (0.0, slit, z_at(0, slit)); c_c = (0.0, slit - R["chin"]["drop"] * w, z_at(0, sm_y))
 ops = [
   {"op": "scale", "note": f"mouth: across ×{R['mouth']['s'][0]}, height ×{R['mouth']['s'][1]}, depth ×{R['mouth']['s'][2]} about the slit's middle, back {R['mouth']['back']} of the face's width; radii {R['mouth']['r']} mouth widths; nothing above the base of the nose (face-ops.py: w {w} m, face {faceW} m, slit y {slit}, nose base y {round(sn_y, 3)})",
-   "c": B(*c_m), "r": [round(k * w / s, 5) for k in R["mouth"]["r"]], "s": R["mouth"]["s"], "back": round(R["mouth"]["back"] * faceW / s, 5),
-   "below": round((sn_y - 0.01) / s, 5), "fade": round(0.02 / s, 5)},
+   "c": B(*c_m), "r": [round(k * w / s, 5) for k in R["mouth"]["r"]], "rd": [round(k * w / s, 5) for k in R["mouth"].get("rd", R["mouth"]["r"])],
+   "s": R["mouth"]["s"], "back": round(R["mouth"]["back"] * faceW / s, 5),
+   # nothing at the base of the nose, the whole move by the upper lip's foremost point: the philtrum recedes all the way up
+   "below": round(sn_y / s, 5), "fade": round(max(sn_y - (slit + (P["upperLip"][0] - P["slit"][0])), 0.02) / s, 5)},
   {"op": "scale", "note": f"chin's pad: depth ×{R['chin']['s'][2]} about the hollow under the lip (y {round(sm_y, 3)}), radius {R['chin']['r'][0]} mouth widths, centred {R['chin']['drop']} w below the slit; nothing above the slit",
    "c": B(*c_c), "r": [round(k * w / s, 5) for k in R["chin"]["r"]], "s": R["chin"]["s"], "below": round((slit - 0.02) / s, 5), "fade": round(0.03 / s, 5)},
 ]
+# the jaw's line lifted a little either side of the chin (the chin's pad no longer a ball: the 3D review's third round)
+if R.get("jaw"):
+  J = R["jaw"]
+  for sg, side in ((1, "left"), (-1, "right")):
+    jx, jy = sg * J["x"] * w, slit - J["drop"] * w
+    ops.append({"op": "push", "note": f"the jaw's line lifted {J['d']} of the face's width on the {side}, {J['x']} w out and {J['drop']} w below the slit (face-ops.py)",
+                "seed": B(jx, jy, z_at(jx, jy)), "r": round(J["r"] * w / s, 5), "dir": [0, 0, 1], "d": round(J["d"] * faceW / s, 5)})
 # the hollow under the lower lip filled by a share of its depth (measured square to the line from the lower lip to the chin)
 if R.get("fill"):
   d_m = f["sulcus"] * w * R["fill"]["k"]

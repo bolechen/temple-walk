@@ -278,6 +278,7 @@ const skyLights = OPENINGS.map((o) => {
 // light off the floor and walls in front of the altar (no bounce is computed here): a broad warm-grey panel facing up
 const floorFill = new THREE.RectAreaLight(0xd8ccb8, 0, 30, 12); floorFill.position.set(0, F + 0.1, ALTAR.z + 9); floorFill.rotation.x = -Math.PI / 2; scene.add(floorFill);
 const bounce = new THREE.RectAreaLight(0xffe2c0, 0, 3.6, 6); bounce.rotation.x = -Math.PI / 2; scene.add(bounce);   // sunlit floor inside the door
+const hemi = new THREE.HemisphereLight(0xf2ece2, 0x6f6152, 2.2); hemi.visible = false; scene.add(hemi);   // for { light: "diffuse" } only
 const altarLamp = new THREE.PointLight(0xffa860, 0, 14, 2); altarLamp.position.set(0, AT + 0.9, ALTAR.z + 3.2); scene.add(altarLamp);
 
 // Two moods. Summer by day (the T00 baseline, for comparison) and early winter, clear and cold, about 09:45 in early
@@ -459,7 +460,16 @@ function shoot(s) {
     rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
     renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
   } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
-  render(); return { tris: renderer.info.render.triangles };
+  // { light: "diffuse" }: the same view lit only by a hemisphere light, the sun, the doors' light, the floor's fill and the
+  // lamp put out, so a form can be told from the shadows the hall's light throws on it (#463, the 3D review's third round)
+  const diffuse = s.light === "diffuse", keep = [];
+  if (diffuse) {
+    for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { keep.push([l, l.visible]); l.visible = false; }
+    hemi.intensity = s.hemi ?? 2.2; hemi.visible = true;
+  }
+  render(); const tris = renderer.info.render.triangles;
+  if (diffuse) { for (const [l, v] of keep) l.visible = v; hemi.visible = false; }
+  return { tris };
 }
 
 let composer = null, useAO = Q.get("ao") !== "0";

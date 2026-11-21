@@ -84,7 +84,8 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
       ink.y = max(ink.y, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9); }
   }
   vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
-  lip = 1. - smoothstep(1. - aa * 8., 1. + aa * 8., length(m));
+  float le = aa * 2. + .002 / max(uFace[4].x, .01);   // the lip's edge soft over about 2 mm (#463, the 3D review's third round)
+  lip = 1. - smoothstep(1. - le, 1. + le, length(m));
   urna = 1. - smoothstep(uFace[4].y - aa, uFace[4].y + aa, length(q - uFace[1].zw));
   return ink;
 }
@@ -183,7 +184,9 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
     // a zone may tint what stands out of it (the tips and rims of a lotus's petals, issue #463): toward `edgeTint.color`
     // by its amount where the surface is convex (cvEdge, below)
     if (z.edgeTint) col = `mix(${col}, ${v3(lin(z.edgeTint.color))}, ${(z.edgeTint.amount ?? 0.5).toFixed(3)} * cvEdge)`;
-    return `  { float k = ${z.glsl}; pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
+    // `folds: false` keeps a zone out of the fold shading (curls, the face: their small forms are lit triangle by
+    // triangle by a curvature taken from screen-space derivatives, #463 round two)
+    return `  { float k = ${z.glsl}; foldW = mix(foldW, ${z.folds === false ? "0." : "1."}, k); pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
   }).join("\n");
   const fo = recipe.folds ?? {}, fk0 = (fo.k0 ?? 3).toFixed(2), fk1 = (fo.k1 ?? 18).toFixed(2), fh = (fo.hollow ?? 0).toFixed(3), fe = (fo.edge ?? 0).toFixed(3);
   const fc = recipe.face, ink = lin(fc.ink), browC = lin(fc.browColor ?? fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
@@ -199,12 +202,12 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   // (a fold's hollow); a fold's ridge some 5–30 cm round reads 3–18 (issue #463: hollows darkened, ridges worn)
   vec3 cvN = normalize(vFigN), cvPx = dFdx(vFig), cvPy = dFdy(vFig);
   float cv = (dot(dFdx(cvN), cvPx) + dot(dFdy(cvN), cvPy)) / max(dot(cvPx, cvPx) + dot(cvPy, cvPy), 1e-10);
-  float cvEdge = smoothstep(${fk0}, ${fk1}, cv), cvHollow = smoothstep(${fk0}, ${fk1}, -cv);
+  float cvEdge = smoothstep(${fk0}, ${fk1}, cv), cvHollow = smoothstep(${fk0}, ${fk1}, -cv), foldW = 1.;
 ${zoneCode}
   float lip_, urna_; vec2 ink2 = faceInk(p, normalize(vFigN), lip_, urna_);
   float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
   // the folds: their hollows darker, their ridges rubbed toward the dust's colour; not on the face, whose lines are drawn
-  pCol *= 1. - ${fh} * cvHollow * (1. - onFace); pCol = mix(pCol, ${v3(lin(recipe.folds?.edgeColor ?? "#8A7A66"))}, ${fe} * cvEdge * (1. - onFace));
+  pCol *= 1. - ${fh} * cvHollow * foldW * (1. - onFace); pCol = mix(pCol, ${v3(lin(recipe.folds?.edgeColor ?? "#8A7A66"))}, ${fe} * cvEdge * foldW * (1. - onFace));
   pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
   // the brow: the skin darkened, at most half covered; the lid: one line of the deep beam colour
   pCol = mix(pCol, ${v3(browC)}, ink2.x * onFace * ${(fc.browAlpha ?? 1).toFixed(3)}); pCol = mix(pCol, ${v3(ink)}, ink2.y * onFace);
