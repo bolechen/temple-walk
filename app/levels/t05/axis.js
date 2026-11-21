@@ -13,16 +13,19 @@
 import * as THREE from "three";
 import { box, merge, mesh, BODY } from "../../src/geo.js";
 import { buildShells } from "./gates.js";
+import { RIDGE } from "./hall.js";
 
 /** Where each of the axis's buildings stands along it (z, x = 0). Proposals but for the Wuliang hall's z, which is OSM's (S26, an inference). */
 /**
  * How far the inner gate (and cam07 in its passage) stands south of where the first white box put it (z = +120). From cam07 the Wuliang hall's
  * ridge hides the Great Hall's roof; the farther the eye from the hall, the lower the hall's ridge looks against the Great Hall's (#482). The
  * hall's ridge cannot come down much (docs/t05/DECISIONS.md: the roof's rise is the Yingzao Fashi's lowest ratio, 1:4, and the columns stay), so the gate
- * moves instead: the way between the gates is shorter by this much and the second terrace longer. 13 or 20 m are the two tried; `docs/t05/SOURCES.md` §13.1.
+ * moves instead: the way between the gates is shorter by this much and the second terrace longer. The art director chose 20 m (13, 25 and 30 were measured too); `docs/t05/evidence/axis-482-r2/`.
  */
-export const INNER_SHIFT = 13;
-export const AXIS = Object.freeze({ outerZ: 208, innerZ: 120 + INNER_SHIFT, paifangZ: 100, hallZ: 67.2 });
+export const INNER_SHIFT = 20;
+// The archway stands where the eye in the inner gate's passage looks under its lowest beams at the Great Hall's ridge: the line to the ridge rises about
+// 7.5 degrees, so that 23 m before the archway it is 5.5 m up, under the 雀替 (5.76 m) that hang from the beam; 2 m nearer than +116, where it grazes them (#482).
+export const AXIS = Object.freeze({ outerZ: 208, innerZ: 120 + INNER_SHIFT, paifangZ: 118, hallZ: 67.2 });
 
 /** The second terrace (SITE.md §4.2: +1.0 m, a proposal; S22, a summary: the front gate, the archway and the Wuliang hall are one group on a higher terrace than the great hall's). */
 export const SECOND = Object.freeze({ y: 1.0, hw: 14, zN: 62, wallT: 0.8, wallH: 3.2 });
@@ -50,30 +53,50 @@ export const FOOT = Object.freeze({
 });
 /** The paved way down the middle of the way and of the terrace (art director's review of #457: a path, not wall-to-wall slabs; the target picture's is about 6 m) and the tree trunks that stand beside it. A proposal. */
 export const PATH = Object.freeze({ hw: 3 });
-/** Where the trunks would stand in even pairs: x either side of the path, z along the way (and, on the terrace, clear of the archway's place by 8 m and of the gate's eave). */
-const GRID = (() => {
-  const lane = [], terrace = [81, 89];
-  for (let z = FOOT.inner.z1 + 7.8; z <= FOOT.outer.z0 - 8; z += 9) lane.push(+z.toFixed(1));
-  for (let z = 109; z < FOOT.inner.z0 - 6.5; z += 9) terrace.push(z);
-  return Object.freeze({ x: 5.5, lane: Object.freeze(lane), terrace: Object.freeze(terrace) });
-})();
-// A trunk is moved off its grid place by up to 0.8 m along the way and 0.5 m across, takes a radius of 0.25 to 0.5 m, and carries a canopy
-// (an ellipsoid, a placeholder for the trees to come); three of them are left out, so that they do not read as a row of telegraph poles
-// (art director's review of #464). Seeded, so that every build and every picture is the same.
+// A trunk takes a radius of 0.25 to 0.5 m and carries a crown (an ellipsoid, a placeholder for the trees to come). They must not stand in a line of sight
+// the axis is made for (art director's reviews of #464 and #482): from cam07, the eye in the inner gate's passage, none may stand in the lines to the Great Hall's
+// ridge or its ornaments, nor in the archway's middle bay seen from there. Seeded, so that every build and every picture is the same.
 const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-const OMIT = new Set(["lane|1|2", "lane|-1|4", "terrace|-1|1"]);   // by place along each run
-const grow = () => {
-  const rnd = seeded(482), out = [];
-  for (const [kind, y] of [["lane", 0], ["terrace", SECOND.y]]) for (const [n, z] of GRID[kind].entries()) for (const sx of [-1, 1]) {
-    const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = 0.25 + rnd() * 0.25, rx = 2.7 + rnd() * 0.9, ry = 2.1 + rnd() * 0.7;
-    if (OMIT.has(`${kind}|${sx}|${n}`)) continue;
-    // (the two pairs before the hall stand farther out: from cam07 the lines to the Great Hall's ridge ends cross the terrace there at 3 to 4 m off the axis, at the height of a crown)
-    const out0 = kind === "terrace" && z < 95 ? 8.5 : GRID.x;
-    out.push(Object.freeze({ x: +(sx * (out0 + dx)).toFixed(2), z: +(z + dz).toFixed(2), y, r: +r.toFixed(2), rx: +rx.toFixed(2), ry: +ry.toFixed(2) }));
+const CAM07 = Object.freeze({ x: 0, y: SECOND.y + 1.6, z: AXIS.innerZ + 1 });
+/** The lines cam07 must see along: to the Great Hall's ridge (every half metre, and the ornaments' fronts) and through the archway's middle bay (a grid of points in its opening, carried on to z = −20). */
+export const SIGHTS = (() => {
+  const lines = [], { rx, zm, height, ornamentTop } = RIDGE, eye = [CAM07.x, CAM07.y, CAM07.z];
+  for (let x = -rx; x <= rx + 1e-9; x += 0.5) lines.push({ kind: "ridge", to: [x, height + 0.4, zm] });
+  for (const s of [-1, 1]) lines.push({ kind: "ridge", to: [s * rx, ornamentTop - 0.05, zm + 0.64] });
+  for (let x = -2.1; x <= 2.1 + 1e-9; x += 0.525) for (let y = SECOND.y + 0.3; y <= SECOND.y + 4.7; y += 0.55) {
+    const k = (-20 - eye[2]) / (AXIS.paifangZ - eye[2]); lines.push({ kind: "door", to: [eye[0] + (x - eye[0]) * k, eye[1] + (y - eye[1]) * k, -20] });
   }
+  return Object.freeze({ eye, lines: Object.freeze(lines) });
+})();
+/** Does the line from the eye to `to` pass through the tree: its crown (an ellipsoid) or its trunk (a cone from r at the foot to 0.8 r at 11 m)? */
+export function treeBlocks(eye, to, t) {
+  const d = [to[0] - eye[0], to[1] - eye[1], to[2] - eye[2]];
+  { // crown
+    const c = [t.x, t.y + 7.6 + t.ry, t.z], o = [eye[0] - c[0], eye[1] - c[1], eye[2] - c[2]], k = [t.rx, t.ry, t.rx];
+    const a = d.reduce((s, v, i) => s + (v / k[i]) ** 2, 0), b = 2 * d.reduce((s, v, i) => s + (v * o[i]) / k[i] ** 2, 0), cc = o.reduce((s, v, i) => s + (v / k[i]) ** 2, 0) - 1, disc = b * b - 4 * a * cc;
+    if (disc >= 0) { const s0 = (-b - Math.sqrt(disc)) / (2 * a), s1 = (-b + Math.sqrt(disc)) / (2 * a); if (s1 > 0 && s0 < 1) return true; }
+  }
+  { // trunk: the circle of the trunk in plan, where the line is within the trunk's height (its radius at the foot, to be safe)
+    const ox = eye[0] - t.x, oz = eye[2] - t.z, a = d[0] ** 2 + d[2] ** 2, b = 2 * (d[0] * ox + d[2] * oz), cc = ox * ox + oz * oz - t.r * t.r, disc = b * b - 4 * a * cc;
+    if (disc >= 0 && a > 0) for (const s of [(-b - Math.sqrt(disc)) / (2 * a), (-b + Math.sqrt(disc)) / (2 * a)]) { const y = eye[1] + d[1] * s; if (s > 0 && s < 1 && y > t.y && y < t.y + 11) return true; }
+  }
+  return false;
+}
+const clear = (t) => !SIGHTS.lines.some((l) => treeBlocks(SIGHTS.eye, l.to, t));
+const grow = () => {
+  const rnd = seeded(482), out = [], rr = () => +(0.25 + rnd() * 0.25).toFixed(2), crown = () => ({ rx: +(2.7 + rnd() * 0.9).toFixed(2), ry: +(2.1 + rnd() * 0.7).toFixed(2) });
+  const add = (tree, push) => { for (let k = 0; k <= 7; k++) { const t = { ...tree, x: +(tree.x + Math.sign(tree.x) * push * k).toFixed(2) }; if (clear(t)) { out.push(Object.freeze(t)); return; } } };   // moved out until it stands clear, else left out
+  // the way between the gates: pairs about 9 m apart, each off its place a little, two places left empty
+  const lane = []; for (let z = FOOT.inner.z1 + 7.8; z <= FOOT.outer.z0 - 8; z += 9) lane.push(z);
+  lane.forEach((z, n) => { for (const sx of [-1, 1]) { const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = rr(), c = crown(); if ((sx === 1 && n === 2) || (sx === -1 && n === 4)) continue; add({ x: sx * (5.5 + dx), z: +(z + dz).toFixed(2), y: 0, r, ...c }, 0.4); } });
+  // the terrace between the hall and the archway (42 m): each side on its own, by hand and unevenly, 5.5 to 8.5 m off the axis, no pairs
+  const TERRACE_TREES = { [-1]: [84.5, 97.2, 106.8], [1]: [82.8, 90.3, 101.5] };
+  for (const sx of [-1, 1]) for (const z of TERRACE_TREES[sx]) { const r = rr(), c = crown(), x = 5.5 + rnd() * 3; add({ x: sx * x, z, y: SECOND.y, r, ...c }, 0.5); }
+  // between the archway and the gate: a pair, a little apart
+  for (const sx of [-1, 1]) { const r = rr(), c = crown(); add({ x: sx * (5.5 + rnd() * 0.6), z: +(127 + (rnd() * 2 - 1) * 1.5).toFixed(2), y: SECOND.y, r, ...c }, 0.5); }
   return Object.freeze(out);
 };
-export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, grid: GRID, list: grow() });
+export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 

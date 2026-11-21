@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 224792,
+   "sha256": "de7a4070692b82833872e275fae7f01019ac0655ed4661ad6f066d9c599934f7",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/cam07-final.png",
+   "bytes": 1113389,
+   "sha256": "84364a85629ed3a386d5efb65256c64b88fce7f6aea4935d35603a9d7bf2b44e",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/rhythm-north-from-the-archway.png",
+   "bytes": 1262045,
+   "sha256": "5c250abe978a6679e92a49f8f67203c8640c4906b2ea65256bc47a8478364699",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/rhythm-south-from-the-hall.png",
+   "bytes": 1259332,
+   "sha256": "6bb3ce919484e64130cf15f0e622a0f182dc25a7fec49b4c0f699f706c187273",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/yaw-left40.png",
+   "bytes": 1145947,
+   "sha256": "07e5d2031195dac7b61c32ae686ca577ba436ddb5bcc02aab76010908a682e75",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/yaw-left65.png",
+   "bytes": 1035716,
+   "sha256": "2ba9bd6d83a3649fe0f79011d6396a77e1563f65a1ae4050ad36be5810897cb7",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/yaw-right40.png",
+   "bytes": 1135557,
+   "sha256": "a29c5e37e73c6baced07f1ae1e5c9c8c69af61ef2cfa8493dc1e3c6cc8100ec3",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "views/yaw-right65.png",
+   "bytes": 1043388,
+   "sha256": "3ad89beb3b3168273ffe353a0e49b060c47a88afad4b86799de44e2945c7e03c",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  }
+ ]
+}
