@@ -49,8 +49,14 @@ export function createGame(y) {
   const BENCH = import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname);
   const seeded = BENCH ? bookFrom(Q.get("seals")) : null;
   const memoryStore = (v) => ({ get: () => v, set: (x) => { v = x; } });
-  const journey = createJourney(seeded ? memoryStore(seeded) : browserStore(), undefined, { closedBefore: seeded ? false : seenBefore });
-  if (seenBefore) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
+  // The book, the visit's metres and the close's old note under yunjing.* are the prologue's. Another level (T05, which
+  // testers walk on the canary since the owner's change of 2026-11-21) neither reads nor writes them: it holds an empty
+  // book in memory for the visit and keeps no metres, so that walking it neither shows the prologue's seals nor adds to
+  // its walk. A level says it is the prologue's by keeping the prologue's place (keepsPlace, #385), until each level
+  // keeps records of its own.
+  const ours = !y.level || !!y.level.keepsPlace;
+  const journey = createJourney(seeded ? memoryStore(seeded) : ours ? browserStore() : memoryStore(null), undefined, { closedBefore: seeded || !ours ? false : seenBefore });
+  if (seenBefore && ours) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
   const ui = y.ui;
@@ -82,8 +88,8 @@ export function createGame(y) {
 
   // The visit so far: metres walked and time on the mountain, kept between sittings like the seals.
   const VISIT = "yunjing.visit.v1", visit = { metres: 0, seconds: 0, at: null, save: 0 };
-  try { const v = JSON.parse(localStorage.getItem(VISIT) || "null"); if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
-  const keep = () => { try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
+  try { const v = ours ? JSON.parse(localStorage.getItem(VISIT) || "null") : null; if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
+  const keep = () => { if (!ours) return; try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
   const told = () => { const l = visitLine(visit.metres, visit.seconds); return !l ? "" : l.under ? t("这一趟走了 {m} 步，在山上不到一分钟。", { m: l.m }) : t("这一趟走了 {m} 步，在山上 {min} 分钟。", { m: l.m, min: l.min }); };
   // ---- On the ground: a ring at every place whose seal is still to be earned ----
   // The summit keeps its ring until the prologue has closed there, whatever else the book holds.
@@ -592,7 +598,8 @@ export function createGame(y) {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); forgetTitle(); left = null; b.dataset.asked = "";
+    // Another level's start empties nothing of the prologue's.
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } left = null; b.dataset.asked = "";
     const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
   // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first

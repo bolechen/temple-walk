@@ -25,7 +25,7 @@
 | 2a | `fix(level): a level other than the prologue leaves T00's place, opening, title and music alone` | **2026-11-20 核过代码，第一阶段一进 `?level=t05` 就会带上 T00 的东西**（`LEVEL-PLAYBOOK.md` §四缺口 5）：①`game.js` 第 478 行的 `free` 不认 `?level=`，所以 T05 的页面会**读** T00 存的 `yunjing.place.v1`（标题页按 T00 的坐标给「接着走」），又每两秒把 T05 的坐标**写**进同一个键，T00 的老访客下次「接着走」就站到错处；②`opening.js` 的 `openingFor` 不认 `?level=`（`SILENT` 里没有），第一次来的访客在 T05 里会飞 T00 开场的那条路；③序章标题的 `atGate` 看的是 T00 山门前的坐标，在 T05 里走到同一坐标就会升起「序章 云径禅寺」；④配乐分区（`score.js` 的 `zoneOf`）只认 T00 的七个区名。本项让关卡对象说这一关有没有开场、序章标题、存不存位置（S3a、S3c、S4 之前的最小一步）：非 `t00` 的关卡不读不写 `yunjing.place.v1`、不播开场、不升标题；T05 的 `zones` 先全部落在 `court`（只有单音和留白），并在 `level.js` 里写明是占位。验收：e2e 在 `?level=t05`（或 S7 的 `?level=_probe`）里走一段、关掉、不带参数重开，`localStorage` 里 T00 的 `yunjing.place.v1` 与走之前逐字节相同，`__opening()` 与 `__prologue()` 都没起 | 2；与 4 一起验（`_probe` 上就能测） | 可以 |
 | 3 | `build(walk): bake and ship each level's floor and doorways`（S5） | `bake-walk --level`、`gridsOf` 读 `levels/<id>/bake.js`、`shared/walk/<id>.bin`、CI 缓存键不再写死 `t00`（#405） | 2 | 可以 |
 | 3a | `chore(tools): every picture and check tool takes a level`（`LEVEL-SPLIT.md` S6，**单列，关键路径**） | `shots.js`、`cameras.mjs`、`edges`、`nearplane`、`around.mjs`、`gpu-render.sh`、`play-t00.cjs` 认 `--level`，默认 `t00` 时输出与改前相同；**`horizon.test` 认关卡**（「地平线以下不露天」能对 T05 跑，缺口 2）；`follow.test`、`spring-arm.test` 的路线表按关卡取（缺口 4 的前提）。PR 9 的 `nearplane:grid --level=t05`、PR 12 的 `edges:grid --level=t05`、PRD 第 2 条都靠它 | 3 | 可以 |
-| 4 | `test(level): a probe level with one pavilion`（S7） | `_probe` 关证明引擎不靠 T00；不进发布产物；**建立「只在工作台认」的关卡登记**（dev 与 PR 预览认，canary 与生产退回序章），T05 白盒照用（所有者 2026-11-20 定，见下文「已定」一节）；`level` 场景在 canary 构建上断言 `?level=_probe` 回落到 `t00` | 2、3 | 可以 |
+| 4 | `test(level): a probe level with one pavilion`（S7） | `_probe` 关证明引擎不靠 T00；不进发布产物；**建立「只在工作台认」的关卡登记**（dev 与 PR 预览认，canary 与生产退回序章；2026-11-21 起 canary 也认，见下「已定」），T05 白盒照用（所有者 2026-11-20 定，见下文「已定」一节）；`level` 场景在 canary 构建上断言 `?level=_probe` 回落到 `t00` | 2、3 | 可以 |
 | 5 | `feat(t05): the courtyard, the platform and the stair, walked from arrival`（T05-1） | `app/levels/t05/` 骨架：`level.js`、平地院子与围墙、3 米台基、月台、18 级踏道（`stairGeo`）、栏杆；**`site.start` 一开始就放在最终的到达点，外山门外 (0, +215)**，中轴未建之前用一段平地接到院子（缺口 8：洪水填充的种子、`views.arrive`、e2e 起点、`?fast=1` 的时长都建在它上面，中途搬家要全部重算）；烘出 `t05.bin`；`t05-plan.test.mjs` 洪水填充到 A、B；**`t05` 登记为只在工作台认**，`level` 场景在 canary 构建上断言 `?level=t05` 回落到 `t00`、在预览构建上是 `t05`，构建扫描断言 canary 与生产的 `dist/` 里没有 T05 的关卡模块；**向外看一圈**：从到达点、院子 A 站、月台 B 站各朝四个方向、朝墙顶出图（`horizon.test` 认关卡之前用 `shots.js`），地平线以下不露天 | 2a、3、3a | 可以：全是新文件 |
 | 6 | `feat(t05): the nine-bay hall, its shell and its floor`（T05-2） | 大雄殿外壳：九间开间按 `ARCHITECTURE.md` §2.1、单檐庑殿（`buildHall` 的 `G` 取进深一半，按参数推断能出庑殿，**未出图验证**；出不来就在 `building.js` 加一个屋顶式样，单独一个 PR）、三门四窗、门槛按 `PRD.md` §2；殿内地面与外面同一张烘焙地面（不换场，`PRD.md` §2.1）。**若改了 `building.js`（缺口 7）**，验收加「T00 不变」三条：`t00.bin` 指纹不变、`docs/t00/camera-manifest.json` 逐字节相同、`shots.js` 改前改后 cam01–cam06 与 `court@autumn-dusk@third` 平均像素差 < 0.5/255、三角形与绘制次数相同（S2 #382 的做法），殿内十六个机位用 `inside.cjs` 同样比 | 5；§11 第 1 项已定（殿院连成一个空间，所有者 2026-11-20「1-10 都同意」） | 可以；若要改 `building.js`，与 #315、结构评审的改动对一下 |
 | 7 | `feat(t05): the altar, seven blocks and the aisles`（T05-3） | 佛坛 37.5×4.8×0.87 m、七个座位 x = 0、±5.80、±11.33、±16.45（`DECISIONS.md` §3）；七尊体块按白盒高度、释迦西偏 7°；十四胁侍与二天王的占位体块；内柱（减柱，柱位【提案】）；东西通道 ≥ 3 m；洪水填充到 C、D、E、F | 6 | 可以 |
@@ -60,7 +60,18 @@
 
 **第一个开发 PR 在 PRD 合并当天就能开工的**：第 1 项。它不等所有者的任何答复；§11 第 1 项已于 2026-11-20 定下，第 6 项也不再被卡。
 
-### 已定：白盒阶段的 T05 只在工作台开放（2026-11-20）
+### 已定：白盒阶段的 T05 在工作台和 canary 开放，生产不开（2026-11-21 改）
+
+所有者 2026-11-21（主创转达）：「t05 改成 canary 可以测」。这推翻了下面 11-20 的「只在工作台开放」：
+
+- `?level=t05` 在 dev server、PR 预览和 canary 都认（`app/src/level.js` 的 `TESTING`，`app/src/bench.js` 的 `benchBuild`）。生产仍不认，照 S2 的规则退回序章并说明问的是什么。
+- 生产构建里没有 T05 的关卡模块、烘焙地面和门内清单。`tests/unit/level-bench.test.mjs` 构建三种目标分别断言：预览和 canary 有，生产没有。
+- e2e `level-targets` 按发布的方式构建 canary 和生产两份，各打开 `?level=t05`：canary 走的是 T05、用 T05 自己的地面；生产回落 `t00`，`known: false`。
+- **存档再核一遍**：第 2a 项（#389）只管了「记住走到哪」、开场和序章标题。核下来，T05 还会读序章的朱印帐，还会把走的步数记进序章的 `yunjing.visit.v1`。本 PR 一并改了：非序章的关卡朱印帐只放在内存里，不记步数，「从头走起」也不清序章的东西。`level-targets` 先在浏览器里放好序章的朱印帐、步数和停留处，再在 canary 上走 T05，断言三样都原样不动，T05 也不显示序章的印。
+- **统计**：canary 构建本来就没有访客计数（`deploy.test.mjs`）。生产不认 T05，所以 T05 不会进统计。
+- 阶段 8 验收通过后对所有人开放的做法不变：改一行登记，另开 PR。
+
+### 原定（已被上面推翻）：白盒阶段的 T05 只在工作台开放（2026-11-20）
 
 所有者 2026-11-20（主创转达）：「同意，白盒只在工作台开放」，即当时推荐的方案 A（`LEVEL-PLAYBOOK.md` §四缺口 6）。
 
