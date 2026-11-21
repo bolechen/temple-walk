@@ -259,8 +259,8 @@
   "inner_x": -1.27,
   "inner_band": 0.08,
   "shoulder": [
-   6.05,
-   5.6
+   5.7,
+   5.2
   ],
   "elbow_blend": [
    -0.5,
@@ -290,6 +290,7 @@
   "cut_dz": 0.18,
   "cut_below_y": 3.64,
   "cap": false,
-  "stretch_below_y": 3.9
+  "stretch_below_y": -9.0,
+  "note_round2": "stretched faces under the forearm kept (deleting them opened a 3-5 cm seam on the thigh); the shoulder's band lowered to 5.7-5.2 m so its top in the front outline keeps within 1 cm"
  }
 }
