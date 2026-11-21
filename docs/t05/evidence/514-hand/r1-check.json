@@ -1,0 +1,77 @@
+{
+ "landmarks": {
+  "wrist": [
+   -1.72,
+   3.92,
+   1.38
+  ],
+  "index_root": [
+   -2.086,
+   3.548,
+   1.68
+  ],
+  "little_root": [
+   -1.518,
+   3.593,
+   1.741
+  ],
+  "tip": [
+   -1.77,
+   3.097,
+   1.948
+  ]
+ },
+ "facing": {
+  "palm_vs_forward_deg": 45.1,
+  "limit": 45,
+  "finger_vs_down_deg": 34.7,
+  "limit_finger": 35
+ },
+ "thumb": {
+  "thumb_tip": [
+   -2.128,
+   3.538,
+   1.734
+  ],
+  "fingertip": [
+   -1.77,
+   3.097,
+   1.948
+  ],
+  "thumb_farther_out": true
+ },
+ "size": {
+  "new_length_m": 1.001,
+  "old_length_m": 1.449,
+  "ratio": 0.691,
+  "range": [
+   0.9,
+   1.1
+  ]
+ },
+ "lotus": {
+  "clearance_m": 0.594
+ },
+ "elsewhere": {
+  "points_checked": 715135,
+  "largest_move_mm": 0.0,
+  "over_1mm": 0
+ },
+ "knee": {
+  "box": [
+   [
+    -2.25,
+    2.5,
+    1.25
+   ],
+   [
+    -1.25,
+    3.98,
+    2.4
+   ]
+  ],
+  "ease_m": 0.08,
+  "original_points_in_box": 19093
+ },
+ "joint": "the hand is joined over the wrist, its wrist sunk into the forearm (no boolean, no bridge ring): the figure is many open shells (167 in Sikhin, likewise here), so it is not watertight anywhere; the joint adds an overlap where the two meet"
+}

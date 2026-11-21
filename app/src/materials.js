@@ -19,14 +19,14 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? "\nattribute vec4 stair; varying vec4 vSt;" : ""))
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;${stair ? " vSt=stair;" : ""}`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform float uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -252,11 +252,13 @@ export function createMaterials() {
       float panel=(1.-zone)*(1.-frame)*smoothstep(.0,.03,min(min(lx-.16,.89-lx),min(q.y-.16,1.02-q.y)));
       col=woodCol(vWP,vec3(9.,1.1,9.))*(1.-.25*panel); col=mix(col,vec3(.01,.009,.008),hole);
       rough_=mix(.8,1.,hole); bump_=(frame+bar*zone+rail)*.012-hole*.03+panel*.008;
-      // Lamplight behind the lattice after dusk: brightest low down where the lamp stands, fading up the paper;
-      // each room its own strength, and one leaf in eight dark.
-      float leaf=floor(vUv2.x), room=n2(vec2(leaf*.31,2.)), on=step(.125,h21(vec2(leaf,7.)));
-      float up=tr?.25:exp(-pow(abs((q.y-.85)/1.25),2.));
-      emit_=mix(uWin*vec3(.24,.145,.11),uWin,up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
+      // Lamplight behind the lattice after dusk, where the plan says a bay is lit (windows.js, ART-REVIEW A2): the
+      // whole part of u carries a code of sixteen leaves (dusk level * 8 + night level, each 0..7, and the bay's
+      // leaves count from there); a bay of level 0 stays dark paper. Brightest low down where the lamp stands,
+      // fading up the paper, each leaf a little its own.
+      float code=floor((vUv2.x+4.)/16.), leaf=vUv2.x-code*16., lv=mix(floor(code/8.),mod(code,8.),uWinNight)/7.;
+      float up=tr?.2:exp(-pow(abs((q.y-.85)/1.1),2.));
+      emit_=mix(uWin*vec3(.2,.13,.1),uWin,up)*uLamp*hole*lv*3.2*(.88+.24*h21(vec2(floor(leaf),7.)));`, { snow: false }),
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
       float p=smoothstep(.4,.72,fbm3(vWP*5.)); col=mix(vec3(.16,.125,.085),vec3(.16,.27,.22),p*.75);  // verdigris
@@ -354,6 +356,15 @@ export function createMaterials() {
     bark: procMat("bark", { roughness: 0.95, envMapIntensity: 0.15 }, `
       vec3 q=vWP*vec3(1.4,.85,1.4), w=triW(vWN); vec3 A=triA(tBarkA,q,w)/mBark; vec4 Nr=triN(tBarkN,q,w);
       col=vec3(.13,.082,.055)*A; col=mix(col,vec3(.12,.15,.08)*A,smoothstep(.5,.75,fbm3(vWP*1.5))*.5);   // moss on the weather side
+      rough_=Nr.w; nd_=Nr.xyz*1.8;
+      // a tree's foot (trees.js gives it a v below -1: how far above the paving it is) is drifted over with snow for its
+      // lowest thirty centimetres, so that it goes down into the blanket round it and does not stand on it (#92)
+      // and lit a little by the sky, as the paving's snow is (that is lit by hand): in the shade it would be greyer than the snow it lies in
+      if(vUv2.y<-.5&&uSnow>.001){ float d_=uSnow*smoothstep(.32,.04,-vUv2.y-1.)*(.85+.15*fbm3(vWP*3.)); col=mix(col,vec3(.82,.86,.92),d_); rough_=mix(rough_,.95,d_); nd_*=1.-d_; ao_=mix(ao_,max(ao_,.85),d_); emit_+=vec3(.82,.86,.92)*uAmb*.25*d_; }`, { tex: ["bark"] }),
+    // The young ginkgo's own bark (#162): the same scan and the same snow at the foot, a greyer brown.
+    barkGinkgo: procMat("barkGinkgo", { roughness: 0.95, envMapIntensity: 0.15 }, `
+      vec3 q=vWP*vec3(1.4,.85,1.4), w=triW(vWN); vec3 A=triA(tBarkA,q,w)/mBark; vec4 Nr=triN(tBarkN,q,w);
+      col=vec3(.145,.118,.096)*A; col=mix(col,vec3(.12,.14,.09)*A,smoothstep(.55,.8,fbm3(vWP*1.5))*.3);   // a young ginkgo's bark: grey-brown, shallowly furrowed (the Flora of China, quoted second-hand), not the cedar's red-brown; a little moss
       rough_=Nr.w; nd_=Nr.xyz*1.8;
       // a tree's foot (trees.js gives it a v below -1: how far above the paving it is) is drifted over with snow for its
       // lowest thirty centimetres, so that it goes down into the blanket round it and does not stand on it (#92)

@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 336763,
+   "sha256": "4e64c4d93eb49bb3aa986fb6e829f40c0a4eb22b9226a2cfc92baaf3dabc3727",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q1-front2m-summer-after.png",
+   "bytes": 1651752,
+   "sha256": "ae0711281b4ed3d9e1f3486b3d89cd663ad8512a3b6f6c62d8d81b259c835c60",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q1-front2m-summer-before.png",
+   "bytes": 1650478,
+   "sha256": "37e3678c446cd16a608742c9c01ebed22480c0ee775027cad9cfb87add1a0bc5",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q1-front2m-winter-after.png",
+   "bytes": 1867464,
+   "sha256": "3183f64569a459ec8a6e5dddd9555eef0d8e0acb540482dca96ec1ed4d6a0840",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q1-front2m-winter-before.png",
+   "bytes": 1866265,
+   "sha256": "409af0c56a0da92fe9d1a5a19210f1079a3507570a1055e91bf139b018b3d147",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q2-court2m-summer-after.png",
+   "bytes": 1698968,
+   "sha256": "09d4c3695777ba74bfd6430021dd661f4c718e647aa642c137135b075f6826a8",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q2-court2m-summer-before.png",
+   "bytes": 1697955,
+   "sha256": "0a8a30d2466a8be0ac9c84b4fc7d7e563f6878f8c4c18a1e2ea4e62244cc462c",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q2-court2m-winter-after.png",
+   "bytes": 1711780,
+   "sha256": "2db902f597a9bb6921a7d040f82d4546290e9610424fd370fe99d1cfd8e8370c",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q2-court2m-winter-before.png",
+   "bytes": 1713751,
+   "sha256": "83aeed7ef8c283bb33afcf86a23f0e8935c4d9b6f32d3931539118995bc260e5",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q3-front-far-summer-after.png",
+   "bytes": 1665965,
+   "sha256": "f9cb32dc51e0aae1ba275ca4a23361d6a89640a980a2b374d080e39fc6b37b2d",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q3-front-far-summer-before.png",
+   "bytes": 1665977,
+   "sha256": "fa4f7e19f95984af1e50c9bf2267f23f6e1441e126ba0c074152f6b153fdee52",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q3-front-far-winter-after.png",
+   "bytes": 1824871,
+   "sha256": "6036d6804af97165be72209d5c2a50832d435a53b898e7f86dec72eb2f35f74c",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  },
+  {
+   "path": "q3-front-far-winter-before.png",
+   "bytes": 1824263,
+   "sha256": "dc53f3e363c25a3a7d73684d16f2f139f7eceda0ffdf64fbc34d90b8950c54e5",
+   "rev": "37675b0ed60bfdcfc99844875c3e990b5d003682"
+  }
+ ]
+}

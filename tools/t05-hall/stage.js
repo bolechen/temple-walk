@@ -35,6 +35,12 @@ const HALF = XS[XS.length - 1] / 2; for (let i = 0; i < XS.length; i++) XS[i] -=
 const DEPTH = 25.13, ZS = [0, 1, 2, 3, 4, 5].map((i) => -i * DEPTH / 5);              // five bays deep, taken as equal
 const COL_H = 6.06, BRACKET = 2.75, WALL = 1.2;                   // column height, bracket sets, wall thickness
 const EAVE = 3.8, RIDGE = 15.86;                                  // eaves out from the columns; ridge above the floor
+// The four tiers of each frame, the heights of their undersides, and how thick each is. Every height in this file is
+// measured from the hall's floor (F above the court), not from the court: the page's hall (app/levels/t05/hall.js, #425,
+// 665b0e4) gives the same tiers from the court, +11.8, 13.6, 15.4 and 17.2, the lowest on the bracket sets' heads
+// (6.06 + 2.75), so that from the threshold the figures' heads and faces are all under it. Ten rafters front to back,
+// 2.88 m each: eleven purlins about the ridge.
+const BEAMS = [8.8, 10.6, 12.4, 14.2], BEAM_D = 0.9, BEAM_W = 0.6, RAFTER = 2.88;
 // The altar along the middle seven bays, 37.5 × 4.8 × 0.87 m; the seven seats at the bays' centres.
 const ALTAR = { w: 37.5, d: 4.8, h: 0.87, z: -17.9 };
 const SEATS = [-16.45, -11.33, -5.8, 0, 5.8, 11.33, 16.45];
@@ -60,7 +66,7 @@ const M = {
   wallIn: mat(0xb9b2a2, 0.95), wallFront: mat(0x8a3b2a, 0.9), wallOut: mat(0x8a3b2a, 0.9, true), timber: mat(0x3a2c23, 0.8), red: mat(0x7a3426, 0.75),
   roof: mat(0x2f251e, 0.85, false, { side: THREE.DoubleSide }), tile: mat(0x5a5f5c, 0.8, true),
   altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x6f5a34, 0.62, false, { metalness: 0.35 }),   // dark gold, not bright (ART.md §3.1, the lead 2026-11-21)
-  halo: mat(0x45372a, 0.7, false, { metalness: 0.12, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
+  halo: mat(0x6a5440, 0.72, false, { metalness: 0.08, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
 };
 const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
 const hall = new THREE.Group(); scene.add(hall);
@@ -108,8 +114,15 @@ const column = (x, z) => { const c = new THREE.Mesh(colG, M.red); c.position.set
   box(0.95, 0.25, 0.95, M.stone, x, F + 0.125, z); box(1.0, 0.5, 1.0, M.timber, x, F + COL_H + 0.25, z); };
 for (const x of XS) { column(x, 0); column(x, -DEPTH); }
 for (const z of ZS.slice(1, -1)) { column(XS[0], z); column(XS[9], z); }
-for (let i = 1; i < 9; i++) column(XS[i], ZS[4]);
-for (const i of [1, 2, 7, 8]) column(XS[i], ZS[1]);
+// The inner columns as app/levels/t05/hall.js has them since #425 (665b0e4): eight in the back row (z −20.1), one under
+// each frame, and two in front at the ends of the front aisle (z −5.03); they rise past the eave columns' heads to the
+// lowest tier of the frames, BEAMS[0] (at the head of this file), as the structural review gives.
+// in the beams' dark old timber, not vermilion: in the red they were the brightest thing in cam03 (the art director, #480;
+// the page's hall decided the same, #493 DECISIONS), 0.84 m across as #493 sets the inner columns
+const innerColumn = (x, z) => { const h = BEAMS[0], c = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, h, 20), M.timber); c.position.set(x, F + h / 2, z); c.castShadow = c.receiveShadow = true; scene.add(c);
+  box(0.95, 0.25, 0.95, M.stone, x, F + 0.125, z); };
+for (let i = 1; i < 9; i++) innerColumn(XS[i], ZS[4]);
+for (const i of [1, 8]) innerColumn(XS[i], ZS[1]);
 
 // Bracket sets as one band of blocks on the walls' heads, stepping out inside and out (七铺作 drawn as a mass).
 const BY = F + COL_H, BH = BRACKET;
@@ -138,12 +151,19 @@ function roofGeometry(dy) {
 const roofIn = new THREE.Mesh(roofGeometry(0), M.roof); roofIn.castShadow = roofIn.receiveShadow = true; scene.add(roofIn);
 const roofOut = new THREE.Mesh(roofGeometry(0.6), new THREE.MeshStandardMaterial({ color: 0x5a5f5c, roughness: 0.8, side: THREE.FrontSide })); roofOut.castShadow = true; scene.add(roofOut); OUT.push(roofOut.material);
 const heightAt = (e) => { for (let k = 0; k < PROF.length - 1; k++) if (e <= PROF[k + 1][0]) { const t = (e - PROF[k][0]) / (PROF[k + 1][0] - PROF[k][0]); return PROF[k][1] + t * (PROF[k + 1][1] - PROF[k][1]); } return RIDGE; };
+// The underside's height (from the court) over a point, the lowest of the four slopes there; and a purlin's height, its
+// top just under the roof
+const underAt = (x, z) => F + heightAt(Math.min(OZ - Math.abs(z - ZC), OX - Math.abs(x)));
+const purlinY = (z) => Math.min(underAt(0, z - 0.2), underAt(0, z + 0.2)) - 0.2 - 0.06;
 // purlins (槫) along the slopes at each step of the profile, and rafters (椽) every 0.6 m on the long slopes, merged
 {
   const parts = [];
-  for (const [e] of PROF.slice(1)) {
-    const y = F + heightAt(e) - 0.25, len = 2 * (OX - e);
-    for (const s of [1, -1]) { if (e >= OZ - 0.01 && s < 0) continue; const g = new THREE.CylinderGeometry(0.2, 0.2, len, 10); g.rotateZ(Math.PI / 2); g.translate(0, y, ZC + s * (OZ - e)); parts.push(g); }
+  // eleven purlins, one at each rafter's joint, 2.88 m apart about the ridge (#425); each runs along the hall only as far
+  // as the hipped ends leave room over it
+  for (let k = -5; k <= 5; k++) {
+    const z = ZC + k * RAFTER, y = purlinY(z), within = (zz) => { let x = OX; while (x > 0 && underAt(x, zz) < y + 0.2 + 0.05) x -= 0.05; return x; };
+    const half = Math.min(within(z - 0.2), within(z + 0.2)); if (half < 0.5) continue;
+    const g = new THREE.CylinderGeometry(0.2, 0.2, 2 * half, 10); g.rotateZ(Math.PI / 2); g.translate(0, y, z); parts.push(g);
   }
   for (let x = -OX + 0.3; x < OX; x += 0.6) for (let k = 0; k < PROF.length - 1; k++) {
     const [e0, h0] = PROF[k], [e1, h1] = PROF[k + 1]; if (Math.abs(x) > OX - e1) continue;
@@ -154,13 +174,28 @@ const heightAt = (e) => { for (let k = 0; k < PROF.length - 1; k++) if (e <= PRO
   }
   const frame = new THREE.Mesh(mergeGeometries(parts), M.timber); frame.castShadow = frame.receiveShadow = true; scene.add(frame);
 }
-// the eight frames: tie beams stepping up to the ridge, on struts (驼峰/蜀柱 as blocks)
-for (let i = 1; i < 9; i++) {
-  const x = XS[i];
-  const tiers = [[0.6, 1.0, 9.0, EAVE], [0.5, 0.8, 10.6, 6.3], [0.45, 0.7, 12.0, 8.8], [0.4, 0.6, 13.5, 11.3]];
-  const ex = OX - Math.abs(x);                                    // in from the hip's eave here: no beam above the roof
-  for (const [w, h, y, e] of tiers) { if (e > ex - 0.8) continue; const half = OZ - e; box(w, h, 2 * half, M.timber, x, F + y + h / 2, ZC); box(w * 1.2, 1.2, 0.8, M.timber, x, F + y - 0.6 + 0.01, ZC + half - 0.6); box(w * 1.2, 1.2, 0.8, M.timber, x, F + y - 0.6 + 0.01, ZC - half + 0.6); }
-  if (ex > OZ) box(0.4, 1.4, 0.5, M.timber, x, F + 14.1 + 0.7, ZC);
+// the eight frames (八缝): four tiers of beams, each shorter than the one below, the lowest on the inner columns' heads,
+// each running front and back as far as the purlin it carries or the roof's underside allows (the hipped ends lower
+// it), short posts between tiers and one up to the ridge purlin; as app/levels/t05/hall.js builds them (#425). Under
+// this white box's own roof (eave 8.2, ridge 15.86 above the floor; the page's is steeper) the fourth tier has no room
+// and is left out.
+{
+  const parts = [], bx = (w, h, d, x, y, z) => parts.push(new THREE.BoxGeometry(w, h, d).translate(x, y, z));
+  const reach = (x, top) => { let f = null, k = null; for (let z = 0; z >= -DEPTH; z -= 0.05) if (underAt(x, z) >= top) { f ??= z; k = z; } return [f ?? ZC, k ?? ZC]; };
+  for (let i = 1; i < 9; i++) {
+    const x = XS[i], edge = x + Math.sign(x) * BEAM_W / 2; let prev = null;
+    BEAMS.forEach((b, j) => {
+      const y = F + b, pf = ZC + RAFTER * (4 - j), pb = ZC - RAFTER * (4 - j), [rf, rb] = reach(edge, y + BEAM_D + 0.05);
+      const z1 = Math.min(pf, rf), z0 = Math.max(pb, rb); if (z1 - z0 < 1.5) return;
+      bx(BEAM_W, BEAM_D, z1 - z0, x, y + BEAM_D / 2, (z0 + z1) / 2);
+      if (prev) for (const z of [z0 + 0.4, z1 - 0.4]) bx(BEAM_W * 0.9, y - prev, 0.7, x, (prev + y) / 2, z);
+      prev = y + BEAM_D;
+      for (const [z, at] of [[z1, pf], [z0, pb]]) { const up = purlinY(at) - 0.2; if (Math.abs(z - at) < 0.01 && up - prev > 0.1) bx(BEAM_W * 0.8, up - prev, 0.5, x, (prev + up) / 2, z + Math.sign(ZC - z) * 0.25); }
+    });
+    const crown = purlinY(ZC) - 0.2;
+    if (prev && crown - prev > 0.3 && crown <= underAt(edge, ZC + 0.3)) bx(BEAM_W * 0.8, crown - prev, 0.6, x, (prev + crown) / 2, ZC);
+  }
+  const frames = new THREE.Mesh(mergeGeometries(parts), M.timber); frames.castShadow = frames.receiveShadow = true; scene.add(frames);
 }
 
 // The altar and, per seat, a Sumeru base (须弥座) as stacked mouldings.
@@ -245,6 +280,7 @@ const skyLights = OPENINGS.map((o) => {
 // light off the floor and walls in front of the altar (no bounce is computed here): a broad warm-grey panel facing up
 const floorFill = new THREE.RectAreaLight(0xd8ccb8, 0, 30, 12); floorFill.position.set(0, F + 0.1, ALTAR.z + 9); floorFill.rotation.x = -Math.PI / 2; scene.add(floorFill);
 const bounce = new THREE.RectAreaLight(0xffe2c0, 0, 3.6, 6); bounce.rotation.x = -Math.PI / 2; scene.add(bounce);   // sunlit floor inside the door
+const hemi = new THREE.HemisphereLight(0xf2ece2, 0x6f6152, 2.2); hemi.visible = false; scene.add(hemi);   // for { light: "diffuse" } only
 const altarLamp = new THREE.PointLight(0xffa860, 0, 14, 2); altarLamp.position.set(0, AT + 0.9, ALTAR.z + 3.2); scene.add(altarLamp);
 
 // Two moods. Summer by day (the T00 baseline, for comparison) and early winter, clear and cold, about 09:45 in early
@@ -294,7 +330,8 @@ async function setStatues(list) {
     const pivot = new THREE.Group(); pivot.add(obj); obj.position.sub(new THREE.Vector3(c.x, bb2.min.y, c.z));
     pivot.position.set(x, AT + seatH, ALTAR.z + 0.3 + (s.dz ?? 0)); pivot.rotation.y = s.yaw ?? 0; group.add(pivot);
     obj.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
-      if (s.paint) o.material = M[s.paint];
+      o.userData.normalMap = o.material?.normalMap ?? null;   // a baked normal map in the file (#463) is kept under the clay and the paint
+      if (s.paint) { o.material = M[s.paint]; if (o.userData.normalMap) { o.material = o.material.clone(); o.material.normalMap = o.userData.normalMap; } }
       else if (o.material) { o.material.envMapIntensity = 0; if (o.geometry.attributes.color && !o.material.map) o.material.vertexColors = true; }
       if (s.tint && o.material) { o.material = o.material.clone(); o.material.color.multiply(new THREE.Color(s.tint)); } } });
     const figH = size.y * k, top = AT + seatH + figH, headY = top - figH * (s.headAt ?? 0.14);
@@ -411,6 +448,7 @@ function studio(on) {
   for (const f of figures) for (const m of Object.values(f.painted || {})) { m.userData.envKeep ??= m.envMap; m.envMap = on ? studioEnv : m.userData.envKeep; m.envMapIntensity = on ? 1.0 : 1.6; m.needsUpdate = true; }
   renderer.shadowMap.needsUpdate = true;
 }
+let lastShot = {};   // zoneIds measures under the same light as the last shot (a diffuse shot's lights are put back after it)
 function shoot(s) {
   if (s.mood) setMood(s.mood); if (s.paint !== undefined) paint(s.paint);
   if (s.studio) {
@@ -425,7 +463,16 @@ function shoot(s) {
     rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
     renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
   } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
-  render(); return { tris: renderer.info.render.triangles };
+  // { light: "diffuse" }: the same view lit only by a hemisphere light, the sun, the doors' light, the floor's fill and the
+  // lamp put out, so a form can be told from the shadows the hall's light throws on it (#463, the 3D review's third round)
+  const diffuse = s.light === "diffuse", keep = []; lastShot = s;
+  if (diffuse) {
+    for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { keep.push([l, l.visible]); l.visible = false; }
+    hemi.intensity = s.hemi ?? 2.2; hemi.visible = true;
+  }
+  render(); const tris = renderer.info.render.triangles;
+  if (diffuse) { for (const [l, v] of keep) l.visible = v; hemi.visible = false; }
+  return { tris };
 }
 
 let composer = null, useAO = Q.get("ao") !== "0";
@@ -466,9 +513,13 @@ function paint(on = true) {
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
-    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
-    f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
-    for (const m of f.meshes) m.material = f.painted[key];
+    // one material for each normal map the file carries (a head baked on a map of its own is its own primitive, #463)
+    for (const mesh of f.meshes) {
+      const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
+      f.painted[k2] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2].userData.update(); if (o.envIntensity) f.painted[k2].envMapIntensity = o.envIntensity;
+      mesh.material = f.painted[k2];
+    }
   }
   painted = o.on; return figures.map((f) => ({ colour: f.s.colour || null, painted: o.on && !!(f.s.colour && ANCHORS[f.s.colour]) }));
 }
@@ -512,10 +563,41 @@ function ortho(i, side = "front", z = {}) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = ex; scene.background = bg; sky.visible = true;
   for (const [o, m] of mats) o.material = m; for (const o of hidden) o.visible = true; orthoGrid.visible = false; scene.overrideMaterial = keep;
 }
+// The picture as drawn and, pixel for pixel, which zone of which figure each pixel shows (issue #463): the painted figures
+// write their zone's number (paint.js, uIdMode), each figure's halo is zone 15, everything else is black. Returns, for
+// each figure and zone, how many pixels showed it (those whose four neighbours show the same zone, so no edge blends in)
+// and their mean colour on screen, 0–255; call after shoot(), with the same view.
+function zoneIds() {
+  const gl = renderer.getContext(), Wd = gl.drawingBufferWidth, Hd = gl.drawingBufferHeight, shown = new Uint8Array(Wd * Hd * 4), id = new Uint8Array(Wd * Hd * 4);
+  const dif = lastShot.light === "diffuse", kept0 = [];
+  if (dif) { for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { kept0.push([l, l.visible]); l.visible = false; } hemi.intensity = lastShot.hemi ?? 2.2; hemi.visible = true; }
+  render(); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, shown);
+  const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), kept = new Map(), mats = [];
+  const haloMat = (i) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(15. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
+  const own = new Set(); figures.forEach((f, i) => { const hm = haloMat(i); mats.push(hm); f.group.traverse((o) => { if (o.isMesh && o.userData.halo) { kept.set(o, o.material); o.material = hm; own.add(o); } }); for (const m of f.meshes) { own.add(m); if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 1; } });
+  scene.traverse((o) => { if ((o.isMesh || o.isLine || o.isPoints) && !own.has(o)) { kept.set(o, o.material); o.material = black; } });
+  const tm = renderer.toneMapping, bg = scene.background, sv = sky.visible; renderer.toneMapping = THREE.NoToneMapping; scene.background = new THREE.Color(0); sky.visible = false;
+  renderer.setRenderTarget(null); renderer.render(scene, camera); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, id);
+  renderer.toneMapping = tm; scene.background = bg; sky.visible = sv;
+  for (const [o, m] of kept) o.material = m; for (const f of figures) for (const m of f.meshes) if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 0;
+  if (dif) { for (const [l, v] of kept0) l.visible = v; hemi.visible = false; }
+  black.dispose(); mats.forEach((m) => m.dispose());
+  const code = (k) => (id[k + 1] ? Math.round(id[k] * 16 / 255) * 100 + Math.round(id[k + 1] * 16 / 255) : 0);
+  const acc = {};
+  for (let y = 1; y < Hd - 1; y++) for (let x = 1; x < Wd - 1; x++) {
+    const k = (y * Wd + x) * 4, c = code(k); if (!c) continue;
+    if (code(k + 4) !== c || code(k - 4) !== c || code(k + Wd * 4) !== c || code(k - Wd * 4) !== c) continue;
+    const a = (acc[c] ??= [0, 0, 0, 0]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2];
+  }
+  const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光";
+  const out = figures.map(() => ({}));
+  for (const [c, [n, r, g, b]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)) }; }
+  return out;
+}
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site

@@ -38,6 +38,8 @@
     fail(opts = {}) {
       if (done || failed) return;
       failed = true; bar.hidden = true; percent.hidden = true;
+      // A page opened behind the ink curtain of a crossing (src/ink.js, #449) lifts it, so that what went wrong can be read.
+      document.documentElement?.classList?.remove("crossing", "crossing-open", "crossing-close");
       // A load that broke may be tried again; a browser that cannot draw at all (`reason: "webgl"`) is told why instead,
       // with no retry, since it would fail the same way. The count keeps the two apart. What broke is named (#326):
       // `asset`, the file — the one handed in, else the first address in the error's own words, else the last resource
