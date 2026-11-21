@@ -27,7 +27,7 @@
 //      the nearest vertices of the same part, then along the arm; then one weight to each point, NOVICE_WELD), and the
 //      sash's end wholly to the `sashTail` bone;
 //   1b. (#286) draws the fingers together and the thumb in, in the palm's plane (SPREAD, PIVOT, THUMB);
-//   3a. (#286, ARMS_IN > 0 only) turns the arms in about the shoulder, for the outline (tools/novice-outline.mjs);
+//   3a. (#286; 0.8 cm by default since #163) turns the arms in about the shoulder, for the outline (tools/novice-outline.mjs);
 //   7b. (#286) adds the helper bones under the arms (tools/novice-rig.mjs, weighed by bone heat with the robe) and keeps
 //       the arms' weights off the robe's body below the shoulder;
 //   8. writes four meshes (skin, robe, legs, shoes) in novice.glb's format: the same attributes, joints numbered as
@@ -339,13 +339,13 @@ for (const p of Object.values(pieces).filter((q) => q.skinInside)) {
   console.log(`${p.what}: ${n} triangles of bare forearm moved to the skin`);
 }
 
-// ---- 3a. the arms drawn in (ARMS_IN, #286; 0, the default, leaves them) ----
+// ---- 3a. the arms drawn in (ARMS_IN, #286; 0.008 by default since #163, the 3D review's choice; ARMS_IN=0 gives the sixth round's r6) ----
 // One of the two ways the 3D review offered to keep his reach within BODY (0.38 m) without widening BODY: the arms of the
 // A-pose turned in about the shoulder's ball until the hands stand ARMS_IN nearer his middle. At 50-55 cm above his soles
 // the hands and cuffs are the widest of him (0.391 m on the fourth round, over BODY by 1.1 cm). The sleeve keeps its seam:
 // the turn comes in over the first ARMS_RAMP of its surface from where it is sewn to the robe's body, and is whole past
 // it; forearms and hands turn whole, except where they are sewn into a sleeve, where they go as the sleeve does there.
-const ARMS_IN = +(process.env.ARMS_IN ?? 0), ARMS_RAMP = +(process.env.ARMS_RAMP ?? 0.06);
+const ARMS_IN = +(process.env.ARMS_IN ?? 0.008), ARMS_RAMP = +(process.env.ARMS_RAMP ?? 0.06);
 if (ARMS_IN > 0) {
   const sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
   const key = (P, i) => `${P[i * 3]},${P[i * 3 + 1]},${P[i * 3 + 2]}`, torsoKeys = new Set(); { const t = pieces.tripo_part_6; for (let i = 0; i < t.P.length / 3; i++) torsoKeys.add(key(t.P, i)); }

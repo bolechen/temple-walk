@@ -25,7 +25,7 @@ import fs from "node:fs";
 const { levelPlan, L: LEVEL, LEVEL_ID, checks } = await import("../tests/unit/level-plan.mjs");
 const { CHEEK, stairProfile } = await import("../app/src/geo.js");
 const { createMonk } = await import("../app/src/monk.js");
-const { dressed } = await import("../tests/unit/novice-glb.mjs");   // the sculpted body he wears in the page, read from the file
+const { dressed, sculpted } = await import("../tests/unit/novice-glb.mjs");   // the bodies he may wear in the page, read from their files: Tripo's (the default, #163) and Meshy's (?body=sculpt)
 const { createTrees } = await import("../app/src/trees.js");
 const { censerGeometry } = await import("../app/src/censer.js");
 
@@ -45,7 +45,7 @@ export function outline() {
   // knee, but for his walking stride only sideways: a foot is put out ahead only toward where he is going, and where
   // something stands in his way he is stopped short of it and stands (he turns on the spot with his feet together).
   const bins = new Float32Array(40), low = new Float32Array(40), v = new THREE.Vector3();
-  for (const make of [createMonk, () => dressed(createMonk)]) for (const [speed, pray] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {   // both bodies; standing, walking, hurrying, hands together, in the air
+  for (const make of [createMonk, () => dressed(createMonk), () => sculpted(createMonk)]) for (const [speed, pray] of [[0, false], [2.1, false], [4.2, false], [0, true], [0, "hop"], [2.1, "hop"]]) {   // every body he may wear (none of them may reach further than the floor allows); standing, walking, hurrying, hands together, in the air
     const monk = make(), striding = speed > 0 && pray !== "hop";
     for (let k = 0; k < 150; k++) {
       monk.update(1 / 30, speed, pray, k / 30, () => 0, { heightAt: () => 0, stairs: false }); monk.group.updateMatrixWorld(true); monk.skeleton?.update?.();   // he is a skinned figure: his surface is where his bones put it, not where it was modelled

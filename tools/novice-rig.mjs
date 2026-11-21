@@ -32,7 +32,7 @@ export const HELPERS = [
  * @param {{ name: string, parent: string, follow: string, k: number }[]} [helpers]
  */
 export function rig(monk, helpers = HELPERS) {
-  if (monk.helpers) return monk;
+  if (monk.helpers?.length) return monk;
   const sk = monk.skeleton, B = monk.bones, run = monk.update;
   run.call(monk, 0, 0, "bind", 0); monk.group.updateMatrixWorld(true);
   const list = helpers.map((h) => {
@@ -63,7 +63,7 @@ export function rig(monk, helpers = HELPERS) {
     }
   };
   monk.update = function (...a) { const r = run.apply(monk, a); if (a[2] !== "bind") drive(); else for (const h of list) { h.bone.quaternion.identity(); h.bone.position.copy(h.parent.worldToLocal(h.follow.getWorldPosition(v))); h.bone.updateMatrixWorld(true); } return r; };
-  monk.helpers = list;
+  Object.defineProperty(monk, "helpers", { value: list, configurable: true });   // monk.js has a getter of its own by that name
   return monk;
 }
 
@@ -74,9 +74,10 @@ export const helpersOf = (extras) => extras?.helpers || [];
  * Dress `monk` in a body read by tests/unit/novice-glb.mjs (or any { geometries, extras }), rigging it first if the body
  * was weighted to helper bones.
  */
-export function wear(monk, body, material = new THREE.MeshStandardMaterial()) {
-  if (helpersOf(body.extras).length) rig(monk, helpersOf(body.extras));
-  monk.dress(body.geometries, material, body.extras.robeColor);
+export function wear(monk, body, material = new THREE.MeshStandardMaterial(), { beads = false } = {}) {
+  // monk.js adds the helpers itself now (#163); the beads are left where they were laid unless asked, so that
+  // novice-measure-beads.mjs still measures them before and after relayBeads
+  monk.dress(body.geometries, material, body.extras.robeColor, { helpers: helpersOf(body.extras), beads });
   return monk;
 }
 

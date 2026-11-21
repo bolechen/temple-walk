@@ -6,7 +6,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createMonk } from "../../app/src/monk.js";
 import { bodyOf } from "../../app/src/novice.js";
-import { rig, helpersOf, relayBeads } from "../novice-rig.mjs";
+import { helpersOf, relayBeads } from "../novice-rig.mjs";
+import { teaBowl } from "../../app/src/rites.js";
 
 const W = 300, H = 640;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -64,8 +65,8 @@ function showFaces(m) {
     mat.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>', '#include <dithering_fragment>\n  if (!gl_FrontFacing) gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);'); };
     mat.customProgramCacheKey = () => 'faces'; o.material = mat; });
 }
-function dress(m) { if (!body) return; if (helpersOf(body.gltf.parser.json.extras).length) rig(m, helpersOf(body.gltf.parser.json.extras));   // a body weighted to helper bones (#286)
-  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, body.gltf.parser.json.extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }
+function dress(m) { if (!body) return; const extras = body.gltf.parser.json.extras;   // a body weighted to helper bones (#286) has monk.js add them
+  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; m.dress(g, material, robeColor, { helpers: helpersOf(extras), beads: false }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {
@@ -81,7 +82,7 @@ const POSES = {
   tea: (m) => hold(m, (B, act) => {
     const mouth = B.head.localToWorld(new THREE.Vector3(0, 0.052, 0.128)), cup = mouth.sub(new THREE.Vector3(0, 0.06, -0.07));
     bowl.position.copy(cup); bowl.quaternion.identity(); scene.add(bowl);
-    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * 0.068, 0.034, 0.012).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
+    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * 0.068, -0.025, -0.025).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
   }),
   // the tea as it is drunk, seated on his stool: `stage.tea` = [tilt, nod] of the bowl at his lips (#286; rites.js tilts
   // it to 0.78 with the head back 0.24)
@@ -89,12 +90,14 @@ const POSES = {
     const [tilt, nod] = stage.tea || [0.78, -0.24]; act.nod = nod;
     const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -tilt), mouth = B.head.localToWorld(new THREE.Vector3(0, 0.052, 0.128)), cup = mouth.sub(new THREE.Vector3(0, 0.06, -0.07).applyQuaternion(q));
     bowl.position.copy(cup); bowl.quaternion.copy(q); scene.add(bowl);
-    const [hx, hy, hz] = stage.hold || [0.068, 0.034, 0.012];   // rites.js's grip, in the bowl's frame
+    const [hx, hy, hz] = stage.hold || [0.068, -0.025, -0.025];   // rites.js's grip (hold()), in the bowl's frame
     for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * hx, hy, hz).applyQuaternion(q).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
   }, "chair", -0.44),
   incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; const [by, bz] = stage.brow || [0.15, 0.15]; B.head.localToWorld(h.at.set(s * 0.0125, by, bz)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),
 };
-const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.035, 0.05, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0x3d3a36, roughness: 0.5, side: THREE.DoubleSide }));
+// rites.js's own bowl (#163: an open cylinder stood in for it here, and its empty bottom showed in the tea's pictures)
+const bowl = teaBowl({ glaze: new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 0.18 }), tea: new THREE.MeshStandardMaterial({ color: 0x6b7a3c, roughness: 0.7 }) });
+bowl.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
 function hold(m, set, pose = false, floorY = 0) {
   const hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 0 });
   const act = { bow: 0, twist: 0, nod: 0, look: 0, breath: null, hands: { left: hand(), right: hand() } };

@@ -6,7 +6,7 @@ import "./dom-stub.mjs";
 import * as THREE from "three";
 const { buildSite, createWalker, BODY, LEVELS, APPROACH } = await import("../../app/src/site.js");
 const { createMonk } = await import("../../app/src/monk.js");
-const { dressed } = await import("./novice-glb.mjs");
+const { dressed, sculpted } = await import("./novice-glb.mjs");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site);
 const { keptOff, isGrid } = await import("./walkers.mjs");
@@ -15,7 +15,7 @@ const { CUSHION } = await import("../../app/src/geo.js");
 const tableOf = (/** @type {any} */ t, h = 0.4) => { const g = BODY - keptOff(walker, h); return isGrid(walker) ? { x0: t.x0 + g, x1: t.x1 - g, z0: t.z0 + g, z1: t.z1 - g } : t; };
 const { isColumn: column } = await import("./walkers.mjs"), isColumn = (/** @type {any} */ p) => column(site, p);
 
-for (const [which, make] of [["built in code", createMonk], ["sculpted", () => dressed(createMonk)]]) test(`the width the plan allows him is the width of the model, in every pose it takes (${which})`, () => {
+for (const [which, make] of [["built in code", createMonk], ["Tripo's, worn by default", () => dressed(createMonk)], ["Meshy's", () => sculpted(createMonk)]]) test(`the width the plan allows him is the width of the model, in every pose it takes (${which})`, () => {
   let reach = 0; const v = new THREE.Vector3();
   // Standing, walking, hurrying, hands together, and in the air. (Seated, his knees spread wider than this; but he
   // sits only where a seat has been set for him, and is put on it, not walked into it.)

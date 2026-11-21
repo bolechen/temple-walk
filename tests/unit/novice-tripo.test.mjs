@@ -1,23 +1,22 @@
-// The body made from Tripo's layered model (tools/novice-tripo.mjs, issue #246) held to what the sculpted body is held to
-// (novice.test.mjs) and to what that one fails: sitting on a stool and cross-legged without parting at a seam, no black
-// under the robe. The file is a trial and is not in git: it is read from NOVICE_TRIPO, or from tools/out/novice-tripo.glb
-// where the tool writes it by default; without either these tests are skipped.
-//   node tools/novice-tripo.mjs <dir with seg-model.glb and comp-model.glb> && node --test tests/unit/novice-tripo.test.mjs
+// The body made from Tripo's layered model (tools/novice-tripo.mjs, issues #246, #286), which the page wears by default
+// since #163: held to what the sculpted body is held to (novice.test.mjs) and to what that one fails: sitting on a stool
+// and cross-legged without parting at a seam, no black under the robe. Read from app/shared/models/novice-tripo.glb, or
+// from NOVICE_TRIPO to hold a rebuilt one (node tools/novice-tripo.mjs <dir with seg-model.glb and comp-model.glb>) to the same.
 import test from "node:test"; import assert from "node:assert/strict";
 import fs from "node:fs";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 const { createMonk } = await import("../../app/src/monk.js");
-const { readNovice } = await import("./novice-glb.mjs");
-const { rig, wear, helpersOf } = await import("../../tools/novice-rig.mjs");
+const { readNovice, dressed: wearing, TRIPO } = await import("./novice-glb.mjs");
+const { rig, helpersOf } = await import("../../tools/novice-rig.mjs");
 
-const FILE = process.env.NOVICE_TRIPO || new URL("../../tools/out/novice-tripo.glb", import.meta.url).pathname;
+const FILE = process.env.NOVICE_TRIPO || TRIPO.pathname;
 const SHIPPED = new URL("../../app/shared/models/novice.glb", import.meta.url);
-const skip = !fs.existsSync(FILE) && `no ${FILE}: run tools/novice-tripo.mjs first`;
+const skip = false;
 const PARTS = ["skin", "robe", "legs", "shoes"];
-const body = skip ? null : readNovice(FILE);
-// he wears it as the page would once taught its helper bones (tools/novice-rig.mjs): rigged first, then dressed
-const dressed = () => wear(createMonk(), body);
+const body = readNovice(FILE);
+// he wears it as the page does (novice.js → monk.dress with the file's helper bones; the beads laid on it)
+const dressed = () => wearing(createMonk, FILE);
 const world = (mesh, i, v = new THREE.Vector3()) => mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld);
 const tris = (g) => PARTS.reduce((s, n) => s + g[n].index.count / 3, 0);
 
@@ -174,14 +173,47 @@ test("the cloth is not drawn out under the raised arms, nor round the back foot'
 // shoulder's ball; in the bind pose they have not turned.
 test("the helper under each arm turns half as far as the arm swings, from the shoulder's ball", { skip: skip || !helpersOf(body.extras).length }, () => {
   const m = dressed(), hand = () => ({ at: new THREE.Vector3(), fingers: new THREE.Vector3(0, 1, 0), palm: new THREE.Vector3(1, 0, 0), w: 1 }), act = { hands: { left: hand(), right: hand() } };
-  m.update(0, 0, "bind", 0); for (const h of m.helpers) assert.ok(h.bone.quaternion.angleTo(new THREE.Quaternion()) < 1e-6, `${h.name} turned in the bind pose`);
+  m.update(0, 0, "bind", 0); for (const h of m.helperRig) assert.ok(h.bone.quaternion.angleTo(new THREE.Quaternion()) < 1e-6, `${h.name} turned in the bind pose`);
   for (let i = 0; i < 90; i++) { m.group.updateMatrixWorld(true); for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; m.bones.head.localToWorld(h.at.set(s * 0.0125, 0.15, 0.15)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); } m.update(1 / 30, 0, false, i / 30, () => 0, { act }); }
   m.group.updateMatrixWorld(true);
-  for (const h of m.helpers) {
+  for (const h of m.helperRig) {
     const down = (b) => new THREE.Vector3(0, -1, 0).transformDirection(b.matrixWorld), arm = down(h.follow);
     const swing = h.axis.clone().transformDirection(h.parent.matrixWorld).angleTo(arm), mine = h.axis.clone().transformDirection(h.parent.matrixWorld).angleTo(h.axis.clone().transformDirection(h.bone.matrixWorld));
     assert.ok(swing > 1.5, `${h.name}: the arm swung only ${swing.toFixed(2)} rad`);
     assert.ok(Math.abs(mine - swing / 2) < 0.05, `${h.name}: turned ${mine.toFixed(2)} rad for a swing of ${swing.toFixed(2)}`);
     assert.ok(h.bone.getWorldPosition(new THREE.Vector3()).distanceTo(h.follow.getWorldPosition(new THREE.Vector3())) < 1e-6, `${h.name} left the shoulder`);
   }
+});
+
+// #163: the page reads the body with GLTFLoader, which hands each attribute as a view into one interleaved buffer
+// (position, normal, uv, joints, weights side by side, 56 bytes to a vertex). The hem's lifting off a step reads the
+// robe's arrays three and four to a vertex; worn from interleaved attributes it must lift the same points as from
+// plain ones (it read the wrong numbers before dress() laid them out).
+test("worn from interleaved attributes, as the page's loader hands them, he moves exactly as from plain ones, the hem lifting off a step included", () => {
+  const interleave = (g) => {
+    const out = new THREE.BufferGeometry(), n = g.attributes.position.count, f = new Float32Array(n * 12), u = new Uint16Array(n * 6);
+    const fl = new THREE.InterleavedBuffer(f, 12), ul = new THREE.InterleavedBuffer(u, 6);
+    for (let i = 0; i < n; i++) {
+      for (let c = 0; c < 3; c++) { f[i * 12 + c] = g.attributes.position.getComponent(i, c); f[i * 12 + 3 + c] = g.attributes.normal.getComponent(i, c); }
+      for (let c = 0; c < 2; c++) f[i * 12 + 6 + c] = g.attributes.uv.getComponent(i, c);
+      for (let c = 0; c < 4; c++) { u[i * 6 + 1 + c] = g.attributes.skinIndex.getComponent(i, c); }
+      for (let c = 0; c < 4; c++) f[i * 12 + 8 + c] = g.attributes.skinWeight.getComponent(i, c);
+    }
+    out.setAttribute("position", new THREE.InterleavedBufferAttribute(fl, 3, 0)); out.setAttribute("normal", new THREE.InterleavedBufferAttribute(fl, 3, 3));
+    out.setAttribute("uv", new THREE.InterleavedBufferAttribute(fl, 2, 6)); out.setAttribute("skinWeight", new THREE.InterleavedBufferAttribute(fl, 4, 8));
+    out.setAttribute("skinIndex", new THREE.InterleavedBufferAttribute(ul, 4, 1)); out.setIndex(g.index);
+    return out;
+  };
+  const plain = dressed(), woven = createMonk(), b = readNovice(FILE), geos = {};
+  for (const n of PARTS) geos[n] = interleave(b.geometries[n]);
+  woven.dress(geos, new THREE.MeshStandardMaterial(), b.extras.robeColor, { helpers: b.extras.helpers });
+  // standing at the foot of a flight whose first tread is under the front of his skirt: the hem is lifted off it
+  const step = (x, z) => (z > 0.1 ? 0.45 : 0);
+  for (const m of [plain, woven]) for (let i = 0; i < 30; i++) m.update(1 / 30, 0, false, i / 30, step, { heightAt: () => 0 });
+  const scale = (m) => ["robeFront", "robeLeft", "robeBack", "robeRight"].map((n) => +m.bones[n].scale.y.toFixed(4));
+  assert.ok(scale(plain)[0] < 0.99, `the skirt's front was not lifted off the tread at all: ${scale(plain)}`);
+  assert.deepEqual(scale(woven), scale(plain), "the hem was lifted differently worn from interleaved attributes");
+  let most = 0; const a = new THREE.Vector3(), c = new THREE.Vector3();
+  for (const n of PARTS) for (let i = 0; i < plain.parts[n].geometry.attributes.position.count; i++) most = Math.max(most, world(plain.parts[n], i, a).distanceTo(world(woven.parts[n], i, c)));
+  assert.ok(most < 1e-6, `a point stands ${most} m apart`);
 });
