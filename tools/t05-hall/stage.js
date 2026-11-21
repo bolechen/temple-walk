@@ -35,6 +35,12 @@ const HALF = XS[XS.length - 1] / 2; for (let i = 0; i < XS.length; i++) XS[i] -=
 const DEPTH = 25.13, ZS = [0, 1, 2, 3, 4, 5].map((i) => -i * DEPTH / 5);              // five bays deep, taken as equal
 const COL_H = 6.06, BRACKET = 2.75, WALL = 1.2;                   // column height, bracket sets, wall thickness
 const EAVE = 3.8, RIDGE = 15.86;                                  // eaves out from the columns; ridge above the floor
+// The four tiers of each frame, the heights of their undersides, and how thick each is. Every height in this file is
+// measured from the hall's floor (F above the court), not from the court: the page's hall (app/levels/t05/hall.js, #425,
+// 665b0e4) gives the same tiers from the court, +11.8, 13.6, 15.4 and 17.2, the lowest on the bracket sets' heads
+// (6.06 + 2.75), so that from the threshold the figures' heads and faces are all under it. Ten rafters front to back,
+// 2.88 m each: eleven purlins about the ridge.
+const BEAMS = [8.8, 10.6, 12.4, 14.2], BEAM_D = 0.9, BEAM_W = 0.6, RAFTER = 2.88;
 // The altar along the middle seven bays, 37.5 × 4.8 × 0.87 m; the seven seats at the bays' centres.
 const ALTAR = { w: 37.5, d: 4.8, h: 0.87, z: -17.9 };
 const SEATS = [-16.45, -11.33, -5.8, 0, 5.8, 11.33, 16.45];
@@ -108,8 +114,13 @@ const column = (x, z) => { const c = new THREE.Mesh(colG, M.red); c.position.set
   box(0.95, 0.25, 0.95, M.stone, x, F + 0.125, z); box(1.0, 0.5, 1.0, M.timber, x, F + COL_H + 0.25, z); };
 for (const x of XS) { column(x, 0); column(x, -DEPTH); }
 for (const z of ZS.slice(1, -1)) { column(XS[0], z); column(XS[9], z); }
-for (let i = 1; i < 9; i++) column(XS[i], ZS[4]);
-for (const i of [1, 2, 7, 8]) column(XS[i], ZS[1]);
+// The inner columns as app/levels/t05/hall.js has them since #425 (665b0e4): eight in the back row (z −20.1), one under
+// each frame, and two in front at the ends of the front aisle (z −5.03); they rise past the eave columns' heads to the
+// lowest tier of the frames, BEAMS[0] (at the head of this file), as the structural review gives.
+const innerColumn = (x, z) => { const h = BEAMS[0], c = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.37, h, 20), M.red); c.position.set(x, F + h / 2, z); c.castShadow = c.receiveShadow = true; scene.add(c);
+  box(0.95, 0.25, 0.95, M.stone, x, F + 0.125, z); };
+for (let i = 1; i < 9; i++) innerColumn(XS[i], ZS[4]);
+for (const i of [1, 8]) innerColumn(XS[i], ZS[1]);
 
 // Bracket sets as one band of blocks on the walls' heads, stepping out inside and out (七铺作 drawn as a mass).
 const BY = F + COL_H, BH = BRACKET;
@@ -138,12 +149,19 @@ function roofGeometry(dy) {
 const roofIn = new THREE.Mesh(roofGeometry(0), M.roof); roofIn.castShadow = roofIn.receiveShadow = true; scene.add(roofIn);
 const roofOut = new THREE.Mesh(roofGeometry(0.6), new THREE.MeshStandardMaterial({ color: 0x5a5f5c, roughness: 0.8, side: THREE.FrontSide })); roofOut.castShadow = true; scene.add(roofOut); OUT.push(roofOut.material);
 const heightAt = (e) => { for (let k = 0; k < PROF.length - 1; k++) if (e <= PROF[k + 1][0]) { const t = (e - PROF[k][0]) / (PROF[k + 1][0] - PROF[k][0]); return PROF[k][1] + t * (PROF[k + 1][1] - PROF[k][1]); } return RIDGE; };
+// The underside's height (from the court) over a point, the lowest of the four slopes there; and a purlin's height, its
+// top just under the roof
+const underAt = (x, z) => F + heightAt(Math.min(OZ - Math.abs(z - ZC), OX - Math.abs(x)));
+const purlinY = (z) => Math.min(underAt(0, z - 0.2), underAt(0, z + 0.2)) - 0.2 - 0.06;
 // purlins (槫) along the slopes at each step of the profile, and rafters (椽) every 0.6 m on the long slopes, merged
 {
   const parts = [];
-  for (const [e] of PROF.slice(1)) {
-    const y = F + heightAt(e) - 0.25, len = 2 * (OX - e);
-    for (const s of [1, -1]) { if (e >= OZ - 0.01 && s < 0) continue; const g = new THREE.CylinderGeometry(0.2, 0.2, len, 10); g.rotateZ(Math.PI / 2); g.translate(0, y, ZC + s * (OZ - e)); parts.push(g); }
+  // eleven purlins, one at each rafter's joint, 2.88 m apart about the ridge (#425); each runs along the hall only as far
+  // as the hipped ends leave room over it
+  for (let k = -5; k <= 5; k++) {
+    const z = ZC + k * RAFTER, y = purlinY(z), within = (zz) => { let x = OX; while (x > 0 && underAt(x, zz) < y + 0.2 + 0.05) x -= 0.05; return x; };
+    const half = Math.min(within(z - 0.2), within(z + 0.2)); if (half < 0.5) continue;
+    const g = new THREE.CylinderGeometry(0.2, 0.2, 2 * half, 10); g.rotateZ(Math.PI / 2); g.translate(0, y, z); parts.push(g);
   }
   for (let x = -OX + 0.3; x < OX; x += 0.6) for (let k = 0; k < PROF.length - 1; k++) {
     const [e0, h0] = PROF[k], [e1, h1] = PROF[k + 1]; if (Math.abs(x) > OX - e1) continue;
@@ -154,13 +172,28 @@ const heightAt = (e) => { for (let k = 0; k < PROF.length - 1; k++) if (e <= PRO
   }
   const frame = new THREE.Mesh(mergeGeometries(parts), M.timber); frame.castShadow = frame.receiveShadow = true; scene.add(frame);
 }
-// the eight frames: tie beams stepping up to the ridge, on struts (驼峰/蜀柱 as blocks)
-for (let i = 1; i < 9; i++) {
-  const x = XS[i];
-  const tiers = [[0.6, 1.0, 9.0, EAVE], [0.5, 0.8, 10.6, 6.3], [0.45, 0.7, 12.0, 8.8], [0.4, 0.6, 13.5, 11.3]];
-  const ex = OX - Math.abs(x);                                    // in from the hip's eave here: no beam above the roof
-  for (const [w, h, y, e] of tiers) { if (e > ex - 0.8) continue; const half = OZ - e; box(w, h, 2 * half, M.timber, x, F + y + h / 2, ZC); box(w * 1.2, 1.2, 0.8, M.timber, x, F + y - 0.6 + 0.01, ZC + half - 0.6); box(w * 1.2, 1.2, 0.8, M.timber, x, F + y - 0.6 + 0.01, ZC - half + 0.6); }
-  if (ex > OZ) box(0.4, 1.4, 0.5, M.timber, x, F + 14.1 + 0.7, ZC);
+// the eight frames (八缝): four tiers of beams, each shorter than the one below, the lowest on the inner columns' heads,
+// each running front and back as far as the purlin it carries or the roof's underside allows (the hipped ends lower
+// it), short posts between tiers and one up to the ridge purlin; as app/levels/t05/hall.js builds them (#425). Under
+// this white box's own roof (eave 8.2, ridge 15.86 above the floor; the page's is steeper) the fourth tier has no room
+// and is left out.
+{
+  const parts = [], bx = (w, h, d, x, y, z) => parts.push(new THREE.BoxGeometry(w, h, d).translate(x, y, z));
+  const reach = (x, top) => { let f = null, k = null; for (let z = 0; z >= -DEPTH; z -= 0.05) if (underAt(x, z) >= top) { f ??= z; k = z; } return [f ?? ZC, k ?? ZC]; };
+  for (let i = 1; i < 9; i++) {
+    const x = XS[i], edge = x + Math.sign(x) * BEAM_W / 2; let prev = null;
+    BEAMS.forEach((b, j) => {
+      const y = F + b, pf = ZC + RAFTER * (4 - j), pb = ZC - RAFTER * (4 - j), [rf, rb] = reach(edge, y + BEAM_D + 0.05);
+      const z1 = Math.min(pf, rf), z0 = Math.max(pb, rb); if (z1 - z0 < 1.5) return;
+      bx(BEAM_W, BEAM_D, z1 - z0, x, y + BEAM_D / 2, (z0 + z1) / 2);
+      if (prev) for (const z of [z0 + 0.4, z1 - 0.4]) bx(BEAM_W * 0.9, y - prev, 0.7, x, (prev + y) / 2, z);
+      prev = y + BEAM_D;
+      for (const [z, at] of [[z1, pf], [z0, pb]]) { const up = purlinY(at) - 0.2; if (Math.abs(z - at) < 0.01 && up - prev > 0.1) bx(BEAM_W * 0.8, up - prev, 0.5, x, (prev + up) / 2, z + Math.sign(ZC - z) * 0.25); }
+    });
+    const crown = purlinY(ZC) - 0.2;
+    if (prev && crown - prev > 0.3 && crown <= underAt(edge, ZC + 0.3)) bx(BEAM_W * 0.8, crown - prev, 0.6, x, (prev + crown) / 2, ZC);
+  }
+  const frames = new THREE.Mesh(mergeGeometries(parts), M.timber); frames.castShadow = frames.receiveShadow = true; scene.add(frames);
 }
 
 // The altar and, per seat, a Sumeru base (须弥座) as stacked mouldings.
