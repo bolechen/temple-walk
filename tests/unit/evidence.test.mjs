@@ -60,6 +60,36 @@ test("CI's check: nothing over 1 MB under an evidence folder; bad manifests fail
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test("CI's check: an evidence folder holds at most one picture (png, jpg, webp); the rest is pushed and listed in the manifest", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ev-"));
+  try {
+    const dir = path.join(root, "docs/t00/evidence/x"), other = path.join(root, "docs/t00/evidence/y");
+    fs.mkdirSync(dir, { recursive: true }); fs.mkdirSync(other, { recursive: true });
+    fs.writeFileSync(path.join(dir, "MANIFEST.json"), JSON.stringify(good));
+    fs.writeFileSync(path.join(other, "MANIFEST.json"), JSON.stringify(good));
+    fs.writeFileSync(path.join(dir, "collage.jpg"), Buffer.alloc(1000));
+    fs.writeFileSync(path.join(other, "a.png"), Buffer.alloc(1000));       // one in each folder: fine
+    assert.deepEqual(checkTree(root), []);
+    fs.writeFileSync(path.join(dir, "second.png"), Buffer.alloc(1000));    // two in one folder
+    const bad = checkTree(root).join("\n");
+    assert.match(bad, /docs\/t00\/evidence\/x: 2 pictures/);
+    assert.match(bad, /collage\.jpg/); assert.match(bad, /second\.png/);
+    assert.ok(!/evidence\/y/.test(bad), "the other folder is not blamed");
+    fs.rmSync(path.join(dir, "second.png"));
+    fs.writeFileSync(path.join(dir, "third.webp"), Buffer.alloc(1000));    // webp counts, case does not matter
+    assert.match(checkTree(root).join("\n"), /2 pictures/);
+    fs.rmSync(path.join(dir, "third.webp"));
+    fs.mkdirSync(path.join(dir, "sub"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "sub", "Deep.JPG"), Buffer.alloc(1000)); // a picture in a subfolder counts toward its folder
+    assert.match(checkTree(root).join("\n"), /evidence\/x: 2 pictures/);
+    fs.rmSync(path.join(dir, "sub"), { recursive: true });
+    assert.deepEqual(checkTree(root), []);
+    // text and films are not pictures here
+    fs.writeFileSync(path.join(dir, "README.md"), "x"); fs.writeFileSync(path.join(dir, "run.webm"), Buffer.alloc(1000));
+    assert.deepEqual(checkTree(root), []);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test("the repository itself passes the check", () => {
   assert.deepEqual(checkTree(ROOT), []);
 });
