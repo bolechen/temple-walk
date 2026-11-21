@@ -2283,7 +2283,10 @@ const scenarios = {
       await t.until(async () => (await t.page.evaluate(() => window.__joya())).mine >= 1, 60000, "pulling the rope did not count a stroke");
       j = await t.page.evaluate(() => window.__joya());
       expect(j.line.includes("106") && j.take, "the stroke should show at once and offer the card: " + JSON.stringify(j));
-      expect(await t.page.evaluate(() => window.__joyaFlush()), "the report did not go");
+      // The page's own five-second tick may send the stroke before the hook is asked (the first report waits for nothing,
+      // and the slower the drawing the likelier the tick is first), so the report is waited for, whoever sent it. The tick
+      // keeps the wall clock, not frames, so this waits in seconds.
+      await t.until(async () => { await t.page.evaluate(() => window.__joyaFlush()); return api.posts.length >= 1 && (await t.page.evaluate(() => window.__joya())).sent === 1; }, 60000, "the report did not go");
       expect(api.posts.length === 1 && api.posts[0].n === 1 && Number.isInteger(api.posts[0].tz), "one report of one stroke with the clock's offset: " + JSON.stringify(api.posts));
       // Others ring: the mountain passes 108 (and 216) between two answers; the far hills answer once.
       // It waits for a gap of three seconds after his own stroke, and is counted apart from the close's far bell.
