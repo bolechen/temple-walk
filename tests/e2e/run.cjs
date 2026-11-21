@@ -1375,6 +1375,17 @@ const scenarios = {
     expect((await t.page.textContent("#titleSeals")).includes("上回走到钟楼"), "the title should say where he was: " + (await t.page.textContent("#titleSeals")));
     await t.shot("e2e-resume"); await t.page.click("#enterBtn"); let st = await t.state();
     expect(Math.abs(st.x - 14) < 0.3 && Math.abs(st.yaw - 0.4) < 0.05, "he is not where he was left: " + JSON.stringify([st.x, st.z, st.yaw]));
+    // Left inside a hall (#375): the place kept is the room's own, and coming back he is in that room where he stood, not
+    // dropped (the room lies under the courts, where the ground's floor is solid) or sent back down the path.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the great hall");
+    const inRoom = await t.state(); await t.page.evaluate((s) => window.__pose(s.x + 0.8, s.z - 2.5, 0.3, 0), inRoom); await t.frames(3);
+    const stood = await t.state(), hallName = await t.page.evaluate(() => window.__halls.find((h) => h.id === "main").name);
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.hall === "main" && Math.hypot(p.x - stood.x, p.z - stood.z) < 0.2; }, 60000, "where he stood in the hall was never kept: " + JSON.stringify(await t.page.evaluate(() => localStorage.getItem("yunjing.place.v1"))));
+    await t.page.reload(); await ready();
+    expect((await t.page.textContent("#titleSeals")).includes("上回走到" + hallName), "the title should say he was in the great hall: " + (await t.page.textContent("#titleSeals")));
+    await t.page.click("#enterBtn"); await t.frames(3); st = await t.state();
+    expect(st.room === "main" && Math.hypot(st.x - stood.x, st.z - stood.z) < 0.5 && Math.abs(st.yaw - stood.yaw) < 0.05, "coming back he should be in the great hall where he stood: " + JSON.stringify({ was: [stood.x, stood.z, stood.yaw, stood.room], now: [st.x, st.z, st.yaw, st.room] }));
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the hall");
     // (The observance is started without handing its promise back: the page would wait for the whole of it.)
     // With a seal in the book, beginning again is asked twice, empties the book and starts at the foot of the path.
     await t.page.evaluate(() => { const p = window.__places.well; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to lose");
