@@ -4,6 +4,14 @@
 import { AXIS, FOOT, LANE, SECOND } from "./axis.js";
 import { ARRIVE, PLATFORM, STATION } from "./site.js";
 
+const HALL_ROUTES = Object.freeze({
+  "up the flight to the terrace and down again": [[0, 26], [0, 12], [0, 26]],
+  "over the middle door's sill into the hall": [[0, 6], [0, -4]],
+  // (each aisle walked north to south and left by its south end: turned out of an aisle's north end, round the front inner column, the eye moves
+  // 0.157 m on its own in a frame against follow.test's 0.15, an issue of the camera's, not of these routes: see the issue named in DECISIONS.md)
+  "round the worship band by the east and west aisles": [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]],
+});
+
 /** @type {Record<string, any>} */
 export default {
   // The seven fixed views of the handoff, with what each must and must not show (docs/t05/PRD.md §3; tools/cameras.mjs writes docs/t05/camera-manifest.json from them and the plan's
@@ -30,6 +38,21 @@ export default {
       ["Wuliang hall's passage", 0, AXIS.hallZ, SECOND.y + 1.6],
       ...Object.entries(STATION).map(([k, [x, z]]) => [`station ${k}`, x, z, (k === "A" || k === "B" ? 0 : PLATFORM.h) + 1.6]),
     ],
+  },
+  // The camera's routes inside and up to the great hall (PLAN.md item 12, gap 4): up the flight to the terrace and down again, over the middle door's
+  // sill into the hall, and round the worship band by the east and west aisles and under the inner bay (PRD.md §1.4 route 3: not behind the altar;
+  // station E is at (0, -9) since #549, and every leg keeps off the figures, their attendants and the kings). tests/unit/follow.test.mjs and
+  // spring-arm.test.mjs walk them with WALK_LEVEL=t05.
+  follow: {
+    routes: () => HALL_ROUTES,
+    // Where he stands still and the view is swung right round: a grid over the terrace, the flight's foot and the hall's front half.
+    spots: { x: [-12, 12], z: [-12, 24], step: 3 },
+  },
+  springArm: {
+    routes: () => HALL_ROUTES,
+    lensRoutes: ["over the middle door's sill into the hall"],
+    // What the walks of the eye's space are gathered over: the hall, its platform and terrace, and the court before them.
+    gather: { x0: -40, x1: 40, z0: -40, z1: 45, bottom: -10, top: 40 },
   },
   nearplane: {
     routes: () => {
