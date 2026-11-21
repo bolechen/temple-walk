@@ -176,6 +176,8 @@
 
 81. **T05 白盒也上 canary。** 所有者 2026-11-21：「t05 改成 canary可以测」。11-20 定的是白盒只在工作台开放（第 79 条），这次改为工作台加 canary 都认 `?level=t05`，生产仍不认。canary 只给测试的人看（noindex，没有访客计数），第 2a 项（#389）也已让 T05 不读写 T00 的存档。由 T05 PRD 会话开小 PR，改 `bench.js` 和构建扫描。同日 #357（为他人点灯）所有者实测通过，已合入；#347 除夕撞钟按主创建议定（末句留下，不足 108 声只发卡片，渠道为小红书、微信、X），所有者已用真机听过配乐，没有问题。
 
+82. **省额度：开发会话降档。** 所有者 2026-11-21：「都按你的」。起因是所有者转来的一条帖子（Claude Code 的子代理默认继承主会话的推理强度，v2.1.315 起可用 `CLAUDE_CODE_SUBAGENT_EFFORT` 单独调低，见 code.claude.com/docs/en/env-vars）。定两条：①子代理默认 medium：服务器不许会话自己设这个变量，由所有者在 claude.ai 的环境设置里给 `buddhist-say` 加 `CLAUDE_CODE_SUBAGENT_EFFORT=medium`；②主创派开发会话时，普通活用 Sonnet、effort 设 medium；难活（造像、大的重构、架构）才用 Opus 或 high，并在派活消息里说明理由。今天撞额度的大头是同时开着的几个长时间 Opus 会话，不是子代理，所以第②条省得更多。
+
 ## 协作与自动同步
 
 **2026-11-16 交给研究 Site 一侧（ChatGPT）的目标：** Site 不再保存目标副本，改为现读本仓库的 `docs/handoff/LATEST-GOALS.md`、`llms.txt` 和 open issue；Site 上旧的 `/handoff/T00/LATEST-GOALS.md`、`/handoff/T00-ART-GOAL.txt` 改为指向仓库。原因：Site 那份副本停在 70a564e，把已合入的玩法 Goal 写成未实施，美术目标（CAM-01～06）与仓库的 `art-goal.md`（art1–art6，#72）不是同一份，留影仍写默认 16:9。仓库不改 Site，由所有者在 ChatGPT 里执行；以 Site 上实际读到的内容复核。
