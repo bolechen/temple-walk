@@ -19,9 +19,10 @@ bpy.context.view_layer.objects.active = obs[0]
 if len(obs) > 1: bpy.ops.object.join()
 ob = bpy.context.view_layer.objects.active; bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 co = np.empty(len(ob.data.vertices) * 3); ob.data.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
-mn, mx = co.min(0), co.max(0); k = H / (mx[2] - mn[2])
-# stage (x, y up, z toward viewer) = (bx, bz, -by) after centring x/y and putting the base at 0
-co = (co - [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, mn[2]]) * k
+mn, mx = co.min(0), co.max(0); k = H / (mx[2] - mn[2]) if H > 0 else 1.0
+# stage (x, y up, z toward viewer) = (bx, bz, -by) after centring x/y and putting the base at 0 (height 0: the file is
+# already in the stage frame, as tools/blender/varada.py writes its pieces, and is left where it is)
+if H > 0: co = (co - [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, mn[2]]) * k
 ob.data.vertices.foreach_set("co", co.ravel()); ob.data.update()
 sc = bpy.context.scene; sc.render.engine = "BLENDER_WORKBENCH"; sc.render.resolution_x = sc.render.resolution_y = 900
 sc.display.shading.light = "STUDIO"; sc.display.shading.color_type = "SINGLE"; sc.display.shading.single_color = (0.75, 0.72, 0.66)
@@ -36,7 +37,7 @@ for vname in views:
   cam.rotation_euler = (C - cam.location).to_track_quat("-Z", "Z" if vname not in ("below", "top") else "Y").to_euler()
   f = f"{out}-{vname}.png"; sc.render.filepath = f; bpy.ops.render.render(write_still=True)
   # the picture's axes in the stage's frame: right and up
-  ax = {"front": ((1, 0, 0), (0, 1, 0)), "left": ((0, 0, -1), (0, 1, 0)), "right": ((0, 0, 1), (0, 1, 0)), "below": ((1, 0, 0), (0, 0, 1)), "top": ((1, 0, 0), (0, 0, -1))}[vname]
+  ax = {"front": ((1, 0, 0), (0, 1, 0)), "left": ((0, 0, -1), (0, 1, 0)), "right": ((0, 0, 1), (0, 1, 0)), "below": ((-1, 0, 0), (0, 0, -1)), "top": ((1, 0, 0), (0, 0, -1))}[vname]
   c3 = np.array([cx, cy, cz]); im = Image.open(f).convert("RGB"); dr = ImageDraw.Draw(im); px = 900 / size
   for i, (axis, horiz) in enumerate(((ax[0], True), (ax[1], False))):
     A = np.array(axis); c0 = float(c3 @ A)

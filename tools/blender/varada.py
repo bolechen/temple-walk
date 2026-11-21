@@ -2,7 +2,8 @@
 #
 #   python3 tools/blender/varada.py <varada.json> <out dir> [--stage=hand|all]
 #
-# Step 1 (hand): the donor's hand is cut out of Sikhin's mesh below the plane `donor.cut` and within `donor.keep`,
+# Step 1 (hand): the donor's hand is cut out of Sikhin's mesh below the plane `donor.cut` and inside the box `donor.keep`
+# (min, max; it leaves out the robe beside and behind the hand and the sleeve above it),
 # welded into one piece (the generated meshes are many unwelded shells; `donor.weld` metres),
 # mirrored across x (a left hand becomes a right one; the faces are turned back out after the mirror), and set on
 # Sakyamuni's wrist: its wrist-to-fingertips axis along target.wrist→target.fingertips, its palm toward target.palm,
@@ -35,7 +36,21 @@ if T.get("sha256") and log["target"]["sha256"] != T["sha256"]: sys.exit(f"target
 # --- the donor's hand ---
 ob, st, _ = load(D["file"], D["height"])
 cp, cn = np.array(D["cut"]["point"]), np.array(D["cut"]["normal"], float); cn /= np.linalg.norm(cn)
-K = D["keep"]; keep = ((st - cp) @ cn > 0) & (np.linalg.norm(st - K["centre"], axis=1) < K["radius"]) & (st[:, 0] > K["xmin"])
+# The generated mesh is many unwelded shells, and the hand is a few of them (palm, thumb, fingers) with the wrist on a
+# shell that runs on up into the sleeve, and a patch of the palm on a shell of the robe: a shell lying mostly (`whole`)
+# or partly (`part`) inside the box `keep` is taken, cut at the wrist and at the box; the robe and the knee, whose
+# shells lie mostly outside the box, are left.
+K = D["keep"]; lo, hi = np.array(K["min"]), np.array(K["max"]); inbox = np.all((st > lo) & (st < hi), axis=1); below = (st - cp) @ cn > 0
+from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import connected_components
+fv = np.empty(len(ob.data.polygons) * 3, dtype=np.int64); ob.data.polygons.foreach_get("vertices", fv); F = fv.reshape(-1, 3)
+E = np.r_[F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]]; n = len(st)
+_, lab = connected_components(coo_matrix((np.ones(len(E)), (E[:, 0], E[:, 1])), shape=(n, n)), directed=False)
+frac = np.bincount(lab, weights=inbox, minlength=lab.max() + 1) / np.maximum(np.bincount(lab, minlength=lab.max() + 1), 1)
+whole = frac >= K.get("whole", 0.8); part = (frac >= K.get("part", 0.4)) & ~whole
+keep = (whole[lab] | part[lab]) & inbox & below
+for lo2, hi2 in K.get("drop", []): keep &= ~np.all((st > lo2) & (st < hi2), axis=1)   # scraps of robe that touch the hand   # every shell kept is still cut at the wrist and the box (a hand shell may run on into the sleeve)
+log["donor"]["shells_whole"] = int(whole[np.unique(lab[inbox])].sum()); log["donor"]["shells_part"] = int(part[np.unique(lab[inbox])].sum())
 me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
 bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
 gone = [f for f in bm.faces if not all(keep[v.index] for v in f.verts)]
@@ -64,9 +79,10 @@ bpy.ops.export_scene.gltf(filepath=os.path.join(out, "hand-donor.glb"), export_f
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
 log["donor"]["welded_verts"] = len(P)
 bm = bmesh.new(); bm.from_mesh(me); log["donor"]["open_edges"] = sum(1 for e in bm.edges if e.is_boundary); log["donor"]["nonmanifold_edges"] = sum(1 for e in bm.edges if not e.is_manifold and not e.is_boundary); bm.free()
-# the donor hand's own frame: the wrist is the middle of what lies within 2 cm of the cut; the long axis runs from it to
-# the farthest point (the middle finger's tip); the palm's normal is the thinnest direction, turned toward +z
-wr = P[np.abs((P - cp) @ cn) < 0.02].mean(0); far = P[np.argmax(np.linalg.norm(P - wr, axis=1))]
+# the donor hand's own frame: the wrist is the middle of what lies nearest the cut; the long axis runs from it to
+# the point farthest past the cut (the middle finger's tip); the palm's normal is the thinnest direction, turned toward +z
+wr = P[(P - cp) @ cn < np.percentile((P - cp) @ cn, 3)].mean(0)   # the wrist: the middle of the 3% of points nearest the cut
+far = P[np.argmax((P - cp) @ cn)]   # the fingertip: the point farthest past the cut (the middle finger's tip, the hand hanging)
 ax = (far - wr) / np.linalg.norm(far - wr); c = P.mean(0); _, _, vt = np.linalg.svd(P - c, full_matrices=False)
 nrm = vt[2] - (vt[2] @ ax) * ax; nrm /= np.linalg.norm(nrm)
 if nrm[2] < 0: nrm = -nrm
@@ -90,3 +106,61 @@ log["placed"] = {"scale": round(float(sc), 4), "turn_deg": T.get("turn_deg", 0),
 for o in bpy.context.scene.objects: o.select_set(o == ob)
 bpy.ops.export_scene.gltf(filepath=os.path.join(out, "hand.glb"), export_format="GLB", use_selection=True)
 json.dump(log, open(os.path.join(out, "hand.json"), "w"), indent=1); print(json.dumps(log))
+if opt.get("stage", "all") == "hand": sys.exit(0)
+# --- step 2: Sakyamuni's own knee where the old hand lay, and the new hand joined on ---
+# The old hand is fused into the knee (there is no knee surface under it): each point of it, inside the box `knee.box`,
+# is moved onto Sakyamuni's own left knee mirrored across x (the same robe, the same folds: the 3D review's third risk),
+# fully inside and less toward the box's edges (`knee.ease` metres), so the mesh stays one piece with nothing to stitch.
+# Then the new hand is joined to the figure, its wrist sunk `target.overlap` metres into the forearm.
+hand_co = Q.copy(); hand_faces = np.array([list(p.vertices) for p in me.polygons])
+ob, st, (k, off) = load(T["file"], T["height"])
+Kn = cfg["knee"]; blo, bhi = np.array(Kn["box"][0]), np.array(Kn["box"][1])
+inb = np.all((st > blo) & (st < bhi), axis=1)
+# how far inside the box each point is (to its nearest face), eased to a weight
+dist_in = np.minimum((st - blo).min(1), (bhi - st).min(1)); wgt = np.clip(dist_in / Kn["ease"], 0, 1) * inb
+# the mirror of the left knee: the figure's points in the mirrored box, their faces, as a BVH to find the nearest point
+from mathutils.bvhtree import BVHTree
+mlo, mhi = blo * [-1, 1, 1], bhi * [-1, 1, 1]; mlo, mhi = np.minimum(mlo, mhi) - [Kn["margin"], 0, 0], np.maximum(mlo, mhi) + [Kn["margin"], 0, 0]
+fv = np.empty(len(ob.data.polygons) * 3, dtype=np.int64); ob.data.polygons.foreach_get("vertices", fv); F = fv.reshape(-1, 3)
+inm = np.all((st > mlo - Kn["margin"]) & (st < mhi + Kn["margin"]), axis=1); fm = F[np.all(inm[F], axis=1)]
+mir = st * [-1, 1, 1]
+tree = BVHTree.FromPolygons([Vector(p) for p in mir], [tuple(f[::-1]) for f in fm])   # the mirror turns the faces round
+idx = np.nonzero(wgt > 0)[0]; moved = 0; far_ = 0.0
+for i in idx:
+  hit = tree.find_nearest(Vector(st[i]))
+  if hit[0] is None: continue
+  tgt = np.array(hit[0]); d = tgt - st[i]; st[i] = st[i] + wgt[i] * d; moved += 1; far_ = max(far_, float(np.linalg.norm(d)))
+log["knee"] = {"box": Kn["box"], "ease": Kn["ease"], "points_in_box": int(inb.sum()), "points_moved": moved, "largest_move_m": round(far_, 3),
+               "from": "Sakyamuni's own left knee, mirrored across x"}
+# the old hand's sides and back, laid onto the knee, leave folded slivers: relax them in place (Blender's Smooth,
+# weighted by the same easing, `knee.relax` passes), then lay them back onto the mirrored knee
+me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
+if Kn.get("relax"):
+  vg = ob.vertex_groups.new(name="knee")
+  for i in idx: vg.add([int(i)], float(wgt[i]), "REPLACE")
+  md = ob.modifiers.new("relax", "SMOOTH"); md.vertex_group = "knee"; md.factor = 1.0; md.iterations = Kn["relax"]
+  bpy.context.view_layer.objects.active = ob; bpy.ops.object.modifier_apply(modifier="relax"); ob.vertex_groups.remove(ob.vertex_groups["knee"])
+  co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+  for i in idx:
+    hit = tree.find_nearest(Vector(st[i]))
+    if hit[0] is not None: st[i] = st[i] + wgt[i] * (np.array(hit[0]) - st[i])
+  log["knee"]["relaxed"] = Kn["relax"]
+# the new hand, joined
+nb = len(st); allco = np.r_[st, hand_co]
+me = ob.data; bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+for p in hand_co: bm.verts.new(Vector(to_blender(p[None])[0]))
+bm.verts.ensure_lookup_table()
+for f in hand_faces:
+  try: bm.faces.new([bm.verts[nb + int(j)] for j in f])
+  except ValueError: pass
+for i, v in enumerate(bm.verts[:nb]): v.co = Vector(to_blender(st[i][None])[0])
+bm.to_mesh(me); bm.free(); me.update()
+log["joined"] = {"hand_points": len(hand_co), "hand_faces": len(hand_faces), "how": "joined over the wrist, the hand's wrist sunk into the forearm (no boolean: the figure is many open shells)"}
+# back to the file's own frame and units, so the rest of the pipeline (thinning, baking) takes it as it took r1
+co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
+S3 = np.c_[co[:, 0], co[:, 2], -co[:, 1]]; B3 = S3 / k; B3 = np.c_[B3[:, 0], -B3[:, 2], B3[:, 1]] + off
+me.vertices.foreach_set("co", B3.ravel()); me.update()
+for o in bpy.context.scene.objects: o.select_set(o == ob)
+dst = os.path.join(out, "sakyamuni-varada.glb"); bpy.ops.export_scene.gltf(filepath=dst, export_format="GLB", use_selection=True, export_normals=True)
+log["out"] = {"file": dst, "sha256": sha(dst)}
+json.dump(log, open(os.path.join(out, "varada.json"), "w"), indent=1); print(json.dumps({k2: log[k2] for k2 in ("knee", "joined", "out")}))

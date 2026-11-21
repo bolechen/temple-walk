@@ -118,6 +118,505 @@
     1
    ],
    "d": 0.0058
+  },
+  {
+   "op": "scale",
+   "note": "mouth: across ×1.0, height ×0.8, depth ×1.0 about the slit's middle, back -0.01 of the face's width; radii [1.3, 0.6, 1.3] mouth widths; nothing above the base of the nose (face-ops.py: w 0.265 m, face 0.96 m, slit y 6.618, nose base y 6.798)",
+   "c": [
+    0.0,
+    -0.04479,
+    0.76702
+   ],
+   "r": [
+    0.03993,
+    0.01843,
+    0.03993
+   ],
+   "rd": [
+    0.07064,
+    0.07064,
+    0.07064
+   ],
+   "s": [
+    1.0,
+    0.8,
+    1.0
+   ],
+   "back": -0.00111,
+   "below": 0.78788,
+   "fade": 0.01738
+  },
+  {
+   "op": "scale",
+   "note": "chin's pad: depth ×0.68 about the hollow under the lip (y 6.597), radius 1.0 mouth widths, centred 0.45 w below the slit; nothing above the slit",
+   "c": [
+    0.0,
+    -0.04078,
+    0.75319
+   ],
+   "r": [
+    0.03071,
+    0.02764,
+    0.03071
+   ],
+   "s": [
+    0.9,
+    1.0,
+    0.68
+   ],
+   "below": 0.7647,
+   "fade": 0.00348
+  },
+  {
+   "op": "push",
+   "note": "the jaw's line lifted 0.01 of the face's width on the left, 1.1 w out and 0.9 w below the slit (face-ops.py)",
+   "seed": [
+    0.03378,
+    0.03601,
+    0.73937
+   ],
+   "r": 0.02457,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.00111
+  },
+  {
+   "op": "push",
+   "note": "the jaw's line lifted 0.01 of the face's width on the right, 1.1 w out and 0.9 w below the slit (face-ops.py)",
+   "seed": [
+    -0.03378,
+    0.0185,
+    0.73937
+   ],
+   "r": 0.02457,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.00111
+  },
+  {
+   "op": "push",
+   "note": "the hollow under the lip filled by 0.5 of its depth (0.0 m), radius 0.5 mouth widths (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.04078,
+    0.76458
+   ],
+   "r": 0.01536,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.0
+  },
+  {
+   "op": "attenuate",
+   "note": "the lips' volume kept to 0.6 of itself, radius 1.1 w, smoothed over 1.6 w (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.04479,
+    0.76702
+   ],
+   "r": 0.03378,
+   "sr": 0.04914,
+   "k": 0.6,
+   "iter": 800
+  },
+  {
+   "op": "attenuate",
+   "note": "the philtrum's pad kept to 0.2 of itself (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.051,
+    0.77919
+   ],
+   "r": 0.01382,
+   "sr": 0.02457,
+   "k": 0.2,
+   "iter": 500
+  },
+  {
+   "op": "facex",
+   "note": "the lower face narrowed ×0.95 across below the cheekbones (y 6.955), easing over 0.35 of the brow-to-mouth span, and out again down the neck (face-ops.py)",
+   "y0": 0.80603,
+   "fade": 0.02483,
+   "k": 0.95,
+   "rx": 0.1159,
+   "front": 0.05215,
+   "ymin": 0.70318,
+   "fadeLow": 0.01773
+  },
+  {
+   "op": "depthk",
+   "note": "underJaw: depth ×0.9 toward the head's axis, [2.5, 1.4] w about -1.8 w from the slit (face-ops.py)",
+   "c": [
+    0.0,
+    0.0,
+    0.71173
+   ],
+   "r": [
+    0.07678,
+    0.043
+   ],
+   "axis": 0.01738,
+   "k": 0.9,
+   "fade": 0.00921,
+   "top": 0.74574,
+   "bottom": 0.69609,
+   "xmax": 0.05007
+  },
+  {
+   "op": "scale",
+   "note": "the lips forward 0.033 m at the upper lip's foremost point, radii [1.0, 0.7, 1.0] w, nothing at the base of the nose (face-ops.py)",
+   "c": [
+    0.0,
+    -0.04479,
+    0.76702
+   ],
+   "r": [
+    0.03071,
+    0.0215,
+    0.03071
+   ],
+   "s": [
+    1,
+    1,
+    1
+   ],
+   "back": -0.00382,
+   "below": 0.78788,
+   "fade": 0.01738
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.159 m, y 6.378, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.01843,
+    -0.00925,
+    0.73925
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.146 m, y 6.378, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.01689,
+    -0.01053,
+    0.73921
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.132 m, y 6.378, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.01536,
+    -0.01168,
+    0.73921
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.119 m, y 6.378, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.01382,
+    -0.01246,
+    0.73925
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.106 m, y 6.379, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.01229,
+    -0.01303,
+    0.73932
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.093 m, y 6.38, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.01075,
+    -0.01339,
+    0.73942
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.079 m, y 6.381, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.00921,
+    -0.01356,
+    0.73955
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.066 m, y 6.382, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.00768,
+    -0.01361,
+    0.73972
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.053 m, y 6.384, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.00614,
+    -0.0135,
+    0.73992
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.04 m, y 6.386, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.00461,
+    -0.01333,
+    0.74016
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.026 m, y 6.389, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.00307,
+    -0.01327,
+    0.74043
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x -0.013 m, y 6.391, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    -0.00154,
+    -0.01336,
+    0.74073
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.0 m, y 6.394, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.0137,
+    0.74107
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.013 m, y 6.397, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.00154,
+    -0.01407,
+    0.74143
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.027 m, y 6.401, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.00307,
+    -0.01426,
+    0.74184
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.04 m, y 6.405, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.00461,
+    -0.01425,
+    0.74227
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.053 m, y 6.409, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.00614,
+    -0.01406,
+    0.74274
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.066 m, y 6.413, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.00768,
+    -0.01381,
+    0.74325
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.08 m, y 6.418, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.00921,
+    -0.01359,
+    0.74379
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.093 m, y 6.422, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.01075,
+    -0.01348,
+    0.74436
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.106 m, y 6.428, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.01229,
+    -0.01349,
+    0.74496
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.119 m, y 6.433, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.01382,
+    -0.01361,
+    0.7456
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.133 m, y 6.439, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.01536,
+    -0.01383,
+    0.74627
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.146 m, y 6.445, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.01689,
+    -0.01412,
+    0.74698
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
+  },
+  {
+   "op": "attenuate",
+   "note": "the chin's lower crease at x 0.159 m, y 6.451, kept to 0.3 of itself in a band 0.1 w wide (face-ops.py)",
+   "seed": [
+    0.01843,
+    -0.0144,
+    0.74772
+   ],
+   "r": 0.00154,
+   "sr": 0.00614,
+   "k": 0.3,
+   "iter": 200
   }
  ]
 }

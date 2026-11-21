@@ -7,7 +7,7 @@
   "cut": {
    "point": [
     1.8,
-    4.53,
+    4.45,
     1.0
    ],
    "normal": [
@@ -18,13 +18,33 @@
    "note": "just under the sleeve's edge, on the bare wrist (the sleeve is not carried over: Sakyamuni's right arm is bare)"
   },
   "keep": {
-   "centre": [
-    2.02,
-    4.22,
-    0.98
+   "min": [
+    1.63,
+    3.4,
+    0.4
    ],
-   "radius": 0.62,
-   "xmin": 1.45
+   "max": [
+    2.55,
+    4.8,
+    1.42
+   ],
+   "whole": 0.8,
+   "part": 0.25,
+   "drop": [
+    [
+     [
+      1.6,
+      3.45,
+      0.3
+     ],
+     [
+      1.74,
+      3.85,
+      1.5
+     ]
+    ]
+   ],
+   "note": "drop: a scrap of the sleeve's lower edge beside the little finger"
   },
   "weld": 0.002
  },
@@ -51,5 +71,23 @@
   "turn_deg": 5,
   "lift": 0.0,
   "overlap": 0.04
+ },
+ "knee": {
+  "box": [
+   [
+    -2.25,
+    2.7,
+    1.25
+   ],
+   [
+    -1.25,
+    3.98,
+    2.4
+   ]
+  ],
+  "ease": 0.08,
+  "margin": 0.1,
+  "note": "the old hand's place on the right knee: from the wrist down to the lotus, in front of the knee",
+  "relax": 40
  }
 }
