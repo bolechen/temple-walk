@@ -1,0 +1,60 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-art3_autumn-dusk_third.jpg",
+   "bytes": 423801,
+   "sha256": "8567bc1ee11f897e6774e7b943a5386e7f81c945453913828088659ba534bae2",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "after-art4_autumn-dusk_first.jpg",
+   "bytes": 297280,
+   "sha256": "1b1cb3cec8d74f7193a9440e0ef29cfbf0ec87296db13d64247e2914f3f2b7c8",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "after-court_autumn-dusk_third.jpg",
+   "bytes": 428714,
+   "sha256": "f74bb526314548ddb5d2dbbf7d54500f86324edfbc1449016e3573f4957ad561",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "after-teatable_autumn-dusk_third.jpg",
+   "bytes": 286392,
+   "sha256": "53f05b112c7460f7d935e9e043f5af6a80951009e40c118f1e78ccacadeb4e38",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-art3_autumn-dusk_third.jpg",
+   "bytes": 436561,
+   "sha256": "d8c1fc0d98469ba866146b2d41f4278031e9d59699ad4a50129282cb8f06a9f3",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-art4_autumn-dusk_first.jpg",
+   "bytes": 300301,
+   "sha256": "d9cc6e13bdef16413af44e11a99494a7d7d4bcc9287d7ab786fc1acd63c585fc",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-court_autumn-dusk_third.jpg",
+   "bytes": 411169,
+   "sha256": "820261bfd2c04f555baa8eeb8038278bbbfc0b63fb7f31524e32dd6970719c0e",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-teatable_autumn-dusk_third.jpg",
+   "bytes": 310668,
+   "sha256": "a6f17e0537652eb503ce47ed351274a188d27835bdfab3316b8868714b6d5ba7",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 425221,
+   "sha256": "1a9a35311d13a19539851bb51cc2bae0484da9d55ded4eff63cceefe3da7fa0a",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  }
+ ]
+}
