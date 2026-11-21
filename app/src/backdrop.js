@@ -65,7 +65,9 @@ export function createBackdrop(scene, M, bounds, levels, terrain, far = null) {
   const steps = [[zS + 14, bounds.fore, -13], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
   [[2.2, 1.0], [5.5, 0.82], [10, 0.62]].forEach(([o, tone], i) => {
     steps.forEach(([za, zb, base], k) => {
-      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
+      // The picture-cards are flat, and flat things do not bear looking at close: the wall hides them from the court, but from a hall's platform the
+      // eye is over the wall and a card 2 to 5 m beyond it shows its torn edge (#288). So the side bands stand 9 m out all along the courts.
+      const x = (k >= 1 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
       // Neighbouring runs of the grove overlap by a stride and each thins out over it, so no run ends in a cut and the two make one stand.
       const north = k < steps.length - 1 ? 11 : 0, south = k > 0 ? 11 : 0;
       band(x, zb - north, x, za + south, i + k * 3 + 1, tone, base + o * 0.09, [1, k === 0 ? 0 : 1]); band(-x, za + south, -x, zb - north, i + k * 3 + 20, tone, base + o * 0.09, [k === 0 ? 0 : 1, 1]);   // the south corner is closed by the band across it

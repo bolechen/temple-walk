@@ -212,6 +212,9 @@ export function buildSite(M) {
   for (const [x, z, h, lvl] of [[-13.6, 54.4, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-15.5, 1.8, 5.2, 0], [15.5, 1.8, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
+    // The baked floor sees a young evergreen's wood only, and its boughs start at 1.35 m: it let him stand 0.9 m from the trunk with
+    // the eye inside the foliage (#288). Where the written plan kept him off by its boughs' reach, the floor is shut too, and half a metre more for the sprays that hang from the boughs.
+    if (h < 8) { const r = girth("cedar", h) + 0.5; closed.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, why: "a young evergreen is clothed to the knee: the eye stays out of its boughs" }); }
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
   const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
@@ -272,10 +275,17 @@ export function buildSite(M) {
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
   const sp = putStack([
-    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
+    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true },   // (three treads up from the path, #478: it had none, and 0.45 m is more than he steps; open floor like the path's other pavilions, #274)
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
   sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
+  // Open floor on the written plan (`walkAll`) leaves no solid round the platform, so that his shoes could come down on its lip from the
+  // ground beside it (`edges`): the platform's own solid is put back, as a hall's is; the floor laid over it, the stair, is unchanged.
+  walk.solids.push({ ...place({ x0: -3.3, x1: 3.3, z0: -3.3, z1: 3.3 }, [-12.5, 50.5], 1), own: true });
+  // The open floor reaches the platform's lip, where the stair's cheek stones stand level with it: a post along the lip on each side of the stair keeps his shoes off them.
+  for (const sx of [-1, 1]) walk.posts.push(place({ x0: sx > 0 ? 0.9 : -1.9, x1: sx > 0 ? 1.9 : -0.9, z0: 2.6, z1: 2.84 }, [-12.5, 50.5], 1));
+  // The written plan walks round the stele's foot (the baked floor takes it from the mesh): 1.5 by 0.9 m, turned a quarter, and his own width.
+  walk.posts.push({ x0: -12.5 - 0.45 - BODY, x1: -12.5 + 0.45 + BODY, z0: 50.5 - 0.75 - BODY, z1: 50.5 + 0.75 + BODY, eyeTop: 3.45 });   // (`eyeTop`: the stele stands 3.6 m, and the following eye stays out of it all the way up)
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
@@ -372,6 +382,25 @@ export function buildSite(M) {
       }
       capIdx.push(b, b + 1, b + 2, b, b + 2, b + 3);
     }
+    // The two ends of the tiled roof are shut with a gable, as every wall's end is in life (#288): without it the hollow under
+    // the slopes shows as a black triangle to anyone who stands level with the end, as he now may at the summit's stair head.
+    for (const l of [0, len]) {
+      const b = capPos.length / 3;
+      for (const [yy, o] of [[H + 0.46, 0], [H + 0.1, 0.62], [H + 0.1, -0.62]]) {
+        capPos.push(alongX ? Math.min(x0, x1) + l : x0 + o, y + yy, alongX ? z0 + o : Math.min(z0, z1) + l); capUv.push(o + 0.625, o === 0 ? 0.72 : 0);   // (its tile rows run across it, not along the wall: a constant u would sit in the gutter between two rows, and be black)
+      }
+      // Wound to face out along the wall's line: the tile shader paints a back face dark, so a gable that faced inward would look no better than the gap.
+      if (alongX === (l === len)) capIdx.push(b, b + 1, b + 2); else capIdx.push(b, b + 2, b + 1);
+      // The tile shader is dark and the face looks sideways, so the shut end read as black from the stair head: over it goes the wall's own
+      // lime plaster, a finger proud and stopping a hand under the tiles, so that their edge still shows, as the wall under it is finished.
+      const out = l === len ? 1 : -1, off = out * 0.015, pts = [[H + 0.4, 0], [H + 0.1, 0.517], [H + 0.1, -0.517]].map(([yy, o]) => (alongX ? [Math.min(x0, x1) + l + off, y + yy, z0 + o] : [x0 + o, y + yy, Math.min(z0, z1) + l + off]));
+      if (alongX !== (l === len)) pts.push(pts.splice(1, 1)[0]);   // (wound to face out, as above)
+      const gable = new THREE.BufferGeometry();
+      gable.setAttribute("position", new THREE.Float32BufferAttribute(pts.flat(), 3));
+      gable.setAttribute("normal", new THREE.Float32BufferAttribute(pts.flatMap(() => (alongX ? [out, 0, 0] : [0, 0, out])), 3));
+      gable.setAttribute("uv", new THREE.Float32BufferAttribute(new Array(6).fill(0), 2));
+      body[lvl].push(gable);
+    }
     const r = { x0: Math.min(x0, x1) - (alongX ? 0 : T / 2), x1: Math.max(x0, x1) + (alongX ? 0 : T / 2), z0: Math.min(z0, z1) - (alongX ? T / 2 : 0), z1: Math.max(z0, z1) + (alongX ? T / 2 : 0) };
     shade[lvl].push(r);
     walk.solids.push({ x0: r.x0 - 0.45, x1: r.x1 + 0.45, z0: r.z0 - 0.45, z1: r.z1 + 0.45 });
@@ -396,6 +425,8 @@ export function buildSite(M) {
     root.add(mesh(footAt(merge([box(w, h, 0.7, 0, h / 2, z)]), 0), M.plaster()), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 1.0, 0.2, 0.24, 0, h + 0.62, z)]), M.stone));   // a plinth, and the ridge of its little roof
     const cp = [], cu = [], ci = [];
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
+    // Its roof's two ends are shut, as the walls' are (#288).
+    for (const e of [0, w + 0.8]) { const b = cp.length / 3; for (const [yy, o] of [[h + 0.56, 0], [h - 0.02, 0.8], [h - 0.02, -0.8]]) { cp.push(-w / 2 - 0.4 + e, yy, z + o); cu.push(o + 0.8, o === 0 ? 0.95 : 0); } if (e) ci.push(b, b + 1, b + 2); else ci.push(b, b + 2, b + 1); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
     // Both faces: a panel of diamond-laid grey brick in a frame of pale stone, the four characters gilt upon it, as on the real wall.
     for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05, M.stone); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
