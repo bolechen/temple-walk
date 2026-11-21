@@ -79,12 +79,12 @@
   ],
   "handRa": [
    -1.73,
-   3.9,
-   1.62
+   3.95,
+   1.55
   ],
   "handRb": [
-   -1.75,
-   2.8,
+   -1.73,
+   3.75,
    1.62
   ],
   "handL2a": [
@@ -231,7 +231,28 @@
    0.16
   ],
   "lipHalf": 0.135,
-  "lipH": 0.087
+  "lipH": 0.087,
+  "bk1Min": [
+   -2.2,
+   2.75,
+   1.46
+  ],
+  "bk1Max": [
+   -1.47,
+   3.98,
+   2.3
+  ],
+  "bk1P": [
+   0,
+   0,
+   1.46
+  ],
+  "bk1N": [
+   0,
+   0,
+   1
+  ]
  },
- "note_514": "round 2: the forearm carried 0.26 m forward and the hand hanging along the knee (tools/t05-statue/sakyamuni/varada.json)"
+ "note_514": "round 2: the forearm carried 0.26 m forward and the hand hanging along the knee (tools/t05-statue/sakyamuni/varada.json)",
+ "note_514_hand": "round 2: the hand painted as a box cut by a plane just before the knee (bk1: everything of the box more than 2 cm in front of the knee's face, z > 1.46), so the thumb and fingertips are skin and the knee behind them robe; the capsule only for the wrist"
 }
