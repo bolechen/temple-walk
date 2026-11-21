@@ -13,7 +13,7 @@ const { serve, launch, open } = require("../tests/e2e/lib.cjs");
   const srv = await serve(), b = await launch(), hash = "#" + encodeLamp({ wish, season: "autumn", time: "dusk" });
   for (const lang of langs) {
     const a = await open(b, srv.base, `q=low&lang=${lang}&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway`, { init: `localStorage.setItem("yunjing.journey.v1", ${JSON.stringify(bookFrom("lamp"))}); localStorage.setItem("yunjing.lang.v1", "${lang}");` });
-    await a.page.evaluate(() => { const p = window.__places.lamp; window.__pose(p.at[0], p.at[1], 0, 0); });
+    await a.page.evaluate(() => { const p = window.__places.lamp; window.__poseNear(p.at[0], p.at[1], 0, 0); });
     await a.until(async () => (await a.page.isVisible("#act")), 60000, "no button"); await a.page.click("#act"); await a.page.locator("#blessList [data-wish]").nth(wish).click();
     await a.page.waitForFunction(() => { const i = document.getElementById("blessImg"); return i.complete && i.naturalWidth === 1080; }, null, { timeout: 60000 });
     const b64 = await a.page.evaluate(async () => { const r = await (await fetch(document.getElementById("blessSave").href)).blob(), u8 = new Uint8Array(await r.arrayBuffer()); let s = ""; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode(...u8.subarray(i, i + 8192)); return btoa(s); });
