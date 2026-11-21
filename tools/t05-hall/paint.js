@@ -79,13 +79,17 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
     vec2 le = uFace[7].z > .5 ? (s == 0 ? uFace[6].xy : uFace[6].zw) : e;
     float rise = uFace[7].z > .5 ? (s == 0 ? uFace[7].x : uFace[7].y) : 0.;
     vec2 ql = q - vec2(0., rise * (q.x - le.x) * sign(le.x));
-    float lt = uFace[3].x * (1. - .9 * pow(clamp(abs(ql.x - le.x) / uFace[2].w, 0., 1.), 2.)); vec2 lc = le + vec2(0., uFace[5].x);
+    // and, toward the outer corner, it is gone before the corner (#480 r7, the art director: a line on the edge, not a band)
+    float outer = clamp((ql.x - le.x) * sign(le.x) / uFace[2].w, 0., 1.);
+    float lt = uFace[3].x * (1. - .9 * pow(clamp(abs(ql.x - le.x) / uFace[2].w, 0., 1.), 2.)) * (1. - smoothstep(.45, .8, outer)); vec2 lc = le + vec2(0., uFace[5].x);
     // a half-open eye under the lid line (only drawn, the carving unchanged): a narrow lens of white, widest in the middle,
     // and a dark pupil in it, looking down at whoever stands below (#480, the art director's trial for r7)
     if (uFace[5].z > 0.) {
       float ex = (ql.x - le.x) / (uFace[2].w * .8), below = lc.y - ql.y, hw = uFace[5].z * (1. - ex * ex);
-      float white = step(abs(ex), 1.) * smoothstep(-aa, aa, below) * (1. - smoothstep(hw - aa, hw + aa, below));
-      float pupil = white * (1. - smoothstep(uFace[5].w - aa, uFace[5].w + aa, length(vec2(ql.x - le.x, below - uFace[5].z * .7))));
+      // no white at the inner corner (seen level it read as a sidelong glance); the pupil a band about four tenths of the
+      // slit's width, reaching from lid to lid, in the slit's middle (#480 r7, the art director)
+      float white = step(abs(ex), 1.) * step(-.55, ex * sign(le.x)) * smoothstep(-aa, aa, below) * (1. - smoothstep(hw - aa, hw + aa, below));
+      float pupil = white * (1. - smoothstep(.32 * uFace[2].w - aa, .32 * uFace[2].w + aa, abs(ql.x - le.x)));
       eyeW = max(eyeW, white); eyeP = max(eyeP, pupil);
     }
     ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(ql, lc, uFace[2].w, -uFace[3].y)));
