@@ -110,6 +110,11 @@ if D.get("scrap"):
   bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"); bm.to_mesh(me); bm.free(); me.update()
   co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
   log["donor"]["scrap_points"] = int(inscrap.sum())
+  if D.get("fill_holes"):   # what the cut opened in the fingers' own surface closed again
+    bm = bmesh.new(); bm.from_mesh(me); f0 = len(bm.faces); bmesh.ops.holes_fill(bm, edges=bm.edges, sides=D["fill_holes"])
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3]); log["donor"]["holes_filled_after_scrap"] = len(bm.faces) - f0
+    bm.to_mesh(me); bm.free(); me.update()
+    co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
 # the donor hand's own frame: the wrist is the middle of what lies nearest the cut; the long axis runs from it to
 # the point farthest past the cut (the middle finger's tip); the palm's normal is the thinnest direction, turned toward +z
 wr = P[(P - cp) @ cn < np.percentile((P - cp) @ cn, 3)].mean(0)   # the wrist: the middle of the 3% of points nearest the cut
