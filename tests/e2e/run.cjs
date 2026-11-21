@@ -1814,7 +1814,7 @@ const scenarios = {
   } },
   // 收尾的略过 (#473): a tap that wakes a dark screen never passes the close over, however late after the page is back it lands
   // (hidden, or only a gap in the frames: some in-app browsers send no visibilitychange); the first watch is passed over only by
-  // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 再看一回 plays it again
+  // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 山顶再坐一回 plays it again
   // and writes nothing in the book.
   "ending-skip": { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
@@ -1867,7 +1867,7 @@ const scenarios = {
     await t.page.mouse.move(120, 120); await t.page.mouse.down(); p = await P(); expect(p.holding && !p.ring, "a watch that has been seen drew a ring for a tap: " + JSON.stringify(p));
     await t.page.mouse.up(); await settle();
     expect(await book() === after, "passing over a second watch changed the book");
-    // --- 再看一回
+    // --- 山顶再坐一回
     const events = () => t.page.evaluate(() => window.__eventLog().map((e) => e.name || e.event || e[0]));
     // the book is filled and the close has been seen: it is kept so, and the page is opened again as a visitor coming back
     await t.page.evaluate(() => { const j = JSON.parse(localStorage.getItem("yunjing.journey.v1")); j.seals.sit = 30; j.done = 31; j.opened = 31; j.stamped = 32; j.closed = j.closed || 30; j.closedSeason = j.closedSeason || "summer"; localStorage.setItem("yunjing.journey.v1", JSON.stringify(j)); });
@@ -1884,7 +1884,7 @@ const scenarios = {
     expect(more.map((m) => m.id).join() === "bookReplay,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper is not one thing to a line, none a seal: " + JSON.stringify(more));
     await t.page.click("#bookReplay");
     await t.until(async () => !(await t.page.isVisible("#bookMore")) && !(await t.page.isVisible("#book")), 20000, "the book and its paper did not go before the close");
-    await t.until(async () => (await R()).closing === true, 120000, "再看一回 did not play the close");
+    await t.until(async () => (await R()).closing === true, 120000, "山顶再坐一回 did not play the close");
     await t.page.mouse.down(); await settle(); await t.page.mouse.up();
     const now = await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")); const bare = (x) => JSON.stringify({ ...JSON.parse(x), told: 0 });   // (the line about the seasons being open is said once when the book is first seen full: not the close's doing)
     expect(bare(now) === bare(kept), "watching again changed the book: " + kept + " -> " + now);

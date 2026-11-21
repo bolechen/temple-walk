@@ -566,7 +566,7 @@ export function createGame(y) {
   function openBookOwed() { if (journey.owed() && !closing && !completing && !rite) complete(); else openBook(); }
   $("bookBtn")?.addEventListener("click", () => { track("demo.book", { seals: journey.count() }); openBookOwed(); });
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
-  // 再看一回 (#473): the close again from the start, from the summit mat. It stamps nothing, keeps nothing in the book and is not a new season's.
+  // 山顶再坐一回 (#473): the close again from the start, from the summit mat. It stamps nothing, keeps nothing in the book and is not a new season's.
   async function replayEnding() {
     const p = places.sit; if (!p || closing || completing || rite || !journey.closed) return;
     ui.close("book"); farEnd();
