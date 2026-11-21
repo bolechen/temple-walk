@@ -127,6 +127,34 @@ const scenarios = {
   } },
   // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
   // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  // The walk is not his while the title is up (#462): the keys, the arrows and the stick do nothing under it, whether the page
+  // opened on the path or (`?in=`) in a hall. Held for some frames, S leaves him where he stands; stepping in, it walks him.
+  "title-holds": { tier: 2, async run(b, base) {
+    for (const [name, query] of [["on the path", "q=low&debug=0"], ["in the great hall (?in=main)", "q=low&debug=0&in=main"]]) {
+      const t = await open(b, base, query + BARE, { enter: false });
+      expect(await t.page.isVisible("#title"), `${name}: the title should be up`);
+      const at = () => t.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, frames: y.frames, room: y.room }; });
+      const before = await at();
+      await t.page.keyboard.down("s"); await t.frames(40);
+      const during = await at();
+      await t.page.keyboard.up("s");
+      expect(during.frames > before.frames + 20, `${name}: the page should have drawn frames while S was held: ` + JSON.stringify([before, during]));
+      expect(Math.hypot(during.x - before.x, during.z - before.z) < 0.001 && during.room === before.room, `${name}: he walked under the title: ` + JSON.stringify([before, during]));
+      await t.page.keyboard.down("ArrowDown"); await t.frames(30); await t.page.keyboard.up("ArrowDown");
+      const arrows = await at(); expect(Math.hypot(arrows.x - before.x, arrows.z - before.z) < 0.001, `${name}: he walked on the arrow under the title: ` + JSON.stringify([before, arrows]));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    // Stepped in, the same key walks him.
+    const t = await open(b, base, "q=low&debug=0&fast=1" + BARE, { enter: false });
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
+    await t.page.waitForFunction(() => document.body.classList.contains("entered")); await t.page.keyboard.press("Escape");
+    await t.page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 });
+    const a = await t.page.evaluate(() => { const y = window.__yard(); return [y.x, y.z]; });
+    await t.page.keyboard.down("w"); await t.frames(30); await t.page.keyboard.up("w");
+    const c = await t.page.evaluate(() => { const y = window.__yard(); return [y.x, y.z]; });
+    expect(Math.hypot(c[0] - a[0], c[1] - a[1]) > 0.2, "stepped in, W should walk him: " + JSON.stringify([a, c]));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The ground keeps what comes down on it (#267): in the real page, leaves that touch the paving under the first
   // court's maple are handed to the ground's record as the frames go, and on an autumn night (a breeze below every leaf's
   // grip) none of them goes in the next minute; run on three minutes, more lie there than before.
