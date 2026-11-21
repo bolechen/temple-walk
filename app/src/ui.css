@@ -566,7 +566,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 .community-card footer .chip { color: var(--ink-3); font-size: var(--t-s); }
 @media (pointer: coarse) { .community-desktop { display: none; } .community-mobile { display: block; } }
 @media (max-width: 400px) { .community-card { padding: 26px 24px 20px; } .community-card h2 { font-size: 30px; } }
-@media (pointer: coarse) { #menuKeys { display: none; } }
+@media (pointer: coarse) { #menuKeys, .keys-only { display: none; } }   /* (a keyboard's settings are not a touch screen's: #295's A/D row) */
 @media (max-width: 400px) { #menu .card { --pb: 20px; --px: 20px; width: min(94vw, 440px); padding-top: 28px; } }
 /* A small phone held upright: the rows close up (each still a thumb's height) so that the whole sheet, 自动镜头 included, is in sight. */
 @media (max-width: 620px) and (max-height: 700px) { #menu .row .version { position: static; order: 3; flex-basis: 100%; margin: 4px 0 0; } #menu .card { --pb: 12px; gap: 4px; padding-top: 14px; } #menu h2 { margin-bottom: 0; font-size: 30px; } #menu .row { margin-top: 2px; } #menu .set { gap: 6px; } }
