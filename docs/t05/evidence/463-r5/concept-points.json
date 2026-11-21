@@ -1,0 +1,6 @@
+{
+ "about": "Where the concepts' faces were read (#463, the 3D review's second round). Pixels of the 1254×1254 pictures. Front points were read by eye from 3× enlargements; the side profile is read by face-ratios.py from the picture's own silhouette (luminance over 90, the edge to a fraction of a pixel, smoothed over 3 rows). Vipasyin has no side concept: its side ratios use Śākyamuni's (refs/t05-concept-2026-11-20/05-shakyamuni-right.webp), the same family drawn at the same scale (front and side heights of nose to chin agree, about 60 px).",
+ "vipasyin-front": {"picture": "refs/t05-concept-2026-11-21/04-vipasyin-front.webp", "corners": [[604.0, 231], [652.1, 231]], "cheeks": [[545.5, 231], [710.6, 231]], "lipTop": 224.5, "lipBottom": 238.3, "mouthW": 0.291, "frontLips": 0.287},
+ "sakyamuni": {"side": {"picture": "refs/t05-concept-2026-11-20/05-shakyamuni-right.webp", "box": [560, 140, 720, 300], "mouthY": 234, "browY": 158, "threshold": 90},
+               "front": {"picture": "refs/t05-concept-2026-11-20/04-shakyamuni-front.webp", "corners": [[604, 233], [651.7, 233]], "cheeks": [[546.7, 233], [700, 233]], "lipTop": 227.3, "lipBottom": 240.7}}
+}
