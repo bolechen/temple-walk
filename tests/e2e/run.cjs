@@ -347,7 +347,7 @@ const scenarios = {
     await t.until(async () => (await t.page.isVisible("#act")) && (await words("#act")).includes("鐘を撞く"), 30000, "the bell should be offered in Japanese");
     await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 20000, "the book did not open");
     // (the walk so far is told only after twenty steps, #185: here he has been posed, not walked)
-    expect((await words("#bookHint")).includes("鐘楼") && (await words("#bookHint")).includes("撞く"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
+    expect((await words("#bookHint")).includes("大雄宝殿") && (await words("#bookHint")).includes("香を供える"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
     expect(await t.page.evaluate(() => document.getElementById("bookImg").complete && document.getElementById("bookImg").naturalWidth === 1200), "the seal book was not drawn");
     await t.page.click("#bookClose");
     // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
