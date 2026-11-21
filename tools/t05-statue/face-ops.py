@@ -60,7 +60,7 @@ if R.get("frame"):
     for dy in Fr["ys"]:
       y = slit + dy * w; xs = np.linspace(0.3 * w, 0.9 * w, 25) * sg; h = 0.04
       dep = [((z_at(x - h, y) + z_at(x + h, y)) / 2 - z_at(x, y)) for x in xs]; k = int(np.argmax(dep)); x = float(xs[k])
-      if dep[k] < 0.003: continue
+      if dep[k] < 0.003 or dep[k] > Fr.get("maxDepth", 1.0): continue
       ops.append({"op": "push", "note": f"the trench beside the upper lip on the {side}, {round(dy, 2)} w over the slit, {round(dep[k], 3)} m below its chord, filled by {Fr['k']} of it (face-ops.py)",
                   "seed": B(x, y, z_at(x, y)), "r": round(Fr["r"] * w / s, 5), "dir": [0, -1, 0], "d": round(Fr["k"] * dep[k] / s, 5)})
 # r7 (the 3D review's fourth round: "a thin lip, told by its slit and its colour, not by its volume"): the lips' volume and
@@ -80,6 +80,28 @@ if R.get("facex"):
   ops.append({"op": "facex", "note": f"the lower face narrowed ×{Fx['k']} across below the cheekbones (y {round(cheek, 3)}), easing over {Fx['fade']} of the brow-to-mouth span, and out again down the neck (face-ops.py)",
               "y0": round(cheek / s, 5), "fade": round(Fx["fade"] * span / s, 5), "k": Fx["k"], "rx": round(1.0 / s, 5), "front": round(0.45 / s, 5),
               "ymin": round((slit - Fx["neck"] * span) / s, 5), "fadeLow": round(0.25 * span / s, 5)})
+# r8 (the 3D review's fifth round: the cheeks and jaw stood in front of the lips, so the mouth sat in a pit): the flesh
+# round the mouth, the lips left out, and the flesh under the jaw brought back toward the head's upright axis
+for key in ("cheeks", "underJaw"):
+  if not R.get(key): continue
+  C = R[key]; cy = slit + C.get("dy", 0) * w
+  op = {"op": "depthk", "note": f"{key}: depth ×{C['k']} toward the head's axis, {C['r']} w about {C.get('dy', 0)} w from the slit (face-ops.py)",
+        "c": B(0.0, cy, 0.0), "r": [round(C["r"][0] * w / s, 5), round(C["r"][1] * w / s, 5)], "axis": round(-C.get("axis", 0.0) / s, 5), "k": C["k"], "fade": round(C.get("fade", 0.3) * w / s, 5)}
+  op["c"] = [op["c"][0], 0.0, op["c"][2]]
+  if C.get("hole"): op["hole"] = {"c": [0.0, round(slit / s, 5)], "r": [round(C["hole"][0] * w / s, 5), round(C["hole"][1] * w / s, 5)]}
+  if C.get("nose"): op["nose"] = {"c": [0.0, round(sn_y / s, 5)], "r": [round(C["nose"][0] * w / s, 5), round(C["nose"][1] * w / s, 5)]}
+  if "top" in C: op["top"] = round((slit + C["top"] * span) / s, 5)
+  if "bottom" in C: op["bottom"] = round((slit + C["bottom"] * span) / s, 5)
+  if "xmax" in C: op["xmax"] = round(C["xmax"] * faceW / 2 / s, 5)
+  ops.append(op)
+# the lids' edges, which stand off the face like fins seen from the side, brought back to within a cap of the smoothed
+# surface (the 3D review's fifth round)
+if R.get("lids"):
+  Ld = R["lids"]
+  for e, side in (("eyeL", "left"), ("eyeR", "right")):
+    ey = f["eyes"][e]["y"]; ex = pts["eyes"][e][0]
+    ops.append({"op": "attenuate", "note": f"the {side} lid's edge kept within {Ld['cap']} m of the smoothed face (face-ops.py)", "seed": B(ex, ey, z_at(ex, ey)),
+                "r": round(Ld["r"] / s, 5), "sr": round(Ld["sr"] / s, 5), "cap": round(Ld["cap"] / s, 5), "back": round(0.4 / s, 5), "k": 1.0, "iter": Ld.get("iter", 300)})
 if R.get("groove"):
   G = R["groove"]; line = []
   for x in np.linspace(f["corners"]["R"], f["corners"]["L"], 15):

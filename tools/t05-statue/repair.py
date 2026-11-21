@@ -91,6 +91,21 @@ for op in spec["ops"]:
     co[:, 0] *= 1 + (op["k"] - 1) * t
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "facex", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "depthk":
+    # depth (toward the viewer, −y) scaled by k toward the head's upright axis (y = axis) inside an ellipse about c
+    # (radii r: across, up), a soft hole round the lips (hole: c and radii), and fading to nothing above `top` and
+    # beyond |x| = `xmax` (the cheekbones, the front of the ears) and inside the nose's wings (`nose`: c and radii)
+    before = co.copy(); c = np.array(op["c"], float); r = np.array(op["r"], float)
+    d = ((co[:, 0] - c[0]) / r[0]) ** 2 + ((co[:, 2] - c[2]) / r[1]) ** 2; g = np.exp(-3 * d) * (co[:, 1] < c[1] + op.get("front", 1e9))
+    for key in ("hole", "nose"):
+      if key in op:
+        h = op[key]; dh = ((co[:, 0] - h["c"][0]) / h["r"][0]) ** 2 + ((co[:, 2] - h["c"][1]) / h["r"][1]) ** 2; g *= 1 - np.exp(-3 * dh)
+    if "top" in op: g *= np.clip((op["top"] - co[:, 2]) / op.get("fade", 0.01), 0, 1)
+    if "xmax" in op: g *= np.clip((op["xmax"] - np.abs(co[:, 0])) / op.get("fade", 0.01), 0, 1)
+    if "bottom" in op: g *= np.clip((co[:, 2] - op["bottom"]) / op.get("fade", 0.01), 0, 1)
+    co[:, 1] = op["axis"] + (co[:, 1] - op["axis"]) * (1 + (op["k"] - 1) * g)
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "depthk", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   if op["op"] == "scale":
     before = co.copy(); c = np.array(op["c"], float); r = np.array(op["r"], float); S = np.array(op["s"], float)
     d = (co - c) / [r[0], r[2], r[1]]; g = np.exp(-3 * (d * d).sum(1))
@@ -147,8 +162,17 @@ for op in spec["ops"]:
     dg = bpy.context.evaluated_depsgraph_get(); ev = ob.evaluated_get(dg).data
     cs = np.empty(len(ev.vertices) * 3); ev.vertices.foreach_get("co", cs); cs = cs.reshape(-1, 3)
     ob.modifiers.remove(md); ob.vertex_groups.remove(vg)
-    kk = 1 - (1 - op["k"]) * w
-    co = np.where(keep[:, None], cs + kk[:, None] * (co - cs), co)
+    if "cap" in op:
+      # a ridge (a lid's edge standing off the face like a fin) brought back to within `cap` of the smoothed surface;
+      # whatever already lies within it is left as it is
+      # only what stands out from the face: the hollows (the eye's own slit, the socket) are left as they are
+      dv = co - cs; n = np.linalg.norm(dv, axis=1); hc = seed + np.array([0.0, op.get("back", 0.0), 0.0])
+      out = (dv * (cs - hc)).sum(1) > 0
+      f = np.where(out & (n > op["cap"]), op["cap"] / np.maximum(n, 1e-12), 1.0)
+      f = 1 - (1 - f) * w; co = np.where(keep[:, None], cs + f[:, None] * dv, co)
+    else:
+      kk = 1 - (1 - op["k"]) * w
+      co = np.where(keep[:, None], cs + kk[:, None] * (co - cs), co)
   elif op["op"] in ("smooth", "laplace"):
     # Blender's Laplacian Smooth modifier (an implicit solve, so a broad ring goes in a few steps; volume kept),
     # weighted by the falloff over the joined region
