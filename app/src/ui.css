@@ -186,6 +186,8 @@ body.photo #bookBtn, body.bare #bookBtn, body:not(.entered) #bookBtn { display: 
 .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 /* The seasons and hours are offered only once the book has been filled once (game.js sets body.seasons). */
 body:not(.seasons) .need-seasons { display: none !important; }
+/* What shows once a temple has been closed, and there is another to go to (行脚图, #449; game.js sets body.pilgrim). */
+body:not(.pilgrim) .need-pilgrim { display: none !important; }
 #goal span { display: grid; gap: 4px; font: 400 21px/1 var(--kai); letter-spacing: var(--track); }
 #goal small { font-size: var(--t-xs); letter-spacing: .2em; color: var(--on-2); }
 /* The way there: the same small seal on the picture where it lies, or at the edge toward it, with how far. */
@@ -276,6 +278,25 @@ body.clipping #photoBar, body.clipping #photoClose, body.clipping #photoSettings
 #clip video { max-width: 100%; max-height: 100%; min-height: 0; align-self: center; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #clip .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
 #clipHint { margin: 0; max-width: 28em; text-align: center; font: 400 var(--t-s)/1.7 var(--kai); letter-spacing: .08em; color: var(--ink-3); color: #d9d2c3; }
+/* The ink curtain of a crossing from one temple to another (src/ink.js, 行脚图 #449): two leaves of ink over the whole page,
+   made of <html>'s own pseudo-elements so that they are there at the first paint, before anything is built. Shut while
+   `crossing` is on <html> (put there by index.html's first script when a crossing is waiting), drawn closed by
+   `crossing-close`, drawn back by `crossing-open`. With reduced motion the leaves do not move: the curtain is a fade. */
+html.crossing::before, html.crossing::after, html.crossing-close::before, html.crossing-close::after {
+  content: ""; position: fixed; left: 0; right: 0; height: 50.4%; z-index: 1000; background: var(--ink); pointer-events: auto; transform: scaleY(1);
+}
+html.crossing::before, html.crossing-close::before { top: 0; transform-origin: top; box-shadow: 0 6px 38px 8px rgba(11,10,9,.8); }
+html.crossing::after, html.crossing-close::after { bottom: 0; transform-origin: bottom; box-shadow: 0 -6px 38px 8px rgba(11,10,9,.8); }
+html.crossing-close:not(.crossing)::before, html.crossing-close:not(.crossing)::after { animation: ink-in .7s var(--ease) both; }
+html.crossing.crossing-open::before, html.crossing.crossing-open::after { animation: ink-out .9s var(--ease) both; pointer-events: none; }
+@keyframes ink-in { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ink-out { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+@keyframes ink-fade-in { from { opacity: 0; transform: none; } to { opacity: 1; transform: none; } }
+@keyframes ink-fade-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  html.crossing-close:not(.crossing)::before, html.crossing-close:not(.crossing)::after { animation: ink-fade-in .25s linear both; }
+  html.crossing.crossing-open::before, html.crossing.crossing-open::after { animation: ink-fade-out .25s linear both; }
+}
 /* The shutter: two leaves of ink close over the view and open again, and behind them the view has stopped. */
 #curtain { position: absolute; inset: 0; pointer-events: none; display: none; }
 #curtain i { position: absolute; left: 0; right: 0; height: 50%; background: var(--ink); transform: scaleY(0); }
@@ -780,3 +801,40 @@ body.directing #joya { opacity: .45; }
 #joyaCard { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
 #joyaCard img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #joyaCard .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+/* ---- 行脚图 (#449, phase one: a plain layout of paper, a region's name, a seal and a fog; phase two, #450, draws the real map) ---- */
+#pilgrim { position: absolute; inset: 0; z-index: 47; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+.pilgrim-card { width: min(92vw, 520px); box-sizing: border-box; padding: 30px 30px 16px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; color: var(--ink-1); }
+.pilgrim-card h2 { margin: 0 0 6px; text-align: center; font: 400 32px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
+#pilgrimHint { margin: 0 0 14px; text-align: center; font: 400 var(--t-s)/1.7 var(--kai); letter-spacing: .12em; color: var(--ink-3); }
+#pilgrimList { margin: 0; padding: 14px 0 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 18px; }
+#pilgrimList li { display: grid; justify-items: center; align-content: start; width: 112px; }
+/* The three kinds of place share one frame, so that the seals (and the fog where a seal would be) stand on one line: a place to go, the one he is in, one not yet visited. None has a box. */
+#pilgrimList .go, #pilgrimList .here, #pilgrimList .fog { position: relative; box-sizing: border-box; width: 100%; min-height: 152px; margin: 0; padding: 8px 4px 10px; border: 0; background: none; display: grid; justify-items: center; align-content: start; gap: 6px; color: var(--ink-1); font: 400 var(--t-m)/1.3 var(--kai); letter-spacing: .2em; text-indent: .2em; }
+#pilgrimList img, #pilgrimList .fog i { display: block; width: 64px; height: 64px; }
+/* 24 px from the seal to the name under it (art review of #455, round three: the grown ring's lower edge had crossed the name): the 6 px of the grid and 18 more under the seal. */
+#pilgrimList .go img, #pilgrimList .here img { margin-bottom: 18px; }
+/* A place to go is one press: its seal, its region (with the stroke under it that every button of this paper has, so that a touch screen, which has no pointing, shows it can be pressed) and when it was last closed. Pointed at, focused or pressed, the vermilion ring comes out round the seal, as it does on the book's own seals (.seal-go): 116 px round a 64 px seal, 1.8 times its side, so that the stroke (drawn at 86–95% of the radius) falls outside the seal's corners, whose diagonal is 90 px. */
+#pilgrimList .go { cursor: pointer; outline: 0; -webkit-tap-highlight-color: transparent; }
+#pilgrimList .go::after { content: ""; position: absolute; top: -18px; left: 50%; width: 116px; height: 116px; margin-left: -58px; pointer-events: none; border-radius: 50%; background: var(--enso-red, none) center / 100% 100% no-repeat; opacity: 0; transform: scale(.9); transition: opacity .25s ease, transform .25s ease; }
+#pilgrimList .go:hover::after, #pilgrimList .go:focus-visible::after, #pilgrimList .go:active::after { opacity: .9; transform: scale(1); }
+#pilgrimList .go .region { position: relative; display: block; padding-bottom: 6px; }
+#pilgrimList .go .region::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 0; height: 7px; pointer-events: none; background: var(--brush-ink, linear-gradient(var(--ink-3), var(--ink-3)) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .55; }
+#pilgrimList .when { font: 400 var(--t-xs)/1.4 var(--serif); letter-spacing: .08em; text-indent: 0; color: var(--ink-3); }
+/* The one he stands in has no ring (the ring is for what can be pressed): only the vermilion words say so. */
+#pilgrimList .mark { font: 400 var(--t-xs)/1.4 var(--kai); letter-spacing: .16em; text-indent: .16em; color: #8a2a1e; }
+/* A place not yet visited is a band of mist on the mountainside, in the distance: a few light strokes of ink, wider than tall, thickest at a third or less; no name, no seal, nothing to press. */
+#pilgrimList .fog { cursor: default; }
+#pilgrimList .fog i { width: 96px; filter: blur(2.5px); background:
+  radial-gradient(ellipse 46px 6px at 54% 26%, rgba(70,64,54,.26), rgba(70,64,54,.1) 60%, rgba(70,64,54,0) 100%),
+  radial-gradient(ellipse 38px 5px at 38% 52%, rgba(70,64,54,.2), rgba(70,64,54,.08) 60%, rgba(70,64,54,0) 100%),
+  radial-gradient(ellipse 43px 5px at 64% 76%, rgba(70,64,54,.16), rgba(70,64,54,.06) 60%, rgba(70,64,54,0) 100%); }
+#pilgrimNote { min-height: 1.4em; margin: 10px 0 0; text-align: center; font: 400 var(--t-s)/1.5 var(--kai); letter-spacing: .12em; color: var(--ink-3); }
+.pilgrim-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
+@media (max-width: 400px) { .pilgrim-card { padding: 26px 20px 16px; } .pilgrim-card h2 { font-size: 28px; } #pilgrimList li { width: 100px; } #pilgrimList .fog i { width: 88px; } }
+@media (prefers-reduced-motion: reduce) { #pilgrimList .go::after { transition: none; } }
+/* The ring a held Q fills is the shared one (.holdring, src/holdring.js). It is laid so that its centre is the centre of the book's small seal at the top left, because the map is what the book turns to and the middle of the picture is where he stands; the word is on its right, and shows only while the key is held, like the ring. */
+#pilgrimHold { position: absolute; z-index: 7; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 22px - 26px); top: calc(50px + env(safe-area-inset-top, 0px) + 22px - 26px); }
+#pilgrimHold small { opacity: 0; transition: opacity .2s ease; }
+#pilgrimHold.held small { opacity: 1; transition: opacity .12s ease; }
+body:not(.entered) #pilgrimHold, body.photo #pilgrimHold { display: none; }

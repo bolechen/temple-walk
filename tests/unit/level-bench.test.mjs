@@ -33,18 +33,32 @@ test("the levels only the workbench lists are the ones the registry lists behind
   assert.match(src, /const TESTING = typeof __DEPLOY__ === "undefined" \|\| __DEPLOY__ === "preview" \|\| __DEPLOY__ === "canary";/);
   const behind = [...(src.match(/\.\.\.\(TESTING \? \{([^}]*)\} : \{\}\)/)?.[1] || "").matchAll(/\b(\w+)\s*:/g)].map((m) => m[1]);
   assert.deepEqual(behind, [...BENCH_LEVELS]);
+  // The map's names for the levels (行脚图, #449) are behind the same test: the public page names only the prologue.
+  const places = [...(src.match(/export const PLACES = \{([\s\S]*?)\n\};/)?.[1] || "").matchAll(/^\s*(?:\.\.\.\(TESTING \? \{ )?(\w+): \{ region/gm)];
+  assert.deepEqual(places.map((m) => m[1]), ["t00", ...BENCH_LEVELS]);
+  assert.match(src, /\.\.\.\(TESTING \? \{ t05: \{ region: "[^"]+", seal: "[^"]+" \} \} : \{\}\)/, "T05's name on the map is behind the test of the build");
 });
 
 test("a preview and the canary ship T05; the public page carries none of it", () => {
   const baked = { floor: fs.existsSync(path.join(ROOT, "app/shared/walk/t05.bin")), doorways: fs.existsSync(path.join(ROOT, "app/shared/doorways/t05.json")) };
   const outs = { preview: build("preview"), canary: build("canary"), production: build("production") };
   try {
+    // (#449) the page's first script is ahead of the stylesheet and the entry script in what is built, or it holds back the page's body
+    for (const [t, o] of Object.entries(outs)) {
+      const page = fs.readFileSync(path.join(o, "index.html"), "utf8"), at = page.indexOf("<script data-first>");
+      assert.ok(at >= 0 && at < page.indexOf('<link rel="stylesheet"') && at < page.indexOf('<script type="module"'), `${t}: the crossing's first script should be ahead of the stylesheet and the entry`);
+    }
     for (const t of ["preview", "canary"]) {
       const p = ofT05(outs[t]);
       assert.ok(p.module, `the ${t} holds T05's level module`); assert.ok(p.listed, `and lists it (${t})`);
       if (baked.floor) assert.ok(p.floor, `and its baked floor (${t})`); if (baked.doorways) assert.ok(p.doorways, `and its doorway list (${t})`);
     }
     assert.deepEqual(ofT05(outs.production), { module: false, listed: false, floor: false, doorways: false }, "production carries nothing of T05");
+    // (#449) nor its name on the map: the seal's characters, and the registry's entry for it. The region's word is still a line in the
+    // translation tables, which hold every line the page may show and are bundled whole (i18n.test.mjs keeps them to the page's own lines): a
+    // line of a table, not a place on the map, and nothing in the page's markup.
+    assert.ok(!scripts(outs.production).some((s) => /奉明|region\s*:\s*["'`]关外/.test(s)), "nor its seal or its entry on the map (#449)");
+    assert.ok(scripts(outs.preview).some((s) => /region\s*:\s*["'`]关外/.test(s)) && scripts(outs.canary).some((s) => /region\s*:\s*["'`]关外/.test(s)), "the testers' builds name it on the map");
   } finally { for (const o of Object.values(outs)) fs.rmSync(o, { recursive: true, force: true }); }
 });
 

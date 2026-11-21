@@ -1,0 +1,180 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 473009,
+   "sha256": "8cbbaeb4e6ef6e077c8fea8e9149ad912816e25b08e629a3ce8ecf693035546f",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p1-court-autumn-new.jpg",
+   "bytes": 210456,
+   "sha256": "85992d204b70bfaf2f2c789dc04773694f94d524ca2ec7bd4354095e7622d4df",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p1-court-autumn-old.jpg",
+   "bytes": 212534,
+   "sha256": "3225a3a8e1cab75b4c7c3062d52aa72a30fec935428bff010225588f49cabf6d",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p1-court-summer-new.jpg",
+   "bytes": 197426,
+   "sha256": "847f5af0b0f0903793b718c9458f2e3020939faf5833efcdc2c8638efd1c440d",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p1-court-summer-old.jpg",
+   "bytes": 196001,
+   "sha256": "a2c0b4ef48cf9385c1b4849fe4d8571808b50b0e7780e7044e14be5c0d3b99e6",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p1-court-winter-new.jpg",
+   "bytes": 184113,
+   "sha256": "b064d4c66a7d5c6105d794b91256f1733f577d4929f6ac8ce15141966b214ab2",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p2-front-autumn-new.jpg",
+   "bytes": 349144,
+   "sha256": "e8d2557ef9af994d61fc68f41bddc1cb14cc8403bd8fb8660d8a15cfec98b7ae",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p2-front-autumn-old.jpg",
+   "bytes": 271248,
+   "sha256": "6751ea077b299c8a27ed9b02494e3c80e0925bce93432f265c1b122f27249990",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p2-front-summer-new.jpg",
+   "bytes": 299323,
+   "sha256": "c3572ce4b92a3278cf8456ad8fe869933712c96e0bafdc80a3042feaba5c12b3",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p2-front-summer-old.jpg",
+   "bytes": 212632,
+   "sha256": "e3ebb162c0c66ce49a4aa04f21cf87e92211324a3fe3df4ced893f6af2810425",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p2-front-winter-new.jpg",
+   "bytes": 371613,
+   "sha256": "5361a6f75e88b0d63dd6b27b602cadd7eaa1c010ccf08f6810c2a04529f42bc5",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p2-front-winter-old.jpg",
+   "bytes": 261575,
+   "sha256": "90283ef034b38af7bca885e2fcd4b888bb0972a865bea48e0b19d76ee75c800c",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p3-library-autumn-new.jpg",
+   "bytes": 240496,
+   "sha256": "25691f163e222e468f935fe84d8c17ffe38d4dcb713ca4df882369a0e7cb3b1d",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p3-library-autumn-old.jpg",
+   "bytes": 251767,
+   "sha256": "f2e7dcfccbc5a9b35ab245c78ba3f38b0f60dedb4b0026067125525c91d149ed",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p3-library-summer-new.jpg",
+   "bytes": 208348,
+   "sha256": "5f84bf3415622619ec1485020baa12067ec844d53c7e9f6dac5fd638f3792512",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p3-library-summer-old.jpg",
+   "bytes": 211501,
+   "sha256": "01c2d67974d3e15dc0a38c862d1183217c3b84aa58495e05e165e683d2f1c292",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p3-library-winter-new.jpg",
+   "bytes": 209614,
+   "sha256": "51fbfcee0975ba27f874426f15d96aa66e2b3c0ad8c9f6865a26925fabde8c64",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p4-summit-autumn-new.jpg",
+   "bytes": 220840,
+   "sha256": "f2b8fd46b9a62694ad84fa2b7480e37e0bbd0a3507f78bacf9467123a6729cf1",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p4-summit-autumn-old.jpg",
+   "bytes": 222674,
+   "sha256": "522091a65e47988a0524e4f3c8bd3b684e3dca0e8d018458de729565fef59ae0",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p4-summit-summer-new.jpg",
+   "bytes": 187177,
+   "sha256": "608b7758c3853d015858bb649fa7674b35ae5097f44c2a4d0f0a2387731061d0",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p4-summit-summer-old.jpg",
+   "bytes": 185630,
+   "sha256": "51691149df9ce62bc449cb78823b2623c07d216861d863687f0a07393dd8cf29",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p4-summit-winter-new.jpg",
+   "bytes": 198187,
+   "sha256": "12b5457076a27f6f6e2d43516bb0542d2ea514f7c89aa894f96ece4de5780fea",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/p5-photo2m-autumn-new.jpg",
+   "bytes": 383932,
+   "sha256": "d7077d5cc868002a3fdb6c98144a32574469c5570d063c744bc46a4165c74a5d",
+   "rev": "552721d697f728b0f098440909c342e1147eea19"
+  },
+  {
+   "path": "pics/t05-a-new.jpg",
+   "bytes": 140600,
+   "sha256": "cd5917f79876d395d4169415ca66fd469c2da171056a3583515a71ec01ce1823",
+   "rev": "dbf9d298818db8980e7d2fcf20517c798dc008ed"
+  },
+  {
+   "path": "pics/t05-a-old.jpg",
+   "bytes": 140605,
+   "sha256": "56968de19ce1c4292002e58f81215a761a43c5648d6adba1fb643179d87a4936",
+   "rev": "dbf9d298818db8980e7d2fcf20517c798dc008ed"
+  },
+  {
+   "path": "pics/t05-arrive-new.jpg",
+   "bytes": 133347,
+   "sha256": "90f9d183c85898c4f17e4b0b60a1d4bbfbe662a50e28992c23ec6026540417e9",
+   "rev": "dbf9d298818db8980e7d2fcf20517c798dc008ed"
+  },
+  {
+   "path": "pics/t05-arrive-old.jpg",
+   "bytes": 133391,
+   "sha256": "21638befa52ad1c536a03c0205388b497b264692f77fa63f93e5ff81b1a0f773",
+   "rev": "dbf9d298818db8980e7d2fcf20517c798dc008ed"
+  },
+  {
+   "path": "pics/t05-d-new.jpg",
+   "bytes": 163098,
+   "sha256": "d192fb26d3216d42161c6290c503cf35b7bd7bba2fb1d2d23c949d09b07d7b56",
+   "rev": "dbf9d298818db8980e7d2fcf20517c798dc008ed"
+  },
+  {
+   "path": "pics/t05-d-old.jpg",
+   "bytes": 162997,
+   "sha256": "7c3124f1104b68894deef238d2262d11a41eee06f48772d6796d1bc877174aff",
+   "rev": "dbf9d298818db8980e7d2fcf20517c798dc008ed"
+  }
+ ]
+}
