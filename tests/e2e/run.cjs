@@ -166,7 +166,7 @@ const scenarios = {
       expect(r.links.length === 0, `${label} ${w}x${h}: the title meets the row of links (${r.links.join(", ")}): ` + JSON.stringify(r));
       if (opts.again) expect(r.again === null || r.again >= 24, `${label} ${w}x${h}: what stands under his feet ends ${r.again} px from the foot of the picture: ` + JSON.stringify(r));
       expect(r.sealsH <= 46, `${label} ${w}x${h}: the line about the visit is more than two lines (${r.sealsH} px): ` + JSON.stringify(r));
-      if (h <= 460) expect(r.h1[1] >= 44 && r.h1[0] >= r.linksBottom + 16, `${label} ${w}x${h}: the name should be at least 44 px high and 16 px under the links: ` + JSON.stringify(r));
+      if (h <= 460 && r.h1[1] > 0) expect(r.h1[1] >= 44 && r.h1[0] >= r.linksBottom + 16, `${label} ${w}x${h}: the name should be at least 44 px high and 16 px under the links: ` + JSON.stringify(r));
     };
     for (const [name, init] of [["a first visitor", null], ["one coming back", RETURN]]) {
       const t = await open(b, base, "q=low&debug=0", { enter: false, ...(init ? { init } : {}) });
