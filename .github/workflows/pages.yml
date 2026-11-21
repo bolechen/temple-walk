@@ -167,7 +167,7 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
-  # The unit tests (the plan, the walker, the building generator, the seasons) shared among five machines (#442): every
+  # The unit tests (the plan, the walker, the building generator, the seasons) shared among three machines (#442): every
   # tests/unit/*.test.mjs on exactly one of them, by the seconds in tests/unit/durations.json (tools/ci/unit-shard.cjs;
   # tests/unit/ci-changes.test.mjs holds that none is left out or run twice). Together they are what `pnpm test` runs.
   tests:
