@@ -1,18 +1,13 @@
 // Renders every named view of the site (see `views` in app/src/site.js) to tools/out/<name>.png.
 // usage: node tools/shots.js [--size=WxH] [--off=part,…] [--tag=-x] [name ...]     e.g. node tools/shots.js gate library; --size=1280x536 for the 2.39:1 art views
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
+const { doorwaysReady } = require("./doorway-ready.cjs");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-  
-  fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  srv = await serve(root);
   fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`;
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
@@ -30,7 +25,7 @@ const srv = http.createServer((req, res) => {
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 }).catch((e) => errs.push(String(e).slice(0, 160)));
     if (!names.length) names = await p.evaluate(() => window.__views);
     // The rooms seen through the doors are taken a face a frame once the page is up (doorway.js): wait until they are in.
-    await p.waitForFunction(() => { const r = window.__doorways?.(); return !r || (!r.busy && !r.queued.length && Object.values(r.halls).every((h) => !h.want || h.fade === 1)); }, null, { timeout: 240000, polling: 500 }).catch((e) => errs.push(String(e).slice(0, 160)));
+    await p.waitForFunction(`(${doorwaysReady})(window.__doorways?.())`, null, { timeout: 600000, polling: 500 }).catch((e) => errs.push(String(e).slice(0, 160)));   // every hall seen through its door shows its room, faded in, or has given up (#373); under software rendering three halls take minutes: their pictures come one cube a frame and fade by the frame
     await p.waitForTimeout(1200);
     await p.screenshot({ path: path.join(out, names[i].replace(/@/g, "_") + tag + ".png"), timeout: 240000 });
     console.log(names[i], JSON.stringify(await p.evaluate(() => { const y = window.__yard(); return { tris: y.tris, calls: y.calls }; })));

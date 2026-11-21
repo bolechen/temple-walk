@@ -1,7 +1,9 @@
 // What a change did to the floor he may stand on (#194): the baked grid of this commit against another's (main's, on a
 // pull request; the commit before, on a push to main).
 //
-//   node tools/walk-diff.mjs <base.bin> [new.bin = app/shared/walk/t00.bin] [--png=<dir>]
+//   node tools/walk-diff.mjs <base.bin> [new.bin = app/shared/walk/<level>.bin] [--level=<id>] [--png=<dir>]
+//
+// --level names whose floor (#405): the new file defaults to that level's, and the report says which level it is.
 //
 // It says, for the drawn floor and for the walker of the written plan alike:
 //   1. how many square metres of floor he can reach were gained or lost, counted against the building (its platform
@@ -15,6 +17,7 @@ import { inflateRawSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { decode, oldReached } from "../app/src/walkgrid.js";
 import { png } from "./walk/png.mjs";
+import { levelFromCommandLine, walkFile } from "./walk/level-arg.mjs";
 
 export const LIMIT = 1;   // square metres a part may change by before it is listed
 
@@ -79,13 +82,14 @@ export function report(c, { baseName = "基准", total = null } = {}) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2).filter((a) => !a.startsWith("--")), pngDir = process.argv.find((a) => a.startsWith("--png="))?.slice(6);
-  const [baseFile, nextFile = fileURLToPath(new URL("../app/shared/walk/t00.bin", import.meta.url))] = args;
+  const level = levelFromCommandLine();
+  const [baseFile, nextFile = walkFile(level)] = args;
   const next = decode(readFileSync(nextFile), inflate);
   const base = baseFile && existsSync(baseFile) ? decode(readFileSync(baseFile), inflate) : null;
   const c = compare(base, next);
   if (!base) c.notes.unshift(`没有基准文件（${baseFile || "未给"}）：只查可达`);
   const sum = (k) => next.grids.reduce((s, g) => s + g[k], 0).toFixed(1);
-  const text = report(c, { baseName: process.env.WALK_BASE_NAME || (baseFile ? ` ${baseFile}` : ""), total: `本提交可走面积合计：画的 ${sum("open")} m²，旧数据 ${sum("oldOpen")} m²（${next.grids.length} 张格子）。` });
+  const text = report(c, { baseName: `${process.env.WALK_BASE_NAME || (baseFile ? ` ${baseFile}` : "")}（关卡 ${level}）`, total: `本提交可走面积合计：画的 ${sum("open")} m²，旧数据 ${sum("oldOpen")} m²（${next.grids.length} 张格子）。` });
   process.stdout.write(text);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, text);
   if (pngDir) {

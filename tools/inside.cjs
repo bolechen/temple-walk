@@ -7,7 +7,7 @@
 //   A registered view gives [dx, z, yaw, pitch] from the room's centre line; --views adds the room's own offset.
 //   view = "first" | "third"; qs = more address parameters, e.g. "time=night".
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const out = process.argv[2];
 // The jobs are read before the site is built, so a wrong level or a bad list fails at once.
 const jobs = (() => {
@@ -15,16 +15,10 @@ const jobs = (() => {
   try { return require("./hall-views.cjs").views(process.argv[4]); } catch (e) { console.error(String(e.message || e).split("\n")[0]); process.exit(2); }
 })();
 const root = require("./site.cjs").site();
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), p = path.join(root, rel);
-  if (!fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-  
-  fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  srv = await serve(root);
   const base = `http://127.0.0.1:${srv.address().port}/`;
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 1280, height: 720 }, locale: "zh-CN" });

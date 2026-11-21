@@ -49,7 +49,9 @@ export function pageKeys() {
 export async function dataKeys() {
   const { SEALS, VERSES } = await import("../../app/src/journey.js");
   const { NAMES, LINES } = await import("../../app/src/mood.js");
-  const keys = new Set();
+  const { WISHES } = await import("../../app/src/wishes.js");
+  const keys = new Set(WISHES);   // the preset lines for a lamp lit for someone (#343)
+  keys.add("为人点灯");   // the action button's word at the lamp once it is lit (game.js picks it by name and shows it through t(w))
   for (const s of SEALS) for (const k of ["seal", "place", "act", "line", "hint"]) keys.add(s[k]);
   for (const [text, from] of VERSES) { keys.add(text); keys.add(from); }
   for (const k of Object.values(NAMES)) keys.add(k);

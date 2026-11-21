@@ -40,10 +40,12 @@ export const SILENT = ["cam", "show", "shot", "in", "enter", "tour", "at", "play
 
 /**
  * Who sees what after 入山. `seals` earned, `place` kept (resume.js), `start` where the path begins, `params` the
- * address's; `again`: the visitor chose 从头走起; `autocam`: the pause menu's 自动镜头; `reduced`: the system's wish for less motion.
+ * address's; `again`: the visitor chose 从头走起; `autocam`: the pause menu's 自动镜头; `reduced`: the system's wish for less motion. `level`: the level
+ * (src/level.js); one that does not say it has the opening plays none (#385). No level is the prologue.
  * @returns {{ eye: "fly" | "ink" | "none", bell: boolean }}
  */
-export function openingFor({ seals = 0, place = null, start, params, again = false, autocam = true, reduced = false }) {
+export function openingFor({ seals = 0, place = null, start, params, again = false, autocam = true, reduced = false, level = null }) {
+  if (level && !level.opening) return { eye: "none", bell: false };   // the opening is the prologue's way down its own mountain (#385)
   if (SILENT.some((k) => params.has(k))) return { eye: "none", bell: false };
   if (!again && hasProgress(seals, place, start)) return { eye: "none", bell: false };
   return { eye: !autocam ? "none" : reduced ? "ink" : "fly", bell: true };

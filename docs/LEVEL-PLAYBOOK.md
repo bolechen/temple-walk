@@ -231,14 +231,14 @@
 
 ## 附录甲（原「二之二」）　走路数据：画出来，再挂意图标记（#265 首院，#274 起全图）
 
-> 2026-11-20 注：下面第 2 步说「在 `gridsOf` 里照样列出它的格子」，`LEVEL-SPLIT.md` S5 合并后改为新关卡只在关卡对象里给 `bounds`，不改 `gridsOf`；例子里的 `SITE.GROVE_IN` 是 T00 的值。其余照旧。
+> 2026-11-21 注（#405，`LEVEL-SPLIT.md` S5）：新关卡不改 `gridsOf`，在自己的文件夹里放一个 `bake.js`（户外格子的范围 `outdoors` 与地面报告按 z 分的段 `bands`，见 `app/levels/t00/bake.js`）。页面不导入它，只有 Node 的烘焙工具读。例子里的 `SITE.GROVE_IN` 是 T00 的值。其余照旧。
 
 **新关卡不手写 `walk.solids / decks / ramps / posts / drops`。** 能走的地面、挡路的东西、台沿都从画出来的网格烘（`tools/bake-walk.mjs`，做法见 `CLAUDE.md`「The floor baked from the drawn meshes」）。T00 自 #274 起户外各层、凌霄阁平坐、八间殿内默认都走烘出来的格子；手写的那一份只为 `?walker=old` 留着，到第 6 步删。没读过本仓库的人照下面五步做：
 
 1. **画。** 建筑用 `put(opts, [x, z], 转几个直角, 层)`，台阶用 `stairGeo`，器物用 `mesh()` 加进 `root`。高过 0.25 米（`BAKE.CLIMB`，他一步迈得上的高度）的台就得有踏步或让他跳（0.255 米到他的跳高之间、没有栏杆的台沿，烘焙自己认作可以跳上跳下）；T00 的半山亭、望江亭台高 0.3 米没画踏步，旧数据靠一块手写台面走上去，#274 才补画。
-2. **说从哪里进。** 户外格子的种子是 `site.start`（`site.views.arrive`）；每间殿是 `room.door`；平坐是 `site.lofts[id].door`。新关卡在 `tools/walk/scene.mjs` 的 `gridsOf` 里照样列出它的格子（一张户外的，每个上层回廊一张，每间房一张）。
+2. **说从哪里进。** 户外格子的种子是 `site.start`（`site.views.arrive`）；每间殿是 `room.door`；平坐是 `site.lofts[id].door`。`tools/walk/scene.mjs` 的 `gridsOf` 对每个关卡都列出这些格子（一张户外的，每个上层回廊一张，每间房一张），新关卡不改它；户外那张的范围由 `app/levels/<id>/bake.js` 的 `outdoors` 给。
 3. **挂意图。** 网格表达不了的才写，挂在画它的那一行上，不另写坐标。全表见下。
-4. **烘，看。** `node tools/bake-walk.mjs`（约一分钟，之后走缓存），`node tools/walk-diff.mjs <基准.bin> --png=tools/out/walk-diff` 出图：灰是两边都到，蓝是多出来的，红是少了的。命名地点（`scene.mjs` 的 `targetsOf`：打卡点、座位、殿门、命名机位、每个画框和功德箱、梯脚、殿内机位、平坐的门）有一个走不到就失败。开着 `?debug` 面板的「碰撞 → 画出格子、外廓、眼球」站到现场看：绿点能站，红点不能，白圈是他的外廓，黄球是眼睛。
+4. **烘，看。** `node tools/bake-walk.mjs --level=<id>`（约一分钟，之后走缓存；不带 `--level` 烘所有关卡），`node tools/walk-diff.mjs <基准.bin> --level=<id> --png=tools/out/walk-diff` 出图：灰是两边都到，蓝是多出来的，红是少了的。命名地点（`scene.mjs` 的 `targetsOf`：打卡点、座位、殿门、命名机位、每个画框和功德箱、梯脚、殿内机位、平坐的门）有一个走不到就失败。开着 `?debug` 面板的「碰撞 → 画出格子、外廓、眼球」站到现场看：绿点能站，红点不能，白圈是他的外廓，黄球是眼睛。
 5. **守。** `pnpm test`（`gridwalker.test`：每段台阶来回走、每座殿四周、殿内绕柱、平坐只在栏杆内）、`pnpm run edges:grid`（他的身体不进任何东西）、`pnpm run nearplane:grid`（含 `eyeroom`：能到的格子 0 个在院墙外、竹林里、屋顶上、殿身里；眼离任何面不小于近裁剪面四角的距离）。画的不对就改画或补意图，不去改格子。
 
 **意图标记全表**（挂在画它的那一行上）：

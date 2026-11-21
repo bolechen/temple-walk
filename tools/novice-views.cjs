@@ -15,7 +15,7 @@
 // quick look while a body is being adjusted. The walking row is frame 52 of a stride from standing (`--walk` for another).
 // The page itself, the light and the paving are portrait.js's job; this is for the shape and the seams.
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const here = __dirname, out = path.join(here, "out");
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 // the bodies, in the order given: null for the one built in code
@@ -48,15 +48,9 @@ async function sleeveCount(img, ids) {
   const { build } = await import("vite");
   const stageOut = path.join(out, "novice-stage");
   await build({ configFile: false, logLevel: "error", root: path.join(here, "novice-stage"), base: "./", publicDir: false, build: { outDir: stageOut, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 4000 } });
-  const types = { ".html": "text/html", ".js": "text/javascript", ".glb": "model/gltf-binary" };
   const files = bodies.filter(Boolean);
-  const srv = http.createServer((req, res) => {
-    const rel = decodeURIComponent(req.url.split("?")[0]), m = /^\/body(\d+)\.glb$/.exec(rel);
-    const p = m ? files[+m[1]] : path.join(stageOut, path.posix.normalize("/" + (rel === "/" ? "index.html" : rel)));
-    if (!p || (!m && !p.startsWith(stageOut)) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-  });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(path.dirname(dest), { recursive: true });
+  const { serve } = require("./site.cjs"); let srv;
+  srv = await serve(stageOut, { api: false, handler: (req, res, rel) => { const m = /^\/body(\d+)\.glb$/.exec(rel); if (!m) return false; const p = files[+m[1]]; if (!p || !fs.existsSync(p)) { res.writeHead(404); res.end(); return true; } res.writeHead(200, { "content-type": "model/gltf-binary" }); fs.createReadStream(p).pipe(res); return true; } }); fs.mkdirSync(path.dirname(dest), { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 400, height: 700 }, deviceScaleFactor: 2 });
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
