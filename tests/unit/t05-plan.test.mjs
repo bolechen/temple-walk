@@ -95,6 +95,11 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
+  // Every wall closes up to the roof's underside over its inner face: no slit along a wall's top lets the sun in.
+  for (const g of h.parts.plaster) { const b = (g.computeBoundingBox(), g.boundingBox); if (b.min.y < HALL.floor + HALL.column + 0.15) continue;
+    const inX = b.max.x - b.min.x < 2, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
+    const innerX = inX ? (cx > 0 ? b.min.x : b.max.x) : 0, innerZ = inX ? (EF + EB) / 2 : (cz > (EF + EB) / 2 ? b.min.z : b.max.z);
+    assert.ok(b.max.y >= under(innerX, innerZ) - 0.01, `a wall's top at ${b.max.y.toFixed(2)} leaves a slit under the roof's underside ${under(innerX, innerZ).toFixed(2)} over its inner face`); }
   // The structural review of #425: eleven purlins, one at each rafter's joint, 2.88 m apart about the ridge.
   const zm = (EF + EB) / 2, along = h.parts.wood.map((g) => (g.computeBoundingBox(), g.boundingBox)).filter((b) => b.max.x - b.min.x > 10 && Math.abs(b.max.y - b.min.y - 0.36) < 0.01 && Math.abs(b.max.z - b.min.z - 0.36) < 0.01);
   const zs = [...new Set(along.map((b) => ((b.min.z + b.max.z) / 2).toFixed(2)))].map(Number).sort((a, b) => b - a);
@@ -120,7 +125,9 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   // Nothing of the timber or the walls passes out through the roof, the hipped ends included (#425's review: two purlins did).
   for (const [part, list] of Object.entries({ wood: h.parts.wood, woodZ: h.parts.woodZ, frame: h.parts.frame, plaster: h.parts.plaster })) for (const g of list) {
     g.computeBoundingBox(); const b = g.boundingBox;
-    for (const x of [b.min.x, b.max.x]) for (const z of [b.min.z, b.max.z]) if (Math.abs(x) <= EX && z <= EF && z >= EB) assert.ok(b.max.y <= under(x, z) + 0.05, `${part}: a piece up to ${b.max.y.toFixed(2)} passes out through the roof at (${x.toFixed(2)}, ${z.toFixed(2)}), under ${under(x, z).toFixed(2)}`);
+    // (a wall may rise into the roof's own thickness over its outer face, to close the roof's underside off; timber may not)
+    const lid = part === "plaster" ? HALL.roof - 0.02 : 0.05;
+    for (const x of [b.min.x, b.max.x]) for (const z of [b.min.z, b.max.z]) if (Math.abs(x) <= EX && z <= EF && z >= EB) assert.ok(b.max.y <= under(x, z) + lid, `${part}: a piece up to ${b.max.y.toFixed(2)} passes out through the roof at (${x.toFixed(2)}, ${z.toFixed(2)}), under ${under(x, z).toFixed(2)}`);
   }
 });
 

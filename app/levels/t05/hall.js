@@ -120,13 +120,17 @@ export function buildHall(M) {
   // underside, the wall between the bracket sets; and the bracket sets themselves, one on each column and one in the
   // middle of each bay, stepping out under the eave and in over the floor, so that from the terrace the eave reads as
   // columns, beam and brackets, not one dark band.
-  const BR = H.bracket, lt = H.lintel, cap = top + 0.2, wallUp = underAt(0, ZS[0] + 0.3);
+  const BR = H.bracket, lt = H.lintel, cap = top + 0.2;
   /** @type {[boolean, number, number, readonly number[], number][]} */
   const sides = [   // [along x?, the column line's z or x, outward sign, the column positions along it, the wall's outer face off the line]
     [true, ZS[0], 1, XS, H.front], [true, zB, -1, XS, 0.3], [false, XS[0], -1, ZS, 0.3], [false, X, 1, ZS, 0.3],
   ];
   for (const [ax, at, out, pos, off] of sides) {
     const a = pos[0], b = pos[pos.length - 1], len = Math.abs(b - a), mid = (a + b) / 2, face = at + out * off;
+    // The wall rises to the roof's underside over its inner face, which is higher than over its outer face (the roof
+    // climbs inward): stopped at the outer face's height it left a slit along every wall's top that the sun came in by
+    // (the hall's inside lit in diagonal bands). Its top above the outer face stays inside the roof's own thickness.
+    const inside = at + out * (off - H.wall), wallUp = ax ? underAt(0, inside) : underAt(inside, zm);
     const put = (list, w, h, d, u, y, v) => list.push(ax ? box(w, h, d, u, y, v) : box(d, h, w, v, y, u));
     const list = ax ? wood : woodZ;
     put(list, len, lt, 0.4, mid, top - lt / 2, face + out * 0.1);                       // the tie-beam, proud of the wall
