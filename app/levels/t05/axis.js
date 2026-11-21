@@ -15,24 +15,26 @@ import { box, merge, mesh, BODY } from "../../src/geo.js";
 import { buildShells } from "./gates.js";
 
 /** Where each of the axis's buildings stands along it (z, x = 0). Proposals but for the Wuliang hall's z, which is OSM's (S26, an inference). */
-export const AXIS = Object.freeze({ outerZ: 208, innerZ: 120, paifangZ: 100, hallZ: 67.2 });
+/**
+ * How far the inner gate (and cam07 in its passage) stands south of where the first white box put it (z = +120). From cam07 the Wuliang hall's
+ * ridge hides the Great Hall's roof; the farther the eye from the hall, the lower the hall's ridge looks against the Great Hall's (#482). The
+ * hall's ridge cannot come down much (docs/t05/DECISIONS.md: the roof's rise is the Yingzao Fashi's lowest ratio, 1:4, and the columns stay), so the gate
+ * moves instead: the way between the gates is shorter by this much and the second terrace longer. 13 or 20 m are the two tried; `docs/t05/SOURCES.md` §13.1.
+ */
+export const INNER_SHIFT = 13;
+export const AXIS = Object.freeze({ outerZ: 208, innerZ: 120 + INNER_SHIFT, paifangZ: 100, hallZ: 67.2 });
 
 /** The second terrace (SITE.md §4.2: +1.0 m, a proposal; S22, a summary: the front gate, the archway and the Wuliang hall are one group on a higher terrace than the great hall's). */
 export const SECOND = Object.freeze({ y: 1.0, hw: 14, zN: 62, wallT: 0.8, wallH: 3.2 });
 /** The way between the gates: the walls' centres, how thick and how high they are (a proposal: SITE.md has no outline for them). */
 export const LANE = Object.freeze({ hw: 8, t: 0.8, h: 3.2 });
 /** The Wuliang hall (S03: 16.14 × 12.22 m; S26: OSM 17.2 × 13.0 m, centre z = +67.2, x = +2.6, which is put on the axis): five bays, columns on a 16.14 × 12.22 m plan. Bays and platform are a proposal. */
-/**
- * How high the Wuliang hall's ridge stands (#482: from cam07 in the inner gate, the Great Hall's ridge must show over it, which wants the hall's
- * ridge under +8.5 m over the court). Plan A lowers the roof's rise (the ridge course at +8.47 m); plan B keeps the roof as it was, +10.77 m, and moves the
- * camera back out of the gate instead. Both have the smaller ornaments. `RIDGE_PLAN` is the one the build uses; docs/t05/DECISIONS.md says which was chosen.
- */
-export const HALL_PLANS = Object.freeze({ A: Object.freeze({ rise: 1.8, crest: 1.3, lift: 0.15 }), B: Object.freeze({ rise: undefined, crest: 1.7, lift: 0.15 }) });
-export const RIDGE_PLAN = "A";
 export const HALL = Object.freeze({
   xs: Object.freeze([-8.07, -5.57, -2.07, 2.07, 5.57, 8.07]),
   zs: Object.freeze([6.11, 2.04, -2.04, -6.11]),
-  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0, liftLen: 2.7, ...HALL_PLANS[RIDGE_PLAN],
+  // The roof's rise is a quarter of the distance between the front and back eave purlins (`juzhe`, the Yingzao Fashi's lowest ratio, for a two-rafter house, which
+  // the Liao halls come near: Fengguosi's 0.245; the structure review of #482), not a third as for a hall; the ornaments and the corners are smaller (the art director).
+  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0, liftLen: 2.7, lift: 0.15, crest: 1.7, juzhe: 0.25,
 });
 /** One gate house, as the outer and the inner gate are laid out: three bays, the platform's flanks meet the walls of the way. A proposal. */
 export const GATE = Object.freeze({ xs: Object.freeze([-6.4, -2.2, 2.2, 6.4]), zs: Object.freeze([3, -3]), platOut: 1.2, steps: 3.8, lift: 0.2, liftLen: 2.7, crest: 1.5 });
@@ -49,22 +51,29 @@ export const FOOT = Object.freeze({
 /** The paved way down the middle of the way and of the terrace (art director's review of #457: a path, not wall-to-wall slabs; the target picture's is about 6 m) and the tree trunks that stand beside it. A proposal. */
 export const PATH = Object.freeze({ hw: 3 });
 /** Where the trunks would stand in even pairs: x either side of the path, z along the way (and, on the terrace, clear of the archway's place by 8 m and of the gate's eave). */
-const GRID = Object.freeze({ x: 5.5, lane: Object.freeze([132, 141, 150, 159, 168, 177, 186, 195]), terrace: Object.freeze([81, 89, 109]) });
+const GRID = (() => {
+  const lane = [], terrace = [81, 89];
+  for (let z = FOOT.inner.z1 + 7.8; z <= FOOT.outer.z0 - 8; z += 9) lane.push(+z.toFixed(1));
+  for (let z = 109; z < FOOT.inner.z0 - 6.5; z += 9) terrace.push(z);
+  return Object.freeze({ x: 5.5, lane: Object.freeze(lane), terrace: Object.freeze(terrace) });
+})();
 // A trunk is moved off its grid place by up to 0.8 m along the way and 0.5 m across, takes a radius of 0.25 to 0.5 m, and carries a canopy
 // (an ellipsoid, a placeholder for the trees to come); three of them are left out, so that they do not read as a row of telegraph poles
 // (art director's review of #464). Seeded, so that every build and every picture is the same.
 const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-const OMIT = new Set(["lane|1|150", "lane|-1|177", "terrace|-1|89"]);
+const OMIT = new Set(["lane|1|2", "lane|-1|4", "terrace|-1|1"]);   // by place along each run
 const grow = () => {
   const rnd = seeded(482), out = [];
-  for (const [kind, y] of [["lane", 0], ["terrace", SECOND.y]]) for (const z of GRID[kind]) for (const sx of [-1, 1]) {
+  for (const [kind, y] of [["lane", 0], ["terrace", SECOND.y]]) for (const [n, z] of GRID[kind].entries()) for (const sx of [-1, 1]) {
     const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = 0.25 + rnd() * 0.25, rx = 2.7 + rnd() * 0.9, ry = 2.1 + rnd() * 0.7;
-    if (OMIT.has(`${kind}|${sx}|${z}`)) continue;
-    out.push(Object.freeze({ x: +(sx * (GRID.x + dx)).toFixed(2), z: +(z + dz).toFixed(2), y, r: +r.toFixed(2), rx: +rx.toFixed(2), ry: +ry.toFixed(2) }));
+    if (OMIT.has(`${kind}|${sx}|${n}`)) continue;
+    // (the two pairs before the hall stand farther out: from cam07 the lines to the Great Hall's ridge ends cross the terrace there at 3 to 4 m off the axis, at the height of a crown)
+    const out0 = kind === "terrace" && z < 95 ? 8.5 : GRID.x;
+    out.push(Object.freeze({ x: +(sx * (out0 + dx)).toFixed(2), z: +(z + dz).toFixed(2), y, r: +r.toFixed(2), rx: +rx.toFixed(2), ry: +ry.toFixed(2) }));
   }
   return Object.freeze(out);
 };
-export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
+export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, grid: GRID, list: grow() });
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 

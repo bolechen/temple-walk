@@ -85,7 +85,7 @@ export function buildShells(M, P) {
   }
 
   // ---- The Wuliang hall: five bays, a passage through the middle one, the rooms either side walled off from it ----
-  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, lift: HALL.lift, liftLen: HALL.liftLen, crest: HALL.crest, rise: HALL.rise, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
+  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, lift: HALL.lift, liftLen: HALL.liftLen, crest: HALL.crest, rise: HALL.juzhe ? HALL.juzhe * (HALL.zs[0] - HALL.zs[HALL.zs.length - 1] + (2 * PURLIN * 0.232) / 0.21) : undefined, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
   take("无量殿", hall, 0, 0);
   // Inside, two walls along the middle bay's columns close the side rooms (the exhibition of the third phase, SCOPE-OPTIONS.md (b)'s neighbours): the passage is the only floor.
   const wallH = HALL.platH + HALL.colTop, mid = Math.floor((HALL.xs.length - 1) / 2), ix = HALL.xs[mid + 1], t = 0.3, zN = HALL.zs[HALL.zs.length - 1], zS = HALL.zs[0];

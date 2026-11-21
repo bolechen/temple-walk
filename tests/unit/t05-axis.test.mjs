@@ -42,8 +42,8 @@ test("he arrives where he did: (0, 215), facing north", () => {
 
 test("the way and the forecourt lie at 0, the second terrace and the hall's and the gate's platforms at +1.0, the court at 0, on both floors", () => {
   for (const [name, w] of both) {
-    for (const [x, z] of [[0, 215], [0, 165], [0, 130], [3, 125.5], [0, 55], [0, 30]]) assert.ok(near(w.heightAt(x, z), 0), `${name}: (${x}, ${z}) at 0, not ${w.heightAt(x, z)}`);
-    for (const [x, z] of [[0, 120], [0, 100], [0, 80], [12, 66], [-12, 66], [11, 100], [0, 67.2], [0, 61], [10, 116]]) assert.ok(near(w.heightAt(x, z), SECOND.y), `${name}: (${x}, ${z}) at +1.0, not ${w.heightAt(x, z)}`);
+    for (const [x, z] of [[0, 215], [0, 195], [0, AXIS.innerZ + 10], [3, FOOT.inner.z1 + 1.3], [0, 55], [0, 30]]) assert.ok(near(w.heightAt(x, z), 0), `${name}: (${x}, ${z}) at 0, not ${w.heightAt(x, z)}`);
+    for (const [x, z] of [[0, AXIS.innerZ], [0, 100], [0, 80], [12, 66], [-12, 66], [11, 100], [0, 67.2], [0, 61], [10, AXIS.innerZ - 4]]) assert.ok(near(w.heightAt(x, z), SECOND.y), `${name}: (${x}, ${z}) at +1.0, not ${w.heightAt(x, z)}`);
   }
 });
 
@@ -63,8 +63,8 @@ test("each of the two flights has even treads: six steps from the way up to the 
 test("nothing outside the walls of the way or of the terrace can be stood on; the walls themselves stop him", () => {
   for (const [name, w] of both) {
     for (const [x, z] of [[LANE.hw + 3, 165], [-LANE.hw - 3, 165], [LANE.hw + 3, 215], [SECOND.hw + 3, 90], [-SECOND.hw - 3, 90], [25, 62.1 + 3], [0, WAY.zS + 3]]) assert.ok(w.blocked(x, z), `${name}: outside, (${x}, ${z})`);
-    for (const [x, z] of [[LANE.hw, 165], [-LANE.hw, 165], [LANE.hw, 215], [SECOND.hw, 90], [-SECOND.hw, 90], [SECOND.hw - 0.2, 119.9], [10, 120]]) assert.ok(w.blocked(x, z), `${name}: in the wall, (${x}, ${z})`);
-    for (const [x, z] of [[LANE.hw - 1.2, 165], [-LANE.hw + 1.2, 165], [LANE.hw - 1.2, 215], [SECOND.hw - 1.2, 90], [-SECOND.hw + 1.2, 90], [0, 130], [0, 90], [0, 55]]) assert.ok(!w.blocked(x, z), `${name}: inside, (${x}, ${z}) is open floor`);
+    for (const [x, z] of [[LANE.hw, 165], [-LANE.hw, 165], [LANE.hw, 215], [SECOND.hw, 90], [-SECOND.hw, 90], [SECOND.hw - 0.2, AXIS.innerZ - 0.1], [10, AXIS.innerZ]]) assert.ok(w.blocked(x, z), `${name}: in the wall, (${x}, ${z})`);
+    for (const [x, z] of [[LANE.hw - 1.2, 165], [-LANE.hw + 1.2, 165], [LANE.hw - 1.2, 215], [SECOND.hw - 1.2, 90], [-SECOND.hw + 1.2, 90], [0, AXIS.innerZ + 10], [0, 90], [0, 55]]) assert.ok(!w.blocked(x, z), `${name}: inside, (${x}, ${z}) is open floor`);
   }
 });
 
@@ -122,7 +122,7 @@ test("every size on the axis has a row in docs/t05/SOURCES.md §13, with how far
 test("what he walks round is the same on both floors: points just off each wall, each platform and each block agree", () => {
   const probes = [];
   for (const sx of [-1, 1]) {
-    for (const z of [130, 170, 195, 215]) probes.push([sx * (LANE.hw - 0.4 - 0.6), z], [sx * (LANE.hw + 0.4 + 0.6), z]);
+    for (const z of [AXIS.innerZ + 10, 170, 195, 215]) probes.push([sx * (LANE.hw - 0.4 - 0.6), z], [sx * (LANE.hw + 0.4 + 0.6), z]);
     for (const z of [70, 90, 110]) probes.push([sx * (SECOND.hw - 0.4 - 0.6), z], [sx * (SECOND.hw + 0.4 + 0.6), z]);
     probes.push([sx * (FOOT.hall.x1 + 0.9), 60.4], [sx * (FOOT.hall.x1 + 0.9), 64], [sx * (FOOT.inner.x1 + 0.9), 117.5], [sx * (FOOT.inner.x1 + 0.9), 123]);
   }
@@ -135,7 +135,7 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   assert.ok(site.paving[0].y < 0.05 && near(site.paving[1].y, SECOND.y + 0.012, 1e-9));
   // The path, the earth beside it and the gap between a trunk and the wall are all open floor; each trunk is in the way.
   for (const [name, w] of both) {
-    for (const z of [140, 175, 215]) for (const x of [0, PATH.hw - 0.5, PATH.hw + 0.6, -PATH.hw - 0.6]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the way is open`);
+    for (const z of [AXIS.innerZ + 12, 175, 215]) for (const x of [0, PATH.hw - 0.5, PATH.hw + 0.6, -PATH.hw - 0.6]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the way is open`);
     for (const z of [85, 112]) for (const x of [0, 2, 4.2, -4.2]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the terrace is open`);
     for (const x of [0, 4.2, -4.2]) assert.ok(!w.blocked(x, 100), `${name}: (${x}, 100) between the archway's posts is open`);
     for (const t of TRUNKS.list) assert.ok(w.blocked(t.x, t.z), `${name}: a trunk at (${t.x}, ${t.z}), r ${t.r}`);
@@ -144,11 +144,24 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   for (const [name, w] of both) { assert.ok(near(w.heightAt(6.8, 150), 0, 0.02), name); assert.ok(near(w.heightAt(6.8, 95), SECOND.y, 0.02), name); }
   // Trunks keep clear of the archway's place (z = 100) and of both platforms.
   const onTerrace = TRUNKS.list.filter((t) => t.y > 0), onLane = TRUNKS.list.filter((t) => t.y === 0);
-  assert.ok(onTerrace.every((t) => Math.abs(t.z - AXIS.paifangZ) >= 8 && t.z > FOOT.hall.z1 + 4 && t.z < FOOT.inner.z0 - 1 - t.rx), `the terrace's trunks and their crowns keep to the stretch between the hall's steps and the gate's eave`);
+  assert.ok(onTerrace.every((t) => Math.abs(t.z - AXIS.paifangZ) >= 8 && t.z > FOOT.hall.z1 + 4 && t.z < FOOT.inner.z0 - 1 - t.rx - 0.8 + 0.8), `the terrace's trunks and their crowns keep to the stretch between the hall's steps and the gate's eave`);
   assert.ok(onLane.every((t) => t.z > FOOT.inner.z1 + 4 && t.z < FOOT.outer.z0 - 4));
   // Scattered, not a row of poles (the art director's review of #464): off the grid by up to 0.8 m along the way and 0.5 m across, radii 0.25–0.5 m, three left out, a crown on each.
-  assert.equal(TRUNKS.list.length, 2 * (8 + 3) - 3, "three of the paired places are left empty");
-  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && Math.abs(Math.abs(t.x) - 5.5) <= 0.5 + 1e-9));
+  assert.equal(TRUNKS.list.length, 2 * (TRUNKS.grid.lane.length + TRUNKS.grid.terrace.length) - 3, "three of the paired places are left empty");
+  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && (Math.abs(Math.abs(t.x) - 5.5) <= 0.5 + 1e-9 || (t.z < 95 && Math.abs(Math.abs(t.x) - 8.5) <= 0.5 + 1e-9))));
   assert.ok(new Set(TRUNKS.list.map((t) => t.r)).size > 6 && new Set(onLane.map((t) => Math.round(t.z * 10) % 9)).size > 3, "radii and places differ");
   assert.ok(TRUNKS.list.every((t) => t.y + TRUNKS.canopyBase > 6), "a crown's underside is over six metres up, over his head and the eye's");
+});
+
+test("no tree crown stands in cam07's view of the Great Hall's ridge, along its whole length and to both ornaments' tips (#482)", async () => {
+  const { buildHall } = await import("../../app/levels/t05/hall.js"), { roof } = buildHall(M), [ex, ez] = [0, AXIS.innerZ + 1], ey = SECOND.y + 1.6;
+  const pts = []; for (let x = -roof.rx; x <= roof.rx + 1e-9; x += 0.5) pts.push([x, roof.ridge + 0.4, roof.zm]); for (const s of [-1, 1]) pts.push([s * roof.rx, roof.ridge + 2.3, roof.zm]);
+  // a segment from the eye to a point against each crown, an ellipsoid with its centre over the trunk
+  const hits = (p, t) => {
+    const c = [t.x, t.y + TRUNKS.canopyBase + t.ry, t.z], d = [p[0] - ex, p[1] - ey, p[2] - ez], o = [ex - c[0], ey - c[1], ez - c[2]], k = [t.rx, t.ry, t.rx];
+    const a = d.reduce((s, v, i) => s + (v / k[i]) ** 2, 0), b = 2 * d.reduce((s, v, i) => s + (v * o[i]) / k[i] ** 2, 0), cc = o.reduce((s, v, i) => s + (v / k[i]) ** 2, 0) - 1, disc = b * b - 4 * a * cc;
+    if (disc < 0) return false; const s0 = (-b - Math.sqrt(disc)) / (2 * a), s1 = (-b + Math.sqrt(disc)) / (2 * a); return s1 > 0 && s0 < 1;
+  };
+  const blocked = []; for (const p of pts) for (const t of TRUNKS.list) if (hits(p, t)) blocked.push(`${p.map((n) => n.toFixed(1))} by the crown at (${t.x}, ${t.z})`);
+  assert.deepEqual(blocked, [], "no crown is in the line of sight");
 });
