@@ -23,6 +23,17 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 2026-11-21：石阶读成砌的、不读成浇的（Issue #460，ART-REVIEW A3，PR #486，分支 claude/460-stone-steps）
+
+- **做了**：全寺每一段台阶都是 `stairGeo` 生成的，所以只改那一处。`stairGeo` 给每个顶点写一个 vec4 属性 `stair`（横向位置；第几级加级内深度，垂带上则是沿坡位置；高度；一个整数装台阶宽、级数、朝向受光、种子，`stairCode`/`stairDecode`），`steps` 材质（`materials.js`）据此排石：垂带头上一块压顶、其下长条石，每块一个色调；踏面两到五块，缝一级一级错开；中线磨浅带光，贴垂带的两头和踢面上方的角深而潮；苔只长在朝北下去（背阴）那几级的角里、踢面脚、垂带脚的缝里；踏面上零星几片画上去的竹叶。同一级台阶每次出同样的石头，没有随机。`procMat` 多了两个可选项 `stair`、`glsl`；`plain()` 与 `mergeStatic` 保留 `stair`。`building.js`、两个关卡的 `site.js` 把台阶摆到哪里告诉 `stairGeo`（`place`）。
+- **数**（T4 运行 `20261121-085034`，代码提交 `2af05b1`（干净），站点 sha256 `338ca548…`；改前是 main `9954fdc` 的构建，用 `BASE_SITE` 放在同一个 Job 里，改前改后交替）：三角面和绘制数逐行相同（cam02 527,283 / 86，art5 692,813 / 122，cam01 1,005,191 / 233；`__census` 逐项相同）；`__cost` 高档 1080p，art5 11.18 → 10.96 ms（8 次）、cam02 12.06 → 11.85 ms（6 次）、cam01 13.23 → 13.23 ms（4 次），都在波动之内。第一版（没收窄噪声调用）是 +0.28、+0.67、−0.93 ms，同样在波动里；`2af05b1` 把噪声只放在可能有苔的踏步和垂带上。
+- **验证**：`pnpm run check`、`typecheck` 过；`pnpm test` 885 项 872 过、13 条跳过、0 失败（新增 `stair-stones.test.mjs`：属性齐全、解码回读、朝向决定受光、同一级台阶同样的字节、`merge` 与 `mergeStatic` 保留属性；`serve.test.mjs` 加了「以 / 结尾的路径给该目录首页」）；场景 `stairs`、`snow`、`moods`、`eaves` 在 `2af05b1` 上全过。
+- **顺带修的工具**：`tools/site.cjs` 的 `serve()` 只给 `/` 配首页，`BASE_SITE` 放在 `base/` 的另一版构建一直 404，T4 上交替量帧耗做不了；现在以 `/` 结尾的路径给该目录的 `index.html`。`tools/gpu/job.cjs` 的图可以带 `path`，从另一版构建出同一张图（文件名加 `_base`）。
+- **关卡可配**（T05 主创、美术总监要求）：`M.steps.userData.stairStyle`，建场时设，第一次编译时当 uniform 读（`stoneW`、`cheekL`、`leaves`、`moss`），默认 `materials.js` 的 `STAIR_STYLE` = T00 现状；T05 在 `app/levels/t05/site.js` 的 `STAIR_STYLE` 里竹叶、苔都关。石块最窄约 0.45 倍等分宽（缝有 ±0.275 格的抖动），T05 九米宽五块时最窄约 0.8 米；美术总监说石块不小于 1.5 米指的是常见尺度，要是指每一块都不小于，要再加一个「匀」的开关（缝不抖、块数不增减），现在没做。
+- **证据**：`docs/t00/evidence/stone-steps-460/`（拼图一张、规格、清单；原图在证据库）。美术审图二的结论写在 PR 评论里。
+- **没验的**：夜景、手机低档、拍照模式成片、十六种季节时辰里别的十二种、其余七座殿的台阶近看。
+- **留给后面的**：石头的分缝和磨损现在全由 `stair` 属性和世界坐标定，要再调只改 `materials.js` 的 `steps` 和它的 `glsl` 函数；要新增一种「朝向受光」的算法，改 `stairLight`（`geo.js`）。落叶没有借 `litter.js`（那套只记跟着他走的 32 米内落地的叶），如果以后要让台阶上的叶随阵风落，再接它。
+
 ## 2026-11-20：镜头改问画出来的网格（Issue #295 PR-A，#161 迁移第 5 步，分支 feat/spring-arm-295）
 
 - **做了**：跟拍的眼睛问画出来的网格（`eyespace.js` 球加 BVH；页面分片收集 `eyegather.js`，Worker 建树 `eyebvh.worker.js`），球半径按当时镜头现算；下台阶抬高越过踏步，不缩臂；栏杆从上面越过；director 的摇镜改问同一套；滚轮进出第一人称改成连续推近（#102）。方案与测量见 `docs/t00/refactor/spring-arm-295.md`。

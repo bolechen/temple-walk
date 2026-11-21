@@ -113,13 +113,13 @@ export function buildHall(M, opts) {
   const add = (geo, mat, o = {}) => { const m = mesh(geo, mat, { ao, ...o }); m.userData.ao = o.ao === bracketAO ? "eave" : "ao" in o ? "own" : "position"; g.add(m); return m; };
 
   // ---- Platform and stairs ----
-  const run = stairGeo(1, p.platH).run, stairs = (w) => stairGeo(w, p.platH).geo;
+  const run = stairGeo(1, p.platH).run, stairs = (w, place) => stairGeo(w, p.platH, { place }).geo;
   {
     const parts = [box(PX * 2, p.platH - p.platBase, zF - zB, 0, (p.platH + p.platBase) / 2, (zF + zB) / 2)];
     const flights = [];
     // Each flight is also kept as where it stands in the building (`userData.flights`), so that its cheeks' feet can be
     // looked under (#272).
-    const at = (g.userData.flights = []), flight = (w, m) => { at.push({ w, rise: p.platH, sides: [-1, 1], m }); flights.push(stairs(w).applyMatrix4(m)); };
+    const at = (g.userData.flights = []), flight = (w, m) => { at.push({ w, rise: p.platH, sides: [-1, 1], m }); flights.push(stairs(w, m)); };
     if (p.steps) flight(p.steps, new THREE.Matrix4().makeTranslation(0, 0, zF));
     for (const bx of backAt) flight(p.stepsBack, new THREE.Matrix4().makeTranslation(bx, 0, zB).multiply(new THREE.Matrix4().makeRotationY(Math.PI)));
     if (flights.length) add(merge(flights), p.platBase > 0 ? M.woodX : M.steps, { ao: null });   // steps are dressed stone, not the platform's rubble
