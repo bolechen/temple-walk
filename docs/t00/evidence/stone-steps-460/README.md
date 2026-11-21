@@ -48,9 +48,24 @@ Refs #460（`docs/ART-REVIEW.md` A3）。PR #486。
 - **冬景**：`t4/cam02_winter-day*.png`、`closeup-sw/cam02-treads-winter-day.png`。积雪照旧（踏面前沿一条雪、垂带顶一层雪），没有新的破绽；#78 那件事（垂带积雪的样子）没动。
 - **落叶**：踏面上零星几片竹叶，画在石面上，没有借 `litter.js`。
 
+## 补的：十六种时辰、手机低档、T05（T00 主创 2026-11-21 要的）
+
+Job `20261121-093102`（十六种时辰、手机、T05 的 `b`）和 `20261121-110043`（T05 的 `a`、`a-tall`），Tesla T4，代码提交 `fe818a4`（本分支，比 `2af05b1` 多合入的 main 只有文档），改前是 main `5f9e2a3` 的构建。
+
+- **cam02 十六种时辰**（四季乘四个时辰，T4 高档 1280×720，一张拼图）：[`sheets/cam02-16-moods.jpg`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/169f75ef01404b439e19e7424e0a8b9567413f52/t00/stone-steps-460/sheets/cam02-16-moods.jpg)；每张原图在 `t4-moods/mood_cam02_<季>-<时>.png`。没有花屏、没有 NaN、没有破绽。夜景和暮景台阶很暗；在软件渲染上拿 main 的构建在同机位同时辰量台阶区域的平均亮度：夏夜 25.1 → 25.7、夏暮 41.1 → 42.2、冬夜 37.4 → 37.5（比值 1.02、1.03、1.00），不是新材质变暗，本来就这样。
+- **手机低档**（`?q=low`，390×844，cam02 夏昼，改前｜改后）：[`sheets/phone-low-cam02-main-vs-460.jpg`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/169f75ef01404b439e19e7424e0a8b9567413f52/t00/stone-steps-460/sheets/phone-low-cam02-main-vs-460.jpg)。缝在低档上仍是细线、不闪；原图 `t4-moods/phone-low_cam02_summer-day{,_base}.png`。
+- **T05**（`?level=t05&show=b|a|a-tall`，夏昼、冬昼，改前｜改后四行）：[`sheets/t05-main-vs-460.jpg`](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/169f75ef01404b439e19e7424e0a8b9567413f52/t00/stone-steps-460/sheets/t05-main-vs-460.jpg)；原图 `t4-t05/`。T05 的台阶只有这一段（场前月台上殿的 9 米宽、17 级的一段），其余画面逐像素相同；换的只是台阶自己的石纹：每级五块、垂带分段。石块大小（约 1.8 米宽一块）和错缝是否合辽构，交 T05 关卡主创和美术总监判；要把石块参数做成关卡可配，默认值保持现在 T00 的样子，等他们看过图再定，现在没做。
+
+## 共用代码改动
+
+- `app/src/geo.js` 的 `stairGeo`：每一关所有台阶共用，多写一个顶点属性、可选参数 `place`，几何（位置、法线、索引）一点没变。`building.js`、`levels/t00/site.js`、`levels/t05/site.js` 把台阶摆到哪里告诉它。
+- `app/src/materials.js` 的 `steps` 材质：只有 `stairGeo` 的台阶用它。
+- `tools/site.cjs` 的 `serve()`：以 `/` 结尾的路径给该目录的 `index.html`（原来只有 `/` 有）；测试在 `tests/unit/serve.test.mjs`。
+- `tools/gpu/job.cjs`：出图可以带 `path`（从 `BASE_SITE` 的另一版构建出同一张）。
+
 ## 没验的
 
-夜景、手机低档（`q=low`）、拍照模式成片、十六种季节时辰里别的十二种、其余七座殿的台阶近看（`hall`、`terrace` 只在夏昼拍了）。雪下的踏面在冬景里被雪盖住，苔看不到，这是对的。
+夜景的近景（十六种时辰的夜景只在 cam02 上看过）、拍照模式成片、其余七座殿的台阶近看（`hall`、`terrace` 只在夏昼拍了）。雪下的踏面在冬景里被雪盖住，苔看不到，这是对的。
 
 ## 原图
 
