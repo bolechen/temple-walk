@@ -66,6 +66,21 @@ export default {
     gather: { x0: -60, x1: 60, z0: -140, z1: 100, bottom: -200, top: 200 },
   },
   // tests/slow/nearplane.test.mjs
+  // tests/unit/grove-eye.test.mjs (#515): the old path through the bamboo, walked each way, where the eye from behind him
+  // must keep out of the grove as it keeps out of a wall. Laid on the open floor of each: across the river-view pavilion's
+  // platform, the first two flights from the start up to the half-way pavilion, round the open side of the ink-stone
+  // pool's platform (where the tester stood), and the first steps from the bamboo start.
+  grove: {
+    routes: () => {
+      const A = APPROACH;
+      return {
+        "across the river-view pavilion's platform": [[A.xB0 + 1.0, A.zC1 - 2.2], [A.xB1 + 3.4, A.zC1 - 2.2]],
+        "from the lower platform up to the half-way pavilion": [[A.xC, A.zC1 - 1.2], [A.xC, A.zA1 + 0.4], [A.xB0 - 0.4, A.zMid], [A.xTurn - 0.4, A.zMid]],
+        "round the ink-stone pool's platform": [[A.xB0 - 2.0, A.zA1 - 1.3], [A.xB0 + 5.0, A.zA1 - 1.3], [A.xB0 + 5.0, A.zA0 + 1.0], [A.xB0 - 2.0, A.zA0 + 1.0]],
+        "the first steps from the bamboo start": [[A.xC, A.zC1 - 1.2], [A.xC, A.zC1 - 3.2]],
+      };
+    },
+  },
   nearplane: {
     routes: (/** @type {any} */ site) => ({ ...common(), ...censerRings(site), "up the stair to the second terrace and on to the Guanyin hall's steps": [[0, T[1].zS + 10], [0, T[1].zS - 5.5]] }),
   },
