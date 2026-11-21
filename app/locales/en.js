@@ -21,6 +21,7 @@ export default {
   "山门之外 · 云径禅寺": "Beyond the Mountain Gate · Yunjing Temple",
   "穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。": "Through a bamboo path into Yunjing Temple: a slow walk up the mountain, among the trees and the sound of a bell.",
   "山门之外：小沙弥站在暮色中的云径禅寺大殿前。": "Beyond the Mountain Gate: a young monk before the main hall of Yunjing Temple at dusk.",
+  "山门之外：小沙弥站在秋日暮色中的云径禅寺大殿前。": "Beyond the Mountain Gate: a young monk before the main hall of Yunjing Temple at dusk in autumn.",
   "山门之外": "山门之外",
   "序章 · 云径禅寺": "Beyond the Mountain Gate · Prologue: Yunjing Temple",
   "朝<br>山": "朝<br>山",
@@ -400,6 +401,10 @@ export default {
   "当日已有{n}人在此静坐": "Visitors to sit here today: {n}",
   // A change of language in the pause menu, while the page opens again in it (#140).
   "换字中": "Changing the language",
+  // Saving a picture where it cannot be shared (#344).
+  "长按图片保存，再发给朋友": "Press and hold the picture to save it, then send it to a friend",
+  "也可以点右上角，在浏览器里打开": "You can also open this page in your browser from the menu at the top right",
+  "下载": "Download",
   "除夕撞钟": "The Year-End Bell",
   "今夜已撞 {n} 声": "Rung tonight: {n}",
   "留一张": "Keep a card",

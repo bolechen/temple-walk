@@ -54,7 +54,7 @@
 
 | 事件 | 何时 | 数据 | 用途 |
 |---|---|---|---|
-| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` `failed` | 到达；加载质量与语言来源；本轮起带失败贴图数（缺席表示旧数据，按未知处理，不当 0） |
+| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` `failed` `from`（分享链接带的场景，白名单外为空，#344） | 到达；加载质量与语言来源；本轮起带失败贴图数（缺席表示旧数据，按未知处理，不当 0） |
 | `demo.enter` | 点「入山」后 | `resumed` `seals` `tier` | 从标题进入；新访/续走 |
 | `opening.played` | 开场开始 | `eye` `again` | 开场覆盖 |
 | `opening.skipped` | 开场被跳过 | `eye` `at`（走到几成） | 开场长度 |
@@ -77,7 +77,7 @@
 | `demo.mood` | 手动换季/换时辰/回到随时辰 | `season` `time` `follow` | 赛季权限用得多不多；偏好 |
 | `demo.view` | 按 V 或滚轮/双指切换第一/第三人称 | `to` | 视角偏好 |
 | `demo.rite` | observance 开始/结束 | `id` `phase` `seconds` `done` | 哪个仪式被开始、多久、有没有做完（补上 `demo.seal` 看不到的放弃） |
-| `demo.share` | 系统分享成功（留影、朱印簿、短片或除夕撞钟卡片） | `from`（`print` `book` `clip` `joya`） | 分享出口 |
+| `demo.share` | 分享了一张图或一段短片：系统分享成功、打开了「长按保存」那张纸，或点了下载（#344；短片 #342、除夕撞钟卡片 #341 只走系统分享） | `from`（`print` / `book` / `clip` / `joya`）`method`（`share` / `save` / `download`）`scene`（链接里带的场景） | 分享出口；在 App 内置浏览器里走的是哪条路 |
 | `demo.clip.start` | 按「拍一段」，录制开始（#342） | `aspect` `tier` `fmt`（`mp4`/`webm`）`mark`（带不带落款） | 短片使用率、画幅、各浏览器出什么格式、落款有没有被关 |
 | `demo.clip.export` | 一段录完、文件出来（自然结束或中途停下） | `fmt` `secs`（取整）`early`（中途停）`tier` | 录得完不完整、平均多长；`start` 与 `export` 之差是录到一半被放弃（收起相机、切到后台）的 |
 | `joya.ring` | 除夕撞钟窗口内，这一页第一次撞钟计入（#341） | `year`, `forced`（工作台 `?event=joya` 提前打开为 1） | 参与活动的人数 |

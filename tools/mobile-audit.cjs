@@ -26,6 +26,8 @@ const SURFACES = [
   ["menu", "document.body.classList.add('seasons'); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
+  // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
+  ["saveSheet", "(async () => { window.__book(); for (let i = 0; i < 100 && !document.getElementById('bookImg').src; i++) await new Promise((r) => setTimeout(r, 100)); document.getElementById('bookShare').click(); })()", "document.getElementById('saveClose').click(); document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   // The photograph's settings with the short film's row, then a film being made (only the way to stop and a hair of progress), then its sheet (#342).
   ["photoSettings", "window.__photo(true); setTimeout(() => document.getElementById('photoSettingsToggle').click(), 300)", "window.__photo(false)"],

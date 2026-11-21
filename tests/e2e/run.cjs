@@ -2589,6 +2589,34 @@ const scenarios = {
     expect(await t.page.evaluate(() => document.body.dataset.ready === "1" && performance.getEntriesByType("navigation").length === 1), "the page should not have reloaded itself");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Sharing from an app's own browser (#344, src/share.js): in WeChat the system cannot take the book's page, so a sheet
+  // shows it as an <img> to press and hold, says so, and adds that the page opens in the browser from the corner; and a
+  // shared link naming a scene brings a first visit there once the opening has shown the mountain.
+  share: { tier: 2, async run(b, base) {
+    const WECHAT = "Mozilla/5.0 (Linux; Android 14; Pixel 8a Build/AP2A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.6478.188 Mobile Safari/537.36 XWEB/1260117 MicroMessenger/8.0.50.2701(0x28003253) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN";
+    const t = await open(b, base, "q=low&cam=0,30,0,0" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, userAgent: WECHAT });
+    await t.page.evaluate(() => window.__book()); await t.until(async () => (await t.page.evaluate(() => !!document.getElementById("bookImg").src)), 60000, "the book's page was never drawn");
+    expect(await t.page.isVisible("#bookShare"), "the book should offer 分享 in WeChat too");
+    await t.page.click("#bookShare"); await t.until(() => t.page.evaluate(() => window.__saveSheet().open), 20000, "the sheet to save from never opened");
+    const sh = await t.page.evaluate(() => ({ ...window.__saveSheet(), line: document.getElementById("saveTitle").textContent, w: document.getElementById("saveImg").getBoundingClientRect().width, events: window.__eventLog().filter((e) => e.name === "demo.share").map((e) => e.data) }));
+    expect(sh.app === "wechat" && sh.img === "IMG" && sh.src && sh.w > 200 && sh.wechat && !sh.download && sh.line.includes("长按"), "in WeChat: the page as an <img> to press and hold, the line about opening in the browser, no download: " + JSON.stringify(sh));
+    expect(sh.events.some((d) => d.method === "save" && d.from === "book" && d.scene === "goshuin"), "the share should be counted as saved: " + JSON.stringify(sh.events));
+    await t.page.click("#saveClose"); expect(!(await t.page.evaluate(() => window.__saveSheet().open)), "收下 puts the sheet away");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A friend's link to the bell, opened for the first time: the opening as ever, then he stands at the bell.
+    const u = await open(b, base, "q=low&from=bell&utm_source=share&utm_content=book" + BARE, { enter: false });
+    await u.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 }); await u.page.click("#enterBtn");
+    await u.until(() => u.page.evaluate(() => window.__opening().active), 30000, "a first visit should still be shown the mountain");
+    await u.page.keyboard.press("Escape");
+    await u.until(async () => { const s = await u.state(), p = await u.page.evaluate(() => window.__places.bell.at); return Math.hypot(s.x - p[0], s.z - p[1]) < 2.5; }, 120000, "the link to the bell did not bring him to the bell");
+    expect((await u.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "bell", "demo.ready should say the link named the bell");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A name the list does not hold is no scene: he starts at the foot of the path.
+    const v = await open(b, base, "q=low&from=../../evil" + BARE, { enter: false });
+    await v.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 });
+    expect((await v.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "", "an unknown scene is not named");
+    expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
+  } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
   // on a phone all three in the lower half, each a thumb's size; and 三分线 and 虚化 seen as the settings open, with no

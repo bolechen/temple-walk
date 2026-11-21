@@ -78,7 +78,7 @@ export function createJoya({ y, ui, say, query, bench }) {
     $("joyaImg").src = url; $("joyaImg").alt = t("除夕撞钟的卡片"); $("joyaSave").href = url; $("joyaSave").download = t("云径禅寺-除夕撞钟.jpg"); $("joyaSave").textContent = t("保存");
     $("joyaClose").textContent = t("合上"); const file = new File([blob], "yunjing-joya.jpg", { type: "image/jpeg" });
     $("joyaShare").textContent = t("分享"); $("joyaShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
-    $("joyaShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 除夕撞钟") }); track("demo.share", { from: "joya" }); } catch {} };
+    $("joyaShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 除夕撞钟") }); track("demo.share", { from: "joya", method: "share" }); } catch {} };
     ui.open("joyaCard"); track("joya.card", { year: ev.year, mine: tally.snapshot().mine });
   });
 

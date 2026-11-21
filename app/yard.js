@@ -55,6 +55,8 @@ import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
 import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
+import { createShare, shareOrSave, countDownload } from "./src/share.js";
+import { FROM, fromOf } from "./src/sharelink.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
@@ -95,6 +97,7 @@ createPaper();   // the paper, strokes and seals the interface is drawn with (sr
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
 createCommunity(ui);
 createCredits(ui);
+createShare(ui);   // the sheet a picture is saved from where the system cannot share it (#344)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
@@ -868,7 +871,7 @@ function frame(now) {
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -981,16 +984,16 @@ on("shutter", async () => {
     lastBlob = await new Promise((r) => card.toBlob(r, "image/jpeg", 0.93));
     const url = URL.createObjectURL(lastBlob); $("printImg").src = url; $("saveLink").href = url;
     $("saveLink").download = lang === "zh" ? `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg` : tr("云径禅寺-{mood}.jpg", { mood: `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}` });
-    const file = new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" });
-    $("shareBtn").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
     ui.open("print", { onClose: () => { if (frozen) freeze(false); } }); stampSound();   // put away by its button or by Esc: the walk goes on
   } catch (e) { freeze(false); throw e; }
   finally { b.disabled = false; }
 });
 on("printBack", () => ui.close("print"));
-on("shareBtn", async () => {
-  try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "print" }); } catch {}
-});
+// Shared from wherever the page is open (src/share.js, #344): the system's sheet where it can take the picture, else a
+// sheet to press and hold it on; the address it carries names the observance he stands at, if he is at one.
+const sceneHere = () => { let best = 12, id = "photo"; for (const [k, p] of Object.entries(site.places)) { if (!FROM.includes(k) || p.room) continue; const d = Math.hypot(p.at[0] - pos.x, p.at[1] - pos.z); if (d < best && !inside) { best = d; id = k; } } return id; };
+on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: "yunjing.jpg", title: tr("云径禅寺"), from: sceneHere(), content: "print" }));
+$("saveLink")?.addEventListener("click", () => countDownload("print", sceneHere()));
 
 // ---- A short film (#342, clip.js) ----------------------------------------------------
 // 拍一段: the same view, held, filmed for twelve seconds (stopped whenever the visitor likes). Each frame the framed part
@@ -1056,7 +1059,7 @@ on("clipStop", stopClip);
 on("clipBack", () => ui.close("clip"));
 on("clipShare", async () => {
   if (!clipLast) return;
-  try { await navigator.share({ files: [clipLast.file], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "clip" }); } catch {}
+  try { await navigator.share({ files: [clipLast.file], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
 });
 settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
 $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));
