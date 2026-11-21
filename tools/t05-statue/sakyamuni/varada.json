@@ -79,7 +79,11 @@
    ]
   ],
   "note_scrap": "the robe scrap at the fingertips, read off the donor hand in its own frame (u 0.66-0.88 of its length, 0.13-0.30 m out on the palm side; and past the little finger's edge, v over 0.2)",
-  "fill_holes": 200
+  "fill_holes": 200,
+  "scrap_smooth": {
+   "r": 0.02,
+   "iterations": 6
+  }
  },
  "target": {
   "file": "tools/out/t05/tripo-370/sakyamuni-f1.glb",
@@ -166,7 +170,7 @@
    ]
   ],
   "zmin": 0.3,
-  "cell": 0.02,
+  "cell": 0.008,
   "head": 0.35,
   "ringW": 0.12,
   "smooth": 50.0,
@@ -187,7 +191,7 @@
     30
    ]
   },
-  "front": 0.02,
+  "front": 0.004,
   "useLeft": false,
   "poly": 2,
   "clamp": false,
@@ -197,7 +201,17 @@
   "edgeBlur": 0.025,
   "note_inset": "the knee's front under the old hand set back to where the left knee's front stands mirrored (z about 1.42 at y 3.4, as the reviewed round 1 had it): the old hand's back blurred stands about 0.3 m before it there",
   "note_edges": "inner edge at 30 degrees (22 left the old hand's right strip standing and the hand was solved 0.47 m out); foot at y 2.38 so the old fingertips on the lotus's rim go with the old hand",
-  "note_ease": "the setting back eases in over 15 cm from the box's sides and foot (6 cm left a steep lit wall at the inner edge, read as a bright strip beside the little finger)"
+  "note_ease": "the setting back eases in over 15 cm from the box's sides and foot (6 cm left a steep lit wall at the inner edge, read as a bright strip beside the little finger)",
+  "innerToOutside": true,
+  "innerOut": 0.004,
+  "innerRay": true,
+  "outerRay": true,
+  "insetMask": {
+   "blur": 0.3,
+   "thr": 0.06,
+   "soft": 0.05
+  },
+  "skirtUnder": 0.004
  },
  "knee_r1": {
   "box": [
@@ -298,6 +312,11 @@
   "ylock": [
    5.35,
    4.85
+  ],
+  "cap_under": true,
+  "cap_under_x": [
+   -1.65,
+   -1.3
   ]
  },
  "cleanup": {

@@ -1,5 +1,5 @@
 {
- "figure": "\u91ca\u8fe6\u6837\u4ef6\uff08#370\uff09\uff0ctools/out/t05/tripo-370/sakyamuni-r1.*.glb\uff1aTripo \u591a\u89c6\u56fe\uff08\u6b63\u9762\u52a0\u80cc\u9762\uff09\u751f\u6210\uff0c\u524d\u81c2\u624b\u4fee\uff1b\u50cf\u8eab\u51c0\u9ad8 6.0 m\uff08\u5ea7\u9876\u81f3\u8089\u9afb\u9876\uff09\uff0c\u6a21\u578b\u81ea\u5e26\u4ef0\u83b2\u5ea7 2.6 m\uff0c\u7acb\u5728 0.4 m \u7684\u5ea7\u57fa\u4e0a\uff0c\u8fde\u5ea7\u901a\u9ad8 9.0 m\u3002\u89e6\u5730\u5f0f\uff08\u53f3\u624b\uff09\uff0c\u5de6\u624b\u638c\u5fc3\u5411\u4e0a\u7f6e\u8179\u524d\uff0c\u8892\u53f3\u3002\u951a\u70b9\u8bfb\u81ea tools/t05-statue/grid.py \u7684\u683c\u5b50\u56fe\u548c tools/t05-statue/pick.py \u7684\u53d6\u70b9\uff0c\u5355\u4f4d\u7c73\uff0c\u6309 8.6 m \u7684\u6a21\u578b\u901a\u9ad8\u7f29\u653e\uff1b2026-11-21 \u7b2c\u4e09\u8f6e\uff1a\u6309\u5ea7\u4f4d\u9ad8\u5ea6 8.6 m\uff08\u6a21\u578b\u9ad8 8.2 m\uff09\u7f29\u653e 8.201",
+ "figure": "释迦样件（#370），tools/out/t05/tripo-370/sakyamuni-r1.*.glb：Tripo 多视图（正面加背面）生成，前臂手修；像身净高 6.0 m（座顶至肉髻顶），模型自带仰莲座 2.6 m，立在 0.4 m 的座基上，连座通高 9.0 m。触地式（右手），左手掌心向上置腹前，袒右。锚点读自 tools/t05-statue/grid.py 的格子图和 tools/t05-statue/pick.py 的取点，单位米，按 8.6 m 的模型通高缩放；2026-11-21 第三轮：按座位高度 8.6 m（模型高 8.2 m）缩放 8.201",
  "scale": 8.201,
  "anchors": {
   "skinMin": [
@@ -238,19 +238,19 @@
    1.46
   ],
   "bk1Max": [
-   -1.47,
+   -1.38,
    3.98,
    2.3
   ],
   "bk1P": [
-   0,
-   0,
-   1.46
+   -1.605,
+   2.8,
+   0
   ],
   "bk1N": [
-   0,
-   0,
-   1
+   -0.951,
+   0.3091,
+   0
   ]
  },
  "note_514": "round 2: the forearm carried 0.26 m forward and the hand hanging along the knee (tools/t05-statue/sakyamuni/varada.json)",

@@ -105,6 +105,7 @@ if D.get("scrap"):
   L_ = np.linalg.norm(far_ - wr_); uu = (P - wr_) @ ax_ / L_; vv = (P - wr_) @ np.cross(ax_, n_); ww = (P - wr_) @ n_
   inscrap = np.zeros(len(P), bool)
   for (u0_, u1_), (v0_, v1_), (w0_, w1_) in D["scrap"]: inscrap |= (uu > u0_) & (uu < u1_) & (vv > v0_) & (vv < v1_) & (ww > w0_) & (ww < w1_)
+  cutP0 = P[inscrap].copy()   # where the cut went, for the smoothing below
   bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
   bmesh.ops.delete(bm, geom=[f for f in bm.faces if any(inscrap[v.index] for v in f.verts)], context="FACES")
   bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"); bm.to_mesh(me); bm.free(); me.update()
@@ -113,6 +114,17 @@ if D.get("scrap"):
   if D.get("fill_holes"):   # what the cut opened in the fingers' own surface closed again
     bm = bmesh.new(); bm.from_mesh(me); f0 = len(bm.faces); bmesh.ops.holes_fill(bm, edges=bm.edges, sides=D["fill_holes"])
     bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3]); log["donor"]["holes_filled_after_scrap"] = len(bm.faces) - f0
+    if D.get("scrap_smooth"):
+      # (the cut runs through the faces as they lay, so it leaves a saw-toothed edge along the little finger, read as a
+      # ragged line where the hand meets the knee (the 3D review's third point); the points within `r` metres of what was
+      # cut are smoothed a few times, the points split along the texture's seams welded first so the surface holds together)
+      SS = D["scrap_smooth"]; bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6); bm.verts.ensure_lookup_table()
+      from scipy.spatial import cKDTree as _KD
+      Pc = np.array([[v.co.x, v.co.z, -v.co.y] for v in bm.verts]); cutp = cutP0
+      near_c = _KD(cutp).query(Pc, k=1)[0] < SS.get("r", 0.02) if len(cutp) else np.zeros(len(Pc), bool)
+      vs_ = [bm.verts[i] for i in np.nonzero(near_c)[0]]
+      for _ in range(SS.get("iterations", 6)): bmesh.ops.smooth_vert(bm, verts=vs_, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+      log["donor"]["scrap_smoothed_points"] = len(vs_)
     bm.to_mesh(me); bm.free(); me.update()
     co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); P = np.c_[co.reshape(-1, 3)[:, 0], co.reshape(-1, 3)[:, 2], -co.reshape(-1, 3)[:, 1]]
 # the donor hand's own frame: the wrist is the middle of what lies nearest the cut; the long axis runs from it to
@@ -295,9 +307,50 @@ if Kn.get("mode") == "surface":
     fin = np.isfinite(Dn); idxn = _edt(~fin, return_distances=False, return_indices=True); Df = Dn[tuple(idxn)]
     GB = gaussian_filter(Df, Kn["blur"] / gs, mode="nearest")
     # not at the box's head: there the figure's front is the old wrist (carried with the arm and cut), not the knee
-    dd = np.minimum(np.minimum(GX - blo[0], bhi[0] - GX), GY - blo[1]); wv = np.clip(dd / Kn.get("ease", 0.12), 0, 1); wv = wv * wv * (3 - 2 * wv)
+    # (the inner side, toward the lap, may take a wider easing, `easeInner`: there the knee meets the robe's own folds
+    # beside the little finger, and a short easing left a step seen from the figure's left; the 3D review's choice (b))
+    e0, e1 = Kn.get("ease", 0.12), Kn.get("easeInner", Kn.get("ease", 0.12))
+    dd = np.minimum(np.minimum((GX - blo[0]) / e0, (bhi[0] - GX) / e1), (GY - blo[1]) / e0); wv = np.clip(dd, 0, 1); wv = wv * wv * (3 - 2 * wv)
     De = gaussian_filter(Df, Kn.get("edgeBlur", 0.025) / gs, mode="nearest")   # the figure's front at the outline, its cell noise smoothed a little
-    GZ = (1 - wv) * De + wv * (GB - Kn.get("inset", 0.12))   # the figure's own front at the outline, the blurred knee inside
+    if Kn.get("innerToOutside"):
+      # (at the inner side the figure's front at the outline is still the old hand, which stood proud of the robe beside
+      # it: eased to that, the knee ended in a ridge over the lap's robe, read as a step from the figure's left. There it
+      # is eased instead to the robe just outside the box, the front of the sheet's last column, row by row)
+      jo = int(np.argmin(np.abs(xs - (bhi[0] + Kn.get("innerOut", sk)))))   # (read just past the edge: the robe is no cylinder)
+      Dout = De[:, jo:jo + 1].copy()
+      if Kn.get("innerRay"):
+        # (the robe's own distance from the knee's line just past the edge, found by a ray toward that line for each row,
+        # not the foremost point of a cell, which on the sloping robe stood 1-2 cm before it)
+        from mathutils.bvhtree import BVHTree
+        tree = BVHTree.FromPolygons([tuple(p) for p in stS], [tuple(f) for f in F0])
+        ang = (bhi[0] + Kn.get("innerOut", sk)) / r0; out_ = np.array([math.sin(ang), 0.0, math.cos(ang)]); hits = 0
+        for j_, yy in enumerate(ys):
+          o_ = np.array([xc, yy, zc]) + 2.5 * out_; hit = tree.ray_cast(Vector(o_), Vector(-out_), 2.5)
+          if hit[0] is not None: Dout[j_, 0] = 2.5 - hit[3]; hits += 1
+        log["knee_inner_ray_rows"] = [hits, len(ys)]
+      a_ = np.clip((GX - (bhi[0] - e1)) / e1, 0, 1); a_ = a_ * a_ * (3 - 2 * a_)
+      De = (1 - a_) * De + a_ * Dout
+      if Kn.get("outerRay"):
+        # (the knee's outer side the same way: there too the figure's front at the edge was the old fingers, and seen
+        # from the figure's right the sheet's edge stood out of the robe as a fin down to the lotus)
+        ang = (blo[0] - Kn.get("innerOut", sk)) / r0; out_ = np.array([math.sin(ang), 0.0, math.cos(ang)]); Dlo = np.full((len(ys), 1), np.nan); hits = 0
+        for j_, yy in enumerate(ys):
+          o_ = np.array([xc, yy, zc]) + 2.5 * out_; hit = tree.ray_cast(Vector(o_), Vector(-out_), 2.5)
+          if hit[0] is not None: Dlo[j_, 0] = 2.5 - hit[3]; hits += 1
+        jl = int(np.argmin(np.abs(xs - (blo[0] - Kn.get("innerOut", sk))))); Dlo = np.where(np.isfinite(Dlo), Dlo, De[:, jl:jl + 1])
+        b_ = np.clip(((blo[0] + e0) - GX) / e0, 0, 1); b_ = b_ * b_ * (3 - 2 * b_)
+        De = (1 - b_) * De + b_ * Dlo; log["knee_outer_ray_rows"] = [hits, len(ys)]
+    insetF = Kn.get("inset", 0.12)
+    if Kn.get("insetMask"):
+      # (the setting back is for where the old hand lay on the knee, not for the bare knee round it: set back everywhere,
+      # the knee's outer side was dug 0.28 m in, read from the figure's right as a fin down to the lotus. The hand is found
+      # as what stands proud of the knee: a wide blur of the front with the hand's cells replaced by it, three times over)
+      IM = Kn["insetMask"]; Kk = gaussian_filter(Df, IM.get("blur", 0.3) / gs, mode="nearest")
+      for _ in range(3):
+        Mh = Df > Kk + IM.get("thr", 0.06); Kk = gaussian_filter(np.where(Mh, Kk, Df), IM.get("blur", 0.3) / gs, mode="nearest")
+      wm = np.clip(gaussian_filter(Mh.astype(float), IM.get("soft", 0.05) / gs) * 2, 0, 1)
+      insetF = insetF * wm; log["knee_inset_mask_cells"] = int(Mh.sum())
+    GZ = (1 - wv) * De + wv * (GB - insetF)   # the figure's own front at the outline, the blurred knee inside
   gy_, gx_ = np.gradient(GZ, gs); okS = np.hypot(gx_, gy_) < Kn.get("slope", 1.2)
   dkeys = set(Dm.keys()); hasF = np.array([[(int(np.floor(x / cell)), int(np.floor(y / cell))) in dkeys for x in xs] for y in ys])
   inbox_ = (GX > blo[0]) & (GX < bhi[0]) & (GY > blo[1]) & (GY < bhi[1])
@@ -307,7 +360,23 @@ if Kn.get("mode") == "surface":
   if nl_ > 1: sizes = np.bincount(lab_.ravel()); sizes[0] = 0; lay = lab_ == sizes.argmax()
   core = lay & inbox_ & (distance_transform_edt(lay) * gs > sk)
   dcore = distance_transform_edt(~core) * gs; tt_ = np.clip(dcore / sk, 0, 1); GZ = GZ - tk * tt_ * tt_ * (3 - 2 * tt_)
+  if Kn.get("innerTuck"):
+    # (on the inner side the sheet's border goes `innerTuck` metres under the robe beside it, which then lies over it, so
+    # the two meet in a crease and no edge of the sheet stands before the robe: the 3D review's step)
+    ai = np.clip((GX - (bhi[0] - 0.05)) / 0.05, 0, 1); ai = ai * ai * (3 - 2 * ai)
+    GZ = GZ - Kn["innerTuck"] * ai * tt_ * tt_ * (3 - 2 * tt_)
   lay &= dcore <= sk
+  if Kn.get("skirtUnder") and cyl:
+    # (the sheet's border past the box is meant to lie under the figure's own surface; it followed the sheet's shape
+    # and in places came out through the robe beside the box, a step of 1-2 cm. Each of its nodes outside the box is put
+    # at least `skirtUnder` metres under the robe there, found by a ray toward the knee's line)
+    from mathutils.bvhtree import BVHTree
+    tree_s = BVHTree.FromPolygons([tuple(p) for p in stS], [tuple(f) for f in F0]); nsk = 0
+    for j_, i_ in zip(*np.nonzero(lay & ~inbox_)):
+      ang = xs[i_] / r0; o_ = np.array([xc + 2.5 * math.sin(ang), ys[j_], zc + 2.5 * math.cos(ang)]); d_ = -np.array([math.sin(ang), 0.0, math.cos(ang)])
+      hit = tree_s.ray_cast(Vector(o_), Vector(d_), 2.5)
+      if hit[0] is not None and GZ[j_, i_] > 2.5 - hit[3] - Kn["skirtUnder"]: GZ[j_, i_] = 2.5 - hit[3] - Kn["skirtUnder"]; nsk += 1
+    log["knee_skirt_pushed_under"] = nsk
   ci = np.clip(np.round((fc0[cand, 0] - xs[0]) / gs).astype(int), 0, len(xs) - 1); cj = np.clip(np.round((fc0[cand, 1] - ys[0]) / gs).astype(int), 0, len(ys) - 1)
   incore = core[cj, ci]; inlay = lay[cj, ci]
   # inside the core everything in front of the knee goes; in the band where the sheet's edge is sunk under the figure's
@@ -444,8 +513,10 @@ if PO and PO.get("solve"):
     kk = np.floor(Qd[:, :2] / 0.02).astype(int)
     return np.array([q[2] - cf.get((a, b), -9.0) for q, (a, b) in zip(Qd, map(tuple, kk))])
   def gap(d, geo=None, sel_=None):
-    g = gaps(place(W0 + [0, 0, d], geo)); sel_ = palm_only if sel_ is None else sel_
-    g = g[sel_ & (g > -8)]
+    Q_ = place(W0 + [0, 0, d], geo); g = gaps(Q_); sel_ = palm_only if sel_ is None else sel_
+    # (with `solve.x_max`, only the palm's outer part, across from the little finger, is laid on the knee: the inner
+    # side is left to the knee's wider easing there, the 3D review's choice (b))
+    g = g[sel_ & (g > -8) & (Q_[:, 0] < PO["solve"].get("x_max", 9.0))]
     return g.min() if len(g) else 9.0
   lo_, hi_ = 0.0, 0.8
   for _ in range(30):
@@ -472,6 +543,7 @@ if PO and PO.get("solve"):
   hand_co = place(W); tw = W
   np.savez(os.path.join(out, "hand-final.npz"), points=hand_co, faces=hand_faces)   # the hand as joined (hand.glb is it before the solve)
   log["pose"].update({"wrist0": W0.tolist(), "solved_shift_m": round(float(dsol), 4), "wrist": W.round(4).tolist(), "gap_m": round(float(gap(dsol)), 4)})
+  gall = gaps(place(W)); gall = gall[palm_only & (gall > -8)]; log["pose"]["palm_least_gap_m"] = round(float(gall.min()), 4)   # the whole palm, inner side too (negative: into the knee)
   Qd = place(W); kk = np.floor(Qd[:, :2] / 0.02).astype(int); gg = np.array([q[2] - cf.get((a, b), -9) for q, (a, b) in zip(Qd, map(tuple, kk))])
   j_ = int(np.argmin(gg)); a_, b_ = map(int, kk[j_]); src = st[sel][np.all(np.floor(st[sel][:, :2] / 0.02).astype(int) == [a_, b_], axis=1)]
   log["pose"]["limit"] = {"hand_point": Qd[j_].round(3).tolist(), "front_z": round(float(cf[(a_, b_)]), 3), "front_point": src[np.argmax(src[:, 2])].round(3).tolist()}
@@ -529,10 +601,15 @@ if AR:
   me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
   if cutz is not None:
     bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
+    # (each point keeps its index from before the deletions below, which number the points afresh)
+    oi = bm.verts.layers.int.new("oi")
+    for v in bm.verts: v[oi] = v.index
     moved = mv > 0.5 * dl
     dead = [f for f in bm.faces if all(moved[v.index] and st[v.index, 2] > cutz and st[v.index, 1] < AR.get("cut_ymax", 4.1) for v in f.verts)]
     if AR.get("cut_below_y"):   # what of the old hand moved with the forearm but hangs below it (the old wrist over the knee)
       cby = AR["cut_below_y"]; dead += [f for f in bm.faces if all(moved[v.index] and st[v.index, 1] < cby for v in f.verts)]
+      # (in front of the wrist a face only partly below it stayed as a thin flap of the forearm over the palm)
+      dead += [f for f in bm.faces if all(moved[v.index] and st[v.index, 2] > tw[2] for v in f.verts) and any(st[v.index, 1] < cby for v in f.verts)]
     # faces between a moved point and one left (the forearm's welded seam on the thigh) drawn out past `stretch` times
     # their length and over 2 cm are taken out rather than left as slivers
     stretched = 0
@@ -550,10 +627,52 @@ if AR:
       # inside shows through a gap in the hand's top
       bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table()
       vi = {v.index: v for v in bm.verts}
-      edge_c = [e for e in bm.edges if e.is_boundary and all(moved[v.index] and st[v.index, 2] > tw[2] for v in e.verts)]
+      edge_c = [e for e in bm.edges if e.is_boundary and all(moved[v[oi]] and st[v[oi], 2] > tw[2] for v in e.verts)]
       before = len(bm.faces); bmesh.ops.holes_fill(bm, edges=edge_c, sides=0); capped = len(bm.faces) - before
       bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
+    if AR.get("cap_under"):
+      # (the forearm's underside, cut where it came down below `cut_below_y`, closed too: seen from the figure's left the
+      # inside of the arm showed through it, above the knee's head, as a black hole; the 3D review's seal)
+      bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); cy = AR.get("cut_below_y", -9)
+      edge_u = [e for e in bm.edges if e.is_boundary and all(moved[v[oi]] and st[v[oi], 1] < cy + AR.get("cap_under_band", 0.06) for v in e.verts)]
+      # (the imported mesh keeps its points split along the texture's seams, so a seam is an open edge on both sides:
+      # only an edge with no twin lying on it is a true opening)
+      ekey = lambda e: tuple(sorted(tuple(round(c, 5) for c in v.co) for v in e.verts))
+      from collections import Counter
+      seen_k = Counter(ekey(e) for e in bm.edges if e.is_boundary)
+      edge_u = [e for e in edge_u if seen_k[ekey(e)] == 1]
+      # the cut's open edge is not a closed loop (it runs on into the forearm's end, where the hand goes in), so each run
+      # of it is closed by a fan to its middle, each triangle wound against the face its edge already has
+      par = {}
+      def root(a):
+        while par.get(a, a) != a: a = par[a]
+        return a
+      for e in edge_u:
+        a, b = root(e.verts[0].index), root(e.verts[1].index)
+        if a != b: par[a] = b
+      runs = {}
+      for e in edge_u: runs.setdefault(root(e.verts[0].index), []).append(e)
+      capped_u = 0
+      for es in runs.values():
+        if len(es) < 3: continue
+        vs = {v for e in es for v in e.verts}; cc = sum((v.co for v in vs), Vector()) / len(vs)
+        xr = AR.get("cap_under_x")   # (only the runs whose middle lies across here: the opening seen from the left)
+        if xr and not (xr[0] < cc.x < xr[1]): continue
+        if -cc.y > tw[2]: continue   # (behind the wrist only: in front of it a fan lay over the back of the hand)
+        vv_ = np.array([[v.co.x, v.co.z, -v.co.y] for v in vs])
+        log.setdefault("arm_cap", {}).setdefault("runs", []).append({"edges": len(es), "middle": [round(cc.x, 3), round(cc.z, 3), round(-cc.y, 3)], "min": vv_.min(0).round(3).tolist(), "max": vv_.max(0).round(3).tolist()})
+        # (each triangle faces away from the forearm's axis, elbow to wrist as carried: the run's edges come from faces
+        # wound either way, the forearm's outside and the robe's inside, so the neighbours' winding cannot say it)
+        c = bm.verts.new(cc); A_ = Ev + Edisp; B_ = np.array(tw, float); ab = (B_ - A_) / np.linalg.norm(B_ - A_)
+        for e in es:
+          a, b = e.verts[0], e.verts[1]
+          ps = np.array([[q.co.x, q.co.z, -q.co.y] for q in (a, b, c)]); nn = np.cross(ps[1] - ps[0], ps[2] - ps[0]); mid = ps.mean(0)
+          rad = (mid - A_) - ((mid - A_) @ ab) * ab
+          try: bm.faces.new([a, b, c] if nn @ rad > 0 else [b, a, c]); capped_u += 1
+          except ValueError: pass
+      log.setdefault("arm_cap", {})["under_edges"] = len(edge_u); log["arm_cap"]["under_runs"] = sum(len(es) >= 3 for es in runs.values()); log["arm_cap"]["under_faces"] = int(capped_u)
     gone_n = n_dead; bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.verts.layers.int.remove(oi)
     bm.to_mesh(me); bm.free(); me.update()
     co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
   log["arm"] = {"pivot": Pv.tolist(), "elbow": Ev.tolist(), "angle_deg": round(math.degrees(ph), 2), "elbow_moves_m": Edisp.round(3).tolist(), "forearm_shift_m": trans.tolist(),
