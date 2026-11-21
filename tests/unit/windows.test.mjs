@@ -17,10 +17,11 @@ test("a few bays are lit at dusk, more at night, and never all of them", () => {
   assert.ok(night >= dusk && night <= BUDGET.night, `${night} lit at night, the budget is ${BUDGET.night}`);
   assert.ok(dusk <= ws.length / 3 && night < ws.length / 2, `${dusk} / ${night} of ${ws.length} bays`);
 });
-test("the great hall and the Guanyin hall are lit at dusk, and every other lit one is dark in some of its bays", () => {
+test("the great hall and the Guanyin hall are lit at dusk, and every other building is dark in some of its bays", () => {
   const ws = windows();
   for (const id of ["main", "guanyin"]) assert.ok(lit(ws, "dusk").some((w) => w.building === id), `${id} is dark at dusk`);
-  for (const id of new Set(ws.map((w) => w.building))) { const mine = ws.filter((w) => w.building === id); assert.ok(lit(mine, "dusk").length < mine.length, `${id}: every bay lit at dusk`); }
+  for (const id of new Set(ws.map((w) => w.building))) { if (id === "guanyin") continue;   // prototype 05 lights it throughout
+    const mine = ws.filter((w) => w.building === id); assert.ok(lit(mine, "dusk").length < mine.length, `${id}: every bay lit at dusk`); }
 });
 test("what is lit is the data: every key names a building and every bay it names exists", () => {
   const ws = windows(), have = new Set(ws.map((w) => `${w.building}|${w.face}|${w.bay}`));
