@@ -462,6 +462,16 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #keys dl { display: grid; grid-template-columns: auto auto auto auto; gap: 15px 14px; margin: 0; align-items: center; }
 #keys dt { justify-self: end; white-space: nowrap; color: var(--ink-1); } #keys dt kbd:last-child { margin-right: 0; } #keys dd { margin: 0 26px 0 0; white-space: nowrap; color: var(--ink-3); } #keys dd:nth-of-type(even) { margin-right: 0; }
 #keys p { margin: 20px 0 0; text-align: center; font-size: var(--t-xs); letter-spacing: .3em; color: var(--ink-4); }
+/* A narrow window (a half screen, a small laptop): never wider than the window less a gutter either side (#401); the pairs
+   of key and word stand two to a row on wide windows and one to a row where they would not fit, the words wrapping. (No overflow on the
+   paper itself: its torn-edge mask would be drawn away with the scroll, which mobile-audit rejects.) */
+#keys { max-width: calc(100vw - 32px); box-sizing: border-box; }
+@media (max-width: 1040px) {
+  #keys { padding: 26px 24px 20px; }
+  #keys dl { grid-template-columns: auto minmax(0, 1fr); gap: 13px 14px; }
+  #keys dd, #keys dd:nth-of-type(even) { margin: 0; white-space: normal; letter-spacing: .08em; line-height: 1.5; }
+  #keys dt { white-space: normal; text-align: right; }
+}
 
 /* ---- The pause menu: a sheet of paper with the few things a visitor may set ---- */
 #menu { position: absolute; inset: 0; z-index: 45; display: grid; place-items: center; background: var(--veil); touch-action: none; }   /* covers the view: nothing behind it is touched while it is open */
