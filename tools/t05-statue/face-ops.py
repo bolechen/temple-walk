@@ -102,6 +102,20 @@ if R.get("lipsFwd"):
   ops.append({"op": "scale", "note": f"the lips forward {Lf['d']} m at the upper lip's foremost point, radii {Lf['r']} w, nothing at the base of the nose (face-ops.py)",
               "c": B(*c_m), "r": [round(k * w / s, 5) for k in Lf["r"]], "s": [1, 1, 1], "back": round(-Lf["d"] / s, 5),
               "below": round(sn_y / s, 5), "fade": round(max(sn_y - ul, 0.02) / s, 5)})
+# the crease along the chin's lower edge (the art director, r7: seen from below the chin still read as a pad): found on
+# the profile at a few places across as the sharpest inward turn below the chin's foremost point, and softened in a
+# narrow band along it (the 3D review: attenuate k 0.3, about 0.1 w wide, not the whole jaw)
+if R.get("chinFold"):
+  Cf = R["chinFold"]; cy0 = P["chin"][0]; found = []
+  for x in np.linspace(-Cf["half"] * w, Cf["half"] * w, 9):
+    yy = np.arange(cy0 - 0.3, cy0 - 0.01, 0.004); zz = np.array([z_at(float(x), y) for y in yy])
+    if np.isnan(zz).any(): continue
+    k2 = np.convolve(zz, [1, -2, 1], "valid"); found.append((float(x), float(yy[int(np.argmin(k2)) + 1])))   # the most convex bend: the edge turning under
+  # the line through them, a gentle curve, so one stray reading does not bend the band; seeds closer than their radius
+  fx, fy = np.array(found).T; fit = np.polyfit(fx, fy, 2); r_m = Cf["band"] / 2 * w
+  for x in np.arange(-Cf["half"] * w, Cf["half"] * w + 1e-6, r_m):
+    y = float(np.polyval(fit, x)); ops.append({"op": "attenuate", "note": f"the chin's lower crease at x {round(float(x), 3)} m, y {round(y, 3)}, kept to {Cf['k']} of itself in a band {Cf['band']} w wide (face-ops.py)",
+                "seed": B(float(x), y, z_at(float(x), y)), "r": round(r_m / s, 5), "sr": round(4 * r_m / s, 5), "k": Cf["k"], "iter": Cf.get("iter", 200)})
 # the lids' edges, which stand off the face like fins seen from the side, brought back to within a cap of the smoothed
 # surface (the 3D review's fifth round)
 if R.get("lids"):
