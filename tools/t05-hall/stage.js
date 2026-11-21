@@ -117,7 +117,9 @@ for (const z of ZS.slice(1, -1)) { column(XS[0], z); column(XS[9], z); }
 // The inner columns as app/levels/t05/hall.js has them since #425 (665b0e4): eight in the back row (z −20.1), one under
 // each frame, and two in front at the ends of the front aisle (z −5.03); they rise past the eave columns' heads to the
 // lowest tier of the frames, BEAMS[0] (at the head of this file), as the structural review gives.
-const innerColumn = (x, z) => { const h = BEAMS[0], c = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.37, h, 20), M.red); c.position.set(x, F + h / 2, z); c.castShadow = c.receiveShadow = true; scene.add(c);
+// in the beams' dark old timber, not vermilion: in the red they were the brightest thing in cam03 (the art director, #480;
+// the page's hall decided the same, #493 DECISIONS), 0.84 m across as #493 sets the inner columns
+const innerColumn = (x, z) => { const h = BEAMS[0], c = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, h, 20), M.timber); c.position.set(x, F + h / 2, z); c.castShadow = c.receiveShadow = true; scene.add(c);
   box(0.95, 0.25, 0.95, M.stone, x, F + 0.125, z); };
 for (let i = 1; i < 9; i++) innerColumn(XS[i], ZS[4]);
 for (const i of [1, 8]) innerColumn(XS[i], ZS[1]);
