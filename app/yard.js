@@ -156,6 +156,8 @@ if (quality.softShadow && !OFF.has("softshadow")) softShadows(SHADOW_BOX);
 await loading.step(tr("山路"));
 const M = createMaterials();
 const site = L.build(M);
+// A closed hall the level says the mist does not fill (fog.js; T05's great hall): its box, for every shader's fog.
+if (site.fogShut) { const f = site.fogShut; U.uFogShut.value.set(f.x0, f.z0, f.x1, f.z1); U.uFogShutY.value.set(f.y0, f.y1); layerFog({ shut: true }); }   // its sums go into the chunks now, before anything is drawn; a level with none compiles the shaders it always did
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
 /** @type {{ bake: any, outline: any }} */ let walkBaked = { bake: null, outline: null };   // the bake's settings and his outline, for the debug panel's drawing (src/walkviz.js)
@@ -856,6 +858,7 @@ function frame(now) {
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
   { const w = windAt(mood?.wind ?? 0, t); U.uWind.value.set(WIND_DIR[0] * w, WIND_DIR[1] * w); if (!still) U.uWindPath.value.addScaledVector(U.uWind.value, dt); }   // the breeze (wind.js); a frozen picture keeps its lean
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); ground.update?.(still ? 0 : dt); flock.update(still ? 0 : dt, t); drift.update(t, camera.position, pxH);
+  site.tick?.(dt, camera.position, still || frames < 3);   // what the level does by where the eye is (T05: the hall's fill as he walks in)
   for (const s of site.strikers) if (s.swing && s.t0) s.swing.position.z = logSwing(s, riteNow());   // drawn back and let go, or only tapped: it touches the bell and swings itself out
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
