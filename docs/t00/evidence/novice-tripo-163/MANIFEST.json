@@ -3,6 +3,24 @@
  "dataset": "bolechen/temple-walk-evidence",
  "files": [
   {
+   "path": "cloth-autumn-dusk.png",
+   "bytes": 2990817,
+   "sha256": "7e12ae17f524ed23f332e7fca678954a830ffb436a245936790dcb7ae6659f57",
+   "rev": "35bb08babfe9d113f5b09502693565781b2d2467"
+  },
+  {
+   "path": "cloth-summer-day.png",
+   "bytes": 2826643,
+   "sha256": "3bea40748a0bf1e3489e8b79302d6af1ec89a26e3f3d357b894077e8cf1bba9a",
+   "rev": "35bb08babfe9d113f5b09502693565781b2d2467"
+  },
+  {
+   "path": "cloth-winter-night.png",
+   "bytes": 2852224,
+   "sha256": "2e3653121b93cae4b67901ce08dad180389a4716844ac5f51109f6fc733618c5",
+   "rev": "35bb08babfe9d113f5b09502693565781b2d2467"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 466298,
    "sha256": "e89d9435ad8dbad3bf71baf4985d9a721b1ac4cc0e5e00219911b1853318c3c9",

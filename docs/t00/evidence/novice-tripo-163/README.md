@@ -15,6 +15,7 @@
 | `portrait-winter-night.png` | 冬夜（`node tools/portrait.js winter-night`），正、侧、背、合掌：背带是暗处的布色，不亮过雪、不发光（钉在数据集提交 `4ff21efe`） |
 | `winter-night-code-vs-tripo.png` | 冬夜同一帧同一光，上：`?body=code`，下：Tripo 加皮肤自发光（`SKIN_GLOW` 0.03，`novice.js` 的 `skinMaterial`）。脸部平均亮度（两张正面，线性亮度）Tripo／代码：加光前 0.66、0.59，加光后 1.17、1.05（3D 评审要 ≥ 0.7）（钉在 `3d678cb8`） |
 | `portrait-summer-day.png` | 夏昼，Tripo 加皮肤自发光后：白天的肤色没有发亮（钉在 `3d678cb8`） |
+| `cloth-summer-day.png`、`cloth-autumn-dusk.png`、`cloth-winter-night.png` | 袍和裤的颜色（美术审图三 #469 的必须改）：`tools/portrait.js`，上代码身体，中 Tripo 原版（秋暮那张中间是第一次调过头、没采用的），下按块顶点色调过的（`novice.js` 的 `CLOTH`）（钉在 `35bb08ba`） |
 | `pixels.txt` | `--sleeve` 的逐像素数 |
 | `collage.jpg` | 五姿、背带、吃茶机位、页面吃茶 |
 
@@ -30,3 +31,17 @@ node tools/shots.js shot-tea shot-incense; node tools/shots.js --body=code --tag
 ```
 
 ![拼图](https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0e1347f7f615b43997ebf059219b1fc1cf93e45f/t00/novice-tripo-163/collage.jpg)
+
+## 袍和裤的读数（portrait 正面，同一组取样框：额头、袍下摆、裤）
+
+| | 袍 L* / C* | 袍÷额头（线性亮度） | 裤 L* / C* | 裤÷袍 |
+| --- | --- | --- | --- | --- |
+| 夏昼 代码身体 | 24 / 24 | 0.16 | — | — |
+| 夏昼 Tripo 原版 | 16 / 17 | 0.11 | 14 / 3 | 0.80 |
+| 夏昼 Tripo 调后 | 23 / 30 | 0.20 | 22 / 11 | 0.93 |
+| 秋暮 代码身体 | 19 / 24 | 0.21 | — | — |
+| 秋暮 Tripo 调后 | 19 / 29 | 0.26 | 17 / 13 | 0.80 |
+| 冬夜 代码身体 | 7 / 4（额头 L* 19） | 0.28 | — | — |
+| 冬夜 Tripo 调后 | 6 / 4（额头 L* 19） | 0.26 | 7 / 4 | 1.02 |
+
+取样框和审图三的不同：同样是代码身体，审图三量袍÷额头是 0.25，这里是 0.16，因为这里的额头取得更亮。所以这里不直接对它的 0.22–0.28，只看两件事：调后的袍和代码身体一样亮（夏昼 L* 23 对 24，秋暮 19 对 19），C* 不低于 22；裤在袍的 0.9–1.2 倍，C* 8–14（夏昼 11）。秋暮的裤是袍的 0.80 倍，低于 0.9。代码身体的「裤」框在秋暮落在袍上，没有可比的数。
