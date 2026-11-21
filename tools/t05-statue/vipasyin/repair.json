@@ -1,1 +1,13 @@
-{ "turn": -90, "source": "04-vipasyin.base_model.glb", "ops": [] }
+{
+ "turn": -90,
+ "source": "vipasyin.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md \u00a73 seats)",
+   "below": 0.315,
+   "k": 0.916,
+   "band": 0.03
+  }
+ ]
+}

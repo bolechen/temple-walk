@@ -1,1 +1,29 @@
-{ "turn": -90, "source": "02-krakucchanda.base_model.glb", "ops": [] }
+{
+ "turn": -90,
+ "source": "krakucchanda.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md \u00a73 seats)",
+   "below": 0.315,
+   "k": 0.9,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.063,
+    0.8925
+   ],
+   "s": [
+    0.95,
+    1.0,
+    1.03
+   ],
+   "z0": 0.7875,
+   "fade": 0.03
+  }
+ ]
+}

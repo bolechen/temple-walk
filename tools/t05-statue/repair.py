@@ -10,6 +10,8 @@
 #           through the surface (so a fold of robe that only comes near is left alone), weighted by a smooth falloff to
 #           nothing at r: takes a ring, cuff or step out of a limb. (#370 tried a hand-written Taubin smoothing and a
 #           tube fit first; the first barely moved a 1.4-million-face mesh, the second tore it; docs/t05/SHAKYAMUNI-SAMPLE.md)
+#   squeeze  {"below", "k", "band"}: narrow everything under a height (the lotus throne) toward the axis by k
+#   headscale {"c", "s", "z0", "fade"}: scale the head about its centre, faded out below the chin (#370, faces of their own)
 #   laplace the Laplacian Smooth modifier instead (implicit, keeps volume): moved nothing on this mesh, kept for trying
 #   push    move what lies within r of the seed along `dir` by up to `d` (falloff as above): to straighten a finger or
 #           part a fingertip from the throne.
@@ -46,6 +48,21 @@ def region(seed, r):
   w = np.where(keep, 0.5 - 0.5 * np.cos(np.pi * np.clip(1 - d / r, 0, 1)), 0.0)   # 1 at the seed, 0 at r
   return keep, w
 for op in spec["ops"]:
+  if op["op"] in ("squeeze", "headscale"):
+    before = co.copy(); z = co[:, 2]
+    if op["op"] == "squeeze":
+      # narrow the throne under the figure: below `below` (file units of height) the points come in toward the axis by
+      # `k` across and in depth, easing back to 1 over `band` above it, so a lotus wider than the knees fits its seat
+      t = np.clip((z - op["below"]) / op.get("band", 0.03), 0, 1); k = 1 + (op["k"] - 1) * (1 - t)
+      co[:, 0] *= k; co[:, 1] *= k
+    else:
+      # give one figure's head its own proportions (a face of its own among seven of one family): scale about the head's
+      # centre `c` by `s` (x across, y depth, z up), fading to nothing between the chin `z0` and `z0 - fade`
+      c = np.array(op["c"], float); sc = np.array(op["s"], float)
+      t = np.clip((z - (op["z0"] - op.get("fade", 0.03))) / op.get("fade", 0.03), 0, 1)
+      co = c + (co - c) * (1 + (sc - 1) * t[:, None])
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": op["op"], "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   seed = np.array(op["seed"], float); r = op["r"]; keep, w = region(seed, r)
   before = co.copy()
   if op["op"] in ("smooth", "laplace"):

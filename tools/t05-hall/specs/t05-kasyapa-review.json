@@ -7,14 +7,14 @@
  "ao": true,
  "statues": [
   {
-   "url": "tools/out/t05/tripo-six/kasyapa-r1.60000.glb",
+   "url": "tools/out/t05/tripo-six/kasyapa-r2.60000.glb",
    "x": 0,
-   "h": 9.0,
+   "h": 8.25,
    "base": false,
    "plinth": 0.4,
    "turn": 0,
    "headAt": 0.13,
-   "maxW": 5.7,
+   "maxW": 10,
    "halo": {
     "rings": 0,
     "tips": 0
@@ -132,14 +132,15 @@
       -17.6
      ],
      "fov": 32,
-     "exp": 3.6
+     "exp": 3.2
     },
-    "lamp": 120,
+    "lamp": 45,
     "lampAt": [
      0.8,
      7.07,
      -14.000000000000002
-    ]
+    ],
+    "lampColor": 16764826
    }
   }
  ]

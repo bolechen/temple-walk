@@ -37,7 +37,9 @@ const seven = [S(0, 0, T), S(1, 5.8, T), S(2, -5.8, T), S(1, 11.33, T), S(2, -11
 if (process.env.SETS === "seven370") {
   // the seven Buddhas as made (#370 and after): each its own near-level file and its own anchors, east to west, in clay and painted, twice over; and the line-up pictures
   const N = ["kasyapa-t05", "krakucchanda-t05", "sikhin-t05", "vipasyin-t05", "visvabhu-t05", "kanakamuni-t05", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
-  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: i === 3 ? 9.4 : 9.0, base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 5.7, halo: { rings: 0, tips: 0 }, paint: "clay", colour: c }));
+  // heights with the throne: DECISIONS.md §3 (middle 9.0, the sides lower step by step), the outer two pairs brought down until each pair of neighbours keeps 0.2 m apart (docs/t05/SHAKYAMUNI-SAMPLE.md, 七尊第二轮)
+  const HT = [8.25, 8.39, 8.9, 9.0, 8.9, 8.39, 8.25];
+  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0 }, paint: "clay", colour: c }));
   const V = ["door", "door3", "front10"], sets = [];
   sets.push({ name: "lineup", size: [1920, 1080], statues: L, shots: [
     { name: "door3-winter", shoot: { paint: true, mood: "winter", view: "door3" } }, { name: "door-winter", shoot: { paint: true, mood: "winter", view: "door" } },
@@ -46,7 +48,7 @@ if (process.env.SETS === "seven370") {
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
 }
 if (process.env.SETS === "lod370") {
-  const L = (u, paint) => [-16.45, -11.33, -5.8, 0, 5.8, 11.33, 16.45].map((x) => ({ url: "s/" + u + ".glb", x, h: 9.0, base: false, plinth: 0.4, turn: 0, headAt: 0.13, halo: { rings: 0, tips: 0 }, paint: "clay", colour: "sakyamuni-370" }));
+  const L = (u, paint) => [-16.45, -11.33, -5.8, 0, 5.8, 11.33, 16.45].map((x) => ({ url: "s/" + u + ".glb", x, h: 8.25, base: false, plinth: 0.4, turn: 0, headAt: 0.13, halo: { rings: 0, tips: 0 }, paint: "clay", colour: "sakyamuni-370" }));
   const V = ["door", "door3", "front10"], sets = [];
   for (const k of [1, 2]) { sets.push({ name: "none-" + k, statues: [], views: V });
     for (const [u, n] of [[0, "near"], [1, "mid"], [2, "far"]]) sets.push({ name: n + "-clay-" + k, statues: L(u), paint: false, views: V }, { name: n + "-paint-" + k, statues: L(u), paint: true, views: V }); }

@@ -54,8 +54,8 @@ const M = {
   brick: mat(0x6e6a60, 0.9), floor: mat(0x5f5b54, 0.82), stone: mat(0x7a7568, 0.9, true), court: mat(0x77736a, 0.92, true),
   wallIn: mat(0xb9b2a2, 0.95), wallFront: mat(0x8a3b2a, 0.9), wallOut: mat(0x8a3b2a, 0.9, true), timber: mat(0x3a2c23, 0.8), red: mat(0x7a3426, 0.75),
   roof: mat(0x2f251e, 0.85, false, { side: THREE.DoubleSide }), tile: mat(0x5a5f5c, 0.8, true),
-  altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x9a7a3e, 0.45, false, { metalness: 0.55 }),
-  halo: mat(0x5a4630, 0.6, false, { metalness: 0.25, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
+  altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x6f5a34, 0.62, false, { metalness: 0.35 }),   // dark gold, not bright (ART.md §3.1, the lead 2026-11-21)
+  halo: mat(0x45372a, 0.7, false, { metalness: 0.12, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
 };
 const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
 const hall = new THREE.Group(); scene.add(hall);
@@ -405,7 +405,7 @@ function shoot(s) {
     key.position.copy(at).add(W3([-9, 10, 12])); key.target.position.copy(at); fill.position.copy(at).add(W3([12, 3, 8])); fill.target.position.copy(at);
     rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
     renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
-  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); }
+  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
   render(); return { tris: renderer.info.render.triangles };
 }
 

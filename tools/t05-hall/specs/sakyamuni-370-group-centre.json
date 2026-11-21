@@ -9,49 +9,7 @@
   {
    "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
    "x": -16.45,
-   "h": 9.0,
-   "base": false,
-   "plinth": 0.4,
-   "turn": 0,
-   "headAt": 0.13,
-   "halo": {
-    "rings": 0,
-    "tips": 0
-   },
-   "paint": "clay"
-  },
-  {
-   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
-   "x": -11.33,
-   "h": 9.0,
-   "base": false,
-   "plinth": 0.4,
-   "turn": 0,
-   "headAt": 0.13,
-   "halo": {
-    "rings": 0,
-    "tips": 0
-   },
-   "paint": "clay"
-  },
-  {
-   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
-   "x": -5.8,
-   "h": 9.0,
-   "base": false,
-   "plinth": 0.4,
-   "turn": 0,
-   "headAt": 0.13,
-   "halo": {
-    "rings": 0,
-    "tips": 0
-   },
-   "paint": "clay"
-  },
-  {
-   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
-   "x": 0,
-   "h": 9.0,
+   "h": 8.25,
    "base": false,
    "plinth": 0.4,
    "turn": 0,
@@ -61,12 +19,58 @@
     "tips": 0
    },
    "paint": "clay",
-   "colour": "sakyamuni-370"
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -11.33,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -5.8,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "maxW": 10
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": 0,
+   "h": 8.25,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370",
+   "maxW": 10
   },
   {
    "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
    "x": 5.8,
-   "h": 9.0,
+   "h": 8.25,
    "base": false,
    "plinth": 0.4,
    "turn": 0,
@@ -75,12 +79,13 @@
     "rings": 0,
     "tips": 0
    },
-   "paint": "clay"
+   "paint": "clay",
+   "maxW": 10
   },
   {
    "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
    "x": 11.33,
-   "h": 9.0,
+   "h": 8.25,
    "base": false,
    "plinth": 0.4,
    "turn": 0,
@@ -89,12 +94,13 @@
     "rings": 0,
     "tips": 0
    },
-   "paint": "clay"
+   "paint": "clay",
+   "maxW": 10
   },
   {
    "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
    "x": 16.45,
-   "h": 9.0,
+   "h": 8.25,
    "base": false,
    "plinth": 0.4,
    "turn": 0,
@@ -103,7 +109,8 @@
     "rings": 0,
     "tips": 0
    },
-   "paint": "clay"
+   "paint": "clay",
+   "maxW": 10
   }
  ],
  "shots": [

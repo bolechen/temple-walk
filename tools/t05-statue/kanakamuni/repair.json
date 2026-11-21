@@ -1,1 +1,29 @@
-{ "turn": -90, "source": "06-kanakamuni.base_model.glb", "ops": [] }
+{
+ "turn": -90,
+ "source": "kanakamuni.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md \u00a73 seats)",
+   "below": 0.315,
+   "k": 0.926,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.07,
+    0.8902
+   ],
+   "s": [
+    1.04,
+    1.0,
+    1.04
+   ],
+   "z0": 0.7852,
+   "fade": 0.03
+  }
+ ]
+}
