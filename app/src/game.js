@@ -98,7 +98,7 @@ export function createGame(y) {
   }
   // The lamp the visitor lights stays lit.
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
-  mine.position.fromArray(places.lamp.flame); y.scene.add(mine);
+  if (places.lamp) { mine.position.fromArray(places.lamp.flame); y.scene.add(mine); }   // (a level with no lamp to light has none, #409)
   const refresh = () => {
     for (const id in rings) rings[id].userData.want = owed(id) && (places[id].room || null) === y.room();   // shown unless the eye is on a shot (below)
     mine.visible = journey.has("lamp");

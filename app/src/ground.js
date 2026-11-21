@@ -199,7 +199,7 @@ export function createGround(scene, shade, censer, paving) {
       }`,
   });
   const levels = [];   // each stretch of paving, with the height it lies at
-  const mat = pave(shade[0], true, new THREE.Vector2(censer.x, censer.z)); levels.push({ mat, y: 0 });
+  const mat = pave(shade[0], true, censer ? new THREE.Vector2(censer.x, censer.z) : new THREE.Vector2(0, 999));   // (no censer: none marked, as on the terraces) levels.push({ mat, y: 0 });
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(460, 300).rotateX(-Math.PI / 2).translate(0, 0, -86), mat);   // ends at the head of the approach stair
   ground.receiveShadow = true; scene.add(ground);
   // The same wet paving on the terraces above: no mirror pass up there, only the sky's sheen.

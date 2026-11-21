@@ -157,6 +157,21 @@ const scenarios = {
     expect(w.mode !== "old" && w.bytes > 0, "the prologue's baked floor should be fetched: " + JSON.stringify(w));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05's white box (#409), on the workbench: ?level=t05 walks its own place on its own baked floor. He arrives at the
+  // outer gate's place, walks the way into the court, past station A and up the flight to station B on the terrace, 3 m
+  // up, and nothing complains. Built, not drawn.
+  t05: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "level=t05&q=low&fast=1" + BARE), lv = await t.page.evaluate(() => window.__level());
+    expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
+    const w = await t.page.evaluate(() => window.__walker());
+    expect(w.mode !== "old" && w.bytes > 0, "T05's own baked floor should be fetched: " + JSON.stringify(w));
+    let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 55], [0, 20], [0, 14.4]]));
+    let lo = 9, hi = -9;
+    await t.until(async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return Math.hypot(s.x, s.z - 14.4) < 0.6; }, 300000, "he never reached station B on the terrace");
+    expect(Math.abs(lo) < 0.1 && Math.abs(s.h - 3) < 0.1, `from the court's paving up to the terrace, 3 m: went ${lo} to ${hi}, stands at ${s.h}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {

@@ -26,6 +26,8 @@ import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 const { DEFAULT_LEVEL, levelFromCommandLine, levelIds, levelObject, doorwayManifest } = await import("./walk/level-arg.mjs");
+const { BENCH_LEVELS, benchBuild } = await import("../app/src/bench.js");
+const { deployOf } = await import("../app/src/deploy.js");
 const { buildInteriors, STAND } = await import("../app/src/interior.js");
 
 const top = join(dirname(fileURLToPath(import.meta.url)), ".."), app = join(top, "app"), dist = join(top, "dist");
@@ -127,7 +129,9 @@ export async function bakeDoorways({ verify = false, level = PROLOGUE } = {}) {
   const missing = ids.filter((id) => !Object.values(allNames(id, fps[id])).every((f) => existsSync(join(CACHE, f))));
   if (missing.length) await draw(missing, fps, LEVEL);
   const manifest = { level: LEVEL, bake: BAKE, halls: {} }, sizes = {}, inSizes = {};
-  for (const dir of [OUT, existsSync(join(dist, "index.html")) ? join(dist, "shared", "doorways") : null].filter(Boolean)) {
+  // A level only the workbench lists (app/src/bench.js) is not written into a canary or production build's site.
+  const shipped = existsSync(join(dist, "index.html")) && (!BENCH_LEVELS.includes(LEVEL) || benchBuild(deployOf(process.env.VITE_DEPLOY)));
+  for (const dir of [OUT, shipped ? join(dist, "shared", "doorways") : null].filter(Boolean)) {
     clearLevel(dir, LEVEL);
     for (const id of ids) {
       const n = names(id, fps[id]), m = inNames(id, fps[id]); for (const f of [...Object.values(n), ...Object.values(m)]) copyFileSync(join(CACHE, f), join(dir, f));

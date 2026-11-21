@@ -60,7 +60,9 @@ export function staleness(prep, file = fileOf(prep)) {
 export function bake(prep, { force = false, file = fileOf(prep) } = {}) {
   const { stale, header: oldHeader } = force ? { stale: prep.grids.map((g) => g.id), header: null } : staleness(prep, file);
   const old = oldHeader && !force ? decode(readFileSync(file), (b) => inflateRawSync(b)) : null;
-  const walker = createWalker(prep.drawn.site), targets = targetsOf(prep.drawn), cells = [], grids = [], ms = {};
+  // The written plan's walker of the level baked: the prologue's from site.js?real (never the swapped one, above); any other
+  // level's is its own, which the swap does not touch.
+  const level = prep.drawn.level, walker = (level.id === DEFAULT_LEVEL ? createWalker : level.createWalker)(prep.drawn.site), targets = targetsOf(prep.drawn), cells = [], grids = [], ms = {};
   for (const g of prep.grids) {
     const t0 = performance.now(); let baked;
     const keep = old && !stale.includes(g.id) ? old.grids.find((o) => o.id === g.id) : null;

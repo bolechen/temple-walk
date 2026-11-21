@@ -173,24 +173,29 @@ await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
-for (const hall of INCENSE_HALLS) site.places[incenseId(hall)] = rooms.places[incenseId(hall)]; site.seats.push(...rooms.seats);
+for (const hall of INCENSE_HALLS) if (rooms.places[incenseId(hall)]) site.places[incenseId(hall)] = rooms.places[incenseId(hall)];   // (a level without that hall has no place for it, #409) site.seats.push(...rooms.seats);
 for (const [id, p] of [...INCENSE_HALLS.map((h) => [incenseId(h), site.places[incenseId(h)]]), ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
+// The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
+// its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
+const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
-const backdrop = part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land));
+// A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
+const NONE = { setMood() {}, update() {} };
+const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land)) : NONE;
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
-const bamboo = part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
+const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
 await loading.step(tr("竹林"));
-const props = part("props", () => createProps(scene, M, site.censer, L.propsAt));
+const props = site.censer ? part("props", () => createProps(scene, M, site.censer, L.propsAt)) : { ...NONE, censer: () => ({ none: true }), setTraces: () => 0 };
 const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: L.grove.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: L.grove?.areas || [], land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -221,7 +226,7 @@ const well = site.places.well ? createWell(scene, site.places.well.pool, wellDri
 onDrop(() => well.ripple());
 // The birds in the old trees by the bell tower, flushed by the third stroke (flock.js; game.js says when). Not at night,
 // when nothing of them would be seen, and not from indoors.
-const flock = site.places.bell && site.cedars ? createFlock(scene, site.cedars, site.places.bell.at) : { flush: () => false, state: () => ({ none: true }) };
+const flock = site.places.bell && site.cedars ? createFlock(scene, site.cedars, site.places.bell.at) : { update() {}, flush: () => false, state: () => ({ none: true }) };
 addEventListener("flush", () => { if (!inside && mood.time !== "night" && flock.flush()) flutter(0.8); });
 
 await loading.step(tr("石阶"));
@@ -1073,7 +1078,7 @@ function lookOut(hall) {
   for (const o of scene.children) { const part = o.userData.part; if (COURTS.includes(part)) o.visible = !OFF.has(part); else if (part === "monk" || part === "interior" || part === "drift") o.visible = false; }
   ground.mirror?.(false);
   const target = renderer.getRenderTarget(), xr = renderer.xr.enabled; renderer.xr.enabled = false;
-  try { outCam.update(renderer, scene); } finally { sky.at(0, 0, 0); }
+  try { outCam.update(renderer, scene); } finally { sky.at(SKY_AT[0], 0, SKY_AT[1]); }
   renderer.xr.enabled = xr; renderer.setRenderTarget(target);
   scene.children.forEach((o, i) => { o.visible = seen[i]; });
   const u = r.outlook.material.uniforms; u.tOut.value = outCube.texture; u.uHas.value = 1; u.uTurn.value.set(f[0], f[1]);
@@ -1294,6 +1299,7 @@ window.__censer = (points = []) => {
   const t = still ? 0 : performance.now() / 1000;
   if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
   const c = document.createElement("canvas"), w = canvas.width, h = canvas.height; c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0);
+  if (!site.censer) return { none: true };   // a level with no censer (#409)
   const lum = points.map(([px, py, pz]) => { const v = new THREE.Vector3(site.censer.x + px, site.censer.y + py, site.censer.z + pz).project(camera);
     const sx = Math.round((v.x + 1) / 2 * w), sy = Math.round((1 - v.y) / 2 * h); if (v.z > 1 || sx < 2 || sy < 2 || sx > w - 3 || sy > h - 3) return null;
     const d = x.getImageData(sx - 2, sy - 2, 5, 5).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += (d[i] + d[i + 1] + d[i + 2]) / 3; return s / 25; });
