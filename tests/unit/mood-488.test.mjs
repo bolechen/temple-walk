@@ -24,7 +24,7 @@ test("the prologue changes autumn dusk's sun (direction, strength) and the glow 
     if (s === "autumn" && t === "dusk") {
       const changed = Object.keys(now).filter((k) => JSON.stringify(now[k]) !== JSON.stringify(was[k]));
       assert.deepEqual(changed.sort(), ["bloom", "disk", "glow", "sun", "sunI"], "only the sun and the sky's own glow differ");
-      assert.ok(Math.abs(now.sunI / was.sunI - 1.5) < 1e-9, "half as bright again, to part sun and shade by 1.4 to 2");
+      assert.ok(Math.abs(now.sunI / was.sunI - 2.25) < 1e-9, "more than twice as bright, to part sun and shade by 1.4 to 2");
     } else assert.deepEqual(now, was, `${s} ${t} must not move (J01 is summer by day; the other dusks are prototype 05's and the rest)`);
   }
 });
@@ -32,6 +32,6 @@ test("the new autumn sun stands low in the north-west of the plan: shadows come 
   const [x, y, z] = moodOf("autumn", "dusk", t00.moodFor).sun, len = Math.hypot(x, y, z), elev = (Math.asin(y / len) * 180) / Math.PI;
   const az = (Math.atan2(-x, -z) * 180) / Math.PI;   // degrees west of north, in the plan's own frame (north is -z)
   assert.ok(elev >= 8 && elev <= 20, `elevation ${elev.toFixed(1)}° is low, not noon`);
-  assert.ok(az > 0 && az <= 45, `${az.toFixed(1)}° west of north: the novice's shadow falls within 45° of the camera's way (the art director's rule, #488)`);
+  assert.ok(az > 0 && az <= 70, `${az.toFixed(1)}° west of north: low in the west, so the novice's shadow falls toward the camera and the lane (art review 2 widened the scan to 70°, #546)`);
   assert.ok(z < 0 && x < 0, "in front of the walker, to the west of the axis");
 });

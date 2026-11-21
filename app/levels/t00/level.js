@@ -5,8 +5,8 @@
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain } from "../../src/site.js";
 import { zoneBounds } from "../../src/score.js";
 
-/** The direction toward the sun at autumn dusk in the plan's frame (north is -z): 16° west of north, 18° above the horizon; how much brighter than the hour's own it burns; and the sky's own glow, bloom and disk, drawn down so that the sun beside the great hall does not wash its west roof out (under 2% of the court's pixels at full white). The numbers come from the T4 scans in docs/t00/evidence/488-autumn-dusk-sun/. */
-const AUTUMN_DUSK_SUN = [-0.2621, 0.309, -0.9142], AUTUMN_DUSK_SUN_K = 1.5, AUTUMN_DUSK_SKY = { glow: 0, bloom: 0.2, disk: 0 };
+/** The direction toward the sun at autumn dusk in the plan's frame (north is -z): 65° west of north, 18° above the horizon; how much brighter than the hour's own it burns; and the sky's own glow, bloom and disk, drawn down to a small tight halo so that the low sun does not wash the great hall's roof out (under 2% of the court's pixels at full white). The numbers come from the T4 scans in docs/t00/evidence/488-autumn-dusk-sun/. */
+const AUTUMN_DUSK_SUN = [-0.8619, 0.309, -0.4019], AUTUMN_DUSK_SUN_K = 2.25, AUTUMN_DUSK_SKY = { glow: 0.1, bloom: 0.2, disk: 0.25 };
 
 /** @type {import("../../src/level.js").Level} */
 export default {
@@ -32,10 +32,10 @@ export default {
   title: true,
   // Autumn dusk keeps part of the first court in the low sun, as prototype 03 has it (#488): the hours' own sun for that
   // evening stands west-south-west, behind the walker's left shoulder, and the west halls, the cedars and the great hall put
-  // the whole court in shade. This one comes from the north, a little west of the axis (16° from north), 15.5° up: it
-  // clears the west halls' roofs and the great hall's ridge at the south-west of the court, so a band of sun lies across
-  // the paving toward the camera and the trees' long shadows cross it; the evening stays against the light, and the
-  // novice's own shadow falls toward the camera. Chosen by measuring the share of lit paving over many directions (`tools/sun-lit.cjs`); nothing else of the mood changes.
+  // the whole court in shade. This one stands low in the west-north-west of the plan (65° from north, 18° up, near where a
+  // real autumn sunset falls in the walls' own frame): it slips between the great hall and the west halls, so bands of
+  // sun lie across the paving and the tea house front, and the trees' long shadows cross them. Chosen by measuring the
+  // lit share of three views over a scan of directions (`tools/sun-lit.cjs`); only the sun and the glow round it change.
   moodFor: (season, time, m) => (season === "autumn" && time === "dusk" ? { sun: AUTUMN_DUSK_SUN, sunI: m.sunI * AUTUMN_DUSK_SUN_K, ...AUTUMN_DUSK_SKY } : null),
   // The title page's foot: a region, never a real city, and one sentence that holds in every season (#445).
   how: { place: "江南 · 古道", line: "路在竹林里，寺在云里。" },

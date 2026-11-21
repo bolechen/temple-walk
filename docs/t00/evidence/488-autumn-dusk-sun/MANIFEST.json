@@ -27,6 +27,18 @@
    "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
   },
   {
+   "path": "art3-1920x1080.jpg",
+   "bytes": 538043,
+   "sha256": "547813d66b17504bebfe8a4c155f25a7c072213e2641d275ed931bc98bc578d2",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
+   "path": "art4-1920x1080.jpg",
+   "bytes": 300879,
+   "sha256": "514743ac138e58a5309e9f51f5851f42e4295007ce24b0580e4352a73257efa1",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
    "path": "before-art3_autumn-dusk_third.jpg",
    "bytes": 436561,
    "sha256": "d8c1fc0d98469ba866146b2d41f4278031e9d59699ad4a50129282cb8f06a9f3",
@@ -51,10 +63,22 @@
    "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
   },
   {
+   "path": "collage-v3.jpg",
+   "bytes": 251581,
+   "sha256": "ff24058d90bc258eefc298890a4f8b39fbbdc3473990bcd543d4f82b1cd6b4bf",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 425221,
    "sha256": "1a9a35311d13a19539851bb51cc2bae0484da9d55ded4eff63cceefe3da7fa0a",
    "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "court-1920x1080.jpg",
+   "bytes": 506915,
+   "sha256": "378726d7170211e40d816affffe876a7ae680b8f4c97e8ef52ae90510899446e",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
   }
  ]
 }
