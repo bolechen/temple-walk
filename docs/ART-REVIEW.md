@@ -161,6 +161,7 @@ J01 的资料库参考图 2026-11-21 放进了 `refs/t00-atlas/`（`T00.lossless
 | #492 | T05 `cam07` 乙′ | **通过**（白盒） | 2026-11-21，`6095ba4` | [评论](https://github.com/bolechen/temple-walk/pull/492#issuecomment-7062592014)：三条画面条件、层次、节奏都成立；合并前挪紧挨牌坊的两棵树；两层屋顶分不分得开等 T4 |
 | #511 | T05 无量殿穿堂顶 | **通过**（白盒） | 2026-11-21，`551bf6d3` | 四轮：[第一次通过](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7062602104)、[反对 `7d0d5252`（椽子没了）](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7063102816)、[`551bf6d3` 通过](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7063182575)：望板、椽、栿檩三档，各差 4–5 个 L\* |
 | #475 | T00 山门天花等（只判落到 T05 的两处） | 可以接受 | 2026-11-21，拼图 | [评论](https://github.com/bolechen/temple-walk/pull/475#issuecomment-7062603301)：两座山门门洞顶的平綦天花比平黑好；结构若改判明造，三处穿堂用同一种顶 |
+| #480 | 同上，第八轮（毗婆尸 r8） | **通过**这张脸的做法（A、闭目），可推到六尊 | 2026-11-21，`6c7a69f` | [评论](https://github.com/bolechen/temple-walk/pull/480#issuecomment-7063231613)：唇前伸取 A，仰看是静的、侧面顺；半开的眼不采用（要重雕睑裂）；睑线断了、侧面的薄片两处带到七尊并排那一轮，进 `app/` 前必须过 |
 
 之后每看一轮，在这张表里加一行。2026-11-21 起，T00 的画面由第二位美术审图接手（主创的分工），T05 和 #327 的复看仍在我这里；两边口径不一致时以这一页为准。
 
