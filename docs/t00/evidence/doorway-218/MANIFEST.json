@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "baked-vs-drawn.jpg",
+   "bytes": 242899,
+   "sha256": "c7a82e603778263f23a76c407afc784efa79a8dcc66c583a354c3c9390a156f1",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "eight-halls.jpg",
+   "bytes": 182802,
+   "sha256": "eddcc09036cc6804e78dc9bd8992c3c3ab0b0d3e4e577ba3dbd52887b31fcaa2",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "locked-views.jpg",
+   "bytes": 208827,
+   "sha256": "be41fdbda1b409524eb35ccdf89c1ac48a618fb5e47a4ef730a6b9e65c5e55e9",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "main-before-after.jpg",
+   "bytes": 115726,
+   "sha256": "b9b65932dcdbefe1e686294ae5a95428f0c3bad43827f0cc0dc1e678e2ab0d78",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "phone-low.jpg",
+   "bytes": 72993,
+   "sha256": "c6bb7de4de0172eca03ab0462f07584428bbda69c725c8c834eb367a9e8013bb",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  }
+ ]
+}
