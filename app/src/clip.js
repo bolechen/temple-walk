@@ -1,0 +1,118 @@
+// A short film of the view held in the raised camera (#342): the framed part of the picture, drawn each frame onto a
+// canvas of its own, the sound of the place taken off the output, and a quiet signature over the last moment. This file
+// is the part that does not need the page's renderer: which container the browser can write, how large the film is, how
+// long it runs, what is said when it cannot be handed over, how the signature is laid. `createClip` wires them to a
+// MediaRecorder; yard.js feeds it one frame at a time.
+import { FONT } from "./i18n.js";
+
+export const CLIP = Object.freeze({
+  secs: 12,        // what is filmed by default; the visitor may stop at any moment
+  max: 15,         // the longest a film may be, signature included
+  tail: 1.6,       // the signature fades in over this much more (it is part of the film, and of `max`)
+  fps: 24,         // frames a second taken from the canvas (each is a read-back; 24 is a film's own rate)
+  long: 960,       // the long side of every film, on every tier (720×960 for the 3:4 frame): measured, T4, as much as a read-back and an encoder will bear
+  bits: 3_500_000, // video bits a second at 720×960 (scaled by area)
+  utm: "utm_source=clip",
+});
+
+// Containers in the order they are wished for: MP4 where the browser writes it (Safari, Chrome 126+), else WebM.
+export const MIMES = Object.freeze([
+  "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1", "video/mp4",
+  "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm",
+]);
+/** @param {(type: string) => boolean} supported `MediaRecorder.isTypeSupported` @returns {{ mime: string, type: string, ext: string } | null} */
+export function pickMime(supported) {
+  for (const m of MIMES) { let ok = false; try { ok = !!supported(m); } catch {} if (ok) { const type = m.split(";")[0]; return { mime: m, type, ext: type === "video/mp4" ? "mp4" : "webm" }; } }
+  return null;
+}
+
+/** The film's size: the long side fixed (`force` for a tool's own), the short side by the frame's shape, both even (encoders want that). */
+export function clipSize(aw, ah, force = 0) {
+  const long = force || CLIP.long, even = (n) => Math.max(2, Math.round(n / 2) * 2);
+  return aw >= ah ? { w: even(long), h: even((long * ah) / aw) } : { w: even((long * aw) / ah), h: even(long) };
+}
+export const clipBits = (w, h) => Math.round(CLIP.bits * Math.min(1.6, (w * h) / (720 * 960)) ** 0.85);
+
+/** How long the scene is filmed: the default, never more than leaves room for the signature inside `max`. */
+export const sceneSecs = (mark, secs = /** @type {number} */ (CLIP.secs)) => Math.max(1, Math.min(secs, CLIP.max - (mark ? CLIP.tail : 0)));
+/** How much of the signature shows `t` seconds into the film: 0 until the tail begins, then a smooth rise to 1. */
+export function markAlpha(t, sceneEnd, tail = CLIP.tail) { const k = Math.min(1, Math.max(0, (t - sceneEnd) / tail)); return k * k * (3 - 2 * k); }
+
+/**
+ * What to tell a visitor whose browser will not hand the film to the system's share sheet. One place for it, so that the
+ * hint under a saved photograph can say the same (#344): a touch screen is told to press and hold, the rest to use the
+ * save button; null when sharing works and nothing needs saying. @returns {"hold" | "save" | null}
+ */
+export function saveHint({ canShare, coarse }) { return canShare ? null : coarse ? "hold" : "save"; }
+
+export const clipName = (ext, words) => `yunjing-clip-${words}.${ext}`.replace(/[^\p{L}\p{N}.\-]+/gu, "-");
+
+/** The signature laid on a film frame at strength `a`: a faint scrim, the temple's name and the hour, the address, a seal. */
+export function drawMark(x, w, h, a, { temple, label, url, seal }) {
+  if (a <= 0) return;
+  const u = Math.min(w, h) / 100, m = u * 5;
+  x.save(); x.globalAlpha = a;
+  const g = x.createLinearGradient(0, h * 0.78, 0, h); g.addColorStop(0, "rgba(20,16,12,0)"); g.addColorStop(1, "rgba(20,16,12,.55)");
+  x.fillStyle = g; x.fillRect(0, h * 0.78, w, h * 0.22);
+  x.textBaseline = "middle"; x.textAlign = "left"; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = u * 0.8;
+  x.fillStyle = "#f3efe5"; x.font = `${Math.round(u * 4.4)}px ${FONT.serif}`; try { x.letterSpacing = `${u * 0.6}px`; } catch {}
+  x.fillText(`${temple} · ${label}`, m, h - m - u * 5.4);
+  x.fillStyle = "rgba(243,239,229,.72)"; x.font = `${Math.round(u * 2.3)}px ${FONT.serif}`; try { x.letterSpacing = `${u * 0.15}px`; } catch {}
+  x.fillText(url, m, h - m - u * 1.2);
+  // The seal, small and red, as on the card.
+  const z = u * 9, sx = w - m - z, sy = h - m - z * 0.95;
+  x.shadowColor = "transparent"; x.translate(sx + z / 2, sy + z / 2); x.rotate(-0.025); x.fillStyle = "#b02a1f";
+  x.beginPath(); x.roundRect(-z / 2, -z / 2, z, z, z * 0.12); x.fill();
+  x.fillStyle = "#f6efe2"; x.textAlign = "center"; try { x.letterSpacing = "0px"; } catch {} x.font = `${Math.round(z * 0.46)}px ${FONT.brush}`;
+  [...seal].slice(0, 2).forEach((ch, i) => x.fillText(ch, 0, (i - 0.5) * z * 0.46 + z * 0.02));
+  x.restore();
+}
+
+/** The signature drawn once, on a transparent canvas the size of the film, to be laid over each frame (a texture in yard.js). */
+export function markCanvas(w, h, info) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; drawMark(c.getContext("2d"), w, h, 1, info); return c;
+}
+
+/**
+ * A recording in progress. `source` is the page's own drawing canvas, which the page has already sized to the film (yard.js
+ * draws the framed part of the view at the film's size while it runs, so nothing is copied from frame to frame: a copy of
+ * a WebGL canvas onto a 2D one cost 25 ms a frame on a T4, #342); `audio` (optional) is a MediaStream with the place's
+ * sound. `frame()` is called after each frame is drawn and says how strongly the signature should show in the frame
+ * just drawn (0..1), and ends the film when its time is up.
+ * @param {{ source: HTMLCanvasElement, audio?: MediaStream | null, pick: { mime: string, type: string, ext: string }, mark?: boolean, secs?: number, now?: () => number, onEnd: (r: { blob: Blob, type: string, ext: string, secs: number, early: boolean, frames: number }) => void, onFail?: (e: any) => void }} o
+ */
+export function createClip(o) {
+  const now = o.now || (() => performance.now() / 1000), scene = sceneSecs(!!o.mark, o.secs), total = scene + (o.mark ? CLIP.tail : 0);
+  // Frames are asked for by `ask()` at CLIP.fps (captureStream(0) + requestFrame), so a read-back is made only for those; a browser without requestFrame takes them at that rate itself.
+  const probe = o.source.captureStream(0), paced = typeof (/** @type {any} */ (probe.getVideoTracks()[0]))?.requestFrame === "function";
+  const stream = paced ? probe : (probe.getTracks().forEach((t) => t.stop()), o.source.captureStream(CLIP.fps)), track = /** @type {any} */ (stream.getVideoTracks()[0]); let lastAsk = -Infinity;
+  o.audio?.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+  const chunks = [], w = o.source.width, h = o.source.height;
+  const rec = new MediaRecorder(stream, { mimeType: o.pick.mime, videoBitsPerSecond: clipBits(w, h), audioBitsPerSecond: 128000 });
+  let t0 = 0, endAt = Infinity, early = false, state = "rec", sceneEnd = scene, drawn = 0;
+  rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onerror = (e) => { state = "failed"; o.onFail?.(e.error || e); };
+  rec.onstop = () => {
+    stream.getTracks().forEach((tr) => tr.stop());
+    if (state === "failed" || state === "cancelled") return;
+    state = "done"; const blob = new Blob(chunks, { type: o.pick.type });
+    o.onEnd({ blob, type: o.pick.type, ext: o.pick.ext, secs: +(Math.min(total, now() - t0)).toFixed(2), early, frames: drawn });
+  };
+  return {
+    get state() { return state; }, get drawn() { return drawn; }, total, scene, w, h,
+    start() { t0 = now(); endAt = t0 + total; rec.start(250); return this; },
+    /** Seconds into the film, and how far along its scene is (0..1), for the progress line. */
+    progress() { const t = Math.max(0, now() - t0); return { t, k: Math.min(1, t / scene) }; },
+    /** The visitor stops: the scene ends here, and the signature, if there is one, takes its tail. */
+    stop() { if (state !== "rec") return; early = now() - t0 < scene - 0.05; if (early) { sceneEnd = Math.max(0.5, now() - t0); endAt = t0 + sceneEnd + (o.mark ? CLIP.tail : 0); } },
+    /** After the frame, signature and all, is drawn: take it, if a frame is due. */
+    ask() { if (!paced || state !== "rec") return; const t = now(); if (t - lastAsk >= 1 / CLIP.fps - 0.004) { lastAsk = t; track.requestFrame(); } },
+    frame() {
+      if (state !== "rec") return 0; const t = now() - t0; drawn++;
+      if (now() >= endAt) { this.finish(); return 0; }
+      return o.mark ? markAlpha(t, sceneEnd) : 0;
+    },
+    finish() { if (state !== "rec") return; state = "ending"; try { rec.requestData(); rec.stop(); } catch (e) { state = "failed"; o.onFail?.(e); } },
+    cancel() { if (state === "done" || state === "cancelled") return; state = "cancelled"; try { rec.state !== "inactive" && rec.stop(); } catch {} stream.getTracks().forEach((tr) => tr.stop()); },
+  };
+}

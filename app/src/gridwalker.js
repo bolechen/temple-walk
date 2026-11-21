@@ -78,8 +78,22 @@ export function ledgesOf(g, box = null, { min = 0.255, max = MAX_DROP, span = 0.
  * @param {any} old createWalker(site)
  * @param {{ outdoors: any, lofts?: Record<string, any>, rooms?: Record<string, any> }} grids decoded grids by place
  */
-export function createGridWalker(old, grids) {
+// Before a hall's door (#294): a visitor walks at a two-metre doorway and expects to go in, but he goes in only within
+// DOOR.half (0.61 m) of its middle, and from 0.7 m off it the frame stopped him dead. Within this much of the door, while he
+// heads in, his step is bent toward its middle, as a game's doors draw a walker in (a door's "magnetism", a funnel).
+export const FUNNEL = Object.freeze({
+  depth: 1.5,   // how far before the door's line it reaches, metres
+  past: 0.3,    // and how far past it: the pocket beside the doorway, between the leaf's frame and the threshold he may not cross
+  half: 1.1,    // how far either side of the door's middle (the doorway is 2 m; past this is the wall or a column)
+  core: 0.35,   // within this of the middle he is left to go straight in
+  pull: 0.9,    // at most this much of his step goes across toward the middle
+  heading: 0.5, // he is heading in when at least this much of his step is toward the door
+});
+/** @param {any} old @param {any} grids @param {{ doors?: any[] }} [opts] the halls (site.halls), for the funnel before each door */
+export function createGridWalker(old, grids, opts = {}) {
   const mode = "mesh";
+  // Each hall's door: where its line is, the way in, and the way across it.
+  const doors = (opts.doors || []).map((h) => { const ix = h.door[0] - h.out[0], iz = h.door[1] - h.out[1], d = Math.hypot(ix, iz) || 1; return { x: h.door[0], z: h.door[1], ux: ix / d, uz: iz / d, lx: -iz / d, lz: ix / d }; });
   // Which grid, and which of its cells, answers for (x, z) now, or -1 where the written plan does.
   /** @returns {any} */
   const gridNow = () => {
@@ -149,6 +163,23 @@ export function createGridWalker(old, grids) {
         const q = 1 - d / (R + 1); sum += hh * q; w += q;
       }
       return (w ? sum / w : h) / 100 + g.base;
+    },
+    /**
+     * Before a hall's door, heading in: the step (vx, vz) bent toward the door's middle, as long as it was, the step straight across toward it for when the frame is in the way, and the step straight in; null anywhere else
+     * (stride.js asks it before each step; the written plan's walker has no funnel).
+     */
+    funnel(/** @type {number} */ x, /** @type {number} */ z, /** @type {number} */ vx, /** @type {number} */ vz) {
+      if (old.room || old.loft || !doors.length) return null;
+      const v = Math.hypot(vx, vz); if (v < 1e-6) return null;
+      for (const d of doors) {
+        const rx = x - d.x, rz = z - d.z, along = rx * d.ux + rz * d.uz, across = rx * d.lx + rz * d.lz, inward = (vx * d.ux + vz * d.uz) / v;
+        if (along < -FUNNEL.depth || along > FUNNEL.past || Math.abs(across) > FUNNEL.half || inward < FUNNEL.heading) continue;
+        if (Math.abs(across) <= FUNNEL.core) return null;
+        const pull = -Math.sign(across) * Math.min(Math.abs(across) - FUNNEL.core, v * FUNNEL.pull), fwd = Math.max(inward * v, v * 0.3);
+        const bx = d.ux * fwd + d.lx * pull, bz = d.uz * fwd + d.lz * pull, b = Math.hypot(bx, bz);
+        return [(bx / b) * v, (bz / b) * v, -Math.sign(across) * d.lx * v, -Math.sign(across) * d.lz * v, d.ux * v, d.uz * v];   // (and, should the frame stop him, the step across toward the middle, and the step in)
+      }
+      return null;
     },
     landAt: (/** @type {number} */ x, /** @type {number} */ z) => old.landAt(x, z),
     wall: (/** @type {number} */ x, /** @type {number} */ z) => old.wall(x, z),

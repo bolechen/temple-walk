@@ -1,5 +1,10 @@
 # 发版流程
 
+**main 自动上 canary，发版才上生产（所有者 2026-11-19，#308）。** 推送到 `main`，过了 `pages.yml` 的检查（解析与类型、两套单测、建站与 `boot`、走路与镜头的快检 `stairs`、`drop`）就部署到 canary，先在那里玩；合并版本 PR、打出 `vX.Y.Z` 标签之后，才把那个版本部署到生产。生产只从版本标签构建，Steam / 平台版也从标签打包。
+
+- **canary**：<https://temple-walk-canary.bole-chen.workers.dev>（Worker `temple-walk-canary`，配置 `wrangler.canary.jsonc`）。内测地址，公开给内测玩家，不加访问限制，只是不被搜索引擎收录。页面行为和生产完全一样（不开调试面板，`?debug`、`?seals`、`?at`、`?play`、`?devpose` 这些工作台参数一律不生效；这些只有 PR 预览才有），只有三处不同：`noindex`（页面 meta 和 Worker 回的 `X-Robots-Tag: noindex, nofollow`）、没有访问统计、版本行显示提交号。
+- **生产**：`temple.rushiwowen.co`，只从 `vX.Y.Z` 标签部署（`deploy-tag.yml`，`target` 选 `production`，默认）。
+
 当前接入基线为 **0.1.0**，版本由根目录`package.json`与`.release-please-manifest.json`共同记录。Release Please使用`node`策略维护这两处版本及`CHANGELOG.md`。这是浏览器游戏的源码版本流程，保留`private: true`，不发布npm包。
 
 ## 日常发布
@@ -30,6 +35,47 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 
 ## 与试玩部署的关系
 
-`pages.yml`仍在`app/**`改变时验证`main`，通过后把`dist/`发布到 Cloudflare Worker `temple-walk`。GitHub Release是命名的源码版本；试玩网址持续跟随已通过部署验证的主线，不保证与最新发布标签完全相同。仅更新版本文件和日志不会强行重新部署游戏。
+三种构建目标，由环境变量 `VITE_DEPLOY=production|canary|preview` 在构建时定下（`app/src/deploy.js`，`vite.config.mjs` 里一处读取；没设时取 `preview`，所以漏写 production 只会少一个统计，不会反过来）：
+
+| 目标 | 谁构建 | 去哪 | 统计 | 搜索引擎 |
+|---|---|---|---|---|
+| `production` | `deploy-tag.yml`，从标签 | Worker `temple-walk`（`temple.rushiwowen.co`） | 有（Umami，仅此一个构建带） | 可收录 |
+| `canary` | `pages.yml` 的 `site`，main 的推送 | Worker `temple-walk-canary` | 无 | `noindex` |
+| `preview` | `pages.yml` 的 `site`，PR | `temple-walk-preview` 的 PR 预览 | 无 | `noindex` |
+
+`pages.yml` 在站点改变时验证 `main`：`verify` 汇总 `unit`、`grid`、`site`（建站与 `boot`）和 `quick`（`stairs`、`drop`，各占一台机器，与 `site` 并行），`deploy`（canary）等 `verify` 和 `quick`。只改文档的推送什么都不建、不发。夜间全量仍测 `main`。
+
+**缓存头（#308）**：三种目标的 Worker 发同一份缓存规则，写在一处（`vite.config.mjs` 的 `HEADERS`，构建时写成 `dist/_headers`，Cloudflare 静态资源读它）。文件名由 Vite 按内容带哈希的（`assets/*`）和名字里带指纹的（`shared/doorways/<厅>.<指纹>.webp|png`）设 `public, max-age=31536000, immutable`；`/`、`index.html`、`version.json`（#310 写出）设 `no-cache`（每次确认）；其余按名字取的（`shared/` 的贴图、模型、`walk/t00.bin`，字体，画廊图片，`doorways/t00.json`）不加规则，保持平台默认的 `must-revalidate` 加 ETag。`deploy.test.mjs` 构建三种目标，断言规则相同、`assets/` 下每个文件都带哈希。
+
+**发版即上线。** 对外分享、或要让一个修复让玩家玩到，都靠发版：版本 PR 随时可合，看过 canary 觉得好就立刻合。合并后 `release-please.yml` 在打出标签的同一次运行里调用 `deploy-tag.yml`（`target: production`）（默认令牌打的标签不会触发别的 workflow，所以由它按 `release_created` 输出接着调用），从标签构建、跑一次 `boot`、部署到生产，并把线上首页与刚建好的首页比哈希。
+
+## 出事先回滚，再修
+
+1. 打开 Actions → **Deploy a version tag** → Run workflow（`deploy-tag.yml`）：`ref` 填要回到的标签（如 `v0.4.0`；必须是 `vX.Y.Z` 标签，分支和提交号会被拒绝），`target` 选 `production`（线上）或 `canary`（内部 Worker，用来演练，不碰玩家），点运行。它从那个标签自己的代码建站（可取消勾选 `check` 以略过 `boot`、求最快），部署到所选的 Worker，把线上首页和刚建好的首页比哈希，写进运行摘要。`dry_run` 勾上则只建站、检查、打印「要把哪个标签部署到哪个 Worker」，不部署。
+2. 去生产的运行用 `production-deploy` 队列，去 canary 的与 `pages.yml` 共用 `pages-canary` 队列，同一时刻每处只有一个部署；排队中的运行会被更新的排队顶掉，看到「已取消」就再点一次。
+3. 回滚不改 `main`，也不动标签和版本；`main` 继续往 canary 走。生产停在那个标签，直到下一个版本标签。要把修好的版本放上去，就合版本 PR。
+4. 要回到最新版本，用同一个入口，`ref` 填最新标签。
+
+## 同修留痕的 Worker 与绑定（#340）
+
+页面之外，canary 和生产的 Worker 各多了一段脚本（`worker/`）和一个 Durable Object，只处理 `/api/*`；静态文件仍由 Cloudflare 直接回，不经脚本、不计脚本请求（配置里 `assets.run_worker_first: ["/api/*"]`）。
+
+| 项 | 内容 |
+|---|---|
+| 接口 | `POST /api/trace`，体 `{ "place", "kind" }`（`place` 取 `worker/trace-core.js` 的 `PLACES`，`kind` 取 `rite`/`seal`，其余 400）；`GET /api/traces?day=today`（或保留期内的 `YYYY-MM-DD`）回 `{ day, traces: { <place>: { rite, seal } } }`，今天的在边缘缓存 30 秒 |
+| 绑定 | `TRACES` → Durable Object 类 `TraceCounter`（SQLite 存储，`migrations` 的 `v1` 用 `new_sqlite_classes`），整座寺一个对象（`idFromName("temple")`），表只有 `counts(day, place, kind, n)` |
+| 隔离 | Durable Object 的命名空间属于 Worker：`temple-walk`（生产）和 `temple-walk-canary` 是两个 Worker，计数天然各自独立，没有共用的 id 要配。PR 预览（`wrangler.jsonc`，`wrangler preview`）**没有**这段脚本和绑定，页面也不会在预览里请求接口（`?presence=1` 只给测试和工作台，对预览 Worker 是 404，页面静默）。本地和测试：`node tools/worker-smoke.mjs [wrangler.canary.jsonc]`（`wrangler dev --local`，workerd 加本地 SQLite，不碰 Cloudflare），单测 `tests/unit/trace.test.mjs` 用 `node:sqlite` 跑同一条 SQL |
+| 发布 | 只经 CI：`pages.yml` 的 `deploy`（canary）和 `deploy-tag.yml` 照旧执行 `wrangler deploy -c wrangler.<target>.jsonc`，两处的稀疏检出加了 `worker/`；`pages.yml` 多一个 `worker` 作业（上面的本地冒烟），列入 `verify` |
+| 首次部署要注意 | 迁移 `v1` 会在第一次 `wrangler deploy` 时创建 Durable Object；`CLOUDFLARE_API_TOKEN` 要有 Workers Scripts 编辑权限（Durable Object 迁移随脚本一起提交，不另需权限；这一点未在本账号上实测，第一次发 canary 时看 `deploy` 作业的输出）；账号要是 Workers Paid（免费档每天 10 万请求，见下） |
+| 回滚 | 回滚某个标签会把脚本也回到那个标签的版本；计数表不随版本变，旧页面读不到接口时静默。要整个关掉：把页面的 `presenceOn` 返回 false（下一版），或在 Cloudflare 里给 `/api/*` 加一条自定义规则拦截，页面静默 |
+| 可选的边缘限流 | 脚本里的限流是按地点的总量桶加每日上限，不认人（trace-core.js 注释）。想要按来源地址的限流，在 Cloudflare 控制台给 `/api/trace` 加一条速率限制规则（它在边缘自己计数，我们的代码和库里不存任何地址），这要账号权限，CI 做不了，所以只作为可选项 |
+
+**成本，按每日 10 万次访问估一次**（单价取自 2026-11-20 读到的 developers.cloudflare.com 的 Workers 与 Durable Objects 定价页，三个月后重读）：每次访问约 1 次读（页面进入时读当日）加平均 4 次报告（钟、香、茶、句、井、灯、坐、印，每处每页一次，多数访客做不到一半）≈ 50 万次脚本请求一天 ≈ 1500 万一月。
+- Workers 请求：含 1000 万/月，超出 $0.30/百万 → (1500−1000)/100 × 0.30 ≈ **$1.5**；CPU 每次几毫秒，在含 3000 万 CPU 毫秒以内。
+- Durable Object 请求：含 100 万/月，超出 $0.15/百万 → 约 **$2.1**（今日的读被边缘缓存挡掉大半，写每次一个请求）。
+- Durable Object 时长：对象几乎不歇，128 MB × 86 400 s × 30 ≈ 32 万 GB-s，在含 40 万 GB-s 以内：$0。
+- SQLite 写：约 1200 万行/月（含主键索引按两倍算 2400 万），含 5000 万：$0；存储每天几十行，可忽略。
+- 合计约 **$3.6/月**，在 Workers Paid 的 $5/月基础费之上（账号已是 Paid 则只多这些）。免费档放不下：每天 10 万请求的上限一天就超。静态文件、`/api` 之外的一切不计费。
+- 现在的实际量远小于此（`docs/t00/ANALYTICS.md`：每日几十到几百次访问），这份估算是留给「万一出圈」的上限。**花钱的开关在所有者手里**：Cloudflare 里可给 Workers 和 Durable Objects 各设花费上限（官方文档 spend management），超了脚本停、页面静默，不影响走路。
 
 官方说明：[Release Please Action](https://github.com/googleapis/release-please-action)、[manifest配置与初始化](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)。

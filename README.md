@@ -2,9 +2,9 @@
 
 **一城一寺，一段值得慢下来的路。**
 
-![云径禅寺：竹径通向层叠山寺，T00生成概念参考](docs/images/T00-concept.webp)
+![云径禅寺首院，秋日黄昏：小沙弥立在石板路上，望向逆光中的大殿](docs/images/screens/01-court-autumn-dusk.webp)
 
-<sub>T00「云径禅寺」生成概念参考，用于美术方向；当前实机效果以试玩为准。</sub>
+<sub>游戏里的真实画面（Tesla T4、高画质、1920×1080 截图），机位见下文「实机截图」。</sub>
 
 《山门之外》是一款在浏览器中行走、停留与观看的寺院探索游戏。我们从真实寺院的文化背景、艺术与空间出发，创作有地方气质的数字寺院：让玩家穿过一段竹径、发现转角后的塔、听见院落里的声响，也在轻互动中理解一处地方。
 
@@ -23,6 +23,20 @@
 - [Claude / Fable 读取入口 llms.txt](https://temple-atlas-research.floralpage64.chatgpt.site/llms.txt)
 - [开发交接与验收包](https://temple-atlas-research.floralpage64.chatgpt.site/handoff/T00-handoff-v001.zip)
 - [开发方按交接包提交的 T00 交付物](docs/t00/README.md)：启动说明、基线、机位、评审记录、已知问题、验收自报与证据
+
+## 实机截图
+
+全部是 Tesla T4 真显卡上用 `tools/gpu-render.sh` 出的游戏画面（高画质，1920×1080），不是生成图，也没有后期修饰。T4 运行 `20261120-002113`，构建自提交 `c38edbe`。想重出，用 `tools/shots.js` 的机位名（殿内一张见表）；季节和时辰写在 `@` 后。
+
+| 画面 | 机位 | 重出 |
+|---|---|---|
+| ![竹径石阶，小沙弥向上走](docs/images/screens/02-bamboo-stair.webp) | 竹径石阶，夏·昼，第三人称 | `node tools/shots.js stair@summer-day@third` |
+| ![双径归堂照壁](docs/images/screens/03-screen-wall.webp) | 照壁「雙徑歸堂」，夏·昼，交接包固定机位 cam03 | `node tools/shots.js cam03@summer-day` |
+| ![大雄宝殿内的释迦坐像与两侧像、烛灯](docs/images/screens/04-main-hall-buddha.webp) | 大殿内佛像，夏·昼，第一人称 | `node tools/inside.cjs tools/out/hall-views --views t00`（`main-altar`） |
+| ![凌霄阁前回望：层层屋顶沉在山雾里](docs/images/screens/05-lookback-from-summit.webp) | 山顶回望，夏·昼 | `node tools/shots.js lookback@summer-day` |
+| ![雪中的首院，小沙弥立在扫出的石径上](docs/images/screens/06-court-winter-snow.webp) | 首院，冬·昼，第三人称 | `node tools/shots.js court@winter-day@third` |
+
+首屏一张是 `court@autumn-dusk@third`。`tools/shots.js` 在本机用软件渲染，画面内容相同，细节和帧率以 T4 或真机为准。
 
 ## 当前实现
 
@@ -71,9 +85,13 @@ pnpm typecheck   # TypeScript（checkJs）检查 app/ 下全部模块，three.js
 
 | 按键／输入 | 操作 |
 |---|---|
-| WASD／方向键 | 行走 |
+| W S（或 ↑ ↓） | 前后行走 |
+| A D | 连同视角转身（歇脚菜单「A/D 平移（旧）」打开后改回左右平移） |
+| ← → | 左右平移 |
 | Shift | 快步 |
-| 单击画面、移动鼠标 | 锁定鼠标并环顾；Esc 松开 |
+| 按住鼠标拖动 | 环顾；单击地面走到那里，单击钟或鼓敲响 |
+| Space | 跳；在无栏矮台前沿面向外侧时下台阶 |
+| Esc | 关闭最上层的面板；没有面板时打开歇脚菜单 |
 | E | 执行当前提示的互动 |
 | V | 切换第一／第三视角 |
 | B | 朱印帐 |
@@ -81,7 +99,7 @@ pnpm typecheck   # TypeScript（checkJs）检查 app/ 下全部模块，three.js
 | T | 季节与时辰 |
 | H | 查看键位 |
 
-移动端使用虚拟摇杆和触屏操作。具体可用操作以游戏提示为准。
+触屏：左下拇指摇杆行走，右下的圆环跳跃（台沿前读作「下台阶」或「上台」），拖动环顾，双指拉近拉远，点地面走到那里。「锁定鼠标」在歇脚菜单里，默认关闭。具体可用操作以游戏提示为准。
 
 ## 测试与截图
 
@@ -145,13 +163,19 @@ node tools/shots.js court@autumn-dusk@third
 
 提交改动时，请说明问题、修改范围和验证结果。画面改动附相同机位、季节、时辰、画质、尺寸和视角的运行截图；性能改动附设备、运行时、原始数据和测量方式。记录截图对应的提交，不把参考效果图当作实机结果。
 
-当前协作保护仍待完善：`main` 尚未启用分支保护，尚无 PR 合并前 CI。建议配置 PR 审查和必需检查；这属于待办，不能假定已经启用。
+PR 有构建预览和自动检查，合并统一用 squash，规则见 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [AGENTS.md](AGENTS.md)。分支保护等仓库设置以 GitHub 仓库设置页为准，这里不替它作证。
 
-## 自动部署
+## 自动部署与发布
 
-[Pages 工作流](.github/workflows/pages.yml) 在 `main` 的 `app/**` 或工作流自身发生推送变更时，以及手动触发时运行：解析、单元测试和 quick 通过后部署。**仅修改 README 不会触发该部署工作流。**
+推送到 `main` 触发 [Pages 工作流](.github/workflows/pages.yml)：解析、类型检查、单元测试（旧、新两种 walker）、建站与 `boot`，以及走路与镜头的快检（`stairs`、`drop`）都通过后，只部署到 **canary 内测地址** <https://temple-walk-canary.bole-chen.workers.dev>（不被搜索引擎收录，不统计）。只改文档（`docs/`、`*.md`、`skills/`）的推送只跑文档相关检查，不构建、不部署。
 
-[完整 E2E 工作流](.github/workflows/e2e.yml) 配置了每周计划和手动触发；配置存在不等于每个提交都已跑过完整套件。实际结果以 [Actions](https://github.com/bolechen/temple-walk/actions) 中对应提交的记录为准。
+**[正式站](https://temple.rushiwowen.co/)只从版本标签部署**：Release Please 发版时自动调用 [`deploy-tag.yml`](.github/workflows/deploy-tag.yml)。出了问题回滚，就在 Actions 里手动运行 `deploy-tag.yml`，选一个旧标签。每一步的细节以 [docs/RELEASING.md](docs/RELEASING.md) 为准。
+
+较慢的场景（`edges` 等）在 [e2e 工作流](.github/workflows/e2e.yml) 里并行跑，每晚还跑一遍全部场景；实际结果以 [Actions](https://github.com/bolechen/temple-walk/actions) 中对应提交的记录为准，配置存在不等于每个提交都已跑过完整套件。
+
+## 隐私与同修留痕
+
+走过的人会在钟楼前看到一句淡淡的「当日已有 N 人在此敲钟」，大殿香炉的灰里也多几根别人留下的香梗（#340）。这是**匿名的计数**，没有实时同步，没有聊天，看不到任何人：服务器只存「日期 × 地点 × 次数」，不存 IP、设备、语言、账号或任何标识；每处每次访问只报一次；浏览器开着 Do Not Track 或 Global Privacy Control 时只读不报；离线或接口出错时页面什么都不显示。统计页面访问用的 Umami 是另一回事，见 [docs/t00/ANALYTICS.md](docs/t00/ANALYTICS.md)。
 
 ## 安全与素材许可
 
@@ -194,15 +218,23 @@ node tools/shots.js court@autumn-dusk@third
 
 单位为米，北向为 `-Z`。具体相机和建筑参数以当前源码为准。
 
-## 下一步
+## 已知缺口与下一步
 
-1. 配置 PR 检查与分支保护。
-2. 类型检查已覆盖全部模块但未开 `strict`，下一步逐步收紧；第二关开工前把「引擎」和「这一关」的代码分开。
-3. 改善植被重复感、近景材质及雾的前中后景层次，提交固定机位对照图。
-4. 完成当前版本正常速度往返走查及目标设备性能测量。
-5. 继续核对斗拱、梁架、檐口、器物与构图；优先完善已实现区域，再扩展剧情与天气。
+- 没有人用键鼠以正常速度走完一整趟并录像；目标设备（Mac、手机）的长采样与 p95 帧耗时尚未取得，T4 的数不能换算成手机：见 [docs/t00/KNOWN-ISSUES.md](docs/t00/KNOWN-ISSUES.md) 与 [验收自报](docs/t00/README.md)。
+- 走路已全部改为走从绘制网格烘出来的地面（`?walker=old` 仍可回到旧的手写碰撞，观察期满后才删），进度和删除条件见 [docs/t00/refactor/collision-spike.md](docs/t00/refactor/collision-spike.md)。
+- 日、英、韩译文是开发方初稿，未经母语者审读。
+- 植被的重复感、近景材质和雾的层次仍在改，设想见 [docs/ART-SPEC.md](docs/ART-SPEC.md)。
+- 其余待办在 [open issues](https://github.com/bolechen/temple-walk/issues) 里，当前交接见 [docs/HANDOFF.md](docs/HANDOFF.md)。
 
 其他实现差距与参考见 [Saltline 对照](docs/SALTLINE-TEARDOWN.md) 和 [水彩表现对照](docs/WATERCOLOUR-TEARDOWN.md)。
+
+## 设计参考
+
+早期的美术方向用过一张生成的概念图：
+
+![T00 生成概念图：竹径通向层叠山寺（不是游戏画面）](docs/images/T00-concept.webp)
+
+<sub>这是生成的概念参考，不是游戏画面；游戏实际的样子以上面的实机截图为准。</sub>
 
 ## 可复用的独立评审 Skill
 

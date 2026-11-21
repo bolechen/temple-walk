@@ -57,9 +57,11 @@ test("every switch the page offers has a name on the panel", () => {
   assert.deepEqual(Object.keys(LABELS).sort(), offered.sort());
 });
 
-test("the panel opens by itself on the dev server and on a pull request's preview, and is fetched nowhere else", () => {
-  assert.match(yard, /const PREVIEW = \/-temple-walk-preview\\\.\/\.test\(location\.hostname\);\s*if \(\(import\.meta\.env\.DEV \|\| PREVIEW\) && Q\.get\("debug"\) !== "0"\) \{\s*const \{ mountDebug \} = await import\("\.\/src\/debug\.js"\)/);
+test("the panel opens by itself on the dev server and a preview, on the canary only with ?debug=1, and is fetched nowhere else", () => {
+  // The gate is src/debuggate.js (its own test holds every host); yard.js asks it and imports the panel only behind it.
+  assert.match(yard, /const DEBUG = debugGate\(\{ dev: !!import\.meta\.env\.DEV, hostname: location\.hostname, search: location\.search \}\);\s*if \(DEBUG\) \{\s*const \{ mountDebug \} = await import\("\.\/src\/debug\.js"\)/);
   const host = /-temple-walk-preview\./;
+  assert.ok(!host.test("temple-walk-canary.bole-chen.workers.dev"), "the canary is not a preview: its panel waits for ?debug=1 (2026-11-20)");
   for (const h of ["pr-68-temple-walk-preview.bole-chen.workers.dev", "06c1ed68-temple-walk-preview.bole-chen.workers.dev"]) assert.ok(host.test(h), h);
   for (const h of ["temple.rushiwowen.co", "bolechen.github.io", "127.0.0.1", "temple-walk-preview.example.com"]) assert.ok(!host.test(h), h);
   assert.ok(!/^import .*debug\.js/m.test(yard), "a static import would put it in the published build");

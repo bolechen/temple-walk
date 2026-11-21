@@ -1,12 +1,13 @@
 // The way to a tapped spot when the straight line is not open (#154): a search over the floor he can stand on, pulled
 // taut, that goes round columns, tables and cushions, takes the stairs, and, where a porch has an unrailed edge a good
-// deal nearer than any stair, hops down it (drop.js `findDrop`, the same hop the Space key makes). It never hops up:
+// deal nearer than any stair, hops down it (drop.js `findDrop`, the same hop the Space key makes), or off a low one steps
+// down it (`findStep`, the same step walking out over it takes, #294). It never hops up:
 // a tap on a platform is walked there by its steps.
 //
 // The search is a generator, `planSteps`: it runs a few hundred cells at a time and gives the frame back, so that a
 // long way round costs the frame no more than `ROUTE.budget` milliseconds. The search itself is grid.js's, shared with
 // the eye's way round him in director.js; what is here is what a cell of floor is and which cells a step joins.
-import { findDrop } from "./drop.js";
+import { findDrop, findStep } from "./drop.js";
 import { gridSearch } from "./grid.js";
 
 export const ROUTE = Object.freeze({
@@ -14,6 +15,7 @@ export const ROUTE = Object.freeze({
   margin: 10,       // how far outside the box round the two ends the search may go
   step: 0.34,       // the most the floor may rise or fall between two neighbouring cells (a tread is under 0.2)
   hop: 3,           // metres of walking a hop down is worth: it is taken when it saves at least this much on the way round
+  stepDown: 0.5,    // and a step down off a low edge (drop.js findStep, #294), which is walked, not jumped: as walking out over it with the keys does
   cap: 120000,      // cells looked at before the search settles for the nearest it has seen
   slice: 400,       // cells between looks at the clock
   budget: 4,        // milliseconds of one frame
@@ -71,7 +73,8 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
       for (let back = 0.0; back <= 0.5; back += 0.05) {
         const px = e.a[0] + (ax * along) / span - nx * back, pz = e.a[1] + (az * along) / span - nz * back, i = ci(px), j = cj(pz), sx = cx(i), sz = cz(j);
         if (!isOpen(i, j)) continue;
-        const plan = findDrop(walker, [e], sx, sz, nx, nz); if (!plan) continue;
+        // off a low edge the same step down the keys take (findStep, on the baked floor only); off a deeper one the hop Space makes (findDrop)
+        const plan = (walker.kind === "grid" ? findStep(walker, [e], sx, sz, nx, nz) : null) || findDrop(walker, [e], sx, sz, nx, nz); if (!plan) continue;
         const k = id(i, j); if (!links.has(k)) { links.set(k, { plan, to: [plan.to[0], plan.to[2]] }); }
         break;
       }
@@ -94,7 +97,7 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
         link(id(ni, nj), (di && dj ? 1.4142 : 1) * C);
       }
       const hop = links.get(k);
-      if (hop) { const ti = ci(hop.to[0]), tj = cj(hop.to[1]); if (isOpen(ti, tj)) link(id(ti, tj), Math.hypot(hop.to[0] - cx(i), hop.to[1] - cz(j)), hop, o.hop); }
+      if (hop) { const ti = ci(hop.to[0]), tj = cj(hop.to[1]); if (isOpen(ti, tj)) link(id(ti, tj), Math.hypot(hop.to[0] - cx(i), hop.to[1] - cz(j)), hop, hop.plan.step ? o.stepDown : o.hop); }
     },
   });
   const { chain } = found, bestD = found.bestH;
@@ -126,4 +129,41 @@ export function* planSteps(walker, drops, from, to, opts = {}) {
 export function planRoute(walker, drops, from, to, opts) {
   const it = planSteps(walker, drops, from, to, { ...opts, budget: Infinity });
   for (;;) { const r = it.next(); if (r.done) return r.value; }
+}
+
+/**
+ * Does something stand across the straight line between two points: a tenth of a metre of it shut with open floor again
+ * beyond (a stair's cheek, a column)? The floor may step (a flight is walked up), and a line whose end lies in something
+ * (a door's threshold, a wall) is walked as far as it goes, as it always was.
+ */
+function across(walker, a, b) {
+  const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.1));
+  let shut = false;
+  for (let i = 1; i <= n; i++) {
+    const s = walker.blocked(a.x + ((b.x - a.x) * i) / n, a.z + ((b.z - a.z) * i) / n);
+    if (s) shut = true; else if (shut) return true;
+  }
+  return false;
+}
+
+/**
+ * A way laid out as points to be walked one after another (`__walk`, the scenarios' and tools' ways, #323): a leg whose
+ * straight line is open is walked as it is, up a flight or down, and so is one that ends in something (a door's threshold,
+ * walked into); a leg that something stands across (a stair's cheek, a
+ * column, a table) is searched round as a tap is, and where no way round reaches its end he is taken as near as he can
+ * go and then on toward it, as a tap takes him. Points the search puts in may carry a hop (`drop`), as a tap's way does.
+ * @param {any} walker @param {any[]} drops @param {{ x: number, z: number }} from @param {{ x: number, z: number }[]} points
+ */
+export function wayThrough(walker, drops, from, points) {
+  const out = []; let at = { x: from.x, z: from.z };
+  for (const p of points) {
+    if (walker.blocked(at.x, at.z) || !across(walker, at, p)) out.push({ x: p.x, z: p.z });
+    else {
+      const r = planRoute(walker, drops, at, p);
+      out.push(...r.points);
+      if (!r.reached || !out.length || out[out.length - 1].x !== p.x || out[out.length - 1].z !== p.z) out.push({ x: p.x, z: p.z });
+    }
+    at = { x: p.x, z: p.z };
+  }
+  return out;
 }

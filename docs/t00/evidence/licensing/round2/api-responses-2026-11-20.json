@@ -1,0 +1,82 @@
+{
+ "sk-5f20": {
+  "license": "CC0 Public Domain",
+  "user": "artsmia",
+  "isDownloadable": true,
+  "name": "Standing Arhat, 6th C CE, China"
+ },
+ "sk-1a57": {
+  "license": "CC0 Public Domain",
+  "user": "clevelandart",
+  "isDownloadable": true,
+  "name": "1997.11 Standing Bodhisattva"
+ },
+ "sk-33699": {
+  "license": "CC0 Public Domain",
+  "user": "artsmia",
+  "isDownloadable": true,
+  "name": "Chinese Amoghasiddhi Buddha, 1403 - 1424 CE"
+ },
+ "sk-a858": {
+  "license": "CC0 Public Domain",
+  "user": "clevelandart",
+  "isDownloadable": true,
+  "name": "1981.53 Eleven-Headed Guanyin"
+ },
+ "cma-1997": {
+  "share_license_status": "CC0",
+  "copyright": null
+ },
+ "cma-1970": {
+  "share_license_status": "CC0",
+  "copyright": null
+ },
+ "cma-1958": {
+  "share_license_status": "CC0",
+  "copyright": null
+ },
+ "cma-1977": {
+  "share_license_status": "CC0",
+  "copyright": null
+ },
+ "met-40276": {
+  "isPublicDomain": true,
+  "title": "Chan master riding a mule"
+ },
+ "met-39534": {
+  "isPublicDomain": true,
+  "title": "Excerpt from “Song of Leyou Park”"
+ },
+ "mia-1473": {
+  "rights_type": "Public Domain",
+  "title": "Figure of a Monk"
+ },
+ "mia-124303": {
+  "rights_type": "Public Domain",
+  "title": "Standing Arhat"
+ },
+ "ph-wood": {
+  "name": "Fine Grained Wood",
+  "authors": {
+   "Rob Tuytel": "All"
+  }
+ },
+ "ph-blocks": {
+  "name": "Medieval Blocks 03",
+  "authors": {
+   "Rob Tuytel": "All"
+  }
+ },
+ "ph-bark": {
+  "name": "Japanese Cedar Bark",
+  "authors": {
+   "Charlotte Baglioni": "All"
+  }
+ },
+ "ph-snow": {
+  "name": "Snow 02",
+  "authors": {
+   "Rob Tuytel": "All"
+  }
+ }
+}

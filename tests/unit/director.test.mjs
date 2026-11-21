@@ -15,9 +15,9 @@ import { DIRECT, shotPose, blendPose, planSwing, planSteps, createDirector, plac
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
 const site = buildSite(M), rooms = buildInteriors(M, site.halls), walker = createWalker(site);
-site.places.incense = rooms.places.incense;
+site.places.incense = rooms.places.incense; site.places["incense-yaoshi"] = rooms.places["incense-yaoshi"]; site.places["incense-guanyin"] = rooms.places["incense-guanyin"];
 site.places["main-box"] = rooms.spots["main-box"];   // the 功德箱 is a spot before a thing, not a seal's place, and has a shot of its own (#202)
-const IDS = ["bell", "incense", "tea", "sutra", "well", "lamp", "sit", "main-box"];
+const IDS = ["bell", "incense", "incense-yaoshi", "incense-guanyin", "tea", "sutra", "well", "lamp", "sit", "main-box"];
 // The places the eye is gone to now: the well's shot is kept in the data but not gone to until #99 (its niche is unlit).
 const GONE = IDS.filter((id) => !site.places[id].shot?.off);
 const DT = 1 / 60, SAFE = 0.9;
@@ -241,7 +241,7 @@ test("the well is not gone to: the eye stays with him there (until #99)", () => 
   const p = site.places.well; assert.ok(p.shot && p.shot.off === "#99", "the well's shot should be kept, marked off for #99");
   const d = createDirector({ walker }); assert.equal(d.go("well", p, at(p)), false, "the eye should not go to the well's shot");
   assert.equal(d.state().phase, "idle");
-  assert.deepEqual(GONE, ["bell", "incense", "tea", "sutra", "lamp", "sit", "main-box"]);
+  assert.deepEqual(GONE, ["bell", "incense", "incense-yaoshi", "incense-guanyin", "tea", "sutra", "lamp", "sit", "main-box"]);
   walker.setRoom(null);
 });
 

@@ -27,8 +27,10 @@
 <meta name="twitter:description" content="穿过竹径，走入云径禅寺。在山林与钟声间，慢慢走一段山路。">
 <meta name="twitter:image" content="https://temple.rushiwowen.co/shared/og/temple-walk.jpg">
 <meta name="twitter:image:alt" content="山门之外：小沙弥站在暮色中的云径禅寺大殿前。">
+<!-- production-only -->
 <link rel="preconnect" href="https://u.rushiwowen.co">
 <script defer src="https://u.rushiwowen.co/script.js" data-website-id="e9b57921-f7a4-4d50-b0e9-8f0fcdccfa42" data-domains="temple.rushiwowen.co" data-do-not-track="true" data-exclude-hash="true" data-performance="true"></script>
+<!-- /production-only -->
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="src/ui.css">
 
@@ -39,9 +41,9 @@
   <p id="goal" class="fade"></p>
   <div id="way" class="fade" aria-hidden="true"><i></i><span></span></div>
   <div id="keys" class="paper" hidden><h2>键位</h2><dl>
-    <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>行走</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
+    <dt><kbd>W</kbd><kbd>S</kbd></dt><dd>前后行走</dd><dt><kbd>A</kbd><kbd>D</kbd></dt><dd id="keysAD">转身</dd><dt><kbd>方向键</kbd></dt><dd>左右平移，上下同 W S</dd><dt><kbd>Shift</kbd></dt><dd>快步</dd>
     <dt><kbd>鼠标</kbd></dt><dd>按住拖动环顾，点地面走去（「歇脚」里可改为锁定鼠标）</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
-    <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd>
+    <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd><dt><kbd>R</kbd></dt><dd>镜头转回身后（鼠标中键亦可）</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
     <dt><kbd>Space</kbd></dt><dd>跳，台沿处下台阶</dd>
     <dt class="need-seasons"><kbd>T</kbd></dt><dd class="need-seasons">时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上，歇脚</dd>
@@ -65,7 +67,7 @@
     <div class="set"><span>画质</span><div class="opts"><button class="chip" data-q="auto" type="button">自动</button><button class="chip" data-q="low" type="button">简</button><button class="chip" data-q="medium" type="button">中</button><button class="chip" data-q="high" type="button">精</button></div></div>
     <p class="note" id="qualityNote" hidden>画质在下次进山时生效　<button class="chip" id="reloadBtn" type="button">现在重来</button></p>
     <div class="set"><label for="setFov">视野</label><input id="setFov" type="range" min="-6" max="16" step="1"></div>
-    <div class="set"><span>自动镜头</span><button class="chip" id="setAutocam" type="button" aria-pressed="true">开</button></div>
+    <div class="set"><span>自动镜头</span><div class="opts"><button class="chip" id="setAutocam" type="button" aria-pressed="true">开</button><button class="chip" id="setFollow" type="button" aria-pressed="true" aria-label="镜头跟随" title="镜头跟随：点地走时，镜头慢慢转到身后">跟随</button></div></div>
     <div class="set need-seasons"><span>时节</span><div class="opts"><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div></div>
     <div class="set need-seasons"><span>时辰</span><div class="opts"><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div></div>
     </div>
@@ -74,6 +76,7 @@
     <div class="set"><label for="setSens">环顾快慢</label><input id="setSens" type="range" min="0.3" max="2.5" step="0.1"></div>
     <div class="set"><span>上下反转</span><button class="chip" id="setInvert" type="button" aria-pressed="false">关</button></div>
     <div class="set"><span>锁定鼠标</span><button class="chip" id="setLock" type="button" aria-pressed="false">关</button></div>
+    <div class="set keys-only"><span>A/D 平移（旧）</span><button class="chip" id="setStrafe" type="button" aria-pressed="false">关</button></div>
     <div class="grp-name"><h3 aria-label="声音" title="声音">耳</h3><button class="chip" id="menuMix" type="button" aria-expanded="false" aria-controls="setMusic setAmbience setEffects">分开调</button></div>
     <div class="set"><label for="setVolume">音量</label><input id="setVolume" type="range" min="0" max="1" step="0.05"></div>
     <div class="set sub"><label for="setMusic">乐声</label><input id="setMusic" type="range" min="0" max="1" step="0.05"></div>
@@ -83,12 +86,13 @@
     <div class="grp-name grp-lang"><h3 aria-label="文字" title="文字">意</h3></div>
     <div class="set"><span>文字</span><div class="opts"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></div></div>
     <div class="community-invite" id="menuCommunityInvite" hidden><button class="chip" id="menuCommunity" type="button">加入内测反馈群</button><p>遇到问题，或有什么想法，来群里聊聊。</p></div>
-    <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuCredits" type="button">鸣谢</button><button class="stamp" id="menuResume" type="button">继续</button></div>
+    <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuCredits" type="button">鸣谢</button><button class="stamp" id="menuResume" type="button">继续</button><p class="version" id="menuVersion" translate="no"></p></div>
   </div></dialog>
   <dialog class="layer" id="credits" aria-labelledby="creditsTitle" hidden>
     <div class="credits-card paper scrolls">
       <h2 id="creditsTitle">鸣谢与来源</h2>
       <div id="creditsBody"></div>
+      <p class="version" id="creditsVersion" translate="no"></p>
       <footer><button class="stamp" id="creditsClose" type="button">合上</button></footer>
     </div>
   </dialog>
@@ -114,12 +118,14 @@
     <button id="shutter" type="button" aria-label="按下快门"></button>
     <button class="chip" id="photoClose" type="button">收起<kbd>Esc</kbd></button>
   </div>
+  <button class="chip" id="clipBtn" type="button">拍一段</button>
+  <div id="clipRec" hidden><button class="chip" id="clipStop" type="button">停下<kbd>Esc</kbd></button><i id="clipBar"></i></div>
   <section id="photoSettings" class="paper scrolls" aria-label="拍照设置" hidden>
     <fieldset><legend>画幅</legend><div class="row">
       <button class="chip" data-aspect="screen" aria-pressed="true" type="button">全幅</button><button class="chip" data-aspect="wide" aria-pressed="false" type="button">横幅</button><button class="chip" data-aspect="square" aria-pressed="false" type="button">方幅</button><button class="chip" data-aspect="tall" aria-pressed="false" type="button">竖幅</button>
     </div></fieldset>
     <fieldset><legend>取景</legend><div class="row">
-      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button>
+      <button class="chip" id="thirdsToggle" aria-pressed="false" type="button">三分线</button><button class="chip" id="qrToggle" aria-pressed="true" type="button">二维码</button><button class="chip" id="blurToggle" aria-pressed="false" type="button" hidden>虚化</button><button class="chip" id="clipMarkToggle" aria-pressed="true" type="button">落款</button>
     </div></fieldset>
     <fieldset><legend>远近</legend><div class="row">
       <button class="chip" data-lens="1" aria-pressed="true" type="button">原景</button><button class="chip" data-lens="1.8" aria-pressed="false" type="button">拉近</button><button class="chip" data-lens="3.2" aria-pressed="false" type="button">特写</button>
@@ -130,6 +136,11 @@
     </div></fieldset>
     <p>画面就是你眼前所见 · 单击即拍 · 滚轮远近</p>
   </section>
+  <dialog class="layer" id="clip" aria-label="影片" hidden>
+    <video id="clipVideo" controls playsinline loop aria-label="刚拍下的影片"></video>
+    <p id="clipHint" hidden></p>
+    <div class="row"><button class="chip" id="clipShare" type="button" hidden>分享</button><a class="chip" id="clipSave" href="#">保存</a><button class="chip" id="clipBack" type="button">返回</button></div>
+  </dialog>
   <dialog class="layer" id="print" aria-label="照片" hidden>
     <img id="printImg" alt="刚拍下的照片">
     <div class="row"><button class="chip" id="shareBtn" type="button" hidden>分享</button><a class="chip" id="saveLink" href="#">保存</a><button class="chip" id="printBack" type="button">返回</button></div>
@@ -166,6 +177,7 @@
       <progress id="loadProgress" max="100" aria-label="山路正在铺开"></progress>
       <button id="loadRetry" type="button" hidden>再来一次</button>
     </div>
+    <p id="relangLine">换字中</p>
     <button id="enterBtn" type="button" disabled>山路正在铺开</button>
     <button id="againBtn" type="button" hidden></button>
   </div>

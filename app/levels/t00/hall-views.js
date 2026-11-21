@@ -8,9 +8,9 @@ const INSIDE = {
   tea:       { door: [0, 3.7, 0, -0.08],         roof: [0, 0.7, 0, 0.72] },
   main:      { altar: [0, 2.3, 0, 0.22],         roof: [0, 1.6, 0, 0.78] },
   library:   { shelves: [0, 2.7, 0, 0.15],       ceiling: [0, 1.1, 0, 0.78] },
-  yaoshi:    { altar: [0, 2, 0, 0.18],           roof: [0, 1, 0, 0.72] },
+  yaoshi:    { altar: [0, 2, 0, 0.18],           roof: [0, 2.6, 0, 0.72] },
   dahui:     { table: [0, 2, 0, 0.15],           roof: [0, 1, 0, 0.72] },
-  guanyin:   { altar: [0, 2, 0, 0.18],           roof: [0, 1, 0, 0.72] },
+  guanyin:   { altar: [0, 2, 0, 0.18],           roof: [0, 2.6, 0, 0.72] },
   lingxiao:  { room: [0, 3.2, 0, 0.12],          roof: [0, 1.4, 0, 0.78] },
 };
 
