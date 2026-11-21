@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-21T06:24:00.814Z",
+  "generated_at": "2026-11-21T06:25:26.941Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "088589adb04acb2b2c2e7aec3a8f3d53c62be1c5",
-    "url": "https://github.com/bolechen/temple-walk/commit/088589adb04acb2b2c2e7aec3a8f3d53c62be1c5"
+    "sha": "6246673da722410c66efb14b4281858d05124369",
+    "url": "https://github.com/bolechen/temple-walk/commit/6246673da722410c66efb14b4281858d05124369"
   },
   "delivery": {
     "analytics": {
@@ -576,13 +576,13 @@
     "kind": "developer_report"
   },
   "verification": {
-    "status": "in_progress",
+    "status": "pending",
     "conclusion": null,
-    "run_id": 44875289210,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/44875289210",
+    "run_id": 44875450477,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/44875450477",
     "checks": {
       "syntax": "pending",
-      "unit": "in_progress",
+      "unit": "pending",
       "e2e": "pending"
     },
     "scope": [
@@ -600,19 +600,19 @@
     "schema_version": "1.0",
     "scene_id": "T00",
     "status": "not_reviewed",
-    "run_id": "t00-20261120-b1ab530",
+    "run_id": "t00-20261121-45d1c91",
     "source": {
       "repository": "https://github.com/bolechen/temple-walk",
       "ref": "main",
-      "reviewed_commit": "b1ab53021da181940b247b882b7a43d3da170608",
-      "code_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+      "reviewed_commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+      "code_commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
       "evidence_commit": null,
-      "evidence_store_commit": "aed430dc5bb6c90bef333e88ea671e3041838d9b",
-      "observed_head": "b1ab53021da181940b247b882b7a43d3da170608",
-      "previous_reviewed_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
-      "code_equivalence": "main HEAD was b1ab530 at the start and again at the end of this run; every result here was produced at b1ab530. evidence_commit is the repository commit that records this report (filled by the merge, not known here); evidence_store_commit is the Hugging Face dataset commit holding the screenshots."
+      "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace",
+      "observed_head": "3b27cab64715014e804f5cd90887d68b9d07df80",
+      "previous_reviewed_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+      "code_equivalence": "Every result here was produced at 45d1c91 (main at the start). By the end main had moved to 3b27cab, which only adds docs/t05/ reference views and touches no app/, worker/ or tools/ file; it was not retested and the report stays locked to 45d1c91. evidence_commit is the repository commit that records this report (filled by the merge); evidence_store_commit is the Hugging Face dataset commit holding the screenshots."
     },
-    "reviewed_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+    "reviewed_commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
     "reviewer": "Claude 定时独立评审",
     "reviewer_details": {
       "method": "commit-traceable independent review",
@@ -628,32 +628,35 @@
       "os": "managed Linux container",
       "browser": "Playwright Chromium headless shell",
       "renderer": "SwiftShader (software GL)",
-      "node": "22",
-      "credentials": "GH/GitHub/HF/cloud tokens removed from every subprocess that ran repository code; servers bound to 127.0.0.1. The evidence push (tools/evidence.mjs, hf) ran with a placeholder token, the proxy supplying the real one.",
+      "node": "22.23.5",
+      "credentials": "GH/GitHub/HF/AWS/GCloud/Umami tokens removed from every subprocess that ran repository code; servers bound to 127.0.0.1. The evidence push ran with a placeholder HF token, the proxy supplying the real one.",
       "target_device": false,
-      "site_access": "research Site not read this run; GitHub llms.txt, LATEST-GOALS and the site-status JSON used."
+      "site_access": "research Site llms.txt reachable (200); content not re-read; GitHub llms.txt, LATEST-GOALS and the site-status JSON used."
     },
     "selection": {
       "selected": [
-        "diff 4aa2d5c..b1ab530 (74 commits; 17 touch app/: #276 grid walker everywhere, #291 camera B, #277/#303 photo blur switch, #301 stair cheeks, #305 loft gallery, #306 stair pitch, #222 doorways, #269 litter, #309 canary deploy)",
+        "diff b1ab530..45d1c91 (58 commits): #295 C A/D turn, #366 R recenter and drift, #350 photo 拍一段, #354/#391 eye space, #346 presence worker, #332 doorway inward face, #321 walk fixes, #316 incense in three halls, #325/#381 language handover, #382/#389/#408 level loading, #404 shots.js",
         "parser",
         "typecheck",
-        "unit tests on the written plan and on the baked grid (599 each)",
-        "e2e:quick (nogl, boot, events)",
-        "edges:grid (the default walker since #276)",
-        "cam01-cam06 screenshots, all six opened and examined",
-        "PHOTO-02 retest: real P key on the high tier, __probe post state and the frame",
-        "PERF-01: read the Pixel 8a report of 2026-11-18 (#262)",
-        "ASSET-01: asset register re-read"
+        "unit tests on both walkers (754 each)",
+        "e2e:quick",
+        "cam01-cam06 screenshots, all six opened",
+        "keywalk (real W/A/D keys, #295 C acceptance route)",
+        "ART-11 and PHOTO-02 at the bamboo start, real P key, 16:9 / 4:3 / 9:16",
+        "edges:grid",
+        "TOOL-01 retest",
+        "presence worker privacy/abuse read (#346)"
       ],
       "skipped": [
-        "Mac/phone performance at this commit (no device; no HF Job: a T4 does not answer the Mac/phone question)",
+        "Mac/phone performance (no device; no HF Job, a T4 does not answer it)",
+        "T4 pictures for #332/#354 shader changes (blocked per protocol v1.1)",
         "smoke/full e2e (nightly CI; CI success is not acceptance)",
-        "nearplane, nearplane:grid, edges on ?walker=old",
-        "five-zone normal-speed real-input round trip and its recording (EVID-01)",
-        "halls, loft, ending, doorways seen up close, litter",
-        "sound listening; the music Goal is a proposal and was only reviewed, nothing generated",
-        "16:9 / 4:3 / phone-portrait framing of camera B (#291)"
+        "nearplane, edges on ?walker=old",
+        "halls, loft, ending, doorways up close, incense in side halls, language handover",
+        "the 拍一段 recording itself (clip scenario)",
+        "five-zone normal-speed human round trip and its recording (EVID-01)",
+        "sound listening; the music Goal is a proposal, reviewed only",
+        "3b27cab (docs only)"
       ]
     },
     "checks": [
@@ -662,10 +665,10 @@
         "scope": "static",
         "criterion": "锁定提交源码可解析",
         "status": "pass",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "pnpm run check: 90 files checked, 0 problems.",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "pnpm run check: 109 files checked, 0 problems.",
         "evidence_ids": [
-          "D-CHECK"
+          "E-CHECK"
         ]
       },
       {
@@ -673,10 +676,10 @@
         "scope": "static",
         "criterion": "类型检查",
         "status": "pass",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
         "reason": "pnpm run typecheck exited 0.",
         "evidence_ids": [
-          "D-TYPECHECK"
+          "E-TYPECHECK"
         ]
       },
       {
@@ -684,23 +687,23 @@
         "scope": "unit",
         "criterion": "单元测试（两套 walker）",
         "status": "pass",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "pnpm test and pnpm run test:grid: 599 tests each, 586 pass, 0 fail, 13 skipped.",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "pnpm test and pnpm run test:grid: 754 tests each, 741 pass, 0 fail, 13 skipped.",
         "evidence_ids": [
-          "D-UNIT",
-          "D-UNIT-GRID"
+          "E-UNIT",
+          "E-UNIT-GRID"
         ]
       },
       {
         "id": "C04",
-        "scope": "runtime",
-        "criterion": "页面启动并绘制，无页面/控制台错误",
-        "status": "partial",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "e2e:quick passed (nogl 1 s, boot 93 s, events 34 s). shots.js drew six cameras but logged two errors from its own doorway wait (TOOL-01): a harness error, not a page error. Boot tier only.",
+        "scope": "e2e",
+        "criterion": "页面启动并绘制，无页面/控制台错误（自动场景）",
+        "status": "pass",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "e2e:quick passed (nogl 1 s, boot 100 s, level 20 s, events 44 s); shots.js drew cam01-06 with errors: []. Automated scenarios only, not a human run.",
         "evidence_ids": [
-          "D-E2E-QUICK",
-          "D-SHOTS-LOG"
+          "E-E2E-QUICK",
+          "E-SHOTS-LOG"
         ]
       },
       {
@@ -708,31 +711,32 @@
         "scope": "visual",
         "criterion": "cam01-cam06 固定机位",
         "status": "partial",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "All six opened. cam01/02: treads read, cheek stones close against the tread ends (no gap); cam03: 雙徑歸堂 and the gate board legible; cam04: gate under the overcast sky, its board readable, court seen through the door; cam05: screen wall framed by the open leaves; cam06: censer on axis, halls, cryptomerias and hills in depth, puddles mostly soft-edged. Fixed-camera tool shots (diagnostic posing) at SwiftShader default tier; art issues ART-01/02/05/07/10 were not re-judged item by item, so no pass.",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "All six opened and compared view by view with b1ab530: no regression (treads and cheek stones closed, boards legible, court in depth). Posed by the tool (diagnostic), SwiftShader. Art issues ART-01/02/05/07/10 remain as before; cam06 puddles still show a straight dark band along the paving joints.",
         "evidence_ids": [
-          "D-COLLAGE",
-          "D-CAM01",
-          "D-CAM02",
-          "D-CAM03",
-          "D-CAM04",
-          "D-CAM05",
-          "D-CAM06",
-          "D-INSPECTION"
+          "E-SHOTS-LOG",
+          "E-INSPECTION",
+          "E-CAM01",
+          "E-CAM02",
+          "E-CAM03",
+          "E-CAM04",
+          "E-CAM05",
+          "E-CAM06"
         ]
       },
       {
         "id": "C06",
         "scope": "runtime",
-        "criterion": "留影：全景清晰无景深（PHOTO-02）",
+        "criterion": "留影：全景清晰无景深（PHOTO-02 回归检查）",
         "status": "pass",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "Real P key on q=high: photo false→true, post.dof false before and after, focus 0. The raised frame at the bamboo start shows the near culm and the far slope equally sharp; only 设置, the shutter and 收起 are on the picture. yard.js:700 gives a focus only with the camera raised and settings.blur on (#277).",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "Real P key (Playwright) at the bamboo start, q=high, three aspect ratios: photo true, post.dof false while walking and raised; near culm and far slope equally sharp. The raised UI is 拍一段 / 设置 / shutter / 收起 (拍一段 new with #350), still sparse.",
         "evidence_ids": [
-          "D-PROBE-PHOTO",
-          "D-PROBE-SCRIPT",
-          "D-COLLAGE",
-          "D-PHOTO-RAISED"
+          "E-ART11-LOG",
+          "E-ART11-JSON",
+          "E-START-RAISED-16x9",
+          "E-START-RAISED-4x3",
+          "E-START-RAISED-9x16"
         ]
       },
       {
@@ -740,10 +744,10 @@
         "scope": "runtime",
         "criterion": "角色体积不进入建筑（EDGE-001/002，默认格子 walker）",
         "status": "partial",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "edges:grid: 178 places reached, 2,001,406 standing places; every group ✓, deepest 1.0 cm (大慧院, within the 1 cm tolerance), 茶寮 0 over; below the knee 0.7 cm. A geometric sweep, not normal-speed input; the video the issues ask for is still missing.",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "edges:grid: 180 places, 0 unreached, 2,001,406 standing places; every group ✓, deepest 1.0 cm (大慧院 woodV, within 1 cm), below the knee 0.7 cm. Geometric sweep, not the normal-speed recording the issues ask for.",
         "evidence_ids": [
-          "D-EDGES-GRID"
+          "E-EDGES-GRID"
         ]
       },
       {
@@ -751,243 +755,320 @@
         "scope": "performance",
         "criterion": "Mac 与手机目标设备 120 s×3 帧率",
         "status": "blocked",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "No target device at b1ab530. The Pixel 8a report (2026-11-18, #262) measured the production site of that day, not this commit; no Mac numbers.",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "No target device at 45d1c91; no HF Job (a T4 does not answer the Mac/phone question). Earlier Pixel 8a / M1 Pro numbers belong to other builds.",
         "evidence_ids": []
       },
       {
         "id": "C09",
         "scope": "runtime",
-        "criterion": "殿内 / 凌霄阁 / 结尾 / 配乐听评 / 五区正常输入往返",
+        "criterion": "殿内 / 凌霄阁 / 结尾 / 配乐听评 / 五区真人正常速度往返",
         "status": "blocked",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "reason": "Not run this round; the music Goal is reviewed as a proposal only; no listening device; no human recording.",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "Not run this round; no listening device; no human recording. The music Goal is a proposal and was only reviewed, nothing generated.",
+        "evidence_ids": []
+      },
+      {
+        "id": "C10",
+        "scope": "runtime",
+        "criterion": "#295 C：只用 W/A/D（加 Shift）不碰鼠标，从山门走到大殿绕一圈",
+        "status": "partial",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "keywalk passed with real key events (Playwright): 335 steps, A 89 / D 104, novice within 0.5% of the picture's centre 95% of the time (max 7.4%), eye 2.48 m behind at the 5th percentile (closest 0.66 m). Start posed with ?cam, q=low 480x320, Shift held: an automated real-key run, not a human recording on a target device.",
+        "evidence_ids": [
+          "E-KEYWALK"
+        ]
+      },
+      {
+        "id": "C11",
+        "scope": "visual",
+        "criterion": "ART-11 复测：竹林起点首帧与举相机三种画幅无竹竿压主角或石阶中线",
+        "status": "fail",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "Reproduced at 16:9, 4:3 and 9:16: a near culm stands just right of centre; at 4:3 it touches the novice's left arm, at 16:9 and 9:16 it cuts the stair's right half.",
+        "evidence_ids": [
+          "E-ART11-LOG",
+          "E-INSPECTION",
+          "E-START-WALK-16x9",
+          "E-START-WALK-4x3",
+          "E-START-WALK-9x16",
+          "E-START-RAISED-16x9",
+          "E-START-RAISED-4x3",
+          "E-START-RAISED-9x16"
+        ]
+      },
+      {
+        "id": "C12",
+        "scope": "static",
+        "criterion": "TOOL-01 复测：shots.js 无报错，注入错误时非零退出",
+        "status": "partial",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "After #404 cam01-06 print errors: [] (first half met). tools/shots.js still ends with console.log of errors and exits 0 whatever it holds; there is no process.exitCode path, so an injected page or wait error would still exit 0 (second half not met; read in source, not injected).",
+        "evidence_ids": [
+          "E-SHOTS-LOG"
+        ]
+      },
+      {
+        "id": "C13",
+        "scope": "security",
+        "criterion": "同修留痕（#346）不收集个人数据、可抗滥用",
+        "status": "partial",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "worker/trace-core.js stores only (day, place, kind) -> n; reads no address, header, cookie or UA; 200-byte body, whitelist, 90-day retention. The limiter is one global bucket per place, so one sender can inflate a count (cap 250k/day) or starve real visits with 429s; per-address limiting is left to a Cloudflare edge rule that this run could not inspect (SEC-01).",
+        "evidence_ids": [
+          "E-INSPECTION"
+        ]
+      },
+      {
+        "id": "C14",
+        "scope": "visual",
+        "criterion": "着色器改动（#332 门洞 1024 内面、#354 眼睛空间）真显卡核对",
+        "status": "blocked",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reason": "Protocol v1.1: shader changes need T4 or Mac pictures; none taken this round (SwiftShader only).",
         "evidence_ids": []
       }
     ],
     "artifacts": [
       {
-        "id": "D-CHECK",
+        "id": "E-CHECK",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/check.log",
-        "sha256": "dc99a0e8113c01944e768ad6114ab513e909f6654b396b0b78848e0564832486"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/check.log",
+        "sha256": "cb3f8fde1be675d5efa70ec92b5039ba92c3e966a6f22cea162db0dc905738dc"
       },
       {
-        "id": "D-TYPECHECK",
+        "id": "E-TYPECHECK",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/typecheck.log",
-        "sha256": "3e5d71e32b771e68049d38ffdd202d6a169fa680df21569e5687e0513a52da37"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/typecheck.log",
+        "sha256": "92184f48e1b9a10e05e7cae52ceb1d98ecd8e44eeef517cf46bd6766fc24fe3c"
       },
       {
-        "id": "D-UNIT",
+        "id": "E-UNIT",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/unit.log",
-        "sha256": "b5c518c7834e3ab5315ab27e6743dbefcf521d7351443535aa09bdc28c629865"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/unit.log",
+        "sha256": "bfef812018cbe37c0bf8fe012675ca60c48e251a61b7e8914159305b863f8d34"
       },
       {
-        "id": "D-UNIT-GRID",
+        "id": "E-UNIT-GRID",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/unit-grid.log",
-        "sha256": "3eb15f2d0ebbf482c5f6e13f78249107ffa343db2f7924247e7b0af733d9dd91"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/unit-grid.log",
+        "sha256": "d3838b5374c0757574d5dbc5c66ea9a1e5fe3f9f911f80155eda341c6896c515"
       },
       {
-        "id": "D-E2E-QUICK",
+        "id": "E-E2E-QUICK",
         "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/e2e-quick.log",
-        "sha256": "f447c605bbef55a43d78abe4f5a5616b721d7b3af4112e431f3cc52deba405ab"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/e2e-quick.log",
+        "sha256": "a8b3aeed3ed0542220b7f0c768e867b552bfa4e10e304e5a081d641fca4c0957"
       },
       {
-        "id": "D-EDGES-GRID",
+        "id": "E-SHOTS-LOG",
         "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/edges-grid.log",
-        "sha256": "5bbf8d6873a7c1f79ea159ae3c53b4d18673359c751e0ba917ddf8d53940ce5d"
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/shots.log",
+        "sha256": "db10e1b5f6be328d25e81844aa5e3d837743820794376fd3df11769e57b6e222"
       },
       {
-        "id": "D-SHOTS-LOG",
-        "type": "test_log",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/shots.log",
-        "sha256": "da1bcd7d53f14154911a737e4e145b214485b330043b429541daf6ee516c4086"
-      },
-      {
-        "id": "D-PROBE-PHOTO",
+        "id": "E-KEYWALK",
         "type": "test_log",
         "mode": "user_input",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/probe-photo.log",
-        "sha256": "111dc5062782f31a8ca9da61286d965fdd896953c070e14e41f5708dfe96bcb9",
-        "note": "Playwright keyboard.press(\"p\") on q=high; __probe() read before and after (the read itself is a hook)."
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/keywalk.log",
+        "sha256": "68548076626936478caaea8b74a0813c5e7194cb173ac4ec801820714feec3de"
       },
       {
-        "id": "D-PROBE-SCRIPT",
-        "type": "test_script",
+        "id": "E-EDGES-GRID",
+        "type": "test_log",
         "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/probes/photo.cjs",
-        "sha256": "19293423b632bbf41bd116665d5d97eeff5321421109ba232ced877756d057ec"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/edges-grid.log",
+        "sha256": "0ea74f2effe22dd85d210ff065805de35109dc8e68e5e47fd59fcef05d3f87d2"
       },
       {
-        "id": "D-COLLAGE",
+        "id": "E-ART11-LOG",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/art11.log",
+        "sha256": "9d7e23a56abe3a75367725b53b731be701f508eace6ae8dc8a6898da813d2e59"
+      },
+      {
+        "id": "E-ART11-JSON",
+        "type": "trace",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/photo/art11.json",
+        "sha256": "4a0e4d21d9bab6e6f96c2086525e33d8c3b4b8f7de2db901afe7d11a9ad65ba0"
+      },
+      {
+        "id": "E-ART11-FIRST-FAIL",
+        "type": "test_log",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/art11-first-failure.log",
+        "sha256": "3a8d2b805754c9099b801cf3bfd51a30824d1f6c12dacc9cafaaf33843328698"
+      },
+      {
+        "id": "E-ART11-SCRIPT",
+        "type": "test_log",
+        "mode": "harness_source",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/art11.cjs.txt",
+        "sha256": "a5e2dbea7bfd075c077ca7764f7d04aafaac5a2751337874240a0c109819ac46"
+      },
+      {
+        "id": "E-INSPECTION",
+        "type": "review_notes",
+        "mode": "manual_inspection",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "file": "docs/t00/evidence/independent/20261121-45d1c91/inspection.md",
+        "sha256": "1b15d7fd95cf2a26a835e0291dd7db0945647e61acc565b8bbe317108e3fb67e"
+      },
+      {
+        "id": "E-CAM01",
         "type": "runtime_screenshot",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/collage.jpg",
-        "sha256": "d72b9b76fbad7b919cee15303858ced067185881cfcc5d83a39e1e4555622ce8",
-        "note": "cam01-06 (rows 1-2) and the raised camera at the bamboo start (row 3), downscaled; originals listed in MANIFEST.json on the HF dataset."
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/shots/cam01.png",
+        "sha256": "eeb0c0c6f0b72cd0292bbc5453c2215d30e648c478f4300d80bf419ce7700036",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       },
       {
-        "id": "D-MANIFEST",
-        "type": "evidence_manifest",
-        "mode": "sanitized_subprocess",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/MANIFEST.json",
-        "sha256": "89da0a63bcad3d43121dd205a86828f632966f51a6f24149a93bb943af5d9e07"
-      },
-      {
-        "id": "D-INSPECTION",
-        "type": "review_note",
-        "mode": "manual",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "file": "docs/t00/evidence/independent/20261120-b1ab530/inspection.md",
-        "sha256": "3b21a574c1af0623267ee813718a7b291b44c989d7ec6c16201ee54b19812bdb"
-      },
-      {
-        "id": "D-CAM01",
+        "id": "E-CAM02",
         "type": "runtime_screenshot",
-        "mode": "diagnostic_fixed_camera",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/cam01.png",
-        "sha256": "44eab6441bfe0bd02ddd46243cc8065a0490a5c50e78e173a1e45364356f2515",
-        "bytes": 1516765,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/shots/cam02.png",
+        "sha256": "278e2da932da4a3ddd14c83d494b9f912c0b6c77ec8717d6a9088399d0d46f3e",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       },
       {
-        "id": "D-CAM02",
+        "id": "E-CAM03",
         "type": "runtime_screenshot",
-        "mode": "diagnostic_fixed_camera",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/cam02.png",
-        "sha256": "907e4ca7e4aa964f3bf9da4ca7282d88c48348c0291b44e5ceb67d7d2018afe8",
-        "bytes": 1448476,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/shots/cam03.png",
+        "sha256": "9b8289bab51fdfb09c4c315e35e7ebc0fd656caf2a8b95a3f8590918ef90a8f6",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       },
       {
-        "id": "D-CAM03",
+        "id": "E-CAM04",
         "type": "runtime_screenshot",
-        "mode": "diagnostic_fixed_camera",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/cam03.png",
-        "sha256": "eebc1566ea8af961c00a7b7f707d826cb915fe7036cbbeeca07044df72c5ff39",
-        "bytes": 1200143,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/shots/cam04.png",
+        "sha256": "fbeb1c3ee137f661891a7679fdfa4488a2f3f9cc4c94b2b0718220d9eb601ee4",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       },
       {
-        "id": "D-CAM04",
+        "id": "E-CAM05",
         "type": "runtime_screenshot",
-        "mode": "diagnostic_fixed_camera",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/cam04.png",
-        "sha256": "fbd32362639f992cc5de91ae460754037bc1d155e15354fc5b56968e5f378091",
-        "bytes": 1203090,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/shots/cam05.png",
+        "sha256": "d1193dd4284d7a4f72d6176ae88f0c8d73c770fe6aed8c4840afb4c19d4fdc19",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       },
       {
-        "id": "D-CAM05",
+        "id": "E-CAM06",
         "type": "runtime_screenshot",
-        "mode": "diagnostic_fixed_camera",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/cam05.png",
-        "sha256": "f613e26310e360b3b7cca3494d31b5cf05bbe8544cd3372fa16480cb8e7c7a8d",
-        "bytes": 1151088,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
+        "mode": "diagnostic_pose",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/shots/cam06.png",
+        "sha256": "ce9f4a09e9d537e47a6a0cb3f541930ee7f3cef79425e222fb49261ce105a46a",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       },
       {
-        "id": "D-CAM06",
-        "type": "runtime_screenshot",
-        "mode": "diagnostic_fixed_camera",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/cam06.png",
-        "sha256": "a9e536e1f8fd4e90d341780c42133d79c08e276506e2187971d3ae9fa8b1efad",
-        "bytes": 1288168,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
-      },
-      {
-        "id": "D-PHOTO-RAISED",
+        "id": "E-START-WALK-16x9",
         "type": "runtime_screenshot",
         "mode": "user_input",
-        "created_at": "2026-11-20T01:45:00Z",
-        "commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530/shots/photo-raised.png",
-        "sha256": "13d3876b6b1379bef0b78d0bd6d650febd53bb61ced19359d515e7cf1a42a4c6",
-        "bytes": 1444798,
-        "hf_rev": "aed430dc5bb6c90bef333e88ea671e3041838d9b"
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/photo/start-walk-16x9.png",
+        "sha256": "9a46851ce2ee425714f62f8f7ef0ff495fd47e157bf9bb680a71c28bec14a4ff",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+      },
+      {
+        "id": "E-START-RAISED-16x9",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/photo/start-raised-16x9.png",
+        "sha256": "39ddc336667d00e4134bd0928473a8ca7fb5a7a236e3c53d8cdfd29fdf73f9a3",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+      },
+      {
+        "id": "E-START-WALK-4x3",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/photo/start-walk-4x3.png",
+        "sha256": "fc1a13d682ec8d490d42311d6b163957a89a98257c8485ef3fb708db8d9eb3d6",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+      },
+      {
+        "id": "E-START-RAISED-4x3",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/photo/start-raised-4x3.png",
+        "sha256": "a3b79aa67c20c671d77b408daf790c7e36373cef5b9cf6214a419cda071ca353",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+      },
+      {
+        "id": "E-START-WALK-9x16",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/photo/start-walk-9x16.png",
+        "sha256": "20278d74dfa194ef44009866a470cbac0c3dbba40aab2912e45f0a628a360de3",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+      },
+      {
+        "id": "E-START-RAISED-9x16",
+        "type": "runtime_screenshot",
+        "mode": "user_input",
+        "created_at": "2026-11-21T06:30:00Z",
+        "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "url": "https://huggingface.co/datasets/bolechen/temple-walk-evidence/resolve/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91/photo/start-raised-9x16.png",
+        "sha256": "3a20952c2903950a754f6d22977ae2b2866159edc56efe516a730c0737594cb6",
+        "evidence_store_commit": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
       }
     ],
     "issues": [
-      {
-        "id": "PHOTO-02",
-        "state": "verified_closed",
-        "severity": "major",
-        "finding": "举相机时高档开着景深：__probe().post 报 dof:true、focus 6.18 m。yard.js 的 post.focus(Q.has(\"shot\") || photo.on ? focusAt() : 0) 在 #125 重新加入了 8e4cb3f 已移除的拍照景深；docs/PHOTO-MODE.md 仍写「画面始终清晰……移除整个景深pass」。art-goal.md 第一阶段写「高档加很浅的景深，只在定机位和拍照时开」，与所有者确认的留影目标（LATEST-GOALS「不需要景深……远近景都清晰」）冲突。",
-        "recommendation": "拍照时不开景深（photo.on 不再给焦距），或由所有者明确改留影目标；同时决定 ?shot 定机位是否保留，并修正 art-goal.md 与 PHOTO-MODE.md 其一。",
-        "target": "留影（高档）与 docs/PHOTO-MODE.md、docs/t00/art-goal.md",
-        "acceptance_condition": "同一锁定提交高档举相机时 __probe().post.dof 为 false，桌面成片近景与远山同样清晰；或有所有者改目标的记录。",
-        "attribution": {
-          "cause": "product",
-          "confidence": "high"
-        },
-        "evidence_ids": [
-          "B-PROBE-1",
-          "C-PROBE-PHOTO"
-        ],
-        "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
-        "reproduced_commits": [
-          "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127"
-        ],
-        "current_reproduced_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
-        "closed_commit": "b1ab53021da181940b247b882b7a43d3da170608",
-        "closed_in_run": "t00-20261120-b1ab530",
-        "retest_evidence_ids": [
-          "D-PROBE-PHOTO",
-          "D-PHOTO-RAISED"
-        ],
-        "fix_claimed_in": [
-          "a0ad8f9 (#277)",
-          "346c5b3 (#303)"
-        ],
-        "retest_note": "b1ab530: real P key on q=high, post.dof stays false and focus 0; the raised frame is sharp near and far. Blur exists only as the player-chosen 虚化 switch (owner 2026-11-19)."
-      },
       {
         "id": "TEST-03",
         "state": "open",
@@ -1292,13 +1373,14 @@
           "91a6343eaa4b44d9f19623a23f283583c32ffb3a",
           "5c2106b197350795b5baef9ade6a6ad66ea90590"
         ],
-        "retest_note": "727687e: edges 0 over in all 15 groups at reach 0.379 m. Animated envelope, turning/backing/Shift/jump and normal-speed before/after video still required to close.",
+        "retest_note": "45d1c91: edges:grid clean again (deepest 1.0 cm, 茶寮 0). Still needs the normal-speed recording; stays fixed_pending_retest.",
         "partial_evidence_ids": [
           "A-EDGES",
           "D-EDGES-GRID"
         ],
         "retest_note_ea2f3d0": "edges 0 over again at ea2f3d0; normal-speed video still missing.",
-        "retest_note_b1ab530": "edges:grid (default walker since #276): all groups ✓, deepest 1.0 cm at 大慧院, 茶寮 0 over. Normal-speed real-input before/after video still required to close."
+        "retest_note_b1ab530": "edges:grid (default walker since #276): all groups ✓, deepest 1.0 cm at 大慧院, 茶寮 0 over. Normal-speed real-input before/after video still required to close.",
+        "retest_evidence_ids": []
       },
       {
         "id": "EDGE-002",
@@ -1329,13 +1411,14 @@
           "91a6343eaa4b44d9f19623a23f283583c32ffb3a",
           "5c2106b197350795b5baef9ade6a6ad66ea90590"
         ],
-        "retest_note": "727687e: edges 0 over (茶寮 22,333 places). Animated envelope and normal-speed video still required to close.",
+        "retest_note": "45d1c91: edges:grid clean again (deepest 1.0 cm, 茶寮 0). Still needs the normal-speed recording; stays fixed_pending_retest.",
         "partial_evidence_ids": [
           "A-EDGES",
           "D-EDGES-GRID"
         ],
         "retest_note_ea2f3d0": "edges 0 over again at ea2f3d0; normal-speed video still missing.",
-        "retest_note_b1ab530": "edges:grid (default walker since #276): all groups ✓, deepest 1.0 cm at 大慧院, 茶寮 0 over. Normal-speed real-input before/after video still required to close."
+        "retest_note_b1ab530": "edges:grid (default walker since #276): all groups ✓, deepest 1.0 cm at 大慧院, 茶寮 0 over. Normal-speed real-input before/after video still required to close.",
+        "retest_evidence_ids": []
       },
       {
         "id": "TEST-02",
@@ -1397,7 +1480,14 @@
         "evidence_ids": [
           "D-SHOTS-LOG"
         ],
-        "first_seen_commit": "b1ab53021da181940b247b882b7a43d3da170608"
+        "first_seen_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+        "fix_claimed_in": [
+          "291ac2c (#404)"
+        ],
+        "retest_note": "45d1c91: errors: [] for cam01-06 (first half met). shots.js still exits 0 regardless of errors (no exitCode path), so the second half of the condition is not met; stays open.",
+        "retest_evidence_ids": [
+          "E-SHOTS-LOG"
+        ]
       },
       {
         "id": "EVID-03",
@@ -1415,7 +1505,8 @@
         "evidence_ids": [
           "D-MANIFEST"
         ],
-        "first_seen_commit": "b1ab53021da181940b247b882b7a43d3da170608"
+        "first_seen_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+        "retest_note": "45d1c91: tools/evidence.mjs unchanged since b1ab530; this run pushed with EVIDENCE_BASE set to the HF original again (manifest written, hashes read back). Not retested without the workaround; stays open."
       },
       {
         "id": "ART-11",
@@ -1431,10 +1522,43 @@
           "confidence": "medium"
         },
         "evidence_ids": [
+          "D-COLLAGE",
           "D-PHOTO-RAISED",
-          "D-COLLAGE"
+          "E-START-RAISED-16x9",
+          "E-START-RAISED-4x3",
+          "E-START-RAISED-9x16",
+          "E-START-WALK-16x9",
+          "E-START-WALK-4x3",
+          "E-START-WALK-9x16"
         ],
-        "first_seen_commit": "b1ab53021da181940b247b882b7a43d3da170608"
+        "first_seen_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+        "reproduced_commits": [
+          "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+          "b1ab53021da181940b247b882b7a43d3da170608"
+        ],
+        "current_reproduced_commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "retest_note": "45d1c91: reproduced at 16:9, 4:3 and 9:16 (real P key, q=high, summer day); still open."
+      },
+      {
+        "id": "SEC-01",
+        "state": "open",
+        "severity": "info",
+        "finding": "同修留痕（#346）的 /api/trace 只按地点做全局令牌桶（burst 120、12/s、每日上限 25 万），不按来源限流：单个发送者可以抬高某地点当天的计数，或在桶空时让真实访客拿到 429。代码注释把按来源限流交给 Cloudflare 边缘规则（docs/RELEASING.md），本轮无 Cloudflare 权限，未能核实生产是否配置。数据本身不含个人信息。",
+        "recommendation": "在生产 Worker 的路由上确认（或配置）/api/trace 的按来源限流规则，并在 docs/RELEASING.md 记下规则名与阈值；或在页面上把计数表述为近似值。",
+        "target": "worker/trace-core.js、生产 Cloudflare 路由 temple.rushiwowen.co/api/*",
+        "acceptance_condition": "有生产边缘限流规则的配置记录（截图或 API 读回），且同一来源连发 200 次 /api/trace 后被边缘拦截，当日计数增量不超过规则阈值。",
+        "attribution": {
+          "cause": "product",
+          "confidence": "medium"
+        },
+        "evidence_ids": [
+          "E-INSPECTION"
+        ],
+        "first_seen_commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+        "reproduced_commits": [
+          "45d1c9156115aa06193f8f7367e14c4fac13b0c9"
+        ],
+        "current_reproduced_commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9"
       }
     ],
     "closed_earlier": [
@@ -1507,11 +1631,51 @@
         ],
         "closed_in_run": "t00-20261119-4aa2d5c",
         "retest_note": "4aa2d5c: menu and menufit passed (zh/ja/en/ko × 1280×720, 1366×768, 1920×1080); fix commit not identified, closed on the new run."
+      },
+      {
+        "id": "PHOTO-02",
+        "state": "verified_closed",
+        "severity": "major",
+        "finding": "举相机时高档开着景深：__probe().post 报 dof:true、focus 6.18 m。yard.js 的 post.focus(Q.has(\"shot\") || photo.on ? focusAt() : 0) 在 #125 重新加入了 8e4cb3f 已移除的拍照景深；docs/PHOTO-MODE.md 仍写「画面始终清晰……移除整个景深pass」。art-goal.md 第一阶段写「高档加很浅的景深，只在定机位和拍照时开」，与所有者确认的留影目标（LATEST-GOALS「不需要景深……远近景都清晰」）冲突。",
+        "recommendation": "拍照时不开景深（photo.on 不再给焦距），或由所有者明确改留影目标；同时决定 ?shot 定机位是否保留，并修正 art-goal.md 与 PHOTO-MODE.md 其一。",
+        "target": "留影（高档）与 docs/PHOTO-MODE.md、docs/t00/art-goal.md",
+        "acceptance_condition": "同一锁定提交高档举相机时 __probe().post.dof 为 false，桌面成片近景与远山同样清晰；或有所有者改目标的记录。",
+        "attribution": {
+          "cause": "product",
+          "confidence": "high"
+        },
+        "evidence_ids": [
+          "B-PROBE-1",
+          "C-PROBE-PHOTO"
+        ],
+        "first_seen_commit": "ea2f3d0ccf5b495b7d5b5f86a536f600e3a6d72e",
+        "reproduced_commits": [
+          "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127"
+        ],
+        "current_reproduced_commit": "4aa2d5ca1106e2c90abaae2fbc6b1e5fbc95e127",
+        "closed_commit": "b1ab53021da181940b247b882b7a43d3da170608",
+        "closed_in_run": "t00-20261120-b1ab530",
+        "retest_evidence_ids": [
+          "D-PROBE-PHOTO",
+          "D-PHOTO-RAISED"
+        ],
+        "fix_claimed_in": [
+          "a0ad8f9 (#277)",
+          "346c5b3 (#303)"
+        ],
+        "retest_note": "b1ab530: real P key on q=high, post.dof stays false and focus 0; the raised frame is sharp near and far. Blur exists only as the player-chosen 虚化 switch (owner 2026-11-19).",
+        "regression_check": {
+          "commit": "45d1c9156115aa06193f8f7367e14c4fac13b0c9",
+          "result": "still closed: post.dof false walking and raised at three aspect ratios",
+          "evidence_ids": [
+            "E-ART11-JSON"
+          ]
+        }
       }
     ],
     "evidence": [
-      "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261120-b1ab530",
-      "https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/aed430dc5bb6c90bef333e88ea671e3041838d9b/t00/independent/20261120-b1ab530",
+      "https://github.com/bolechen/temple-walk/tree/main/docs/t00/evidence/independent/20261121-45d1c91",
+      "https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace/t00/independent/20261121-45d1c91",
       "https://raw.githubusercontent.com/bolechen/temple-walk/site-status/status/t00.json"
     ],
     "publish": {
@@ -1523,16 +1687,15 @@
       "note": "Routine status is synchronized by the site-status workflow from this file; the Site source was not changed."
     },
     "limitations": [
-      "SwiftShader only; no target-device performance at this commit.",
-      "Automated Playwright input (the P key); fixed views are posed by the tool (diagnostic); no human recording, no five-zone normal-speed route.",
-      "Screenshots are on the HF evidence dataset (pinned at aed430d); git keeps MANIFEST.json and one 377 KB collage.",
-      "Camera B was not looked at in 4:3 or phone portrait.",
-      "Halls, loft, ending, doorways up close and sound not inspected; the music Goal is a proposal and was not implemented or generated.",
-      "No GPU job run.",
-      "nearplane and the old walker's edges were not rerun.",
-      "Research Site content not read."
+      "SwiftShader only; no target-device performance and no GPU pictures at this commit.",
+      "Input is automated Playwright key events (keywalk, the P key); fixed views and keywalk's start are posed by the tool (diagnostic); no human recording, no five-zone normal-speed route.",
+      "Screenshots are on the HF evidence dataset (pinned at 0f4b10b); git keeps MANIFEST.json, logs and notes, no collage this round.",
+      "The ART-11 script failed once on its own 30 s screenshot timeout (log kept) and passed on one retry with 240 s.",
+      "Halls, loft, ending, doorways up close, the clip recording and sound not inspected.",
+      "Cloudflare edge configuration for /api/trace not readable from here.",
+      "Latest main 3b27cab (docs/t05 only) not retested."
     ],
-    "note": "b1ab530（锁定，评审起止 main 均为此提交）：解析、类型检查、两套 walker 各 599 项单测（0 失败）、e2e quick、edges:grid（全组 ✓，最深 1.0 cm）通过；cam01–06 全部看过，画面正常。PHOTO-02 复测通过并关闭：真按 P、高档 dof 始终 false、成片远近都清晰。EDGE-001/002、STR-15 仍待正常速度录像或仰视补拍。新登记 TOOL-01（shots.js 门洞等待报错仍退出 0）、EVID-03（证据推送回读走未镜像的 R2）、ART-11（竹林起点举相机竹竿压画面中央）。性能、殿内、凌霄阁、结尾、听评、五区真人往返 blocked。总体 partial / not_accepted。",
+    "note": "45d1c91（锁定；结束时 main 为 3b27cab，只动 docs/t05，未另测）：解析、类型检查、两套 walker 各 754 项单测（0 失败）、e2e quick、edges:grid（最深 1.0 cm）通过；cam01–06 全部看过，与上轮相比无回归。#295 C 的 keywalk（真键盘 W/A/D，自动化）通过，记 partial（缺真人录像）。PHOTO-02 回归检查仍关闭。ART-11 三种画幅都复现（fail）。TOOL-01 一半修好（errors: []），但仍总是退出 0，保持 open。新登记 SEC-01（info：同修留痕只按地点限流，生产边缘规则未核实）。性能、着色器真显卡、殿内、凌霄阁、结尾、听评、五区真人往返 blocked。总体 partial / not_accepted。",
     "supplemental_reviews": [
       {
         "run_id": "T00-20261114-edges-3e67700",
