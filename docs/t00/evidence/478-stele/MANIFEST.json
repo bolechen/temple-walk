@@ -55,6 +55,12 @@
    "bytes": 534554,
    "sha256": "7941157dcc337d7efb902de80184a33155438f78c8ba9ffef17ca08723be518b",
    "rev": "957e08be1b324baf65cf90ee8ebce71fbcfb3b90"
+  },
+  {
+   "path": "steps-front-after-486.jpg",
+   "bytes": 174736,
+   "sha256": "733744e139cb61af643beaf7fb42b34fa0b5fb80f594efb9a82437d55703772c",
+   "rev": "6e113013ac22a92068eb43e23a8e9756bafe58d5"
   }
  ]
 }
