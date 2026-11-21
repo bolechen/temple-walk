@@ -982,11 +982,11 @@ const scenarios = {
     });
     const handover = (o) => t.page.evaluate(([k, v]) => sessionStorage.setItem(k, JSON.stringify(v)), [CROSS, { from: "t00", season: "summer", time: "day", follow: false, at: Date.now(), ...o }]);
     await handover({ to: "t05" });
-    await t.page.goto(base + "?" + QRY, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    await t.page.goto(base + "?" + QRY, { waitUntil: "commit" }); await t.page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
     let g = await t.page.evaluate(() => ({ log: window.__ink, key: sessionStorage.getItem("yunjing.crossing.v1"), cls: document.documentElement.className, title: !document.getElementById("title").hidden }));
     expect(g.key === null && !/crossing/.test(g.cls) && g.log.length && g.log.every((r) => !r.shut) && g.title, "a handover for another temple's page should be forgotten and never shut the curtain: " + JSON.stringify({ key: g.key, cls: g.cls, title: g.title, shut: g.log.filter((r) => r.shut).length }));
     await handover({ to: "t00" });
-    await t.page.goto(base + "?" + QRY + "&cam=6.6,53.4,0,0.05", { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    await t.page.goto(base + "?" + QRY + "&cam=6.6,53.4,0,0.05", { waitUntil: "commit" }); await t.page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
     g = await t.page.evaluate(() => ({ key: sessionStorage.getItem("yunjing.crossing.v1"), cls: document.documentElement.className, over: document.elementFromPoint(innerWidth / 2, innerHeight / 2) === document.documentElement, events: window.__eventLog().map((e) => e.name) }));
     expect(g.key === null && !/crossing/.test(g.cls) && !g.over && !g.events.includes("pilgrimage.arrive"), "an address that names its own place should drop the handover and lift the curtain: " + JSON.stringify(g));
 
@@ -1007,7 +1007,7 @@ const scenarios = {
         const m = await dark().catch(() => null); const r1 = await t.page.evaluate(() => document.body && document.body.dataset.ready === "1").catch(() => true);
         if (m && !r1) { samples++; ink.push(m.map((v) => Math.round(v)).join("/")); expect(Math.max(...m) < 30, `${label}: the page should be ink while the temple is being made, it was ${m.map((v) => Math.round(v))}`); }
       }
-      await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await t.page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
       await t.until(() => t.page.evaluate(() => window.__pilgrimage().ink.arrival?.walkMs != null), 120000, `${label}: the curtain never drew back`);
       const a = await t.page.evaluate(() => ({ level: window.__level(), y: window.__yard(), start: window.__walker().start, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), key: sessionStorage.getItem("yunjing.crossing.v1"), search: location.search, season: window.__probe().season, time: window.__probe().time, events: window.__eventLog().map((e) => e.name), cls: document.documentElement.className, p: window.__pilgrimage(), log: window.__ink }));
       expect(a.level.id === to, `${label}: the page should walk ${to}: ` + JSON.stringify(a.level));
