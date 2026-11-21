@@ -1,6 +1,6 @@
 // A lamp lit for someone (#343) as it is seen: the card that goes with the link, and the lamp (with its slip) shown to whoever opens it.
 //
-//     node tools/lamp-views.cjs [outdir] [--langs=zh,en] [--wish=3]     → tools/out/lamp/lamp-card-<lang>.jpg, lamp-arrival-<lang>.png, a contact sheet
+//     node tools/lamp-views.cjs [outdir] [--langs=zh,en] [--wish=3]     → tools/out/lamp/lamp-card-<lang>.jpg and lamp-arrival-<lang>-<desktop|phone>.png (the card; the lamp as whoever opens the link sees it, on a 1280×720 desktop and a 390×844 phone)
 //
 // The card is read off the page's own sheet (the book's journey kept in memory, as ?seals= does); the arrival is the page opened
 // with the link's fragment, drawn whole, a moment after the lamp is shown.
@@ -18,9 +18,11 @@ const { serve, launch, open } = require("../tests/e2e/lib.cjs");
     await a.page.waitForFunction(() => { const i = document.getElementById("blessImg"); return i.complete && i.naturalWidth === 1080; }, null, { timeout: 60000 });
     const b64 = await a.page.evaluate(async () => { const r = await (await fetch(document.getElementById("blessSave").href)).blob(), u8 = new Uint8Array(await r.arrayBuffer()); let s = ""; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode(...u8.subarray(i, i + 8192)); return btoa(s); });
     fs.writeFileSync(path.join(dir, `lamp-card-${lang}.jpg`), Buffer.from(b64, "base64")); await a.close();
-    const r = await open(b, srv.base, `q=low&lang=${lang}&fast=1&season=autumn&time=dusk` + hash);
-    await r.until(() => r.page.evaluate(() => window.__lamp().shown), 120000, "not shown"); await r.until(async () => /./.test(await r.page.textContent("#say")), 60000, "no line"); await r.frames(3);
-    await r.page.waitForTimeout(1500); await r.shot(`lamp-arrival-${lang}`); fs.copyFileSync(path.join(require("../tests/e2e/lib.cjs").out, `lamp-arrival-${lang}.png`), path.join(dir, `lamp-arrival-${lang}.png`)); await r.close();
+    for (const [screen, ctx] of Object.entries({ desktop: { viewport: { width: 1280, height: 720 } }, phone: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } })) {
+      const r = await open(b, srv.base, `q=low&lang=${lang}&fast=1&season=autumn&time=dusk` + hash, ctx);
+      await r.until(() => r.page.evaluate(() => window.__lamp().shown), 120000, "not shown"); await r.until(async () => /./.test(await r.page.textContent("#say")), 60000, "no line"); await r.frames(3);
+      await r.page.waitForTimeout(1500); await r.shot(`lamp-arrival-${lang}-${screen}`); fs.copyFileSync(path.join(require("../tests/e2e/lib.cjs").out, `lamp-arrival-${lang}-${screen}.png`), path.join(dir, `lamp-arrival-${lang}-${screen}.png`)); await r.close();
+    }
     console.log("wrote", lang);
   }
   await b.close(); srv.close();

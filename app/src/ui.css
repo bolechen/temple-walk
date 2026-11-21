@@ -209,6 +209,7 @@ body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
 /* While the log is still swinging out from the last stroke the rope cannot be drawn yet: the ring rests, faint. */
 #act.wait { opacity: .45; } #act.wait .enso { transform: scale(.94); }
 #say { position: absolute; left: 0; right: 0; bottom: calc(176px + env(safe-area-inset-bottom, 0px)); margin: 0; padding: 0 20px; text-align: center; font: 400 clamp(19px, 3.1vmin, 26px)/1.6 var(--kai); letter-spacing: .16em; color: var(--on); text-shadow: var(--lift), 0 0 24px rgba(0,0,0,.4); opacity: 0; transition: opacity 1.4s ease; pointer-events: none; z-index: 6; }
+#say { text-wrap: balance; word-break: auto-phrase; }   /* a spoken line breaks at a phrase, and never leaves one character alone on its last row (a Japanese line did) */
 #say.on { opacity: 1; }
 /* On a phone the slips stand at the right edge beside it: the line keeps clear of them, and of the thumb-stick. */
 @media (pointer: coarse) { #say { padding: 0 64px; } }

@@ -446,7 +446,7 @@ export function createGame(y) {
   async function showTheirs(l) {
     if (theirs) return; const f = places.lamp.flame, m = moodOf(l.season, l.time);
     const flame = new THREE.Mesh(new THREE.SphereGeometry(0.02, 10, 8).scale(1, 2.4, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.9, 1), fog: false }));
-    flame.position.set(f[0] + 0.62, f[1] + 0.012, f[2]);
+    flame.position.set(f[0] + 0.5, f[1] + 0.012, f[2]);
     const cv = document.createElement("canvas"); cv.width = 320; cv.height = 200; const x = cv.getContext("2d");
     try { await document.fonts.load(`40px ${FONT.xing}`, t(WISHES[l.wish])); } catch {}
     x.fillStyle = "#f1ead9"; x.fillRect(0, 0, 320, 200); x.strokeStyle = "rgba(60,50,40,.45)"; x.lineWidth = 4; x.strokeRect(6, 6, 308, 188); x.fillStyle = "#26221e"; x.textAlign = "center"; x.textBaseline = "middle";
@@ -455,8 +455,8 @@ export function createGame(y) {
     rows.forEach((r, i) => x.fillText(r, 160, 78 - ((rows.length - 1) * fs * 1.3) / 2 + i * fs * 1.3));
     x.fillStyle = "#7a6f5e"; x.font = `22px ${FONT.serif}`; x.fillText(m.label.split(" · ").map((w) => t(w)).join(" · "), 160, 168);
     const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-    const slip = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.25), new THREE.MeshBasicMaterial({ map: tex, fog: true }));
-    slip.position.set(f[0] + 0.62, f[1] - 0.02, f[2] + 0.2); slip.rotation.x = -0.35;
+    const slip = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.2), new THREE.MeshBasicMaterial({ map: tex, fog: true }));
+    slip.position.set(f[0] + 0.5, f[1] - 0.02, f[2] + 0.2); slip.rotation.x = -0.35;
     y.scene.add(flame, slip); theirs = { flame, slip, lamp: l };
   }
   async function arrive() {
