@@ -1,0 +1,691 @@
+{
+  "started": "2026-11-21T00:31:18.339Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "7d2d4b3ebcad2fee6b476096a3254afd06c72616",
+    "entry": "assets/index-CxDM26j-.js",
+    "files": 6,
+    "sha256": "9607dbb509586960634d4ff3deb985d1532ddf64f257b306ee3ce67b46923a3f"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "script": {
+    "name": "t05-hall-gpu.cjs",
+    "timeline": [
+      {
+        "set": "review",
+        "view": "turn-front",
+        "file": "review-turn-front.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "turn-right",
+        "file": "review-turn-right.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "turn-back",
+        "file": "review-turn-back.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "turn-left",
+        "file": "review-turn-left.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "hand-front",
+        "file": "review-hand-front.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "hand-side",
+        "file": "review-hand-side.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "hand-left",
+        "file": "review-hand-left.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "review",
+        "view": "half-warm",
+        "file": "review-half-warm.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "none-1",
+        "view": "door",
+        "ao": true,
+        "paint": null,
+        "file": "none-1-door.png",
+        "tris": 13496,
+        "calls": 160,
+        "ms": 5.369999999999951,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "none-1",
+        "view": "door3",
+        "ao": true,
+        "paint": null,
+        "file": "none-1-door3.png",
+        "tris": 12852,
+        "calls": 129,
+        "ms": 2.3025000000001454,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "none-1",
+        "view": "front10",
+        "ao": true,
+        "paint": null,
+        "file": "none-1-front10.png",
+        "tris": 11988,
+        "calls": 91,
+        "ms": 1.7941666666665697,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-clay-1",
+        "view": "door",
+        "ao": true,
+        "paint": false,
+        "file": "near-clay-1-door.png",
+        "tris": 437612,
+        "calls": 195,
+        "ms": 3.5183333333334303,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-clay-1",
+        "view": "door3",
+        "ao": true,
+        "paint": false,
+        "file": "near-clay-1-door3.png",
+        "tris": 436968,
+        "calls": 164,
+        "ms": 4.33083333333343,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-clay-1",
+        "view": "front10",
+        "ao": true,
+        "paint": false,
+        "file": "near-clay-1-front10.png",
+        "tris": 435312,
+        "calls": 120,
+        "ms": 3.9066666666665695,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-paint-1",
+        "view": "door",
+        "ao": true,
+        "paint": true,
+        "file": "near-paint-1-door.png",
+        "tris": 437612,
+        "calls": 195,
+        "ms": 5.209166666666473,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-paint-1",
+        "view": "door3",
+        "ao": true,
+        "paint": true,
+        "file": "near-paint-1-door3.png",
+        "tris": 436968,
+        "calls": 164,
+        "ms": 5.017499999999806,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-paint-1",
+        "view": "front10",
+        "ao": true,
+        "paint": true,
+        "file": "near-paint-1-front10.png",
+        "tris": 435312,
+        "calls": 120,
+        "ms": 5.029166666666667,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-clay-1",
+        "view": "door",
+        "ao": true,
+        "paint": false,
+        "file": "mid-clay-1-door.png",
+        "tris": 157598,
+        "calls": 195,
+        "ms": 3.392499999999806,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-clay-1",
+        "view": "door3",
+        "ao": true,
+        "paint": false,
+        "file": "mid-clay-1-door3.png",
+        "tris": 156954,
+        "calls": 164,
+        "ms": 4.066666666666666,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-clay-1",
+        "view": "front10",
+        "ao": true,
+        "paint": false,
+        "file": "mid-clay-1-front10.png",
+        "tris": 155298,
+        "calls": 120,
+        "ms": 3.7058333333334303,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-paint-1",
+        "view": "door",
+        "ao": true,
+        "paint": true,
+        "file": "mid-paint-1-door.png",
+        "tris": 157598,
+        "calls": 195,
+        "ms": 3.7666666666666666,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-paint-1",
+        "view": "door3",
+        "ao": true,
+        "paint": true,
+        "file": "mid-paint-1-door3.png",
+        "tris": 156954,
+        "calls": 164,
+        "ms": 4.769999999999709,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-paint-1",
+        "view": "front10",
+        "ao": true,
+        "paint": true,
+        "file": "mid-paint-1-front10.png",
+        "tris": 155298,
+        "calls": 120,
+        "ms": 4.607499999999709,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-clay-1",
+        "view": "door",
+        "ao": true,
+        "paint": false,
+        "file": "far-clay-1-door.png",
+        "tris": 59612,
+        "calls": 195,
+        "ms": 3.299166666666861,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-clay-1",
+        "view": "door3",
+        "ao": true,
+        "paint": false,
+        "file": "far-clay-1-door3.png",
+        "tris": 58968,
+        "calls": 164,
+        "ms": 3.9,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-clay-1",
+        "view": "front10",
+        "ao": true,
+        "paint": false,
+        "file": "far-clay-1-front10.png",
+        "tris": 57312,
+        "calls": 120,
+        "ms": 3.6091666666669577,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-paint-1",
+        "view": "door",
+        "ao": true,
+        "paint": true,
+        "file": "far-paint-1-door.png",
+        "tris": 59612,
+        "calls": 195,
+        "ms": 3.590000000000388,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-paint-1",
+        "view": "door3",
+        "ao": true,
+        "paint": true,
+        "file": "far-paint-1-door3.png",
+        "tris": 58968,
+        "calls": 164,
+        "ms": 4.439999999999903,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-paint-1",
+        "view": "front10",
+        "ao": true,
+        "paint": true,
+        "file": "far-paint-1-front10.png",
+        "tris": 57312,
+        "calls": 120,
+        "ms": 4.379999999999806,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "none-2",
+        "view": "door",
+        "ao": true,
+        "paint": null,
+        "file": "none-2-door.png",
+        "tris": 13496,
+        "calls": 160,
+        "ms": 2.415833333333042,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "none-2",
+        "view": "door3",
+        "ao": true,
+        "paint": null,
+        "file": "none-2-door3.png",
+        "tris": 12852,
+        "calls": 129,
+        "ms": 2.5833333333333335,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "none-2",
+        "view": "front10",
+        "ao": true,
+        "paint": null,
+        "file": "none-2-front10.png",
+        "tris": 11988,
+        "calls": 91,
+        "ms": 1.997500000000097,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-clay-2",
+        "view": "door",
+        "ao": true,
+        "paint": false,
+        "file": "near-clay-2-door.png",
+        "tris": 437612,
+        "calls": 195,
+        "ms": 3.5833333333333335,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-clay-2",
+        "view": "door3",
+        "ao": true,
+        "paint": false,
+        "file": "near-clay-2-door3.png",
+        "tris": 436968,
+        "calls": 164,
+        "ms": 4.320000000000194,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-clay-2",
+        "view": "front10",
+        "ao": true,
+        "paint": false,
+        "file": "near-clay-2-front10.png",
+        "tris": 435312,
+        "calls": 120,
+        "ms": 4.048333333333236,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-paint-2",
+        "view": "door",
+        "ao": true,
+        "paint": true,
+        "file": "near-paint-2-door.png",
+        "tris": 437612,
+        "calls": 195,
+        "ms": 4.069166666667055,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-paint-2",
+        "view": "door3",
+        "ao": true,
+        "paint": true,
+        "file": "near-paint-2-door3.png",
+        "tris": 436968,
+        "calls": 164,
+        "ms": 5.228333333333527,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "near-paint-2",
+        "view": "front10",
+        "ao": true,
+        "paint": true,
+        "file": "near-paint-2-front10.png",
+        "tris": 435312,
+        "calls": 120,
+        "ms": 5.0941666666665695,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-clay-2",
+        "view": "door",
+        "ao": true,
+        "paint": false,
+        "file": "mid-clay-2-door.png",
+        "tris": 157598,
+        "calls": 195,
+        "ms": 3.415833333333042,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-clay-2",
+        "view": "door3",
+        "ao": true,
+        "paint": false,
+        "file": "mid-clay-2-door3.png",
+        "tris": 156954,
+        "calls": 164,
+        "ms": 4.117499999999806,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-clay-2",
+        "view": "front10",
+        "ao": true,
+        "paint": false,
+        "file": "mid-clay-2-front10.png",
+        "tris": 155298,
+        "calls": 120,
+        "ms": 3.772499999999612,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-paint-2",
+        "view": "door",
+        "ao": true,
+        "paint": true,
+        "file": "mid-paint-2-door.png",
+        "tris": 157598,
+        "calls": 195,
+        "ms": 3.8116666666668606,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-paint-2",
+        "view": "door3",
+        "ao": true,
+        "paint": true,
+        "file": "mid-paint-2-door3.png",
+        "tris": 156954,
+        "calls": 164,
+        "ms": 4.807499999999709,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "mid-paint-2",
+        "view": "front10",
+        "ao": true,
+        "paint": true,
+        "file": "mid-paint-2-front10.png",
+        "tris": 155298,
+        "calls": 120,
+        "ms": 4.654999999999806,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-clay-2",
+        "view": "door",
+        "ao": true,
+        "paint": false,
+        "file": "far-clay-2-door.png",
+        "tris": 59612,
+        "calls": 195,
+        "ms": 3.3408333333335274,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-clay-2",
+        "view": "door3",
+        "ao": true,
+        "paint": false,
+        "file": "far-clay-2-door3.png",
+        "tris": 58968,
+        "calls": 164,
+        "ms": 3.9158333333335276,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-clay-2",
+        "view": "front10",
+        "ao": true,
+        "paint": false,
+        "file": "far-clay-2-front10.png",
+        "tris": 57312,
+        "calls": 120,
+        "ms": 3.635000000000097,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-paint-2",
+        "view": "door",
+        "ao": true,
+        "paint": true,
+        "file": "far-paint-2-door.png",
+        "tris": 59612,
+        "calls": 195,
+        "ms": 3.659999999999612,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-paint-2",
+        "view": "door3",
+        "ao": true,
+        "paint": true,
+        "file": "far-paint-2-door3.png",
+        "tris": 58968,
+        "calls": 164,
+        "ms": 4.518333333332945,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      },
+      {
+        "set": "far-paint-2",
+        "view": "front10",
+        "ao": true,
+        "paint": true,
+        "file": "far-paint-2-front10.png",
+        "tris": 57312,
+        "calls": 120,
+        "ms": 4.411666666666861,
+        "info": {
+          "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+        }
+      }
+    ]
+  },
+  "finished": "2026-11-21T00:33:02.128Z"
+}

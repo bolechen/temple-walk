@@ -1,0 +1,467 @@
+{
+ "out": "tools/out/t05/seven/faces",
+ "size": [
+  1920,
+  1080
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/kasyapa-r3.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/sikhin-r3.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/vipasyin-r3.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/visvabhu-r3.60000.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/kanakamuni-r3.60000.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370"
+  }
+ ],
+ "faces": [
+  {
+   "i": 0,
+   "name": "kasyapa",
+   "colour": "kasyapa-t05"
+  },
+  {
+   "i": 1,
+   "name": "krakucchanda",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "i": 2,
+   "name": "sikhin",
+   "colour": "sikhin-t05"
+  },
+  {
+   "i": 3,
+   "name": "vipasyin",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "i": 4,
+   "name": "visvabhu",
+   "colour": "visvabhu-t05"
+  },
+  {
+   "i": 5,
+   "name": "kanakamuni",
+   "colour": "kanakamuni-t05"
+  },
+  {
+   "i": 6,
+   "name": "sakyamuni",
+   "colour": "sakyamuni-370"
+  }
+ ],
+ "shots": [
+  {
+   "name": "cam03-16x9-third",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 50
+    }
+   }
+  },
+  {
+   "name": "cam03-16x9-first",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 65
+    }
+   }
+  },
+  {
+   "name": "cam03-4x3-third",
+   "size": [
+    1440,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 50
+    }
+   }
+  },
+  {
+   "name": "cam03-4x3-first",
+   "size": [
+    1440,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 65
+    }
+   }
+  },
+  {
+   "name": "cam03-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62
+    }
+   }
+  },
+  {
+   "name": "cam03-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75
+    }
+   }
+  },
+  {
+   "name": "in2-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62,
+     "at": [
+      0,
+      4.6,
+      -2.0
+     ]
+    }
+   }
+  },
+  {
+   "name": "in2-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75,
+     "at": [
+      0,
+      4.6,
+      -2.0
+     ]
+    }
+   }
+  },
+  {
+   "name": "in4.5-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62,
+     "at": [
+      0,
+      4.6,
+      -4.5
+     ]
+    }
+   }
+  },
+  {
+   "name": "in4.5-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75,
+     "at": [
+      0,
+      4.6,
+      -4.5
+     ]
+    }
+   }
+  },
+  {
+   "name": "in7-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62,
+     "at": [
+      0,
+      4.6,
+      -7.0
+     ]
+    }
+   }
+  },
+  {
+   "name": "in7-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75,
+     "at": [
+      0,
+      4.6,
+      -7.0
+     ]
+    }
+   }
+  },
+  {
+   "name": "turn15-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62,
+     "yaw": 15
+    }
+   }
+  },
+  {
+   "name": "turn15-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75,
+     "yaw": 15
+    }
+   }
+  },
+  {
+   "name": "turn30-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62,
+     "yaw": 30
+    }
+   }
+  },
+  {
+   "name": "turn30-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75,
+     "yaw": 30
+    }
+   }
+  },
+  {
+   "name": "turn45-phone-third",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 62,
+     "yaw": 45
+    }
+   }
+  },
+  {
+   "name": "turn45-phone-first",
+   "size": [
+    1080,
+    2340
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "summer",
+    "view": "cam03",
+    "over": {
+     "fov": 75,
+     "yaw": 45
+    }
+   }
+  }
+ ]
+}

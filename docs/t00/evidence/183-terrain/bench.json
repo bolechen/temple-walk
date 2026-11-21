@@ -1,0 +1,155 @@
+{
+ "site": {
+  "commit": "49c061d8d2c743d045180dbaf7f7c4bb65a3b274",
+  "entry": "assets/index-COBX7Yv7.js",
+  "files": 182,
+  "sha256": "0d04d2870830e5a5e3998e89b34f20b1b93bc6d6ffe1471004d76cd7265e88ed"
+ },
+ "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+ "rows": [
+  {
+   "view": "cam06",
+   "terrain": "rings",
+   "cost": 11.93,
+   "fps": 40.9,
+   "tris": 2002024,
+   "calls": 364
+  },
+  {
+   "view": "cam06",
+   "terrain": "made",
+   "cost": 13.09,
+   "fps": 40.1,
+   "tris": 2226424,
+   "calls": 358
+  },
+  {
+   "view": "cam06",
+   "terrain": "dem",
+   "cost": 13.9,
+   "fps": 37.5,
+   "tris": 2226424,
+   "calls": 358
+  },
+  {
+   "view": "cam06",
+   "terrain": "rings",
+   "cost": 13.44,
+   "fps": 39.1,
+   "tris": 2002024,
+   "calls": 364
+  },
+  {
+   "view": "cam06",
+   "terrain": "made",
+   "cost": 12.58,
+   "fps": 39.6,
+   "tris": 2226424,
+   "calls": 358
+  },
+  {
+   "view": "cam06",
+   "terrain": "dem",
+   "cost": 13.67,
+   "fps": 38.8,
+   "tris": 2226424,
+   "calls": 358
+  },
+  {
+   "view": "cam06",
+   "terrain": "rings",
+   "cost": 12.88,
+   "fps": 39.4,
+   "tris": 2002024,
+   "calls": 364
+  },
+  {
+   "view": "cam06",
+   "terrain": "made",
+   "cost": 12.79,
+   "fps": 39.7,
+   "tris": 2226424,
+   "calls": 358
+  },
+  {
+   "view": "cam06",
+   "terrain": "dem",
+   "cost": 13.34,
+   "fps": 39.8,
+   "tris": 2226424,
+   "calls": 358
+  },
+  {
+   "view": "loft",
+   "terrain": "rings",
+   "cost": 10.47,
+   "fps": 49.5,
+   "tris": 966483,
+   "calls": 218
+  },
+  {
+   "view": "loft",
+   "terrain": "made",
+   "cost": 10.76,
+   "fps": 48.8,
+   "tris": 1078683,
+   "calls": 215
+  },
+  {
+   "view": "loft",
+   "terrain": "dem",
+   "cost": 10.28,
+   "fps": 51.2,
+   "tris": 1078683,
+   "calls": 215
+  },
+  {
+   "view": "loft",
+   "terrain": "rings",
+   "cost": 10.17,
+   "fps": 51.1,
+   "tris": 966483,
+   "calls": 218
+  },
+  {
+   "view": "loft",
+   "terrain": "made",
+   "cost": 10.86,
+   "fps": 47.8,
+   "tris": 1078683,
+   "calls": 215
+  },
+  {
+   "view": "loft",
+   "terrain": "dem",
+   "cost": 10.43,
+   "fps": 50.9,
+   "tris": 1078683,
+   "calls": 215
+  },
+  {
+   "view": "loft",
+   "terrain": "rings",
+   "cost": 10.08,
+   "fps": 50.6,
+   "tris": 966483,
+   "calls": 218
+  },
+  {
+   "view": "loft",
+   "terrain": "made",
+   "cost": 10.05,
+   "fps": 52.8,
+   "tris": 1078683,
+   "calls": 215
+  },
+  {
+   "view": "loft",
+   "terrain": "dem",
+   "cost": 10.3,
+   "fps": 54.3,
+   "tris": 1078683,
+   "calls": 215
+  }
+ ]
+}

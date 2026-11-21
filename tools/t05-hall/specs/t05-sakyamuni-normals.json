@@ -1,0 +1,136 @@
+{
+ "out": "tools/out/t05/seven/chest",
+ "size": [
+  1400,
+  1400
+ ],
+ "ao": false,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370"
+  }
+ ],
+ "shots": [
+  {
+   "name": "sakyamuni-normals-front",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": -0.9,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "sakyamuni-normals-back",
+   "ortho": {
+    "i": 0,
+    "side": "back",
+    "cx": -0.9,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "sakyamuni-grid-front",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": -0.9,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true
+   }
+  },
+  {
+   "name": "sakyamuni-grid-back",
+   "ortho": {
+    "i": 0,
+    "side": "back",
+    "cx": -0.9,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true
+   }
+  },
+  {
+   "name": "sakyamuni-depth-front",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": -0.9,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "sakyamuni-depth-back",
+   "ortho": {
+    "i": 0,
+    "side": "back",
+    "cx": -0.9,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "sakyamuni-normals-right",
+   "ortho": {
+    "i": 0,
+    "side": "side",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "sakyamuni-depth-right",
+   "ortho": {
+    "i": 0,
+    "side": "side",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "sakyamuni-grid-right",
+   "ortho": {
+    "i": 0,
+    "side": "side",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 1.9,
+    "square": true
+   }
+  }
+ ]
+}

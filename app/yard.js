@@ -12,6 +12,7 @@ import { layerFog } from "./src/fog.js";
 import { softShadows } from "./src/shadows.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
+import { loadHeightmap, terrainAsked } from "./src/terrain-far.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
@@ -187,10 +188,14 @@ const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus)
 // The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
 // its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
 const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
-const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
+const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving, site.trees));
 // A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
 const NONE = { setMood() {}, update() {} };
-const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land)) : NONE;
+// #183's spike: on the workbench (the dev server, a preview) ?terrain=dem|made draws the far land from a heightmap instead
+// of the hill rings; the canary and the public page never read it (terrainAsked, src/debuggate.js).
+const TERRAIN_ASKED = L.backdrop ? terrainAsked({ dev: !!import.meta.env.DEV, hostname: location.hostname, search: location.search }) : null;
+const TERRAIN = TERRAIN_ASKED ? await loadHeightmap(asset, TERRAIN_ASKED).catch((e) => { console.warn("terrain:", e.message); return null; }) : null;
+const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land, TERRAIN)) : NONE;
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
@@ -274,9 +279,9 @@ const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("l
 function setMood(season, time) {
   state.season = season; state.time = time; mood = moodOf(season, time);
   sky.setMood(mood);
-  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
+  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uWinNight.value = mood.winNight; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
-  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
+  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); ground.setMood?.(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
   renderer.toneMappingExposure = mood.exp;
@@ -1419,7 +1424,7 @@ window.__pick = (px, py, n = 6) => {
 function directShot(id, opts) {
   if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
   if (upIn) return false;   // up on a balcony he sees with his own eyes only: no place's shot is taken there
-  const p = site.places[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
+  const p = site.places[id] || site.restPlaces?.[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
   const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
   if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
   return going;
@@ -1512,6 +1517,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
+window.__lamp = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).

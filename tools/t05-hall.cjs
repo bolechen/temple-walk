@@ -43,31 +43,60 @@ const here = __dirname, root = path.join(here, "..");
     return p;
   }
   const [W, H] = spec.size || [1600, 900];
-  if (spec.shots?.length) {
-    const p = await page(W, H);
-    for (const s of spec.shots) {
+  // A shot may name its own size (issue #370's faces at the door: 16:9, 4:3 and a phone held upright); shots of one size
+  // share a page. With `faces`, each picture also reports, for every listed figure, how tall its face stands on the
+  // screen in pixels (hairline to chin, both read from the figure's paint anchors) and whether its eyes and mouth are
+  // in the picture and not hidden (window.hall.occlusion).
+  const faceList = (spec.faces || []).map((f) => {
+    const A = JSON.parse(fs.readFileSync(path.join(here, "t05-hall", "paint", `${f.colour}.json`), "utf8")).anchors;
+    const eyeY = (A.eyeL[1] + A.eyeR[1]) / 2, chin = [A.mouth[0], A.mouth[1] - 0.6 * (eyeY - A.mouth[1]), A.mouth[2]];
+    return { i: f.i, name: f.name, pts: { hairline: A.hairFront, chin, eyeL: A.eyeL, eyeR: A.eyeR, mouth: A.mouth } };
+  });
+  const sizes = [...new Set((spec.shots || []).map((s) => (s.size || [W, H]).join("x")))];
+  for (const sz of sizes) {
+    const [sw, sh] = sz.split("x").map(Number), p = await page(sw, sh);
+    for (const s of spec.shots.filter((s) => (s.size || [W, H]).join("x") === sz)) {
       const t0 = Date.now();
-      const r = s.ortho ? await p.evaluate(([o, paint]) => { if (paint !== undefined) window.hall.paint(paint); window.hall.ortho(o.i ?? 0, o.side || "front", o); return {}; }, [s.ortho, s.paint])
+      const r = s.shoot ? await p.evaluate((sh) => window.hall.shoot(sh), s.shoot) : s.ortho ? await p.evaluate(([o, paint]) => { if (paint !== undefined) window.hall.paint(paint); window.hall.ortho(o.i ?? 0, o.side || "front", o); return {}; }, [s.ortho, s.paint])
         : await p.evaluate(({ v, m, over, paint }) => { window.hall.setMood(m); if (paint !== undefined) window.hall.paint(paint); window.hall.view(v, over || {}); const r = window.hall.stats(); window.hall.render(); return r; }, { v: s.view, m: s.mood || "summer", over: s.over, paint: s.paint });
       const file = path.join(out, `${s.name}.png`); await p.locator("canvas").screenshot({ path: file });
+      if (faceList.length) r.faces = await p.evaluate(([fl, w, h]) => fl.map((f) => {
+        const px = (v) => { const q = window.hall.figurePoint(f.i, v).project(window.hall.camera); return [(q.x + 1) / 2 * w, (1 - q.y) / 2 * h]; };
+        const a = px(f.pts.hairline), b = px(f.pts.chin), e = px(f.pts.eyeL), m = px(f.pts.mouth);
+        const occ = window.hall.occlusion(f.i, { eyeL: f.pts.eyeL, eyeR: f.pts.eyeR, mouth: f.pts.mouth }, 0.3);
+        return { name: f.name, facePx: +Math.hypot(a[0] - b[0], a[1] - b[1]).toFixed(1), eyeToMouthPx: +Math.hypot(e[0] - m[0], e[1] - m[1]).toFixed(1),
+          at: b.map((v) => Math.round(v)), seen: Object.fromEntries(Object.entries(occ).map(([k, o]) => [k, o.seen ? "yes" : o.onScreen ? "hidden by " + o.by : "off screen"])) };
+      }), [faceList, sw, sh]);
       report.shots.push({ ...s, file: path.relative(root, file), ...r, ms: Date.now() - t0 }); console.log(`${s.name}: ${r.tris} tris, ${r.calls} calls, ${Date.now() - t0} ms`);
     }
-    if (spec.cost) { report.cost = { view: spec.costView || "door3", ms: await p.evaluate(([n, v]) => { window.hall.view(v); return window.hall.cost(n); }, [spec.cost, spec.costView || "door3"]) }; console.log("cost", report.cost); }
+    if (spec.cost && sz === sizes[0]) { report.cost = { view: spec.costView || "door3", ms: await p.evaluate(([n, v]) => { window.hall.view(v); return window.hall.cost(n); }, [spec.cost, spec.costView || "door3"]) }; console.log("cost", report.cost); }
     await p.close();
   }
   if (spec.film) {
     const [fw, fh] = spec.film.size || [1280, 720], fps = spec.film.fps || 24, dir = path.join(out, `${spec.film.name}-frames`);
     fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
     const p = await page(fw, fh); await p.evaluate((m) => window.hall.setMood(m), spec.film.mood || "winter");
-    const dur = await p.evaluate(() => window.hall.walk(0)); const n = Math.round(Math.min(dur, spec.film.secs || 20) * fps);
+    // a film may walk its own path (issue #370: the worship band, the side aisle) and log, frame by frame, which of a
+    // figure's named points the eye sees and what hides the others (window.hall.occlusion)
+    const path_ = spec.film.path, occ = spec.film.occlude, occLog = [];
+    if (spec.film.paint !== undefined) await p.evaluate((v) => window.hall.paint(v), spec.film.paint);
+    const dur = await p.evaluate((ps) => ps ? window.hall.walkPath(ps, 0) : window.hall.walk(0), path_ || null); const n = Math.round(Math.min(dur, spec.film.secs || 20) * fps);
     for (let i = 0; i < n; i++) {
-      await p.evaluate((t) => { window.hall.walk(t); window.hall.render(); }, i / fps);
+      const o = await p.evaluate(([t, ps, oc]) => { if (ps) window.hall.walkPath(ps, t); else window.hall.walk(t); window.hall.render();
+        return oc ? { t, at: window.hall.camera.position.toArray().map((v) => +v.toFixed(2)), occ: window.hall.occlusion(oc.i, oc.pts, oc.near) } : null; }, [i / fps, path_ || null, occ || null]);
+      if (o) occLog.push(o);
       await p.locator("canvas").screenshot({ path: path.join(dir, `${String(i).padStart(4, "0")}.png`) });
       if (i % 48 === 0) console.log(`film ${i}/${n}`);
     }
     const mp4 = path.join(out, `${spec.film.name}.mp4`);
     execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", path.join(dir, "%04d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23", "-movflags", "+faststart", mp4]);
     report.film = { file: path.relative(root, mp4), frames: n, fps, secs: n / fps, size: [fw, fh] }; await p.close();
+    if (occLog.length) {   // per point: the share of frames it was seen, and the stretches (metres walked) where it was not
+      const sum = {}; for (const k of Object.keys(occLog[0].occ)) { const seen = occLog.filter((f) => f.occ[k].seen).length, hidden = [];
+        for (const f of occLog) if (!f.occ[k].seen) { const last = hidden[hidden.length - 1]; if (last && f.t - last.t1 <= 1.5 / fps) { last.t1 = f.t; last.to = f.at; last.by[f.occ[k].by || "off-screen"] = 1; } else hidden.push({ t0: f.t, t1: f.t, from: f.at, to: f.at, by: { [f.occ[k].by || "off-screen"]: 1 } }); }
+        sum[k] = { seen: +(seen / occLog.length).toFixed(3), hidden: hidden.map((h) => ({ ...h, by: Object.keys(h.by) })) }; }
+      report.film.occlusion = sum; fs.writeFileSync(path.join(out, `${spec.film.name}-occlusion.json`), JSON.stringify(occLog));
+    }
     if (!spec.film.keepFrames) fs.rmSync(dir, { recursive: true, force: true });
   }
   report.errors = errs; fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 2));

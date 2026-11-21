@@ -31,7 +31,7 @@ function doorMaterial(U, steps) {
       tInDay: { value: null }, tInNight: { value: null }, tInDist: { value: null }, uHi: { value: 0 },
       tLive: { value: null }, uLive: { value: 0 }, uLiveOn: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uGain: { value: GAIN[0] },
       uW2R: { value: new THREE.Matrix4() }, uMin: { value: new THREE.Vector3() }, uMax: { value: new THREE.Vector3() }, uC: { value: new THREE.Vector3() }, uDoor: { value: new THREE.Vector4(-1, 1, 0, 3) },
-      uLamp: U.uLamp,
+      uLamp: U.uLamp, uWinNight: U.uWinNight, uDusk: { value: 1 },
     }),
     vertexShader: `
       #include <common>
@@ -44,7 +44,7 @@ function doorMaterial(U, steps) {
     fragmentShader: `
       #include <common>
       #include <fog_pars_fragment>
-      uniform samplerCube tDay, tNight, tDist; uniform float uHas, uLamp; uniform mat4 uW2R; uniform vec3 uMin, uMax, uC; uniform vec4 uDoor;
+      uniform samplerCube tDay, tNight, tDist; uniform float uHas, uLamp, uWinNight, uDusk; uniform mat4 uW2R; uniform vec3 uMin, uMax, uC; uniform vec4 uDoor;
       uniform sampler2D tInDay, tInNight, tInDist, tLive; uniform float uHi, uLive, uLiveOn, uGain; uniform vec2 uRes;
       varying vec3 vWP;
       // On the face into the room (-z, as the capture's sixth camera saw it), laid as the cube's own -z face is: a cube's
@@ -85,6 +85,8 @@ function doorMaterial(U, steps) {
           vec3 room=inward(q) ? mix(textureGrad(tInDay,inUV(q),gx,gy).rgb,textureGrad(tInNight,inUV(q),gx,gy).rgb,clamp(uLamp,0.,1.)) : mix(texture(tDay,q).rgb,texture(tNight,q).rgb,clamp(uLamp,0.,1.));
           c=mix(c,room,uHas);
         }
+        // At dusk and dawn a hall whose middle bay the plan leaves unlit is a dark door, as its windows are (windows.js, #459); at night every room shows.
+        c*=mix(1.,mix(uDusk,1.,uWinNight),smoothstep(0.,.5,uLamp));
         gl_FragColor=vec4(c,1.);
         #include <fog_fragment>
         // The room drawn live has had the air between the eye and every point of it already (doorway-live.js).
@@ -149,6 +151,9 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     // The opening between the two leaves of the middle bay (building.js: each leaf 1.05 m, a quarter metre in from the column).
     const xs = [...h.xs].sort((a, b) => a - b), mid = Math.floor((xs.length - 1) / 2);
     u.uDoor.value.set(xs[mid] + 1.3 - 0.02, xs[mid + 1] - 1.3 + 0.02, 0.1, 3.1);
+    // How much of its room shows through the door at dusk: the plan's level for the middle bay, never quite none.
+    const lv = Math.max(0, ...(site.litWindows || []).filter((w) => w.building === h.id && w.face === "front" && w.bay === mid).map((w) => w.dusk));
+    u.uDusk.value = 0.12 + 0.88 * (lv / 7);
     d.mesh.material = mat;
     const o = { hall: h, d, r, mat, zs, door: new THREE.Vector3(), want: false, taken: 0, fade: 0, tex: null, pending: null, source: null };
     place(o); d.mesh.geometry.computeBoundingSphere();

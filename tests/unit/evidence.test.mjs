@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { urlOf, remoteOf, manifestProblems, checkTree, isText, push, CONFIG } from "../../tools/evidence.mjs";
+import { urlOf, remoteOf, manifestProblems, checkTree, isText, push, verifyTmp, CONFIG } from "../../tools/evidence.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const REV = "a".repeat(40);
@@ -60,6 +60,36 @@ test("CI's check: nothing over 1 MB under an evidence folder; bad manifests fail
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test("CI's check: an evidence folder holds at most one picture (png, jpg, webp); the rest is pushed and listed in the manifest", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ev-"));
+  try {
+    const dir = path.join(root, "docs/t00/evidence/x"), other = path.join(root, "docs/t00/evidence/y");
+    fs.mkdirSync(dir, { recursive: true }); fs.mkdirSync(other, { recursive: true });
+    fs.writeFileSync(path.join(dir, "MANIFEST.json"), JSON.stringify(good));
+    fs.writeFileSync(path.join(other, "MANIFEST.json"), JSON.stringify(good));
+    fs.writeFileSync(path.join(dir, "collage.jpg"), Buffer.alloc(1000));
+    fs.writeFileSync(path.join(other, "a.png"), Buffer.alloc(1000));       // one in each folder: fine
+    assert.deepEqual(checkTree(root), []);
+    fs.writeFileSync(path.join(dir, "second.png"), Buffer.alloc(1000));    // two in one folder
+    const bad = checkTree(root).join("\n");
+    assert.match(bad, /docs\/t00\/evidence\/x: 2 pictures/);
+    assert.match(bad, /collage\.jpg/); assert.match(bad, /second\.png/);
+    assert.ok(!/evidence\/y/.test(bad), "the other folder is not blamed");
+    fs.rmSync(path.join(dir, "second.png"));
+    fs.writeFileSync(path.join(dir, "third.webp"), Buffer.alloc(1000));    // webp counts, case does not matter
+    assert.match(checkTree(root).join("\n"), /2 pictures/);
+    fs.rmSync(path.join(dir, "third.webp"));
+    fs.mkdirSync(path.join(dir, "sub"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "sub", "Deep.JPG"), Buffer.alloc(1000)); // a picture in a subfolder counts toward its folder
+    assert.match(checkTree(root).join("\n"), /evidence\/x: 2 pictures/);
+    fs.rmSync(path.join(dir, "sub"), { recursive: true });
+    assert.deepEqual(checkTree(root), []);
+    // text and films are not pictures here
+    fs.writeFileSync(path.join(dir, "README.md"), "x"); fs.writeFileSync(path.join(dir, "run.webm"), Buffer.alloc(1000));
+    assert.deepEqual(checkTree(root), []);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test("the repository itself passes the check", () => {
   assert.deepEqual(checkTree(ROOT), []);
 });
@@ -93,4 +123,10 @@ test("verify asks again for a body cut off halfway, and still fails one that arr
     globalThis.fetch = async () => new Response(Buffer.from("a whole fiction!"), { status: 200 });
     assert.equal((await verify({ all: true, root, log: () => {} })).length, 1, "a whole body with other bytes is a failure, not asked again");
   } finally { globalThis.fetch = real; fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("verify-store reads two objects of the same bytes into two different files (#288: they raced on one and the mirror run went red every time)", () => {
+  const same = "c".repeat(64), a = verifyTmp({ key: "rev/t00/288-form/shots/gable-top-after.png", sha256: same }), b = verifyTmp({ key: "rev/t00/288-form/shots/gable-top-before.png", sha256: same });
+  assert.notEqual(a, b, "two keys of one content share a file name");
+  assert.equal(a, verifyTmp({ key: "rev/t00/288-form/shots/gable-top-after.png", sha256: same }), "one key keeps its name");
 });
