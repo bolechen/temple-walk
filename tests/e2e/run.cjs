@@ -1342,7 +1342,8 @@ const scenarios = {
           for (let n = 0; n < 40 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (the way round from a porch is worked out over a few frames; wait on frames, not on a single read)
           expect(s1.target && s1.target[1] > -0.48, `main hall: a tap on the court from the porch should set a target past the foot of the steps (z > -0.48), got ${s1.target}`);
         }
-        await t.untilFrames(async () => { const s = await t.state(); return !s.target && s.z > -0.48; }, 400, "he did not walk down the steps");
+        // (Past the foot of the steps is what is asked, not the end of the way: the tap's target lies 16 m out, and on a card that draws sixty frames a second 400 of them are not enough to walk it, #349.)
+        await t.untilFrames(async () => (await t.state()).z > -0.48, 900, "he did not walk down the steps"); await t.page.evaluate(() => window.__walk([]));
         expect(!(await t.inHall()), "main hall: walked back in");
       }
       if (view === "first") {
