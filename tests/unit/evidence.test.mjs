@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { urlOf, remoteOf, manifestProblems, checkTree, isText, push, CONFIG } from "../../tools/evidence.mjs";
+import { urlOf, remoteOf, manifestProblems, checkTree, isText, push, verifyTmp, CONFIG } from "../../tools/evidence.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const REV = "a".repeat(40);
@@ -123,4 +123,10 @@ test("verify asks again for a body cut off halfway, and still fails one that arr
     globalThis.fetch = async () => new Response(Buffer.from("a whole fiction!"), { status: 200 });
     assert.equal((await verify({ all: true, root, log: () => {} })).length, 1, "a whole body with other bytes is a failure, not asked again");
   } finally { globalThis.fetch = real; fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("verify-store reads two objects of the same bytes into two different files (#288: they raced on one and the mirror run went red every time)", () => {
+  const same = "c".repeat(64), a = verifyTmp({ key: "rev/t00/288-form/shots/gable-top-after.png", sha256: same }), b = verifyTmp({ key: "rev/t00/288-form/shots/gable-top-before.png", sha256: same });
+  assert.notEqual(a, b, "two keys of one content share a file name");
+  assert.equal(a, verifyTmp({ key: "rev/t00/288-form/shots/gable-top-after.png", sha256: same }), "one key keeps its name");
 });
