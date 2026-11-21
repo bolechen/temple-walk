@@ -116,21 +116,7 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   zs.forEach((z, i) => assert.ok(Math.abs(z - (zm + HALL.rafter * (5 - i))) < 0.01, `purlin ${i} at ${z}`));
   // The inner columns rise to the lowest tier, under the beam they carry, as the eave columns' bracket sets do.
   for (const g of h.parts.columns.slice(28)) { g.computeBoundingBox(); assert.ok(Math.abs(g.boundingBox.max.y - HALL.beams[0]) < 0.01, "an inner column's head at the lowest tier"); }
-  // From the threshold the heads and faces of all seven are under the lowest beam (the lead's call on #425: PRD.md §9.1's
-  // faces come first). The eyes are cam03's as the page has them (third person 3.66 m up at z +6.57, upright 3.8, first
-  // person 4.3 at the threshold; __frame() on this commit), the figures DECISIONS.md §3's (9.0 the middle one, 8.9, 8.8 and
-  // 8.6 out to the ends, on the 0.87 m altar, centred 17.6 m in). Wherever the line from an eye to a head's top crosses a
-  // frame where its lowest beam runs, it passes under that beam with room to spare.
-  const SEATS = [[0, 9.0], [5.8, 8.9], [11.33, 8.8], [16.45, 8.6]], zFig = -17.6, altar = HALL.floor + 0.87;
-  for (const [ex, ey, ez] of [[0, 3.66, 6.57], [0, 3.8, 6.58], [0, 4.3, 0.6]]) for (const [sx, hgt] of SEATS) for (const side of [1, -1]) {
-    const hx = side * sx, hy = altar + hgt;
-    for (const fx of XS.slice(1, -1)) {
-      const t = (fx - ex) / (hx - ex); if (!(t > 0 && t < 1)) continue;
-      const y = ey + t * (hy - ey), z = ez + t * (zFig - ez);
-      const runs = h.parts.frame.some((g) => { const b = g.boundingBox; return Math.abs((b.min.x + b.max.x) / 2 - fx) < 0.01 && Math.abs(b.min.y - HALL.beams[0]) < 0.01 && z >= b.min.z && z <= b.max.z; });
-      if (runs) assert.ok(y < HALL.beams[0] - 0.3, `from (${ex}, ${ey}, ${ez}) to the head of the figure at x ${hx}: the line crosses the frame at x ${fx} at ${y.toFixed(2)}, too near the lowest beam at ${HALL.beams[0]}`);
-    }
-  }
+  // (From the threshold every head is under the lowest beam: t05-altar.test.mjs holds it with the figures as altar.js stands them.)
   // Nothing of the timber or the walls passes out through the roof, the hipped ends included (#425's review: two purlins did).
   for (const [part, list] of Object.entries({ wood: h.parts.wood, woodZ: h.parts.woodZ, frame: h.parts.frame, plaster: h.parts.plaster })) for (const g of list) {
     g.computeBoundingBox(); const b = g.boundingBox;

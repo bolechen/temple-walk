@@ -19,7 +19,8 @@ export const HALL = Object.freeze({
   rows: 5,               // five bays deep; laid out equal here, which the sources do not give (proposal)
   floor: 3.0,            // the platform's top
   column: 6.06,          // column height (S04, 234 small cun, converted)
-  colR: 0.32,            // a white-box column's radius (proposal)
+  colR: 0.39,            // an eave column's radius at its foot, 0.78 m across, a little less at its head (the structural review of #432: the Yingzao Fashi's 殿阁 columns are two cai two zhi to three cai across, chapter 5, read; 42 fen at a 28 cm cai)
+  innerR: 0.42,          // an inner column's, 0.84 m (three cai, 45 fen: it is 2.7 m taller than the eave columns; the review's choice)
   wall: 0.9,             // the walls' thickness, their outer face 0.3 m outside the column line (ARCHITECTURE.md §4.2: 1.0–1.5 m, a proposal; thinner here so the platform's back edge holds it)
   front: -0.05,          // but the front wall's outer face lies just behind its column line, so that the ten front columns stand out of it more than half round and the nine bays read (the review of #425); the end and back walls keep the columns in, as this hall's thick walls do
   eave: 11.81,           // the eave's edge above the court: platform 3 + column 6.06 + bracket sets 2.75 (SITE.md §4.2)
@@ -60,7 +61,7 @@ export function buildHall(M) {
   const columns = [];
   for (const x of XS) for (const z of [ZS[0], zB]) columns.push([x, z]);
   for (const z of ZS.slice(1, -1)) for (const x of [XS[0], X]) columns.push([x, z]);
-  const cyl = (x, z) => new THREE.CylinderGeometry(H.colR, H.colR * 1.06, H.column, 16).translate(x, y0 + H.column / 2, z);
+  const cyl = (x, z) => new THREE.CylinderGeometry(H.colR * 0.94, H.colR, H.column, 16).translate(x, y0 + H.column / 2, z);
   const columnGeo = columns.map(([x, z]) => cyl(x, z));
   // A run of wall along x (front or back) or z (an end), between two points, from height a to b above the floor.
   const along = (x0, x1, zc, a, b) => { if (x1 - x0 > 0.01 && b - a > 0.01) plaster.push(box(x1 - x0, b - a, H.wall, (x0 + x1) / 2, y0 + (a + b) / 2, zc)); };
@@ -165,8 +166,8 @@ export function buildHall(M) {
   // the survey's section is read (ARCHITECTURE.md §2.2).
   const inner = [...XS.slice(1, -1).map((x) => [x, ZS[INNER.back]]), ...INNER.frontAt.map((i) => [XS[i], ZS[INNER.front]])];
   const yb = H.beams, bw = H.beam.w, bd = H.beam.d, innerTop = yb[0];
-  const innerGeo = inner.map(([x, z]) => new THREE.CylinderGeometry(H.colR * 1.1, H.colR * 1.15, innerTop - y0, 16).translate(x, (y0 + innerTop) / 2, z));
-  for (const [x, z] of inner) walk.posts.push({ x0: x - H.colR * 1.1 - BODY, x1: x + H.colR * 1.1 + BODY, z0: z - H.colR * 1.1 - BODY, z1: z + H.colR * 1.1 + BODY });
+  const R = H.innerR, innerGeo = inner.map(([x, z]) => new THREE.CylinderGeometry(R * 0.94, R, innerTop - y0, 16).translate(x, (y0 + innerTop) / 2, z));
+  for (const [x, z] of inner) walk.posts.push({ x0: x - R - BODY, x1: x + R + BODY, z0: z - R - BODY, z1: z + R + BODY });
   const frame = [], PT = 0.36;
   // The purlins' places, front to back, and the height of each: its top just under the roof there.
   const purlinZ = (k) => [zm + H.rafter * k, zm - H.rafter * k], purlinY = (z) => Math.min(underAt(0, z - PT / 2), underAt(0, z + PT / 2)) - PT / 2 - 0.06;

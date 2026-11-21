@@ -10,6 +10,7 @@ import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER } from "./hall.js";
+import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
@@ -109,6 +110,10 @@ export function buildSite(M) {
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
+  const altar = buildAltar(), ap = altar.parts;
+  walk.posts.push(...altar.walk.posts);
+  root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
   for (const [x, y, z, i, d] of hall.fill) { const l = new THREE.PointLight(0xfff4e8, i, d, 1.6); l.position.set(x, y, z); root.add(l); }
 
   root.add(ax.group);
