@@ -5,14 +5,14 @@
 // great hall and the Wuliang hall (docs/t05/SCOPE-OPTIONS.md §二 B, docs/t05/SITE.md §1.1, §4.2). Every number here, and
 // how far it is a published measurement, a summary or our own, is in docs/t05/SOURCES.md §13.
 //
-// What this file draws is ground and stone: no gate, hall or archway is built here (items 9 and 10). The two building
-// platforms that the terrace is cut round, and their steps, are drawn as plain stone blocks to be taken out when
-// the buildings come, which stand on their own platforms at the same footprints (`HALL`, `GATE` are theirs to read).
+// What this file draws is ground and stone, and, from ./gates.js, the three buildings on it: the outer gate, the inner gate
+// and the Wuliang hall (item 9). The archway between the inner gate and the hall is item 10's: its place is held.
 //
 // Heights are from the court's paving (y = 0), as site.js has them; x east, z south, the great hall's front column line
 // is z = 0 and the court's paving stops at the court's south wall, z = +62.
 import * as THREE from "three";
-import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
+import { box, merge, mesh, BODY } from "../../src/geo.js";
+import { buildShells } from "./gates.js";
 
 /** Where each of the axis's buildings stands along it (z, x = 0). Proposals but for the Wuliang hall's z, which is OSM's (S26, an inference). */
 export const AXIS = Object.freeze({ outerZ: 208, innerZ: 120, paifangZ: 100, hallZ: 67.2 });
@@ -25,17 +25,23 @@ export const LANE = Object.freeze({ hw: 8, t: 0.8, h: 3.2 });
 export const HALL = Object.freeze({
   xs: Object.freeze([-8.07, -5.57, -2.07, 2.07, 5.57, 8.07]),
   zs: Object.freeze([6.11, 2.04, -2.04, -6.11]),
-  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0,
+  platOut: 1.2, platH: SECOND.y, stepsBack: 4.0, colTop: 4.0,
 });
 /** One gate house, as the outer and the inner gate are laid out: three bays, the platform's flanks meet the walls of the way. A proposal. */
 export const GATE = Object.freeze({ xs: Object.freeze([-6.4, -2.2, 2.2, 6.4]), zs: Object.freeze([3, -3]), platOut: 1.2, steps: 3.8 });
 
+/** The inner gate's wickets: a door leaf set in a niche in the terrace's south wall, between jambs and under a lintel. A proposal. */
+export const WICKET = Object.freeze({ w: 1.5, h: 2.4, jamb: 0.2, lintel: 0.22, depth: 0.25 });
 const half = (xs, out) => xs[xs.length - 1] + out;
 /** The platforms' footprints, from the numbers above. */
 export const FOOT = Object.freeze({
   hall: Object.freeze({ x0: -half(HALL.xs, HALL.platOut), x1: half(HALL.xs, HALL.platOut), z0: AXIS.hallZ - HALL.zs[0] - HALL.platOut, z1: AXIS.hallZ + HALL.zs[0] + HALL.platOut }),
   inner: Object.freeze({ x0: -half(GATE.xs, GATE.platOut), x1: half(GATE.xs, GATE.platOut), z0: AXIS.innerZ - GATE.zs[0] - GATE.platOut, z1: AXIS.innerZ + GATE.zs[0] + GATE.platOut }),
+  outer: Object.freeze({ x0: -half(GATE.xs, GATE.platOut), x1: half(GATE.xs, GATE.platOut), z0: AXIS.outerZ - GATE.zs[0] - GATE.platOut, z1: AXIS.outerZ + GATE.zs[0] + GATE.platOut }),
 });
+/** The paved way down the middle of the way and of the terrace (art director's review of #457: a path, not wall-to-wall slabs; the target picture's is about 6 m) and the tree trunks that stand beside it. A proposal. */
+export const PATH = Object.freeze({ hw: 3 });
+export const TRUNKS = Object.freeze({ x: 5.5, r: 0.4, h: 11, lane: Object.freeze([132, 141, 150, 159, 168, 177, 186, 195]), terrace: Object.freeze([81, 89, 109, 114]) });
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
@@ -68,58 +74,66 @@ export function slabAround(rect, holes, top) {
  * @param {{ C: { x: number, zN: number, zS: number, t: number }, W: { x: number, zS: number, wallH: number, t: number } }} at the court's walls and the way's end, which site.js owns
  */
 export function buildAxis(M, { C, W }) {
-  const stone = [], plaster = [], steps = [], flights = [], shade = [[], []];
-  const walk = { solids: [], decks: [], ramps: [], posts: [] };
-  const top = SECOND.y, pad = BODY + 0.02;
+  const stone = [], plaster = [], shade = [[], []];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], roofs: [] };
+  const top = SECOND.y;
 
   // A wall between two points, from the ground to h. Plaster on a stone plinth, with the written plan's rectangle (drawn wider by his width).
-  const wall = (x0, z0, x1, z1, h, t, into) => {
+  const wall = (x0, z0, x1, z1, h, t, into, niches = []) => {
     const alongX = z0 === z1, len = alongX ? x1 - x0 : z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    plaster.push(alongX ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
+    if (alongX && niches.length) {
+      // A recess in the north face (the terrace's side) for each niche: the wall in full thickness either side and over it, the back part below.
+      let a = x0;
+      for (const n of [...niches].sort((p, q) => p.x - q.x)) {
+        plaster.push(box(n.x - n.w / 2 - a, h, t, (a + n.x - n.w / 2) / 2, h / 2, cz), box(n.w, h - n.top, t, n.x, (n.top + h) / 2, cz), box(n.w, n.top, t - n.depth, n.x, n.top / 2, cz + n.depth / 2));
+        a = n.x + n.w / 2;
+      }
+      plaster.push(box(x1 - a, h, t, (a + x1) / 2, h / 2, cz));
+    } else plaster.push(alongX ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
     stone.push(alongX ? box(len + 0.2, 0.35, t + 0.2, cx, 0.175, cz) : box(t + 0.2, 0.35, len + 0.2, cx, 0.175, cz));
+    // a coping on the wall's top (art director's review of #457: the wall takes a cap, not bays)
+    stone.push(alongX ? box(len + 0.1, 0.16, t + 0.24, cx, h + 0.08, cz) : box(t + 0.24, 0.16, len + 0.1, cx, h + 0.08, cz));
     const r = alongX ? { x0, x1, z0: cz - t / 2, z1: cz + t / 2 } : { x0: cx - t / 2, x1: cx + t / 2, z0, z1 };
     walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, eyeTop: h + 0.3 });
     shade[into].push(r);
   };
-  // A flight of steps from a platform's edge at z = zEdge, going down south (dir +1) or north (-1), `rise` high; with his written plan.
-  const flight = (w, rise, zEdge, dir) => {
-    const g = stairGeo(w, rise), run = g.run ?? stairProfile(rise).run;
-    const m = new THREE.Matrix4().makeTranslation(0, 0, zEdge);
-    if (dir < 0) m.multiply(new THREE.Matrix4().makeRotationY(Math.PI));
-    steps.push(g.geo.applyMatrix4(m)); flights.push({ w, rise, sides: [-1, 1], m });
-    const foot = zEdge + dir * run, [a, b] = dir > 0 ? [zEdge, foot] : [foot, zEdge];
-    walk.ramps.push({ x0: -w / 2 + pad, x1: w / 2 - pad, z0: a - (dir > 0 ? 0.8 : 0.3), z1: b + (dir > 0 ? 0.3 : 0.8), base: 0, h: rise, low: [0, foot], high: [0, zEdge], floor: "stone" });
-    for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: dir > 0 ? zEdge + 0.02 : foot - BODY - 0.06, z1: dir > 0 ? foot + BODY + 0.06 : zEdge - 0.02, h: rise });
-    return { foot, run };
-  };
-  // A platform as a plain stone block with the written plan's mass (the buildings of item 9 stand on theirs instead).
-  const block = (r, h) => {
-    stone.push(box(r.x1 - r.x0, h, r.z1 - r.z0, (r.x0 + r.x1) / 2, h / 2, (r.z0 + r.z1) / 2));
-    walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, top: h });
-    walk.decks.push({ ...r, h, floor: "stone" });
-  };
-
   // ---- The second terrace: the slab, the two platforms cut out of it, and their steps ----
   const T = { x0: -SECOND.hw, x1: SECOND.hw, z0: SECOND.zN, z1: AXIS.innerZ + SECOND.wallT / 2 };
   stone.push(...slabAround(T, [FOOT.hall, FOOT.inner], top));
   walk.decks.push({ ...T, h: top, floor: "stone" });
-  block(FOOT.hall, HALL.platH); block(FOOT.inner, top);
-  shade[0].push({ ...FOOT.hall });
-  // The Wuliang hall's back steps down into the court, the inner gate's front steps down into the way.
-  flight(HALL.stepsBack, HALL.platH, FOOT.hall.z0, -1);
-  flight(GATE.steps, top, FOOT.inner.z1, +1);
+  // The three buildings (./gates.js): each on its own platform, which the slab is cut round; the hall's back steps lead down into
+  // the court, the inner gate's front steps down into the way.
+  const sh = buildShells(M, { AXIS, GATE, HALL, FOOT, SECOND, WICKET });
+  for (const k of Object.keys(walk)) walk[k].push(...sh.walk[k]);
+  shade[0].push(...sh.shade[0]); shade[1].push(...sh.shade[1]);
 
   // ---- Walls: the terrace's two sides and the stub either side of the gate; the way's two sides; the forecourt's, low, and the wall that closes it ----
   const wt = SECOND.wallT, wh = top + SECOND.wallH, gx = FOOT.inner.x1;
   wall(-SECOND.hw, SECOND.zN, -SECOND.hw, AXIS.innerZ, wh, wt, 0); wall(SECOND.hw, SECOND.zN, SECOND.hw, AXIS.innerZ, wh, wt, 0);
-  wall(-SECOND.hw - wt / 2, AXIS.innerZ, -gx, AXIS.innerZ, wh, wt, 0); wall(gx, AXIS.innerZ, SECOND.hw + wt / 2, AXIS.innerZ, wh, wt, 0);
+  // (the wickets of the inner gate are niches in these two stubs, ./gates.js fits their doors)
+  const wx = (gx + SECOND.hw) / 2, niche = (x) => ({ x, w: WICKET.w + 2 * WICKET.jamb, top: SECOND.y + WICKET.h + WICKET.lintel, depth: WICKET.depth });
+  wall(-SECOND.hw - wt / 2, AXIS.innerZ, -gx, AXIS.innerZ, wh, wt, 0, [niche(-wx)]); wall(gx, AXIS.innerZ, SECOND.hw + wt / 2, AXIS.innerZ, wh, wt, 0, [niche(wx)]);
   for (const sx of [-1, 1]) {
     wall(sx * LANE.hw, AXIS.innerZ + wt / 2, sx * LANE.hw, AXIS.outerZ, LANE.h, LANE.t, 1);
     wall(sx * LANE.hw, AXIS.outerZ, sx * LANE.hw, W.zS, W.wallH, W.t, 1);
   }
   wall(-LANE.hw, W.zS, LANE.hw, W.zS, W.wallH, W.t, 1);
   walk.decks.push({ x0: -LANE.hw, x1: LANE.hw, z0: AXIS.innerZ, z1: W.zS, h: 0, floor: "paving" });
-  const paving = [{ level: 1, y: 0.012, x: LANE.hw, zS: W.zS, zN: FOOT.inner.z1 }];
+  // Only the middle is paved, a path PATH.hw either side of the axis; either side of it the ground is earth (below).
+  const paving = [{ level: 1, y: 0.012, x: PATH.hw, zS: W.zS, zN: FOOT.inner.z1 }, { level: 1, y: top + 0.012, x: PATH.hw, zS: FOOT.inner.z0, zN: FOOT.hall.z1 }];
+  const earthSides = [], earthAt = (x0, x1, z0, z1, y) => { for (const [a, b] of [[x0, x1], [-x1, -x0]]) earthSides.push(new THREE.PlaneGeometry(b - a, z1 - z0).rotateX(-Math.PI / 2).translate((a + b) / 2, y, (z0 + z1) / 2)); };
+  {
+    const lx = LANE.hw - LANE.t / 2, tx = SECOND.hw - wt / 2;
+    earthAt(PATH.hw, lx, FOOT.inner.z1, FOOT.outer.z0, 0); earthAt(PATH.hw, lx, FOOT.outer.z1, W.zS, 0);
+    earthAt(PATH.hw, tx, FOOT.hall.z1, FOOT.inner.z0, top + 0.01);
+    earthAt(FOOT.hall.x1, tx, SECOND.zN, FOOT.hall.z1, top + 0.01); earthAt(FOOT.inner.x1, tx, FOOT.inner.z0, AXIS.innerZ - wt / 2, top + 0.01);
+  }
+  // Trunks stand in the earth either side of the path, for the trees to come: plain posts, in the way, with their written-plan rectangles.
+  const trunk = [];
+  for (const sx of [-1, 1]) for (const { zs, y } of [{ zs: TRUNKS.lane, y: 0 }, { zs: TRUNKS.terrace, y: top }]) for (const z of zs) {
+    trunk.push(new THREE.CylinderGeometry(TRUNKS.r * 0.8, TRUNKS.r, TRUNKS.h, 8).translate(sx * TRUNKS.x, y + TRUNKS.h / 2, z));
+    walk.solids.push({ x0: sx * TRUNKS.x - TRUNKS.r - BODY, x1: sx * TRUNKS.x + TRUNKS.r + BODY, z0: z - TRUNKS.r - BODY, z1: z + TRUNKS.r + BODY, eyeTop: y + TRUNKS.h });
+  }
 
   // ---- The plain outside the walls (the county is flat, SITE.md §4.1): everything but what lies inside them ----
   const cx = C.x + C.t / 2, cn = C.zN - C.t / 2, cs = C.zS + C.t / 2, tx = SECOND.hw + wt / 2, lx = LANE.hw + LANE.t / 2, zT = AXIS.innerZ + wt / 2, ze = W.zS + W.t / 2;
@@ -128,6 +142,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
+  group.add(sh.group, mesh(merge(earthSides), M.earth, { cast: false }), mesh(merge(trunk), M.woodV));
   group.add(
     mesh(merge([box(mw, 0.45, mw, mx, M0.y + 0.225, mz)]), M.stone),
     mesh(merge([box(mw - 0.7, 3.4, mw - 0.7, mx, M0.y + 0.45 + 1.7, mz)]), M.plaster()),
@@ -148,9 +163,9 @@ export function buildAxis(M, { C, W }) {
     mouth: [0, FOOT.hall.z0 - 2.9, 0, 0.12],
   };
   const buildings = [
-    { name: "无量殿台基", ...FOOT.hall, y: 0 }, { name: "内山门台基", ...FOOT.inner, y: 0 },
+    ...sh.buildings,
     { name: "碑亭位", x0: M0.x0, x1: M0.x1, z0: M0.z0, z1: M0.z1, y: M0.y },
     { name: "二层高台", ...T, y: 0 },
   ];
-  return { stone, plaster, steps, flights, walk, shade, paving, outside, group, views, buildings };
+  return { stone, plaster, walk, shade, paving, outside, group, views, buildings, closed: sh.closed };
 }
