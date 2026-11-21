@@ -173,6 +173,9 @@ export function buildSite(M) {
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
   };
+  // The seven fixed views of the handoff (docs/t05/PRD.md §3, docs/t05/camera-manifest.json written by tools/cameras.mjs): cam01–cam06 are the six
+  // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
+  Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
     root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,

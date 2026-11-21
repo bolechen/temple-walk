@@ -37,6 +37,21 @@ test("he arrives at the outer gate's place, and every named view stands where he
   for (const [id, v] of Object.entries(site.views)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
 });
 
+test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the baked floor, are reached from where he arrives, and the manifest says what the plan says", async () => {
+  const fs = await import("node:fs"), targets = file.header.targets;
+  const manifest = JSON.parse(fs.readFileSync(new URL("../../docs/t05/camera-manifest.json", import.meta.url), "utf8"));
+  const { default: checks } = await import("../../app/levels/t05/checks.js");
+  assert.deepEqual(Object.keys(checks.cameras.what), ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"]);
+  for (const [i, id] of ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"].entries()) {
+    const v = site.views[id]; assert.ok(v, id);
+    assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open on the baked floor`);
+    const t = targets.find((x) => x.kind === "view" && x.id === id);
+    assert.ok(t && t.new, `${id}: reached from the arrival on the floor baked from what is drawn`);
+    const c = manifest.cameras[i], at = c.stands_at || c.position; assert.equal(c.view, id);   // (cam03's still is taken from the following eye behind him: stands_at is where he stands)
+    assert.deepEqual([at[0], at[2], c.yaw_rad, c.pitch_rad], [+v[0].toFixed(2), +v[1].toFixed(2), +v[2].toFixed(2), +v[3].toFixed(2)], `${id}: the manifest is the plan's`);
+  }
+});
+
 test("from where he arrives he can walk to station A in the court and to station B at the foot of the flight", () => {
   const targets = file.header.targets;
   for (const id of ["arrive", "a", "b"]) {
