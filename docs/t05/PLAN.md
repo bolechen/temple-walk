@@ -8,9 +8,9 @@
 |---|---|---|---|
 | **一 白盒可走** | 院落、台基与月台、踏道、大雄殿外壳与殿内地面、佛坛与七尊体块、六站、烘焙地面；从 T00 走进来或 `?level=t05` 直达 | 第 1、2、3 条；第 4 条的机位先站得住 | `LEVEL-SPLIT.md` S1、S2、S5；§11 第 1 项已定；范围档位（`SCOPE-OPTIONS.md`）定下后补第一阶段的前奏 PR。**不等顾问** |
 | 二 光与殿内 | 「在殿内的程度」连续过渡；持灯（`SCOPE-OPTIONS.md` (b)）；光照探针（PMREM 与 `LightProbeGridWebGL` 比一次）；曝光渐变；J01 季时；Z1/Z3 声场与大殿混响。**光照与曝光的目标图**：`refs/t05-concept-2026-11-20/02-hall-from-door.webp`（#372），取门光在地上铺成一道、往里渐弱、浮尘、梁架褪色；按主创意见，门光要照亮中间三尊的脸（图里像身亮度偏平均）、彩画要更温哑、像要更压人，图上的手印和比例不作参考 | 第 4 条出图；第 6 条光比；T4 第一次量；cam03 与目标图并排出图 | S8（关卡自己的季时）；第 4 项（基线季时） |
-| 三 七佛与群像 | 正式七尊（Tripo 生成、LOD、法线、上色）；认七佛（(c)，按位置认，不等手印；2026-11-20 改写）；胁侍与天王体块到中模；梁架与彩画色带 | 第 5 条；第 7 条 T4 部分 | 释迦样件 #370 先过（顾问评审 2026-11-20：先做一尊，按实测工时估七尊）；Tripo 已充值（约 1080 点，T05 已批约 110）；`STATUE-PIPELINE.md` 的工具 |
+| 三 七佛与群像 | 正式七尊（Tripo 生成、LOD、法线、上色）；认七佛（(c)，按位置认，不等手印；2026-11-20 改写）；胁侍与天王体块到中模；梁架与彩画色带 | 第 5 条；第 7 条 T4 部分；认七佛的独立验收（`PRD.md` §1.3） | 释迦样件 #370 先过；**`PRD.md` §9.1 的门槛外画面在批量造像之前验完**（2026-11-21 已用七尊白盒从 cam03 实拍过三种画幅，横屏两档照实拍锁、竖屏改给「初见」镜头；换上正式七尊再出一次）；所有者 2026-11-21 批七尊共 200 点（含当时已花的 60），以 `docs/t05/SHAKYAMUNI-SAMPLE.md`「点数台账」为准（随 #407 进仓库；2026-11-21 已花 180），扩产条件见 `STATUE-PIPELINE.md` §四；`STATUE-PIPELINE.md` 的工具 |
 | 四 印、书、声音、语言 | 一枚印与三张观察页；抄碑（(a)，抄一句进书）；书上 T05 页；标题页「第一章」；配乐两小段；四种语言；鸣谢与登记表 | 第 8 条；`mobile-audit` | S3a、S3c、S4；§11 第 2、3、5、6 项 |
-| 五 验收 | 六机位 T4 重拍、独立评审、手机实测、所有者走十分钟 | 第 7 条手机部分；全部八条在同一提交上有证据 | #188 的 `tools/device.cjs` |
+| 五 验收 | 七机位 T4 重拍、独立评审、礼仪评审（`PRD.md` §9 第 9 条）、手机按 `PRD.md` §9.2 的四段路线实测、所有者走十分钟 | 第 7 条手机部分；全部九条在同一提交上有证据；第 8 条（正式候选的跨章）在这一阶段之前的第四阶段先过 | #188 的 `tools/device.cjs` |
 
 每一阶段收尾请所有者用手机走十分钟（`LEVEL-PLAYBOOK.md` §四）。
 
@@ -33,8 +33,8 @@
 | 9 | `feat(t05): the outer gate, the inner gate and the Wuliang hall, as shells`（T05-A2） | 外山门、内山门（三间带两侧便门）、无量殿（五间、单檐歇山，前后开门可穿过）用 `buildHall` 的参数出外壳；位置照 `SCOPE-OPTIONS.md` §二 B 的图（顺序照真寺，位置是提案）；穿堂过 `edges:grid`、`nearplane:grid`；**三座外壳的正、侧、俯三向图先给结构评审**（缺口 9：位置和高差都是提案，T00 的结构评审拖到做完之后，返工四个阶段） | 8、3a | 可以 |
 | 10 | `feat(building): a four-post, three-bay archway (paifang)`（T05-A3） | `building.js` 没有牌坊：新写四柱三间三楼木牌坊的生成器（或单独一个模块），先出正、侧、俯三向图给结构评审，再放到中轴上。改 `building.js` 的话，验收加「T00 不变」三条（同第 6 项：指纹、相机清单、`shots.js` 前后像素差 < 0.5/255） | 生成器不依赖别的；放上中轴依赖 8 | 可以：生成器从第一天就能做；若改 `building.js`，与 #315、结构评审的改动对一下 |
 | 11 | `feat(t05): seven named views and their manifest`（T05-4） | `views.cam01…cam07`（cam01–cam06 照 `PRD.md` §3，新加 cam07「内山门望殿」，所有者 2026-11-20 定七个，`SCOPE-OPTIONS.md` S-4；**cam07 的构图目标**是 `refs/t05-concept-2026-11-20/03-axis-from-inner-gate.webp`（#372：门洞框住柏树甬道、牌坊、高台上的无量殿和远处大殿的庑殿顶），白盒出图与它并排看）、`views.arrive`；`tools/cameras.mjs --level=t05` 写 `docs/t05/camera-manifest.json`；`shots.js --level=t05` 出七张；单测每个机位站在可走格子上；**向外看一圈**（缺口 2）：六站和中轴三处（外山门、内山门、无量殿穿堂）各朝四个方向、朝墙顶、朝背面出图，`horizon.test --level=t05` 绿；发现逐条开 issue | 7、9、10、3a | 可以 |
-| 12 | `test(e2e): t05-walk, from the prologue's book or straight in`（T05-5） | e2e `t05-walk`：`?level=t05` 直达，从外山门外走到 F，**正常步速**（2.1 m/s，BARE；至少跨门槛和上下踏道两段不用 `?fast`，缺口 11：T00 的门只在加速时过得去，见 `docs/t00/PITFALLS.md` A3）；**镜头路线**（缺口 4）：踏道上下、跨门槛进殿、殿内绕佛坛走东西通道三条进 `follow.test`、`spring-arm.test`；从 T00 进来那条先用工作台入口（`?level=t05` 加书上的按钮存在性），书上翻页的正式入口在第四阶段；断言 T00 存档不动；`edges:grid`、`nearplane:grid` 带 `--level=t05` 跑通 | 11 | 可以 |
-| 13 | `docs(t05): phase one measured`（T05-6） | T4 一个 Job 里 T00 首院与 T05 cam03、cam06、cam07 交替量 `__cost`；**手机低档量一次**（`tools/device.cjs`，Pixel 8a），**所有者用自己的手机按一张不超过十项的清单走十分钟**，两样都是阶段 3 的退出条件（`LEVEL-PLAYBOOK.md` 阶段 3，缺口 12）；做不了就由所有者明说，记「未经真机」；数写进 `docs/HANDOFF.md` 与 `docs/t05/`；七张图推证据库 | 12 | 可以 |
+| 12 | `test(e2e): t05-walk, from the prologue's book or straight in`（T05-5） | e2e `t05-walk`：`?level=t05` 直达，从外山门外走到 F，**正常步速**（2.1 m/s，BARE；至少跨门槛和上下踏道两段不用 `?fast`，缺口 11：T00 的门只在加速时过得去，见 `docs/t00/PITFALLS.md` A3）；**镜头路线**（缺口 4）：踏道上下、跨门槛进殿、殿内绕佛坛走东西通道三条进 `follow.test`、`spring-arm.test`；判的是 `PRD.md` §9 第 3 条（白盒）：工作台直达、真实输入（键盘与点地，踏道和门槛两段不瞬移）、发布渠道隔离（canary 与生产回落到 `t00`，构建扫描见 #414 的 `level-bench.test`）；断言 T00 的 `yunjing.journey.v1`、`yunjing.place.v1` 不动。**正式的跨章**（旧 T00 存档、帐页翻到 T05、链接直达、续玩、返回 T00）是 §9 第 8 条，第四阶段的 e2e `t05-chapter` 判，不在这一项；`edges:grid`、`nearplane:grid` 带 `--level=t05` 跑通 | 11 | 可以 |
+| 13 | `docs(t05): phase one measured`（T05-6） | T4 一个 Job 里 T00 首院与 T05 cam03、cam06、cam07 交替量 `__cost`；**手机低档量一次**（`tools/device.cjs`，Pixel 8a，按 `PRD.md` §9.2 的四段路线与取数口径；白盒只收基线，不判预算），**所有者用自己的手机按一张不超过十项的清单走十分钟**，两样都是阶段 3 的退出条件（`LEVEL-PLAYBOOK.md` 阶段 3，缺口 12）；做不了就由所有者明说，记「未经真机」；数写进 `docs/HANDOFF.md` 与 `docs/t05/`；七张图推证据库 | 12 | 可以 |
 
 **依赖图**：1 → 2 → 2a → 3 → 3a → 5 → 6 → 7 → 11 → 12 → 13；中轴一支 5 → 8 → 9 → 11；牌坊 10 的生成器随时可做，放上中轴在 8 之后，也汇进 11；4 挂在 2、3 后面，与 2a、5 同时做（2a 的验收可以先在 4 上跑）。
 
