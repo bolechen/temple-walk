@@ -99,7 +99,7 @@ for key in ("cheeks", "underJaw"):
 if R.get("lids"):
   Ld = R["lids"]
   for e, side in (("eyeL", "left"), ("eyeR", "right")):
-    ey = f["eyes"][e]["y"]; ex = pts["eyes"][e][0]
+    ex, ey = pts["eyes"][e][0], (f["eyes"].get(e) or {}).get("y", pts["eyes"][e][1])   # the carved slit if found, else the anchor
     ops.append({"op": "attenuate", "note": f"the {side} lid's edge kept within {Ld['cap']} m of the smoothed face (face-ops.py)", "seed": B(ex, ey, z_at(ex, ey)),
                 "r": round(Ld["r"] / s, 5), "sr": round(Ld["sr"] / s, 5), "cap": round(Ld["cap"] / s, 5), "back": round(0.4 / s, 5), "k": 1.0, "iter": Ld.get("iter", 300)})
 if R.get("groove"):

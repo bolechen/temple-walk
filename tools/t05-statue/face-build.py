@@ -43,6 +43,9 @@ pre = os.path.join(D, f"{name}-{tag}-pre.glb")
 if not only: repair(base_ops + [tilt_op] + small, pre)
 mouth = bowed([0, F["mouth"][1], F["mouth"][2]])
 pts = {"height": H, "mouth": [0, round(mouth[1], 3)], "browY": round(bowed([0, F["browY"], F["knit"][2]])[1], 3), "tilt": tilt, "slitWin": 0.03}
+if "anchors-from" in opt:   # the eyes, turned with the head, for the face ops that work on the lids
+  _a = json.load(open(opt["anchors-from"]))["anchors"]
+  pts["eyes"] = {k: [round(q, 3) for q in bowed(_a[k])[:2]] for k in ("eyeL", "eyeR") if k in _a}
 pj = os.path.join(here, name, f"points-{tag}.json"); json.dump(pts, open(pj, "w"))
 final = os.path.join(D, f"{name}-{tag}.glb"); j = os.path.join(here, name, f"repair-{tag}.json")
 if not only:
