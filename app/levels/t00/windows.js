@@ -15,7 +15,7 @@ export const LIT = {
   // The great hall: the lamp before the Buddha shows through its three doors, strongest in the middle.
   main: { front: { 2: [3, 5], 3: [7, 7], 4: [0, 5], 1: [0, 3], 5: [4, 3] } },
   // The Guanyin hall on the second terrace is the one prototype 05 shows lit, the paper deep and pale by turns.
-  guanyin: { front: { 1: [3, 4], 2: [6, 7], 3: [0, 5], 0: [0, 2] } },
+  guanyin: { front: { 2: [7, 7], 4: [3, 3], 1: [0, 4], 3: [0, 5], 0: [0, 2] } },
   // The side buildings of the first court stay dark paper at dusk, as prototypes 03 and 04 have them (the Chan hall and
   // the library each keep one dim lamp); a few more are lit at night.
   chan: { front: { 3: [2, 5], 1: [0, 2] } },
@@ -31,4 +31,4 @@ export const LIT = {
 
 // How many bays may be lit at each hour (tests/unit/windows.test.mjs holds the data to them, and mood.js's winNight
 // to the hours): "a few" at dusk, more at night, never all.
-export const BUDGET = { dusk: 8, night: 20 };
+export const BUDGET = { dusk: 8, night: 22 };
