@@ -456,7 +456,8 @@ function startMusic(place) {
   music = { keeper, player, place };
   const tick = () => {
     if (ctx.state !== "running") return;
-    const p = place(), now = ctx.currentTime, zone = keeper.update(titleAwaited && p.zone === "gate" ? "stair" : p.joya ? joyaZone(p.zone || "court") : p.zone || "court", now);
+    const p = place(); if (p.zone === "none") return;   // a level with no music of its own yet hears none (score.js zoneOf)
+    const now = ctx.currentTime, zone = keeper.update(titleAwaited && p.zone === "gate" ? "stair" : p.joya ? joyaZone(p.zone || "court") : p.zone || "court", now);
     player.tick(now, zone, seals, moodMusic(p.season, p.time));
   };
   tick(); setInterval(tick, 250);

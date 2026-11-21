@@ -82,6 +82,8 @@
 | `demo.clip.export` | 一段录完、文件出来（自然结束或中途停下） | `fmt` `secs`（取整）`early`（中途停）`tier` | 录得完不完整、平均多长；`start` 与 `export` 之差是录到一半被放弃（收起相机、切到后台）的 |
 | `joya.ring` | 除夕撞钟窗口内，这一页第一次撞钟计入（#341） | `year`, `forced`（工作台 `?event=joya` 提前打开为 1） | 参与活动的人数 |
 | `joya.card` | 生成除夕撞钟卡片（#341） | `year`, `mine`（自己计入的下数） | 卡片生成次数 |
+| `lamp.link` | 在供灯处选了一句祝语、生成了链接和卡片（#343） | `wish`（预设祝语的编号）`season` `time` | 为他人点灯做了多少次、选的哪句；不记链接，不记任何文字 |
+| `lamp.open` | 经「为他人点灯」的链接打开，灯被带到眼前 | `wish` `season` `time` | 链接有没有被打开；与 `lamp.link` 对比，再加 `utm_source=lamp` 的访问数 |
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
 | `demo.leave` | 入山后第一次页面隐藏（每次打开一次） | `seconds`（本次页面打开秒数）`seals` `metres`（这一趟）`place`（殿 id / 楼上 id / 地点名）`inside` `up` | 每次访问在哪儿结束、多久、走了多少、几枚印 |
 | `demo.setting` | 改设置（同一 key 800 ms 内合并，取最后值；值未变不发） | `key` `value`（布尔为 `1/0`） | 谁改了哪项：自动镜头、画质、锁定鼠标、音量、视野等 |

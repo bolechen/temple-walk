@@ -33,6 +33,7 @@ export function zoneBounds(SITE, LEVELS, APPROACH, SCREEN) {
 /** What a zone plays on the year-end bell's night (#341): the bell's court and the terraces above it take the drone. @param {string} zone */
 export const joyaZone = (zone) => (zone === "court" || zone === "upper" ? "joya" : zone);
 export function zoneOf(x, z, inside, B) {
+  if (!B) return "none";                // a level with no music of its own yet (#409): the prologue's is not played there
   if (inside) return "hall";
   if (z > B.grove) return "grove";      // the bamboo and the first flight, below the half-way pavilion
   if (z > B.stair) return "stair";      // the turning stair and the forecourt before the screen wall

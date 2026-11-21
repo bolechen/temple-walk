@@ -46,3 +46,12 @@ test("the eye's own distance is handed over, and a bad one is dropped", () => {
   for (const bad of [-1, "far", Infinity, 99, null, undefined]) assert.equal(sanitizeRelang({ ...visit, dist: bad }, { now: NOW, lang: "en" }).dist, null, String(bad));
   assert.equal(sanitizeRelang({ ...visit, dist: 0 }, { now: NOW, lang: "en" }).dist, 0, "against a wall the eye stands at his shoulder: that is a distance too");
 });
+
+// #402: a link that names its place loses that place from the address once the visitor changes language by hand.
+import { withoutPose, POSE_PARAMS } from "../../app/src/relang.js";
+test("withoutPose takes a link's place out of the address and keeps the rest", () => {
+  const u = withoutPose("https://x.test/p/?cam=21.3,87.37,0,0.04&view=third&season=autumn&time=day&lang=zh&q=low&off=drift&devpose=1&in=main&up=lingxiao&show=gate&shot=1#h");
+  assert.equal(u, "https://x.test/p/?lang=zh&q=low&off=drift#h");
+  assert.equal(withoutPose("https://x.test/?q=low"), "https://x.test/?q=low");
+  assert.deepEqual(POSE_PARAMS, ["cam", "show", "shot", "in", "up", "season", "time", "view", "devpose"]);
+});
