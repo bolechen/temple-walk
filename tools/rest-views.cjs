@@ -18,7 +18,7 @@ const season = arg("season", "summer"), time = arg("time", "day");
   const seats = await p.evaluate(() => window.__seats.map((s, i) => ({ i, at: s.at, face: s.face, top: s.top, pavilion: s.pavilion || null, place: s.place || null })).filter((s) => s.pavilion));
   const done = new Set();
   for (const s of seats) {
-    if (done.has(s.pavilion)) continue; done.add(s.pavilion);
+    if (done.has(s.pavilion) || (arg("only", "") && !s.pavilion.includes(arg("only", "")))) continue; done.add(s.pavilion);
     const name = s.pavilion === "半山亭" ? "banshan" : s.pavilion === "望江亭" ? "wangjiang" : "yubei";
     // From the path, before he sits: outside the pavilion on the side the bench is seen from, a few metres off, looking at it.
     const from = [s.at[0] + Math.sin(s.face) * 5.5, s.at[1] + Math.cos(s.face) * 5.5];

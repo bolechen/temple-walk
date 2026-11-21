@@ -547,7 +547,7 @@ export function buildSite(M) {
     if (s.pavilion !== "半山亭") continue;
     const id = `rest-banshan-${Object.keys(restPlaces).length}`, b = buildings.find((k) => k.name === s.pavilion), mid = [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2];
     const left = [Math.cos(s.face), -Math.sin(s.face)], toMid = (mid[0] - s.at[0]) * left[0] + (mid[1] - s.at[1]) * left[1];
-    restPlaces[id] = { at: s.at, r: 1.2, face: s.face, shot: { at: [toMid, 1.35, 2.9], look: [toMid * 0.3, 0.8, -3.0], fov: 52, in: 2.4, out: 1.2, drift: { push: 0.01, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] } };
+    restPlaces[id] = { at: s.at, r: 1.2, face: s.face, shot: { at: [toMid, 1.35, 2.9], look: [toMid * 0.3, 0.5, -3.0], fov: 52, in: 2.4, out: 1.2, drift: { push: 0.01, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] } };
     s.place = id;
   }
 
