@@ -93,7 +93,7 @@ jobs:
   # Every scenario, once a night and when asked: the machines take a share of the list each, made by tests/e2e/shards.cjs from the
   # last measured time of every scenario (tests/e2e/durations.json; `node tests/e2e/shards.cjs update <reports>` refreshes them after a run), so
   # that none runs much longer than another: taken in turn, four machines ran 35 to 48 minutes of the same list. Asked for by name, the
-  # scenarios named are run on the first machine alone.
+  # scenarios named are shared the same way, but among as few machines as they need (one, for a few short ones).
   # How many machines the list needs is worked out here, by the same plan the machines use (tests/e2e/shards.cjs, #376): the fewest, twelve at
   # least, that keep the longest share within its budget, so a new scenario adds a machine instead of stopping the unit tests.
   shards:
@@ -108,8 +108,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # Asked for by name, the scenarios named are shared among as many machines as they need (tests/e2e/shards.cjs matrix <names>), by their measured times.
       - id: plan
-        run: node tests/e2e/shards.cjs matrix >> "$GITHUB_OUTPUT"
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: node tests/e2e/shards.cjs matrix $SCENARIOS >> "$GITHUB_OUTPUT"
 
   full:
     needs: shards
@@ -123,7 +126,7 @@ jobs:
     steps:
       - name: Is there anything for this machine
         id: mine
-        run: echo "run=${{ (github.event.inputs.scenarios == '' || github.event.inputs.scenarios == null || matrix.shard == 1) && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+        run: echo "run=true" >> "$GITHUB_OUTPUT"   # (every machine of the matrix has a share now, asked for by name or not)
       - uses: actions/checkout@v4
         if: steps.mine.outputs.run == 'true'
       - uses: pnpm/action-setup@v4
@@ -165,7 +168,7 @@ jobs:
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
-          if [ -n "$SCENARIOS" ]; then node tests/e2e/run.cjs $SCENARIOS; else node tests/e2e/run.cjs --shard=${{ matrix.shard }}/${{ needs.shards.outputs.count }}; fi
+          node tests/e2e/run.cjs $SCENARIOS --shard=${{ matrix.shard }}/${{ needs.shards.outputs.count }}
       # Read after the scenarios, and whatever they gave: a read of the public address that timed out once stood before
       # them and left the first machine's quarter of the scenarios unwalked (#276).
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
