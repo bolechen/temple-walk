@@ -63,7 +63,7 @@
 
 - 主创每小时巡检（:36）、每晚复盘（21:43 北京）。
 - T00 Git 独立评审（trig_01BBvxxJdxa7Ap2oKfUm1XuL，主创重建，每天 08:47 新加坡，Opus，每次开新会话）：所有者 11-21 关掉了他自己建的那个，改由主创维护（LATEST-GOALS 第 83 条）；首跑 11-22。
-- T00 每周数据分析（trig_01NS7RNXizj3gh4qrMgkgp5m，周一 14:17 新加坡，每次新会话）：首跑 11-23；UMAMI_KEY 用法未验证，读不到会报 blocked。
+- T00 每周数据分析（trig_01NS7RNXizj3gh4qrMgkgp5m，周一 14:17 新加坡，每次新会话）：首跑 11-23；UMAMI_KEY 用 Bearer 头已读通（11-21）。
 
 ## 在等所有者
 
