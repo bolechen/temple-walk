@@ -13,6 +13,8 @@ const { chromium } = require("playwright");
 const { site, serve } = require("./site.cjs");
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const cols = arg("cols", "").split(",").filter(Boolean).map(Number), rows = arg("rows", "100,400").split(",").map(Number), W = 1280, H = 720;
+// VARIANTS='[{"name":"…","r0":2.4,"r1":3.4,"k":1.2,"w":0.22}]' also counts other settings of `rise` and `edgeW`, for choosing them.
+const variants = JSON.parse(process.env.VARIANTS || "[]");
 const views = JSON.parse(process.argv.find((x) => x.startsWith("[")) || JSON.stringify([
   { name: "under the maple", eye: 3.5, q: "cam=-6.5,30,0.9,-0.3&season=summer&time=day&view=third&show=court" },
   { name: "from above", eye: 5, q: "cam=0,22,0,-0.4&season=summer&time=day&view=third&show=court" },
@@ -30,16 +32,17 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
     await p.waitForTimeout(1500);
     const wet = 1, eye = v.eye || 3.5, rise = smooth(2.4, 3.4, eye);   // summer: `wet` in mood.js; the paving is the ground: eye height above it
     const grid = await p.evaluate(([X, r0, r1]) => X.map((x) => { const col = []; for (let y = r0; y <= r1; y++) { const h = window.__pick(x, y, 3).find((q) => q.kind === "Mesh" && Math.abs(q.at[1]) < 0.02); col.push(h ? [h.at[0], h.at[2]] : null); } return col; }), [X, ...(v.rows || rows)]);
-    const res = { old: [], now: [] };
+    const res = { old: [], now: [] }; for (const x of variants) res[x.name] = [];
     for (const col of grid) {
-      const mask = { old: [], now: [] };
+      const mask = { old: [], now: [] }; for (const x of variants) mask[x.name] = [];
       col.forEach((q, i) => {
-        if (!q) { mask.old.push(null); mask.now.push(null); return; }
+        if (!q) { for (const k in mask) mask[k].push(null); return; }
         const n = col[i + 1] || col[i - 1], reach = n ? Math.hypot(n[0] - q[0], n[1] - q[1]) : 0.05;   // ground one pixel covers along the column
         const low = fbm2(q[0] * 0.17 + 3, q[1] * 0.17 + 3) + (wet - 1) * 0.34, edgeW = 0.04 + (Math.min(0.22, Math.max(0.04, 1.2 * reach)) - 0.04) * rise;
         mask.old.push(smooth(0.57, 0.61, low)); mask.now.push(smooth(0.59 - 0.5 * edgeW, 0.59 + 0.5 * edgeW, low));
+        for (const x of variants) { const w = 0.04 + (Math.min(x.w, Math.max(0.04, x.k * reach)) - 0.04) * smooth(x.r0, x.r1, eye); mask[x.name].push(smooth(0.59 - 0.5 * w, 0.59 + 0.5 * w, low)); }
       });
-      for (const k of ["old", "now"]) {
+      for (const k of Object.keys(mask)) {
         const m = mask[k]; let i = 0;
         while (i < m.length) {   // find each run from under .1 to over .9, either way
           if (m[i] === null || m[i] >= 0.1 && m[i] <= 0.9) { i++; continue; }
@@ -54,7 +57,7 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
       }
     }
     const stat = (a) => { if (!a.length) return "none"; a = [...a].sort((x, y) => x - y); return `n=${a.length} median ${a[a.length >> 1]} px, smallest ${a[0]}, largest ${a[a.length - 1]}`; };
-    console.log(v.name, "\n  main :", stat(res.old), "\n  now  :", stat(res.now));
+    console.log(v.name, "\n  main :", stat(res.old), "\n  now  :", stat(res.now)); for (const x of variants) console.log("  " + x.name + ":", stat(res[x.name]));
   }
   await b.close(); srv.close();
 })();
