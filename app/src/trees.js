@@ -206,6 +206,19 @@ function bed(x, y, z, r, seed) {
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
 
+// The fallen leaves under a ginkgo: a round patch of the season's leaf colour (the material's colour is set by the mood) laid
+// a finger over the paving, thickest at the trunk and fading to nothing at its edge (the alpha in each vertex's colour), so
+// that no hard line shows where it ends.
+function softBed(x, y, z, r, seed) {
+  const R = 36, rings = [[0, 0.85], [0.35, 0.8], [0.65, 0.45], [0.85, 0.15], [1, 0]], pos = [x, y + 0.02, z], col = [1, 1, 1, rings[0][1]], idx = [];
+  for (let i = 1; i < rings.length; i++) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r * rings[i][0] * (1 + 0.1 * Math.sin(a * 3 + seed) + 0.07 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y + 0.02 - 0.004 * i, z + Math.sin(a) * rr); col.push(1, 1, 1, rings[i][1]); }
+  for (let k = 0; k < R; k++) { const n = (k + 1) % R; idx.push(0, 1 + n, 1 + k); }
+  for (let i = 1; i < rings.length - 1; i++) for (let k = 0; k < R; k++) { const n = (k + 1) % R, a = 1 + (i - 1) * R, b = 1 + i * R; idx.push(a + k, a + n, b + k, a + n, b + n, b + k); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 4)); g.setIndex(idx); g.computeVertexNormals();
+  const N = g.attributes.normal; for (let i = 0; i < N.count; i++) N.setXYZ(i, 0, 1, 0);
+  return g;
+}
+
 // `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
 // A short fingerprint of some geometry, every coordinate rounded to a tenth of a millimetre: the same plan grown in Node
 // and in the browser must give the same one (the cedars' wood is grown from a seed; #161, #162).
@@ -238,7 +251,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
   let draw = seeded(311); const rnd = () => draw();
-  const wood = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
+  const wood = [], ginkgoWood = [], ginkgoBeds = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), V = (x, y, z) => new THREE.Vector3(x, y, z);
   // One flat spray at `p`, lit as part of the crown round `centre`; `shade` darkens those deep inside.
   const card = (list, g, p, centre, shade, squash = 0.75, lift = 0.35) => {
@@ -400,22 +413,22 @@ export function createTrees(scene, M, spots, opts = {}) {
     } else if (kind === "ginkgo") {
       // A young male ginkgo (#162): see ginkgoLayout for its shape. Its wood is grown by three's TreeGenerator like the
       // cedars', the leader and its whorled boughs in one piece from the roots up, so there is no foot and no seam.
-      const back = own(x, z, 3), lay = ginkgoLayout(h, rnd), top = y + h, centre = V(x, y + h * 0.55, z), r0 = 0.09 + h * 0.019, sk = { at: [x, z], h, base: y, trunk: [], boughs: [], geometry: null };
+      const back = own(x, z, 3), lay = ginkgoLayout(h, rnd), top = y + h, centre = V(x, y + h * 0.55, z), r0 = 0.06 + h * 0.012, sk = { at: [x, z], h, base: y, trunk: [], boughs: [], geometry: null };
       {
         const seed = Math.abs(Math.round(x * 211 + z * 37)) + 29, whorls = [];
         for (const L of lay.layers) for (const b of L.boughs) whorls.push({ t: (L.y + b.dy + 0.2) / h, tilt: b.theta, roll: b.az, length: b.reach / Math.sin((b.theta * Math.PI) / 180) });
         const gen = /** @type {any} */ (new TreeGenerator(null));
-        for (const [k, v] of Object.entries({ seed, levels: 3, trunkLength: h, trunkRadius: r0, taper: [0.82, 0.6, 0.5], taperCurve: 0.85, rootFlare: 0.5, flareFrac: 0.07, radialSegments: [20, 6, 4], whorls, childRadius: [0.2, 0.55], children: [0, 3], branchAngle: [0, 50], angleVariance: 12, lengthRatio: [0, 0.22], branchLengthFalloff: 0.3, childStart: 0.35, minRadius: 0.006, minLength: 0.3, droop: 0.015, upPull: 0.12, gnarl: [0.004, 0.02, 0.05], sectionLength: 0.9, collar: 0.3, radiusExponent: 2.6 })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
+        for (const [k, v] of Object.entries({ seed, levels: 3, trunkLength: h, trunkRadius: r0, taper: [0.93, 0.93, 0.93], taperCurve: 0.85, rootFlare: 0.5, flareFrac: 0.07, radialSegments: [20, 6, 4], whorls, childRadius: [0.2, 0.55], children: [0, 3], branchAngle: [0, 50], angleVariance: 12, lengthRatio: [0, 0.22], branchLengthFalloff: 0.3, childStart: 0.35, minRadius: 0.006, minLength: 0.3, droop: 0.015, upPull: 0.12, gnarl: [0.004, 0.02, 0.05], sectionLength: 0.9, collar: 0.3, radiusExponent: 2.6 })) gen["set" + k[0].toUpperCase() + k.slice(1)](v);
         const m = gen.build(), tubes = m.userData.tubes; m.geometry.translate(x, y - 0.2, z); for (const t of tubes) for (const r of t.rings) r.pos.add(V(x, y - 0.2, z));
-        wood.push(m.geometry); sk.geometry = m.geometry; info.tris += m.geometry.index.count / 3;
+        ginkgoWood.push(m.geometry); sk.geometry = m.geometry; info.tris += m.geometry.index.count / 3;
         const at = (t, u) => { const f = u * (t.rings.length - 1), i = Math.min(t.rings.length - 2, Math.floor(f)); return t.rings[i].pos.clone().lerp(t.rings[i + 1].pos, f - i); };
         for (const t of tubes) {
-          if (t.level === 0) { sk.trunk = t.rings.map((r) => r.pos.toArray()); continue; }
-          if (t.level === 1) { sk.boughs.push({ from: t.rings[0].pos.toArray(), to: t.rings[t.rings.length - 1].pos.toArray(), r: t.base }); for (const u of [0.45, 0.7, 0.95]) clump(kind, at(t, u), centre, 0.95 + rnd() * 0.5, 4); }
+          if (t.level === 0) { sk.trunk = t.rings.map((r) => r.pos.toArray()); sk.radii = t.rings.map((r) => r.radius); continue; }
+          if (t.level === 1) { sk.boughs.push({ from: t.rings[0].pos.toArray(), to: t.rings[t.rings.length - 1].pos.toArray(), r: t.base, r0: t.rings[0].radius, r1: t.rings[t.rings.length - 1].radius }); for (const u of [0.45, 0.7, 0.95]) clump(kind, at(t, u), centre, 0.95 + rnd() * 0.5, 4); }
           else clump(kind, at(t, 1), centre, 0.9 + rnd() * 0.4, 4);
         }
         const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
-        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth));
+        nth++; ginkgoBeds.push(softBed(x, y, z, flare * 3 + 0.9, nth));
       }
       clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
       ginkgoSkeletons.push(sk);
@@ -460,13 +473,16 @@ export function createTrees(scene, M, spots, opts = {}) {
     let tris = 0; for (let i = w0; i < wood.length; i++) tris += wood[i].index ? wood[i].index.count / 3 : wood[i].attributes.position.count / 3;
     census.push({ kind, h, at: [x, z], tris, far: !!far0 });
   }
-  scene.add(mesh(merge(wood), M.bark));
+  if (wood.length) scene.add(mesh(merge(wood), M.bark));
+  if (ginkgoWood.length) scene.add(mesh(merge(ginkgoWood), M.barkGinkgo));
   // The beds the trees stand in. Under snow a bed is buried as the paving round it is, one blanket over both, so in
   // winter it is not laid at all: drawn, it took a patchy snow of its own over its dark earth and showed as a hard-edged
   // grey disc against the paving's snow (#92). It stays its own mesh, not merged with the rest, so that it can be put away.
   let soil = null;
   if (beds.length) { soil = mesh(merge(beds), M.earth); soil.receiveShadow = true; soil.userData.keep = true; soil.name = "tree-beds"; scene.add(soil); }
 
+  let gbed = null;
+  if (ginkgoBeds.length) { gbed = new THREE.Mesh(mergeGeometries(ginkgoBeds), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); gbed.receiveShadow = true; gbed.userData.keep = true; gbed.name = "ginkgo-beds"; gbed.renderOrder = 0; scene.add(gbed); }
   const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
   const put = (kind, map, o) => {
     if (!cards[kind].length) return;
@@ -475,7 +491,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
@@ -483,6 +499,8 @@ export function createTrees(scene, M, spots, opts = {}) {
         k.mat.color.setRGB(...c); if (kind === "maple") k.mat.map = m.season === "spring" ? tex.blossom : tex.maple;
       }
       if (soil) soil.visible = !(m.snow > 0.5);
+      // the leaves under a ginkgo are the season's own, and are not there when it is bare
+      if (gbed) { const c = COLOURS.ginkgo[m.season]; gbed.visible = !!c && !(m.snow > 0.5); if (c) gbed.material.color.setRGB(c[0] * 0.6, c[1] * 0.6, c[2] * 0.6); }
       // Bare twigs show only when the leaves are down.
       if (crowns.twig) { crowns.twig.mesh.visible = m.season === "winter"; crowns.twig.mat.color.setRGB(0.2, 0.16, 0.13); }
     },

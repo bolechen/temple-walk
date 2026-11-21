@@ -1,6 +1,6 @@
 // The four ginkgoes of the courts are young male trees (#162, docs/t00/SOURCES.md): one straight leader to the top, boughs
 // in whorls, a cone of a crown. Everything here is measured from the skeleton the tree was grown from, not from its picture.
-import test from "node:test"; import assert from "node:assert/strict";
+import test from "node:test"; import fs from "node:fs"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 const { buildSite } = await import("../../app/src/site.js");
@@ -71,5 +71,31 @@ const deg = (r) => (r * 180) / Math.PI;
     const again = createTrees(new THREE.Group(), M, spots);
     assert.deepEqual(again.ginkgos.map((g) => [g.trunk, g.boughs]), grown.ginkgos.map((g) => [g.trunk, g.boughs]));
     assert.deepEqual(again.census, grown.census);
+  });
+
+  test("the tip of every bough is fine, not a sawn-off stick: at most 2 cm and 0.2 of where it starts (the 3D review of #327)", () => {
+    for (const t of trees) {
+      for (const b of t.g.boughs) { assert.ok(b.r1 <= 0.02, `the ${t.h} m ginkgo: a bough ends ${(b.r1 * 100).toFixed(1)} cm in radius`); assert.ok(b.r1 <= 0.2 * b.r0, `the ${t.h} m ginkgo: a bough ends at ${(b.r1 / b.r0).toFixed(2)} of where it starts`); }
+      const top = t.g.radii[t.g.radii.length - 1]; assert.ok(top <= 0.03, `the ${t.h} m ginkgo's leader ends ${(top * 100).toFixed(1)} cm in radius`);
+    }
+  });
+  test("a young ginkgo's trunk is slender: 1.3 m up it is at most 0.04 of the tree's height across", () => {
+    for (const t of trees) {
+      const tr = t.g.trunk, ys = tr.map((p) => p[1] - t.g.base), at = ys.findIndex((y) => y >= 1.3), f = (1.3 - ys[at - 1]) / (ys[at] - ys[at - 1]), r = t.g.radii[at - 1] + (t.g.radii[at] - t.g.radii[at - 1]) * f;
+      assert.ok((2 * r) / t.h <= 0.04, `the ${t.h} m ginkgo is ${(2 * r).toFixed(2)} m across at 1.3 m`);
+    }
+  });
+  test("a ginkgo's bark is its own material, greyer than the cedar's: hue 25-40 degrees and less saturated", () => {
+    const sh = fs.readFileSync(new URL("../../app/src/materials.js", import.meta.url), "utf8"), colour = (key) => { const m = sh.slice(sh.indexOf(`${key}: procMat("${key}"`)).match(/col=vec3\(([\d.]+),([\d.]+),([\d.]+)\)\*A/); return m.slice(1).map(Number); };
+    const hs = ([r, g, b]) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return { hue: (60 * (g - b)) / (r - b), sat: (mx - mn) / mx }; };
+    const gk = hs(colour("barkGinkgo")), cd = hs(colour("bark")); assert.ok(gk.hue >= 25 && gk.hue <= 40, `hue ${gk.hue.toFixed(1)}`); assert.ok(gk.sat < cd.sat, `saturation ${gk.sat.toFixed(2)} against the cedar's ${cd.sat.toFixed(2)}`);
+    const scene = new THREE.Group(); createTrees(scene, M, spots); assert.ok(scene.children.some((o) => o.material === M.barkGinkgo) && !scene.children.some((o) => o.material === M.bark), "the ginkgo's wood is drawn with the cedar's bark");
+  });
+  test("the leaves under a ginkgo are the season's own, gone when it is bare, and fade to nothing at their edge", () => {
+    const scene = new THREE.Group(), g = createTrees(scene, M, spots), bed = g.ginkgoBeds, col = bed.geometry.attributes.color;
+    assert.equal(col.itemSize, 4); let edge = 0, centre = 0; for (let i = 0; i < col.count; i++) { if (col.getW(i) === 0) edge++; if (col.getW(i) > 0.8) centre++; } assert.ok(edge >= 36 * 4 && centre >= 4, `${edge} edge points at 0 alpha, ${centre} thick ones`);
+    const want = { summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1] };
+    for (const [season, c] of Object.entries(want)) { g.setMood({ season, snow: 0 }); assert.ok(bed.visible, season); const k = bed.material.color; assert.ok(Math.abs(k.r - c[0] * 0.6) < 1e-6 && Math.abs(k.g - c[1] * 0.6) < 1e-6, `${season}: ${k.r}, ${k.g}`); }
+    g.setMood({ season: "winter", snow: 0 }); assert.ok(!bed.visible, "winter"); g.setMood({ season: "summer", snow: 0.9 }); assert.ok(!bed.visible, "under snow");
   });
 }

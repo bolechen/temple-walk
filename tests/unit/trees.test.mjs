@@ -211,6 +211,8 @@ test("every near tree stands in a bed of earth as wide as its wood at the ground
   const wrong = [];
   for (const t of site.trees.filter((s) => !s[5])) {
     const scene = new THREE.Group(); createTrees(scene, M, [t]);
+    // a ginkgo's bed is its own (a soft patch of the season's leaves, ginkgo.test.mjs), its wood its own material
+    if (t[3] === "ginkgo") { if (!scene.children.find((o) => o.name === "ginkgo-beds")) wrong.push(`the ginkgo at ${t[0]}, ${t[2]} has no bed`); continue; }
     const soil = scene.children.find((o) => o.material === M.earth), bark = scene.children.find((o) => o.material === M.bark);
     if (!soil) { wrong.push(`the ${t[3]} at ${t[0]}, ${t[2]} has no bed`); continue; }
     const S = soil.geometry.attributes.position, B = bark.geometry.attributes.position;
