@@ -17,6 +17,38 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// The probe level (app/levels/_probe, docs/t05/LEVEL-SPLIT.md S7) proves the engine stands on its own. On the build tested here (dist/, built with
+// no target: a preview's) it is walked on its own baked floor and, as any level but the prologue, leaves what the prologue keeps alone
+// (#385: its place, its opening, its title). That the canary and production do not list it is `level-targets`, which builds them.
+async function probeLevel(b, base) {
+  const PLACE = "yunjing.place.v1", seed = JSON.stringify({ x: 3.25, z: 71.5, yaw: 1.5, pitch: 0.1, name: "seed", t: 1700000000000 });
+  const t = await open(b, base, "level=_probe&q=low" + BARE), lv = await t.page.evaluate(() => window.__level());
+  expect(lv.id === "_probe" && lv.asked === "_probe" && lv.known === true, "the preview build should walk the probe level: " + JSON.stringify(lv));
+  const w = await t.page.evaluate(() => window.__walker());
+  expect(w.mode !== "old" && w.bytes > 0, "the probe's own baked floor should be fetched: " + JSON.stringify(w));
+  const s0 = await t.state(), start = w.start;
+  expect(Math.abs(s0.x - start[0]) < 0.5 && Math.abs(s0.z - start[1]) < 0.5, "he should begin at the probe's start: " + JSON.stringify([s0.x, s0.z, start]));
+  // What the prologue keeps stays as it was: put a place there, walk, leave the page, and look again.
+  await t.page.evaluate(([k, v]) => localStorage.setItem(k, v), [PLACE, seed]);
+  await t.page.evaluate(() => window.__walk([[0, 20]]));
+  await t.until(async () => { const s = await t.state(); return Math.hypot(s.x - 0, s.z - 20) < 0.4; }, 120000, "he did not walk across the probe's plot");
+  await t.frames(10);
+  await t.page.evaluate(() => { window.dispatchEvent(new Event("pagehide")); Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
+  const kept = await t.page.evaluate((k) => localStorage.getItem(k), PLACE);
+  expect(kept === seed, "the probe level wrote over the prologue's place: " + kept);
+  // No opening, no prologue title.
+  const op = await t.page.evaluate(() => window.__opening()), pr = await t.page.evaluate(() => window.__prologue());
+  expect(!op.active && op.cuts === 0 && !op.skipped && op.phase === "idle", "the probe level played an opening: " + JSON.stringify(op));
+  expect(!pr.titled && !pr.shown && !pr.on, "the probe level raised the prologue's title: " + JSON.stringify(pr));
+  // One named place, and the pavilion's own floor up its steps.
+  const pl = await t.page.evaluate(() => Object.keys(window.__places));
+  expect(pl.length === 1 && pl[0] === "pavilion", "the probe has one named place: " + pl);
+  await t.page.evaluate(() => window.__walk([[0, -8]]));
+  await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z + 8) < 0.5; }, 120000, "he did not walk up into the pavilion");
+  expect((await t.state()).h > 0.25, "he should stand on the pavilion's raised floor: " + JSON.stringify(await t.state()));
+  expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+}
+
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
@@ -156,6 +188,7 @@ const scenarios = {
     const w = await t.page.evaluate(() => window.__walker());
     expect(w.mode !== "old" && w.bytes > 0, "the prologue's baked floor should be fetched: " + JSON.stringify(w));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    await probeLevel(b, base);
   } },
   // T05's white box (#409), on the workbench: ?level=t05 walks its own place on its own baked floor. He arrives at the
   // outer gate's place, walks the way into the court, past station A and up the flight to station B on the terrace, 3 m
@@ -203,6 +236,10 @@ const scenarios = {
             for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} as it was: ${kept[k]}`);
           }
           expect(t.errors.length === 0, `${target}: ` + t.errors.join("\n")); await t.close();
+          // The probe level is the workbench's alone: neither of these lists it, and ?level=_probe walks the prologue (app/src/bench.js).
+          const q = await open(b, srv.base, "level=_probe&q=low" + BARE, { route }), ql = await q.page.evaluate(() => window.__level());
+          expect(ql.id === "t00" && ql.asked === "_probe" && ql.known === false, `${target} should not know the probe level: ` + JSON.stringify(ql));
+          expect(q.errors.length === 0, `${target} (probe): ` + q.errors.join("\n")); await q.close();
         } finally { srv.close(); }
       } finally { fs.rmSync(out, { recursive: true, force: true }); }
     }
@@ -2122,6 +2159,17 @@ const scenarios = {
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
       t = await open(b, base, "q=low&cam=0,30,0,0" + BARE); await t.frames(2);
       expect(await t.page.evaluate(() => typeof window.__walkviz === "undefined"), "the published site should not carry the collision drawing's switch");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      // On another level (#434) the panel names the level the page walks, offers no room views of the prologue's and shows
+      // none of the prologue's seals.
+      t = await open(pb, host, "level=t05&q=low&cam=0,200,0,0" + BARE);
+      await t.until(() => t.page.evaluate(() => !!document.querySelector(".lil-gui")), 60000, "the preview did not open the debug panel on T05");
+      const panel = await t.page.evaluate(() => {
+        const rows = Object.fromEntries([...document.querySelectorAll(".lil-gui .controller")].map((c) => [c.querySelector(".name")?.textContent, c.querySelector("input")?.value ?? c.querySelector("select")?.value]));
+        return { title: document.querySelector(".lil-gui > .title")?.textContent, level: window.__level(), rows, rooms: [...document.querySelectorAll(".lil-gui .controller select")].map((s) => s.options.length) };
+      });
+      expect(panel.level.id === "t05" && /t05/.test(panel.title || "") && panel.rows["关卡"] === "t05", "the panel should name T05: " + JSON.stringify(panel));
+      expect(panel.rows["朱印"] === "不适用" && panel.rows["完成状态"] === "不适用", "T05 should show none of the prologue's seals: " + JSON.stringify(panel.rows));
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
       t = await open(pb, host, "q=low&cam=0,30,0,0&debug=0" + BARE); await t.frames(6);
       expect(!(await t.page.evaluate(() => !!document.querySelector(".lil-gui"))), "?debug=0 should keep the panel shut on a preview");
