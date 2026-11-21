@@ -163,7 +163,8 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) } };
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) },
+    uIdMode: { value: 0 }, uFig: { value: opts.fig ?? 0 } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
     const c = lin(z.color);
@@ -171,19 +172,31 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
     if (z.pattern === "flowers") { const c2 = lin(z.pattern2 ?? "#9A7A3E"); col = `mix(${v3(c)}, ${v3(c2)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))`; }
     const metal = z.pattern === "flowers" ? `mix(${(z.metal ?? 0).toFixed(3)}, ${(z.metal2 ?? 0.6).toFixed(3)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))` : (z.metal ?? 0).toFixed(3);
     const wear = (z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "") + (z.tint ? " * uTint" : "");
+    // a zone may tint what stands out of it (the tips and rims of a lotus's petals, issue #463): toward `edgeTint.color`
+    // by its amount where the surface is convex (cvEdge, below)
+    if (z.edgeTint) col = `mix(${col}, ${v3(lin(z.edgeTint.color))}, ${(z.edgeTint.amount ?? 0.5).toFixed(3)} * cvEdge)`;
     return `  { float k = ${z.glsl}; pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
   }).join("\n");
+  const fo = recipe.folds ?? {}, fk0 = (fo.k0 ?? 3).toFixed(2), fk1 = (fo.k1 ?? 18).toFixed(2), fh = (fo.hollow ?? 0).toFixed(3), fe = (fo.edge ?? 0).toFixed(3);
   const fc = recipe.face, ink = lin(fc.ink), browC = lin(fc.browColor ?? fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform mat4 uToFig;\nvarying vec3 vFig;\nvarying vec3 vFigN;")
       .replace("#include <project_vertex>", "#include <project_vertex>\n  vFig = (uToFig * modelMatrix * vec4(transformed, 1.)).xyz;\n  vFigN = normalize(mat3(uToFig * modelMatrix) * objectNormal);");
-    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\n" + GLSL.replace(/LEAVES/g, String(N * 2)))
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform float uIdMode;\nuniform float uFig;\n" + GLSL.replace(/LEAVES/g, String(N * 2)))
       .replace("#include <color_fragment>", `#include <color_fragment>
   vec3 p = vFig; vec3 pCol = diffuseColor.rgb; float pRough = roughness; float pMetal = metalness; float zone = 0.;
+  // how the surface bends here, from the change of its normal across the pixel against the change of its place: the
+  // mean curvature in 1/m, more than zero where it stands out (a fold's ridge, a petal's rim) and less where it goes in
+  // (a fold's hollow); a fold's ridge some 5–30 cm round reads 3–18 (issue #463: hollows darkened, ridges worn)
+  vec3 cvN = normalize(vFigN), cvPx = dFdx(vFig), cvPy = dFdy(vFig);
+  float cv = (dot(dFdx(cvN), cvPx) + dot(dFdy(cvN), cvPy)) / max(dot(cvPx, cvPx) + dot(cvPy, cvPy), 1e-10);
+  float cvEdge = smoothstep(${fk0}, ${fk1}, cv), cvHollow = smoothstep(${fk0}, ${fk1}, -cv);
 ${zoneCode}
   float lip_, urna_; vec2 ink2 = faceInk(p, normalize(vFigN), lip_, urna_);
   float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
+  // the folds: their hollows darker, their ridges rubbed toward the dust's colour; not on the face, whose lines are drawn
+  pCol *= 1. - ${fh} * cvHollow * (1. - onFace); pCol = mix(pCol, ${v3(lin(recipe.folds?.edgeColor ?? "#8A7A66"))}, ${fe} * cvEdge * (1. - onFace));
   pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
   // the brow: the skin darkened, at most half covered; the lid: one line of the deep beam colour
   pCol = mix(pCol, ${v3(browC)}, ink2.x * onFace * ${(fc.browAlpha ?? 1).toFixed(3)}); pCol = mix(pCol, ${v3(ink)}, ink2.y * onFace);
@@ -194,7 +207,10 @@ ${zoneCode}
   pCol = mix(pCol, ${v3(lin(recipe.dust?.color ?? "#8A7A66"))}, ${(recipe.dust?.amount ?? 0).toFixed(3)} * smoothstep(.55, .95, normalize(vFigN).y) * (1. - max(ink2.x, ink2.y) * onFace));
   diffuseColor.rgb = pCol;`)
       .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = clamp(pRough, .04, 1.);")
-      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);");
+      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);")
+      // a picture of which zone each pixel is, for measuring the colours on screen zone by zone (stage.js zoneIds): red
+      // the zone's number (the lips 14) over 16, green the figure's
+      .replace("#include <dithering_fragment>", "#include <dithering_fragment>\n  if (uIdMode > .5) gl_FragColor = vec4(mix(zone, 14., step(.5, lip_ * onFace)) / 16., (uFig + 1.) / 16., 0., 1.);");
   };
   m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N;
   const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };

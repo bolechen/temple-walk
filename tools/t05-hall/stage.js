@@ -66,7 +66,7 @@ const M = {
   wallIn: mat(0xb9b2a2, 0.95), wallFront: mat(0x8a3b2a, 0.9), wallOut: mat(0x8a3b2a, 0.9, true), timber: mat(0x3a2c23, 0.8), red: mat(0x7a3426, 0.75),
   roof: mat(0x2f251e, 0.85, false, { side: THREE.DoubleSide }), tile: mat(0x5a5f5c, 0.8, true),
   altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x6f5a34, 0.62, false, { metalness: 0.35 }),   // dark gold, not bright (ART.md §3.1, the lead 2026-11-21)
-  halo: mat(0x45372a, 0.7, false, { metalness: 0.12, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
+  halo: mat(0x6a5440, 0.72, false, { metalness: 0.08, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
 };
 const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
 const hall = new THREE.Group(); scene.add(hall);
@@ -499,7 +499,7 @@ function paint(on = true) {
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
-    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f) } : { masks, fig: figures.indexOf(f), envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
     f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
     for (const m of f.meshes) m.material = f.painted[key];
   }
@@ -545,10 +545,38 @@ function ortho(i, side = "front", z = {}) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = ex; scene.background = bg; sky.visible = true;
   for (const [o, m] of mats) o.material = m; for (const o of hidden) o.visible = true; orthoGrid.visible = false; scene.overrideMaterial = keep;
 }
+// The picture as drawn and, pixel for pixel, which zone of which figure each pixel shows (issue #463): the painted figures
+// write their zone's number (paint.js, uIdMode), each figure's halo is zone 15, everything else is black. Returns, for
+// each figure and zone, how many pixels showed it (those whose four neighbours show the same zone, so no edge blends in)
+// and their mean colour on screen, 0–255; call after shoot(), with the same view.
+function zoneIds() {
+  const gl = renderer.getContext(), Wd = gl.drawingBufferWidth, Hd = gl.drawingBufferHeight, shown = new Uint8Array(Wd * Hd * 4), id = new Uint8Array(Wd * Hd * 4);
+  render(); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, shown);
+  const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), kept = new Map(), mats = [];
+  const haloMat = (i) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(15. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
+  const own = new Set(); figures.forEach((f, i) => { const hm = haloMat(i); mats.push(hm); f.group.traverse((o) => { if (o.isMesh && o.userData.halo) { kept.set(o, o.material); o.material = hm; own.add(o); } }); for (const m of f.meshes) { own.add(m); if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 1; } });
+  scene.traverse((o) => { if ((o.isMesh || o.isLine || o.isPoints) && !own.has(o)) { kept.set(o, o.material); o.material = black; } });
+  const tm = renderer.toneMapping, bg = scene.background, sv = sky.visible; renderer.toneMapping = THREE.NoToneMapping; scene.background = new THREE.Color(0); sky.visible = false;
+  renderer.setRenderTarget(null); renderer.render(scene, camera); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, id);
+  renderer.toneMapping = tm; scene.background = bg; sky.visible = sv;
+  for (const [o, m] of kept) o.material = m; for (const f of figures) for (const m of f.meshes) if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 0;
+  black.dispose(); mats.forEach((m) => m.dispose());
+  const code = (k) => (id[k + 1] ? Math.round(id[k] * 16 / 255) * 100 + Math.round(id[k + 1] * 16 / 255) : 0);
+  const acc = {};
+  for (let y = 1; y < Hd - 1; y++) for (let x = 1; x < Wd - 1; x++) {
+    const k = (y * Wd + x) * 4, c = code(k); if (!c) continue;
+    if (code(k + 4) !== c || code(k - 4) !== c || code(k + Wd * 4) !== c || code(k - Wd * 4) !== c) continue;
+    const a = (acc[c] ??= [0, 0, 0, 0]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2];
+  }
+  const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光";
+  const out = figures.map(() => ({}));
+  for (const [c, [n, r, g, b]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)) }; }
+  return out;
+}
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site
