@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 194586,
+   "sha256": "1d299795cb90b425c89cfa4f6daf0d1df18e0be91f004f37d998384b951c059c",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/hall-back.png",
+   "bytes": 1110366,
+   "sha256": "8019d8f930665e2f65bd4bd939adcea5de81391f617e95107185240d7695ac9d",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/hall-edge.png",
+   "bytes": 1242871,
+   "sha256": "e2dcb9c3181a903d9ca4f142b4f0bc8287d338fc2585d654233edf9b9c917315",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/hall-front.png",
+   "bytes": 1117136,
+   "sha256": "0affc58aab25e237a9c597c9bd4eab9c64f6516b9e3ba445ddfce8cf792f538d",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/hall-side.png",
+   "bytes": 1127825,
+   "sha256": "c81c5b4ae7a75b210246c36ea29cab06bc1add4fb0909e4c8288faef1b8bb2c6",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/hall-top.png",
+   "bytes": 1318393,
+   "sha256": "4830b7fab1a02c5e2811610ed9261f1c73ee998e9a7a321156aa4d0062835d81",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/inner-back.png",
+   "bytes": 1088541,
+   "sha256": "3d8897a20f8fecdcb68b04d9b32a36f49fac53a8dc211ab4241f7cf71608f892",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/inner-edge.png",
+   "bytes": 1273486,
+   "sha256": "54259f091affa42ae8b722c7adb6b3efadd72eff150064f1fab3716980023bfc",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/outer-edge.png",
+   "bytes": 1218910,
+   "sha256": "dff234a4727818901280c8f55f68fdbd6dc0cce06e5470aa8a29e4a4f992f88f",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/wicket-45.png",
+   "bytes": 1157041,
+   "sha256": "f7f91e2e07883f3b8201d694f7d2a9004d0f726aafa070e6a93dedcc0c91c748",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  },
+  {
+   "path": "views/wicket-side.png",
+   "bytes": 1153048,
+   "sha256": "ccfc98ccd5bd8ee914cae4ea91338215187404da66fd4eda20684317efc1b892",
+   "rev": "2d4b8711945faa34d2eacc296d794db41c589f42"
+  }
+ ]
+}

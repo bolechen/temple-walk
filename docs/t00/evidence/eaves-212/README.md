@@ -84,3 +84,5 @@
 | court 低档手机 | 5.81 ms，891 461，182 | 5.08 ms，同 |
 
 报告里的 `site.commit` 两次都写 `a6dc5ff`（推送时的 HEAD），但改前那份站点是从 main 的 `building.js`/`geo.js` 构建的（`TEMPLE_SITE` 指过去）：以 `site.entry` 区分，改前 `assets/index-DBTQyDp8.js`（sha256 `bd7cf396…`），改后 `assets/index-Cr4xNfI0.js`（sha256 `ba475119…`）。三角形与绘制次数一样，改后不慢（两台机器之间约 1 ms 的出入是噪声，不算变快）。
+
+> 其余图片（本目录 `MANIFEST.json` 列着的）在证据库，不在 git：`node tools/evidence.mjs pull <本目录>` 取回到 `tools/out/evidence/`，每张的地址是 `base + rev + 路径`（见 `MANIFEST.json`、`tools/evidence.config.json`）。每个证据目录在 git 里只留一张拼图。
