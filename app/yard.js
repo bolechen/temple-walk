@@ -1340,7 +1340,7 @@ window.__capture = async () => { const c = await capture(); return { w: c.width,
 window.__blocked = (x, z) => walker.blocked(x, z);
 // Which walker answers (#265): its mode, what the baked floor weighed and cost to fetch, open and keep, and the porch edges.
 window.__eyeSpace = () => ({ ...eyeInfo, t0: undefined, radius: eyeSpace ? +eyeSpace.radius.toFixed(3) : null, shutNow: eyeSpace ? eyeSpace.shut(camera.position.x, camera.position.y, camera.position.z) : null });   // (shutNow: the eye where it stands this frame touches something drawn, asked of the hierarchy itself)
-window.__level = () => ({ ...LV });   // which temple this page walks, and what the address asked for (src/level.js, #369)
+window.__level = () => ({ ...LV, keepsPlace: !!L.keepsPlace });   // which temple this page walks, what the address asked for (src/level.js, #369), and whether it keeps the prologue's place and book (#385, #426)
 window.__walker = () => ({ ...walker.stats, grid: walker.grid ? walker.grid()?.id || null : null, answers: walker.answers ? walker.answers(pos.x, pos.z) : false, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
 window.__drops = () => walker.drops.map((e) => ({ a: e.a, b: e.b, normal: e.normal, top: e.top }));   // the porch edges as this walker has them
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
@@ -1430,12 +1430,16 @@ createGame({
   level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
-  where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null }),
+  where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null, hall: inside && !upIn ? hallIn.room.id : null }),
+  hallIds: site.halls.map((h) => h.id),
   // Up on a balcony walked round: which one; the stair's foot in the room he is in, if it has one; go up or come down.
   up: () => (upIn ? upIn.id : null), stair: () => (inside && hallIn.room.stair) || null, lofts: site.lofts,
   climb: (id) => climbTo(site.lofts[id]), descend: () => climbTo(null),
   // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).
-  place(x, z, turn, up = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  // Stood where a kept place says: on a balcony, in a hall's room (#375: indoors first, so that the room's floor is the one
+  // asked, as a change of language does), or on the ground; a spot that falls in something moves to the nearest open floor,
+  // in a room else its door, out of doors else the foot of the path.
+  place(x, z, turn, up = null, hallId = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } const hall = hallId ? site.halls.find((h) => h.id === hallId) : null; if (hall) indoors(hall); { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else if (hall) { x = pos.x; z = pos.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
   start: site.start,
   // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
   async travel(x, z, turn, hallId) {

@@ -1,0 +1,108 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cma-goryeo-arhat-1979-71.webp",
+   "bytes": 166362,
+   "sha256": "ec62787bfd62fd5e182441be117bafd0e8b2dc2d15455af6858aa7691a7ba331",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "cma-li-sheng-five-bhiksu.webp",
+   "bytes": 138610,
+   "sha256": "fbb4098a47ff28802b1d39e34567b261a90faeeb4951850747d8e369910e8cb8",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "cma-wubin-500-arhats-1.webp",
+   "bytes": 43988,
+   "sha256": "c4d3dda4af549fd0cf4d01cd4380182c87094dc6942c6be70d8948aac0463dc2",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "cma-wubin-500-arhats-2.webp",
+   "bytes": 27218,
+   "sha256": "51cb1d14db7bcd2ff4a832d57605f64c42937a99db82898e187ae16eeb42c45c",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-juroku-rakan-1.webp",
+   "bytes": 136058,
+   "sha256": "1e8781a9cfae1d7a7a7fd20a65a9575b307980c97ea5a88044fdbf461555796e",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-juroku-rakan-2.webp",
+   "bytes": 137368,
+   "sha256": "a1e6a0cba89ae6934ed52ae2d35326c4f15444d52e21fa09412f07122a1f7fd8",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-juroku-rakan-3.webp",
+   "bytes": 79730,
+   "sha256": "f05646bee073247c611e3f2f8df4c92e399c9d7715fd635e97fe278fae14a3b9",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-juroku-rakan-4.webp",
+   "bytes": 100216,
+   "sha256": "13f1f2638e24c2a709b1a2055b41cc54ddad2793ce9da4b23f031ffdfaa88e26",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-kegon-737-2.webp",
+   "bytes": 207166,
+   "sha256": "761d6d54dadd8ac1da6f752dc8c34dae4744c935d1b7ac0f6ed10264205eadd0",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-kegon-b130.webp",
+   "bytes": 109246,
+   "sha256": "eea05edc986c184a6dd7e9c6793f9679009d9ae8118d465b56c415080b348903",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-nehan-10599.webp",
+   "bytes": 187862,
+   "sha256": "a728259b7f26d0927ad4cd74e2043550d72491419b058431f582f5d3185769da",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-nehan-757.webp",
+   "bytes": 131722,
+   "sha256": "01a164e3cd33a8a8a182e7568f53a13ec3854738645b81a379a8db138dbae3d8",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-ryokai-mandara-kongo.webp",
+   "bytes": 340232,
+   "sha256": "3a303b1081bb7ba3b392bf44546f5d2f183a0fa87d2c4a709dd58371161a5ce0",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "colbase-ryokai-mandara-taizo.webp",
+   "bytes": 380132,
+   "sha256": "b502cbe344bd905b78eee72937ade07edef6f829797f6b524fd78431e445230f",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "met-luohan-panel-53513.webp",
+   "bytes": 173470,
+   "sha256": "15d12be2191eac431777425c06aaca17483f68862aa745c10e155467de5c41ea",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "met-luohan-panel-53514.webp",
+   "bytes": 69436,
+   "sha256": "dd131460cabcaad67cc1a27faa344b921e2a5baeeafc11909f7a4ed25898eaff",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  },
+  {
+   "path": "met-shakyamuni-luohan-51423.webp",
+   "bytes": 54212,
+   "sha256": "a02dea6f4af58af12191a70848c04c1518343181a689c6d6d1a6c94f57468bc1",
+   "rev": "e7a5b88eb12ba19853f928904b0bc54ff61cce48"
+  }
+ ]
+}

@@ -25,7 +25,7 @@ export const HALL = Object.freeze({
   eave: 11.81,           // the eave's edge above the court: platform 3 + column 6.06 + bracket sets 2.75 (SITE.md §4.2)
   ridge: 21.0,           // the ridge above the court (SITE.md §1, about +21)
   overhang: 3.75,        // the eave beyond the column line (ARCHITECTURE.md §4.1: about 3.5–4 m)
-  door: { w: 5.0, h: 5.0, sill: 0.24 },    // a square door filling its 5.8 m bay but for the jambs (the Yingzao Fashi's plank door is as wide as it is tall: SOURCES.md §12); the sill pressed to 0.24 m so he steps over it (PRD.md §2)
+  door: { w: 5.0, h: 5.0, sill: 0.24 },    // a square door filling its 5.8 m bay but for the jambs (the Yingzao Fashi's plank door is as wide as it is tall: SOURCES.md §14); the sill pressed to 0.24 m so he steps over it (PRD.md §2)
   window: { sill: 1.1, bars: 13 },   // upright bars over a sill wall 1.0–1.2 m (ARCHITECTURE.md §4.2, not measured); as wide as its bay less the jambs, and its head on the doors' line (the review of #425)
   inside: 0.15,          // the share of the sky's light a surface inside the walls takes (white box, a proposal)
   jamb: 0.4,             // the wooden jambs each side of a door or window, and the head over it

@@ -8,9 +8,10 @@ import { deployOf, DEPLOYS, DEPLOY } from "../../app/src/deploy.js";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const COUNTER = "u.rushiwowen.co", TEXT = /\.(js|mjs|css|html|json|txt|svg|map)$/;
 const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
-function build(target) {
+function build(target, { workbench = true } = {}) {
   const out = fs.mkdtempSync(path.join(os.tmpdir(), `temple-deploy-${target || "unset"}-`));
   const env = { ...process.env }; if (target) env.VITE_DEPLOY = target; else delete env.VITE_DEPLOY;
+  if (!workbench) env.VITE_NO_WORKBENCH = "1";   // a preview without the levels only the workbench lists (app/src/level.js)
   execFileSync(process.execPath, [path.join(ROOT, "node_modules/vite/bin/vite.js"), "build", "--logLevel", "warn", "--outDir", out, "--emptyOutDir"], { cwd: ROOT, env, stdio: ["ignore", "inherit", "inherit"] });
   return out;
 }
@@ -57,7 +58,10 @@ test("only the production build holds the counter's address and may be indexed; 
 // gate, as many times, no mention of the canary's own address; and its code is a preview's, byte for byte but for the
 // target's name, so that what it holds beyond production's is what a preview holds (level-bench.test.mjs: T05).
 test("the canary build opens no debug panel and no workbench address that production does not", () => {
-  const prod = build("production"), canary = build("canary"), preview = build("preview");
+  // (The canary is compared with a preview built without the workbench's levels, not with a plain preview: a preview also lists the probe level,
+  // which no published build does, and with two levels sharing the building and the walker the bundler cuts different chunks. With the workbench's
+  // levels set aside, VITE_NO_WORKBENCH=1, a preview is the canary and nothing else, which is what this holds.)
+  const prod = build("production"), canary = build("canary"), preview = build("preview", { workbench: false });
   try {
     const scripts = (out) => walk(out).filter((f) => /\.js$/.test(f)).map((f) => [path.basename(f), fs.readFileSync(f, "utf8")]);
     const gate = /-temple-walk-preview/g, count = (list) => list.reduce((n, [, s]) => n + (s.match(gate) || []).length, 0);

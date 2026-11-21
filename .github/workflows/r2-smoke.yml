@@ -35,18 +35,13 @@ jobs:
       R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
     steps:
+      # Only the one script is needed from the checkout.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/ci
       - name: The four secrets are all present
         run: |
-          missing=""
-          [ -n "$AWS_ACCESS_KEY_ID" ] || missing="$missing R2_ACCESS_KEY_ID"
-          [ -n "$AWS_SECRET_ACCESS_KEY" ] || missing="$missing R2_SECRET_ACCESS_KEY"
-          [ -n "$R2_ENDPOINT" ] || missing="$missing R2_ENDPOINT"
-          [ -n "$R2_BUCKET" ] || missing="$missing R2_BUCKET"
-          if [ -n "$missing" ]; then
-            echo "::error::Repository secret(s) missing or empty:$missing"
-            exit 1
-          fi
-          echo "All four secrets are set."
+          bash tools/ci/r2-secrets-check.sh
           aws --version
 
       - name: Write one object, read it back from the public domain
@@ -68,6 +63,18 @@ jobs:
           [ -n "$ok" ] || { echo "::error::could not fetch $PUBLIC_BASE/$key"; exit 1; }
           sha256sum sent.txt got.txt
           cmp sent.txt got.txt && echo "Public read matches the written bytes."
+
+      # What is in the bucket under the two trial prefixes, by name and size, for the owner to decide what to delete (#247: the
+      # workflow deletes nothing). List only.
+      - name: Objects under the trial prefixes (names and sizes, nothing deleted)
+        run: |
+          for prefix in t00/_trial/ t00/_ci-smoke/; do
+            echo "== $prefix"
+            aws s3api list-objects-v2 --endpoint-url "$R2_ENDPOINT" --bucket "$R2_BUCKET" --prefix "$prefix" \
+              --query 'Contents[].[Key,Size,LastModified]' --output text > list.out 2> list.err \
+              || { echo "::error::list failed: $(grep -o 'An error occurred ([A-Za-z]*)[^.]*' list.err | head -1)"; exit 1; }
+            if [ -s list.out ] && [ "$(cat list.out)" != "None" ]; then cat list.out; else echo "(none)"; fi
+          done
 
       - name: The same credentials are refused by another bucket
         run: |

@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "desk-before-after.jpg",
+   "bytes": 290668,
+   "sha256": "b1fd660261652a8d26e3b5ebe26b216c16cd9f8daa3db542867468903f697a03",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "phone-before-after.jpg",
+   "bytes": 255718,
+   "sha256": "32d3c4c9a56d96c7573eb3635be8cfb40fd719f93302a4870a93f8ebec0f94be",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  }
+ ]
+}

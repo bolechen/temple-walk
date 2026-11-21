@@ -27,9 +27,11 @@ test("no machine runs much longer than another, and none runs longer than the ta
   // 29.1, run 44675254911): so the count has to leave a third and more of room.
   assert.ok(max <= BUDGET, `the longest machine is counted at ${(max / 60).toFixed(1)} min over ${N} machines: refresh durations.json (machines() already adds machines up to its limit, so a single scenario is too long)`);
   assert.ok(max - min <= 0.1 * max, `the machines are counted at ${(min / 60).toFixed(1)} to ${(max / 60).toFixed(1)} min`);
-  // what it replaced: taken in turn, the same times give the 25-to-48-minute spread of 2026-11-20
-  const secs = secsOf(data.scenarios), turn = Array.from({ length: 4 }, (_, k) => all.filter((_, i) => i % 4 === k).reduce((n, x) => n + secs(x), 0));
-  assert.ok(Math.max(...turn) > 1.2 * Math.min(...turn), "the old way was not uneven on these times: the comparison says nothing");
+  // what it replaced: taken in turn (in alphabetical order, so that where a scenario stands in run.cjs decides nothing), the same
+  // times leave a wider gap between the longest and the shortest machine than the plan does (the 25-to-48-minute spread of 2026-11-20)
+  const secs = secsOf(data.scenarios), names = [...all].sort(), turn = Array.from({ length: 4 }, (_, k) => names.filter((_, i) => i % 4 === k).reduce((n, x) => n + secs(x), 0));
+  const four = plan(all, 4).loads;
+  assert.ok(Math.max(...turn) - Math.min(...turn) > Math.max(...four) - Math.min(...four), "taking them in turn was not more uneven than the plan on these times: the comparison says nothing");
 });
 
 test("the first machine, which also runs the quick checks, is given less of the list", () => {
@@ -83,7 +85,7 @@ test("e2e.yml: the machines are counted by the plan, the command shares by the s
   assert.doesNotMatch(full, /shard: \[[\d, ]+\]/, "the machines are listed by hand again");
   assert.match(e2e, /shard: \$\{\{ fromJson\(needs\.shards\.outputs\.matrix\) \}\}/, "the matrix is not the plan's");
   assert.match(e2e, /--shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ needs\.shards\.outputs\.count \}\}/, "the command shares by a different number than the matrix has");
-  assert.match(e2e, /run: node tests\/e2e\/shards\.cjs matrix >> "\$GITHUB_OUTPUT"/);
+  assert.match(e2e, /run: node tests\/e2e\/shards\.cjs matrix \$SCENARIOS >> "\$GITHUB_OUTPUT"/);
   const evidence = [...e2e.matchAll(/- name: [^\n]*(?:S3|public address|original store)[^\n]*\n\s+if: ([^\n]+)/g)].map((m) => m[1]);
   assert.equal(evidence.length, 3, "the three evidence reads were not found");
   for (const cond of evidence) assert.match(cond, /matrix\.shard == 1\b/, `an evidence read on every machine: ${cond}`);
@@ -95,4 +97,28 @@ test("`node tests/e2e/shards.cjs matrix` writes what a workflow reads", async ()
   const { execFileSync } = await import("node:child_process");
   const out = execFileSync(process.execPath, [ROOT + "tests/e2e/shards.cjs", "matrix"], { encoding: "utf8" }).trim().split("\n");
   assert.equal(out[0], `matrix=${JSON.stringify(Array.from({ length: N }, (_, i) => i + 1))}`); assert.equal(out[1], `count=${N}`);
+});
+
+// Asked for by name (a run by hand), the scenarios named were all run on the first machine: ten of them outran the job's forty minutes
+// (2026-11-21). They are shared by their measured times like the whole suite is, over as few machines as they need.
+test("scenarios named by hand are shared by their measured times over the machines they need, not all run on the first", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const named = ["taps", "loft", "layers", "pilgrimage", "opening", "rites", "phone", "snow", "jump", "photo"];
+  const sum = named.reduce((t, x) => t + (data.scenarios[x] || 0), 0), n = machines(named, data, 1);
+  assert.ok(sum > BUDGET, `these ten (${(sum / 60).toFixed(0)} min together) are more than one machine's budget, which is what went wrong`);
+  assert.ok(n >= 2 && n < FEWEST, `they need ${n} machines: more than one, fewer than the whole suite's ${FEWEST}`);
+  const { parts, loads } = plan(named, n, data);
+  assert.deepEqual([...parts.flat()].sort(), [...named].sort(), "every named scenario is on one machine, none twice");
+  assert.ok(Math.max(...loads) <= BUDGET, "and no machine's share is over the budget");
+  assert.equal(machines(["boot"], data, 1), 1, "a single short one stays on one machine");
+  const run = (...a) => execFileSync(process.execPath, [ROOT + "tests/e2e/shards.cjs", "matrix", ...a], { encoding: "utf8" }).trim().split("\n");
+  assert.deepEqual(run(...named), [`matrix=${JSON.stringify(Array.from({ length: n }, (_, i) => i + 1))}`, `count=${n}`]);
+  assert.deepEqual(run("boot"), ["matrix=[1]", "count=1"]);
+  assert.deepEqual(run("--smoke"), ["matrix=[1]", "count=1"], "a flag is run.cjs's own selection: one machine");
+});
+test("e2e.yml hands the names to the plan through the environment and gives every machine its share of them", () => {
+  const sh = /^  shards:\n([\s\S]*?)^  full:/m.exec(e2e)?.[1] || "", full = /^  full:\n([\s\S]*?)^  [a-z0-9-]+:\n/m.exec(e2e)?.[1] || "";
+  assert.match(sh, /SCENARIOS: \$\{\{ github\.event\.inputs\.scenarios \}\}[\s\S]*node tests\/e2e\/shards\.cjs matrix \$SCENARIOS/, "names reach the plan by an environment variable, never pasted into the shell");
+  assert.match(full, /node tests\/e2e\/run\.cjs \$SCENARIOS --shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ needs\.shards\.outputs\.count \}\}/, "each machine walks its own share of what was named");
+  assert.doesNotMatch(full, /matrix\.shard == 1\) && 'true'/, "no machine but the first is sent away when scenarios are named");
 });

@@ -38,11 +38,11 @@ function plan(names, n, data = read()) {
 const BUDGET = 16 * 60, FEWEST = 12, MOST = 40;
 
 /**
- * The fewest machines, FEWEST at least, that keep the longest share within BUDGET.
- * @param {string[]} names @param {{ scenarios: Record<string, number>, extra?: Record<string, number> }} [data]
+ * The fewest machines, `fewest` (FEWEST for the whole suite) at least, that keep the longest share within BUDGET.
+ * @param {string[]} names @param {{ scenarios: Record<string, number>, extra?: Record<string, number> }} [data] @param {number} [fewest]
  */
-function machines(names, data = read()) {
-  for (let n = FEWEST; n <= MOST; n++) if (Math.max(...plan(names, n, data).loads) <= BUDGET) return n;
+function machines(names, data = read(), fewest = FEWEST) {
+  for (let n = fewest; n <= MOST; n++) if (Math.max(...plan(names, n, data).loads) <= BUDGET) return n;
   throw new Error(`even ${MOST} machines leave one over ${BUDGET / 60} minutes: a single scenario is too long, or durations.json is wrong`);
 }
 
@@ -66,7 +66,14 @@ module.exports = { plan, parseShard, secsOf, read, defined, machines, BUDGET, FE
 if (require.main === module) {
   const [cmd, ...rest] = process.argv.slice(2);
   if (cmd === "machines") console.log(machines(defined()));
-  else if (cmd === "matrix") { const n = machines(defined()); console.log(`matrix=${JSON.stringify(Array.from({ length: n }, (_, i) => i + 1))}\ncount=${n}`); }
+  else if (cmd === "matrix") {
+    // Asked for by name (a run by hand), the scenarios named are shared by their measured times like the whole suite is, but over as few machines
+    // as they need (one, when they are few): ten named at once on the first machine alone outran the job's forty minutes. A flag (--smoke) is
+    // run.cjs's own selection, not a list of names: that stays on one machine.
+    const asked = rest.filter(Boolean), flag = asked.some((x) => x.startsWith("--"));
+    const n = !asked.length ? machines(defined()) : flag ? 1 : machines(asked, read(), 1);
+    console.log(`matrix=${JSON.stringify(Array.from({ length: n }, (_, i) => i + 1))}\ncount=${n}`);
+  }
   else if (cmd === "plan") {
     const n = Number(rest[0] || machines(defined())), { parts, loads } = plan(defined(), n);
     parts.forEach((p, i) => console.log(`shard ${i + 1}/${n}: ${String(Math.round(loads[i] / 60 * 10) / 10).padStart(5)} min  ${p.join(" ")}`));
@@ -76,5 +83,5 @@ if (require.main === module) {
     Object.assign(data.scenarios, seen);
     data.scenarios = Object.fromEntries(Object.entries(data.scenarios).sort(([a], [b]) => (a < b ? -1 : 1)));
     fs.writeFileSync(FILE, JSON.stringify(data, null, 1) + "\n"); console.log(`${Object.keys(seen).length} times written to ${path.relative(process.cwd(), FILE)}`);
-  } else { console.error("usage: shards.cjs machines | matrix | plan [N] | update <e2e-report.json>..."); process.exit(2); }
+  } else { console.error("usage: shards.cjs machines | matrix [names…] | plan [N] | update <e2e-report.json>..."); process.exit(2); }
 }

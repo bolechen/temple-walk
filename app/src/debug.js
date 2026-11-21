@@ -40,14 +40,18 @@ export function tierSearch(search, tier) {
 // the door he is put at on entering.
 export function roomPose(view, cx) { return [cx + view.abs[0], view.abs[1], view.abs[2], view.abs[3]]; }
 
-// Which level's room views to offer: ?level if it has a table, otherwise the prologue.
-export function levelOf(search, have) {
-  const want = new URLSearchParams(search).get("level");
-  return want && have.includes(want) ? want : have.includes("t00") ? "t00" : have[0] || null;
+// Which level's room views to offer: the walked level's own table, or none when it has none (#434: T05 has no rooms
+// of its own yet, and borrowing the prologue's named the panel after the wrong temple).
+export function levelOf(id, have) {
+  return have.includes(id) ? id : null;
 }
 
-// How far the level has been carried: the seals of the pilgrimage, the next observance, and the visit so far.
-export function levelState(j, visit = {}) {
+// How far the level has been carried: the seals of the pilgrimage, the next observance, and the visit so far. A level
+// that keeps nothing of the prologue's (#426: its book is an empty one in memory, its metres are not counted) has none
+// of these to show.
+const NONE = "不适用";
+export function levelState(j, visit = {}, ours = true) {
+  if (!ours) return { state: NONE, progress: NONE, next: NONE, seals: NONE, visit: NONE };
   const total = Number(j.total) > 0 ? Number(j.total) : Object.keys(j.seals || {}).length;
   const got = j.earned || Object.keys(j.seals || {});   // the seals by their names, in the order they are met
   return {
@@ -64,11 +68,12 @@ export async function mountDebug({ link }) {
   const W = /** @type {any} */ (window);
   const [{ default: GUI }, { default: Stats }] = await Promise.all([import("three/addons/libs/lil-gui.module.min.js"), import("three/addons/libs/stats.module.js")]);
   const tables = import.meta.glob("../levels/*/hall-views.js");
-  const have = Object.keys(tables).map((p) => p.split("/")[2]).sort(), level = levelOf(location.search, have);
+  const walked = W.__level(), ours = walked.keepsPlace !== false;   // the level the page walks (src/level.js), not the one with room views
+  const have = Object.keys(tables).map((p) => p.split("/")[2]).sort(), level = levelOf(walked.id, have);
   const rooms = level ? /** @type {any} */ (await tables[`../levels/${level}/hall-views.js`]()).HALL_VIEWS : [];
   const saved = (() => { try { return JSON.parse(sessionStorage.getItem(STORE) || "{}") || {}; } catch { return {}; } })();
 
-  const gui = new GUI({ title: `调试 · ${level || "—"}` });
+  const gui = new GUI({ title: `调试 · ${walked.id}` });
   gui.domElement.id = "debug"; gui.domElement.style.zIndex = "60";
   const stats = new Stats(); stats.dom.id = "debugStats"; Object.assign(stats.dom.style, { left: "auto", right: "252px", zIndex: "60" }); document.body.appendChild(stats.dom);
   (function tick() { stats.update(); requestAnimationFrame(tick); })();
@@ -103,9 +108,9 @@ export async function mountDebug({ link }) {
     s.heaviest = Object.entries(c).sort((a, b) => b[1].tris - a[1].tris).slice(0, 3).map(([k, v]) => `${k} ${Math.round(v.tris / 1000)}k`).join(" · ");
   } }, "census").name("各部分面数 __census()"); perf.add(s, "heaviest").name("最重").listen().disable();
 
-  const lv = levelState(W.__journey(), W.__visit());
+  const lv = levelState(W.__journey(), W.__visit(), ours);
   const levelFolder = gui.addFolder("关卡");
-  const ls = { level: level || "—", state: lv.state, progress: lv.progress, next: lv.next, seals: lv.seals, visit: lv.visit };
+  const ls = { level: walked.id, state: lv.state, progress: lv.progress, next: lv.next, seals: lv.seals, visit: lv.visit };
   levelFolder.add(ls, "level").name("关卡").disable();
   levelFolder.add(ls, "state").name("完成状态").listen().disable();
   levelFolder.add(ls, "progress").name("朱印").listen().disable();
@@ -131,7 +136,7 @@ export async function mountDebug({ link }) {
     Object.assign(s, readout(y, rate(f0, y.frames, t - t0))); f0 = y.frames; t0 = t;
     if (document.activeElement?.closest?.("#debug")) return;   // not while a control is being used
     s.season = y.season; s.time = y.time; s.eye = y.view;
-    Object.assign(ls, levelState(W.__journey(), W.__visit()));
+    Object.assign(ls, levelState(W.__journey(), W.__visit(), ours));
     if (hs.viz) W.__walkviz().then((/** @type {any} */ r) => { if (r.on) hs.cells = `${r.grid || "无格子"} · 开 ${r.open} · 挡 ${r.shut}`; });
   }, EVERY);
 
