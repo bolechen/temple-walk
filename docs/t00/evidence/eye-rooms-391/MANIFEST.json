@@ -1,0 +1,126 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "before-out-main-door-574b14e.png",
+   "bytes": 749521,
+   "sha256": "d20c81b041b3bf33ceb48fba1e5bdedc5b9bf4412b914c729d23556a74d6d6e0",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "chan-1.png",
+   "bytes": 1005413,
+   "sha256": "65a1b5365865890ca1979de18ffe12fa61cddff58082ed74058799c745e91d10",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "chan-2.png",
+   "bytes": 1024750,
+   "sha256": "c29b38433bc2f28909296b060fa8c649caad2dfbfa53891fc9d91529121c7977",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "chan-3.png",
+   "bytes": 975400,
+   "sha256": "91c3496b16d49a71e557a72d40c86688cf62c90a4e57b464951ab890acb3fcfb",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "chan-door.png",
+   "bytes": 1075757,
+   "sha256": "7f590dcfe1daf4c31eb6e870232c696f4b76ce9f527dba98ba025fff5fccb8b3",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "halls.jsonl",
+   "bytes": 1488,
+   "sha256": "6466c43002a0d073038dd41eb8285df3232c42a44d16ec12f51f9ebb486ae35e",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "main-1.png",
+   "bytes": 1063144,
+   "sha256": "eecac6140af0dd1629958ea1c55104f8cb34fd2223d181cf9a5d5ffcb9b7704c",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "main-2.png",
+   "bytes": 866496,
+   "sha256": "597ac7d35144d6ef059d3051a7ae560201c79f08632d79a0ee6678ecc9c0a939",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "main-3.png",
+   "bytes": 831788,
+   "sha256": "7afcac2c04aaef12eeeed91ded92d66613eeddf92217cff01a231a35f5d698ad",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "main-door.png",
+   "bytes": 1142559,
+   "sha256": "a23b98bb86407e0d0d231fc9275f85f6ff468a85bbc5e24e69e2f93ff1aec8de",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "out-back-wall.png",
+   "bytes": 1036255,
+   "sha256": "5b3e09f8f6cced041e283dfe97c9c0938488c8468bbf69b5ecc47f368bd5c563",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "out-main-door.png",
+   "bytes": 1108949,
+   "sha256": "4325be140f67b59183e4d71498cfb171ffcefa5270ab811c332b5f64d6675b76",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "out-west-wall.png",
+   "bytes": 1014731,
+   "sha256": "b73580d3d1f590adb8ffcd60bcc34cc780d52487197bc61c6b85850516408651",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "outdoors.jsonl",
+   "bytes": 840,
+   "sha256": "32a47ef9cc8aef7740a12cd9b441658920292df32bf6b30940eaac54dcf5bf42",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "relang-in-main.png",
+   "bytes": 1142383,
+   "sha256": "730fedc13e65f5b5eda4b2bc95ee15dd11ac3d3ec6fc767102e0b903f16a6504",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "relang-out-door.png",
+   "bytes": 1109290,
+   "sha256": "5739975420050a136f6bff3c96c7fbc46b1d5409386e83a3c3fc0bb5d42f9b21",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "relang-west-wall.png",
+   "bytes": 1013639,
+   "sha256": "27a1132a7f9448bafe1e47120dc0f585cddbf1445e60537a2385a299fe6cf0a0",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "tea-1.png",
+   "bytes": 1023907,
+   "sha256": "6ffa4f8007f338469c27ac55406808235ff29bd10d7052d7fdc24babd92d8e86",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "tea-2.png",
+   "bytes": 1033423,
+   "sha256": "ab9bbf59b6a9ba679d8328daa26a38d75c7c823aad07e058906e1d0bf2490331",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  },
+  {
+   "path": "tea-door.png",
+   "bytes": 1094221,
+   "sha256": "878b82713f6009f0e8a335994ec4685063205bdf00c4b8a189daeac7561ae6fa",
+   "rev": "f0bb446358486f171966d08b3dea4b05bfaed2d2"
+  }
+ ]
+}
