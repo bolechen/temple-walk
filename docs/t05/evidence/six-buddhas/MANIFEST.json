@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 548255,
+   "sha256": "ac99c72907f87dcfd2cf98513c39d1caed7851796c526a0dc1cba2fec04add5e",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  },
+  {
+   "path": "sheets/01-kasyapa.jpg",
+   "bytes": 94463,
+   "sha256": "f892d0085a4f7835c413bf3c52829f5523f0cfb1ca6d49bfb6f8c9d9c71759d3",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  },
+  {
+   "path": "sheets/02-krakucchanda.jpg",
+   "bytes": 94468,
+   "sha256": "37acf23819cdd1c6ca1ecc7705fb52a7d31605a6f89f759afd80f23d4e335121",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  },
+  {
+   "path": "sheets/03-sikhin.jpg",
+   "bytes": 96414,
+   "sha256": "b70000e83e13fe6190e79e94ef6e9f13675a081380cbb939e9002a7631de8c9b",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  },
+  {
+   "path": "sheets/04-vipasyin.jpg",
+   "bytes": 94208,
+   "sha256": "b3fca7b2c8bc29020ced6c5f491ed90f0981072164e5cae64310ee8498c21ccd",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  },
+  {
+   "path": "sheets/05-visvabhu.jpg",
+   "bytes": 95282,
+   "sha256": "c9cb40a2aee2c063d325fb4a39f54a996bbd2724ee57d81ae2fe2464cbf1e8cb",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  },
+  {
+   "path": "sheets/06-kanakamuni.jpg",
+   "bytes": 97550,
+   "sha256": "57dcb214ee45c4f37e7e28d2e2d5268cc291ef016817d5f66fb56dd57f9fc8e6",
+   "rev": "f9fba79a646ceadf8427c174ad2c9c7c41261c38"
+  }
+ ]
+}

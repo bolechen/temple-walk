@@ -1,0 +1,24 @@
+{
+ "census": {
+  "triangles": 13874,
+  "byMaterial": {
+   "monolith": 240,
+   "woodV": 572,
+   "woodX": 7212,
+   "woodZ": 120,
+   "tile": 1204,
+   "rafters": 1204,
+   "fascia": 298,
+   "ridge": 2996,
+   "gable": 28
+  },
+  "meshes": 50,
+  "materials": 9,
+  "parts": 50
+ },
+ "size": {
+  "w": 14.727279663085938,
+  "h": 9.179499626159668,
+  "d": 2.927279233932495
+ }
+}

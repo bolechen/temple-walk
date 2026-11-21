@@ -14,8 +14,14 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { paintMaterial } from "./paint.js";
 import recipe from "./paint/recipe.json";
+// the masks some figures' zones are drawn from (paint/masks/*.png, tools/t05-hall/mask.py), loaded before the page says it is ready
+const MASK_URLS = import.meta.glob("./paint/masks/*.png", { eager: true, query: "?url", import: "default" });
+const MASKS = Object.fromEntries(await Promise.all(Object.entries(MASK_URLS).map(async ([k, u]) => {
+  const t = await new THREE.TextureLoader().loadAsync(u); t.colorSpace = THREE.NoColorSpace; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter;
+  return [k.replace(/^.*\/masks\//, ""), t]; })));
 const ANCHORS = Object.fromEntries(Object.entries(import.meta.glob("./paint/*.json", { eager: true, import: "default" }))
   .filter(([k]) => !k.endsWith("recipe.json")).map(([k, v]) => [k.replace(/^.*\/(.*)\.json$/, "$1"), v]));
 
@@ -53,8 +59,8 @@ const M = {
   brick: mat(0x6e6a60, 0.9), floor: mat(0x5f5b54, 0.82), stone: mat(0x7a7568, 0.9, true), court: mat(0x77736a, 0.92, true),
   wallIn: mat(0xb9b2a2, 0.95), wallFront: mat(0x8a3b2a, 0.9), wallOut: mat(0x8a3b2a, 0.9, true), timber: mat(0x3a2c23, 0.8), red: mat(0x7a3426, 0.75),
   roof: mat(0x2f251e, 0.85, false, { side: THREE.DoubleSide }), tile: mat(0x5a5f5c, 0.8, true),
-  altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x9a7a3e, 0.45, false, { metalness: 0.55 }),
-  halo: mat(0x5a4630, 0.6, false, { metalness: 0.25, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
+  altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x6f5a34, 0.62, false, { metalness: 0.35 }),   // dark gold, not bright (ART.md §3.1, the lead 2026-11-21)
+  halo: mat(0x45372a, 0.7, false, { metalness: 0.12, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
 };
 const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
 const hall = new THREE.Group(); scene.add(hall);
@@ -183,17 +189,30 @@ function sumeru(x, lotusOn = true) {
 
 // A mandorla (背光) and head halo behind each figure: a pointed body halo and a disc, in dark gold, whose ring count and
 // flame tips are the per-figure differences (the pack: 七尊各有背光).
+// The body halo (身光): one form for all seven (ART.md §3.1). The art director's call of 2026-11-21 (#407): widest, 4.2 m,
+// at the height of the shoulders, which it frames with the head, narrowing below behind the knees and rising above to a
+// point (舟形), the top where it was; 4.2 m keeps every halo clear of the beams of the frames between the seats (the
+// narrowest pair of seats stands 5.12 m apart, a beam 0.6 m wide between them).
+function haloShape(w, h, ys, inset = 0) {
+  // w the widest, h the height, ys the height of the widest; inset draws the band just inside the edge
+  const s = new THREE.Shape(), half = w / 2 - inset, foot = half * 0.82, top = h - inset * 1.2;
+  s.moveTo(-foot, 0);
+  s.bezierCurveTo(-half, ys * 0.35, -half, ys * 0.75, -half, ys);
+  s.bezierCurveTo(-half, ys + (top - ys) * 0.45, -half * 0.35, top * 0.9, 0, top);
+  s.bezierCurveTo(half * 0.35, top * 0.9, half, ys + (top - ys) * 0.45, half, ys);
+  s.bezierCurveTo(half, ys * 0.75, half, ys * 0.35, foot, 0);
+  s.lineTo(-foot, 0);
+  return s;
+}
 function mandorla(x, topY, headY, v = {}) {
   const g = new THREE.Group();
-  const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 5.6, z = ALTAR.z - 2.25;
-  const s = new THREE.Shape(); const h = topY - AT - BASE_H, b = AT + BASE_H;
-  s.moveTo(-wB / 2, 0); s.bezierCurveTo(-wB / 2, h * 0.55, -wB * 0.32, h * 0.82, 0, h); s.bezierCurveTo(wB * 0.32, h * 0.82, wB / 2, h * 0.55, wB / 2, 0); s.lineTo(-wB / 2, 0);
-  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
-  for (let r = 0; r < rings; r++) {   // concentric bands in relief
-    const k = 0.9 - r * 0.14, s2 = new THREE.Shape(); const ww = wB * k, hh = h * (0.55 + 0.45 * k);
-    s2.moveTo(-ww / 2, 0); s2.bezierCurveTo(-ww / 2, hh * 0.55, -ww * 0.32, hh * 0.82, 0, hh); s2.bezierCurveTo(ww * 0.32, hh * 0.82, ww / 2, hh * 0.55, ww / 2, 0); s2.lineTo(ww / 2 - 0.18, 0);
-    s2.bezierCurveTo(ww / 2 - 0.18, hh * 0.55 - 0.1, ww * 0.32 - 0.12, hh * 0.82 - 0.18, 0, hh - 0.22); s2.bezierCurveTo(-ww * 0.32 + 0.12, hh * 0.82 - 0.18, -ww / 2 + 0.18, hh * 0.55 - 0.1, -ww / 2 + 0.18, 0); s2.lineTo(-ww / 2, 0);
-    const o = new THREE.Mesh(new THREE.ExtrudeGeometry(s2, { depth: 0.08, bevelEnabled: false, curveSegments: 24 }), M.gold); o.position.set(x, b, z + 0.18); g.add(o);
+  const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 4.2, z = ALTAR.z - 2.25;
+  const h = topY - AT - BASE_H, b = AT + BASE_H, ys = Math.max(0.5, Math.min(h * 0.85, (v.shoulderY ?? headY - 1.6) - b));
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(haloShape(wB, h, ys), { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
+  for (let r = 0; r < rings; r++) {   // concentric bands in relief: the outline drawn smaller, less its own inset
+    const k = 0.9 - r * 0.14, outer = haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k);
+    outer.holes.push(new THREE.Path(haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k, 0.18).getPoints(48)));
+    const o = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: 0.08, bevelEnabled: false, curveSegments: 24 }), M.gold); o.position.set(x, b, z + 0.18); g.add(o);
   }
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(v.head ?? 1.9, v.head ?? 1.9, 0.12, 48), M.gold); disc.rotation.x = Math.PI / 2; disc.position.set(x, headY, z + 0.3); g.add(disc);
   const inner = new THREE.Mesh(new THREE.CylinderGeometry((v.head ?? 1.9) * 0.7, (v.head ?? 1.9) * 0.7, 0.14, 48), M.halo); inner.rotation.x = Math.PI / 2; inner.position.set(x, headY, z + 0.31); g.add(inner);
@@ -203,7 +222,7 @@ function mandorla(x, topY, headY, v = {}) {
     const px = Math.cos(a) * wB * 0.52, py = Math.sin(a) * h * 0.98;
     cone.position.set(x + px, b + py * 0.92 + 0.2, z + 0.1); cone.rotation.z = a - Math.PI / 2; g.add(cone);
   }
-  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.userData.halo = true; } });
   scene.add(g); return g;
 }
 
@@ -264,7 +283,9 @@ async function setStatues(list) {
     const group = new THREE.Group(); scene.add(group);
     const x = s.x ?? SEATS[3], total = s.h ?? 9.0;          // 通高 above the altar, base included
     if (s.base !== false) group.add(sumeru(x, s.lotus !== false));
-    const seatH = s.base === false ? 0 : s.lotus === false ? SUMERU_H : BASE_H;   // a figure that brings its own lotus sits on the Sumeru base
+    // a figure that brings its own lotus throne (issue #370's Śākyamuni) stands on a plain plinth of `plinth` metres
+    if (s.base === false && s.plinth) { const pl = new THREE.Mesh(new THREE.BoxGeometry(SEAT_W * 0.98, s.plinth, SEAT_D * 0.98), M.base); pl.position.set(x, AT + s.plinth / 2, ALTAR.z + 0.3); pl.castShadow = pl.receiveShadow = true; group.add(pl); }
+    const seatH = s.base === false ? (s.plinth || 0) : s.lotus === false ? SUMERU_H : BASE_H;   // a figure that brings its own lotus sits on the Sumeru base
     const gltf = await loader.loadAsync(s.url); const obj = gltf.scene;
     obj.rotation.y = s.turn ?? 0; obj.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(obj), size = bb.getSize(new THREE.Vector3());
@@ -321,9 +342,90 @@ function walk(t) {
   const z = t < tWalk ? z0 - v * t : z1, k = Math.max(0, Math.min(1, (t - tWalk) / 6)), e = k * k * (3 - 2 * k);
   const inside = Math.max(0, Math.min(1, (2 - z) / 6));
   camera.fov = 55; camera.position.set(0, F + 1.6 + Math.sin(t * 2 * Math.PI * 1.75) * 0.012 * (t < tWalk ? 1 : 0), z);
-  const level = F + 2.8 + inside * 1.2; camera.lookAt(0, level + e * (F + 9.0 - level), SZ);   // the eye ends on the face (about 9 m up) camera.updateProjectionMatrix();
+  // The eye ends on the face (about 9 m up).
+  const level = F + 2.8 + inside * 1.2; camera.lookAt(0, level + e * (F + 9.0 - level), SZ); camera.updateProjectionMatrix();
   renderer.toneMappingExposure = (1.4 + inside * 3.6) * exposureScale;
   return tWalk + 7;
+}
+
+// A walk along any path (issue #370: the worship band 8–10 m before a figure, the side aisle): points [x, z] on the
+// hall's floor at eye height 1.6 m, walked at `speed` m/s, the eye kept on `look` (a point in the world, or a figure's
+// anchor). Returns the walk's length in seconds; walkPath(spec, t) poses the camera at time t.
+function walkPath(spec, t) {
+  const P = spec.points, v = spec.speed ?? 1.2; const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+  const dur = L[L.length - 1] / v; const d = Math.min(Math.max(t, 0) * v, L[L.length - 1]); let i = 1; while (i < P.length - 1 && L[i] < d) i++;
+  const k = (d - L[i - 1]) / Math.max(1e-6, L[i] - L[i - 1]), x = P[i - 1][0] + k * (P[i][0] - P[i - 1][0]), z = P[i - 1][1] + k * (P[i][1] - P[i - 1][1]);
+  camera.fov = spec.fov ?? 55; camera.position.set(x, F + 1.6 + Math.sin(t * 2 * Math.PI * 1.75) * 0.012, z);
+  const look = Array.isArray(spec.look) ? new THREE.Vector3(...spec.look) : figurePoint(spec.look.i, spec.look.at);
+  camera.lookAt(look); camera.updateProjectionMatrix(); renderer.toneMappingExposure = (spec.exp ?? 4.5) * exposureScale;
+  return dur;
+}
+// a point given in a figure's own frame (metres; x to the viewer's right, y up from its seat, z toward the viewer) in the world
+function figurePoint(i, p) { const f = figures[i]; f.pivot.updateMatrixWorld(true); return f.pivot.localToWorld(new THREE.Vector3(...p)); }
+// Which of a figure's named points the eye sees from where the camera stands: a line from the eye to each point; the
+// point counts as seen if the first thing the line meets lies within `near` metres of it (the figure's own surface
+// there), and as hidden otherwise, with what hid it (the altar, a column, a neighbour, the figure's own knee).
+const ray = new THREE.Raycaster();
+// A point on a figure's surface in its own frame (the frame the paint's anchors are written in): a line cast from the
+// front (+z), the figure's right (-x), or from above at height `top`, through (a, b) of that view (#370's pick tool, in
+// the page itself, so what it gives is exactly what the paint reads).
+function pick(i, a, b, from = "front", top = 99) {
+  const f = figures[i], P = f.pivot; P.updateMatrixWorld(true);
+  const o = from === "front" ? new THREE.Vector3(a, b, 20) : from === "right" ? new THREE.Vector3(-20, b, a) : new THREE.Vector3(a, top, b);
+  const d = from === "front" ? new THREE.Vector3(0, 0, -1) : from === "right" ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, -1, 0);
+  const wo = P.localToWorld(o.clone()), wd = P.localToWorld(o.clone().add(d)).sub(wo).normalize();
+  ray.set(wo, wd); ray.far = 100; const h = ray.intersectObject(f.obj, true)[0];
+  return h ? P.worldToLocal(h.point.clone()).toArray().map((v) => +v.toFixed(3)) : null;
+}
+function occlusion(i, pts, near = 0.3) {
+  const eye = camera.position.clone(), out = {};
+  const targets = []; scene.traverse((o) => { if (o.isMesh && o.visible && o !== sky) targets.push(o); });
+  for (const [name, p] of Object.entries(pts)) {
+    const w = figurePoint(i, p), dir = w.clone().sub(eye), dist = dir.length(); dir.normalize();
+    ray.set(eye, dir); ray.far = dist + near; const hit = ray.intersectObjects(targets, false)[0];
+    const ndc = w.clone().project(camera), onScreen = Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z < 1;
+    const by = !hit ? null : isIn(hit.object, figures[i].obj) ? "self" : figures.findIndex((f) => isIn(hit.object, f.obj)) >= 0 ? "figure" + figures.findIndex((f) => isIn(hit.object, f.obj)) : hit.object.geometry?.type || "scene";
+    out[name] = { seen: onScreen && (!hit || hit.distance > dist - near), onScreen, by: hit && hit.distance <= dist - near ? by : null, gap: hit ? +(dist - hit.distance).toFixed(2) : null };
+  }
+  return out;
+}
+
+// Pictures of one figure for review (issue #370: the owner asked to see the hands and the paint before acceptance went on):
+// shoot({ studio: { az, el, dist, at, fov, exp } }) stands the eye round figure 0 at `az` degrees (0 in front, 90 its
+// right, 180 behind, 270 its left), `el` up, `dist` metres from `at` (a point in its own frame), with the hall hidden,
+// a warm key, a cool fill and a rim, and a room environment for the gold to reflect; shoot({ view, over, mood, lamp })
+// is a view in the hall, with the altar lamp (a warm point before the altar) at `lamp`.
+let studioOn = false, studioEnv = null; const studioLights = [];
+function studio(on) {
+  if (on === studioOn) return; studioOn = on;
+  if (!studioLights.length) {
+    const key = new THREE.DirectionalLight(0xffd9a8, 3.2), fill = new THREE.DirectionalLight(0xb8c8e0, 0.9), rim = new THREE.DirectionalLight(0xfff0d8, 2.2);
+    studioLights.push(key, fill, rim); for (const l of studioLights) { l.visible = false; scene.add(l, l.target); }
+    const pm = new THREE.PMREMGenerator(renderer); studioEnv = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+  }
+  const keepIn = new Set(); for (const f of figures) f.group.traverse((o) => keepIn.add(o));
+  scene.traverse((o) => { if (o.isMesh && !keepIn.has(o)) { o.userData.studioHid ??= o.visible; o.visible = on ? false : o.userData.studioHid; } });
+  for (const f of figures) f.group.traverse((o) => { if (o.isMesh && o.userData.halo) o.visible = !on; });
+  for (const l of studioLights) l.visible = on; sun.visible = !on; for (const l of skyLights) l.visible = !on; floorFill.visible = bounce.visible = !on;
+  scene.background = on ? new THREE.Color(0x2a2622) : null; sky.visible = !on;
+  for (const f of figures) for (const m of Object.values(f.painted || {})) { m.userData.envKeep ??= m.envMap; m.envMap = on ? studioEnv : m.userData.envKeep; m.envMapIntensity = on ? 1.0 : 1.6; m.needsUpdate = true; }
+  renderer.shadowMap.needsUpdate = true;
+}
+function shoot(s) {
+  if (s.mood) setMood(s.mood); if (s.paint !== undefined) paint(s.paint);
+  if (s.studio) {
+    studio(true); const o = s.studio, f = figures[0], P = f.pivot; P.updateMatrixWorld(true);
+    const at = P.localToWorld(new THREE.Vector3(...(o.at || [0, 4.3, 0]))), az = THREE.MathUtils.degToRad(o.az || 0), el = THREE.MathUtils.degToRad(o.el ?? 8), d = o.dist ?? 16;
+    // in the figure's frame its front is +z and its right is -x (the viewer's left)
+    const dir = P.localToWorld(new THREE.Vector3(-Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el))).sub(P.localToWorld(new THREE.Vector3()));
+    camera.position.copy(at).addScaledVector(dir.normalize(), d); camera.fov = o.fov ?? 35; camera.lookAt(at); camera.updateProjectionMatrix();
+    const W3 = (v) => P.localToWorld(new THREE.Vector3(...v)).sub(P.localToWorld(new THREE.Vector3()));
+    const [key, fill, rim] = studioLights;   // lights fixed to the figure, not the eye: the four sides are lit the same way round it
+    key.position.copy(at).add(W3([-9, 10, 12])); key.target.position.copy(at); fill.position.copy(at).add(W3([12, 3, 8])); fill.target.position.copy(at);
+    rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
+    renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
+  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
+  render(); return { tris: renderer.info.render.triangles };
 }
 
 let composer = null, useAO = Q.get("ao") !== "0";
@@ -358,9 +460,13 @@ function paint(on = true) {
   for (const f of figures) {
     const A = f.s.colour && ANCHORS[f.s.colour];
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
-    const key = o.env === false ? "noenv" : "env";
+    // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
+    // masks cost a frame (#370 round 6)
+    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "");
     f.painted ??= {};
-    f.painted[key] ??= paintMaterial(recipe, A.anchors, f.pivot, o.env === false ? {} : { envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+    const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
+    const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
+    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
     f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
     for (const m of f.meshes) m.material = f.painted[key];
   }
@@ -379,21 +485,28 @@ function ortho(i, side = "front", z = {}) {
   const pts = [[], [], []];
   // zoomed in (z.half under 1 m) the faint lines are every 2 cm, the stronger every 10 cm and the red every 50 cm
   const fine = (z.half ?? 3.5) < 1, st = fine ? 50 : 10, mid = fine ? 5 : 5, big = fine ? 25 : 10;
-  for (let k = -3.5 * st; k <= 3.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(v, -0.5, 0, v, 6.5, 0); }
-  for (let k = -0.5 * st; k <= 6.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(-3.5, v, 0, 3.5, v, 0); }
+  for (let k = -3.5 * st; k <= 3.5 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(v, -0.5, 0, v, 10, 0); }
+  for (let k = -0.5 * st; k <= 10 * st; k++) { const v = k / st, c = k % big === 0 ? 2 : k % mid === 0 ? 1 : 0; pts[c].push(-3.5, v, 0, 3.5, v, 0); }
   orthoGrid = new THREE.Group();
   [[0x8a8a8a, 0.25], [0xffffff, 0.6], [0xff3030, 0.9]].forEach(([col, op], c) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pts[c], 3));
     const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op, depthTest: false })); l.renderOrder = 10; orthoGrid.add(l); });
-  P.add(orthoGrid);
-  if (side === "side") orthoGrid.rotation.y = -Math.PI / 2; else orthoGrid.rotation.y = 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
+  if (z.grid !== false) P.add(orthoGrid);   // a picture for tools/t05-hall/mask.py is drawn without the grid
+  orthoGrid.rotation.y = side === "side" ? -Math.PI / 2 : side === "back" ? Math.PI : 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
   const d = 20, cx = z.cx ?? 0, cy = z.cy ?? 3, hh = z.half ?? 3.5;
-  Object.assign(orthoCam, { left: -hh, right: hh, top: hh, bottom: -hh });
-  const at = side === "side" ? new THREE.Vector3(-d, cy, cx) : new THREE.Vector3(cx, cy, d);
-  orthoCam.position.copy(P.localToWorld(at.clone())); orthoCam.up.set(0, 1, 0); orthoCam.lookAt(P.localToWorld(at.clone().add(side === "side" ? new THREE.Vector3(d, 0, 0) : new THREE.Vector3(0, 0, -d))));
+  const asp = z.square ? 1 : W / H;   // keep metres square on a wide picture (#370; #287 drew its grids square at 1400 px)
+  Object.assign(orthoCam, { left: -hh * asp, right: hh * asp, top: hh, bottom: -hh });
+  // from behind (#370 round 6, a mask for the back): +x is on the picture's left
+  const at = side === "side" ? new THREE.Vector3(-d, cy, cx) : side === "back" ? new THREE.Vector3(cx, cy, -d) : new THREE.Vector3(cx, cy, d);
+  orthoCam.position.copy(P.localToWorld(at.clone())); orthoCam.up.set(0, 1, 0); orthoCam.lookAt(P.localToWorld(at.clone().add(side === "side" ? new THREE.Vector3(d, 0, 0) : side === "back" ? new THREE.Vector3(0, 0, d) : new THREE.Vector3(0, 0, -d))));
   orthoCam.updateProjectionMatrix();
   const keep = scene.overrideMaterial; scene.overrideMaterial = null;
   const hidden = []; scene.traverse((o) => { if (o.isMesh && !isIn(o, f.obj) && o.visible) { o.visible = false; hidden.push(o); } });
-  const mats = new Map(); if (!z.lit) f.obj.traverse((o) => { if (o.isMesh) { mats.set(o, o.material); o.material = new THREE.MeshNormalMaterial(); } });
+  // { depth: true }: the depth of the nearest surface toward the eye, in the figure's frame, as grey: (z·s + 3.5) / 7, s = 1
+  // from the front and -1 from behind (#370 round 6: a mask is laid only on the surface its picture saw, mask.py)
+  const depthMat = z.depth ? new THREE.ShaderMaterial({ uniforms: { uToFig: { value: P.matrixWorld.clone().invert() }, uS: { value: side === "back" ? -1 : 1 }, uSide: { value: side === "side" ? 1 : 0 } },
+    vertexShader: "uniform mat4 uToFig; uniform float uSide; varying float vZ; void main() { vec3 f = (uToFig * modelMatrix * vec4(position, 1.)).xyz; vZ = uSide > .5 ? -f.x : f.z; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+    fragmentShader: "uniform float uS; uniform float uSide; varying float vZ; void main() { float g = clamp((vZ * (uSide > .5 ? 1. : uS) + 3.5) / 7., 0., 1.); gl_FragColor = vec4(vec3(g), 1.); }" }) : null;
+  const mats = new Map(); if (!z.lit) f.obj.traverse((o) => { if (o.isMesh) { mats.set(o, o.material); o.material = depthMat ?? new THREE.MeshNormalMaterial(); } });
   const ex = renderer.toneMappingExposure; if (z.lit) renderer.toneMappingExposure = z.exp ?? 4.5; else renderer.toneMapping = THREE.NoToneMapping; renderer.setClearColor(0x202020); const bg = scene.background; scene.background = new THREE.Color(0x202020); sky.visible = false;
   renderer.render(scene, orthoCam);
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = ex; scene.background = bg; sky.visible = true;
@@ -402,7 +515,7 @@ function ortho(i, side = "front", z = {}) {
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, ortho, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site

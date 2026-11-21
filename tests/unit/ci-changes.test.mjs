@@ -90,8 +90,8 @@ test("pages.yml: the publication waits for both sets of unit tests, the build an
   const y = read("pages.yml");
   assert.match(jobOf(y, "verify"), /needs: \[changes, unit, tests, grid, site, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
-  assert.match(jobOf(y, "tests"), /node --test \$\(node tools\/ci\/unit-shard\.cjs \$\{\{ matrix\.shard \}\}\/5\)/);
-  assert.match(jobOf(y, "grid"), /swap\.mjs --test \$\(node tools\/ci\/unit-shard\.cjs/);
+  assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5\n/);
+  assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5 --import \.\/tools\/walk\/swap\.mjs/);
   for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4, 5\]/, `${j}: five machines, as SHARDS says`);
   assert.ok(jobOf(y, "grid").indexOf("node tools/bake-walk.mjs") < jobOf(y, "grid").indexOf("swap.mjs"), "the grid job writes the floor before the swapped walker reads it");
   const site = jobOf(y, "site");
@@ -194,5 +194,30 @@ test("unit tests: every file runs on exactly one of the five machines, none over
   assert.equal(seen.length, all.length); assert.deepEqual([...seen].sort(), all);
   for (const l of loads) assert.ok(l <= sh.BUDGET, `a machine's share is ${l.toFixed(0)} s, over ${sh.BUDGET}`);
   for (const f of Object.keys(sh.durations())) assert.ok(all.includes(f), `durations.json names ${f}, which is not a test`);
-  assert.match(fs.readFileSync(new URL("../../.github/workflows/pages.yml", import.meta.url), "utf8"), new RegExp(`unit-shard\\.cjs \\$\\{\\{ matrix\\.shard \\}\\}/${sh.SHARDS}`));
+  assert.match(fs.readFileSync(new URL("../../.github/workflows/pages.yml", import.meta.url), "utf8"), new RegExp(`unit-shard\\.cjs run \\$\\{\\{ matrix\\.shard \\}\\}/${sh.SHARDS}`));
+});
+
+test("unit tests: a share with no file runs nothing, because `node --test` with no file would run the whole suite", async () => {
+  const { createRequire } = await import("node:module");
+  const sh = createRequire(import.meta.url)("../../tools/ci/unit-shard.cjs");
+  assert.equal(sh.testArgs([]), null);
+  assert.deepEqual(sh.testArgs(["a.test.mjs"], ["--import", "x"]), ["--import", "x", "--test", "tests/unit/a.test.mjs"]);
+  assert.equal(sh.shareOf("0/5"), null); assert.equal(sh.shareOf("6/5"), null);
+  // 200 machines for 123 files: the last ones are empty, and say so rather than run everything
+  const empty = sh.plan(sh.files(), 200).parts.filter((p) => p.length === 0);
+  assert.ok(empty.length > 0);
+  const { spawnSync } = await import("node:child_process");
+  const bad = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "0/5"], { encoding: "utf8" });
+  assert.equal(bad.status, 2);
+  const none = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "200/200"], { encoding: "utf8" });
+  assert.equal(none.status, 0); assert.match(none.stdout, /holds no test file/);
+});
+
+test("evidence-mirror: runs of different branches never queue in one group; each commit on main has its own", () => {
+  const y = read("evidence-mirror.yml");
+  const group = /concurrency:\n\s+group: (.+)\n\s+cancel-in-progress: false/.exec(y);
+  assert.ok(group, "a concurrency group that does not cancel a run in progress");
+  assert.match(group[1], /github\.ref/, "pull request runs are grouped by their own branch");
+  assert.match(group[1], /github\.event_name == 'push' && github\.sha/, "a push to main is its own group, so the next push cannot replace it");
+  assert.doesNotMatch(group[1].trim(), /^evidence-mirror$/, "not one group for everything");
 });

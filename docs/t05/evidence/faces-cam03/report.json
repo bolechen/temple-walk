@@ -1,0 +1,2202 @@
+{
+  "spec": "tools/t05-hall/specs/t05-faces-cam03.json",
+  "shots": [
+    {
+      "name": "cam03-16x9-third",
+      "size": [
+        1920,
+        1080
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 50
+        }
+      },
+      "file": "tools/out/t05/seven/faces/cam03-16x9-third.png",
+      "tris": 959581,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 61.7,
+          "eyeToMouthPx": 27.2,
+          "at": [
+            1985,
+            335
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 65.4,
+          "eyeToMouthPx": 28.1,
+          "at": [
+            1661,
+            336
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 67.9,
+          "eyeToMouthPx": 31,
+          "at": [
+            1317,
+            311
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 68.1,
+          "eyeToMouthPx": 31.9,
+          "at": [
+            960,
+            301
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 67,
+          "eyeToMouthPx": 32,
+          "at": [
+            601,
+            306
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 65.8,
+          "eyeToMouthPx": 32.6,
+          "at": [
+            261,
+            339
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 62.6,
+          "eyeToMouthPx": 31.7,
+          "at": [
+            -54,
+            336
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 10928
+    },
+    {
+      "name": "cam03-16x9-first",
+      "size": [
+        1920,
+        1080
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 65
+        }
+      },
+      "file": "tools/out/t05/seven/faces/cam03-16x9-first.png",
+      "tris": 1919842,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 45.1,
+          "eyeToMouthPx": 19.9,
+          "at": [
+            1710,
+            390
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 47.9,
+          "eyeToMouthPx": 20.6,
+          "at": [
+            1473,
+            391
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 49.7,
+          "eyeToMouthPx": 22.7,
+          "at": [
+            1221,
+            372
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 49.9,
+          "eyeToMouthPx": 23.3,
+          "at": [
+            960,
+            365
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 49,
+          "eyeToMouthPx": 23.4,
+          "at": [
+            698,
+            369
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 48.2,
+          "eyeToMouthPx": 23.8,
+          "at": [
+            448,
+            393
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 45.8,
+          "eyeToMouthPx": 23.2,
+          "at": [
+            217,
+            391
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        }
+      ],
+      "ms": 7802
+    },
+    {
+      "name": "cam03-4x3-third",
+      "size": [
+        1440,
+        1080
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 50
+        }
+      },
+      "file": "tools/out/t05/seven/faces/cam03-4x3-third.png",
+      "tris": 956973,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 61.7,
+          "eyeToMouthPx": 27.2,
+          "at": [
+            1745,
+            335
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 65.4,
+          "eyeToMouthPx": 28.1,
+          "at": [
+            1421,
+            336
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 67.9,
+          "eyeToMouthPx": 31,
+          "at": [
+            1077,
+            311
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 68.1,
+          "eyeToMouthPx": 31.9,
+          "at": [
+            720,
+            301
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 67,
+          "eyeToMouthPx": 32,
+          "at": [
+            361,
+            306
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 65.8,
+          "eyeToMouthPx": 32.6,
+          "at": [
+            21,
+            339
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 62.6,
+          "eyeToMouthPx": 31.7,
+          "at": [
+            -294,
+            336
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 9177
+    },
+    {
+      "name": "cam03-4x3-first",
+      "size": [
+        1440,
+        1080
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 65
+        }
+      },
+      "file": "tools/out/t05/seven/faces/cam03-4x3-first.png",
+      "tris": 1916626,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 45.1,
+          "eyeToMouthPx": 19.9,
+          "at": [
+            1470,
+            390
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 47.9,
+          "eyeToMouthPx": 20.6,
+          "at": [
+            1233,
+            391
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 49.7,
+          "eyeToMouthPx": 22.7,
+          "at": [
+            981,
+            372
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 49.9,
+          "eyeToMouthPx": 23.3,
+          "at": [
+            720,
+            365
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 49,
+          "eyeToMouthPx": 23.4,
+          "at": [
+            458,
+            369
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 48.2,
+          "eyeToMouthPx": 23.8,
+          "at": [
+            208,
+            393
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 45.8,
+          "eyeToMouthPx": 23.2,
+          "at": [
+            -23,
+            391
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 6901
+    },
+    {
+      "name": "cam03-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62
+        }
+      },
+      "file": "tools/out/t05/seven/faces/cam03-phone-third.png",
+      "tris": 472049,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 103.7,
+          "eyeToMouthPx": 45.8,
+          "at": [
+            2264,
+            825
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 110,
+          "eyeToMouthPx": 47.2,
+          "at": [
+            1718,
+            828
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 114.2,
+          "eyeToMouthPx": 52.2,
+          "at": [
+            1140,
+            784
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 114.5,
+          "eyeToMouthPx": 53.6,
+          "at": [
+            540,
+            769
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 112.6,
+          "eyeToMouthPx": 53.9,
+          "at": [
+            -63,
+            776
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 110.7,
+          "eyeToMouthPx": 54.8,
+          "at": [
+            -636,
+            833
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 105.3,
+          "eyeToMouthPx": 53.3,
+          "at": [
+            -1166,
+            827
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 10363
+    },
+    {
+      "name": "cam03-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75
+        }
+      },
+      "file": "tools/out/t05/seven/faces/cam03-phone-first.png",
+      "tris": 1185078,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 81.2,
+          "eyeToMouthPx": 35.8,
+          "at": [
+            1890,
+            900
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 86.2,
+          "eyeToMouthPx": 37,
+          "at": [
+            1463,
+            902
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 89.4,
+          "eyeToMouthPx": 40.9,
+          "at": [
+            1010,
+            868
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 89.7,
+          "eyeToMouthPx": 41.9,
+          "at": [
+            540,
+            856
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 88.2,
+          "eyeToMouthPx": 42.2,
+          "at": [
+            68,
+            862
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 86.7,
+          "eyeToMouthPx": 42.9,
+          "at": [
+            -381,
+            906
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 82.4,
+          "eyeToMouthPx": 41.7,
+          "at": [
+            -796,
+            902
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8254
+    },
+    {
+      "name": "in2-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62,
+          "at": [
+            0,
+            4.6,
+            -2
+          ]
+        }
+      },
+      "file": "tools/out/t05/seven/faces/in2-phone-third.png",
+      "tris": 1656223,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 119.7,
+          "eyeToMouthPx": 52,
+          "at": [
+            2541,
+            725
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 126.7,
+          "eyeToMouthPx": 53.8,
+          "at": [
+            1906,
+            729
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 131.5,
+          "eyeToMouthPx": 59.8,
+          "at": [
+            1236,
+            678
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 131.7,
+          "eyeToMouthPx": 61.6,
+          "at": [
+            540,
+            661
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 129.6,
+          "eyeToMouthPx": 62.3,
+          "at": [
+            -159,
+            669
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 127.4,
+          "eyeToMouthPx": 63.7,
+          "at": [
+            -823,
+            736
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 121.4,
+          "eyeToMouthPx": 62.3,
+          "at": [
+            -1437,
+            730
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8366
+    },
+    {
+      "name": "in2-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75,
+          "at": [
+            0,
+            4.6,
+            -2
+          ]
+        }
+      },
+      "file": "tools/out/t05/seven/faces/in2-phone-first.png",
+      "tris": 2128696,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 93.7,
+          "eyeToMouthPx": 40.7,
+          "at": [
+            2107,
+            822
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 99.2,
+          "eyeToMouthPx": 42.1,
+          "at": [
+            1610,
+            825
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 103,
+          "eyeToMouthPx": 46.8,
+          "at": [
+            1085,
+            785
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "yes",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 103.1,
+          "eyeToMouthPx": 48.2,
+          "at": [
+            540,
+            771
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 101.4,
+          "eyeToMouthPx": 48.8,
+          "at": [
+            -8,
+            778
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 99.8,
+          "eyeToMouthPx": 49.8,
+          "at": [
+            -527,
+            830
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 95,
+          "eyeToMouthPx": 48.7,
+          "at": [
+            -1008,
+            825
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8633
+    },
+    {
+      "name": "in4.5-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62,
+          "at": [
+            0,
+            4.6,
+            -4.5
+          ]
+        }
+      },
+      "file": "tools/out/t05/seven/faces/in4.5-phone-third.png",
+      "tris": 2599793,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 140.7,
+          "eyeToMouthPx": 59.8,
+          "at": [
+            2907,
+            594
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 148.4,
+          "eyeToMouthPx": 62.1,
+          "at": [
+            2154,
+            600
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 153.9,
+          "eyeToMouthPx": 69.5,
+          "at": [
+            1364,
+            538
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 153.8,
+          "eyeToMouthPx": 72,
+          "at": [
+            540,
+            519
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 151.5,
+          "eyeToMouthPx": 73.3,
+          "at": [
+            -286,
+            529
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 149.2,
+          "eyeToMouthPx": 75.4,
+          "at": [
+            -1069,
+            608
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 142.3,
+          "eyeToMouthPx": 74.2,
+          "at": [
+            -1793,
+            601
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8635
+    },
+    {
+      "name": "in4.5-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75,
+          "at": [
+            0,
+            4.6,
+            -4.5
+          ]
+        }
+      },
+      "file": "tools/out/t05/seven/faces/in4.5-phone-first.png",
+      "tris": 3071354,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 110.2,
+          "eyeToMouthPx": 46.8,
+          "at": [
+            2394,
+            719
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 116.2,
+          "eyeToMouthPx": 48.6,
+          "at": [
+            1804,
+            724
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 120.5,
+          "eyeToMouthPx": 54.4,
+          "at": [
+            1185,
+            675
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 120.4,
+          "eyeToMouthPx": 56.4,
+          "at": [
+            540,
+            660
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 118.6,
+          "eyeToMouthPx": 57.4,
+          "at": [
+            -107,
+            668
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 116.8,
+          "eyeToMouthPx": 59.1,
+          "at": [
+            -720,
+            730
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 111.4,
+          "eyeToMouthPx": 58.1,
+          "at": [
+            -1287,
+            724
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8276
+    },
+    {
+      "name": "in7-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62,
+          "at": [
+            0,
+            4.6,
+            -7
+          ]
+        }
+      },
+      "file": "tools/out/t05/seven/faces/in7-phone-third.png",
+      "tris": 3540547,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 170.8,
+          "eyeToMouthPx": 70.2,
+          "at": [
+            3438,
+            403
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 179.1,
+          "eyeToMouthPx": 73.4,
+          "at": [
+            2511,
+            413
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 185.5,
+          "eyeToMouthPx": 82.9,
+          "at": [
+            1548,
+            336
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 184.8,
+          "eyeToMouthPx": 86.5,
+          "at": [
+            539,
+            315
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 182.3,
+          "eyeToMouthPx": 89.2,
+          "at": [
+            -470,
+            326
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 179.9,
+          "eyeToMouthPx": 92.6,
+          "at": [
+            -1423,
+            424
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 172.2,
+          "eyeToMouthPx": 92,
+          "at": [
+            -2307,
+            415
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8820
+    },
+    {
+      "name": "in7-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75,
+          "at": [
+            0,
+            4.6,
+            -7
+          ]
+        }
+      },
+      "file": "tools/out/t05/seven/faces/in7-phone-first.png",
+      "tris": 4011644,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 133.7,
+          "eyeToMouthPx": 55,
+          "at": [
+            2809,
+            570
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 140.3,
+          "eyeToMouthPx": 57.4,
+          "at": [
+            2083,
+            577
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 145.3,
+          "eyeToMouthPx": 64.9,
+          "at": [
+            1329,
+            517
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 144.7,
+          "eyeToMouthPx": 67.8,
+          "at": [
+            540,
+            500
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 142.8,
+          "eyeToMouthPx": 69.8,
+          "at": [
+            -251,
+            509
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 140.9,
+          "eyeToMouthPx": 72.5,
+          "at": [
+            -997,
+            586
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 134.8,
+          "eyeToMouthPx": 72.1,
+          "at": [
+            -1689,
+            579
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8253
+    },
+    {
+      "name": "turn15-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62,
+          "yaw": 15
+        }
+      },
+      "file": "tools/out/t05/seven/faces/turn15-phone-third.png",
+      "tris": 4724163,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 87.1,
+          "eyeToMouthPx": 35.7,
+          "at": [
+            1527,
+            925
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 98.3,
+          "eyeToMouthPx": 40,
+          "at": [
+            1120,
+            895
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 109.3,
+          "eyeToMouthPx": 47.7,
+          "at": [
+            630,
+            814
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 118.2,
+          "eyeToMouthPx": 54.3,
+          "at": [
+            39,
+            746
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 126.3,
+          "eyeToMouthPx": 61.8,
+          "at": [
+            -662,
+            692
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 135.5,
+          "eyeToMouthPx": 72.6,
+          "at": [
+            -1457,
+            692
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 141.1,
+          "eyeToMouthPx": 82,
+          "at": [
+            -2333,
+            614
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8438
+    },
+    {
+      "name": "turn15-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75,
+          "yaw": 15
+        }
+      },
+      "file": "tools/out/t05/seven/faces/turn15-phone-first.png",
+      "tris": 5437898,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 68.2,
+          "eyeToMouthPx": 27.9,
+          "at": [
+            1313,
+            978
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 77,
+          "eyeToMouthPx": 31.3,
+          "at": [
+            995,
+            954
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 85.6,
+          "eyeToMouthPx": 37.4,
+          "at": [
+            611,
+            891
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 92.6,
+          "eyeToMouthPx": 42.5,
+          "at": [
+            148,
+            838
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 98.9,
+          "eyeToMouthPx": 48.4,
+          "at": [
+            -401,
+            796
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 106.1,
+          "eyeToMouthPx": 56.8,
+          "at": [
+            -1024,
+            796
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 110.5,
+          "eyeToMouthPx": 64.2,
+          "at": [
+            -1710,
+            735
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8076
+    },
+    {
+      "name": "turn30-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62,
+          "yaw": 30
+        }
+      },
+      "file": "tools/out/t05/seven/faces/turn30-phone-third.png",
+      "tris": 6030303,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 79.5,
+          "eyeToMouthPx": 31.2,
+          "at": [
+            962,
+            971
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 94.2,
+          "eyeToMouthPx": 37.2,
+          "at": [
+            609,
+            918
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 111.5,
+          "eyeToMouthPx": 47.7,
+          "at": [
+            132,
+            800
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 130.6,
+          "eyeToMouthPx": 61.1,
+          "at": [
+            -534,
+            670
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 154.8,
+          "eyeToMouthPx": 83.1,
+          "at": [
+            -1489,
+            515
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 191,
+          "eyeToMouthPx": 126.1,
+          "at": [
+            -2880,
+            377
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 241.1,
+          "eyeToMouthPx": 202.2,
+          "at": [
+            -4978,
+            37
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8278
+    },
+    {
+      "name": "turn30-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75,
+          "yaw": 30
+        }
+      },
+      "file": "tools/out/t05/seven/faces/turn30-phone-first.png",
+      "tris": 6623516,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 62.2,
+          "eyeToMouthPx": 24.4,
+          "at": [
+            870,
+            1014
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 73.8,
+          "eyeToMouthPx": 29.1,
+          "at": [
+            594,
+            972
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 87.3,
+          "eyeToMouthPx": 37.4,
+          "at": [
+            221,
+            880
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 102.2,
+          "eyeToMouthPx": 47.9,
+          "at": [
+            -301,
+            778
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 121.2,
+          "eyeToMouthPx": 65,
+          "at": [
+            -1049,
+            657
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 149.6,
+          "eyeToMouthPx": 98.7,
+          "at": [
+            -2138,
+            549
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 188.8,
+          "eyeToMouthPx": 158.4,
+          "at": [
+            -3781,
+            283
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 8113
+    },
+    {
+      "name": "turn45-phone-third",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 62,
+          "yaw": 45
+        }
+      },
+      "file": "tools/out/t05/seven/faces/turn45-phone-third.png",
+      "tris": 7094881,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 77.7,
+          "eyeToMouthPx": 29.9,
+          "at": [
+            458,
+            982
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 96.4,
+          "eyeToMouthPx": 37.6,
+          "at": [
+            106,
+            905
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 121.6,
+          "eyeToMouthPx": 52.9,
+          "at": [
+            -422,
+            740
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 156.7,
+          "eyeToMouthPx": 80,
+          "at": [
+            -1297,
+            507
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 218.2,
+          "eyeToMouthPx": 149.2,
+          "at": [
+            -2934,
+            119
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 377.3,
+          "eyeToMouthPx": 418.3,
+          "at": [
+            -6741,
+            -614
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 1631.5,
+          "eyeToMouthPx": 2938.7,
+          "at": [
+            -23275,
+            -4343
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 7852
+    },
+    {
+      "name": "turn45-phone-first",
+      "size": [
+        1080,
+        2340
+      ],
+      "shoot": {
+        "paint": true,
+        "mood": "summer",
+        "view": "cam03",
+        "over": {
+          "fov": 75,
+          "yaw": 45
+        }
+      },
+      "file": "tools/out/t05/seven/faces/turn45-phone-first.png",
+      "tris": 7566822,
+      "faces": [
+        {
+          "name": "kasyapa",
+          "facePx": 60.9,
+          "eyeToMouthPx": 23.4,
+          "at": [
+            475,
+            1023
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "krakucchanda",
+          "facePx": 75.5,
+          "eyeToMouthPx": 29.5,
+          "at": [
+            200,
+            962
+          ],
+          "seen": {
+            "eyeL": "yes",
+            "eyeR": "yes",
+            "mouth": "yes"
+          }
+        },
+        {
+          "name": "sikhin",
+          "facePx": 95.2,
+          "eyeToMouthPx": 41.4,
+          "at": [
+            -214,
+            833
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "vipasyin",
+          "facePx": 122.7,
+          "eyeToMouthPx": 62.7,
+          "at": [
+            -898,
+            651
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "visvabhu",
+          "facePx": 170.9,
+          "eyeToMouthPx": 116.8,
+          "at": [
+            -2180,
+            347
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "kanakamuni",
+          "facePx": 295.5,
+          "eyeToMouthPx": 327.6,
+          "at": [
+            -5162,
+            -227
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        },
+        {
+          "name": "sakyamuni",
+          "facePx": 1277.6,
+          "eyeToMouthPx": 2301.2,
+          "at": [
+            -18109,
+            -3147
+          ],
+          "seen": {
+            "eyeL": "off screen",
+            "eyeR": "off screen",
+            "mouth": "off screen"
+          }
+        }
+      ],
+      "ms": 7776
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo-six/kasyapa-r2.60000.glb",
+      "tris": 59992
+    },
+    {
+      "file": "tools/out/t05/tripo-six/krakucchanda-r2.60000.glb",
+      "tris": 59991
+    },
+    {
+      "file": "tools/out/t05/tripo-six/sikhin-r2.60000.glb",
+      "tris": 59995
+    },
+    {
+      "file": "tools/out/t05/tripo-six/vipasyin-r2.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-six/visvabhu-r2.60000.glb",
+      "tris": 59993
+    },
+    {
+      "file": "tools/out/t05/tripo-six/kanakamuni-r2.60000.glb",
+      "tris": 59995
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}
