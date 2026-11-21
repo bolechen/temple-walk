@@ -33,7 +33,8 @@ test("it is a four-post, three-bay, three-tier archway: the middle bay and its r
   const sideRidge = pf.tiers.find((t) => t.id === "side-e").ridgeY;
   // the art review (#438): the middle roof's eave edge stands a hand or two over the side roofs' ridge, the three roofs close together
   const gap = byId.get("roof-mid").box.min.y - sideRidge;
-  assert.ok(gap > 0.1 && gap <= 0.35, `the middle roof's eave edge is ${gap.toFixed(2)} m over the side roofs' ridge`);
+  // (the third version's changes, #482: taller sets, a thinner eave and ridges that stay where they were, opened the gap by a quarter of a metre)
+  assert.ok(gap > 0.1 && gap <= 0.6, `the middle roof's eave edge is ${gap.toFixed(2)} m over the side roofs' ridge`);
   assert.ok(mid.max.x > post2.max.x && mid.min.x < byId.get("post-1").box.min.x, "and it spreads over both middle posts");
 });
 

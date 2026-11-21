@@ -1,0 +1,156 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 234891,
+   "sha256": "6cbb70c1603632186a4b1af77a7d1cfc9d77ac404c94ce1e3a1869b67847e90d",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/cam07-A-autumn-day.png",
+   "bytes": 1106970,
+   "sha256": "446ab86ce1c1c851b17640087f80d7cb919bb2d665d3a3ca74ee8d86cbb4ada9",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/cam07-A-summer-day.png",
+   "bytes": 1095693,
+   "sha256": "855dabd1a58d47a45c763155784f10229a33bdac0c46227151338f52052933f0",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/cam07-A-winter-day.png",
+   "bytes": 1093865,
+   "sha256": "55a10e2b24155a08b6dd48d72b39974e0ee0224d87d35f834193683ab2d791a1",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/cam07-B1-hall-unchanged-summer-day.png",
+   "bytes": 1096515,
+   "sha256": "809be6eae66fa8745cffbbddad86be598c2aeab87541a163f6028dd75b6c4bed",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/cam07-B1-hall-unchanged.png",
+   "bytes": 1111093,
+   "sha256": "f735c89a8f9f9ed61e95d75b0c0d644b38f77a53d97bf29eddcd87ea0393bde0",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/cam07-B2-back-on-the-lane.png",
+   "bytes": 1299752,
+   "sha256": "c8a102ee71641b8f63d85910aadbcdaf510b5faa5f568292bae037c71811b1a5",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/gate-oblique-after.png",
+   "bytes": 1346606,
+   "sha256": "26a6fa2cfa388fd8b79cdf302fc1304e05a3171a4b772c7c4faff0c9540deeb8",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/gate-oblique-before.png",
+   "bytes": 1274388,
+   "sha256": "2d7e206d15531ae255aeada8ec4dbbacc711de111cbe234fa2f6787d3ef0340c",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/gates-lane-after.png",
+   "bytes": 1294111,
+   "sha256": "a0a752c72a412968db960cec7a377f93bec2ac131be3930cad55325d72dcc1d6",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/gates-lane-before.png",
+   "bytes": 1194190,
+   "sha256": "2cf38cda5a3280bfb563f9ea896425b2d217aad4757c6ae416516510bb46a120",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/hall-front-after.png",
+   "bytes": 1248875,
+   "sha256": "f2f98fa7fc7ae1912d965b7c26c87fc593194316883b31d71b32b1b210d3bd14",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/hall-front-before.png",
+   "bytes": 1285188,
+   "sha256": "dab05bf35200881e132c2a238279f931690bcc84f708f6b818af3a006e981a9f",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/hall-oblique-after.png",
+   "bytes": 1309407,
+   "sha256": "06c9205706cbe718b71dfe3c574161f5d6be665e736906bcfa5e42f4a583b54e",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/hall-oblique-before.png",
+   "bytes": 1292508,
+   "sha256": "d82d8b05b1c7bb04ccc28d1b0bf6048c73a3f012bf3be2cc770f7c4289ef5ddd",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-back-after.png",
+   "bytes": 1167101,
+   "sha256": "1dce70e16c4f5f7fd4d3739a52528afeacb95a5c94e946129157d7f68b99844c",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-front-after.png",
+   "bytes": 1119661,
+   "sha256": "b63e1d5dc204f3b1860c3a49327ad60dd439549d4cd19c8742967e6e097dc7bf",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-front-before.png",
+   "bytes": 1088959,
+   "sha256": "6dee651ab35fe1c1e2f1ff65023457f6ea1117a593cc4d8e6821c1f58e2ed4e3",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-oblique-after.png",
+   "bytes": 1292515,
+   "sha256": "3159cd2105465b102d7c557ba1b48e0fa6bc10753035f5e41400d2f75e6cca14",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-ridge-band.png",
+   "bytes": 177402,
+   "sha256": "dc962a281ecb030f69e19eec8a1037f1933f1431990ed53b5ddc1d75e37431b6",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-stage-after.png",
+   "bytes": 172873,
+   "sha256": "ff18dee1cdf4f4bff84a4e211c757681773de99d3c73e8c46891af85a07dec77",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-stage-before.png",
+   "bytes": 177632,
+   "sha256": "55f4edb5c6e839bcd163a959254926d28d43dcc7d4bd406a27ae86216fa722c0",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/paifang-stage-iso-after.png",
+   "bytes": 225809,
+   "sha256": "c474fb6d4a3ef660d4759ea51c072fbb61f96ef2c6ca4410dacfc03a84ca9b01",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/trunks-after.png",
+   "bytes": 1235738,
+   "sha256": "7f536d4688b1fc9825828d219db774622003ddd1c9fc9c028dacd20e5540da50",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  },
+  {
+   "path": "views/trunks-before.png",
+   "bytes": 1177445,
+   "sha256": "dfa27944409b24968504894da0b0dc4d8a96b315dcd2f62f9f4d6715b5d4c836",
+   "rev": "e17650d76a3105f9f8c8720f4c6706dc62fa7f97"
+  }
+ ]
+}

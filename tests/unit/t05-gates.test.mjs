@@ -9,7 +9,7 @@ import { inflateRawSync } from "node:zlib";
 const T05 = await import("../../app/levels/t05/site.js");
 const AX = await import("../../app/levels/t05/axis.js");
 const { buildSite, createWalker } = T05;
-const { AXIS, GATE, HALL, FOOT, SECOND } = AX;
+const { AXIS, GATE, HALL, FOOT, SECOND } = AX, AX2 = await import("../../app/src/paifang.js");
 const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
@@ -31,7 +31,7 @@ test("each building is registered where the axis table puts it, and none of them
   assert.ok(near(inner.x1, FOOT.inner.x1, 1e-6) && near(hall.x1, FOOT.hall.x1, 1e-6) && near(inner.z0, FOOT.inner.z0, 1e-6) && near(hall.z0, FOOT.hall.z0, 1e-6));
   assert.ok(near(outer.x1, GATE.xs[3] + GATE.platOut, 1e-6), "the outer gate's platform is as wide as the inner one's");
   assert.deepEqual(site.halls, [], "no room under the court: he walks through, he does not go in");
-  assert.equal(site.walk.roofs.length, 3, "each building's roof is told to the eye and to the snow");
+  assert.equal(site.walk.roofs.length, 6, "each building's roof is told to the eye and to the snow: three buildings and the archway's three tiers");
 });
 
 test("he walks through each by its passage, on both floors, to the same heights: 0 → +0.5 → 0, 0 → +1.0 and on along the terrace, +1.0 → 0", () => {
@@ -78,4 +78,29 @@ test("every parameter of the three shells has a row in docs/t05/SOURCES.md §13.
   const doc = readFileSync(new URL("../../docs/t05/SOURCES.md", import.meta.url), "utf8"), at = doc.indexOf("### 13.1");
   assert.ok(at > 0, "SOURCES.md has a §13.1");
   for (const name of ["外山门", "内山门", "便门", "无量殿", "隔墙", "三角形", "自拟"]) assert.ok(doc.slice(at).includes(name), `§13.1 has a row for ${name}`);
+});
+
+test("the archway stands on the terrace at the table's z, and he walks through each of its three bays on both floors", () => {
+  const pf = thing("牌坊"), { PAIFANG } = AX2;
+  assert.ok(pf, "registered");
+  assert.ok(near((pf.z0 + pf.z1) / 2, AXIS.paifangZ, 0.2) && near(pf.y, SECOND.y, 1e-9), "its posts' plane at paifangZ, on the terrace");
+  // the four posts' plane is z = paifangZ; the bays are 3.6, 4.8 and 3.6 m between post axes; walk each bay's middle from 6 m south of the archway to 6 m north of it
+  const xs = [-(PAIFANG.mid / 2 + PAIFANG.end), -PAIFANG.mid / 2, PAIFANG.mid / 2, PAIFANG.mid / 2 + PAIFANG.end], bays = [0, 1, 2].map((i) => (xs[i] + xs[i + 1]) / 2);
+  for (const [name, w] of both) {
+    for (const x of bays) for (let z = AXIS.paifangZ + 6; z >= AXIS.paifangZ - 6 - 1e-9; z -= 0.1) {
+      assert.ok(!w.blocked(x, z), `${name}: bay at x = ${x}, (${x}, ${z.toFixed(1)}) is open`);
+      assert.ok(near(w.heightAt(x, z), SECOND.y), `${name}: (${x}, ${z.toFixed(1)}) is level with the terrace, not ${w.heightAt(x, z)}`);
+    }
+    for (const x of xs) assert.ok(w.blocked(x, AXIS.paifangZ), `${name}: a post's clamp stones at (${x}, ${AXIS.paifangZ})`);
+  }
+});
+
+test("the archway's ridges stand where they did, the eave board is no thicker than 0.12 m and the sets are about 0.85 m tall (the art review of #438's third version)", async () => {
+  const { buildPaifang } = await import("../../app/src/paifang.js"), pf = buildPaifang(M), by = new Map(pf.parts.map((p) => [p.id, p]));
+  const ridge = Object.fromEntries(pf.tiers.map((t) => [t.id, t.ridgeY]));
+  assert.ok(near(ridge["side-e"], 7.26, 0.01) && near(ridge.mid, 8.37, 0.01), `${JSON.stringify(ridge)}`);
+  assert.ok(AX2.PAIFANG.roof.fascia <= 0.12 && AX2.PAIFANG.roof.under <= 0.12, "the eave board and the boards under the tiles are thin");
+  const sets = by.get("sets-e").box, plate = by.get("plate-e").box; assert.ok(near(sets.max.y - sets.min.y, 0.87, 0.05), `sets ${(sets.max.y - sets.min.y).toFixed(2)}`);
+  assert.ok(near(plate.max.y, sets.min.y, 0.01));
+  assert.ok(near(by.get("roof-side-e").box.max.x, 6 + AX2.PAIFANG.roof.out, 0.05) && AX2.PAIFANG.roof.out === 1.0, "the side roofs reach 1.0 m past the outer posts, not 1.6");
 });

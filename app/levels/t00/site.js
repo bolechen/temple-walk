@@ -85,7 +85,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {};
+  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {}, benchSeats = [];
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. A pointed (tent) roof rises half its span.
@@ -107,6 +107,8 @@ export function buildSite(M) {
       walk.drops.push({ a: world(edge.a), b: world(edge.b), normal: turn(...edge.normal, q), top: edge.top + y });
     }
     if (base === undefined) shade[lvl].push(place(b.plat, at, q));
+    // A bench between the columns (#479): each seat where it stands in the world, facing out over the view.
+    for (const s of b.seats) { const [x, z] = turn(s.at[0], s.at[1], q), [fx, fz] = turn(s.out[0], s.out[1], q); benchSeats.push({ at: [x + at[0], z + at[1]], top: s.top + y, face: Math.atan2(-fx, -fz), room: null, kind: "stool", pavilion: opts.plaque?.text || opts.plaque }); }
     // What stands where, by name: the edge sweep and the tests go round each building by this list.
     buildings.push({ name: opts.hall?.name || opts.plaque?.text || opts.plaque || opts.name || "", ...place(b.plat, at, q), y, rail: b.rail,
       frame: { xs: [...(opts.xs || [])], zs: [...(opts.zs || [])], sets: b.sets, cai: b.cai, parts: b.parts, corners: b.corners, cols: b.cols, ping: b.ping || null, roof: b.roof, storey: opts.storey || 0, under: !!opts.under, at: [...at], q, brackets: opts.brackets !== false } });   // its timber frame as built, in its own space: the structure tests read it
@@ -210,6 +212,9 @@ export function buildSite(M) {
   for (const [x, z, h, lvl] of [[-13.6, 54.4, 21, 0], [13.4, 53.8, 23, 0], [-19, 29, 19, 0], [19.6, 1.5, 20, 0], [-19.6, 0.5, 22, 0], [-15.5, 1.8, 5.2, 0], [15.5, 1.8, 5.6, 0], [-17, T1.zS - 27, 20, 1], [-17.5, T2.zS - 15, 18, 2]]) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
+    // The baked floor sees a young evergreen's wood only, and its boughs start at 1.35 m: it let him stand 0.9 m from the trunk with
+    // the eye inside the foliage (#288). Where the written plan kept him off by its boughs' reach, the floor is shut too, and half a metre more for the sprays that hang from the boughs.
+    if (h < 8) { const r = girth("cedar", h) + 0.5; closed.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, why: "a young evergreen is clothed to the knee: the eye stays out of its boughs" }); }
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
   const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
@@ -278,7 +283,7 @@ export function buildSite(M) {
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
   // Each flight is also kept as where it stands (`root.userData.flights`), so that its cheeks' feet can be looked under (#272).
-  const flightAt = (w, rise, m) => { (root.userData.flights ||= []).push({ w, rise, sides: [-1, 1], m }); return stairGeo(w, rise).geo.applyMatrix4(m); };
+  const flightAt = (w, rise, m) => { (root.userData.flights ||= []).push({ w, rise, sides: [-1, 1], m }); return stairGeo(w, rise, { place: m }).geo; };
   const placed = (x, y, z, turn = 0) => new THREE.Matrix4().makeTranslation(x, y, z).multiply(new THREE.Matrix4().makeRotationY(turn));
   LEVELS.forEach((L, i) => {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
@@ -325,9 +330,9 @@ export function buildSite(M) {
       brackets: false, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true };   // (two treads up from the landing, #274: the floor stands 0.3 m over it, more than he steps; nearly the middle bay wide)
     // The half-way pavilion stands on the downhill side of the landing, on a podium built out over the slope:
     // level ground under every column, and the valley to look at.
-    put({ ...rest, plaque: { text: "半山亭", style: "wood" } }, [5.2, A.zA1 + 2.75], 2, 0, yA);
+    put({ ...rest, bench: ["b"], plaque: { text: "半山亭", style: "wood" } }, [5.2, A.zA1 + 2.75], 2, 0, yA);
     stone.push(box(5.0, 4.0, 5.7, 5.2, yA - 2.0, A.zA1 + 2.65));
-    put({ ...rest, steps: 0, stepsBack: 2.6, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
+    put({ ...rest, bench: ["f"], steps: 0, stepsBack: 2.6, plaque: { text: "望江亭", style: "wood" } }, [A.xB1 + 2.9, (A.zC0 + A.zC1) / 2 + 0.2], 1, 0, yC);
     // The pool where Su Shi, climbing to the temple, washed his ink-stone (the county gazetteer: outside the gate, its
     // water clear, the ripples glinting on a still moonlit night as though there were ink in them), beside the second
     // landing: clear water in a tank of dressed stone, and behind it, facing the stair, a small stele with its name cut
@@ -370,6 +375,25 @@ export function buildSite(M) {
       }
       capIdx.push(b, b + 1, b + 2, b, b + 2, b + 3);
     }
+    // The two ends of the tiled roof are shut with a gable, as every wall's end is in life (#288): without it the hollow under
+    // the slopes shows as a black triangle to anyone who stands level with the end, as he now may at the summit's stair head.
+    for (const l of [0, len]) {
+      const b = capPos.length / 3;
+      for (const [yy, o] of [[H + 0.46, 0], [H + 0.1, 0.62], [H + 0.1, -0.62]]) {
+        capPos.push(alongX ? Math.min(x0, x1) + l : x0 + o, y + yy, alongX ? z0 + o : Math.min(z0, z1) + l); capUv.push(o + 0.625, o === 0 ? 0.72 : 0);   // (its tile rows run across it, not along the wall: a constant u would sit in the gutter between two rows, and be black)
+      }
+      // Wound to face out along the wall's line: the tile shader paints a back face dark, so a gable that faced inward would look no better than the gap.
+      if (alongX === (l === len)) capIdx.push(b, b + 1, b + 2); else capIdx.push(b, b + 2, b + 1);
+      // The tile shader is dark and the face looks sideways, so the shut end read as black from the stair head: over it goes the wall's own
+      // lime plaster, a finger proud and stopping a hand under the tiles, so that their edge still shows, as the wall under it is finished.
+      const out = l === len ? 1 : -1, off = out * 0.015, pts = [[H + 0.4, 0], [H + 0.1, 0.517], [H + 0.1, -0.517]].map(([yy, o]) => (alongX ? [Math.min(x0, x1) + l + off, y + yy, z0 + o] : [x0 + o, y + yy, Math.min(z0, z1) + l + off]));
+      if (alongX !== (l === len)) pts.push(pts.splice(1, 1)[0]);   // (wound to face out, as above)
+      const gable = new THREE.BufferGeometry();
+      gable.setAttribute("position", new THREE.Float32BufferAttribute(pts.flat(), 3));
+      gable.setAttribute("normal", new THREE.Float32BufferAttribute(pts.flatMap(() => (alongX ? [out, 0, 0] : [0, 0, out])), 3));
+      gable.setAttribute("uv", new THREE.Float32BufferAttribute(new Array(6).fill(0), 2));
+      body[lvl].push(gable);
+    }
     const r = { x0: Math.min(x0, x1) - (alongX ? 0 : T / 2), x1: Math.max(x0, x1) + (alongX ? 0 : T / 2), z0: Math.min(z0, z1) - (alongX ? T / 2 : 0), z1: Math.max(z0, z1) + (alongX ? T / 2 : 0) };
     shade[lvl].push(r);
     walk.solids.push({ x0: r.x0 - 0.45, x1: r.x1 + 0.45, z0: r.z0 - 0.45, z1: r.z1 + 0.45 });
@@ -394,6 +418,8 @@ export function buildSite(M) {
     root.add(mesh(footAt(merge([box(w, h, 0.7, 0, h / 2, z)]), 0), M.plaster()), mesh(merge([box(w + 0.5, 0.5, 1.0, 0, 0.25, z), box(w + 1.0, 0.2, 0.24, 0, h + 0.62, z)]), M.stone));   // a plinth, and the ridge of its little roof
     const cp = [], cu = [], ci = [];
     for (const s of [-1, 1]) { const b = cp.length / 3; for (const [l, yy, o] of [[0, h + 0.56, 0], [w + 0.8, h + 0.56, 0], [w + 0.8, h - 0.02, s * 0.8], [0, h - 0.02, s * 0.8]]) { cp.push(-w / 2 - 0.4 + l, yy, z + o); cu.push(l, o === 0 ? 0.95 : 0); } ci.push(b, b + 1, b + 2, b, b + 2, b + 3); }
+    // Its roof's two ends are shut, as the walls' are (#288).
+    for (const e of [0, w + 0.8]) { const b = cp.length / 3; for (const [yy, o] of [[h + 0.56, 0], [h - 0.02, 0.8], [h - 0.02, -0.8]]) { cp.push(-w / 2 - 0.4 + e, yy, z + o); cu.push(o + 0.8, o === 0 ? 0.95 : 0); } if (e) ci.push(b, b + 1, b + 2); else ci.push(b, b + 2, b + 1); }
     root.add(mesh(tiles(cp, cu, ci), M.tile));
     // Both faces: a panel of diamond-laid grey brick in a frame of pale stone, the four characters gilt upon it, as on the real wall.
     for (const s of [-1, 1]) { const p = makeWallPanel("双径归堂", w - 1.3, h - 1.05, M.stone); p.position.set(0, 0.5 + (h - 0.5) / 2 - 0.02, z + s * 0.36); if (s < 0) p.rotation.y = Math.PI; root.add(p); }
@@ -499,6 +525,7 @@ export function buildSite(M) {
   // cushion cross-legged. The rooms add their own (interior.js); game.js offers them.
   const seats = [[0, 0.62], [0.95, -0.12], [0, -0.86]].map(([lx, lz]) => { const p = teaFrom(lx, lz), c = teaFrom(0, -0.12); return { at: p, top: 0.44, face: Math.atan2(c[0] - p[0], c[1] - p[1]), room: null, kind: "stool" }; });
   seats.push({ at: [0, porchZ], top: porchY + 0.104, face: 0, room: null, kind: "cushion" });
+  seats.push(...benchSeats);   // the benches of the path's pavilions (#479)
   drawnSeats.push([0, porchZ], ...seats.slice(0, 3).map((q) => q.at)); seats.push(...teaMats);
   // Where each observance is made: a spot to stand (and the radius within which it is offered), the way to face
   // (0 looks downhill, toward +z), and whatever the scene needs to know to stage it.
@@ -535,6 +562,18 @@ export function buildSite(M) {
     sit: { at: [-1.0, 0.55, 1.4], look: [0, 0.53, 0], fov: 44, in: 2.4, out: 1.2, drift: { push: 0.012, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] },
   };
   for (const id in SHOTS) places[id].shot = SHOTS[id];
+  // The half-way pavilion's bench (#479): sitting on it, the eye turns slowly to the valley and stays there. Not an observance, so
+  // these are no places the game offers (`restPlaces`, one for each seat, asked for by the seat itself); each shot is worked out
+  // from its seat, since he sits facing in and the valley is behind him: the eye comes round to the middle of the pavilion, two
+  // metres in front of him, and looks back past him over the rail, down the slope.
+  const restPlaces = {};
+  for (const s of benchSeats) {
+    if (s.pavilion !== "半山亭") continue;
+    const id = `rest-banshan-${Object.keys(restPlaces).length}`, b = buildings.find((k) => k.name === s.pavilion), mid = [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2];
+    const left = [Math.cos(s.face), -Math.sin(s.face)], toMid = (mid[0] - s.at[0]) * left[0] + (mid[1] - s.at[1]) * left[1];
+    restPlaces[id] = { at: s.at, r: 1.2, face: s.face, shot: { at: [toMid, 1.35, 2.9], look: [toMid * 0.3, 0.5, -3.0], fov: 52, in: 2.4, out: 1.2, drift: { push: 0.01, for: 30 }, keep: [[0, 0.1, 0], [0, 0.95, 0]] } };
+    s.place = id;
+  }
 
   // ---- Named views: one per thing worth looking at. The screenshot tool renders each of them. ----
   const A = APPROACH;
@@ -552,6 +591,8 @@ export function buildSite(M) {
     // The observances' own shots (src/director.js): ?show=shot-<id> stands him at the place, begins the observance and
     // puts the eye on its shot at once. The incense is made indoors; its view is added with the hall's room (yard.js).
     ...Object.fromEntries(Object.entries(places).filter(([, p]) => p.shot).map(([id, p]) => [`shot-${id}`, [p.at[0], p.at[1], Math.PI - p.face, 0.05]])),
+    // The bench's own: he stands a step in front of it (the seat itself is inside the bench) looking toward it.
+    ...Object.fromEntries(Object.entries(restPlaces).map(([id, p]) => [`shot-${id}`, [p.at[0] + Math.sin(p.face) * 0.85, p.at[1] + Math.cos(p.face) * 0.85, -p.face, 0.05]])),
     teamat: [-7.6, 25.6, -0.72, -0.2], lamps: [-5.4, T2.zS - 1.0, -0.25, -0.22], desk: [1.2, deskAt[1] + 0.62, 1.25, -0.25], cushion: [2.6, TOP.zS - 1.2, 0.5, 0.2],
     // The six views of the art prototype (docs/t00/art-targets.md, A1 to A6), framed to match its pictures at 2.39:1:
     // the bamboo stair with the half-way pavilion at its head, the gate between the screen wall and its steps, the first
@@ -571,7 +612,7 @@ export function buildSite(M) {
   const censer = new THREE.Vector3(0, 0, 13);
   walk.posts.push({ x: censer.x, z: censer.z, r: CENSER.reach, eyeR: CENSER.ears + 0.1, top: censer.y + CENSER.height + 0.05 });   // the eye kept off its ears too
 
-  return { root, walk, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, restPlaces, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----
