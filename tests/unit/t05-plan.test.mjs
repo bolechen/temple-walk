@@ -70,6 +70,9 @@ test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, th
   assert.deepEqual([...FRONT], ["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
   const h = buildHall(M);
   assert.equal(h.columns.length, 28, "ten across the front and the back, four more up each end");
+  assert.equal(HALL.door.w, 4); assert.equal(HALL.door.sill, 0.24);
+  const back = h.parts.dark.map((g) => (g.computeBoundingBox(), g.boundingBox));
+  assert.ok(back.some((bb) => Math.abs(bb.max.x - bb.min.x - HALL.door.w) < 0.01 && bb.min.z < OUTER.zB + 1 && Math.abs(bb.min.x + bb.max.x) < 0.01), "a shut door in the back wall's middle bay");
   assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
   assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
   assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
