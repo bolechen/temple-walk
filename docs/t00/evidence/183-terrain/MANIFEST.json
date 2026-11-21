@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "art1-dem.png",
+   "bytes": 2574336,
+   "sha256": "14ba6ae425dc23da5ef660b82f4efbf6f6eeda079423d243edc44585bfd2fb67",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "art1-made.png",
+   "bytes": 2573039,
+   "sha256": "fa613386d335bedd9299676696447fec4c0970d74d18ccc9ea26b5a48c55e6a5",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "art1-rings.png",
+   "bytes": 2575235,
+   "sha256": "f9a971198ff50ebcb60d1e0590b1298564dac91928155faffca941a11dec1b06",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam01-dem.png",
+   "bytes": 3405038,
+   "sha256": "03e835dff320db5d748fde9b57ebc64cfaca5c0cf75f88b3966c4c08e0d12e21",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam01-made.png",
+   "bytes": 3405576,
+   "sha256": "e7833ab42168dffd7c393637ad877f1714760ad9090470df1510670c3cdd266c",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam01-rings.png",
+   "bytes": 3405120,
+   "sha256": "ff37d04a16288621e72b3c8cd1622056ef51c30482763281ce25aee29ee25d58",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam04-dem.png",
+   "bytes": 2651153,
+   "sha256": "9233cded9e4a916839899a15407bd63f8287cc7246d112b238833a84d874a43f",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam04-made.png",
+   "bytes": 2652829,
+   "sha256": "6179d7946a74946954485743930da8922a13ba48292e376c0b5e79e1f27fe0bb",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam04-rings.png",
+   "bytes": 2652889,
+   "sha256": "1d17fe2a38c4fce2e34c08bcf00c46040aa261e54ff9116f910a2495724822a2",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam06-dem.png",
+   "bytes": 2847832,
+   "sha256": "2ec8753e74bd01314c4edde81c2d235bac3abfd9b14dbc61a041c8b38b97c7da",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam06-made.png",
+   "bytes": 2852826,
+   "sha256": "103792bf282cb993fb2fd031e791c100d7d545975cfd8986aa59a261e97027b6",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "cam06-rings.png",
+   "bytes": 2852303,
+   "sha256": "1f382ec2fa7c3b58f376ac2e7f2bc49a52d211c04a258d548322d14e48aa8887",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "loft-dem.png",
+   "bytes": 2304539,
+   "sha256": "184a81e24c9aa8379bfbba07aa8e52c98925452fe6b1e0cb6eebf04fe583182c",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "loft-made.png",
+   "bytes": 2290646,
+   "sha256": "53c15ba597a2ad1752827435b570a413d8932ad8bdeafe880fdba1c479663e15",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "loft-rings.png",
+   "bytes": 2317261,
+   "sha256": "b1eaa904850d6a65da4776d1ca13beaf43bb17b2a566c389c3725fbf241ef772",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "opening0-dem.png",
+   "bytes": 2437420,
+   "sha256": "d12573a161418451f6c6165a52ef2c2ad0e1d6b7453389d30a111106338a10ec",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "opening0-made.png",
+   "bytes": 2415071,
+   "sha256": "7fd89e0d4cc65036a608c4aa76f879ac2eaba3344eb43e71d2e40b6dac65952a",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "opening0-rings.png",
+   "bytes": 2430549,
+   "sha256": "09a994a3bb5ab082863419d1208c722c6a05c2b8977b50801703d5ce617705cb",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  },
+  {
+   "path": "sheet.jpg",
+   "bytes": 605256,
+   "sha256": "940221e84e7a7c384d2154dedd147d0cbbc09d76d7d828ed811e88d33eda212a",
+   "rev": "fde6d52c0345c567276bb3953fd5dbc1535ee6ad"
+  }
+ ]
+}
