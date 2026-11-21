@@ -1,0 +1,126 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam03-winter.png",
+   "bytes": 787994,
+   "sha256": "eb1898e8df963027b47b24bb1621531b0f056de20af14a7bdf3e16104ce9accd",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "cam04-winter.png",
+   "bytes": 882280,
+   "sha256": "20ba592232bd66c5df973fd6dbcfda45487fbe9a4c0741bd76234f2a7f7ffe63",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "cam06-winter.png",
+   "bytes": 761145,
+   "sha256": "316363940663a9311ed02c6116d8eb72c78a5aa9fd81052a42a45bf876913469",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 331333,
+   "sha256": "a7dbc28dea3b50f8632754cb04b145e25acdcef0f03d3b4d55fbab4c3b54cfdd",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-kanakamuni.png",
+   "bytes": 631051,
+   "sha256": "5e740502d7209f70dfc144096f67fb09d71f26ce303c4bb319baef4391d277cd",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-kasyapa.png",
+   "bytes": 536736,
+   "sha256": "feffdf584d3d8d6c03b826f1b8ee17803cc979a56a5340cbd1ca4a5ceb0fd425",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-krakucchanda.png",
+   "bytes": 602839,
+   "sha256": "b59ca88a550051c8d92efbbce9ade3c1413a09ae41af8bedbad83b53d5e6704a",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-sakyamuni.png",
+   "bytes": 475009,
+   "sha256": "aad295253cdd71453c87782462b92772bab66540d402f4871029a86121aa08cd",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-sikhin.png",
+   "bytes": 666949,
+   "sha256": "21e802badfee134775895ea64f0409efbc96ca54a8edf5cad64d9c23d3aadbe8",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-vipasyin.png",
+   "bytes": 677210,
+   "sha256": "adfa15616e52ba426519a7aa243021b987470be8592ce25032413973cb2eeeb7",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "face10-visvabhu.png",
+   "bytes": 667763,
+   "sha256": "73e0ceef52605fc02a5368acbb30d662feb88d5c714f5345909dc7988b5b928b",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "front-vs-concept.png",
+   "bytes": 1394230,
+   "sha256": "cf4856c2a72af22f643a91af6a16db13ae5909fe13c1bf2b2bf2d3d695c48608",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "kanakamuni-half-warm.png",
+   "bytes": 782994,
+   "sha256": "d892315c2e1da3237a8a75483ed6f0bc96607fbfd62f8af41319687577fb053a",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "kasyapa-half-warm.png",
+   "bytes": 763924,
+   "sha256": "d95421d974b7b941120da0cd1c0441f355b1c8bbb94647331c57cb2de8d6fef3",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "krakucchanda-half-warm.png",
+   "bytes": 762450,
+   "sha256": "f22dfae11d1fb8519a275495d397b3be94149fe7c4308060d066df7e65e44ebc",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "lineup-row-winter.png",
+   "bytes": 760731,
+   "sha256": "005ad1f5d0de59eaa04f65b6d9516ddc666f536381d7b75b2fcc36a1f982742c",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "sakyamuni-half-warm.png",
+   "bytes": 916367,
+   "sha256": "b07642011bd0f421ed1bac5196a090085b81fd34ff49241cd39361177564c1ea",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "sikhin-half-warm.png",
+   "bytes": 862304,
+   "sha256": "c2e9000c879eb97614d2b92e72fd5dd807f2913e4a986613290088c4386ee708",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "vipasyin-half-warm.png",
+   "bytes": 856828,
+   "sha256": "fee9f5e490cd4cb293438ece73eb782c13a5e91c9dbd4c1e8c712aadfca437e6",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  },
+  {
+   "path": "visvabhu-half-warm.png",
+   "bytes": 814991,
+   "sha256": "8ca733f0a6d42fb8b901ed53573be81c81794d95eb1ac38617269d19a3e6ffca",
+   "rev": "2281ff1653e6003518c7475bf2bac90d5a9f350c"
+  }
+ ]
+}

@@ -1,0 +1,92 @@
+{
+  "spec": "tools/t05-hall/specs/sakyamuni-370-group.json",
+  "shots": [
+    {
+      "name": "door-winter",
+      "view": "door",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group/door-winter.png",
+      "tris": 437612,
+      "calls": 195,
+      "ms": 14944
+    },
+    {
+      "name": "door-summer",
+      "view": "door",
+      "mood": "summer",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group/door-summer.png",
+      "tris": 437612,
+      "calls": 195,
+      "ms": 10685
+    },
+    {
+      "name": "cam03-winter",
+      "view": "cam03",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group/cam03-winter.png",
+      "tris": 436992,
+      "calls": 166,
+      "ms": 9569
+    },
+    {
+      "name": "door3-winter",
+      "view": "door3",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/group/door3-winter.png",
+      "tris": 436968,
+      "calls": 164,
+      "ms": 10252
+    },
+    {
+      "name": "door-winter-clay",
+      "view": "door",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/sakyamuni-370/group/door-winter-clay.png",
+      "tris": 437612,
+      "calls": 195,
+      "ms": 10597
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}
