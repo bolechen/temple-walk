@@ -49,6 +49,9 @@ const SIDES = [["left", 1], ["right", -1]];   // he faces +z, so his left hand i
 // How far the skirt's bones follow a raised knee (radians of bone turn): freely up to SKIRT_FREE, easing to SKIRT_REACH for
 // the front and to SKIRT_SIDE for the side bones, which lie over the knees. Level walking never gets past SKIRT_FREE.
 const SKIRT_FREE = 0.5, SKIRT_REACH = 0.7, SKIRT_SIDE = 0.8;
+// The back of the skirt swings lightly: what walking turns it by (the trail and the trailing knee together) is free up to
+// the first and eased to the second, whatever the stride. Level walking turns it by no more than 0.14.
+const SKIRT_BACK_FREE = 0.25, SKIRT_BACK_REACH = 0.4;
 const SKIRT = ["robeFront", "robeLeft", "robeBack", "robeRight"];
 // Under each sole, the points that must clear the ground (in the foot's own frame, on the floor).
 const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.114], [0, 0.117], [0, -0.056]].map(([x, z]) => V3(x, 0, z));
@@ -739,12 +742,12 @@ export function createMonk() {
       const sd = springs.side.step(clamp(-0.07 * turn * Math.min(1, speed + 0.3), -0.2, 0.2) + 0.02 * Math.sin(phase) * gait, dt);
       // A thigh comes up a long way on a stair; cloth does not follow it into a board. The skirt follows the knee as it
       // always did up to SKIRT_FREE and eases to SKIRT_REACH, past which no bone turns on the knee's account.
-      const reachOf = (x, to = SKIRT_REACH) => x <= SKIRT_FREE ? x : SKIRT_FREE + (to - SKIRT_FREE) * Math.tanh((x - SKIRT_FREE) / (to - SKIRT_FREE));
-      const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, swingBack = (k) => reachOf(0.7 * Math.max(0, -k)) / 0.7;
-      const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = swingBack(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
+      const reachOf = (x, to = SKIRT_REACH, free = SKIRT_FREE) => x <= free ? x : free + (to - free) * Math.tanh((x - free) / (to - free));
+      const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, backTurn = (k) => reachOf(tr + 0.7 * Math.max(0, -k), SKIRT_BACK_REACH, SKIRT_BACK_FREE);
+      const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt lies over his thighs, the sides open over his knees, the back falls behind.
       B.robeFront.rotation.set(tr - 0.9 * fwd - 0.85 * seat - 1.22 * perch, 0, sd);
-      B.robeBack.rotation.set(tr + 0.7 * back + 0.35 * seat + 0.9 * perch, 0, sd);
+      B.robeBack.rotation.set(back + 0.35 * seat + 0.9 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
       B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
       B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);

@@ -40,7 +40,7 @@ function reach(opts) {
 // robe's hem being at 0.246) are each sent straight out from the axis of his body at its own height; if that ray meets
 // none of the robe's skirt cloth, the vertex is in the open. The skirt cloth is the robe's triangles whose points hang
 // wholly from the pelvis and the four skirt bones (the sleeves and the sash do not).
-function exposed(opts, every = 3, sample = 15) {
+function exposed(opts, every = 3, sample = 5) {
   const probe = createMonk(); probe.group.updateMatrixWorld(true); probe.skeleton.update();
   const names = probe.skeleton.bones.map((b) => b.name), rg = probe.parts.robe.geometry, si = rg.attributes.skinIndex, sw = rg.attributes.skinWeight, v = new THREE.Vector3();
   const skirtW = (i) => { let w = 0; for (let k = 0; k < 4; k++) { const n = names[si.getComponent(i, k)]; if (n === "hips" || SKIRT.includes(n)) w += sw.getComponent(i, k); } return w; };
@@ -84,7 +84,7 @@ test("on a flight, up or down, the skirt's front and sides never lift into a boa
     const r = reach({ n: 10, dir, speed }), tag = `${dir > 0 ? "up" : "down"} at ${speed.toFixed(2)} m/s`;
     for (const k of ["robeFront", "robeLeft", "robeRight"]) {
       assert.ok(r[k].xmin >= -0.85, `${k} ${tag}: turned ${r[k].xmin.toFixed(2)} rad from the pelvis`);
-      assert.ok(r[k].world <= deg(1) * 0 + THREE.MathUtils.degToRad(55), `${k} ${tag}: ${deg(r[k].world).toFixed(0)}° from the vertical`);
+      assert.ok(r[k].world <= THREE.MathUtils.degToRad(55), `${k} ${tag}: ${deg(r[k].world).toFixed(0)}° from the vertical`);
       assert.ok(r[k].z <= 0.22, `${k} ${tag}: splayed ${r[k].z.toFixed(2)} rad`);
     }
   }
