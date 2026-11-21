@@ -516,6 +516,15 @@ if AR:
                 "range": {"min": st0[mv > 0].min(0).round(3).tolist(), "max": st0[mv > 0].max(0).round(3).tolist()}, "old_hand_faces_cut": gone_n - stretched, "stretched_faces_cut": stretched}
   np.save(os.path.join(out, "arm-moved.npy"), np.c_[st0[mv > 0], mv[mv > 0]])
 # the new hand, joined
+if PO and PO.get("trim"):
+  # the donor's own cut lies aslant once the hand is turned to its pose and stood out of the forearm (round 2: the
+  # wrist's edge 70 mm outside at the median); the stub's top `trim` metres (along the hand from the wrist) are taken
+  # off, so its open end is a level ring inside the forearm's end
+  s_h = (hand_co - tw) @ tax; keepv = s_h >= PO["trim"]
+  hand_faces = hand_faces[np.all(keepv[hand_faces], axis=1)]; used = np.unique(hand_faces)
+  remap = -np.ones(len(hand_co), int); remap[used] = np.arange(len(used)); hand_co = hand_co[used]; hand_faces = remap[hand_faces]
+  log.setdefault("pose", {})["trim_m"] = PO["trim"]
+  np.savez(os.path.join(out, "hand-final.npz"), points=hand_co, faces=hand_faces)
 nb = len(st); allco = np.r_[st, hand_co]
 me = ob.data; bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
 for p in hand_co: bm.verts.new(Vector(to_blender(p[None])[0]))

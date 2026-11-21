@@ -59,7 +59,7 @@
      1
     ],
     [
-     0.13,
+     0.17,
      1
     ]
    ]
@@ -125,7 +125,8 @@
     "palm_u": 0.55
    },
    "note_bend": "the fingers bend from the knuckles toward the back of the hand (negative), following the knee down past its fullest point (the 3D review's 2026-11-21 correction: knuckles ≤ 25° toward the back); the palm (wrist to knuckles, the first 40%) is not bent",
-   "note_section": "the hand's wrist and the forearm's end are both wider across (x) than deep: their flat sides are met at 0°, not turned 180° (the 3D review)"
+   "note_section": "the hand's wrist and the forearm's end are both wider across (x) than deep: their flat sides are met at 0°, not turned 180° (the 3D review)",
+   "trim": 0.12
   }
  },
  "knee": {
@@ -168,7 +169,7 @@
   "useLeft": false,
   "poly": 2,
   "clamp": false,
-  "blur": 0.12,
+  "blur": 0.25,
   "inset": 0.3,
   "ease": 0.06,
   "edgeBlur": 0.025,
