@@ -100,7 +100,8 @@
 | 3d 模型评审 `session_01Cq65vJ2GkdWh45XFe4vGGJ`（交接：`docs/handoff/review-3d.md`） | 小沙弥的身体、蒙皮、步态、造像模型 | 人物和模型的 PR；新身体接不接 |
 | music 音乐评审 `session_01Cq65vGnvJSp9okVxhkRbVN`（交接：`docs/handoff/review-music.md`；作曲时切 Opus） | 配乐、环境声、脚步、器物声 | 凡加了看得见的动静（落叶、水、门、仪式），问它该不该有声 |
 | 美术总监（Fable）`session_01Cq65vEhGAf3gZq6wx85Hzo`（清单：`docs/ART-REVIEW.md`） | 画面好不好看、合不合方向；T05 的画面，以及两位美术意见不一时的定夺 | **凡看得见的改动，没有「美术通过」主创不合**（所有者 2026-11-21：「美术为我们第一要素，要 fable 把关」）；只审不改代码 |
-| 美术审图二（Fable）`session_01Cq65vG81EZC5oMHbwEyY95` | T00 的画面改动（2026-11-21 起分担） | 同上，口径以美术总监和 `docs/ART-REVIEW.md` 为准 |
+| 美术审图二（Fable）`session_01Cq65vG81EZC5oMHbwEyY95` | T00 的场景与画面：镜头构图、建筑、铺地、远景、窗、石阶、碑 | 同上，口径以美术总监和 `docs/ART-REVIEW.md` 为准 |
+| 美术审图三（Fable）`session_01Cq65vJv1VfVJ6DDBRt8wot` | T00 的界面与人物：标题页、各张纸、行脚图版式、小沙弥（2026-11-21 所有者同意加开） | 同上；人物先过 3D 评审再看美术 |
 | 产品全面审查与优化 `session_01Cq65vGZNxhYejMudm6nJ13` | 界面走查（开发会话，不是独立评审） | 菜单、提示、手机界面的小修可以直接交给它 |
 
 主创用 `send_message` 找它们；它们的意见是专项的证据，写在 PR / issue 评论里，最后的取舍仍是主创的，主创不同意时写明理由。独立评审是另一回事，结论谁也不能代改。

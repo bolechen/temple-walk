@@ -166,8 +166,8 @@ const scenarios = {
     // A first visitor is shown the mountain first (src/opening.js); what follows is the arriving view it hands back.
     expect(await t.page.evaluate(() => window.__opening().active), "a first visitor should be shown the opening");
     await t.until(() => t.page.evaluate(() => window.__opening().phase === "done"), 180000, "the opening never handed the walk back");
-    expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("钟楼"), "a new visitor should be pointed at the bell");
-    await t.frames(2); expect(await t.page.isVisible("#way") && /\d+ 步/.test(await t.page.textContent("#way")), "an arriving visitor should be shown the way to the first place, and how far");
+    expect((await t.journey()).entered && (await t.page.textContent("#goal")).includes("大雄宝殿"), "a new visitor should be pointed at the great hall's incense (#436)");
+    await t.frames(2); expect(await t.page.isVisible("#way") && /\d+ 步/.test(await t.page.textContent("#way")), "an arriving visitor should be shown the way to the first place (the great hall), and how far");
     const loading = await t.page.evaluate(() => ({ values: window.__loadingHistory, hidden: document.getElementById("loading").hidden, value: document.getElementById("loadProgress").value }));
     expect(loading.values.includes(null), "loading indicator must exist before module initialization");
     expect(loading.values.some(v => v > 0 && v < 100), "loading must show intermediate real progress");
@@ -241,18 +241,24 @@ const scenarios = {
     await probeLevel(b, base);
   } },
   // T05's white box (#409), on the workbench: ?level=t05 walks its own place on its own baked floor. He arrives at the
-  // outer gate's place, walks the way into the court, past station A and up the flight to station B on the terrace, 3 m
-  // up, and nothing complains. Built, not drawn.
+  // outer gate's place, walks the way into the court, past stations A and B and up the flight onto the terrace, 3 m
+  // up, and on through the hall's middle door to station E under its roof, and nothing complains. Built, not drawn.
   t05: { tier: 2, async run(b, base) {
     const t = await open(b, base, "level=t05&q=low&fast=1" + BARE), lv = await t.page.evaluate(() => window.__level());
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
     const w = await t.page.evaluate(() => window.__walker());
     expect(w.mode !== "old" && w.bytes > 0, "T05's own baked floor should be fetched: " + JSON.stringify(w));
     let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
-    await t.page.evaluate(() => window.__walk([[0, 120], [0, 55], [0, 20], [0, 14.4]]));
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 44], [0, 27], [0, 14.4]]));
     let lo = 9, hi = -9;
-    await t.until(async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return Math.hypot(s.x, s.z - 14.4) < 0.6; }, 300000, "he never reached station B on the terrace");
+    await t.until(async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return Math.hypot(s.x, s.z - 14.4) < 0.6; }, 300000, "he never reached the terrace by way of station B");
     expect(Math.abs(lo) < 0.1 && Math.abs(s.h - 3) < 0.1, `from the court's paving up to the terrace, 3 m: went ${lo} to ${hi}, stands at ${s.h}`);
+    // On into the great hall (#422) through its middle door, over the sill to station F and under the roof to E: the
+    // same floor as the court's, no veil, no room under the court.
+    await t.page.evaluate(() => window.__walk([[0, 2], [0, -2], [0, -12]]));
+    let veil = false;
+    await t.until(async () => { s = await t.state(); veil ||= !!s.inside || s.room !== null; return Math.hypot(s.x, s.z + 12) < 0.6; }, 300000, "he never reached station E inside the hall");
+    expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
@@ -429,12 +435,12 @@ const scenarios = {
     expect(await t.page.isVisible('.langs [data-lang="en"]') && !(await t.page.isVisible('.langs [data-lang="ja"]')), "the title should offer the other two languages");
     await t.page.click("#enterBtn"); await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 30000, "the title never left");
     if (await t.page.evaluate(() => window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening"); }   // a first visit: the mountain first (src/opening.js)
-    expect((await words("#goal")).includes("鐘楼") && (await words("#goal")).includes("次は"), "the next place should be named in Japanese: " + (await words("#goal")));
+    expect((await words("#goal")).includes("大雄宝殿") && (await words("#goal")).includes("次は"), "the next place should be named in Japanese: " + (await words("#goal")));
     await t.page.evaluate(() => { const p = window.__places.bell; window.__poseNear(p.at[0] + 0.3, p.at[1] - 0.3, 0, 0); });
     await t.until(async () => (await t.page.isVisible("#act")) && (await words("#act")).includes("鐘を撞く"), 30000, "the bell should be offered in Japanese");
     await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 20000, "the book did not open");
     // (the walk so far is told only after twenty steps, #185: here he has been posed, not walked)
-    expect((await words("#bookHint")).includes("鐘楼") && (await words("#bookHint")).includes("撞く"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
+    expect((await words("#bookHint")).includes("大雄宝殿") && (await words("#bookHint")).includes("香を供える"), "the book's hint should be in Japanese: " + (await words("#bookHint")));
     expect(await t.page.evaluate(() => document.getElementById("bookImg").complete && document.getElementById("bookImg").naturalWidth === 1200), "the seal book was not drawn");
     await t.page.click("#bookClose");
     // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
@@ -927,7 +933,7 @@ const scenarios = {
     const at = (id) => t.page.evaluate((k) => window.__journey && (() => { const p = window.__places[k]; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); })(), id);
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
     const word = () => t.page.getAttribute("#act", "data-word"), offered = (w, what) => t.until(async () => (await t.page.isVisible("#act")) && (await word()) === w, 30000, `"${w}" was not offered ${what}`);
-    let j = await t.journey(); expect(j.count === 0 && j.next === "bell", "a new book should be empty");
+    let j = await t.journey(); expect(j.count === 0 && j.next === "incense", "a new book should be empty and point at the incense (#436)");
     // #403: while a seal is being given, the same words must not stand on the page twice (the observance's line at the foot
     // and the seal's own line under the stamp). Watched from inside the page on every class change, so no frame is missed.
     await t.page.evaluate(() => {
@@ -1211,12 +1217,15 @@ const scenarios = {
     const R = () => t.page.evaluate(() => window.__rites().incense), word = async () => ((await t.page.isVisible("#act")) ? t.page.getAttribute("#act", "data-word") : null);
     const at = () => t.page.evaluate(() => { const p = window.__places.incense; window.__poseNear(p.at[0] + 0.2, p.at[1] + 0.3, 0, 0); });
     await t.until(() => t.inHall(), 60000, "not in the great hall"); await at();
+    // #436: an empty book points at this offering, and once its seal is given the goal moves on to the bell tower.
+    await t.until(async () => (await t.page.textContent("#goal")).includes("大雄宝殿") && (await t.journey()).next === "incense", 30000, "an empty book should point at the great hall: " + (await t.page.textContent("#goal")));
     await t.until(async () => (await word()) === "上香", 40000, "上香 was not offered"); await t.page.click("#act");
     await t.until(async () => (await R()).planted, 120000, "the sticks were never set in the ash");
     let r = await R(); expect(r.smoke && r.left > 0 && r.left <= 12, "planted sticks should smoke and have time left: " + JSON.stringify(r));
     // The seal comes after the bow that follows the planting, a few seconds on: wait for it, as for any passage.
     await t.until(async () => (await t.journey()).seals.incense > 0, 60000, "no seal for the incense");
     await t.until(async () => !(await t.journey()).rite, 30000, "he did not finish the offering");
+    await t.until(async () => (await t.page.textContent("#goal")).includes("钟楼") && (await t.journey()).next === "bell", 30000, "after the incense the goal should be the bell tower: " + (await t.page.textContent("#goal")));
     expect((await word()) !== "上香", "incense should not be offered while it burns");
     await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     r = await R(); expect(r.planted || r.burnt, "a reload lost the incense: " + JSON.stringify(r));

@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 const T05 = await import("../../app/levels/t05/site.js");
 const AX = await import("../../app/levels/t05/axis.js");
 const { buildSite, createWalker, COMPOUND, WAY, ARRIVE, TERRACE, PLATFORM } = T05;
-const { AXIS, SECOND, LANE, HALL, GATE, FOOT, HALL_HALF, MONUMENT, LAMP } = AX;
+const { AXIS, SECOND, LANE, HALL, GATE, FOOT, HALL_HALF, MONUMENT, LAMP, PATH, TRUNKS } = AX;
 const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
@@ -68,13 +68,15 @@ test("nothing outside the walls of the way or of the terrace can be stood on; th
   }
 });
 
-test("between the court and the terrace the only way across is over the hall's platform; between the terrace and the way, over the gate's", () => {
+test("between the court and the terrace the only way across is the Wuliang hall's passage; between the terrace and the way, the inner gate's", () => {
   const open = (w, z, lo, hi) => { const xs = []; for (let x = lo; x <= hi + 1e-9; x += 0.1) if (!w.blocked(x, z)) xs.push(+x.toFixed(1)); return xs; };
+  const mid = HALL.xs[3], gmid = GATE.xs[2];
   for (const [name, w] of both) {
+    // z = 62 lies inside the hall, behind its back wall: open in the passage and on the porch outside the side walls, not in the rooms either side of the passage.
     const a = open(w, COMPOUND.zS, -COMPOUND.x - 1, COMPOUND.x + 1);
-    assert.ok(a.length > 50 && a.every((x) => Math.abs(x) < FOOT.hall.x1), `${name}: along the court's south wall only the hall's platform is open: ${a[0]} … ${a[a.length - 1]}`);
+    assert.ok(a.some((x) => Math.abs(x) < 0.5) && a.every((x) => Math.abs(x) < mid - 0.3 || Math.abs(x) > HALL.xs[5] - 0.2) && a.every((x) => Math.abs(x) < FOOT.hall.x1), `${name}: along the court's south wall, across the hall: ${a.join(" ")}`);
     const b = open(w, AXIS.innerZ + 0.2, -SECOND.hw - 1, SECOND.hw + 1);
-    assert.ok(b.length > 50 && b.every((x) => Math.abs(x) < FOOT.inner.x1), `${name}: along the terrace's south end only the gate's platform is open: ${b[0]} … ${b[b.length - 1]}`);
+    assert.ok(b.some((x) => Math.abs(x) < 0.5) && b.every((x) => Math.abs(x) < gmid + 0.3 || Math.abs(x) > GATE.xs[3] - 0.2) && b.every((x) => Math.abs(x) < FOOT.inner.x1), `${name}: along the terrace's south end, across the gate: ${b.join(" ")}`);
   }
 });
 
@@ -85,7 +87,7 @@ test("from where he arrives, the outer gate's, the inner gate's, the archway's, 
     assert.ok(t, `${id} is a named view`); assert.ok(t.new, `${id}: reached on the floor baked from what is drawn`); assert.ok(t.old, `${id}: reached by the written plan's walker`);
     const v = site.views[id]; assert.ok(!grid.blocked(v[0], v[1]) && !old.blocked(v[0], v[1]), `${id} stands on open floor`);
   }
-  assert.ok(near(grid.heightAt(...site.views.outer), 0) && near(grid.heightAt(...site.views.inner), SECOND.y) && near(grid.heightAt(...site.views.mouth), 0));
+  assert.ok(near(grid.heightAt(...site.views.outer), 0.5) && near(grid.heightAt(...site.views.inner), SECOND.y) && near(grid.heightAt(...site.views.mouth), 0));   // (the outer gate's platform is 0.5 m)
   assert.equal(file.header.targets.filter((t) => !t.new || !t.old).length, 0, "every named place is reached on both floors");
   assert.ok(site.views.mouth[1] < FOOT.hall.z0 - stairProfile(SECOND.y).run, "the court's mouth is beyond the foot of the hall's back steps");
 });
@@ -120,9 +122,28 @@ test("every size on the axis has a row in docs/t05/SOURCES.md §13, with how far
 test("what he walks round is the same on both floors: points just off each wall, each platform and each block agree", () => {
   const probes = [];
   for (const sx of [-1, 1]) {
-    for (const z of [130, 170, 205, 215]) probes.push([sx * (LANE.hw - 0.4 - 0.6), z], [sx * (LANE.hw + 0.4 + 0.6), z]);
+    for (const z of [130, 170, 195, 215]) probes.push([sx * (LANE.hw - 0.4 - 0.6), z], [sx * (LANE.hw + 0.4 + 0.6), z]);
     for (const z of [70, 90, 110]) probes.push([sx * (SECOND.hw - 0.4 - 0.6), z], [sx * (SECOND.hw + 0.4 + 0.6), z]);
     probes.push([sx * (FOOT.hall.x1 + 0.9), 60.4], [sx * (FOOT.hall.x1 + 0.9), 64], [sx * (FOOT.inner.x1 + 0.9), 117.5], [sx * (FOOT.inner.x1 + 0.9), 123]);
   }
   for (const [x, z] of probes) assert.equal(old.blocked(x, z), grid.blocked(x, z), `(${x}, ${z}): the plan says ${old.blocked(x, z)}, the grid ${grid.blocked(x, z)}`);
+});
+
+test("only a path of about 6 m is paved down the way and the terrace; earth either side, with trunks standing in it", () => {
+  assert.equal(PATH.hw * 2, 6);
+  assert.deepEqual(site.paving.map((p) => p.x), [PATH.hw, PATH.hw], "two strips of paving, each 6 m across: the way's and the terrace's");
+  assert.ok(site.paving[0].y < 0.05 && near(site.paving[1].y, SECOND.y + 0.012, 1e-9));
+  // The path, the earth beside it and the gap between a trunk and the wall are all open floor; each trunk is in the way.
+  for (const [name, w] of both) {
+    for (const z of [140, 175, 215]) for (const x of [0, PATH.hw - 0.5, PATH.hw + 0.6, -PATH.hw - 0.6]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the way is open`);
+    for (const z of [85, 100, 112]) for (const x of [0, 2, 4.2, -4.2]) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) on the terrace is open`);
+    for (const sx of [-1, 1]) for (const z of TRUNKS.lane) assert.ok(w.blocked(sx * TRUNKS.x, z), `${name}: a trunk at (${sx * TRUNKS.x}, ${z})`);
+    for (const sx of [-1, 1]) for (const z of TRUNKS.terrace) assert.ok(w.blocked(sx * TRUNKS.x, z), `${name}: a trunk on the terrace at (${sx * TRUNKS.x}, ${z})`);
+  }
+  // Heights: the earth beside the path is on the floor, 0 down the way and +1.0 on the terrace.
+  for (const [name, w] of both) { assert.ok(near(w.heightAt(6.8, 150), 0, 0.02), name); assert.ok(near(w.heightAt(6.8, 95), SECOND.y, 0.02), name); }
+  // Trunks keep clear of the archway's place (z = 100) and of both platforms.
+  const tz = TRUNKS.terrace; assert.ok(tz.every((z) => Math.abs(z - AXIS.paifangZ) >= 8 && z > FOOT.hall.z1 + 4 && z < FOOT.inner.z0 - 1), `${tz}`);
+  assert.ok(TRUNKS.lane.every((z) => z > FOOT.inner.z1 + 4 && z < FOOT.outer.z0 - 4));
+  assert.equal(new Set(TRUNKS.lane.slice(1).map((z, i) => z - TRUNKS.lane[i])).size, 1, "even spacing down the way");
 });

@@ -1,6 +1,6 @@
 # T01 馆藏选件：从 T00 的画框制度到宝通寺的七处墙面
 
-> 状态：**首批 17 幅图已下载到 `docs/t01/evidence/gallery/`（长边 1280，WebP，约 2.4 MB）；缩略总览见 [`evidence/gallery-contact.jpg`](evidence/gallery-contact.jpg)。接页面时再移到 `app/levels/t01/gallery/`；尚无 `works.js`、三语卡片与页面接入，未上线**。本文件回答「哪些公开馆藏可以挂进 T01 的哪座殿、为什么、许可够不够、卡片怎么写」。接页面要等主创定了白盒与殿内墙面之后再做。
+> 状态：**首批 17 幅图已下载并放进证据库里（清单 `docs/t01/evidence/gallery/MANIFEST.json`，钉在提交 `e7a5b88eb12b`，每幅的地址是 `https://evidence.dev.rushiwowen.co/e7a5b88eb12ba19853f928904b0bc54ff61cce48/t01/gallery/<文件名>.webp`；`node tools/evidence.mjs pull docs/t01/evidence/gallery` 取回到 `tools/out/evidence/`）（长边 1280，WebP，约 2.4 MB）；缩略总览见 [`evidence/gallery-contact.jpg`](evidence/gallery-contact.jpg)。接页面时再移到 `app/levels/t01/gallery/`；尚无 `works.js`、三语卡片与页面接入，未上线**。本文件回答「哪些公开馆藏可以挂进 T01 的哪座殿、为什么、许可够不够、卡片怎么写」。接页面要等主创定了白盒与殿内墙面之后再做。
 >
 > 读法：先看 §0 与 §3 的总表；做内容时看 §4 的逐件著录；做工程时看 §8；要引用时看每件的馆方条目地址，不要引用本文件的转述。
 
@@ -304,7 +304,7 @@ T00 已用的 32 件里，与 T01 候选最接近的两件：
 ### 8.1 文件与数据
 
 ```
-app/levels/t01/gallery/<slug>.webp          # 1280 px 长边，WebP q80；接页面时从 docs/t01/evidence/gallery/ 移来
+app/levels/t01/gallery/<slug>.webp          # 1280 px 长边，WebP q80；接页面时从证据库取回（`evidence.mjs pull docs/t01/evidence/gallery`） 移来
 app/levels/t01/works.js                     # 由 tools/gallery.py 写出，不手改
 app/levels/t01/locales/{ja,en,ko}.js        # 每件的 title/note/link 三语
 ```
@@ -355,8 +355,8 @@ python3 tools/gallery.py <dir> --level t01
 ## 9. 待办（按顺序）
 
 1. **主创定墙面**：罗汉堂是否留密坛壁龛；藏经楼是否独立成室；弥勒殿是否挂画。这三个决定影响 8 件作品的去留。
-2. **逐件下载（已完成）**：首批 17 幅已下载到 `docs/t01/evidence/gallery/*.webp`，长边 1280、WebP q82，共约 2.4 MB。ColBase 10 幅（6 个条目）用无头浏览器取条目页的 detail 图；大都会 3 幅用 `primaryImage`；克利夫兰 4 幅用 `_print` / `_full.tif` 裁段。1994.25 暂缓（见 W-CJ-02）。
-3. **裁切已做第一版**：吴彬长卷两段、李昇手卷、高丽罗汉、两幅曼荼罗、两幅涅槃图都按画心裁切；比例与位置交主创看 `docs/t01/evidence/gallery/` 后还可再调，裁切参数应补进将来 `tools/gallery.py` 的 `CROP` 表。
+2. **逐件下载（已完成）**：首批 17 幅已下载并放进证据库（`docs/t01/evidence/gallery/MANIFEST.json`，`e7a5b88eb12b`），长边 1280、WebP q82，共约 2.4 MB。ColBase 10 幅（6 个条目）用无头浏览器取条目页的 detail 图；大都会 3 幅用 `primaryImage`；克利夫兰 4 幅用 `_print` / `_full.tif` 裁段。1994.25 暂缓（见 W-CJ-02）。
+3. **裁切已做第一版**：吴彬长卷两段、李昇手卷、高丽罗汉、两幅曼荼罗、两幅涅槃图都按画心裁切；比例与位置交主创看证据库里的图（上面的地址或 `evidence.mjs pull`）后还可再调，裁切参数应补进将来 `tools/gallery.py` 的 `CROP` 表。
 4. **写三语**：每件 title/note/link 的日、英、韩；馆方来源行不译。图已就位，三语还没有写。
 5. **更新 `asset-register.csv`（已完成）**：17 件的 `file` 已从 `(planned)` 改为实际路径；1994.25 标为 `deferred`；A-757 补为候选。
 6. **等白盒**：墙面尺寸、画框位置、灯光角度都要等白盒定了再放；现在不写进 `scene-spec.json`。
@@ -365,7 +365,7 @@ python3 tools/gallery.py <dir> --level t01
 
 ## 10. 这份文件不做什么
 
-- 本文件记著录与候选；首批 17 幅图已下载到 `docs/t01/evidence/gallery/`，但还没有 `works.js`、三语卡片与页面接入，状态仍是候选而非已上线。
+- 本文件记著录与候选；首批 17 幅图已下载并放进证据库（`docs/t01/evidence/gallery/MANIFEST.json`），但还没有 `works.js`、三语卡片与页面接入，状态仍是候选而非已上线。
 - 不把候选说成已定；`candidate` 就是候选。
 - 不替主创决定寺庙的收藏性格；只给出一套有理由、可替换的选件。
 - 不把公开馆藏说成宝通寺的旧藏，也不把宝通寺说成这些作品的收藏地。
