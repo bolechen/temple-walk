@@ -438,6 +438,10 @@ if PO and PO.get("solve"):
     for bdeg in np.arange(PO["solve"]["bend_range"][0], PO["solve"]["bend_range"][1] + 0.01, 1.0):
       if gap(dsol, bendgeo(math.radians(bdeg)), fingers) >= PO["solve"].get("tip_gap", 0.01): b_best = float(bdeg); break
     if b_best is None: b_best = float(PO["solve"]["bend_range"][1])
+    Q0 = place(W, bendgeo(0.0)); g0 = gaps(Q0); g0[~fingers | (g0 < -8)] = 9; j0 = int(np.argmin(g0)); k0 = tuple(np.floor(Q0[j0, :2] / 0.02).astype(int))
+    src0 = st[sel][np.all(np.floor(st[sel][:, :2] / 0.02).astype(int) == list(k0), axis=1)]
+    log["pose"]["straight_finger_limit"] = {"gap_m": round(float(g0[j0]), 4), "hand_point": Q0[j0].round(3).tolist(), "u": round(float(u[j0]), 3), "v": round(float(v[j0]), 3), "w": round(float(w[j0]), 3),
+                                             "front_point": src0[np.argmax(src0[:, 2])].round(3).tolist() if len(src0) else None}
     du, dn = bendgeo(math.radians(b_best)); log["pose"]["bend_deg"] = float(b_best)
     log["pose"]["tip_gap_m"] = round(float(gap(dsol, None, fingers)), 4)
   hand_co = place(W); tw = W
