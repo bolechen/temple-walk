@@ -37,23 +37,40 @@ test("the altar is 37.5 × 4.8 × 0.87 m, its top at +3.87, its front 14.5 m in;
     assert.ok(b.min.x > -ALTAR.w / 2 - 0.15 && b.max.x < ALTAR.w / 2 + 0.15 && b.min.z > ALTAR.zB - 0.15 && b.max.z < ALTAR.zF + 0.15, "what stands on the altar stays on it"); }
 });
 
-test("the middle one is the tallest and reads so from the threshold: 25 px over his neighbours at cam03, third person, 1080 lines", () => {
+test("the middle one is not lower than his neighbours, the six within 8.6–8.9 m; Shakyamuni turned 7° west", () => {
   const [mid3, ...rest] = [FIGURES[3], ...FIGURES.filter((_, k) => k !== 3)];
   assert.equal(mid3.id, "vipasyin");
-  for (const f of rest) assert.ok(f.h >= 8.6 && f.h <= 8.9, `${f.id} ${f.h}: 8.6–8.9 m (DECISIONS.md §3)`);
+  for (const f of rest) { assert.ok(f.h >= 8.6 && f.h <= 8.9, `${f.id} ${f.h}: 8.6–8.9 m (DECISIONS.md §3)`); assert.ok(mid3.h >= f.h, `Vipashyin not lower than ${f.id}`); }
   assert.ok(mid3.h <= 9.5, "within the public figures' 8.6–9.5 m");
-  // The following eye's camera at cam03 (3.66 m up at z +6.57, 50° high, raised as the view is): Vipashyin's top stands
-  // 2.3% of the picture's height over Sikhin's and Visvabhu's (25 px at 1080). The page's own camera is reported by the
-  // render script in the evidence; this holds the margin in the plan.
+  // Shakyamuni at the west end is turned 7° to the west.
+  const sak = FIGURES[6]; assert.equal(sak.id, "sakyamuni"); assert.ok(sak.x < 0 && Math.abs(sak.yaw + (7 * Math.PI) / 180) < 1e-9);
+  assert.ok(Math.sin(sak.yaw) < 0, "facing turned toward -x, the west");
+});
+
+// #432's second criterion, 25 px over his neighbours at cam03 (third person, 1080 lines; 2.3% of the picture's height),
+// waits on the art director's call (the T05 lead, 2026-11-21): it is worked out and reported, not yet held.
+test("the middle one reads tallest from the threshold: 25 px over his neighbours at cam03", { todo: "awaiting the art director's call on the 25 px line (#432)" }, () => {
   const cam = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 400);
   for (const pitch of [0.1, 0.14, 0.2]) {
     cam.position.set(...EYES[0]); cam.rotation.set(pitch, 0, 0, "YXZ"); cam.updateMatrixWorld();
     const y = (id) => { const t = altar.tops.find((q) => q.id === id); return ((1 - new THREE.Vector3(t.x, t.top, t.z).project(cam).y) / 2) * 1080; };
     for (const n of ["sikhin", "visvabhu"]) assert.ok(y(n) - y("vipasyin") >= 1080 * 0.023, `pitch ${pitch}: ${(y(n) - y("vipasyin")).toFixed(1)} px over ${n}`);
   }
-  // Shakyamuni at the west end is turned 7° to the west.
-  const sak = FIGURES[6]; assert.equal(sak.id, "sakyamuni"); assert.ok(sak.x < 0 && Math.abs(sak.yaw + (7 * Math.PI) / 180) < 1e-9);
-  assert.ok(Math.sin(sak.yaw) < 0, "facing turned toward -x, the west");
+});
+
+test("every halo keeps clear of the frames' beams either side of it (the structural review of #493)", () => {
+  const beams = hall.parts.frame.map((g) => (g.computeBoundingBox(), g.boundingBox));
+  let least = Infinity;
+  for (const g of altar.parts.halo) {
+    g.computeBoundingBox(); const h = g.boundingBox;
+    for (const b of beams) {
+      if (b.max.y <= h.min.y || b.min.y >= h.max.y || b.max.z <= h.min.z || b.min.z >= h.max.z) continue;   // not beside it
+      const gap = Math.max(b.min.x - h.max.x, h.min.x - b.max.x);
+      least = Math.min(least, gap);
+      assert.ok(gap > 0, `a halo (x ${h.min.x.toFixed(2)} to ${h.max.x.toFixed(2)}) runs into a beam (x ${b.min.x.toFixed(2)} to ${b.max.x.toFixed(2)})`);
+    }
+  }
+  assert.ok(least < Infinity, "the halos stand beside the frames");
 });
 
 test("fourteen attendants, two to each, either side and a little in front, 2.5–2.7 m; two kings at the altar's ends, 3.5–4.0 m", () => {

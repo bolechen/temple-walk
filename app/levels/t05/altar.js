@@ -70,7 +70,7 @@ export function buildAltar() {
     tops.push({ id: f.id, x, z, top: y, head: y - head * 0.5 });
     // the halo behind, from the lotus up to over the head
     const hy = top + SEAT.sumeru + SEAT.lotus, hh = y + SEAT.halo.over - hy;
-    const h = [new THREE.ExtrudeGeometry(haloShape(SEAT.halo.w, hh), { depth: SEAT.halo.t, bevelEnabled: false, curveSegments: 12 }).translate(0, hy, SEAT.halo.z - z - SEAT.halo.t / 2)];
+    const h = [new THREE.ExtrudeGeometry(haloShape(SEAT.halo.w, hh), { depth: SEAT.halo.t, bevelEnabled: false, curveSegments: 12 }).translate(0, hy, -SEAT.halo.t / 2)];   // (about its own middle: see below)
     // the attendants either side, a little in front: a lotus and a standing figure
     for (const s of [-1, 1]) {
       const ax = s * ATTEND.dx, az = ATTEND.z - z, a = ATTEND.w;
@@ -81,7 +81,10 @@ export function buildAltar() {
     // the whole group, Buddha, halo and attendants, stood on its bay and turned as it faces
     const turn = new THREE.Matrix4().makeTranslation(x, 0, z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
     for (const p of g) clay.push(p.applyMatrix4(turn));
-    for (const p of h) halo.push(p.applyMatrix4(turn));
+    // the halo turned about its own middle, not the base's: turned about the base it would swing 0.26 m sideways into the
+    // frame's beam beside it (the outer halos keep only 0.09 m from those beams, the structural review of #493)
+    const turnHalo = new THREE.Matrix4().makeTranslation(x, 0, SEAT.halo.z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
+    for (const p of h) halo.push(p.applyMatrix4(turnHalo));
     for (const s of [-1, 1]) { const at = new THREE.Vector3(s * ATTEND.dx, 0, ATTEND.z - z).applyMatrix4(turn); attendants.push({ of: f.id, side: s, x: at.x, z: at.z, top: top + ATTEND.h }); }
   }
   // the two kings at the ends, on the floor, each on its plinth
