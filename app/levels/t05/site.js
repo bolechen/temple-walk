@@ -12,6 +12,7 @@ import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
+import { buildSurround } from "./surround.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
  * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
@@ -154,6 +155,7 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
+  root.add(buildSurround(M, C));   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
 

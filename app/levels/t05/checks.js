@@ -5,6 +5,11 @@ import { AXIS, FOOT, LANE, SECOND } from "./axis.js";
 
 /** @type {Record<string, any>} */
 export default {
+  // Where the horizon is looked at from (tests/unit/t05-surround.test.mjs, #548; tests/unit/horizon.test.mjs reads the same table where a level has far hills, and T05 has none): name,
+  // x, z and the eye's height over the court's paving (the arrival, the stations A and B in the court, C and F on the platform and in the hall's door).
+  horizon: {
+    places: [["arrival", 0, 215, 1.3], ["A", 0, 44, 1.3], ["B", 0, 27, 1.3], ["C", 0, 0.6, 4.3], ["F", 0, -2, 4.3]],
+  },
   nearplane: {
     routes: () => {
       const inner = FOOT.inner, hall = FOOT.hall, edge = LANE.hw - LANE.t / 2 - 0.9, tedge = SECOND.hw - SECOND.wallT / 2 - 0.9;
