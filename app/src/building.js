@@ -272,7 +272,7 @@ export function buildHall(M, opts) {
     // (Overhead, 4.9 m up: nothing to stand on, and nothing he reaches, so it is left out of the baked floor (`bake: false`; the eye still keeps
     // out of it, as it must, or the camera backing out of the doorway would go through the boards and see the roof's bare underside again). In the
     // floor it moved the cells at the library's stair heads by a centimetre, ninety metres away: the bake bisected it to this panel and I did not run that to ground, #288.)
-    add(panel, M.passage, { ao: () => 0.85 }).userData.bake = false; add(merge(ribs), M.beamX, { ao: () => 0.5, cast: false }).userData.bake = false;
+    add(panel, M.passage, { ao: () => 0.85 }).userData.bake = false; add(merge(ribs), M.beamX, { ao: () => 0.2, cast: false }).userData.bake = false;
   }
   if (p.brackets) {   // the white band between the bracket sets, all the way round
     const bandH = underside(p.overhang) - PLATE_TOP + 0.12, y = PLATE_TOP + bandH / 2;
