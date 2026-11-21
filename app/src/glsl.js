@@ -6,7 +6,7 @@ import * as THREE from "three";
 // with three's default texture makes the whole draw invalid).
 function oneTexel(data, format, type, internal = null) { const t = new THREE.DataTexture(data, 1, 1, format, type); if (internal) t.internalFormat = /** @type {any} */ (internal); t.unpackAlignment = 1; t.needsUpdate = true; return t; }
 export const U = {
-  uFogD: { value: 0.009 }, uSnow: { value: 0 }, uLamp: { value: 0 }, uWet: { value: 1 },
+  uFogD: { value: 0.009 }, uSnow: { value: 0 }, uLamp: { value: 0 }, uWinNight: { value: 0 }, uWet: { value: 1 },
   // the breeze (wind.js): how it blows now, in m/s along x and z, and how far it has carried the air since the page opened
   uWind: { value: new THREE.Vector2(0, 0) }, uWindPath: { value: new THREE.Vector2(0, 0) },
   uAmb: { value: new THREE.Color(0.78, 0.83, 0.84) }, uSunC: { value: new THREE.Color(0.42, 0.39, 0.34) },
