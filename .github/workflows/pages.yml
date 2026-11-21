@@ -219,7 +219,7 @@ jobs:
 
   # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
   # preview.
-  site:
+  build:
     needs: changes
     if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
@@ -258,6 +258,45 @@ jobs:
           restore-keys: doorways-
       - name: Build the site
         run: pnpm run build
+      # Built once for the whole run (#442 step 3): `site`, `quick` and, after `verify`, the preview or the canary all take these
+      # very files, so what `boot` and the stairs were driven through is what is published. Named by the run only: re-running
+      # the failed jobs finds it, and a whole re-run overwrites it.
+      - name: Hand the built site to the jobs that drive it
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist
+          name: built-site-${{ github.run_id }}
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
+
+  # `boot` on the site `build` made: the page comes up clean and draws (#442 step 3: no second build).
+  site:
+    needs: [changes, build]
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: built-site-${{ github.run_id }}
+          path: dist
+      # tools/site.cjs rebuilds a dist/ older than anything in app/; this checkout is newer than the build that made it, so say
+      # that the stamp is the site as it should be.
+      - name: The site is built, whatever the checkout's date
+        run: touch dist/.built
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
       - name: End to end, startup and movement
         run: node tests/e2e/run.cjs boot
       - name: Keep the report and screenshots
@@ -268,31 +307,12 @@ jobs:
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
-      # The site is what Vite built into dist/, the same files the browser above was just driven through.
-      - name: Hand the site over for the canary
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          path: dist
-          name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}
-          retention-days: 1
-          include-hidden-files: true
-      # A pull request from this repository gets its own preview (docs/PREVIEWS.md): the same dist/ that was just driven
-      # through, handed to the preview job. Pull requests from forks have no access to the Cloudflare token and get none.
-      - name: Hand the site over for the pull request's preview
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/upload-artifact@v4
-        with:
-          path: dist
-          name: preview-site-${{ github.run_id }}-${{ github.run_attempt }}
-          retention-days: 1
-          include-hidden-files: true
 
   # What walking and the camera break most often, run before the site goes out and not beside it (#308): the stairs and the
   # low drop, one machine each, side by side with `site` (each builds its own copy from the caches, so none waits for another).
   # Only when the site is built at all. `e2e.yml`'s regression run no longer repeats them.
   quick:
-    needs: changes
+    needs: [changes, build]
     if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -307,6 +327,14 @@ jobs:
       - uses: ./.github/actions/prepare
         with:
           floor: ${{ needs.changes.outputs.walk }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: built-site-${{ github.run_id }}
+          path: dist
+      # tools/site.cjs rebuilds a dist/ older than anything in app/; this checkout is newer than the build that made it, so say
+      # that the stamp is the site as it should be.
+      - name: The site is built, whatever the checkout's date
+        run: touch dist/.built
       - name: Remember the browser between runs
         id: pw
         uses: actions/cache@v4
@@ -315,15 +343,6 @@ jobs:
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: Which doorways are to be drawn
-        id: doorways
-        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
-      - name: Remember drawn doorways between runs
-        uses: actions/cache@v4
-        with:
-          path: node_modules/.cache/doorways
-          key: doorways-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-
       - name: The scenario, on the built site
         run: node tests/e2e/run.cjs ${{ matrix.scenarios }}
       - name: Keep the report and screenshots
@@ -359,7 +378,7 @@ jobs:
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, floor, tests, grid, site, quick, worker]
+    needs: [changes, unit, floor, build, tests, grid, site, quick, worker]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -393,7 +412,7 @@ jobs:
       - uses: actions/download-artifact@v4
         if: needs.verify.result == 'success' && needs.verify.outputs.site == 'true'
         with:
-          name: preview-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: built-site-${{ github.run_id }}
           path: dist
       - uses: actions/setup-node@v4
         if: needs.verify.result == 'success' && needs.verify.outputs.site == 'true'
@@ -439,7 +458,7 @@ jobs:
             app/src
       - uses: actions/download-artifact@v4
         with:
-          name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}
+          name: built-site-${{ github.run_id }}
           path: dist
       - uses: actions/setup-node@v4
         with:
