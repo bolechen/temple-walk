@@ -145,6 +145,23 @@ if Kn.get("relax"):
     hit = tree.find_nearest(Vector(st[i]))
     if hit[0] is not None: st[i] = st[i] + wgt[i] * (np.array(hit[0]) - st[i])
   log["knee"]["relaxed"] = Kn["relax"]
+# where the old hand lay fully inside the box (weight 1), its faces are taken out and the mirrored left knee's own
+# faces put in their place (laid onto it, the hand's sides and back folded over and showed inside out); the band at the
+# box's edge keeps the figure's own points, laid onto the same surface, so the two meet on it
+full = wgt >= 0.999
+bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+for i, v in enumerate(bm.verts): v.co = Vector(to_blender(st[i][None])[0])
+dead = [f for f in bm.faces if all(full[v.index] for v in f.verts)]
+bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+mdist = np.minimum((mir - blo).min(1), (bhi - mir).min(1)); takem = np.all((mir > blo) & (mir < bhi), axis=1) & (mdist > Kn["ease"] * 0.8)
+fpatch = fm[np.all(takem[fm], axis=1)]; used = np.unique(fpatch); remap = {}
+for j in used: remap[int(j)] = bm.verts.new(Vector(to_blender(mir[j][None])[0]))
+for f in fpatch:
+  try: bm.faces.new([remap[int(j)] for j in f[::-1]])
+  except ValueError: pass
+bm.to_mesh(me); bm.free(); me.update()
+co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
+log["knee"].update({"faces_taken_out": len(dead), "faces_put_in": int(len(fpatch))})
 # the new hand, joined
 nb = len(st); allco = np.r_[st, hand_co]
 me = ob.data; bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
