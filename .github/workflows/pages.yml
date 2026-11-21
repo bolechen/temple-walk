@@ -141,49 +141,81 @@ jobs:
           for lv in $(node tools/bake-walk.mjs --list); do node tools/walk-diff.mjs ".main/app/shared/walk/$lv.bin" --level="$lv" --png="tools/out/walk-diff/$lv" || status=1; done
           exit $status
 
+  # The floor he may stand on, baked once for the whole run (#442): the ten test shards used to restore or bake it each, which on a
+  # change to what is drawn was ten bakes of two minutes at once (and twenty seconds each to find it in the cache even when
+  # it was there). It is baked (or restored from the cache `unit` keeps) here, handed on as an artifact, and the shards take it
+  # as it is: every test that needs the floor to be fresh still checks it (`ensure` in tools/bake-walk.mjs) and would bake again
+  # if it were not, so a wrong floor cannot be taken for a right one.
+  floor:
+    needs: changes
+    if: needs.changes.outputs.unit == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
+      - name: The floor, from the cache or baked
+        run: node tools/bake-walk.mjs
+      - name: Hand the floor on to the test shards
+        uses: actions/upload-artifact@v4
+        with:
+          name: floor-${{ github.run_id }}
+          path: app/shared/walk/*.bin
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: error
+
   # The unit tests (the plan, the walker, the building generator, the seasons) shared among five machines (#442): every
   # tests/unit/*.test.mjs on exactly one of them, by the seconds in tests/unit/durations.json (tools/ci/unit-shard.cjs;
   # tests/unit/ci-changes.test.mjs holds that none is left out or run twice). Together they are what `pnpm test` runs.
   tests:
-    needs: changes
+    needs: [changes, floor]
     if: needs.changes.outputs.unit == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
         with:
           floor: ${{ needs.changes.outputs.walk }}
-      # The tests read the baked floor: from the cache (a few seconds), or baked here, the same floor the `unit` job keeps.
-      - name: The floor, from the cache or baked
-        run: node tools/bake-walk.mjs
+      # The tests read the baked floor: the one the `floor` job baked for this commit, taken as it is.
+      - name: The floor, from the `floor` job
+        uses: actions/download-artifact@v4
+        with:
+          name: floor-${{ github.run_id }}
+          path: app/shared/walk
       - name: Unit tests, this machine's share
-        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5
+        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3
 
   # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
-    needs: changes
+    needs: [changes, floor]
     if: needs.changes.outputs.unit == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
         with:
           floor: ${{ needs.changes.outputs.walk }}
-      # Writes the floor into app/shared/walk/ from the cache (a few seconds), or bakes it; the swapped walker reads that file.
-      - name: The floor, from the cache or baked
-        run: node tools/bake-walk.mjs
+      # The swapped walker reads the floor in app/shared/walk/: the one the `floor` job baked for this commit, taken as it is.
+      - name: The floor, from the `floor` job
+        uses: actions/download-artifact@v4
+        with:
+          name: floor-${{ github.run_id }}
+          path: app/shared/walk
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
-        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5 --import ./tools/walk/swap.mjs
+        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3 --import ./tools/walk/swap.mjs
 
   # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
   # preview.
@@ -267,7 +299,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [stairs, stairs-edge, drop, drop-touch]
+        include:
+          - { name: a, scenarios: "drop-touch stairs-edge" }
+          - { name: b, scenarios: "stairs drop" }
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -291,12 +325,12 @@ jobs:
           key: doorways-${{ steps.doorways.outputs.key }}
           restore-keys: doorways-
       - name: The scenario, on the built site
-        run: node tests/e2e/run.cjs ${{ matrix.scenario }}
+        run: node tests/e2e/run.cjs ${{ matrix.scenarios }}
       - name: Keep the report and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: e2e-quick-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
           retention-days: 7
           if-no-files-found: ignore
@@ -325,7 +359,7 @@ jobs:
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, tests, grid, site, quick, worker]
+    needs: [changes, unit, floor, tests, grid, site, quick, worker]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
