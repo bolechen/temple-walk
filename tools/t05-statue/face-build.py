@@ -60,6 +60,9 @@ if "anchors-from" in opt:
   for k in ("neckFront", "neckBack", "hairFront", "hairBack", "earL", "earR", "eyeL", "eyeR", "mouth", "urna", "neckB", "lobeL", "lobeR"):
     if k in a: a[k] = [round(q, 3) for q in bowed(a[k])]
   drop = a["mouth"][1] - mouth0[1]
+  # the head's box reaches further forward: bowed, the front of the curls moves past where it stood (a patch of robe
+  # colour at the hairline at 15°)
+  if "skinMax" in a: a["skinMax"][2] = round(a["skinMax"][2] + 0.3, 3)
   for k in ("jawMin", "chinMin"):
     if k in a: a[k][1] = round(a[k][1] + drop, 3)
   eyes = {"eyeL": a["eyeL"][:2], "eyeR": a["eyeR"][:2]}
