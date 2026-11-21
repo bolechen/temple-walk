@@ -46,8 +46,8 @@ export const LINES = {
   autumn: ["叶落知山空", "一灯红叶深"], winter: ["雪深不闻钟", "雪夜一灯明"],
 };
 
-// `tune` is the level's own say in the mood (Level.moodFor, app/src/level.js): called with the season and the hour, it returns
-// the fields of the table to replace, or nothing. The hours' tables stay as they are for every level that says nothing.
+// `tune` is the level's own say in the mood (Level.moodFor, app/src/level.js): called with the season, the hour and the mood as the
+// hours and seasons have made it, it returns the fields of the table to replace, or nothing. The hours' tables stay as they are for every level that says nothing.
 export function moodOf(season, time, tune) {
   if (!TIME[time]) time = "day"; if (!SEASON[season]) season = "summer";
   const t = TIME[time], s = SEASON[season], dark = time === "night" || time === "dusk";
@@ -68,7 +68,7 @@ export function moodOf(season, time, tune) {
   // A cloudy summer dusk after rain: the deck glows rose under an indigo sky and the lamps burn amber (prototype 05).
   if (season === "summer" && time === "dusk") Object.assign(m, { zen: [0.13, 0.15, 0.4], hor: [0.78, 0.47, 0.56], sunCol: [1, 0.55, 0.45], sunI: m.sunI * 0.6, win: [0.66, 0.34, 0.13] });
   if (s.snow && time !== "night") m.fog = t.fog.map((v, i) => v * 0.6 + [0.86, 0.88, 0.92][i] * 0.4);
-  const own = tune ? tune(season, time) : null; if (own) Object.assign(m, own);   // the level's say, after the hours and the seasons have had theirs
+  const own = tune ? tune(season, time, m) : null; if (own) Object.assign(m, own);   // the level's say, after the hours and the seasons have had theirs
   m.drift = s.drift === "none" && time === "night" ? "firefly" : s.drift;
   // The breeze (wind.js), m/s at its steadiest: a spring and autumn day the liveliest, still winter cold and the night
   // the calmest, so that the smoke stands straightest then. And how much of the censer's incense is burning: most after

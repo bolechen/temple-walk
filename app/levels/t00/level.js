@@ -5,8 +5,8 @@
 import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain } from "../../src/site.js";
 import { zoneBounds } from "../../src/score.js";
 
-/** The direction toward the sun at autumn dusk in the plan's frame (north is -z): 15.7° west of north, 15° above the horizon. */
-const AUTUMN_DUSK_SUN = [-0.2614, 0.2588, -0.9298];
+/** The direction toward the sun at autumn dusk in the plan's frame (north is -z): 16° west of north, 15.5° above the horizon; and how much brighter than the hour's own it burns, so that sun and shade part by the 1.4 to 2.0 that evening light does. */
+const AUTUMN_DUSK_SUN = [-0.2656, 0.2672, -0.9263], AUTUMN_DUSK_SUN_K = 1.3;
 
 /** @type {import("../../src/level.js").Level} */
 export default {
@@ -32,11 +32,11 @@ export default {
   title: true,
   // Autumn dusk keeps part of the first court in the low sun, as prototype 03 has it (#488): the hours' own sun for that
   // evening stands west-south-west, behind the walker's left shoulder, and the west halls, the cedars and the great hall put
-  // the whole court in shade. This one comes from the north, a little west of the axis (15.7° from north), 15° up: it
+  // the whole court in shade. This one comes from the north, a little west of the axis (16° from north), 15.5° up: it
   // clears the west halls' roofs and the great hall's ridge at the south-west of the court, so a band of sun lies across
   // the paving toward the camera and the trees' long shadows cross it; the evening stays against the light, and the
   // novice's own shadow falls toward the camera. Chosen by measuring the share of lit paving over many directions (`tools/sun-lit.cjs`); nothing else of the mood changes.
-  moodFor: (season, time) => (season === "autumn" && time === "dusk" ? { sun: AUTUMN_DUSK_SUN } : null),
+  moodFor: (season, time, m) => (season === "autumn" && time === "dusk" ? { sun: AUTUMN_DUSK_SUN, sunI: m.sunI * AUTUMN_DUSK_SUN_K } : null),
   // The title page's foot: a region, never a real city, and one sentence that holds in every season (#445).
   how: { place: "江南 · 古道", line: "路在竹林里，寺在云里。" },
 };
