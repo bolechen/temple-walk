@@ -288,3 +288,21 @@ test("his shadow stays on the ground when he is in the air, fainter and a little
   m.group.position.y = floor + 0.4; m.update(1 / 30, 0, "chair", 0, () => floor); for (let i = 0; i < 40; i++) m.update(1 / 30, 0, "chair", 0, () => floor);
   assert.ok(Math.abs(base().y - (floor + 0.4 + 0.03)) < 0.01, "seated, the patch goes with him as before");
 });
+
+// The sill-bench of the path's pavilions (#479): he sits on its board facing in, his back to the balustrade on its outer edge.
+test("on a pavilion's sill-bench he sits clear of its board and its rail, his feet hanging over the front edge", async () => {
+  const { BENCH } = await import("../../app/src/building.js");
+  const m = seated("chair", BENCH.top), H = BENCH.depth, rc = -BENCH.back - (H / 2 - 0.03);   // the rail's centre, in his frame (z forward, the board's middle BENCH.back behind him)
+  let low = Infinity, boardIn = 0, railIn = 0, lipIn = 0, where = "";
+  for (const [n, v] of body(m)) {
+    low = Math.min(low, v.y + BENCH.top);
+    const onBoard = Math.abs(v.z + BENCH.back) < H / 2;
+    if (onBoard && v.y < -0.015) boardIn = Math.max(boardIn, -v.y - 0.015);
+    if (Math.abs(v.z - rc) < 0.025 + 0.004 && v.y > BENCH.rail - 0.05 && v.y < BENCH.rail) { railIn = Math.max(railIn, 1); where = `${n} at ${v.toArray().map((q) => q.toFixed(3))}`; }
+    if (Math.abs(v.z - rc) < 0.035 && v.y > 0.1 && v.y < 0.16) { lipIn = Math.max(lipIn, 1); where ||= `${n} lip at ${v.toArray().map((q) => q.toFixed(3))}`; }
+  }
+  assert.ok(boardIn < 0.008, `part of him is ${(boardIn * 1000).toFixed(0)} mm into the board`);
+  assert.ok(!railIn && !lipIn, `part of him is in the balustrade: ${where}`);
+  const feet = ["left", "right"].map((s) => world(m.bones[s + "Foot"]));
+  for (const f of feet) assert.ok(f.z > H / 2 - BENCH.back - 0.02, `a foot at z ${f.z.toFixed(2)} is under the board`);
+});

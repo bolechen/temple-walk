@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "banshan-1-from-outside.png",
+   "bytes": 2012245,
+   "sha256": "f07f7b495e87f1cde6c4ae02561cae19a0d31459664c1148003c92f9e7a7afb6",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  },
+  {
+   "path": "banshan-2-the-bench.png",
+   "bytes": 2187243,
+   "sha256": "6c65b0d49e8f2969cec01e26fe21c39acd86e0e36dec921a0690cb7146526416",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  },
+  {
+   "path": "banshan-3-sitting-as-he-sits.png",
+   "bytes": 2155527,
+   "sha256": "c1d44d786c4055d6570113487a2c6c802238b50890875cd189b027cb5772dc70",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  },
+  {
+   "path": "banshan-4-the-eye-at-the-valley.png",
+   "bytes": 2138580,
+   "sha256": "76dde76ef63e521a000c426f635b6646f79a873b9d5ab479ee9c015233056cc5",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  },
+  {
+   "path": "banshan-4b-the-eye-at-the-valley-tilted.png",
+   "bytes": 2092528,
+   "sha256": "4b3d53f4c3d4eac293567aabb5ec9fcec137a6884fa53a45555b634bf48fbbb7",
+   "rev": "e0183f7aa72b61c56b182f3b1ae17512fe95d348"
+  },
+  {
+   "path": "wangjiang-1-from-outside.png",
+   "bytes": 1773874,
+   "sha256": "ad7a11e7a1411967523a3733bdc18a7348c39097d0996e48ddd8632d71a29f1e",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  },
+  {
+   "path": "wangjiang-2-the-bench.png",
+   "bytes": 1775803,
+   "sha256": "cdcb0846a9ec524d0c59012b918cbadc82583e133e2723d2aeb688aad163384c",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  },
+  {
+   "path": "wangjiang-3-sitting-as-he-sits.png",
+   "bytes": 1723523,
+   "sha256": "3a8f76e8000de83c6a906cf8ab74dad0ae984149f126ef0beb6e658c46c0e3bb",
+   "rev": "40aef14c30a0c2a561357456cea9276fb8ad3b8c"
+  }
+ ]
+}

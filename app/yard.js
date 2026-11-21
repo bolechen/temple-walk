@@ -1439,7 +1439,7 @@ window.__pick = (px, py, n = 6) => {
 function directShot(id, opts) {
   if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
   if (upIn) return false;   // up on a balcony he sees with his own eyes only: no place's shot is taken there
-  const p = site.places[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
+  const p = site.places[id] || site.restPlaces?.[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
   const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
   if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
   return going;

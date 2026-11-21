@@ -24,13 +24,15 @@ export const PAIFANG = Object.freeze({
   stone: Object.freeze({ plinth: [1.4, 0.12, 1.4], collar: [1.10, 1.04], capOver: 0.05, cap: 0.1, top: 1.25 }),
   // The two bands of beams (efang): small beam, filling board, great beam, and the flat plate on top that carries the sets.
   // `y` is the underside of the small beam; the thicknesses are across the archway (z).
-  band: Object.freeze({ lower: 5.0, upper: 6.1, xiao: [0.24, 0.26], dian: [0.16, 0.14], da: [0.38, 0.26], plate: [0.12, 0.4], stub: 0.35 }),
-  // The bracket sets are drawn at the scale of a standard timber (cai) of 0.16 m: three quarters of buildHall's 0.21 grade.
-  cai: 0.16,
-  // The roofs: depth front to back (the eave's edge stands out half of it from the post plane), rise from the eave's edge to
-  // the ridge, and how far the eaves reach past an outer post (`out`) and past a middle one (`midOut`). The eave purlin lies
+  band: Object.freeze({ lower: 5.0, upper: 6.1, xiao: [0.24, 0.26], dian: [0.16, 0.14], da: [0.38, 0.26], plate: [0.12, 0.4], stub: 0.35, back: -0.03 }),
+  // The bracket sets are drawn at the scale of a standard timber (cai) of 0.18 m, so that the layer of sets is about 0.85 m tall (the art
+  // review of #438, third version: the eave was thick and the sets thin, the wrong way round); buildHall's grade is 0.21.
+  cai: 0.18,
+  // The roofs: depth front to back (the eave's edge stands out half of it from the post plane), where the ridge stands (the rise
+  // from the eave's edge follows from it and from the height of the sets, so that taller sets do not lift the ridges), the thickness
+  // of the eave board (`fascia`, at most 0.12 m) and of the boards under the tiles (`under`), and how far the eaves reach past an outer post (`out`) and past a middle one (`midOut`). The eave purlin lies
   // out from the post plane as in building.js, scaled to this cai.
-  roof: Object.freeze({ side: { depth: 3.2, rise: 0.75 }, mid: { depth: 3.4, rise: 0.8 }, out: 1.6, midOut: 1.4, tileOver: 0.12, under: 0.3 }),
+  roof: Object.freeze({ side: { depth: 3.2, ridge: 7.26 }, mid: { depth: 3.4, ridge: 8.37 }, out: 1.0, midOut: 1.4, tileOver: 0.12, under: 0.12, fascia: 0.12, ridgeH: 0.16 }),
   quezi: [0.7, 0.24, 0.2],
 });
 
@@ -68,7 +70,7 @@ function bracketSet(K) {
 // ornaments, the four hip ridges. `hipL`/`hipR`: whether that end slopes down; an end without one is cut square, against
 // the post it butts onto. The surface is a heightfield on a grid laid so that its diagonals follow the hip creases.
 function hipRoof(s) {
-  const { x0, x1, depth, rise, eaveY, hipL, hipR, under, pu } = s, Dm = depth / 2, N = 7, st = Dm / N;
+  const { x0, x1, depth, rise, eaveY, hipL, hipR, under, fasciaT, rh, pu } = s, Dm = depth / 2, N = 7, st = Dm / N;
   const xa = hipL ? x0 + Dm : x0, xb = hipR ? x1 - Dm : x1;
   const dxOf = (x) => Math.min(hipL ? x - x0 : Infinity, hipR ? x1 - x : Infinity);
   const yAt = (x, z) => {
@@ -105,10 +107,10 @@ function hipRoof(s) {
   if (hipR) for (const z of zs) path.push([x1, z]);
   for (const x of [...xs].reverse()) path.push([x, Dm]);
   if (hipL) for (const z of [...zs].reverse()) path.push([x0, z]);
-  const fp = [], fi = []; path.forEach(([x, z], i) => { const y = yAt(x, z); fp.push(x, y + 0.04, z, x, y - under - 0.06, z); if (i) { const k = (i - 1) * 2; fi.push(k, k + 1, k + 2, k + 2, k + 1, k + 3); } });
+  const fp = [], fi = []; path.forEach(([x, z], i) => { const y = yAt(x, z); fp.push(x, y + 0.04, z, x, y + 0.04 - fasciaT, z); if (i) { const k = (i - 1) * 2; fi.push(k, k + 1, k + 2, k + 2, k + 1, k + 3); } });
   const fascia = new THREE.BufferGeometry(); fascia.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3)); fascia.setAttribute("uv", new THREE.Float32BufferAttribute(new Array((fp.length / 3) * 2).fill(0), 2)); fascia.setIndex(fi); fascia.computeVertexNormals();
   // The ridge ornaments: a low wall of tile courses along the ridge, a curled end at each hipped end, a tube down each hip.
-  const ridgeY = eaveY + rise, rh = 0.28, /** @type {THREE.BufferGeometry[]} */ parts = [box(xb - xa + (hipL ? 0.3 : 0), rh + 0.12, 0.22, (xa + xb) / 2, ridgeY - 0.1 + (rh + 0.12) / 2, 0)];
+  const ridgeY = eaveY + rise, /** @type {THREE.BufferGeometry[]} */ parts = [box(xb - xa + (hipL ? 0.3 : 0), rh + 0.12, 0.22, (xa + xb) / 2, ridgeY - 0.1 + (rh + 0.12) / 2, 0)];
   const k = 0.26, curl = new THREE.Shape([[0, 0], [0.95, 0], [1.0, 0.55], [0.74, 1.1], [0.34, 1.36], [0.1, 1.18], [0.36, 0.98], [0.46, 0.66], [0.22, 0.5], [0, 0.56]].map(([a, b]) => new THREE.Vector2(a * k, b * k)));
   const ends = [];
   for (const [on, sx, x] of [[hipL, -1, xa], [hipR, 1, xb]]) if (on) {
@@ -173,8 +175,9 @@ export function buildPaifang(M, opts = {}) {
   const tiers = [];
   const purlinY = (plateTop) => plateTop + LIFT * K, tileY = (py) => py + 0.1 + R.tileOver;
   const mk = (id, spec, plate) => {
-    const py = purlinY(plate[1]), Dm = spec.depth / 2, dp = Dm - PU, eaveY = tileY(py) - spec.rise * Math.pow(dp / Dm, 1.3);
-    tiers.push({ id, ...spec, py, eaveY, ridgeY: eaveY + spec.rise, plateTop: plate[1] });
+    // the ridge stands where it is asked to; the rise from the eave's edge is what is left over the eave purlin's tile line
+    const py = purlinY(plate[1]), Dm = spec.depth / 2, dp = Dm - PU, fall = Math.pow(dp / Dm, 1.3), rise = (spec.ridge - tileY(py)) / (1 - fall), eaveY = tileY(py) - rise * fall;
+    tiers.push({ id, ...spec, rise, py, eaveY, ridgeY: spec.ridge, plateTop: plate[1] });
   };
   const sideIn = cx[2] + r, sideOut = cx[3] + R.out;
   mk("side-e", { ...R.side, x0: cx[2], x1: sideOut, hipL: false, hipR: true }, lo.plate);
@@ -192,6 +195,14 @@ export function buildPaifang(M, opts = {}) {
   stoneMat.onBeforeCompile = (sh, rr) => { was.call(M.monolith, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", "diffuseColor.rgb=col*vec3(.62,.68,.76);"); };
   stoneMat.customProgramCacheKey = () => "paifang-stone";
   names.set(stoneMat, "stone");
+  // The beams are the posts' timber: the same wood, its colour drawn toward the posts' warm brown (on the stage the horizontal faces came out
+  // a pale, bleached beige, and the four members read as one board); the filling board is darker, and stands back from the beams' faces.
+  const toned = (base, name, mul) => {
+    const m = base.clone(), was = base.onBeforeCompile;
+    m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", `diffuseColor.rgb=col*vec3(${mul});`); };
+    m.customProgramCacheKey = () => name; names.set(m, name); return m;
+  };
+  const beamMat = toned(M.woodX, "beam", ".74,.58,.52"), boardMat = toned(M.woodX, "board", ".46,.37,.33");
   const stones = [];
   cx.forEach((x, i) => {
     const [pw, ph, pd] = S.plinth, [cb, ct] = S.collar, sTop = S.top, hc = sTop - S.cap - ph;
@@ -219,17 +230,17 @@ export function buildPaifang(M, opts = {}) {
   }
 
   // ---- Beams: the small beam, the filling board and the great beam, in both bands ----
-  const span = (xa, xb, lv, k, th, y0 = lv[k][0], y1 = lv[k][1]) => box(xb - xa, y1 - y0, th, (xa + xb) / 2, (y0 + y1) / 2, 0);
+  const span = (xa, xb, lv, k, th, y0 = lv[k][0], y1 = lv[k][1], z = 0) => box(xb - xa, y1 - y0, th, (xa + xb) / 2, (y0 + y1) / 2, z);
   const posts = (...ix) => ix.map((i) => `post-${i}`);
   // lower: through all four posts, a stub beyond each outer one
-  for (const [k, mat] of [["xiao", M.woodX], ["dian", M.woodX], ["da", M.woodX]]) {
+  for (const [k, mat] of [["xiao", beamMat], ["dian", boardMat], ["da", beamMat]]) {
     const th = B[k][1], on = k === "xiao" ? posts(0, 1, 2, 3) : [`${k === "dian" ? "xiao" : "dian"}-lower`];
-    add(`${k}-lower`, on, span(-endX, endX, lo, k, th), mat, { ao: ao });
+    add(`${k}-lower`, on, span(-endX, endX, lo, k, th, undefined, undefined, k === "dian" ? B.back : 0), mat, { ao: ao });
   }
   // upper: between the two middle posts, a stub beyond each
-  for (const [k, mat] of [["xiao", M.woodX], ["dian", M.woodX], ["da", M.woodX]]) {
+  for (const [k, mat] of [["xiao", beamMat], ["dian", boardMat], ["da", beamMat]]) {
     const th = B[k][1], on = k === "xiao" ? posts(1, 2) : [`${k === "dian" ? "xiao" : "dian"}-upper`];
-    add(`${k}-upper`, on, span(-midX, midX, up, k, th), mat, { ao: ao });
+    add(`${k}-upper`, on, span(-midX, midX, up, k, th, undefined, undefined, k === "dian" ? B.back : 0), mat, { ao: ao });
   }
   // the board between the bands in the middle bay: a framed panel, left without writing (the name board's place)
   {
@@ -243,9 +254,9 @@ export function buildPaifang(M, opts = {}) {
     add("quezi", ["xiao-lower", ...posts(0, 1, 2, 3)], merge(list), M.woodX);
   }
   // the plates that carry the sets: under each side roof, and over the middle bay
-  add("plate-e", ["da-lower"], box(endX - sideIn, B.plate[0], B.plate[1], (endX + sideIn) / 2, (lo.plate[0] + lo.plate[1]) / 2, 0), M.woodX, { ao });
-  add("plate-w", ["da-lower"], box(endX - sideIn, B.plate[0], B.plate[1], -(endX + sideIn) / 2, (lo.plate[0] + lo.plate[1]) / 2, 0), M.woodX, { ao });
-  add("plate-mid", ["da-upper"], box(midX * 2, B.plate[0], B.plate[1], 0, (up.plate[0] + up.plate[1]) / 2, 0), M.woodX, { ao });
+  add("plate-e", ["da-lower"], box(endX - sideIn, B.plate[0], B.plate[1], (endX + sideIn) / 2, (lo.plate[0] + lo.plate[1]) / 2, 0), beamMat, { ao });
+  add("plate-w", ["da-lower"], box(endX - sideIn, B.plate[0], B.plate[1], -(endX + sideIn) / 2, (lo.plate[0] + lo.plate[1]) / 2, 0), beamMat, { ao });
+  add("plate-mid", ["da-upper"], box(midX * 2, B.plate[0], B.plate[1], 0, (up.plate[0] + up.plate[1]) / 2, 0), beamMat, { ao });
 
   // ---- Bracket sets and eave purlins ----
   const set = bracketSet(K).scale(1, LIFT, 1);
@@ -268,7 +279,7 @@ export function buildPaifang(M, opts = {}) {
 
   // ---- Roofs ----
   const roofs = tiers.map((t) => {
-    const rf = hipRoof({ x0: t.x0, x1: t.x1, depth: t.depth, rise: t.rise, eaveY: t.eaveY, hipL: t.hipL, hipR: t.hipR, under: R.under, pu: PU });
+    const rf = hipRoof({ x0: t.x0, x1: t.x1, depth: t.depth, rise: t.rise, eaveY: t.eaveY, hipL: t.hipL, hipR: t.hipR, under: R.under, fasciaT: R.fascia, rh: R.ridgeH, pu: PU });
     const on = [`purlin-${t.id}`];
     add(`roof-${t.id}`, on, rf.tile, M.tile, { ao: null }); add(`boards-${t.id}`, [`roof-${t.id}`], rf.boards, M.rafters, { ao: null, cast: false });
     add(`fascia-${t.id}`, [`roof-${t.id}`], rf.fascia, M.fascia, { ao: null });
