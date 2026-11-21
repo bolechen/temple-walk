@@ -1,0 +1,4 @@
+    keywalk {"steps":335,"turns":{"a":89,"d":104},"off95":0.005,"offMax":0.074,"dist5":2.48,"distMin":0.66}
+ok   keywalk   625s
+all 1 scenarios passed
+keywalk 0
