@@ -120,7 +120,7 @@
   "cell": 0.02,
   "head": 0.35,
   "ringW": 0.12,
-  "smooth": 1.0,
+  "smooth": 50.0,
   "note": "round 2: the old hand pressed into the knee it lay on (the box seen from the front; its head stops under the old wrist, which the new hand covers); the knee's front is the left knee's mirrored front corrected to meet the right knee round the box's sides and foot",
   "behind": 0.08,
   "skirt": 0.04,
@@ -128,18 +128,24 @@
   "grid": 0.015,
   "island": 50,
   "neighbors": 200,
-  "slope": 1.2,
+  "slope": 3.0,
   "cylinder": {
    "x": -1.8,
    "z": 0.95,
    "r0": 0.7,
    "deg": [
-    -42,
-    33
+    -48,
+    35
    ]
   },
   "front": 0.003,
-  "useLeft": false
+  "useLeft": false,
+  "poly": 2,
+  "clamp": false,
+  "blur": 0.12,
+  "inset": 0.12,
+  "ease": 0.06,
+  "edgeBlur": 0.025
  },
  "knee_r1": {
   "box": [

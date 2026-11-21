@@ -214,8 +214,14 @@ if Kn.get("mode") == "surface":
   else:
     inner = [((a + 0.5) * cell, (b + 0.5) * cell, z) for (a, b), z in Bm.items() if blo[0] < (a + 0.5) * cell < bhi[0] and blo[1] < (b + 0.5) * cell < bhi[1]]
     fitp = np.r_[np.array([(x, y, z + Bm[(int(np.floor(x / cell)), int(np.floor(y / cell)))]) for x, y, z in ring]), np.array(inner)]
-  surf = RBFInterpolator(fitp[:, :2], fitp[:, 2], kernel="thin_plate_spline", smoothing=Kn.get("smooth", 5.0), neighbors=Kn.get("neighbors", 200))
-  Ssurf = lambda xy: surf(np.atleast_2d(xy))
+  # a low-order shape first (a polynomial of degree `poly` in the two sheet coordinates, least squares), so the surface
+  # cannot run away where the ring says nothing (the box's head), then the spline on what it leaves, smoothed hard
+  dg = Kn.get("poly", 2)
+  def pbasis(xy): return np.stack([xy[:, 0] ** i * xy[:, 1] ** j for i in range(dg + 1) for j in range(dg + 1 - i)], 1)
+  pc = np.linalg.lstsq(pbasis(fitp[:, :2]), fitp[:, 2], rcond=None)[0]
+  res_ = fitp[:, 2] - pbasis(fitp[:, :2]) @ pc
+  surf = RBFInterpolator(fitp[:, :2], res_, kernel="thin_plate_spline", smoothing=Kn.get("smooth", 5.0), neighbors=Kn.get("neighbors", 200))
+  Ssurf = lambda xy: pbasis(np.atleast_2d(xy)) @ pc + surf(np.atleast_2d(xy))
   # every face of the figure whose middle lies over the box (seen from the front) and in front of the knee's surface
   # (or within `behind` metres of it) is taken out: the old hand and the torn robe under it
   me = ob.data; me.vertices.foreach_set("co", to_blender(stS).ravel()); me.update()   # the mesh into the stage frame first
@@ -229,13 +235,25 @@ if Kn.get("mode") == "surface":
   xs = np.arange(blo[0] - sk, bhi[0] + sk + 1e-9, gs); ys = np.arange(blo[1] - sk, bhi[1] + sk + 1e-9, gs)
   GX, GY = np.meshgrid(xs, ys); GZ = Ssurf(np.c_[GX.ravel(), GY.ravel()]).reshape(GX.shape)
   Dn = np.array([[Dm.get((int(np.floor(x / cell)), int(np.floor(y / cell))), np.nan) for x in xs] for y in ys])
-  GZ = np.where(np.isfinite(Dn), np.minimum(GZ, Dn), GZ)
+  if Kn.get("clamp", False): GZ = np.where(np.isfinite(Dn), np.minimum(GZ, Dn), GZ)
+  if Kn.get("blur"):
+    # (round 2, fourth try) round the old hand there is only the knee's outer side and the lap, both far behind its
+    # front, so nothing round it says where the knee's front is; the old hand itself does: it lay on the knee. The
+    # surface is the figure's front as it was, blurred (a Gaussian of `blur` metres) so the fingers run together into
+    # one swell, set back `inset` metres (about the hand's thickness) inside the box, the setting back eased in over
+    # `ease` metres from the box's outline so the sheet meets the figure as it is
+    from scipy.ndimage import gaussian_filter, distance_transform_edt as _edt
+    fin = np.isfinite(Dn); idxn = _edt(~fin, return_distances=False, return_indices=True); Df = Dn[tuple(idxn)]
+    GB = gaussian_filter(Df, Kn["blur"] / gs, mode="nearest")
+    dd = np.minimum(np.minimum(GX - blo[0], bhi[0] - GX), np.minimum(GY - blo[1], bhi[1] - GY)); wv = np.clip(dd / Kn.get("ease", 0.12), 0, 1); wv = wv * wv * (3 - 2 * wv)
+    De = gaussian_filter(Df, Kn.get("edgeBlur", 0.025) / gs, mode="nearest")   # the figure's front at the outline, its cell noise smoothed a little
+    GZ = (1 - wv) * De + wv * (GB - Kn.get("inset", 0.12))   # the figure's own front at the outline, the blurred knee inside
   gy_, gx_ = np.gradient(GZ, gs); okS = np.hypot(gx_, gy_) < Kn.get("slope", 1.2)
   dkeys = set(Dm.keys()); hasF = np.array([[(int(np.floor(x / cell)), int(np.floor(y / cell))) in dkeys for x in xs] for y in ys])
   inbox_ = (GX > blo[0]) & (GX < bhi[0]) & (GY > blo[1]) & (GY < bhi[1])
-  lay = okS & hasF
-  from scipy.ndimage import binary_opening, label as _lab
-  lay = binary_opening(lay, iterations=2); lab_, nl_ = _lab(lay)
+  lay = okS & hasF if not Kn.get("blur") else okS.copy()   # with the blurred front every node has a value (gaps filled from the nearest)
+  from scipy.ndimage import binary_opening, binary_closing, label as _lab
+  lay = binary_closing(lay, iterations=2) if Kn.get("blur") else binary_opening(lay, iterations=2); lab_, nl_ = _lab(lay)
   if nl_ > 1: sizes = np.bincount(lab_.ravel()); sizes[0] = 0; lay = lab_ == sizes.argmax()
   core = lay & inbox_ & (distance_transform_edt(lay) * gs > sk)
   dcore = distance_transform_edt(~core) * gs; tt_ = np.clip(dcore / sk, 0, 1); GZ = GZ - tk * tt_ * tt_ * (3 - 2 * tt_)
@@ -280,6 +298,11 @@ if Kn.get("mode") == "surface":
                  "from": "Sakyamuni's own left knee mirrored across x, corrected (thin-plate spline) to meet the right knee round the box's sides and foot",
                  "cylinder": cyl}
   blo, bhi = sblo, sbhi
+  if opt.get("stage") == "knee":   # the knee alone, in the stage frame, with the sheet's grid for looking at
+    for o in bpy.context.scene.objects: o.select_set(o == ob)
+    bpy.ops.export_scene.gltf(filepath=os.path.join(out, "knee.glb"), export_format="GLB", use_selection=True)
+    np.savez(os.path.join(out, "knee-grid.npz"), xs=xs, ys=ys, GZ=GZ, lay=lay, core=core, okS=okS, hasF=hasF, Dn=Dn, ring=ring)
+    json.dump(log, open(os.path.join(out, "varada.json"), "w"), indent=1); sys.exit(0)
   inb = np.zeros(len(st), bool); Kn = dict(Kn); Kn["relax"] = 0; Kn["weld"] = 0; Kn["skip"] = True
 if not Kn.get("skip"):   # round 1's mirrored patch (knee.mode absent)
   # how far inside the box each point is (to its nearest face), eased to a weight
@@ -378,6 +401,9 @@ if PO and PO.get("solve"):
   dsol = hi_; W = W0 + [0, 0, dsol]; AR = dict(AR); AR["shift"] = float(dsol)
   hand_co = place(W); tw = W
   log["pose"].update({"wrist0": W0.tolist(), "solved_shift_m": round(float(dsol), 4), "wrist": W.round(4).tolist(), "gap_m": round(float(gap(dsol)), 4)})
+  Qd = place(W); kk = np.floor(Qd[:, :2] / 0.02).astype(int); gg = np.array([q[2] - cf.get((a, b), -9) for q, (a, b) in zip(Qd, map(tuple, kk))])
+  j_ = int(np.argmin(gg)); a_, b_ = map(int, kk[j_]); src = st[sel][np.all(np.floor(st[sel][:, :2] / 0.02).astype(int) == [a_, b_], axis=1)]
+  log["pose"]["limit"] = {"hand_point": Qd[j_].round(3).tolist(), "front_z": round(float(cf[(a_, b_)]), 3), "front_point": src[np.argmax(src[:, 2])].round(3).tolist()}
 if AR:
   # Round 2 (the T05 lead's ruling; the 3D review's measures, issue #514 items 3 and 4): the whole right arm brought
   # forward so the hand can lie on the knee with its palm no more than 10° up. The upper arm turns about the shoulder
