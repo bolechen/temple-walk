@@ -65,8 +65,9 @@ float flowers(vec2 q, float cell) { vec2 g = q / cell; vec2 id = floor(g); vec2 
 float arcDist(vec2 q, vec2 c, float w, float sag) { float x = clamp((q.x - c.x) / w, -1., 1.); float y = c.y - sag * x * x; return abs(q.y - y) + max(abs(q.x - c.x) - w, 0.); }
 // the face's ink: x the brows, y the upper lids (and the eye beneath, when its radius is above zero), drawn in two colours
 // (#370 round 7: a brow is a soft shadow under the brow ridge, not a hard line; a lid is one soft line along the eye's slit)
+float eyeW = 0., eyeP = 0.;   // the half-open eye's white and pupil, set by faceInk
 vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
-  vec2 ink = vec2(0); lip = 0.; urna = 0.;
+  vec2 ink = vec2(0); lip = 0.; urna = 0.; eyeW = 0.; eyeP = 0.;
   if (uFace[4].w < .5 || p.z < uFace[4].z || n.z < .15) return ink;
   vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002, soft = uFace[5].y;
   for (int s = 0; s < 2; s++) {
@@ -79,6 +80,14 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
     float rise = uFace[7].z > .5 ? (s == 0 ? uFace[7].x : uFace[7].y) : 0.;
     vec2 ql = q - vec2(0., rise * (q.x - le.x) * sign(le.x));
     float lt = uFace[3].x * (1. - .9 * pow(clamp(abs(ql.x - le.x) / uFace[2].w, 0., 1.), 2.)); vec2 lc = le + vec2(0., uFace[5].x);
+    // a half-open eye under the lid line (only drawn, the carving unchanged): a narrow lens of white, widest in the middle,
+    // and a dark pupil in it, looking down at whoever stands below (#480, the art director's trial for r7)
+    if (uFace[5].z > 0.) {
+      float ex = (ql.x - le.x) / (uFace[2].w * .8), below = lc.y - ql.y, hw = uFace[5].z * (1. - ex * ex);
+      float white = step(abs(ex), 1.) * smoothstep(-aa, aa, below) * (1. - smoothstep(hw - aa, hw + aa, below));
+      float pupil = white * (1. - smoothstep(uFace[5].w - aa, uFace[5].w + aa, length(vec2(ql.x - le.x, below - uFace[5].z * .55))));
+      eyeW = max(eyeW, white); eyeP = max(eyeP, pupil);
+    }
     ink.y = max(ink.y, 1. - smoothstep(lt - aa - soft, lt + aa + soft, arcDist(ql, lc, uFace[2].w, -uFace[3].y)));
     if (uFace[3].z > 0.) { vec2 d = q - lc; float ir = uFace[3].z; float half_ = d.y < 0. ? length(d) : 1e3;
       ink.y = max(ink.y, (1. - smoothstep(ir - aa, ir + aa, half_)) * .9); }
@@ -150,7 +159,7 @@ function faceUniforms(face, A) {
   out.splice(8, 4, k(face.browUp), k(face.browHalf), k(face.browT), k(face.lidHalf));
   out.splice(12, 4, k(face.lidT), k(face.lidSag), k(face.iris), A.lipHalf ?? k(face.lipHalf));
   out.splice(16, 4, A.lipH ?? k(face.lipH), k(face.urna), (A.faceZ ?? A.eyeL[2]) - face.depth, 1);
-  out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, 0, 0);
+  out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, A.eyeOpen ? A.eyeOpen[0] : 0, A.eyeOpen ? A.eyeOpen[1] : 0);   // eyeOpen: a half-open eye drawn under the lid line (white's height, pupil's radius, metres; #480 the art director's trial)
   // the lids laid on the carved eye's slit where it was measured (lidL/lidR: x, y and the rise per metre outward,
   // tools/t05-statue/face-ratios.py; #463), else on the eye anchors as before
   if (A.lidL && A.lidR) { out.splice(24, 4, A.lidL[0], A.lidL[1], A.lidR[0], A.lidR[1]); out.splice(28, 4, A.lidL[2] ?? 0, A.lidR[2] ?? 0, 1, 0); }
@@ -208,7 +217,8 @@ ${zoneCode}
   float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
   // the folds: their hollows darker, their ridges rubbed toward the dust's colour; not on the face, whose lines are drawn
   pCol *= 1. - ${fh} * cvHollow * foldW * (1. - onFace); pCol = mix(pCol, ${v3(lin(recipe.folds?.edgeColor ?? "#8A7A66"))}, ${fe} * cvEdge * foldW * (1. - onFace));
-  pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
+  pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace);
+  pCol = mix(pCol, ${v3(lin(fc.eyeWhite ?? "#C9C0B0"))}, eyeW * onFace); pCol = mix(pCol, ${v3(lin(fc.pupil ?? "#2A221C"))}, eyeP * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
   // the brow: the skin darkened, at most half covered; the lid: one line of the deep beam colour
   pCol = mix(pCol, ${v3(browC)}, ink2.x * onFace * ${(fc.browAlpha ?? 1).toFixed(3)}); pCol = mix(pCol, ${v3(ink)}, ink2.y * onFace);
   pRough = mix(pRough, ${fc.inkRough.toFixed(3)}, max(ink2.x, ink2.y) * onFace); pMetal = mix(pMetal, 0., max(ink2.x, ink2.y) * onFace);
