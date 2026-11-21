@@ -46,3 +46,7 @@ test("the shader reads the code the building writes: sixteen to a leaf, dusk lev
   const sh = readFileSync(new URL("../../app/src/materials.js", import.meta.url), "utf8"), b = readFileSync(new URL("../../app/src/building.js", import.meta.url), "utf8");
   assert.match(sh, /code=floor\(\(vUv2\.x\+4\.\)\/16\.\)/); assert.match(b, /code = lit\[0\] \* 8 \+ lit\[1\]/); assert.match(b, /\* n \+ code \* 16/);
 });
+test("the censer's shader patch still finds the line it rewrites in procMat's fragment", () => {
+  const m = readFileSync(new URL("../../app/src/materials.js", import.meta.url), "utf8"), c = readFileSync(new URL("../../app/src/censer.js", import.meta.url), "utf8");
+  const target = /\.replace\("(uniform float uSnow, uLamp, uT;)"/.exec(c)?.[1]; assert.ok(target, "censer.js no longer patches that line"); assert.ok(m.includes(target), "materials.js no longer declares `" + target + "` as censer.js expects (#459: the T4 saw 'uAt undeclared')");
+});
