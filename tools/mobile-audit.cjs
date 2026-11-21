@@ -32,6 +32,8 @@ const SURFACES = [
   ["slip", "window.__slip(8)", "window.__slip(null)"],
   // The 功德箱's sheet (#202, web build only): a coin dropped in the great hall, then the paper with its one link.
   ["offering", "(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); for (let i = 0; i < 100 && !window.__offeringSheet?.(); i++) await w(100); })()", "document.getElementById('offeringClose')?.click()"],
+  // A lamp lit for someone (#343): the sheet with its list of lines, and with the longest line chosen, the card, the link and the buttons.
+  ["bless", "(async () => { window.__bless(7); for (let i = 0; i < 200 && document.getElementById('blessActs').hidden; i++) await new Promise((r) => setTimeout(r, 120)); })()", "document.getElementById('blessClose').click()"],
   // Sitting on the summit (#156): the small word for the breath at the foot, then the line said after the three breaths; both whole on the screen.
   ["sit", "(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite('sit'); })()", null],
   ["sitsay", "(async () => { window.__riteClock(0); for (let i = 0; i < 80 && !document.getElementById('say').classList.contains('on'); i++) { window.__riteClock(500); await new Promise((r) => setTimeout(r, 120)); } })()", null],
@@ -105,7 +107,11 @@ const measure = () => {
   // A sheet that scrolls must carry its paper itself (class `scrolls`): paper drawn behind the words is only as tall as
   // the part in sight and is drawn away with them, leaving the rest of the sheet bare.
   const bare = [...document.querySelectorAll(".paper:not(.scrolls)")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY)).map((el) => el.id || el.parentElement.id + " ." + el.className);
-  return { small, tiny, off, bare, broken, tight, wrapped, overlap, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
+  // The paper of a sheet laid over the walk lies inside the screen and in the middle of it, with 16 px or more to either side (the lamp sheet,
+  // #343: a screen that measures every control and none of the paper let it run edge to edge once).
+  const placed = [], card = document.querySelector("#bless[open] article");
+  if (card) { const r = card.getBoundingClientRect(); if (r.left < 15.5 || W - r.right < 15.5) placed.push(`paper has ${Math.round(r.left)} px to its left and ${Math.round(W - r.right)} to its right`); if (Math.abs((r.left + r.right) / 2 - W / 2) > 2) placed.push("paper is not in the middle"); if (r.top < -0.5 || r.bottom > H + 0.5) placed.push(`paper runs off the top or foot [${Math.round(r.top)}, ${Math.round(r.bottom)}] of ${H}`); }
+  return { small, tiny, off, bare, broken, tight, wrapped, overlap, placed, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
 };
 (async () => {
   srv = await serve(root); fs.mkdirSync(out, { recursive: true });
@@ -121,8 +127,8 @@ const measure = () => {
       // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
       if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => p.waitForTimeout(1200)).catch(() => {});
       const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
-      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
-      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
+      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
+      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(' | ')}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
       if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); }
     }
     if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
