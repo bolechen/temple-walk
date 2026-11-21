@@ -177,3 +177,15 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   assert.equal(s.tick(0.05, eye(...STATION.A), false), 0, "a jump of the eye takes the light of where it lands");
   assert.ok(FILL.lux > 0 && FILL.depth > 0 && frames > 0);
 });
+
+test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
+  const h = buildHall(M), X = XS[XS.length - 1], xi = X + 0.3 - HALL.wall, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - 0.3 + HALL.wall;
+  // the east end wall's inner face at its front corner, inside the front wall's thickness: looking in, so inside
+  assert.equal(h.shut(xi, 6, ZS[0] + HALL.front - 0.01, -1, 0, 0), HALL.inside);
+  assert.equal(h.shut(-xi, 6, zb - 0.2, 1, 0, 0), HALL.inside, "the west wall's inner face where it runs into the back wall");
+  assert.equal(h.shut(X - 1, 6, zf, 0, 0, -1), HALL.inside, "the front wall's inner face over the east end bay");
+  // the outer faces, and a face looking along the wall, are not
+  assert.equal(h.shut(X + 0.3, 6, -10, 1, 0, 0), 1); assert.equal(h.shut(0, 6, ZS[0] + HALL.front, 0, 0, 1), 1);
+  assert.equal(h.shut(xi + 0.4, 6, -0.5, 0, 0, 1), 1, "the end of a wall seen from the court");
+  for (const g of h.parts.mural) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(Math.max(-b.min.x, b.max.x) <= xi + 1e-6 && b.max.z <= zf + 1e-6 && b.min.z >= zb - 1e-6, "a mural's ground within the inner faces"); }
+});

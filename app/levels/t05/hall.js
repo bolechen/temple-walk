@@ -148,7 +148,11 @@ export function buildHall(M) {
     put(plaster, len, wallUp - cap, H.wall, mid, (cap + wallUp) / 2, at + out * (off - H.wall / 2));  // the wall between the brackets, up to the roof
     // Inside the back and end walls, their whole height, the dark ground the murals are painted on (ARCHITECTURE.md §7.2:
     // darker and greyer than the timber's colours), so that seen from the court through the doors the hall is dark.
-    if (off > 0) put(mural, len - 2 * (H.wall - 0.3), wallUp - y0, 0.04, mid, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
+    // (along an end wall it runs from the front wall's inner face to the back wall's, not on into the front wall)
+    if (off > 0) {
+      const g0 = ax ? -(X + 0.3 - H.wall) : zB - 0.3 + H.wall, g1 = ax ? X + 0.3 - H.wall : ZS[0] + H.front - H.wall;
+      put(mural, g1 - g0, wallUp - y0, 0.04, (g0 + g1) / 2, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
+    }
     const sets = []; pos.forEach((p, i) => { sets.push(p); if (i < pos.length - 1) sets.push((p + pos[i + 1]) / 2); });
     for (const u of sets) {
       for (let k = 0; k < BR.tiers; k++) {                                               // out under the eave
@@ -211,7 +215,18 @@ export function buildHall(M) {
     // How much of the sky reaches a point: under the roof and inside the walls, little (the white box's stand-in for the
     // occlusion a closed hall has, which a mesh's own baked occlusion does not see); outside, all of it. Handed to
     // geo.mesh's `ao`, so that from the court the doorways read darker than the wall (the review of #425).
-    shut: (x, y, z) => (Math.abs(x) < X + 0.3 - H.wall + 0.02 && z < ZS[0] + H.front - H.wall + 0.02 && z > zB - 0.3 + H.wall - 0.02 && y > y0 - 0.01 ? H.inside : 1),
+    // A wall is one long box with points only at its corners, so a wall's inner face ran out to corners that lie within
+    // the next wall, outside the inside, and took the whole sky there, which spread down the face (the end walls read
+    // eight to ten times the back wall, the art review of #481). Within the walls' own thickness, a face that looks
+    // into the hall is inside; one that looks out, or along the wall, is not.
+    shut: (x, y, z, nx = 0, ny = 1, nz = 0) => {
+      if (y < y0 - 0.01) return 1;
+      const xi = X + 0.3 - H.wall, zf = ZS[0] + H.front - H.wall, zb = zB - 0.3 + H.wall, ax = Math.abs(x);
+      if (ax < xi + 0.02 && z < zf + 0.02 && z > zb - 0.02) return H.inside;
+      if (ax > X + 0.3 + 0.02 || z > ZS[0] + H.front + 0.02 || z < zB - 0.3 - 0.02) return 1;
+      const inward = (ax >= xi && nx * Math.sign(x) < -0.5) || (z >= zf && nz < -0.5) || (z <= zb && nz > 0.5);
+      return inward ? H.inside : 1;
+    },
     // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.
     fogShut: { x0: -(X + 0.3 - H.wall), x1: X + 0.3 - H.wall, z0: zB - 0.3 + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },
     // A neutral fill under the roof, so that the white box's frame and floor can be seen from inside (the hall's own
