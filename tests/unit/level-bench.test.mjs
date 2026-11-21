@@ -49,7 +49,10 @@ test("a preview and the canary ship T05; the public page carries none of it", ()
       if (baked.floor) assert.ok(p.floor, `and its baked floor (${t})`); if (baked.doorways) assert.ok(p.doorways, `and its doorway list (${t})`);
     }
     assert.deepEqual(ofT05(outs.production), { module: false, listed: false, floor: false, doorways: false }, "production carries nothing of T05");
-    assert.ok(!scripts(outs.production).some((s) => /关外|奉明/.test(s)), "nor its region or its seal on the map (#449)");
-    assert.ok(scripts(outs.preview).some((s) => /关外/.test(s)) && scripts(outs.canary).some((s) => /关外/.test(s)), "the testers' builds name it");
+    // (#449) nor its name on the map: the seal's characters, and the registry's entry for it. The region's word is still a line in the
+    // translation tables, which hold every line the page may show and are bundled whole (i18n.test.mjs keeps them to the page's own lines): a
+    // line of a table, not a place on the map, and nothing in the page's markup.
+    assert.ok(!scripts(outs.production).some((s) => /奉明|region\s*:\s*["'`]关外/.test(s)), "nor its seal or its entry on the map (#449)");
+    assert.ok(scripts(outs.preview).some((s) => /region\s*:\s*["'`]关外/.test(s)) && scripts(outs.canary).some((s) => /region\s*:\s*["'`]关外/.test(s)), "the testers' builds name it on the map");
   } finally { for (const o of Object.values(outs)) fs.rmSync(o, { recursive: true, force: true }); }
 });
