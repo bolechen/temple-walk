@@ -15,7 +15,7 @@ import { createPresence, presenceOn, readDay } from "./presence.js";
 import { traceStubCount } from "./censer.js";
 import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
-import { readPlace, writePlace, clearPlace, labelOf, titleOffer } from "./resume.js";
+import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
 import { track } from "./analytics.js";
 import { t, lang, glyphs } from "./i18n.js";
 import { WEB } from "./channel.js";
@@ -428,7 +428,8 @@ export function createGame(y) {
     if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
       SEALS.forEach((d, i) => { if (!journey.has(d.id) || !places[d.id]) return; const b = document.createElement("button"), [l, top, w, h] = boxes[i];
         b.type = "button"; b.className = "seal-go"; b.dataset.id = d.id; b.setAttribute("aria-label", t("回到{place}", { place: t(d.place) })); b.title = t("回到{place}", { place: t(d.place) });
-        b.style.cssText = `left:${(l * 100).toFixed(2)}%;top:${(top * 100).toFixed(2)}%;width:${(w * 100).toFixed(2)}%;height:${(h * 100).toFixed(2)}%`;
+        // The row of seals was shortened to leave the foot's end to the code (#337), so a seal's share of the page is 38 px wide at 388, not 51: the button is never narrower than a thumb (44 px), centred on its seal; the drawn seals are 30 px apart, so neighbours' buttons overlap by 3 px at the least.
+        b.style.cssText = `left:calc(${((l + w / 2) * 100).toFixed(2)}% - max(${(w * 100).toFixed(2)}%, 44px) / 2);top:${(top * 100).toFixed(2)}%;width:max(${(w * 100).toFixed(2)}%, 44px);height:max(${(h * 100).toFixed(2)}%, 44px)`;
         b.addEventListener("click", () => goBack(d.id)); leaf.appendChild(b); });
       if ($("bookGo")) $("bookGo").hidden = !journey.count(); }
     leaf0?.classList.remove("drawing");
@@ -465,7 +466,7 @@ export function createGame(y) {
   // A page opened by a change of language is not a visitor coming in (#140): if he stood before the gate then, the title
   // waits until he has walked away from it and comes round again.
   let relangHold = !!y.relang;
-  y.onTick(() => { const g = atGate(y.where()); if (relangHold && !g) relangHold = false; if (!titled && entered && free && !relangHold && !y.inside() && !y.openingActive() && g) prologueTitle(); });
+  y.onTick(() => { const g = atGate(y.where()); if (relangHold && !g) relangHold = false; if (!titled && entered && titleOn && !relangHold && !y.inside() && !y.openingActive() && g) prologueTitle(); });
   // What the title has done (and, for the picture tools, `__prologue(true)` raises it now, wherever he stands; "hold" keeps it up).
   window.__prologue = (show) => { if (show === true || show === "hold") prologueTitle(show === "hold"); return { titled, shown: titleShown, on: !!$("prologue")?.classList.contains("on"), text: $("prologue")?.textContent || "" }; };
 
@@ -475,8 +476,11 @@ export function createGame(y) {
   // A first visit is offered only 入山. A visitor who has a seal, or left from somewhere up the mountain, is offered to
   // go on (接着走) from where they were, or to begin again (从头走起, asked twice: it empties the book).
   const named = SEALS.filter((d) => places[d.id] && !places[d.id].room).map((d) => ({ place: d.place, at: places[d.id].at }));
-  const free = !(Q.has("cam") || Q.has("show") || Q.has("shot") || Q.has("in") || Q.has("tour") || Q.has("enter") || (BENCH && (Q.has("at") || Q.has("play") || Q.has("seals"))));   // a tool or a test that names its own place is left where it asked to be
-  awaitTitle(free && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
+  // A tool or a test that names its own place is left where it asked to be; a level that keeps no place (any but the
+  // prologue, until levels keep their own, #385) neither reads the prologue's nor writes its own over it.
+  const free = placeKept(Q, BENCH, y.level);
+  const titleOn = free && (!y.level || !!y.level.title);   // the prologue's title rises in the prologue only
+  awaitTitle(titleOn && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
   let left = free ? readPlace(localStorage) : null, kept = 0;
   if (left && left.up && !y.lofts[left.up]) left = null;
   // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
@@ -527,7 +531,7 @@ export function createGame(y) {
     if (entered) return;
     const resumed = !!(left && titleOffer(journey.count(), SEALS.length, left, y.start).going);
     track("demo.enter", { resumed, seals: journey.count(), tier: y.tier || "" });
-    const o = openingFor({ seals: journey.count(), place: left, start: y.start, params: Q, again: again === true, autocam: y.autocam(), reduced: y.reduced() });
+    const o = openingFor({ seals: journey.count(), place: left, start: y.start, params: Q, again: again === true, autocam: y.autocam(), reduced: y.reduced(), level: y.level });
     if (o.eye !== "none") holdMusic(true);
     if (o.bell) mountainBell();   // inside the click that stepped in, so the browser lets it sound
     entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered");

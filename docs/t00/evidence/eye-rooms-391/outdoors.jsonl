@@ -1,0 +1,6 @@
+{"name":"out-main-door","at":[0,-5.34],"room":null,"eye":[0,2.76,-5.84],"space":"ready","tris":1245627,"shutNow":false,"inPicture":false}
+{"name":"out-west-wall","at":[-18.8,-12],"room":null,"eye":[-14.8,2.8,-12],"space":"ready","tris":1245627,"shutNow":false,"inPicture":true}
+{"name":"out-back-wall","at":[0,-28.4],"room":null,"eye":[0,2.77,-34.4],"space":"ready","tris":1245627,"shutNow":false,"inPicture":true}
+{"name":"relang-in-main","at":[120,6.8],"room":"main","eye":[120,-58.81,8.3],"space":"ready","tris":1393622,"shutNow":false,"inPicture":true}
+{"name":"relang-out-door","at":[0,-5.34],"room":null,"eye":[0,2.76,-5.84],"space":"ready","tris":1393622,"shutNow":false,"inPicture":false}
+{"name":"relang-west-wall","at":[-18.8,-12],"room":null,"eye":[-14.8,2.8,-12],"space":"ready","tris":1393622,"shutNow":false,"inPicture":true}
