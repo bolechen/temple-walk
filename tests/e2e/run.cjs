@@ -2566,7 +2566,7 @@ const scenarios = {
     await t.frames(10);
     const K = t.page.keyboard, held = new Set(), hold = async (k, on) => { if (on && !held.has(k)) { await K.down(k); held.add(k); } else if (!on && held.has(k)) { await K.up(k); held.delete(k); } };
     const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-    const way = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 1], [0, 1.5]];
+    const way = require("./keywalk-way.cjs");
     const log = { frames: 0, off: [], dist: [], turns: { a: 0, d: 0 }, keys: [] };
     let i = 0, best = Infinity, still = 0;
     await hold("Shift", true);
