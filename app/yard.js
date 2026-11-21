@@ -12,6 +12,7 @@ import { layerFog } from "./src/fog.js";
 import { softShadows } from "./src/shadows.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
+import { loadHeightmap } from "./src/terrain-far.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
@@ -190,7 +191,9 @@ const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
 // A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
 const NONE = { setMood() {}, update() {} };
-const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land)) : NONE;
+// #183's spike: ?terrain=dem|made draws the far land from a heightmap instead of the hill rings (the default is unchanged).
+const TERRAIN = L.backdrop && ["dem", "made"].includes(Q.get("terrain") || "") ? await loadHeightmap(asset, Q.get("terrain")).catch((e) => { console.warn("terrain:", e.message); return null; }) : null;
+const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land, TERRAIN)) : NONE;
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
