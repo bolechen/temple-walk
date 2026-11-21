@@ -177,14 +177,15 @@ test("the fill comes from the doors, from over the floor and from the floor: non
   const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
   const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
   const spots = h.fill.filter((f) => f[6]), lamps = h.fill.filter((f) => !f[6]);
-  assert.equal(spots.length, 4, "a spot for each of the four openings' light");
+  assert.equal(spots.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
   for (const [x, y, z, , , , aim] of spots) {
     assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
     assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar and the back wall, so the front wall takes none of it");
     assert.ok(y > y0 + 3 && y < y0 + 8, "at about the height of the doors' middle");
   }
   const bounce = lamps.filter((f) => f[1] < y0), top = lamps.filter((f) => f[1] > y0);
-  assert.equal(bounce.length, 3); assert.equal(top.length, 1);
+  assert.equal(bounce.length, 1); assert.equal(top.length, 1);
+  assert.ok(h.fill.length <= 5, "no more lamps than the five the hall had before (#493: each is in every shader, outdoors too)");
   for (const [, y, z] of bounce) assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3, "the floor's bounce: under the floor, before the altar, so the floor itself takes none of it");
   for (const [x, y, z] of top) assert.ok(z > ALTAR.zF + 3 && y > y0 + 10, "the one lamp overhead hangs high and well before the figures");
   for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);

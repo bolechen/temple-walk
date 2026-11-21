@@ -259,9 +259,9 @@ export function buildHall(M) {
     // colour, aim]: a spot where an aim is given, a lamp otherwise; the intensity is what it reaches once he is well
     // inside; from the court it is out, so that the doorway reads dark (`within` below, and the site's tick, raise it).
     fill: [
-      ...[-17, -6, 6, 17].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.8, y0 + 4, zB + 1]]),
+      ...[-10, 10].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.9, y0 + 4, zB + 1]]),
       [0, y0 + 13, -9, FILL.top, 26, 0xfff4e8],
-      ...[-10, 0, 10].map((x) => [x, y0 - 0.5, -9, FILL.bounce, 22, 0xe8dccb]),
+      [0, y0 - 0.5, -9, FILL.bounce, 26, 0xe8dccb],
     ],
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.out metres before the
     // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
