@@ -27,6 +27,8 @@ const [T1, T2, TOP] = LEVELS;
 // departure from the Yingzao Fashi (docs/t00/decisions.md, 登凌霄阁); the structure review prefers the balcony's edge
 // over the second storey's columns (2.0 m) under an eave of about 2.8 m, for the owner to decide. Change it here only.
 export const LOFT = Object.freeze({ out: 2.4, overhang: 3.2 });
+/** How far from a young evergreen's trunk the floor is shut, metres (#531): the eye at 1.6 m is in its boughs inside 0.95 m, and the following eye, drawn in by the sprays, fills the picture with them at 1.0 m and is clear of them at 1.25. */
+const CEDAR_SHUT = 1.25;
 const HILL = { zS: T2.zN, zN: TOP.zS };   // the slope below the summit, crossed only by the stair between the tea rows
 // The way in: the last of the old path up the mountain, a zigzag through the grove. You start at the
 // river-view pavilion, climb north past the ink-stone pool, turn west and climb to the half-way pavilion,
@@ -219,8 +221,9 @@ export function buildSite(M) {
     cedars.push([x, lvl ? LEVELS[lvl - 1].y : 0, z, "cedar", h]);
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
     // The baked floor sees a young evergreen's wood only, and its boughs start at 1.35 m: it let him stand 0.9 m from the trunk with
-    // the eye inside the foliage (#288). Where the written plan kept him off by its boughs' reach, the floor is shut too, and half a metre more for the sprays that hang from the boughs.
-    if (h < 8) { const r = girth("cedar", h) + 0.5; closed.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, why: "a young evergreen is clothed to the knee: the eye stays out of its boughs" }); }
+    // the eye inside the foliage (#288). The floor is shut round the trunk as a circle of `CEDAR_SHUT` (#531: it was a square 1.5 m out from the written plan's post, 3 m across,
+    // which kept him a corner's width from a tree he could see round; the eye, 1.6 m up, is among the boughs at 0.95 m and clear of them at 1.0).
+    if (h < 8) closed.push({ x, z, r: CEDAR_SHUT, x0: x - CEDAR_SHUT, x1: x + CEDAR_SHUT, z0: z - CEDAR_SHUT, z1: z + CEDAR_SHUT, why: "a young evergreen is clothed to the knee: the eye stays out of its boughs" });
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
   const seasonal = [[14.5, 0, 60.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],

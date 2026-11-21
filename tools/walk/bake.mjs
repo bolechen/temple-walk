@@ -369,7 +369,8 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // What the plan closes though it is drawn as floor: a doorway he is taken in at, beyond that line (`hall.stop`: the door is
   // drawn open), and `site.closed` (the gate's shut side bays, the bamboo either side of the forecourt).
   for (const c of closed) for (let j = Math.max(0, Math.floor((c.z0 - box.z0) / step)); j < Math.min(nz, Math.ceil((c.z1 - box.z0) / step)); j++) for (let i = Math.max(0, Math.floor((c.x0 - box.x0) / step)); i < Math.min(nx, Math.ceil((c.x1 - box.x0) / step)); i++) {
-    const x = cx(i), z = cz(j), k = j * nx + i; if (x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1 && !state[k]) state[k] = 1 + DOOR;
+    const x = cx(i), z = cz(j), k = j * nx + i;   // (a round one says `x, z, r` as well as the box that holds it, #531)
+    if (c.r !== undefined ? Math.hypot(x - c.x, z - c.z) < c.r : x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1) { if (!state[k]) state[k] = 1 + DOOR; }
   }
   // 5. What cannot be walked to from the seeds.
   const seen = new Uint8Array(N); qh = qt = 0;
