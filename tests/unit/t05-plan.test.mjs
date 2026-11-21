@@ -25,7 +25,8 @@ test("the platform, the terrace and the flight are SITE.md's sizes, the court's 
   const { count, height } = stairProfile(FLIGHT.rise);
   // SITE.md §6 proposes about 18 steps of 0.16–0.17 m; every flight in the game is laid by the one profile (0.18 m), which gives 17 here.
   assert.equal(count, Math.round(3 / STAIR.rise)); assert.ok(height > 0.16 && height < 0.18, `${height}`);
-  for (const [x, z] of [[0, 30], [0, 60], [0, 200]]) assert.equal(old.heightAt(x, z), 0, `the court and the way at 0 (${x}, ${z})`);
+  // (z = 60 was the court once; it is the Wuliang hall's platform now, +1.0: docs/t05/SOURCES.md §13)
+  for (const [x, z] of [[0, 30], [0, 55], [0, 200]]) assert.equal(old.heightAt(x, z), 0, `the court and the way at 0 (${x}, ${z})`);
   for (const [x, z] of [[0, -12], [20, -20], [0, 8], [15, 12]]) assert.equal(old.heightAt(x, z), 3, `the platform and the terrace at +3 (${x}, ${z})`);
 });
 

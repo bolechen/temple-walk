@@ -140,16 +140,40 @@ jobs:
           status=0
           for lv in $(node tools/bake-walk.mjs --list); do node tools/walk-diff.mjs ".main/app/shared/walk/$lv.bin" --level="$lv" --png="tools/out/walk-diff/$lv" || status=1; done
           exit $status
-      - name: Unit tests (the plan, the walker, the building generator, the seasons)
-        if: needs.changes.outputs.unit == 'true'
-        run: pnpm test
 
-  # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it.
+  # The unit tests (the plan, the walker, the building generator, the seasons) shared among five machines (#442): every
+  # tests/unit/*.test.mjs on exactly one of them, by the seconds in tests/unit/durations.json (tools/ci/unit-shard.cjs;
+  # tests/unit/ci-changes.test.mjs holds that none is left out or run twice). Together they are what `pnpm test` runs.
+  tests:
+    needs: changes
+    if: needs.changes.outputs.unit == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: ${{ needs.changes.outputs.walk }}
+      # The tests read the baked floor: from the cache (a few seconds), or baked here, the same floor the `unit` job keeps.
+      - name: The floor, from the cache or baked
+        run: node tools/bake-walk.mjs
+      - name: Unit tests, this machine's share
+        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5
+
+  # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
     needs: changes
     if: needs.changes.outputs.unit == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -158,8 +182,8 @@ jobs:
       # Writes the floor into app/shared/walk/ from the cache (a few seconds), or bakes it; the swapped walker reads that file.
       - name: The floor, from the cache or baked
         run: node tools/bake-walk.mjs
-      - name: The same unit tests on the walker over the baked floor (#265)
-        run: WALKER=mesh node --import ./tools/walk/swap.mjs --test tests/unit/*.test.mjs
+      - name: The same unit tests on the walker over the baked floor (#265), this machine's share
+        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5 --import ./tools/walk/swap.mjs
 
   # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
   # preview.
@@ -243,7 +267,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [stairs, drop]
+        scenario: [stairs, stairs-edge, drop, drop-touch]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -301,7 +325,7 @@ jobs:
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, grid, site, quick, worker]
+    needs: [changes, unit, tests, grid, site, quick, worker]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -1,0 +1,68 @@
+{
+  "spec": "tools/t05-hall/specs/sakyamuni-370-band.json",
+  "shots": [],
+  "film": {
+    "file": "tools/out/t05/sakyamuni-370/walk/band-winter.mp4",
+    "frames": 160,
+    "fps": 12,
+    "secs": 13.333333333333334,
+    "size": [
+      1280,
+      720
+    ],
+    "occlusion": {
+      "face": {
+        "seen": 1,
+        "hidden": []
+      },
+      "rhand": {
+        "seen": 1,
+        "hidden": []
+      },
+      "lhand": {
+        "seen": 1,
+        "hidden": []
+      },
+      "lotus": {
+        "seen": 1,
+        "hidden": []
+      }
+    }
+  },
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    },
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}

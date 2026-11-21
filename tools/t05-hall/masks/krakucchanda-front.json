@@ -1,0 +1,107 @@
+{
+ "normals": "tools/out/t05/seven/chest/krakucchanda-normals.png",
+ "depth": "tools/out/t05/seven/chest/krakucchanda-depth.png",
+ "rect": [
+  -1.5,
+  3.7,
+  1.5,
+  6.7
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/krakucchanda-front.png",
+ "preview": "tools/out/t05/seven/chest/krakucchanda-mask-preview.png",
+ "channels": [
+  {
+   "zone": "袒露的胸",
+   "ch": 0,
+   "seeds": [
+    [
+     0,
+     6.0
+    ],
+    [
+     -0.25,
+     5.9
+    ],
+    [
+     0.25,
+     5.9
+    ],
+    [
+     0,
+     6.42
+    ],
+    [
+     -0.2,
+     6.4
+    ],
+    [
+     0.2,
+     6.4
+    ]
+   ],
+   "box": [
+    -0.5,
+    5.55,
+    0.55,
+    6.65
+   ],
+   "tol": 0.03,
+   "close": 0.03,
+   "blur": 0.012,
+   "stops": [
+    [
+     0,
+     5.3
+    ],
+    [
+     0,
+     5.1
+    ]
+   ]
+  },
+  {
+   "zone": "内衣",
+   "ch": 2,
+   "seeds": [
+    [
+     0,
+     5.0
+    ],
+    [
+     0,
+     4.7
+    ],
+    [
+     0.1,
+     5.4
+    ]
+   ],
+   "box": [
+    -0.5,
+    4.35,
+    0.55,
+    5.7
+   ],
+   "tol": 0.03,
+   "close": 0.03,
+   "blur": 0.012
+  },
+  {
+   "zone": "衣缘描金",
+   "ch": 1,
+   "ring_of": [
+    0,
+    1
+   ],
+   "width": 0.06,
+   "box": [
+    -0.75,
+    4.3,
+    0.8,
+    6.35
+   ],
+   "blur": 0.006
+  }
+ ]
+}

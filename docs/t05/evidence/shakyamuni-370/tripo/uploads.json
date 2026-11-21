@@ -1,0 +1,37 @@
+[
+  {
+    "file": "front.png",
+    "bytes": 1440687,
+    "sha256": "070941b67796404a528e427f24bc93a8a587970133a90cc9b4ac50ef0a54bc07",
+    "token": "744cd4a0-57a4-47a2-a103-d42f171bc4e8",
+    "at": "2026-11-20T13:55:14.203Z"
+  },
+  {
+    "file": "back.png",
+    "bytes": 1424198,
+    "sha256": "b1516e86d02c902a35bf3e8bdfc9330a10be74338c01c5d5f028a1f6209fe116",
+    "token": "bbb99b6c-1b01-4210-abd0-ba0f5d0eb698",
+    "at": "2026-11-20T13:55:16.584Z"
+  },
+  {
+    "file": "04-shakyamuni-front.png",
+    "bytes": 1558634,
+    "sha256": "d20ffc2259fb898fe58302b222edc414c8612a43c07b0ce2f12cea44c32630a2",
+    "token": "cfb2a283-a7a2-443b-9b25-9213b472fb2b",
+    "at": "2026-11-21T00:10:20.152Z"
+  },
+  {
+    "file": "05-shakyamuni-right.png",
+    "bytes": 1166895,
+    "sha256": "6796fbc574fd48df04b5a9cab8fa4c3623bde1d74fca81ae4500fe0bf474577f",
+    "token": "159ff86f-63fa-47c7-a87a-00aa9bbc4085",
+    "at": "2026-11-21T00:10:23.942Z"
+  },
+  {
+    "file": "06-shakyamuni-back.png",
+    "bytes": 1493940,
+    "sha256": "d2e52931b91f360ce8fdf9d2aa4a48cc686d44c9a25e875014bd253affb8985a",
+    "token": "0e23cdd0-4c9e-43bd-9d72-19faa75dcccb",
+    "at": "2026-11-21T00:10:26.757Z"
+  }
+]
