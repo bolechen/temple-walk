@@ -1,0 +1,154 @@
+{
+ "out": "tools/out/t05/seven/lineup",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/kasyapa-r1.60000.glb",
+   "x": 16.45,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/krakucchanda-r1.60000.glb",
+   "x": 11.33,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/sikhin-r1.60000.glb",
+   "x": 5.8,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/vipasyin-r1.60000.glb",
+   "x": 0,
+   "h": 9.4,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/visvabhu-r1.60000.glb",
+   "x": -5.8,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/kanakamuni-r1.60000.glb",
+   "x": -11.33,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -16.45,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370"
+  }
+ ],
+ "shots": [
+  {
+   "name": "row-winter",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "front10",
+    "over": {
+     "at": [
+      0,
+      7.0,
+      -1.0
+     ],
+     "look": [
+      0,
+      8.8,
+      -17.6
+     ],
+     "fov": 72,
+     "exp": 3.8
+    }
+   }
+  },
+  {
+   "name": "door3-winter",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "door3"
+   }
+  }
+ ]
+}

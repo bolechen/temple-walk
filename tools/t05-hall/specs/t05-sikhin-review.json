@@ -1,0 +1,164 @@
+{
+ "out": "tools/out/t05/seven/sikhin",
+ "size": [
+  1000,
+  1000
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/sikhin-r1.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 5.7,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  }
+ ],
+ "shots": [
+  {
+   "name": "turn-front",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 0,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "turn-right",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 90,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "turn-back",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 180,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "turn-left",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 270,
+     "el": 6,
+     "dist": 14.5,
+     "at": [
+      0,
+      4.3,
+      0
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "hand-right",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": 15,
+     "el": 12,
+     "dist": 4.6,
+     "at": [
+      -0.7095,
+      5.4395,
+      0.734
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "hand-left",
+   "shoot": {
+    "paint": true,
+    "studio": {
+     "az": -15,
+     "el": 12,
+     "dist": 4.6,
+     "at": [
+      2.322,
+      4.3,
+      0.873
+     ],
+     "fov": 35,
+     "exp": 0.8
+    }
+   }
+  },
+  {
+   "name": "half-warm",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "front10",
+    "over": {
+     "at": [
+      1.2,
+      8.47,
+      -10.100000000000001
+     ],
+     "look": [
+      0,
+      10.170000000000002,
+      -17.6
+     ],
+     "fov": 32,
+     "exp": 3.6
+    },
+    "lamp": 120,
+    "lampAt": [
+     0.8,
+     7.07,
+     -14.000000000000002
+    ]
+   }
+  }
+ ]
+}
