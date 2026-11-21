@@ -280,7 +280,7 @@ test("everywhere on the grid a stair is where the floor steps by a tread: the ga
     const x = xOf(G, k), z = zOf(G, k), h = walker.heightAt(x, z), st = walker.onStairs(x, z); let rise = 0, span = 0;
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       if (!walker.blocked(x + dx * 0.1, z + dz * 0.1)) rise = Math.max(rise, Math.abs(walker.heightAt(x + dx * 0.1, z + dz * 0.1) - h));
-      for (const d of [0.2, 0.3, 0.35]) if (!walker.blocked(x + dx * d, z + dz * d)) span = Math.max(span, Math.abs(walker.heightAt(x + dx * d, z + dz * d) - h));
+      for (const d of [0.05, 0.2, 0.3, 0.35]) if (!walker.blocked(x + dx * d, z + dz * d)) span = Math.max(span, Math.abs(walker.heightAt(x + dx * d, z + dz * d) - h));
     }
     if (st && Math.max(span, rise) < 0.05) flat.push([+x.toFixed(2), +z.toFixed(2)]);
     if (!st && rise >= 0.09 && rise <= 0.25) step.push([+x.toFixed(2), +z.toFixed(2)]);
