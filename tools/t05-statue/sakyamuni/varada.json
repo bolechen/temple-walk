@@ -132,7 +132,8 @@
     "sink": 0.008,
     "reach": 0.6
    },
-   "note_wrist": "the forearm lies level and the hand hangs from it, so at the wrist the forearm's end stands upright and the hand's opening lies level: the forearm is kept on to the palm's face (cut 0.18 m past the wrist) and the hand's top, which stands above the forearm, is drawn down onto it (wrap)"
+   "note_wrist": "the forearm lies level and the hand hangs from it, so at the wrist the forearm's end stands upright and the hand's opening lies level: the forearm is kept on to the palm's face (cut 0.18 m past the wrist) and the hand's top, which stands above the forearm, is drawn down onto it (wrap)",
+   "cap_top": 0.1
   }
  },
  "knee": {
@@ -273,6 +274,6 @@
   "stretch": 3.0,
   "cut_dz": 0.18,
   "cut_below_y": 3.64,
-  "cap": true
+  "cap": false
  }
 }

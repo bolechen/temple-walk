@@ -567,6 +567,13 @@ for f in hand_faces:
   try: bm.faces.new([bm.verts[nb + int(j)] for j in f])
   except ValueError: pass
 for i, v in enumerate(bm.verts[:nb]): v.co = Vector(to_blender(st[i][None])[0])
+if PO and PO.get("cap_top"):
+  # the hand's own open top (the stub's cut) closed where it lies within `cap_top` metres of the wrist, so no gap in it
+  # shows the inside where the forearm does not cover it
+  bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); s_all = (hand_co - tw) @ tax
+  edge_h = [e for e in bm.edges if e.is_boundary and all(v.index >= nb and s_all[v.index - nb] < PO["cap_top"] for v in e.verts)]
+  f0 = len(bm.faces); bmesh.ops.holes_fill(bm, edges=edge_h, sides=0); log.setdefault("pose", {})["cap_top_faces"] = len(bm.faces) - f0
+  bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
 bm.to_mesh(me); bm.free(); me.update()
 log["joined"] = {"hand_points": len(hand_co), "hand_faces": len(hand_faces), "how": "joined over the wrist, the hand's wrist sunk into the forearm (no boolean: the figure is many open shells)"}
 # back to the file's own frame and units, so the rest of the pipeline (thinning, baking) takes it as it took r1
