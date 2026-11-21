@@ -113,4 +113,34 @@ const deg = (r) => (r * 180) / Math.PI;
       assert.ok(n > 100 && outer / n >= 0.9, `the ${t.h} m ginkgo: ${outer} of ${n} leaf cards are in the outer half`);
     }
   });
+
+  // The pipe model (Leonardo's rule), as the cedars' own test holds it: where wood leaves a limb, what goes out carries about
+  // what comes in (#92); and no bough stands out of its parent's outline where it leaves (#200).
+  test("at every fork of every ginkgo the wood that goes out is what comes in: the leader's whorls carry 0.8-1.2 of its base, and no twig bears more than its bough (#313)", () => {
+    // The cedars' own test (trees.test.mjs) measures a limb's kids against its base, and so does this. The leader's boughs are
+    // sized to the wood the leader loses as it narrows, and carry 0.8-1.2 of it. A bough, though, narrows to a fine tip (the 3D
+    // review of #327: at most 2 cm and 0.2 of its start) while it bears only three twigs, which cannot take the rest of its
+    // wood out, so the twigs' share of a bough's base is far under 0.8 (about 0.15): not asserted, only that it never
+    // comes to more than the bough has (the other way a fork breaks the rule).
+    let n = 0; const off = [], over = [];
+    for (const g of grown.ginkgos) for (const t of g.tubes) if (t.kids && t.kids.length) {
+      n++; const r = t.kids.reduce((a, k) => a + k * k, 0) / (t.base * t.base);
+      if (t.level === 0 && (r < 0.8 || r > 1.2)) off.push(`the ${g.h} m ginkgo's leader: ${r.toFixed(2)}`);
+      if (t.level > 0 && r > 1.2) over.push(`the ${g.h} m ginkgo, a level ${t.level} limb: ${r.toFixed(2)}`);
+    }
+    assert.ok(n >= 12, `only ${n} forks`); assert.deepEqual(off, []); assert.deepEqual(over, []);
+  });
+  test("no bough starts outside its parent: its first ring lies within the parent's radius where it leaves, at least 2 cm in (or 0.3 of it on a fine twig) (#313, #200)", () => {
+    const out = []; let n = 0;
+    for (const g of grown.ginkgos) {
+      const owner = new Map(); for (const t of g.tubes) for (const k of t.rings) owner.set(k, t);
+      // a child's first ring is centred on its parent's axis: find the parent ring nearest it, and the radius there
+      for (const t of g.tubes) {
+        if (t.level < 1) continue; const c = t.rings[0], parent = g.tubes.filter((p) => p.level === t.level - 1).map((p) => { let best = { d: Infinity }; for (let i = 0; i + 1 < p.rings.length; i++) { const a = p.rings[i], b = p.rings[i + 1], ab = b.pos.clone().sub(a.pos), u = Math.max(0, Math.min(1, c.pos.clone().sub(a.pos).dot(ab) / ab.lengthSq())), q = a.pos.clone().addScaledVector(ab, u), d = q.distanceTo(c.pos); if (d < best.d) best = { d, R: a.radius + (b.radius - a.radius) * u }; } return best; }).sort((p, q) => p.d - q.d)[0];
+        n++; const room = Math.min(0.02, 0.3 * parent.R);
+        if (parent.d > 1e-3 || c.radius > parent.R - room) out.push(`the ${g.h} m ginkgo, a level ${t.level} limb: first ring ${c.radius.toFixed(3)} m in a parent of ${parent.R.toFixed(3)} m (${parent.d.toFixed(3)} m off its axis)`);
+      }
+    }
+    assert.ok(n >= 60, `only ${n} limbs`); assert.deepEqual(out.slice(0, 8), [], `${out.length} limbs begin outside their parent`);
+  });
 }
