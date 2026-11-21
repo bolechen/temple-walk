@@ -3,6 +3,60 @@
  "dataset": "bolechen/temple-walk-evidence",
  "files": [
   {
+   "path": "final-arrival-en-phone.jpg",
+   "bytes": 62630,
+   "sha256": "a2a0d9b99ac4536c8b3f6a9e26956dedda1a6d5bb6483f2910f52520dc40ec30",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-arrival-ja-phone.jpg",
+   "bytes": 60900,
+   "sha256": "991ef18073b11babce3a6e107bea76fffa914e01a5715a1dd9c96bb2632ee99e",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-arrival-ko-phone.jpg",
+   "bytes": 63226,
+   "sha256": "b37caaefc5708d2c62473f97881c93fac906154ba76492462d9a7eaa46131fe1",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-arrival-zh-phone.jpg",
+   "bytes": 60566,
+   "sha256": "341ce23c0b0471b05afc33e5a7b0728d291776ba238e6e0cdecf34e26a470a0b",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-en.jpg",
+   "bytes": 124637,
+   "sha256": "e75b4e0946eb66c386d09dfbdec5f8ba26f4af2567266f538697147ea96bbb4a",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-ja.jpg",
+   "bytes": 118755,
+   "sha256": "97ef7ddcaac70d9b853c2c304a5e69b6d68bdf2c1271c0fc844da6c3b45f80e4",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-ko.jpg",
+   "bytes": 112379,
+   "sha256": "3af71b1a1aca30839ee220eb77ca8288af6badd31d489e0d47f4c44be5fed9ba",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-card-zh.jpg",
+   "bytes": 110377,
+   "sha256": "6dbbb7ff08aef3d576ad5a384859afa8e9600080b57d132569eae65c9537641c",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
+   "path": "final-sheet.jpg",
+   "bytes": 299696,
+   "sha256": "c33a1c9a72a18d65f66bb7fff9c61cd2d40c255e446c17f8138a57ed71a469a6",
+   "rev": "97465ade36457cbb1f625eb5346a9d82cd4dfea9"
+  },
+  {
    "path": "lamp-arrival-en-desktop.jpg",
    "bytes": 145525,
    "sha256": "d389f6da3890a69cb7aa48fb5c1b1490ad98e895747cfcb8e1be94398dd24811",
