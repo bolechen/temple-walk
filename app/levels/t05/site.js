@@ -39,9 +39,9 @@ export function buildSite(M) {
   shade[0].push({ x0: -pX, x1: pX, z0: pN, z1: P.zS }, { x0: -tX, x1: tX, z0: T.zN, z1: T.zS });
 
   // The flight down the terrace's south face, its head at the terrace's edge.
-  const flight = stairGeo(F.w, F.rise), run = flight.run ?? stairProfile(F.rise).run;
   const at = new THREE.Matrix4().makeTranslation(0, 0, T.zS);
-  steps.push(flight.geo.applyMatrix4(at)); (root.userData.flights ||= []).push({ w: F.w, rise: F.rise, sides: [-1, 1], m: at });
+  const flight = stairGeo(F.w, F.rise, { place: at }), run = flight.run ?? stairProfile(F.rise).run;
+  steps.push(flight.geo); (root.userData.flights ||= []).push({ w: F.w, rise: F.rise, sides: [-1, 1], m: at });
   const pad = BODY + 0.02;   // the treads are walked clear of the cheek stones by his own width
   walk.ramps.push({ x0: -F.w / 2 + pad, x1: F.w / 2 - pad, z0: T.zS - 0.8, z1: T.zS + run + 0.3, base: 0, h: F.rise, low: [0, T.zS + run], high: [0, T.zS], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? F.w / 2 - BODY - 0.021 : -F.w / 2 - CHEEK - BODY, x1: sx > 0 ? F.w / 2 + CHEEK + BODY : -F.w / 2 + BODY + 0.021, z0: T.zS + 0.02, z1: T.zS + run + BODY + 0.06, h: top });
