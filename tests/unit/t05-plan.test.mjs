@@ -157,3 +157,20 @@ test("T05 builds no censer, no trees, no bell and no seat of its own yet, and it
   assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
   assert.equal(level.backdrop, null); assert.equal(level.grove, null); assert.equal(level.zones, null);
 });
+
+test("the hall's fill is out while the eye is in the court and comes up as he walks in, over seconds, never at a jump (#481)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
+  for (const [x, z] of [STATION.A, STATION.B, [0, 6.57], [0, 0.6], [0, -0.04]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  for (const k of ["E", "F", "D"]) assert.ok(h.within(STATION[k][0], 4.6, STATION[k][1]) > 0.97, `the whole fill at ${k}`);
+  // the court's picture is drawn with the fill out, however long he stands there
+  for (let i = 0; i < 50; i++) assert.equal(s.tick(0.05, eye(0, 6.57), false), 0);
+  // walking in at his pace (2.1 m/s, 20 frames a second) from the threshold to E: it rises steadily, never more than 5% a frame
+  let last = 0, rise = 0, frames = 0;
+  for (let z = 6.57; z > STATION.E[1]; z -= 2.1 * 0.05) { const k = s.tick(0.05, eye(0, z), false); assert.ok(k >= last - 1e-9, "it only rises walking in"); rise = Math.max(rise, k - last); last = k; frames++; }
+  assert.ok(rise <= 0.05, `the most in one frame ${rise.toFixed(3)}`);
+  for (let i = 0; i < 80; i++) last = s.tick(0.05, eye(...STATION.E), false);
+  assert.equal(last, 1, "settled once he stands inside");
+  assert.equal(s.tick(0.05, eye(...STATION.A), false), 0, "a jump of the eye takes the light of where it lands");
+  assert.ok(FILL.lux > 0 && FILL.depth > 0 && frames > 0);
+});

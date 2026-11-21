@@ -36,6 +36,12 @@ export const HALL = Object.freeze({
   beam: { w: 0.6, d: 0.9 },
   rafter: 2.88,          // a rafter's run, between purlins: ten rafters front to back (the structural review of #425, from the depth between the eave purlins)
 });
+/**
+ * The fill under the roof while he is inside (white box): the level it reaches, as the round before #481 had it always
+ * on; over how many metres in from the front wall it comes up; and how fast the eye takes it (seconds to cover about
+ * two thirds of a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
+ */
+export const FILL = Object.freeze({ lux: 10, depth: 2, ease: 0.8 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
@@ -208,9 +214,19 @@ export function buildHall(M) {
     shut: (x, y, z) => (Math.abs(x) < X + 0.3 - H.wall + 0.02 && z < ZS[0] + H.front - H.wall + 0.02 && z > zB - 0.3 + H.wall - 0.02 && y > y0 - 0.01 ? H.inside : 1),
     // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.
     fogShut: { x0: -(X + 0.3 - H.wall), x1: X + 0.3 - H.wall, z0: zB - 0.3 + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },
-    // A neutral fill under the roof, so that the white box's frame and floor can be seen from the door and from below
-    // (the hall's own light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance]
-    fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, 0, 26]),
+    // A neutral fill under the roof, so that the white box's frame and floor can be seen from inside (the hall's own
+    // light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance]:
+    // the intensity is what it reaches once he is well inside; from the court it is out, so that the doorway reads dark
+    // (`within` below, and the site's tick, raise it as he goes in).
+    fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, FILL.lux, 26]),
+    // How far inside the hall an eye is, 0 to 1: nothing outside the walls, then rising over
+    // FILL.depth metres in from the threshold (PRD.md §2.1's "how far inside", its cheapest form), whole by station F.
+    within: (x, y, z) => {
+      const zF = ZS[0] + H.front, xIn = X + 0.3 - H.wall, zIn = zB - 0.3 + H.wall;
+      if (Math.abs(x) > xIn || z < zIn || y < y0 - 0.5 || y > H.ridge) return 0;
+      const t = Math.min(1, Math.max(0, (zF - z) / FILL.depth));
+      return t * t * (3 - 2 * t);
+    },
     roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge },
     box: { x0: -OUTER.x, x1: OUTER.x, z0: OUTER.zB, z1: OUTER.zF },
   };
