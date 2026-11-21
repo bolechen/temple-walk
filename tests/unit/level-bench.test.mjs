@@ -43,6 +43,11 @@ test("a preview and the canary ship T05; the public page carries none of it", ()
   const baked = { floor: fs.existsSync(path.join(ROOT, "app/shared/walk/t05.bin")), doorways: fs.existsSync(path.join(ROOT, "app/shared/doorways/t05.json")) };
   const outs = { preview: build("preview"), canary: build("canary"), production: build("production") };
   try {
+    // (#449) the page's first script is ahead of the stylesheet and the entry script in what is built, or it holds back the page's body
+    for (const [t, o] of Object.entries(outs)) {
+      const page = fs.readFileSync(path.join(o, "index.html"), "utf8"), at = page.indexOf("<script data-first>");
+      assert.ok(at >= 0 && at < page.indexOf('<link rel="stylesheet"') && at < page.indexOf('<script type="module"'), `${t}: the crossing's first script should be ahead of the stylesheet and the entry`);
+    }
     for (const t of ["preview", "canary"]) {
       const p = ofT05(outs[t]);
       assert.ok(p.module, `the ${t} holds T05's level module`); assert.ok(p.listed, `and lists it (${t})`);

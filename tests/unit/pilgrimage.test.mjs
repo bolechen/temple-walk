@@ -207,13 +207,16 @@ test("the address of the page that opens: the level, the visitor's own settings,
 import vm from "node:vm";
 test("index.html's first script shuts the curtain exactly when a usable crossing is waiting for this page's level", () => {
   const html = fs.readFileSync(path.join(ROOT, "app/index.html"), "utf8");
-  const code = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((c) => c.includes(CROSSING_KEY));
+  const code = [...html.matchAll(/<script data-first>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((c) => c.includes(CROSSING_KEY));
   assert.ok(code, "the first script is in index.html and names the crossing's key");
   assert.ok(html.indexOf(code) < html.indexOf("<canvas") && html.indexOf(code) < html.indexOf('<script type="module"'), "it comes before anything is built or painted");
   // Vite puts the page's entry script before the first "<body" or "</head" it finds in the text, comments included: a comment that
   // writes one of them swallows the entry script (the page then never starts: every check on #455's first pushes failed on it).
   assert.ok(!/<body\b|<\/?head\b/i.test(html), "index.html has no <body> or <head> in its text, not even in a comment");
-  assert.ok(html.indexOf(code) < html.indexOf('<link rel="stylesheet"'), "above the stylesheet: a script placed after it waits for the sheet and holds back <body>, which the tests read the moment the page commits (quick (stairs) failed on it in CI)");
+  // (Vite puts the stylesheet and the entry script at the head of the page whatever the source says, so the build moves this script ahead
+  // of them: vite.config.mjs's scriptFirst; tests/unit/level-bench.test.mjs looks in what is built. A script after a stylesheet waits for
+  // it and holds back the page's body, which the tests read the moment the page commits: quick (stairs) failed on it in CI.)
+  assert.match(html, /<script data-first>/, "the script is marked, for scriptFirst to find");
   const run = (stored, search, now = NOW) => {
     const added = [];
     const sessionStorage = { getItem: (k) => { if (stored === "throw") throw new Error("denied"); return k === CROSSING_KEY ? stored : null; } };
