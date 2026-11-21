@@ -128,15 +128,15 @@
    "position": [
     0,
     4.3,
-    -12
+    -9
    ],
    "target": [
     0,
-    12.77,
-    -17.32
+    13.43,
+    -13.08
    ],
    "yaw_rad": 0,
-   "pitch_rad": 1.01,
+   "pitch_rad": 1.15,
    "fov_degrees": 52,
    "fov_axis": "vertical",
    "eye_height_m": 1.3,
