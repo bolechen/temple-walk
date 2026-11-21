@@ -153,6 +153,8 @@ const scenarios = {
     const node = createTrees(new THREE.Group(), M, buildSite(M).trees, {});
     expect(page.cedars > 10 && page.cedars === node.cedars.length, `the page grew ${page.cedars} cedars, Node ${node.cedars.length}`);
     expect(page.hash === geometryHash(node.cedars.map((c) => c.geometry)), `the page's cedars (${page.hash}) are not Node's (${geometryHash(node.cedars.map((c) => c.geometry))})`);
+    expect(page.ginkgos === 4 && page.ginkgos === node.ginkgos.length, `the page grew ${page.ginkgos} ginkgoes, Node ${node.ginkgos.length}`);
+    expect(page.ginkgoHash === geometryHash(node.ginkgos.map((g) => g.geometry)), `the page's ginkgoes (${page.ginkgoHash}) are not Node's (${geometryHash(node.ginkgos.map((g) => g.geometry))})`);
     await t.close();
   } },
   boot: { tier: 1, async run(b, base) {
@@ -967,6 +969,8 @@ const scenarios = {
     await t.until(() => t.page.isVisible("#book"), 60000, "the book never opened after the close");
     expect((await t.page.textContent("#bookHint")).includes("帐上还空着六处"), "the book should say what is still to be found: " + (await t.page.textContent("#bookHint")));
     await t.page.click("#bookClose"); j = await t.journey(); expect(j.closed > 0 && j.count === 1, "the close was not remembered: " + JSON.stringify(j));
+    // (#449) the close played is what closes the temple for the map of temples walked: kept apart from this book, under its own key
+    { const pm = await t.page.evaluate(() => window.__pilgrimage()); expect(pm.record.t00?.closed > 0 && /^(spring|summer|autumn|winter)$/.test(pm.record.t00.season), "playing the close should close the temple in the pilgrimage's record: " + JSON.stringify(pm.record)); }
     // He is still sitting; the button stands him up. Sitting there again is only a seat now: no second close.
     await offered("起身", "while he sits on the summit"); await t.page.keyboard.press("e");   // (the button is not drawn on the far view, #147: E stands him up all the same)
     await t.until(async () => !(await t.page.evaluate(() => window.__yard().staged)), 20000, "起身 did not stand him up");
@@ -1003,6 +1007,167 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__rites().ended)) === 0, "the close played again for the seventh seal");
     await t.until(async () => ((await t.page.getAttribute("#bookSave", "href")) || "").startsWith("blob:"), 60000, "nothing to save"); await t.shot("e2e-book");   // (the page opens as bare paper and is written on when drawn)
     await t.page.click("#bookClose"); expect((await word()) !== "上香" || !(await t.page.isVisible("#act")), "the incense should not be offered again");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // 行脚图, phase one (#449): once a temple has been closed there are three ways to the map of temples walked (the pause menu's
+  // row, the book's chip, a hold on Q for a second), and none before; a place on it that has been closed is one press away and
+  // the page opens again as that temple's behind an ink curtain; one not yet visited is a fog with no name. From the prologue to
+  // T05 and back, with nothing complaining. Waited on conditions, never on seconds; Q's hold on a clock the scenario holds still
+  // (`__pilgrimage({ clock })`), and once on the page's own.
+  "pilgrimage-map": { tier: 2, async run(b, base) {
+    const QRY = "q=low" + BARE, KEY = "yunjing.pilgrimage.v1", CROSS = "yunjing.crossing.v1";
+    const t = await open(b, base, QRY);
+    const P = (o) => t.page.evaluate((x) => window.__pilgrimage(x), o), shown = (sel) => t.page.isVisible(sel), stack = () => t.page.evaluate(() => window.__ui().stack);
+    const begin = await t.page.evaluate(() => window.__walker().start.slice());
+    const menu = async (open) => { if (open) { await t.page.keyboard.press("Escape"); await t.until(() => shown("#menu"), 20000, "the pause menu never opened"); } else { await t.page.keyboard.press("Escape"); await t.until(async () => !(await stack()).includes("menu"), 20000, "Esc did not put the menu away"); } };
+    const mapOpen = (what) => t.until(async () => (await P()).open && (await shown("#pilgrim")) && (await t.page.locator("#pilgrimList li").count()) > 0, 60000, `the map did not open ${what}`);
+    const mapShut = async () => { await t.page.keyboard.press("Escape"); await t.until(async () => !(await stack()).includes("pilgrim"), 20000, "Esc did not put the map away"); };
+
+    // 1. Nothing closed: no entrance anywhere, and a held Q does nothing.
+    let p = await P({ wipe: true });
+    expect(!p.visible && !p.body && p.entries.length === 2, "with no temple closed the entrances should be shut: " + JSON.stringify(p));
+    await menu(true); expect(!(await shown("#menuPilgrim")), "no row for the map in the menu before a temple is closed"); await menu(false);
+    await t.page.keyboard.press("b"); await t.until(() => shown("#book"), 30000, "the book never opened"); expect(!(await shown("#bookMap")), "no chip for the map in the book before a temple is closed"); await t.page.click("#bookClose");
+    await t.page.keyboard.down("q"); await t.frames(4); p = await P(); expect(!p.hold.active && !p.hold.shown && !p.open, "a held Q should do nothing before a temple is closed: " + JSON.stringify(p.hold)); await t.page.keyboard.up("q");
+
+    // 2. The prologue closed: the record is kept apart, and the three entrances are there.
+    p = await P({ mark: "t00", season: "autumn" });
+    expect(p.visible && p.body && p.record.t00.season === "autumn" && p.record.t00.closed > 0, "closing the prologue should open the entrances: " + JSON.stringify(p));
+    const kept = await t.page.evaluate((k) => JSON.parse(localStorage.getItem(k)), KEY); expect(kept.t00.season === "autumn" && kept.t00.closed > 0 && Object.keys(kept).join() === "t00", "the record should be kept under its own key: " + JSON.stringify(kept));
+    expect((await t.page.evaluate(() => document.getElementById("keys").textContent)).includes("Q"), "the keys' card should say where Q is used");
+
+    // 3. The entrance in the pause menu: reached with Tab (the row is a button on the page's own tab order), pressed with Enter.
+    await menu(true);
+    let reached = false; for (let i = 0; i < 80 && !reached; i++) { await t.page.keyboard.press("Tab"); reached = await t.page.evaluate(() => document.activeElement?.id === "menuPilgrim"); }
+    expect(reached, "Tab should reach the map's row in the menu");
+    await t.page.keyboard.press("Enter"); await mapOpen("from the menu");
+    // Nothing else closed: the prologue is marked, the other temple is a fog that carries no name, in the words or in the page's markup.
+    const dom = await t.page.evaluate(() => ({ here: document.querySelector("#pilgrimList .here")?.textContent || "", go: document.querySelectorAll("#pilgrimList .go").length, fog: document.querySelectorAll("#pilgrimList .fog").length, fogHtml: document.querySelector("#pilgrimList .fog")?.outerHTML || "", page: document.documentElement.outerHTML, current: document.querySelector("#pilgrimList .here")?.getAttribute("aria-current") }));
+    expect(dom.here.includes("江南") && dom.here.includes("此刻在此") && dom.here.includes("上回") && dom.here.includes("秋") && dom.current === "location", "the temple he is in should be marked, with its region and the season: " + dom.here);
+    expect(dom.go === 0 && dom.fog === 1, "the other temple should be a fog, nothing to go to: " + JSON.stringify({ go: dom.go, fog: dom.fog }));
+    expect(!/关外|奉明|t05/i.test(dom.fogHtml) && !dom.page.includes("关外") && !dom.page.includes("奉明"), "a temple not yet visited should not be named anywhere in the page: " + dom.fogHtml);
+    // (art review of #455, round two) with no temple to go to the focus stays on the sheet: no ring round 合上
+    { const f = await t.page.evaluate(() => ({ id: document.activeElement?.id || document.activeElement?.tagName, go: document.querySelectorAll("#pilgrimList .go").length })); expect(f.go === 0 && f.id === "pilgrim", "with no temple to go to, the focus should stay on the sheet, not on 合上: " + JSON.stringify(f)); }
+    // (art review of #455) no box anywhere on the map, and no ring on the temple he is in: the ring is for what can be pressed
+    { const look = await t.page.evaluate(() => { const L = document.getElementById("pilgrimList"), here = L.querySelector(".here");
+        return { bordered: [...L.querySelectorAll("*")].filter((e) => { const c = getComputedStyle(e); return parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderLeftWidth) > 0; }).length, hereRing: getComputedStyle(here, "::before").content, hereAfter: getComputedStyle(here, "::after").content }; });
+      expect(look.bordered === 0 && look.hereRing === "none" && look.hereAfter === "none", "the map should have no box, and the temple he is in no ring: " + JSON.stringify(look)); }
+    { const gap = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList .go, #pilgrimList .here")].map((c) => Math.round(c.querySelector(".region").getBoundingClientRect().top - c.querySelector("img").getBoundingClientRect().bottom)));
+      expect(gap.length >= 1 && gap.every((g) => g >= 24), "the name should lie 24 px or more under its seal, clear of the ring's lower edge: " + JSON.stringify(gap)); }
+    await t.page.click("#pilgrimList .fog", { force: true }); await t.frames(2); expect(!(await P()).going && (await t.page.evaluate((k) => sessionStorage.getItem(k), CROSS)) === null, "a fog should not be a place to go");
+    await mapShut(); expect((await stack()).includes("menu") && !(await stack()).includes("pilgrim"), "Esc should put the map away and leave the menu: " + (await stack())); await menu(false);
+
+    // 4. The entrance in the book: a line on its 更多 paper that lays the map over the page; Esc turns back to the book.
+    await t.page.keyboard.press("b"); await t.until(() => shown("#book"), 30000, "the book never opened");
+    expect(!(await shown("#bookMap")), "the line for the map is on the 更多 paper, not on the book's foot");
+    await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 30000, "更多 never opened");
+    expect(await shown("#bookMap"), "the 更多 paper should have its line for the map once a temple is closed");
+    await t.page.click("#bookMap"); await mapOpen("from the book"); expect((await stack()).join() === "book,pilgrim", "the map should lie over the book: " + (await stack()));
+    await mapShut(); expect((await stack()).join() === "book", "the book should be as it was under the map: " + (await stack())); await t.page.click("#bookClose");
+
+    // 5. The entrance on Q: a ring that fills over a second, an aria value a reader can follow; let go on the way, it opens nothing.
+    await P({ clock: 0 });
+    await t.page.keyboard.down("q"); await t.until(async () => (await P()).hold.active && (await P()).hold.shown, 30000, "holding Q should show the ring");
+    expect(await t.page.evaluate(() => document.getElementById("pilgrimHold").getAttribute("role") === "progressbar" && document.getElementById("pilgrimHold").getAttribute("aria-valuemax") === "100"), "the ring should be a progress bar a reader can follow (the shared one, holdring.js)");
+    await P({ clock: 600 }); await t.until(async () => (await P()).hold.valuenow === 60, 30000, "the ring should say how full it is (aria-valuenow)");
+    await t.page.keyboard.up("q"); await t.until(async () => { const h = (await P()).hold; return !h.active && !h.shown; }, 30000, "letting go should put the ring away");
+    await P({ clock: 5000 }); await t.frames(4); expect(!(await P()).open && !(await shown("#pilgrim")), "letting go on the way should open nothing, however long after");
+    // (art review of #455) the ring stands outside the book's small seal at the top left, away from him: at four shapes of picture its box (and its word's), and his grown by 8 px, do not meet
+    await P({ clock: 20000 });
+    for (const [w, h] of [[1280, 720], [1024, 768], [390, 844], [844, 390]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      await t.page.keyboard.down("q"); await t.until(async () => (await P()).hold.shown, 30000, `no ring at ${w}x${h}`);
+      const m = await t.page.evaluate(() => { const rs = [document.querySelector("#pilgrimHold .mark"), document.querySelector("#pilgrimHold small")].map((e) => e.getBoundingClientRect()), b = window.__probe().monkBox;
+        return { ring: [Math.min(...rs.map((r) => r.left)), Math.min(...rs.map((r) => r.top)), Math.max(...rs.map((r) => r.right)), Math.max(...rs.map((r) => r.bottom))].map(Math.round), size: Math.round(rs[0].width), box: b, w: innerWidth, h: innerHeight }; });
+      expect(m.box && m.size === 52, `${w}x${h}: the ring should be 52 px and he in the picture: ` + JSON.stringify(m));
+      const [x0, y0, bw, bh] = m.box, [rx0, ry0, rx1, ry1] = m.ring, meet = rx0 < x0 + bw + 8 && rx1 > x0 - 8 && ry0 < y0 + bh + 8 && ry1 > y0 - 8;
+      expect(!meet && rx0 >= 0 && ry0 >= 0 && rx1 <= w && ry1 <= h, `${w}x${h}: the ring should be clear of him and on the screen: ` + JSON.stringify(m));
+      await t.page.keyboard.up("q"); await t.until(async () => !(await P()).hold.shown, 30000, `${w}x${h}: the ring did not fade`);
+    }
+    await t.page.setViewportSize({ width: 420, height: 800 }); await t.frames(2);
+    await P({ clock: 10000 }); await t.page.keyboard.down("q"); await t.until(async () => (await P()).hold.active, 30000, "the second hold did not begin");
+    await P({ clock: 10999 }); await t.until(async () => (await P()).hold.valuenow === 100, 30000, "the ring should be full to the eye a millisecond short"); expect(!(await P()).open && (await P()).hold.active, "a millisecond short of a second should open nothing");
+    await P({ clock: 11000 }); await mapOpen("by a held Q"); p = await P(); expect(!p.hold.active && !p.hold.shown, "the ring should be put away when the map opens: " + JSON.stringify(p.hold));
+    await t.page.keyboard.up("q"); await t.frames(2); expect((await P()).open, "the key coming up after the map is open should not put it away"); await mapShut();
+    await P({ clock: null });   // the page's own clock: a real second
+    await t.page.keyboard.down("q"); await mapOpen("by a real second of Q"); await t.page.keyboard.up("q"); await mapShut();
+
+    // 6. A handover that is not for this page, or that an address of its own overrules, comes to nothing and lifts the curtain (the
+    //    first script shuts it for anything waiting for this level; yard.js reads the handover and lifts it again).
+    await t.page.addInitScript(() => {
+      window.__ink = [];
+      const look = () => {
+        requestAnimationFrame(look);
+        const root = document.documentElement;   // (read each frame: an init script runs before the document has an element)
+        if (!root) return;   // (first: the page asked half-built may throw, and the record must not stop with it)
+        let frames = 0; try { frames = window.__yard ? window.__yard().frames : 0; } catch {}
+        const w = innerWidth, h = innerHeight;
+        if (window.__ink.length < 20000) window.__ink.push({ frames, ready: !!document.body && document.body.dataset.ready === "1", shut: root.classList.contains("crossing") && !root.classList.contains("crossing-open"), opening: root.classList.contains("crossing-open"), over: document.elementFromPoint(w / 2, h / 2) === root });
+      };
+      requestAnimationFrame(look);
+    });
+    const handover = (o) => t.page.evaluate(([k, v]) => sessionStorage.setItem(k, JSON.stringify(v)), [CROSS, { from: "t00", season: "summer", time: "day", follow: false, at: Date.now(), ...o }]);
+    await handover({ to: "t05" });
+    await t.page.goto(base + "?" + QRY, { waitUntil: "commit" }); await t.page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
+    let g = await t.page.evaluate(() => ({ log: window.__ink, key: sessionStorage.getItem("yunjing.crossing.v1"), cls: document.documentElement.className, title: !document.getElementById("title").hidden }));
+    expect(g.key === null && !/crossing/.test(g.cls) && g.log.length && g.log.every((r) => !r.shut) && g.title, "a handover for another temple's page should be forgotten and never shut the curtain: " + JSON.stringify({ key: g.key, cls: g.cls, title: g.title, shut: g.log.filter((r) => r.shut).length }));
+    await handover({ to: "t00" });
+    await t.page.goto(base + "?" + QRY + "&cam=6.6,53.4,0,0.05", { waitUntil: "commit" }); await t.page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
+    g = await t.page.evaluate(() => ({ key: sessionStorage.getItem("yunjing.crossing.v1"), cls: document.documentElement.className, over: document.elementFromPoint(innerWidth / 2, innerHeight / 2) === document.documentElement, events: window.__eventLog().map((e) => e.name) }));
+    expect(g.key === null && !/crossing/.test(g.cls) && !g.over && !g.events.includes("pilgrimage.arrive"), "an address that names its own place should drop the handover and lift the curtain: " + JSON.stringify(g));
+
+    // 7. From the prologue to T05 and back. T05 is closed for the test (it has no close of its own yet); he stands away from the start, in
+    //    the autumn dusk, so that arriving at the start and the visit's season and hour are things to see.
+    const sharp = require("sharp"), dark = async () => { const s = await sharp(await t.page.screenshot({ timeout: 240000 })).stats(); return s.channels.slice(0, 3).map((c) => c.mean); };
+    const cross = async (to, from, label, reduced) => {
+      await t.page.evaluate(() => { const q = window.__places.bell; if (q) window.__poseNear(q.at[0] + 0.3, q.at[1] - 0.3, 0, 0); window.__mood("autumn", "dusk"); });
+      await P({ mark: to, season: "winter" }); await P({ open: true }); await mapOpen(`on the way to ${to}`);
+      const entries = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList .go")].map((b) => b.dataset.to)); expect(entries.join() === to && (await t.page.locator("#pilgrimList .fog").count()) === 0, `${label}: the temple to go to should be a button and nothing a fog: ` + entries);
+      const sel = `#pilgrimList .go[data-to="${to}"]`;
+      // (art review of #455) the seals stand on one line; pointed at, the temple that can be gone to shows a ring at least 1.5 times its seal across, and no box
+      { const tops = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList img")].map((i) => Math.round(i.getBoundingClientRect().top)));
+        expect(tops.length === 2 && tops[0] === tops[1], `${label}: the two seals should stand on one line: ` + tops);
+        await t.page.hover(sel);
+        await t.until(() => t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q), "::after"); return +c.opacity > 0.5 && parseFloat(c.width) >= 115; }, sel), 30000, `${label}: a ring 1.8 times the seal across (clear of its corners) should come out round the seal of a temple that can be gone to`);
+        expect(await t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q)); return parseFloat(c.borderTopWidth) === 0 && c.backgroundColor === "rgba(0, 0, 0, 0)"; }, sel), `${label}: no box and no ground on it`); }
+      if (reduced) await t.page.emulateMedia({ reducedMotion: "reduce" });
+      await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click(sel)]);
+      // Frame by frame from the first frame the new page draws: the curtain stays over it, and the picture taken meanwhile is ink.
+      const ink = []; let samples = 0;
+      for (let i = 0; i < 12; i++) {
+        const r0 = await t.page.evaluate(() => document.body && document.body.dataset.ready === "1").catch(() => true); if (r0) break;
+        const m = await dark().catch(() => null); const r1 = await t.page.evaluate(() => document.body && document.body.dataset.ready === "1").catch(() => true);
+        if (m && !r1) { samples++; ink.push(m.map((v) => Math.round(v)).join("/")); expect(Math.max(...m) < 30, `${label}: the page should be ink while the temple is being made, it was ${m.map((v) => Math.round(v))}`); }
+      }
+      await t.page.waitForFunction(() => !!document.body && document.body.dataset.ready === "1", null, { timeout: 240000 });
+      await t.until(() => t.page.evaluate(() => window.__pilgrimage().ink.arrival?.walkMs != null), 120000, `${label}: the curtain never drew back`);
+      const a = await t.page.evaluate(() => ({ level: window.__level(), y: window.__yard(), start: window.__walker().start, entered: document.body.classList.contains("entered"), title: !document.getElementById("title").hidden && !document.getElementById("title").classList.contains("gone"), opening: window.__opening(), key: sessionStorage.getItem("yunjing.crossing.v1"), search: location.search, season: window.__probe().season, time: window.__probe().time, events: window.__eventLog().map((e) => e.name), cls: document.documentElement.className, p: window.__pilgrimage(), log: window.__ink }));
+      expect(a.level.id === to, `${label}: the page should walk ${to}: ` + JSON.stringify(a.level));
+      expect(Math.hypot(a.y.x - a.start[0], a.y.z - a.start[1]) < 0.3, `${label}: he should stand at the start (${a.start}), he stood at ${a.y.x}, ${a.y.z}`);
+      expect(a.entered && !a.title && !a.opening.active && !a.events.includes("opening.played") && !a.events.includes("demo.enter"), `${label}: the title and the opening should be skipped: ` + JSON.stringify({ entered: a.entered, title: a.title, opening: a.opening.active, events: a.events }));
+      expect(a.key === null && (to === "t00" ? !/level=/.test(a.search) : a.search.includes(`level=${to}`)) && !/enter|seals|cam=/.test(a.search), `${label}: the handover should be read once, and the address hold no place: ` + JSON.stringify([a.key, a.search]));
+      expect(a.season === "autumn" && a.time === "dusk", `${label}: the visit's season and hour should be handed across: ` + [a.season, a.time]);
+      expect(a.events.includes("pilgrimage.arrive") && a.events.includes("demo.ready") && !/crossing/.test(a.cls), `${label}: the arrival should be named and the curtain gone: ` + JSON.stringify([a.events, a.cls]));
+      // The curtain is shut at the first frame and stays shut, over the page, until the temple can be drawn (body.dataset.ready); only then does it draw back.
+      const iReady = a.log.findIndex((r) => r.ready), before = a.log.slice(0, iReady < 0 ? a.log.length : iReady);
+      expect(a.log.length > 0 && a.log[0].shut && a.log[0].over, `${label}: the curtain should be shut at the first frame: ` + JSON.stringify(a.log[0]));
+      expect(before.every((r) => r.shut && !r.opening && r.over), `${label}: the curtain lifted before the temple could be drawn: ` + JSON.stringify(before.find((r) => !(r.shut && !r.opening && r.over))));
+      expect(a.log.some((r) => r.opening) || a.log.slice(iReady).some((r) => !r.shut), `${label}: the curtain should draw back once the temple is drawn`);
+      const ar = a.p.ink.arrival; expect(ar.from === from && ar.to === to && ar.ms > 0 && ar.walkMs >= ar.ms, `${label}: how long it took should be kept: ` + JSON.stringify(ar));
+      console.log(`  crossing ${from} → ${to}${reduced ? " (reduced motion)" : ""}: ${ar.ms} ms from the press to the temple drawn, ${ar.walkMs} ms to the walk his; ${samples} pictures taken meanwhile, ink: ${ink.join(" ")}`);
+      expect(samples >= 1, `${label}: no picture was taken while the curtain was over the page`);
+      return a;
+    };
+    await cross("t05", "t00", "t00 → t05", false);
+    // In T05 the map is the same map: the prologue closed, a place to go; T05 marked, with its own region and no season yet that it was closed in.
+    p = await P(); expect(p.visible && p.level === "t05", "the map's entrances should be open in the other temple too: " + JSON.stringify(p));
+    await P({ clock: null }); await t.page.keyboard.down("q"); await mapOpen("by Q in T05"); await t.page.keyboard.up("q");
+    const here = await t.page.evaluate(() => ({ here: document.querySelector("#pilgrimList .here")?.textContent || "", go: document.querySelector("#pilgrimList .go")?.textContent || "" }));
+    expect(here.here.includes("关外") && here.here.includes("此刻在此") && here.go.includes("江南") && here.go.includes("上回") && here.go.includes("秋"), "T05's map should mark T05 and offer the prologue with the season it was closed in: " + JSON.stringify(here));
+    await mapShut();
+    const back = await cross("t00", "t05", "t05 → t00", true);
+    // Back in the prologue after standing at the bell, a kept place was written; the crossing still stood him at the start, not there.
+    expect(back.start[0] === begin[0] && back.start[1] === begin[1], "the prologue's start should be the same one: " + JSON.stringify([back.start, begin]));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A book kept by an older version: a filled one has seen the close and is not shown it on the summit again; one
@@ -1535,11 +1700,13 @@ const scenarios = {
     await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture"); await t.page.waitForTimeout(2600);
     await t.page.reload(); await ready();
     expect((await t.page.textContent("#titleSeals")).includes("已得一印"), "the seal was not remembered: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify((await t.journey()).seals));
+    const closedBefore = await t.page.evaluate(() => window.__pilgrimage({ mark: "t00", season: "spring" }).record.t00);   // (#449) a temple closed: beginning again must not forget it
     await t.page.click("#againBtn"); expect((await t.page.textContent("#againBtn")).includes("朱印清空") && !(await t.page.evaluate(() => document.body.classList.contains("entered"))), "beginning again should ask a second time");
     await t.page.click("#againBtn"); await t.until(() => t.page.evaluate(() => document.body.classList.contains("entered")), 20000, "he did not set out again");
     expect(await t.page.evaluate(() => window.__opening().active), "beginning again from the foot of the path should show the mountain again (src/opening.js)");
     await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening");
     st = await t.state(); const j = await t.journey();
+    expect(JSON.stringify(await t.page.evaluate(() => window.__pilgrimage().record.t00)) === JSON.stringify(closedBefore), "beginning again (从头走起) should not empty the record of temples closed (#449)");
     expect(j.count === 0 && Math.abs(st.x - start.x) < 0.3 && Math.abs(st.z - start.z) < 0.6, "beginning again should empty the book and stand him at the start: " + JSON.stringify([j.count, st.x, st.z, start.x, start.z]));
     // A seal that has been earned is the way back to its place: earn the well's again, walk off, open the book, press the seal.
     await t.page.evaluate(() => { const p = window.__places.well; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite("well"); }); await t.until(async () => (await t.journey()).seals.well > 0, 120000, "no seal to go back to");
@@ -1928,7 +2095,7 @@ const scenarios = {
     expect(new Set(foot.map((f) => f.top)).size === 1 && foot.every((f) => f.h >= 44 && f.w >= 44) && foot.filter((f) => f.stamp).map((f) => f.id).join() === "bookClose" && foot[foot.length - 1].right <= (await t.page.evaluate(() => innerWidth)) - 16, "the foot of the book is not one line of four, the seal alone: " + JSON.stringify(foot));
     await t.page.click("#bookMoreBtn"); await t.until(async () => t.page.isVisible("#bookMore"), 10000, "更多 did not open");
     const more = await t.page.evaluate(() => [...document.querySelectorAll("#bookMore .chip, #bookMore .stamp")].filter((e) => e.offsetParent !== null).map((e) => { const r = e.getBoundingClientRect(); return { id: e.id, top: Math.round(r.top), h: Math.round(r.height), stamp: e.classList.contains("stamp") }; }));
-    expect(more.map((m) => m.id).join() === "bookReplay,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper is not one thing to a line, none a seal: " + JSON.stringify(more));
+    expect(more.map((m) => m.id).join() === "bookReplay,bookMap,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper (with the map's line, #449, since this close was played) is not one thing to a line, none a seal: " + JSON.stringify(more));
     await t.page.click("#bookReplay");
     await t.until(async () => !(await t.page.isVisible("#bookMore")) && !(await t.page.isVisible("#book")), 20000, "the book and its paper did not go before the close");
     await t.until(async () => (await R()).closing === true, 120000, "山顶再坐一回 did not play the close");
@@ -2286,7 +2453,10 @@ const scenarios = {
       await t.until(async () => (await t.page.evaluate(() => window.__joya())).mine >= 1, 60000, "pulling the rope did not count a stroke");
       j = await t.page.evaluate(() => window.__joya());
       expect(j.line.includes("106") && j.take, "the stroke should show at once and offer the card: " + JSON.stringify(j));
-      expect(await t.page.evaluate(() => window.__joyaFlush()), "the report did not go");
+      // The page's own five-second tick may send the stroke before the hook is asked (the first report waits for nothing,
+      // and the slower the drawing the likelier the tick is first), so the report is waited for, whoever sent it. The tick
+      // keeps the wall clock, not frames, so this waits in seconds.
+      await t.until(async () => { await t.page.evaluate(() => window.__joyaFlush()); return api.posts.length >= 1 && (await t.page.evaluate(() => window.__joya())).sent === 1; }, 60000, "the report did not go");
       expect(api.posts.length === 1 && api.posts[0].n === 1 && Number.isInteger(api.posts[0].tz), "one report of one stroke with the clock's offset: " + JSON.stringify(api.posts));
       // Others ring: the mountain passes 108 (and 216) between two answers; the far hills answer once.
       // It waits for a gap of three seconds after his own stroke, and is counted apart from the close's far bell.
@@ -3025,9 +3195,11 @@ const scenarios = {
     await t.page.keyboard.press("Escape"); await t.page.keyboard.press("Escape");
     await t.page.keyboard.press("t"); expect(await t.page.isVisible("#moodPanel"), "T should open the seasons once they are the visitor's"); await t.page.keyboard.press("Escape");
     // Begin the book again: the seals go, the seasons stay, and closing the book says once that they are open.
+    const closedKept = await t.page.evaluate(() => window.__pilgrimage({ mark: "t00", season: "winter" }).record.t00);   // (#449) a temple closed: the book beginning again must not forget it
     await t.page.click("#bookBtn"); await t.until(() => t.page.isVisible("#book"), 60000, "the seal at the top left did not open the book");
     await t.page.click("#bookMoreBtn"); await t.page.click("#bookReset"); await t.page.click("#bookReset");
     await t.until(async () => !(await t.page.isVisible("#book")), 20000, "重新朝山 did not close the book");
+    expect(JSON.stringify(await t.page.evaluate(() => window.__pilgrimage().record.t00)) === JSON.stringify(closedKept), "重新朝山 should not empty the record of temples closed (#449)");
     const j = await t.journey(); expect(j.count === 0 && j.opened && j.told, "重新朝山 should empty the book and keep the seasons, having said so: " + JSON.stringify({ count: j.count, opened: j.opened, told: j.told }));
     expect(await offered() && (await t.page.evaluate(() => window.__hud().said)).includes("seasons"), "the seasons should stay open, and the visitor be told");
     await t.page.evaluate(() => localStorage.removeItem("yunjing.journey.v1"));

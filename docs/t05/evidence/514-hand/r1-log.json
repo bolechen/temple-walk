@@ -1,0 +1,82 @@
+{
+ "donor": {
+  "file": "tools/out/t05/tripo-six/sikhin-r3.glb",
+  "sha256": "a1224ee73752a4c36eb75f1fc6b4cd932443a2a0293ee903293471281494f057",
+  "shells_whole": 5,
+  "shells_part": 2,
+  "faces_cut": 22840,
+  "welded_verts": 11609,
+  "open_edges": 385,
+  "nonmanifold_edges": 4,
+  "wrist": [
+   2.01,
+   4.435,
+   0.745
+  ],
+  "tip": [
+   2.128,
+   3.424,
+   1.406
+  ],
+  "length_m": 1.214,
+  "palm_normal": [
+   -0.438,
+   0.456,
+   0.775
+  ]
+ },
+ "target": {
+  "file": "tools/out/t05/tripo-370/sakyamuni-r1.glb",
+  "sha256": "02817edd0bfaa280b8ea53c46fd9d3f6398d9e93cabc83ced3739225da350d44"
+ },
+ "placed": {
+  "scale": 0.8695,
+  "turn_deg": 5,
+  "wrist": [
+   -1.72,
+   3.92,
+   1.38
+  ],
+  "axis": [
+   -0.046,
+   -0.827,
+   0.56
+  ],
+  "palm": [
+   0.031,
+   0.56,
+   0.828
+  ]
+ },
+ "knee": {
+  "box": [
+   [
+    -2.25,
+    2.5,
+    1.25
+   ],
+   [
+    -1.25,
+    3.98,
+    2.4
+   ]
+  ],
+  "ease": 0.08,
+  "points_in_box": 19093,
+  "points_moved": 19093,
+  "largest_move_m": 0.457,
+  "from": "Sakyamuni's own left knee, mirrored across x",
+  "relaxed": 40,
+  "faces_taken_out": 27892,
+  "faces_put_in": 10293
+ },
+ "joined": {
+  "hand_points": 11609,
+  "hand_faces": 22839,
+  "how": "joined over the wrist, the hand's wrist sunk into the forearm (no boolean: the figure is many open shells)"
+ },
+ "out": {
+  "file": "/tmp/claude-0/-home-user-temple-walk/144eaa5b-c82b-52ca-b562-9aca24104526/scratchpad/varada/sakyamuni-varada.glb",
+  "sha256": "67a1e6f7eaf40181df9991349ef6dc42d3ba7b8c798fe61ecea9cc0307d02d87"
+ }
+}

@@ -96,6 +96,14 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
+  // The murals' ground stands off the wall's inner face, never on it: on it, the two faces fought for the same pixels and
+  // the lit plaster showed through the dark ground in stripes and slanting bands (the art review's "diagonal line").
+  const faces = h.parts.plaster.map((g) => (g.computeBoundingBox(), g.boundingBox));
+  for (const g of h.parts.mural) { const m = (g.computeBoundingBox(), g.boundingBox), alongX = m.max.x - m.min.x > m.max.z - m.min.z;
+    for (const w of faces) { const near = alongX ? [w.min.z, w.max.z].some((z) => Math.abs(z - m.min.z) < 0.01 || Math.abs(z - m.max.z) < 0.01) && w.max.x - w.min.x > 2 : [w.min.x, w.max.x].some((x) => Math.abs(x - m.min.x) < 0.01 || Math.abs(x - m.max.x) < 0.01) && w.max.z - w.min.z > 2;
+      assert.ok(!near, "a face of the murals' ground lies on a wall's face"); } }
+  // The hall's floor lies all within the walls, so the inside's shut-out sky reaches every corner of it.
+  for (const g of h.parts.floor) { const b = (g.computeBoundingBox(), g.boundingBox); for (const [x, z] of [[b.min.x, b.min.z], [b.max.x, b.max.z]]) assert.ok(h.shut(x * 0.999, HALL.floor, z + (z > -12 ? -0.001 : 0.001)) < 1, `the floor's corner (${x}, ${z}) is outside the shut inside`); }
   // Every wall closes up to the roof's underside over its inner face: no slit along a wall's top lets the sun in.
   for (const g of h.parts.plaster) { const b = (g.computeBoundingBox(), g.boundingBox); if (b.min.y < HALL.floor + HALL.column + 0.15) continue;
     const inX = b.max.x - b.min.x < 2, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
@@ -148,4 +156,36 @@ test("T05 builds no censer, no trees, no bell and no seat of its own yet, and it
   assert.equal(site.censer, null); assert.deepEqual(site.trees, []); assert.deepEqual(site.halls, []); assert.deepEqual(site.strikers, []);
   assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
   assert.equal(level.backdrop, null); assert.equal(level.grove, null); assert.equal(level.zones, null);
+});
+
+test("the hall's fill is out while the eye is in the court and comes up as he walks in, over seconds, never at a jump (#481)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
+  for (const [x, z] of [STATION.A, STATION.B, [0, 9.5]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  for (const k of ["E", "D"]) assert.equal(h.within(STATION[k][0], 4.6, STATION[k][1]), 1, `the whole fill at ${k}`);
+  assert.ok(h.within(...[STATION.F[0], 4.6, STATION.F[1]]) > 0.9, "nearly all of it at F, 2 m in");
+  // from 9 m out to 3 m in it rises without a step: never more than 2% of it over 5 cm walked
+  for (let z = 9.1, prev = 0; z > -3.1; z -= 0.05) { const k = h.within(0, 4.6, z); assert.ok(k >= prev && k - prev <= 0.02, `at z ${z.toFixed(2)}`); prev = k; }
+  // the court's picture is drawn with the fill out, however long he stands there
+  for (let i = 0; i < 50; i++) assert.equal(s.tick(0.05, eye(0, 9.5), false), 0);
+  // walking in at his pace (2.1 m/s, 20 frames a second) from the threshold to E: it rises steadily, never more than 5% a frame
+  let last = 0, rise = 0, frames = 0;
+  for (let z = 9.5; z > STATION.E[1]; z -= 2.1 * 0.05) { const k = s.tick(0.05, eye(0, z), false); assert.ok(k >= last - 1e-9, "it only rises walking in"); rise = Math.max(rise, k - last); last = k; frames++; }
+  assert.ok(rise <= 0.05, `the most in one frame ${rise.toFixed(3)}`);
+  for (let i = 0; i < 80; i++) last = s.tick(0.05, eye(...STATION.E), false);
+  assert.equal(last, 1, "settled once he stands inside");
+  assert.equal(s.tick(0.05, eye(...STATION.A), false), 0, "a jump of the eye takes the light of where it lands");
+  assert.ok(FILL.lux > 0 && FILL.depth > 0 && frames > 0);
+});
+
+test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
+  const h = buildHall(M), X = XS[XS.length - 1], xi = X + 0.3 - HALL.wall, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - 0.3 + HALL.wall;
+  // the east end wall's inner face at its front corner, inside the front wall's thickness: looking in, so inside
+  assert.equal(h.shut(xi, 6, ZS[0] + HALL.front - 0.01, -1, 0, 0), HALL.inside);
+  assert.equal(h.shut(-xi, 6, zb - 0.2, 1, 0, 0), HALL.inside, "the west wall's inner face where it runs into the back wall");
+  assert.equal(h.shut(X - 1, 6, zf, 0, 0, -1), HALL.inside, "the front wall's inner face over the east end bay");
+  // the outer faces, and a face looking along the wall, are not
+  assert.equal(h.shut(X + 0.3, 6, -10, 1, 0, 0), 1); assert.equal(h.shut(0, 6, ZS[0] + HALL.front, 0, 0, 1), 1);
+  assert.equal(h.shut(xi + 0.4, 6, -0.5, 0, 0, 1), 1, "the end of a wall seen from the court");
+  for (const g of h.parts.mural) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(Math.max(-b.min.x, b.max.x) <= xi + 1e-6 && b.max.z <= zf + 1e-6 && b.min.z >= zb - 1e-6, "a mural's ground within the inner faces"); }
 });

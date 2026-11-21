@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "before-and-donor.jpg",
+   "bytes": 124250,
+   "sha256": "859c2edc37c1b0758be628dc5c891bcf0b354c2bd9474dcf9aaf692f7d30d58e",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 116843,
+   "sha256": "9050bd361ae0ca00ed99e33b9b61755a3fba0fc81b3170a5b79bebf5a9362339",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-cam03.png",
+   "bytes": 835511,
+   "sha256": "780fe8c68d054812a06cb22d7266188c954d796dfb0aa3e66ae86003d75b3b91",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-cam04.png",
+   "bytes": 946466,
+   "sha256": "bab28dccf4f58932de5e73393ac69e47653c8a6bf8b8ac759d057b9f82223aaa",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-figure10.png",
+   "bytes": 686120,
+   "sha256": "b23b3fae281c925e70b21ef86e83ef35e197a140f084da74a5d3947676ec0c9a",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-hand-level.png",
+   "bytes": 707089,
+   "sha256": "0bfea63ebd319d60942d6f85f45c771fd3fc286211029b55f3a09997cf5dc01d",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-hand-side.png",
+   "bytes": 340079,
+   "sha256": "e553b1bbf854cec2ebfc2a320c1391f4d00ef768116d839cf8d703fc4ba2ac92",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-hand10-diffuse.png",
+   "bytes": 712291,
+   "sha256": "ed450b1ebe59300f4f8acbc209405236161d6dd7d65f148b0357cd59c0642694",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-hand10.png",
+   "bytes": 629634,
+   "sha256": "836d609b0586ef231d3e5ab87a8d8e55f5d55931e2b0ed7738bdeac68d967161",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-hand34.png",
+   "bytes": 501556,
+   "sha256": "ce5c948bbc4707813f454d4096674ff717f9b5bc67acf06c322740713a42cb41",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  },
+  {
+   "path": "r1-mesh-front.png",
+   "bytes": 661445,
+   "sha256": "fbb305beec9bd2a0596c318a9eb2cd124579dcb538ecbf9e991ccf72066ffd71",
+   "rev": "baa81008cd9ae3c2c2a9f990ddac8fa358d5dbe9"
+  }
+ ]
+}
