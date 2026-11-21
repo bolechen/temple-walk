@@ -18,6 +18,8 @@ uniform mat4 uToFig;
 uniform vec4 uL[LEAVES];
 uniform vec4 uFace[8];
 uniform float uEdge;
+uniform sampler2D uMaskF;
+uniform sampler2D uMaskB;
 varying vec3 vFig;
 varying vec3 vFigN;
 float pEll(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 q = (p - a.xyz) / b.xyz; float k = min(b.x, min(b.y, b.z));
@@ -26,6 +28,15 @@ float pCap(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 pa = p - a.xy
   return 1. - smoothstep(-uEdge, uEdge, length(pa - ba * h) - b.w); }
 float pBox(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 d = max(a.xyz - p, p - b.xyz); return 1. - smoothstep(-uEdge, uEdge, max(d.x, max(d.y, d.z))); }
 float pHalf(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; return smoothstep(-uEdge, uEdge, dot(p - a.xyz, b.xyz)); }
+// a mask drawn in the figure's frame and laid on from the front (b.w = 1) or the back (b.w = -1) (issue #370, round 6):
+// a = (x0, y0, the depth past which it reaches, on), b = (x1, y1, channel, side). The mask is a picture over the
+// rectangle x0..x1 × y0..y1, worked out from the figure's own surface (tools/t05-hall/mask.py), so its edges follow the
+// folds and the collar instead of a box's straight sides; only the surface on its own side and facing that way takes it.
+float pMap(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec2 uv = (p.xy - a.xy) / (b.xy - a.xy);
+  if (uv.x < 0. || uv.y < 0. || uv.x > 1. || uv.y > 1.) return 0.;
+  float s = b.w; if (s * p.z < s * a.z || s * vFigN.z < -.1) return 0.;
+  vec4 t = s > 0. ? texture2D(uMaskF, uv) : texture2D(uMaskB, vec2(1. - uv.x, uv.y));
+  return b.z < .5 ? t.r : b.z < 1.5 ? t.g : b.z < 2.5 ? t.b : t.a; }
 // a band round the figure whose middle line rises as y0 + c·x² (a neckline, a sash), half-height h, across |x| < w, in front of z0
 float pBand(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; float d = abs(p.y - (a.x + a.y * p.x * p.x)) - a.z;
   d = max(d, abs(p.x) - b.x); d = max(d, b.y - p.z); return 1. - smoothstep(-uEdge, uEdge, d); }
@@ -70,10 +81,10 @@ export function compileRecipe(recipe) {
     if (node.and) return "(" + node.and.map(expr).join(" * ") + ")";
     if (node.or) return node.or.map(expr).reduce((a, b) => `max(${a}, ${b})`);
     if (node.not) return "(1. - " + expr(node.not) + ")";
-    const type = Object.keys(node).find((k) => ["ell", "cap", "box", "half", "band"].includes(k));
+    const type = Object.keys(node).find((k) => ["ell", "cap", "box", "half", "band", "map"].includes(k));
     if (!type) throw new Error("paint: unknown shape " + JSON.stringify(node));
     const i = leaves.length; leaves.push({ type, spec: node[type] });
-    const fn = { ell: "pEll", cap: "pCap", box: "pBox", half: "pHalf", band: "pBand" }[type];
+    const fn = { ell: "pEll", cap: "pCap", box: "pBox", half: "pHalf", band: "pBand", map: "pMap" }[type];
     return `${fn}(p, uL[${2 * i}], uL[${2 * i + 1}])`;
   }
   const zones = recipe.zones.map((z) => ({ ...z, glsl: expr(z.where) }));
@@ -105,6 +116,8 @@ function leafUniforms(leaf, A) {
   }
   if (leaf.type === "band") { const y0 = val(s.y0, A), c = val(s.c ?? 0, A), h = val(s.h, A), w = val(s.w, A), z0 = val(s.z0 ?? -99, A);
     if ([y0, c, h, w, z0].some((x) => x === undefined)) return out; return [y0, c, h, 1, w, z0, 0, 0]; }
+  if (leaf.type === "map") { const M = A[s.m === "back" ? "maskBack" : "maskFront"]; if (!M || !M.rect) return out;
+    const [x0, y0, x1, y1] = M.rect; return [x0, y0, M.z ?? (s.m === "back" ? 99 : -99), 1, x1, y1, s.ch ?? 0, s.m === "back" ? -1 : 1]; }
   return out;
 }
 
@@ -134,7 +147,9 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const F = faceUniforms(recipe.face, anchors), uFace = []; for (let i = 0; i < 8; i++) uFace.push(new THREE.Vector4().fromArray(F, i * 4));
   const base = recipe.base;
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
-  const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 } };
+  const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
+  const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
     const c = lin(z.color);

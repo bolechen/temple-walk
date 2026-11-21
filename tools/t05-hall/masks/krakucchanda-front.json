@@ -1,0 +1,40 @@
+{
+ "normals": "tools/out/t05/seven/chest/krakucchanda-normals.png",
+ "rect": [
+  -1.2,
+  4.2,
+  1.2,
+  6.6
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/krakucchanda-front.png",
+ "preview": "tools/out/t05/seven/chest/krakucchanda-mask-preview.png",
+ "channels": [
+  {
+   "zone": "胸衣",
+   "seeds": [
+    [
+     0,
+     5.0
+    ],
+    [
+     0,
+     4.7
+    ],
+    [
+     0.1,
+     5.4
+    ]
+   ],
+   "box": [
+    -0.5,
+    4.35,
+    0.55,
+    5.7
+   ],
+   "tol": 0.06,
+   "close": 0.03,
+   "blur": 0.012
+  }
+ ]
+}

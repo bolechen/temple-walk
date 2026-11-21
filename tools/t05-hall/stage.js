@@ -17,6 +17,11 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { paintMaterial } from "./paint.js";
 import recipe from "./paint/recipe.json";
+// the masks some figures' zones are drawn from (paint/masks/*.png, tools/t05-hall/mask.py), loaded before the page says it is ready
+const MASK_URLS = import.meta.glob("./paint/masks/*.png", { eager: true, query: "?url", import: "default" });
+const MASKS = Object.fromEntries(await Promise.all(Object.entries(MASK_URLS).map(async ([k, u]) => {
+  const t = await new THREE.TextureLoader().loadAsync(u); t.colorSpace = THREE.NoColorSpace; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter;
+  return [k.replace(/^.*\/masks\//, ""), t]; })));
 const ANCHORS = Object.fromEntries(Object.entries(import.meta.glob("./paint/*.json", { eager: true, import: "default" }))
   .filter(([k]) => !k.endsWith("recipe.json")).map(([k, v]) => [k.replace(/^.*\/(.*)\.json$/, "$1"), v]));
 
@@ -444,7 +449,8 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     const key = o.env === false ? "noenv" : "env";
     f.painted ??= {};
-    f.painted[key] ??= paintMaterial(recipe, A.anchors, f.pivot, o.env === false ? {} : { envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+    const masks = { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file] };
+    f.painted[key] ??= paintMaterial(recipe, A.anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
     f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
     for (const m of f.meshes) m.material = f.painted[key];
   }
@@ -468,7 +474,7 @@ function ortho(i, side = "front", z = {}) {
   orthoGrid = new THREE.Group();
   [[0x8a8a8a, 0.25], [0xffffff, 0.6], [0xff3030, 0.9]].forEach(([col, op], c) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pts[c], 3));
     const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op, depthTest: false })); l.renderOrder = 10; orthoGrid.add(l); });
-  P.add(orthoGrid);
+  if (z.grid !== false) P.add(orthoGrid);   // a picture for tools/t05-hall/mask.py is drawn without the grid
   if (side === "side") orthoGrid.rotation.y = -Math.PI / 2; else orthoGrid.rotation.y = 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
   const d = 20, cx = z.cx ?? 0, cy = z.cy ?? 3, hh = z.half ?? 3.5;
   const asp = z.square ? 1 : W / H;   // keep metres square on a wide picture (#370; #287 drew its grids square at 1400 px)

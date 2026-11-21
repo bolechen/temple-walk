@@ -152,25 +152,15 @@
    1.42
   ],
   "handR2r": 0.21,
-  "chestMin": [
-   -0.48,
-   5.0,
-   -0.453
-  ],
-  "chestMax": [
-   0.48,
-   6.3,
-   9
-  ],
-  "chestLow": [
-   0,
-   5.0,
-   0
-  ],
-  "chestLowN": [
-   0,
-   1,
-   0
-  ]
+  "maskFront": {
+   "file": "vipasyin-front.png",
+   "rect": [
+    -1.2,
+    4.2,
+    1.2,
+    6.6
+   ],
+   "z": -0.6
+  }
  }
 }

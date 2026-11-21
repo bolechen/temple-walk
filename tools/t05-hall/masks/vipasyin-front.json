@@ -1,0 +1,72 @@
+{
+ "normals": "tools/out/t05/seven/chest/vipasyin-normals.png",
+ "rect": [
+  -1.2,
+  4.2,
+  1.2,
+  6.6
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/vipasyin-front.png",
+ "preview": "tools/out/t05/seven/chest/vipasyin-mask-preview.png",
+ "channels": [
+  {
+   "zone": "胸衣",
+   "seeds": [
+    [
+     0,
+     5.85
+    ],
+    [
+     0,
+     5.6
+    ],
+    [
+     0,
+     5.35
+    ],
+    [
+     0,
+     5.12
+    ],
+    [
+     0,
+     4.98
+    ],
+    [
+     -0.3,
+     5.1
+    ],
+    [
+     0.3,
+     5.1
+    ],
+    [
+     -0.3,
+     5.35
+    ],
+    [
+     0.3,
+     5.35
+    ],
+    [
+     -0.3,
+     5.9
+    ],
+    [
+     0.3,
+     5.9
+    ]
+   ],
+   "box": [
+    -0.62,
+    4.85,
+    0.62,
+    6.6
+   ],
+   "tol": 0.02,
+   "close": 0.03,
+   "blur": 0.012
+  }
+ ]
+}

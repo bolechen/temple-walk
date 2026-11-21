@@ -1,0 +1,96 @@
+{
+ "out": "tools/out/t05/seven/chest",
+ "size": [
+  1200,
+  1200
+ ],
+ "ao": false,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/vipasyin-r3.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/kanakamuni-r3.60000.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-t05"
+  }
+ ],
+ "shots": [
+  {
+   "name": "krakucchanda-normals",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.4,
+    "half": 1.2,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "vipasyin-normals",
+   "ortho": {
+    "i": 1,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.4,
+    "half": 1.2,
+    "square": true,
+    "grid": false
+   }
+  },
+  {
+   "name": "kanakamuni-normals",
+   "ortho": {
+    "i": 2,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.4,
+    "half": 1.2,
+    "square": true,
+    "grid": false
+   }
+  }
+ ]
+}
